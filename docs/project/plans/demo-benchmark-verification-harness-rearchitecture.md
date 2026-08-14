@@ -1,0 +1,689 @@
+# Demo Benchmark and Verification Harness Rearchitecture Plan
+
+## Status
+
+Active. The code, test, benchmark, layout-tree, and running-device audit is complete; production
+implementation has not started.
+
+The Demo is being redefined as a deterministic benchmark and framework-verification harness.
+Automated validation owns the primary information architecture. Human verification remains a
+supported secondary workflow, but explanatory copy must not displace the fixture, become a
+selector contract, or enter a measured benchmark hierarchy.
+
+Last verified: 2026-08-14.
+
+Next action: execute Phase 0 by freezing the scenario inventory and current benchmark workload
+revisions, then implement the Phase 1 route and automation-target contracts before changing the
+catalog or fixture layouts.
+
+Do not benchmark or begin a performance-only slice from the
+[Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
+until the completion gate in this plan has produced a stable replacement Demo baseline. A
+source-and-contract audit or a focused correctness fix does not depend on that performance gate.
+
+## Maven release changesets
+
+- None.
+
+The planned work is initially confined to the Demo application, its test APK, and the internal
+Macrobenchmark module. If implementation proves that a published framework API must change, that
+slice must receive its own API-quality assessment, owning-module documentation, compiled samples,
+and immutable `release/changes/*.json` entry before it is considered part of this plan.
+
+## Objective
+
+Replace the current module-oriented showcase with a long-lived verification harness that provides:
+
+1. one stable, directly launchable route for every independently testable scenario;
+2. deterministic setup, ready, action, state, reset, and result targets that do not depend on
+   visible text or locale;
+3. fixture-first pages whose measured content is isolated from catalog, guidance, diagnostics, and
+   other unrelated UI;
+4. complete English and Simplified Chinese resources for all visible Demo copy;
+5. compact human instructions that are available on demand but are not mounted in benchmark mode;
+6. an explicit workload revision for every performance baseline so historical measurements are
+   not compared across changed fixtures; and
+7. one maintainable registry connecting navigation, automation, manual verification, screenshots,
+   and benchmarks without presenting the project roadmap or module architecture inside the app.
+
+The end state is not a documentation browser or a component marketing catalog. Project plans,
+future modules, architecture inventories, and known gaps remain in repository documentation.
+
+## Product position and priority
+
+The Demo has two consumers in this strict order:
+
+| Priority | Consumer | Required outcome |
+| --- | --- | --- |
+| 1 | Instrumentation and Macrobenchmark | Direct launch, stable machine targets, deterministic state, isolated workload, and bounded navigation cost |
+| 2 | Framework developers reproducing a defect | Fast search, one-tap launch, visible state/result, reset, and environment controls |
+| 3 | Human visual review | Localized goal, steps, and expected result presented outside the primary fixture |
+
+This ordering has concrete consequences:
+
+- automation never navigates by translated copy;
+- a scenario is not hidden behind a chapter tab or a long document;
+- the primary fixture and its first action/result appear before explanatory prose;
+- benchmark mode does not mount human guidance or the general Demo shell;
+- a page can still be visually polished, but polish cannot make the workload ambiguous; and
+- a feature that needs a special Activity, lifecycle, window, or configuration owns that host
+  explicitly instead of inheriting one universal shell.
+
+## Audit method and reproducible baseline
+
+The 2026-08-14 audit combined source inspection, unit/instrumentation/Macrobenchmark inspection,
+Android accessibility layout dumps, and screenshots from the current Debug APK.
+
+Running-device baseline:
+
+| Property | Value |
+| --- | --- |
+| Device | Samsung SM-G991B |
+| Android | 13 / API 33 |
+| Display | 1080 x 2400, 480 dpi |
+| Font scale | 1.0 |
+| Locale | `zh-Hans-CN` |
+| Build | Current branch Debug APK built on 2026-08-14 |
+
+The capture workflow was:
+
+```bash
+./gradlew :app:assembleDebug
+android run \
+  --device=<device-serial> \
+  --apks=app/build/outputs/apk/debug/app-debug.apk \
+  --activity=com.viewcompose.MainActivity
+android layout --device=<device-serial> -p -o=<layout-output>.json
+android screen capture -o=<screenshot-output>.png
+```
+
+Screenshots are audit evidence, not a normative UI specification, and are intentionally not stored
+as permanent plan assets. The source, scenario contract, executable tests, and future screenshot
+baselines remain authoritative.
+
+## Current baseline
+
+### Quantitative source baseline
+
+| Measure | Current value | Interpretation |
+| --- | ---: | --- |
+| Demo Kotlin files | 52 | Shared infrastructure and feature pages are already a substantial application subsystem. |
+| Demo page Kotlin files | 42 | Page ownership is fragmented across broad chapters and partial section files. |
+| Demo-related Activity files | 24 | Ordinary fixtures and lifecycle-specific fixtures are not clearly distinguished. |
+| Available catalog modules | 18 | The catalog models coarse framework modules rather than independently executable scenarios. |
+| App instrumentation test files | 18 | Significant device evidence exists and must be migrated rather than discarded. |
+| Macrobenchmark Kotlin files | 11 | Benchmark entry and interaction helpers are already a first-class consumer of the Demo. |
+| `DemoTestTags` constants | 385 | Stable in-process identifiers exist, but are manually centralized and disconnected from scenario ownership. |
+| Production `testTag` applications | 319 | Many fixtures already expose test hooks. |
+| Direct `text = "..."` assignments in Demo/activity/performance source | 660 | This is a lower bound; titles, labels, model fields, and formatted prose add more hard-coded visible copy. |
+| App string resources | 1 | Only `app_name` exists in the default `strings.xml`; no second locale resource file exists. |
+| Macrobenchmark visible-text helper calls | 136 | Waiting, scrolling, clicking, and state assertions remain coupled to English or Chinese copy. |
+
+`Modifier.testTag` currently reaches Android through the named View tag
+`R.id.viewcompose_test_tag`. That is appropriate for in-process test helpers, but it is not exposed
+as an Android resource ID in the UiAutomator layout tree. Current Macrobenchmarks therefore fall
+back to `By.text(...)` and text-based wrapper functions. Internationalizing the Demo without first
+replacing that black-box selector contract would make the benchmark suite unstable by design.
+
+### Captured screen audit
+
+| Screen | Current observation | Required direction |
+| --- | --- | --- |
+| Home catalog | The first viewport is dominated by catalog rationale, planned chapter prose, manual focus, and benchmark route descriptions. The first actionable module card is only partially visible. | Compact executable scenario rows; search/filter and launch are primary. No roadmap or route prose. |
+| Diagnostics / Runtime | A repeated chapter overview, framework-module list, and page-switcher occupy most of the first viewport before the benchmark fixture. | Each diagnostic concern becomes a direct scenario; no repeated chapter preamble. |
+| Diagnostics / Theme | Switching the tab rebuilds a long document while the same preamble remains visible. The actual theme fixture begins near the bottom edge. | Direct theme scenario route with snapshot/actions/result first. |
+| Diagnostics / Renderer | The renderer controls are preceded by unrelated module and chapter content. | Direct renderer scenario with refresh/reset/result machine targets in the first viewport. |
+| Diagnostics / Gaps | The page explicitly presents `roadmap gaps` and says that gaps guide future framework work. | Remove the page. Plans and roadmap own future work. |
+| Settings | Theme, resource, Material 3, custom-token, and multi-design-system verification are mixed into one long settings document. | Separate global environment controls from independently launchable verification scenarios. |
+| About | Hard-coded module names, DSL counts, Modifier counts, Defaults counts, NodeType counts, and placeholder version/link values can become stale without a code failure. | Remove architecture/statistics content. Show generated build identity only when useful to reproduce a run. |
+| State | The benchmark controls are reachable, but route prose and a stable-target checklist consume most of the first screen; the actual state/effect fixture starts below it. | Keep action, reset, state, and result first; route metadata belongs to the scenario contract, not visible UI. |
+| Widget showcase | The catalog is relatively compact, but each entry is still a human-oriented description and automation must select a visible component name. | Retain human browsing while giving every component/property fixture a direct stable scenario route. |
+| Performance comparison / List | The dedicated Activity already has a compact ready marker, mutation/reset actions, and the measured list in the first viewport, with no general Demo shell. | Preserve this isolation pattern and add locale-independent machine targets plus workload revision. |
+
+### Structural findings
+
+1. **The catalog model has the wrong unit of identity.** `DemoModule` combines display title,
+   subtitle, availability, manual focus, benchmark path, and Activity class. A module can contain
+   several independent chapter tabs and fixtures, so its key cannot precisely identify the state or
+   workload under test.
+2. **Navigation and fixture identity are coupled.** The home uses a four-page
+   `HorizontalPager`; many module Activities then use another page selector inside a long
+   `LazyColumn`. Automation often has to navigate and scroll before it reaches the scenario.
+3. **Visible prose is executable test infrastructure.** Macrobenchmark helpers use localized text
+   for readiness, actions, state changes, tab selection, and scrolling. Copy editing can therefore
+   invalidate performance tests without changing behavior.
+4. **Human guidance is mounted as workload content.** `ScenarioSection`,
+   `BenchmarkRouteCallout`, `ChapterPageOverviewSection`, `ChapterPageFilterSection`, and
+   `VerificationNotesSection` place instructions, route data, module lists, and expected results in
+   the same hierarchy as the fixture.
+5. **Planning data has leaked into runtime UI.** Planned modules, roadmap gaps, module layering,
+   capability counts, and placeholder links duplicate repository documentation and inevitably
+   become stale.
+6. **The existing tag registry is broad but not ownership-safe.** One 410-line object contains
+   targets for unrelated scenarios. It does not encode roles, guarantee per-scenario completeness,
+   or provide an external-process resource selector.
+7. **Dedicated benchmark screens demonstrate a better boundary.**
+   `PerformanceComparisonActivity` selects a strict engine/scenario contract, fails on unknown
+   values, and mounts only the measured screen. This design should become the baseline for all
+   measured fixtures, not remain an exception.
+
+## Locked design principles
+
+### 1. Scenario, not module or page tab, is the unit of verification
+
+A scenario has one stable business identity, one deterministic initial state, one launch contract,
+and one independently assertable outcome. Categories are catalog filters only; they do not define
+runtime ownership or benchmark identity.
+
+Chapter tabs are removed unless tab behavior itself is the feature under test. Existing chapter
+pages are split into direct scenarios instead of being retained behind an initial-page index.
+
+### 2. The fixture is a reusable workload, not a whole screen document
+
+Each scenario separates:
+
+- the **fixture**, which owns the DSL and state being tested;
+- the **host**, which supplies Activity/window/lifecycle/environment boundaries;
+- the **automation contract**, which supplies machine targets and readiness;
+- the **benchmark contract**, which supplies workload revision and measured actions; and
+- the **human guide**, which supplies localized goal, steps, and expected result outside benchmark
+  mode.
+
+The same fixture may run in an interactive host and a benchmark host only when host differences do
+not change its semantics. A lifecycle-, window-, overlay-, navigation-, resource-, or system-UI
+scenario keeps a dedicated host.
+
+### 3. Machine identity is locale-independent and role-based
+
+Every scenario declares stable roles instead of ad hoc labels:
+
+| Role | Required | Meaning |
+| --- | --- | --- |
+| `root` | Always | The mounted scenario identity and bounds. |
+| `ready` | Always | Initial composition and deterministic setup are complete. |
+| `primary_action` | Interactive scenarios | The canonical state transition. |
+| `reset` | Mutable scenarios | Restores the declared initial state. |
+| `state` | Stateful scenarios | Machine-readable current state/result. |
+| `target` | Visual, input, or gesture scenarios | The principal View under verification. |
+| `secondary_*` | Only when necessary | Additional actions or results explicitly named by the scenario. |
+
+Names follow `demo.<scenario-id>.<role>` in the in-process bridge and
+`demo_<scenario_id>_<role>` for Android resource IDs. IDs are immutable after a baseline is
+published. Renaming display copy never renames a scenario or target.
+
+### 4. Black-box automation uses Android resource IDs, not accessibility copy
+
+The implementation creates an app-internal `DemoAutomationTarget` abstraction that applies both:
+
+- the existing `testTag` for in-process instrumentation and diagnostics; and
+- an app `R.id` through replay-safe `Modifier.nativeView` configuration for UiAutomator
+  `By.res(...)` queries.
+
+`contentDescription` remains localized accessibility content. It is never overloaded with an
+automation protocol. The Demo phase does not add a public framework API merely to solve an
+application-test selector problem.
+
+The exact helper shape may vary, but one target declaration must be the source used by both test
+bridges. A second hand-maintained 385-constant registry is not accepted.
+
+### 5. Visible text is a resource; wire values are not display text
+
+Default resources are canonical English and `values-zh-rCN` provides Simplified Chinese. Every
+title, label, action, status, hint, content description, formatted count, and plural resolves
+through `stringResource` or `pluralStringResource`.
+
+Stable scenario IDs, Intent extra names, enum wire values, test tags, trace section names, and
+synthetic data keys are deliberately not translated. Visible synthetic benchmark data uses shared
+resource format strings so paired ViewCompose/Compose workloads remain semantically identical.
+
+### 6. Benchmark workloads are revisioned and isolated
+
+Every measured scenario declares a monotonically increasing `workloadRevision`. The revision
+changes when row count, tree shape, content length class, action sequence, state fan-out, gesture,
+host chrome, or measured environment changes. Copy translation alone does not change a revision if
+selectors and workload shape remain equivalent; a material layout-length change requires fresh
+locale-specific evidence.
+
+Results with different scenario IDs or workload revisions are not longitudinally comparable. The
+benchmark report records both values.
+
+### 7. Project management never renders inside the Demo
+
+The following content is removed and prohibited from returning:
+
+- planned or future modules;
+- roadmap gaps and phase status;
+- manually copied module dependency/layer diagrams;
+- handwritten counts of APIs, components, modifiers, or node types;
+- benchmark route instructions intended for test authors; and
+- placeholder versions or links.
+
+Generated build variant, version, commit, host mode, locale, theme, font scale, density, and
+workload revision may be shown in a compact reproduction panel because they describe the running
+artifact rather than future work.
+
+## Target architecture
+
+### Scenario contract
+
+The registry is the single source of executable Demo inventory. A representative internal model is:
+
+```kotlin
+internal data class DemoScenarioSpec(
+    val id: DemoScenarioId,
+    val category: DemoScenarioCategory,
+    @StringRes val titleRes: Int,
+    @StringRes val summaryRes: Int,
+    val host: DemoHostPolicy,
+    val targets: DemoAutomationContract,
+    val benchmark: DemoBenchmarkContract?,
+    val guide: DemoHumanGuide?,
+    val fixture: DemoFixture,
+)
+```
+
+This is an internal design direction, not a public API signature. The implementation may split
+metadata from executable factories to avoid retaining Activity instances, Views, Contexts, or
+mutable state in the registry. The following invariants are mandatory:
+
+1. `DemoScenarioId` is immutable, non-localized, unique, and validated at startup/unit-test time.
+2. The registry contains executable scenarios only; there is no `Planned` state.
+3. Display resources are present in both supported locales.
+4. Every scenario declares `root` and `ready`; mutable scenarios declare `reset`.
+5. A benchmark contract cannot exist without an action sequence, target set, workload revision,
+   and environment policy.
+6. Factories do not capture an Activity, root View, Session, or previous scenario state.
+7. Unknown route IDs and unsupported extras fail deterministically.
+
+### Host policies
+
+| Host | Use | Examples |
+| --- | --- | --- |
+| Shared fixture Activity | Ordinary state, layout, component, gesture, graphics, and collection scenarios | Counter, keyed reorder, modifier patch, component state |
+| Dedicated Activity | Lifecycle, window, configuration, resource, system navigation, or external Android integration is part of the behavior | Resource configuration, cross-Activity theme, predictive Back |
+| Overlay-capable fixture host | Overlay behavior is the scenario and must use the real host integration | Dialog, snackbar, bottom sheet |
+| Benchmark fixture host | Release-like measured hierarchy with guidance and catalog disabled | State patch, list, complex layout, shadow comparison |
+| Preview/snapshot host | Static preview or deterministic image capture without device navigation | Component visual baselines |
+
+An ordinary scenario does not receive a new Activity merely for catalog organization. Conversely,
+a shared Activity is not used when it would erase the Android lifecycle boundary being verified.
+
+### Launch and route contract
+
+`MainActivity` remains the stable launcher package entry used by Macrobenchmark, but its routing
+unit changes from `EXTRA_DEMO_MODULE_KEY` to a strict scenario ID. Normal launch opens the catalog;
+a scenario extra redirects directly to the correct host and finishes the launcher shell.
+
+The hard cut is atomic:
+
+1. inventory all existing test and benchmark routes;
+2. assign their replacement scenario IDs;
+3. migrate callers and readiness selectors in the same implementation series;
+4. retain a temporary module-key adapter only while both sides are changed in one branch; and
+5. remove the adapter and `DemoModuleStatus` before the plan completes.
+
+No long-lived dual route system is permitted. Dedicated performance comparison engine/scenario
+extras may remain where they express a real workload dimension, but they are registered under the
+same baseline inventory.
+
+### Catalog and global environment
+
+The four-page bottom navigation and home `HorizontalPager` are removed. The root app has one
+compact scenario catalog with:
+
+- localized search;
+- category and verification-kind filters;
+- stable scenario ID, localized title, and small benchmark/manual/visual badges;
+- one launch target per row; and
+- toolbar access to environment controls and generated build information.
+
+Recommended catalog categories are test domains, not Maven or roadmap modules:
+
+1. Runtime and state;
+2. Rendering and layout;
+3. Collections and reuse;
+4. Input and interaction;
+5. Android integration;
+6. Navigation and lifecycle;
+7. Design systems and visual behavior; and
+8. Performance comparisons.
+
+Theme, locale, layout direction, font scale, density, reduced motion, and other supported global
+controls live in an Environment panel. Verification slices such as Material 3 defaults,
+multi-design-system switching, resource propagation, and One UI behavior remain direct scenarios,
+not settings entries.
+
+The About page is removed. A build-information panel may show values generated from the running
+build and scenario launch, never handwritten framework inventories.
+
+### Fixture-first page hierarchy
+
+Interactive mode uses this order:
+
+```text
+localized title + stable scenario ID + optional guide action
+ready/state strip + reset
+primary fixture
+primary action and observable result when not intrinsic to the fixture
+optional secondary fixture controls
+collapsed localized verification guide
+optional reproduction/build facts
+```
+
+Benchmark mode uses:
+
+```text
+ready target + workload revision
+measured controls required by the script
+measured fixture
+```
+
+The guide contains goal, steps, and expected result in a consistent structure. It is collapsed by
+default in interactive mode and absent from benchmark mode. Route strings, selector names, module
+lists, and project gaps never appear in it.
+
+For the 360 x 800 dp reference viewport at font scale 1.0, `ready`, the primary action, the primary
+observable result, and the beginning of the target fixture must be visible without scrolling. At
+font scale 1.3, the same targets must remain directly addressable without text-based search even if
+the visual layout scrolls.
+
+### Source ownership
+
+The target package shape is:
+
+```text
+demo/
+  contract/       scenario IDs, specs, host policies, workload revisions
+  registry/       validated executable inventory
+  automation/     target roles and app resource-ID bridge
+  catalog/        search, filters, environment entry, build facts
+  host/           shared, dedicated, benchmark, and preview hosts
+  guidance/       localized optional guide presentation
+  scenarios/
+    runtime/
+    rendering/
+    collections/
+    input/
+    interop/
+    navigation/
+    designsystem/
+    performance/
+```
+
+Files may be grouped further when a domain becomes large, but `core/` must not become another
+catch-all containing unrelated test metadata and UI.
+
+## Benchmark baseline model
+
+The rearchitecture distinguishes three kinds of evidence:
+
+| Evidence | Purpose | Shell policy |
+| --- | --- | --- |
+| Release baseline | Detect delivered-binary startup and state-patch regressions | Benchmark host only; strict scenario/revision |
+| Comparative performance fixture | Compare ViewCompose and Compose under the same data and actions | Dedicated comparison host; paired resources and models |
+| Interactive regression scenario | Reproduce behavior and collect device evidence | Shared/dedicated fixture host; optional guide outside measured interval |
+
+Each benchmark inventory row records at least:
+
+- scenario ID and workload revision;
+- host mode and engine where applicable;
+- build type and compilation mode;
+- deterministic setup and reset;
+- ready, action, state, and target resource IDs;
+- action or gesture sequence;
+- locale, theme, direction, font scale, density, and reduced-motion policy;
+- measured interval boundaries; and
+- invalidating changes since the previous revision.
+
+`DemoBenchmarkScope` is split by responsibility. Launching and querying resource targets remain
+generic; scenario-specific action scripts live beside their benchmark specs. General helpers no
+longer search an arbitrary document up and down for text.
+
+Existing `PerformanceComparisonActivity` data models and paired engine screens are retained as a
+positive baseline. Their visible strings and machine targets are migrated, but the data shape and
+measurement semantics do not change without a workload revision.
+
+## Execution plan
+
+| Phase | Status | Primary output | Exit gate |
+| --- | --- | --- | --- |
+| 0. Inventory and freeze | Not started | Scenario map, current selector map, current workload revisions, same-device baseline | Every existing automated path has an owner and replacement scenario ID before UI movement. |
+| 1. Contract and automation spine | Not started | Scenario registry, strict direct route, role-based targets, Android resource-ID bridge | Instrumentation and Macrobenchmark can launch/query a pilot scenario without visible text. |
+| 2. Host and catalog hard cut | Not started | Shared/dedicated/benchmark host policies, compact catalog, environment/build panels | Catalog contains executable scenarios only; top-level pager, About, planned modules, and gaps are removed. |
+| 3. Localization and content policy | Not started | Canonical English and Simplified Chinese resources, hard-coded-copy gate, localized guide model | Both locales pass; selectors and benchmark scripts are unchanged between locales. |
+| 4. Scenario migration | Not started | Fixture-first routes for every retained capability, chapter tabs split or explicitly justified | Primary fixture/action/result are directly reachable; old module/page wrappers have no callers. |
+| 5. Benchmark rebaseline | Not started | Revisioned release/comparison/interaction baselines and reports on the reference device | Same-device results pass the performance policy and record scenario/revision metadata. |
+| 6. Cleanup and Runtime-plan unlock | Not started | Old route/tag/section infrastructure removed; durable docs updated | Completion criteria pass, this plan is archived, then the Runtime/Patch plan is re-audited against the new baseline. |
+
+## Phase 0: Inventory and contract freeze
+
+Create one checked inventory row for every current catalog module, internal page selection,
+dedicated Activity, instrumentation launch, Macrobenchmark launch, and screenshot baseline.
+
+For each row decide:
+
+1. retain as one scenario;
+2. split into several independently launchable scenarios;
+3. merge because the difference is presentation-only;
+4. keep a dedicated host because Android ownership is under test; or
+5. remove because it is roadmap, documentation, placeholder, or duplicate content.
+
+Record current benchmark workloads before layout migration. At minimum capture cold startup, state
+patch, diagnostics long fling, list scroll/mutation, complex layout scroll/update, navigation
+motion, design-system slice, and advanced shadow comparisons under their existing scripts.
+
+Phase 0 changes no framework production behavior. It completes only when test owners approve the
+mapping and every historical comparison can be classified as retained, revised, or retired.
+
+## Phase 1: Contract and automation spine
+
+Implement the registry and target model with one pilot from each host class:
+
+- ordinary state fixture;
+- dedicated resource/configuration fixture;
+- overlay fixture;
+- system-navigation fixture; and
+- performance comparison fixture.
+
+Add strict validation tests for duplicate scenario IDs, duplicate target roles, missing resources,
+missing reset on mutable fixtures, missing workload revision on benchmarks, and unsupported host
+configuration.
+
+Migrate pilot instrumentation and Macrobenchmark scripts to `By.res(...)`. Add a source gate that
+rejects Demo-owned `By.text(...)`, text-scroll helpers, and direct visible-copy action selectors.
+System UI, IME, and third-party surfaces may use a narrow documented allowlist because the Demo
+does not own their resource IDs.
+
+Phase 1 is a prerequisite for localization. Do not translate the current text-selector protocol
+and then replace it later.
+
+## Phase 2: Host and catalog hard cut
+
+Replace `DemoModule`, `DemoModuleStatus`, `AVAILABLE_DEMO_MODULES`, `PLANNED_DEMO_MODULES`, the home
+pager, and the four bottom destinations with the validated scenario registry and compact catalog.
+
+Move global configuration controls into the Environment panel. Move theme/token/design-system and
+resource checks into direct scenarios. Replace About with generated build facts. Delete the gaps
+page and all planning/module statistics.
+
+Keep the current stable launcher component for external benchmark tooling. Validate that launcher
+redirect adds no measured frame after the scenario host begins and leaves no empty Activity in the
+task stack.
+
+## Phase 3: Localization and content hard cut
+
+Move visible source literals to resources domain by domain. Use canonical default English plus
+`values-zh-rCN`; format dynamic values through placeholders and plurals.
+
+Add mechanical gates for:
+
+1. resource-key parity between the two locales;
+2. format-argument and plural-item parity;
+3. hard-coded human-language literals in Demo production source;
+4. visible resource use in Activity titles, content descriptions, overlays, and native AndroidView
+   updates; and
+5. selector invariance across locale changes without Activity-process state leakage.
+
+Stable test data that is intentionally not language must be declared in a small allowlist with a
+reason. The allowlist cannot contain explanatory prose.
+
+## Phase 4: Scenario migration and page simplification
+
+Migrate fixtures by risk rather than file order:
+
+1. state, renderer diagnostics, collections, and layouts because they anchor the upcoming Runtime
+   and View patch baseline;
+2. input, gestures, graphics, animation, and modifiers;
+3. resources, AndroidView interop, overlays, navigation, and lifecycle;
+4. Material 3, custom-token, multi-design-system, and One UI verification; and
+5. component visual/showcase scenarios.
+
+Remove `ChapterPageOverviewSection`, `ChapterPageFilterSection`, `BenchmarkRouteCallout`, visible
+framework-module lists, visible stable-target lists, and repeated scenario-kind hints as their last
+callers migrate. Retain a small reusable guide presentation only for localized human verification.
+
+Do not preserve a chapter tab merely to reduce diff size. A hard cut is preferred when direct
+scenario identity produces a simpler and more reliable model.
+
+## Phase 5: Benchmark rebaseline and acceptance
+
+Build the release-like target, run the revised scenarios on the same device and thermal policy,
+and produce reports containing scenario ID and workload revision.
+
+For structurally unchanged workloads, apply the repository performance policy: P50 fails only when
+it regresses by more than both 5% and 0.3 ms; P95 fails only when it regresses by more than both 10%
+and 0.8 ms. Unstable runs are rerun rather than interpreted. A changed workload revision receives a
+new baseline and is never presented as an optimization against the old revision.
+
+The new Runtime/Patch plan audit may begin only after state patch, renderer diagnostics, list
+scroll/mutation, and complex-layout baselines have stable revisioned results.
+
+## Explicit removals and non-goals
+
+This plan removes or rejects:
+
+- using the Demo as the framework roadmap or module catalog;
+- planned-module cards and placeholder pages;
+- a top-level known-gaps destination;
+- static architecture/module/API-count content in About;
+- route instructions and selector names rendered as user content;
+- one giant Activity or pager holding every scenario Session alive;
+- one Activity per ordinary catalog grouping;
+- visible copy as a benchmark synchronization protocol;
+- content descriptions as hidden test IDs;
+- retaining chapter tabs for compatibility after callers migrate;
+- making screenshots the source of truth for behavior; and
+- changing framework runtime or renderer behavior merely to simplify the Demo.
+
+The plan does not redesign the framework's public diagnostics API, add a public automation-ID
+modifier, or decide the Runtime/Patch optimization phases. Those decisions require their own
+evidence after the new baseline exists.
+
+## Validation matrix
+
+| Area | Required evidence |
+| --- | --- |
+| Registry | Duplicate/missing ID, missing resource, target-role completeness, host-policy, and workload-revision unit tests |
+| Direct routing | Cold and warm launch for every scenario; strict unknown-ID failure; no empty launcher Activity |
+| In-process automation | Target lookup and interaction by the scenario contract, not manually copied strings |
+| Black-box automation | UiAutomator lookup through package resource IDs in English and Simplified Chinese |
+| Reset determinism | Launch, mutate, reset, relaunch, Activity recreation, and process restoration where applicable |
+| Configuration | Light/dark, locale, RTL, font scale 1.0/1.3, density override, and reduced motion for affected scenarios |
+| Accessibility | Localized content descriptions, logical traversal, touch targets, and no machine identifiers exposed as spoken copy |
+| Visual | Representative category screenshots in both locales and themes, plus focused component baselines |
+| Benchmark | Scenario/revision in output, deterministic ready/action/state targets, same-device P50/P95/heap/RSS evidence |
+| Lifecycle | Shared host disposal, dedicated host recreation, overlay cleanup, and no Session retained across unrelated scenarios |
+| Documentation | Active plan/index updated, durable performance/tooling docs updated with implemented contracts, structure/language gates pass |
+
+Expected implementation gates include:
+
+```bash
+./gradlew :app:testDebugUnitTest
+./gradlew :app:connectedDebugAndroidTest
+./gradlew :viewcompose-benchmark:connectedBenchmarkAndroidTest
+./gradlew qaRelease
+./gradlew benchmarkCompare
+./gradlew verifyDocumentationStructure
+```
+
+Narrow test tasks may be used while developing a phase, but completion requires the relevant full
+device and release-like evidence. Failures caused by existing unrelated environment instability
+must be recorded with exact commands and must not be silently treated as passing.
+
+## Risks and controls
+
+| Risk | Control |
+| --- | --- |
+| Direct routes change current benchmark workload | Freeze and revision workloads before moving UI; compare only equal revisions. |
+| Shared host erases lifecycle behavior | Dedicated host policy is part of the scenario spec and covered by host-class pilots. |
+| Resource migration changes text width and visual cost | Paired resources, locale matrix, screenshot evidence, and fresh locale-specific baseline where shape changes. |
+| Android resource IDs conflict with framework/internal View IDs | Use app-owned `R.id` values through one replay-safe helper; test insert, patch, reset, rollback, and reuse. |
+| Registry becomes another oversized central file | Keep immutable metadata in the registry and executable fixture definitions in owning scenario packages. |
+| Human guidance becomes undiscoverable | Provide one consistent localized guide action/card in interactive mode while keeping it absent from benchmark mode. |
+| Removing module chapters hides coverage | Generate coverage and catalog filters from executable scenario metadata; documentation remains the architecture source. |
+| Old test helpers survive beside the new contract | Add source guards and delete text/module adapters before completion. |
+
+## Documentation and release impact
+
+The planning-only change adds no public API and no Maven artifact change.
+
+During implementation:
+
+- update [Performance](../../tooling/performance.md) when benchmark identity, workload revision, or
+  report output becomes durable;
+- update [Capability verification](../capability-verification.md) when the direct-scenario device
+  workflow becomes authoritative;
+- update the Runtime/Patch plan only after the replacement baseline is recorded;
+- update app-internal comments and tests together with any hard-cut route or selector contract; and
+- add Maven release changesets only if published production source or publication inputs change.
+
+## Completion criteria
+
+This plan is complete only when all of the following are true:
+
+1. every retained Demo capability is represented by a unique directly launchable scenario;
+2. categories contain executable scenarios only and do not model future modules;
+3. no ordinary automation path selects Demo-owned UI by visible text;
+4. every scenario exposes `root` and `ready`, and every mutable scenario exposes deterministic
+   `reset` and observable `state` targets;
+5. default English and Simplified Chinese resources cover all visible Demo copy with passing parity
+   and format checks;
+6. catalog, fixture, environment, guidance, and benchmark host responsibilities are separated;
+7. planned modules, roadmap gaps, module architecture, static API counts, route prose, and
+   placeholder About content are removed;
+8. benchmark mode mounts no catalog, guide, About, or unrelated diagnostics hierarchy;
+9. every measured scenario reports a workload revision and has a same-device baseline under the
+   repository performance policy;
+10. old module-key routing, chapter-wrapper infrastructure, text-search benchmark helpers, and the
+    monolithic test-tag registry have no callers and are removed;
+11. instrumentation, Macrobenchmark, visual, configuration, lifecycle, documentation, and release
+    gates pass; and
+12. durable conclusions are moved to the owning active documents before this plan moves to
+    `docs/archive/`.
+
+The 2026-08-14 source-and-contract re-audit of the Runtime data propagation and Android View patch
+optimization plan is complete. Only after these criteria pass may its performance experiments begin;
+they must use the new scenario IDs and workload revisions rather than reconstructing baselines from
+the retired Demo layout.
+
+## Evidence ledger
+
+| Date | Evidence | Result |
+| --- | --- | --- |
+| 2026-08-14 | Source inventory across Demo pages, Activities, app instrumentation, and Macrobenchmark | Confirmed coarse module identity, Activity/page fragmentation, broad tag usage, and visible-text coupling. |
+| 2026-08-14 | Resource audit | Confirmed one app string resource and no second locale file versus at least 660 direct `text` literals. |
+| 2026-08-14 | Test selector audit | Confirmed 385 centralized tag constants, 319 production tag applications, and 136 Macrobenchmark text-helper calls. |
+| 2026-08-14 | Renderer test-tag path audit | Confirmed `testTag` is stored as `R.id.viewcompose_test_tag`, not an external-process Android resource ID. |
+| 2026-08-14 | Running-device layout/screenshot audit on SM-G991B | Captured catalog, four Diagnostics states, Settings, About, State, widget showcase, and performance-list comparison; findings are recorded in the screen matrix. |
+| 2026-08-14 | Debug APK build | `./gradlew :app:assembleDebug` passed. |
+
+## Decision history
+
+| Date | Decision |
+| --- | --- |
+| 2026-08-14 | Define the Demo as benchmark plus framework verification, with automation before human guidance. |
+| 2026-08-14 | Use independently launchable scenarios, not modules or chapter tabs, as the stable identity. |
+| 2026-08-14 | Remove roadmap, planned-module, known-gap, static architecture-count, and placeholder About content from runtime UI. |
+| 2026-08-14 | Add an app-owned Android resource-ID bridge before internationalizing text-dependent Macrobenchmarks. |
+| 2026-08-14 | Require explicit workload revisions and a replacement baseline before benchmarking or implementing Runtime/Patch performance work. |
+| 2026-08-14 | Permit Runtime/Patch source auditing and focused correctness work now, while keeping performance experiments blocked on this plan's replacement baseline. |

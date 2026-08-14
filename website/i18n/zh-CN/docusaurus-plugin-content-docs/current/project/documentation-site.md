@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 6e06cabf83fdb946006dc47498fcc69fb7df40cc009aafd94f172fc3de095d05
+translation_source_hash: b9b389b3519cffe38b2d9f566f025499735385109254b5b028310ebad80c4d24
 translation_status: current
 ---
 
@@ -81,12 +81,15 @@ Docusaurus 完成各 locale 构建后，受支持的构建入口会删除 `/zh-C
 静态副本。中文页面直接链接权威 API 树，因此这些副本只增加存储，并不提供本地化内容或受支持
 路由。
 
-预算模型把预期的发布历史增长与真正的回归分开：非 API 产物上限为 40 MiB；不可变
-artifact/version 树与未发布制品的工作树 `current` Dokka 共用 API 树预算，平均上限为
-4.5 MiB，任一单独树不得超过 24 MiB。只有 manifest 与重定向别名使用独立的 1 MiB 路由
-配额。其他上限为 Docusaurus 构建 120 秒、JavaScript 总计 8 MiB/单文件 768 KiB、CSS
-128 KiB、各 locale 搜索索引 5.5 MiB。门禁也会拒绝任何带 locale 前缀的 API 副本。提高阈值
-必须附有读者或发布价值的测量说明。
+预算模型把预期的发布历史增长与真正的回归分开：非 API 产物上限为 41 MiB。加入 Demo
+验证基座计划前，`main` 的干净构建已经达到 39.999791 MiB；发布这份可搜索的英文计划、对应的
+`zh-CN` 回退路由以及两个 locale 的搜索条目后，实测为 40.427350 MiB。因此，经审查的上限从
+40 MiB 调整为 41 MiB，而不是删除对读者有价值的规划证据。不可变 artifact/version 树与未发布
+制品的工作树 `current` Dokka 共用 API 树预算，平均上限为 4.5 MiB，任一单独树不得超过
+24 MiB。只有 manifest 与重定向别名使用独立的 1 MiB 路由配额。其他上限保持不变：Docusaurus
+构建 120 秒、JavaScript 总计 8 MiB/单文件 768 KiB、CSS 128 KiB、各 locale 搜索索引
+5.5 MiB。门禁也会拒绝任何带 locale 前缀的 API 副本。提高阈值必须附有读者或发布价值的测量
+说明。
 
 无障碍检查覆盖站点自有英文与本地化页面，检查文档语言、title/main landmark、标题顺序、
 accessible name、图片替代文本、表头、iframe title 和重复 ID；重定向 stub 与 Dokka 生成页
@@ -166,6 +169,11 @@ identity token。
 - Pages 产物健康但自定义域名失败时，单独诊断 DNS 与域名验证。
 
 ## 最近验证
+
+2026-08-14：对当前 `main` 与文档规划分支执行干净构建，测得非 API 产物分别为
+39.999791 MiB 与 40.427350 MiB。经审查的非 API 上限调整为 41 MiB，使直接链接的 Demo
+验证基座计划在英文站点及其中文回退路由中继续可搜索。JavaScript、CSS、搜索索引、API 树、
+路由和构建时间阈值均未改变。
 
 2026-08-06：干净完整历史构建从冻结 revision 重建 69 个不可变制品版本，并从工作树生成 9 个
 未发布 `current` API 树；不可变源码链接、manifest、退役历史、current/unreleased 与仅稳定版

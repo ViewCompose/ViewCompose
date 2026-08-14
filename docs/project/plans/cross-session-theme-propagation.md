@@ -2,20 +2,23 @@
 
 ## Status
 
-Active. The plan is landed, the Demo and navigation implementation are complete, and scoped
-automated and manual validation have passed. The aggregate device suite still has unrelated
-failures recorded below.
+Completed; awaiting linked Maven changeset publication and release-time archival. Pull request
+[#88](https://github.com/ViewCompose/ViewCompose/pull/88) merged the Demo and navigation
+implementation into `main` at `7b1f5f5a`. Scoped automated and manual validation passed, and the
+formerly unrelated 15-failure Demo device baseline was subsequently repaired in
+[#90](https://github.com/ViewCompose/ViewCompose/pull/90); the complete repository `qaFull` gate is
+green.
 
 This plan owns the bounded correction for application theme changes that cross Activity root
 sessions and retained `NavHost` destination sessions. It remains canonical English-only under the
-documentation-governance policy. When implementation and validation are complete, durable
-contracts move into the active theming, navigation, architecture, and module documents before this
-file moves to `docs/archive/`.
+documentation-governance policy. Durable contracts are recorded in the active theming, navigation,
+architecture, and module documents. This file remains active only because the linked Maven
+changeset has not yet been published.
 
-Last verified: 2026-08-12.
+Last verified: 2026-08-14.
 
-Next action: publish and merge the implementation pull request, then separately triage the
-unrelated aggregate device-suite failures before archiving the plan.
+Next action: include the linked immutable changeset in the intended Maven release and archive this
+plan immediately before Maven Central upload.
 
 ## Maven release changesets
 
@@ -242,7 +245,8 @@ changing a public/protected signature. Its documentation classification is:
 
 ## Completion criteria
 
-This plan is complete only when:
+All completion criteria are satisfied. The plan remains in the active directory only until its
+release-time archival gate:
 
 1. separate Activity sessions observe one Demo application theme source and the secondary-Activity
    return path passes manual and connected-device verification;
@@ -269,6 +273,8 @@ This plan is complete only when:
 | 2026-08-11 | `7a9617a0` | Repository validation | Full navigation, Material theme, and app unit tests; `verifyDocumentationStructure`; `verifyViewComposeReleaseIntent`; `qaQuick` | All passed; compiled Q3 sample and locale freshness verified | Run connected-device validation |
 | 2026-08-11 | `7a9617a0` | Connected-device validation | `qaFull` on unlocked Android 13 SM-G991B; isolated `secondaryActivityThemeSwitch_refreshesOriginalActivitySession` rerun | New cross-Activity test passed twice, including the 95-test run; aggregate `qaFull` failed because 15 unrelated UI/device tests outside the changed paths failed | Keep plan active and record the aggregate device-suite failures for separate triage |
 | 2026-08-12 | User-confirmed build | Manual validation | Switch theme in the secondary Activity, return to the primary Activity, and inspect the retained navigation page | Passed; both Activity roots and the revealed retained destination showed the selected theme | Publish the pull request and track it through merge to `main` |
+| 2026-08-12 | `7b1f5f5a` | Main integration | GitHub pull request #88 | Merged into `main`; the Demo source, retained-destination refresh, durable documentation, tests, and immutable changeset landed together | Retain the plan until its Maven release-time archival gate |
+| 2026-08-12 | `4b233adc` | Aggregate device follow-up | Complete repository `qaFull` recorded by the transactional-effect and Android-resource closeout | Passed 1,756 tasks, including all 96 Demo device tests, one Counter test, and two Tutorials tests | The unrelated 15-failure baseline is closed; no implementation or validation work remains in this plan |
 
 ## Decision history
 

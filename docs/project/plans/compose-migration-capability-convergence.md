@@ -2,618 +2,418 @@
 
 ## Status
 
-Active and ready for scheduling. This plan records the high-value capability work identified by
-the current Compose migration comparison, the evidence required before risky implementation, and
-the Compose behaviors that ViewCompose deliberately will not reproduce.
+Active after a 2026-08-14 implementation and contract re-audit. The retained plan now owns proven
+ViewCompose correctness and Android-ecosystem compatibility work, not general Compose API parity.
+Diagnostics are supporting test infrastructure only; they are not a product goal or an independent
+delivery phase.
 
-No implementation phase has started. The plan is ordered by product and correctness value rather
-than by Compose API count. Compiler plugins, compiler-generated restart groups, stability inference,
-and other compiler-owned optimizations are explicitly outside the comparison.
+No production slice or Maven changeset is currently owned by this plan. However, the previous claim
+that no implementation phase had started is obsolete: later work independently added partial
+ordinary keyed-sibling movement, transactional composition effects, `snapshotFlow`, deferred lazy
+session activation, and stronger Android View reuse/release behavior. Those implementations are
+audited below instead of being counted as unfinished work from this plan.
 
-Last verified: 2026-08-05.
+Last verified: 2026-08-14.
 
-Next action: schedule Phase 0, freeze the unresolved public contracts, and capture the required
-host, navigation, identity, inset, and restoration baselines before selecting the first production
-release slice.
+Next action: schedule the Phase 0 focused reproductions, then implement the Phase 1 runtime
+transaction and key-identity hardening slice. Do not begin a convenience API or conditional
+protocol while a retained P0 correctness defect remains open.
 
 ## Maven release changesets
 
 - None.
 
+The first production slice selected from this plan must add and list its immutable
+`release/changes/*.json` file before implementation is considered complete.
+
 ## Objective
 
-Close the migration gaps that materially affect correctness, Android ecosystem integration, or
-common application architecture while preserving ViewCompose's native Android View engine and its
-existing transactional boundaries.
+Resolve migration-relevant defects that can cause lifecycle leaks, incomplete state persistence,
+ambiguous runtime identity, incorrect RTL output, or broken Android ViewModel integration while
+preserving ViewCompose's native Android View engine and transactional render boundaries.
 
-The plan has five outcomes:
+This plan is complete without matching the number, names, or internal implementation of Compose
+APIs. A difference is retained when ViewCompose's behavior is correct, documented, and better
+aligned with Android View ownership.
 
-1. lifecycle, session disposal, saveable state, and Android View callback contracts agree across
-   source, tests, and documentation;
-2. navigation owners interoperate with parent ViewModel factories and `CreationExtras`, and common
-   stack rewrites remain atomic;
-3. ordinary keyed composition identity, RTL edges, and WindowInsets have explicit, tested behavior;
-4. existing View hierarchies gain an optional safe owner/disposal integration without weakening the
-   low-level `renderInto` contract; and
-5. high-risk or low-value Compose parity work stays rejected unless a new product requirement and
-   new evidence change the decision.
+## Re-audit conclusion
 
-This is not a goal to make ViewCompose a drop-in implementation of Compose Runtime, Compose UI,
-Navigation 2, or Navigation 3.
+The original plan mixed four different kinds of work:
+
+1. proven defects in current lifecycle or transaction behavior;
+2. partially implemented behavior that now needs contract hardening;
+3. valuable but independently schedulable migration capabilities; and
+4. speculative parity work with no demonstrated product requirement.
+
+Only the first two categories remain immediate work. Required Android correctness items stay in
+this plan at a lower priority. Convenience features and speculative protocols are explicitly
+deferred or rejected so they cannot silently become release blockers.
 
 ## Scope
 
-The required and conditional work can affect:
+Retained work may affect:
 
-- `viewcompose-android`: Activity/Fragment hosting and automatic owner integration;
-- `viewcompose-host-android`: low-level ViewTree owner integration, frame/session terminal behavior,
-  and Android View public callback documentation;
-- `viewcompose-runtime` and `viewcompose-ui-foundation`: keyed composition identity, remember/effect
-  movement, saveable-state claim recovery, and focused snapshot/derived-state correctness tests;
-- `viewcompose-navigation-core` and `viewcompose-navigation-android`: entry and graph owners, atomic stack
-  commands, deep-link query policy, retained destination diagnostics, and process restoration;
-- `viewcompose-ui-contract`, `viewcompose-renderer-android`, and layout-owning widget modules: logical edge
-  contracts, scoped Box parent data, WindowInsets application and consumption, and renderer
-  diagnostics;
-- `viewcompose-benchmark`, Demo/device certification surfaces, and owning module tests where a
-  performance, memory, Android lifecycle, or mixed-View claim requires executable evidence;
-- active migration, architecture, guide, tooling, module, and localized public documentation when
-  an implemented phase changes current behavior or public API.
+- `viewcompose-runtime` and `viewcompose-ui-foundation`: commit-callback failure recovery, restored
+  saveable-state claims, keyed composition identity, duplicate-key policy, and abort behavior;
+- `viewcompose-host-android` and `viewcompose-android`: public session terminal behavior, Fragment
+  View-lifecycle ownership, and Android View release documentation;
+- `viewcompose-navigation-core` and `viewcompose-navigation-android`: deep-link contract alignment,
+  parent ViewModel Factory and `CreationExtras` inheritance, and cross-stack owner evidence;
+- `viewcompose-ui-contract` and `viewcompose-renderer-android`: logical start/end edge APIs and
+  direction-aware renderer resolution; and
+- focused tests, owning module manuals, migration guides, compiled samples, localized public
+  documentation, and release intent required by each implemented slice.
 
-The image-loading protocol migration is not part of this plan. Its migration page compares old and
-new ViewCompose APIs rather than ViewCompose and Compose engine capabilities, and it remains owned
-by the separate image-loading plan.
+The plan does not own the developer preview locator, render-tree inspector, general diagnostics
+UI, Material 3 fidelity, lazy-list physical reuse, or configuration-aware Android resources.
 
-## Non-goals
+## Audited decisions
 
-This plan does not include:
+| Area | Current evidence | Necessity and priority | Decision |
+| --- | --- | --- | --- |
+| Fragment content lifecycle | The session follows the current Fragment View lifecycle, but content still receives the Fragment as `LocalLifecycleOwner`. | P0: proven owner mismatch can keep View-bound collection and effects active past `onDestroyView`. | Required correctness fix. |
+| RenderSession terminal contract | Public host documentation says fail-fast, while Android runtime `render`, invalidation, and activation paths can silently return after disposal. | P0: caller misuse must be deterministic; queued internal callbacks still need race-safe no-op behavior. | Required contract and implementation fix. |
+| Commit-callback and saveable registration failure | `SaveableHolder.onRemembered` can fail registering a provider after its lifecycle has become active; the frame records the failure but does not restore registration or retry state. | P0: proven transaction hole can leave a committed composition unsaveable. | Required architecture fix with focused failure recovery. |
+| Ordinary keyed sibling identity | The 2026-08-14 lazy-ownership hard cut added keyed `RecomposeScope` movement and remember/saveable tests. Duplicate logical keys, effect/observation ownership, arbitrary edits, and abort restoration are not fully proved. | P0: behavior is already on the general runtime path, so an ambiguous contract is riskier than a missing feature. | Keep only after exhaustive hardening; otherwise revert movement and narrow the API contract. |
+| Android View release | Renderer rollback, committed removal, session disposal, and final reuse-cache eviction release abandoned Views; public `AndroidViewNodeProps` wording still omits rollback candidates. | P1 and low cost: implementation is retained; public contract is stale. | Documentation/KDoc correction only unless tests find a behavior defect. |
+| Unknown deep-link query keys | Resolver accepts extra keys and ignores them; some ViewCompose documentation previously suggested exact key equality. AndroidX Navigation also treats extraneous query parameters as irrelevant to URI matching. | P1 and low risk: current behavior is useful for tracking parameters and is not a routing security issue when unknown values never enter route arguments or launch decisions. | Retain permissive matching, add explicit non-influence tests, and correct documentation. Do not implement strict rejection by default. |
+| Navigation parent Factory and extras | Entry and graph owners construct a `SavedStateViewModelFactory` and fresh extras from Application/route defaults rather than inheriting the intended parent owner. | P1: concrete DI and Android ViewModel ecosystem compatibility gap. | Required after P0 runtime/host work. |
+| Cross-stack owner isolation | Core IDs are globally isolated and collisions are rejected, but same-route/same-key Android ViewModelStore isolation lacks a focused test. | P1 evidence: expected implementation is plausible but the public claim is under-certified. | Add focused evidence with the Factory/Extras slice; change behavior only if the test fails. |
+| Logical start/end edges | ConstraintLayout and some collection padding are logical, while general padding, margin, offset, and inset selectors remain physical. | P1: real RTL correctness gap, independent of Compose parity. Android Views already expose native direction-aware primitives. | Required as a separate public-API slice after P0 work. Preserve existing physical APIs. |
+| Non-navigation process restoration | Activity recreation is tested; real process-death evidence exists for Navigation but not for a general Activity root. | P1 certification: public saveable-state claims should include the platform-owned restoration path. | Add device evidence; production changes require a reproduced failure. |
+| Atomic pop-to-existing-entry | No single rollback-safe command exists. | P2 feature: valuable and common, but not a defect in an existing command and not required for lifecycle/state correctness. | Move to a separately scheduled Navigation enhancement plan when product demand exists. |
+| Snapshot and derived-state certification | Core snapshot, nested mutable snapshot, derived state, and `snapshotFlow` exist; some nested derived/dependency-switch/failure scenarios remain untested. | P2 evidence: no current failure demonstrates a release-blocking defect. | Add opportunistically with Runtime work; do not authorize a new optimization or collection API. |
+| Nested WindowInsets consumption | Current modifiers apply physical padding and return the original `WindowInsetsCompat`; nested owners can therefore apply the same inset twice. | Conditional: a full Compose-style consumed-inset environment would duplicate platform machinery and complicate mixed View trees. | Retain and document explicit single-owner-per-type/edge behavior. Add a general protocol only after a reproduced mixed-tree requirement and a separate design review. |
+| ViewTree-aware high-level host | Raw `renderInto` intentionally installs no owners; Activity and Fragment integrations cover first-party common hosts. | Deferred convenience API: no current leak proves another public host is necessary. | Require a concrete embedding use case before a separate plan. Keep raw `renderInto` explicit. |
+| `BoxScope.matchParentSize` | No equivalent exists. | Deferred layout convenience: useful but not a correctness defect and unrelated to ownership convergence. | Schedule only from a layout product requirement; never alias it to `fillMaxSize`. |
+| Hidden navigation session disposal | Hidden destinations retain state and Views while frame rendering is inactive. | Conditional optimization: current behavior preserves fast switching and page identity; no representative memory regression is recorded. | Keep current default. Require same-device memory evidence before an opt-in policy experiment. |
 
-- a Compose compiler plugin, compiler-generated groups, change masks, stability inference, strong
-  skipping, or automatic lambda memoization;
-- a general Compose-style `Layout`, `MeasurePolicy`, measurable/placeable protocol, or intrinsic
-  measurement engine;
-- a public application-defined `Modifier.Node` lifecycle or capability-dispatch system;
-- Compose constraint-chain parity, fractional fill parity, required-size parity, or general
-  intrinsic-size parity;
-- `SnapshotStateList`, `SnapshotStateMap`, `SnapshotStateSet`, or `snapshotFlow` without a separate
-  product use case;
-- tracked and static `UiLocal` variants that turn local lookup into implicit observation;
-- arbitrary `Parcelable`, `Serializable`, or application-object navigation arguments;
-- a complete `NavOptions` clone, Navigation3 scene/metadata engine, Activity or Fragment
-  destinations, or Fragment-in-render-tree support;
-- action- or MIME-based deep-link matching inside the navigation core;
-- a dedicated ViewBinding renderer node when `AndroidView` inflation is sufficient;
-- changing the transaction-aware `AndroidView` callback phases to match Compose callback timing;
-- making direct NavigationEvent APIs a prerequisite while Activity's compatible
-  `OnBackPressedDispatcher` path still covers system Back and Predictive Back;
-- automatically disposing every hidden navigation destination by default;
-- derived-state equal-result suppression, nullable mutation-policy merge redesign, or another
-  performance-only runtime change without a separately measured trigger; or
-- retaining an experimental implementation whose correctness, targeted operation reduction, or
-  representative end-to-end benefit cannot be demonstrated.
+## External behavior decisions
 
-## Current baseline
+The re-audit intentionally corrects two assumptions from the original plan:
 
-The baseline is the implementation and migration documentation reviewed on 2026-08-05.
+1. AndroidX Navigation documents that extraneous query parameters do not affect URI matching.
+   ViewCompose therefore retains extra-query tolerance while guaranteeing that undeclared values do
+   not become route arguments, alter specificity, select a stack, or choose a launch mode.
+2. Android View Insets consumption is a platform dispatch decision. Mixed View hierarchies require
+   an explicit owner, and consuming at one View can affect descendants and, on older Android
+   versions, sibling dispatch. ViewCompose will not create an implicit per-node Compose Insets
+   runtime without a demonstrated requirement.
 
-| Area | Current behavior | Consequence |
-| --- | --- | --- |
-| Fragment lifecycle | `Fragment.setUiContent` installs the Fragment as `LocalLifecycleOwner`, while session disposal follows the current `viewLifecycleOwner`. | View-bound collection and cleanup can outlive `onDestroyView`. |
-| Session terminal behavior | `RenderSession.dispose()` is idempotent, but some public render/activation calls silently no-op after disposal while documentation describes fail-fast behavior. | Use-after-dispose can remain hidden and the public contract is not deterministic. |
-| Android View release | Renderer rollback releases an uncommitted candidate, while public `AndroidView.onRelease` wording names only committed removal and session disposal. | Implementation and KDoc disagree even though rollback cleanup is required. |
-| Deep-link query matching | Tests accept additional unregistered query keys while the navigation guide describes exact query-key matching. | Security and compatibility behavior is unresolved. |
-| Navigation owners | Destination and graph owners create saved-state-aware factories from Application and route defaults but do not establish complete parent factory and `CreationExtras` inheritance. | Custom DI/factory inputs are not reliably available in page scopes. |
-| Multiple stacks | Entry identities isolate retained owners, but same-route/same-key cross-stack isolation lacks a focused parity test. | Store isolation is expected but not fully certified. |
-| Stack commands | Push, `SingleTop`, pop, replace, reset, stack selection, and deep-link commands are transactional. There is no atomic pop-to-existing-entry command. | Applications cannot express common `popUpTo` results without multiple non-atomic pops. |
-| Ordinary keyed identity | `key` isolates group identity at the current position, but ordinary sibling reorder does not move remember, observation, and effect scopes. Lazy item keys do support item movement. | The public key wording is stronger than ordinary composition behavior. |
-| Layout direction | Direction and locales reach VNodes and native Views, but general padding, margin, offset, and inset selectors use physical left/right edges. | Compose start/end migrations can be wrong in RTL. |
-| WindowInsets | System bars and IME can add physical-edge padding, but nested ViewCompose nodes do not exchange consumed state and mixed View/ViewCompose behavior lacks end-to-end evidence. | Ancestors and descendants can apply the same inset more than once. |
-| Existing View hierarchy | `renderInto` deliberately installs no owner and requires explicit disposal. | The low-level boundary is clear, but ordinary ViewTree embedding remains easy to leak or misconfigure. |
-| Saveable restoration | Restored values use claim/commit/release, but provider-registration failure during composition commit lacks focused recovery coverage. | A committed-frame failure may leave a claim/provider lifecycle in an unclear state. |
-| Process restoration | Navigation has broad restore coverage; a general non-navigation Activity-root process-kill certification is still missing. | Recreation evidence is narrower than the documented host surface. |
-| Hidden destinations | Non-visible stacks retain RenderSessions, native Views, composition state, and effects while frame rendering is inactive. | Fast switching is preserved at a potentially significant memory and background-work cost. |
+Authoritative references:
 
-Authoritative comparison pages:
+- [Android Navigation deep-link matching](https://developer.android.com/guide/navigation/design/deep-link)
+- [Compose lifecycle and keyed identity](https://developer.android.com/develop/ui/compose/lifecycle)
+- [Insets in mixed Views and Compose trees](https://developer.android.com/develop/ui/compose/system/insets-views-compose)
+- [Edge-to-edge Insets handling for Android Views](https://developer.android.com/develop/ui/views/layout/edge-to-edge)
 
-- [Migration overview](../../migration/README.md)
-- [State, recomposition, and restoration](../../migration/compose-state-recomposition-and-restoration.md)
-- [Layout, Modifier, and environment](../../migration/compose-layout-modifier-and-environment.md)
-- [Host lifecycle and Android interop](../../migration/compose-host-lifecycle-and-android-interop.md)
-- [Navigation](../../migration/compose-navigation.md)
+## Locked principles
 
-## Locked decision principles
+### 1. Fix ViewCompose correctness, not API-count differences
 
-### 1. Correctness and Android ownership outrank API parity
+A current lifecycle, transaction, state-identity, RTL, or Android owner defect can justify work.
+An absent Compose-named convenience API cannot justify work by itself.
 
-A lifecycle owner mismatch, lost restoration opportunity, ambiguous deep-link rule, or non-atomic
-stack rewrite is higher priority than a missing Compose-named layout or modifier API.
+### 2. Reproduction precedes production change
 
-### 2. Preserve the native Android View engine
+Every retained defect begins with one focused failing test that demonstrates current behavior. Use
+existing structured failure reports where sufficient. Do not build a broad diagnostics subsystem
+as a prerequisite.
 
-New behavior should reuse View measurement, `LayoutParams`, ViewTree owners,
-`WindowInsetsCompat`, AndroidX lifecycle, and native interop. Do not create a second general layout
-or modifier runtime merely to match Compose concepts.
+### 3. Preserve Android View and transaction ownership
 
-### 3. Preserve prepare, commit, rollback, and explicit ownership boundaries
+Keep native View measurement, `LayoutParams`, ViewTree owners, `WindowInsetsCompat`, and explicit
+RenderSession ownership. Preserve prepare, native-tree commit, composition/effect commit, rollback,
+and permanent release boundaries.
 
-No phase may publish irreversible work before native-tree commit, make rollback release less
-complete, retain a View beyond its owner, merge independently disposable RenderSessions, or hide
-session ownership behind a process-global registry.
+### 4. Caller errors and internal races are different contracts
 
-### 4. Add narrow primitives instead of broad compatibility surfaces
+Public caller-initiated work after terminal disposal fails fast. Already queued internal frame or
+invalidation callbacks may no-op after proving that they cannot render, retain work, or publish
+effects.
 
-Prefer one atomic pop-to command over a `NavOptions` clone, logical edge values over Compose layout
-constraints, `BoxScope.matchParentSize` over a general measure policy, and a high-level ViewTree host
-over implicit behavior in the low-level `renderInto` API.
+### 5. Key moves one complete logical scope or does not move
 
-### 5. High-complexity behavior starts with tests and diagnostics
+If ordinary `key` movement remains, remember values, effects, observations, child scopes,
+saveable paths, and rollback checkpoints move together. Duplicate effective keys under one parent
+must fail before state can alias. A partial identity move is not an acceptable optimization.
 
-Keyed sibling movement, nested inset consumption, and hidden-session retention changes must begin
-with current-behavior tests, failure-path tests, and representative performance or memory evidence.
-Production changes must be separately revertible. Useful tests and diagnostics remain if an
-experiment is rejected.
+### 6. Existing physical edges remain physical
 
-### 6. Public contracts become deterministic before optimization
+Logical start/end APIs are additive. Existing left/right padding, margin, offset, and inset calls
+must never silently change meaning under RTL.
 
-When KDoc, implementation, migration guidance, and tests disagree, freeze the intended contract
-first. A performance improvement cannot justify leaving lifecycle, cleanup, persistence, or
-security behavior ambiguous.
+## Phase 0: Focused reproductions and contract freeze
 
-## Priority and scheduling decision
+Phase 0 is a test-first gate, not a diagnostics feature phase. Add the smallest executable evidence
+for:
 
-| Priority | Work item | Expected value | Complexity | Scheduling decision |
-| --- | --- | --- | --- | --- |
-| P0 | Fragment view-lifecycle alignment | Very high lifecycle and leak correctness | Medium to high | Required; test-first correctness work |
-| P0 | RenderSession terminal contract | High ownership correctness and diagnostics | Low | Required |
-| P0 | AndroidView release and deep-link query contract convergence | High contract confidence for low cost | Low to medium | Required |
-| P0 | Navigation parent Factory/`CreationExtras` inheritance and cross-stack isolation evidence | Very high ViewModel/DI compatibility | Medium | Required |
-| P1 | Ordinary keyed-sibling scope movement | High state/effect correctness for dynamic trees | High | Baseline and rollback gated |
-| P1 | Logical start/end edges | High RTL correctness | Low to medium | Required after P0 |
-| P1 | Atomic pop-to-existing-entry command | High navigation correctness and ergonomics | Medium | Required after owner work |
-| P1 | Nested WindowInsets consumption | High edge-to-edge correctness | High | Baseline and rollback gated |
-| P2 | ViewTree-aware high-level render host | Medium to high embedding safety | Medium | Required without changing raw `renderInto` |
-| P2 | Saveable/snapshot/process-death hardening | Medium correctness and certification value | Low to medium | Required evidence; behavior change only if proven |
-| P2 | `BoxScope.matchParentSize` | Medium layout ergonomics with a narrow boundary | Medium | Schedule after core correctness work |
-| Conditional | Hidden destination retention policy | Potentially high memory value | High | Diagnostics first; no default change |
-| Conditional | Arbitrary subtree ViewModel scope provider | Product-specific ownership value | Medium to high | Do not schedule before parent inheritance is complete |
-| Deferred | Direct NavigationEvent surface | Future integration value | Medium | Revisit only for a direct nested/forward/Preview requirement |
-| Deferred | Derived-state equal-result suppression | Workload-specific performance value | High | Keep outside this plan unless separately measured |
+1. Fragment content observing the current View lifecycle across `onCreateView`, `onDestroyView`, and
+   View recreation without retaining the previous View generation;
+2. public `RenderSession.render` and rendering-activation calls after disposal, separated from
+   already queued internal invalidations;
+3. restored saveable state whose provider registration fails during composition commit, including
+   claim visibility in `performSave`, later retry, successful registration, and disposal; and
+4. keyed siblings under insertion, deletion, head/tail movement, arbitrary reorder, duplicate keys,
+   effect/observation ownership, saveable paths, prepared-composition abort, and committed removal.
 
-## Release slicing policy
-
-The work is intentionally separable so maintainers can schedule it across release windows.
-
-1. A release slice should contain one coherent ownership or behavior change plus its tests,
-   documentation, and immutable Changeset.
-2. The first production change selected directly from this plan must replace `- None.` in
-   `Maven release changesets` with every Changeset owned by this plan.
-3. If maintainers need to publish one slice while later slices remain unscheduled, extract the
-   selected slice into a narrowly scoped child execution plan before production implementation.
-   The child plan owns its Changeset and implementation evidence; this plan retains only the shared
-   ranking and handoff status. Do not duplicate the architecture rationale.
-4. A plan that owns a Changeset must complete, move durable conclusions into active documents, and
-   archive before Maven Central accepts the affected direct or dependency-propagated artifacts.
-5. Conditional and deferred items do not block completion when their trigger was not met and the
-   decision is recorded in the evidence ledger.
-
-## Phase 0: Contract freeze, diagnostics, and current-behavior baselines
-
-### Goal
-
-Make every later change observable and establish the exact current behavior before changing a
-public or lifecycle contract.
-
-### Required baselines
-
-Add focused evidence for:
-
-1. Fragment `onCreateView`, `onViewCreated`, `onDestroyView`, view recreation, and Fragment
-   destruction, recording the owner visible through `LocalLifecycleOwner` and the exact disposal
-   reason;
-2. public `RenderSession.render`, activation, and repeated disposal before and after terminal
-   disposal, separated from already-queued internal callbacks;
-3. Android View candidate creation, failed-frame rollback release, committed removal, and session
-   disposal, asserting exactly-once `onRelease`;
-4. deep-link query matching with exact keys, missing keys, duplicate keys, additional keys, malformed
-   encodings, and security-sensitive values;
-5. ordinary keyed siblings under insertion, deletion, head/tail movement, arbitrary reorder,
-   duplicate keys, prepared-composition abort, and committed removal;
-6. navigation entry/graph Factory and `CreationExtras` provenance plus same-route entries in
-   different stacks;
-7. raw, consumed, and applied Insets per type and physical edge in nested and mixed View trees;
-8. hidden navigation session, native View, active effect, and owner counts by stack; and
-9. restored claims, active providers, failed registrations, released claims, and the value included
-   by `performSave` after each failure path.
-
-Diagnostics must be test-visible or debug-only and must not retain owners, Views, or unbounded event
-history. Release paths with diagnostics disabled must remain allocation-free or use an already
-approved diagnostics mechanism.
-
-### Contracts to freeze
-
-Before Phase 1 implementation, record executable expectations for these decisions:
+Contract freeze:
 
 - Fragment content lifecycle follows the Fragment View lifecycle. ViewModel and saved-state owners
-  are selected independently and follow the documented Android Fragment ViewTree contract.
-- `RenderSession.dispose()` stays idempotent; public render/activation calls after disposal fail
-  fast; queued internal callbacks may safely no-op.
-- `AndroidView.onRelease` covers permanent abandonment of every created candidate, including
-  rollback, committed removal, and session disposal.
-- Unknown deep-link query keys are rejected by default. A future opt-in compatibility policy
-  requires an explicit API and separate security tests.
-- Ordinary `key` is intended to move a complete composition scope among siblings under one parent.
-  If the Phase 3 experiment cannot make that safe, the implementation is reverted and public
-  wording is narrowed to positional isolation.
+  remain independently selected according to the documented host contract.
+- `dispose()` remains idempotent; public work after disposal fails fast; queued internal work is
+  safely ignored.
+- A failed remember activation cannot leave an attached remembered object that is neither fully
+  active nor safely retryable. Restored state remains saveable until provider ownership commits.
+- Ordinary `key` movement is retained only as a complete logical-scope operation with duplicate-key
+  rejection.
 
-### Phase 0 completion gate
+Phase 0 completes when every current behavior is reproduced, the intended contract is executable,
+and the first production changeset is registered. No broad logging or inspector dependency is
+allowed.
 
-- Every current behavior above is protected or intentionally recorded by a focused test.
-- No production behavior changes.
-- The first release slice and its owning plan are selected.
-- Baseline results and unresolved blockers are recorded in the evidence ledger.
+## Phase 1: Runtime transaction and key-identity hardening
 
-## Phase 1: Host and public-contract correctness
+### Commit-callback recovery
 
-### Fragment owner alignment
+Design commit callback state so a throwing `RememberObserver.onRemembered` cannot leave a false
+Active lifecycle. The solution must define:
 
-Do not directly access `viewLifecycleOwner` before Fragment view creation completes. Implement a
-two-stage binding that:
+- whether the failing candidate is compensated, abandoned, or retained for a deterministic retry;
+- how already successful callbacks in the same commit remain exactly-once;
+- how restored claims, provider entries, `performSave`, later recomposition, and disposal behave;
+- how a frame already committed to the native tree reports recovery; and
+- how multiple callback failures preserve the first cause and bounded structured diagnostics.
 
-1. creates and returns the root without publishing a false long-lived lifecycle boundary;
-2. binds or rebinds the content lifecycle when the current View lifecycle owner becomes available;
-3. disposes the session exactly once at `onDestroyView` or earlier permanent teardown;
-4. does not keep an observer or View from a previous Fragment view generation; and
-5. preserves the intended Fragment-scoped ViewModel and saved-state ownership independently from
-   the View lifecycle owner.
+Do not special-case away the failure solely in `rememberSaveable` if the general RememberObserver
+lifecycle can still enter an impossible state.
 
-If preserving a synchronous fully composed first frame conflicts with truthful owner identity, the
-implementation must document and test the selected ordering. Do not introduce a proxy owner whose
-lifecycle events can diverge from AndroidX unless an ADR establishes that contract.
+### Ordinary keyed identity
+
+Audit the current `RecomposeScope` movement implementation rather than adding a second key system.
+Retain it only if tests prove:
+
+1. duplicate effective keys fail deterministically before any state or effect can alias;
+2. remember, `RememberObserver`, DisposableEffect, coroutine effects, observations, children, and
+   saveable namespaces remain bound to business identity;
+3. insertion, deletion, reorder, and removal publish balanced lifecycle callbacks;
+4. prepared composition abort restores ordering, observations, effects, and invalidation queues;
+5. unchanged positional trees do not regress beyond repository performance policy; and
+6. implementation remains local to composition identity rather than leaking into renderer-native
+   reconciliation.
+
+If any invariant cannot be made reliable, revert ordinary movement, keep the tests, and narrow
+`key` KDoc to positional isolation. Lazy item identity remains owned by the collection Session
+architecture and is not reverted with ordinary composition movement.
+
+## Phase 2: Host lifecycle and terminal ownership
+
+### Fragment View lifecycle
+
+Use a two-stage Fragment binding that does not read `viewLifecycleOwner` before it exists and does
+not publish the Fragment lifecycle as the content lifecycle:
+
+1. create the returned root without retaining a previous View generation;
+2. compose or bind content when the current View owner is available;
+3. dispose exactly once at `onDestroyView` or earlier permanent teardown;
+4. remove observers and references from the previous View generation; and
+5. preserve the documented Fragment-scoped ViewModel and saved-state ownership independently.
+
+Do not invent a proxy LifecycleOwner unless a separate ADR proves that it cannot diverge from
+AndroidX lifecycle events.
 
 ### RenderSession terminal behavior
 
-- keep `dispose()` idempotent and best-effort across cleanup failures;
-- fail fast on caller-initiated render or activation after terminal disposal;
-- keep internal scheduled invalidations race-safe and non-rendering after disposal; and
-- add diagnostics that name the disposed session and rejected operation without retaining the host.
+- keep disposal idempotent and best-effort across cleanup failures;
+- fail fast for caller-initiated render or activation after disposal;
+- keep scheduled invalidations and frame callbacks race-safe and non-rendering after disposal; and
+- make public KDoc, host manual, migration guidance, and tests state the same boundary.
 
 ### Android View release wording
 
-Update canonical-English KDoc, compiled samples if affected, host/renderer module manuals, migration
-pages, and Chinese mirrors so rollback-candidate release is part of the public contract. Preserve
-the current transaction-aware callback phases; do not remove rollback cleanup to imitate Compose.
+Correct canonical-English KDoc, owning module manuals, migration pages, compiled samples when
+affected, and Chinese mirrors. `onRelease` is one-shot permanent-abandonment cleanup, including an
+uncommitted rollback candidate, committed removal, final reuse-cache eviction, and session
+disposal. Preserve the stronger transaction-aware behavior instead of imitating Compose callback
+timing.
 
-### Deep-link query policy
+## Phase 3: Navigation contract and owner compatibility
 
-Align resolver tests, navigation guide, module manuals, and migration pages on strict unknown-query
-rejection. If compatibility data demonstrates a need for extra tracking parameters, design a
-separate explicit declaration rather than silently accepting them.
+### Extra query parameters
 
-### Phase 1 completion gate
+Retain current permissive matching and add tests proving unknown query values:
 
-- Fragment view recreation cannot leave old collection/effect/View ownership alive.
-- Public and internal session operations have deterministic post-disposal behavior.
-- Every created Android View candidate is released exactly once on every permanent-abandon path.
-- Deep-link resolver, guide, migration page, and tests state the same query policy.
-- Applicable API quality, sample, documentation, and Changeset gates pass.
+- do not enter `NavRoute.arguments`;
+- do not increase match specificity or resolve an otherwise ambiguous destination;
+- do not select a retained stack or launch mode; and
+- remain inert even when their names resemble registered placeholders.
 
-## Phase 2: Navigation ownership and atomic stack operations
+Update the navigation guide, migration matrix, and module manuals to remove exact-query-key wording.
+An application that needs signed or exact URLs validates them before routing; a future strict mode
+requires an explicit API and separate compatibility contract.
 
 ### Parent Factory and CreationExtras inheritance
 
-For both destination and graph owners:
-
-1. capture the nearest intended parent `HasDefaultViewModelProviderFactory` contract at host
-   attachment;
-2. inherit the parent default Factory and immutable starting `CreationExtras`;
-3. override current owner keys, saved-state owner keys, and route/graph default arguments without
-   losing unrelated application extras;
-4. preserve stable inputs across host recreation and retained stacks; and
-5. fail with an actionable diagnostic when a required parent extra cannot be represented safely.
-
-Tests must cover custom factories, Application extras, default arguments, `SavedStateHandle`, graph
-scope, destination scope, process recreation, and same-route entries in separate retained stacks.
-
-### Atomic pop-to command
-
-Add one controller command that expresses the result of popping to an existing entry or route,
-with an explicit inclusive flag. It must use the existing prepare, render, commit, and rollback
-transaction. Define behavior for:
-
-- missing target;
-- repeated routes and entry identity selection;
-- root targets and inclusive root removal;
-- nested graphs;
-- adaptive pane transitions;
-- retained stack selection; and
-- render failure after the target set is prepared.
-
-Do not add a broad `NavOptions` property bag or implement pop-to as a loop of public pop calls.
-
-### Phase 2 completion gate
-
-- parent Factory/Extras inheritance is demonstrated for entry and graph owners;
-- cross-stack owner isolation and clearing are deterministic;
-- pop-to is one rollback-safe navigation transaction; and
-- navigation migration and module documentation describe only the supported command surface.
-
-## Phase 3: Logical edges and ordinary keyed identity
-
-### Logical start/end edges
-
-Add logical-edge contracts without changing the meaning of existing physical APIs:
-
-- logical padding and margin;
-- logical horizontal offset or an explicitly direction-aware offset form;
-- logical system-bar and IME edge selection; and
-- renderer resolution using the captured `UiLayoutDirection`.
-
-Physical `left` and `right` declarations remain physical. Do not reinterpret existing serialized or
-source-compatible calls. Tests must cover LTR, RTL, runtime direction changes, nested delayed
-sessions, ConstraintLayout anchors where applicable, and mixed logical/physical declarations.
-
-### Keyed sibling movement experiment
-
-Move a keyed group only as one complete ownership unit:
-
-- remember slots and `RememberObserver` lifecycle;
-- DisposableEffect and coroutine-effect identity;
-- observations and invalidation queues;
-- child groups and cached results;
-- saveable-key paths; and
-- transaction checkpoints needed for abort and rollback.
-
-Duplicate effective keys under the same matching parent must fail or produce one deterministic
-diagnostic policy; they must never silently alias state. Matching must remain bounded for realistic
-sibling counts and must not degrade unchanged positional trees.
-
-### Keyed movement keep or revert rule
-
-Keep the behavior only when:
-
-1. insertion, removal, reorder, and duplicate-key semantics are exhaustive and deterministic;
-2. aborted composition restores the previous scope tree and effects exactly;
-3. no remembered value, effect, observation, or saveable path crosses business identity;
-4. unchanged and positional compositions do not regress beyond the repository policy; and
-5. implementation complexity remains local to composition identity rather than leaking into the
-   renderer or native View reconciliation contract.
-
-If any condition fails, revert the movement implementation, keep the tests and diagnostics, and
-narrow `key` KDoc and migration guidance to the proven positional behavior.
-
-## Phase 4: WindowInsets consumption experiment
-
-### Goal
-
-Prevent duplicate system-bar and IME application in nested and mixed Android View/ViewCompose trees
-without reproducing the complete Compose Insets model.
-
-### Required design boundaries
-
-- use AndroidX `WindowInsetsCompat` and Android View dispatch as the platform source;
-- represent raw, consumed, and remaining values per inset type and edge;
-- make one node's consumption visible to participating descendants;
-- preserve non-participating ordinary View behavior;
-- define system-bars-plus-IME behavior without blindly summing overlapping physical space;
-- avoid combining `adjustResize` and IME padding into duplicate ownership; and
-- keep listener replacement, View reuse, rollback, and disposal idempotent.
-
-### Required scenarios
-
-- ancestor and descendant request the same system-bar edge;
-- system bars and IME target the same View and separate Views;
-- ordinary View ancestor with ViewCompose descendant, and the reverse;
-- edge-to-edge Activity with gesture and three-button navigation;
-- IME open, close, progress/animation, cancellation, and configuration change;
-- LTR/RTL logical edges; and
-- recycled or rollback-restored native Views.
-
-### Insets keep or revert rule
-
-Keep a general nested protocol only if the final ownership is deterministic in all mixed-tree
-scenarios and it does not require a hidden second layout engine. Otherwise revert the protocol,
-retain raw/applied diagnostics and tests, and keep the documented single-owner-per-edge rule.
-
-## Phase 5: Safer existing-View hosting and narrow layout completion
-
-### ViewTree-aware host
-
-Keep raw `renderInto` unchanged. Add a separate high-level host entry point only if it can:
-
-1. discover the intended ViewTree lifecycle, ViewModel, and saved-state owners;
-2. fail clearly when a required owner is absent rather than installing a partial environment;
-3. bind disposal to an explicit documented strategy;
-4. preserve caller control over theme, environment, overlay, frame clock, and diagnostics; and
-5. avoid retaining the container or owner after disposal.
-
-The API must not silently infer an Activity or Fragment destination and must not hide the returned
-session when explicit disposal remains caller-owned.
-
-### BoxScope.matchParentSize
-
-Add a Box-scoped parent-data operation only if the native Box implementation can preserve the key
-semantic: the matching child fills the final Box without participating in the Box's own desired
-size. It must not be an alias for `fillMaxSize`.
-
-Cover wrap-content Box measurement, multiple matching children, alignment precedence, invalid
-parent use, RTL, and View reuse. Do not generalize the solution into a public measure policy.
-
-## Phase 6: Restoration and snapshot certification
-
-### Required evidence
-
-Add focused tests for:
-
-- provider-registration failure after a restored value was claimed;
-- claim availability, active provider state, `performSave`, later retry, and session disposal after
-  that failure;
-- mutable-snapshot creation while a read-only snapshot is active, with one explicit supported or
-  rejected contract;
-- nested derived state, equal derived results, dependency switching, and calculation failure;
-- non-navigation Activity-root configuration recreation and real process-kill restoration; and
-- predictive-back device certification when navigation or host lifecycle work changes its inputs.
-
-### Change boundary
-
-Correct a proven state-loss, owner leak, or read-only-boundary violation with the smallest internal
-change. Do not add snapshot collections, `snapshotFlow`, derived-state mutation-policy overloads,
-or equal-result suppression as part of certification.
-
-## Phase 7: Conditional navigation retention work
-
-Do not implement a new retention policy until diagnostics demonstrate a representative problem.
-The trigger requires all of:
-
-1. a real multi-stack or adaptive-pane scenario retains materially expensive hidden Views or work;
-2. heap, RSS, retained-View counts, or background-work counters identify hidden sessions as the
-   cause;
-3. lifecycle-aware collection alone does not address the cost; and
-4. a page-level policy can define which state survives recreation.
-
-If triggered, compare the current keep-alive behavior with an explicit opt-in dispose-when-hidden
-policy. The default remains unchanged unless same-device memory and switching evidence shows a
-clear net benefit and the state-loss contract is acceptable. Plain `remember` state and active
-effects must never be implied to survive a disposed session.
-
-## Explicitly deferred or rejected work
-
-The following decisions are historical inputs to scheduling, not unassigned backlog:
-
-### Keep View measurement and LayoutParams semantics
-
-Do not add a Compose constraint engine, general custom measure policy, intrinsic-measurement parity,
-or fractional fill surface. Use built-in containers, AndroidX ConstraintLayout, or a lifecycle-owned
-custom Android `ViewGroup`.
-
-### Keep Modifier as immutable renderer input
-
-Do not expose application-defined `Modifier.Node` attach/detach, invalidation, local-read, layout,
-draw, input, or semantics capability interfaces. Add reviewed contract elements and renderer
-support only for demonstrated framework features.
-
-### Keep UiLocal lookup separate from observation
-
-Changing local values remain backed by ViewCompose State or another explicit host invalidation
-source. Do not make all local reads tracked merely to resemble `CompositionLocal`.
-
-### Keep navigation state closed and saveable
-
-Do not accept arbitrary object routes, Fragment/Activity destinations, general Navigation3 scenes,
-action/MIME matching, or a complete `NavOptions` clone. Complex domain objects are loaded by stable
-identifier after navigation.
-
-### Keep AndroidView transaction phases
-
-Replay-safe update/reset, post-tree-commit work, and one-shot permanent release remain separate.
-Compose callback parity is not a reason to remove `onCommit` or weaken rollback cleanup.
-
-### Keep hidden-session disposal explicit and conditional
-
-The current keep-alive model remains the default. A memory optimization must not silently reset
-plain remember state, effects, native widget state, or page-local resources.
-
-### Defer direct NavigationEvent and arbitrary subtree ViewModel scopes
-
-Revisit direct NavigationEvent only when nested dispatch, forward events, official test fakes, or
-Preview inspection is a product requirement not served by the Activity compatibility path. Revisit
-arbitrary subtree ViewModel scope only after parent factory/extras inheritance is complete and a
-non-navigation scope has a concrete lifecycle owner.
-
-### Defer derived-state notification optimization
-
-Equal-result suppression remains a performance experiment owned by a separate benchmark-triggered
-plan. Nested and failure correctness tests in this plan do not authorize that optimization.
+For destination and graph owners:
+
+1. capture the intended parent `HasDefaultViewModelProviderFactory` at host attachment;
+2. inherit its Factory and immutable starting `CreationExtras`;
+3. override only the current ViewModelStore owner, saved-state owner, and route/graph default args;
+4. preserve unrelated application and DI extras across recreation and retained stacks; and
+5. provide actionable failure diagnostics when required parent inputs cannot be represented.
+
+Cover custom factories, Application extras, default args, `SavedStateHandle`, destination and graph
+scope, process recreation, and same-route entries in separate retained stacks.
+
+Atomic pop-to is not part of this phase. It requires a separate Navigation enhancement plan when
+scheduled.
+
+## Phase 4: RTL correctness and restoration certification
+
+### Logical edges
+
+Add narrowly scoped logical start/end forms for general padding, margin, direction-aware horizontal
+offset, and inset edge selection. Resolve them from the captured `UiLayoutDirection`; preserve
+existing physical forms. Cover LTR, RTL, runtime direction changes, delayed child Sessions,
+applicable ConstraintLayout integration, and mixed logical/physical declarations.
+
+This is a public API slice and must complete its Q-level, KDoc, sample, module manual, migration,
+localized documentation, compatibility, and changeset requirements in the same change.
+
+### General Activity-root restoration
+
+Add one real process-death certification path for ordinary Activity-root `rememberSaveable` state.
+Keep existing recreation tests. Change production code only if the device path reproduces state
+loss, owner leakage, or an invalid persistence boundary.
+
+Focused snapshot and derived-state tests may accompany this phase when they exercise an existing
+contract, but they do not authorize new snapshot collections, mutation policies, or equal-result
+suppression.
+
+## Conditional and separately scheduled work
+
+The following items do not block this plan:
+
+| Candidate | Trigger required before a new plan | Retained boundary |
+| --- | --- | --- |
+| Atomic pop-to-existing-entry | A product navigation flow needs one rollback-safe inclusive/exclusive stack rewrite | One typed transactional command, not a `NavOptions` property bag |
+| Nested WindowInsets protocol | A reproducible nested or mixed View tree cannot express correct ownership with one explicit owner per type/edge | AndroidX dispatch remains the platform source; no hidden second layout engine |
+| ViewTree-aware high-level render host | A concrete non-Activity/non-Fragment embedding repeatedly leaks or misconfigures explicit ownership | Raw `renderInto` remains owner-free and explicitly disposable |
+| `BoxScope.matchParentSize` | A real layout requires a child to fill final Box bounds without determining wrap-content Box size | Never alias to `fillMaxSize`; do not create a general measure policy |
+| Hidden destination dispose policy | Same-device heap/RSS/View/effect evidence identifies hidden Sessions as a material cost | Current keep-alive default remains; any disposal policy is explicit opt-in |
+| Direct NavigationEvent integration | Nested dispatch, forward events, official test fakes, or Preview inspection cannot use the Activity compatibility path | Do not make it a prerequisite without that use case |
+| Arbitrary subtree ViewModel scope | A non-navigation scope has a concrete owner and cannot be modeled after parent Factory inheritance | No ownerless or process-global scope registry |
+
+Untriggered candidates are decisions, not an unassigned backlog.
+
+## Explicitly rejected work
+
+This plan does not authorize:
+
+- a Compose compiler plugin, restart groups, change masks, stability inference, strong skipping, or
+  automatic lambda memoization;
+- a general Compose-style `Layout`, `MeasurePolicy`, measurable/placeable, or intrinsic-measurement
+  engine;
+- application-defined `Modifier.Node` lifecycle or capability dispatch;
+- reinterpretation of physical left/right APIs as logical start/end;
+- tracked `UiLocal` lookup that turns every read into implicit observation;
+- arbitrary object routes, Fragment/Activity destinations, general Navigation3 scenes, action/MIME
+  matching, or a full `NavOptions` clone;
+- weakening `AndroidView` prepare/commit/rollback/release behavior to match Compose timing;
+- automatic hidden-page disposal without an explicit state-loss contract;
+- a general nested Insets runtime without the conditional trigger above; or
+- derived-state equal-result suppression or another performance optimization without a separate
+  measured trigger.
+
+`snapshotFlow` is no longer listed as rejected: it was implemented and documented by the
+transactional-effects work. Snapshot collection types remain outside scope without a separate
+product requirement.
 
 ## Validation matrix
 
-| Area | Minimum evidence before completion |
+| Area | Minimum evidence |
 | --- | --- |
-| Fragment host | JVM/Robolectric lifecycle tests plus Fragment view recreation instrumentation or equivalent device evidence |
-| RenderSession | runtime tests for caller calls, queued callbacks, repeated disposal, cleanup failures, and diagnostics |
-| AndroidView | renderer transaction tests for factory/update/reset/commit/release across commit, rollback, replacement, and disposal |
-| Deep links | navigation-core resolver tests, public host tests, guide/migration agreement, and malformed-input coverage |
-| Navigation owners | entry and graph tests for custom Factory, extras, SavedStateHandle, process recreation, and cross-stack isolation |
-| Atomic pop-to | controller mutation tests, host rollback tests, lifecycle/transition ordering, and adaptive-pane coverage |
-| Logical edges | renderer tests for LTR/RTL and direction changes plus representative device/layout certification |
-| Keyed identity | remember/effect/observation/saveable movement tests, abort tests, duplicate-key diagnostics, and unchanged-tree performance |
-| WindowInsets | nested/mixed tree instrumentation, IME and system-bar device coverage, listener rollback/reuse/disposal tests |
-| Existing ViewTree host | owner discovery, missing-owner failure, disposal, detach/recreate, and leak-safe cleanup tests |
-| Box match-parent | native measurement and parent-data tests proving the child does not determine wrap-content Box size |
-| Restoration | registry failure tests and non-navigation process-kill certification |
-| Retention | same-device heap/RSS/View/effect counters and switching-time comparison before any policy decision |
-| Documentation | migration matrix, owning module manuals, guides, KDoc/Javadoc, compiled samples, and Chinese mirrors updated with implemented behavior |
+| Commit callback and saveable state | Failed registration, claim/save/retry/dispose, multiple callback failure, and committed-frame reporting tests |
+| Ordinary key identity | Remember/effect/observation/saveable movement, duplicate keys, insert/remove/reorder, abort, and unchanged-tree performance |
+| Fragment host | Robolectric lifecycle tests plus Fragment View recreation instrumentation or equivalent device evidence |
+| RenderSession | Caller calls, queued callbacks, repeated disposal, cleanup failures, and terminal diagnostics tests |
+| Android View release | Commit, rollback, removal, cross-key reuse, cache eviction, and session disposal exactly-once tests plus corrected public docs |
+| Deep links | Extra, duplicate, malformed, and placeholder-like query tests plus guide/migration agreement |
+| Navigation owners | Parent Factory/Extras, SavedStateHandle, graph/destination scope, recreation, and same-route cross-stack isolation |
+| Logical edges | LTR/RTL and runtime direction tests plus representative renderer/device certification |
+| Restoration | Activity recreation plus real non-navigation process-death certification |
+| Documentation | KDoc/Javadoc, compiled samples, module manuals, migration pages, active guides, and Chinese mirrors for implemented public behavior |
 
-Minimum repository gates for every implementation slice:
+Minimum gates for every implementation slice:
 
 ```bash
 ./gradlew verifyDocumentationStructure
 ./gradlew qaQuick
 ```
 
-Run `./gradlew qaFull` and the applicable connected/device procedures whenever a phase changes
-Fragment lifecycle, process restoration, WindowInsets, IME, Predictive Back, or other device-owned
-behavior. Record device readiness and any test that could not run; do not silently replace device
-evidence with JVM-only assertions.
+Run `./gradlew qaFull` and the applicable device procedure for Fragment lifecycle, process death,
+Insets, IME, Predictive Back, or other platform-owned behavior. Record unavailable device evidence;
+do not silently replace it with JVM-only assertions.
 
 ## Documentation and API quality impact
 
-Before changing a public or protected API, the implementation slice must assign its Q level and
-identify every applicable lifecycle, ownership, error, threading, persistence, layout-unit, and
-performance contract. The same slice includes canonical-English KDoc/Javadoc, compiled Q3 samples
-where required, owning-module documentation, migration updates, and Chinese mirrors for active
-public pages.
+Every changed public or protected API assigns its Q level and completes the applicable lifecycle,
+ownership, error, threading, persistence, layout-unit, performance, and compatibility fields.
+Canonical-English KDoc/Javadoc, compiled Q3 samples, owning module documentation, migration updates,
+and Chinese mirrors ship in the same slice.
 
-Use the documentation impact matrix as follows:
+Documentation routing:
 
-- Fragment entry behavior updates the Android aggregate manual; low-level session behavior updates
-  the host-engine manual. Both update the host migration page and applicable architecture/guide
-  pages;
-- key, snapshot, remember, or saveable behavior updates Runtime/UI Foundation manuals and the state
-  migration page;
-- logical edges, Box parent data, or Insets update contract/renderer module manuals and the layout
-  migration page;
-- navigation owner, command, deep-link, or retention behavior updates both navigation module
-  manuals, navigation guide, and navigation migration page; and
-- a durable ownership decision that crosses modules receives an ADR when the implementation makes
-  it costly to reverse.
+- runtime transaction, key, remember, and saveable behavior updates Runtime/UI Foundation manuals,
+  the effects or state architecture page, and state migration guidance;
+- Fragment and terminal-session behavior updates Android aggregate and Host manuals plus host
+  lifecycle architecture and migration pages;
+- Android View release updates UI Contract, Renderer/Host manuals, interop guidance, and migration;
+- deep-link or owner behavior updates both Navigation manuals, navigation guide, and migration;
+- logical edges update UI Contract/Renderer manuals and layout migration guidance; and
+- a costly cross-module ownership decision receives an ADR.
 
 Every publication-relevant production change adds one immutable `release/changes/*.json` file and
 lists it under exactly one active implementation plan. Dependency propagation remains release
-planner output and must not be hand-written.
+planner output.
 
 ## Completion criteria
 
-This plan is complete when all of the following are true:
+This plan is complete when:
 
-1. every P0 and required P1/P2 item is implemented and verified, or handed off to a separately
-   indexed child plan with no duplicated source of truth;
-2. keyed identity and Insets experiments each have an explicit keep, simplify, or revert decision
-   with retained evidence;
-3. conditional retention and deferred items have their trigger result recorded and do not remain
+1. every P0 defect has a focused reproduction, deterministic contract, implementation decision,
+   and passing validation;
+2. keyed movement is either fully retained with exhaustive evidence or reverted with narrowed KDoc;
+3. Fragment content ownership, public Session terminal behavior, and Android View release wording
+   agree across source, tests, and documentation;
+4. deep-link extra-query behavior and Navigation parent Factory/Extras inheritance are explicit and
+   verified;
+5. logical start/end edges and general Activity-root process restoration are implemented/certified,
+   or handed to separately indexed plans without duplicate ownership;
+6. conditional candidates record their untriggered or handed-off decision and do not remain
    ambiguous backlog;
-4. source contracts, tests, migration pages, architecture/guide pages, module manuals, samples, and
-   localized mirrors agree on every changed capability;
-5. all plan-owned Changesets are listed and the applicable quick, full, benchmark, and device gates
-   pass or have an explicit blocker;
-6. durable decisions and final measured results have moved into active documentation; and
-7. this file moves to `docs/archive/`, both plan indexes are updated, and release-plan validation
-   succeeds before the affected Maven Central upload.
+7. all plan-owned changesets and required quick/full/device gates pass; and
+8. durable conclusions move into active documents and this file moves to `docs/archive/` before the
+   affected Maven Central upload.
 
 ## Evidence ledger
 
-Record each scheduled slice here before implementation and update it after validation.
-
-| Date | Phase or slice | Baseline/evidence | Decision | Changeset or follow-up plan |
-| --- | --- | --- | --- | --- |
-| 2026-08-05 | Initial planning | Migration documents, current source contracts, and existing focused tests reviewed | Plan created; no implementation selected | None |
+| Date | Area | Evidence | Decision |
+| --- | --- | --- | --- |
+| 2026-08-05 | Initial planning | Migration documents, source contracts, and existing focused tests | Broad capability plan created; no implementation selected |
+| 2026-08-14 | Full re-audit | Current source/tests, commits for transactional effects, lazy activation, and lazy three-layer ownership, plus AndroidX behavior references | Retain proven core defects; recognize partial keyed implementation; correct Deep Link policy; reject broad automatic Insets protocol; defer convenience APIs |
+| 2026-08-14 | Existing test baseline | Runtime, UI Foundation, Host, Android aggregate, Navigation Core/Android, and Renderer unit tests | Seven relevant module test tasks pass; gaps remain uncovered behavior, not existing red tests |
 
 ## Decision history
 
-- 2026-08-05: prioritize Android lifecycle, ownership, state identity, RTL, Insets, and atomic
-  navigation semantics over Compose API-count parity.
-- 2026-08-05: preserve native View measurement, immutable Modifier/VNode inputs, explicit
-  RenderSession ownership, and prepare/commit/rollback boundaries.
-- 2026-08-05: require baseline-first, separately revertible experiments for keyed sibling movement,
-  nested Insets consumption, and hidden destination retention.
-- 2026-08-05: reject compiler work and record custom measurement, `Modifier.Node`, snapshot
-  collections/flow, general scenes, Fragment-in-tree, and broad route/NavOptions parity as non-goals.
+- 2026-08-05: prioritize lifecycle, ownership, identity, RTL, Insets, and Navigation gaps over API
+  count parity.
+- 2026-08-14: narrow the active plan to current correctness and Android compatibility; diagnostics
+  become focused supporting evidence only.
+- 2026-08-14: treat commit-callback/saveable recovery, Fragment View ownership, Session terminal
+  behavior, and already-live ordinary key movement as the immediate P0 set.
+- 2026-08-14: retain permissive extra-query deep-link matching because it matches AndroidX behavior;
+  unknown values must remain inert rather than being rejected by default.
+- 2026-08-14: require additive logical edges for RTL correctness while keeping physical APIs stable.
+- 2026-08-14: reject an untriggered general nested Insets runtime and defer atomic pop-to,
+  ViewTree-aware hosting, `matchParentSize`, and hidden-session disposal to independent requirements.
