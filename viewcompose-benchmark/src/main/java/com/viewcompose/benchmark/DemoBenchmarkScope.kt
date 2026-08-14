@@ -268,11 +268,9 @@ internal fun MacrobenchmarkScope.startDemoActivityAndWait(
     waitForText(expectedText)
 }
 
-/** Temporary benchmark-only bridge removed when Phase 4 assigns these fixtures strict IDs. */
+/** Temporary benchmark-only bridge removed when the remaining environment host gets a strict ID. */
 private fun legacyBenchmarkActivityClass(moduleKey: String): String = when (moduleKey) {
     "environment" -> "com.viewcompose.DemoEnvironmentActivity"
-    "foundations" -> "com.viewcompose.FoundationsActivity"
-    "diagnostics" -> "com.viewcompose.DiagnosticsActivity"
     else -> error("Unknown legacy benchmark module: $moduleKey")
 }
 

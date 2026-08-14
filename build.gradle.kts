@@ -541,7 +541,7 @@ tasks.register("verifyDemoAutomationSelectors") {
             "app/src/androidTest/java/com/viewcompose/DemoUiTestHelpers.kt" to 6,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ComplexLayoutPerformanceComparisonBenchmark.kt" to 3,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt" to 18,
-            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoInteractionBenchmark.kt" to 8,
+            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoInteractionBenchmark.kt" to 4,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ShadowPerformanceComparisonBenchmark.kt" to 3,
         )
         val sourceRoots = listOf(
@@ -772,6 +772,10 @@ tasks.register("verifyDemoLocalizedVisibleCopy") {
             rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/components"),
             rootDir.resolve(
                 "app/src/main/java/com/viewcompose/activity/demo/pages/advanced/ComponentShowcaseActivity.kt",
+            ),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/foundations"),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/core/FoundationsActivity.kt",
             ),
             rootDir.resolve(
                 "app/src/main/java/com/viewcompose/demo/designsystem/DemoContrastDesignSystem.kt",

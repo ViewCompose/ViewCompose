@@ -1,85 +1,113 @@
 package com.viewcompose
 
-import androidx.appcompat.app.AppCompatActivity
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioId
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.demo.registry.DemoScenarioIds
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.preview.tooling.ViewComposePreview
-import com.viewcompose.ui.modifier.Modifier
-import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTreeBuilder
-import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.foundation.key
+import com.viewcompose.ui.foundation.rememberSaveable
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.fillMaxSize
+import com.viewcompose.ui.modifier.fillMaxWidth
+import com.viewcompose.ui.modifier.margin
+import com.viewcompose.ui.unit.dp
 
-@ViewComposePreview(name = "Foundations · Guide", group = "Demo/Pages")
-internal fun UiTreeBuilder.PreviewFoundationsGuide() {
-    OverviewPage(initialPageIndex = 0, onOpenCapability = {})
+@ViewComposePreview(name = "Foundations · Locals", group = "Demo/Foundations")
+internal fun UiTreeBuilder.PreviewFoundationsLocals() {
+    FoundationsPage(FoundationsFixture.Locals)
 }
 
-@ViewComposePreview(name = "Foundations · Theme", group = "Demo/Pages")
+@ViewComposePreview(name = "Foundations · Theme", group = "Demo/Foundations")
 internal fun UiTreeBuilder.PreviewFoundationsTheme() {
-    OverviewPage(initialPageIndex = 1, onOpenCapability = {})
+    FoundationsPage(FoundationsFixture.Theme)
 }
 
-@ViewComposePreview(name = "Foundations · Media", group = "Demo/Pages")
+@ViewComposePreview(name = "Foundations · Media", group = "Demo/Foundations")
 internal fun UiTreeBuilder.PreviewFoundationsMedia() {
-    OverviewPage(initialPageIndex = 2, onOpenCapability = {})
+    FoundationsPage(FoundationsFixture.Media)
 }
 
-@ViewComposePreview(name = "Foundations · Typography", group = "Demo/Pages")
+@ViewComposePreview(name = "Foundations · Typography", group = "Demo/Foundations")
 internal fun UiTreeBuilder.PreviewFoundationsTypography() {
-    OverviewPage(initialPageIndex = 3, onOpenCapability = {})
+    FoundationsPage(FoundationsFixture.Typography)
 }
 
-internal fun UiTreeBuilder.OverviewPage(
-    initialPageIndex: Int = 0,
-    onOpenCapability: (Class<out AppCompatActivity>) -> Unit,
+internal enum class FoundationsFixture(
+    val scenarioId: DemoScenarioId,
 ) {
-    val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 3)) }
-    val benchmarkState = remember { mutableStateOf(false) }
-    val pageItems = foundationsPageItems(selectedPageState.value)
-    LazyColumn(
-        items = pageItems,
-        key = { it },
-        modifier = Modifier.fillMaxSize(),
-    ) { section ->
-        when (section) {
-            "page" -> ChapterPageOverviewSection(
-                title = "基础组件",
-                goal = "验证核心视觉原语、主题作用域、组件默认值和媒体控件，然后再进入更高级的运行时场景。",
-                modules = listOf("ui-widget-core", "ui-renderer", "theme locals", "component defaults"),
-            )
+    Locals(DemoScenarioIds.FoundationsLocals),
+    Theme(DemoScenarioIds.FoundationsTheme),
+    Media(DemoScenarioIds.FoundationsMedia),
+    Typography(DemoScenarioIds.FoundationsTypography),
+    ;
 
-            "page_filter" -> ChapterPageFilterSection(
-                pages = listOf("指南", "主题", "媒体", "排版"),
-                selectedIndex = selectedPageState.value,
-                onSelectionChange = { selectedPageState.value = it },
-            )
+    companion object {
+        fun from(scenarioId: DemoScenarioId): FoundationsFixture =
+            entries.singleOrNull { fixture -> fixture.scenarioId == scenarioId }
+                ?: error("Unsupported foundations scenario: $scenarioId")
+    }
+}
 
-            "intro" -> FoundationsIntroSection()
-            "benchmark" -> FoundationsBenchmarkSection(
-                enabled = benchmarkState.value,
-                onToggle = { benchmarkState.value = !benchmarkState.value },
-                onReset = { benchmarkState.value = false },
-            )
-            "theme" -> FoundationsThemeSection()
-            "business_locals" -> FoundationsBusinessLocalSection()
-            "overrides" -> FoundationsOverridesSection()
-            "progress" -> FoundationsProgressSection()
-            "media" -> FoundationsMediaSection()
-            "typography" -> FoundationsTypographySection()
-            "jump" -> FoundationsJumpSection(onOpenCapability)
-            "surface" -> FoundationsSurfaceSection()
-            else -> FoundationsVerificationSection()
+internal fun UiTreeBuilder.FoundationsPage(
+    fixture: FoundationsFixture,
+    scenario: DemoScenarioSpec? = null,
+) {
+    if (fixture != FoundationsFixture.Media) {
+        when (fixture) {
+            FoundationsFixture.Locals -> FoundationsLocalsFixture(scenario)
+            FoundationsFixture.Theme -> FoundationsThemeFixture(scenario)
+            FoundationsFixture.Typography -> FoundationsTypographyFixture(scenario)
+            FoundationsFixture.Media -> Unit
         }
+        return
+    }
+
+    val generation = rememberSaveable(key = "foundations-media-session-generation") {
+        mutableStateOf(0)
+    }
+    key(generation.value) {
+        FoundationsMediaFixture(
+            scenario = scenario,
+            generation = generation.value,
+            onReset = { generation.value += 1 },
+        )
     }
 }
 
-private fun foundationsPageItems(
-    selectedPageIndex: Int,
-): List<String> {
-    return when (selectedPageIndex) {
-        0 -> listOf("benchmark", "page", "page_filter", "intro", "jump", "surface", "verify")
-        1 -> listOf("overrides", "page", "page_filter", "theme", "business_locals", "verify")
-        2 -> listOf("page", "page_filter", "progress", "media", "verify")
-        else -> listOf("page", "page_filter", "typography", "verify")
+internal fun UiTreeBuilder.FoundationsFixtureList(
+    generation: Int = 0,
+    sections: List<String>,
+    content: UiTreeBuilder.(String) -> Unit,
+) {
+    LazyColumn(
+        items = sections,
+        key = { section -> "$generation:$section" },
+        modifier = Modifier.fillMaxSize(),
+        itemContent = content,
+    )
+}
+
+internal fun UiTreeBuilder.FoundationsSummary(scenario: DemoScenarioSpec?) {
+    scenario?.let {
+        Text(
+            text = stringResource(it.summaryRes),
+            style = Theme.typography.bodyMedium,
+            color = TextDefaults.secondaryColor(),
+            modifier = Modifier.fillMaxWidth().margin(top = 12.dp, bottom = 8.dp),
+        )
     }
 }
+
+internal fun Modifier.foundationsScenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier = scenario?.automation?.get(role)?.let(::demoAutomationTarget) ?: this

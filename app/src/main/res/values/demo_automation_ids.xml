@@ -439,6 +439,27 @@
     <item name="demo_component_progress_state" type="id" />
     <item name="demo_component_progress_target" type="id" />
 
+    <item name="demo_foundations_locals_root" type="id" />
+    <item name="demo_foundations_locals_ready" type="id" />
+    <item name="demo_foundations_locals_target" type="id" />
+
+    <item name="demo_foundations_theme_root" type="id" />
+    <item name="demo_foundations_theme_ready" type="id" />
+    <item name="demo_foundations_theme_target" type="id" />
+    <item name="demo_foundations_theme_secondary_target" type="id" />
+
+    <item name="demo_foundations_media_root" type="id" />
+    <item name="demo_foundations_media_ready" type="id" />
+    <item name="demo_foundations_media_primary_action" type="id" />
+    <item name="demo_foundations_media_reset" type="id" />
+    <item name="demo_foundations_media_state" type="id" />
+    <item name="demo_foundations_media_target" type="id" />
+    <item name="demo_foundations_media_secondary_target" type="id" />
+
+    <item name="demo_foundations_typography_root" type="id" />
+    <item name="demo_foundations_typography_ready" type="id" />
+    <item name="demo_foundations_typography_target" type="id" />
+
     <item name="demo_design_system_dialog_open" type="id" />
     <item name="demo_design_system_dialog_state" type="id" />
     <item name="demo_design_system_dialog_switch" type="id" />

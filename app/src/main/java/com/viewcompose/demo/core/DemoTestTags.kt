@@ -163,17 +163,6 @@ internal object DemoTestTags {
     const val COLLECTIONS_GRID_TWO_COLS = "collections_grid_two_cols"
     const val COLLECTIONS_GRID_THREE_COLS = "collections_grid_three_cols"
     const val COLLECTIONS_GRID_FIRST_ITEM = "collections_grid_first_item"
-
-
-    const val FOUNDATIONS_BENCHMARK_TOGGLE = "foundations_benchmark_toggle"
-    const val FOUNDATIONS_BENCHMARK_RESET = "foundations_benchmark_reset"
-    const val FOUNDATIONS_ACCENT_PRIMARY = "foundations_accent_primary"
-    const val FOUNDATIONS_PRIMARY_TOKEN = "foundations_primary_token"
-    const val FOUNDATIONS_BIZ_TOKEN_CARD = "foundations_biz_token_card"
-    const val FOUNDATIONS_REMOTE_IMAGE = "foundations_remote_image"
-    const val FOUNDATIONS_FALLBACK_IMAGE = "foundations_fallback_image"
-    const val FOUNDATIONS_PRIMARY_ICON_BUTTON = "foundations_primary_icon_button"
-
     const val INPUT_FOCUS_SCROLLABLE_SEARCH = "input_focus_scrollable_search"
     const val INPUT_FOCUS_VERTICAL_PAGER_SEARCH = "input_focus_vertical_pager_search"
     const val INPUT_FOCUS_PULL_REFRESH_SEARCH = "input_focus_pull_refresh_search"

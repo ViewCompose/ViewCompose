@@ -5,6 +5,7 @@ import android.content.Intent
 import com.viewcompose.ActionsActivity
 import com.viewcompose.AnimationActivity
 import com.viewcompose.FeedbackActivity
+import com.viewcompose.FoundationsActivity
 import com.viewcompose.GesturesActivity
 import com.viewcompose.GraphicsActivity
 import com.viewcompose.CollectionsActivity
@@ -102,6 +103,10 @@ internal object DemoScenarioIds {
     val ComponentSegmentedControl = DemoScenarioId("component.segmented-control")
     val ComponentDivider = DemoScenarioId("component.divider")
     val ComponentProgress = DemoScenarioId("component.progress")
+    val FoundationsLocals = DemoScenarioId("foundations.locals")
+    val FoundationsTheme = DemoScenarioId("foundations.theme")
+    val FoundationsMedia = DemoScenarioId("foundations.media")
+    val FoundationsTypography = DemoScenarioId("foundations.typography")
     val PerformanceList = DemoScenarioId("performance.list")
 }
 
@@ -970,6 +975,71 @@ internal object DemoScenarioRegistry {
                 state = R.id.demo_design_oneui7_state,
                 target = R.id.demo_design_oneui7_target,
                 secondaryTarget = R.id.demo_design_oneui7_secondary_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.FoundationsLocals,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_foundations_locals_title,
+            summaryRes = R.string.demo_scenario_foundations_locals_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(FoundationsActivity::class.java),
+            mutable = false,
+            ids = TargetIds(
+                root = R.id.demo_foundations_locals_root,
+                ready = R.id.demo_foundations_locals_ready,
+                target = R.id.demo_foundations_locals_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.FoundationsTheme,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_foundations_theme_title,
+            summaryRes = R.string.demo_scenario_foundations_theme_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(FoundationsActivity::class.java),
+            mutable = false,
+            ids = TargetIds(
+                root = R.id.demo_foundations_theme_root,
+                ready = R.id.demo_foundations_theme_ready,
+                target = R.id.demo_foundations_theme_target,
+                secondaryTarget = R.id.demo_foundations_theme_secondary_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.FoundationsMedia,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_foundations_media_title,
+            summaryRes = R.string.demo_scenario_foundations_media_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(FoundationsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_foundations_media_root,
+                ready = R.id.demo_foundations_media_ready,
+                primaryAction = R.id.demo_foundations_media_primary_action,
+                reset = R.id.demo_foundations_media_reset,
+                state = R.id.demo_foundations_media_state,
+                target = R.id.demo_foundations_media_target,
+                secondaryTarget = R.id.demo_foundations_media_secondary_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.FoundationsTypography,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_foundations_typography_title,
+            summaryRes = R.string.demo_scenario_foundations_typography_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(FoundationsActivity::class.java),
+            mutable = false,
+            ids = TargetIds(
+                root = R.id.demo_foundations_typography_root,
+                ready = R.id.demo_foundations_typography_ready,
+                target = R.id.demo_foundations_typography_target,
             ),
         ),
         actionComponentScenario(

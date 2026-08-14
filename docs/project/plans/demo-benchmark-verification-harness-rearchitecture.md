@@ -12,7 +12,7 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-15.
 
-Next action: migrate the remaining Foundations and Preview owners, then audit the unresolved
+Next action: migrate the remaining Preview owner, then audit the unresolved
 performance-comparison scenarios against the replacement fixture baseline.
 
 Do not benchmark or begin a performance-only slice from the
@@ -922,6 +922,21 @@ SM-G991B Android 13 reference device, the four mutable fixtures passed their Eng
 Simplified Chinese action/full-reset contract, all five visual targets and the SegmentedControl and
 Checkbox native interaction regressions passed, the Button matrix was visually inspected, and the
 registry-wide host-role sweep passed.
+
+The Foundations chapter is now four strict direct fixtures: `foundations.locals`,
+`foundations.theme`, `foundations.media`, and `foundations.typography`. `FoundationsActivity`
+requires one of those immutable scenario identities; the page-index extra, chapter switcher,
+architecture prose, copied component inventory, cross-chapter jump controls, verification
+checklist, and fake benchmark switch were deleted. Locals, Theme, and Typography are intentionally
+immutable visual fixtures and therefore do not manufacture action or reset roles. Media retains
+the real resource, URL/fallback, delayed-model replacement, cancellation, and icon-content-color
+behavior; it alone exposes action, state, target, and full-Session reset roles, with the parent
+generation embedded in every lazy-item key. Component Progress and IconButton matrices remain
+owned by their `component.*` scenarios instead of being duplicated here. Paired resources cover
+the complete domain, and the hard-coded-copy gate owns the page and Activity. The two legacy
+Macrobenchmarks were removed rather than rebaselined: one measured an artificial on/off switch,
+and the other measured a module-to-scenario launch that is not a registered workload. Neither had
+a comparable framework behavior to preserve.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

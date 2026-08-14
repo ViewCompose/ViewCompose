@@ -115,6 +115,10 @@ class DemoScenarioAutomationUiTest {
             "component.segmented-control",
             "component.divider",
             "component.progress",
+            "foundations.locals",
+            "foundations.theme",
+            "foundations.media",
+            "foundations.typography",
             "performance.list",
         ).forEach { scenarioId ->
             launchScenario(scenarioId)
@@ -484,6 +488,30 @@ class DemoScenarioAutomationUiTest {
                     waitForTargetText(scenarioId, initial),
                 )
             }
+        }
+    }
+
+    @Test
+    fun foundationsMediaPublishesDeterministicActionAndFullSessionReset() {
+        listOf("en", "zh-CN").forEach { languageTag ->
+            setApplicationLanguageTags(languageTag)
+            val scenarioId = "foundations.media"
+            launchScenario(scenarioId)
+            val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+            requireTarget(scenarioId, "primary_action").click()
+            assertNotEquals(
+                "$scenarioId action must publish state",
+                initial,
+                waitForTargetTextChange(scenarioId, initial),
+            )
+
+            requireTarget(scenarioId, "reset").click()
+            assertEquals(
+                "$scenarioId reset must recreate the initial media Session",
+                initial,
+                waitForTargetText(scenarioId, initial),
+            )
         }
     }
 

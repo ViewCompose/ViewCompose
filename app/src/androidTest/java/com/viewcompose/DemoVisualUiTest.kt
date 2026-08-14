@@ -318,22 +318,6 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun foundationsBenchmarkButtons_areVisibleAndNotEllipsized() {
-        launchDemoActivity(FoundationsActivity::class.java).use { scenario ->
-            waitForUiIdle()
-            captureDeviceScreenshot("foundations-benchmark-light")
-            scenario.onActivity { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.FOUNDATIONS_BENCHMARK_TOGGLE)
-                val reset = activity.requireTextViewByTestTag(DemoTestTags.FOUNDATIONS_BENCHMARK_RESET)
-                assertViewFullyVisible(toggle)
-                assertViewFullyVisible(reset)
-                assertTextNotEllipsized(toggle)
-                assertTextNotEllipsized(reset)
-            }
-        }
-    }
-
-    @Test
     fun inputPage_controlsStayVisibleAndResetFormIsNotEllipsized() {
         launchDemoScenarioActivity(
             InputActivity::class.java,
@@ -558,68 +542,6 @@ class DemoVisualUiTest {
                 scenario = scenario,
                 tag = DemoTestTags.INPUT_FOCUS_PULL_REFRESH_SEARCH,
             )
-        }
-    }
-
-    @Test
-    fun scopedThemeOverride_updatesPrimaryButtonBackground() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            FoundationsActivity::class.java,
-        ).putExtra(EXTRA_FOUNDATIONS_PAGE_INDEX, 1)
-        launchDemoActivity<FoundationsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
-            waitForUiIdle()
-            captureDeviceScreenshot("foundations-theme-override-light")
-            scenario.onActivity { activity ->
-                val accentButton = activity.requireTextViewByTestTag(DemoTestTags.FOUNDATIONS_ACCENT_PRIMARY)
-                assertViewFullyVisible(accentButton)
-                assertTextNotEllipsized(accentButton)
-                assertViewBackgroundColor(
-                    view = accentButton,
-                    expectedColor = DemoThemeTokens.light.colors.secondary,
-                )
-            }
-        }
-    }
-
-    @Test
-    fun componentStyleOverride_updatesPrimaryTokenButtonBackground() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            FoundationsActivity::class.java,
-        ).putExtra(EXTRA_FOUNDATIONS_PAGE_INDEX, 1)
-        launchDemoActivity<FoundationsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
-            waitForUiIdle()
-            captureDeviceScreenshot("foundations-component-override-light")
-            scenario.onActivity { activity ->
-                val tokenButton = activity.requireTextViewByTestTag(DemoTestTags.FOUNDATIONS_PRIMARY_TOKEN)
-                assertViewFullyVisible(tokenButton)
-                assertTextNotEllipsized(tokenButton)
-                assertViewBackgroundColor(
-                    view = tokenButton,
-                    expectedColor = DemoThemeTokens.light.colors.onSurface,
-                )
-            }
-        }
-    }
-
-    @Test
-    fun foundationsMedia_viewsRemainVisibleAfterScroll() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            FoundationsActivity::class.java,
-        ).putExtra(EXTRA_FOUNDATIONS_PAGE_INDEX, 2)
-        launchDemoActivity<FoundationsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
-            waitForUiIdle()
-            captureDeviceScreenshot("foundations-media-light")
-            scenario.onActivity { activity ->
-                val remoteImage = activity.requireViewByTestTag(DemoTestTags.FOUNDATIONS_REMOTE_IMAGE)
-                val fallbackImage = activity.requireViewByTestTag(DemoTestTags.FOUNDATIONS_FALLBACK_IMAGE)
-                val iconButton = activity.requireViewByTestTag(DemoTestTags.FOUNDATIONS_PRIMARY_ICON_BUTTON)
-                assertViewFullyVisible(remoteImage)
-                assertViewFullyVisible(fallbackImage)
-                assertViewFullyVisible(iconButton)
-            }
         }
     }
 
