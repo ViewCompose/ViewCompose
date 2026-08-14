@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: continue the second-risk group with Animation and Modifiers while reducing the
-remaining text-selector debt with each direct scenario slice.
+Next action: complete the second-risk group with Modifiers while reducing the remaining
+text-selector debt with each direct scenario slice.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -744,6 +744,21 @@ visible copy, including Canvas labels resolved during composition before draw ca
 hard-coded-copy gate now owns both Graphics source files. Focused device evidence covers all three
 advanced-shadow behaviors and both drawing-control paths, while the strict cross-locale automation
 contract covers drawing, inner shadow, and shadow diagnostics.
+
+The Animation domain now has six strict direct fixtures: `animation.core`,
+`animation.content`, `animation.list-motion`, `animation.specs`, `animation.transition`, and
+`animation.infinite`. `AnimationActivity` requires immutable scenario identity; the chapter page
+index and infinite-pulse extras, page switcher, overview, filtering, and verification prose were
+deleted. Only the selected fixture creates state, animation objects, coroutine context, or
+`LaunchedEffect`, so inactive animation Sessions no longer join an unrelated route. The list-motion
+fixture stores stable logical item identities and resolves labels during composition, preventing a
+locale change from freezing translated text into reusable state. Every fixture exposes localized,
+deterministic action/state/reset roles; the infinite reset state deliberately excludes transient
+command bookkeeping while still snapping the controlled value to its initial target. The
+hard-coded-copy gate now owns the Animation source, and the old Activity extras have no callers.
+On the Samsung SM-G991B Android 13 reference device, the registry-wide root/ready sweep, all six
+action-reset contracts in English and Simplified Chinese, and seven focused animation behavior
+tests passed.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

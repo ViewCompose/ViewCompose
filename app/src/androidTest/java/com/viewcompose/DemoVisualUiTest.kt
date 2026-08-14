@@ -1033,43 +1033,49 @@ class DemoVisualUiTest {
 
     @Test
     fun animationPage_visibilityToggle_showRestoresTargetContent() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 0)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.core",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             var footerTopBeforeHide = 0
             var footerTopAfterHide = 0
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val target = activity.requireViewByTestTagVisible(DemoTestTags.ANIMATION_VISIBILITY_TARGET)
+                val target = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_animation_core_target,
+                )
                 val footer = activity.requireViewByTestTagVisible(DemoTestTags.ANIMATION_VISIBILITY_FOOTER)
                 footerTopBeforeHide = viewTopOnScreen(footer)
                 assertViewFullyVisible(target)
-                activity.clickByTestTag(DemoTestTags.ANIMATION_VISIBILITY_TOGGLE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_core_primary_action)
             }
             waitForUiIdle()
             val hiddenMoved = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_VISIBILITY_TOGGLE)
+                val toggle = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_animation_core_primary_action,
+                )
                 val footer = activity.requireViewByTestTagVisible(DemoTestTags.ANIMATION_VISIBILITY_FOOTER)
                 footerTopAfterHide = viewTopOnScreen(footer)
-                toggle.text.toString().contains("显示块") && footerTopAfterHide < footerTopBeforeHide
+                toggle.text.toString() == activity.getString(R.string.demo_animation_core_show) &&
+                    footerTopAfterHide < footerTopBeforeHide
             }
             assertTrue(
                 "Expected footer to move up after hide, before=$footerTopBeforeHide, after=$footerTopAfterHide",
                 hiddenMoved,
             )
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.ANIMATION_VISIBILITY_TOGGLE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_core_primary_action)
             }
             waitForUiIdle()
             val shownMoved = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_VISIBILITY_TOGGLE)
+                val toggle = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_animation_core_primary_action,
+                )
                 val footer = activity.requireViewByTestTagVisible(DemoTestTags.ANIMATION_VISIBILITY_FOOTER)
                 val footerTopAfterShow = viewTopOnScreen(footer)
-                val root = activity.window.decorView.findViewById<View>(android.R.id.content)
-                val target = findViewByTestTag(root, DemoTestTags.ANIMATION_VISIBILITY_TARGET)
-                if (!toggle.text.toString().contains("隐藏块")) {
+                val target = activity.findViewById<View>(R.id.demo_animation_core_target)
+                if (toggle.text.toString() != activity.getString(R.string.demo_animation_core_hide)) {
                     return@waitUntilActivityCondition false
                 }
                 if (footerTopAfterShow <= footerTopAfterHide) {
@@ -1086,34 +1092,38 @@ class DemoVisualUiTest {
 
     @Test
     fun animationPage_contentToggle_updatesAnimatedContentLabel() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 1)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.content",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val label = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_CONTENT_LABEL)
-                assertTrue(label.text.toString().contains("主文案"))
-                activity.clickByTestTag(DemoTestTags.ANIMATION_CONTENT_TOGGLE)
+                assertEquals(activity.getString(R.string.demo_animation_content_primary), label.text.toString())
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_content_primary_action)
             }
             waitForUiIdle()
             val switchedToAlt = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_CONTENT_TOGGLE)
+                val toggle = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_animation_content_primary_action,
+                )
                 val label = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_CONTENT_LABEL)
-                toggle.text.toString().contains("切到主文案") &&
-                    label.text.toString().contains("替代文案")
+                toggle.text.toString() == activity.getString(R.string.demo_animation_content_to_primary) &&
+                    label.text.toString() == activity.getString(R.string.demo_animation_content_alternative)
             }
             assertTrue("Expected animated content label to switch to alternative copy", switchedToAlt)
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.ANIMATION_CONTENT_TOGGLE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_content_primary_action)
             }
             waitForUiIdle()
             val switchedBackToMain = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_CONTENT_TOGGLE)
+                val toggle = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_animation_content_primary_action,
+                )
                 val label = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_CONTENT_LABEL)
-                toggle.text.toString().contains("切到替代文案") &&
-                    label.text.toString().contains("主文案")
+                toggle.text.toString() == activity.getString(R.string.demo_animation_content_to_alternative) &&
+                    label.text.toString() == activity.getString(R.string.demo_animation_content_primary)
             }
             assertTrue("Expected animated content label to switch back to primary copy", switchedBackToMain)
         }
@@ -1121,46 +1131,49 @@ class DemoVisualUiTest {
 
     @Test
     fun animationPage_listMotion_controlsUpdateFirstItem() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 2)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.list-motion",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val first = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_LIST_FIRST)
-                assertTrue(first.text.toString().contains("Item A"))
-                activity.clickByTestTag(DemoTestTags.ANIMATION_LIST_ADD)
+                assertEquals(activity.getString(R.string.demo_animation_list_item_a), first.text.toString())
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_list_motion_primary_action)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val first = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_LIST_FIRST)
-                assertTrue(first.text.toString().contains("New"))
-                activity.clickByTestTag(DemoTestTags.ANIMATION_LIST_REORDER)
+                assertEquals(
+                    activity.getString(R.string.demo_animation_list_item_new, 1),
+                    first.text.toString(),
+                )
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_list_motion_secondary_action)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val first = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_LIST_FIRST)
-                assertTrue(first.text.toString().contains("Item A"))
+                assertEquals(activity.getString(R.string.demo_animation_list_item_a), first.text.toString())
             }
         }
     }
 
     @Test
     fun animationPage_specsPanel_switchesTypedAndGenericAnimations() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 3)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.specs",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             var floatBefore = ""
             var vectorBefore = ""
             scenario.onActivity { activity ->
                 floatBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_SPEC_FLOAT_VALUE).text.toString()
                 vectorBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_SPEC_VECTOR_VALUE).text.toString()
-                activity.clickByTestTag(DemoTestTags.ANIMATION_SPEC_KIND_TOGGLE)
-                activity.clickByTestTag(DemoTestTags.ANIMATION_SPEC_TARGET_TOGGLE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_specs_secondary_action)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_specs_primary_action)
                 activity.clickByTestTag(DemoTestTags.ANIMATION_SPEC_VECTOR_TOGGLE)
                 activity.clickByTestTag(DemoTestTags.ANIMATION_SPEC_SIZE_TOGGLE)
             }
@@ -1179,11 +1192,11 @@ class DemoVisualUiTest {
 
     @Test
     fun animationPage_transitionPanel_updatesAllTransitionChannels() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 4)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.transition",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             var alphaBefore = ""
             var intBefore = ""
@@ -1194,7 +1207,7 @@ class DemoVisualUiTest {
                 intBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_INT).text.toString()
                 dpBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_DP).text.toString()
                 colorBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_COLOR).text.toString()
-                activity.clickByTestTag(DemoTestTags.ANIMATION_TRANSITION_TOGGLE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_transition_primary_action)
             }
             waitForUiIdle()
             var transitionAfterSnapshot = ""
@@ -1220,14 +1233,14 @@ class DemoVisualUiTest {
 
     @Test
     fun animationPage_visibilityStatePanel_reportsIdleAndTargetState() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 4)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.transition",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.ANIMATION_VISIBILITY_STATE_TOGGLE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_transition_secondary_action)
                 activity.clickByTestTag(DemoTestTags.ANIMATION_ROW_AXIS_TOGGLE)
                 activity.clickByTestTag(DemoTestTags.ANIMATION_COLUMN_AXIS_TOGGLE)
             }
@@ -1238,9 +1251,14 @@ class DemoVisualUiTest {
                 val rowToggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_ROW_AXIS_TOGGLE).text.toString()
                 val columnToggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_COLUMN_AXIS_TOGGLE).text.toString()
                 visibilityAfterSnapshot = "$status, row=$rowToggle, column=$columnToggle"
-                status.contains("target=true") &&
-                    rowToggle.contains("隐藏") &&
-                    columnToggle.contains("隐藏")
+                status == activity.getString(
+                    R.string.demo_animation_visibility_status,
+                    true,
+                    true,
+                    true,
+                ) &&
+                    rowToggle == activity.getString(R.string.demo_animation_row_hide) &&
+                    columnToggle == activity.getString(R.string.demo_animation_column_hide)
             }
             assertTrue(
                 "Expected visibility state status and axis targets to update; after=[$visibilityAfterSnapshot]",
@@ -1282,18 +1300,16 @@ class DemoVisualUiTest {
 
     @Test
     fun animationPage_infiniteAndAnimatable_controlsAffectRenderedValue() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        )
-            .putExtra(EXTRA_ANIMATION_PAGE_INDEX, 5)
-            .putExtra(EXTRA_ANIMATION_INFINITE_PULSE, false)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.infinite",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_INFINITE_VALUE)
                 activity.clickByTestTag(DemoTestTags.ANIMATION_INFINITE_REPEAT_MODE)
-                activity.clickByTestTag(DemoTestTags.ANIMATION_ANIMATABLE_SNAP_HIGH)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_infinite_secondary_action)
             }
             waitForUiIdle()
             val snapHighApplied = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->

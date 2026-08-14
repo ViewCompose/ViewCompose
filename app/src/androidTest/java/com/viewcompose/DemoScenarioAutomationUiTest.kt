@@ -65,6 +65,12 @@ class DemoScenarioAutomationUiTest {
             "graphics.outer-shadow",
             "graphics.inner-shadow",
             "graphics.shadow-list",
+            "animation.core",
+            "animation.content",
+            "animation.list-motion",
+            "animation.specs",
+            "animation.transition",
+            "animation.infinite",
             "diagnostics.runtime",
             "diagnostics.theme",
             "diagnostics.renderer",
@@ -154,6 +160,35 @@ class DemoScenarioAutomationUiTest {
                 "graphics.drawing",
                 "graphics.inner-shadow",
                 "graphics.shadow-list",
+            ).forEach { scenarioId ->
+                launchScenario(scenarioId)
+                val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+                requireTarget(scenarioId, "primary_action").click()
+                val changed = waitForTargetTextChange(scenarioId, initial)
+                assertNotEquals("$scenarioId action must publish state", initial, changed)
+
+                requireTarget(scenarioId, "reset").click()
+                assertEquals(
+                    "$scenarioId reset must restore initial state",
+                    initial,
+                    waitForTargetText(scenarioId, initial),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun animationFixturesPublishDeterministicActionAndResetState() {
+        listOf("en", "zh-CN").forEach { languageTag ->
+            setApplicationLanguageTags(languageTag)
+            listOf(
+                "animation.core",
+                "animation.content",
+                "animation.list-motion",
+                "animation.specs",
+                "animation.transition",
+                "animation.infinite",
             ).forEach { scenarioId ->
                 launchScenario(scenarioId)
                 val initial = requireTarget(scenarioId, "state").text.orEmpty()

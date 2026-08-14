@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_animation_reset">重置场景</string>
+    <string name="demo_animation_core_title">基础动画</string>
+    <string name="demo_animation_core_summary">组合 animateFloatAsState 与 AnimatedVisibility，验证显隐和缩放更新。</string>
+    <string name="demo_animation_core_state">显示=%1$b · 脉冲=%2$b · 已完成=%3$b</string>
+    <string name="demo_animation_core_hide">隐藏块</string>
+    <string name="demo_animation_core_show">显示块</string>
+    <string name="demo_animation_core_scale_low">缩放到 0.92x</string>
+    <string name="demo_animation_core_scale_high">缩放到 1.08x</string>
+    <string name="demo_animation_core_surface">动画核心表面</string>
+    <string name="demo_animation_core_footer">显隐底部锚点</string>
+    <string name="demo_animation_task_title">阅读教程</string>
+    <string name="demo_animation_task_completed">已完成</string>
+    <string name="demo_animation_task_reopen">重新打开%1$s</string>
+    <string name="demo_animation_task_complete">完成%1$s</string>
+    <string name="demo_animation_task_details">查看%1$s详情</string>
+    <string name="demo_animation_task_delete">删除%1$s</string>
+
+    <string name="demo_animation_content_title">内容过渡</string>
+    <string name="demo_animation_content_summary">在同一聚焦场景中验证 AnimatedContent 与 Crossfade 的内容替换。</string>
+    <string name="demo_animation_content_state">内容=%1$b · 淡入淡出=%2$b</string>
+    <string name="demo_animation_content_to_primary">显示主文案</string>
+    <string name="demo_animation_content_to_alternative">显示替代文案</string>
+    <string name="demo_animation_crossfade_to_primary">淡入主文案</string>
+    <string name="demo_animation_crossfade_to_alternative">淡入替代文案</string>
+    <string name="demo_animation_content_primary">主文案：等待内容过渡</string>
+    <string name="demo_animation_content_alternative">替代文案：内容过渡已生效</string>
+    <string name="demo_animation_crossfade_primary">淡入淡出主文案展示中</string>
+    <string name="demo_animation_crossfade_alternative">淡入淡出替代文案已生效</string>
+
+    <string name="demo_animation_list_title">列表条目位移</string>
+    <string name="demo_animation_list_summary">LazyColumn 通过 lazyContainerMotion 验证条目新增、移动和变更策略。</string>
+    <string name="demo_animation_list_state">序号=%1$d · 首项=%2$s · 数量=%3$d</string>
+    <string name="demo_animation_list_insert">插入头部条目</string>
+    <string name="demo_animation_list_rotate">轮换条目顺序</string>
+    <string name="demo_animation_list_item_a">条目 A</string>
+    <string name="demo_animation_list_item_b">条目 B</string>
+    <string name="demo_animation_list_item_c">条目 C</string>
+    <string name="demo_animation_list_item_new">新条目 %1$d</string>
+    <string name="demo_animation_list_first">首项：%1$s</string>
+
+    <string name="demo_animation_specs_title">动画规格与泛型值</string>
+    <string name="demo_animation_specs_summary">验证类型化与泛型状态动画、缓动、重复模式及 animateContentSize。</string>
+    <string name="demo_animation_specs_state">规格=%1$s · 目标=%2$b · 线性=%3$b · 反向=%4$b · 向量=%5$b · 展开=%6$b</string>
+    <string name="demo_animation_specs_kind">规格：%1$s</string>
+    <string name="demo_animation_specs_kind_tween">补间</string>
+    <string name="demo_animation_specs_kind_spring">弹簧</string>
+    <string name="demo_animation_specs_kind_keyframes">关键帧</string>
+    <string name="demo_animation_specs_kind_snap">瞬时</string>
+    <string name="demo_animation_specs_kind_repeatable">有限重复</string>
+    <string name="demo_animation_specs_target_start">目标：起点</string>
+    <string name="demo_animation_specs_target_end">目标：终点</string>
+    <string name="demo_animation_specs_easing_linear">缓动：线性</string>
+    <string name="demo_animation_specs_easing_fast_out_slow_in">缓动：先快后慢</string>
+    <string name="demo_animation_specs_repeat_reverse">重复：反向</string>
+    <string name="demo_animation_specs_repeat_restart">重复：重新开始</string>
+    <string name="demo_animation_specs_float">浮点值 = %1$s</string>
+    <string name="demo_animation_specs_int">整数值 = %1$d</string>
+    <string name="demo_animation_specs_dp">Dp(px) = %1$s</string>
+    <string name="demo_animation_specs_color">颜色 = #%1$s</string>
+    <string name="demo_animation_specs_vector_reset">向量：重置</string>
+    <string name="demo_animation_specs_vector_target">向量：目标</string>
+    <string name="demo_animation_specs_vector_value">二维向量（x=%1$s，y=%2$s）</string>
+    <string name="demo_animation_specs_size_collapse">收起尺寸块</string>
+    <string name="demo_animation_specs_size_expand">展开尺寸块</string>
+    <string name="demo_animation_specs_size_title">animateContentSize 兼容目标</string>
+    <string name="demo_animation_specs_size_content_a">展开内容 A</string>
+    <string name="demo_animation_specs_size_content_b">展开内容 B</string>
+    <string name="demo_animation_specs_size_content_c">展开内容 C</string>
+
+    <string name="demo_animation_transition_title">Transition 与显隐状态</string>
+    <string name="demo_animation_transition_summary">验证 updateTransition、MutableTransitionState 及横向和纵向显隐。</string>
+    <string name="demo_animation_transition_state">过渡=%1$b · 显隐=%2$b · 横向=%3$b · 纵向=%4$b</string>
+    <string name="demo_animation_transition_to_primary">切换到主状态</string>
+    <string name="demo_animation_transition_to_alternative">切换到替代状态</string>
+    <string name="demo_animation_transition_alpha">透明度=%1$s</string>
+    <string name="demo_animation_transition_int">整数=%1$d</string>
+    <string name="demo_animation_transition_dp">dp(px)=%1$s</string>
+    <string name="demo_animation_transition_color">颜色=#%1$s</string>
+    <string name="demo_animation_visibility_target_false">将显隐目标设为 false</string>
+    <string name="demo_animation_visibility_target_true">将显隐目标设为 true</string>
+    <string name="demo_animation_visibility_status">当前=%1$b · 目标=%2$b · 空闲=%3$b</string>
+    <string name="demo_animation_visibility_content">由 MutableTransitionState 驱动的内容</string>
+    <string name="demo_animation_row_hide">隐藏横向块</string>
+    <string name="demo_animation_row_show">显示横向块</string>
+    <string name="demo_animation_row_content">横向块</string>
+    <string name="demo_animation_column_hide">隐藏纵向块</string>
+    <string name="demo_animation_column_show">显示纵向块</string>
+    <string name="demo_animation_column_content">纵向块</string>
+
+    <string name="demo_animation_infinite_title">无限过渡与 Animatable</string>
+    <string name="demo_animation_infinite_summary">验证 rememberInfiniteTransition、infiniteRepeatable 与 Animatable 命令生命周期。</string>
+    <string name="demo_animation_infinite_state">脉冲=%1$b · 反向=%2$b</string>
+    <string name="demo_animation_infinite_disable">关闭无限脉冲</string>
+    <string name="demo_animation_infinite_enable">开启无限脉冲</string>
+    <string name="demo_animation_infinite_repeat_reverse">重复：反向</string>
+    <string name="demo_animation_infinite_repeat_restart">重复：重新开始</string>
+    <string name="demo_animation_infinite_scale">无限缩放 = %1$s</string>
+    <string name="demo_animation_animatable_panel">Animatable 控制</string>
+    <string name="demo_animation_animatable_to_high">animateTo 1.0</string>
+    <string name="demo_animation_animatable_to_low">animateTo 0.0</string>
+    <string name="demo_animation_animatable_snap_high">snapTo 1.0</string>
+    <string name="demo_animation_animatable_snap_low">snapTo 0.0</string>
+    <string name="demo_animation_animatable_stop">停止当前 Animatable 任务</string>
+    <string name="demo_animation_animatable_value">Animatable 值 = %1$s</string>
+</resources>

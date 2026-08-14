@@ -112,6 +112,54 @@
     <item name="demo_graphics_shadow_list_state" type="id" />
     <item name="demo_graphics_shadow_list_target" type="id" />
 
+    <item name="demo_animation_core_root" type="id" />
+    <item name="demo_animation_core_ready" type="id" />
+    <item name="demo_animation_core_primary_action" type="id" />
+    <item name="demo_animation_core_secondary_action" type="id" />
+    <item name="demo_animation_core_reset" type="id" />
+    <item name="demo_animation_core_state" type="id" />
+    <item name="demo_animation_core_target" type="id" />
+
+    <item name="demo_animation_content_root" type="id" />
+    <item name="demo_animation_content_ready" type="id" />
+    <item name="demo_animation_content_primary_action" type="id" />
+    <item name="demo_animation_content_secondary_action" type="id" />
+    <item name="demo_animation_content_reset" type="id" />
+    <item name="demo_animation_content_state" type="id" />
+    <item name="demo_animation_content_target" type="id" />
+
+    <item name="demo_animation_list_motion_root" type="id" />
+    <item name="demo_animation_list_motion_ready" type="id" />
+    <item name="demo_animation_list_motion_primary_action" type="id" />
+    <item name="demo_animation_list_motion_secondary_action" type="id" />
+    <item name="demo_animation_list_motion_reset" type="id" />
+    <item name="demo_animation_list_motion_state" type="id" />
+    <item name="demo_animation_list_motion_target" type="id" />
+
+    <item name="demo_animation_specs_root" type="id" />
+    <item name="demo_animation_specs_ready" type="id" />
+    <item name="demo_animation_specs_primary_action" type="id" />
+    <item name="demo_animation_specs_secondary_action" type="id" />
+    <item name="demo_animation_specs_reset" type="id" />
+    <item name="demo_animation_specs_state" type="id" />
+    <item name="demo_animation_specs_target" type="id" />
+
+    <item name="demo_animation_transition_root" type="id" />
+    <item name="demo_animation_transition_ready" type="id" />
+    <item name="demo_animation_transition_primary_action" type="id" />
+    <item name="demo_animation_transition_secondary_action" type="id" />
+    <item name="demo_animation_transition_reset" type="id" />
+    <item name="demo_animation_transition_state" type="id" />
+    <item name="demo_animation_transition_target" type="id" />
+
+    <item name="demo_animation_infinite_root" type="id" />
+    <item name="demo_animation_infinite_ready" type="id" />
+    <item name="demo_animation_infinite_primary_action" type="id" />
+    <item name="demo_animation_infinite_secondary_action" type="id" />
+    <item name="demo_animation_infinite_reset" type="id" />
+    <item name="demo_animation_infinite_state" type="id" />
+    <item name="demo_animation_infinite_target" type="id" />
+
     <item name="demo_diagnostics_runtime_root" type="id" />
     <item name="demo_diagnostics_runtime_ready" type="id" />
     <item name="demo_diagnostics_runtime_target" type="id" />

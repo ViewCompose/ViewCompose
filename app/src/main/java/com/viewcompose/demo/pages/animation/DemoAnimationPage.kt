@@ -1,5 +1,10 @@
 package com.viewcompose
 
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioId
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.demo.registry.DemoScenarioIds
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.animation.AnimatedContent
 import com.viewcompose.animation.AnimatedVisibility
@@ -34,6 +39,7 @@ import com.viewcompose.animation.core.snap
 import com.viewcompose.animation.core.spring
 import com.viewcompose.animation.core.tween
 import com.viewcompose.animation.updateTransition
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -64,135 +70,180 @@ import kotlinx.coroutines.withContext
 
 @ViewComposePreview(name = "Animation · Core", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewAnimationCore() {
-    AnimationPage(initialPageIndex = 0, initialInfinitePulse = false)
+    AnimationPage(AnimationFixture.Core)
 }
 
 @ViewComposePreview(name = "Animation · Content", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewAnimationContent() {
-    AnimationPage(initialPageIndex = 1, initialInfinitePulse = false)
+    AnimationPage(AnimationFixture.Content)
 }
 
 @ViewComposePreview(name = "Animation · List motion", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewAnimationListMotion() {
-    AnimationPage(initialPageIndex = 2, initialInfinitePulse = false)
+    AnimationPage(AnimationFixture.ListMotion)
 }
 
 @ViewComposePreview(name = "Animation · Specs", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewAnimationSpecs() {
-    AnimationPage(initialPageIndex = 3, initialInfinitePulse = false)
+    AnimationPage(AnimationFixture.Specs)
 }
 
 @ViewComposePreview(name = "Animation · Transition", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewAnimationTransition() {
-    AnimationPage(initialPageIndex = 4, initialInfinitePulse = false)
+    AnimationPage(AnimationFixture.Transition)
 }
 
 @ViewComposePreview(name = "Animation · Infinite", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewAnimationInfinite() {
-    AnimationPage(initialPageIndex = 5, initialInfinitePulse = false)
+    AnimationPage(AnimationFixture.Infinite)
+}
+
+internal enum class AnimationFixture(
+    val scenarioId: DemoScenarioId,
+    val sectionKey: String,
+) {
+    Core(DemoScenarioIds.AnimationCore, "core"),
+    Content(DemoScenarioIds.AnimationContent, "transition"),
+    ListMotion(DemoScenarioIds.AnimationListMotion, "list"),
+    Specs(DemoScenarioIds.AnimationSpecs, "specs"),
+    Transition(DemoScenarioIds.AnimationTransition, "transition_matrix"),
+    Infinite(DemoScenarioIds.AnimationInfinite, "infinite_animatable"),
+    ;
+
+    companion object {
+        fun from(scenarioId: DemoScenarioId): AnimationFixture =
+            entries.singleOrNull { fixture -> fixture.scenarioId == scenarioId }
+                ?: error("Unsupported animation scenario: $scenarioId")
+    }
 }
 
 internal fun UiTreeBuilder.AnimationPage(
-    initialPageIndex: Int = 0,
-    initialInfinitePulse: Boolean = true,
+    fixture: AnimationFixture,
+    scenario: DemoScenarioSpec? = null,
 ) {
-    val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 5)) }
-    val visibleState = remember { mutableStateOf(true) }
-    val taskCompletedState = remember { mutableStateOf(false) }
-    val contentState = remember { mutableStateOf(false) }
-    val crossfadeState = remember { mutableStateOf(false) }
-    val pulseState = remember { mutableStateOf(false) }
-    val listItemsState = remember { mutableStateOf(listOf("Item A", "Item B", "Item C")) }
-    val listSeedState = remember { mutableStateOf(0) }
-    val specKindState = remember { mutableStateOf(AnimationSpecKind.Tween) }
-    val specTargetState = remember { mutableStateOf(false) }
-    val easingLinearState = remember { mutableStateOf(false) }
-    val repeatModeReverseState = remember { mutableStateOf(false) }
-    val vectorTargetState = remember { mutableStateOf(false) }
-    val sizeExpandedState = remember { mutableStateOf(false) }
-    val transitionState = remember { mutableStateOf(false) }
-    val mutableVisibilityState = remember { MutableTransitionState(false) }
-    val rowAxisVisibleState = remember { mutableStateOf(false) }
-    val columnAxisVisibleState = remember { mutableStateOf(false) }
-    val infinitePulseState = remember { mutableStateOf(initialInfinitePulse) }
-    val infiniteReverseState = remember { mutableStateOf(false) }
-    val animatableCommandState = remember { mutableStateOf(AnimatableCommand.None) }
-    val animatableCommandNonceState = remember { mutableStateOf(0) }
-    val animatable = rememberAnimatable(initialValue = 0f, converter = AnimationConverters.Float)
-    val animationCoroutineContext = LocalAnimationCoroutineContext.current
-
-    val sections = when (selectedPageState.value) {
-        0 -> listOf("page", "filter", "core", "verify")
-        1 -> listOf("page", "filter", "transition", "verify")
-        2 -> listOf("page", "filter", "list", "verify")
-        3 -> listOf("page", "filter", "specs", "verify")
-        4 -> listOf("page", "filter", "transition_matrix", "verify")
-        else -> listOf("page", "filter", "infinite_animatable", "verify")
+    val visibleState = if (fixture == AnimationFixture.Core) remember { mutableStateOf(true) } else null
+    val taskCompletedState = if (fixture == AnimationFixture.Core) remember { mutableStateOf(false) } else null
+    val pulseState = if (fixture == AnimationFixture.Core) remember { mutableStateOf(false) } else null
+    val contentState = if (fixture == AnimationFixture.Content) remember { mutableStateOf(false) } else null
+    val crossfadeState = if (fixture == AnimationFixture.Content) remember { mutableStateOf(false) } else null
+    val listItemsState = if (fixture == AnimationFixture.ListMotion) {
+        remember { mutableStateOf(initialAnimationListItems()) }
+    } else {
+        null
+    }
+    val listSeedState = if (fixture == AnimationFixture.ListMotion) remember { mutableStateOf(0) } else null
+    val specKindState = if (fixture == AnimationFixture.Specs) {
+        remember { mutableStateOf(AnimationSpecKind.Tween) }
+    } else {
+        null
+    }
+    val specTargetState = if (fixture == AnimationFixture.Specs) remember { mutableStateOf(false) } else null
+    val easingLinearState = if (fixture == AnimationFixture.Specs) remember { mutableStateOf(false) } else null
+    val repeatModeReverseState = if (fixture == AnimationFixture.Specs) remember { mutableStateOf(false) } else null
+    val vectorTargetState = if (fixture == AnimationFixture.Specs) remember { mutableStateOf(false) } else null
+    val sizeExpandedState = if (fixture == AnimationFixture.Specs) remember { mutableStateOf(false) } else null
+    val transitionState = if (fixture == AnimationFixture.Transition) remember { mutableStateOf(false) } else null
+    val mutableVisibilityState = if (fixture == AnimationFixture.Transition) {
+        remember { MutableTransitionState(false) }
+    } else {
+        null
+    }
+    val rowAxisVisibleState = if (fixture == AnimationFixture.Transition) remember { mutableStateOf(false) } else null
+    val columnAxisVisibleState = if (fixture == AnimationFixture.Transition) remember { mutableStateOf(false) } else null
+    val infinitePulseState = if (fixture == AnimationFixture.Infinite) remember { mutableStateOf(false) } else null
+    val infiniteReverseState = if (fixture == AnimationFixture.Infinite) remember { mutableStateOf(false) } else null
+    val animatableCommandState = if (fixture == AnimationFixture.Infinite) {
+        remember { mutableStateOf(AnimatableCommand.None) }
+    } else {
+        null
+    }
+    val animatableCommandNonceState = if (fixture == AnimationFixture.Infinite) {
+        remember { mutableStateOf(0) }
+    } else {
+        null
+    }
+    val animatable = if (fixture == AnimationFixture.Infinite) {
+        rememberAnimatable(initialValue = 0f, converter = AnimationConverters.Float)
+    } else {
+        null
+    }
+    val animationCoroutineContext = if (fixture == AnimationFixture.Infinite) {
+        LocalAnimationCoroutineContext.current
+    } else {
+        null
     }
 
-    LaunchedEffect(
-        animatableCommandState.value,
-        animatableCommandNonceState.value,
-        animationCoroutineContext,
+    if (
+        animatableCommandState != null &&
+        animatableCommandNonceState != null &&
+        animatable != null &&
+        animationCoroutineContext != null
     ) {
-        val command = animatableCommandState.value
-        withContext(animationCoroutineContext) {
-            when (command) {
-                AnimatableCommand.None,
-                AnimatableCommand.Stop,
-                -> Unit
+        LaunchedEffect(
+            animatableCommandState.value,
+            animatableCommandNonceState.value,
+            animationCoroutineContext,
+        ) {
+            val command = animatableCommandState.value
+            withContext(animationCoroutineContext) {
+                when (command) {
+                    AnimatableCommand.None -> Unit
 
-                AnimatableCommand.AnimateToHigh -> {
-                    animatable.animateTo(
-                        targetValue = 1f,
-                        animationSpec = tween(durationMillis = 420),
-                    )
-                }
+                    AnimatableCommand.Stop -> animatable.stop()
 
-                AnimatableCommand.AnimateToLow -> {
-                    animatable.animateTo(
-                        targetValue = 0f,
-                        animationSpec = spring(durationMillis = 520),
-                    )
-                }
+                    AnimatableCommand.AnimateToHigh -> {
+                        animatable.animateTo(
+                            targetValue = 1f,
+                            animationSpec = tween(durationMillis = 420),
+                        )
+                    }
 
-                AnimatableCommand.SnapToHigh -> {
-                    animatable.snapTo(1f)
-                }
+                    AnimatableCommand.AnimateToLow -> {
+                        animatable.animateTo(
+                            targetValue = 0f,
+                            animationSpec = spring(durationMillis = 520),
+                        )
+                    }
 
-                AnimatableCommand.SnapToLow -> {
-                    animatable.snapTo(0f)
+                    AnimatableCommand.SnapToHigh -> {
+                        animatable.snapTo(1f)
+                    }
+
+                    AnimatableCommand.SnapToLow -> {
+                        animatable.snapTo(0f)
+                    }
                 }
             }
         }
     }
 
     LazyColumn(
-        items = sections,
+        items = listOf(fixture.sectionKey),
         key = { it },
         modifier = Modifier.fillMaxSize(),
     ) { section ->
         when (section) {
-            "page" -> ChapterPageOverviewSection(
-                title = "Animation",
-                goal = "验证状态驱动动画、内容过渡和列表位移动画在 ViewCompose 中可用且默认行为可控。",
-                modules = listOf("viewcompose-animation", "graphicsLayer", "LazyContainer motion policy"),
-            )
-
-            "filter" -> ChapterPageFilterSection(
-                pages = listOf("Core", "Content", "List Motion", "Specs", "Transition", "Infinite"),
-                selectedIndex = selectedPageState.value,
-                onSelectionChange = { selectedPageState.value = it },
-            )
-
-            "core" -> ScenarioSection(
+            "core" -> {
+                val visibleState = checkNotNull(visibleState)
+                val taskCompletedState = checkNotNull(taskCompletedState)
+                val pulseState = checkNotNull(pulseState)
+                ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "基础属性动画",
-                subtitle = "animateFloatAsState + AnimatedVisibility 组合，验证显隐与缩放状态更新。",
+                title = stringResource(R.string.demo_animation_core_title),
+                subtitle = stringResource(R.string.demo_animation_core_summary),
             ) {
                 val scale = animateFloatAsState(
                     targetValue = if (pulseState.value) 1.08f else 0.92f,
                     animationSpec = spring(),
+                )
+                Text(
+                    text = stringResource(
+                        R.string.demo_animation_core_state,
+                        visibleState.value,
+                        pulseState.value,
+                        taskCompletedState.value,
+                    ),
+                    modifier = Modifier.animationScenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Row(
                     spacing = 8.dp,
@@ -201,24 +252,52 @@ internal fun UiTreeBuilder.AnimationPage(
                         .margin(bottom = 8.dp),
                 ) {
                     Button(
-                        text = if (visibleState.value) "隐藏块" else "显示块",
+                        text = stringResource(
+                            if (visibleState.value) {
+                                R.string.demo_animation_core_hide
+                            } else {
+                                R.string.demo_animation_core_show
+                            },
+                        ),
                         onClick = { visibleState.value = !visibleState.value },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_VISIBILITY_TOGGLE),
+                            .testTag(DemoTestTags.ANIMATION_VISIBILITY_TOGGLE)
+                            .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     )
                     Button(
-                        text = if (pulseState.value) "缩放 0.92x" else "缩放 1.08x",
+                        text = stringResource(
+                            if (pulseState.value) {
+                                R.string.demo_animation_core_scale_low
+                            } else {
+                                R.string.demo_animation_core_scale_high
+                            },
+                        ),
                         variant = ButtonVariant.Outlined,
                         onClick = { pulseState.value = !pulseState.value },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                     )
                 }
+                Button(
+                    text = stringResource(R.string.demo_animation_reset),
+                    onClick = {
+                        visibleState.value = true
+                        pulseState.value = false
+                        taskCompletedState.value = false
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(bottom = 8.dp)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.Reset),
+                )
                 AnimatedVisibility(
                     visible = visibleState.value,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.ANIMATION_VISIBILITY_TARGET),
+                        .testTag(DemoTestTags.ANIMATION_VISIBILITY_TARGET)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.Target),
                 ) {
                     Surface(
                         variant = SurfaceVariant.Variant,
@@ -230,11 +309,11 @@ internal fun UiTreeBuilder.AnimationPage(
                             )
                             .padding(12.dp),
                     ) {
-                        Text(text = "Animation Core Surface")
+                        Text(text = stringResource(R.string.demo_animation_core_surface))
                     }
                 }
                 Text(
-                    text = "Visibility footer anchor",
+                    text = stringResource(R.string.demo_animation_core_footer),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp)
@@ -244,7 +323,7 @@ internal fun UiTreeBuilder.AnimationPage(
                     items = listOf(
                         DemoAnimationTask(
                             id = 1L,
-                            title = "Read the tutorial",
+                            title = stringResource(R.string.demo_animation_task_title),
                             completed = taskCompletedState.value,
                         ),
                     ),
@@ -272,13 +351,13 @@ internal fun UiTreeBuilder.AnimationPage(
                                 visible = task.completed,
                                 modifier = Modifier.testTag(DemoTestTags.ANIMATION_TASK_STATUS),
                             ) {
-                                Text(text = "Completed")
+                                Text(text = stringResource(R.string.demo_animation_task_completed))
                             }
                             Button(
                                 text = if (task.completed) {
-                                    "Reopen ${task.title}"
+                                    stringResource(R.string.demo_animation_task_reopen, task.title)
                                 } else {
-                                    "Complete ${task.title}"
+                                    stringResource(R.string.demo_animation_task_complete, task.title)
                                 },
                                 onClick = {
                                     taskCompletedState.value = !taskCompletedState.value
@@ -294,13 +373,13 @@ internal fun UiTreeBuilder.AnimationPage(
                                     .testTag(DemoTestTags.ANIMATION_TASK_ACTIONS),
                             ) {
                                 Button(
-                                    text = "Details ${task.title}",
+                                    text = stringResource(R.string.demo_animation_task_details, task.title),
                                     variant = ButtonVariant.Outlined,
                                     onClick = {},
                                     modifier = Modifier.weight(1f),
                                 )
                                 Button(
-                                    text = "Delete ${task.title}",
+                                    text = stringResource(R.string.demo_animation_task_delete, task.title),
                                     variant = ButtonVariant.Outlined,
                                     onClick = {},
                                     modifier = Modifier.weight(1f),
@@ -309,13 +388,25 @@ internal fun UiTreeBuilder.AnimationPage(
                         }
                     }
                 }
+                }
             }
 
-            "transition" -> ScenarioSection(
+            "transition" -> {
+                val contentState = checkNotNull(contentState)
+                val crossfadeState = checkNotNull(crossfadeState)
+                ScenarioSection(
                 kind = ScenarioKind.Visual,
-                title = "内容过渡动画",
-                subtitle = "AnimatedContent + Crossfade 同页示例，覆盖内容替换动画。",
+                title = stringResource(R.string.demo_animation_content_title),
+                subtitle = stringResource(R.string.demo_animation_content_summary),
             ) {
+                Text(
+                    text = stringResource(
+                        R.string.demo_animation_content_state,
+                        contentState.value,
+                        crossfadeState.value,
+                    ),
+                    modifier = Modifier.animationScenarioTarget(scenario, DemoAutomationRole.State),
+                )
                 Row(
                     spacing = 8.dp,
                     modifier = Modifier
@@ -323,27 +414,53 @@ internal fun UiTreeBuilder.AnimationPage(
                         .margin(bottom = 8.dp),
                 ) {
                     Button(
-                        text = if (contentState.value) "切到主文案" else "切到替代文案",
+                        text = stringResource(
+                            if (contentState.value) {
+                                R.string.demo_animation_content_to_primary
+                            } else {
+                                R.string.demo_animation_content_to_alternative
+                            },
+                        ),
                         onClick = { contentState.value = !contentState.value },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_CONTENT_TOGGLE),
+                            .testTag(DemoTestTags.ANIMATION_CONTENT_TOGGLE)
+                            .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     )
                     Button(
-                        text = if (crossfadeState.value) "Crossfade 主文案" else "Crossfade 替代文案",
+                        text = stringResource(
+                            if (crossfadeState.value) {
+                                R.string.demo_animation_crossfade_to_primary
+                            } else {
+                                R.string.demo_animation_crossfade_to_alternative
+                            },
+                        ),
                         variant = ButtonVariant.Outlined,
                         onClick = { crossfadeState.value = !crossfadeState.value },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_CROSSFADE_TOGGLE),
+                            .testTag(DemoTestTags.ANIMATION_CROSSFADE_TOGGLE)
+                            .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                     )
                 }
+                Button(
+                    text = stringResource(R.string.demo_animation_reset),
+                    onClick = {
+                        contentState.value = false
+                        crossfadeState.value = false
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(bottom = 8.dp)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.Reset),
+                )
                 AnimatedContent(
                     targetState = contentState.value,
                     transitionSpec = { tween(260) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .margin(bottom = 10.dp),
+                        .margin(bottom = 10.dp)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.Target),
                 ) { alt ->
                     Surface(
                         variant = SurfaceVariant.Variant,
@@ -352,11 +469,13 @@ internal fun UiTreeBuilder.AnimationPage(
                             .padding(12.dp),
                     ) {
                         Text(
-                            text = if (alt) {
-                                "替代文案：内容过渡已生效"
-                            } else {
-                                "主文案：内容过渡待切换"
-                            },
+                            text = stringResource(
+                                if (alt) {
+                                    R.string.demo_animation_content_alternative
+                                } else {
+                                    R.string.demo_animation_content_primary
+                                },
+                            ),
                             modifier = Modifier.testTag(DemoTestTags.ANIMATION_CONTENT_LABEL),
                         )
                     }
@@ -373,22 +492,37 @@ internal fun UiTreeBuilder.AnimationPage(
                             .padding(12.dp),
                     ) {
                         Text(
-                            text = if (alt) {
-                                "Crossfade 替代文案已生效"
-                            } else {
-                                "Crossfade 主文案展示中"
-                            },
+                            text = stringResource(
+                                if (alt) {
+                                    R.string.demo_animation_crossfade_alternative
+                                } else {
+                                    R.string.demo_animation_crossfade_primary
+                                },
+                            ),
                             modifier = Modifier.testTag(DemoTestTags.ANIMATION_CROSSFADE_LABEL),
                         )
                     }
                 }
+                }
             }
 
-            "list" -> ScenarioSection(
+            "list" -> {
+                val listItemsState = checkNotNull(listItemsState)
+                val listSeedState = checkNotNull(listSeedState)
+                ScenarioSection(
                 kind = ScenarioKind.Stress,
-                title = "列表位移动画",
-                subtitle = "LazyColumn 通过 lazyContainerMotion 启用 item add/move/change 的动画策略。",
+                title = stringResource(R.string.demo_animation_list_title),
+                subtitle = stringResource(R.string.demo_animation_list_summary),
             ) {
+                Text(
+                    text = stringResource(
+                        R.string.demo_animation_list_state,
+                        listSeedState.value,
+                        animationListItemLabel(listItemsState.value.firstOrNull()),
+                        listItemsState.value.size,
+                    ),
+                    modifier = Modifier.animationScenarioTarget(scenario, DemoAutomationRole.State),
+                )
                 Row(
                     spacing = 8.dp,
                     modifier = Modifier
@@ -396,18 +530,19 @@ internal fun UiTreeBuilder.AnimationPage(
                         .margin(bottom = 8.dp),
                 ) {
                     Button(
-                        text = "头部插入",
+                        text = stringResource(R.string.demo_animation_list_insert),
                         onClick = {
                             val nextSeed = listSeedState.value + 1
                             listSeedState.value = nextSeed
-                            listItemsState.value = listOf("New $nextSeed") + listItemsState.value
+                            listItemsState.value = listOf(AnimationListItem.New(nextSeed)) + listItemsState.value
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_LIST_ADD),
+                            .testTag(DemoTestTags.ANIMATION_LIST_ADD)
+                            .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     )
                     Button(
-                        text = "顺序轮换",
+                        text = stringResource(R.string.demo_animation_list_rotate),
                         variant = ButtonVariant.Outlined,
                         onClick = {
                             val current = listItemsState.value
@@ -417,12 +552,24 @@ internal fun UiTreeBuilder.AnimationPage(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_LIST_REORDER),
+                            .testTag(DemoTestTags.ANIMATION_LIST_REORDER)
+                            .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                     )
                 }
+                Button(
+                    text = stringResource(R.string.demo_animation_reset),
+                    onClick = {
+                        listSeedState.value = 0
+                        listItemsState.value = initialAnimationListItems()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(bottom = 8.dp)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.Reset),
+                )
                 LazyColumn(
                     items = listItemsState.value,
-                    key = { it },
+                    key = AnimationListItem::stableKey,
                     spacing = 8.dp,
                     motionPolicy = CollectionMotionPolicy(
                         animateInsert = true,
@@ -432,7 +579,8 @@ internal fun UiTreeBuilder.AnimationPage(
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp),
+                        .height(220.dp)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.Target),
                 ) { item ->
                     Surface(
                         variant = SurfaceVariant.Variant,
@@ -441,7 +589,7 @@ internal fun UiTreeBuilder.AnimationPage(
                             .padding(10.dp),
                     ) {
                         Text(
-                            text = item,
+                            text = animationListItemLabel(item),
                             style = UiTextStyle(fontSizeSp = 14.sp),
                             modifier = if (item == listItemsState.value.firstOrNull()) {
                                 Modifier.testTag(DemoTestTags.ANIMATION_LIST_FIRST)
@@ -452,16 +600,27 @@ internal fun UiTreeBuilder.AnimationPage(
                     }
                 }
                 Text(
-                    text = "First item: ${listItemsState.value.firstOrNull().orEmpty()}",
+                    text = stringResource(
+                        R.string.demo_animation_list_first,
+                        animationListItemLabel(listItemsState.value.firstOrNull()),
+                    ),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier.margin(top = 8.dp),
                 )
+                }
             }
 
-            "specs" -> ScenarioSection(
+            "specs" -> {
+                val specKindState = checkNotNull(specKindState)
+                val specTargetState = checkNotNull(specTargetState)
+                val easingLinearState = checkNotNull(easingLinearState)
+                val repeatModeReverseState = checkNotNull(repeatModeReverseState)
+                val vectorTargetState = checkNotNull(vectorTargetState)
+                val sizeExpandedState = checkNotNull(sizeExpandedState)
+                ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "AnimationSpec 与泛型动画",
-                subtitle = "覆盖 animateInt/Color/Dp/ValueAsState、Easing、RepeatMode、animateContentSize。",
+                title = stringResource(R.string.demo_animation_specs_title),
+                subtitle = stringResource(R.string.demo_animation_specs_summary),
             ) {
                 val easing = if (easingLinearState.value) EasingDefaults.Linear else EasingDefaults.FastOutSlowIn
                 val repeatMode = if (repeatModeReverseState.value) RepeatMode.Reverse else RepeatMode.Restart
@@ -525,6 +684,18 @@ internal fun UiTreeBuilder.AnimationPage(
                         easing = easing,
                     ),
                 )
+                Text(
+                    text = stringResource(
+                        R.string.demo_animation_specs_state,
+                        specKindState.value.name,
+                        specTargetState.value,
+                        easingLinearState.value,
+                        repeatModeReverseState.value,
+                        vectorTargetState.value,
+                        sizeExpandedState.value,
+                    ),
+                    modifier = Modifier.animationScenarioTarget(scenario, DemoAutomationRole.State),
+                )
                 Column(
                     spacing = 8.dp,
                     modifier = Modifier.fillMaxWidth(),
@@ -534,21 +705,38 @@ internal fun UiTreeBuilder.AnimationPage(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Button(
-                            text = "Spec: ${specKindState.value.label}",
+                            text = stringResource(
+                                R.string.demo_animation_specs_kind,
+                                stringResource(specKindState.value.labelResource),
+                            ),
                             onClick = {
                                 specKindState.value = nextAnimationSpecKind(specKindState.value)
                             },
                             modifier = Modifier
                                 .weight(1f)
-                                .testTag(DemoTestTags.ANIMATION_SPEC_KIND_TOGGLE),
+                                .testTag(DemoTestTags.ANIMATION_SPEC_KIND_TOGGLE)
+                                .animationScenarioTarget(
+                                    scenario,
+                                    DemoAutomationRole.SecondaryAction,
+                                ),
                         )
                         Button(
-                            text = if (specTargetState.value) "目标: End" else "目标: Start",
+                            text = stringResource(
+                                if (specTargetState.value) {
+                                    R.string.demo_animation_specs_target_end
+                                } else {
+                                    R.string.demo_animation_specs_target_start
+                                },
+                            ),
                             variant = ButtonVariant.Outlined,
                             onClick = { specTargetState.value = !specTargetState.value },
                             modifier = Modifier
                                 .weight(1f)
-                                .testTag(DemoTestTags.ANIMATION_SPEC_TARGET_TOGGLE),
+                                .testTag(DemoTestTags.ANIMATION_SPEC_TARGET_TOGGLE)
+                                .animationScenarioTarget(
+                                    scenario,
+                                    DemoAutomationRole.PrimaryAction,
+                                ),
                         )
                     }
                     Row(
@@ -556,7 +744,13 @@ internal fun UiTreeBuilder.AnimationPage(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Button(
-                            text = if (easingLinearState.value) "Easing: Linear" else "Easing: FastOutSlowIn",
+                            text = stringResource(
+                                if (easingLinearState.value) {
+                                    R.string.demo_animation_specs_easing_linear
+                                } else {
+                                    R.string.demo_animation_specs_easing_fast_out_slow_in
+                                },
+                            ),
                             variant = ButtonVariant.Outlined,
                             onClick = { easingLinearState.value = !easingLinearState.value },
                             modifier = Modifier
@@ -564,7 +758,13 @@ internal fun UiTreeBuilder.AnimationPage(
                                 .testTag(DemoTestTags.ANIMATION_SPEC_EASING_TOGGLE),
                         )
                         Button(
-                            text = if (repeatModeReverseState.value) "Repeat: Reverse" else "Repeat: Restart",
+                            text = stringResource(
+                                if (repeatModeReverseState.value) {
+                                    R.string.demo_animation_specs_repeat_reverse
+                                } else {
+                                    R.string.demo_animation_specs_repeat_restart
+                                },
+                            ),
                             variant = ButtonVariant.Outlined,
                             onClick = { repeatModeReverseState.value = !repeatModeReverseState.value },
                             modifier = Modifier
@@ -572,30 +772,57 @@ internal fun UiTreeBuilder.AnimationPage(
                                 .testTag(DemoTestTags.ANIMATION_SPEC_REPEAT_MODE_TOGGLE),
                         )
                     }
+                    Button(
+                        text = stringResource(R.string.demo_animation_reset),
+                        onClick = {
+                            specKindState.value = AnimationSpecKind.Tween
+                            specTargetState.value = false
+                            easingLinearState.value = false
+                            repeatModeReverseState.value = false
+                            vectorTargetState.value = false
+                            sizeExpandedState.value = false
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animationScenarioTarget(scenario, DemoAutomationRole.Reset),
+                    )
                     Surface(
                         variant = SurfaceVariant.Variant,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
+                            .padding(12.dp)
+                            .animationScenarioTarget(scenario, DemoAutomationRole.Target),
                     ) {
                         Column(
                             spacing = 4.dp,
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
-                                text = "Float = ${floatValueState.value.format2()}",
+                                text = stringResource(
+                                    R.string.demo_animation_specs_float,
+                                    floatValueState.value.format2(),
+                                ),
                                 modifier = Modifier.testTag(DemoTestTags.ANIMATION_SPEC_FLOAT_VALUE),
                             )
                             Text(
-                                text = "Int = ${intValueState.value}",
+                                text = stringResource(
+                                    R.string.demo_animation_specs_int,
+                                    intValueState.value,
+                                ),
                                 modifier = Modifier.testTag(DemoTestTags.ANIMATION_SPEC_INT_VALUE),
                             )
                             Text(
-                                text = "Dp(px) = ${dpValueState.value}",
+                                text = stringResource(
+                                    R.string.demo_animation_specs_dp,
+                                    dpValueState.value.toString(),
+                                ),
                                 modifier = Modifier.testTag(DemoTestTags.ANIMATION_SPEC_DP_VALUE),
                             )
                             Text(
-                                text = "Color = #${colorValueState.value.toUInt().toString(16).uppercase()}",
+                                text = stringResource(
+                                    R.string.demo_animation_specs_color,
+                                    colorValueState.value.toUInt().toString(16).uppercase(),
+                                ),
                                 color = colorValueState.value,
                                 modifier = Modifier.testTag(DemoTestTags.ANIMATION_SPEC_COLOR_VALUE),
                             )
@@ -606,21 +833,37 @@ internal fun UiTreeBuilder.AnimationPage(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Button(
-                            text = if (vectorTargetState.value) "Vector: Reset" else "Vector: Target",
+                            text = stringResource(
+                                if (vectorTargetState.value) {
+                                    R.string.demo_animation_specs_vector_reset
+                                } else {
+                                    R.string.demo_animation_specs_vector_target
+                                },
+                            ),
                             onClick = { vectorTargetState.value = !vectorTargetState.value },
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag(DemoTestTags.ANIMATION_SPEC_VECTOR_TOGGLE),
                         )
                         Text(
-                            text = "Vec2(x=${vectorValueState.value.x.format2()}, y=${vectorValueState.value.y.format2()})",
+                            text = stringResource(
+                                R.string.demo_animation_specs_vector_value,
+                                vectorValueState.value.x.format2(),
+                                vectorValueState.value.y.format2(),
+                            ),
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag(DemoTestTags.ANIMATION_SPEC_VECTOR_VALUE),
                         )
                     }
                     Button(
-                        text = if (sizeExpandedState.value) "收起 Size 块" else "展开 Size 块",
+                        text = stringResource(
+                            if (sizeExpandedState.value) {
+                                R.string.demo_animation_specs_size_collapse
+                            } else {
+                                R.string.demo_animation_specs_size_expand
+                            },
+                        ),
                         variant = ButtonVariant.Outlined,
                         onClick = { sizeExpandedState.value = !sizeExpandedState.value },
                         modifier = Modifier
@@ -638,28 +881,34 @@ internal fun UiTreeBuilder.AnimationPage(
                             spacing = 6.dp,
                             modifier = Modifier.fillMaxWidth(),
                         ) {
-                            Text(text = "animateContentSize 兼容入口")
+                            Text(text = stringResource(R.string.demo_animation_specs_size_title))
                             if (sizeExpandedState.value) {
                                 Text(
-                                    text = "展开内容 A",
+                                    text = stringResource(R.string.demo_animation_specs_size_content_a),
                                     modifier = Modifier.testTag(DemoTestTags.ANIMATION_SPEC_SIZE_PROBE),
                                 )
-                                Text(text = "展开内容 B")
-                                Text(text = "展开内容 C")
+                                Text(text = stringResource(R.string.demo_animation_specs_size_content_b))
+                                Text(text = stringResource(R.string.demo_animation_specs_size_content_c))
                             }
                         }
                     }
                 }
+                }
             }
 
-            "transition_matrix" -> ScenarioSection(
+            "transition_matrix" -> {
+                val transitionState = checkNotNull(transitionState)
+                val mutableVisibilityState = checkNotNull(mutableVisibilityState)
+                val rowAxisVisibleState = checkNotNull(rowAxisVisibleState)
+                val columnAxisVisibleState = checkNotNull(columnAxisVisibleState)
+                ScenarioSection(
                 kind = ScenarioKind.Visual,
-                title = "Transition + VisibilityState",
-                subtitle = "覆盖 updateTransition、MutableTransitionState 与 Row/Column 轴向显隐。",
+                title = stringResource(R.string.demo_animation_transition_title),
+                subtitle = stringResource(R.string.demo_animation_transition_summary),
             ) {
                 val transition = updateTransition(
                     targetState = transitionState.value,
-                    label = "demo_transition",
+                    label = DEMO_TRANSITION_LABEL,
                 )
                 val transitionAlphaState = transition.animateFloat(
                     animationSpec = { tween(260) },
@@ -681,55 +930,110 @@ internal fun UiTreeBuilder.AnimationPage(
                 ) { toggled ->
                     if (toggled) 0xFF2E7D32.toInt() else 0xFFAD1457.toInt()
                 }
+                Text(
+                    text = stringResource(
+                        R.string.demo_animation_transition_state,
+                        transitionState.value,
+                        mutableVisibilityState.targetState,
+                        rowAxisVisibleState.value,
+                        columnAxisVisibleState.value,
+                    ),
+                    modifier = Modifier.animationScenarioTarget(scenario, DemoAutomationRole.State),
+                )
                 Button(
-                    text = if (transitionState.value) "切到主状态" else "切到替代状态",
+                    text = stringResource(
+                        if (transitionState.value) {
+                            R.string.demo_animation_transition_to_primary
+                        } else {
+                            R.string.demo_animation_transition_to_alternative
+                        },
+                    ),
                     onClick = { transitionState.value = !transitionState.value },
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.ANIMATION_TRANSITION_TOGGLE),
+                        .testTag(DemoTestTags.ANIMATION_TRANSITION_TOGGLE)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                 )
                 Surface(
                     variant = SurfaceVariant.Variant,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
+                        .padding(12.dp)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.Target),
                 ) {
                     Column(
                         spacing = 4.dp,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(
-                            text = "alpha=${transitionAlphaState.value.format2()}",
+                            text = stringResource(
+                                R.string.demo_animation_transition_alpha,
+                                transitionAlphaState.value.format2(),
+                            ),
                             modifier = Modifier.testTag(DemoTestTags.ANIMATION_TRANSITION_ALPHA),
                         )
                         Text(
-                            text = "int=${transitionIntState.value}",
+                            text = stringResource(
+                                R.string.demo_animation_transition_int,
+                                transitionIntState.value,
+                            ),
                             modifier = Modifier.testTag(DemoTestTags.ANIMATION_TRANSITION_INT),
                         )
                         Text(
-                            text = "dp(px)=${transitionDpState.value}",
+                            text = stringResource(
+                                R.string.demo_animation_transition_dp,
+                                transitionDpState.value.toString(),
+                            ),
                             modifier = Modifier.testTag(DemoTestTags.ANIMATION_TRANSITION_DP),
                         )
                         Text(
-                            text = "color=#${transitionColorState.value.toUInt().toString(16).uppercase()}",
+                            text = stringResource(
+                                R.string.demo_animation_transition_color,
+                                transitionColorState.value.toUInt().toString(16).uppercase(),
+                            ),
                             color = transitionColorState.value,
                             modifier = Modifier.testTag(DemoTestTags.ANIMATION_TRANSITION_COLOR),
                         )
                     }
                 }
                 Button(
-                    text = if (mutableVisibilityState.targetState) "VisibilityState 目标=false" else "VisibilityState 目标=true",
+                    text = stringResource(R.string.demo_animation_reset),
+                    onClick = {
+                        transitionState.value = false
+                        mutableVisibilityState.targetState = false
+                        rowAxisVisibleState.value = false
+                        columnAxisVisibleState.value = false
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(top = 10.dp)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.Reset),
+                )
+                Button(
+                    text = stringResource(
+                        if (mutableVisibilityState.targetState) {
+                            R.string.demo_animation_visibility_target_false
+                        } else {
+                            R.string.demo_animation_visibility_target_true
+                        },
+                    ),
                     onClick = {
                         mutableVisibilityState.targetState = !mutableVisibilityState.targetState
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(top = 10.dp, bottom = 8.dp)
-                        .testTag(DemoTestTags.ANIMATION_VISIBILITY_STATE_TOGGLE),
+                        .testTag(DemoTestTags.ANIMATION_VISIBILITY_STATE_TOGGLE)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                 )
                 Text(
-                    text = "current=${mutableVisibilityState.currentState}, target=${mutableVisibilityState.targetState}, idle=${mutableVisibilityState.isIdle}",
+                    text = stringResource(
+                        R.string.demo_animation_visibility_status,
+                        mutableVisibilityState.currentState,
+                        mutableVisibilityState.targetState,
+                        mutableVisibilityState.isIdle,
+                    ),
                     modifier = Modifier
                         .margin(bottom = 8.dp)
                         .testTag(DemoTestTags.ANIMATION_VISIBILITY_STATE_STATUS),
@@ -748,7 +1052,7 @@ internal fun UiTreeBuilder.AnimationPage(
                             .fillMaxWidth()
                             .padding(10.dp),
                     ) {
-                        Text(text = "MutableTransitionState 驱动的内容")
+                        Text(text = stringResource(R.string.demo_animation_visibility_content))
                     }
                 }
                 Row(
@@ -758,7 +1062,13 @@ internal fun UiTreeBuilder.AnimationPage(
                         .margin(top = 10.dp),
                 ) {
                     Button(
-                        text = if (rowAxisVisibleState.value) "隐藏 Row 轴向块" else "显示 Row 轴向块",
+                        text = stringResource(
+                            if (rowAxisVisibleState.value) {
+                                R.string.demo_animation_row_hide
+                            } else {
+                                R.string.demo_animation_row_show
+                            },
+                        ),
                         variant = ButtonVariant.Outlined,
                         onClick = { rowAxisVisibleState.value = !rowAxisVisibleState.value },
                         modifier = Modifier
@@ -779,7 +1089,7 @@ internal fun UiTreeBuilder.AnimationPage(
                                 .fillMaxWidth()
                                 .padding(8.dp),
                         ) {
-                            Text(text = "Row Axis")
+                            Text(text = stringResource(R.string.demo_animation_row_content))
                         }
                     }
                 }
@@ -790,7 +1100,13 @@ internal fun UiTreeBuilder.AnimationPage(
                         .margin(top = 10.dp),
                 ) {
                     Button(
-                        text = if (columnAxisVisibleState.value) "隐藏 Column 轴向块" else "显示 Column 轴向块",
+                        text = stringResource(
+                            if (columnAxisVisibleState.value) {
+                                R.string.demo_animation_column_hide
+                            } else {
+                                R.string.demo_animation_column_show
+                            },
+                        ),
                         variant = ButtonVariant.Outlined,
                         onClick = { columnAxisVisibleState.value = !columnAxisVisibleState.value },
                         modifier = Modifier
@@ -811,18 +1127,25 @@ internal fun UiTreeBuilder.AnimationPage(
                                 .fillMaxWidth()
                                 .padding(8.dp),
                         ) {
-                            Text(text = "Column Axis")
+                            Text(text = stringResource(R.string.demo_animation_column_content))
                         }
                     }
                 }
+                }
             }
 
-            "infinite_animatable" -> ScenarioSection(
+            "infinite_animatable" -> {
+                val infinitePulseState = checkNotNull(infinitePulseState)
+                val infiniteReverseState = checkNotNull(infiniteReverseState)
+                val animatableCommandState = checkNotNull(animatableCommandState)
+                val animatableCommandNonceState = checkNotNull(animatableCommandNonceState)
+                val animatable = checkNotNull(animatable)
+                ScenarioSection(
                 kind = ScenarioKind.Stress,
-                title = "Infinite + Animatable",
-                subtitle = "覆盖 rememberInfiniteTransition/infiniteRepeatable 与 Animatable 控制链路。",
+                title = stringResource(R.string.demo_animation_infinite_title),
+                subtitle = stringResource(R.string.demo_animation_infinite_summary),
             ) {
-                val infiniteTransition = rememberInfiniteTransition(label = "demo_infinite")
+                val infiniteTransition = rememberInfiniteTransition(label = DEMO_INFINITE_TRANSITION_LABEL)
                 val infiniteScaleState = infiniteTransition.animateFloat(
                     initialValue = if (infinitePulseState.value) 0.86f else 1f,
                     targetValue = if (infinitePulseState.value) 1.14f else 1f,
@@ -838,6 +1161,14 @@ internal fun UiTreeBuilder.AnimationPage(
                         },
                     ),
                 )
+                Text(
+                    text = stringResource(
+                        R.string.demo_animation_infinite_state,
+                        infinitePulseState.value,
+                        infiniteReverseState.value,
+                    ),
+                    modifier = Modifier.animationScenarioTarget(scenario, DemoAutomationRole.State),
+                )
                 Row(
                     spacing = 8.dp,
                     modifier = Modifier
@@ -845,14 +1176,27 @@ internal fun UiTreeBuilder.AnimationPage(
                         .margin(bottom = 8.dp),
                 ) {
                     Button(
-                        text = if (infinitePulseState.value) "关闭 Infinite 脉冲" else "开启 Infinite 脉冲",
+                        text = stringResource(
+                            if (infinitePulseState.value) {
+                                R.string.demo_animation_infinite_disable
+                            } else {
+                                R.string.demo_animation_infinite_enable
+                            },
+                        ),
                         onClick = { infinitePulseState.value = !infinitePulseState.value },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_INFINITE_RUN_TOGGLE),
+                            .testTag(DemoTestTags.ANIMATION_INFINITE_RUN_TOGGLE)
+                            .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     )
                     Button(
-                        text = if (infiniteReverseState.value) "Repeat=Reverse" else "Repeat=Restart",
+                        text = stringResource(
+                            if (infiniteReverseState.value) {
+                                R.string.demo_animation_infinite_repeat_reverse
+                            } else {
+                                R.string.demo_animation_infinite_repeat_restart
+                            },
+                        ),
                         variant = ButtonVariant.Outlined,
                         onClick = { infiniteReverseState.value = !infiniteReverseState.value },
                         modifier = Modifier
@@ -860,6 +1204,19 @@ internal fun UiTreeBuilder.AnimationPage(
                             .testTag(DemoTestTags.ANIMATION_INFINITE_REPEAT_MODE),
                     )
                 }
+                Button(
+                    text = stringResource(R.string.demo_animation_reset),
+                    onClick = {
+                        infinitePulseState.value = false
+                        infiniteReverseState.value = false
+                        animatableCommandState.value = AnimatableCommand.SnapToLow
+                        animatableCommandNonceState.value += 1
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(bottom = 8.dp)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.Reset),
+                )
                 Surface(
                     variant = SurfaceVariant.Variant,
                     modifier = Modifier
@@ -868,15 +1225,19 @@ internal fun UiTreeBuilder.AnimationPage(
                             scaleX = infiniteScaleState.value,
                             scaleY = infiniteScaleState.value,
                         )
-                        .padding(12.dp),
+                        .padding(12.dp)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.Target),
                 ) {
                     Text(
-                        text = "Infinite scale = ${infiniteScaleState.value.format2()}",
+                        text = stringResource(
+                            R.string.demo_animation_infinite_scale,
+                            infiniteScaleState.value.format2(),
+                        ),
                         modifier = Modifier.testTag(DemoTestTags.ANIMATION_INFINITE_VALUE),
                     )
                 }
                 Text(
-                    text = "Animatable 控制面板",
+                    text = stringResource(R.string.demo_animation_animatable_panel),
                     style = UiTextStyle(fontSizeSp = 15.sp),
                     modifier = Modifier.margin(top = 10.dp, bottom = 6.dp),
                 )
@@ -885,7 +1246,7 @@ internal fun UiTreeBuilder.AnimationPage(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Button(
-                        text = "animateTo 1.0",
+                        text = stringResource(R.string.demo_animation_animatable_to_high),
                         onClick = {
                             animatableCommandState.value = AnimatableCommand.AnimateToHigh
                             animatableCommandNonceState.value = animatableCommandNonceState.value + 1
@@ -895,7 +1256,7 @@ internal fun UiTreeBuilder.AnimationPage(
                             .testTag(DemoTestTags.ANIMATION_ANIMATABLE_TO_HIGH),
                     )
                     Button(
-                        text = "animateTo 0.0",
+                        text = stringResource(R.string.demo_animation_animatable_to_low),
                         variant = ButtonVariant.Outlined,
                         onClick = {
                             animatableCommandState.value = AnimatableCommand.AnimateToLow
@@ -913,7 +1274,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         .margin(top = 8.dp),
                 ) {
                     Button(
-                        text = "snapTo 1.0",
+                        text = stringResource(R.string.demo_animation_animatable_snap_high),
                         variant = ButtonVariant.Outlined,
                         onClick = {
                             animatableCommandState.value = AnimatableCommand.SnapToHigh
@@ -921,10 +1282,11 @@ internal fun UiTreeBuilder.AnimationPage(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_ANIMATABLE_SNAP_HIGH),
+                            .testTag(DemoTestTags.ANIMATION_ANIMATABLE_SNAP_HIGH)
+                            .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                     )
                     Button(
-                        text = "snapTo 0.0",
+                        text = stringResource(R.string.demo_animation_animatable_snap_low),
                         variant = ButtonVariant.Outlined,
                         onClick = {
                             animatableCommandState.value = AnimatableCommand.SnapToLow
@@ -936,7 +1298,7 @@ internal fun UiTreeBuilder.AnimationPage(
                     )
                 }
                 Button(
-                    text = "停止当前 Animatable 任务",
+                    text = stringResource(R.string.demo_animation_animatable_stop),
                     variant = ButtonVariant.Outlined,
                     onClick = {
                         animatableCommandState.value = AnimatableCommand.Stop
@@ -955,40 +1317,57 @@ internal fun UiTreeBuilder.AnimationPage(
                         .padding(10.dp),
                 ) {
                     Text(
-                        text = "Animatable value = ${animatable.asState.value.format2()}",
+                        text = stringResource(
+                            R.string.demo_animation_animatable_value,
+                            animatable.asState.value.format2(),
+                        ),
                         modifier = Modifier.testTag(DemoTestTags.ANIMATION_ANIMATABLE_VALUE),
                     )
                 }
+                }
             }
 
-            else -> VerificationNotesSection(
-                what = "Animation 页已覆盖 viewcompose-animation 对业务暴露的全部平台无关 API。",
-                howToVerify = listOf(
-                    "Core：animateFloatAsState + AnimatedVisibility(visible) 默认语义。",
-                    "Content：AnimatedContent + Crossfade 文案切换。",
-                    "List Motion：lazyContainerMotion 行为保持稳定。",
-                    "Specs：animateInt/Color/Dp/ValueAsState + AnimationSpec/Easing/RepeatMode + animateContentSize。",
-                    "Transition：updateTransition + MutableTransitionState + Row/Column 轴向显隐 + enter/exit 组合。",
-                    "Infinite：rememberInfiniteTransition + infiniteRepeatable + Animatable animateTo/snapTo。",
-                ),
-                expected = listOf(
-                    "0/1/2 旧标签行为不回退，索引兼容。",
-                    "每个 API 族均有 demo 锚点与可自动化断言的 testTag。",
-                    "动画值更新在状态变更后可预测且无同帧写后读异常。",
-                ),
-            )
+            else -> error("Unsupported animation section: $section")
         }
     }
 }
 
-private enum class AnimationSpecKind(
-    val label: String,
+private sealed class AnimationListItem(
+    val stableKey: String,
 ) {
-    Tween("Tween"),
-    Spring("Spring"),
-    Keyframes("Keyframes"),
-    Snap("Snap"),
-    Repeatable("Repeatable"),
+    data object A : AnimationListItem("a")
+
+    data object B : AnimationListItem("b")
+
+    data object C : AnimationListItem("c")
+
+    data class New(
+        val seed: Int,
+    ) : AnimationListItem("new-$seed")
+}
+
+private fun initialAnimationListItems(): List<AnimationListItem> = listOf(
+    AnimationListItem.A,
+    AnimationListItem.B,
+    AnimationListItem.C,
+)
+
+private fun UiTreeBuilder.animationListItemLabel(item: AnimationListItem?): String = when (item) {
+    AnimationListItem.A -> stringResource(R.string.demo_animation_list_item_a)
+    AnimationListItem.B -> stringResource(R.string.demo_animation_list_item_b)
+    AnimationListItem.C -> stringResource(R.string.demo_animation_list_item_c)
+    is AnimationListItem.New -> stringResource(R.string.demo_animation_list_item_new, item.seed)
+    null -> ""
+}
+
+private enum class AnimationSpecKind(
+    val labelResource: Int,
+) {
+    Tween(R.string.demo_animation_specs_kind_tween),
+    Spring(R.string.demo_animation_specs_kind_spring),
+    Keyframes(R.string.demo_animation_specs_kind_keyframes),
+    Snap(R.string.demo_animation_specs_kind_snap),
+    Repeatable(R.string.demo_animation_specs_kind_repeatable),
     ;
 }
 
@@ -1038,3 +1417,14 @@ private fun nextAnimationSpecKind(kind: AnimationSpecKind): AnimationSpecKind {
         AnimationSpecKind.Repeatable -> AnimationSpecKind.Tween
     }
 }
+
+private fun Modifier.animationScenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
+}
+
+private const val DEMO_TRANSITION_LABEL = "demo_transition"
+private const val DEMO_INFINITE_TRANSITION_LABEL = "demo_infinite"

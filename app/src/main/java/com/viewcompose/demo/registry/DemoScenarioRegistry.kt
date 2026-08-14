@@ -2,6 +2,7 @@ package com.viewcompose.demo.registry
 
 import android.content.Context
 import android.content.Intent
+import com.viewcompose.AnimationActivity
 import com.viewcompose.FeedbackActivity
 import com.viewcompose.GesturesActivity
 import com.viewcompose.GraphicsActivity
@@ -44,6 +45,12 @@ internal object DemoScenarioIds {
     val GraphicsOuterShadow = DemoScenarioId("graphics.outer-shadow")
     val GraphicsInnerShadow = DemoScenarioId("graphics.inner-shadow")
     val GraphicsShadowList = DemoScenarioId("graphics.shadow-list")
+    val AnimationCore = DemoScenarioId("animation.core")
+    val AnimationContent = DemoScenarioId("animation.content")
+    val AnimationListMotion = DemoScenarioId("animation.list-motion")
+    val AnimationSpecs = DemoScenarioId("animation.specs")
+    val AnimationTransition = DemoScenarioId("animation.transition")
+    val AnimationInfinite = DemoScenarioId("animation.infinite")
     val DiagnosticsRuntime = DemoScenarioId("diagnostics.runtime")
     val DiagnosticsTheme = DemoScenarioId("diagnostics.theme")
     val DiagnosticsRenderer = DemoScenarioId("diagnostics.renderer")
@@ -341,6 +348,78 @@ internal object DemoScenarioRegistry {
                 state = R.id.demo_graphics_shadow_list_state,
                 target = R.id.demo_graphics_shadow_list_target,
             ),
+        ),
+        animationScenario(
+            id = DemoScenarioIds.AnimationCore,
+            titleRes = R.string.demo_scenario_animation_core_title,
+            summaryRes = R.string.demo_scenario_animation_core_summary,
+            root = R.id.demo_animation_core_root,
+            ready = R.id.demo_animation_core_ready,
+            primaryAction = R.id.demo_animation_core_primary_action,
+            secondaryAction = R.id.demo_animation_core_secondary_action,
+            reset = R.id.demo_animation_core_reset,
+            state = R.id.demo_animation_core_state,
+            target = R.id.demo_animation_core_target,
+        ),
+        animationScenario(
+            id = DemoScenarioIds.AnimationContent,
+            titleRes = R.string.demo_scenario_animation_content_title,
+            summaryRes = R.string.demo_scenario_animation_content_summary,
+            root = R.id.demo_animation_content_root,
+            ready = R.id.demo_animation_content_ready,
+            primaryAction = R.id.demo_animation_content_primary_action,
+            secondaryAction = R.id.demo_animation_content_secondary_action,
+            reset = R.id.demo_animation_content_reset,
+            state = R.id.demo_animation_content_state,
+            target = R.id.demo_animation_content_target,
+        ),
+        animationScenario(
+            id = DemoScenarioIds.AnimationListMotion,
+            titleRes = R.string.demo_scenario_animation_list_motion_title,
+            summaryRes = R.string.demo_scenario_animation_list_motion_summary,
+            root = R.id.demo_animation_list_motion_root,
+            ready = R.id.demo_animation_list_motion_ready,
+            primaryAction = R.id.demo_animation_list_motion_primary_action,
+            secondaryAction = R.id.demo_animation_list_motion_secondary_action,
+            reset = R.id.demo_animation_list_motion_reset,
+            state = R.id.demo_animation_list_motion_state,
+            target = R.id.demo_animation_list_motion_target,
+        ),
+        animationScenario(
+            id = DemoScenarioIds.AnimationSpecs,
+            titleRes = R.string.demo_scenario_animation_specs_title,
+            summaryRes = R.string.demo_scenario_animation_specs_summary,
+            root = R.id.demo_animation_specs_root,
+            ready = R.id.demo_animation_specs_ready,
+            primaryAction = R.id.demo_animation_specs_primary_action,
+            secondaryAction = R.id.demo_animation_specs_secondary_action,
+            reset = R.id.demo_animation_specs_reset,
+            state = R.id.demo_animation_specs_state,
+            target = R.id.demo_animation_specs_target,
+        ),
+        animationScenario(
+            id = DemoScenarioIds.AnimationTransition,
+            titleRes = R.string.demo_scenario_animation_transition_title,
+            summaryRes = R.string.demo_scenario_animation_transition_summary,
+            root = R.id.demo_animation_transition_root,
+            ready = R.id.demo_animation_transition_ready,
+            primaryAction = R.id.demo_animation_transition_primary_action,
+            secondaryAction = R.id.demo_animation_transition_secondary_action,
+            reset = R.id.demo_animation_transition_reset,
+            state = R.id.demo_animation_transition_state,
+            target = R.id.demo_animation_transition_target,
+        ),
+        animationScenario(
+            id = DemoScenarioIds.AnimationInfinite,
+            titleRes = R.string.demo_scenario_animation_infinite_title,
+            summaryRes = R.string.demo_scenario_animation_infinite_summary,
+            root = R.id.demo_animation_infinite_root,
+            ready = R.id.demo_animation_infinite_ready,
+            primaryAction = R.id.demo_animation_infinite_primary_action,
+            secondaryAction = R.id.demo_animation_infinite_secondary_action,
+            reset = R.id.demo_animation_infinite_reset,
+            state = R.id.demo_animation_infinite_state,
+            target = R.id.demo_animation_infinite_target,
         ),
         scenario(
             id = DemoScenarioIds.DiagnosticsRuntime,
@@ -825,6 +904,37 @@ internal object DemoScenarioRegistry {
         val state: Int? = null,
         val target: Int? = null,
         val secondaryTarget: Int? = null,
+    )
+
+    private fun animationScenario(
+        id: DemoScenarioId,
+        titleRes: Int,
+        summaryRes: Int,
+        root: Int,
+        ready: Int,
+        primaryAction: Int,
+        secondaryAction: Int,
+        reset: Int,
+        state: Int,
+        target: Int,
+    ): DemoScenarioSpec = scenario(
+        id = id,
+        category = DemoScenarioCategory.Rendering,
+        titleRes = titleRes,
+        summaryRes = summaryRes,
+        host = DemoHostPolicy.SharedFixture,
+        verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+        route = DemoScenarioRoute(AnimationActivity::class.java),
+        mutable = true,
+        ids = TargetIds(
+            root = root,
+            ready = ready,
+            primaryAction = primaryAction,
+            secondaryAction = secondaryAction,
+            reset = reset,
+            state = state,
+            target = target,
+        ),
     )
 
     private fun scenario(
