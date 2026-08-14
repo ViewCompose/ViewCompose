@@ -91,6 +91,7 @@ class DemoScenarioAutomationUiTest {
             "layout.scroll",
             "layout.constraint",
             "environment.resources",
+            "interop.android-view",
             "overlay.dialog",
             "navigation.system",
             "performance.list",
@@ -207,6 +208,27 @@ class DemoScenarioAutomationUiTest {
                     waitForTargetText(scenarioId, initial),
                 )
             }
+        }
+    }
+
+    @Test
+    fun interopFixturePublishesDeterministicActionAndResetState() {
+        listOf("en", "zh-CN").forEach { languageTag ->
+            setApplicationLanguageTags(languageTag)
+            val scenarioId = "interop.android-view"
+            launchScenario(scenarioId)
+            val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+            requireTarget(scenarioId, "primary_action").click()
+            val changed = waitForTargetTextChange(scenarioId, initial)
+            assertNotEquals("$scenarioId action must publish state", initial, changed)
+
+            requireTarget(scenarioId, "reset").click()
+            assertEquals(
+                "$scenarioId reset must restore initial state",
+                initial,
+                waitForTargetText(scenarioId, initial),
+            )
         }
     }
 

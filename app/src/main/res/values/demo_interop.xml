@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_interop_mode_primary">primary</string>
+    <string name="demo_interop_mode_alternate">alternate</string>
+    <string name="demo_interop_state">Fixture state: %1$s</string>
+    <string name="demo_interop_action_primary">Show primary native content</string>
+    <string name="demo_interop_action_alternate">Show alternate native content</string>
+    <string name="demo_interop_reset">Reset Android View fixture</string>
+    <string name="demo_interop_native_primary">Native TextView: primary content</string>
+    <string name="demo_interop_native_alternate">Native TextView: alternate content</string>
+    <string name="demo_interop_native_description">Native Android TextView result</string>
+    <string name="demo_interop_declarative_mirror">Declarative mirror: %1$s</string>
+    <string name="demo_interop_theme_note">The native TextView stays mounted while state, locale, and theme values patch it in place.</string>
+</resources>

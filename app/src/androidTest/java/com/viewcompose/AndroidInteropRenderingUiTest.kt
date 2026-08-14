@@ -27,7 +27,10 @@ import org.junit.runner.RunWith
 class AndroidInteropRenderingUiTest {
     @Test
     fun nativeViewConfig_isAppliedAfterSpecAndModifierPatch() {
-        launchDemoActivity(InteropActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            InteropActivity::class.java,
+            "interop.android-view",
+        ).use { scenario ->
             scenario.onActivity { activity ->
                 val container = FrameLayout(activity)
                 val first = textNode(
@@ -64,7 +67,10 @@ class AndroidInteropRenderingUiTest {
 
     @Test
     fun androidView_reuseAndDisposeInvokeLifecycleCallbacksOnce() {
-        launchDemoActivity(InteropActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            InteropActivity::class.java,
+            "interop.android-view",
+        ).use { scenario ->
             scenario.onActivity { activity ->
                 val container = FrameLayout(activity)
                 var factoryCalls = 0

@@ -265,6 +265,14 @@
     <item name="demo_environment_resources_state" type="id" />
     <item name="demo_environment_resources_target" type="id" />
 
+    <item name="demo_interop_android_view_root" type="id" />
+    <item name="demo_interop_android_view_ready" type="id" />
+    <item name="demo_interop_android_view_primary_action" type="id" />
+    <item name="demo_interop_android_view_reset" type="id" />
+    <item name="demo_interop_android_view_state" type="id" />
+    <item name="demo_interop_android_view_target" type="id" />
+    <item name="demo_interop_android_view_secondary_target" type="id" />
+
     <item name="demo_overlay_dialog_root" type="id" />
     <item name="demo_overlay_dialog_ready" type="id" />
     <item name="demo_overlay_dialog_primary_action" type="id" />

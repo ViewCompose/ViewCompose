@@ -7,6 +7,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Configurator
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 
@@ -117,6 +118,26 @@ internal fun MacrobenchmarkScope.waitForScenarioTargetTextChange(
     return current
 }
 
+/** Waits until a resource-addressed target publishes the expected value. */
+internal fun MacrobenchmarkScope.waitForScenarioTargetText(
+    scenarioId: String,
+    role: DemoTargetRole,
+    expected: String,
+) {
+    val resourceName = scenarioTargetResourceName(scenarioId, role)
+    val deadline = SystemClock.uptimeMillis() + UI_WAIT_TIMEOUT_MS
+    var current = device.findObject(By.res(TARGET_PACKAGE, resourceName))?.text.orEmpty()
+    while (current != expected && SystemClock.uptimeMillis() < deadline) {
+        SystemClock.sleep(16L)
+        current = device.findObject(By.res(TARGET_PACKAGE, resourceName))?.text.orEmpty()
+    }
+    assertEquals(
+        "Unexpected scenario target text: $scenarioId/${role.wireValue}",
+        expected,
+        current,
+    )
+}
+
 private fun scenarioTargetResourceName(
     scenarioId: String,
     role: DemoTargetRole,
@@ -182,7 +203,6 @@ internal fun MacrobenchmarkScope.startDemoActivityAndWait(
 private fun legacyBenchmarkActivityClass(moduleKey: String): String = when (moduleKey) {
     "environment" -> "com.viewcompose.DemoEnvironmentActivity"
     "foundations" -> "com.viewcompose.FoundationsActivity"
-    "interop" -> "com.viewcompose.InteropActivity"
     "diagnostics" -> "com.viewcompose.DiagnosticsActivity"
     else -> error("Unknown legacy benchmark module: $moduleKey")
 }

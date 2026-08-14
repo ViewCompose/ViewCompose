@@ -220,18 +220,18 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "interop",
-                expectedText = "Interop",
-            )
-            scrollUntilText("Interop Benchmark Primary")
-            scrollUntilText("Reset Interop Benchmark")
+            startDemoScenarioAndWait("interop.android-view")
         },
     ) {
-        clickText("Interop Benchmark Primary")
-        waitForText("Interop Benchmark Alternate")
-        clickText("Reset Interop Benchmark")
-        waitForText("Interop Benchmark Primary")
+        val initial = scenarioTargetText("interop.android-view", DemoTargetRole.State)
+        clickScenarioTarget("interop.android-view", DemoTargetRole.PrimaryAction)
+        waitForScenarioTargetTextChange(
+            "interop.android-view",
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget("interop.android-view", DemoTargetRole.Reset)
+        waitForScenarioTargetText("interop.android-view", DemoTargetRole.State, initial)
     }
 
     @Test

@@ -14,6 +14,9 @@ class InteropActivity : DemoRenderActivity() {
         root: ViewGroup,
         builder: UiTreeBuilder,
     ) {
-        builder.InteropPage()
+        val scenario = checkNotNull(currentScenario()) {
+            "InteropActivity requires the registered interop scenario"
+        }
+        builder.InteropPage(scenario)
     }
 }

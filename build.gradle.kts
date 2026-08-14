@@ -544,7 +544,7 @@ tasks.register("verifyDemoAutomationSelectors") {
             "app/src/androidTest/java/com/viewcompose/OneUi7VerificationUiTest.kt" to 4,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ComplexLayoutPerformanceComparisonBenchmark.kt" to 3,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt" to 19,
-            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoInteractionBenchmark.kt" to 12,
+            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoInteractionBenchmark.kt" to 8,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DesignSystemVerticalSliceBenchmark.kt" to 17,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ShadowPerformanceComparisonBenchmark.kt" to 3,
         )
@@ -734,6 +734,7 @@ tasks.register("verifyDemoLocalizedVisibleCopy") {
                 "app/src/main/java/com/viewcompose/demo/pages/animation/DemoAnimationPage.kt",
             ),
             rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/modifiers"),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/interop"),
         )
         val visibleLiteral = Regex(
             """(?:\b(?:text|title|subtitle|label|supportingText|placeholder|""" +

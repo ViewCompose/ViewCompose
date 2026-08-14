@@ -176,9 +176,6 @@ internal object DemoTestTags {
     const val COLLECTIONS_GRID_THREE_COLS = "collections_grid_three_cols"
     const val COLLECTIONS_GRID_FIRST_ITEM = "collections_grid_first_item"
 
-    const val INTEROP_BENCHMARK_TOGGLE = "interop_benchmark_toggle"
-    const val INTEROP_BENCHMARK_RESET = "interop_benchmark_reset"
-    const val INTEROP_BENCHMARK_NATIVE_TEXT = "interop_benchmark_native_text"
 
     const val FOUNDATIONS_BENCHMARK_TOGGLE = "foundations_benchmark_toggle"
     const val FOUNDATIONS_BENCHMARK_RESET = "foundations_benchmark_reset"

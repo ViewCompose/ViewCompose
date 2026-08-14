@@ -29,6 +29,7 @@ class FoundationsActivity : DemoRenderActivity() {
             val strictScenarioId = when (target) {
                 CollectionsActivity::class.java -> DemoScenarioIds.CollectionControls
                 InputActivity::class.java -> DemoScenarioIds.InputFields
+                InteropActivity::class.java -> DemoScenarioIds.InteropAndroidView
                 LayoutsActivity::class.java -> DemoScenarioIds.LayoutLinear
                 StateActivity::class.java -> DemoScenarioIds.RuntimeState
                 else -> null

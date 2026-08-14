@@ -15,6 +15,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -246,26 +247,69 @@ class DemoVisualUiTest {
 
     @Test
     fun interopBenchmarkControls_andNativeMirror_areVisible() {
-        launchDemoActivity(InteropActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            InteropActivity::class.java,
+            "interop.android-view",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("interop-benchmark-light")
+            var mountedNativeView: TextView? = null
             scenario.onActivity { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.INTEROP_BENCHMARK_TOGGLE)
-                val reset = activity.requireTextViewByTestTag(DemoTestTags.INTEROP_BENCHMARK_RESET)
-                val nativeMirror = activity.requireTextViewByTestTag(DemoTestTags.INTEROP_BENCHMARK_NATIVE_TEXT)
+                val toggle = activity.requireScenarioViewByIdVisible<TextView>(
+                    R.id.demo_interop_android_view_primary_action,
+                )
+                val reset = activity.requireScenarioViewByIdVisible<TextView>(
+                    R.id.demo_interop_android_view_reset,
+                )
+                val nativeMirror = activity.requireScenarioViewByIdVisible<TextView>(
+                    R.id.demo_interop_android_view_target,
+                )
                 assertViewFullyVisible(toggle)
                 assertViewFullyVisible(reset)
                 assertViewFullyVisible(nativeMirror)
                 assertTextNotEllipsized(toggle)
                 assertTextNotEllipsized(reset)
-                assertEquals("原生 benchmark TextView: 主要", nativeMirror.text.toString())
-                activity.clickByTestTag(DemoTestTags.INTEROP_BENCHMARK_TOGGLE)
+                assertEquals(
+                    activity.getString(R.string.demo_interop_native_primary),
+                    nativeMirror.text.toString(),
+                )
+                assertEquals(DemoThemeTokens.light.colors.onSurface, nativeMirror.currentTextColor)
+                mountedNativeView = nativeMirror
+                activity.clickScenarioViewById(R.id.demo_interop_android_view_primary_action)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val nativeMirror = activity.requireTextViewByTestTag(DemoTestTags.INTEROP_BENCHMARK_NATIVE_TEXT)
-                assertEquals("原生 benchmark TextView: 替代", nativeMirror.text.toString())
+                val nativeMirror = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_interop_android_view_target,
+                )
+                val declarativeMirror = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_interop_android_view_secondary_target,
+                )
+                assertSame(mountedNativeView, nativeMirror)
+                assertEquals(
+                    activity.getString(R.string.demo_interop_native_alternate),
+                    nativeMirror.text.toString(),
+                )
+                assertEquals(
+                    activity.getString(
+                        R.string.demo_interop_declarative_mirror,
+                        activity.getString(R.string.demo_interop_native_alternate),
+                    ),
+                    declarativeMirror.text.toString(),
+                )
+                DemoThemeSession.mode = DemoThemeMode.Dark
             }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val nativeMirror = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_interop_android_view_target,
+                )
+                assertSame(mountedNativeView, nativeMirror)
+                assertEquals(DemoThemeTokens.dark.colors.onSurface, nativeMirror.currentTextColor)
+                DemoThemeSession.mode = DemoThemeMode.Light
+            }
+            waitForUiIdle()
         }
     }
 

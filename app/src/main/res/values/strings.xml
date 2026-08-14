@@ -120,6 +120,8 @@
     <string name="demo_scenario_layout_constraint_summary">Constraint anchors, dimensions, chains, sets, and virtual helpers.</string>
     <string name="demo_scenario_environment_resources_title">Android resource environment</string>
     <string name="demo_scenario_environment_resources_summary">Locale, night mode, direction, font scale, and density propagation.</string>
+    <string name="demo_scenario_interop_android_view_title">Android View interop</string>
+    <string name="demo_scenario_interop_android_view_summary">Native View updates and theme-local propagation inside a stable declarative tree.</string>
     <string name="demo_scenario_overlay_dialog_title">Dialog overlay</string>
     <string name="demo_scenario_overlay_dialog_summary">Overlay creation, dismissal, and host lifecycle.</string>
     <string name="demo_scenario_navigation_system_title">Android system navigation</string>

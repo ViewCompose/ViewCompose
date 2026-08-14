@@ -11,6 +11,7 @@ import com.viewcompose.DiagnosticsActivity
 import com.viewcompose.LayoutsActivity
 import com.viewcompose.ModifiersActivity
 import com.viewcompose.InputActivity
+import com.viewcompose.InteropActivity
 import com.viewcompose.R
 import com.viewcompose.ResourceConfigurationActivity
 import com.viewcompose.StateActivity
@@ -72,6 +73,7 @@ internal object DemoScenarioIds {
     val LayoutScroll = DemoScenarioId("layout.scroll")
     val LayoutConstraint = DemoScenarioId("layout.constraint")
     val EnvironmentResources = DemoScenarioId("environment.resources")
+    val InteropAndroidView = DemoScenarioId("interop.android-view")
     val OverlayDialog = DemoScenarioId("overlay.dialog")
     val NavigationSystem = DemoScenarioId("navigation.system")
     val PerformanceList = DemoScenarioId("performance.list")
@@ -760,6 +762,30 @@ internal object DemoScenarioRegistry {
                 state = R.id.demo_environment_resources_state,
                 target = R.id.demo_environment_resources_target,
             ),
+        ),
+        scenario(
+            id = DemoScenarioIds.InteropAndroidView,
+            category = DemoScenarioCategory.AndroidIntegration,
+            titleRes = R.string.demo_scenario_interop_android_view_title,
+            summaryRes = R.string.demo_scenario_interop_android_view_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(
+                DemoVerificationKind.Manual,
+                DemoVerificationKind.Visual,
+                DemoVerificationKind.Benchmark,
+            ),
+            route = DemoScenarioRoute(InteropActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_interop_android_view_root,
+                ready = R.id.demo_interop_android_view_ready,
+                primaryAction = R.id.demo_interop_android_view_primary_action,
+                reset = R.id.demo_interop_android_view_reset,
+                state = R.id.demo_interop_android_view_state,
+                target = R.id.demo_interop_android_view_target,
+                secondaryTarget = R.id.demo_interop_android_view_secondary_target,
+            ),
+            benchmarkRevision = 2,
         ),
         scenario(
             id = DemoScenarioIds.OverlayDialog,

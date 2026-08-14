@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: begin the third-risk group with Resources and Android View interop while reducing the
-remaining text-selector debt with each direct scenario slice.
+Next action: continue the third-risk group with overlays, navigation, and lifecycle-specific hosts
+while reducing the remaining text-selector debt with each direct scenario slice.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -235,6 +235,7 @@ claiming a performance delta against this table.
 | `catalog` cold startup | 1 | Launcher shell, first-frame catalog hierarchy, startup data set |
 | `runtime.view-patch` state patch | 1 | Patched node set, state fan-out, action sequence, host chrome |
 | `diagnostics.theme` long fling | 1 | Full item tree, tab-switch prelude, fling bounds, host chrome |
+| `interop.android-view` state patch | 1 | Native target, declarative mirror, host hierarchy, action/reset sequence |
 | `collection.stress` mutation | 1 | Item count/order, key/content revisions, action sequence |
 | `performance.list` | 1 | 240-row model, row tree/content shape, rotation/update rule, engine |
 | `performance.complex-layout` | 1 | Dashboard-card model, nested tree, update rule, engine |
@@ -772,6 +773,22 @@ Modifiers directory. On the Samsung SM-G991B Android 13 reference device, all th
 passed the registry-wide root/ready sweep; focused tests also passed for Drawable precedence and
 outline clipping, fillMaxHeight parent geometry, localized contentDescription, and replayed
 nativeView typeface/letter-spacing patches.
+
+The existing dedicated `environment.resources` route already satisfied the third-risk-group
+contract and required no duplicate migration. Android View interop now has one strict direct
+fixture, `interop.android-view`; `InteropActivity` requires that immutable scenario identity, and
+the chapter overview, page switcher, route callout, verification checklist, and duplicate basic
+fixture were deleted. State, action, reset, declarative mirror, and native TextView result use
+scenario-owned resource roles. Dynamic state, localized resources, and theme tokens are read
+inside the mounted lazy-item Session so a stable item key cannot freeze ordinary captured values;
+the same native TextView is patched in place across state and light/dark theme changes. The direct
+host and hierarchy advance the workload revision from 1 to 2. Its Macrobenchmark now uses only
+resource-ID roles, the legacy `interop` module bridge has no callers and was removed, and the
+guarded visible-text selector baseline fell by four usages. Paired resources cover the complete
+fixture, and the hard-coded-copy gate owns the Interop domain. On the Samsung SM-G991B Android 13
+reference device, two renderer lifecycle regressions, the in-place state/theme fixture, the
+English and Simplified Chinese action-reset contract, and the registry-wide root/ready sweep
+passed.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 
