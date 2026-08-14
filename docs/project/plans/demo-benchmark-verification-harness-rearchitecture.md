@@ -2,8 +2,8 @@
 
 ## Status
 
-Active. The code, test, benchmark, layout-tree, and running-device audit is complete; production
-implementation has not started.
+Active. Phase 0 inventory and workload freeze are complete. Phase 1 contract and automation-spine
+implementation is in progress.
 
 The Demo is being redefined as a deterministic benchmark and framework-verification harness.
 Automated validation owns the primary information architecture. Human verification remains a
@@ -12,8 +12,7 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: execute Phase 0 by freezing the scenario inventory and current benchmark workload
-revisions, then implement the Phase 1 route and automation-target contracts before changing the
+Next action: implement the Phase 1 route and automation-target contracts before changing the
 catalog or fixture layouts.
 
 Do not benchmark or begin a performance-only slice from the
@@ -166,6 +165,87 @@ replacing that black-box selector contract would make the benchmark suite unstab
    `PerformanceComparisonActivity` selects a strict engine/scenario contract, fails on unknown
    values, and mounts only the measured screen. This design should become the baseline for all
    measured fixtures, not remain an exception.
+
+## Frozen scenario inventory
+
+Phase 0 replaces the old module/page identity with the following immutable scenario IDs. The
+legacy page index is recorded only to classify and migrate existing callers; it is not part of the
+new launch contract.
+
+| Legacy owner | Page or variant | Decision | Replacement scenario ID |
+| --- | --- | --- | --- |
+| Home | Catalog | Retain as the unmeasured launcher/catalog | `catalog` |
+| Home | Diagnostics, Settings, About pager pages | Split diagnostics and environment controls; remove About | Direct scenarios below; no page IDs |
+| Foundations | Guide, 0 | Remove architecture prose; retain the business-Local fixture | `foundations.locals` |
+| Foundations | Theme, Media, Typography, 1-3 | Split | `foundations.theme`, `foundations.media`, `foundations.typography` |
+| State | Core, Identity, Patch, 0-2 | Split | `runtime.state`, `runtime.key-identity`, `runtime.view-patch` |
+| State | Checklist, 3 | Remove copied capability inventory | None |
+| Layouts | Linear, Stack, Edges, Flow, Scroll, Constraint, 0-5 | Split | `layout.linear`, `layout.stack`, `layout.edges`, `layout.flow`, `layout.scroll`, `layout.constraint` |
+| Layouts | Checklist, 6 | Remove copied capability inventory | None |
+| Input | Fields, Selection, Stress, Search, Summary, 0-4 | Split | `input.fields`, `input.selection`, `input.stress`, `input.search`, `input.derived-summary` |
+| Feedback | Transient, Dialog, Menu, 0-2 | Split; retain overlay-capable host | `overlay.transient`, `overlay.dialog`, `overlay.menu` |
+| Collections | Controls, List, Stress, Interop, Row, Grid, Refresh, 0-6 | Split | `collection.controls`, `collection.lazy-list`, `collection.stress`, `collection.android-view`, `collection.lazy-row`, `collection.grid`, `collection.pull-refresh` |
+| Interop | Android View and Local propagation | Retain | `interop.android-view` |
+| Diagnostics | Runtime, Theme, Renderer, 0-2 | Split | `diagnostics.runtime`, `diagnostics.theme`, `diagnostics.renderer` |
+| Diagnostics | Gaps, 3 | Remove roadmap content | None |
+| Preview | Bridge, Overlay mock, Snapshot, 0-2 | Split; preview/snapshot ownership remains explicit | `preview.bridge`, `preview.overlay-mock`, `preview.snapshot` |
+| Actions | Card, FAB, Chip, List item, 0-3 | Split | `component.card`, `component.fab`, `component.chip`, `component.list-item` |
+| Modifiers | Visual, Sizing, Accessibility/native View, 0-2 | Split | `modifier.visual`, `modifier.sizing`, `modifier.accessibility` |
+| Gestures | Tap, Drag/swipe, Transform, 0-2 | Split | `gesture.tap`, `gesture.drag-swipe`, `gesture.transform` |
+| Animation | Core, Content, List motion, Specs, Transition, Infinite, 0-5 | Split | `animation.core`, `animation.content`, `animation.list-motion`, `animation.specs`, `animation.transition`, `animation.infinite` |
+| Graphics | Drawing, Outer shadow, Inner shadow, Lazy/diagnostics, 0-3 | Split | `graphics.drawing`, `graphics.outer-shadow`, `graphics.inner-shadow`, `graphics.shadow-list` |
+| Navigation components | App bars, Navigation bar, Scaffold, 0-2 | Split | `component.app-bars`, `component.navigation-bar`, `component.scaffold` |
+| System navigation | NavHost, stacks, deep links, predictive Back, adaptive panes | Retain dedicated lifecycle host | `navigation.system` |
+| Theme switch | Cross-Activity propagation | Retain dedicated host | `environment.cross-activity-theme` |
+| Resource configuration | Locale, night, direction, font scale, density | Retain dedicated configuration host | `environment.resources` |
+| Material 3 verification | Android XML, static baseline, custom tokens | Split by declared source | `design.material3-xml`, `design.material3-static`, `design.material3-custom` |
+| Multi-design-system verification | Material 3 and contrast bundles | Split by bundle | `design.bundle-material3`, `design.bundle-contrast` |
+| One UI 7 verification | Five-component slice | Retain dedicated design-system host | `design.oneui7` |
+| Widget showcase | Each of the 20 widget keys | Split; catalog-only chooser is removed | `widget.<widget-key>` |
+| Performance comparison | List, complex layout, shadow list, shadow complex layout | Retain isolated host; engine and shadow policy remain workload dimensions | `performance.list`, `performance.complex-layout`, `performance.shadow-list`, `performance.shadow-complex-layout` |
+
+The retained widget keys are `text`, `image`, `divider`, `button`, `icon-button`,
+`segmented-control`, `chip`, `fab`, `text-field`, `text-field-variants`, `checkbox`, `switch`,
+`radio-button`, `slider`, `search-bar`, `linear-progress`, `circular-progress`, `badge`,
+`list-item`, and `card`. Their wire IDs use hyphens even where the retired implementation used
+underscores internally.
+
+### Existing automation ownership
+
+| Existing owner | Frozen disposition |
+| --- | --- |
+| App instrumentation using `DemoTestTags` | Retain behavior assertions; migrate launch and scenario-level targets to the owning scenario contract. Fine-grained in-process fixture tags may remain beside the fixture. |
+| `DemoInteractionBenchmark` | Split into direct scenario workloads; remove catalog and chapter-tab navigation. |
+| `ReleaseBaselineBenchmark` | Retain startup and `runtime.view-patch`; replace text synchronization with role targets. |
+| Diagnostics long-fling benchmark | Retain as `diagnostics.theme`; direct launch makes the old tab-switch prelude non-comparable. |
+| List and complex-layout comparison benchmarks | Retain paired engines and data shape under explicit workload revisions. |
+| Navigation motion benchmarks | Retain `navigation.system` and its dedicated Activity boundary. |
+| Design-system vertical slice | Split by `design.bundle-*`; keep bundle kind as declared scenario identity rather than visible copy. |
+| Shadow comparison benchmarks | Retain the performance scenario plus engine/backend dimensions. |
+| Screenshot tests and preview snapshots | Retain visual assertions; launch the direct scenario or preview fixture without catalog copy. |
+
+### Frozen workload revisions
+
+These revisions describe the pre-migration workloads. A direct-route or hierarchy change that
+alters measured work advances the corresponding revision and establishes a new baseline instead of
+claiming a performance delta against this table.
+
+| Scenario/workload | Frozen revision | Invalidating dimensions |
+| --- | ---: | --- |
+| `catalog` cold startup | 1 | Launcher shell, first-frame catalog hierarchy, startup data set |
+| `runtime.view-patch` state patch | 1 | Patched node set, state fan-out, action sequence, host chrome |
+| `diagnostics.theme` long fling | 1 | Full item tree, tab-switch prelude, fling bounds, host chrome |
+| `collection.stress` mutation | 1 | Item count/order, key/content revisions, action sequence |
+| `performance.list` | 1 | 240-row model, row tree/content shape, rotation/update rule, engine |
+| `performance.complex-layout` | 1 | Dashboard-card model, nested tree, update rule, engine |
+| `navigation.system` motion | 1 | Stack seed, destinations, transition duration, gesture/action sequence |
+| `design.bundle-material3` and `design.bundle-contrast` | 1 | Component slice, state fan-out, overlay sequence, bundle |
+| `performance.shadow-list` | 1 | Row model, shadow layers, engine, backend policy |
+| `performance.shadow-complex-layout` | 1 | Dashboard model, shadow layers, engine, backend policy |
+
+Phase 0 is complete: every current catalog module, page selector, dedicated host, instrumentation
+owner, and Macrobenchmark owner now has a retained, split, or removed disposition. The migration is
+allowed to change UI only through the scenario and workload contracts above.
 
 ## Locked design principles
 
@@ -447,8 +527,8 @@ measurement semantics do not change without a workload revision.
 
 | Phase | Status | Primary output | Exit gate |
 | --- | --- | --- | --- |
-| 0. Inventory and freeze | Not started | Scenario map, current selector map, current workload revisions, same-device baseline | Every existing automated path has an owner and replacement scenario ID before UI movement. |
-| 1. Contract and automation spine | Not started | Scenario registry, strict direct route, role-based targets, Android resource-ID bridge | Instrumentation and Macrobenchmark can launch/query a pilot scenario without visible text. |
+| 0. Inventory and freeze | Completed | Scenario map, current selector map, current workload revisions, same-device baseline | Every existing automated path has an owner and replacement scenario ID before UI movement. |
+| 1. Contract and automation spine | In progress | Scenario registry, strict direct route, role-based targets, Android resource-ID bridge | Instrumentation and Macrobenchmark can launch/query a pilot scenario without visible text. |
 | 2. Host and catalog hard cut | Not started | Shared/dedicated/benchmark host policies, compact catalog, environment/build panels | Catalog contains executable scenarios only; top-level pager, About, planned modules, and gaps are removed. |
 | 3. Localization and content policy | Not started | Canonical English and Simplified Chinese resources, hard-coded-copy gate, localized guide model | Both locales pass; selectors and benchmark scripts are unchanged between locales. |
 | 4. Scenario migration | Not started | Fixture-first routes for every retained capability, chapter tabs split or explicitly justified | Primary fixture/action/result are directly reachable; old module/page wrappers have no callers. |
@@ -676,6 +756,7 @@ the retired Demo layout.
 | 2026-08-14 | Renderer test-tag path audit | Confirmed `testTag` is stored as `R.id.viewcompose_test_tag`, not an external-process Android resource ID. |
 | 2026-08-14 | Running-device layout/screenshot audit on SM-G991B | Captured catalog, four Diagnostics states, Settings, About, State, widget showcase, and performance-list comparison; findings are recorded in the screen matrix. |
 | 2026-08-14 | Debug APK build | `./gradlew :app:assembleDebug` passed. |
+| 2026-08-14 | Phase 0 scenario and workload freeze | Classified every module/page/dedicated host and benchmark owner; assigned direct scenario IDs and revision 1 to each retained measured workload. |
 
 ## Decision history
 
@@ -687,3 +768,4 @@ the retired Demo layout.
 | 2026-08-14 | Add an app-owned Android resource-ID bridge before internationalizing text-dependent Macrobenchmarks. |
 | 2026-08-14 | Require explicit workload revisions and a replacement baseline before benchmarking or implementing Runtime/Patch performance work. |
 | 2026-08-14 | Permit Runtime/Patch source auditing and focused correctness work now, while keeping performance experiments blocked on this plan's replacement baseline. |
+| 2026-08-14 | Freeze the replacement inventory before UI movement; widget scenarios use hyphenated wire IDs and paired performance engines remain workload dimensions. |
