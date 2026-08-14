@@ -326,6 +326,29 @@
     <item name="demo_design_material3_custom_state" type="id" />
     <item name="demo_design_material3_custom_target" type="id" />
 
+    <item name="demo_design_bundle_material3_root" type="id" />
+    <item name="demo_design_bundle_material3_ready" type="id" />
+    <item name="demo_design_bundle_material3_primary_action" type="id" />
+    <item name="demo_design_bundle_material3_secondary_action" type="id" />
+    <item name="demo_design_bundle_material3_reset" type="id" />
+    <item name="demo_design_bundle_material3_state" type="id" />
+    <item name="demo_design_bundle_material3_target" type="id" />
+    <item name="demo_design_bundle_material3_secondary_target" type="id" />
+
+    <item name="demo_design_bundle_contrast_root" type="id" />
+    <item name="demo_design_bundle_contrast_ready" type="id" />
+    <item name="demo_design_bundle_contrast_primary_action" type="id" />
+    <item name="demo_design_bundle_contrast_secondary_action" type="id" />
+    <item name="demo_design_bundle_contrast_reset" type="id" />
+    <item name="demo_design_bundle_contrast_state" type="id" />
+    <item name="demo_design_bundle_contrast_target" type="id" />
+    <item name="demo_design_bundle_contrast_secondary_target" type="id" />
+
+    <item name="demo_design_system_dialog_open" type="id" />
+    <item name="demo_design_system_dialog_state" type="id" />
+    <item name="demo_design_system_dialog_switch" type="id" />
+    <item name="demo_design_system_dialog_close" type="id" />
+
     <item name="demo_performance_list_root" type="id" />
     <item name="demo_performance_list_ready" type="id" />
     <item name="demo_performance_list_primary_action" type="id" />

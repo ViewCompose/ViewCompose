@@ -1,5 +1,11 @@
 package com.viewcompose
 
+import androidx.annotation.IdRes
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.host.android.nativeView
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Dialog
@@ -11,11 +17,10 @@ import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiTreeBuilder
-import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.foundation.key
 import com.viewcompose.ui.foundation.rememberSaveable
 import com.viewcompose.ui.foundation.rememberTextFieldState
 import com.viewcompose.ui.layout.VerticalAlignment
-import com.viewcompose.ui.node.TextFieldAutofillHint
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -24,13 +29,36 @@ import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.systemBarsInsetsPadding
 import com.viewcompose.ui.modifier.testTag
+import com.viewcompose.ui.node.TextFieldAutofillHint
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 
-/** Renders the internal design-system pressure slice with screenshot-readable attribution. */
+/** Renders one strict multi-design-system pressure fixture with screenshot-readable attribution. */
 internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
     hostContext: DemoHostContextSnapshot,
+    scenario: DemoScenarioSpec,
     onReplaceDesignSystem: (DemoDesignSystemKind) -> Unit,
+) {
+    val sessionGeneration = rememberSaveable(key = "design-system-session-generation") {
+        mutableStateOf(0)
+    }
+    key(sessionGeneration.value) {
+        DemoDesignSystemVerificationSession(
+            hostContext = hostContext,
+            scenario = scenario,
+            sessionGeneration = sessionGeneration.value,
+            onReplaceDesignSystem = onReplaceDesignSystem,
+            onReset = { sessionGeneration.value += 1 },
+        )
+    }
+}
+
+private fun UiTreeBuilder.DemoDesignSystemVerificationSession(
+    hostContext: DemoHostContextSnapshot,
+    scenario: DemoScenarioSpec,
+    sessionGeneration: Int,
+    onReplaceDesignSystem: (DemoDesignSystemKind) -> Unit,
+    onReset: () -> Unit,
 ) {
     val bundle = DemoDesignSystem
     val nextKind = when (bundle.kind) {
@@ -45,34 +73,54 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
     val dialogVisible = rememberSaveable(key = "design-system-dialog-visible") { mutableStateOf(false) }
     val field = rememberTextFieldState("Ada")
     val errorField = rememberTextFieldState("")
+    val segmentLabels = listOf(
+        stringResource(R.string.demo_design_system_day),
+        stringResource(R.string.demo_design_system_week),
+        stringResource(R.string.demo_design_system_month),
+    )
+    val navigationItems = demoDesignNavigationItems(
+        listOf(
+            stringResource(R.string.demo_design_system_home),
+            stringResource(R.string.demo_design_system_search),
+            stringResource(R.string.demo_design_system_profile),
+        ),
+    )
     LazyColumn(
         items = listOf(
             "identity",
             "switching",
-            "button",
             "surface",
             "switch",
             "textfield",
             "segmented",
             "navigation",
         ),
-        key = { section -> section },
+        // Lazy items own independent logical Sessions; reset must replace those identities too.
+        key = { section -> "$sessionGeneration:$section" },
         modifier = Modifier
             .fillMaxSize()
             .backgroundColor(Theme.colors.background)
             .systemBarsInsetsPadding()
             .padding(horizontal = 16.dp)
-            .testTag(DemoTestTags.DESIGN_SYSTEM_ROOT),
+            .designSystemScenarioTarget(scenario, DemoAutomationRole.Root),
     ) { section ->
         when (section) {
-            "identity" -> DemoDesignSystemIdentitySection(bundle, hostContext)
+            "identity" -> DemoDesignSystemIdentitySection(
+                bundle = bundle,
+                hostContext = hostContext,
+                scenario = scenario,
+                buttonClicks = buttonClicks.value,
+                onConfirm = { buttonClicks.value += 1 },
+                onReset = onReset,
+            )
+
             "switching" -> Column(
                 spacing = 10.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 18.dp),
             ) {
-                DemoDesignSectionTitle("Root/session coherence")
+                DemoDesignSectionTitle(stringResource(R.string.demo_design_system_root_coherence))
                 Text(
-                    text = "Lazy system: ${bundle.kind.id}",
+                    text = stringResource(R.string.demo_design_system_lazy_identity, bundle.kind.id),
                     color = Theme.colors.onSurfaceVariant,
                     style = Theme.typography.bodyMedium,
                     modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_LAZY_IDENTITY),
@@ -83,47 +131,28 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     DemoDesignButton(
-                        text = "Switch to ${nextKind.id}",
+                        text = stringResource(R.string.demo_design_system_switch_kind, nextKind.id),
                         onClick = { onReplaceDesignSystem(nextKind) },
                         modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_REPLACE_ROOT),
                     )
                     DemoDesignButton(
-                        text = "Open dialog",
+                        text = stringResource(R.string.demo_design_system_open_dialog),
                         onClick = { dialogVisible.value = true },
-                        modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_OPEN_DIALOG),
+                        modifier = Modifier
+                            .testTag(DemoTestTags.DESIGN_SYSTEM_OPEN_DIALOG)
+                            .designSystemAndroidId(
+                                R.id.demo_design_system_dialog_open,
+                                "dialog-open",
+                            ),
                     )
                 }
-            }
-            "button" -> Column(
-                spacing = 10.dp,
-                modifier = Modifier.fillMaxWidth().margin(top = 18.dp),
-            ) {
-                DemoDesignSectionTitle("Button · shared BasicButton")
-                Row(spacing = 10.dp, verticalAlignment = VerticalAlignment.Center) {
-                    DemoDesignButton(
-                        text = "Confirm",
-                        onClick = { buttonClicks.value += 1 },
-                        modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_BUTTON),
-                    )
-                    DemoDesignButton(
-                        text = "Disabled",
-                        enabled = false,
-                        modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_BUTTON_DISABLED),
-                    )
-                }
-                Text(
-                    text = "Button clicks: ${buttonClicks.value}",
-                    color = Theme.colors.onSurfaceVariant,
-                    style = Theme.typography.bodySmall,
-                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_BUTTON_STATUS),
-                )
             }
 
             "surface" -> Column(
                 spacing = 10.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 18.dp),
             ) {
-                DemoDesignSectionTitle("Surface/Card · shared BasicSurface")
+                DemoDesignSectionTitle(stringResource(R.string.demo_design_system_surface_section))
                 DemoDesignCard(
                     onClick = {},
                     modifier = Modifier
@@ -132,12 +161,12 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
                 ) {
                     Column(spacing = 6.dp) {
                         Text(
-                            text = "Resolved surface",
+                            text = stringResource(R.string.demo_design_system_resolved_surface),
                             color = Theme.colors.onSurface,
                             style = Theme.typography.titleMedium,
                         )
                         Text(
-                            text = "Fill, border, shape, clip and interaction share one resolved contract.",
+                            text = stringResource(R.string.demo_design_system_surface_summary),
                             color = Theme.colors.onSurfaceVariant,
                             style = Theme.typography.bodySmall,
                         )
@@ -149,17 +178,17 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
                 spacing = 4.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 18.dp),
             ) {
-                DemoDesignSectionTitle("Switch · design-system composite")
+                DemoDesignSectionTitle(stringResource(R.string.demo_design_system_switch_section))
                 DemoDesignSwitch(
-                    text = "Synchronize workspace",
+                    text = stringResource(R.string.demo_design_system_switch_label),
                     checked = checked.value,
                     onCheckedChange = { checked.value = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.DESIGN_SYSTEM_SWITCH),
+                        .designSystemScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                 )
                 DemoDesignSwitch(
-                    text = "Disabled control",
+                    text = stringResource(R.string.demo_design_system_switch_disabled),
                     checked = false,
                     onCheckedChange = {},
                     enabled = false,
@@ -168,10 +197,16 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
                         .testTag(DemoTestTags.DESIGN_SYSTEM_SWITCH_DISABLED),
                 )
                 Text(
-                    text = "Checked: ${checked.value}",
+                    text = stringResource(
+                        R.string.demo_design_system_checked_status,
+                        checked.value.toString(),
+                    ),
                     color = Theme.colors.onSurfaceVariant,
                     style = Theme.typography.bodySmall,
-                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_SWITCH_STATUS),
+                    modifier = Modifier.designSystemScenarioTarget(
+                        scenario,
+                        DemoAutomationRole.SecondaryTarget,
+                    ),
                 )
             }
 
@@ -179,12 +214,12 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
                 spacing = 14.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 18.dp),
             ) {
-                DemoDesignSectionTitle("TextField · native editing core")
+                DemoDesignSectionTitle(stringResource(R.string.demo_design_system_text_field_section))
                 DemoDesignTextField(
                     state = field,
-                    label = "Account name",
-                    placeholder = "Name",
-                    supportingText = "IME, selection and autofill remain native.",
+                    label = stringResource(R.string.demo_design_system_account_name),
+                    placeholder = stringResource(R.string.demo_design_system_name_placeholder),
+                    supportingText = stringResource(R.string.demo_design_system_text_field_support),
                     isError = false,
                     autofillHints = setOf(TextFieldAutofillHint.Username),
                     modifier = Modifier
@@ -193,9 +228,9 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
                 )
                 DemoDesignTextField(
                     state = errorField,
-                    label = "Required field",
-                    placeholder = "Required",
-                    supportingText = "A value is required",
+                    label = stringResource(R.string.demo_design_system_required_field),
+                    placeholder = stringResource(R.string.demo_design_system_required_placeholder),
+                    supportingText = stringResource(R.string.demo_design_system_required_support),
                     isError = true,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -207,15 +242,18 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
                 spacing = 10.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 18.dp),
             ) {
-                DemoDesignSectionTitle("SegmentedControl · design-system composite")
+                DemoDesignSectionTitle(stringResource(R.string.demo_design_system_segmented_section))
                 DemoDesignSegmentedControl(
-                    labels = listOf("Day", "Week", "Month"),
+                    labels = segmentLabels,
                     selectedIndex = selectedSegment.value,
                     onItemSelected = { selectedSegment.value = it },
                     modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_SEGMENTED),
                 )
                 Text(
-                    text = "Segment: ${listOf("Day", "Week", "Month")[selectedSegment.value]}",
+                    text = stringResource(
+                        R.string.demo_design_system_segment_status,
+                        segmentLabels[selectedSegment.value],
+                    ),
                     color = Theme.colors.onSurfaceVariant,
                     style = Theme.typography.bodySmall,
                     modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS),
@@ -226,15 +264,18 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
                 spacing = 10.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 18.dp, bottom = 28.dp),
             ) {
-                DemoDesignSectionTitle("NavigationBar · design-system composite")
+                DemoDesignSectionTitle(stringResource(R.string.demo_design_system_navigation_section))
                 DemoDesignNavigationBar(
-                    items = demoDesignNavigationItems(),
+                    items = navigationItems,
                     selectedIndex = selectedIndex.value,
                     onItemSelected = { selectedIndex.value = it },
                     modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_NAVIGATION),
                 )
                 Text(
-                    text = "Selected: ${demoDesignNavigationItems()[selectedIndex.value].label}",
+                    text = stringResource(
+                        R.string.demo_design_system_selected_status,
+                        navigationItems[selectedIndex.value].label,
+                    ),
                     color = Theme.colors.onSurfaceVariant,
                     style = Theme.typography.bodySmall,
                     modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_NAVIGATION_STATUS),
@@ -250,24 +291,40 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
         DemoDesignCard(modifier = Modifier.fillMaxWidth()) {
             Column(spacing = 10.dp) {
                 Text(
-                    text = "Overlay system: ${bundle.kind.id}",
+                    text = stringResource(
+                        R.string.demo_design_system_overlay_identity,
+                        bundle.kind.id,
+                    ),
                     color = Theme.colors.onSurface,
                     style = Theme.typography.titleMedium,
-                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_OVERLAY_IDENTITY),
+                    modifier = Modifier
+                        .testTag(DemoTestTags.DESIGN_SYSTEM_OVERLAY_IDENTITY)
+                        .designSystemAndroidId(
+                            R.id.demo_design_system_dialog_state,
+                            "dialog-state",
+                        ),
                 )
                 Text(
-                    text = "Overlay token: demo-design-system/${bundle.kind.id}",
+                    text = stringResource(R.string.demo_design_system_overlay_token, bundle.kind.id),
                     color = Theme.colors.onSurfaceVariant,
                     style = Theme.typography.bodyMedium,
                     modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_OVERLAY_TOKEN_SOURCE),
                 )
                 DemoDesignButton(
-                    text = "Switch overlay to ${nextKind.id}",
+                    text = stringResource(R.string.demo_design_system_overlay_switch, nextKind.id),
                     onClick = { onReplaceDesignSystem(nextKind) },
+                    modifier = Modifier.designSystemAndroidId(
+                        R.id.demo_design_system_dialog_switch,
+                        "dialog-switch",
+                    ),
                 )
                 DemoDesignButton(
-                    text = "Close coherent dialog",
+                    text = stringResource(R.string.demo_design_system_overlay_close),
                     onClick = { dialogVisible.value = false },
+                    modifier = Modifier.designSystemAndroidId(
+                        R.id.demo_design_system_dialog_close,
+                        "dialog-close",
+                    ),
                 )
             }
         }
@@ -277,59 +334,132 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
 private fun UiTreeBuilder.DemoDesignSystemIdentitySection(
     bundle: DemoDesignSystemBundle,
     hostContext: DemoHostContextSnapshot,
+    scenario: DemoScenarioSpec,
+    buttonClicks: Int,
+    onConfirm: () -> Unit,
+    onReset: () -> Unit,
 ) {
+    val designSystemLabel = stringResource(R.string.demo_design_system_fact_design_system)
+    val tokenSourceLabel = stringResource(R.string.demo_design_system_fact_token_source)
+    val recipeIdentityLabel = stringResource(R.string.demo_design_system_fact_recipe_identity)
+    val rootContextLabel = stringResource(R.string.demo_design_system_fact_root_context)
+    val androidPrimaryLabel = stringResource(R.string.demo_design_system_fact_android_primary)
+    val componentBackendsLabel = stringResource(R.string.demo_design_system_fact_component_backends)
+    val modeLabel = stringResource(R.string.demo_design_system_fact_mode)
+    val reducedMotionLabel = stringResource(R.string.demo_design_system_fact_reduced_motion)
+    val fontScaleLabel = stringResource(R.string.demo_design_system_fact_font_scale)
+    val capabilityLabel = stringResource(R.string.demo_design_system_fact_capability)
     Column(
         spacing = 10.dp,
         modifier = Modifier.fillMaxWidth().margin(top = 16.dp),
     ) {
         Text(
-            text = "Multi-design-system verification",
+            text = stringResource(R.string.demo_design_system_ready),
+            color = Theme.colors.onSurfaceVariant,
+            style = Theme.typography.labelMedium,
+            modifier = Modifier.designSystemScenarioTarget(scenario, DemoAutomationRole.Ready),
+        )
+        Text(
+            text = stringResource(R.string.demo_design_system_title),
             color = Theme.colors.onBackground,
             style = Theme.typography.headlineSmall,
         )
         Text(
-            text = "The visible identity, recipe, token source, motion and fallback values are part of every screenshot.",
+            text = stringResource(R.string.demo_design_system_summary),
             color = Theme.colors.onSurfaceVariant,
             style = Theme.typography.bodyMedium,
+            modifier = Modifier.designSystemScenarioTarget(scenario, DemoAutomationRole.Target),
+        )
+        Row(spacing = 10.dp, verticalAlignment = VerticalAlignment.Center) {
+            DemoDesignButton(
+                text = stringResource(R.string.demo_design_system_button_confirm),
+                onClick = onConfirm,
+                modifier = Modifier.designSystemScenarioTarget(
+                    scenario,
+                    DemoAutomationRole.PrimaryAction,
+                ),
+            )
+            DemoDesignButton(
+                text = stringResource(R.string.demo_design_system_button_disabled),
+                enabled = false,
+                modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_BUTTON_DISABLED),
+            )
+        }
+        Text(
+            text = stringResource(R.string.demo_design_system_button_status, buttonClicks),
+            color = Theme.colors.onSurfaceVariant,
+            style = Theme.typography.bodySmall,
+            modifier = Modifier.designSystemScenarioTarget(scenario, DemoAutomationRole.State),
+        )
+        DemoDesignButton(
+            text = stringResource(R.string.demo_design_system_reset),
+            onClick = onReset,
+            modifier = Modifier.designSystemScenarioTarget(scenario, DemoAutomationRole.Reset),
         )
         DiagnosticFactGroup(
-            title = "Screenshot identity",
+            title = stringResource(R.string.demo_design_system_screenshot_identity),
             facts = listOf(
-                DiagnosticFact("Fixture", "multi-design-system-pressure-v2"),
-                DiagnosticFact("Design system", "${bundle.kind.id} · ${bundle.kind.label}"),
-                DiagnosticFact("Token source", "demo-design-system/${bundle.kind.id}"),
-                DiagnosticFact("Recipe identity", "${bundle.kind.id}/pressure-v2"),
-                DiagnosticFact("Root context", hostContext.chain),
-                DiagnosticFact("Android colorPrimary", hostContext.androidPrimary.asColorHex()),
                 DiagnosticFact(
-                    "Component backends",
-                    "Button=DSL/DeclarativeBoxLayout; Switch=DSL/DeclarativeBoxLayout; " +
-                        "TextField=native/ViewComposeEditText",
+                    stringResource(R.string.demo_design_system_fact_fixture),
+                    "multi-design-system-pressure-v2",
                 ),
-                DiagnosticFact("Mode", if (bundle.tokens.metadata.isDark == true) "Dark" else "Light"),
-                DiagnosticFact("Reduced motion", bundle.reducedMotionEnabled.toString()),
-                DiagnosticFact("Font scale", Environment.density.fontScale.toString()),
-                DiagnosticFact("Layout direction", Environment.layoutDirection.name),
-                DiagnosticFact("Shape", bundle.tokens.shapes.medium.demoLabel()),
-                DiagnosticFact("Primary", bundle.tokens.colors.primary.asColorHex()),
-                DiagnosticFact("Surface", bundle.tokens.colors.surface.asColorHex()),
-                DiagnosticFact("Capability", bundle.capabilitySummary()),
+                DiagnosticFact(
+                    designSystemLabel,
+                    "${bundle.kind.id} · ${stringResource(bundle.kind.labelRes)}",
+                ),
+                DiagnosticFact(tokenSourceLabel, "demo-design-system/${bundle.kind.id}"),
+                DiagnosticFact(recipeIdentityLabel, "${bundle.kind.id}/pressure-v2"),
+                DiagnosticFact(rootContextLabel, hostContext.chain),
+                DiagnosticFact(androidPrimaryLabel, hostContext.androidPrimary.asColorHex()),
+                DiagnosticFact(
+                    componentBackendsLabel,
+                    stringResource(R.string.demo_design_system_component_backends_value),
+                ),
+                DiagnosticFact(
+                    modeLabel,
+                    stringResource(
+                        if (bundle.tokens.metadata.isDark == true) {
+                            R.string.demo_design_system_mode_dark
+                        } else {
+                            R.string.demo_design_system_mode_light
+                        },
+                    ),
+                ),
+                DiagnosticFact(reducedMotionLabel, bundle.reducedMotionEnabled.toString()),
+                DiagnosticFact(fontScaleLabel, Environment.density.fontScale.toString()),
+                DiagnosticFact(
+                    stringResource(R.string.demo_design_system_fact_layout_direction),
+                    Environment.layoutDirection.name,
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_design_system_fact_shape),
+                    bundle.tokens.shapes.medium.demoLabel(),
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_design_system_fact_primary),
+                    bundle.tokens.colors.primary.asColorHex(),
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_design_system_fact_surface),
+                    bundle.tokens.colors.surface.asColorHex(),
+                ),
+                DiagnosticFact(capabilityLabel, bundle.capabilitySummary()),
             ),
             valueTagsByLabel = mapOf(
-                "Design system" to DemoTestTags.DESIGN_SYSTEM_IDENTITY,
-                "Token source" to DemoTestTags.DESIGN_SYSTEM_TOKEN_SOURCE,
-                "Recipe identity" to DemoTestTags.DESIGN_SYSTEM_RECIPE_IDENTITY,
-                "Root context" to DemoTestTags.DESIGN_SYSTEM_ROOT_CONTEXT,
-                "Android colorPrimary" to DemoTestTags.DESIGN_SYSTEM_ANDROID_PRIMARY,
-                "Component backends" to DemoTestTags.DESIGN_SYSTEM_COMPONENT_BACKENDS,
-                "Mode" to DemoTestTags.DESIGN_SYSTEM_MODE,
-                "Reduced motion" to DemoTestTags.DESIGN_SYSTEM_REDUCED_MOTION,
-                "Font scale" to DemoTestTags.DESIGN_SYSTEM_FONT_SCALE,
-                "Capability" to DemoTestTags.DESIGN_SYSTEM_CAPABILITY,
+                designSystemLabel to DemoTestTags.DESIGN_SYSTEM_IDENTITY,
+                tokenSourceLabel to DemoTestTags.DESIGN_SYSTEM_TOKEN_SOURCE,
+                recipeIdentityLabel to DemoTestTags.DESIGN_SYSTEM_RECIPE_IDENTITY,
+                rootContextLabel to DemoTestTags.DESIGN_SYSTEM_ROOT_CONTEXT,
+                androidPrimaryLabel to DemoTestTags.DESIGN_SYSTEM_ANDROID_PRIMARY,
+                componentBackendsLabel to DemoTestTags.DESIGN_SYSTEM_COMPONENT_BACKENDS,
+                modeLabel to DemoTestTags.DESIGN_SYSTEM_MODE,
+                reducedMotionLabel to DemoTestTags.DESIGN_SYSTEM_REDUCED_MOTION,
+                fontScaleLabel to DemoTestTags.DESIGN_SYSTEM_FONT_SCALE,
+                capabilityLabel to DemoTestTags.DESIGN_SYSTEM_CAPABILITY,
             ),
         )
         DiagnosticFactGroup(
-            title = "Conformance",
+            title = stringResource(R.string.demo_design_system_conformance),
             facts = bundle.conformance.map { item ->
                 DiagnosticFact(
                     item.component,
@@ -355,4 +485,18 @@ private fun UiTreeBuilder.DemoDesignSectionTitle(text: String) {
         color = Theme.colors.onSurface,
         style = UiTextStyle(fontSizeSp = 18.sp, fontWeight = 650, lineHeightSp = 24.sp),
     )
+}
+
+private fun Modifier.designSystemScenarioTarget(
+    scenario: DemoScenarioSpec,
+    role: DemoAutomationRole,
+): Modifier = demoAutomationTarget(scenario.automation.require(role))
+
+private fun Modifier.designSystemAndroidId(
+    @IdRes id: Int,
+    name: String,
+): Modifier = nativeView(key = "demo-design-system:$name") { view ->
+    if (view.id != id) {
+        view.id = id
+    }
 }

@@ -538,13 +538,11 @@ tasks.register("verifyDemoAutomationSelectors") {
         // This exact baseline is temporary migration debt. Phase 4 removes Demo-owned entries;
         // any retained system/IME/third-party selector must move to a narrowly named allowlist.
         val legacySelectorBaseline = mapOf(
-            "app/src/androidTest/java/com/viewcompose/DemoDesignSystemVerificationUiTest.kt" to 6,
             "app/src/androidTest/java/com/viewcompose/DemoUiTestHelpers.kt" to 6,
             "app/src/androidTest/java/com/viewcompose/OneUi7VerificationUiTest.kt" to 4,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ComplexLayoutPerformanceComparisonBenchmark.kt" to 3,
-            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt" to 19,
+            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt" to 18,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoInteractionBenchmark.kt" to 8,
-            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DesignSystemVerticalSliceBenchmark.kt" to 17,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ShadowPerformanceComparisonBenchmark.kt" to 3,
         )
         val sourceRoots = listOf(
@@ -749,6 +747,15 @@ tasks.register("verifyDemoLocalizedVisibleCopy") {
             ),
             rootDir.resolve(
                 "app/src/main/java/com/viewcompose/activity/demo/pages/quality/Material3DefaultThemeActivity.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/settings/DemoDesignSystemVerificationPage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/quality/DemoDesignSystemVerificationActivity.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/designsystem/DemoContrastDesignSystem.kt",
             ),
         )
         val visibleLiteral = Regex(

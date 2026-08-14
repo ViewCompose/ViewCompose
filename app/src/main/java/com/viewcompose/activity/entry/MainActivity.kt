@@ -30,11 +30,6 @@ class MainActivity : DemoRenderActivity() {
                 source = intent,
             )
         }
-        if (intent?.hasExtra(EXTRA_DEMO_DESIGN_SYSTEM_KIND) == true) {
-            return Intent(this, DemoDesignSystemVerificationActivity::class.java).apply {
-                intent?.extras?.let(::putExtras)
-            }
-        }
         if (intent?.hasExtra(EXTRA_PERFORMANCE_ENGINE) == true) {
             // benchmark 入口复用主 Activity intent，保持 Macrobenchmark 的启动包名稳定。
             // Benchmark launches reuse the main Activity intent so Macrobenchmark keeps a stable package entry.

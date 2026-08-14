@@ -17,6 +17,7 @@ import com.viewcompose.ResourceConfigurationActivity
 import com.viewcompose.StateActivity
 import com.viewcompose.SystemNavigationActivity
 import com.viewcompose.Material3DefaultThemeActivity
+import com.viewcompose.DemoDesignSystemVerificationActivity
 import com.viewcompose.demo.contract.DemoAutomationContract
 import com.viewcompose.demo.contract.DemoAutomationRole
 import com.viewcompose.demo.contract.DemoBenchmarkContract
@@ -82,6 +83,8 @@ internal object DemoScenarioIds {
     val DesignMaterial3Xml = DemoScenarioId("design.material3-xml")
     val DesignMaterial3Static = DemoScenarioId("design.material3-static")
     val DesignMaterial3Custom = DemoScenarioId("design.material3-custom")
+    val DesignBundleMaterial3 = DemoScenarioId("design.bundle-material3")
+    val DesignBundleContrast = DemoScenarioId("design.bundle-contrast")
     val PerformanceList = DemoScenarioId("performance.list")
 }
 
@@ -903,6 +906,32 @@ internal object DemoScenarioRegistry {
             state = R.id.demo_design_material3_custom_state,
             target = R.id.demo_design_material3_custom_target,
         ),
+        designSystemBundleScenario(
+            id = DemoScenarioIds.DesignBundleMaterial3,
+            titleRes = R.string.demo_scenario_design_bundle_material3_title,
+            summaryRes = R.string.demo_scenario_design_bundle_material3_summary,
+            root = R.id.demo_design_bundle_material3_root,
+            ready = R.id.demo_design_bundle_material3_ready,
+            primaryAction = R.id.demo_design_bundle_material3_primary_action,
+            secondaryAction = R.id.demo_design_bundle_material3_secondary_action,
+            reset = R.id.demo_design_bundle_material3_reset,
+            state = R.id.demo_design_bundle_material3_state,
+            target = R.id.demo_design_bundle_material3_target,
+            secondaryTarget = R.id.demo_design_bundle_material3_secondary_target,
+        ),
+        designSystemBundleScenario(
+            id = DemoScenarioIds.DesignBundleContrast,
+            titleRes = R.string.demo_scenario_design_bundle_contrast_title,
+            summaryRes = R.string.demo_scenario_design_bundle_contrast_summary,
+            root = R.id.demo_design_bundle_contrast_root,
+            ready = R.id.demo_design_bundle_contrast_ready,
+            primaryAction = R.id.demo_design_bundle_contrast_primary_action,
+            secondaryAction = R.id.demo_design_bundle_contrast_secondary_action,
+            reset = R.id.demo_design_bundle_contrast_reset,
+            state = R.id.demo_design_bundle_contrast_state,
+            target = R.id.demo_design_bundle_contrast_target,
+            secondaryTarget = R.id.demo_design_bundle_contrast_secondary_target,
+        ),
         scenario(
             id = DemoScenarioIds.PerformanceList,
             category = DemoScenarioCategory.Performance,
@@ -1121,6 +1150,44 @@ internal object DemoScenarioRegistry {
             state = state,
             target = target,
         ),
+    )
+
+    private fun designSystemBundleScenario(
+        id: DemoScenarioId,
+        titleRes: Int,
+        summaryRes: Int,
+        root: Int,
+        ready: Int,
+        primaryAction: Int,
+        secondaryAction: Int,
+        reset: Int,
+        state: Int,
+        target: Int,
+        secondaryTarget: Int,
+    ): DemoScenarioSpec = scenario(
+        id = id,
+        category = DemoScenarioCategory.DesignSystems,
+        titleRes = titleRes,
+        summaryRes = summaryRes,
+        host = DemoHostPolicy.Dedicated,
+        verificationKinds = setOf(
+            DemoVerificationKind.Manual,
+            DemoVerificationKind.Visual,
+            DemoVerificationKind.Benchmark,
+        ),
+        route = DemoScenarioRoute(DemoDesignSystemVerificationActivity::class.java),
+        mutable = true,
+        ids = TargetIds(
+            root = root,
+            ready = ready,
+            primaryAction = primaryAction,
+            secondaryAction = secondaryAction,
+            reset = reset,
+            state = state,
+            target = target,
+            secondaryTarget = secondaryTarget,
+        ),
+        benchmarkRevision = 2,
     )
 
     private fun scenario(

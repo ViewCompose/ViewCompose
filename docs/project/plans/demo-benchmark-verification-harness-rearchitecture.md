@@ -12,8 +12,9 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: continue the fourth-risk group with multi-design-system and One UI verification while
-reducing the remaining text-selector debt with each direct scenario slice.
+Next action: complete the fourth-risk group with One UI verification, then begin the retained
+component visual/showcase scenarios while reducing the remaining text-selector debt with each
+direct scenario slice.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -240,7 +241,7 @@ claiming a performance delta against this table.
 | `performance.list` | 1 | 240-row model, row tree/content shape, rotation/update rule, engine |
 | `performance.complex-layout` | 1 | Dashboard-card model, nested tree, update rule, engine |
 | `navigation.system` motion | 1 | Stack seed, destinations, transition duration, gesture/action sequence |
-| `design.bundle-material3` and `design.bundle-contrast` | 1 | Component slice, state fan-out, overlay sequence, bundle |
+| `design.bundle-material3` and `design.bundle-contrast` | 2 | Component slice, state fan-out, overlay sequence, bundle |
 | `performance.shadow-list` | 1 | Row model, shadow layers, engine, backend policy |
 | `performance.shadow-complex-layout` | 1 | Dashboard model, shadow layers, engine, backend policy |
 
@@ -835,6 +836,25 @@ Macrobenchmark owner, so no workload revision was added. On the Samsung SM-G991B
 reference device, the bilingual three-source action/full-reset contract, all five existing theme
 source, touch-target, native-switch, and state-layer tests, and the registry-wide host-role sweep
 passed.
+
+Multi-design-system verification now has exactly two public scenario identities:
+`design.bundle-material3` owns the rounded Material 3 reference bundle, while
+`design.bundle-contrast` owns the cut-contrast bundle and its internal `cupertino-pressure`
+verification variant. The variant extra is no longer a launcher route or permissive source
+selector: it is accepted only by the owning strict scenario, and an unknown or cross-bundle value
+fails deterministically. Root replacement updates both scenario and variant identity before
+Activity recreation. Caller state intentionally survives that explicit replacement, while Reset
+advances a generation embedded in every lazy-item key so remember, effect, field, and callback
+identity are recreated throughout the fixture. Paired resources now cover the full page and all
+three variant labels. Scenario roles replace the old root, primary-action/state, and secondary
+action/state tags; common overlay resource IDs cover black-box dialog interaction across Activity
+replacement. This hierarchy and automation hard cut advances both bundle workloads from revision
+1 to 2. It removes all 23 fixture-specific visible-copy selectors from the instrumentation and
+Macrobenchmark owners, plus the obsolete shared launcher readiness lookup. On the Samsung
+SM-G991B Android 13 reference device, both bundles passed the action/full-reset contract in English
+and Simplified Chinese, the five-case light/dark, LTR/RTL, font-scale, reduced-motion, native-input,
+accessibility, recreation, and screenshot matrix passed, root/lazy/overlay replacement coherence
+passed, and the registry-wide host-role sweep passed.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

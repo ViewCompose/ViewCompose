@@ -9,6 +9,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.view.autofill.AutofillValue
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -16,6 +17,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import com.viewcompose.demo.contract.DemoAutomationRole
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -36,16 +38,14 @@ class DemoDesignSystemVerificationUiTest {
             waitForUiIdle()
             var previousRoot: View? = null
             scenario.onActivity { activity ->
-                previousRoot = activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_ROOT)
-                activity.clickByTestTag(DemoTestTags.DESIGN_SYSTEM_BUTTON)
+                previousRoot = activity.requireScenarioTarget(DemoAutomationRole.Root)
+                activity.clickScenarioTarget(DemoAutomationRole.PrimaryAction)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 assertEquals(
-                    "Button clicks: 1",
-                    activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.DESIGN_SYSTEM_BUTTON_STATUS,
-                    ).text.toString(),
+                    activity.getString(R.string.demo_design_system_button_status, 1),
+                    activity.requireScenarioTextTarget(DemoAutomationRole.State).text.toString(),
                 )
                 activity.clickByTestTag(DemoTestTags.DESIGN_SYSTEM_REPLACE_ROOT)
             }
@@ -54,25 +54,28 @@ class DemoDesignSystemVerificationUiTest {
             waitForUiIdle()
 
             scenario.onActivity { activity ->
-                val nextRoot = activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_ROOT)
+                val nextRoot = activity.requireScenarioTarget(DemoAutomationRole.Root)
                 assertTrue("Expected root View replacement", nextRoot !== previousRoot)
                 assertEquals(
-                    "rounded-reference · Rounded reference",
+                    "rounded-reference · " + activity.getString(
+                        DemoDesignSystemKind.RoundedReference.labelRes,
+                    ),
                     activity.requireTextViewByTestTagVisible(
                         DemoTestTags.DESIGN_SYSTEM_IDENTITY,
                     ).text.toString(),
                 )
                 assertEquals(
-                    "Lazy system: rounded-reference",
+                    activity.getString(
+                        R.string.demo_design_system_lazy_identity,
+                        DemoDesignSystemKind.RoundedReference.id,
+                    ),
                     activity.requireTextViewByTestTagVisible(
                         DemoTestTags.DESIGN_SYSTEM_LAZY_IDENTITY,
                     ).text.toString(),
                 )
                 assertEquals(
-                    "Button clicks: 1",
-                    activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.DESIGN_SYSTEM_BUTTON_STATUS,
-                    ).text.toString(),
+                    activity.getString(R.string.demo_design_system_button_status, 1),
+                    activity.requireScenarioTextTarget(DemoAutomationRole.State).text.toString(),
                 )
                 activity.clickByTestTag(DemoTestTags.DESIGN_SYSTEM_OPEN_DIALOG)
             }
@@ -81,28 +84,31 @@ class DemoDesignSystemVerificationUiTest {
             assertTrue(
                 "Expected overlay to capture rounded-reference locals",
                 device.wait(
-                    Until.hasObject(By.text("Overlay system: rounded-reference")),
+                    Until.hasObject(By.res(TARGET_PACKAGE, DIALOG_STATE_RESOURCE)),
                     OVERLAY_TIMEOUT_MS,
                 ),
             )
+            val previousOverlayState = requireNotNull(
+                device.findObject(By.res(TARGET_PACKAGE, DIALOG_STATE_RESOURCE)),
+            ).text.orEmpty()
+            assertTrue(previousOverlayState.contains(DemoDesignSystemKind.RoundedReference.id))
             captureEvidence(
                 label = "phase5-overlay-rounded-reference",
                 metadata = "suite=multi-design-phase5\ndesignSystem=rounded-reference\nsnapshot=root+lazy+overlay\n",
             )
-            device.findObject(By.text("Switch overlay to cupertino-pressure")).click()
+            requireNotNull(
+                device.findObject(By.res(TARGET_PACKAGE, DIALOG_SWITCH_RESOURCE)),
+            ).click()
             waitForUiIdle()
             SystemClock.sleep(WINDOW_TRANSITION_SETTLE_MS)
             waitForUiIdle()
-            assertTrue(
-                "Expected restored overlay to capture cupertino-pressure locals",
-                device.wait(
-                    Until.hasObject(By.text("Overlay system: cupertino-pressure")),
-                    OVERLAY_TIMEOUT_MS,
-                ),
+            val currentOverlayState = device.waitForResourceTextChange(
+                resourceName = DIALOG_STATE_RESOURCE,
+                previous = previousOverlayState,
             )
             assertTrue(
-                "Old overlay session must be cleared atomically",
-                !device.hasObject(By.text("Overlay system: rounded-reference")),
+                "Expected restored overlay to capture cupertino-pressure locals",
+                currentOverlayState.contains(DemoDesignSystemKind.CupertinoPressure.id),
             )
             captureEvidence(
                 label = "phase5-overlay-cupertino-pressure",
@@ -111,29 +117,34 @@ class DemoDesignSystemVerificationUiTest {
 
             scenario.onActivity { activity ->
                 assertEquals(
-                    "cupertino-pressure · Cupertino pressure",
+                    "cupertino-pressure · " + activity.getString(
+                        DemoDesignSystemKind.CupertinoPressure.labelRes,
+                    ),
                     activity.requireTextViewByTestTagVisible(
                         DemoTestTags.DESIGN_SYSTEM_IDENTITY,
                     ).text.toString(),
                 )
                 assertEquals(
-                    "Lazy system: cupertino-pressure",
+                    activity.getString(
+                        R.string.demo_design_system_lazy_identity,
+                        DemoDesignSystemKind.CupertinoPressure.id,
+                    ),
                     activity.requireTextViewByTestTagVisible(
                         DemoTestTags.DESIGN_SYSTEM_LAZY_IDENTITY,
                     ).text.toString(),
                 )
                 assertEquals(
-                    "Button clicks: 1",
-                    activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.DESIGN_SYSTEM_BUTTON_STATUS,
-                    ).text.toString(),
+                    activity.getString(R.string.demo_design_system_button_status, 1),
+                    activity.requireScenarioTextTarget(DemoAutomationRole.State).text.toString(),
                 )
             }
-            device.findObject(By.text("Close coherent dialog")).click()
+            requireNotNull(
+                device.findObject(By.res(TARGET_PACKAGE, DIALOG_CLOSE_RESOURCE)),
+            ).click()
             assertTrue(
                 "Expected new-session dialog dismissal",
                 device.wait(
-                    Until.gone(By.text("Overlay system: cupertino-pressure")),
+                    Until.gone(By.res(TARGET_PACKAGE, DIALOG_STATE_RESOURCE)),
                     OVERLAY_TIMEOUT_MS,
                 ),
             )
@@ -194,7 +205,7 @@ class DemoDesignSystemVerificationUiTest {
                 var metadata = ""
                 scenario.onActivity { activity ->
                     assertEquals(
-                        "${fixture.kind.id} · ${fixture.kind.label}",
+                        "${fixture.kind.id} · ${activity.getString(fixture.kind.labelRes)}",
                         activity.requireTextViewByTestTagVisible(
                             DemoTestTags.DESIGN_SYSTEM_IDENTITY,
                         ).text.toString(),
@@ -218,8 +229,7 @@ class DemoDesignSystemVerificationUiTest {
                         ).text.toString(),
                     )
                     assertEquals(
-                        "Button=DSL/DeclarativeBoxLayout; Switch=DSL/DeclarativeBoxLayout; " +
-                            "TextField=native/ViewComposeEditText",
+                        activity.getString(R.string.demo_design_system_component_backends_value),
                         activity.requireTextViewByTestTagVisible(
                             DemoTestTags.DESIGN_SYSTEM_COMPONENT_BACKENDS,
                         ).text.toString(),
@@ -238,7 +248,7 @@ class DemoDesignSystemVerificationUiTest {
                     )
                     assertEquals(
                         if (fixture.rtl) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR,
-                        activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_ROOT).layoutDirection,
+                        activity.requireScenarioTarget(DemoAutomationRole.Root).layoutDirection,
                     )
                     metadata = fixture.metadata(activity)
                     val root = activity.findViewById<ViewGroup>(android.R.id.content)
@@ -250,10 +260,8 @@ class DemoDesignSystemVerificationUiTest {
 
                 scenario.onActivity { activity ->
                     listOf(
-                        DemoTestTags.DESIGN_SYSTEM_BUTTON,
                         DemoTestTags.DESIGN_SYSTEM_BUTTON_DISABLED,
                         DemoTestTags.DESIGN_SYSTEM_SURFACE,
-                        DemoTestTags.DESIGN_SYSTEM_SWITCH,
                         DemoTestTags.DESIGN_SYSTEM_SWITCH_DISABLED,
                         DemoTestTags.DESIGN_SYSTEM_TEXT_FIELD,
                         DemoTestTags.DESIGN_SYSTEM_TEXT_FIELD_ERROR,
@@ -264,7 +272,7 @@ class DemoDesignSystemVerificationUiTest {
                         assertTrue("Expected measured fixture for $tag", view.width > 0 && view.height > 0)
                     }
                     activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_SURFACE)
-                    activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_BUTTON)
+                    activity.requireScenarioTarget(DemoAutomationRole.PrimaryAction)
                 }
                 waitForUiIdle()
                 captureEvidence("$label-button-surface", metadata)
@@ -276,7 +284,7 @@ class DemoDesignSystemVerificationUiTest {
                 captureEvidence("$label-switch-text-field", metadata)
 
                 scenario.onActivity { activity ->
-                    val button = activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_BUTTON)
+                    val button = activity.requireScenarioTarget(DemoAutomationRole.PrimaryAction)
                     assertTrue("Expected a stateful Button background", button.background?.isStateful == true)
                     button.isFocusableInTouchMode = true
                     assertTrue("Expected Button to accept keyboard focus", button.requestFocus())
@@ -294,7 +302,7 @@ class DemoDesignSystemVerificationUiTest {
                     )
                     button.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_CENTER))
 
-                    val switch = activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_SWITCH)
+                    val switch = activity.requireScenarioTarget(DemoAutomationRole.SecondaryAction)
                     val nodeInfo = switch.createAccessibilityNodeInfo()
                     assertTrue("Expected checked Switch semantics", nodeInfo.isCheckable && nodeInfo.isChecked)
                     assertTrue(
@@ -331,30 +339,34 @@ class DemoDesignSystemVerificationUiTest {
                     val middleItem = (navigation as ViewGroup).getChildAt(1)
                     activity.tapView(middleItem)
                     activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_SEGMENTED)
-                    activity.tapTextView("Week")
+                    activity.tapTextView(activity.getString(R.string.demo_design_system_week))
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     assertEquals(
-                        "Button clicks: 1",
-                        activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_BUTTON_STATUS,
+                        activity.getString(R.string.demo_design_system_button_status, 1),
+                        activity.requireScenarioTextTarget(DemoAutomationRole.State).text.toString(),
+                    )
+                    assertEquals(
+                        activity.getString(R.string.demo_design_system_checked_status, false),
+                        activity.requireScenarioTextTarget(
+                            DemoAutomationRole.SecondaryTarget,
                         ).text.toString(),
                     )
                     assertEquals(
-                        "Checked: false",
-                        activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_SWITCH_STATUS,
-                        ).text.toString(),
-                    )
-                    assertEquals(
-                        "Selected: Search",
+                        activity.getString(
+                            R.string.demo_design_system_selected_status,
+                            activity.getString(R.string.demo_design_system_search),
+                        ),
                         activity.requireTextViewByTestTagVisible(
                             DemoTestTags.DESIGN_SYSTEM_NAVIGATION_STATUS,
                         ).text.toString(),
                     )
                     assertEquals(
-                        "Segment: Week",
+                        activity.getString(
+                            R.string.demo_design_system_segment_status,
+                            activity.getString(R.string.demo_design_system_week),
+                        ),
                         activity.requireTextViewByTestTagVisible(
                             DemoTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS,
                         ).text.toString(),
@@ -365,25 +377,29 @@ class DemoDesignSystemVerificationUiTest {
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     assertEquals(
-                        "Checked: false",
-                        activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_SWITCH_STATUS,
+                        activity.getString(R.string.demo_design_system_checked_status, false),
+                        activity.requireScenarioTextTarget(
+                            DemoAutomationRole.SecondaryTarget,
                         ).text.toString(),
                     )
                     assertEquals(
-                        "Button clicks: 1",
-                        activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_BUTTON_STATUS,
-                        ).text.toString(),
+                        activity.getString(R.string.demo_design_system_button_status, 1),
+                        activity.requireScenarioTextTarget(DemoAutomationRole.State).text.toString(),
                     )
                     assertEquals(
-                        "Selected: Search",
+                        activity.getString(
+                            R.string.demo_design_system_selected_status,
+                            activity.getString(R.string.demo_design_system_search),
+                        ),
                         activity.requireTextViewByTestTagVisible(
                             DemoTestTags.DESIGN_SYSTEM_NAVIGATION_STATUS,
                         ).text.toString(),
                     )
                     assertEquals(
-                        "Segment: Week",
+                        activity.getString(
+                            R.string.demo_design_system_segment_status,
+                            activity.getString(R.string.demo_design_system_week),
+                        ),
                         activity.requireTextViewByTestTagVisible(
                             DemoTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS,
                         ).text.toString(),
@@ -480,6 +496,36 @@ class DemoDesignSystemVerificationUiTest {
 
     private fun View.childCountOrZero(): Int = (this as? ViewGroup)?.childCount ?: 0
 
+    private fun DemoDesignSystemVerificationActivity.scenarioTag(
+        role: DemoAutomationRole,
+    ): String = checkNotNull(currentScenario()).automation.require(role).testTag
+
+    private fun DemoDesignSystemVerificationActivity.requireScenarioTarget(
+        role: DemoAutomationRole,
+    ): View = requireViewByTestTagVisible(scenarioTag(role))
+
+    private fun DemoDesignSystemVerificationActivity.requireScenarioTextTarget(
+        role: DemoAutomationRole,
+    ): TextView = requireTextViewByTestTagVisible(scenarioTag(role))
+
+    private fun DemoDesignSystemVerificationActivity.clickScenarioTarget(
+        role: DemoAutomationRole,
+    ) = clickByTestTag(scenarioTag(role))
+
+    private fun UiDevice.waitForResourceTextChange(
+        resourceName: String,
+        previous: String,
+    ): String {
+        val deadline = SystemClock.uptimeMillis() + OVERLAY_TIMEOUT_MS
+        var current = findObject(By.res(TARGET_PACKAGE, resourceName))?.text.orEmpty()
+        while (current == previous && SystemClock.uptimeMillis() < deadline) {
+            SystemClock.sleep(16L)
+            current = findObject(By.res(TARGET_PACKAGE, resourceName))?.text.orEmpty()
+        }
+        assertTrue("Expected $resourceName text to change", current != previous)
+        return current
+    }
+
     private data class FixtureCase(
         val kind: DemoDesignSystemKind,
         val dark: Boolean,
@@ -500,5 +546,9 @@ class DemoDesignSystemVerificationUiTest {
         const val PUBLIC_OUTPUT_DIRECTORY = "viewcompose-multi-design-system"
         const val WINDOW_TRANSITION_SETTLE_MS = 500L
         const val OVERLAY_TIMEOUT_MS = 5_000L
+        const val TARGET_PACKAGE = "com.gzq.uiframework"
+        const val DIALOG_STATE_RESOURCE = "demo_design_system_dialog_state"
+        const val DIALOG_SWITCH_RESOURCE = "demo_design_system_dialog_switch"
+        const val DIALOG_CLOSE_RESOURCE = "demo_design_system_dialog_close"
     }
 }

@@ -138,6 +138,75 @@ internal fun MacrobenchmarkScope.waitForScenarioTargetText(
     )
 }
 
+/** Waits for a locale-independent Android resource target that is shared across scenario variants. */
+internal fun MacrobenchmarkScope.waitForResourceTarget(resourceName: String): UiObject2 {
+    val target = device.wait(
+        Until.findObject(By.res(TARGET_PACKAGE, resourceName)),
+        UI_WAIT_TIMEOUT_MS,
+    )
+    assertNotNull("Expected resource target: $resourceName", target)
+    return target!!
+}
+
+/** Scrolls until a shared resource target is mounted inside the safe viewport. */
+internal fun MacrobenchmarkScope.scrollUntilResourceTarget(
+    resourceName: String,
+    maxSwipes: Int = 10,
+): UiObject2 {
+    repeat(maxSwipes + 1) { attempt ->
+        device.findObject(By.res(TARGET_PACKAGE, resourceName))?.let { target ->
+            if (hasVisibleBoundsInSafeViewport(target)) return target
+        }
+        if (attempt < maxSwipes) {
+            swipePageUpForTextSearch()
+        }
+    }
+    val target = device.findObject(By.res(TARGET_PACKAGE, resourceName))
+    assertNotNull("Expected visible resource target: $resourceName", target)
+    return target!!
+}
+
+/** Clicks a currently visible shared resource target. */
+internal fun MacrobenchmarkScope.clickResourceTarget(
+    resourceName: String,
+    waitForIdle: Boolean = true,
+) {
+    val target = waitForResourceTarget(resourceName)
+    tapTarget(target, "resource target: $resourceName")
+    if (waitForIdle) {
+        device.waitForIdle()
+    }
+}
+
+/** Returns the current text published by a shared resource target. */
+internal fun MacrobenchmarkScope.resourceTargetText(
+    resourceName: String,
+): String = waitForResourceTarget(resourceName).text.orEmpty()
+
+/** Waits until a shared resource target publishes a different value. */
+internal fun MacrobenchmarkScope.waitForResourceTargetTextChange(
+    resourceName: String,
+    previous: String,
+): String {
+    val deadline = SystemClock.uptimeMillis() + UI_WAIT_TIMEOUT_MS
+    var current = device.findObject(By.res(TARGET_PACKAGE, resourceName))?.text.orEmpty()
+    while (current == previous && SystemClock.uptimeMillis() < deadline) {
+        SystemClock.sleep(16L)
+        current = device.findObject(By.res(TARGET_PACKAGE, resourceName))?.text.orEmpty()
+    }
+    assertTrue("Expected resource target text to change: $resourceName", current != previous)
+    return current
+}
+
+/** Waits until a shared resource target leaves the active window. */
+internal fun MacrobenchmarkScope.waitForResourceTargetGone(resourceName: String) {
+    val gone = device.wait(
+        Until.gone(By.res(TARGET_PACKAGE, resourceName)),
+        UI_WAIT_TIMEOUT_MS,
+    )
+    assertTrue("Expected resource target to disappear: $resourceName", gone)
+}
+
 private fun scenarioTargetResourceName(
     scenarioId: String,
     role: DemoTargetRole,
@@ -213,21 +282,23 @@ internal fun MacrobenchmarkScope.startDiagnosticsThemeAndWait() {
     waitForScenarioTarget("diagnostics.theme", DemoTargetRole.Target)
 }
 
-/** Starts the internal multi-design-system fixture through the stable launcher redirect. */
-internal fun MacrobenchmarkScope.startDesignSystemAndWait(kind: String) {
-    prepareBenchmarkUiAutomation()
-    pressHome()
-    startActivityAndWait { intent ->
-        intent.removeExtra("demo_module_key")
-        intent.removeExtra("performance_engine")
-        intent.putExtra("demo_design_system_kind", kind)
-        intent.putExtra("demo_design_system_dark", false)
-        intent.putExtra("demo_design_system_rtl", false)
-        intent.putExtra("demo_design_system_font_scale", 1f)
-        intent.putExtra("demo_design_system_reduced_motion", false)
-        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+/** Starts one revisioned multi-design-system scenario and returns its public scenario id. */
+internal fun MacrobenchmarkScope.startDesignSystemAndWait(kind: String): String {
+    val scenarioId = designSystemScenarioId(kind)
+    startDemoScenarioAndWait(scenarioId) {
+        putExtra("demo_design_system_kind", kind)
+        putExtra("demo_design_system_dark", false)
+        putExtra("demo_design_system_rtl", false)
+        putExtra("demo_design_system_font_scale", 1f)
+        putExtra("demo_design_system_reduced_motion", false)
     }
-    waitForText("Multi-design-system verification")
+    return scenarioId
+}
+
+internal fun designSystemScenarioId(kind: String): String = when (kind) {
+    "rounded-reference" -> "design.bundle-material3"
+    "cut-contrast", "cupertino-pressure" -> "design.bundle-contrast"
+    else -> error("Unknown design-system benchmark variant: $kind")
 }
 
 /**
