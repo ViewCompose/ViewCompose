@@ -709,6 +709,9 @@ tasks.register("verifyDemoLocalizedVisibleCopy") {
             rootDir.resolve(
                 "app/src/main/java/com/viewcompose/demo/pages/diagnostics/DemoDiagnosticsPage.kt",
             ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/diagnostics/DemoDiagnosticsThemeSections.kt",
+            ),
         )
         val visibleLiteral = Regex(
             """(?:\b(?:text|title|subtitle|label|supportingText|placeholder|""" +

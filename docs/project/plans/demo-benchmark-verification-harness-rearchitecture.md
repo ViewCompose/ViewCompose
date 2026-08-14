@@ -666,10 +666,11 @@ description, manual-probe checklist, and verification/gaps branches were deleted
 translated or retained behind a compatibility mode. The theme long-fling workload now launches
 the direct scenario and synchronizes against first/last Android resource IDs; its hierarchy change
 advances the workload revision from 1 to 2. The obsolete tab-switch workload was removed because
-chapter tabs no longer exist in the target information architecture. Runtime and renderer visible
-copy now use paired locale resources, and the renderer refresh tests plus strict-route device tests
-pass on the reference device. Theme-fixture copy remains the next localization slice before the
-Diagnostics domain enters the complete hard-coded-copy gate.
+chapter tabs no longer exist in the target information architecture. Runtime, renderer, and theme
+visible copy now use paired locale resources. The theme fixture resolves human-facing labels,
+notes, sample values, and accessibility descriptions through resources while keeping framework
+token and API identifiers as stable diagnostic data. The complete Diagnostics domain is in the
+hard-coded-copy gate, and all three strict diagnostics routes pass on the reference device.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 
