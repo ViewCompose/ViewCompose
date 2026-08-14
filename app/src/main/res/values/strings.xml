@@ -44,6 +44,16 @@
     <string name="demo_scenario_runtime_key_identity_summary">Conditional keyed content removal, recreation, and state reset.</string>
     <string name="demo_scenario_runtime_view_patch_title">Android View patch</string>
     <string name="demo_scenario_runtime_view_patch_summary">Focused text, input, selection, layout, and pager patch workload.</string>
+    <string name="demo_scenario_input_fields_title">Input fields</string>
+    <string name="demo_scenario_input_fields_summary">Text, email, password, number, multiline, and deterministic field mutation.</string>
+    <string name="demo_scenario_input_selection_title">Selection controls</string>
+    <string name="demo_scenario_input_selection_summary">Checkbox, switch, radio, slider, and local color overrides.</string>
+    <string name="demo_scenario_input_stress_title">Input stress</string>
+    <string name="demo_scenario_input_stress_summary">Long labels, multiline growth, read-only state, and persistent errors.</string>
+    <string name="demo_scenario_input_search_title">Search and focus follow</string>
+    <string name="demo_scenario_input_search_summary">Search input, clear/submit, nested scroll, pager, and refresh focus behavior.</string>
+    <string name="demo_scenario_input_derived_summary_title">Derived input summary</string>
+    <string name="demo_scenario_input_derived_summary_summary">A deterministic derivedStateOf projection over profile input state.</string>
     <string name="demo_scenario_diagnostics_runtime_title">Runtime diagnostics</string>
     <string name="demo_scenario_diagnostics_runtime_summary">Current environment, theme tokens, and local environment overrides.</string>
     <string name="demo_scenario_diagnostics_theme_title">Theme diagnostics</string>

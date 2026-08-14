@@ -27,6 +27,42 @@
     <item name="demo_runtime_view_patch_state" type="id" />
     <item name="demo_runtime_view_patch_target" type="id" />
 
+    <item name="demo_input_fields_root" type="id" />
+    <item name="demo_input_fields_ready" type="id" />
+    <item name="demo_input_fields_primary_action" type="id" />
+    <item name="demo_input_fields_reset" type="id" />
+    <item name="demo_input_fields_state" type="id" />
+    <item name="demo_input_fields_target" type="id" />
+
+    <item name="demo_input_selection_root" type="id" />
+    <item name="demo_input_selection_ready" type="id" />
+    <item name="demo_input_selection_primary_action" type="id" />
+    <item name="demo_input_selection_reset" type="id" />
+    <item name="demo_input_selection_state" type="id" />
+    <item name="demo_input_selection_target" type="id" />
+
+    <item name="demo_input_stress_root" type="id" />
+    <item name="demo_input_stress_ready" type="id" />
+    <item name="demo_input_stress_primary_action" type="id" />
+    <item name="demo_input_stress_secondary_action" type="id" />
+    <item name="demo_input_stress_reset" type="id" />
+    <item name="demo_input_stress_state" type="id" />
+    <item name="demo_input_stress_target" type="id" />
+
+    <item name="demo_input_search_root" type="id" />
+    <item name="demo_input_search_ready" type="id" />
+    <item name="demo_input_search_primary_action" type="id" />
+    <item name="demo_input_search_reset" type="id" />
+    <item name="demo_input_search_state" type="id" />
+    <item name="demo_input_search_target" type="id" />
+
+    <item name="demo_input_derived_summary_root" type="id" />
+    <item name="demo_input_derived_summary_ready" type="id" />
+    <item name="demo_input_derived_summary_primary_action" type="id" />
+    <item name="demo_input_derived_summary_reset" type="id" />
+    <item name="demo_input_derived_summary_state" type="id" />
+    <item name="demo_input_derived_summary_target" type="id" />
+
     <item name="demo_diagnostics_runtime_root" type="id" />
     <item name="demo_diagnostics_runtime_ready" type="id" />
     <item name="demo_diagnostics_runtime_target" type="id" />

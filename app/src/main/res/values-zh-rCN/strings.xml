@@ -45,6 +45,16 @@
     <string name="demo_scenario_runtime_key_identity_summary">验证键控条件内容的移除、重建与状态重置。</string>
     <string name="demo_scenario_runtime_view_patch_title">Android View Patch</string>
     <string name="demo_scenario_runtime_view_patch_summary">集中验证文本、输入、选择、布局与分页器 Patch 负载。</string>
+    <string name="demo_scenario_input_fields_title">输入字段</string>
+    <string name="demo_scenario_input_fields_summary">验证文本、邮箱、密码、数字、多行及可确定的字段变更。</string>
+    <string name="demo_scenario_input_selection_title">选择控件</string>
+    <string name="demo_scenario_input_selection_summary">验证 Checkbox、Switch、Radio、Slider 与局部颜色覆盖。</string>
+    <string name="demo_scenario_input_stress_title">输入压力测试</string>
+    <string name="demo_scenario_input_stress_summary">验证长标签、多行增长、只读状态与持久错误态。</string>
+    <string name="demo_scenario_input_search_title">搜索与焦点跟随</string>
+    <string name="demo_scenario_input_search_summary">验证搜索输入、清除与提交、嵌套滚动、Pager 和刷新容器焦点行为。</string>
+    <string name="demo_scenario_input_derived_summary_title">输入派生摘要</string>
+    <string name="demo_scenario_input_derived_summary_summary">基于个人资料输入状态验证可确定的 derivedStateOf 投影。</string>
     <string name="demo_scenario_diagnostics_runtime_title">运行时诊断</string>
     <string name="demo_scenario_diagnostics_runtime_summary">检查当前环境、主题 Token 与局部环境覆盖。</string>
     <string name="demo_scenario_diagnostics_theme_title">主题诊断</string>

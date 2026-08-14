@@ -182,7 +182,6 @@ internal fun MacrobenchmarkScope.startDemoActivityAndWait(
 private fun legacyBenchmarkActivityClass(moduleKey: String): String = when (moduleKey) {
     "environment" -> "com.viewcompose.DemoEnvironmentActivity"
     "foundations" -> "com.viewcompose.FoundationsActivity"
-    "input" -> "com.viewcompose.InputActivity"
     "interop" -> "com.viewcompose.InteropActivity"
     "diagnostics" -> "com.viewcompose.DiagnosticsActivity"
     else -> error("Unknown legacy benchmark module: $moduleKey")

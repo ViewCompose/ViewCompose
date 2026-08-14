@@ -29,11 +29,9 @@ class ComponentFamilySmokeUiTest {
             }
         }
 
-        launchDemoActivity<InputActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                InputActivity::class.java,
-            ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3),
+        launchDemoScenarioActivity(
+            activityClass = InputActivity::class.java,
+            scenarioId = "input.search",
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->

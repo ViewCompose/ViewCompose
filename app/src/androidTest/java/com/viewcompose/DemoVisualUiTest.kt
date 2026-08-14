@@ -230,7 +230,10 @@ class DemoVisualUiTest {
 
     @Test
     fun inputPage_controlsStayVisibleAndResetFormIsNotEllipsized() {
-        launchDemoActivity(InputActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            InputActivity::class.java,
+            "input.fields",
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("input-fields-light")
             scenario.onActivity { activity ->
@@ -309,11 +312,11 @@ class DemoVisualUiTest {
 
     @Test
     fun inputStress_controlsRemainVisibleAndReadable() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             InputActivity::class.java,
-        ).putExtra(EXTRA_INPUT_PAGE_INDEX, 2)
-        launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "input.stress",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("input-stress-light")
             scenario.onActivity { activity ->
@@ -334,11 +337,11 @@ class DemoVisualUiTest {
 
     @Test
     fun inputSearch_focusSearchBar_scrollsOnlyEnoughToRevealInput() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             InputActivity::class.java,
-        ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
-        launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "input.search",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             assertFocusActionRevealsInput(
                 scenario = scenario,
@@ -349,11 +352,11 @@ class DemoVisualUiTest {
 
     @Test
     fun inputSearch_focusScrollableColumnSearch_scrollsOnlyEnoughToRevealInput() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             InputActivity::class.java,
-        ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
-        launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "input.search",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             assertFocusActionRevealsInput(
                 scenario = scenario,
@@ -364,11 +367,11 @@ class DemoVisualUiTest {
 
     @Test
     fun inputSearch_focusVerticalPagerSearch_scrollsOnlyEnoughToRevealInput() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             InputActivity::class.java,
-        ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
-        launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "input.search",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             assertFocusActionRevealsInput(
                 scenario = scenario,
@@ -379,11 +382,11 @@ class DemoVisualUiTest {
 
     @Test
     fun inputSearch_focusPullRefreshSearch_scrollsOnlyEnoughToRevealInput() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             InputActivity::class.java,
-        ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
-        launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "input.search",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             assertFocusActionRevealsInput(
                 scenario = scenario,

@@ -3,6 +3,7 @@ package com.viewcompose
 import android.app.LocaleManager
 import android.os.Build
 import android.os.LocaleList
+import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
@@ -11,8 +12,9 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.junit.After
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -51,6 +53,11 @@ class DemoScenarioAutomationUiTest {
             "runtime.state",
             "runtime.key-identity",
             "runtime.view-patch",
+            "input.fields",
+            "input.selection",
+            "input.stress",
+            "input.search",
+            "input.derived-summary",
             "diagnostics.runtime",
             "diagnostics.theme",
             "diagnostics.renderer",
@@ -75,6 +82,31 @@ class DemoScenarioAutomationUiTest {
             launchScenario(scenarioId)
             requireTarget(scenarioId, "root")
             requireTarget(scenarioId, "ready")
+        }
+    }
+
+    @Test
+    fun inputFixturesPublishDeterministicActionAndResetState() {
+        listOf(
+            "input.fields",
+            "input.selection",
+            "input.stress",
+            "input.search",
+            "input.derived-summary",
+        ).forEach { scenarioId ->
+            launchScenario(scenarioId)
+            val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+            requireTarget(scenarioId, "primary_action").click()
+            val changed = waitForTargetTextChange(scenarioId, initial)
+            assertNotEquals("$scenarioId action must publish state", initial, changed)
+
+            requireTarget(scenarioId, "reset").click()
+            assertEquals(
+                "$scenarioId reset must restore initial state",
+                initial,
+                waitForTargetText(scenarioId, initial),
+            )
         }
     }
 
@@ -122,6 +154,32 @@ class DemoScenarioAutomationUiTest {
         )
         assertNotNull("Missing $scenarioId/$role", target)
         return requireNotNull(target)
+    }
+
+    private fun waitForTargetTextChange(
+        scenarioId: String,
+        previous: String,
+    ): String {
+        val deadline = SystemClock.uptimeMillis() + TARGET_TIMEOUT_MS
+        var current = requireTarget(scenarioId, "state").text.orEmpty()
+        while (current == previous && SystemClock.uptimeMillis() < deadline) {
+            SystemClock.sleep(16L)
+            current = requireTarget(scenarioId, "state").text.orEmpty()
+        }
+        return current
+    }
+
+    private fun waitForTargetText(
+        scenarioId: String,
+        expected: String,
+    ): String {
+        val deadline = SystemClock.uptimeMillis() + TARGET_TIMEOUT_MS
+        var current = requireTarget(scenarioId, "state").text.orEmpty()
+        while (current != expected && SystemClock.uptimeMillis() < deadline) {
+            SystemClock.sleep(16L)
+            current = requireTarget(scenarioId, "state").text.orEmpty()
+        }
+        return current
     }
 
     private fun localizedString(

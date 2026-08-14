@@ -6,6 +6,7 @@ import com.viewcompose.FeedbackActivity
 import com.viewcompose.CollectionsActivity
 import com.viewcompose.DiagnosticsActivity
 import com.viewcompose.LayoutsActivity
+import com.viewcompose.InputActivity
 import com.viewcompose.R
 import com.viewcompose.ResourceConfigurationActivity
 import com.viewcompose.StateActivity
@@ -29,6 +30,11 @@ internal object DemoScenarioIds {
     val RuntimeState = DemoScenarioId("runtime.state")
     val RuntimeKeyIdentity = DemoScenarioId("runtime.key-identity")
     val RuntimeViewPatch = DemoScenarioId("runtime.view-patch")
+    val InputFields = DemoScenarioId("input.fields")
+    val InputSelection = DemoScenarioId("input.selection")
+    val InputStress = DemoScenarioId("input.stress")
+    val InputSearch = DemoScenarioId("input.search")
+    val InputDerivedSummary = DemoScenarioId("input.derived-summary")
     val DiagnosticsRuntime = DemoScenarioId("diagnostics.runtime")
     val DiagnosticsTheme = DemoScenarioId("diagnostics.theme")
     val DiagnosticsRenderer = DemoScenarioId("diagnostics.renderer")
@@ -108,6 +114,98 @@ internal object DemoScenarioRegistry {
                 target = R.id.demo_runtime_view_patch_target,
             ),
             benchmarkRevision = 2,
+        ),
+        scenario(
+            id = DemoScenarioIds.InputFields,
+            category = DemoScenarioCategory.Input,
+            titleRes = R.string.demo_scenario_input_fields_title,
+            summaryRes = R.string.demo_scenario_input_fields_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual, DemoVerificationKind.Benchmark),
+            route = DemoScenarioRoute(InputActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_input_fields_root,
+                ready = R.id.demo_input_fields_ready,
+                primaryAction = R.id.demo_input_fields_primary_action,
+                reset = R.id.demo_input_fields_reset,
+                state = R.id.demo_input_fields_state,
+                target = R.id.demo_input_fields_target,
+            ),
+            benchmarkRevision = 2,
+        ),
+        scenario(
+            id = DemoScenarioIds.InputSelection,
+            category = DemoScenarioCategory.Input,
+            titleRes = R.string.demo_scenario_input_selection_title,
+            summaryRes = R.string.demo_scenario_input_selection_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(InputActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_input_selection_root,
+                ready = R.id.demo_input_selection_ready,
+                primaryAction = R.id.demo_input_selection_primary_action,
+                reset = R.id.demo_input_selection_reset,
+                state = R.id.demo_input_selection_state,
+                target = R.id.demo_input_selection_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.InputStress,
+            category = DemoScenarioCategory.Input,
+            titleRes = R.string.demo_scenario_input_stress_title,
+            summaryRes = R.string.demo_scenario_input_stress_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(InputActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_input_stress_root,
+                ready = R.id.demo_input_stress_ready,
+                primaryAction = R.id.demo_input_stress_primary_action,
+                secondaryAction = R.id.demo_input_stress_secondary_action,
+                reset = R.id.demo_input_stress_reset,
+                state = R.id.demo_input_stress_state,
+                target = R.id.demo_input_stress_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.InputSearch,
+            category = DemoScenarioCategory.Input,
+            titleRes = R.string.demo_scenario_input_search_title,
+            summaryRes = R.string.demo_scenario_input_search_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(InputActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_input_search_root,
+                ready = R.id.demo_input_search_ready,
+                primaryAction = R.id.demo_input_search_primary_action,
+                reset = R.id.demo_input_search_reset,
+                state = R.id.demo_input_search_state,
+                target = R.id.demo_input_search_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.InputDerivedSummary,
+            category = DemoScenarioCategory.Input,
+            titleRes = R.string.demo_scenario_input_derived_summary_title,
+            summaryRes = R.string.demo_scenario_input_derived_summary_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual),
+            route = DemoScenarioRoute(InputActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_input_derived_summary_root,
+                ready = R.id.demo_input_derived_summary_ready,
+                primaryAction = R.id.demo_input_derived_summary_primary_action,
+                reset = R.id.demo_input_derived_summary_reset,
+                state = R.id.demo_input_derived_summary_state,
+                target = R.id.demo_input_derived_summary_target,
+            ),
         ),
         scenario(
             id = DemoScenarioIds.DiagnosticsRuntime,

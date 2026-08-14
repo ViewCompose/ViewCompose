@@ -112,18 +112,18 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "input",
-                expectedText = "Input",
-            )
-            scrollUntilText("Input Benchmark Compact")
-            scrollUntilText("Reset Input Benchmark")
+            startDemoScenarioAndWait("input.fields")
         },
     ) {
-        clickText("Input Benchmark Compact")
-        waitForText("Input Benchmark Expanded")
-        clickText("Reset Input Benchmark")
-        waitForText("Input Benchmark Compact")
+        val initial = scenarioTargetText("input.fields", DemoTargetRole.State)
+        clickScenarioTarget("input.fields", DemoTargetRole.PrimaryAction)
+        val changed = waitForScenarioTargetTextChange(
+            "input.fields",
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget("input.fields", DemoTargetRole.Reset)
+        waitForScenarioTargetTextChange("input.fields", DemoTargetRole.State, changed)
     }
 
     @Test
