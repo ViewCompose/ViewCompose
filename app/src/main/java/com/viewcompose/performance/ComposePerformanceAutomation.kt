@@ -1,6 +1,7 @@
 package com.viewcompose.performance
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -10,6 +11,7 @@ import com.viewcompose.demo.contract.DemoAutomationRole
 import com.viewcompose.demo.contract.DemoScenarioSpec
 
 /** Exposes the same fully qualified Android resource selector as the ViewCompose fixture. */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun Modifier.performanceScenarioTarget(
     scenario: DemoScenarioSpec,
