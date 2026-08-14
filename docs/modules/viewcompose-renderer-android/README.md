@@ -83,6 +83,11 @@ View lifecycle callbacks and deferred disposal run after structural commit; thei
 isolated in `RenderTreeResult.commitFailures` because the new visible tree can no longer be rolled
 back safely.
 
+ConstraintLayout virtual `Group` visibility is re-applied after `ConstraintSet.applyTo`. This
+ordering prevents the set's cloned child visibility from restoring stale native state when an
+existing helper changes between frames; multiple groups retain AndroidX declaration-order
+precedence.
+
 ## Principal APIs
 
 - [`ViewTreeRenderer`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.view.tree/-view-tree-renderer/)

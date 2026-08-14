@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Harden composition identity and host lifecycles, correct nullable Local lookup, and publish related runtime state atomically.",
+  "summary": "Harden composition identity and host lifecycles, publish runtime state atomically, and keep mutable ConstraintLayout Group visibility authoritative.",
   "changes": [
     { "artifact": "viewcompose-runtime", "impact": "breaking" },
     { "artifact": "viewcompose-ui-contract", "impact": "fix" },
@@ -10,7 +10,8 @@
     { "artifact": "viewcompose-android", "impact": "breaking" },
     { "artifact": "viewcompose-animation", "impact": "fix" },
     { "artifact": "viewcompose-gesture", "impact": "fix" },
-    { "artifact": "viewcompose-text-core", "impact": "fix" }
+    { "artifact": "viewcompose-text-core", "impact": "fix" },
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" }
   ],
   "ignored": []
 }

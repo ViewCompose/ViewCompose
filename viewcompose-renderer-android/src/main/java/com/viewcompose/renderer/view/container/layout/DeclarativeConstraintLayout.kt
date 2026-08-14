@@ -215,6 +215,10 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         )
         try {
             constraintSet.applyTo(this)
+            reapplyGroupRuntimeProperties(
+                groups = mergedHelpers.groups,
+                helperReferenceIds = helperReferenceIds,
+            )
         } catch (error: Throwable) {
             warnOnce("ConstraintSet apply failed: ${error.message}")
         }
@@ -454,6 +458,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             val key = helperKey("group", group.id)
             val helperId = requireNotNull(helperIdToViewId[key])
             applyGroupHelper(
+                constraintSet = constraintSet,
                 key = key,
                 helperId = helperId,
                 spec = group,
@@ -582,6 +587,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     }
 
     private fun applyGroupHelper(
+        constraintSet: ConstraintSet,
         key: String,
         helperId: Int,
         spec: ConstraintGroupSpec,
@@ -601,8 +607,39 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             warnOnce("Group '${spec.id}' has no valid referenced ids.")
         }
         groupView.setReferencedIds(referencedIds)
-        groupView.visibility = spec.visibility.toViewVisibility()
-        groupView.elevation = requireUiEnvironment().toPx(spec.elevation)
+        val visibility = spec.visibility.toViewVisibility()
+        val elevation = requireUiEnvironment().toPx(spec.elevation)
+        groupView.visibility = visibility
+        groupView.elevation = elevation
+        // ConstraintSet.applyTo() runs after helper configuration. Persist these runtime properties
+        // in the set as well so its cloned previous values cannot overwrite the new Group state.
+        constraintSet.setVisibility(helperId, visibility)
+        constraintSet.setElevation(helperId, elevation)
+    }
+
+    private fun reapplyGroupRuntimeProperties(
+        groups: List<ConstraintGroupSpec>,
+        helperReferenceIds: Map<String, Int>,
+    ) {
+        // applyTo() restores each referenced child's cloned visibility after Group first propagates
+        // its state. Reapply groups in declaration order so the last group keeps native precedence.
+        groups.forEach { spec ->
+            val groupView = helperViews[helperKey("group", spec.id)] as? Group ?: return@forEach
+            val referencedIds = resolveReferencedIds(
+                referenceIds = spec.referencedIds,
+                helperReferenceIds = helperReferenceIds,
+                warningPrefix = "Group '${spec.id}'",
+            )
+            val visibility = spec.visibility.toViewVisibility()
+            groupView.setReferencedIds(referencedIds)
+            groupView.visibility = visibility
+            groupView.elevation = requireUiEnvironment().toPx(spec.elevation)
+            // Group may defer its child lookup while ConstraintLayout finalizes the helper graph.
+            // Apply visibility directly as well so this committed frame never exposes cloned state.
+            referencedIds.forEach { referencedId ->
+                findViewById<View>(referencedId)?.visibility = visibility
+            }
+        }
     }
 
     private fun applyLayerHelper(

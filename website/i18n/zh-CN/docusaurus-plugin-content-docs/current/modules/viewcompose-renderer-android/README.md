@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 3cda6191a5624a5f396c1445a7db8fa5ea40f1932a1d4593cf44ad005edd19e0
+translation_source_hash: 931467352bb6cd128066c7a2c039245f3da62cd9b02116e65639d3e5638376ed
 translation_status: current
 ---
 
@@ -75,6 +75,10 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 渲染在结构变更阶段具有事务性。差分、View 创建或绑定失败时，流水线恢复上一棵 View 树并
 重新抛出错误。Android View 生命周期回调和延迟释放在结构提交后执行；由于新的可见树此时
 不能安全回滚，其失败会被隔离在 `RenderTreeResult.commitFailures` 中。
+
+ConstraintLayout 虚拟 `Group` 的可见性会在 `ConstraintSet.applyTo` 之后重新应用。该顺序可
+避免现有 helper 在帧间变化时，被 ConstraintSet 克隆的子项可见性恢复成陈旧原生状态；多个
+Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
 
 ## 主要 API
 
