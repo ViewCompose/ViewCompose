@@ -186,6 +186,17 @@ Defaults:
 3. D: the capability has a Demo page and verification points.
 4. UI: instrumentation passes in `qaFull`, or the roadmap records a scoped exemption and deadline.
 
+### 4.2 Deferred design-system enhancement candidates
+
+These candidates are not active work, current defect classifications, or release blockers. Work
+starts only after its activation trigger is met and a separate narrow execution plan is accepted.
+Do not reopen an archived parent plan as a mutable backlog.
+
+| Candidate | Current decision | Activation trigger | Scheduling contract |
+| --- | --- | --- | --- |
+| Material 3 TextField structural fidelity | Retain the supported native TextField structure and current theme bridge | A prioritized product requirement or reviewed visual baseline demonstrates a materially visible incompatibility with the pinned standard Material 3 behavior | Create a `material3-textfield-structural-fidelity` plan that owns IME, selection, accessibility, RTL, font-scale, measurement, save/restore, visual, performance, and rollback evidence; do not add Material dependencies to UI Foundation or Android Renderer |
+| Material 3 Switch and Slider exact geometry and motion | Retain the accepted colors, touch targets, semantics, native behavior, and current geometry | Product review demonstrates a visible normal-density geometry or motion gap, or an accessibility impact | Create a `material3-switch-slider-geometry` plan with screenshot/geometry, touch, keyboard, accessibility, RTL, density, frame/allocation, and independently revertible per-control evidence |
+
 ## 5. Milestone contracts
 
 ### Milestone A: Overlay stability

@@ -2,591 +2,337 @@
 
 ## Status
 
-Active and ready for scheduling. No implementation phase has started.
+Active after a 2026-08-14 implementation and necessity re-audit. The retained plan now owns two
+proven runtime correctness gaps and two bounded Android View/runtime allocation optimizations. It no
+longer treats a broad diagnostics system, a shared frame scheduler, or general Compose parity as
+prerequisites.
 
-This plan records the approved optimization direction, the evidence required before each risky
-change, explicit rollback gates, and the alternatives that are deliberately not scheduled. It is a
-temporary execution plan and remains canonical English-only under the documentation-governance
-policy. When the work is complete or intentionally cancelled, durable conclusions move into the
-owning architecture, performance, migration, and module documents before this file moves to
-`docs/archive/`.
+No production slice or Maven changeset is currently owned by this plan. The old statement that all
+related work was unstarted is obsolete: later work independently added `snapshotFlow`,
+configuration-aware Android resources, resource and environment revisions, transactional effects,
+deferred child-session activation, and the logical-session/physical-tree collection reuse model.
+Those capabilities are audited as current foundations below, not repeated as unfinished phases.
 
-Last verified: 2026-08-05.
+Last verified: 2026-08-14.
 
-Next action: execute Phase 0 without changing runtime behavior, capture the first same-device
-baseline, and update the status and evidence ledger in this plan before scheduling Phase 1.
+Next action: add the Phase 0 focused correctness reproductions. Nullable Local lookup and atomic
+publication of framework-owned state may proceed without a Demo performance baseline. Do not begin
+modifier-only binding or LocalSnapshot allocation work until the replacement scenario and workload
+revision baseline from the
+[Demo benchmark and verification harness rearchitecture plan](./demo-benchmark-verification-harness-rearchitecture.md)
+exists.
 
 ## Maven release changesets
 
-- None. Implementation has not started, so this plan owns no publication-relevant Changeset yet.
+- None.
+
+The first production slice selected from this plan must add and list its immutable
+`release/changes/*.json` file before implementation is considered complete.
 
 ## Objective
 
-Improve ViewCompose state publication, local propagation, Android View patching, and multi-session
-frame scheduling while preserving the architecture's current strengths:
+Correct runtime data propagation where the current behavior can publish an invalid logical state,
+then remove two demonstrated classes of redundant Android View work without weakening immutable
+render inputs, delayed-session ownership, renderer transactions, or native View lifecycle.
 
-1. `ThreadLocal` remains the synchronous dynamic-scope carrier for locals, observation, composer,
-   and snapshot contexts where it is already appropriate.
-2. `UiLocalSnapshot` remains an explicit opaque boundary for delayed content.
-3. `RenderSession` instances remain independently owned and independently disposable.
-4. VNodes, NodeSpecs, modifiers, and captured environments remain immutable render inputs.
-5. Snapshot writes continue through the MVCC transaction and conflict path.
-6. Android View creation, mutation, layout, and disposal remain main-thread work.
-7. Renderer apply and composition preparation retain their current commit/abort and rollback
-   boundaries.
+This plan is complete without a process-wide scheduler, persistent Local collection, new public
+diagnostics surface, or Compose-equivalent implementation. An optimization remains only when its
+targeted operation count falls and the replacement Demo baseline shows no policy regression.
 
-The goal is not feature parity with Jetpack Compose. The goal is to remove demonstrable redundant
-work and strengthen consistency inside the native Android View architecture.
+## Re-audit conclusion
 
-## Scope
+The original plan mixed four different kinds of work:
 
-The planned work may affect these implementation areas:
+1. foundations or product capabilities that are already implemented;
+2. two current correctness defects that should not wait for performance measurement;
+3. small or medium optimizations with a concrete redundant-work path but no valid current Demo
+   baseline; and
+4. speculative infrastructure whose complexity is not justified by present evidence.
 
-- `viewcompose-runtime`: snapshot apply, observation delivery, diagnostics, and transaction tests;
-- `viewcompose-ui-foundation`: local snapshot representation and render diagnostics;
-- `viewcompose-animation` and `viewcompose-gesture`: atomic publication of related state holders;
-- `viewcompose-renderer-android`: modifier-only binding plans and Android View patch classification;
-- `viewcompose-host-android`: shared frame batching for independent render sessions;
-- `viewcompose-benchmark` and the Demo benchmark surfaces: targeted workloads and trace metrics;
-- active architecture, performance, migration, module, and localized documentation affected by an
-  implemented behavior or public-contract change.
+Only categories 2 and 3 remain active. Category 1 is recorded as evidence, and category 4 is
+rejected or moved behind a new-plan trigger so it cannot silently become a release blocker.
 
-## Non-goals
+## Audit method and current evidence
 
-This plan does not include:
+The re-audit inspected current source, tests, active architecture and module documentation, and the
+changes landed since the plan's 2026-08-05 baseline. The important current facts are:
 
-- removing or replacing `ThreadLocal` merely to use a different context mechanism;
-- introducing a compiler plugin, compiler-generated restart groups, change masks, or stability
-  inference;
-- concurrent or background composition;
-- merging delayed child sessions into a parent composition or weakening their independent
-  lifecycle;
-- replacing VNode immutability with mutable pooled nodes;
-- adding a process-global View, Session, VNode, LocalSnapshot, or state-object cache;
-- making every `UiLocal` read automatically observable;
-- adding snapshot collections or a `snapshotFlow` equivalent without an independent product use
-  case;
-- changing RecyclerView pool ownership or motion defaults;
-- optimizing rare configuration changes before measured render or allocation hot paths;
-- bypassing Snapshot apply, merge, conflict, observation, or history-pruning semantics;
-- keeping a complex optimization whose targeted work reduction or end-to-end result cannot be
-  demonstrated.
-
-## Current baseline
-
-Verified from the current main worktree on 2026-08-05:
-
-1. `SnapshotRuntime` supplies MVCC read versions, buffered mutable snapshots, atomic global apply,
-   policy-based conflict merging, observer notification, and history pruning.
-2. A framework write outside an explicit mutable snapshot creates and applies an automatic mutable
-   snapshot.
-3. One successful global apply currently accumulates observer callbacks in a list. The same
-   `Observation` can therefore be invoked multiple times when it read several states changed by the
-   same transaction.
-4. `Transition.syncFromCore()` publishes seven related state holders as separate writes.
-   `AnchoredDraggableState` publishes related semantic and offset states as separate writes, and
-   `Animatable` has similar multi-holder transitions.
-5. `NodeBindingDiffer` chooses `Rebind` when the NodeSpec is unchanged and only the Modifier
-   changed, even though `ViewModifierApplier` already compares resolved modifier families before
-   mutating the View.
-6. `LocalContext` stores a Map in a `ThreadLocal`; every `snapshot()` call creates a new
-   `LocalSnapshot` wrapper, and every `UiTreeBuilder.emit()` captures one snapshot.
-7. `LocalContext.current()` uses an Elvis fallback and does not distinguish an absent binding from
-   a present nullable binding whose value is `null`.
-8. Every Android render session owns its own frame dispatcher and Choreographer-backed frame clock.
-   Invalidations coalesce inside one session but not across independent sessions.
-9. `ComposerLite` creates a candidate `Observation` for every recomposed scope and commits or
-   abandons it transactionally. This is intentionally simple but may create subscription churn.
-10. Diagnostics already report composition reasons, tree structure, rebind/patch/skip outcomes,
-    and layout metrics. Cross-session correlation, targeted runtime counters, and per-node time are
-    not complete.
-11. Release macrobenchmarks already cover cold start, state patches, lists, complex layouts,
-    navigation, animation-adjacent workloads, frame timing, heap, and RSS, with Compose controls for
-    selected scenarios.
+1. `SnapshotRuntime` already supplies MVCC reads, mutable-snapshot buffering, conflict handling,
+   atomic global apply, history pruning, and the public `Snapshot.withMutableSnapshot` boundary.
+2. `snapshotFlow` is implemented, documented, sampled, and tested. Snapshot collection types remain
+   a separate product decision.
+3. A successful global apply still accumulates `Observation` instances in a list. One observation
+   that read several changed states is therefore invoked once per changed state, as its current
+   public KDoc explicitly states.
+4. `Transition.syncFromCore()` still writes seven observable mirrors separately. `Animatable` and
+   `AnchoredDraggableState` also publish related target/running/value or
+   semantic/target/offset/dragging fields in separate automatic snapshots. A Kotlin `synchronized`
+   block serializes writers but does not make those snapshot publications atomic to readers.
+5. `LocalContext.current()` uses a cast plus Elvis fallback. A present nullable value of `null` is
+   therefore indistinguishable from an absent binding and incorrectly evaluates the default.
+6. `LocalContext` stores a Map in its `ThreadLocal`, and each `snapshot()` creates a new immutable
+   wrapper. `UiTreeBuilder` captures that wrapper while emitting nodes, so wrapper allocation still
+   scales with emission rather than only provider boundaries.
+7. `NodeBindingDiffer` still returns `Rebind` when only a Modifier changes. Preflight then resolves
+   the chain, rebuilds `LayoutParams`, and runs a complete NodeSpec bind even though
+   `ViewModifierApplier` can already compare and patch modifier families.
+8. Targeted spec patches, renderer prepare/apply/commit/rollback, AndroidView reset/release, and
+   aggregate rebind/patch/skip diagnostics already exist. The original broad Phase 0 is not needed
+   to prove the two remaining redundant-work paths.
+9. Configuration-aware resource access, `LocalResourceRevision`, framework-owned environment
+   revisions, and retained child-session refresh are implemented. Same key plus equal content and
+   environment revisions can skip lazy or pager item rendering.
+10. `TabRow` is now an eager keyed child set, while Lazy containers and Pager retain independent
+    logical Sessions and a separate bounded physical mounted-tree reuse layer. The old plan's
+    assumptions about tab Sessions and undifferentiated delayed containers are obsolete.
+11. Android render Sessions still own separate frame dispatchers and Choreographer callbacks.
+    Per-session invalidations already coalesce, and no current trace or benchmark shows that callback
+    registration, rather than the Sessions' actual composition and patch work, is material.
 
 Authoritative current documents:
 
 - [State snapshot architecture](../../architecture/state-snapshots.md)
 - [Architecture overview](../../architecture/overview.md)
 - [Delayed-session container checklist](../../architecture/session-containers.md)
+- [Host-owned Android resource environment](../../architecture/decisions/0007-host-owned-android-resource-environment.md)
+- [Lazy collection logical and physical ownership](../../architecture/decisions/0012-lazy-collection-logical-and-physical-ownership.md)
 - [Performance specification](../../tooling/performance.md)
 - [State and recomposition migration boundary](../../migration/compose-state-recomposition-and-restoration.md)
 - [Layout, Modifier, and environment migration boundary](../../migration/compose-layout-modifier-and-environment.md)
 
-## Decision principles
+## Scope
+
+Retained work may affect:
+
+- `viewcompose-runtime`: one-apply observation delivery and focused snapshot tests;
+- `viewcompose-ui-foundation`: nullable Local lookup and LocalSnapshot representation;
+- `viewcompose-animation` and `viewcompose-gesture`: atomic publication of fields that form one
+  public logical state;
+- `viewcompose-renderer-android`: a benchmark-gated modifier-only binding plan and its rollback,
+  LayoutParams, modifier-family, and AndroidView coverage;
+- the replacement Demo scenarios and `viewcompose-benchmark`: workload identity, operation-count
+  evidence, and same-device acceptance; and
+- affected public KDoc, compiled samples, module manuals, architecture, performance, migration, and
+  localized documentation required by an implemented slice.
+
+The plan does not own collection logical/physical reuse, the developer preview locator, general
+diagnostics UI, theme-system policy, or new resource APIs.
+
+## Audited decisions
+
+| Area | Current evidence | Necessity and priority | Decision |
+| --- | --- | --- | --- |
+| Snapshot MVCC and explicit transactions | MVCC, nested mutable snapshots, conflict handling, and `Snapshot.withMutableSnapshot` exist and are tested. | Implemented foundation. | Retain; do not build another transaction layer. |
+| `snapshotFlow` | Cold per-collector observation, invalidation conflation, documentation, samples, and tests exist. | Implemented independently. | Remove the stale rejection; snapshot collections remain out of scope. |
+| Resource and environment propagation | Android resource APIs, host revision publication, VNode environment equality, and delayed-session refresh exist. | Implemented independently. | Treat as current input to renderer and item revision decisions. Do not reopen resource architecture here. |
+| Collection Session and native-tree reuse | Lazy/Pager separate logical identity from bounded physical reuse; TabRow is eager keyed content. | Implemented independently. | Preserve the current architecture; no Session merging or tab scheduler work. |
+| Renderer transactions and diagnostics | Targeted spec patches, rollback, reset/release, aggregate stats, patch records, and frame failure data exist. | Implemented foundation. | Reuse focused counters and tests; do not build the original general correlation subsystem. |
+| Nullable Local lookup | A present `null` falls through to the default; no focused nullable Local test exists. | P0 correctness: an existing generic API returns the wrong value. | Required focused fix. |
+| Atomic related-state publication | Transition, Animatable, and anchored drag expose tuples whose fields currently commit separately. | P0 correctness: readers can observe a committed mixed tuple; repeated automatic applies are secondary cost. | Required, using the existing Snapshot transaction boundary only around proven invariants. |
+| One-apply observation delivery | The same `Observation` can receive duplicate callbacks from one successful apply, and current KDoc promises per-changed-state delivery. | P1 contract simplification and deterministic hot-path reduction, not a standalone correctness fix. | Hard-cut to at-most-once per successful apply only with explicit public contract, sample, and compatibility updates. |
+| Modifier-only Android View binding | Modifier-only changes currently force a full NodeSpec bind and unconditional LayoutParams rebuild. | P1 concrete redundancy, but end-to-end value and rollback shape still require the replacement benchmark. | Retain as a benchmark-gated experiment; keep only the smallest plan that reuses existing modifier-family comparison. |
+| LocalSnapshot wrapper identity | Every capture creates a wrapper although the installed map is immutable for that scope. | P1 low-risk allocation experiment after a valid workload baseline. | Retain the `ThreadLocal<LocalSnapshot>` identity-reuse experiment; require deterministic allocation reduction and no regression. |
+| Shared frame scheduler | Sessions register separate callbacks, but callbacks only dispatch independent render work and no evidence identifies registration as material. | Not currently necessary; high lifecycle, reentrancy, failure-isolation, and process-global retention cost. | Remove from this plan. A future trace showing material callback cost requires a separate plan and ADR-level ownership review. |
+| Broad runtime-to-View trace correlation | Existing composition, renderer, tree, failure, and frame diagnostics already locate the retained gaps. | Not necessary for the current corrections; always-on correlation would add hot-path work. | Reject as a prerequisite. Add only bounded test/benchmark counters local to an experiment. |
+| Productized optimization diagnostics | The Demo already exposes actionable renderer outcomes; the Demo itself is being rebuilt around stable scenarios. | Separate tooling concern with no current product requirement. | Remove the old Phase 5. Keep only metrics that remain useful after a decision. |
+| Persistent Local map | The expected active Local count is small and wrapper reuse has not yet been measured. | Speculative dependency and lookup complexity. | Reject from this plan; require evidence from at least two revisioned workloads before a new proposal. |
+| Observation dependency-set reuse | It reaches prepared composition commit/abort and subscription lifetime. | Risk is disproportionate without a measured allocation share. | Reject from this plan; a future trigger requires its own transactional design. |
+| Derived-state equal-result suppression | Correct suppression changes when arbitrary user calculations run. | No proven workload or safe scheduling contract. | Do not implement here. |
+| Tracked UiLocals | Automatic tracking would add hidden subscriptions and broad invalidation without compiler scopes. | Not needed for current environment/service lookup. | Keep explicit snapshot propagation; use State or Flow for changing business data. |
+| Field-specific environment patching | Locale, density, font scale, direction, theme, and resources can affect broad native state. | Rare path and high semantic risk. | Keep conservative full rebind on environment inequality. |
+| VNode, NodeSpec, LocalSnapshot, State, or View pools | Mutable pooling conflicts with immutable inputs, rollback, and final release. | Risk exceeds unproven allocation value. | Reject. Keep only the separately owned bounded mounted-tree cache for declared resettable content. |
+| Nullable mutation-policy merge protocol | Current `null`-means-conflict cannot express a successful merge to `null`. | Real API-design issue, but unrelated to propagation or View patch hot paths. | Leave to a separately scheduled runtime API design. |
+
+## Locked principles
 
-### 1. Correctness outranks benchmark improvement
+### 1. Correctness work does not wait for performance infrastructure
 
-Atomic publication of fields that form one public state and correct nullable-local lookup may stay
-even when frame timing does not move, provided the implementation remains small and does not cause
-a regression. A performance-only experiment does not receive this exception.
+A nullable Local returning its default and a framework state exposing a mixed committed tuple are
+contract defects. Their focused reproductions and fixes may proceed before the Demo rearchitecture.
 
-### 2. Operation-count evidence comes before timing claims
+### 2. One logical publication uses one existing Snapshot transaction
 
-Each optimization first proves that it removes the exact redundant work it targets. Examples
-include seven automatic state applies becoming one explicit apply, modifier-only changes producing
-zero full node rebinds, or N invalidated sessions using one Choreographer callback. A noisy frame
-timing result cannot replace a failed operation-count assertion.
+Only fields whose public meaning forms one invariant are grouped. Do not wrap every adjacent write,
+invent a parallel transaction type, or use frame debouncing to conceal intermediate commits.
+
+### 3. Operation-count evidence precedes timing claims
 
-### 3. Complex work requires a before/after experiment
+The retained optimizations must first prove their exact effect: a modifier-only update performs no
+full NodeSpec bind or unnecessary LayoutParams replacement, and LocalSnapshot wrappers scale with
+provider boundaries instead of emitted nodes. Timing alone cannot substitute for those assertions.
 
-Modifier-only patching, persistent local maps, shared session scheduling, observation subscription
-diffing, and derived-state conditional invalidation must not begin with an unmeasured production
-rewrite. The required sequence is:
+### 4. Performance comparison requires stable workload identity
 
-1. add correctness and workload coverage;
-2. capture a release/R8 baseline;
-3. implement on a separately revertible commit or branch;
-4. repeat the same-device and same-build workload;
-5. keep, simplify, or revert according to the phase gate;
-6. retain useful tests and diagnostics even if the optimization is reverted.
+Do not compare the current text-coupled, changing Demo against a future fixture and call the result
+an optimization. Performance slices start only after a direct scenario ID and explicit
+`workloadRevision` identify the same fixture, setup, action, and result in both builds.
 
-### 4. Complexity must be proportional to durable benefit
+### 5. Native View ownership and renderer rollback remain authoritative
 
-A small internal change may remain when it deterministically removes redundant work and causes no
-regression. A new shared runtime, dependency, cache, public API, or transactional state machine must
-also show a stable end-to-end benefit above the repository's noise floor.
+No patch may bypass preflight, mutate a View outside the renderer transaction, retain a View past
+release, replay an AndroidView without its reset contract, or make failure rollback incomplete.
+
+### 6. Simpler current infrastructure wins without a material trigger
+
+Per-session scheduling, copy-on-provider Maps, fresh composition observations, lazy derived state,
+and conservative environment rebind remain the default while no stable representative workload
+shows that their cost is material.
+
+## Phase 0: Focused reproductions and contract freeze
+
+Phase 0 is a correctness-test gate, not a diagnostics phase. Add the smallest executable evidence
+for:
+
+1. a nullable `UiLocal<String?>` whose non-null default is overridden with `null`, including nested
+   providers, batch providers, capture/restore, exceptional restore, and one delayed child Session;
+2. Transition mirror publication, Animatable begin/end/cancel publication, and anchored-drag
+   snap/settle/anchor-reconciliation publication, proving that readers cannot observe a committed
+   mixed tuple;
+3. one `RuntimeObservation` reading two states changed by one explicit mutable snapshot, two
+   independent successful applies, conflict/no-op apply, callback thread, disposal race, and
+   `snapshotFlow` invalidation behavior; and
+4. an inventory of framework-owned adjacent writes limited to animation, gesture, text,
+   navigation, and session state, classifying each group as one invariant or independent events.
+
+Contract freeze:
 
-### 5. Preserve ownership and rollback boundaries
+- an absent Local evaluates its default; a present binding returns its value even when that value
+  is `null`;
+- framework-owned fields documented as one logical state are visible from one successful Snapshot
+  commit or not at all;
+- if observation coalescing is retained, one observation is invalidated at most once per successful
+  global apply while separate applies remain separate opportunities; and
+- `synchronized` protects writer arbitration but never substitutes for Snapshot read consistency.
 
-No optimization may share mutable composition data between sessions, retain a View beyond its
-owner, run View work away from the main thread, publish effects before renderer commit, or make a
-failed frame harder to roll back.
+Phase 0 completes when the current failures are executable, the affected public API Q levels and
+contract fields are recorded, and the first production changeset is registered. No cross-session
+trace chain or Demo page is required.
 
-## Priority and scheduling decision
+## Phase 1: Runtime and Local correctness hard cut
 
-| Priority | Work item | Expected value | Complexity | Scheduling decision |
-| --- | --- | --- | --- | --- |
-| P0 | Measurement and diagnostic baseline | Enables every later decision and strengthens current diagnostics | Medium | Required before behavior changes |
-| P1 | Atomic publication of related framework state plus transaction-level observer coalescing | High consistency and hot-path reduction for animation, gesture, and state patches | Low to medium | Schedule after Phase 0 |
-| P1 | Modifier-only Android View patching | High native-View binding and layout benefit | Medium | Benchmark-gated implementation |
-| P2 | LocalSnapshot correctness and low-risk allocation reduction | Medium allocation benefit plus one correctness fix | Low | Schedule after P1 work |
-| P2 | Shared frame batching for independent sessions | Potentially high benefit in Lazy, Pager, overlay, and navigation workloads | High | Baseline first; revert without stable benefit |
-| Conditional | Persistent local map | Unknown until Local provider copying is measured | Medium | Do not schedule unless Phase 3 trigger is met |
-| Deferred | Observation dependency-set reuse | Possible allocation benefit but high transaction/rollback risk | High | Do not schedule in this plan |
-| Deferred | Derived-state equal-result suppression | Workload-specific benefit and difficult thread semantics | High | Do not schedule in this plan |
-| Deferred | Environment-specific partial rebind | Low-frequency path with broad semantic impact | Medium | Do not schedule in this plan |
+### Nullable Local lookup
 
-## Measurement and rollback policy
+Change lookup to distinguish key presence from value nullability. Preserve current provider
+nesting, batch provider order, opaque capture/restore, shallow value references, synchronous
+ThreadLocal scope, effect-read prohibition, diagnostic formatting, and exception restoration.
 
-### Required build and device discipline
+Do not introduce a sentinel into public snapshots or make Local values automatically observable.
 
-1. Measure an R8-optimized, resource-shrunk target through the existing release benchmark path.
-2. Run before and after results on the same device model, Android build, thermal state, power state,
-   compilation mode, workload, iteration count, and benchmark APK inputs.
-3. Treat a run coefficient of variation above `0.15` as unstable and rerun it.
-4. Apply the raw and normalized regression policy in
-   `tools/performance/benchmark_policy.json`; never interpret cross-device division as a speedup.
-5. Record the source revision, device identity, system fingerprint, command, raw result path, and
-   summarized counters in this plan's evidence ledger.
+### Atomic related-state publication
 
-### Required phase evidence
+Use `Snapshot.withMutableSnapshot` at the smallest framework mutation boundaries identified in
+Phase 0. Cover Transition first, then Animatable and AnchoredDraggableState. Include
+MutableTransitionState or another holder only when its actual update path publishes fields that are
+documented as one invariant.
 
-Every implementation phase must provide all of the following:
+Preserve mutation arbitration, cancellation, conflict propagation, writer-thread callback
+behavior, nested mutable snapshots, animation frame clocks, and gesture offset clamping. A failed
+apply publishes none of the grouped fields and schedules no render.
 
-- deterministic unit or instrumentation assertions for the targeted operation-count reduction;
-- correctness and failure-path coverage, including rollback or disposal where applicable;
-- no regression beyond the existing P50, P95, heap, and RSS policy;
-- at least one representative end-to-end workload, not only a synthetic loop;
-- an explicit keep/revert conclusion recorded in this plan.
+### One-apply observation delivery
 
-### Additional gate for high-complexity experiments
+After the related-state tests pass, change invalidation accumulation to stable unique Observation
+delivery outside runtime and state locks. This is a public behavior change because current KDoc
+describes one callback per changed observed state. Before implementation, assign the API's Q level
+and update canonical KDoc, compiled samples, runtime module documentation, migration guidance, and
+tests in the same slice.
 
-Shared session scheduling, a persistent-map dependency, observation subscription reuse, or another
-new runtime state machine is kept only when:
+Do not debounce across applies, frames, or time. Do not reuse Observation dependency sets.
 
-1. the targeted operation count is reduced as designed;
-2. at least one stable representative scenario improves beyond measurement noise in frame CPU,
-   frame overrun, allocation, heap, or RSS;
-3. no paired scenario regresses beyond policy;
-4. the new code does not require a broader ownership or public-contract exception;
-5. the maintenance cost is documented and judged proportional to the measured result.
+Phase 1 completes when focused runtime, animation, gesture, Local, delayed-session, and
+`snapshotFlow` tests pass, the public contracts are aligned, and aggregate quality gates show no
+regression.
 
-If these conditions are not met, revert the implementation. Keep only independently useful tests,
-trace points, benchmark workloads, and documented findings.
+## Performance implementation gate
 
-### Revert mechanics
+Phases 2 and 3 remain blocked until the Demo rearchitecture provides:
 
-- Land baseline diagnostics and each optimization in separate commits whenever practical.
-- Do not mix public API expansion, module dependency changes, and the optimization experiment in
-  one inseparable commit.
-- Do not preserve dead compatibility branches after reverting an experiment.
-- Update this plan with the rejected result and evidence so the same experiment is not repeated
-  without a changed premise.
+1. a stable direct scenario ID and workload revision for the affected state/modifier and Local-heavy
+   fixtures;
+2. locale-independent ready, action, reset, state, and target selectors;
+3. an isolated benchmark hierarchy without catalog or human-guidance content;
+4. same-device release/R8 baseline results with source revision, device/build, thermal discipline,
+   commands, raw paths, P50/P95, frame-overrun, allocation, heap, and RSS evidence; and
+5. deterministic test-only or opt-in counters for only the operation targeted by the experiment.
 
-## Phase 0: Diagnostics and benchmark baseline
+Use the variance and regression thresholds from
+[Performance](../../tooling/performance.md) and `tools/performance/benchmark_policy.json`. If the
+workload revision changes, establish a new baseline instead of comparing unlike fixtures.
 
-### Goal
+## Phase 2: Modifier-only Android View patch experiment
 
-Create enough low-overhead evidence to distinguish state publication, composition, session
-scheduling, renderer binding, and Android layout work before changing behavior.
+Introduce one explicit modifier-only binding plan only if the baseline reaches the current Rebind
+path. The implementation must:
 
-### Runtime and renderer counters
+1. reuse `ViewModifierApplier` family comparison rather than duplicate Node binder logic;
+2. resolve the next modifier chain once;
+3. rebuild or replace LayoutParams only when resolved layout or parent data changes;
+4. preserve cleanup when a modifier family is removed;
+5. replay stable native configuration only when its existing semantic key requires it;
+6. keep full rebind for type or environment changes, incompatible specs, cross-owner reuse, and any
+   family whose equivalence cannot be proved; and
+7. preserve preflight, transaction checkpoints, commit effects, AndroidView reset/release, and
+   failure rollback.
 
-Add benchmark/test-visible internal counters or trace fields for:
+Required evidence includes draw/property, semantics/interaction, layout, insets, nested scroll,
+focus, decoration, native configuration, AndroidView, and failed-patch cases. The target scenario
+must report zero full binds and zero LayoutParams replacement for a visual-only modifier update.
 
-- state writes, automatic mutable snapshots, explicit mutable snapshots, successful applies,
-  conflicts, changed state objects, and unique notified observations;
-- invalidated scopes, queued scopes, scheduled render requests, direct renders, and actual frame
-  renders;
-- LocalSnapshot creation, installation, capture, and identity reuse;
-- full node rebinds, spec patches, modifier-only patches, skipped nodes, skipped subtrees, and
-  LayoutParams rebuilds;
-- frame callbacks requested, cancelled, drained, and the number of sessions drained per callback.
+Keep the change only when the operation-count target is met and no representative scenario regresses
+beyond policy. If the plan grows type-specific binder branches or incomplete rollback, revert it and
+retain only independently useful tests.
 
-Instrumentation must be disabled or allocation-free on the normal release path unless an existing
-diagnostic or trace mode is enabled. Do not add an always-growing event list.
+## Phase 3: LocalSnapshot identity-reuse experiment
 
-### Trace correlation
+After the nullable correctness fix, test the smallest representation change:
 
-Add an internal correlation chain that can connect:
+1. store the current immutable `LocalSnapshot` in the ThreadLocal;
+2. return that installed instance from `snapshot()`;
+3. create one new snapshot at a provider boundary and restore the exact prior snapshot on exit; and
+4. install the supplied snapshot object directly during `withSnapshot`.
 
-```text
-state apply
-    -> observation invalidation
-    -> recompose scope
-    -> render session and frame
-    -> VNode patch
-    -> Android View mutation/layout request
-```
+Preserve Map equality, opaque public wrappers, nesting, batch providers, effect boundaries,
+exception restoration, diagnostics redaction, delayed-session refresh, and shallow reference
+semantics. Do not add a persistent collection or cache.
 
-Every delayed child session should expose an opaque parent/session correlation identifier to
-diagnostics without granting access to another session's local map or lifecycle. Correlation IDs
-are process-local diagnostics, not persistence or public identity.
+The deterministic keep gate is that LocalSnapshot creation scales with provider boundaries and
+explicit public captures rather than emitted-node count. Also require no regression in the
+revisioned Local-heavy and representative state/list/layout scenarios. Revert if identity reuse
+requires mutable snapshots, hidden ownership, or broader caching.
 
-### Benchmark workloads
+## Work removed from the active sequence
 
-Establish or extend workloads for:
+The following items are not later phases of this plan:
 
-1. one Transition frame that updates multiple channels and mirror states;
-2. one anchored-drag state transition that updates semantic and offset holders;
-3. modifier-only updates separated into draw/property, semantics/interaction, and layout families;
-4. a Local-heavy tree with nested providers, hundreds of emitted nodes, unchanged renders, and one
-   provider change;
-5. multiple visible independent item/page sessions observing one shared State;
-6. a representative existing state-patch, list, complex-layout, and navigation workload so a
-   synthetic improvement cannot hide an application regression.
+- shared Choreographer batching across Sessions;
+- cross-session state-to-View correlation infrastructure;
+- public or Demo productization of experimental counters;
+- persistent Local maps;
+- Observation dependency-set reuse;
+- derived-state equal-result suppression;
+- tracked UiLocals;
+- field-specific environment patches;
+- VNode, NodeSpec, LocalSnapshot, State, Session, or process-global View pools;
+- merged Lazy, Pager, overlay, or navigation Sessions; and
+- nullable mutation-policy merge redesign.
 
-### Phase 0 completion gate
-
-- Counters are deterministic in unit or instrumentation tests.
-- Trace/counter collection does not change output, scheduling, or lifecycle behavior.
-- Release builds with diagnostics disabled show no policy regression.
-- The first baseline is recorded in the evidence ledger.
-
-## Phase 1: Atomic state publication and observation coalescing
-
-### Goal
-
-Publish fields that form one logical framework state in one Snapshot transaction and deliver at
-most one callback to the same Observation for one successful global apply.
-
-### Ordered work
-
-1. Inventory framework-owned consecutive writes in animation, gesture, navigation, text, and
-   session state. Classify each set as one invariant or independent events.
-2. Wrap only invariant-related writes in `Snapshot.withMutableSnapshot` or an internal helper that
-   delegates to it. Do not create a separate transaction mechanism.
-3. Cover Transition mirror fields, `Animatable` mutation boundaries, and anchored-drag semantic and
-   offset publication first.
-4. Change global apply invalidation accumulation from duplicate callbacks to stable unique
-   Observation delivery.
-5. Preserve callback delivery outside runtime and state locks.
-6. Update `RuntimeObservation` KDoc and tests from per-changed-state callback count to at-most-once
-   per successful apply if that public contract change is retained.
-7. Add concurrent apply, conflict, nested snapshot, writer-thread callback, composition consistency,
-   and failed-apply coverage.
-
-### Required assertions
-
-- One Transition synchronization advances the global snapshot at most once when values change.
-- Readers never observe a committed mixed tuple of related Transition or anchored-drag fields.
-- One Observation reading multiple changed states is invoked once for that apply.
-- Two independent successful applies still produce two invalidation opportunities.
-- A conflict applies none of the related fields and produces no invalidation.
-- Frame scheduling still coalesces repeated invalidations.
-
-### Keep or revert rule
-
-Atomic publication is retained for its correctness value when the implementation remains a small
-use of the existing Snapshot API and causes no regression. Transaction-level observation
-coalescing is reverted or narrowed if public consumers require per-state callback counts or if
-concurrent tests reveal lost invalidations. It must not be emulated with a timer or frame-only
-debounce.
-
-## Phase 2: Modifier-only Android View patches
-
-### Goal
-
-Avoid complete NodeSpec binding when only Modifier data changed, while preserving View reuse,
-LayoutParams behavior, native configuration replay, and renderer rollback.
-
-### Ordered work
-
-1. Capture separate baselines for draw/property, semantics/interaction, insets, native
-   configuration, and layout Modifier changes.
-2. Add a modifier-only binding plan instead of manufacturing an empty NodeViewPatch.
-3. Reuse `ViewModifierApplier` family comparisons so an unchanged family performs no setter work.
-4. Re-resolve modifiers only when their ordered chain changed.
-5. Rebuild LayoutParams only when resolved layout or parent-data fields changed.
-6. Replay `nativeView` configuration only when its stable semantic key requires it.
-7. Keep full rebind for node-type changes, incompatible NodeSpec classes, density/font-scale changes,
-   and any family whose patch equivalence cannot be proven.
-8. Record modifier-only outcomes separately from spec patches and full rebinds.
-
-### Required assertions
-
-- Modifier-only draw/property changes perform zero NodeSpec full binds.
-- A visual-only patch does not replace LayoutParams or request parent constraint regeneration.
-- A layout Modifier change produces the correct LayoutParams and layout request.
-- Removing a Modifier family restores the original reused-View state.
-- Semantics, nested scroll, insets listeners, click/focus state, decoration, z order, and
-  `nativeView` retain their current cleanup and rollback behavior.
-- A failed patch restores the previously committed View and diagnostic state.
-
-### Keep or revert rule
-
-Keep the plan only when targeted full rebinds become modifier-only patches and representative
-state-patch or complex-layout results do not regress. If the plan grows special cases that duplicate
-Node binder logic, or if rollback cannot remain complete, revert it and retain only any safe
-family-specific patch discovered during the experiment.
-
-## Phase 3: LocalSnapshot correctness and allocation reduction
-
-### Goal
-
-Reduce per-node local snapshot allocation without changing lookup, provider nesting, explicit
-capture/restore, delayed-session refresh, or snapshot equality semantics.
-
-### Required correctness fix
-
-Make `LocalContext.current()` distinguish:
-
-- no binding: evaluate the Local default factory;
-- present non-null binding: return it;
-- present nullable binding with `null`: return `null`.
-
-Add public-behavior tests using a nullable Local whose default is non-null, nested overrides, batch
-providers, captured snapshots, and delayed child sessions.
-
-### Low-risk representation experiment
-
-1. Store the current `LocalSnapshot` in the `ThreadLocal` instead of storing only its Map.
-2. Let `snapshot()` return the installed snapshot instance.
-3. Create one new snapshot at a provider boundary and restore the exact previous snapshot on exit.
-4. Install the supplied snapshot object directly in `withSnapshot`.
-5. Preserve opaque values, diagnostic formatting, Map equality, nesting, and exception restoration.
-
-Expected deterministic result: snapshot-wrapper creation scales with provider boundaries and
-explicit captures rather than emitted-node count.
-
-### Conditional persistent-map experiment
-
-Do not add a persistent-collection dependency or custom persistent trie during the initial change.
-Open that experiment only if Phase 0 and the low-risk representation result show that provider Map
-copying remains a material allocation or render-CPU contributor in at least two representative
-workloads.
-
-If triggered, compare:
-
-- the current copy-on-provider Map;
-- a small internal structurally shared map optimized for the expected Local count;
-- a maintained persistent-collection dependency that satisfies module-boundary and delivery-cost
-  constraints.
-
-Reject the persistent-map change if it adds dependency or lookup complexity without a stable
-allocation, heap, or frame benefit.
-
-### Required assertions
-
-- Nested provide/restore behavior is unchanged across normal and exceptional exit.
-- Explicit `captureUiLocalSnapshot` and `withUiLocalSnapshot` remain opaque and synchronous.
-- Lazy, Pager, tab, overlay, and navigation sessions refresh the latest snapshot and closure.
-- Mutable values remain shallow references; no implementation claims to freeze or make them
-  thread-safe.
-- Diagnostics never expose original sensitive Local objects.
-
-## Phase 4: Shared frame batching for independent sessions
-
-### Goal
-
-Allow main-looper render sessions to share one Choreographer callback per frame without sharing
-their composition, state, local map, mounted View tree, or lifecycle.
-
-### Mandatory pre-implementation baseline
-
-Before creating a shared scheduler, demonstrate all of the following in the multi-session workload:
-
-- more than one frame callback is currently registered for one logical shared-state change;
-- the affected sessions are active and independently require rendering;
-- callback or dispatcher work is visible in trace counts or stable frame/memory data;
-- direct session rendering and ordinary single-session rendering are not the dominant cost being
-  misclassified as scheduling cost.
-
-If the baseline does not show duplicated scheduling as a material contributor, stop Phase 4 and
-record the result. Do not implement the shared scheduler for conceptual neatness.
-
-### Experimental design
-
-1. Add one main-looper batch scheduler owned by the installed Android render platform.
-2. Queue opaque session runtime handles in stable insertion order.
-3. Register at most one platform frame callback while the queue is non-empty.
-4. Remove a session from the queue before direct `render()` and before disposal.
-5. Keep one pending invalidation while a session is inactive; enqueue it only after reactivation.
-6. Send invalidations created while draining to the next frame unless the owning session's current
-   contract explicitly requires synchronous rendering.
-7. Continue rendering other queued sessions if one session reports a recoverable frame failure;
-   preserve existing failure propagation at the owning session boundary.
-8. Hold no strong reference after session disposal and retain no Activity, Fragment, container, or
-   View in a process-global queue.
-
-### Required assertions
-
-- N requesting active sessions produce one platform frame callback and N independent render calls.
-- Repeated requests from one session coalesce.
-- A disposed or inactive session is not rendered.
-- Reactivation preserves one pending invalidation.
-- Direct render cancels only the target session's queued frame work.
-- Reentrant invalidation during drain schedules the correct next frame.
-- One session failure does not corrupt or dispose another session.
-- Lazy holder recycle, Pager detach/attach, overlay dismissal, and navigation removal leave no
-  queued handle.
-
-### Keep or revert rule
-
-This is a high-complexity optimization. Keep it only if the high-complexity gate in this plan is
-met. If callback count falls but representative frame, allocation, heap, and RSS results remain
-below noise, prefer the simpler per-session dispatcher and revert the shared scheduler.
-
-## Phase 5: Productize proven diagnostics
-
-### Goal
-
-Retain diagnostic capabilities that materially improve investigation after the optimization phases,
-without turning benchmark-only implementation details into permanent public API.
-
-### Ordered work
-
-1. Review every Phase 0 counter and remove those that did not influence a decision.
-2. Keep internal trace fields needed for regression triage and benchmark automation.
-3. Add bounded cross-session correlation to `RenderTreeResult` or a separate opt-in diagnostic type
-   only if it is useful in Lazy, overlay, or navigation investigations.
-4. Add per-node or per-phase timing only in opt-in diagnostics; cap records and do not call a clock
-   for every node when diagnostics are disabled.
-5. Extend the Demo inspector only for stable concepts that application developers can act on.
-6. Update the performance specification with the retained metric definitions, collection overhead,
-   and interpretation rules.
-
-### Public API quality
-
-Initial experiments use internal counters and trace events. If a later phase changes public
-diagnostic types, assign at least Q2 and document:
-
-- exact unit and aggregation boundary;
-- whether the value is a count, duration, maximum, or sampled estimate;
-- session and frame ownership;
-- opt-in overhead and record bounds;
-- thread, ordering, and persistence limitations;
-- one compiled diagnostic sample when interpretation is non-trivial.
-
-Do not expose raw Snapshot IDs, mutable state objects, Local values, View references, callback
-instances, or benchmark-only class names.
-
-## Explicitly deferred or rejected work
-
-These decisions are part of the plan so future architecture work can understand why the alternatives
-were not selected.
-
-### Keep ThreadLocal dynamic scope
-
-`ThreadLocal` remains appropriate for synchronous current-context selection. Replacing it with a
-coroutine context, global registry, explicit parameter on every DSL call, or another mechanism does
-not itself improve Local equality, state observation, or View patching. Explicit capture/restore
-continues at delayed and cross-session boundaries.
-
-### Do not make all UiLocals tracked
-
-The current Local model is intended for tree-scoped environment and service lookup. Automatic
-tracking without compiler-provided component scopes would often move invalidation to a broad parent
-scope while adding hidden subscription state. Frequently changing business values should continue
-to use ViewCompose State or Flow and immutable Local values with meaningful equality.
-
-A separate tracked-Local design requires an independent use case, invalidation model, public API
-review, benchmarks, and plan. It is not a fallback for poor State ownership.
-
-### Do not schedule Observation dependency-set reuse
-
-Reusing one Observation and diffing old/new dependencies could reduce allocations, but it reaches
-deeply into prepared composition commit/abort, concurrent invalidation, removed scopes, and observer
-lifetime. Phase 0 may measure subscription churn, but this plan does not implement the optimization.
-
-Reconsider only if retained Observation allocation and subscription add/remove work is a material
-share of render CPU or allocation in at least two representative workloads. A triggered
-investigation requires its own plan and rollback proof.
-
-### Do not schedule derived-state equal-result suppression
-
-Correct suppression requires deciding where and when a dirty derived calculation may run. Eager
-calculation on the writer or Snapshot applying thread can block arbitrary producers and violates the
-current lazy model. Deferring calculation without losing a required invalidation needs a broader
-conditional-invalidation design.
-
-Continue using explicit stable MutableState publication for expensive or equality-sensitive
-derived values. Reconsider only for a demonstrated application workload and a separate design.
-
-### Do not optimize environment changes independently
-
-Density, font scale, locale, and layout direction changes are rare and can affect layout, text,
-resources, constraints, and native View state. The current full rebind is conservative. Reusing one
-`UiEnvironmentValues` instance per LocalSnapshot may be considered as part of Phase 3 allocation
-work, but field-specific environment patching is not scheduled.
-
-### Do not add VNode, NodeSpec, or LocalSnapshot object pools
-
-Pooling would introduce mutable ownership, stale-data, rollback, and retention risks into objects
-whose immutability and reference identity currently enable safe subtree skipping. Allocation work
-must first use structural sharing and fewer creations, not recycled mutable instances.
-
-### Do not merge independent RenderSessions
-
-Lazy item, Pager page, overlay, and navigation sessions intentionally isolate remembered state,
-effects, owners, mounted trees, failures, and disposal. Phase 4 may share only the platform frame
-callback queue. It must not create shared Composer, SlotTable, Local map, renderer transaction, or
-container ownership.
-
-### Do not add snapshot collections or snapshotFlow in this optimization plan
-
-Those are product capabilities, not necessary optimizations of current State and View rendering.
-Use immutable collection values and external Flow ownership until a public use case justifies a
-separate API and performance design.
-
-### Do not redesign nullable mutation-policy merge here
-
-The existing `null`-means-conflict protocol cannot express a successful merge to `null`, but fixing
-it changes a public runtime contract and has little relationship to the measured hot paths in this
-plan. Review a sealed merge-result contract separately before API stabilization; do not bundle it
-with performance experiments.
-
-### Do not keep a persistent-map dependency without evidence
-
-The expected number of simultaneously active Locals is small. Phase 3 first removes per-node
-snapshot-wrapper allocation. A new dependency or custom persistent data structure is rejected if
-provider Map copying is not still material afterward.
+A future proposal must begin from a new reproducible product or benchmark trigger and must not cite
+their presence in the 2026-08-05 plan as approval.
 
 ## Validation matrix
 
 | Area | Required validation |
 | --- | --- |
-| Snapshot/runtime | state, snapshot, conflict, merge, history pruning, nested apply, observation-thread, and composition-consistency unit tests |
-| Animation/gesture | transition retarget/frame tests, Animatable arbitration/cancellation tests, anchored-drag state tests, and representative device animation/gesture checks |
-| Locals | default/nullable/nested/batch/capture/restore tests plus lazy, overlay, and navigation refresh tests |
-| Renderer | binding-plan, modifier-family, LayoutParams, transaction rollback, reused-View cleanup, AndroidView, semantics, insets, focus, and nested-scroll tests |
-| Host scheduling | dispatcher, inactive/reactivate, direct render, disposal, cross-thread request, reentrancy, failure-isolation, and multi-session tests |
-| Containers | delayed-session checklist scenarios, including empty diff, changed closure, changed Local, reorder, recycle, and disposal |
-| Performance | R8 release build, targeted trace/counters, existing state/list/complex/navigation workloads, same-device before/after report, and policy gate |
-| Documentation | canonical active pages, required Chinese mirrors for implemented durable changes, language and translation gates, site build where applicable, and `verifyDocumentationStructure` |
+| Snapshot/runtime | automatic and explicit snapshots, nested apply, conflict/merge, history pruning, one-apply observation delivery, callback thread, disposal race, composition consistency, and `snapshotFlow` tests |
+| Animation/gesture | Transition retarget/frame, Animatable arbitration/cancellation/failure, MutableTransitionState where classified, and anchored-drag snap/settle/anchor/cancel tests |
+| Locals | absent/nullable/nested/batch/capture/restore/exception tests plus resource, lazy, pager, overlay, and navigation refresh evidence |
+| Renderer | binding plan, modifier families, LayoutParams identity, rollback, reused-View cleanup, AndroidView, semantics, insets, focus, decoration, and nested-scroll tests |
+| Collections | equal revision skip, changed revision, cross-key physical reuse, detached activation, reset/release, parent rollback, and long-fling regression coverage |
+| Performance | stable scenario and workload revision, R8 release build, targeted counters, same-device before/after data, representative paired workloads, and policy gate |
+| Documentation | canonical active pages, affected module manuals, required Chinese mirrors, API-quality/sample gates, and `verifyDocumentationStructure` |
 
-Minimum repository gates for each completed implementation slice:
+Minimum repository gates for each retained implementation slice include focused changed-module tests
+followed by:
 
 ```bash
 ./gradlew qaQuick
@@ -594,67 +340,70 @@ Minimum repository gates for each completed implementation slice:
 ./gradlew verifyDocumentationStructure
 ```
 
-Run the focused module tests for the changed source before those aggregate gates. Run
-`benchmarkRelease` or the narrower connected benchmark class on an unlocked, thermally controlled
-device for every benchmark-gated phase. Run `qaFull` for visible, interaction, container, overlay,
-navigation, input, animation, or lifecycle changes before declaring that phase complete.
+Run `qaFull` for visible interaction, collection, lifecycle, input, animation, or gesture changes.
+Run the revisioned connected benchmark scenario on an unlocked, thermally controlled device for
+every performance-only phase.
 
 ## Documentation and release impact
 
-This plan itself is temporary English-only project documentation. Implemented durable changes have
-the following same-change documentation obligations:
+This planning-only re-audit changes no public API and no Maven artifact.
 
-- Snapshot or Observation semantics: runtime KDoc, compiled samples when Q3, runtime module manual,
-  state architecture, state migration comparison, and both required locales.
-- Local lookup or propagation semantics: UI Foundation KDoc, UI Foundation module manual, architecture
-  environment rules, layout/environment migration comparison, and both required locales.
-- Renderer patch or rollback behavior: renderer module manual, performance specification, relevant
-  architecture pages, and both required locales.
-- Host frame scheduling behavior: host-android KDoc/module manual, performance and session-container
-  documents, and both required locales.
-- Public diagnostics: canonical KDoc, Q-level classification, compiled sample when required,
-  tooling/performance documentation, and both required locales.
+Implemented durable changes have these same-change obligations:
+
+- Snapshot or Observation semantics: canonical runtime KDoc, assigned Q level, compiled samples
+  when required, runtime module manual, state architecture, migration comparison, and required
+  locales;
+- Local lookup or propagation: UI Foundation KDoc and samples when required, module manual,
+  architecture and environment migration documents, and required locales;
+- renderer patch or rollback behavior: renderer module manual, performance specification, relevant
+  architecture documents, and required locales; and
+- benchmark identity or metric semantics: Demo scenario contract, capability-verification and
+  performance documentation, with no public framework API added solely for Demo automation.
 
 Every pull request that changes production source or other publication input for a published
 artifact adds one immutable `release/changes/<unique>.json` file and classifies each detected
-artifact. Never hand-write dependency propagation.
+artifact. Never hand-write reverse-dependency propagation.
 
 ## Completion criteria
 
 This plan is complete when all of the following are true:
 
-1. Phase 0 baseline evidence exists and retained diagnostics are documented.
-2. Phases 1 through 3 have a recorded keep/revert decision and all retained changes pass their
-   correctness and performance gates.
-3. Phase 4 either passes its high-complexity keep gate or is explicitly stopped/reverted with
-   evidence.
-4. Phase 5 removes unused experimental diagnostics and documents the retained model.
-5. Every deferred/rejected direction still reflects the final decision or links a superseding plan
-   or ADR.
-6. All production changes have required Changesets, public API documentation, samples, module
-   manuals, active architecture/tooling/migration updates, and reviewed Chinese mirrors.
-7. `qaQuick`, `qaRelease`, documentation gates, relevant focused tests, and required device gates
-   pass at the final retained revision.
-8. Durable conclusions are moved into current active documentation.
-9. This plan and its final evidence ledger move to `docs/archive/`, and
-   `docs/project/plans/README.md` is updated in the same change.
+1. the nullable Local and related-state atomicity defects have focused executable evidence and are
+   fixed with aligned public contracts;
+2. one-apply observation delivery has either been retained with its hard-cut contract and tests or
+   explicitly rejected with compatibility evidence;
+3. the replacement Demo scenarios and workload revisions provide a valid performance baseline;
+4. modifier-only binding and LocalSnapshot identity reuse each have a recorded keep/revert decision
+   against deterministic operation counts and the performance policy;
+5. no removed speculative item has entered production without a new trigger and separate approved
+   design;
+6. all retained production changes have required release changesets, API documentation, compiled
+   samples, module manuals, architecture/performance/migration updates, and reviewed Chinese
+   mirrors;
+7. focused tests, repository quality gates, documentation gates, and required device/benchmark
+   gates pass at the final retained revision;
+8. durable conclusions move into current architecture, performance, migration, and module
+   documentation; and
+9. this plan and its final evidence move to `docs/archive/` with the active-plan index updated.
 
 ## Evidence ledger
 
-Update this table at every phase decision. Do not replace failed or reverted evidence with a later
-clean narrative.
-
-| Date | Revision | Phase | Device/build and command | Result | Decision and next action |
-| --- | --- | --- | --- | --- | --- |
-| 2026-08-05 | Working tree | Planning | Repository source and active documentation review; no performance command run | Plan created; implementation unscheduled | Run Phase 0 baseline before any behavior change |
+| Date | Revision | Evidence | Result and decision |
+| --- | --- | --- | --- |
+| 2026-08-05 | Working tree | Initial source and active-document review; no performance command run | Broad five-phase optimization plan created. |
+| 2026-08-14 | Current working tree | Current source, tests, architecture, module documentation, and post-2026-08-05 change history audited | Confirmed nullable Local and related-state atomicity defects; confirmed modifier-only rebind and per-node LocalSnapshot allocation; removed shared scheduling and broad diagnostics from the active sequence. |
+| 2026-08-14 | Current working tree | `snapshotFlow`, configuration-aware resources, resource/environment revisions, transactional effects, delayed-session activation, and collection ownership/reuse evidence | Marked these as independently implemented foundations rather than unfinished Runtime/Patch work. |
+| 2026-08-14 | Current working tree | Demo benchmark and automation audit | Performance experiments blocked on direct scenario IDs and explicit workload revisions; correctness work remains unblocked. |
 
 ## Decision history
 
 | Date | Decision | Rationale |
 | --- | --- | --- |
-| 2026-08-05 | Preserve ThreadLocal-based synchronous dynamic scope | It fits the current ownership model; replacement does not address measured work |
-| 2026-08-05 | Prioritize atomic related-state publication and modifier-only View patches | They improve consistency or remove concrete redundant work without weakening boundaries |
-| 2026-08-05 | Put diagnostics and representative baselines before complex implementation | High-complexity optimizations must be reversible and evidence-backed |
-| 2026-08-05 | Permit shared frame scheduling but not shared RenderSession ownership | One platform callback may be shared; composition, locals, Views, failure, and disposal stay isolated |
-| 2026-08-05 | Defer Observation reuse, derived-state suppression, environment partial patching, and tracked Locals | Their benefit is uncertain or their transaction/invalidation risk is disproportionate today |
-| 2026-08-05 | Reject pooling and unmeasured persistent-map dependencies | Immutability, rollback, and maintainability are more valuable than speculative allocation savings |
+| 2026-08-05 | Preserve ThreadLocal-based synchronous dynamic scope | Replacement does not address Local lookup correctness or measured work. |
+| 2026-08-05 | Prefer existing Snapshot transactions and immutable render inputs | They preserve conflict, observation, rollback, and subtree-skip semantics. |
+| 2026-08-14 | Narrow immediate work to nullable Local lookup, atomic related-state publication, and one-apply observation delivery | These are current contract defects or deterministic transaction-level redundancy. |
+| 2026-08-14 | Retain modifier-only binding and LocalSnapshot identity reuse behind the replacement Demo baseline | Their redundant-work paths are concrete, but end-to-end keep decisions require stable workload identity. |
+| 2026-08-14 | Remove shared Session scheduling from this plan | Callback batching does not reduce independent render work, and no evidence justifies its global lifecycle complexity. |
+| 2026-08-14 | Remove broad trace correlation and diagnostics productization | Existing focused diagnostics are sufficient for retained work; more hot-path instrumentation is not a product goal. |
+| 2026-08-14 | Reject persistent maps, dependency-set reuse, derived suppression, tracked Locals, environment partial patches, and object pools from the active sequence | Their current benefit is unproven and their semantic or maintenance risk is disproportionate. |
+| 2026-08-14 | Correct stale capability assumptions | `snapshotFlow`, resource/environment propagation, transactional effects, delayed activation, and logical/physical collection reuse already exist. |

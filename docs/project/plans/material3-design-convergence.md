@@ -2,24 +2,25 @@
 
 ## Status
 
-Active. Phase 0 and the low-risk Phase 1 release slice are implemented. Phase 2 has accepted
-independently revertible effective-target changes for Button and the native Checkbox, RadioButton,
-Switch, and Slider controls. It has also accepted a bounded action/composite state-layer slice
-through a small renderer-neutral contract. Chip touch-target expansion remains deferred behind a
-generic composite-target contract. The Settings verification fixture isolates Android XML, static Material 3, and Demo
-custom-token sources with deliberately different palettes and screenshot-stable source diagnostics.
+Completed for the retained Phase 0 through Phase 2 release scope; awaiting linked Maven changeset
+publication and release-time archival. Phase 2 accepted independently revertible effective-target
+changes for Button and the native Checkbox, RadioButton, Switch, and Slider controls plus a bounded
+action/composite state-layer slice through a small renderer-neutral contract. Chip touch-target
+expansion remains an untriggered conditional candidate and does not block this plan. The Settings
+verification fixture isolates Android XML, static Material 3, and Demo custom-token sources with
+deliberately different palettes and screenshot-stable source diagnostics.
 
 This is a temporary execution plan and remains canonical English-only under the documentation
-governance policy. When the accepted work is complete, durable contracts move into the theme guide
-and owning module manuals before this plan moves to `docs/archive/`.
+governance policy. Durable retained contracts are recorded in the theme guide and owning module
+manuals. The former Phase 3 and Phase 4 structural experiments are deferred enhancement candidates,
+not current release work; their activation triggers are recorded in the unified roadmap.
 
-Last verified: 2026-08-07.
+Last verified: 2026-08-14.
 
-Next action: review and release the retained Phase 1 and Phase 2 slices, then decide whether product
-value justifies a generic composite-target experiment for Chip. Do not extend state layers into
-navigation APIs with explicit ripple overrides or native control geometry, start TextField work, or
-start custom-control structural changes before each area's required current-behavior tests and keep
-criteria exist.
+Next action: release the retained Phase 1 and Phase 2 changesets, then archive this plan immediately
+before Maven Central upload. Do not create production work for a deferred candidate until its
+roadmap trigger is met and a separate narrow active plan owns its baseline, implementation,
+rollback, documentation, and release intent.
 
 ## Maven release changesets
 
@@ -118,15 +119,16 @@ protocol, lifecycle, or failure contract.
 | P0 | Low-risk semantic default corrections | High visible consistency | Low; no new component state machine | Implemented in Phase 1 |
 | P1 | Minimum 48dp touch targets separated from visual bounds | High accessibility value | Medium; hit testing/layout interaction | Baseline first in Phase 2 |
 | P1 | Focused/hovered/pressed state-layer fidelity | High interaction consistency | Medium; state propagation | Baseline first in Phase 2 |
-| P1 | TextField floating label, focused indicator, and focused/error precedence | High for a common control | High; structure, focus, measurement, animation | Separately revertible Phase 3 experiment |
-| P2 | Switch and Slider exact geometry and motion | Medium visual value | High; custom drawing and interaction | Conditional Phase 4 experiment |
+| Deferred | TextField floating label, focused indicator, and focused/error precedence | High for a common control | High; structure, focus, measurement, animation | Future narrow plan only after the roadmap activation trigger is met |
+| Deferred | Switch and Slider exact geometry and motion | Medium visual value | High; custom drawing and interaction | Future narrow plan only after the roadmap activation trigger is met |
 | P2 | Full state-by-state golden screenshot matrix | Medium regression value | Medium infrastructure cost | Add only for components entering structural phases; keep the representative Phase 1 release screenshots below |
 | Deferred | Material 3 Expressive | Unknown until a version decision | High and cross-cutting | Separate future migration |
 | Rejected | Wholesale Material widget replacement | Low relative to boundary damage | Very high | Do not implement |
 
 ## Phase 0: Baseline and diagnostics
 
-Status: complete for Phase 1 scope; required extensions remain before later phases.
+Status: complete for the retained Phase 1 and Phase 2 scope. Deferred enhancement candidates own
+any additional baseline work if they are scheduled later.
 
 Completed evidence:
 
@@ -137,7 +139,8 @@ Completed evidence:
 - existing token-consumption audit updated so every new public role is consumed or explicitly
   reserved.
 
-Before Phase 2 or later work, add diagnostics/test fixtures that can record:
+The following additional fixture fields remain requirements for a future structural-fidelity plan;
+they are not unfinished work in this release plan:
 
 - the active token source, light/dark mode, semantic-role values, and accidental role collisions;
 - visual bounds, measured bounds, semantic bounds, and effective touch bounds;
@@ -151,7 +154,7 @@ Diagnostics must remain test-only or debug-only and must not add an always-on ev
 
 ## Phase 1: Token, bridge, and semantic-default convergence
 
-Status: implemented; awaiting review and release.
+Status: implemented and retained; awaiting Maven release.
 
 Implemented work:
 
@@ -410,7 +413,15 @@ retain the tests and document the limitation instead of adding a Material-only r
 Interaction-state work in this phase may add missing focused and hovered state layers only after
 the full precedence matrix is executable. Do not encode focus color guesses in Android Renderer.
 
-## Phase 3: TextField structural fidelity
+## Deferred enhancement candidate: Material 3 TextField structural fidelity
+
+Status: deferred on 2026-08-14. Retain the current native TextField structure. This candidate is
+not a current defect classification, release blocker, or active implementation phase.
+
+Activation trigger: a prioritized product requirement or reviewed visual baseline must demonstrate
+a materially visible incompatibility with the pinned standard Material 3 behavior. When that
+trigger is met, create a separate `material3-textfield-structural-fidelity` active plan rather than
+reopening this plan.
 
 Required baseline:
 
@@ -433,11 +444,16 @@ accessible, preserves current state ownership and renderer rollback, and does no
 Components inside UI Foundation or Android Renderer. Otherwise revert the structural code and keep
 the baseline tests and recorded result.
 
-## Phase 4: Conditional custom-control geometry
+## Deferred enhancement candidate: Material 3 Switch and Slider geometry
+
+Status: deferred on 2026-08-14. Retain the accepted Material color, touch-target, native-behavior,
+and current geometry implementation. This candidate is not scheduled and does not block the
+retained release scope.
 
 Switch and Slider exact geometry, state-specific dimensions, and motion are conditional. Begin only
 if product review finds the current native/custom rendering visibly inadequate after Phase 1 color
-correction.
+correction. When that trigger is met, create a separate
+`material3-switch-slider-geometry` active plan rather than reopening this plan.
 
 Required evidence:
 
@@ -499,12 +515,14 @@ untriggered conditional item does not block plan completion.
 
 ## Completion criteria
 
-This plan is complete when:
+The implementation and deferral decisions are complete. The plan remains active only until its
+release-time archival gate:
 
-1. Phase 1 is released with all gates passing.
-2. Phase 2 is either accepted with evidence or explicitly declined after baseline/product review.
-3. TextField and custom-control experiments are either accepted with their keep gates satisfied or
-   recorded as deferred/rejected without residual production complexity.
+1. The retained Phase 1 and Phase 2 changesets pass their release gates.
+2. Phase 2 is accepted with the evidence recorded below; untriggered Chip expansion does not block
+   completion.
+3. TextField and Switch/Slider structural work is recorded as deferred without residual production
+   complexity, with activation triggers in the unified roadmap.
 4. Durable token, bridge, component-default, accessibility, and compatibility conclusions are in
    active guides and module manuals.
 5. The evidence ledger records final keep/revert decisions and the plan is archived before the
@@ -525,3 +543,12 @@ This plan is complete when:
 | 2026-08-07 | 2 | Button RippleDrawable report plus pinned Material selector comparison for pressed, focused, and hovered output | State-layer mismatch confirmed; baseline retained and production behavior unchanged pending a reusable renderer-neutral contract |
 | 2026-08-07 | 2 | Generic selector and targeted-patch tests plus API 35 attached-View default/pressed/focused/hovered screenshots | Button/IconButton state-layer experiment retained; expansion beyond these two components remains out of scope |
 | 2026-08-07 | 2 | Composite NodeSpec/default tests, SegmentedControl role-switch rendering tests, and API 35 Chip/FAB/segment selector plus screenshot evidence | Bounded composite expansion retained; navigation override APIs and native-control geometry remain deferred |
+| 2026-08-14 | Scope closeout | Product scheduling decision and current implementation review | Phase 0 through Phase 2 form the retained release scope; TextField and Switch/Slider structural fidelity move to roadmap candidates and do not block release |
+
+## Decision history
+
+| Date | Decision | Rationale |
+| --- | --- | --- |
+| 2026-08-14 | Defer Material 3 TextField structural fidelity | The current implementation remains supported, no current product priority justifies the high-risk structure, focus, measurement, animation, and IME work, and a future effort must begin from its own complete baseline. |
+| 2026-08-14 | Defer Material 3 Switch and Slider exact geometry and motion | Accepted colors, touch targets, semantics, and native behavior remain current; custom geometry is justified only by a reviewed visible or accessibility gap and must retain independent rollback. |
+| 2026-08-14 | Create new narrow plans when either trigger is met | Archived execution plans are historical evidence, not mutable backlogs; independent future plans preserve scope, ownership, validation, release intent, and rollback clarity. |

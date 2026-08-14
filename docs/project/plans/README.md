@@ -13,23 +13,28 @@ This directory contains multi-step work that is currently active and must surviv
   non-Material internal design system, then stage shared primitives, motion, capability fallbacks,
   root switching, and a first public high-fidelity non-Material design-system slice without adding
   design-system policy to Android Renderer.
-- [Material 3 design convergence](./material3-design-convergence.md) — complete the standard
-  Material 3 token and theme bridge, correct low-risk component defaults, and require baseline,
-  accessibility, visual, and rollback evidence before touch-target, TextField, Switch, or Slider
-  structural convergence.
+- [Material 3 design convergence](./material3-design-convergence.md) — release the completed token,
+  theme-bridge, component-default, touch-target, and state-layer scope; TextField and Switch/Slider
+  structural fidelity remain roadmap candidates that require separate future plans after their
+  activation triggers are met.
 - [Five-layer module architecture hard cut](./five-layer-module-architecture-hard-cut.md) —
   replace the broad foundation/optional split with enforceable Kernel, UI Foundation, Android
   Engine, Design System, and Integration layers; rename misleading artifacts, isolate Material 3,
   converge exclusive package ownership and opaque platform handles, and restore the complete Maven,
   sample, tooling, and documentation gates after the hard cut.
+- [Demo benchmark and verification harness rearchitecture](./demo-benchmark-verification-harness-rearchitecture.md) —
+  replace the module-oriented, text-coupled Demo with directly launchable revisioned scenarios,
+  locale-independent automation targets, fixture-first benchmark hosts, complete English and
+  Simplified Chinese resources, and optional human guidance before benchmarking Runtime/View patch
+  optimizations against a new stable baseline.
 - [Runtime data propagation and Android View patch optimization](./runtime-data-propagation-and-view-patch-optimization.md) —
-  establish diagnostic and benchmark baselines, optimize atomic state publication, modifier-only
-  View patches, LocalSnapshot allocation, and conditionally shared frame scheduling while recording
-  explicit rollback gates and rejected high-risk alternatives.
+  fix nullable-Local and related-state publication defects, harden one-apply observation delivery,
+  and retain modifier-only View binding plus LocalSnapshot identity reuse only behind revisioned
+  Demo baselines; shared scheduling and broad diagnostics are no longer active phases.
 - [Compose migration capability convergence](./compose-migration-capability-convergence.md) —
-  prioritize lifecycle, ownership, keyed identity, RTL, Insets, and atomic navigation gaps while
-  preserving the native Android View engine and recording explicit test, rollback, and rejection
-  decisions for high-risk Compose parity work.
+  fix audited runtime-transaction, Fragment lifecycle, terminal-session, keyed-identity, navigation
+  owner, and RTL correctness gaps while retaining AndroidX-compatible deep-link behavior and moving
+  untriggered Insets, layout, hosting, and navigation conveniences out of the core defect path.
 Completed tutorial, language-consistency, migration-sample, hosted-documentation, and
 version-retention plans are retained in the
 [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).
