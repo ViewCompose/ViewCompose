@@ -43,27 +43,45 @@ class ComponentFamilySmokeUiTest {
             }
         }
 
-        launchDemoActivity<NavigationActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                NavigationActivity::class.java,
-            ).putExtra(EXTRA_NAVIGATION_PAGE_INDEX, 1),
+        launchDemoScenarioActivity(
+            activityClass = NavigationActivity::class.java,
+            scenarioId = "component.app-bars",
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.NAVIGATION_BAR_PRIMARY))
+                assertViewFullyVisible(
+                    activity.requireScenarioViewById<android.view.View>(
+                        R.id.demo_component_app_bars_primary_action,
+                    ),
+                )
             }
         }
 
-        launchDemoActivity<NavigationActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                NavigationActivity::class.java,
-            ).putExtra(EXTRA_NAVIGATION_PAGE_INDEX, 2),
+        launchDemoScenarioActivity(
+            activityClass = NavigationActivity::class.java,
+            scenarioId = "component.navigation-bar",
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.NAVIGATION_SCAFFOLD))
+                assertViewFullyVisible(
+                    activity.requireScenarioViewById<android.view.View>(
+                        R.id.demo_component_navigation_bar_primary_action,
+                    ),
+                )
+            }
+        }
+
+        launchDemoScenarioActivity(
+            activityClass = NavigationActivity::class.java,
+            scenarioId = "component.scaffold",
+        ).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                assertViewFullyVisible(
+                    activity.requireScenarioViewById<android.view.View>(
+                        R.id.demo_component_scaffold_target,
+                    ),
+                )
             }
         }
 

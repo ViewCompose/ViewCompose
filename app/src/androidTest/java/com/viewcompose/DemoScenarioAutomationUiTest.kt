@@ -107,6 +107,9 @@ class DemoScenarioAutomationUiTest {
             "component.fab",
             "component.chip",
             "component.list-item",
+            "component.app-bars",
+            "component.navigation-bar",
+            "component.scaffold",
             "performance.list",
         ).forEach { scenarioId ->
             launchScenario(scenarioId)
@@ -399,6 +402,35 @@ class DemoScenarioAutomationUiTest {
                 "component.fab",
                 "component.chip",
                 "component.list-item",
+            ).forEach { scenarioId ->
+                launchScenario(scenarioId)
+                val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+                requireTarget(scenarioId, "primary_action").click()
+                assertNotEquals(
+                    "$scenarioId action must publish state",
+                    initial,
+                    waitForTargetTextChange(scenarioId, initial),
+                )
+
+                requireTarget(scenarioId, "reset").click()
+                assertEquals(
+                    "$scenarioId reset must recreate the initial component Session",
+                    initial,
+                    waitForTargetText(scenarioId, initial),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun navigationComponentFixturesPublishDeterministicActionAndFullSessionReset() {
+        listOf("en", "zh-CN").forEach { languageTag ->
+            setApplicationLanguageTags(languageTag)
+            listOf(
+                "component.app-bars",
+                "component.navigation-bar",
+                "component.scaffold",
             ).forEach { scenarioId ->
                 launchScenario(scenarioId)
                 val initial = requireTarget(scenarioId, "state").text.orEmpty()

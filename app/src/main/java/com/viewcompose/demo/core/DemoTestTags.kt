@@ -267,9 +267,6 @@ internal object DemoTestTags {
     const val GESTURE_SWIPE_TARGET_VALUE = "gesture_swipe_target_value"
     const val GESTURE_SWIPE_OFFSET_VALUE = "gesture_swipe_offset_value"
 
-    const val NAVIGATION_BAR_PRIMARY = "navigation_bar_primary"
-    const val NAVIGATION_SCAFFOLD = "navigation_scaffold"
-    const val NAVIGATION_SELECTED_SUMMARY = "navigation_selected_summary"
     const val SYSTEM_NAV_DESTINATION = "system_nav_destination"
     const val SYSTEM_NAV_STATUS = "system_nav_status"
     const val SYSTEM_NAV_EXTERNAL_DEEP_LINK = "system_nav_external_deep_link"

@@ -11,6 +11,7 @@ import com.viewcompose.CollectionsActivity
 import com.viewcompose.DiagnosticsActivity
 import com.viewcompose.LayoutsActivity
 import com.viewcompose.ModifiersActivity
+import com.viewcompose.NavigationActivity
 import com.viewcompose.InputActivity
 import com.viewcompose.InteropActivity
 import com.viewcompose.R
@@ -92,6 +93,9 @@ internal object DemoScenarioIds {
     val ComponentFab = DemoScenarioId("component.fab")
     val ComponentChip = DemoScenarioId("component.chip")
     val ComponentListItem = DemoScenarioId("component.list-item")
+    val ComponentAppBars = DemoScenarioId("component.app-bars")
+    val ComponentNavigationBar = DemoScenarioId("component.navigation-bar")
+    val ComponentScaffold = DemoScenarioId("component.scaffold")
     val PerformanceList = DemoScenarioId("performance.list")
 }
 
@@ -1006,6 +1010,39 @@ internal object DemoScenarioRegistry {
             state = R.id.demo_component_list_item_state,
             target = R.id.demo_component_list_item_target,
         ),
+        navigationComponentScenario(
+            id = DemoScenarioIds.ComponentAppBars,
+            titleRes = R.string.demo_scenario_component_app_bars_title,
+            summaryRes = R.string.demo_scenario_component_app_bars_summary,
+            root = R.id.demo_component_app_bars_root,
+            ready = R.id.demo_component_app_bars_ready,
+            primaryAction = R.id.demo_component_app_bars_primary_action,
+            reset = R.id.demo_component_app_bars_reset,
+            state = R.id.demo_component_app_bars_state,
+            target = R.id.demo_component_app_bars_target,
+        ),
+        navigationComponentScenario(
+            id = DemoScenarioIds.ComponentNavigationBar,
+            titleRes = R.string.demo_scenario_component_navigation_bar_title,
+            summaryRes = R.string.demo_scenario_component_navigation_bar_summary,
+            root = R.id.demo_component_navigation_bar_root,
+            ready = R.id.demo_component_navigation_bar_ready,
+            primaryAction = R.id.demo_component_navigation_bar_primary_action,
+            reset = R.id.demo_component_navigation_bar_reset,
+            state = R.id.demo_component_navigation_bar_state,
+            target = R.id.demo_component_navigation_bar_target,
+        ),
+        navigationComponentScenario(
+            id = DemoScenarioIds.ComponentScaffold,
+            titleRes = R.string.demo_scenario_component_scaffold_title,
+            summaryRes = R.string.demo_scenario_component_scaffold_summary,
+            root = R.id.demo_component_scaffold_root,
+            ready = R.id.demo_component_scaffold_ready,
+            primaryAction = R.id.demo_component_scaffold_primary_action,
+            reset = R.id.demo_component_scaffold_reset,
+            state = R.id.demo_component_scaffold_state,
+            target = R.id.demo_component_scaffold_target,
+        ),
         scenario(
             id = DemoScenarioIds.PerformanceList,
             category = DemoScenarioCategory.Performance,
@@ -1190,6 +1227,35 @@ internal object DemoScenarioRegistry {
         host = DemoHostPolicy.SharedFixture,
         verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
         route = DemoScenarioRoute(ActionsActivity::class.java),
+        mutable = true,
+        ids = TargetIds(
+            root = root,
+            ready = ready,
+            primaryAction = primaryAction,
+            reset = reset,
+            state = state,
+            target = target,
+        ),
+    )
+
+    private fun navigationComponentScenario(
+        id: DemoScenarioId,
+        titleRes: Int,
+        summaryRes: Int,
+        root: Int,
+        ready: Int,
+        primaryAction: Int,
+        reset: Int,
+        state: Int,
+        target: Int,
+    ): DemoScenarioSpec = scenario(
+        id = id,
+        category = DemoScenarioCategory.Rendering,
+        titleRes = titleRes,
+        summaryRes = summaryRes,
+        host = DemoHostPolicy.SharedFixture,
+        verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+        route = DemoScenarioRoute(NavigationActivity::class.java),
         mutable = true,
         ids = TargetIds(
             root = root,

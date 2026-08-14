@@ -386,6 +386,27 @@
     <item name="demo_component_list_item_state" type="id" />
     <item name="demo_component_list_item_target" type="id" />
 
+    <item name="demo_component_app_bars_root" type="id" />
+    <item name="demo_component_app_bars_ready" type="id" />
+    <item name="demo_component_app_bars_primary_action" type="id" />
+    <item name="demo_component_app_bars_reset" type="id" />
+    <item name="demo_component_app_bars_state" type="id" />
+    <item name="demo_component_app_bars_target" type="id" />
+
+    <item name="demo_component_navigation_bar_root" type="id" />
+    <item name="demo_component_navigation_bar_ready" type="id" />
+    <item name="demo_component_navigation_bar_primary_action" type="id" />
+    <item name="demo_component_navigation_bar_reset" type="id" />
+    <item name="demo_component_navigation_bar_state" type="id" />
+    <item name="demo_component_navigation_bar_target" type="id" />
+
+    <item name="demo_component_scaffold_root" type="id" />
+    <item name="demo_component_scaffold_ready" type="id" />
+    <item name="demo_component_scaffold_primary_action" type="id" />
+    <item name="demo_component_scaffold_reset" type="id" />
+    <item name="demo_component_scaffold_state" type="id" />
+    <item name="demo_component_scaffold_target" type="id" />
+
     <item name="demo_design_system_dialog_open" type="id" />
     <item name="demo_design_system_dialog_state" type="id" />
     <item name="demo_design_system_dialog_switch" type="id" />

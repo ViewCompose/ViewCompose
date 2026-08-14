@@ -980,24 +980,31 @@ class DemoVisualUiTest {
 
     @Test
     fun navigationBar_selectionChange_updatesSummary() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            NavigationActivity::class.java,
-        ).putExtra(EXTRA_NAVIGATION_PAGE_INDEX, 1)
-        launchDemoActivity<NavigationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = NavigationActivity::class.java,
+            scenarioId = "component.navigation-bar",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val summary = activity.requireTextViewByTestTag(DemoTestTags.NAVIGATION_SELECTED_SUMMARY)
+                val summary = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_component_navigation_bar_state,
+                )
                 assertViewFullyVisible(summary)
                 assertTrue(summary.text.toString().contains("0"))
             }
             scenario.onActivity { activity ->
-                activity.clickTextViewVisible("搜索")
+                val navigationBar = activity.requireScenarioViewById<android.view.ViewGroup>(
+                    R.id.demo_component_navigation_bar_primary_action,
+                )
+                assertTrue(navigationBar.getChildAt(1).performClick())
             }
             waitForUiIdle()
             captureDeviceScreenshot("navigation-navbar-selection-light")
             scenario.onActivity { activity ->
-                val summary = activity.requireTextViewByTestTag(DemoTestTags.NAVIGATION_SELECTED_SUMMARY)
+                val summary = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_component_navigation_bar_state,
+                )
                 assertViewFullyVisible(summary)
                 assertTrue(summary.text.toString().contains("1"))
             }

@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-15.
 
-Next action: begin the retained component visual/showcase scenarios while reducing the remaining
-text-selector debt with each direct scenario slice.
+Next action: continue the fifth-risk group with the retained `widget.*` visual/showcase scenarios
+while reducing the remaining text-selector debt with each direct scenario slice.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -889,6 +889,22 @@ component-family smoke test passed, and the registry-wide host-role sweep passed
 Shared-host ready markers now show a workload revision only when the scenario owns a real
 `DemoBenchmarkContract`; visual and manual-only scenarios no longer publish the misleading
 `workload r0` label.
+
+The Navigation-components chapter is now three strict component fixtures:
+`component.app-bars`, `component.navigation-bar`, and `component.scaffold`. `NavigationActivity`
+requires one of those immutable scenario identities; the page-index extra, chapter switcher,
+copied module overview, fake benchmark anchor, and manual verification checklist were deleted.
+System stack, deep-link, lifecycle-owner, and predictive-Back behavior remains exclusively owned
+by the separate `navigation.system` host. Each component fixture creates only its own state and
+places a real AppBar action, NavigationBar selection, or Scaffold floating action together with
+observable state and full-Session reset in the first lazy item. Reset advances both the parent
+generation and every lazy-item key. Paired resources cover all visible and accessibility copy;
+scenario resource roles replace the three obsolete Navigation tags and visible-copy selection in
+the focused NavigationBar test. These visual fixtures have no Macrobenchmark owner, so no workload
+revision was added. On the Samsung SM-G991B Android 13 reference device, all three routes passed
+the English and Simplified Chinese action/full-reset contract, the NavigationBar selection
+regression and component-family smoke tests passed, visual inspection confirmed a non-overlapping
+Scaffold hierarchy, and the registry-wide host-role sweep passed.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

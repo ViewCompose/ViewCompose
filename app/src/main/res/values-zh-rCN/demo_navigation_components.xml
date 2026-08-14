@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_scenario_component_app_bars_title">组件 · 应用栏</string>
+    <string name="demo_scenario_component_app_bars_summary">验证顶部栏导航与操作，以及简洁顶部栏和底部栏变体。</string>
+    <string name="demo_scenario_component_navigation_bar_title">组件 · 导航栏</string>
+    <string name="demo_scenario_component_navigation_bar_summary">验证选中态、徽标、标签和自定义导航栏颜色。</string>
+    <string name="demo_scenario_component_scaffold_title">组件 · Scaffold</string>
+    <string name="demo_scenario_component_scaffold_summary">验证顶部栏、内容区、浮动操作和底部导航组成的单一集成布局。</string>
+
+    <string name="demo_navigation_reset">重置夹具</string>
+    <string name="demo_navigation_action_count">操作次数：%1$d</string>
+    <string name="demo_navigation_selected_index">选中项：%1$d</string>
+    <string name="demo_navigation_scaffold_state">浮动操作次数：%1$d · 选中项：%2$d</string>
+
+    <string name="demo_navigation_app_bar_page_title">页面标题</string>
+    <string name="demo_navigation_app_bar_back_description">执行应用栏前导操作</string>
+    <string name="demo_navigation_app_bar_primary_description">执行应用栏主要操作</string>
+    <string name="demo_navigation_app_bar_more_description">执行应用栏更多操作</string>
+    <string name="demo_navigation_app_bar_variants">应用栏变体</string>
+    <string name="demo_navigation_app_bar_simple_title">仅标题顶部栏</string>
+    <string name="demo_navigation_bottom_bar_home_description">首页操作</string>
+    <string name="demo_navigation_bottom_bar_saved_description">收藏操作</string>
+    <string name="demo_navigation_bottom_bar_settings_description">设置操作</string>
+
+    <string name="demo_navigation_bar_home">首页</string>
+    <string name="demo_navigation_bar_search">搜索</string>
+    <string name="demo_navigation_bar_messages">消息</string>
+    <string name="demo_navigation_bar_profile">我的</string>
+    <string name="demo_navigation_bar_custom_variant">自定义颜色与徽标</string>
+    <string name="demo_navigation_bar_feed">动态</string>
+    <string name="demo_navigation_bar_discover">发现</string>
+    <string name="demo_navigation_bar_notifications">通知</string>
+
+    <string name="demo_navigation_scaffold_title">Scaffold 页面</string>
+    <string name="demo_navigation_scaffold_add_description">执行 Scaffold 浮动操作</string>
+    <string name="demo_navigation_scaffold_content">Scaffold 内容区</string>
+    <string name="demo_navigation_scaffold_content_summary">组件稳定承载顶部栏、内容、浮动操作和底部区域，彼此不重叠。</string>
+</resources>

@@ -1,333 +1,443 @@
 package com.viewcompose
 
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioId
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.demo.registry.DemoScenarioIds
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.preview.tooling.ViewComposePreview
-import com.viewcompose.ui.layout.VerticalAlignment
-import com.viewcompose.ui.modifier.Modifier
-import com.viewcompose.ui.modifier.backgroundColor
-import com.viewcompose.ui.modifier.cornerRadius
-import com.viewcompose.ui.modifier.fillMaxSize
-import com.viewcompose.ui.modifier.fillMaxWidth
-import com.viewcompose.ui.modifier.height
-import com.viewcompose.ui.modifier.margin
-import com.viewcompose.ui.modifier.padding
-import com.viewcompose.ui.modifier.testTag
-import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.ui.foundation.Badge
-import com.viewcompose.ui.foundation.BadgedBox
 import com.viewcompose.ui.foundation.BottomAppBar
-import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.ButtonVariant
 import com.viewcompose.ui.foundation.Column
-import com.viewcompose.ui.foundation.ExtendedFloatingActionButton
 import com.viewcompose.ui.foundation.FloatingActionButton
 import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.LazyColumn
 import com.viewcompose.ui.foundation.NavigationBar
-import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.Scaffold
-import com.viewcompose.ui.foundation.SurfaceDefaults
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.TopAppBar
-import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.key
+import com.viewcompose.ui.foundation.rememberSaveable
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.fillMaxSize
+import com.viewcompose.ui.modifier.fillMaxWidth
+import com.viewcompose.ui.modifier.height
+import com.viewcompose.ui.modifier.margin
+import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.ui.foundation.remember
-import com.viewcompose.ui.unit.sp
 
-@ViewComposePreview(name = "Navigation · App bar", group = "Demo/Pages")
-internal fun UiTreeBuilder.PreviewNavigationAppBar() {
-    NavigationPage(initialPageIndex = 0)
+@ViewComposePreview(name = "Navigation · App bars", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewNavigationAppBars() {
+    NavigationPage(NavigationFixture.AppBars)
 }
 
 @ViewComposePreview(name = "Navigation · Navigation bar", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewNavigationBar() {
-    NavigationPage(initialPageIndex = 1)
+    NavigationPage(NavigationFixture.NavigationBar)
 }
 
 @ViewComposePreview(name = "Navigation · Scaffold", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewNavigationScaffold() {
-    NavigationPage(initialPageIndex = 2)
+    NavigationPage(NavigationFixture.Scaffold)
+}
+
+internal enum class NavigationFixture(
+    val scenarioId: DemoScenarioId,
+) {
+    AppBars(DemoScenarioIds.ComponentAppBars),
+    NavigationBar(DemoScenarioIds.ComponentNavigationBar),
+    Scaffold(DemoScenarioIds.ComponentScaffold),
+    ;
+
+    companion object {
+        fun from(scenarioId: DemoScenarioId): NavigationFixture =
+            entries.singleOrNull { fixture -> fixture.scenarioId == scenarioId }
+                ?: error("Unsupported navigation-component scenario: $scenarioId")
+    }
 }
 
 internal fun UiTreeBuilder.NavigationPage(
-    initialPageIndex: Int = 0,
+    fixture: NavigationFixture,
+    scenario: DemoScenarioSpec? = null,
 ) {
-    val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 2)) }
-    val navSelectedState = remember { mutableStateOf(0) }
-    val benchmarkState = remember { mutableStateOf(false) }
-
-    val pageItems = when (selectedPageState.value) {
-        0 -> listOf("benchmark", "page", "page_filter", "appbar", "verify")
-        1 -> listOf("page", "page_filter", "navbar", "verify")
-        else -> listOf("page", "page_filter", "scaffold", "verify")
+    val generation = rememberSaveable(key = "navigation-session-generation") {
+        mutableStateOf(0)
     }
+    key(generation.value) {
+        when (fixture) {
+            NavigationFixture.AppBars -> NavigationAppBarsFixture(
+                scenario = scenario,
+                generation = generation.value,
+                onReset = { generation.value += 1 },
+            )
 
-    LazyColumn(
-        items = pageItems,
-        key = { it },
-        modifier = Modifier.fillMaxSize(),
-    ) { section ->
+            NavigationFixture.NavigationBar -> NavigationBarFixture(
+                scenario = scenario,
+                generation = generation.value,
+                onReset = { generation.value += 1 },
+            )
+
+            NavigationFixture.Scaffold -> NavigationScaffoldFixture(
+                scenario = scenario,
+                generation = generation.value,
+                onReset = { generation.value += 1 },
+            )
+        }
+    }
+}
+
+private fun UiTreeBuilder.NavigationAppBarsFixture(
+    scenario: DemoScenarioSpec?,
+    generation: Int,
+    onReset: () -> Unit,
+) {
+    val actionCount = rememberSaveable(key = "navigation-app-bars-action-count") {
+        mutableStateOf(0)
+    }
+    NavigationFixtureList(generation, listOf("control", "variants")) { section ->
         when (section) {
-            "page" -> ChapterPageOverviewSection(
-                title = "导航组件",
-                goal = "验证 TopAppBar、BottomAppBar、NavigationBar、Scaffold 的渲染和交互。",
-                modules = listOf("TopAppBar", "BottomAppBar", "NavigationBar", "Scaffold"),
-            )
-
-            "page_filter" -> ChapterPageFilterSection(
-                pages = listOf("AppBar", "NavigationBar", "Scaffold"),
-                selectedIndex = selectedPageState.value,
-                onSelectionChange = { selectedPageState.value = it },
-            )
-
-            "benchmark" -> ScenarioSection(
-                kind = ScenarioKind.Benchmark,
-                title = "导航组件 Benchmark 锚点",
-                subtitle = "NavigationBar selectedIndex 切换的稳定路径。",
+            "control" -> NavigationFixtureHeader(
+                scenario = scenario,
+                state = {
+                    stringResource(R.string.demo_navigation_action_count, actionCount.value)
+                },
+                onReset = onReset,
             ) {
-                BenchmarkRouteCallout(
-                    route = "Catalog -> Navigation -> AppBar 页 -> Benchmark 锚点",
-                    stableTargets = listOf(
-                        "NavigationBar selection toggle",
-                        "Scaffold content refresh",
-                    ),
-                )
-                Button(
-                    text = if (benchmarkState.value) "Benchmark 已展开" else "Benchmark 已收起",
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { benchmarkState.value = !benchmarkState.value },
-                )
-            }
-
-            "appbar" -> ScenarioSection(
-                kind = ScenarioKind.Core,
-                title = "TopAppBar + BottomAppBar",
-                subtitle = "TopAppBar 提供标题、导航图标和 actions 插槽。BottomAppBar 提供底部操作栏。",
-            ) {
-                Text(
-                    text = "TopAppBar 标准",
-                    style = UiTextStyle(fontSizeSp = 14.sp),
-                    modifier = Modifier.margin(bottom = 8.dp),
-                )
                 TopAppBar(
-                    title = "页面标题",
+                    title = stringResource(R.string.demo_navigation_app_bar_page_title),
                     navigationIcon = {
                         IconButton(
                             icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                            contentDescription = "返回",
-                            onClick = {},
+                            contentDescription = stringResource(
+                                R.string.demo_navigation_app_bar_back_description,
+                            ),
+                            onClick = { actionCount.value += 1 },
                         )
                     },
                     actions = {
                         IconButton(
                             icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                            contentDescription = "搜索",
-                            onClick = {},
+                            contentDescription = stringResource(
+                                R.string.demo_navigation_app_bar_primary_description,
+                            ),
+                            onClick = { actionCount.value += 1 },
+                            modifier = Modifier.navigationScenarioTarget(
+                                scenario,
+                                DemoAutomationRole.PrimaryAction,
+                            ),
                         )
                         IconButton(
                             icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                            contentDescription = "更多",
-                            onClick = {},
+                            contentDescription = stringResource(
+                                R.string.demo_navigation_app_bar_more_description,
+                            ),
+                            onClick = { actionCount.value += 1 },
                         )
                     },
-                    modifier = Modifier.margin(bottom = 12.dp),
+                    modifier = Modifier.navigationScenarioTarget(
+                        scenario,
+                        DemoAutomationRole.Target,
+                    ),
                 )
-                Text(
-                    text = "TopAppBar 仅标题",
-                    style = UiTextStyle(fontSizeSp = 14.sp),
-                    modifier = Modifier.margin(bottom = 8.dp),
-                )
-                TopAppBar(
-                    title = "简洁标题",
-                    modifier = Modifier.margin(bottom = 12.dp),
-                )
-                Text(
-                    text = "BottomAppBar",
-                    style = UiTextStyle(fontSizeSp = 14.sp),
-                    modifier = Modifier.margin(bottom = 8.dp),
-                )
-                BottomAppBar {
-                    IconButton(
-                        icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                        contentDescription = "首页",
-                        onClick = {},
-                    )
-                    IconButton(
-                        icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                        contentDescription = "收藏",
-                        onClick = {},
-                    )
-                    IconButton(
-                        icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                        contentDescription = "设置",
-                        onClick = {},
-                    )
-                }
             }
 
-            "navbar" -> ScenarioSection(
-                kind = ScenarioKind.Core,
-                title = "NavigationBar 底部导航",
-                subtitle = "NavigationBar 提供图标 + 标签的标准底部导航，支持 badge 和颜色自定义。",
-            ) {
-                Text(
-                    text = "当前选中: ${navSelectedState.value}",
-                    style = UiTextStyle(fontSizeSp = 13.sp),
-                    color = TextDefaults.secondaryColor(),
-                    modifier = Modifier
-                        .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.NAVIGATION_SELECTED_SUMMARY),
+            else -> NavigationAppBarVariants(onClick = { actionCount.value += 1 })
+        }
+    }
+}
+
+private fun UiTreeBuilder.NavigationAppBarVariants(onClick: () -> Unit) {
+    Column(
+        spacing = 10.dp,
+        modifier = Modifier.fillMaxWidth().margin(top = 16.dp, bottom = 24.dp),
+    ) {
+        FixtureTitle(R.string.demo_navigation_app_bar_variants)
+        TopAppBar(title = stringResource(R.string.demo_navigation_app_bar_simple_title))
+        BottomAppBar {
+            listOf(
+                R.string.demo_navigation_bottom_bar_home_description,
+                R.string.demo_navigation_bottom_bar_saved_description,
+                R.string.demo_navigation_bottom_bar_settings_description,
+            ).forEach { descriptionRes ->
+                IconButton(
+                    icon = ImageSource.Resource(R.drawable.demo_media_icon),
+                    contentDescription = stringResource(descriptionRes),
+                    onClick = onClick,
                 )
+            }
+        }
+    }
+}
+
+private fun UiTreeBuilder.NavigationBarFixture(
+    scenario: DemoScenarioSpec?,
+    generation: Int,
+    onReset: () -> Unit,
+) {
+    val selectedIndex = rememberSaveable(key = "navigation-bar-selected-index") {
+        mutableStateOf(0)
+    }
+    NavigationFixtureList(generation, listOf("control", "variants")) { section ->
+        when (section) {
+            "control" -> NavigationFixtureHeader(
+                scenario = scenario,
+                state = {
+                    stringResource(
+                        R.string.demo_navigation_selected_index,
+                        selectedIndex.value,
+                    )
+                },
+                onReset = onReset,
+            ) {
                 NavigationBar(
-                    selectedIndex = navSelectedState.value,
-                    onItemSelected = { navSelectedState.value = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .margin(bottom = 16.dp)
-                        .testTag(DemoTestTags.NAVIGATION_BAR_PRIMARY),
+                    selectedIndex = selectedIndex.value,
+                    onItemSelected = { selectedIndex.value = it },
+                    modifier = Modifier.navigationScenarioTarget(
+                        scenario,
+                        DemoAutomationRole.PrimaryAction,
+                    ),
                 ) {
                     Item(
-                        label = "首页",
+                        label = stringResource(R.string.demo_navigation_bar_home),
                         icon = ImageSource.Resource(R.drawable.demo_media_icon),
                     )
                     Item(
-                        label = "搜索",
+                        label = stringResource(R.string.demo_navigation_bar_search),
                         icon = ImageSource.Resource(R.drawable.demo_media_icon),
                     )
                     Item(
-                        label = "消息",
+                        label = stringResource(R.string.demo_navigation_bar_messages),
                         icon = ImageSource.Resource(R.drawable.demo_media_icon),
                         badgeCount = 3,
                     )
-                    Item(
-                        label = "我的",
-                        icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                    )
-                }
-                Text(
-                    text = "自定义颜色 NavigationBar",
-                    style = UiTextStyle(fontSizeSp = 14.sp),
-                    modifier = Modifier.margin(bottom = 8.dp),
-                )
-                NavigationBar(
-                    selectedIndex = navSelectedState.value,
-                    onItemSelected = { navSelectedState.value = it },
-                    containerColor = Theme.colors.surfaceVariant,
-                    selectedIconColor = Theme.colors.secondary,
-                    selectedLabelColor = Theme.colors.secondary,
-                    indicatorColor = Theme.colors.background,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Item(
-                        label = "动态",
-                        icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                    )
-                    Item(
-                        label = "发现",
-                        icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                        badgeCount = 12,
-                    )
-                    Item(
-                        label = "通知",
-                        icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                    )
                 }
             }
 
-            "scaffold" -> ScenarioSection(
-                kind = ScenarioKind.Core,
-                title = "Scaffold 脚手架集成",
-                subtitle = "Scaffold 组合 TopAppBar + NavigationBar + FAB + 内容区，构成完整页面结构。",
-            ) {
-                Scaffold(
-                    topBar = {
-                        TopAppBar(
-                            title = "Scaffold 演示",
-                            navigationIcon = {
-                                IconButton(
-                                    icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                                    contentDescription = "返回",
-                                    onClick = {},
-                                )
-                            },
-                        )
-                    },
-                    bottomBar = {
-                        NavigationBar(
-                            selectedIndex = navSelectedState.value,
-                            onItemSelected = { navSelectedState.value = it },
-                        ) {
-                            Item(
-                                label = "首页",
-                                icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                            )
-                            Item(
-                                label = "消息",
-                                icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                                badgeCount = 5,
-                            )
-                            Item(
-                                label = "我的",
-                                icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                            )
-                        }
-                    },
-                    floatingActionButton = {
-                        FloatingActionButton(onClick = {}) {
-                            Icon(
-                                source = ImageSource.Resource(R.drawable.demo_media_icon),
-                                contentDescription = "添加",
-                            )
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(400.dp)
-                        .testTag(DemoTestTags.NAVIGATION_SCAFFOLD),
-                ) {
-                    Column(
-                        spacing = 8.dp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                    ) {
-                        Text(
-                            text = "这是 Scaffold 的内容区域",
-                            style = UiTextStyle(fontSizeSp = 16.sp),
-                        )
-                        Text(
-                            text = "当前导航项: ${navSelectedState.value}",
-                            style = UiTextStyle(fontSizeSp = 13.sp),
-                            color = TextDefaults.secondaryColor(),
-                        )
-                        Text(
-                            text = "TopAppBar + NavigationBar + FAB 组合展示完整页面结构。Scaffold 自动处理各组件的定位。",
-                            style = UiTextStyle(fontSizeSp = 13.sp),
-                            color = TextDefaults.secondaryColor(),
-                        )
-                    }
-                }
-            }
-
-            else -> VerificationNotesSection(
-                what = "导航组件应验证 TopAppBar、BottomAppBar、NavigationBar、Scaffold 的渲染和交互。",
-                howToVerify = listOf(
-                    "确认 TopAppBar 的导航图标和 actions 按钮正常显示和响应点击。",
-                    "切换 NavigationBar 的选中项，确认选中态指示器和颜色正确变化。",
-                    "确认带 badge 的导航项正确显示数字徽标。",
-                    "观察 Scaffold 集成页面，确认 TopAppBar、NavigationBar、FAB 和内容区的布局稳定。",
-                ),
-                expected = listOf(
-                    "TopAppBar 导航图标和 actions 水平排列，标题居中或居左。",
-                    "NavigationBar 选中态有指示器高亮，badge 定位准确。",
-                    "Scaffold 内各组件不重叠，FAB 悬浮在内容区之上。",
-                ),
+            else -> NavigationBarVariants(
+                scenario = scenario,
+                selectedIndex = selectedIndex.value.coerceIn(0, 2),
+                onItemSelected = { selectedIndex.value = it },
             )
         }
     }
+}
+
+private fun UiTreeBuilder.NavigationBarVariants(
+    scenario: DemoScenarioSpec?,
+    selectedIndex: Int,
+    onItemSelected: (Int) -> Unit,
+) {
+    Column(
+        spacing = 10.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .margin(top = 16.dp, bottom = 24.dp)
+            .navigationScenarioTarget(scenario, DemoAutomationRole.Target),
+    ) {
+        FixtureTitle(R.string.demo_navigation_bar_custom_variant)
+        NavigationBar(
+            selectedIndex = selectedIndex,
+            onItemSelected = onItemSelected,
+            containerColor = Theme.colors.surfaceVariant,
+            selectedIconColor = Theme.colors.secondary,
+            selectedLabelColor = Theme.colors.secondary,
+            indicatorColor = Theme.colors.background,
+        ) {
+            Item(
+                label = stringResource(R.string.demo_navigation_bar_feed),
+                icon = ImageSource.Resource(R.drawable.demo_media_icon),
+            )
+            Item(
+                label = stringResource(R.string.demo_navigation_bar_discover),
+                icon = ImageSource.Resource(R.drawable.demo_media_icon),
+                badgeCount = 12,
+            )
+            Item(
+                label = stringResource(R.string.demo_navigation_bar_notifications),
+                icon = ImageSource.Resource(R.drawable.demo_media_icon),
+            )
+        }
+    }
+}
+
+private fun UiTreeBuilder.NavigationScaffoldFixture(
+    scenario: DemoScenarioSpec?,
+    generation: Int,
+    onReset: () -> Unit,
+) {
+    val actionCount = rememberSaveable(key = "navigation-scaffold-action-count") {
+        mutableStateOf(0)
+    }
+    val selectedIndex = rememberSaveable(key = "navigation-scaffold-selected-index") {
+        mutableStateOf(0)
+    }
+    NavigationFixtureList(generation, listOf("control")) {
+        NavigationFixtureHeader(
+            scenario = scenario,
+            state = {
+                stringResource(
+                    R.string.demo_navigation_scaffold_state,
+                    actionCount.value,
+                    selectedIndex.value,
+                )
+            },
+            onReset = onReset,
+            stateBeforeAction = true,
+        ) {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = stringResource(R.string.demo_navigation_scaffold_title),
+                    )
+                },
+                bottomBar = {
+                    NavigationBar(
+                        selectedIndex = selectedIndex.value,
+                        onItemSelected = { selectedIndex.value = it },
+                    ) {
+                        Item(
+                            label = stringResource(R.string.demo_navigation_bar_home),
+                            icon = ImageSource.Resource(R.drawable.demo_media_icon),
+                        )
+                        Item(
+                            label = stringResource(R.string.demo_navigation_bar_messages),
+                            icon = ImageSource.Resource(R.drawable.demo_media_icon),
+                            badgeCount = 5,
+                        )
+                        Item(
+                            label = stringResource(R.string.demo_navigation_bar_profile),
+                            icon = ImageSource.Resource(R.drawable.demo_media_icon),
+                        )
+                    }
+                },
+                floatingActionButton = {
+                    FloatingActionButton(
+                        onClick = { actionCount.value += 1 },
+                        modifier = Modifier.navigationScenarioTarget(
+                            scenario,
+                            DemoAutomationRole.PrimaryAction,
+                        ),
+                    ) {
+                        Icon(
+                            source = ImageSource.Resource(R.drawable.demo_media_icon),
+                            contentDescription = stringResource(
+                                R.string.demo_navigation_scaffold_add_description,
+                            ),
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+                    .navigationScenarioTarget(scenario, DemoAutomationRole.Target),
+            ) {
+                Column(
+                    spacing = 8.dp,
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.demo_navigation_scaffold_content),
+                        style = Theme.typography.bodyLarge,
+                    )
+                    Text(
+                        text = stringResource(R.string.demo_navigation_scaffold_content_summary),
+                        style = Theme.typography.bodyMedium,
+                        color = TextDefaults.secondaryColor(),
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun UiTreeBuilder.NavigationFixtureList(
+    generation: Int,
+    sections: List<String>,
+    content: UiTreeBuilder.(String) -> Unit,
+) {
+    LazyColumn(
+        items = sections,
+        key = { section -> "$generation:$section" },
+        modifier = Modifier.fillMaxSize(),
+        itemContent = content,
+    )
+}
+
+private fun UiTreeBuilder.NavigationFixtureHeader(
+    scenario: DemoScenarioSpec?,
+    state: UiTreeBuilder.() -> String,
+    onReset: () -> Unit,
+    stateBeforeAction: Boolean = false,
+    primaryAction: UiTreeBuilder.() -> Unit,
+) {
+    Column(
+        spacing = 10.dp,
+        modifier = Modifier.fillMaxWidth().margin(top = 12.dp),
+    ) {
+        scenario?.let {
+            Text(
+                text = stringResource(it.summaryRes),
+                style = Theme.typography.bodyMedium,
+                color = TextDefaults.secondaryColor(),
+            )
+        }
+        if (stateBeforeAction) {
+            NavigationFixtureState(scenario, state)
+            NavigationFixtureReset(scenario, onReset)
+        }
+        primaryAction()
+        if (!stateBeforeAction) {
+            NavigationFixtureState(scenario, state)
+            NavigationFixtureReset(scenario, onReset)
+        }
+    }
+}
+
+private fun UiTreeBuilder.NavigationFixtureState(
+    scenario: DemoScenarioSpec?,
+    state: UiTreeBuilder.() -> String,
+) {
+    Text(
+        // Dynamic copy must resolve in the lazy item's Session so state invalidation reaches it.
+        text = state(),
+        style = Theme.typography.bodyMedium,
+        color = TextDefaults.secondaryColor(),
+        modifier = Modifier.navigationScenarioTarget(scenario, DemoAutomationRole.State),
+    )
+}
+
+private fun UiTreeBuilder.NavigationFixtureReset(
+    scenario: DemoScenarioSpec?,
+    onReset: () -> Unit,
+) {
+    Button(
+        text = stringResource(R.string.demo_navigation_reset),
+        variant = ButtonVariant.Outlined,
+        onClick = onReset,
+        modifier = Modifier.navigationScenarioTarget(scenario, DemoAutomationRole.Reset),
+    )
+}
+
+private fun UiTreeBuilder.FixtureTitle(titleRes: Int) {
+    Text(
+        text = stringResource(titleRes),
+        style = Theme.typography.titleMedium,
+        color = Theme.colors.onSurface,
+    )
+}
+
+private fun Modifier.navigationScenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
 }

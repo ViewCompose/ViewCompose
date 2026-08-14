@@ -764,6 +764,12 @@ tasks.register("verifyDemoLocalizedVisibleCopy") {
                 "app/src/main/java/com/viewcompose/activity/demo/pages/core/ActionsActivity.kt",
             ),
             rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/navigation/DemoNavigationPage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/interaction/NavigationActivity.kt",
+            ),
+            rootDir.resolve(
                 "app/src/main/java/com/viewcompose/demo/designsystem/DemoContrastDesignSystem.kt",
             ),
         )
