@@ -30,9 +30,13 @@ internal class ResolvedModifiers(
     var dropShadows: List<DropShadowModifierElement> = emptyList(),
     var innerShadows: List<InnerShadowModifierElement> = emptyList(),
     var offset: OffsetModifierElement? = null,
+    var relativeOffset: RelativeOffsetModifierElement? = null,
     var padding: PaddingModifierElement? = null,
+    var relativePadding: RelativePaddingModifierElement? = null,
     var systemBarsInsetsPadding: SystemBarsInsetsPaddingModifierElement? = null,
+    var relativeSystemBarsInsetsPadding: RelativeSystemBarsInsetsPaddingModifierElement? = null,
     var imeInsetsPadding: ImeInsetsPaddingModifierElement? = null,
+    var relativeImeInsetsPadding: RelativeImeInsetsPaddingModifierElement? = null,
     var minHeight: MinHeightModifierElement? = null,
     var minWidth: MinWidthModifierElement? = null,
     var animateContentSize: AnimateContentSizeModifierElement? = null,
@@ -57,6 +61,7 @@ internal class ResolvedModifiers(
     // ViewLayoutParamsFactory fields
     var boxAlign: BoxAlignModifierElement? = null,
     var margin: MarginModifierElement? = null,
+    var relativeMargin: RelativeMarginModifierElement? = null,
     var size: SizeModifierElement? = null,
     var width: WidthModifierElement? = null,
     var height: HeightModifierElement? = null,
@@ -110,10 +115,38 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             is ElevationModifierElement -> result.elevation = element
             is DropShadowModifierElement -> result.dropShadows = result.dropShadows + element
             is InnerShadowModifierElement -> result.innerShadows = result.innerShadows + element
-            is OffsetModifierElement -> result.offset = element
-            is PaddingModifierElement -> result.padding = element
-            is SystemBarsInsetsPaddingModifierElement -> result.systemBarsInsetsPadding = element
-            is ImeInsetsPaddingModifierElement -> result.imeInsetsPadding = element
+            is OffsetModifierElement -> {
+                result.offset = element
+                result.relativeOffset = null
+            }
+            is RelativeOffsetModifierElement -> {
+                result.offset = null
+                result.relativeOffset = element
+            }
+            is PaddingModifierElement -> {
+                result.padding = element
+                result.relativePadding = null
+            }
+            is RelativePaddingModifierElement -> {
+                result.padding = null
+                result.relativePadding = element
+            }
+            is SystemBarsInsetsPaddingModifierElement -> {
+                result.systemBarsInsetsPadding = element
+                result.relativeSystemBarsInsetsPadding = null
+            }
+            is RelativeSystemBarsInsetsPaddingModifierElement -> {
+                result.systemBarsInsetsPadding = null
+                result.relativeSystemBarsInsetsPadding = element
+            }
+            is ImeInsetsPaddingModifierElement -> {
+                result.imeInsetsPadding = element
+                result.relativeImeInsetsPadding = null
+            }
+            is RelativeImeInsetsPaddingModifierElement -> {
+                result.imeInsetsPadding = null
+                result.relativeImeInsetsPadding = element
+            }
             is MinHeightModifierElement -> result.minHeight = element
             is MinWidthModifierElement -> result.minWidth = element
             is AnimateContentSizeModifierElement -> result.animateContentSize = element
@@ -141,7 +174,14 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             is PreviewKeyEventModifierElement -> result.previewKeyEvent = element
             is KeyEventModifierElement -> result.keyEvent = element
             is BoxAlignModifierElement -> result.boxAlign = element
-            is MarginModifierElement -> result.margin = element
+            is MarginModifierElement -> {
+                result.margin = element
+                result.relativeMargin = null
+            }
+            is RelativeMarginModifierElement -> {
+                result.margin = null
+                result.relativeMargin = element
+            }
             is SizeModifierElement -> result.size = element
             is WidthModifierElement -> result.width = element
             is HeightModifierElement -> result.height = element
@@ -162,6 +202,7 @@ internal fun Modifier.resolve(): ResolvedModifiers {
 internal fun layoutModifiersChanged(previous: ResolvedModifiers, next: ResolvedModifiers): Boolean {
     return previous.boxAlign != next.boxAlign ||
         previous.margin != next.margin ||
+        previous.relativeMargin != next.relativeMargin ||
         previous.size != next.size ||
         previous.width != next.width ||
         previous.height != next.height ||

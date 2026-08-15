@@ -262,7 +262,7 @@ Use the [session-container checklist](session-containers.md).
 3. Renderer dp/sp conversion goes through its shared `DimensionUtils.kt`; containers must not duplicate density helpers.
 4. `com.viewcompose.host.android.environment.AndroidEnvironmentBridge` remains the Android-to-contract mapper, while `com.viewcompose.host.android.resources` owns mounted observation and resolution. UI Foundation accepts only resolved `UiEnvironmentValues` and never imports Android resource types.
 5. Custom tokens and built-in Locals use `uiLocalOf`, `UiLocals.current`, `ProvideLocal`, and `ProvideLocals`; do not add a new dedicated `ProvideXxx` pattern.
-6. Local snapshot/restore behavior must propagate consistently through lazy containers, pagers, overlays, and navigation destinations, including resource revisions.
+6. Local snapshot/restore behavior must propagate consistently through lazy containers, pagers, overlays, and navigation destinations, including resource revisions. `LocalContext` installs immutable snapshots by identity: provider boundaries allocate them, while repeated group/node capture in one scope returns the installed instance.
 7. Lifecycle and ViewModel Locals use the public packages `com.viewcompose.lifecycle` and `com.viewcompose.viewmodel`, while the `viewcompose-android` composition root performs default injection.
 
 ### 4.6 SlotTable Lite recomposition

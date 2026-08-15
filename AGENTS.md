@@ -37,6 +37,10 @@ These rules apply to AI-assisted work in this repository:
     [`ADR-0009`](docs/architecture/decisions/0009-development-tooling-isolation.md): concrete tooling
     lives downstream, activation requires artifact + debuggable process + explicit request, and the
     inactive path cannot own recurring hot-path work. Run `./gradlew verifyDevelopmentToolingIsolation`.
+15. Accepted test or benchmark evidence must be interpreted in the owning active documentation in
+    the same change or acceptance step. Record the comparison context, absolute results, normalized
+    change, conclusion (`improved`, `regressed`, `mixed`, `no material change`, or `inconclusive`),
+    limitations, and next action; raw output alone does not close a plan or substantiate a claim.
 
 If an active document conflicts with code or tests, verify the implementation and correct the
 document rather than creating a parallel explanation.

@@ -33,8 +33,10 @@ enum class NavDeepLinkLaunchMode {
  * Placeholders must occupy a complete path segment or query value, for example
  * `https://example.com/users/{userId}?source={source}`. Placeholder names are unique and default to
  * [NavDeepLinkArgumentType.Text]. Schemes and hosts compare case-insensitively; decoded path and
- * query values compare exactly. Fragments, user info, malformed percent encoding, duplicate query
- * names, and non-hierarchical URIs are rejected at construction.
+ * query values compare exactly. Input query parameters not declared by the pattern are ignored:
+ * they never become route arguments, affect match specificity, select a stack, or choose a launch
+ * mode. Fragments, user info, malformed percent encoding, duplicate query names, and
+ * non-hierarchical URIs are rejected at construction.
  *
  * @sample com.viewcompose.navigation.core.samples.deepLinkResolutionSample
  * @property uriPattern validated absolute hierarchical URI pattern

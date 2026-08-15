@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_scenario_component_card_title">Component · Cards</string>
+    <string name="demo_scenario_component_card_summary">Verify filled, elevated, outlined, disabled, and text-button action surfaces.</string>
+    <string name="demo_scenario_component_fab_title">Component · Floating actions</string>
+    <string name="demo_scenario_component_fab_summary">Verify small, medium, large, extended, and custom-color floating actions.</string>
+    <string name="demo_scenario_component_chip_title">Component · Chips</string>
+    <string name="demo_scenario_component_chip_summary">Verify assist, filter, input, suggestion, selected, and disabled chip states.</string>
+    <string name="demo_scenario_component_list_item_title">Component · List items and badges</string>
+    <string name="demo_scenario_component_list_item_summary">Verify list-item slots plus numeric, dot, and custom-color badges.</string>
+
+    <string name="demo_actions_reset">Reset fixture</string>
+    <string name="demo_actions_click_count">Action count: %1$d</string>
+    <string name="demo_actions_filter_state">Filter selected: %1$s</string>
+    <string name="demo_actions_state_on">On</string>
+    <string name="demo_actions_state_off">Off</string>
+
+    <string name="demo_actions_card_primary">Elevated action card</string>
+    <string name="demo_actions_card_primary_summary">Tap to verify state and stable shadow geometry.</string>
+    <string name="demo_actions_card_variants">Card variants</string>
+    <string name="demo_actions_card_filled">Filled card</string>
+    <string name="demo_actions_card_filled_summary">Default filled surface.</string>
+    <string name="demo_actions_card_outlined">Outlined card</string>
+    <string name="demo_actions_card_outlined_summary">Bordered secondary surface.</string>
+    <string name="demo_actions_card_disabled">Disabled card</string>
+    <string name="demo_actions_card_disabled_summary">Disabled and non-clickable.</string>
+    <string name="demo_actions_text_button">Standard text button</string>
+    <string name="demo_actions_text_button_disabled">Disabled text button</string>
+
+    <string name="demo_actions_fab_primary_description">Increment floating-action count</string>
+    <string name="demo_actions_fab_variants">Floating-action sizes</string>
+    <string name="demo_actions_fab_small_description">Small floating action</string>
+    <string name="demo_actions_fab_medium_description">Medium floating action</string>
+    <string name="demo_actions_fab_large_description">Large floating action</string>
+    <string name="demo_actions_fab_size_summary">Small, medium, and large touch targets</string>
+    <string name="demo_actions_fab_new_project">New project</string>
+    <string name="demo_actions_fab_custom_color">Custom color</string>
+
+    <string name="demo_actions_chip_primary">Filter chip</string>
+    <string name="demo_actions_chip_variants">Chip variants</string>
+    <string name="demo_actions_chip_assist">Assist</string>
+    <string name="demo_actions_chip_input">Input</string>
+    <string name="demo_actions_chip_suggestion">Suggestion</string>
+    <string name="demo_actions_chip_selected">Selected</string>
+    <string name="demo_actions_chip_unselected">Unselected</string>
+    <string name="demo_actions_chip_disabled">Disabled</string>
+    <string name="demo_actions_chip_selected_disabled">Selected and disabled</string>
+
+    <string name="demo_actions_list_primary">Clickable list item</string>
+    <string name="demo_actions_list_primary_summary">Tap to verify interaction state.</string>
+    <string name="demo_actions_list_variants">List-item slots</string>
+    <string name="demo_actions_list_single_line">Single-line item</string>
+    <string name="demo_actions_list_supporting">Item with supporting text</string>
+    <string name="demo_actions_list_supporting_summary">Supporting copy stays aligned with the headline.</string>
+    <string name="demo_actions_list_complete">Complete list item</string>
+    <string name="demo_actions_list_complete_summary">Leading icon, overline, supporting copy, and trailing content.</string>
+    <string name="demo_actions_list_overline">Category</string>
+    <string name="demo_actions_list_details">Details</string>
+    <string name="demo_actions_list_icon_description">List-item icon</string>
+    <string name="demo_actions_badge_variants">Badge variants</string>
+    <string name="demo_actions_badge_number">Number</string>
+    <string name="demo_actions_badge_dot">Dot</string>
+    <string name="demo_actions_badge_custom">Custom color</string>
+    <string name="demo_actions_badge_number_description">Numeric badge</string>
+    <string name="demo_actions_badge_dot_description">Dot badge</string>
+    <string name="demo_actions_badge_custom_description">Custom-color badge</string>
+</resources>

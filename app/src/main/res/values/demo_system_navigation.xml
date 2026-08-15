@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_system_nav_window_title">System navigation · %1$s</string>
+    <string name="demo_system_nav_toolbar_title">System navigation · %1$s</string>
+    <string name="demo_system_nav_exit_description">Exit system navigation Demo</string>
+    <string name="demo_system_nav_stack_home">Home</string>
+    <string name="demo_system_nav_stack_discover">Discover</string>
+    <string name="demo_system_nav_stack_account">Account</string>
+    <string name="demo_system_nav_route_home">Home overview</string>
+    <string name="demo_system_nav_route_home_detail">Home detail</string>
+    <string name="demo_system_nav_route_cart">Checkout · Cart</string>
+    <string name="demo_system_nav_route_receipt">Checkout · Receipt</string>
+    <string name="demo_system_nav_route_discover">Discover</string>
+    <string name="demo_system_nav_route_search_result">Search result</string>
+    <string name="demo_system_nav_route_profile">Account profile</string>
+    <string name="demo_system_nav_route_security">Security settings</string>
+    <string name="demo_system_nav_route_settings">Account settings</string>
+    <string name="demo_system_nav_route_replacement">ReplaceTop acceptance</string>
+
+    <string name="demo_system_nav_fixture_title">Navigation transaction fixture</string>
+    <string name="demo_system_nav_fixture_summary">The primary push, observable result, and full Session reset are kept in the first fixture block.</string>
+    <string name="demo_system_nav_recent_event">Recent action: %1$s\nActive stack depth: %2$d</string>
+    <string name="demo_system_nav_push">Push next destination</string>
+    <string name="demo_system_nav_reset_fixture">Reset all stacks and owners</string>
+
+    <string name="demo_system_nav_status_summary">A real NavHost destination with an independent Lifecycle, ViewModelStore, and SavedStateRegistry.</string>
+    <string name="demo_system_nav_status_route">route=%1$s · entry=%2$s · lifecycle=%3$s</string>
+    <string name="demo_system_nav_status_arguments">arguments=%1$s</string>
+    <string name="demo_system_nav_status_graph">graph=%1$s</string>
+    <string name="demo_system_nav_stack_snapshot">active=%1$s · history=%2$s\n%3$s</string>
+    <string name="demo_system_nav_stack_missing">missing</string>
+    <string name="demo_system_nav_history_empty">empty</string>
+    <string name="demo_system_nav_lifecycle_none">NONE</string>
+
+    <string name="demo_system_nav_state_title">Destination ownership and state restoration</string>
+    <string name="demo_system_nav_state_summary">Observe rememberSaveable, SavedStateHandle, ViewModel, and parent-graph state independently.</string>
+    <string name="demo_system_nav_counter_state">rememberSaveable=%1$d · SavedStateHandle=%2$d · ViewModel#%3$d=%4$d</string>
+    <string name="demo_system_nav_increment_saveable">rememberSaveable +1</string>
+    <string name="demo_system_nav_increment_handle">SavedStateHandle +1</string>
+    <string name="demo_system_nav_increment_view_model">ViewModel +1</string>
+    <string name="demo_system_nav_no_graph_owner">The current destination has no graph owner.</string>
+    <string name="demo_system_nav_graph_state">Parent graph: %1$s#%2$s · counter=%3$d</string>
+    <string name="demo_system_nav_increment_graph">Parent graph state +1</string>
+
+    <string name="demo_system_nav_actions_title">Transactional stack operations</string>
+    <string name="demo_system_nav_actions_summary">SingleTop, Pop, and ReplaceTop share the same prepare, commit, and rollback pipeline.</string>
+    <string name="demo_system_nav_single_top">SingleTop current destination</string>
+    <string name="demo_system_nav_pop">Pop</string>
+    <string name="demo_system_nav_replace_top">ReplaceTop with acceptance destination</string>
+
+    <string name="demo_system_nav_capabilities_title">Platform, stacks, and adaptive panes</string>
+    <string name="demo_system_nav_capabilities_summary">Exercise independent stacks, PreviousStack Back, predictive Back, dynamic panes, and host updates.</string>
+    <string name="demo_system_nav_seed_adaptive">Seed three-pane sample in current stack</string>
+    <string name="demo_system_nav_adaptive_on">Adaptive panes: on (switch to single pane)</string>
+    <string name="demo_system_nav_adaptive_off">Adaptive panes: off (enable)</string>
+    <string name="demo_system_nav_motion_on">Transition motion: on (disable)</string>
+    <string name="demo_system_nav_motion_off">Transition motion: off (enable)</string>
+    <string name="demo_system_nav_back_on">System Back: handled by NavHost</string>
+    <string name="demo_system_nav_back_off">System Back: disabled (restore)</string>
+    <string name="demo_system_nav_account_pop_root">Account stack: select and PopToRoot</string>
+
+    <string name="demo_system_nav_checkout_title">Nested Checkout graph</string>
+    <string name="demo_system_nav_checkout_summary">Opening the graph route resolves its startDestination and shares one checkout graph owner across cart and receipt.</string>
+    <string name="demo_system_nav_enter_checkout">Enter Checkout graph</string>
+    <string name="demo_system_nav_open_receipt">Open Receipt</string>
+    <string name="demo_system_nav_deep_link_title">Strict Deep Link</string>
+    <string name="demo_system_nav_deep_link_summary">Only allowlisted graph URIs match; declared argument types and target-stack updates commit atomically.</string>
+    <string name="demo_system_nav_deep_link_valid_reset">Valid Search · Reset</string>
+    <string name="demo_system_nav_deep_link_valid_push">Valid Search · Push</string>
+    <string name="demo_system_nav_deep_link_invalid">Invalid Int argument (reject)</string>
+    <string name="demo_system_nav_deep_link_no_match">Unregistered URI (NoMatch)</string>
+    <string name="demo_system_nav_account_title">Account graph and native Intent</string>
+    <string name="demo_system_nav_account_summary">Account destinations share an account-graph owner; ACTION_VIEW enters the same strict Deep Link transaction.</string>
+    <string name="demo_system_nav_security_deep_link">Security Deep Link · ReplaceTop</string>
+    <string name="demo_system_nav_open_settings">Open account settings</string>
+
+    <string name="demo_system_nav_event_waiting">Waiting for action</string>
+    <string name="demo_system_nav_event_host_failure">Navigation failure: %1$s · route=%2$s · committed=%3$b</string>
+    <string name="demo_system_nav_event_pane_adaptive">Pane policy changed to Adaptive</string>
+    <string name="demo_system_nav_event_pane_single">Pane policy changed to Single</string>
+    <string name="demo_system_nav_event_motion_enabled">Transition motion enabled</string>
+    <string name="demo_system_nav_event_motion_disabled">Transition motion disabled</string>
+    <string name="demo_system_nav_event_back_enabled">System Back handling enabled</string>
+    <string name="demo_system_nav_event_back_disabled">System Back handling disabled</string>
+    <string name="demo_system_nav_event_seeded">Three-pane sample: %1$s</string>
+    <string name="demo_system_nav_action_switch">Switch to %1$s</string>
+    <string name="demo_system_nav_action_push">Push</string>
+    <string name="demo_system_nav_action_single_top">SingleTop</string>
+    <string name="demo_system_nav_action_pop">Pop</string>
+    <string name="demo_system_nav_action_replace_top">ReplaceTop</string>
+    <string name="demo_system_nav_action_checkout">Enter Checkout</string>
+    <string name="demo_system_nav_action_receipt">Open Receipt</string>
+    <string name="demo_system_nav_action_account_root">Account PopToRoot</string>
+    <string name="demo_system_nav_action_settings">Open settings</string>
+    <string name="demo_system_nav_result_with_action">%1$s: %2$s</string>
+    <string name="demo_system_nav_result_committed_detail">committed · %1$s → %2$s</string>
+    <string name="demo_system_nav_result_no_change_detail">no change · %1$s</string>
+    <string name="demo_system_nav_result_queued_detail">queued</string>
+    <string name="demo_system_nav_result_failed_detail">failed · %1$s</string>
+
+    <string name="demo_system_nav_source_internal">In-page</string>
+    <string name="demo_system_nav_source_external">External</string>
+    <string name="demo_system_nav_deep_link_none">%1$s Deep Link: not received</string>
+    <string name="demo_system_nav_deep_link_controller_unavailable">%1$s Deep Link failed: NavHost was not ready</string>
+    <string name="demo_system_nav_deep_link_navigated">%1$s Deep Link: %2$s → %3$s · %4$s</string>
+    <string name="demo_system_nav_deep_link_no_match_result">%1$s Deep Link: no match; navigation state unchanged</string>
+    <string name="demo_system_nav_deep_link_rejected">%1$s Deep Link rejected: %2$s</string>
+    <string name="demo_system_nav_deep_link_rejected_argument">%1$s Deep Link rejected: %2$s (argument %3$s)</string>
+    <string name="demo_system_nav_deep_link_unsupported">%1$s Deep Link: controller has no graph</string>
+</resources>

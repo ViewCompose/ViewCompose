@@ -1,6 +1,10 @@
 package com.viewcompose
 
-import com.viewcompose.preview.tooling.ViewComposePreview
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioId
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.demo.registry.DemoScenarioIds
 import com.viewcompose.graphics.Canvas
 import com.viewcompose.graphics.drawBehind
 import com.viewcompose.graphics.drawWithCache
@@ -19,6 +23,8 @@ import com.viewcompose.graphics.core.Rect
 import com.viewcompose.graphics.core.RoundRect
 import com.viewcompose.graphics.core.TextStyle
 import com.viewcompose.graphics.core.path
+import com.viewcompose.host.android.resources.stringResource
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
@@ -42,72 +48,137 @@ import kotlin.math.min
 
 @ViewComposePreview(name = "Graphics · Drawing", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewGraphicsDrawing() {
-    GraphicsPage(initialPageIndex = 0)
+    GraphicsPage(GraphicsFixture.Drawing)
 }
 
 @ViewComposePreview(name = "Graphics · Outer shadow", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewGraphicsOuterShadow() {
-    GraphicsPage(initialPageIndex = 1)
+    GraphicsPage(GraphicsFixture.OuterShadow)
 }
 
 @ViewComposePreview(name = "Graphics · Inner shadow", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewGraphicsInnerShadow() {
-    GraphicsPage(initialPageIndex = 2)
+    GraphicsPage(GraphicsFixture.InnerShadow)
 }
 
 @ViewComposePreview(name = "Graphics · Lazy diagnostics", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewGraphicsLazyDiagnostics() {
-    GraphicsPage(initialPageIndex = 3)
+    GraphicsPage(GraphicsFixture.ShadowList)
+}
+
+internal enum class GraphicsFixture(
+    val scenarioId: DemoScenarioId,
+) {
+    Drawing(DemoScenarioIds.GraphicsDrawing),
+    OuterShadow(DemoScenarioIds.GraphicsOuterShadow),
+    InnerShadow(DemoScenarioIds.GraphicsInnerShadow),
+    ShadowList(DemoScenarioIds.GraphicsShadowList),
+    ;
+
+    companion object {
+        fun from(scenarioId: DemoScenarioId): GraphicsFixture =
+            entries.singleOrNull { fixture -> fixture.scenarioId == scenarioId }
+                ?: error("Unsupported graphics scenario: $scenarioId")
+    }
 }
 
 internal fun UiTreeBuilder.GraphicsPage(
-    initialPageIndex: Int = GRAPHICS_PAGE_DRAWING,
+    fixture: GraphicsFixture,
+    scenario: DemoScenarioSpec? = null,
 ) {
-    val selectedPageState = remember {
-        mutableStateOf(
-            initialPageIndex.coerceIn(
-                GRAPHICS_PAGE_DRAWING,
-                GRAPHICS_PAGE_SHADOW_DIAGNOSTICS,
-            ),
-        )
+    // Graphics fixtures intentionally do not share one state holder: the shadow backend policy,
+    // diagnostics snapshot, and drawing controls have different ownership and disposal rules.
+    when (fixture) {
+        GraphicsFixture.Drawing -> GraphicsDrawingFixture(scenario)
+        GraphicsFixture.OuterShadow -> GraphicsOuterShadowFixture(scenario)
+        GraphicsFixture.InnerShadow -> GraphicsInnerShadowFixture(scenario)
+        GraphicsFixture.ShadowList -> GraphicsShadowListFixture(scenario)
     }
+}
+
+private fun UiTreeBuilder.GraphicsDrawingFixture(scenario: DemoScenarioSpec?) {
     val blendMultiplyState = remember { mutableStateOf(false) }
     val drawContentVisibleState = remember { mutableStateOf(true) }
     val cacheKeyState = remember { mutableStateOf(0) }
     val cacheAccentState = remember { mutableStateOf(false) }
-    val shadowPageState = rememberGraphicsShadowPageState()
+    val primitivesCanvasLabel = stringResource(R.string.demo_graphics_primitives_canvas_label)
+    val blendCanvasLabel = stringResource(R.string.demo_graphics_blend_canvas_label)
+    val drawCanvasLabel = stringResource(R.string.demo_graphics_draw_canvas_label)
 
-    InstallGraphicsShadowLifecycle()
-    val sections = graphicsPageItems(selectedPageState.value)
+    fun reset() {
+        blendMultiplyState.value = false
+        drawContentVisibleState.value = true
+        cacheKeyState.value = 0
+        cacheAccentState.value = false
+    }
+
+    val sections = listOf(
+        "primitives",
+        "path_clip",
+        "gradient_blend",
+        "draw_modifiers",
+        "cache",
+    )
     LazyColumn(
         items = sections,
         key = { it },
-        contentType = ::graphicsPageContentType,
         modifier = Modifier.fillMaxSize(),
     ) { section ->
         when (section) {
-            "overview" -> ChapterPageOverviewSection(
-                title = "Graphics",
-                goal = "验证 Canvas、draw modifier 与高级阴影装饰层是否稳定，并覆盖精确外阴影、内阴影、Lazy 缓存和后端诊断。",
-                modules = listOf(
-                    "viewcompose-graphics-core",
-                    "viewcompose-graphics",
-                    "viewcompose-shadow-android",
-                    "viewcompose-renderer-android",
-                ),
-            )
-
-            "page_filter" -> ChapterPageFilterSection(
-                pages = listOf("绘制", "外阴影", "内阴影", "Lazy/诊断"),
-                selectedIndex = selectedPageState.value,
-                onSelectionChange = { selectedPageState.value = it },
-            )
-
             "primitives" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "基础图元",
-                subtitle = "Rect / Line / Circle / Text 组合，确认 Canvas 节点可稳定自绘。",
+                title = stringResource(R.string.demo_graphics_primitives_title),
+                subtitle = stringResource(R.string.demo_graphics_primitives_summary),
             ) {
+                Text(
+                    text = stringResource(
+                        R.string.demo_graphics_drawing_state,
+                        stringResource(
+                            if (blendMultiplyState.value) {
+                                R.string.demo_graphics_state_blend_multiply
+                            } else {
+                                R.string.demo_graphics_state_blend_src_over
+                            },
+                        ),
+                        stringResource(
+                            if (drawContentVisibleState.value) {
+                                R.string.demo_graphics_state_content_visible
+                            } else {
+                                R.string.demo_graphics_state_content_hidden
+                            },
+                        ),
+                        cacheKeyState.value,
+                        stringResource(
+                            if (cacheAccentState.value) {
+                                R.string.demo_graphics_state_accent_orange
+                            } else {
+                                R.string.demo_graphics_state_accent_indigo
+                            },
+                        ),
+                    ),
+                    modifier = Modifier.graphicsScenarioTarget(scenario, DemoAutomationRole.State),
+                )
+                Button(
+                    text = stringResource(R.string.demo_graphics_drawing_action),
+                    onClick = {
+                        blendMultiplyState.value = !blendMultiplyState.value
+                        drawContentVisibleState.value = !drawContentVisibleState.value
+                        cacheKeyState.value += 1
+                        cacheAccentState.value = !cacheAccentState.value
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(bottom = 8.dp)
+                        .graphicsScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+                )
+                Button(
+                    text = stringResource(R.string.demo_graphics_reset),
+                    onClick = ::reset,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(bottom = 8.dp)
+                        .graphicsScenarioTarget(scenario, DemoAutomationRole.Reset),
+                )
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -115,7 +186,8 @@ internal fun UiTreeBuilder.GraphicsPage(
                         .backgroundColor(0xFFF8FAFC.toInt())
                         .cornerRadius(16.dp)
                         .padding(8.dp)
-                        .testTag(DemoTestTags.GRAPHICS_PRIMITIVES_CANVAS),
+                        .testTag(DemoTestTags.GRAPHICS_PRIMITIVES_CANVAS)
+                        .graphicsScenarioTarget(scenario, DemoAutomationRole.Target),
                 ) { context ->
                     val width = context.size.width
                     val height = context.size.height
@@ -154,7 +226,7 @@ internal fun UiTreeBuilder.GraphicsPage(
                         paint = DrawPaint(brush = Brush.SolidColor(0xFF22C55E.toInt())),
                     )
                     drawText(
-                        text = "Canvas primitives",
+                        text = primitivesCanvasLabel,
                         origin = Offset(22f, height - 20f),
                         style = TextStyle(textSizePx = 30f, isBold = true),
                         paint = DrawPaint(brush = Brush.SolidColor(0xFF0F172A.toInt())),
@@ -164,8 +236,8 @@ internal fun UiTreeBuilder.GraphicsPage(
 
             "path_clip" -> ScenarioSection(
                 kind = ScenarioKind.Visual,
-                title = "Path + Clip",
-                subtitle = "路径裁剪与路径描边叠加，验证 clipPath 与 path draw 顺序。",
+                title = stringResource(R.string.demo_graphics_path_clip_title),
+                subtitle = stringResource(R.string.demo_graphics_path_clip_summary),
             ) {
                 Canvas(
                     modifier = Modifier
@@ -221,22 +293,30 @@ internal fun UiTreeBuilder.GraphicsPage(
 
             "gradient_blend" -> ScenarioSection(
                 kind = ScenarioKind.Stress,
-                title = "Gradient + Blend/Filter",
-                subtitle = "切换 Multiply，观察高对比重叠层变化；同时附带 blur imageFilter 降级路径。",
+                title = stringResource(R.string.demo_graphics_blend_title),
+                subtitle = stringResource(R.string.demo_graphics_blend_summary),
             ) {
                 Button(
-                    text = if (blendMultiplyState.value) "Blend: Multiply" else "Blend: SrcOver",
+                    text = stringResource(
+                        if (blendMultiplyState.value) {
+                            R.string.demo_graphics_blend_button_multiply
+                        } else {
+                            R.string.demo_graphics_blend_button_src_over
+                        },
+                    ),
                     onClick = { blendMultiplyState.value = !blendMultiplyState.value },
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(DemoTestTags.GRAPHICS_BLEND_TOGGLE),
                 )
                 Text(
-                    text = if (blendMultiplyState.value) {
-                        "当前混合模式：Multiply"
-                    } else {
-                        "当前混合模式：SrcOver"
-                    },
+                    text = stringResource(
+                        if (blendMultiplyState.value) {
+                            R.string.demo_graphics_blend_status_multiply
+                        } else {
+                            R.string.demo_graphics_blend_status_src_over
+                        },
+                    ),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp, bottom = 8.dp)
@@ -305,7 +385,7 @@ internal fun UiTreeBuilder.GraphicsPage(
                         ),
                     )
                     drawText(
-                        text = "Blend target",
+                        text = blendCanvasLabel,
                         origin = Offset(20f, height - 16f),
                         style = TextStyle(textSizePx = 28f, isBold = true),
                         paint = DrawPaint(brush = Brush.SolidColor(0xFF0F172A.toInt())),
@@ -315,18 +395,30 @@ internal fun UiTreeBuilder.GraphicsPage(
 
             "draw_modifiers" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "Draw Modifier 顺序",
-                subtitle = "drawBehind + drawWithContent：切换是否透传内容，验证 modifier 链路顺序稳定。",
+                title = stringResource(R.string.demo_graphics_draw_modifiers_title),
+                subtitle = stringResource(R.string.demo_graphics_draw_modifiers_summary),
             ) {
                 Button(
-                    text = if (drawContentVisibleState.value) "隐藏内容层" else "显示内容层",
+                    text = stringResource(
+                        if (drawContentVisibleState.value) {
+                            R.string.demo_graphics_draw_hide_content
+                        } else {
+                            R.string.demo_graphics_draw_show_content
+                        },
+                    ),
                     onClick = { drawContentVisibleState.value = !drawContentVisibleState.value },
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(DemoTestTags.GRAPHICS_DRAW_CONTENT_TOGGLE),
                 )
                 Text(
-                    text = if (drawContentVisibleState.value) "drawWithContent 已透传内容" else "drawWithContent 已拦截内容",
+                    text = stringResource(
+                        if (drawContentVisibleState.value) {
+                            R.string.demo_graphics_draw_status_visible
+                        } else {
+                            R.string.demo_graphics_draw_status_hidden
+                        },
+                    ),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp, bottom = 8.dp)
@@ -364,7 +456,7 @@ internal fun UiTreeBuilder.GraphicsPage(
                         paint = DrawPaint(brush = Brush.SolidColor(0xFF0EA5E9.toInt())),
                     )
                     drawText(
-                        text = "Canvas content layer",
+                        text = drawCanvasLabel,
                         origin = Offset(26f, height * 0.60f),
                         style = TextStyle(textSizePx = 30f, isBold = true),
                         paint = DrawPaint(brush = Brush.SolidColor(0xFFFFFFFF.toInt())),
@@ -374,11 +466,18 @@ internal fun UiTreeBuilder.GraphicsPage(
 
             "cache" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
-                title = "drawWithCache 语义",
-                subtitle = "切换 cache key 才重建缓存命令，切换 accent 只影响内容层，验证 cache 命中路径。",
+                title = stringResource(R.string.demo_graphics_cache_title),
+                subtitle = stringResource(R.string.demo_graphics_cache_summary),
             ) {
+                val cacheCanvasLabel = stringResource(
+                    R.string.demo_graphics_cache_canvas_key,
+                    cacheKeyState.value,
+                )
                 Button(
-                    text = "切换 Cache Key (${cacheKeyState.value})",
+                    text = stringResource(
+                        R.string.demo_graphics_cache_key_action,
+                        cacheKeyState.value,
+                    ),
                     onClick = { cacheKeyState.value += 1 },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -386,12 +485,28 @@ internal fun UiTreeBuilder.GraphicsPage(
                         .testTag(DemoTestTags.GRAPHICS_CACHE_KEY_BUMP),
                 )
                 Button(
-                    text = if (cacheAccentState.value) "Accent: Orange" else "Accent: Indigo",
+                    text = stringResource(
+                        if (cacheAccentState.value) {
+                            R.string.demo_graphics_cache_accent_orange
+                        } else {
+                            R.string.demo_graphics_cache_accent_indigo
+                        },
+                    ),
                     onClick = { cacheAccentState.value = !cacheAccentState.value },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text(
-                    text = "cacheKey=${cacheKeyState.value} · accent=${if (cacheAccentState.value) "orange" else "indigo"}",
+                    text = stringResource(
+                        R.string.demo_graphics_cache_state,
+                        cacheKeyState.value,
+                        stringResource(
+                            if (cacheAccentState.value) {
+                                R.string.demo_graphics_state_accent_orange
+                            } else {
+                                R.string.demo_graphics_state_accent_indigo
+                            },
+                        ),
+                    ),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp, bottom = 8.dp)
@@ -419,7 +534,7 @@ internal fun UiTreeBuilder.GraphicsPage(
                                         ),
                                     ),
                                     DrawCommand.DrawText(
-                                        text = "cacheKey=${cacheKeyState.value}",
+                                        text = cacheCanvasLabel,
                                         origin = Offset(20f, height - 18f),
                                         style = TextStyle(textSizePx = 30f, isBold = true),
                                         paint = DrawPaint(brush = Brush.SolidColor(0xFF334155.toInt())),
@@ -445,12 +560,15 @@ internal fun UiTreeBuilder.GraphicsPage(
                 }
             }
 
-            "verify" -> GraphicsVerificationNotes(selectedPageState.value)
-
-            else -> RenderGraphicsShadowSection(
-                section = section,
-                state = shadowPageState,
-            )
+            else -> error("Unsupported graphics drawing section: $section")
         }
     }
+}
+
+private fun Modifier.graphicsScenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
 }

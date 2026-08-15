@@ -8,6 +8,9 @@ import com.viewcompose.ui.node.spec.ConstraintAnchor
 import com.viewcompose.ui.node.spec.ConstraintAnchorLink
 import com.viewcompose.ui.node.spec.ConstraintAnchorTarget
 import com.viewcompose.ui.node.spec.ConstraintDimension
+import com.viewcompose.ui.node.spec.ConstraintGroupSpec
+import com.viewcompose.ui.node.spec.ConstraintHelperVisibility
+import com.viewcompose.ui.node.spec.ConstraintHelpersSpec
 import com.viewcompose.ui.node.spec.ConstraintItemSpec
 import com.viewcompose.ui.node.spec.ConstraintSetSpec
 import com.viewcompose.ui.unit.UiDensity
@@ -20,6 +23,28 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class DeclarativeConstraintLayoutEnvironmentTest {
+    @Test
+    fun `group visibility changes survive constraint set application`() {
+        val context = RuntimeEnvironment.getApplication()
+        val layout = DeclarativeConstraintLayout(context).apply {
+            installEnvironment(density = 1f)
+        }
+        val child = View(context).apply {
+            setTag(R.id.viewcompose_constraint_layout_id, "child")
+        }
+        layout.addView(child)
+
+        layout.inlineHelpersSpec = groupHelpers(ConstraintHelperVisibility.Gone)
+        layout.applyConstraintsNow()
+        layout.measureAndLayout()
+        assertEquals(View.GONE, child.visibility)
+
+        layout.inlineHelpersSpec = groupHelpers(ConstraintHelperVisibility.Visible)
+        layout.applyConstraintsNow()
+        layout.measureAndLayout()
+        assertEquals(View.VISIBLE, child.visibility)
+    }
+
     @Test
     fun `constraint dimensions resolve again when local density changes`() {
         val context = RuntimeEnvironment.getApplication()
@@ -64,6 +89,23 @@ class DeclarativeConstraintLayoutEnvironmentTest {
                 ),
             ),
         )
+    }
+
+    private fun groupHelpers(visibility: ConstraintHelperVisibility): ConstraintHelpersSpec =
+        ConstraintHelpersSpec(
+            groups = listOf(
+                ConstraintGroupSpec(
+                    id = "group",
+                    referencedIds = listOf("child"),
+                    visibility = visibility,
+                ),
+            ),
+        )
+
+    private fun DeclarativeConstraintLayout.measureAndLayout() {
+        val spec = View.MeasureSpec.makeMeasureSpec(300, View.MeasureSpec.EXACTLY)
+        measure(spec, spec)
+        layout(0, 0, 300, 300)
     }
 
     private fun assertResolvedLayoutParams(

@@ -85,7 +85,9 @@ If the value disappears, the nearest anchor to the current visual offset becomes
 movement updates an offset clamped to the installed range. Completion commits the renderer-selected
 nearest target and may report it through `onValueSettled`; cancellation restores the last committed
 anchor before its callback. This release settles immediately without an animation, so `targetValue`
-normally changes with `currentValue`.
+normally changes with `currentValue`. The Q3 state contract publishes semantic value, target,
+offset, and dragging status in one snapshot transaction for each delta, snap, settle, cancellation,
+or anchor reconciliation. Mutations remain serialized on the owning UI thread.
 
 `rememberAnchoredDraggableState` reads `initialValue` only when first remembered. Changing the
 argument later does not reset state; call `snapTo` explicitly. Snapping to a value absent from the

@@ -30,21 +30,24 @@ internal data class PerformanceDashboardCard(
     val accentColor: Int,
 )
 
-private val basePerformanceDashboardCards: List<PerformanceDashboardCard> =
+internal fun createBasePerformanceDashboardCards(
+    copy: PerformanceCopy,
+): List<PerformanceDashboardCard> =
     List(PERFORMANCE_DASHBOARD_CARD_COUNT) { index ->
         PerformanceDashboardCard(
             id = index,
-            title = "Dashboard section ${index + 1}",
-            subtitle = "Nested layout group ${index % 6}",
-            status = if (index % 3 == 0) "Active" else "Stable",
+            title = copy.dashboardSection(index + 1),
+            subtitle = copy.nestedLayoutGroup(index % 6),
+            status = if (index % 3 == 0) copy.active else copy.stable,
             metrics = performanceDashboardMetrics(
                 index = index,
                 revision = 0,
+                copy = copy,
             ),
             tags = listOf(
-                "Region ${index % 4 + 1}",
-                "Tier ${index % 3 + 1}",
-                "Node ${index + 10}",
+                copy.region(index % 4 + 1),
+                copy.tier(index % 3 + 1),
+                copy.node(index + 10),
             ),
             detailsVisible = index % 4 == 0,
             accentColor = performanceDashboardAccentColor(index),
@@ -59,15 +62,20 @@ private val basePerformanceDashboardCards: List<PerformanceDashboardCard> =
  * The same card ids are retained while nested metrics and detail visibility change, measuring
  * deep-layout patch cost.
  */
-internal fun performanceDashboardCards(revision: Int): List<PerformanceDashboardCard> {
-    if (revision == 0) return basePerformanceDashboardCards
-    return basePerformanceDashboardCards.map { card ->
+internal fun performanceDashboardCards(
+    base: List<PerformanceDashboardCard>,
+    copy: PerformanceCopy,
+    revision: Int,
+): List<PerformanceDashboardCard> {
+    if (revision == 0) return base
+    return base.map { card ->
         card.copy(
-            subtitle = "Updated layout revision $revision",
-            status = if ((card.id + revision) % 3 == 0) "Active" else "Updated",
+            subtitle = copy.updatedLayoutRevision(revision),
+            status = if ((card.id + revision) % 3 == 0) copy.active else copy.updated,
             metrics = performanceDashboardMetrics(
                 index = card.id,
                 revision = revision,
+                copy = copy,
             ),
             detailsVisible = (card.id + revision) % 4 == 0,
         )
@@ -77,19 +85,20 @@ internal fun performanceDashboardCards(revision: Int): List<PerformanceDashboard
 private fun performanceDashboardMetrics(
     index: Int,
     revision: Int,
+    copy: PerformanceCopy,
 ): List<PerformanceDashboardMetric> {
     return listOf(
         PerformanceDashboardMetric(
-            label = "Requests",
+            label = copy.requests,
             value = "${1_200 + index * 17 + revision * 31}",
         ),
         PerformanceDashboardMetric(
-            label = "Success",
+            label = copy.success,
             value = "${96 + (index + revision) % 4}%",
         ),
         PerformanceDashboardMetric(
-            label = "Latency",
-            value = "${18 + index % 9 + revision * 2} ms",
+            label = copy.latency,
+            value = copy.latencyValue(18 + index % 9 + revision * 2),
         ),
     )
 }

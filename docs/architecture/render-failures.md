@@ -32,7 +32,9 @@ completed frame report.
   layout parameters, View order, and releases newly inserted nodes on a best-effort basis.
 - commit, side-effect, overlay, diagnostics, and native commit failures report `FrameCommitted`.
   These happen after the new View tree has become authoritative and are isolated so that one
-  callback does not prevent the remaining callbacks from running.
+  callback does not prevent the remaining callbacks from running. A throwing remembered activation
+  stays pending and is retried by a later successful composition commit; successful siblings are
+  not activated twice, and removal before success abandons the pending value.
 - composition-coroutine failures report `FrameUnchanged`.
 - disposal failures report `SessionDisposed`; cleanup continues across remaining nodes and hosts.
 
@@ -60,7 +62,7 @@ AndroidView(
         analytics.recordPlayerAttached(playerId)
     },
     onRelease = { view ->
-        // One-shot resource release after removal commit or session disposal.
+        // One-shot resource release after any permanent abandonment.
         view.player = null
     },
 )
@@ -74,8 +76,9 @@ The rules are strict:
 2. Put network writes, analytics, database writes, service calls, or other non-replayable external
    effects in `onCommit`. The renderer publishes these callbacks only after the complete recursive
    View-tree transaction commits. A rolled-back candidate never publishes or runs them.
-3. `onRelease` is resource cleanup, not a general commit effect. It runs at most once for a mounted
-   node after a successful removal or during session disposal.
+3. `onRelease` is resource cleanup, not a general commit effect. It runs at most once whenever a
+   created node is permanently abandoned, including candidate rollback, successful removal, final
+   reuse-cache eviction, or session disposal.
 4. Native platform state cannot be cloned generically. The rollback guarantee therefore covers
    framework-owned tree structure plus replay of the previous View configuration, not arbitrary
    state hidden inside a third-party View.

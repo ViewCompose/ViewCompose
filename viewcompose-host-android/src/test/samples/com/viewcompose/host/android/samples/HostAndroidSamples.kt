@@ -27,6 +27,7 @@ fun renderIntoSample(container: ViewGroup) {
     session.setRenderingActive(false)
     session.render()
     session.dispose()
+    check(runCatching(session::render).exceptionOrNull() is IllegalStateException)
 }
 
 fun androidViewInteropSample(builder: UiTreeBuilder) {

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-gesture/README.md
-translation_source_hash: 9d41522ea3b4e9d8ed47e5b004d82d6075593833d5382a06fd2066203b6e9ed6
+translation_source_hash: 483ae74ed26ff52a87034ebc00234bd1b002f79335f57807ffcf4c6455a5d00a
 translation_status: current
 ---
 
@@ -80,7 +80,9 @@ Modifier 每次组合调用都会把最新 Anchors 同步安装进 State。当�
 重新安装会保留正在拖动的 Offset；值消失时，最接近当前视觉 Offset 的 Anchor 成为当前值。原始
 移动更新限制在已安装范围内的 Offset。正常结束会提交 Renderer 选择的最近目标，并可通过
 `onValueSettled` 报告；取消会先恢复最后一次已提交 Anchor，再调用取消 Callback。当前版本立即
-完成 Settle，没有动画，因此 `targetValue` 通常与 `currentValue` 同时变化。
+完成 Settle，没有动画，因此 `targetValue` 通常与 `currentValue` 同时变化。Q3 State 契约会为
+每次 Delta、Snap、Settle、取消或 Anchor 对齐，通过一次 Snapshot Transaction 发布 Semantic
+Value、Target、Offset 与 Dragging 状态。Mutation 仍须串行运行在所属 UI 线程。
 
 `rememberAnchoredDraggableState` 只在首次 Remember 时读取 `initialValue`。之后改变参数不会重置；
 应显式调用 `snapTo`。Snap 到当前 Anchors 不包含的值会保存语义值并清除 Offset，直到下一次

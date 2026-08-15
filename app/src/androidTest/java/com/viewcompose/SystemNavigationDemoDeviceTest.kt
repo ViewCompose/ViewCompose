@@ -21,11 +21,14 @@ class SystemNavigationDemoDeviceTest {
 
     @Test
     fun independentStacksAndPreviousStackBackAreVisibleThroughTheDemo() {
-        launchDemoActivity(SystemNavigationActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            SystemNavigationActivity::class.java,
+            "navigation.system",
+        ).use { scenario ->
             awaitNavigation()
 
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.SYSTEM_NAV_PUSH)
+                activity.clickScenarioViewById(R.id.demo_navigation_system_primary_action)
             }
             awaitNavigation()
 
@@ -119,6 +122,9 @@ class SystemNavigationDemoDeviceTest {
             Uri.parse(SystemNavigationDemoModel.SecurityDeepLink),
             context,
             SystemNavigationActivity::class.java,
+        ).putExtra(
+            com.viewcompose.demo.contract.EXTRA_DEMO_SCENARIO_ID,
+            "navigation.system",
         )
         launchDemoActivity<SystemNavigationActivity>(intent).use { scenario ->
             awaitNavigation()
@@ -131,7 +137,10 @@ class SystemNavigationDemoDeviceTest {
                     NavValue.LongValue(42L),
                     state.activeStack.top.route[SystemNavigationDemoModel.UserIdArgument],
                 )
-                assertTrue(activity.externalDeepLinkOutcomeForTest().contains("外部 Deep Link"))
+                assertTrue(
+                    activity.externalDeepLinkOutcomeForTest() is
+                        SystemNavigationDeepLinkOutcome.Navigated,
+                )
 
                 activity.controllerForTest().selectStack(
                     stackId = SystemNavigationDemoModel.DiscoverStack,
@@ -185,7 +194,10 @@ class SystemNavigationDemoDeviceTest {
 
     @Test
     fun entryAndGraphOwnedStateSurviveActivityRecreation() {
-        launchDemoActivity(SystemNavigationActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            SystemNavigationActivity::class.java,
+            "navigation.system",
+        ).use { scenario ->
             awaitNavigation()
 
             scenario.onActivity { activity ->

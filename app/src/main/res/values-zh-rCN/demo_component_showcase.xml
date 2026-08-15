@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_activity_component_showcase_title">组件</string>
+
+    <string name="demo_scenario_component_button_title">组件 · 按钮</string>
+    <string name="demo_scenario_component_button_summary">验证所有按钮变体与尺寸，以及图标、禁用态和文本按钮。</string>
+    <string name="demo_scenario_component_icon_button_title">组件 · 图标按钮</string>
+    <string name="demo_scenario_component_icon_button_summary">验证图标按钮变体、主题着色、交互和禁用态。</string>
+    <string name="demo_scenario_component_segmented_control_title">组件 · 分段控件</string>
+    <string name="demo_scenario_component_segmented_control_summary">验证选中态、小到大尺寸和禁用态。</string>
+    <string name="demo_scenario_component_divider_title">组件 · 分隔线</string>
+    <string name="demo_scenario_component_divider_summary">验证默认、语义色和粗细变体，不构造虚假状态。</string>
+    <string name="demo_scenario_component_progress_title">组件 · 进度指示器</string>
+    <string name="demo_scenario_component_progress_summary">验证线性和环形的确定、不确定及自定义指示器变体。</string>
+
+    <string name="demo_component_reset">重置夹具</string>
+    <string name="demo_component_action_count">操作次数：%1$d</string>
+    <string name="demo_component_selected_index">选中项：%1$d</string>
+    <string name="demo_component_enabled">启用</string>
+    <string name="demo_component_disabled">禁用</string>
+    <string name="demo_component_disabled_state">禁用态</string>
+
+    <string name="demo_component_button_primary">执行按钮操作</string>
+    <string name="demo_component_button_matrix">变体与尺寸矩阵</string>
+    <string name="demo_component_button_extras">图标、文本按钮和启用状态</string>
+    <string name="demo_component_button_leading_icon">前导图标</string>
+    <string name="demo_component_button_trailing_icon">尾随图标</string>
+    <string name="demo_component_text_button">文本按钮</string>
+
+    <string name="demo_component_icon_button_primary_description">执行图标按钮操作</string>
+    <string name="demo_component_icon_button_variants">图标按钮变体</string>
+    <string name="demo_component_icon_button_variant_description">%1$s 图标按钮变体</string>
+    <string name="demo_component_icon_button_tints">主题着色和禁用态</string>
+    <string name="demo_component_icon_button_tint_description">着色样例 %1$d</string>
+    <string name="demo_component_icon_button_disabled_description">禁用图标按钮</string>
+
+    <string name="demo_component_option_a">选项 A</string>
+    <string name="demo_component_option_b">选项 B</string>
+    <string name="demo_component_option_c">选项 C</string>
+    <string name="demo_component_segmented_sizes">小、中、大三种尺寸</string>
+
+    <string name="demo_component_divider_default">默认分隔线</string>
+    <string name="demo_component_divider_colors">语义颜色</string>
+    <string name="demo_component_divider_thickness">粗细变体</string>
+    <string name="demo_component_divider_thickness_value">粗细：%1$d dp</string>
+    <string name="demo_component_color_primary">主要色</string>
+    <string name="demo_component_color_secondary">次要色</string>
+    <string name="demo_component_color_on_surface_variant">Surface 变体前景色</string>
+
+    <string name="demo_component_progress_advance">推进进度</string>
+    <string name="demo_component_progress_percent">进度：%1$d%%</string>
+    <string name="demo_component_progress_variants">进度指示器变体</string>
+    <string name="demo_component_progress_indeterminate">不确定模式的线性和环形指示器</string>
+    <string name="demo_component_progress_custom">自定义颜色、尺寸和粗细</string>
+</resources>

@@ -108,7 +108,12 @@ by a later renderer or child render session.
   role. Passive and disabled composites keep a null multi-state contract.
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   and the local-provider APIs scope density, locales, layout direction, content color, text style,
-  image loading, focus, frame clock, and host capabilities.
+  image loading, focus, frame clock, and host capabilities. `UiLocals.current` is a Q2 scoped lookup:
+  an absent binding evaluates its default, while an explicitly provided `null` for a nullable Local
+  remains `null` through nesting, batch providers, snapshots, and delayed child sessions. Each
+  provider boundary installs one immutable internal snapshot; repeated captures in the same scope
+  reuse that identity, and `ProvideLocals` installs its complete batch atomically. Public
+  `UiLocalSnapshot` wrappers remain opaque and independently allocated.
 - `Image`, `Icon`, [`ProvideImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/current/com.viewcompose.ui.foundation/-provide-image-loader.html),
   and `UiImageRequestOptions` expose image semantics without selecting Coil, Glide, or another
   decoder. A subtree may install one `UiImageLoader` or leave it absent for resource-only rendering.
@@ -151,6 +156,9 @@ current immutable value while building content. Local snapshots preserve it for 
 pagers, overlays, and navigation destinations. Android resource resolution and observation remain
 outside UI Foundation in `viewcompose-host-android`; no named design system owns this neutral Local.
 
+Local binding presence is independent of value nullability. Defaults run only when the current
+snapshot has no entry for that Local; they are not a fallback for an explicitly provided `null`.
+
 - A `UiTreeBuilder` is an ephemeral recorder. Do not retain it or invoke a captured builder after
   its content block returns. Retain state and stable keys instead.
 - ViewCompose has no compiler transform that can infer every ordinary captured Kotlin value. A
@@ -165,14 +173,17 @@ outside UI Foundation in `viewcompose-host-android`; no named design system owns
   a committed frame. Composition or native-tree rollback retains the logical session and retries
   the same semantic revision; failures after frame commit remain observable without undoing it.
 - `remember` and effects require an active composition. Positional identity follows the structural
-  call path; use stable `key` groups and lazy-item keys when content can move.
+  call path. Stable ordinary `key` groups move complete logical scopes among siblings; duplicate
+  effective keys fail before state can alias. Lazy containers keep their separate item-session key
+  contract.
 - Candidate effect changes are transactional. A failed composition or native tree render starts no
   candidate work, retains committed subscriptions and jobs, and discards candidate
   `rememberUpdatedState` publication. After native success, committed-value publication and all
   outgoing lifecycle callbacks precede incoming lifecycle callbacks, then `SideEffect`, native
   `AndroidView.onCommit`, overlay, and diagnostics work.
-- `DisposableEffect` setup and cleanup are synchronous and terminal. A throwing setup owns no
-  cleanup and is not retried for equal keys; a throwing cleanup is never invoked again. Independent
+- `DisposableEffect` setup and cleanup are synchronous. A throwing setup owns no cleanup and remains
+  pending for retry on a later successful composition commit; it must therefore be retry-safe. A
+  successful setup activates once, and a throwing cleanup is never invoked again. Independent
   lifecycle callbacks are still attempted.
 - `LaunchedEffect` inherits the render session coroutine context and requires explicit restart
   identity. `rememberCoroutineScope` is for event callbacks and owns a normal child Job. Passing a
@@ -181,8 +192,10 @@ outside UI Foundation in `viewcompose-host-android`; no named design system owns
   while declaring the effect. Provider stacks are not implicitly restored around callbacks;
   built-in effect scopes reject Local reads with a named diagnostic even if another provider is
   active on the callback thread. Debug render sessions warn when synchronous callbacks exceed 16 ms.
-- `rememberSaveable` registers providers only after composition commit. A failed or abandoned
-  composition releases its restored claim so a later attempt can still restore the value.
+- `rememberSaveable` registers providers only after composition commit. A failed provider
+  registration preserves its restored claim in `performSave` and retries registration on a later
+  commit. An aborted or abandoned candidate releases its uncommitted claim so a later owner can
+  restore the value.
 - Delayed child compositions do not share the host registry's flat provider-key namespace. Lazy,
   Pager, and overlay containers remember hierarchical child registries by logical key, retain them
   across recycling, and restore them without moving state across keyed reorders. Tab children use
@@ -205,8 +218,9 @@ outside UI Foundation in `viewcompose-host-android`; no named design system owns
   and full defaults to a bounds-relative pill. These are compatibility fallbacks, not Material
   values; Material applications receive the concrete scale from `viewcompose-material3`.
 - Each `RenderSession` exclusively owns one container, its mounted nodes, composition, coroutine
-  scope, and session-scoped overlays. Call `dispose` with the host lifecycle; the session cannot be
-  reused afterward.
+  scope, and session-scoped overlays. Call `dispose` with the host lifecycle. Disposal is
+  idempotent; later caller-initiated `render` or `setRenderingActive` calls fail fast, while already
+  queued internal invalidations and frame callbacks are ignored without publishing work.
 - Source tooling is disabled by default. An installed adapter is consulted before initial tree
   construction, receives bounded source candidates from that successful build, is registered only
   after a native tree is established, updated by `setRenderingActive`, and disposed with the

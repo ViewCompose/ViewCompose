@@ -98,26 +98,27 @@ internal object ModifierInsetsApplier {
             state.baseBottom = view.paddingBottom - state.appliedBottom - content.bottom
         }
 
-        // A full node rebind may run after insets were already delivered. Reapply the retained
-        // snapshot immediately so a child binder cannot expose an unpadded frame until the next
-        // platform insets dispatch.
+        // A selector or layout-direction change invalidates the old physical contribution. Resolve
+        // current root insets synchronously when available; otherwise publish only stable base
+        // padding until the platform dispatches the new selection.
+        val currentInsets = ViewCompat.getRootWindowInsets(view)
+        if (currentInsets == null) {
+            state.clearAppliedInsets()
+        } else {
+            state.updateAppliedInsets(
+                insets = currentInsets,
+                systemBarsModifier = systemBarsModifier,
+                imeModifier = imeModifier,
+            )
+        }
         state.applyTo(view)
 
         ViewCompat.setOnApplyWindowInsetsListener(view) { target, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
-            state.appliedLeft =
-                (if (systemBarsModifier?.left == true) systemBars.left else 0) +
-                (if (imeModifier?.left == true) ime.left else 0)
-            state.appliedTop =
-                (if (systemBarsModifier?.top == true) systemBars.top else 0) +
-                (if (imeModifier?.top == true) ime.top else 0)
-            state.appliedRight =
-                (if (systemBarsModifier?.right == true) systemBars.right else 0) +
-                (if (imeModifier?.right == true) ime.right else 0)
-            state.appliedBottom =
-                (if (systemBarsModifier?.bottom == true) systemBars.bottom else 0) +
-                (if (imeModifier?.bottom == true) ime.bottom else 0)
+            state.updateAppliedInsets(
+                insets = insets,
+                systemBarsModifier = systemBarsModifier,
+                imeModifier = imeModifier,
+            )
             state.applyTo(target)
             insets
         }
@@ -151,6 +152,34 @@ internal object ModifierInsetsApplier {
         var appliedRight: Int = 0,
         var appliedBottom: Int = 0,
     ) {
+        fun clearAppliedInsets() {
+            appliedLeft = 0
+            appliedTop = 0
+            appliedRight = 0
+            appliedBottom = 0
+        }
+
+        fun updateAppliedInsets(
+            insets: WindowInsetsCompat,
+            systemBarsModifier: SystemBarsInsetsPaddingModifierElement?,
+            imeModifier: ImeInsetsPaddingModifierElement?,
+        ) {
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            appliedLeft =
+                (if (systemBarsModifier?.left == true) systemBars.left else 0) +
+                (if (imeModifier?.left == true) ime.left else 0)
+            appliedTop =
+                (if (systemBarsModifier?.top == true) systemBars.top else 0) +
+                (if (imeModifier?.top == true) ime.top else 0)
+            appliedRight =
+                (if (systemBarsModifier?.right == true) systemBars.right else 0) +
+                (if (imeModifier?.right == true) ime.right else 0)
+            appliedBottom =
+                (if (systemBarsModifier?.bottom == true) systemBars.bottom else 0) +
+                (if (imeModifier?.bottom == true) ime.bottom else 0)
+        }
+
         fun applyTo(view: View) {
             val content = view.lazyContentPadding()
             view.applyPadding(

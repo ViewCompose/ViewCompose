@@ -1,31 +1,32 @@
 package com.viewcompose
 
+import android.content.Intent
 import android.view.ViewGroup
 import coil3.ImageLoader
+import com.viewcompose.demo.automation.DemoCatalogAutomation
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.registry.DemoScenarioRegistry
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.image.coil.CoilImageLoaderAdapter
-import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.ui.modifier.Modifier
-import com.viewcompose.ui.modifier.backgroundColor
-import com.viewcompose.ui.modifier.fillMaxSize
-import com.viewcompose.ui.modifier.systemBarsInsetsPadding
-import com.viewcompose.ui.modifier.testTag
-import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.foundation.DisposableEffect
-import com.viewcompose.ui.foundation.HorizontalPager
-import com.viewcompose.ui.foundation.NavigationBar
+import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.ProvideImageLoader
 import com.viewcompose.ui.foundation.Scaffold
 import com.viewcompose.ui.foundation.SideEffect
 import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.TopAppBar
+import com.viewcompose.ui.foundation.TopAppBarDefaults
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.remember
-import com.viewcompose.ui.foundation.rememberSaveable
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.backgroundColor
+import com.viewcompose.ui.modifier.fillMaxSize
+import com.viewcompose.ui.modifier.systemBarsInsetsPadding
+import com.viewcompose.ui.node.ImageSource
 
-/**
- * demo 首页根脚手架，承载目录、诊断、设置和关于四个顶层页面。
- * Root scaffold for the demo home, hosting catalog, diagnostics, settings, and about pages.
- */
+/** Root host for the executable scenario catalog and its generated utility panels. */
 internal fun UiTreeBuilder.DemoHomeScaffold(
     root: ViewGroup,
 ) {
@@ -43,55 +44,70 @@ internal fun UiTreeBuilder.DemoHomeScaffold(
         isSystemDark = DemoThemeTokens.isSystemDark(root.context),
     )
     ProvideImageLoader(imageLoader) {
-        val scaffoldContent: UiTreeBuilder.() -> Unit = {
-            // 首页导航页签需要跨渲染恢复，避免旋转或重建后跳回目录页。
-            // The home tab index is saveable so rotation or recreation does not reset to the catalog.
-            val navIndex = rememberSaveable(key = "demo-home-navigation-index") {
-                mutableStateOf(0)
-            }
-            val diagnosticsPageState = remember { mutableStateOf(0) }
+        UiTheme(tokens = themeTokens) {
             val currentTheme = Theme.current
+            val catalogTitle = stringResource(R.string.demo_catalog_title)
+            val windowTitle = stringResource(
+                R.string.demo_activity_title_format,
+                catalogTitle,
+                DemoThemeTokens.modeLabel(themeModeState.value, root.context),
+            )
             SideEffect {
-                // Activity chrome 属于宿主副作用，跟随当前主题 token 在每帧提交后同步。
-                // Activity chrome is a host side effect and is synchronized after each committed frame.
-                activity?.title = "ViewCompose · ${DemoThemeTokens.modeLabel(themeModeState.value, root.context)}"
+                activity?.title = windowTitle
                 activity?.applyDemoThemeWindowAppearance(currentTheme)
             }
             Scaffold(
-                bottomBar = {
-                    NavigationBar(
-                        selectedIndex = navIndex.value,
-                        onItemSelected = { navIndex.value = it },
-                        modifier = Modifier.testTag(DemoTestTags.HOME_NAVIGATION_BAR),
-                    ) {
-                        Item(label = "目录", icon = ImageSource.Resource(R.drawable.demo_media_icon))
-                        Item(label = "诊断", icon = ImageSource.Resource(R.drawable.demo_media_icon))
-                        Item(label = "设置", icon = ImageSource.Resource(R.drawable.demo_media_icon))
-                        Item(label = "关于", icon = ImageSource.Resource(R.drawable.demo_media_icon))
-                    }
+                topBar = {
+                    TopAppBar(
+                        title = catalogTitle,
+                        actions = {
+                            IconButton(
+                                icon = ImageSource.Resource(R.drawable.ic_demo_environment),
+                                contentDescription = stringResource(R.string.demo_catalog_environment),
+                                onClick = {
+                                    activity?.startActivity(
+                                        Intent(root.context, DemoEnvironmentActivity::class.java),
+                                    )
+                                },
+                                tint = TopAppBarDefaults.titleColor(),
+                                modifier = Modifier.demoAutomationTarget(
+                                    DemoCatalogAutomation.contract.require(
+                                        DemoAutomationRole.PrimaryAction,
+                                    ),
+                                ),
+                            )
+                            IconButton(
+                                icon = ImageSource.Resource(R.drawable.ic_demo_build_info),
+                                contentDescription = stringResource(R.string.demo_catalog_build_info),
+                                onClick = {
+                                    activity?.startActivity(
+                                        Intent(root.context, DemoBuildInfoActivity::class.java),
+                                    )
+                                },
+                                tint = TopAppBarDefaults.titleColor(),
+                                modifier = Modifier.demoAutomationTarget(
+                                    DemoCatalogAutomation.contract.require(
+                                        DemoAutomationRole.SecondaryAction,
+                                    ),
+                                ),
+                            )
+                        },
+                    )
                 },
                 modifier = Modifier
                     .fillMaxSize()
                     .backgroundColor(Theme.colors.background)
-                    .systemBarsInsetsPadding(),
+                    .systemBarsInsetsPadding()
+                    .demoAutomationTarget(
+                        DemoCatalogAutomation.contract.require(DemoAutomationRole.Root),
+                    ),
             ) {
-                HorizontalPager(
-                    currentPage = navIndex.value,
-                    onPageChanged = { navIndex.value = it },
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    Page(key = "catalog") { DemoCatalogPage(root) }
-                    Page(key = "diagnostics") {
-                        DiagnosticsPage(
-                            root = root,
-                            selectedPageState = diagnosticsPageState,
-                        )
-                    }
-                    Page(key = "settings") { SettingsPage(themeModeState, root) }
-                    Page(key = "about") { AboutPage() }
+                DemoCatalogPage { scenario ->
+                    activity?.startActivity(
+                        DemoScenarioRegistry.createLaunchIntent(root.context, scenario),
+                    )
                 }
             }
         }
-        UiTheme(tokens = themeTokens, content = scaffoldContent)
     }
 }

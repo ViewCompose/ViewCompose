@@ -12,7 +12,7 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /** Debug-only real Android Renderer host used by the Phase 1 Material 3 visual acceptance suite. */
 class Material3VisualBaselineActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Material 3 visual baseline"
+    override val demoTitleRes: Int = R.string.demo_activity_material3_visual_baseline_title
 
     private val baselinePage: Int
         get() = intent.getIntExtra(EXTRA_PAGE, PAGE_ACTIONS).coerceIn(PAGE_ACTIONS, PAGE_SURFACES)

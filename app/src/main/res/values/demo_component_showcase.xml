@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_activity_component_showcase_title">Components</string>
+
+    <string name="demo_scenario_component_button_title">Component · Buttons</string>
+    <string name="demo_scenario_component_button_summary">Verify every button variant and size plus icons, disabled state, and text buttons.</string>
+    <string name="demo_scenario_component_icon_button_title">Component · Icon buttons</string>
+    <string name="demo_scenario_component_icon_button_summary">Verify icon-button variants, theme tints, interaction, and disabled state.</string>
+    <string name="demo_scenario_component_segmented_control_title">Component · Segmented control</string>
+    <string name="demo_scenario_component_segmented_control_summary">Verify selection, compact through large sizing, and disabled state.</string>
+    <string name="demo_scenario_component_divider_title">Component · Dividers</string>
+    <string name="demo_scenario_component_divider_summary">Verify default, semantic-color, and thickness variants without synthetic state.</string>
+    <string name="demo_scenario_component_progress_title">Component · Progress indicators</string>
+    <string name="demo_scenario_component_progress_summary">Verify linear and circular determinate, indeterminate, and custom indicator variants.</string>
+
+    <string name="demo_component_reset">Reset fixture</string>
+    <string name="demo_component_action_count">Action count: %1$d</string>
+    <string name="demo_component_selected_index">Selected item: %1$d</string>
+    <string name="demo_component_enabled">Enabled</string>
+    <string name="demo_component_disabled">Disabled</string>
+    <string name="demo_component_disabled_state">Disabled state</string>
+
+    <string name="demo_component_button_primary">Run button action</string>
+    <string name="demo_component_button_matrix">Variant and size matrix</string>
+    <string name="demo_component_button_extras">Icons, text button, and enabled state</string>
+    <string name="demo_component_button_leading_icon">Leading icon</string>
+    <string name="demo_component_button_trailing_icon">Trailing icon</string>
+    <string name="demo_component_text_button">Text button</string>
+
+    <string name="demo_component_icon_button_primary_description">Run icon-button action</string>
+    <string name="demo_component_icon_button_variants">Icon-button variants</string>
+    <string name="demo_component_icon_button_variant_description">%1$s icon-button variant</string>
+    <string name="demo_component_icon_button_tints">Theme tints and disabled state</string>
+    <string name="demo_component_icon_button_tint_description">Tint sample %1$d</string>
+    <string name="demo_component_icon_button_disabled_description">Disabled icon button</string>
+
+    <string name="demo_component_option_a">Option A</string>
+    <string name="demo_component_option_b">Option B</string>
+    <string name="demo_component_option_c">Option C</string>
+    <string name="demo_component_segmented_sizes">Compact, medium, and large sizes</string>
+
+    <string name="demo_component_divider_default">Default divider</string>
+    <string name="demo_component_divider_colors">Semantic colors</string>
+    <string name="demo_component_divider_thickness">Thickness variants</string>
+    <string name="demo_component_divider_thickness_value">Thickness: %1$d dp</string>
+    <string name="demo_component_color_primary">Primary</string>
+    <string name="demo_component_color_secondary">Secondary</string>
+    <string name="demo_component_color_on_surface_variant">On-surface variant</string>
+
+    <string name="demo_component_progress_advance">Advance progress</string>
+    <string name="demo_component_progress_percent">Progress: %1$d%%</string>
+    <string name="demo_component_progress_variants">Progress variants</string>
+    <string name="demo_component_progress_indeterminate">Indeterminate linear and circular indicators</string>
+    <string name="demo_component_progress_custom">Custom color, size, and thickness</string>
+</resources>

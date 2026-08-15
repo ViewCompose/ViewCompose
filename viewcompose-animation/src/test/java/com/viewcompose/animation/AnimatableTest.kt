@@ -8,6 +8,7 @@ package com.viewcompose.animation
 import com.viewcompose.animation.core.AnimationConverters
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.frame.MonotonicFrameClock
+import com.viewcompose.runtime.observation.RuntimeObservation
 import kotlin.math.abs
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
@@ -20,6 +21,69 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AnimatableTest {
+    @Test
+    fun `snap publishes complete begin value and end states`() = runBlocking {
+        val animatable = Animatable(
+            initialValue = 0f,
+            converter = AnimationConverters.Float,
+        )
+        val published = mutableListOf<AnimatableSnapshot>()
+        val (_, observation) = RuntimeObservation.observeReads(
+            onInvalidated = { published += animatable.snapshot() },
+        ) {
+            animatable.snapshot()
+        }
+
+        animatable.snapTo(10f)
+
+        assertEquals(
+            listOf(
+                AnimatableSnapshot(value = 0f, target = 10f, running = true),
+                AnimatableSnapshot(value = 10f, target = 10f, running = true),
+                AnimatableSnapshot(value = 10f, target = 10f, running = false),
+            ),
+            published,
+        )
+        observation.dispose()
+    }
+
+    @Test
+    fun `cancellation publishes idle only with the retained value as target`() = runBlocking {
+        val clock = ManualClock()
+        val animatable = Animatable(
+            initialValue = 0f,
+            converter = AnimationConverters.Float,
+            defaultFrameClock = clock,
+        )
+        val published = mutableListOf<AnimatableSnapshot>()
+        val (_, observation) = RuntimeObservation.observeReads(
+            onInvalidated = { published += animatable.snapshot() },
+        ) {
+            animatable.snapshot()
+        }
+        val animation = launch {
+            animatable.animateTo(
+                targetValue = 100f,
+                animationSpec = tween(durationMillis = 100),
+            )
+        }
+        clock.advanceToMillis(0)
+        clock.advanceToMillis(40)
+
+        animation.cancel()
+        animation.join()
+
+        assertTrue(published.any(AnimatableSnapshot::running))
+        assertTrue(
+            published.filterNot(AnimatableSnapshot::running).all { snapshot ->
+                snapshot.value == snapshot.target
+            },
+        )
+        assertEquals(animatable.value, animatable.targetValue, 0f)
+        assertFalse(animatable.isRunning)
+        observation.dispose()
+    }
+
     @Test
     fun `animateTo requires bound frame clock`() = runBlocking {
         val animatable = Animatable(
@@ -188,4 +252,18 @@ class AnimatableTest {
             yield()
         }
     }
+
+    private fun Animatable<Float>.snapshot(): AnimatableSnapshot {
+        return AnimatableSnapshot(
+            value = value,
+            target = targetValue,
+            running = isRunning,
+        )
+    }
+
+    private data class AnimatableSnapshot(
+        val value: Float,
+        val target: Float,
+        val running: Boolean,
+    )
 }

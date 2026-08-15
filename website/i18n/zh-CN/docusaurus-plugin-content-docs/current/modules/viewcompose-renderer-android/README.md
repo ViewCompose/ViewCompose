@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 3cda6191a5624a5f396c1445a7db8fa5ea40f1932a1d4593cf44ad005edd19e0
+translation_source_hash: f6d3028f8db46dd9736a00bc9162bb1a25b0b9e0d6adecea333c09d026f9bad7
 translation_status: current
 ---
 
@@ -76,6 +76,10 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 重新抛出错误。Android View 生命周期回调和延迟释放在结构提交后执行；由于新的可见树此时
 不能安全回滚，其失败会被隔离在 `RenderTreeResult.commitFailures` 中。
 
+ConstraintLayout 虚拟 `Group` 的可见性会在 `ConstraintSet.applyTo` 之后重新应用。该顺序可
+避免现有 helper 在帧间变化时，被 ConstraintSet 克隆的子项可见性恢复成陈旧原生状态；多个
+Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
+
 ## 主要 API
 
 - [`ViewTreeRenderer`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.view.tree/-view-tree-renderer/)
@@ -139,6 +143,14 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 - 定向 patch 和子树跳过只是优化。只有每个直接 child 都是组合所复用的完全相同 VNode 实例时，
   才能跳过完整原生子树；新构建但值相等的 child 仍需调和，因为嵌套 Session 回调可能已变化。
   自定义 host 不得从 patch 记录或诊断计数推断业务状态。
+- 当 Type、Environment 与 NodeSpec 均未变化时，Modifier 变化会走仅 Modifier Patch。该路径保留
+  原生 View 与语义 Node 绑定，复用现有的分族 Modifier 差分，并继续调和 Child。纯视觉变化会
+  保留现有 LayoutParams；布局或 Parent Data 变化才会替换参数。`NativeViewElement.stableKey`
+  变化时会重新执行其配置，而 AndroidView 的 Update、Reset、Commit 与 Release Callback 均不
+  会被触发。诊断会把该路径记为定向 Patch，Detail 为 `ModifierOnly`。
+- 物理 Padding、Margin、Offset 与 Inset 选择器保持 left/right 语义。对应 `Relative` API 会在
+  每次 Bind 或环境重绑时根据 VNode 捕获的布局方向映射逻辑 start/end。同一族中后声明的物理或
+  相对值会整体替换先声明值。正 `offsetRelative.horizontal` 朝逻辑 end 平移且不改变测量。
 - Gesture 分发会保留尚未判定的 Pointer Stream，直到识别出 Drag。若 Stream 结束时没有被 Gesture
   消费，保留目标会收到一次普通 Click；已识别的 Drag 会消费 Stream 并抑制该 Click。
 - Button Surface 内缩变化会参与定向样式 Patch，不得因此重建原生 View 或改变其有效测量目标。
@@ -173,9 +185,10 @@ Error 或 Fallback 使用资源，规范化图片请求就会把版本传给 Ada
 固定像素行高。因此，自然行高会在 View 复用和环境重绑期间随已解析字体、字号与字体缩放变化；
 显式 `lineHeightSp` 仍具有最终权限。
 
-对于 Lazy 集合，Renderer 统一持有一份合成后的原生 Padding：逻辑 `contentPadding`、物理
-`Modifier.padding` 与选定的系统栏/IME Insets 按边相加。逻辑 start/end 会根据捕获的布局方向
-解析；资源或配置重绑期间会保留最近一次平台 Insets 快照，直到 Android 分发更新值。
+对于 Lazy 集合，Renderer 统一持有一份合成后的原生 Padding：逻辑 `contentPadding`、已解析的
+物理或相对 Modifier Padding 与选定的系统栏/IME Insets 按边相加。所有逻辑 start/end 都根据
+捕获的布局方向解析。方向变化同时改变相对 Inset 选择器时，Renderer 会立即使用可用的 Root
+Insets；若尚不可用，则先清除旧物理边贡献直至 Android 分发新快照，绝不带着旧边多渲染一帧。
 
 - 渲染、释放、View 绑定、Pager 更新和装饰回调都限制在 UI 线程。
 - 一个容器只有一个已挂载树所有者。不得在容器或 render session 之间共享 mounted node。
@@ -224,3 +237,6 @@ Renderer 的多状态路径实现通用 UI Contract，并非 Material 功能。�
 消费集合语义的自定义 Renderer 必须保留逻辑行列顺序，并把 item 跨度、选中态和标题态映射为
 等价的平台无障碍元数据。alpha 阶段尚未识别这些可空集合字段的 Renderer 可以忽略它们，但其
 无障碍输出将无法播报集合位置。
+
+相对 Modifier API 族只能根据每个 VNode 环境解析。Renderer 分支必须同时升级折叠、LayoutParams、
+平移与 Inset 选择路径；从进程 Configuration 映射或重新解释旧物理元素都会违反公共 UI Contract。

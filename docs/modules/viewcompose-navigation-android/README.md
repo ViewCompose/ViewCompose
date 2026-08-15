@@ -93,6 +93,13 @@ Every destination entry receives an independent Android owner containing:
 
 Pushing the same route twice creates two owners and does not share page state.
 
+At native `NavHost` creation, destination and graph owners capture the nearest
+`LocalViewModelStoreOwner`. If it implements `HasDefaultViewModelProviderFactory`, its default
+Factory and starting `CreationExtras` are inherited. Each child owner then replaces only the
+ViewModelStore owner, saved-state owner, and route or graph default arguments, preserving unrelated
+Application and DI extras. A different parent-owner identity recreates the native host; retained
+stacks therefore never mix provider contracts from two parents.
+
 Nested graph instances receive `NavGraphOwner` boundaries. Destinations in one graph instance share
 its Lifecycle, ViewModelStore, and SavedStateRegistry until the last descendant leaves the stack.
 Entering the same graph route again later creates a new owner.

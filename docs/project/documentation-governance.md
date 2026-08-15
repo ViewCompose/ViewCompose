@@ -386,10 +386,39 @@ Use this matrix before implementation and again during review:
 | Tooling or preview change | Tooling page, supported-version statement, and screenshots where useful |
 | Breaking change or deprecation | KDoc/Javadoc replacement; migration page; release notes; versioned docs preserved |
 | Bug fix that corrects documented behavior | Correct the active page and add regression evidence |
+| Test or benchmark changes a durable conclusion | Owning active page with comparison context, interpreted result, limitations, and next action |
 | Internal refactor with no contract impact | Explicit `No documentation impact` rationale in the pull request |
 
 `No documentation impact` is a reviewed conclusion, not a default checkbox. A pull request must
 state which row applies.
+
+## Test evidence and conclusion closure
+
+Running a test or preserving raw benchmark output is evidence collection, not documentation
+closure. When accepted evidence validates, rejects, or materially qualifies a durable claim, the
+same change or acceptance step must update the active document that owns that claim. A plan may
+retain commands and raw artifacts, but it cannot be completed or archived while the interpreted
+result exists only in a pull-request comment, chat, local report, or archive entry.
+
+The durable conclusion records:
+
+1. the scenario or contract under test, workload revision, implementation revision, build mode,
+   device or environment, and controls needed to reproduce a valid comparison;
+2. absolute control/before and candidate/after results for every decision metric, plus a normalized
+   delta when the samples are comparable;
+3. exactly one primary classification: `improved`, `regressed`, `mixed`, `no material change`, or
+   `inconclusive`;
+4. median or steady-state behavior separately from tail behavior and any important absolute budget
+   risk, so a favorable average cannot conceal a user-visible regression;
+5. stability checks, rejected evidence, limitations, the decision supported by the result, and the
+   next action for any remaining gap.
+
+Classification follows the owning specification's thresholds and noise floor. Opposing decision
+metrics are `mixed`; unstable, mismatched, underpowered, or otherwise invalid evidence is
+`inconclusive` and must not be reported as an improvement or regression. Authors must not select
+only favorable metrics or compare incompatible environments. When accepted evidence does not
+change any durable claim, the pull request or plan records that rationale explicitly instead of
+silently omitting documentation impact.
 
 ## Naming, links, and assets
 
@@ -448,8 +477,10 @@ AI agents must:
 7. preserve module boundaries, version baselines, link reachability, and the canonical-language
    rule;
 8. update indexes and incoming links when adding, moving, or deleting content;
-9. run the documentation gates before handoff and report any validation that could not run.
-10. add one immutable per-PR Changeset for publication-relevant artifact changes and never infer or
+9. close accepted test and benchmark evidence into an interpreted conclusion in the owning active
+   document rather than leaving only raw output;
+10. run the documentation gates before handoff and report any validation that could not run.
+11. add one immutable per-PR Changeset for publication-relevant artifact changes and never infer or
     hand-write reverse-dependency release impact outside the release planner.
 
 The root `AGENTS.md` contains the shortest machine-discoverable version of these rules and points
@@ -463,6 +494,8 @@ Every documentation review verifies:
 - framework-level and module-level concerns are separated without duplicated truth;
 - version, compatibility, and stability statements match publishing metadata;
 - behavior claims match code, tests, or cited measurements;
+- accepted test and benchmark evidence has an interpreted conclusion, comparison context,
+  limitations, and next action in its owning active document;
 - public symbols have sufficient source documentation;
 - samples compile and screenshots identify their environment;
 - new public modules are present in the artifact catalog;

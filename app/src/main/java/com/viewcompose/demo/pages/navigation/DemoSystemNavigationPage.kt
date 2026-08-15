@@ -1,7 +1,11 @@
 package com.viewcompose
 
 import android.view.ViewGroup
-import com.viewcompose.preview.tooling.ViewComposePreview
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.host.android.resources.stringResource
+import com.viewcompose.navigation.NavDeepLinkResult
 import com.viewcompose.navigation.NavFailure
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.NavHostController
@@ -18,14 +22,9 @@ import com.viewcompose.navigation.core.NavStackSelectionMode
 import com.viewcompose.navigation.core.NavStackSpec
 import com.viewcompose.navigation.core.navGraph
 import com.viewcompose.navigation.rememberNavHostController
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.ui.modifier.Modifier
-import com.viewcompose.ui.modifier.backgroundColor
-import com.viewcompose.ui.modifier.fillMaxSize
-import com.viewcompose.ui.modifier.systemBarsInsetsPadding
-import com.viewcompose.ui.modifier.testTag
-import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.NavigationBar
 import com.viewcompose.ui.foundation.Scaffold
@@ -34,13 +33,20 @@ import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.TopAppBar
 import com.viewcompose.ui.foundation.TopAppBarDefaults
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.key
+import com.viewcompose.ui.foundation.remember
 import com.viewcompose.ui.foundation.rememberSaveable
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.backgroundColor
+import com.viewcompose.ui.modifier.fillMaxSize
+import com.viewcompose.ui.modifier.systemBarsInsetsPadding
+import com.viewcompose.ui.node.ImageSource
 
 @ViewComposePreview(name = "System navigation", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewSystemNavigation() {
     SystemNavigationDemoPage(
         root = null,
-        externalDeepLinkOutcome = mutableStateOf("尚未接收外部 Deep Link"),
+        externalDeepLinkOutcome = mutableStateOf(SystemNavigationDeepLinkOutcome.None),
         diagnosticsEnabled = false,
         onControllerReady = {},
         onExit = {},
@@ -49,10 +55,39 @@ internal fun UiTreeBuilder.PreviewSystemNavigation() {
 
 internal fun UiTreeBuilder.SystemNavigationDemoPage(
     root: ViewGroup?,
-    externalDeepLinkOutcome: MutableState<String>,
+    externalDeepLinkOutcome: MutableState<SystemNavigationDeepLinkOutcome>,
     diagnosticsEnabled: Boolean,
+    scenario: DemoScenarioSpec? = null,
     onControllerReady: (NavHostController) -> Unit,
     onExit: () -> Unit,
+) {
+    val sessionGeneration = rememberSaveable(key = "system-navigation-session-generation") {
+        mutableStateOf(0)
+    }
+    key(sessionGeneration.value) {
+        SystemNavigationSession(
+            root = root,
+            externalDeepLinkOutcome = externalDeepLinkOutcome,
+            diagnosticsEnabled = diagnosticsEnabled,
+            scenario = scenario,
+            onControllerReady = onControllerReady,
+            onExit = onExit,
+            onReset = {
+                externalDeepLinkOutcome.value = SystemNavigationDeepLinkOutcome.None
+                sessionGeneration.value += 1
+            },
+        )
+    }
+}
+
+private fun UiTreeBuilder.SystemNavigationSession(
+    root: ViewGroup?,
+    externalDeepLinkOutcome: MutableState<SystemNavigationDeepLinkOutcome>,
+    diagnosticsEnabled: Boolean,
+    scenario: DemoScenarioSpec?,
+    onControllerReady: (NavHostController) -> Unit,
+    onExit: () -> Unit,
+    onReset: () -> Unit,
 ) {
     val adaptivePanes = rememberSaveable(key = "system-navigation-adaptive-panes") {
         mutableStateOf(true)
@@ -63,9 +98,7 @@ internal fun UiTreeBuilder.SystemNavigationDemoPage(
     val motionEnabled = rememberSaveable(key = "system-navigation-motion") {
         mutableStateOf(true)
     }
-    val lastEvent = rememberSaveable(key = "system-navigation-last-event") {
-        mutableStateOf("等待操作")
-    }
+    val lastEvent = remember { mutableStateOf<SystemNavigationEvent>(SystemNavigationEvent.Waiting) }
     val controller = rememberNavHostController(
         stackConfiguration = SystemNavigationDemoModel.StackConfiguration,
         graph = SystemNavigationDemoModel.Graph,
@@ -74,21 +107,24 @@ internal fun UiTreeBuilder.SystemNavigationDemoPage(
     val selectedStackIndex = SystemNavigationDemoModel.StackIds
         .indexOf(stackState.activeStackId)
         .coerceAtLeast(0)
+    val activeStackLabel = stringResource(
+        SystemNavigationDemoModel.stackLabelRes(stackState.activeStackId),
+    )
+    val windowTitle = stringResource(R.string.demo_system_nav_window_title, activeStackLabel)
 
     SideEffect {
         onControllerReady(controller)
-        root?.context?.findAppCompatActivity()?.title =
-            "系统导航 · ${stackState.activeStackId.value}"
+        root?.context?.findAppCompatActivity()?.title = windowTitle
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = "系统导航 · ${SystemNavigationDemoModel.stackLabel(stackState.activeStackId)}",
+                title = stringResource(R.string.demo_system_nav_toolbar_title, activeStackLabel),
                 navigationIcon = {
                     IconButton(
                         icon = ImageSource.Resource(R.drawable.ic_arrow_back),
-                        contentDescription = "退出系统导航 Demo",
+                        contentDescription = stringResource(R.string.demo_system_nav_exit_description),
                         onClick = onExit,
                         tint = TopAppBarDefaults.titleColor(),
                     )
@@ -105,20 +141,24 @@ internal fun UiTreeBuilder.SystemNavigationDemoPage(
                             stackId = target,
                             selectionMode = NavStackSelectionMode.Preserve,
                         )
-                        .toDemoDescription("切换到 ${SystemNavigationDemoModel.stackLabel(target)}")
+                        .toDemoEvent(
+                            action = SystemNavigationAction.SwitchStack,
+                            detail = target.value,
+                        )
                 },
-                modifier = Modifier.testTag(DemoTestTags.SYSTEM_NAV_TAB_BAR),
+                modifier = Modifier
+                    .scenarioTarget(scenario, DemoAutomationRole.Ready),
             ) {
                 Item(
-                    label = "首页",
+                    label = stringResource(R.string.demo_system_nav_stack_home),
                     icon = ImageSource.Resource(R.drawable.demo_media_icon),
                 )
                 Item(
-                    label = "发现",
+                    label = stringResource(R.string.demo_system_nav_stack_discover),
                     icon = ImageSource.Resource(R.drawable.demo_media_icon),
                 )
                 Item(
-                    label = "账户",
+                    label = stringResource(R.string.demo_system_nav_stack_account),
                     icon = ImageSource.Resource(R.drawable.demo_media_icon),
                 )
             }
@@ -126,7 +166,8 @@ internal fun UiTreeBuilder.SystemNavigationDemoPage(
         modifier = Modifier
             .fillMaxSize()
             .systemBarsInsetsPadding()
-            .backgroundColor(Theme.colors.background),
+            .backgroundColor(Theme.colors.background)
+            .scenarioTarget(scenario, DemoAutomationRole.Root),
     ) {
         NavHost(
             controller = controller,
@@ -144,11 +185,11 @@ internal fun UiTreeBuilder.SystemNavigationDemoPage(
             debug = diagnosticsEnabled,
             debugTag = "SystemNavigationDemoHost",
             onFailure = { failure ->
-                lastEvent.value = failure.toDemoDescription()
+                lastEvent.value = failure.toDemoEvent()
             },
             modifier = Modifier
                 .fillMaxSize()
-                .testTag(DemoTestTags.SYSTEM_NAV_HOST),
+                .scenarioTarget(scenario, DemoAutomationRole.Target),
         ) { entry ->
             SystemNavigationDestinationPage(
                 controller = controller,
@@ -158,9 +199,138 @@ internal fun UiTreeBuilder.SystemNavigationDemoPage(
                 motionEnabled = motionEnabled,
                 lastEvent = lastEvent,
                 externalDeepLinkOutcome = externalDeepLinkOutcome,
+                scenario = scenario,
+                onReset = onReset,
             )
         }
     }
+}
+
+internal sealed interface SystemNavigationEvent {
+    data object Waiting : SystemNavigationEvent
+
+    data class Result(
+        val action: SystemNavigationAction,
+        val result: SystemNavigationResultSummary,
+        val detail: String? = null,
+    ) : SystemNavigationEvent
+
+    data class DeepLink(
+        val outcome: SystemNavigationDeepLinkOutcome,
+    ) : SystemNavigationEvent
+
+    data class HostFailure(
+        val phase: String,
+        val route: String,
+        val stackCommitted: Boolean,
+    ) : SystemNavigationEvent
+
+    data class PanePolicyChanged(val adaptive: Boolean) : SystemNavigationEvent
+
+    data class MotionChanged(val enabled: Boolean) : SystemNavigationEvent
+
+    data class SystemBackChanged(val enabled: Boolean) : SystemNavigationEvent
+
+    data class AdaptiveStackSeeded(
+        val results: List<SystemNavigationResultSummary>,
+    ) : SystemNavigationEvent
+}
+
+internal enum class SystemNavigationAction {
+    SwitchStack,
+    Push,
+    SingleTop,
+    Pop,
+    ReplaceTop,
+    EnterCheckout,
+    OpenReceipt,
+    AccountPopToRoot,
+    OpenSettings,
+}
+
+internal sealed interface SystemNavigationResultSummary {
+    data class Committed(
+        val previousRoute: String,
+        val nextRoute: String,
+    ) : SystemNavigationResultSummary
+
+    data class NoChange(val reason: String) : SystemNavigationResultSummary
+
+    data object Queued : SystemNavigationResultSummary
+
+    data class Failed(val phase: String) : SystemNavigationResultSummary
+}
+
+internal sealed interface SystemNavigationDeepLinkOutcome {
+    data object None : SystemNavigationDeepLinkOutcome
+
+    data object ControllerUnavailable : SystemNavigationDeepLinkOutcome
+
+    data class Navigated(
+        val uriPattern: String,
+        val route: String,
+        val result: SystemNavigationResultSummary,
+    ) : SystemNavigationDeepLinkOutcome
+
+    data object NoMatch : SystemNavigationDeepLinkOutcome
+
+    data class Rejected(
+        val reason: String,
+        val argumentName: String?,
+    ) : SystemNavigationDeepLinkOutcome
+
+    data object Unsupported : SystemNavigationDeepLinkOutcome
+}
+
+internal fun NavResult.toDemoEvent(
+    action: SystemNavigationAction,
+    detail: String? = null,
+): SystemNavigationEvent = SystemNavigationEvent.Result(
+    action = action,
+    result = toDemoSummary(),
+    detail = detail,
+)
+
+internal fun NavResult.toDemoSummary(): SystemNavigationResultSummary = when (this) {
+    is NavResult.Committed -> SystemNavigationResultSummary.Committed(
+        previousRoute = mutation.previousTop.route.name,
+        nextRoute = mutation.nextTop.route.name,
+    )
+
+    is NavResult.NoChange -> SystemNavigationResultSummary.NoChange(reason.toString())
+    is NavResult.Queued -> SystemNavigationResultSummary.Queued
+    is NavResult.Failed -> SystemNavigationResultSummary.Failed(failure.phase.toString())
+}
+
+internal fun NavDeepLinkResult.toDemoOutcome(): SystemNavigationDeepLinkOutcome = when (this) {
+    is NavDeepLinkResult.Navigated -> SystemNavigationDeepLinkOutcome.Navigated(
+        uriPattern = match.deepLink.uriPattern,
+        route = match.route.name,
+        result = navigationResult.toDemoSummary(),
+    )
+
+    NavDeepLinkResult.NoMatch -> SystemNavigationDeepLinkOutcome.NoMatch
+    is NavDeepLinkResult.Rejected -> SystemNavigationDeepLinkOutcome.Rejected(
+        reason = rejection.reason.toString(),
+        argumentName = rejection.argumentName,
+    )
+
+    NavDeepLinkResult.Unsupported -> SystemNavigationDeepLinkOutcome.Unsupported
+}
+
+private fun NavFailure.toDemoEvent(): SystemNavigationEvent.HostFailure =
+    SystemNavigationEvent.HostFailure(
+        phase = phase.toString(),
+        route = failedEntry?.route?.name ?: "unknown",
+        stackCommitted = stackCommitted,
+    )
+
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
 }
 
 internal object SystemNavigationDemoModel {
@@ -276,54 +446,31 @@ internal object SystemNavigationDemoModel {
         paneSpacingDp = 8f,
     )
 
-    fun stackLabel(stackId: NavStackId): String {
-        return when (stackId) {
-            HomeStack -> "首页"
-            DiscoverStack -> "发现"
-            AccountStack -> "账户"
-            else -> stackId.value
-        }
+    fun stackLabelRes(stackId: NavStackId): Int = when (stackId) {
+        HomeStack -> R.string.demo_system_nav_stack_home
+        DiscoverStack -> R.string.demo_system_nav_stack_discover
+        AccountStack -> R.string.demo_system_nav_stack_account
+        else -> error("Unknown demo stack: $stackId")
     }
 
-    fun routeLabel(route: String): String {
-        return when (route) {
-            HomeRoute -> "首页总览"
-            HomeDetailRoute -> "首页详情"
-            CartRoute -> "Checkout · Cart"
-            ReceiptRoute -> "Checkout · Receipt"
-            DiscoverRoute -> "发现"
-            SearchResultRoute -> "搜索结果"
-            ProfileRoute -> "账户资料"
-            SecurityRoute -> "安全设置"
-            SettingsRoute -> "账户设置"
-            ReplacementRoute -> "ReplaceTop 验收页"
-            else -> route
-        }
+    fun routeLabelRes(route: String): Int = when (route) {
+        HomeRoute -> R.string.demo_system_nav_route_home
+        HomeDetailRoute -> R.string.demo_system_nav_route_home_detail
+        CartRoute -> R.string.demo_system_nav_route_cart
+        ReceiptRoute -> R.string.demo_system_nav_route_receipt
+        DiscoverRoute -> R.string.demo_system_nav_route_discover
+        SearchResultRoute -> R.string.demo_system_nav_route_search_result
+        ProfileRoute -> R.string.demo_system_nav_route_profile
+        SecurityRoute -> R.string.demo_system_nav_route_security
+        SettingsRoute -> R.string.demo_system_nav_route_settings
+        ReplacementRoute -> R.string.demo_system_nav_route_replacement
+        else -> error("Unknown demo route: $route")
     }
 
-    fun rootRoute(stackId: NavStackId): NavRoute {
-        return when (stackId) {
-            HomeStack -> NavRoute(HomeRoute)
-            DiscoverStack -> NavRoute(DiscoverRoute)
-            AccountStack -> NavRoute(AccountGraphRoute)
-            else -> error("Unknown demo stack: $stackId")
-        }
+    fun rootRoute(stackId: NavStackId): NavRoute = when (stackId) {
+        HomeStack -> NavRoute(HomeRoute)
+        DiscoverStack -> NavRoute(DiscoverRoute)
+        AccountStack -> NavRoute(AccountGraphRoute)
+        else -> error("Unknown demo stack: $stackId")
     }
-}
-
-internal fun NavResult.toDemoDescription(action: String = "导航"): String {
-    return when (this) {
-        is NavResult.Committed -> {
-            "$action：已提交 · ${mutation.previousTop.route.name} → ${mutation.nextTop.route.name}"
-        }
-
-        is NavResult.NoChange -> "$action：无变化 · $reason"
-        is NavResult.Queued -> "$action：已排队"
-        is NavResult.Failed -> "$action：失败 · ${failure.phase}"
-    }
-}
-
-private fun NavFailure.toDemoDescription(): String {
-    val route = failedEntry?.route?.name ?: "unknown"
-    return "导航失败：$phase · route=$route · committed=$stackCommitted"
 }

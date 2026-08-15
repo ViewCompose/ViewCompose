@@ -5,6 +5,7 @@ import com.viewcompose.animation.core.AnimationSpec
 import com.viewcompose.animation.core.runAnimation
 import com.viewcompose.animation.core.spring
 import com.viewcompose.runtime.MutableState
+import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.runtime.frame.MonotonicFrameClock
@@ -22,6 +23,9 @@ import kotlinx.coroutines.job
  * job cancels the previous job, and only the newest mutation identifier may publish values. The
  * interrupted caller observes cancellation; stale frames cannot overwrite the new mutation.
  * External cancellation leaves [value] at its latest sample and resets [targetValue] to that value.
+ * Mutation start publishes [targetValue] with [isRunning] in one snapshot transaction. Completion,
+ * stop, and cancellation likewise publish the retained target with the idle state atomically;
+ * individual animation samples remain separate value publications.
  *
  * The instance does not own a coroutine scope. [animateTo] requires the constructor's
  * [defaultFrameClock] or a clock installed later by [rememberAnimatable]. State reads are observable
@@ -148,8 +152,10 @@ class Animatable<T>(
             )
             previous = activeMutation
             activeMutation = mutation
-            targetState.value = targetValue
-            runningState.value = true
+            Snapshot.withMutableSnapshot {
+                targetState.value = targetValue
+                runningState.value = true
+            }
         }
         if (previous != null && previous.job !== mutationJob) {
             // Do not self-cancel when a mutation is replaced reentrantly from the same Job.
@@ -175,8 +181,10 @@ class Animatable<T>(
         synchronized(mutationLock) {
             if (activeMutation?.id == mutationId) {
                 activeMutation = null
-                targetState.value = internalState.value
-                runningState.value = false
+                Snapshot.withMutableSnapshot {
+                    targetState.value = internalState.value
+                    runningState.value = false
+                }
             }
         }
     }

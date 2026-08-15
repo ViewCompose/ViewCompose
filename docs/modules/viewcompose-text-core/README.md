@@ -84,7 +84,9 @@ state.undo()
 ```
 
 `TextFieldState` exposes a stable observable owner around immutable `TextFieldValue` snapshots. Its
-editing buffer and history stacks are UI-thread-confined.
+editing buffer and history stacks are UI-thread-confined. This is a Q3 state API: each edit, undo,
+or redo publishes its complete value and `canUndo`/`canRedo` availability through one snapshot
+transaction, so observers cannot receive a committed text value paired with stale history status.
 
 - `edit` is one atomic application-owned transaction and bypasses user-input transformations.
 - `TextFieldBuffer` keeps document annotations and maps selection/composition across replacements.

@@ -85,10 +85,12 @@ fun LifecycleStartEffect(
  * [LifecycleStartStopEffectScope.onStopOrDispose]. An aborted candidate does not replace the active
  * observer or setup.
  *
- * Callbacks run synchronously on the lifecycle dispatch thread and must not block it. A throwing
- * setup detaches that observer and is not retried until the effect identity changes. A throwing
- * cleanup is terminal and is not retried. Resolve composition locals while declaring the effect;
- * reading a missing provider from either callback fails with a named diagnostic.
+ * Callbacks run synchronously on the lifecycle dispatch thread and must not block it. If initial
+ * setup throws while an already-active owner is installed during composition commit, the effect
+ * remains pending and retries on a later commit. If setup throws on a later lifecycle transition,
+ * that observer detaches and is not retried until effect identity changes. A throwing cleanup is
+ * terminal and is not retried. Resolve composition locals while declaring the effect; reading a
+ * missing provider from either callback fails with a named diagnostic.
  *
  * @sample com.viewcompose.lifecycle.samples.lifecycleStartEffectSample
  * @param key1 value compared by structural equality as part of composition effect identity

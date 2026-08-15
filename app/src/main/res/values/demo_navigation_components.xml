@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_scenario_component_app_bars_title">Component · App bars</string>
+    <string name="demo_scenario_component_app_bars_summary">Verify top-bar navigation and actions plus simple top and bottom app-bar variants.</string>
+    <string name="demo_scenario_component_navigation_bar_title">Component · Navigation bar</string>
+    <string name="demo_scenario_component_navigation_bar_summary">Verify selection, badges, labels, and custom navigation-bar colors.</string>
+    <string name="demo_scenario_component_scaffold_title">Component · Scaffold</string>
+    <string name="demo_scenario_component_scaffold_summary">Verify one integrated top bar, content region, floating action, and bottom navigation layout.</string>
+
+    <string name="demo_navigation_reset">Reset fixture</string>
+    <string name="demo_navigation_action_count">Action count: %1$d</string>
+    <string name="demo_navigation_selected_index">Selected item: %1$d</string>
+    <string name="demo_navigation_scaffold_state">Floating actions: %1$d · selected item: %2$d</string>
+
+    <string name="demo_navigation_app_bar_page_title">Page title</string>
+    <string name="demo_navigation_app_bar_back_description">Run leading app-bar action</string>
+    <string name="demo_navigation_app_bar_primary_description">Run primary app-bar action</string>
+    <string name="demo_navigation_app_bar_more_description">Run overflow app-bar action</string>
+    <string name="demo_navigation_app_bar_variants">App-bar variants</string>
+    <string name="demo_navigation_app_bar_simple_title">Title-only top bar</string>
+    <string name="demo_navigation_bottom_bar_home_description">Home action</string>
+    <string name="demo_navigation_bottom_bar_saved_description">Saved action</string>
+    <string name="demo_navigation_bottom_bar_settings_description">Settings action</string>
+
+    <string name="demo_navigation_bar_home">Home</string>
+    <string name="demo_navigation_bar_search">Search</string>
+    <string name="demo_navigation_bar_messages">Messages</string>
+    <string name="demo_navigation_bar_profile">Profile</string>
+    <string name="demo_navigation_bar_custom_variant">Custom colors and badge</string>
+    <string name="demo_navigation_bar_feed">Feed</string>
+    <string name="demo_navigation_bar_discover">Discover</string>
+    <string name="demo_navigation_bar_notifications">Notifications</string>
+
+    <string name="demo_navigation_scaffold_title">Scaffold page</string>
+    <string name="demo_navigation_scaffold_add_description">Run scaffold floating action</string>
+    <string name="demo_navigation_scaffold_content">Scaffold content region</string>
+    <string name="demo_navigation_scaffold_content_summary">The component owns stable top, content, floating-action, and bottom regions without overlap.</string>
+</resources>

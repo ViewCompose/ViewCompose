@@ -1,5 +1,9 @@
 package com.viewcompose
 
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.shadow.android.ShadowDecorationLayer
@@ -24,6 +28,7 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.DisposableEffect
+import com.viewcompose.ui.foundation.LazyColumn
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.SegmentedControl
 import com.viewcompose.ui.foundation.Surface
@@ -35,59 +40,35 @@ import com.viewcompose.ui.foundation.TextFieldSize
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.remember
 import com.viewcompose.ui.foundation.rememberTextFieldState
+import com.viewcompose.text.TextFieldState
 
-internal const val GRAPHICS_PAGE_DRAWING: Int = 0
-internal const val GRAPHICS_PAGE_OUTER_SHADOWS: Int = 1
-internal const val GRAPHICS_PAGE_INNER_SHADOWS: Int = 2
-internal const val GRAPHICS_PAGE_SHADOW_DIAGNOSTICS: Int = 3
 internal const val GRAPHICS_SHADOW_LAZY_ITEM_COUNT: Int = 1_000
 
-private const val SHADOW_LAZY_ITEM_PREFIX = "shadow_lazy_item_"
+internal const val GRAPHICS_SHADOW_LAZY_ITEM_PREFIX = "shadow_lazy_item_"
 
-private val GraphicsCommonPageItems = listOf(
-    "overview",
-    "page_filter",
-)
-
-private val GraphicsDrawingPageItems = listOf(
-    "primitives",
-    "path_clip",
-    "gradient_blend",
-    "draw_modifiers",
-    "cache",
-    "verify",
-)
-
-private val GraphicsOuterShadowPageItems = listOf(
+internal val GraphicsOuterShadowItems = listOf(
     "shadow_outer_single",
     "shadow_outer_multi",
     "shadow_outer_spread",
     "shadow_outer_shape",
-    "verify",
 )
 
-private val GraphicsInnerShadowPageItems = listOf(
+internal val GraphicsInnerShadowItems = listOf(
+    "shadow_inner_interop",
     "shadow_inner_single",
     "shadow_inner_multi",
-    "shadow_inner_interop",
-    "verify",
 )
 
-private val GraphicsShadowDiagnosticsPageItems = listOf(
+private val GraphicsShadowDiagnosticsHeaderItems = listOf(
     "shadow_diagnostics",
     "shadow_lazy_intro",
-    "verify",
 )
 
-private val GraphicsShadowLazyItems = List(GRAPHICS_SHADOW_LAZY_ITEM_COUNT) { index ->
-    "$SHADOW_LAZY_ITEM_PREFIX$index"
+internal val GraphicsShadowLazyItems = List(GRAPHICS_SHADOW_LAZY_ITEM_COUNT) { index ->
+    "$GRAPHICS_SHADOW_LAZY_ITEM_PREFIX$index"
 }
 
-private val GraphicsDrawingItems = GraphicsCommonPageItems + GraphicsDrawingPageItems
-private val GraphicsOuterShadowItems = GraphicsCommonPageItems + GraphicsOuterShadowPageItems
-private val GraphicsInnerShadowItems = GraphicsCommonPageItems + GraphicsInnerShadowPageItems
-private val GraphicsShadowDiagnosticsItems = GraphicsCommonPageItems +
-    GraphicsShadowDiagnosticsPageItems +
+internal val GraphicsShadowListItems = GraphicsShadowDiagnosticsHeaderItems +
     GraphicsShadowLazyItems
 
 private val GraphicsShadowPolicies = listOf(
@@ -96,21 +77,9 @@ private val GraphicsShadowPolicies = listOf(
     ShadowRenderPolicy.RenderNodeDisplayList,
 )
 
-private val GraphicsShadowPolicyLabels = listOf("Auto", "Bitmap", "RenderNode")
-
-internal fun graphicsPageItems(selectedPage: Int): List<String> {
-    return when (selectedPage) {
-        GRAPHICS_PAGE_DRAWING -> GraphicsDrawingItems
-        GRAPHICS_PAGE_OUTER_SHADOWS -> GraphicsOuterShadowItems
-        GRAPHICS_PAGE_INNER_SHADOWS -> GraphicsInnerShadowItems
-        GRAPHICS_PAGE_SHADOW_DIAGNOSTICS -> GraphicsShadowDiagnosticsItems
-        else -> GraphicsDrawingItems
-    }
-}
-
-internal fun graphicsPageContentType(section: String): String {
-    return if (section.startsWith(SHADOW_LAZY_ITEM_PREFIX)) {
-        SHADOW_LAZY_ITEM_PREFIX
+internal fun graphicsShadowContentType(section: String): String {
+    return if (section.startsWith(GRAPHICS_SHADOW_LAZY_ITEM_PREFIX)) {
+        GRAPHICS_SHADOW_LAZY_ITEM_PREFIX
     } else {
         section
     }
@@ -126,7 +95,6 @@ internal data class GraphicsShadowPageState(
     val policy: MutableState<ShadowRenderPolicy>,
     val diagnostics: MutableState<GraphicsShadowDiagnosticsSnapshot>,
     val diagnosticSampleRevision: MutableState<Int>,
-    val innerInteractionCount: MutableState<Int>,
 )
 
 internal fun UiTreeBuilder.rememberGraphicsShadowPageState(): GraphicsShadowPageState {
@@ -135,7 +103,6 @@ internal fun UiTreeBuilder.rememberGraphicsShadowPageState(): GraphicsShadowPage
             policy = mutableStateOf(ShadowRenderPolicy.Auto),
             diagnostics = mutableStateOf(captureGraphicsShadowDiagnostics()),
             diagnosticSampleRevision = mutableStateOf(0),
-            innerInteractionCount = mutableStateOf(0),
         )
     }
 }
@@ -150,95 +117,80 @@ internal fun InstallGraphicsShadowLifecycle() {
     }
 }
 
-internal fun UiTreeBuilder.RenderGraphicsShadowSection(
-    section: String,
-    state: GraphicsShadowPageState,
-) {
-    when {
-        section == "shadow_outer_single" -> GraphicsSingleOuterShadowSection()
-        section == "shadow_outer_multi" -> GraphicsMultiOuterShadowSection()
-        section == "shadow_outer_spread" -> GraphicsSpreadShadowSection()
-        section == "shadow_outer_shape" -> GraphicsShapeShadowSection()
-        section == "shadow_inner_single" -> GraphicsSingleInnerShadowSection()
-        section == "shadow_inner_multi" -> GraphicsMultiInnerShadowSection()
-        section == "shadow_inner_interop" -> GraphicsInnerShadowInteropSection(state)
-        section == "shadow_diagnostics" -> GraphicsShadowDiagnosticsSection(state)
-        section == "shadow_lazy_intro" -> GraphicsShadowLazyIntroSection()
-        section.startsWith(SHADOW_LAZY_ITEM_PREFIX) -> {
-            val index = section.removePrefix(SHADOW_LAZY_ITEM_PREFIX).toInt()
-            GraphicsShadowLazyItem(index)
+internal fun UiTreeBuilder.GraphicsOuterShadowFixture(scenario: DemoScenarioSpec?) {
+    InstallGraphicsShadowLifecycle()
+    LazyColumn(
+        items = GraphicsOuterShadowItems,
+        key = { it },
+        modifier = Modifier.fillMaxWidth(),
+    ) { section ->
+        when (section) {
+            "shadow_outer_single" -> GraphicsSingleOuterShadowSection(scenario)
+            "shadow_outer_multi" -> GraphicsMultiOuterShadowSection()
+            "shadow_outer_spread" -> GraphicsSpreadShadowSection()
+            "shadow_outer_shape" -> GraphicsShapeShadowSection()
+            else -> error("Unsupported outer-shadow section: $section")
         }
     }
 }
 
-internal fun UiTreeBuilder.GraphicsVerificationNotes(selectedPage: Int) {
-    when (selectedPage) {
-        GRAPHICS_PAGE_OUTER_SHADOWS -> VerificationNotesSection(
-            what = "外阴影页覆盖单层、多层、彩色偏移、正负 spread 与切角 shape。",
-            howToVerify = listOf(
-                "确认每张卡片外侧阴影没有被父容器裁切。",
-                "确认多层和彩色阴影按声明顺序叠加。",
-                "对比正负 spread，并检查切角轮廓是否和内容 shape 对齐。",
-            ),
-            expected = listOf(
-                "阴影不改变卡片测量尺寸和周围布局。",
-                "阴影跟随 shape、偏移和 spread，且没有方形边缘或残影。",
-            ),
-        )
-
-        GRAPHICS_PAGE_INNER_SHADOWS -> VerificationNotesSection(
-            what = "内阴影页覆盖单层、多层和输入/点击互操作，验证前景装饰平面。",
-            howToVerify = listOf(
-                "确认内阴影只出现在内容轮廓内部。",
-                "编辑文本并点击按钮，确认前景阴影不会拦截输入和手势。",
-                "切换暗色主题，确认 shape 和内容仍完整可见。",
-            ),
-            expected = listOf(
-                "内阴影绘制在内容之上，但输入、焦点和点击保持可用。",
-                "多层内阴影保留声明顺序且不会溢出 shape。",
-            ),
-        )
-
-        GRAPHICS_PAGE_SHADOW_DIAGNOSTICS -> VerificationNotesSection(
-            what = "Lazy/诊断页使用 1000 个稳定 key 项验证缓存复用、回收和后端选择。",
-            howToVerify = listOf(
-                "滚动列表后返回顶部，再点击刷新诊断。",
-                "确认外阴影 cache hit 增长，miss 不随每一帧持续增长。",
-                "切换后端策略并检查实际 backend、选择原因和降级计数。",
-            ),
-            expected = listOf(
-                "滚动期间阴影稳定，无闪烁、错位或回收残留。",
-                "Auto 默认保持 ExactBitmap；实验后端不满足条件时明确回退。",
-            ),
-        )
-
-        else -> VerificationNotesSection(
-            what = "Graphics 页覆盖 Canvas 节点、draw modifiers、渐变/混合/路径/缓存。",
-            howToVerify = listOf(
-                "在基础图元区确认线条、圆形、文字都可见。",
-                "切换 Blend 模式，观察状态文案变化并对照图形叠色变化。",
-                "切换 drawWithContent 透传，确认内容层可显示/隐藏。",
-                "切换 cacheKey 与 accent，确认状态文案与图形同步更新。",
-            ),
-            expected = listOf(
-                "Canvas 节点绘制稳定，无崩溃和空白。",
-                "drawWithContent 可以控制内容层是否透传。",
-                "drawWithCache 仅在 key 变化时重建缓存命令。",
-            ),
-        )
+internal fun UiTreeBuilder.GraphicsInnerShadowFixture(scenario: DemoScenarioSpec?) {
+    InstallGraphicsShadowLifecycle()
+    val initialFieldText = stringResource(R.string.demo_graphics_inner_field_initial)
+    val fieldState = rememberTextFieldState(initialFieldText)
+    val interactionCountState = remember { mutableStateOf(0) }
+    LazyColumn(
+        items = GraphicsInnerShadowItems,
+        key = { it },
+        modifier = Modifier.fillMaxWidth(),
+    ) { section ->
+        when (section) {
+            "shadow_inner_single" -> GraphicsSingleInnerShadowSection(scenario)
+            "shadow_inner_multi" -> GraphicsMultiInnerShadowSection()
+            "shadow_inner_interop" -> GraphicsInnerShadowInteropSection(
+                fieldState = fieldState,
+                interactionCountState = interactionCountState,
+                initialFieldText = initialFieldText,
+                scenario = scenario,
+            )
+            else -> error("Unsupported inner-shadow section: $section")
+        }
     }
 }
 
-private fun UiTreeBuilder.GraphicsSingleOuterShadowSection() {
+internal fun UiTreeBuilder.GraphicsShadowListFixture(scenario: DemoScenarioSpec?) {
+    InstallGraphicsShadowLifecycle()
+    val state = rememberGraphicsShadowPageState()
+    LazyColumn(
+        items = GraphicsShadowListItems,
+        key = { it },
+        contentType = ::graphicsShadowContentType,
+        modifier = Modifier.fillMaxWidth(),
+    ) { section ->
+        when {
+            section == "shadow_diagnostics" -> GraphicsShadowDiagnosticsSection(state, scenario)
+            section == "shadow_lazy_intro" -> GraphicsShadowLazyIntroSection()
+            section.startsWith(GRAPHICS_SHADOW_LAZY_ITEM_PREFIX) -> {
+                val index = section.removePrefix(GRAPHICS_SHADOW_LAZY_ITEM_PREFIX).toInt()
+                GraphicsShadowLazyItem(index, scenario)
+            }
+            else -> error("Unsupported shadow-list section: $section")
+        }
+    }
+}
+
+private fun UiTreeBuilder.GraphicsSingleOuterShadowSection(scenario: DemoScenarioSpec?) {
     ScenarioSection(
         kind = ScenarioKind.Core,
-        title = "单层精确外阴影",
-        subtitle = "显式 blur、offset 和颜色，不依赖 View.elevation。",
+        title = stringResource(R.string.demo_graphics_outer_single_title),
+        subtitle = stringResource(R.string.demo_graphics_outer_single_summary),
     ) {
         OuterShadowSample(
             key = "outer-single",
-            title = "Soft elevation",
-            description = "blur=14dp · offsetY=7dp",
+            title = stringResource(R.string.demo_graphics_outer_single_sample_title),
+            description = stringResource(
+                R.string.demo_graphics_outer_single_sample_description,
+            ),
             shape = UiShape.rounded(24.dp),
             shadows = listOf(
                 UiShadow(
@@ -248,6 +200,7 @@ private fun UiTreeBuilder.GraphicsSingleOuterShadowSection() {
                 ),
             ),
             testTag = DemoTestTags.GRAPHICS_SHADOW_OUTER_SINGLE,
+            modifier = Modifier.shadowScenarioTarget(scenario, DemoAutomationRole.Target),
         )
     }
 }
@@ -255,13 +208,15 @@ private fun UiTreeBuilder.GraphicsSingleOuterShadowSection() {
 private fun UiTreeBuilder.GraphicsMultiOuterShadowSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "多层彩色阴影",
-        subtitle = "蓝色左上光晕与紫红右下阴影按声明顺序合成。",
+        title = stringResource(R.string.demo_graphics_outer_multi_title),
+        subtitle = stringResource(R.string.demo_graphics_outer_multi_summary),
     ) {
         OuterShadowSample(
             key = "outer-multi",
-            title = "Ordered color layers",
-            description = "2 layers · independent blur and offset",
+            title = stringResource(R.string.demo_graphics_outer_multi_sample_title),
+            description = stringResource(
+                R.string.demo_graphics_outer_multi_sample_description,
+            ),
             shape = UiShape.rounded(28.dp),
             shadows = listOf(
                 UiShadow(
@@ -286,13 +241,15 @@ private fun UiTreeBuilder.GraphicsMultiOuterShadowSection() {
 private fun UiTreeBuilder.GraphicsSpreadShadowSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "Spread 对照",
-        subtitle = "相同 blur 下对比向外扩张与向内收缩的 mask。",
+        title = stringResource(R.string.demo_graphics_outer_spread_title),
+        subtitle = stringResource(R.string.demo_graphics_outer_spread_summary),
     ) {
         OuterShadowSample(
             key = "outer-spread-positive",
-            title = "Positive spread",
-            description = "spread=6dp",
+            title = stringResource(R.string.demo_graphics_outer_positive_spread_title),
+            description = stringResource(
+                R.string.demo_graphics_outer_positive_spread_description,
+            ),
             shape = UiShape.rounded(20.dp),
             shadows = listOf(
                 UiShadow(
@@ -306,8 +263,10 @@ private fun UiTreeBuilder.GraphicsSpreadShadowSection() {
         )
         OuterShadowSample(
             key = "outer-spread-negative",
-            title = "Negative spread",
-            description = "spread=-4dp",
+            title = stringResource(R.string.demo_graphics_outer_negative_spread_title),
+            description = stringResource(
+                R.string.demo_graphics_outer_negative_spread_description,
+            ),
             shape = UiShape.rounded(20.dp),
             shadows = listOf(
                 UiShadow(
@@ -325,13 +284,15 @@ private fun UiTreeBuilder.GraphicsSpreadShadowSection() {
 private fun UiTreeBuilder.GraphicsShapeShadowSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "Shape 映射",
-        subtitle = "切角内容与阴影使用同一 UiShape，检查轮廓桥接精度。",
+        title = stringResource(R.string.demo_graphics_outer_shape_title),
+        subtitle = stringResource(R.string.demo_graphics_outer_shape_summary),
     ) {
         OuterShadowSample(
             key = "outer-cut-shape",
-            title = "Cut corner shadow",
-            description = "UiShape.cut(18dp)",
+            title = stringResource(R.string.demo_graphics_outer_shape_sample_title),
+            description = stringResource(
+                R.string.demo_graphics_outer_shape_sample_description,
+            ),
             shape = UiShape.cut(18.dp),
             shadows = listOf(
                 UiShadow(
@@ -346,16 +307,18 @@ private fun UiTreeBuilder.GraphicsShapeShadowSection() {
     }
 }
 
-private fun UiTreeBuilder.GraphicsSingleInnerShadowSection() {
+private fun UiTreeBuilder.GraphicsSingleInnerShadowSection(scenario: DemoScenarioSpec?) {
     ScenarioSection(
         kind = ScenarioKind.Core,
-        title = "单层内阴影",
-        subtitle = "前景装饰平面在内容完成后绘制，并裁切到圆角轮廓。",
+        title = stringResource(R.string.demo_graphics_inner_single_title),
+        subtitle = stringResource(R.string.demo_graphics_inner_single_summary),
     ) {
         InnerShadowSample(
             key = "inner-single",
-            title = "Inset depth",
-            description = "blur=10dp · offset=(3dp, 4dp)",
+            title = stringResource(R.string.demo_graphics_inner_single_sample_title),
+            description = stringResource(
+                R.string.demo_graphics_inner_single_sample_description,
+            ),
             shape = UiShape.rounded(24.dp),
             shadows = listOf(
                 UiShadow(
@@ -366,6 +329,7 @@ private fun UiTreeBuilder.GraphicsSingleInnerShadowSection() {
                 ),
             ),
             testTag = DemoTestTags.GRAPHICS_SHADOW_INNER_SINGLE,
+            modifier = Modifier.shadowScenarioTarget(scenario, DemoAutomationRole.Target),
         )
     }
 }
@@ -373,13 +337,15 @@ private fun UiTreeBuilder.GraphicsSingleInnerShadowSection() {
 private fun UiTreeBuilder.GraphicsMultiInnerShadowSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "多层内阴影",
-        subtitle = "冷色顶部层与深色底部层验证声明顺序和独立偏移。",
+        title = stringResource(R.string.demo_graphics_inner_multi_title),
+        subtitle = stringResource(R.string.demo_graphics_inner_multi_summary),
     ) {
         InnerShadowSample(
             key = "inner-multi",
-            title = "Dual inset layers",
-            description = "2 layers · ordered foreground draw",
+            title = stringResource(R.string.demo_graphics_inner_multi_sample_title),
+            description = stringResource(
+                R.string.demo_graphics_inner_multi_sample_description,
+            ),
             shape = UiShape.cut(16.dp),
             shadows = listOf(
                 UiShadow(
@@ -401,13 +367,15 @@ private fun UiTreeBuilder.GraphicsMultiInnerShadowSection() {
 }
 
 private fun UiTreeBuilder.GraphicsInnerShadowInteropSection(
-    state: GraphicsShadowPageState,
+    fieldState: TextFieldState,
+    interactionCountState: MutableState<Int>,
+    initialFieldText: String,
+    scenario: DemoScenarioSpec?,
 ) {
-    val fieldState = rememberTextFieldState("Inner shadow input")
     ScenarioSection(
         kind = ScenarioKind.Stress,
-        title = "输入与手势互操作",
-        subtitle = "内阴影覆盖在子树之上，但不能拦截 TextField、焦点、ripple 或 Button 点击。",
+        title = stringResource(R.string.demo_graphics_inner_interop_title),
+        subtitle = stringResource(R.string.demo_graphics_inner_interop_summary),
     ) {
         Surface(
             key = "inner-interop",
@@ -429,7 +397,7 @@ private fun UiTreeBuilder.GraphicsInnerShadowInteropSection(
                 spacing = 10.dp,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(text = "Foreground decoration must remain input-transparent")
+                Text(text = stringResource(R.string.demo_graphics_inner_interop_note))
                 TextField(
                     state = fieldState,
                     size = TextFieldSize.Medium,
@@ -438,20 +406,37 @@ private fun UiTreeBuilder.GraphicsInnerShadowInteropSection(
                         .testTag(DemoTestTags.GRAPHICS_SHADOW_INNER_FIELD),
                 )
                 Button(
-                    text = "验证点击 (${state.innerInteractionCount.value})",
+                    text = stringResource(
+                        R.string.demo_graphics_inner_click,
+                        interactionCountState.value,
+                    ),
                     onClick = {
-                        state.innerInteractionCount.value += 1
+                        interactionCountState.value += 1
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.GRAPHICS_SHADOW_INNER_CLICK_BUTTON),
+                        .testTag(DemoTestTags.GRAPHICS_SHADOW_INNER_CLICK_BUTTON)
+                        .shadowScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+                )
+                Button(
+                    text = stringResource(R.string.demo_graphics_reset),
+                    onClick = {
+                        interactionCountState.value = 0
+                        fieldState.setTextAndPlaceCursorAtEnd(initialFieldText)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadowScenarioTarget(scenario, DemoAutomationRole.Reset),
                 )
                 Text(
-                    text = "点击次数 ${state.innerInteractionCount.value}",
-                    color = TextDefaults.secondaryColor(),
-                    modifier = Modifier.testTag(
-                        DemoTestTags.GRAPHICS_SHADOW_INNER_CLICK_COUNT,
+                    text = stringResource(
+                        R.string.demo_graphics_inner_click_count,
+                        interactionCountState.value,
                     ),
+                    color = TextDefaults.secondaryColor(),
+                    modifier = Modifier
+                        .testTag(DemoTestTags.GRAPHICS_SHADOW_INNER_CLICK_COUNT)
+                        .shadowScenarioTarget(scenario, DemoAutomationRole.State),
                 )
             }
         }
@@ -460,16 +445,36 @@ private fun UiTreeBuilder.GraphicsInnerShadowInteropSection(
 
 private fun UiTreeBuilder.GraphicsShadowDiagnosticsSection(
     state: GraphicsShadowPageState,
+    scenario: DemoScenarioSpec?,
 ) {
     val snapshot = state.diagnostics.value
     val backend = snapshot.backend
+    val policyLabel = stringResource(R.string.demo_graphics_shadow_fact_policy)
+    val latestBackendLabel = stringResource(
+        R.string.demo_graphics_shadow_fact_latest_backend,
+    )
+    val outerHitsLabel = stringResource(R.string.demo_graphics_shadow_fact_outer_hits)
+    val outerMissesLabel = stringResource(R.string.demo_graphics_shadow_fact_outer_misses)
+    val notDrawn = stringResource(R.string.demo_graphics_shadow_not_drawn)
     ScenarioSection(
         kind = ScenarioKind.Benchmark,
-        title = "阴影缓存与后端诊断",
-        subtitle = "切换策略后重建样本；刷新可读取实际绘制、缓存命中和降级原因。",
+        title = stringResource(R.string.demo_graphics_shadow_diagnostics_title),
+        subtitle = stringResource(R.string.demo_graphics_shadow_diagnostics_summary),
     ) {
+        Text(
+            text = stringResource(
+                R.string.demo_graphics_shadow_diagnostics_state,
+                state.diagnosticSampleRevision.value,
+                state.policy.value.wireValue,
+            ),
+            modifier = Modifier.shadowScenarioTarget(scenario, DemoAutomationRole.State),
+        )
         SegmentedControl(
-            items = GraphicsShadowPolicyLabels,
+            items = listOf(
+                stringResource(R.string.demo_graphics_shadow_policy_auto),
+                stringResource(R.string.demo_graphics_shadow_policy_bitmap),
+                stringResource(R.string.demo_graphics_shadow_policy_render_node),
+            ),
             selectedIndex = GraphicsShadowPolicies.indexOf(state.policy.value).coerceAtLeast(0),
             onSelectionChange = { index ->
                 val next = GraphicsShadowPolicies[index]
@@ -489,16 +494,18 @@ private fun UiTreeBuilder.GraphicsShadowDiagnosticsSection(
                 .margin(top = 10.dp, bottom = 10.dp),
         ) {
             Button(
-                text = "刷新诊断",
+                text = stringResource(R.string.demo_graphics_shadow_refresh),
                 onClick = {
+                    state.diagnosticSampleRevision.value += 1
                     state.diagnostics.value = captureGraphicsShadowDiagnostics()
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .testTag(DemoTestTags.GRAPHICS_SHADOW_DIAGNOSTICS_REFRESH),
+                    .testTag(DemoTestTags.GRAPHICS_SHADOW_DIAGNOSTICS_REFRESH)
+                    .shadowScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
             )
             Button(
-                text = "清空缓存",
+                text = stringResource(R.string.demo_graphics_shadow_clear_cache),
                 onClick = {
                     ShadowDecorationLayer.clearCache()
                     ShadowDecorationLayer.resetBackendDiagnostics()
@@ -507,58 +514,120 @@ private fun UiTreeBuilder.GraphicsShadowDiagnosticsSection(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .testTag(DemoTestTags.GRAPHICS_SHADOW_CACHE_CLEAR),
+                    .testTag(DemoTestTags.GRAPHICS_SHADOW_CACHE_CLEAR)
+                    .shadowScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
             )
         }
+        Button(
+            text = stringResource(R.string.demo_graphics_reset),
+            onClick = {
+                ShadowDecorationLayer.setRenderPolicy(ShadowRenderPolicy.Auto)
+                ShadowDecorationLayer.clearCache()
+                ShadowDecorationLayer.resetBackendDiagnostics()
+                state.policy.value = ShadowRenderPolicy.Auto
+                state.diagnosticSampleRevision.value = 0
+                state.diagnostics.value = captureGraphicsShadowDiagnostics()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .margin(bottom = 10.dp)
+                .shadowScenarioTarget(scenario, DemoAutomationRole.Reset),
+        )
         OuterShadowSample(
             key = "diagnostic-${state.policy.value.wireValue}-${state.diagnosticSampleRevision.value}",
-            title = "Backend draw probe",
-            description = "切换策略或清空缓存时重建",
+            title = stringResource(R.string.demo_graphics_shadow_probe_title),
+            description = stringResource(R.string.demo_graphics_shadow_probe_description),
             shape = UiShape.rounded(18.dp),
             shadows = LazyItemShadows,
             testTag = DemoTestTags.GRAPHICS_SHADOW_DIAGNOSTIC_SAMPLE,
         )
         DiagnosticFactGroup(
-            title = "Backend",
+            title = stringResource(R.string.demo_graphics_shadow_backend_group),
             facts = listOf(
-                DiagnosticFact("策略", backend.policy.wireValue),
-                DiagnosticFact("最近后端", backend.lastDecision?.backend?.name ?: "尚未绘制"),
-                DiagnosticFact("选择原因", backend.lastDecision?.reason?.name ?: "尚未绘制"),
-                DiagnosticFact("Bitmap draws", backend.bitmapDraws.toString()),
-                DiagnosticFact("RenderNode draws", backend.renderNodeDraws.toString()),
-                DiagnosticFact("RenderNode records", backend.renderNodeRecordings.toString()),
-                DiagnosticFact("RenderNode hits", backend.renderNodeCacheHits.toString()),
-                DiagnosticFact("RenderNode cache", backend.renderNodeCachedBytes.asKiB()),
+                DiagnosticFact(policyLabel, backend.policy.wireValue),
+                DiagnosticFact(
+                    latestBackendLabel,
+                    backend.lastDecision?.backend?.name ?: notDrawn,
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_graphics_shadow_fact_decision_reason),
+                    backend.lastDecision?.reason?.name ?: notDrawn,
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_graphics_shadow_fact_bitmap_draws),
+                    backend.bitmapDraws.toString(),
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_graphics_shadow_fact_render_node_draws),
+                    backend.renderNodeDraws.toString(),
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_graphics_shadow_fact_render_node_records),
+                    backend.renderNodeRecordings.toString(),
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_graphics_shadow_fact_render_node_hits),
+                    backend.renderNodeCacheHits.toString(),
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_graphics_shadow_fact_render_node_cache),
+                    stringResource(
+                        R.string.demo_graphics_shadow_kib,
+                        backend.renderNodeCachedBytes / 1024,
+                    ),
+                ),
             ),
             valueTagsByLabel = mapOf(
-                "策略" to DemoTestTags.GRAPHICS_SHADOW_BACKEND_POLICY,
-                "最近后端" to DemoTestTags.GRAPHICS_SHADOW_BACKEND_ACTUAL,
+                policyLabel to DemoTestTags.GRAPHICS_SHADOW_BACKEND_POLICY,
+                latestBackendLabel to DemoTestTags.GRAPHICS_SHADOW_BACKEND_ACTUAL,
             ),
         )
         DiagnosticFactGroup(
-            title = "Raster cache",
+            title = stringResource(R.string.demo_graphics_shadow_raster_group),
             facts = listOf(
-                DiagnosticFact("外阴影命中", snapshot.outerCache.hits.toString()),
-                DiagnosticFact("外阴影未命中", snapshot.outerCache.misses.toString()),
-                DiagnosticFact("外阴影淘汰", snapshot.outerCache.evictions.toString()),
-                DiagnosticFact("外阴影超预算", snapshot.outerCache.oversizedSkips.toString()),
-                DiagnosticFact("外阴影缓存", snapshot.outerCache.cachedBytes.asKiB()),
-                DiagnosticFact("内阴影命中", snapshot.innerCache.hits.toString()),
-                DiagnosticFact("内阴影未命中", snapshot.innerCache.misses.toString()),
-                DiagnosticFact("内阴影缓存", snapshot.innerCache.cachedBytes.asKiB()),
+                DiagnosticFact(outerHitsLabel, snapshot.outerCache.hits.toString()),
+                DiagnosticFact(outerMissesLabel, snapshot.outerCache.misses.toString()),
+                DiagnosticFact(
+                    stringResource(R.string.demo_graphics_shadow_fact_outer_evictions),
+                    snapshot.outerCache.evictions.toString(),
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_graphics_shadow_fact_outer_oversized),
+                    snapshot.outerCache.oversizedSkips.toString(),
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_graphics_shadow_fact_outer_cache),
+                    stringResource(
+                        R.string.demo_graphics_shadow_kib,
+                        snapshot.outerCache.cachedBytes / 1024,
+                    ),
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_graphics_shadow_fact_inner_hits),
+                    snapshot.innerCache.hits.toString(),
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_graphics_shadow_fact_inner_misses),
+                    snapshot.innerCache.misses.toString(),
+                ),
+                DiagnosticFact(
+                    stringResource(R.string.demo_graphics_shadow_fact_inner_cache),
+                    stringResource(
+                        R.string.demo_graphics_shadow_kib,
+                        snapshot.innerCache.cachedBytes / 1024,
+                    ),
+                ),
             ),
             valueTagsByLabel = mapOf(
-                "外阴影命中" to DemoTestTags.GRAPHICS_SHADOW_CACHE_HITS,
-                "外阴影未命中" to DemoTestTags.GRAPHICS_SHADOW_CACHE_MISSES,
+                outerHitsLabel to DemoTestTags.GRAPHICS_SHADOW_CACHE_HITS,
+                outerMissesLabel to DemoTestTags.GRAPHICS_SHADOW_CACHE_MISSES,
             ),
         )
+        val decisions = backend.decisionsByReason.entries
+            .joinToString(separator = " · ") { (reason, count) -> "${reason.name}=$count" }
+            .ifEmpty { notDrawn }
         Text(
-            text = backend.decisionsByReason.entries
-                .joinToString(
-                    prefix = "Decisions: ",
-                    separator = " · ",
-                ) { (reason, count) -> "${reason.name}=$count" }
-                .ifEmpty { "Decisions: 尚未绘制" },
+            text = stringResource(R.string.demo_graphics_shadow_decisions, decisions),
             color = TextDefaults.secondaryColor(),
             modifier = Modifier.margin(top = 8.dp),
         )
@@ -568,18 +637,26 @@ private fun UiTreeBuilder.GraphicsShadowDiagnosticsSection(
 private fun UiTreeBuilder.GraphicsShadowLazyIntroSection() {
     ScenarioSection(
         kind = ScenarioKind.Stress,
-        title = "Lazy 1000 项阴影",
-        subtitle = "全部项目使用稳定 key、相同尺寸和双层阴影；滚动后返回可观察缓存复用。",
+        title = stringResource(R.string.demo_graphics_shadow_lazy_title),
+        subtitle = stringResource(R.string.demo_graphics_shadow_lazy_summary),
     ) {
-        Text(text = "$GRAPHICS_SHADOW_LAZY_ITEM_COUNT items · stable keys · shared raster spec")
         Text(
-            text = "向下快速滚动，再返回此处并刷新上方诊断。",
+            text = stringResource(
+                R.string.demo_graphics_shadow_lazy_facts,
+                GRAPHICS_SHADOW_LAZY_ITEM_COUNT,
+            ),
+        )
+        Text(
+            text = stringResource(R.string.demo_graphics_shadow_lazy_instruction),
             color = TextDefaults.secondaryColor(),
         )
     }
 }
 
-private fun UiTreeBuilder.GraphicsShadowLazyItem(index: Int) {
+private fun UiTreeBuilder.GraphicsShadowLazyItem(
+    index: Int,
+    scenario: DemoScenarioSpec?,
+) {
     val tagModifier = if (index == 0) {
         Modifier.testTag(DemoTestTags.GRAPHICS_SHADOW_LAZY_FIRST)
     } else {
@@ -596,7 +673,14 @@ private fun UiTreeBuilder.GraphicsShadowLazyItem(index: Int) {
                 shadows = LazyItemShadows,
                 shape = LazyItemShape,
             )
-            .then(tagModifier),
+            .then(tagModifier)
+            .then(
+                if (index == 0) {
+                    Modifier.shadowScenarioTarget(scenario, DemoAutomationRole.Target)
+                } else {
+                    Modifier
+                },
+            ),
     ) {
         Column(
             spacing = 4.dp,
@@ -604,9 +688,9 @@ private fun UiTreeBuilder.GraphicsShadowLazyItem(index: Int) {
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
-            Text(text = "Shadow row #$index")
+            Text(text = stringResource(R.string.demo_graphics_shadow_row_title, index))
             Text(
-                text = "stable key · shared shape · cached raster",
+                text = stringResource(R.string.demo_graphics_shadow_row_summary),
                 color = TextDefaults.secondaryColor(),
             )
         }
@@ -620,6 +704,7 @@ private fun UiTreeBuilder.OuterShadowSample(
     shape: UiShape,
     shadows: List<UiShadow>,
     testTag: String,
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = Modifier
@@ -639,7 +724,8 @@ private fun UiTreeBuilder.OuterShadowSample(
                     shadows = shadows,
                     shape = shape,
                 )
-                .testTag(testTag),
+                .testTag(testTag)
+                .then(modifier),
         ) {
             Column(
                 spacing = 6.dp,
@@ -664,6 +750,7 @@ private fun UiTreeBuilder.InnerShadowSample(
     shape: UiShape,
     shadows: List<UiShadow>,
     testTag: String,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         key = key,
@@ -676,7 +763,8 @@ private fun UiTreeBuilder.InnerShadowSample(
                 shadows = shadows,
                 shape = shape,
             )
-            .testTag(testTag),
+            .testTag(testTag)
+            .then(modifier),
     ) {
         Column(
             spacing = 6.dp,
@@ -701,7 +789,13 @@ private fun captureGraphicsShadowDiagnostics(): GraphicsShadowDiagnosticsSnapsho
     )
 }
 
-private fun Int.asKiB(): String = "${this / 1024} KiB"
+private fun Modifier.shadowScenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
+}
 
 private val LazyItemShape = UiShape.rounded(16.dp)
 

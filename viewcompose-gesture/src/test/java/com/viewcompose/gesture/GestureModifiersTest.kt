@@ -5,6 +5,7 @@ package com.viewcompose.gesture
  * Test responsibility: covers Gesture Modifiers behavior in gesture DSL and guards the contract against regressions.
  */
 
+import com.viewcompose.runtime.observation.RuntimeObservation
 import com.viewcompose.ui.gesture.GestureOrientation
 import com.viewcompose.ui.gesture.GesturePriority
 import com.viewcompose.ui.gesture.PointerEvent
@@ -26,6 +27,42 @@ import org.junit.Assert.fail
 import org.junit.Test
 
 class GestureModifiersTest {
+    @Test
+    fun `anchored drag publishes one complete state per logical mutation`() {
+        val state = AnchoredDraggableState(initialValue = "A")
+        val published = mutableListOf<AnchoredSnapshot>()
+        val (_, observation) = RuntimeObservation.observeReads(
+            onInvalidated = { published += state.snapshot() },
+        ) {
+            state.snapshot()
+        }
+
+        state.updateAnchors(draggableAnchorsOf(0f to "A", 100f to "B"))
+        assertEquals(listOf(AnchoredSnapshot("A", "A", 0f, false)), published)
+
+        state.dispatchRawDelta(80f)
+        assertEquals(AnchoredSnapshot("A", "A", 80f, true), published.last())
+        assertEquals(2, published.size)
+
+        state.settleToOffset(80f)
+        assertEquals(AnchoredSnapshot("B", "B", 100f, false), published.last())
+        assertEquals(3, published.size)
+
+        state.updateAnchors(draggableAnchorsOf(0f to "C", 50f to "D"))
+        assertEquals(AnchoredSnapshot("D", "D", 50f, false), published.last())
+        assertEquals(4, published.size)
+
+        state.dispatchRawDelta(-25f)
+        state.cancelDrag()
+        assertEquals(AnchoredSnapshot("D", "D", 50f, false), published.last())
+        assertEquals(6, published.size)
+
+        state.snapTo("C")
+        assertEquals(AnchoredSnapshot("C", "C", 0f, false), published.last())
+        assertEquals(7, published.size)
+        observation.dispose()
+    }
+
     @Test
     fun `pointerInput appends pointer element`() {
         val modifier = Modifier.pointerInput(key = "p") {
@@ -197,6 +234,22 @@ class GestureModifiersTest {
         state.update(checked = false, checkedAnchorOffsetPx = -100f)
         assertEquals(0f, state.progress.value)
     }
+
+    private fun AnchoredDraggableState<String>.snapshot(): AnchoredSnapshot {
+        return AnchoredSnapshot(
+            current = currentValue.value,
+            target = targetValue.value,
+            offset = currentOffsetPx.value,
+            dragging = isDragging.value,
+        )
+    }
+
+    private data class AnchoredSnapshot(
+        val current: String,
+        val target: String,
+        val offset: Float?,
+        val dragging: Boolean,
+    )
 
     @Test
     fun `toggle cancellation publishes release progress before restoring caller state`() {

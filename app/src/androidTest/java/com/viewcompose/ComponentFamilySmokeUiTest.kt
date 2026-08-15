@@ -1,7 +1,5 @@
 package com.viewcompose
 
-import android.content.Intent
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,59 +15,77 @@ import org.junit.runner.RunWith
 class ComponentFamilySmokeUiTest {
     @Test
     fun keyComponentFamilies_haveVisibleSmokeAnchors() {
-        launchDemoActivity<ActionsActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                ActionsActivity::class.java,
-            ).putExtra(EXTRA_ACTIONS_PAGE_INDEX, 2),
+        launchDemoScenarioActivity(
+            activityClass = ActionsActivity::class.java,
+            scenarioId = "component.chip",
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.ACTIONS_CHIP_FILTER))
+                assertViewFullyVisible(
+                    activity.requireScenarioViewByIdVisible<android.view.View>(
+                        R.id.demo_component_chip_primary_action,
+                    ),
+                )
             }
         }
 
-        launchDemoActivity<InputActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                InputActivity::class.java,
-            ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3),
+        launchDemoScenarioActivity(
+            activityClass = InputActivity::class.java,
+            scenarioId = "input.search",
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.INPUT_SEARCH_PRIMARY))
+                assertViewFullyVisible(
+                    activity.requireScenarioViewById<android.view.View>(R.id.demo_input_search_target),
+                )
             }
         }
 
-        launchDemoActivity<NavigationActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                NavigationActivity::class.java,
-            ).putExtra(EXTRA_NAVIGATION_PAGE_INDEX, 1),
+        launchDemoScenarioActivity(
+            activityClass = NavigationActivity::class.java,
+            scenarioId = "component.app-bars",
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.NAVIGATION_BAR_PRIMARY))
+                assertViewFullyVisible(
+                    activity.requireScenarioViewById<android.view.View>(
+                        R.id.demo_component_app_bars_primary_action,
+                    ),
+                )
             }
         }
 
-        launchDemoActivity<NavigationActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                NavigationActivity::class.java,
-            ).putExtra(EXTRA_NAVIGATION_PAGE_INDEX, 2),
+        launchDemoScenarioActivity(
+            activityClass = NavigationActivity::class.java,
+            scenarioId = "component.navigation-bar",
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.NAVIGATION_SCAFFOLD))
+                assertViewFullyVisible(
+                    activity.requireScenarioViewById<android.view.View>(
+                        R.id.demo_component_navigation_bar_primary_action,
+                    ),
+                )
             }
         }
 
-        launchDemoActivity<CollectionsActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                CollectionsActivity::class.java,
-            ).putExtra(EXTRA_COLLECTIONS_PAGE_INDEX, 4),
+        launchDemoScenarioActivity(
+            activityClass = NavigationActivity::class.java,
+            scenarioId = "component.scaffold",
+        ).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                assertViewFullyVisible(
+                    activity.requireScenarioViewById<android.view.View>(
+                        R.id.demo_component_scaffold_target,
+                    ),
+                )
+            }
+        }
+
+        launchDemoScenarioActivity(
+            activityClass = CollectionsActivity::class.java,
+            scenarioId = "collection.lazy-row",
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
@@ -77,29 +93,14 @@ class ComponentFamilySmokeUiTest {
             }
         }
 
-        launchDemoActivity<LayoutsActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                LayoutsActivity::class.java,
-            ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 3),
+        launchDemoScenarioActivity(
+            activityClass = LayoutsActivity::class.java,
+            scenarioId = "layout.flow",
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_FLOW_ROW))
             }
         }
-
-        launchDemoActivity<PreviewActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                PreviewActivity::class.java,
-            ).putExtra(EXTRA_PREVIEW_PAGE_INDEX, 0),
-        ).use { scenario ->
-            waitForUiIdle()
-            scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.PREVIEW_HOST_SAMPLE))
-            }
-        }
-
     }
 }

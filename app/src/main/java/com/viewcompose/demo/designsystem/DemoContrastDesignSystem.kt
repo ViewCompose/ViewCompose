@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import androidx.annotation.StringRes
 import com.viewcompose.animation.animateColorAsState
 import com.viewcompose.animation.rememberAnimatable
 import com.viewcompose.animation.core.AnimationConverters
@@ -67,17 +68,18 @@ import com.viewcompose.ui.unit.sp
 /** Internal recipe families used to expose accidental Material fallback in screenshots. */
 internal enum class DemoDesignSystemKind(
     val id: String,
-    val label: String,
+    @StringRes val labelRes: Int,
 ) {
-    RoundedReference("rounded-reference", "Rounded reference"),
-    CutContrast("cut-contrast", "Cut contrast"),
-    CupertinoPressure("cupertino-pressure", "Cupertino pressure"),
+    RoundedReference("rounded-reference", R.string.demo_design_system_kind_rounded),
+    CutContrast("cut-contrast", R.string.demo_design_system_kind_cut_contrast),
+    CupertinoPressure("cupertino-pressure", R.string.demo_design_system_kind_cupertino),
     ;
 
     companion object {
-        fun fromId(id: String?): DemoDesignSystemKind {
-            return entries.firstOrNull { kind -> kind.id == id } ?: CutContrast
-        }
+        fun fromId(id: String): DemoDesignSystemKind =
+            requireNotNull(entries.firstOrNull { kind -> kind.id == id }) {
+                "Unknown design-system variant: $id"
+            }
     }
 }
 
@@ -1025,12 +1027,13 @@ internal fun UiTreeBuilder.DemoDesignSegmentedControl(
     }
 }
 
-internal fun demoDesignNavigationItems(): List<NavigationBarItem> {
+internal fun demoDesignNavigationItems(labels: List<String>): List<NavigationBarItem> {
+    require(labels.size == 3) { "Design-system navigation requires three labels." }
     val icon = ImageSource.Resource(R.drawable.demo_media_icon)
     return listOf(
-        NavigationBarItem(key = "home", label = "Home", icon = icon),
-        NavigationBarItem(key = "search", label = "Search", icon = icon),
-        NavigationBarItem(key = "profile", label = "Profile", icon = icon),
+        NavigationBarItem(key = "home", label = labels[0], icon = icon),
+        NavigationBarItem(key = "search", label = labels[1], icon = icon),
+        NavigationBarItem(key = "profile", label = labels[2], icon = icon),
     )
 }
 

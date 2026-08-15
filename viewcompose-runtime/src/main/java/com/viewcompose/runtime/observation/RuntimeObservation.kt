@@ -9,10 +9,11 @@ internal interface ObservableState {
 /**
  * Owns the state subscriptions collected by one [RuntimeObservation.observeReads] call.
  *
- * Each state is subscribed at most once per observation. A successful state commit invokes the
- * observation callback on the applying thread once for each changed observed state, so one
- * multi-state transaction may invoke it more than once. Call [dispose] when the consumer no longer
- * needs invalidations so observed states can release the subscription.
+ * Each state is subscribed at most once per observation. One successful global snapshot apply
+ * invokes the observation callback at most once on the applying thread, even when that transaction
+ * changes several observed states. Separate applies remain separate invalidation opportunities.
+ * Call [dispose] when the consumer no longer needs invalidations so observed states can release the
+ * subscription.
  */
 class Observation internal constructor(
     private val onInvalidated: () -> Unit,

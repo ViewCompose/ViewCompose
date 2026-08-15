@@ -265,6 +265,9 @@ class NavHostController internal constructor(
     /**
      * Resolves an allowlisted graph URI and atomically updates and selects its destination stack.
      *
+     * Input query parameters not declared by the matched pattern are ignored. They cannot become
+     * route arguments or override the declaration's target stack or the caller's [launchMode].
+     *
      * @return a resolver diagnostic, or `Navigated` containing the host transaction result
      */
     @MainThread

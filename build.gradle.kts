@@ -525,6 +525,287 @@ tasks.register("verifyDevelopmentToolingIsolation") {
     }
 }
 
+tasks.register("verifyDemoAutomationSelectors") {
+    group = "verification"
+    description =
+        "Prevent new Demo automation from selecting app-owned UI through localized visible copy."
+    doLast {
+        val selectorPattern = Regex(
+            """\b(?:By\.text|waitForText|waitForTextGone|scrollUntilText|clickVisibleText|""" +
+                """tapVisibleText|tapText|scrollTabStripUntilText|assertDeviceTextVisible|""" +
+                """clickDeviceText|waitForDeviceText|findObjectByText)\s*\(""",
+        )
+        val sourceRoots = listOf(
+            rootDir.resolve("app/src/androidTest"),
+            rootDir.resolve("viewcompose-benchmark/src/main"),
+        )
+        val actualCounts = sourceRoots
+            .flatMap { sourceRoot ->
+                sourceRoot.walkTopDown()
+                    .filter { file -> file.isFile && file.extension == "kt" }
+                    .toList()
+            }
+            .associate { file ->
+                file.relativeTo(rootDir).invariantSeparatorsPath to
+                    selectorPattern.findAll(file.readText()).count()
+            }
+            .filterValues { count -> count > 0 }
+
+        if (actualCounts.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Demo automation selector verification failed:")
+                    actualCounts.toSortedMap().forEach { (path, count) ->
+                        appendLine("- $path -> found $count visible-text selector usages")
+                    }
+                    appendLine("Use scenario-owned Android resource IDs.")
+                },
+            )
+        }
+    }
+}
+
+tasks.register("verifyDemoLocalizationResources") {
+    group = "verification"
+    description =
+        "Verify Demo default-English and Simplified-Chinese resource parity and format contracts."
+    doLast {
+        fun readResources(directory: File): Map<String, Map<String, String>> {
+            val parserFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance().apply {
+                isNamespaceAware = false
+                isIgnoringComments = true
+            }
+            return directory.listFiles()
+                .orEmpty()
+                .filter { file -> file.isFile && file.extension == "xml" }
+                .sortedBy { file -> file.name }
+                .flatMap { file ->
+                    val document = parserFactory.newDocumentBuilder().parse(file)
+                    val root = document.documentElement
+                    (0 until root.childNodes.length).mapNotNull { index ->
+                        val element = root.childNodes.item(index) as? org.w3c.dom.Element
+                            ?: return@mapNotNull null
+                        val kind = element.tagName
+                        if (kind !in setOf("string", "plurals", "string-array")) {
+                            return@mapNotNull null
+                        }
+                        val name = element.getAttribute("name")
+                        require(name.isNotBlank()) {
+                            "Missing resource name in ${file.relativeTo(rootDir)}"
+                        }
+                        val values = when (kind) {
+                            "string" -> mapOf("value" to element.textContent.trim())
+                            else -> {
+                                var ordinal = 0
+                                (0 until element.childNodes.length).mapNotNull itemLoop@ { childIndex ->
+                                    val item = element.childNodes.item(childIndex) as? org.w3c.dom.Element
+                                        ?: return@itemLoop null
+                                    if (item.tagName != "item") return@itemLoop null
+                                    val selector = if (kind == "plurals") {
+                                        item.getAttribute("quantity")
+                                    } else {
+                                        (ordinal++).toString()
+                                    }
+                                    selector to item.textContent.trim()
+                                }.toMap()
+                            }
+                        }
+                        "$kind:$name" to values
+                    }
+                }
+                .toMap()
+        }
+
+        val formatPattern = Regex(
+            """%(?:(\d+)\$)?[-#+ 0,(<]*\d*(?:\.\d+)?([a-zA-Z%])""",
+        )
+        fun formatSignature(value: String): List<String> {
+            var implicitIndex = 1
+            return formatPattern.findAll(value).mapNotNull { match ->
+                val conversion = match.groupValues[2]
+                if (conversion == "%") return@mapNotNull null
+                val explicitIndex = match.groupValues[1]
+                val argumentIndex = explicitIndex.ifBlank { (implicitIndex++).toString() }
+                "$argumentIndex:${conversion.lowercase()}"
+            }.toList()
+        }
+
+        val defaultResources = readResources(rootDir.resolve("app/src/main/res/values"))
+        val chineseResources = readResources(rootDir.resolve("app/src/main/res/values-zh-rCN"))
+        val violations = mutableListOf<String>()
+        (defaultResources.keys - chineseResources.keys).sorted().forEach { key ->
+            violations += "$key is missing from values-zh-rCN"
+        }
+        (chineseResources.keys - defaultResources.keys).sorted().forEach { key ->
+            violations += "$key has no canonical default-English resource"
+        }
+        (defaultResources.keys intersect chineseResources.keys).sorted().forEach { key ->
+            val canonical = defaultResources.getValue(key)
+            val localized = chineseResources.getValue(key)
+            if (canonical.keys != localized.keys) {
+                violations +=
+                    "$key selectors differ: default=${canonical.keys.sorted()}, " +
+                        "zh-rCN=${localized.keys.sorted()}"
+                return@forEach
+            }
+            canonical.keys.sorted().forEach { selector ->
+                val canonicalFormat = formatSignature(canonical.getValue(selector))
+                val localizedFormat = formatSignature(localized.getValue(selector))
+                if (canonicalFormat != localizedFormat) {
+                    violations +=
+                        "$key[$selector] format differs: default=$canonicalFormat, " +
+                            "zh-rCN=$localizedFormat"
+                }
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Demo localization resource verification failed:")
+                    violations.forEach { violation -> appendLine("- $violation") }
+                },
+            )
+        }
+    }
+}
+
+tasks.register("verifyDemoLocalizedVisibleCopy") {
+    group = "verification"
+    description =
+        "Prevent hard-coded visible copy from returning to Demo source domains already migrated to resources."
+    doLast {
+        val migratedSources = listOf(
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/automation"),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/contract"),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/core"),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/registry"),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/state/DemoStatePage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/diagnostics/DemoDiagnosticsPage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/diagnostics/DemoDiagnosticsThemeSections.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/collections/DemoCollectionsPage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/layouts/DemoLayoutsPage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/input/DemoInputPage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/gestures/DemoGesturesPage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/graphics/DemoGraphicsPage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/graphics/DemoGraphicsShadowSections.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/animation/DemoAnimationPage.kt",
+            ),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/modifiers"),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/interop"),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/feedback"),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/navigation/DemoSystemNavigationPage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/navigation/DemoSystemNavigationDestination.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/interaction/SystemNavigationActivity.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/settings/DemoMaterial3DefaultThemePage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/quality/Material3DefaultThemeActivity.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/settings/DemoDesignSystemVerificationPage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/quality/DemoDesignSystemVerificationActivity.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/settings/DemoOneUi7VerificationPage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/quality/OneUi7VerificationActivity.kt",
+            ),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/actions"),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/core/ActionsActivity.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/navigation/DemoNavigationPage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/interaction/NavigationActivity.kt",
+            ),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/components"),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/advanced/ComponentShowcaseActivity.kt",
+            ),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/foundations"),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/core/FoundationsActivity.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/quality/ThemeSwitchActivity.kt",
+            ),
+            rootDir.resolve("app/src/main/java/com/viewcompose/performance"),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/designsystem/DemoContrastDesignSystem.kt",
+            ),
+        )
+        val visibleLiteral = Regex(
+            """(?:\b(?:text|title|subtitle|label|supportingText|placeholder|""" +
+                """contentDescription|what|goal)\s*=\s*|""" +
+                """\b(?:Text|Button|Chip|SearchBar)\s*\(\s*)\"""",
+        )
+        val violations = migratedSources
+            .flatMap { source ->
+                if (source.isDirectory) {
+                    source.walkTopDown()
+                        .filter { file -> file.isFile && file.extension == "kt" }
+                        .toList()
+                } else {
+                    listOf(source)
+                }
+            }
+            .flatMap { file ->
+                if (!file.exists()) return@flatMap emptyList()
+                val source = file.readText()
+                visibleLiteral.findAll(source).map { match ->
+                    val lineNumber = source.take(match.range.first).count { character ->
+                        character == '\n'
+                    } + 1
+                    val line = source.lineSequence().drop(lineNumber - 1).first().trim()
+                    "${file.relativeTo(rootDir)}:$lineNumber -> $line"
+                }
+                    .toList()
+            }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Demo localized visible-copy verification failed:")
+                    violations.sorted().forEach { violation -> appendLine("- $violation") }
+                    appendLine("Resolve visible copy through Android resources in migrated domains.")
+                },
+            )
+        }
+    }
+}
+
 tasks.register("verifyDesignSystemIsolation") {
     group = "verification"
     description =
@@ -1778,6 +2059,9 @@ tasks.register("qaQuick") {
     dependsOn("verifyAndroidModuleNamespaces")
     dependsOn("verifyModuleDependencyBoundaries")
     dependsOn("verifyDevelopmentToolingIsolation")
+    dependsOn("verifyDemoAutomationSelectors")
+    dependsOn("verifyDemoLocalizationResources")
+    dependsOn("verifyDemoLocalizedVisibleCopy")
     dependsOn("verifyDesignSystemIsolation")
     dependsOn("verifyUiFoundationPlatformBoundary")
     dependsOn("verifyDocumentationStructure")

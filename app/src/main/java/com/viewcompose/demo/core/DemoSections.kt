@@ -1,5 +1,7 @@
 package com.viewcompose
 
+import androidx.annotation.StringRes
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.backgroundColor
@@ -32,28 +34,28 @@ import java.util.Locale
  * Marks demo scenario types so pages use consistent copy for baseline, stress, and edge verification paths.
  */
 internal enum class ScenarioKind(
-    val label: String,
-    val hint: String,
+    @StringRes val labelRes: Int,
+    @StringRes val hintRes: Int,
 ) {
     Guide(
-        label = "Guide",
-        hint = "Use this block to understand the page goal before testing.",
+        labelRes = R.string.demo_scenario_kind_guide,
+        hintRes = R.string.demo_scenario_kind_guide_hint,
     ),
     Core(
-        label = "Core Scenario",
-        hint = "This is the primary manual verification path for the current page.",
+        labelRes = R.string.demo_scenario_kind_core,
+        hintRes = R.string.demo_scenario_kind_core_hint,
     ),
     Visual(
-        label = "Visual Scenario",
-        hint = "Use this block to inspect placement, styling, and visual state stability.",
+        labelRes = R.string.demo_scenario_kind_visual,
+        hintRes = R.string.demo_scenario_kind_visual_hint,
     ),
     Stress(
-        label = "Stress Scenario",
-        hint = "Use this block to trigger edge cases and benchmark-friendly repeated updates.",
+        labelRes = R.string.demo_scenario_kind_stress,
+        hintRes = R.string.demo_scenario_kind_stress_hint,
     ),
     Benchmark(
-        label = "Benchmark Entry",
-        hint = "This block is intentionally stable so manual runs and macrobenchmarks can share the same path.",
+        labelRes = R.string.demo_scenario_kind_benchmark,
+        hintRes = R.string.demo_scenario_kind_benchmark_hint,
     ),
 }
 
@@ -104,14 +106,20 @@ internal fun UiTreeBuilder.ScenarioSection(
     kind: ScenarioKind,
     title: String,
     subtitle: String,
+    modifier: Modifier = Modifier,
     content: UiTreeBuilder.() -> Unit,
 ) {
     DemoSection(
         title = title,
         subtitle = subtitle,
+        modifier = modifier,
     ) {
         Text(
-            text = "${kind.label} · ${kind.hint}",
+            text = stringResource(
+                R.string.demo_scenario_kind_format,
+                stringResource(kind.labelRes),
+                stringResource(kind.hintRes),
+            ),
             style = UiTextStyle(fontSizeSp = 12.sp),
             color = TextDefaults.secondaryColor(),
             modifier = Modifier.padding(bottom = 4.dp),
@@ -137,14 +145,14 @@ internal fun UiTreeBuilder.BenchmarkRouteCallout(
                 .padding(12.dp),
         ) {
             Text(
-                text = "Benchmark Route",
+                text = stringResource(R.string.demo_benchmark_route),
                 style = UiTextStyle(fontSizeSp = 13.sp),
                 color = TextDefaults.secondaryColor(),
             )
             Text(text = route)
             if (stableTargets.isNotEmpty()) {
                 ChecklistGroup(
-                    title = "Stable Targets",
+                    title = stringResource(R.string.demo_stable_targets),
                     items = stableTargets,
                 )
             }
@@ -159,6 +167,7 @@ internal fun UiTreeBuilder.BenchmarkRouteCallout(
 internal fun UiTreeBuilder.DemoSection(
     title: String,
     subtitle: String,
+    modifier: Modifier = Modifier,
     content: UiTreeBuilder.() -> Unit,
 ) {
     Surface(
@@ -166,7 +175,8 @@ internal fun UiTreeBuilder.DemoSection(
         modifier = Modifier
             .fillMaxWidth()
             .margin(bottom = 12.dp)
-            .padding(16.dp),
+            .padding(16.dp)
+            .then(modifier),
     ) {
         Column(
             spacing = 8.dp,
@@ -196,11 +206,11 @@ internal fun UiTreeBuilder.ChapterPageOverviewSection(
 ) {
     DemoSection(
         title = title,
-        subtitle = "This page defines the testing goal and the framework layers that should be touched during manual verification.",
+        subtitle = stringResource(R.string.demo_chapter_overview_subtitle),
     ) {
         Text(text = goal)
         ChecklistGroup(
-            title = "Framework Modules",
+            title = stringResource(R.string.demo_framework_modules),
             items = modules,
         )
     }
@@ -212,8 +222,8 @@ internal fun UiTreeBuilder.ChapterPageFilterSection(
     onSelectionChange: (Int) -> Unit,
 ) {
     DemoSection(
-        title = "Chapter Pages",
-        subtitle = "Use the local page switcher to isolate one manual test path at a time within the current chapter.",
+        title = stringResource(R.string.demo_chapter_pages),
+        subtitle = stringResource(R.string.demo_chapter_pages_subtitle),
     ) {
         SegmentedControl(
             items = pages,
@@ -231,21 +241,21 @@ internal fun UiTreeBuilder.VerificationNotesSection(
     relatedGaps: List<String> = emptyList(),
 ) {
     DemoSection(
-        title = "Verification Notes",
-        subtitle = "Use this block as the manual acceptance checklist for the current chapter page.",
+        title = stringResource(R.string.demo_verification_notes),
+        subtitle = stringResource(R.string.demo_verification_notes_subtitle),
     ) {
         Text(text = what)
         ChecklistGroup(
-            title = "How To Verify",
+            title = stringResource(R.string.demo_how_to_verify),
             items = howToVerify,
         )
         ChecklistGroup(
-            title = "Expected",
+            title = stringResource(R.string.demo_expected),
             items = expected,
         )
         if (relatedGaps.isNotEmpty()) {
             ChecklistGroup(
-                title = "Related Gaps",
+                title = stringResource(R.string.demo_related_gaps),
                 items = relatedGaps,
             )
         }
@@ -266,7 +276,13 @@ internal fun UiTreeBuilder.ChecklistGroup(
             color = TextDefaults.secondaryColor(),
         )
         items.forEachIndexed { index, item ->
-            Text(text = "${index + 1}. $item")
+            Text(
+                text = stringResource(
+                    R.string.demo_numbered_item_format,
+                    index + 1,
+                    item,
+                ),
+            )
         }
     }
 }

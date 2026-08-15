@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_scenario_design_bundle_material3_title">设计系统 · Material 3 Bundle</string>
+    <string name="demo_scenario_design_bundle_material3_summary">通过共享压力夹具验证圆角参考 Bundle。</string>
+    <string name="demo_scenario_design_bundle_contrast_title">设计系统 · 对比 Bundle</string>
+    <string name="demo_scenario_design_bundle_contrast_summary">验证 Cut Contrast 与 Cupertino Pressure 变体不会泄漏 Material 配方。</string>
+    <string name="demo_design_system_kind_rounded">圆角参考</string>
+    <string name="demo_design_system_kind_cut_contrast">切角对比</string>
+    <string name="demo_design_system_kind_cupertino">Cupertino 压力</string>
+
+    <string name="demo_design_system_ready">多设计系统夹具已就绪</string>
+    <string name="demo_design_system_title">多设计系统验证</string>
+    <string name="demo_design_system_summary">每张截图都包含可见的身份、配方、Token 来源、动效和回退证据。</string>
+    <string name="demo_design_system_button_confirm">确认</string>
+    <string name="demo_design_system_button_disabled">禁用</string>
+    <string name="demo_design_system_button_status">按钮点击次数：%1$d</string>
+    <string name="demo_design_system_reset">重置夹具</string>
+    <string name="demo_design_system_root_coherence">根节点与 Session 一致性</string>
+    <string name="demo_design_system_lazy_identity">Lazy 系统：%1$s</string>
+    <string name="demo_design_system_switch_kind">切换到 %1$s</string>
+    <string name="demo_design_system_open_dialog">打开对话框</string>
+    <string name="demo_design_system_surface_section">Surface 与 Card · 共享 BasicSurface</string>
+    <string name="demo_design_system_resolved_surface">已解析的 Surface</string>
+    <string name="demo_design_system_surface_summary">填充、边框、形状、裁剪和交互共享同一份解析契约。</string>
+    <string name="demo_design_system_switch_section">Switch · 设计系统组合控件</string>
+    <string name="demo_design_system_switch_label">同步工作区</string>
+    <string name="demo_design_system_switch_disabled">禁用控件</string>
+    <string name="demo_design_system_checked_status">选中：%1$s</string>
+    <string name="demo_design_system_text_field_section">TextField · 原生编辑核心</string>
+    <string name="demo_design_system_account_name">账户名称</string>
+    <string name="demo_design_system_name_placeholder">姓名</string>
+    <string name="demo_design_system_text_field_support">IME、选区和自动填充保持原生行为。</string>
+    <string name="demo_design_system_required_field">必填字段</string>
+    <string name="demo_design_system_required_placeholder">必填</string>
+    <string name="demo_design_system_required_support">必须填写一个值</string>
+    <string name="demo_design_system_segmented_section">SegmentedControl · 设计系统组合控件</string>
+    <string name="demo_design_system_day">日</string>
+    <string name="demo_design_system_week">周</string>
+    <string name="demo_design_system_month">月</string>
+    <string name="demo_design_system_segment_status">分段：%1$s</string>
+    <string name="demo_design_system_navigation_section">NavigationBar · 设计系统组合控件</string>
+    <string name="demo_design_system_home">首页</string>
+    <string name="demo_design_system_search">搜索</string>
+    <string name="demo_design_system_profile">个人</string>
+    <string name="demo_design_system_selected_status">已选择：%1$s</string>
+    <string name="demo_design_system_overlay_identity">Overlay 系统：%1$s</string>
+    <string name="demo_design_system_overlay_token">Overlay Token：demo-design-system/%1$s</string>
+    <string name="demo_design_system_overlay_switch">切换 Overlay 到 %1$s</string>
+    <string name="demo_design_system_overlay_close">关闭一致性对话框</string>
+
+    <string name="demo_design_system_screenshot_identity">截图身份</string>
+    <string name="demo_design_system_fact_fixture">夹具</string>
+    <string name="demo_design_system_fact_design_system">设计系统</string>
+    <string name="demo_design_system_fact_token_source">Token 来源</string>
+    <string name="demo_design_system_fact_recipe_identity">配方身份</string>
+    <string name="demo_design_system_fact_root_context">根 Context</string>
+    <string name="demo_design_system_fact_android_primary">Android colorPrimary</string>
+    <string name="demo_design_system_fact_component_backends">组件后端</string>
+    <string name="demo_design_system_component_backends_value">Button=DSL/DeclarativeBoxLayout; Switch=DSL/DeclarativeBoxLayout; TextField=native/ViewComposeEditText</string>
+    <string name="demo_design_system_fact_mode">模式</string>
+    <string name="demo_design_system_fact_reduced_motion">减少动效</string>
+    <string name="demo_design_system_fact_font_scale">字体缩放</string>
+    <string name="demo_design_system_fact_layout_direction">布局方向</string>
+    <string name="demo_design_system_fact_shape">形状</string>
+    <string name="demo_design_system_fact_primary">Primary</string>
+    <string name="demo_design_system_fact_surface">Surface</string>
+    <string name="demo_design_system_fact_capability">能力</string>
+    <string name="demo_design_system_mode_light">浅色</string>
+    <string name="demo_design_system_mode_dark">深色</string>
+    <string name="demo_design_system_conformance">一致性</string>
+</resources>

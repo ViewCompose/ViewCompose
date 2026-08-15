@@ -10,13 +10,8 @@ import org.junit.Test
 
 class DemoDiagnosticsPageModelTest {
     @Test
-    fun `every diagnostics tab keeps the overview and switcher at stable leading positions`() {
-        (0..3).forEach { selectedPage ->
-            assertEquals(
-                listOf("page", "page_filter"),
-                diagnosticsPageItems(selectedPage).take(2),
-            )
-        }
+    fun `runtime diagnostics is a direct fixture without chapter chrome`() {
+        assertEquals(listOf("runtime"), diagnosticsPageItems(selectedPage = 0))
     }
 
     @Test
@@ -24,7 +19,7 @@ class DemoDiagnosticsPageModelTest {
         val items = diagnosticsPageItems(selectedPage = 1)
 
         assertEquals(
-            listOf("page", "page_filter") + DIAGNOSTICS_THEME_PAGE_ITEMS + "theme_verify",
+            DIAGNOSTICS_THEME_PAGE_ITEMS,
             items,
         )
     }
@@ -33,16 +28,29 @@ class DemoDiagnosticsPageModelTest {
     fun `renderer diagnostics splits expensive inspector groups into independent items`() {
         assertEquals(
             listOf(
-                "page",
-                "page_filter",
                 "renderer_actions",
                 "renderer_probe",
                 "renderer_snapshots",
                 "renderer_tree",
                 "renderer_composition",
                 "renderer_layout",
-                "verify",
             ),
+            diagnosticsPageItems(selectedPage = 2),
+        )
+    }
+
+    @Test
+    fun `direct diagnostics scenarios omit chapter chrome and verification prose`() {
+        assertEquals(
+            listOf("runtime"),
+            diagnosticsPageItems(selectedPage = 0),
+        )
+        assertEquals(
+            DIAGNOSTICS_THEME_PAGE_ITEMS,
+            diagnosticsPageItems(selectedPage = 1),
+        )
+        assertEquals(
+            DIAGNOSTICS_RENDERER_PAGE_ITEMS,
             diagnosticsPageItems(selectedPage = 2),
         )
     }

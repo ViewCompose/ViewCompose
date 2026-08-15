@@ -618,9 +618,11 @@ private fun UiTreeBuilder.animatedVisibilityCore(
         },
     )
     // Mirror the internal segment after sampling so external observers see committed and idle state.
-    visibleState.currentState = transition.currentState
-    visibleState.targetState = targetVisible
-    visibleState.isIdle = !transition.isRunning && transition.currentState == transition.targetState
+    visibleState.syncFromTransition(
+        currentState = transition.currentState,
+        targetState = targetVisible,
+        isIdle = !transition.isRunning && transition.currentState == transition.targetState,
+    )
     val shouldRenderContent = transition.currentState || transition.targetState || transition.isRunning
     val hasSizeTransform = enterWidthExpand != null ||
         enterHeightExpand != null ||

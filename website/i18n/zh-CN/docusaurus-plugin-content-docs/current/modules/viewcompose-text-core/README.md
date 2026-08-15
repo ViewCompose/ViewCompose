@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-text-core/README.md
-translation_source_hash: 75b576ab1ee0ce52b5f2831904e76d39f71db8b681b443d791970d5cbbb76ca4
+translation_source_hash: b1438e2371ac67f8ff8f5689814c9f2630d82d160221bd85964c1bf580cd3cd5
 translation_status: current
 ---
 
@@ -85,8 +85,10 @@ state.edit {
 state.undo()
 ```
 
-`TextFieldState` 是不可变 `TextFieldValue` 快照的稳定可观察 owner。其编辑缓冲区与历史栈限制在
-所属 UI 线程使用。
+`TextFieldState` 是不可变 `TextFieldValue` 快照的稳定可观察 Owner。其编辑缓冲区与历史栈限制在
+所属 UI 线程使用。这是 Q3 State API：每次 Edit、Undo 或 Redo 都通过一次 Snapshot Transaction
+发布完整 Value 及 `canUndo`/`canRedo` 可用性，因此 Observer 不会收到已提交文本与过期历史状态
+混合的结果。
 
 - `edit` 是一个原子的业务编辑事务，并且不会经过用户输入 transformation。
 - `TextFieldBuffer` 会保留文档 annotation，并在替换后迁移 selection/composition。

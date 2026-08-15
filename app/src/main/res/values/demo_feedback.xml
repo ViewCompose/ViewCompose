@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_feedback_visible">visible</string>
+    <string name="demo_feedback_hidden">hidden</string>
+    <string name="demo_feedback_reset">Reset fixture</string>
+
+    <string name="demo_feedback_transient_title">Transient feedback</string>
+    <string name="demo_feedback_transient_summary">Exercise custom Dialog, Popup, Snackbar, and Toast requests without unrelated overlay state.</string>
+    <string name="demo_feedback_transient_state">Dialog=%1$d · Popup=%2$d · Snackbar=%3$d · Toast=%4$d</string>
+    <string name="demo_feedback_transient_primary_action">Show Dialog, Snackbar, and Toast</string>
+    <string name="demo_feedback_transient_popup_action">Show anchored Popup</string>
+    <string name="demo_feedback_custom_dialog_title">Custom Dialog %1$d</string>
+    <string name="demo_feedback_custom_dialog_body">This content is mounted through the overlay host in the current render Session.</string>
+    <string name="demo_feedback_custom_dialog_confirm">Confirm</string>
+    <string name="demo_feedback_popup_title">Popup %1$d</string>
+    <string name="demo_feedback_popup_body">Anchored content follows its declared target.</string>
+    <string name="demo_feedback_popup_close">Close Popup</string>
+    <string name="demo_feedback_snackbar_message">Snackbar notice %1$d</string>
+    <string name="demo_feedback_snackbar_action">Got it</string>
+    <string name="demo_feedback_toast_message">Toast notice %1$d</string>
+
+    <string name="demo_feedback_dialog_title">AlertDialog and ModalBottomSheet</string>
+    <string name="demo_feedback_dialog_summary">Verify standard dialog actions and a resource-addressed bottom-sheet lifecycle.</string>
+    <string name="demo_feedback_dialog_state">Outcome=%1$s · sheet=%2$s · alert=%3$s</string>
+    <string name="demo_feedback_show_bottom_sheet">Show ModalBottomSheet</string>
+    <string name="demo_feedback_show_alert">Show standard AlertDialog</string>
+    <string name="demo_feedback_show_icon_alert">Show icon AlertDialog</string>
+    <string name="demo_feedback_outcome_idle">idle</string>
+    <string name="demo_feedback_outcome_alert_confirmed">alert confirmed</string>
+    <string name="demo_feedback_outcome_alert_dismissed">alert dismissed</string>
+    <string name="demo_feedback_outcome_icon_confirmed">icon alert confirmed</string>
+    <string name="demo_feedback_outcome_icon_dismissed">icon alert dismissed</string>
+    <string name="demo_feedback_outcome_sheet_saved">sheet saved</string>
+    <string name="demo_feedback_outcome_sheet_discarded">sheet discarded</string>
+    <string name="demo_feedback_alert_title">Confirm deletion?</string>
+    <string name="demo_feedback_alert_body">This operation cannot be undone.</string>
+    <string name="demo_feedback_alert_confirm">Delete</string>
+    <string name="demo_feedback_alert_cancel">Cancel</string>
+    <string name="demo_feedback_icon_alert_title">Update available</string>
+    <string name="demo_feedback_icon_alert_body">Install the new version now?</string>
+    <string name="demo_feedback_icon_alert_confirm">Update</string>
+    <string name="demo_feedback_icon_alert_cancel">Later</string>
+    <string name="demo_feedback_bottom_sheet_title">Bottom sheet</string>
+    <string name="demo_feedback_bottom_sheet_body">The sheet is rendered through the overlay path and supports gesture dismissal.</string>
+    <string name="demo_feedback_bottom_sheet_save">Save draft</string>
+    <string name="demo_feedback_bottom_sheet_discard">Discard changes</string>
+
+    <string name="demo_feedback_menu_title">DropdownMenu and PlainTooltip</string>
+    <string name="demo_feedback_menu_summary">Verify focusable menu selection and non-focusable tooltip anchoring independently.</string>
+    <string name="demo_feedback_menu_state">Selection=%1$s · menu=%2$s · tooltip=%3$s</string>
+    <string name="demo_feedback_show_tooltip">Show Tooltip</string>
+    <string name="demo_feedback_hide_tooltip">Hide Tooltip</string>
+    <string name="demo_feedback_open_menu">Open menu</string>
+    <string name="demo_feedback_menu_reset">Reset menu fixture</string>
+    <string name="demo_feedback_menu_none">none</string>
+    <string name="demo_feedback_menu_edit">Edit</string>
+    <string name="demo_feedback_menu_copy">Copy</string>
+    <string name="demo_feedback_menu_share">Share</string>
+    <string name="demo_feedback_menu_delete">Delete</string>
+    <string name="demo_feedback_menu_shortcut">Ctrl+S</string>
+    <string name="demo_feedback_tooltip_text">Anchored tooltip information</string>
+</resources>

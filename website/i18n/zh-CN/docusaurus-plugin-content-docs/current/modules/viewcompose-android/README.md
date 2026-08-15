@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-android/README.md
-translation_source_hash: d2516ab6827fa52599cb19818d5ec35a36abae2ac56677d34296d16e6000582e
+translation_source_hash: 2deb94f8c4a1a5b8c1ae8a85e3609cbc6fbbd4ad5fac9d261bf1b00db5d23d95
 translation_status: current
 ---
 
@@ -60,8 +60,10 @@ Context，并由根节点、原生子 View 与默认 Overlay 共同使用。
 
 如果根设计系统需要不同的 Android Context，应先解析该 Context，再传给 `rootContext`。切换根设计
 系统时必须使用新的 Context 与 Token Provider 再次调用 `setUiContent`，使 View 在同一份平台/主题
-快照下重建。重复调用会释放旧 Session；Fragment Session 跟随当前 View Lifecycle，Activity
-Session 在 Activity 销毁时结束。
+快照下重建。重复调用会释放旧 Session。Fragment 在 `onCreateView` 中调用时会先返回 Root，等
+Android 发布该 Root 的 `viewLifecycleOwner` 后立即开始渲染；内容接收这个 View Owner，Session
+在 `onDestroyView` 时结束，而 Fragment Scope 的 ViewModel 与 Saved State Owner 会跨 View 重建
+保持稳定。Activity Session 同步渲染，并在 Activity 销毁时结束。
 
 标准 Root 会自动安装 `AndroidResourceEnvironment`，因此内容可以直接使用
 `com.viewcompose.host.android.resources` 中的查询函数，不需要页面自有的失效状态。Configuration

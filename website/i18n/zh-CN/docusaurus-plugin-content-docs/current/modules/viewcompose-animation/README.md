@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: cb94cc818897eb9fa792b80cbd671082589ccc513bfe3c0c74bbb9d08631efa4
+translation_source_hash: f35f925a5573c402a4b8d3d8b0d42f7f54b02b8b6e27afdf6bb7f71d5496c25a
 translation_status: current
 ---
 
@@ -91,6 +91,8 @@ LaunchedEffect(command) {
 每个 `animateTo`、`snapTo` 和 `stop` 都是一项 Mutation。来自其他 Coroutine Job 的新 Mutation
 会取消旧 Job，过期帧会被 Mutation Identity 拒绝。`animateTo` 从最后接受值 Retarget；
 `snapTo` 立即发布；`stop` 保留当前值。取消和失败保留最新样本，并把目标重置为该值。
+Q3 `Animatable` 契约会一起发布 Mutation 开始时的 Target/Running，并一起发布完成时保留的
+Target/Idle；逐帧 Sample 仍是独立的 Value Commit。
 
 `rememberAnimatable` 只在首次创建时使用 `initialValue`。Converter 变化会创建新实例；只改变
 `initialValue` 不会重置。当前 Frame Clock 每轮组合都会重新绑定。直接构造可以传显式 Clock；
@@ -117,7 +119,10 @@ val height = transition.animateDp(
 
 首次组合停在初始目标。后续 Segment 开始时，每个 Channel 固定当前样本与新目标并注册时长。
 最长 Channel 决定 `currentState` 何时提交 `targetState`；短 Channel 会停在自己的终点。
-Retarget 会取消旧帧 Effect，并让已有 Channel 从最新样本开始。
+Retarget 会取消旧帧 Effect，并让已有 Channel 从最新样本开始。Q3 `Transition` 在每次 Target
+或 Frame 更新时，通过一次 Snapshot Transaction 发布逻辑 State、Target、Running Flag、
+Segment Identity、Endpoint 与 Play Time。`MutableTransitionState` 也通过同一原子边界镜像
+框架持有的 Current/Target/Idle 元组。
 
 Channel Factory 当前不接收 Segment 对象；它为 Channel 提供一个规格，并把逻辑状态映射为
 `Float`、`Int`、打包 ARGB 或 `UiDp`。Label 为未来诊断保留，不改变 Identity。

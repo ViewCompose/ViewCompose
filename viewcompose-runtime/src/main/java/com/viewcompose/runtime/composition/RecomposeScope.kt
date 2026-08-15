@@ -192,12 +192,7 @@ class RecomposeScope internal constructor(
         val lifecycle: RememberLifecycle,
     )
 
-    /**
-     * Owns the exactly-once lifecycle state for one remembered value.
-     *
-     * State changes happen before user callbacks so a throwing callback cannot be retried by a
-     * later structural cleanup path.
-     */
+    /** Owns successful activation, retryable activation failure, and terminal cleanup. */
     internal class RememberLifecycle(
         private val observer: RememberObserver?,
         private val diagnostic: EffectDiagnostic,
@@ -209,7 +204,6 @@ class RecomposeScope internal constructor(
 
         fun activate() {
             if (state != State.Pending) return
-            state = State.Active
             observer?.let { currentObserver ->
                 runSynchronousEffectOperation(
                     diagnostic = diagnostic,
@@ -220,7 +214,16 @@ class RecomposeScope internal constructor(
                     block = currentObserver::onRemembered,
                 )
             }
+            // Publish Active only after the callback completes. A throwing attempt remains Pending
+            // so a later composition commit can retry it or structural removal can abandon it.
+            state = State.Active
         }
+
+        val isPending: Boolean
+            get() = state == State.Pending
+
+        val isTerminal: Boolean
+            get() = state == State.Terminal
 
         fun leave() {
             when (state) {

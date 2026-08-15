@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_scenario_foundations_locals_title">业务 Local</string>
+    <string name="demo_scenario_foundations_locals_summary">验证自定义 Local 默认值、嵌套覆盖以及离开 Provider 作用域后的恢复。</string>
+    <string name="demo_scenario_foundations_theme_title">主题作用域</string>
+    <string name="demo_scenario_foundations_theme_summary">验证调色板、形状和组件默认值的局部覆盖不会修改父级主题。</string>
+    <string name="demo_scenario_foundations_media_title">媒体管线</string>
+    <string name="demo_scenario_foundations_media_summary">验证资源解码、URL 与回退、请求替换与取消，以及图标内容色。</string>
+    <string name="demo_scenario_foundations_typography_title">排版</string>
+    <string name="demo_scenario_foundations_typography_summary">验证字重、字体族、字间距、行高、装饰线、最大行数和省略号渲染。</string>
+
+    <string name="demo_foundations_reset">重置场景</string>
+
+    <string name="demo_foundations_locals_default_scope">默认作用域</string>
+    <string name="demo_foundations_locals_override_scope">嵌套覆盖作用域</string>
+    <string name="demo_foundations_locals_restored_scope">恢复后的父级作用域</string>
+    <string name="demo_foundations_locals_default_token">默认业务 token</string>
+    <string name="demo_foundations_locals_campaign_token">营销活动 token</string>
+    <string name="demo_foundations_locals_feature_state">featureEnabled=%1$b</string>
+
+    <string name="demo_foundations_theme_color_override">调色板覆盖</string>
+    <string name="demo_foundations_theme_local_colors">局部颜色</string>
+    <string name="demo_foundations_theme_background">背景</string>
+    <string name="demo_foundations_theme_surface">表面</string>
+    <string name="demo_foundations_theme_primary">主色</string>
+    <string name="demo_foundations_theme_secondary">次色</string>
+    <string name="demo_foundations_theme_accent_primary">将次色作为主色</string>
+    <string name="demo_foundations_theme_component_defaults">局部组件默认值</string>
+    <string name="demo_foundations_theme_alpha">甲</string>
+    <string name="demo_foundations_theme_beta">乙</string>
+    <string name="demo_foundations_theme_gamma">丙</string>
+    <string name="demo_foundations_theme_primary_token">主色 token</string>
+    <string name="demo_foundations_theme_error_value" translatable="false">error@token.dev</string>
+    <string name="demo_foundations_theme_token_snapshot">父级 token 快照</string>
+    <string name="demo_foundations_theme_core_colors">核心颜色</string>
+    <string name="demo_foundations_theme_shape_state">形状：卡片=%1$s，小型=%2$s</string>
+    <string name="demo_foundations_theme_shape_override">形状覆盖</string>
+    <string name="demo_foundations_theme_rounded_button">圆角按钮</string>
+
+    <string name="demo_foundations_media_pipeline_title">请求替换与取消</string>
+    <string name="demo_foundations_media_pipeline_content_description">图片管线结果</string>
+    <string name="demo_foundations_media_advance">切换图片来源</string>
+    <string name="demo_foundations_media_state_resource">source=resource</string>
+    <string name="demo_foundations_media_state_fallback">source=null；result=fallback</string>
+    <string name="demo_foundations_media_state_model">source=delayed-model</string>
+    <string name="demo_foundations_media_resource_title">资源解码尺寸</string>
+    <string name="demo_foundations_media_resource_content_description">本地加载的图片</string>
+    <string name="demo_foundations_media_resource_summary">64dp 目标请求 64 × 64dp 解码尺寸，并应用裁剪缩放。</string>
+    <string name="demo_foundations_media_fallback_title">URL 与空来源回退</string>
+    <string name="demo_foundations_media_remote_content_description">远程 URL 图片</string>
+    <string name="demo_foundations_media_fallback_content_description">空图片来源的回退图片</string>
+    <string name="demo_foundations_media_icon_title">图标内容色</string>
+    <string name="demo_foundations_media_icon_summary">第二个图标从嵌套主题覆盖中解析内容色。</string>
+    <string name="demo_foundations_media_default_icon_content_description">默认内容色图标</string>
+    <string name="demo_foundations_media_secondary_icon_content_description">次要内容色图标</string>
+
+    <string name="demo_foundations_typography_overflow_title">最大行数与省略号</string>
+    <string name="demo_foundations_typography_overflow_one_line">这是一段特意写长的单行文本，在可用宽度耗尽时必须以省略号结尾。</string>
+    <string name="demo_foundations_typography_overflow_two_lines">这是一段特意写长的双行文本，用于验证最大行数和省略号能够协作，并且不会裁剪字形或绘制第三行文字。</string>
+    <string name="demo_foundations_typography_weight_title">字重</string>
+    <string name="demo_foundations_typography_weight_normal">常规（400）</string>
+    <string name="demo_foundations_typography_weight_medium">中等（500）</string>
+    <string name="demo_foundations_typography_weight_bold">粗体（700）</string>
+    <string name="demo_foundations_typography_weight_black">特粗（900）</string>
+    <string name="demo_foundations_typography_family_title">字体族</string>
+    <string name="demo_foundations_typography_family_default">默认字体</string>
+    <string name="demo_foundations_typography_family_monospace">等宽字体</string>
+    <string name="demo_foundations_typography_family_serif">衬线字体</string>
+    <string name="demo_foundations_typography_family_sans">无衬线字体</string>
+    <string name="demo_foundations_typography_spacing_title">字间距与行高</string>
+    <string name="demo_foundations_typography_spacing_default">默认字间距</string>
+    <string name="demo_foundations_typography_spacing_wide">0.15em 宽字间距</string>
+    <string name="demo_foundations_typography_line_height_default">使用默认行高的简短示例，在窄屏上自然换行。</string>
+    <string name="demo_foundations_typography_line_height_explicit">使用明确 24sp 行高的简短示例，在窄屏上自然换行。</string>
+    <string name="demo_foundations_typography_decoration_title">文本装饰</string>
+    <string name="demo_foundations_typography_decoration_underline">下划线</string>
+    <string name="demo_foundations_typography_decoration_line_through">删除线</string>
+    <string name="demo_foundations_typography_decoration_combined">下划线与删除线</string>
+</resources>

@@ -1,10 +1,12 @@
 package com.viewcompose.benchmark
 
+import android.graphics.Rect
 import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.FrameTimingMetric
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,68 +24,6 @@ class DemoInteractionBenchmark {
     val benchmarkRule = MacrobenchmarkRule()
 
     @Test
-    fun chapterSwitch() = benchmarkRule.measureRepeated(
-        packageName = TARGET_PACKAGE,
-        metrics = listOf(FrameTimingMetric()),
-        compilationMode = CompilationMode.Partial(),
-        iterations = DEFAULT_ITERATIONS,
-        startupMode = StartupMode.WARM,
-        setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "foundations",
-                expectedText = "Foundations",
-            )
-        },
-    ) {
-        startDemoActivityAndWait(
-            moduleKey = "state",
-            expectedText = "State Benchmark Anchor",
-        )
-    }
-
-    @Test
-    fun themeSwitch() = benchmarkRule.measureRepeated(
-        packageName = TARGET_PACKAGE,
-        metrics = listOf(FrameTimingMetric()),
-        compilationMode = CompilationMode.Partial(),
-        iterations = DEFAULT_ITERATIONS,
-        startupMode = StartupMode.WARM,
-        setupBlock = {
-            startCatalogAndWait()
-            waitForText("已实现模块")
-            waitForText("Light")
-            waitForText("Dark")
-        },
-    ) {
-        clickText("Dark")
-        waitForText("Dark")
-        clickText("Light")
-        waitForText("Light")
-    }
-
-    @Test
-    fun foundationsBenchmarkAnchor() = benchmarkRule.measureRepeated(
-        packageName = TARGET_PACKAGE,
-        metrics = listOf(FrameTimingMetric()),
-        compilationMode = CompilationMode.Partial(),
-        iterations = DEFAULT_ITERATIONS,
-        startupMode = StartupMode.WARM,
-        setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "foundations",
-                expectedText = "Foundations",
-            )
-            scrollUntilText("Foundations Benchmark Off")
-            scrollUntilText("Reset Foundations Benchmark")
-        },
-    ) {
-        clickText("Foundations Benchmark Off")
-        waitForText("Foundations Benchmark On")
-        clickText("Reset Foundations Benchmark")
-        waitForText("Foundations Benchmark Off")
-    }
-
-    @Test
     fun layoutsBenchmarkAnchor() = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),
@@ -91,18 +31,18 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "layouts",
-                expectedText = "Layouts",
-            )
-            scrollUntilText("Layouts Benchmark Compact")
-            scrollUntilText("Reset Layouts Benchmark")
+            startDemoScenarioAndWait("layout.linear")
         },
     ) {
-        clickText("Layouts Benchmark Compact")
-        waitForText("Layouts Benchmark Expanded")
-        clickText("Reset Layouts Benchmark")
-        waitForText("Layouts Benchmark Compact")
+        val initial = scenarioTargetText("layout.linear", DemoTargetRole.State)
+        clickScenarioTarget("layout.linear", DemoTargetRole.PrimaryAction)
+        val changed = waitForScenarioTargetTextChange(
+            "layout.linear",
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget("layout.linear", DemoTargetRole.Reset)
+        waitForScenarioTargetTextChange("layout.linear", DemoTargetRole.State, changed)
     }
 
     @Test
@@ -113,18 +53,18 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "input",
-                expectedText = "Input",
-            )
-            scrollUntilText("Input Benchmark Compact")
-            scrollUntilText("Reset Input Benchmark")
+            startDemoScenarioAndWait("input.fields")
         },
     ) {
-        clickText("Input Benchmark Compact")
-        waitForText("Input Benchmark Expanded")
-        clickText("Reset Input Benchmark")
-        waitForText("Input Benchmark Compact")
+        val initial = scenarioTargetText("input.fields", DemoTargetRole.State)
+        clickScenarioTarget("input.fields", DemoTargetRole.PrimaryAction)
+        val changed = waitForScenarioTargetTextChange(
+            "input.fields",
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget("input.fields", DemoTargetRole.Reset)
+        waitForScenarioTargetTextChange("input.fields", DemoTargetRole.State, changed)
     }
 
     @Test
@@ -135,18 +75,18 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "collections",
-                expectedText = "Collections",
-            )
-            scrollUntilText("Collections Benchmark A-B-C")
-            scrollUntilText("Reset Collections Benchmark")
+            startDemoScenarioAndWait("collection.controls")
         },
     ) {
-        clickText("Collections Benchmark A-B-C")
-        waitForText("Collections Benchmark C-A-B")
-        clickText("Reset Collections Benchmark")
-        waitForText("Collections Benchmark A-B-C")
+        val initial = scenarioTargetText("collection.controls", DemoTargetRole.State)
+        clickScenarioTarget("collection.controls", DemoTargetRole.PrimaryAction)
+        val changed = waitForScenarioTargetTextChange(
+            "collection.controls",
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget("collection.controls", DemoTargetRole.Reset)
+        waitForScenarioTargetTextChange("collection.controls", DemoTargetRole.State, changed)
     }
 
     @Test
@@ -157,18 +97,18 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "state",
-                expectedText = "State Benchmark Anchor",
-            )
-            scrollUntilText("Advance State Benchmark 0")
-            scrollUntilText("Reset State Benchmark")
+            startDemoScenarioAndWait("runtime.state")
         },
     ) {
-        clickText("Advance State Benchmark 0")
-        waitForText("Advance State Benchmark 1")
-        clickText("Reset State Benchmark")
-        waitForText("Advance State Benchmark 0")
+        val initial = scenarioTargetText("runtime.state", DemoTargetRole.State)
+        clickScenarioTarget("runtime.state", DemoTargetRole.PrimaryAction)
+        val changed = waitForScenarioTargetTextChange(
+            "runtime.state",
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget("runtime.state", DemoTargetRole.Reset)
+        waitForScenarioTargetTextChange("runtime.state", DemoTargetRole.State, changed)
     }
 
     @Test
@@ -179,22 +119,31 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "diagnostics",
-                expectedText = "Diagnostics",
-            )
-            scrollUntilText("Refresh Diagnostics Benchmark")
-            scrollUntilText("Reset Diagnostics Benchmark")
+            startDemoScenarioAndWait("diagnostics.renderer")
         },
     ) {
-        clickText("Refresh Diagnostics Benchmark")
-        waitForText("Diagnostics refresh count 1")
-        clickText("Reset Diagnostics Benchmark")
-        waitForText("Diagnostics refresh count 0")
+        repeat(DIAGNOSTICS_RENDERER_CYCLES_PER_ITERATION) {
+            val beforeRefresh = scenarioTargetText(
+                "diagnostics.renderer",
+                DemoTargetRole.State,
+            )
+            clickScenarioTarget("diagnostics.renderer", DemoTargetRole.PrimaryAction)
+            val afterRefresh = waitForScenarioTargetTextChange(
+                "diagnostics.renderer",
+                DemoTargetRole.State,
+                beforeRefresh,
+            )
+            clickScenarioTarget("diagnostics.renderer", DemoTargetRole.Reset)
+            waitForScenarioTargetTextChange(
+                "diagnostics.renderer",
+                DemoTargetRole.State,
+                afterRefresh,
+            )
+        }
     }
 
     @Test
-    fun diagnosticsThemeLongFlingToBottomAndBack() = benchmarkRule.measureRepeated(
+    fun diagnosticsThemeLongFlingToBottomAndBackRevision2() = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),
         compilationMode = CompilationMode.Partial(),
@@ -202,42 +151,17 @@ class DemoInteractionBenchmark {
         startupMode = StartupMode.WARM,
         setupBlock = {
             startDiagnosticsThemeAndWait()
+            waitForPerformanceMeasurementSettle()
         },
     ) {
         repeat(DIAGNOSTICS_THEME_FLING_COUNT) {
             flingPageUp()
         }
-        assertVisibleText("Expected")
+        waitForScenarioTarget("diagnostics.theme", DemoTargetRole.SecondaryTarget)
         repeat(DIAGNOSTICS_THEME_FLING_COUNT) {
             flingPageDown()
         }
-        assertVisibleText("Chapter Pages")
-    }
-
-    @Test
-    fun diagnosticsTabSwitchThenImmediateLongFling() = benchmarkRule.measureRepeated(
-        packageName = TARGET_PACKAGE,
-        metrics = listOf(FrameTimingMetric()),
-        compilationMode = CompilationMode.Partial(),
-        iterations = DEFAULT_ITERATIONS,
-        startupMode = StartupMode.WARM,
-        setupBlock = {
-            startDiagnosticsThemeAndWait()
-        },
-    ) {
-        listOf("渲染器", "缺口", "主题").forEach { tab ->
-            clickChapterTab(tab, waitForIdle = false)
-            // The first forceful gesture intentionally overlaps the tab's initial mount and layout.
-            flingPageUp()
-            repeat(DIAGNOSTICS_THEME_FLING_COUNT - 1) {
-                flingPageUp()
-            }
-            assertVisibleText("Expected")
-            repeat(DIAGNOSTICS_THEME_FLING_COUNT) {
-                flingPageDown()
-            }
-            assertVisibleText("Chapter Pages")
-        }
+        waitForScenarioTarget("diagnostics.theme", DemoTargetRole.Target)
     }
 
     @Test
@@ -248,37 +172,78 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "interop",
-                expectedText = "Interop",
-            )
-            scrollUntilText("Interop Benchmark Primary")
-            scrollUntilText("Reset Interop Benchmark")
+            startDemoScenarioAndWait("interop.android-view")
         },
     ) {
-        clickText("Interop Benchmark Primary")
-        waitForText("Interop Benchmark Alternate")
-        clickText("Reset Interop Benchmark")
-        waitForText("Interop Benchmark Primary")
+        val initial = scenarioTargetText("interop.android-view", DemoTargetRole.State)
+        clickScenarioTarget("interop.android-view", DemoTargetRole.PrimaryAction)
+        waitForScenarioTargetTextChange(
+            "interop.android-view",
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget("interop.android-view", DemoTargetRole.Reset)
+        waitForScenarioTargetText("interop.android-view", DemoTargetRole.State, initial)
     }
 
     @Test
-    fun collectionsScroll() = benchmarkRule.measureRepeated(
+    fun collectionsScrollRevision2() {
+        var scrollBounds = Rect()
+        benchmarkRule.measureRepeated(
+            packageName = TARGET_PACKAGE,
+            metrics = listOf(FrameTimingMetric()),
+            compilationMode = CompilationMode.Partial(),
+            iterations = DEFAULT_ITERATIONS,
+            startupMode = StartupMode.WARM,
+            setupBlock = {
+                startDemoScenarioAndWait("collection.stress")
+                scrollBounds = scenarioTargetBounds("collection.stress", DemoTargetRole.Target)
+                waitForPerformanceMeasurementSettle()
+            },
+        ) {
+            repeat(COLLECTION_SCROLL_SWIPES_PER_DIRECTION) {
+                swipeWithinBounds(scrollBounds, PageSwipeDirection.TowardBottom)
+            }
+            repeat(COLLECTION_SCROLL_SWIPES_PER_DIRECTION) {
+                swipeWithinBounds(scrollBounds, PageSwipeDirection.TowardTop)
+            }
+        }
+    }
+
+    @Test
+    fun collectionsStressMutationRevision2() = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),
         compilationMode = CompilationMode.Partial(),
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "collections",
-                expectedText = "Collections",
-            )
+            startDemoScenarioAndWait("collection.stress")
+            waitForPerformanceMeasurementSettle()
         },
     ) {
-        swipePageUp()
-        swipePageUp()
-        swipePageUp()
+        repeat(COLLECTION_MUTATION_CYCLES_PER_ITERATION) {
+            val initial = scenarioTargetText("collection.stress", DemoTargetRole.State)
+            clickScenarioTarget("collection.stress", DemoTargetRole.PrimaryAction)
+            val rotated = waitForScenarioTargetTextChange(
+                "collection.stress",
+                DemoTargetRole.State,
+                initial,
+            )
+            clickScenarioTarget("collection.stress", DemoTargetRole.SecondaryAction)
+            val inserted = waitForScenarioTargetTextChange(
+                "collection.stress",
+                DemoTargetRole.State,
+                rotated,
+            )
+            clickScenarioTarget("collection.stress", DemoTargetRole.Reset)
+            val reset = waitForScenarioTargetTextChange(
+                "collection.stress",
+                DemoTargetRole.State,
+                inserted,
+            )
+            assertEquals(initial, reset)
+        }
     }
 
     @Test
@@ -289,45 +254,29 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "state",
-                expectedText = "Patch Stress",
-                extras = mapOf("state_page_index" to 2),
-            )
-            waitForText("Advance patch state 0")
-            waitForText("Reset patch state")
+            startDemoScenarioAndWait("runtime.view-patch")
         },
     ) {
-        clickText("Advance patch state 0")
-        waitForText("Advance patch state 1")
-        clickText("Advance patch state 1")
-        waitForText("Advance patch state 2")
-        clickText("Reset patch state")
-        waitForText("Advance patch state 0")
+        val initial = scenarioTargetText("runtime.view-patch", DemoTargetRole.State)
+        clickScenarioTarget("runtime.view-patch", DemoTargetRole.PrimaryAction)
+        val first = waitForScenarioTargetTextChange(
+            "runtime.view-patch",
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget("runtime.view-patch", DemoTargetRole.PrimaryAction)
+        val second = waitForScenarioTargetTextChange(
+            "runtime.view-patch",
+            DemoTargetRole.State,
+            first,
+        )
+        clickScenarioTarget("runtime.view-patch", DemoTargetRole.Reset)
+        waitForScenarioTargetTextChange("runtime.view-patch", DemoTargetRole.State, second)
     }
 
-    @Test
-    fun diagnosticsRefreshAfterPatch() = benchmarkRule.measureRepeated(
-        packageName = TARGET_PACKAGE,
-        metrics = listOf(FrameTimingMetric()),
-        compilationMode = CompilationMode.Partial(),
-        iterations = DEFAULT_ITERATIONS,
-        startupMode = StartupMode.WARM,
-        setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "state",
-                expectedText = "State Benchmark Anchor",
-            )
-            scrollUntilText("Advance State Benchmark 0")
-            clickText("Advance State Benchmark 0")
-            waitForText("Advance State Benchmark 1")
-        },
-    ) {
-        startDemoActivityAndWait(
-            moduleKey = "diagnostics",
-            expectedText = "Diagnostics",
-        )
-    }
 }
 
 private const val DIAGNOSTICS_THEME_FLING_COUNT = 8
+private const val DIAGNOSTICS_RENDERER_CYCLES_PER_ITERATION = 8
+private const val COLLECTION_SCROLL_SWIPES_PER_DIRECTION = 8
+private const val COLLECTION_MUTATION_CYCLES_PER_ITERATION = 8

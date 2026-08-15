@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_scenario_foundations_locals_title">Business locals</string>
+    <string name="demo_scenario_foundations_locals_summary">Verify custom local defaults, a nested override, and restoration after leaving the provider scope.</string>
+    <string name="demo_scenario_foundations_theme_title">Theme scopes</string>
+    <string name="demo_scenario_foundations_theme_summary">Verify palette, shape, and component-default overrides without mutating the parent theme.</string>
+    <string name="demo_scenario_foundations_media_title">Media pipeline</string>
+    <string name="demo_scenario_foundations_media_summary">Verify resource decoding, URL and fallback handling, request replacement, cancellation, and icon content color.</string>
+    <string name="demo_scenario_foundations_typography_title">Typography</string>
+    <string name="demo_scenario_foundations_typography_summary">Verify weight, family, spacing, line height, decoration, max lines, and ellipsis rendering.</string>
+
+    <string name="demo_foundations_reset">Reset fixture</string>
+
+    <string name="demo_foundations_locals_default_scope">Default scope</string>
+    <string name="demo_foundations_locals_override_scope">Nested override scope</string>
+    <string name="demo_foundations_locals_restored_scope">Restored parent scope</string>
+    <string name="demo_foundations_locals_default_token">Default business token</string>
+    <string name="demo_foundations_locals_campaign_token">Campaign token</string>
+    <string name="demo_foundations_locals_feature_state">featureEnabled=%1$b</string>
+
+    <string name="demo_foundations_theme_color_override">Palette override</string>
+    <string name="demo_foundations_theme_local_colors">Local colors</string>
+    <string name="demo_foundations_theme_background">Background</string>
+    <string name="demo_foundations_theme_surface">Surface</string>
+    <string name="demo_foundations_theme_primary">Primary</string>
+    <string name="demo_foundations_theme_secondary">Secondary</string>
+    <string name="demo_foundations_theme_accent_primary">Secondary as primary</string>
+    <string name="demo_foundations_theme_component_defaults">Scoped component defaults</string>
+    <string name="demo_foundations_theme_alpha">Alpha</string>
+    <string name="demo_foundations_theme_beta">Beta</string>
+    <string name="demo_foundations_theme_gamma">Gamma</string>
+    <string name="demo_foundations_theme_primary_token">Primary token</string>
+    <string name="demo_foundations_theme_error_value" translatable="false">error@token.dev</string>
+    <string name="demo_foundations_theme_token_snapshot">Parent token snapshot</string>
+    <string name="demo_foundations_theme_core_colors">Core colors</string>
+    <string name="demo_foundations_theme_shape_state">Shapes: card=%1$s, small=%2$s</string>
+    <string name="demo_foundations_theme_shape_override">Shape override</string>
+    <string name="demo_foundations_theme_rounded_button">Rounded button</string>
+
+    <string name="demo_foundations_media_pipeline_title">Request replacement and cancellation</string>
+    <string name="demo_foundations_media_pipeline_content_description">Image pipeline result</string>
+    <string name="demo_foundations_media_advance">Advance image source</string>
+    <string name="demo_foundations_media_state_resource">source=resource</string>
+    <string name="demo_foundations_media_state_fallback">source=null; result=fallback</string>
+    <string name="demo_foundations_media_state_model">source=delayed-model</string>
+    <string name="demo_foundations_media_resource_title">Resource decode size</string>
+    <string name="demo_foundations_media_resource_content_description">Locally loaded image</string>
+    <string name="demo_foundations_media_resource_summary">A 64dp target requests a 64 × 64dp decode and applies crop scaling.</string>
+    <string name="demo_foundations_media_fallback_title">URL and empty-source fallback</string>
+    <string name="demo_foundations_media_remote_content_description">Remote URL image</string>
+    <string name="demo_foundations_media_fallback_content_description">Fallback for an empty image source</string>
+    <string name="demo_foundations_media_icon_title">Icon content color</string>
+    <string name="demo_foundations_media_icon_summary">The second icon resolves content color from a nested theme override.</string>
+    <string name="demo_foundations_media_default_icon_content_description">Default content-color icon</string>
+    <string name="demo_foundations_media_secondary_icon_content_description">Secondary content-color icon</string>
+
+    <string name="demo_foundations_typography_overflow_title">Maximum lines and ellipsis</string>
+    <string name="demo_foundations_typography_overflow_one_line">This deliberately long single-line sample must end with an ellipsis when the available width is exhausted.</string>
+    <string name="demo_foundations_typography_overflow_two_lines">This deliberately long two-line sample verifies that maxLines and ellipsis cooperate without clipping glyphs or drawing a third line of text.</string>
+    <string name="demo_foundations_typography_weight_title">Font weight</string>
+    <string name="demo_foundations_typography_weight_normal">Normal (400)</string>
+    <string name="demo_foundations_typography_weight_medium">Medium (500)</string>
+    <string name="demo_foundations_typography_weight_bold">Bold (700)</string>
+    <string name="demo_foundations_typography_weight_black">Black (900)</string>
+    <string name="demo_foundations_typography_family_title">Font family</string>
+    <string name="demo_foundations_typography_family_default">Default family</string>
+    <string name="demo_foundations_typography_family_monospace">Monospace family</string>
+    <string name="demo_foundations_typography_family_serif">Serif family</string>
+    <string name="demo_foundations_typography_family_sans">Sans-serif family</string>
+    <string name="demo_foundations_typography_spacing_title">Letter spacing and line height</string>
+    <string name="demo_foundations_typography_spacing_default">Default letter spacing</string>
+    <string name="demo_foundations_typography_spacing_wide">Wide letter spacing at 0.15em</string>
+    <string name="demo_foundations_typography_line_height_default">Default line height across a short sample that wraps naturally on narrow screens.</string>
+    <string name="demo_foundations_typography_line_height_explicit">Explicit 24sp line height across a short sample that wraps naturally on narrow screens.</string>
+    <string name="demo_foundations_typography_decoration_title">Text decoration</string>
+    <string name="demo_foundations_typography_decoration_underline">Underline</string>
+    <string name="demo_foundations_typography_decoration_line_through">Line through</string>
+    <string name="demo_foundations_typography_decoration_combined">Underline and line through</string>
+</resources>

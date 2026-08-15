@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: fe02d0b088c1544e0a6887a45ec1ce146e7e21aac8dc70c79d2261d4a249f202
+translation_source_hash: 4100e0d568c0435396e65b60d399fd1f4bb7bffeecd279946fd9b5c3cb6e11ec
 translation_status: current
 ---
 
@@ -12,7 +12,7 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 生命周期和可观察行为，而不是替换名称相似的函数。在把页面迁移到原生 Android View
 渲染器之前，先用本节识别语义缺口。
 
-最后验证日期：**2026-08-12**
+最后验证日期：**2026-08-15**
 
 复核责任人：**Kernel、UI Foundation、Android Engine、Android 聚合层与 navigation 模块族的维护者**
 
@@ -90,7 +90,7 @@ Kotlin `2.0.21`，声明位置是
 | Modifier | 结构相等性和渲染器复用 | **Supported（支持）** | 使用具有语义的稳定 key；新的回调对象不一定是更新信号。 | [Modifier 相等性](compose-layout-modifier-and-environment.md#modifier-ordering-folding-and-equality) |
 | Modifier | 应用自定义 `Modifier.Node` 生命周期 | **Unsupported（不支持）** | 使用受支持 Modifier、互操作或经过审查的 UI-contract 与 renderer 能力。 | [Modifier.Node](compose-layout-modifier-and-environment.md#why-modifiernode-does-not-migrate-directly) |
 | 环境 | density 和 font scale | **Supported（支持）** | 保留逻辑 dp/sp 值，只在渲染器边界转换。 | [环境](compose-layout-modifier-and-environment.md#density-locales-and-layout-direction) |
-| 环境 | locale、布局方向和物理边 | **Partially supported（部分支持）** | 审计所有逻辑 start/end 映射并测试 RTL。 | [环境](compose-layout-modifier-and-environment.md#density-locales-and-layout-direction) |
+| 环境 | locale、布局方向以及逻辑/物理边 | **Supported（支持）** | start/end 意图使用相对 API，明确 left/right 行为才使用物理 API，并测试 RTL 输出。 | [环境](compose-layout-modifier-and-environment.md#density-locales-and-layout-direction) |
 | 环境 | 用 `UiLocal` 替代 `CompositionLocal` | **Intentionally different（刻意不同）** | 用可观察状态支撑变化的 local；只读取 local 不会让读取者失效。 | [UiLocal](compose-layout-modifier-and-environment.md#uilocal-versus-compositionlocal) |
 | Insets | 系统栏、IME 和嵌套消费 | **Partially supported（部分支持）** | 每条边指定一个所有者，并验证 View/ViewCompose 混合处理。 | [Insets](compose-layout-modifier-and-environment.md#system-bar-and-ime-insets) |
 | 互操作 | ViewCompose `AndroidView` 回调生命周期 | **Intentionally different（刻意不同）** | 分离可重放 update/reset、事务后 commit 和永久 release 清理。 | [Android View 互操作](compose-host-lifecycle-and-android-interop.md#android-view-interop-callback-mapping) |
@@ -101,10 +101,10 @@ Kotlin `2.0.21`，声明位置是
 | 互操作 | 直接 ViewBinding 和树内 Fragment API | **Unsupported（不支持）** | 把 Fragment 所有权留在渲染树外，并显式管理 XML inflate。 | [不支持的互操作](compose-host-lifecycle-and-android-interop.md#unsupported-direct-interop) |
 | 导航 | controller、目的地和多栈所有权 | **Intentionally different（刻意不同）** | 迁移目标状态转换，不要迁移 Navigation 2 或 3 的 API 名称。 | [导航模型](compose-navigation.md#choosing-the-source-navigation-model) |
 | 导航 | 图、类型化路由和栈操作 | **Partially supported（部分支持）** | 使用受支持的基础 `NavValue` 参数和单个事务命令。 | [路由与事务](compose-navigation.md#graphs-routes-and-arguments) |
-| 导航 | entry/graph owner 和 Lifecycle 2.11 factory 继承 | **Partially supported（部分支持）** | 验证每个 factory、extra、SavedStateHandle 和重复 key 的栈作用域。 | [Entry 所有权](compose-navigation.md#entry-and-graph-ownership) |
+| 导航 | entry/graph owner 和 Lifecycle 2.11 factory 继承 | **Supported（支持）** | 保留继承的父级 Factory/extra，并隔离重复 route 的栈 owner。 | [Entry 所有权](compose-navigation.md#entry-and-graph-ownership) |
 | 导航 | 目的地生命周期和自适应 pane | **Intentionally different（刻意不同）** | 允许多个 resumed entry；不要从 `RESUMED` 推断唯一可见性。 | [生命周期](compose-navigation.md#lifecycle-and-adaptive-panes) |
 | 导航 | 隐藏目的地保留组合 | **Partially supported（部分支持）** | 让后台工作感知生命周期；隐藏 session 会保留 Effect 和原生 View。 | [保留](compose-navigation.md#hidden-destination-retention) |
-| 导航 | 深链 | **Partially supported（部分支持）** | 替换 action/MIME 规则，不要依赖尚未解决的额外 query 行为。 | [深链](compose-navigation.md#deep-links) |
+| 导航 | 深链 | **Partially supported（部分支持）** | 替换 action/MIME 规则；未声明 query 值可存在，但不能影响导航策略。 | [深链](compose-navigation.md#deep-links) |
 | 导航 | 保存/恢复、系统 Back 和 Predictive Back | **Supported（支持）** | 恢复后重建存活对象，并在发布流程中保留设备验证。 | [恢复与 Back](compose-navigation.md#save-restore-and-process-death) |
 | 导航 | 直接 NavigationEvent 集成 | **Unsupported（不支持）** | 把 dispatcher-owner、forward event、测试 fake 和 Preview 需求留在 ViewCompose 外。 | [NavigationEvent](compose-navigation.md#system-back-and-predictive-back) |
 
@@ -141,23 +141,17 @@ Kotlin `2.0.21`，声明位置是
 
 根 `qaQuick` 任务会编译这些样例源码集或使用它们的测试。它还会运行
 `verifyMigrationPairedSamples`，拒绝中英文页面中缺失、额外、乱序或过期的成对片段。仅设备
-可验证的恢复和 Predictive Back 证据仍由[英文导航指南](https://docs.viewcompose.com/guides/navigation)
-链接的流程治理。
+可验证的恢复和 Predictive Back 证据仍由[状态与恢复对照](https://docs.viewcompose.com/migration/compose-state-recomposition-and-restoration)
+及[英文导航指南](https://docs.viewcompose.com/guides/navigation)链接的流程治理。
 
 ## 已知契约缺口
 
 在源码文档、实现和可执行证据就以下问题达成一致前，不要提高能力状态：
 
-- Fragment 内容当前收到 Fragment lifecycle owner，而销毁跟随 Fragment view lifecycle。
-- 一些 `renderInto` 销毁后操作会静默忽略，但公开文字描述为快速失败。
-- Android View 回滚会释放未提交候选，而当前公开 `onRelease` 文字只列出已提交移除和
-  session 销毁。
-- 导航指南与深链测试对额外未注册 query key 的行为存在冲突。
-- 相等结果与嵌套派生状态、只读快照嵌套、普通 keyed 兄弟节点重排需要专项回归覆盖。
+- 相等结果与嵌套派生状态以及只读快照嵌套需要专项回归覆盖。
 - 重复 size/padding、嵌套 inset 消费和 native-view 回调身份需要更广的可执行覆盖。
-- Lifecycle `2.11.0` 任意 UI 作用域和完整 parent factory/`CreationExtras` 继承没有
-  ViewCompose 等价证据。
-- 通用的非导航进程死亡认证和最新 Predictive Back 设备运行仍比完整语义基线更窄。
+- Lifecycle `2.11.0` 任意 UI 作用域没有 ViewCompose 等价证据。
+- 最新 Predictive Back 设备运行仍比完整语义基线更窄。
 
 复核必须先检查上游官方文档，再检查不可变 ViewCompose 源码契约、测试、可编译样例和适用的
 设备流程。签名匹配或 API 名称相似永远不足以证明语义等价。

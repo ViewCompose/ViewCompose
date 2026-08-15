@@ -15,7 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Compares the internal high-fidelity slice with its rounded reference using Phase 0 metrics.
+ * Compares revisioned design-system variants through locale-independent scenario contracts.
  *
  * Both paths use the same host, state, and renderer. The comparison therefore isolates the cost
  * of resolved recipes, custom geometry, and semantic motion without conflating a different app
@@ -93,16 +93,21 @@ class DesignSystemVerticalSliceBenchmark {
         startupMode = StartupMode.WARM,
         setupBlock = {
             startDesignSystemAndWait(kind)
-            scrollUntilText("Confirm")
-            SystemClock.sleep(SCROLL_SETTLE_MILLIS)
+            scrollUntilScenarioTarget(
+                designSystemScenarioId(kind),
+                DemoTargetRole.PrimaryAction,
+            )
+            waitForPerformanceMeasurementSettle()
         },
     ) {
         // A single retained patch can complete without enough frame slices for Perfetto to report
         // stable run-level percentiles. Repeat the same patch workload inside each iteration so the
         // metric still isolates retained updates while producing a representative frame sample.
-        repeat(PATCH_UPDATES_PER_ITERATION) { updateIndex ->
-            clickVisibleText("Confirm")
-            waitForText("Button clicks: ${updateIndex + 1}")
+        repeat(PATCH_UPDATES_PER_ITERATION) {
+            val scenarioId = designSystemScenarioId(kind)
+            val previous = scenarioTargetText(scenarioId, DemoTargetRole.State)
+            clickScenarioTarget(scenarioId, DemoTargetRole.PrimaryAction)
+            waitForScenarioTargetTextChange(scenarioId, DemoTargetRole.State, previous)
         }
     }
 
@@ -115,6 +120,7 @@ class DesignSystemVerticalSliceBenchmark {
         setupBlock = {
             startDesignSystemAndWait(kind)
             scrollToPageTop()
+            waitForPerformanceMeasurementSettle()
         },
     ) {
         swipePageUp()
@@ -130,13 +136,21 @@ class DesignSystemVerticalSliceBenchmark {
         startupMode = StartupMode.WARM,
         setupBlock = {
             startDesignSystemAndWait(kind)
-            scrollUntilText("Synchronize workspace")
-            scrollUntilText("Checked: true")
-            SystemClock.sleep(SCROLL_SETTLE_MILLIS)
+            scrollUntilScenarioTarget(
+                designSystemScenarioId(kind),
+                DemoTargetRole.SecondaryAction,
+            )
+            waitForPerformanceMeasurementSettle()
         },
     ) {
-        clickVisibleCheckableControlWithoutIdle()
-        waitForText("Checked: false")
+        val scenarioId = designSystemScenarioId(kind)
+        val previous = scenarioTargetText(scenarioId, DemoTargetRole.SecondaryTarget)
+        clickScenarioTarget(
+            scenarioId,
+            DemoTargetRole.SecondaryAction,
+            waitForIdle = false,
+        )
+        waitForScenarioTargetTextChange(scenarioId, DemoTargetRole.SecondaryTarget, previous)
         // The logical checked state changes before the visual spring completes. Keep the measured
         // trace open through the terminal frame so one representative user transition supplies the
         // whole animation workload instead of only its first frame.
@@ -157,33 +171,38 @@ class DesignSystemVerticalSliceBenchmark {
         startupMode = StartupMode.WARM,
         setupBlock = {
             startDesignSystemAndWait(initialKind)
-            scrollUntilText("Open dialog")
-            // UiAutomator idle waits are disabled for OEM stability, so let the page gesture settle
-            // before the measured overlay lifecycle begins.
-            SystemClock.sleep(SCROLL_SETTLE_MILLIS)
+            scrollUntilResourceTarget(DIALOG_OPEN_RESOURCE)
+            waitForPerformanceMeasurementSettle()
         },
     ) {
         // One overlay lifecycle yields too few frame slices on some OEM devices for stable
         // run-level percentiles. Repeat show and dismiss without changing the page position, then
         // use the final lifecycle for the representative root-scoped overlay replacement.
         repeat(OVERLAY_SHOW_DISMISS_REPEATS_PER_ITERATION) {
-            clickVisibleText("Open dialog")
-            waitForText("Overlay system: $initialKind")
-            clickVisibleText("Close coherent dialog")
-            waitForTextGone("Overlay system: $initialKind")
+            clickResourceTarget(DIALOG_OPEN_RESOURCE)
+            waitForResourceTarget(DIALOG_STATE_RESOURCE)
+            clickResourceTarget(DIALOG_CLOSE_RESOURCE)
+            waitForResourceTargetGone(DIALOG_STATE_RESOURCE)
         }
-        clickVisibleText("Open dialog")
-        waitForText("Overlay system: $initialKind")
-        clickVisibleText("Switch overlay to $replacementKind")
-        waitForText("Overlay system: $replacementKind")
-        clickVisibleText("Close coherent dialog")
-        waitForTextGone("Overlay system: $replacementKind")
+        clickResourceTarget(DIALOG_OPEN_RESOURCE)
+        val previous = resourceTargetText(DIALOG_STATE_RESOURCE)
+        clickResourceTarget(DIALOG_SWITCH_RESOURCE)
+        val current = waitForResourceTargetTextChange(DIALOG_STATE_RESOURCE, previous)
+        check(current.contains(replacementKind)) {
+            "Expected overlay replacement $replacementKind, found $current"
+        }
+        clickResourceTarget(DIALOG_CLOSE_RESOURCE)
+        waitForResourceTargetGone(DIALOG_STATE_RESOURCE)
     }
 
     private companion object {
         const val CUT_CONTRAST = "cut-contrast"
         const val CUPERTINO_PRESSURE = "cupertino-pressure"
         const val ROUNDED_REFERENCE = "rounded-reference"
+        const val DIALOG_OPEN_RESOURCE = "demo_design_system_dialog_open"
+        const val DIALOG_STATE_RESOURCE = "demo_design_system_dialog_state"
+        const val DIALOG_SWITCH_RESOURCE = "demo_design_system_dialog_switch"
+        const val DIALOG_CLOSE_RESOURCE = "demo_design_system_dialog_close"
     }
 }
 
@@ -195,7 +214,6 @@ private fun designSystemIterations(): Int {
         ?: DEFAULT_ITERATIONS
 }
 
-private const val SCROLL_SETTLE_MILLIS = 2_000L
 private const val ACTIVE_ANIMATION_SETTLE_MILLIS = 600L
 private const val PATCH_UPDATES_PER_ITERATION = 24
 private const val OVERLAY_SHOW_DISMISS_REPEATS_PER_ITERATION = 5

@@ -18,7 +18,7 @@
             android:shell="true"
             tools:targetApi="29" />
         <activity
-            android:name=".WidgetShowcaseActivity"
+            android:name=".ComponentShowcaseActivity"
             android:exported="false" />
         <activity
             android:name=".ActionsActivity"
@@ -52,9 +52,6 @@
             android:name=".InteropActivity"
             android:exported="false" />
         <activity
-            android:name=".PreviewActivity"
-            android:exported="false" />
-        <activity
             android:name=".performance.PerformanceComparisonActivity"
             android:exported="false" />
         <activity
@@ -67,6 +64,9 @@
             android:name=".ThemeSwitchActivity"
             android:exported="false" />
         <activity
+            android:name=".ThemeSwitchSecondaryActivity"
+            android:exported="false" />
+        <activity
             android:name=".DemoDesignSystemVerificationActivity"
             android:exported="false" />
         <activity
@@ -74,6 +74,12 @@
             android:exported="false" />
         <activity
             android:name=".ResourceConfigurationActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DemoEnvironmentActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DemoBuildInfoActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

@@ -36,6 +36,8 @@ internal class NavEntryOwner(
     val entry: NavEntry,
     private val application: Application?,
     restoredState: Bundle?,
+    private val parentViewModelProviderFactory: ViewModelProvider.Factory? = null,
+    parentViewModelCreationExtras: CreationExtras = CreationExtras.Empty,
 ) : LifecycleOwner,
     ViewModelStoreOwner,
     SavedStateRegistryOwner,
@@ -44,6 +46,7 @@ internal class NavEntryOwner(
     private val savedStateController = SavedStateRegistryController.create(this)
     private val ownedViewModelStore = ViewModelStore()
     private val defaultArguments = entry.route.arguments.toBundle()
+    private val inheritedCreationExtras = MutableCreationExtras(parentViewModelCreationExtras)
 
     override val lifecycle: Lifecycle
         get() = lifecycleRegistry
@@ -55,20 +58,22 @@ internal class NavEntryOwner(
         get() = savedStateController.savedStateRegistry
 
     override val defaultViewModelProviderFactory: ViewModelProvider.Factory =
-        SavedStateViewModelFactory(
+        parentViewModelProviderFactory ?: SavedStateViewModelFactory(
             application,
             this,
             defaultArguments,
         )
 
     override val defaultViewModelCreationExtras: CreationExtras
-        get() = MutableCreationExtras().apply {
-            // Route arguments enter extras as defaults, matching SavedStateHandle and Android VM factory behavior.
+        get() = MutableCreationExtras(inheritedCreationExtras).apply {
+            // The entry owns saved state and storage; unrelated parent DI/application extras remain intact.
             this[SAVED_STATE_REGISTRY_OWNER_KEY] = this@NavEntryOwner
             this[VIEW_MODEL_STORE_OWNER_KEY] = this@NavEntryOwner
             this[DEFAULT_ARGS_KEY] = Bundle(defaultArguments)
-            application?.let { app ->
-                this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] = app
+            if (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] == null) {
+                application?.let { app ->
+                    this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] = app
+                }
             }
         }
 

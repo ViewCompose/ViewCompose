@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_interop_mode_primary">主要</string>
+    <string name="demo_interop_mode_alternate">替代</string>
+    <string name="demo_interop_state">场景状态：%1$s</string>
+    <string name="demo_interop_action_primary">显示原生主要内容</string>
+    <string name="demo_interop_action_alternate">显示原生替代内容</string>
+    <string name="demo_interop_reset">重置 Android View 场景</string>
+    <string name="demo_interop_native_primary">原生 TextView：主要内容</string>
+    <string name="demo_interop_native_alternate">原生 TextView：替代内容</string>
+    <string name="demo_interop_native_description">原生 Android TextView 结果</string>
+    <string name="demo_interop_declarative_mirror">声明式镜像：%1$s</string>
+    <string name="demo_interop_theme_note">原生 TextView 保持挂载，状态、语言和主题值会原位 patch 到它。</string>
+</resources>

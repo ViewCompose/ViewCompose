@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_graphics_reset">Reset fixture</string>
+    <string name="demo_graphics_primitives_title">Canvas primitives</string>
+    <string name="demo_graphics_primitives_summary">Rect, line, circle, and text commands verify stable Canvas rendering.</string>
+    <string name="demo_graphics_drawing_state">blend=%1$s · content=%2$s · cacheKey=%3$d · accent=%4$s</string>
+    <string name="demo_graphics_drawing_action">Mutate drawing fixture</string>
+    <string name="demo_graphics_state_blend_multiply">multiply</string>
+    <string name="demo_graphics_state_blend_src_over">src-over</string>
+    <string name="demo_graphics_state_content_visible">visible</string>
+    <string name="demo_graphics_state_content_hidden">hidden</string>
+    <string name="demo_graphics_state_accent_orange">orange</string>
+    <string name="demo_graphics_state_accent_indigo">indigo</string>
+    <string name="demo_graphics_primitives_canvas_label">Canvas primitives</string>
+    <string name="demo_graphics_path_clip_title">Path and clip</string>
+    <string name="demo_graphics_path_clip_summary">Layer path clipping and strokes to verify clipPath and path draw ordering.</string>
+    <string name="demo_graphics_blend_title">Gradient, blend, and filter</string>
+    <string name="demo_graphics_blend_summary">Toggle Multiply on high-contrast overlapping layers and retain the blur image-filter fallback path.</string>
+    <string name="demo_graphics_blend_button_multiply">Blend: Multiply</string>
+    <string name="demo_graphics_blend_button_src_over">Blend: SrcOver</string>
+    <string name="demo_graphics_blend_status_multiply">Current blend mode: Multiply</string>
+    <string name="demo_graphics_blend_status_src_over">Current blend mode: SrcOver</string>
+    <string name="demo_graphics_blend_canvas_label">Blend target</string>
+    <string name="demo_graphics_draw_modifiers_title">Draw modifier order</string>
+    <string name="demo_graphics_draw_modifiers_summary">Toggle content forwarding to verify stable drawBehind and drawWithContent ordering.</string>
+    <string name="demo_graphics_draw_hide_content">Hide content layer</string>
+    <string name="demo_graphics_draw_show_content">Show content layer</string>
+    <string name="demo_graphics_draw_status_visible">drawWithContent forwards content</string>
+    <string name="demo_graphics_draw_status_hidden">drawWithContent intercepts content</string>
+    <string name="demo_graphics_draw_canvas_label">Canvas content layer</string>
+    <string name="demo_graphics_cache_title">drawWithCache semantics</string>
+    <string name="demo_graphics_cache_summary">Changing the cache key rebuilds cached commands; changing the accent affects only the content layer.</string>
+    <string name="demo_graphics_cache_key_action">Change cache key (%1$d)</string>
+    <string name="demo_graphics_cache_accent_orange">Accent: Orange</string>
+    <string name="demo_graphics_cache_accent_indigo">Accent: Indigo</string>
+    <string name="demo_graphics_cache_state">cacheKey=%1$d · accent=%2$s</string>
+    <string name="demo_graphics_cache_canvas_key">cacheKey=%1$d</string>
+    <string name="demo_graphics_inner_field_initial">Inner shadow input</string>
+    <string name="demo_graphics_inner_click">Verify click (%1$d)</string>
+    <string name="demo_graphics_inner_click_count">Click count %1$d</string>
+    <string name="demo_graphics_shadow_diagnostics_state">revision=%1$d · policy=%2$s</string>
+    <string name="demo_graphics_shadow_policy_auto">Auto</string>
+    <string name="demo_graphics_shadow_policy_bitmap">Bitmap</string>
+    <string name="demo_graphics_shadow_policy_render_node">RenderNode</string>
+    <string name="demo_graphics_shadow_refresh">Refresh diagnostics</string>
+    <string name="demo_graphics_shadow_clear_cache">Clear cache</string>
+    <string name="demo_graphics_outer_single_title">Exact single outer shadow</string>
+    <string name="demo_graphics_outer_single_summary">Explicit blur, offset, and color without View.elevation.</string>
+    <string name="demo_graphics_outer_single_sample_title">Soft elevation</string>
+    <string name="demo_graphics_outer_single_sample_description">blur=14dp · offsetY=7dp</string>
+    <string name="demo_graphics_outer_multi_title">Layered color shadows</string>
+    <string name="demo_graphics_outer_multi_summary">Compose a blue upper-left glow and magenta lower-right shadow in declaration order.</string>
+    <string name="demo_graphics_outer_multi_sample_title">Ordered color layers</string>
+    <string name="demo_graphics_outer_multi_sample_description">2 layers · independent blur and offset</string>
+    <string name="demo_graphics_outer_spread_title">Spread comparison</string>
+    <string name="demo_graphics_outer_spread_summary">Compare outward and inward masks with the same blur radius.</string>
+    <string name="demo_graphics_outer_positive_spread_title">Positive spread</string>
+    <string name="demo_graphics_outer_positive_spread_description">spread=6dp</string>
+    <string name="demo_graphics_outer_negative_spread_title">Negative spread</string>
+    <string name="demo_graphics_outer_negative_spread_description">spread=-4dp</string>
+    <string name="demo_graphics_outer_shape_title">Shape mapping</string>
+    <string name="demo_graphics_outer_shape_summary">Use one UiShape for cut-corner content and shadow to verify outline bridging.</string>
+    <string name="demo_graphics_outer_shape_sample_title">Cut corner shadow</string>
+    <string name="demo_graphics_outer_shape_sample_description">UiShape.cut(18dp)</string>
+    <string name="demo_graphics_inner_single_title">Single inner shadow</string>
+    <string name="demo_graphics_inner_single_summary">Draw foreground decoration after content and clip it to the rounded outline.</string>
+    <string name="demo_graphics_inner_single_sample_title">Inset depth</string>
+    <string name="demo_graphics_inner_single_sample_description">blur=10dp · offset=(3dp, 4dp)</string>
+    <string name="demo_graphics_inner_multi_title">Layered inner shadows</string>
+    <string name="demo_graphics_inner_multi_summary">Verify declaration order and independent offsets with a cool top layer and dark bottom layer.</string>
+    <string name="demo_graphics_inner_multi_sample_title">Dual inset layers</string>
+    <string name="demo_graphics_inner_multi_sample_description">2 layers · ordered foreground draw</string>
+    <string name="demo_graphics_inner_interop_title">Input and gesture interop</string>
+    <string name="demo_graphics_inner_interop_summary">The foreground shadow must not intercept TextField focus, ripple, or Button clicks.</string>
+    <string name="demo_graphics_inner_interop_note">Foreground decoration remains input-transparent.</string>
+    <string name="demo_graphics_shadow_diagnostics_title">Shadow cache and backend diagnostics</string>
+    <string name="demo_graphics_shadow_diagnostics_summary">Rebuild samples after a policy change, then inspect actual draws, cache hits, and fallback reasons.</string>
+    <string name="demo_graphics_shadow_probe_title">Backend draw probe</string>
+    <string name="demo_graphics_shadow_probe_description">Rebuilt when policy changes or caches clear</string>
+    <string name="demo_graphics_shadow_backend_group">Backend</string>
+    <string name="demo_graphics_shadow_fact_policy">Policy</string>
+    <string name="demo_graphics_shadow_fact_latest_backend">Latest backend</string>
+    <string name="demo_graphics_shadow_fact_decision_reason">Decision reason</string>
+    <string name="demo_graphics_shadow_fact_bitmap_draws">Bitmap draws</string>
+    <string name="demo_graphics_shadow_fact_render_node_draws">RenderNode draws</string>
+    <string name="demo_graphics_shadow_fact_render_node_records">RenderNode records</string>
+    <string name="demo_graphics_shadow_fact_render_node_hits">RenderNode hits</string>
+    <string name="demo_graphics_shadow_fact_render_node_cache">RenderNode cache</string>
+    <string name="demo_graphics_shadow_raster_group">Raster cache</string>
+    <string name="demo_graphics_shadow_fact_outer_hits">Outer hits</string>
+    <string name="demo_graphics_shadow_fact_outer_misses">Outer misses</string>
+    <string name="demo_graphics_shadow_fact_outer_evictions">Outer evictions</string>
+    <string name="demo_graphics_shadow_fact_outer_oversized">Outer over-budget</string>
+    <string name="demo_graphics_shadow_fact_outer_cache">Outer cache</string>
+    <string name="demo_graphics_shadow_fact_inner_hits">Inner hits</string>
+    <string name="demo_graphics_shadow_fact_inner_misses">Inner misses</string>
+    <string name="demo_graphics_shadow_fact_inner_cache">Inner cache</string>
+    <string name="demo_graphics_shadow_not_drawn">Not drawn</string>
+    <string name="demo_graphics_shadow_kib">%1$d KiB</string>
+    <string name="demo_graphics_shadow_decisions">Decisions: %1$s</string>
+    <string name="demo_graphics_shadow_lazy_title">1,000-item lazy shadow list</string>
+    <string name="demo_graphics_shadow_lazy_summary">All rows use stable keys, equal dimensions, and two shadow layers so returning after a fling exposes cache reuse.</string>
+    <string name="demo_graphics_shadow_lazy_facts">%1$d items · stable keys · shared raster spec</string>
+    <string name="demo_graphics_shadow_lazy_instruction">Fling to the bottom, return here, and refresh the diagnostics above.</string>
+    <string name="demo_graphics_shadow_row_title">Shadow row #%1$d</string>
+    <string name="demo_graphics_shadow_row_summary">stable key · shared shape · cached raster</string>
+</resources>

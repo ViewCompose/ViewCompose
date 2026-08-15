@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_scenario_component_card_title">组件 · 卡片</string>
+    <string name="demo_scenario_component_card_summary">验证填充、高程、描边、禁用卡片及文本按钮操作 Surface。</string>
+    <string name="demo_scenario_component_fab_title">组件 · 浮动操作</string>
+    <string name="demo_scenario_component_fab_summary">验证小、中、大、扩展及自定义颜色的浮动操作。</string>
+    <string name="demo_scenario_component_chip_title">组件 · Chip</string>
+    <string name="demo_scenario_component_chip_summary">验证辅助、筛选、输入、建议、选中及禁用 Chip 状态。</string>
+    <string name="demo_scenario_component_list_item_title">组件 · 列表项与徽标</string>
+    <string name="demo_scenario_component_list_item_summary">验证列表项插槽以及数字、圆点和自定义颜色徽标。</string>
+
+    <string name="demo_actions_reset">重置夹具</string>
+    <string name="demo_actions_click_count">操作次数：%1$d</string>
+    <string name="demo_actions_filter_state">筛选已选中：%1$s</string>
+    <string name="demo_actions_state_on">是</string>
+    <string name="demo_actions_state_off">否</string>
+
+    <string name="demo_actions_card_primary">高程操作卡片</string>
+    <string name="demo_actions_card_primary_summary">点击验证状态及稳定的阴影几何。</string>
+    <string name="demo_actions_card_variants">卡片变体</string>
+    <string name="demo_actions_card_filled">填充卡片</string>
+    <string name="demo_actions_card_filled_summary">默认填充 Surface。</string>
+    <string name="demo_actions_card_outlined">描边卡片</string>
+    <string name="demo_actions_card_outlined_summary">带边框的次要 Surface。</string>
+    <string name="demo_actions_card_disabled">禁用卡片</string>
+    <string name="demo_actions_card_disabled_summary">已禁用且不可点击。</string>
+    <string name="demo_actions_text_button">标准文本按钮</string>
+    <string name="demo_actions_text_button_disabled">禁用文本按钮</string>
+
+    <string name="demo_actions_fab_primary_description">增加浮动操作计数</string>
+    <string name="demo_actions_fab_variants">浮动操作尺寸</string>
+    <string name="demo_actions_fab_small_description">小型浮动操作</string>
+    <string name="demo_actions_fab_medium_description">中型浮动操作</string>
+    <string name="demo_actions_fab_large_description">大型浮动操作</string>
+    <string name="demo_actions_fab_size_summary">小、中、大三种触控目标</string>
+    <string name="demo_actions_fab_new_project">新建项目</string>
+    <string name="demo_actions_fab_custom_color">自定义颜色</string>
+
+    <string name="demo_actions_chip_primary">筛选 Chip</string>
+    <string name="demo_actions_chip_variants">Chip 变体</string>
+    <string name="demo_actions_chip_assist">辅助</string>
+    <string name="demo_actions_chip_input">输入</string>
+    <string name="demo_actions_chip_suggestion">建议</string>
+    <string name="demo_actions_chip_selected">已选中</string>
+    <string name="demo_actions_chip_unselected">未选中</string>
+    <string name="demo_actions_chip_disabled">禁用</string>
+    <string name="demo_actions_chip_selected_disabled">选中并禁用</string>
+
+    <string name="demo_actions_list_primary">可点击列表项</string>
+    <string name="demo_actions_list_primary_summary">点击验证交互状态。</string>
+    <string name="demo_actions_list_variants">列表项插槽</string>
+    <string name="demo_actions_list_single_line">单行列表项</string>
+    <string name="demo_actions_list_supporting">带支撑文本的列表项</string>
+    <string name="demo_actions_list_supporting_summary">支撑文案与标题保持对齐。</string>
+    <string name="demo_actions_list_complete">完整列表项</string>
+    <string name="demo_actions_list_complete_summary">包含前导图标、上方标注、支撑文案和尾部内容。</string>
+    <string name="demo_actions_list_overline">分类</string>
+    <string name="demo_actions_list_details">详情</string>
+    <string name="demo_actions_list_icon_description">列表项图标</string>
+    <string name="demo_actions_badge_variants">徽标变体</string>
+    <string name="demo_actions_badge_number">数字</string>
+    <string name="demo_actions_badge_dot">圆点</string>
+    <string name="demo_actions_badge_custom">自定义色</string>
+    <string name="demo_actions_badge_number_description">数字徽标</string>
+    <string name="demo_actions_badge_dot_description">圆点徽标</string>
+    <string name="demo_actions_badge_custom_description">自定义颜色徽标</string>
+</resources>

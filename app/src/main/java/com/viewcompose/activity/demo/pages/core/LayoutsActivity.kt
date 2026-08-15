@@ -4,24 +4,21 @@ import android.view.ViewGroup
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
- * 指定 Layouts demo 初始页签，复用在手工验收和自动化启动路径中。
- * Selects the initial Layouts demo tab, shared by manual acceptance and automated launch paths.
- */
-internal const val EXTRA_LAYOUTS_PAGE_INDEX = "layouts_page_index"
-
-/**
- * Layouts chapter 的 Activity 入口，展示线性、滚动、流式和约束布局能力。
- * Activity entry for the Layouts chapter, showcasing linear, scrollable, flow, and constraint layout capabilities.
+ * Hosts one strict layout fixture selected by immutable scenario identity.
  */
 class LayoutsActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Layouts"
+    override val demoTitleRes: Int = R.string.demo_activity_layouts_title
 
     override fun buildDemoContent(
         root: ViewGroup,
         builder: UiTreeBuilder,
     ) {
+        val scenario = checkNotNull(currentScenario()) {
+            "LayoutsActivity requires a registered layout scenario"
+        }
         builder.LayoutPage(
-            initialPageIndex = intent?.getIntExtra(EXTRA_LAYOUTS_PAGE_INDEX, 0) ?: 0,
+            fixture = LayoutFixture.from(scenario.id),
+            scenario = scenario,
         )
     }
 }

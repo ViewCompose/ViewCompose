@@ -111,6 +111,54 @@ class RememberSaveableTest {
     }
 
     @Test
+    fun `failed provider registration preserves restored state and retries on later commit`() {
+        val backingRegistry = createSaveableStateRegistry(
+            restoredValues = mapOf("user:field" to "restored"),
+        )
+        val registry = FailOnceSaveableStateRegistry(backingRegistry)
+        val composer = ComposerLite()
+        var value = ""
+
+        fun commit(): Throwable? {
+            composer.requestRootRecompose()
+            return runCatching {
+                ComposerContext.withComposer(
+                    composer = composer,
+                    coroutineContext = Dispatchers.Unconfined,
+                ) {
+                    composer.composeRoot {
+                        UiTreeBuilder().apply {
+                            ProvideSaveableStateRegistry(registry) {
+                                value = rememberSaveable(
+                                    key = "field",
+                                    saver = Saver(
+                                        save = { saved -> saved },
+                                        restore = { restored -> restored },
+                                    ),
+                                ) {
+                                    "initial"
+                                }
+                            }
+                        }
+                    }
+                }
+            }.exceptionOrNull()
+        }
+
+        assertTrue(commit() is IllegalStateException)
+        assertEquals("restored", value)
+        assertEquals(1, registry.registrationAttempts)
+        assertEquals("restored", backingRegistry.performSave()["user:field"])
+
+        assertTrue(commit() == null)
+        assertEquals(2, registry.registrationAttempts)
+        assertEquals("restored", backingRegistry.performSave()["user:field"])
+
+        composer.dispose()
+        assertEquals("restored", backingRegistry.performSave()["user:field"])
+    }
+
+    @Test
     fun `aborted composition does not publish a replacement saver`() {
         val registry = bundleLikeRegistry()
         val composer = ComposerLite()
@@ -480,4 +528,22 @@ class RememberSaveableTest {
         val name: String,
         val population: Int,
     )
+
+    private class FailOnceSaveableStateRegistry(
+        private val delegate: SaveableStateRegistry,
+    ) : SaveableStateRegistry by delegate {
+        var registrationAttempts: Int = 0
+            private set
+
+        override fun registerProvider(
+            key: String,
+            valueProvider: () -> Any?,
+        ): SaveableStateRegistry.Entry {
+            registrationAttempts += 1
+            if (registrationAttempts == 1) {
+                error("transient provider registration failure")
+            }
+            return delegate.registerProvider(key, valueProvider)
+        }
+    }
 }

@@ -1,13 +1,8 @@
 package com.viewcompose
 
-import com.viewcompose.ui.modifier.Modifier
-import com.viewcompose.ui.modifier.shape
-import com.viewcompose.ui.modifier.backgroundColor
-import com.viewcompose.ui.modifier.cornerRadius
-import com.viewcompose.ui.modifier.fillMaxWidth
-import com.viewcompose.ui.modifier.padding
-import com.viewcompose.ui.modifier.testTag
-import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.ui.foundation.AlertDialog
 import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Button
@@ -32,24 +27,26 @@ import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.Toast
 import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.backgroundColor
+import com.viewcompose.ui.modifier.fillMaxWidth
+import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.shape
+import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 
-internal fun UiTreeBuilder.DeclareFeedbackOverlays(
+internal fun UiTreeBuilder.DeclareTransientFeedbackOverlays(
     anchors: FeedbackAnchors,
-    state: FeedbackPageState,
+    state: TransientFeedbackState,
+    scenario: DemoScenarioSpec?,
 ) {
     Dialog(
-        visible = state.dialogVisibleState.value,
-        requestKey = "feedback_dialog",
+        visible = state.dialogVisible.value,
+        requestKey = "feedback_transient_dialog",
         position = DialogPosition.Bottom,
         scrimOpacity = 0.48f,
-        onDismissRequest = {
-            if (state.dialogVisibleState.value) {
-                state.dialogVisibleState.value = false
-                state.lastEventState.value = "Dialog 关闭 ${state.dialogCountState.value}"
-            }
-        },
+        onDismissRequest = { state.dialogVisible.value = false },
     ) {
         Column(
             spacing = 12.dp,
@@ -60,11 +57,15 @@ internal fun UiTreeBuilder.DeclareFeedbackOverlays(
                 .padding(16.dp),
         ) {
             Text(
-                text = "自定义 Dialog ${state.dialogCountState.value}",
+                text = stringResource(
+                    R.string.demo_feedback_custom_dialog_title,
+                    state.dialogCount.value,
+                ),
                 style = UiTextStyle(fontSizeSp = 18.sp),
+                modifier = Modifier.feedbackScenarioTarget(scenario, DemoAutomationRole.Target),
             )
             Text(
-                text = "Dialog 内容通过 overlay host 渲染到同一个 render session 中。",
+                text = stringResource(R.string.demo_feedback_custom_dialog_body),
                 color = TextDefaults.secondaryColor(),
             )
             Row(
@@ -72,42 +73,29 @@ internal fun UiTreeBuilder.DeclareFeedbackOverlays(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Button(
-                    text = "确认",
-                    onClick = {
-                        state.dialogVisibleState.value = false
-                        state.lastEventState.value = "Dialog 确认 ${state.dialogCountState.value}"
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag(DemoTestTags.FEEDBACK_DIALOG_CONFIRM),
+                    text = stringResource(R.string.demo_feedback_custom_dialog_confirm),
+                    onClick = { state.dialogVisible.value = false },
+                    modifier = Modifier.weight(1f),
                 )
                 Button(
-                    text = "关闭",
+                    text = stringResource(R.string.demo_feedback_reset),
                     variant = ButtonVariant.Outlined,
-                    onClick = {
-                        state.dialogVisibleState.value = false
-                        state.lastEventState.value = "Dialog 关闭 ${state.dialogCountState.value}"
-                    },
+                    onClick = { resetTransientFeedback(state) },
                     modifier = Modifier
                         .weight(1f)
-                        .testTag(DemoTestTags.FEEDBACK_DIALOG_CLOSE),
+                        .feedbackScenarioTarget(scenario, DemoAutomationRole.Reset),
                 )
             }
         }
     }
 
     Popup(
-        visible = state.popupVisibleState.value,
-        anchorId = anchors.popupAnchorId,
-        requestKey = "feedback_popup",
+        visible = state.popupVisible.value,
+        anchorId = anchors.popup,
+        requestKey = "feedback_transient_popup",
         alignment = PopupAlignment.AboveStart,
         offsetY = 8.dp,
-        onDismissRequest = {
-            if (state.popupVisibleState.value) {
-                state.popupVisibleState.value = false
-                state.lastEventState.value = "Popup 关闭 ${state.popupCountState.value}"
-            }
-        },
+        onDismissRequest = { state.popupVisible.value = false },
     ) {
         Column(
             spacing = 10.dp,
@@ -117,151 +105,104 @@ internal fun UiTreeBuilder.DeclareFeedbackOverlays(
                 .padding(12.dp),
         ) {
             Text(
-                text = "Popup ${state.popupCountState.value}",
+                text = stringResource(
+                    R.string.demo_feedback_popup_title,
+                    state.popupCount.value,
+                ),
                 style = UiTextStyle(fontSizeSp = 16.sp),
             )
             Text(
-                text = "锚定弹窗内容，通过 anchor target 定位。",
+                text = stringResource(R.string.demo_feedback_popup_body),
                 color = TextDefaults.secondaryColor(),
             )
             Button(
-                text = "关闭 Popup",
+                text = stringResource(R.string.demo_feedback_popup_close),
                 variant = ButtonVariant.Outlined,
-                onClick = {
-                    state.popupVisibleState.value = false
-                    state.lastEventState.value = "Popup 手动关闭 ${state.popupCountState.value}"
-                },
+                onClick = { state.popupVisible.value = false },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag(DemoTestTags.FEEDBACK_POPUP_DISMISS),
+                    .feedbackScenarioTarget(scenario, DemoAutomationRole.SecondaryTarget),
             )
         }
     }
 
     Snackbar(
-        visible = state.snackbarVisibleState.value,
-        message = "Snackbar 通知 ${state.snackbarCountState.value}",
-        actionLabel = "知道了",
+        visible = state.snackbarVisible.value,
+        message = stringResource(
+            R.string.demo_feedback_snackbar_message,
+            state.snackbarCount.value,
+        ),
+        actionLabel = stringResource(R.string.demo_feedback_snackbar_action),
         duration = SnackbarDuration.Long,
-        requestKey = "feedback_snackbar",
-        onAction = {
-            state.lastEventState.value = "Snackbar 操作 ${state.snackbarCountState.value}"
-            state.snackbarVisibleState.value = false
-        },
-        onDismiss = {
-            if (state.snackbarVisibleState.value) {
-                state.lastEventState.value = "Snackbar 消失 ${state.snackbarCountState.value}"
-                state.snackbarVisibleState.value = false
-            }
-        },
+        requestKey = "feedback_transient_snackbar",
+        onAction = { state.snackbarVisible.value = false },
+        onDismiss = { state.snackbarVisible.value = false },
     )
 
     Toast(
-        visible = state.toastCountState.value > 0,
-        message = "Toast 提示 ${state.toastCountState.value}",
-        requestKey = "feedback_toast_${state.toastCountState.value}",
+        visible = state.toastCount.value > 0,
+        message = stringResource(R.string.demo_feedback_toast_message, state.toastCount.value),
+        requestKey = "feedback_transient_toast_${state.toastCount.value}",
     )
+}
 
+internal fun UiTreeBuilder.DeclareDialogFeedbackOverlays(
+    state: DialogFeedbackState,
+    scenario: DemoScenarioSpec?,
+) {
     AlertDialog(
-        visible = state.alertDialogVisibleState.value,
-        title = "确认删除？",
-        text = "此操作不可撤销，删除后数据将无法恢复。",
-        confirmButtonText = "确定",
+        visible = state.alertVisible.value,
+        title = stringResource(R.string.demo_feedback_alert_title),
+        text = stringResource(R.string.demo_feedback_alert_body),
+        confirmButtonText = stringResource(R.string.demo_feedback_alert_confirm),
         onConfirm = {
-            state.alertDialogVisibleState.value = false
-            state.lastEventState.value = "AlertDialog 确认"
+            state.alertVisible.value = false
+            state.outcome.value = DialogFeedbackOutcome.AlertConfirmed
         },
-        dismissButtonText = "取消",
+        dismissButtonText = stringResource(R.string.demo_feedback_alert_cancel),
         onDismiss = {
-            state.alertDialogVisibleState.value = false
-            state.lastEventState.value = "AlertDialog 取消"
+            state.alertVisible.value = false
+            state.outcome.value = DialogFeedbackOutcome.AlertDismissed
         },
         onDismissRequest = {
-            state.alertDialogVisibleState.value = false
-            state.lastEventState.value = "AlertDialog 外部关闭"
+            state.alertVisible.value = false
+            state.outcome.value = DialogFeedbackOutcome.AlertDismissed
         },
         requestKey = "feedback_alert_dialog",
     )
 
     AlertDialog(
-        visible = state.alertDialogIconVisibleState.value,
-        title = "更新可用",
-        text = "发现新版本，是否立即更新？",
-        confirmButtonText = "更新",
+        visible = state.iconAlertVisible.value,
+        title = stringResource(R.string.demo_feedback_icon_alert_title),
+        text = stringResource(R.string.demo_feedback_icon_alert_body),
+        confirmButtonText = stringResource(R.string.demo_feedback_icon_alert_confirm),
         onConfirm = {
-            state.alertDialogIconVisibleState.value = false
-            state.lastEventState.value = "AlertDialog 带图标 确认"
+            state.iconAlertVisible.value = false
+            state.outcome.value = DialogFeedbackOutcome.IconConfirmed
         },
-        dismissButtonText = "稍后",
+        dismissButtonText = stringResource(R.string.demo_feedback_icon_alert_cancel),
         onDismiss = {
-            state.alertDialogIconVisibleState.value = false
-            state.lastEventState.value = "AlertDialog 带图标 取消"
+            state.iconAlertVisible.value = false
+            state.outcome.value = DialogFeedbackOutcome.IconDismissed
         },
         onDismissRequest = {
-            state.alertDialogIconVisibleState.value = false
-            state.lastEventState.value = "AlertDialog 带图标 外部关闭"
+            state.iconAlertVisible.value = false
+            state.outcome.value = DialogFeedbackOutcome.IconDismissed
         },
         icon = ImageSource.Resource(R.drawable.demo_media_icon),
-        requestKey = "feedback_alert_dialog_icon",
-    )
-
-    DropdownMenu(
-        expanded = state.menuExpandedState.value,
-        anchorId = anchors.menuAnchorId,
-        onDismissRequest = { state.menuExpandedState.value = false },
-        requestKey = "feedback_dropdown_menu",
-    ) {
-        DropdownMenuItem(
-            text = "编辑",
-            onClick = {
-                state.menuSelectedState.value = "编辑"
-                state.menuExpandedState.value = false
-            },
-            leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
-        )
-        DropdownMenuItem(
-            text = "复制",
-            onClick = {
-                state.menuSelectedState.value = "复制"
-                state.menuExpandedState.value = false
-            },
-        )
-        DropdownMenuItem(
-            text = "分享",
-            onClick = {
-                state.menuSelectedState.value = "分享"
-                state.menuExpandedState.value = false
-            },
-            trailingText = "Ctrl+S",
-        )
-        DropdownMenuItem(
-            text = "删除",
-            onClick = {},
-            enabled = false,
-        )
-    }
-
-    PlainTooltip(
-        text = "这是一个提示信息",
-        visible = state.tooltipVisibleState.value,
-        anchorId = anchors.tooltipAnchorId,
-        onDismissRequest = { state.tooltipVisibleState.value = false },
-        requestKey = "feedback_tooltip",
+        requestKey = "feedback_icon_alert_dialog",
     )
 
     ModalBottomSheet(
-        visible = state.bottomSheetVisibleState.value,
+        visible = state.bottomSheetVisible.value,
         requestKey = "feedback_bottom_sheet",
-        onDismissRequest = {
-            state.bottomSheetVisibleState.value = false
-            state.lastEventState.value = "BottomSheet 关闭"
-        },
+        onDismissRequest = { resetDialogFeedback(state) },
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .shape(SurfaceDefaults.shape())
-                .backgroundColor(ModalBottomSheetDefaults.containerColor())
+                .backgroundColor(ModalBottomSheetDefaults.containerColor()),
         ) {
             Column(
                 spacing = 12.dp,
@@ -270,44 +211,95 @@ internal fun UiTreeBuilder.DeclareFeedbackOverlays(
                     .padding(16.dp),
             ) {
                 Text(
-                    text = "底部弹窗",
+                    text = stringResource(R.string.demo_feedback_bottom_sheet_title),
                     style = UiTextStyle(fontSizeSp = 18.sp),
-                    modifier = Modifier.testTag(DemoTestTags.FEEDBACK_BOTTOM_SHEET_TITLE),
+                    modifier = Modifier.feedbackScenarioTarget(
+                        scenario,
+                        DemoAutomationRole.Target,
+                    ),
                 )
                 Text(
-                    text = "ModalBottomSheet 通过 overlay 路径渲染，支持手势下滑关闭。",
+                    text = stringResource(R.string.demo_feedback_bottom_sheet_body),
                     color = TextDefaults.secondaryColor(),
                 )
                 Divider()
                 Button(
-                    text = "选项一：保存草稿",
+                    text = stringResource(R.string.demo_feedback_bottom_sheet_save),
                     onClick = {
-                        state.bottomSheetVisibleState.value = false
-                        state.lastEventState.value = "BottomSheet 保存草稿"
+                        state.bottomSheetVisible.value = false
+                        state.outcome.value = DialogFeedbackOutcome.SheetSaved
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Button(
-                    text = "选项二：丢弃更改",
+                    text = stringResource(R.string.demo_feedback_bottom_sheet_discard),
                     variant = ButtonVariant.Outlined,
                     onClick = {
-                        state.bottomSheetVisibleState.value = false
-                        state.lastEventState.value = "BottomSheet 丢弃更改"
+                        state.bottomSheetVisible.value = false
+                        state.outcome.value = DialogFeedbackOutcome.SheetDiscarded
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Button(
-                    text = "关闭",
+                    text = stringResource(R.string.demo_feedback_reset),
                     variant = ButtonVariant.Tonal,
-                    onClick = {
-                        state.bottomSheetVisibleState.value = false
-                        state.lastEventState.value = "BottomSheet 关闭"
-                    },
+                    onClick = { resetDialogFeedback(state) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.FEEDBACK_BOTTOM_SHEET_CLOSE),
+                        .feedbackScenarioTarget(scenario, DemoAutomationRole.Reset),
                 )
             }
         }
     }
+}
+
+internal fun UiTreeBuilder.DeclareMenuFeedbackOverlays(
+    anchors: FeedbackAnchors,
+    state: MenuFeedbackState,
+    scenario: DemoScenarioSpec?,
+) {
+    DropdownMenu(
+        expanded = state.expanded.value,
+        anchorId = anchors.menu,
+        onDismissRequest = { state.expanded.value = false },
+        requestKey = "feedback_dropdown_menu",
+    ) {
+        DropdownMenuItem(
+            text = stringResource(R.string.demo_feedback_menu_edit),
+            onClick = {
+                state.selection.value = MenuFeedbackSelection.Edit
+                state.expanded.value = false
+            },
+            leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
+            modifier = Modifier.feedbackScenarioTarget(scenario, DemoAutomationRole.Target),
+        )
+        DropdownMenuItem(
+            text = stringResource(R.string.demo_feedback_menu_copy),
+            onClick = {
+                state.selection.value = MenuFeedbackSelection.Copy
+                state.expanded.value = false
+            },
+        )
+        DropdownMenuItem(
+            text = stringResource(R.string.demo_feedback_menu_share),
+            onClick = {
+                state.selection.value = MenuFeedbackSelection.Share
+                state.expanded.value = false
+            },
+            trailingText = stringResource(R.string.demo_feedback_menu_shortcut),
+        )
+        DropdownMenuItem(
+            text = stringResource(R.string.demo_feedback_menu_delete),
+            onClick = {},
+            enabled = false,
+        )
+    }
+
+    PlainTooltip(
+        text = stringResource(R.string.demo_feedback_tooltip_text),
+        visible = state.tooltipVisible.value,
+        anchorId = anchors.tooltip,
+        onDismissRequest = { state.tooltipVisible.value = false },
+        requestKey = "feedback_tooltip",
+    )
 }

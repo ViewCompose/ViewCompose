@@ -1,6 +1,13 @@
 package com.viewcompose
 
 import android.widget.TextView
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioId
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.demo.registry.DemoScenarioIds
+import com.viewcompose.host.android.resources.stringResource
+import com.viewcompose.host.android.resources.pluralStringResource
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
@@ -48,83 +55,106 @@ import com.viewcompose.ui.unit.sp
 
 @ViewComposePreview(name = "Collections · Controls", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsControls() {
-    CollectionPage(initialPageIndex = 0)
+    CollectionPage(CollectionFixture.Controls)
 }
 
 @ViewComposePreview(name = "Collections · List", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsList() {
-    CollectionPage(initialPageIndex = 1)
+    CollectionPage(CollectionFixture.LazyList)
 }
 
 @ViewComposePreview(name = "Collections · Stress", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsStress() {
-    CollectionPage(initialPageIndex = 2)
+    CollectionPage(CollectionFixture.Stress)
 }
 
 @ViewComposePreview(name = "Collections · Interop", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsInterop() {
-    CollectionPage(initialPageIndex = 3)
+    CollectionPage(CollectionFixture.AndroidView)
 }
 
 @ViewComposePreview(name = "Collections · Lazy row", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsLazyRow() {
-    CollectionPage(initialPageIndex = 4)
+    CollectionPage(CollectionFixture.LazyRow)
 }
 
 @ViewComposePreview(name = "Collections · Grid", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsGrid() {
-    CollectionPage(initialPageIndex = 5)
+    CollectionPage(CollectionFixture.Grid)
 }
 
 @ViewComposePreview(name = "Collections · Pull refresh", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsPullRefresh() {
-    CollectionPage(initialPageIndex = 6)
+    CollectionPage(CollectionFixture.PullRefresh)
+}
+
+internal enum class CollectionFixture(
+    val scenarioId: DemoScenarioId,
+) {
+    Controls(DemoScenarioIds.CollectionControls),
+    LazyList(DemoScenarioIds.CollectionLazyList),
+    Stress(DemoScenarioIds.CollectionStress),
+    AndroidView(DemoScenarioIds.CollectionAndroidView),
+    LazyRow(DemoScenarioIds.CollectionLazyRow),
+    Grid(DemoScenarioIds.CollectionGrid),
+    PullRefresh(DemoScenarioIds.CollectionPullRefresh),
+    ;
+
+    companion object {
+        fun from(scenarioId: DemoScenarioId): CollectionFixture =
+            entries.singleOrNull { fixture -> fixture.scenarioId == scenarioId }
+                ?: error("Unsupported collection scenario: $scenarioId")
+    }
 }
 
 internal fun UiTreeBuilder.CollectionPage(
-    initialPageIndex: Int = 0,
+    fixture: CollectionFixture,
+    scenario: DemoScenarioSpec? = null,
 ) {
     val benchmarkRotateState = remember { mutableStateOf(false) }
     val reversedState = remember { mutableStateOf(false) }
     val alternateLabelsState = remember { mutableStateOf(false) }
     val stressRotateState = remember { mutableStateOf(false) }
     val stressEdgeItemState = remember { mutableStateOf(false) }
-    val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 6)) }
     val spanCountState = remember { mutableStateOf(2) }
     val refreshingState = remember { mutableStateOf(false) }
     val refreshCountState = remember { mutableStateOf(0) }
+    val forwardOrder = stringResource(R.string.demo_collections_order, "A-B-C")
+    val reverseOrder = stringResource(R.string.demo_collections_order, "C-B-A")
     val listOrderState = produceState(
-        initialValue = "列表顺序: A-B-C",
+        initialValue = forwardOrder,
         reversedState.value,
+        forwardOrder,
+        reverseOrder,
     ) {
-        value = if (reversedState.value) "列表顺序: C-B-A" else "列表顺序: A-B-C"
+        value = if (reversedState.value) reverseOrder else forwardOrder
     }
-    val keyedItems = if (reversedState.value) {
-        listOf("C", "B", "A")
-    } else {
-        listOf("A", "B", "C")
-    }.map { id ->
+    val horizontalItems = (1..10).map {
+        DemoListItem(id = "$it", title = stringResource(R.string.demo_collections_horizontal_card, it))
+    }
+    val gridItems = (1..12).map {
+        DemoListItem(id = "$it", title = stringResource(R.string.demo_collections_grid_item, it))
+    }
+    val pullItems = (1..8).map {
         DemoListItem(
-            id = id,
-            title = if (alternateLabelsState.value) {
-                "Lazy 项 $id（替代）"
-            } else {
-                "Lazy 项 $id"
-            },
+            id = "$it",
+            title = pluralStringResource(
+                R.plurals.demo_collections_refresh_item,
+                refreshCountState.value,
+                it,
+                refreshCountState.value,
+            ),
         )
     }
-    val horizontalItems = (1..10).map { DemoListItem(id = "$it", title = "横向卡片 $it") }
-    val gridItems = (1..12).map { DemoListItem(id = "$it", title = "网格项 $it") }
-    val pullItems = (1..8).map { DemoListItem(id = "$it", title = "刷新列表项 $it · 刷新 ${refreshCountState.value} 次") }
 
-    val pageItems = when (selectedPageState.value) {
-        0 -> listOf("benchmark", "page", "page_filter", "verify")
-        1 -> listOf("page", "page_filter", "controls", "list", "verify")
-        2 -> listOf("page", "page_filter", "stress", "verify")
-        3 -> listOf("page", "page_filter", "interop", "verify")
-        4 -> listOf("page", "page_filter", "lazy_row", "verify")
-        5 -> listOf("page", "page_filter", "grid", "verify")
-        else -> listOf("page", "page_filter", "pull_refresh", "verify")
+    val pageItems = when (fixture) {
+        CollectionFixture.Controls -> listOf("benchmark")
+        CollectionFixture.LazyList -> listOf("controls", "list")
+        CollectionFixture.Stress -> listOf("stress")
+        CollectionFixture.AndroidView -> listOf("interop")
+        CollectionFixture.LazyRow -> listOf("lazy_row")
+        CollectionFixture.Grid -> listOf("grid")
+        CollectionFixture.PullRefresh -> listOf("pull_refresh")
     }
 
     LazyColumn(
@@ -133,22 +163,10 @@ internal fun UiTreeBuilder.CollectionPage(
         modifier = Modifier.fillMaxSize(),
     ) { section ->
         when (section) {
-            "page" -> ChapterPageOverviewSection(
-                title = "集合组件",
-                goal = "验证 LazyColumn/LazyRow/LazyVerticalGrid 的键控复用、PullToRefresh 的下拉刷新、以及 AndroidView 互操作。",
-                modules = listOf("LazyColumn", "LazyRow", "LazyVerticalGrid", "PullToRefresh", "diff", "lazy item sessions", "AndroidView"),
-            )
-
-            "page_filter" -> ChapterPageFilterSection(
-                pages = listOf("控制", "列表", "压力", "互操作", "横向列表", "网格", "下拉刷新"),
-                selectedIndex = selectedPageState.value,
-                onSelectionChange = { selectedPageState.value = it },
-            )
-
             "benchmark" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
-                title = "集合组件 Benchmark 锚点",
-                subtitle = "键控列表排序切换和网格 spanCount 切换的稳定路径。",
+                title = stringResource(R.string.demo_collections_benchmark_title),
+                subtitle = stringResource(R.string.demo_collections_benchmark_summary),
             ) {
                 val benchmarkItems = if (benchmarkRotateState.value) {
                     listOf("C", "A", "B")
@@ -157,30 +175,45 @@ internal fun UiTreeBuilder.CollectionPage(
                 }.map { id ->
                     DemoListItem(
                         id = id,
-                        title = if (benchmarkRotateState.value) "Benchmark 项 $id 展开" else "Benchmark 项 $id",
+                        title = stringResource(
+                            if (benchmarkRotateState.value) {
+                                R.string.demo_collections_benchmark_item_expanded
+                            } else {
+                                R.string.demo_collections_benchmark_item
+                            },
+                            id,
+                        ),
                     )
                 }
                 Text(
-                    text = "稳定路径: launcher -> collections -> benchmark anchor",
+                    text = stringResource(
+                        R.string.demo_collections_current_order,
+                        if (benchmarkRotateState.value) "C-A-B" else "A-B-C",
+                    ),
                     style = UiTextStyle(fontSizeSp = 12.sp),
                     color = TextDefaults.secondaryColor(),
-                    modifier = Modifier.margin(bottom = 8.dp),
+                    modifier = Modifier
+                        .margin(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Button(
-                    text = if (benchmarkRotateState.value) "Benchmark C-A-B" else "Benchmark A-B-C",
+                    text = stringResource(
+                        R.string.demo_collections_current_order,
+                        if (benchmarkRotateState.value) "C-A-B" else "A-B-C",
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.COLLECTIONS_BENCHMARK_TOGGLE),
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     onClick = { benchmarkRotateState.value = !benchmarkRotateState.value },
                 )
                 Button(
-                    text = "重置 Benchmark",
+                    text = stringResource(R.string.demo_collections_benchmark_reset),
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.COLLECTIONS_BENCHMARK_RESET),
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
                     onClick = { benchmarkRotateState.value = false },
                 )
                 LazyColumn(
@@ -192,7 +225,8 @@ internal fun UiTreeBuilder.CollectionPage(
                         .fillMaxWidth()
                         .height(180.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .shape(SurfaceDefaults.shape()),
+                        .shape(SurfaceDefaults.shape())
+                        .scenarioTarget(scenario, DemoAutomationRole.Target),
                 ) { item ->
                     Surface(
                         variant = SurfaceVariant.Default,
@@ -205,9 +239,16 @@ internal fun UiTreeBuilder.CollectionPage(
                                 .fillMaxWidth()
                                 .padding(12.dp),
                         ) {
-                            Text(text = item.title)
                             Text(
-                                text = "稳定 key: ${item.id}",
+                                text = item.title,
+                                modifier = if (item.id == "A") {
+                                    Modifier.testTag(DemoTestTags.COLLECTIONS_BENCHMARK_ITEM_A)
+                                } else {
+                                    Modifier
+                                },
+                            )
+                            Text(
+                                text = stringResource(R.string.demo_collections_stable_key, item.id),
                                 style = UiTextStyle(fontSizeSp = 12.sp),
                                 color = TextDefaults.secondaryColor(),
                                 modifier = Modifier.weight(1f),
@@ -219,8 +260,8 @@ internal fun UiTreeBuilder.CollectionPage(
 
             "controls" -> ScenarioSection(
                 kind = ScenarioKind.Guide,
-                title = "集合控制",
-                subtitle = "这些按钮变更数据源和标签，同时保持键控 item 状态。",
+                title = stringResource(R.string.demo_collections_controls_title),
+                subtitle = stringResource(R.string.demo_collections_controls_summary),
             ) {
                 Text(text = listOrderState.value)
                 Row(
@@ -229,26 +270,65 @@ internal fun UiTreeBuilder.CollectionPage(
                     modifier = Modifier.margin(top = 12.dp),
                 ) {
                     Button(
-                        text = if (reversedState.value) "显示 A-B-C" else "显示 C-B-A",
+                        text = stringResource(
+                            R.string.demo_collections_show_order,
+                            if (reversedState.value) "A-B-C" else "C-B-A",
+                        ),
                         onClick = { reversedState.value = !reversedState.value },
                     )
                     Button(
-                        text = if (alternateLabelsState.value) "主要标签" else "替代标签",
+                        text = stringResource(
+                            if (alternateLabelsState.value) {
+                                R.string.demo_collections_primary_labels
+                            } else {
+                                R.string.demo_collections_alternate_labels
+                            },
+                        ),
                         modifier = Modifier.testTag(DemoTestTags.COLLECTIONS_LABEL_TOGGLE),
                         onClick = { alternateLabelsState.value = !alternateLabelsState.value },
                     )
                 }
+                Button(
+                    text = stringResource(R.string.demo_collections_reset_list),
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(top = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = {
+                        reversedState.value = false
+                        alternateLabelsState.value = false
+                    },
+                )
             }
 
             "list" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "LazyColumn",
-                subtitle = "完整布局状态、sticky header、contentType、预取与键控 item 状态。",
+                title = stringResource(R.string.demo_collections_lazy_list_title),
+                subtitle = stringResource(R.string.demo_collections_lazy_list_summary),
             ) {
+                val keyedItems = if (reversedState.value) {
+                    listOf("C", "B", "A")
+                } else {
+                    listOf("A", "B", "C")
+                }.map { id ->
+                    DemoListItem(
+                        id = id,
+                        title = if (alternateLabelsState.value) {
+                            stringResource(R.string.demo_collections_lazy_item_alternate, id)
+                        } else {
+                            stringResource(R.string.demo_collections_lazy_item, id)
+                        },
+                    )
+                }
                 val listState = rememberLazyListState()
                 Text(
-                    text = "可见 ${listState.layoutInfo.visibleItemsInfo.map { it.index }} · " +
-                        "可前滚 ${listState.canScrollForward} · 滚动中 ${listState.isScrollInProgress}",
+                    text = stringResource(
+                        R.string.demo_collections_layout_info,
+                        listState.layoutInfo.visibleItemsInfo.map { it.index }.toString(),
+                        listState.canScrollForward,
+                        listState.isScrollInProgress,
+                    ),
                     style = UiTextStyle(fontSizeSp = 12.sp),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier.margin(bottom = 8.dp),
@@ -278,7 +358,11 @@ internal fun UiTreeBuilder.CollectionPage(
                                 .padding(horizontal = 12.dp, vertical = 8.dp),
                         ) {
                             Text(
-                                text = "固定标题 · ${keyedItems.size} 项",
+                                text = pluralStringResource(
+                                    R.plurals.demo_collections_sticky_header,
+                                    keyedItems.size,
+                                    keyedItems.size,
+                                ),
                                 style = UiTextStyle(fontSizeSp = 13.sp),
                             )
                         }
@@ -307,7 +391,11 @@ internal fun UiTreeBuilder.CollectionPage(
                                 modifier = titleModifier,
                             )
                             Button(
-                                text = "项 ${item.id} 点击: ${itemCountState.value}",
+                                text = stringResource(
+                                    R.string.demo_collections_item_click_count,
+                                    item.id,
+                                    itemCountState.value,
+                                ),
                                 onClick = { itemCountState.value = itemCountState.value + 1 },
                             )
                         }
@@ -317,8 +405,8 @@ internal fun UiTreeBuilder.CollectionPage(
 
             "stress" -> ScenarioSection(
                 kind = ScenarioKind.Stress,
-                title = "Lazy 压力测试",
-                subtitle = "排序、插入、标签变更和受限高度集中在一个可重复的测试路径中。",
+                title = stringResource(R.string.demo_collections_stress_title),
+                subtitle = stringResource(R.string.demo_collections_stress_summary),
             ) {
                 val stressItems = buildList {
                     val baseIds = if (stressRotateState.value) {
@@ -327,21 +415,29 @@ internal fun UiTreeBuilder.CollectionPage(
                         listOf("A", "B", "C", "D")
                     }
                     if (stressEdgeItemState.value) {
-                        add(DemoListItem(id = "X", title = "插入项 X"))
+                        add(
+                            DemoListItem(
+                                id = "X",
+                                title = stringResource(R.string.demo_collections_inserted_item),
+                            ),
+                        )
                     }
                     baseIds.forEach { id ->
                         add(
                             DemoListItem(
                                 id = id,
-                                title = if (alternateLabelsState.value) "压力项 $id（替代）" else "压力项 $id",
+                                title = stringResource(
+                                    if (alternateLabelsState.value) {
+                                        R.string.demo_collections_stress_item_alternate
+                                    } else {
+                                        R.string.demo_collections_stress_item
+                                    },
+                                    id,
+                                ),
                             ),
                         )
                     }
                 }
-                BenchmarkRouteCallout(
-                    route = "Catalog -> Collections -> 压力页",
-                    stableTargets = listOf("Linear Order / Rotate Order", "Insert X / Remove X"),
-                )
                 Row(
                     spacing = 8.dp,
                     modifier = Modifier
@@ -349,25 +445,55 @@ internal fun UiTreeBuilder.CollectionPage(
                         .margin(bottom = 12.dp),
                 ) {
                     Button(
-                        text = if (stressRotateState.value) "线性顺序" else "旋转顺序",
+                        text = stringResource(
+                            if (stressRotateState.value) {
+                                R.string.demo_collections_linear_order
+                            } else {
+                                R.string.demo_collections_rotated_order
+                            },
+                        ),
                         size = ButtonSize.Compact,
-                        modifier = Modifier.testTag(DemoTestTags.COLLECTIONS_STRESS_ROTATE),
+                        modifier = Modifier
+                            .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                         onClick = { stressRotateState.value = !stressRotateState.value },
                     )
                     Button(
-                        text = if (stressEdgeItemState.value) "移除 X" else "插入 X",
+                        text = stringResource(
+                            if (stressEdgeItemState.value) {
+                                R.string.demo_collections_remove_x
+                            } else {
+                                R.string.demo_collections_insert_x
+                            },
+                        ),
                         size = ButtonSize.Compact,
-                        modifier = Modifier.testTag(DemoTestTags.COLLECTIONS_STRESS_EDGE),
+                        modifier = Modifier
+                            .scenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                         onClick = { stressEdgeItemState.value = !stressEdgeItemState.value },
                     )
                 }
                 Text(
-                    text = "当前 IDs: ${stressItems.joinToString(" -> ") { it.id }}",
+                    text = stringResource(
+                        R.string.demo_collections_active_ids,
+                        stressItems.joinToString(" -> ") { it.id },
+                    ),
                     style = UiTextStyle(fontSizeSp = 13.sp),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(bottom = 12.dp)
-                        .testTag(DemoTestTags.COLLECTIONS_STRESS_ACTIVE_IDS),
+                        .scenarioTarget(scenario, DemoAutomationRole.State),
+                )
+                Button(
+                    text = stringResource(R.string.demo_collections_reset_stress),
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(bottom = 12.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = {
+                        stressRotateState.value = false
+                        stressEdgeItemState.value = false
+                        alternateLabelsState.value = false
+                    },
                 )
                 LazyColumn(
                     items = stressItems,
@@ -378,7 +504,8 @@ internal fun UiTreeBuilder.CollectionPage(
                         .fillMaxWidth()
                         .height(320.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .shape(SurfaceDefaults.shape()),
+                        .shape(SurfaceDefaults.shape())
+                        .scenarioTarget(scenario, DemoAutomationRole.Target),
                 ) { item ->
                     val itemCountState = remember { mutableStateOf(0) }
                     Surface(
@@ -394,12 +521,16 @@ internal fun UiTreeBuilder.CollectionPage(
                         ) {
                             Text(text = item.title)
                             Text(
-                                text = "稳定 key: ${item.id}",
+                                text = stringResource(R.string.demo_collections_stable_key, item.id),
                                 style = UiTextStyle(fontSizeSp = 12.sp),
                                 color = TextDefaults.secondaryColor(),
                             )
                             Button(
-                                text = "项 ${item.id} 点击: ${itemCountState.value}",
+                                text = stringResource(
+                                    R.string.demo_collections_item_click_count,
+                                    item.id,
+                                    itemCountState.value,
+                                ),
                                 size = ButtonSize.Compact,
                                 onClick = { itemCountState.value = itemCountState.value + 1 },
                             )
@@ -410,14 +541,10 @@ internal fun UiTreeBuilder.CollectionPage(
 
             "interop" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
-                title = "AndroidView 互操作",
-                subtitle = "原生 View 插入声明式状态流。",
+                title = stringResource(R.string.demo_collections_android_view_title),
+                subtitle = stringResource(R.string.demo_collections_android_view_summary),
             ) {
-                val summaryText = if (alternateLabelsState.value) {
-                    "原生 TextView: 替代标签已启用"
-                } else {
-                    "原生 TextView: 主要标签已启用"
-                }
+                val summaryText = stringResource(R.string.demo_collections_android_view_bound)
                 AndroidView(
                     key = "legacy_summary",
                     modifier = Modifier.padding(vertical = 4.dp),
@@ -428,11 +555,11 @@ internal fun UiTreeBuilder.CollectionPage(
 
             "lazy_row" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "LazyRow 横向列表",
-                subtitle = "LazyRow 提供横向滚动的 RecyclerView，支持 key、spacing 和 contentPadding。",
+                title = stringResource(R.string.demo_collections_lazy_row_title),
+                subtitle = stringResource(R.string.demo_collections_lazy_row_summary),
             ) {
                 Text(
-                    text = "图片卡片横向列表",
+                    text = stringResource(R.string.demo_collections_horizontal_cards),
                     style = UiTextStyle(fontSizeSp = 14.sp),
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
@@ -472,12 +599,12 @@ internal fun UiTreeBuilder.CollectionPage(
                     }
                 }
                 Text(
-                    text = "文字标签横向列表",
+                    text = stringResource(R.string.demo_collections_horizontal_labels),
                     style = UiTextStyle(fontSizeSp = 14.sp),
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
                 LazyRow(
-                    items = (1..15).map { "标签 $it" },
+                    items = (1..15).map { stringResource(R.string.demo_collections_label, it) },
                     key = { it },
                     spacing = 8.dp,
                     contentPadding = 4.dp,
@@ -496,8 +623,8 @@ internal fun UiTreeBuilder.CollectionPage(
 
             "grid" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "LazyVerticalGrid 网格",
-                subtitle = "LazyVerticalGrid 基于 GridLayoutManager 实现，支持 spanCount 切换。",
+                title = stringResource(R.string.demo_collections_grid_title),
+                subtitle = stringResource(R.string.demo_collections_grid_summary),
             ) {
                 Row(
                     spacing = 8.dp,
@@ -506,7 +633,7 @@ internal fun UiTreeBuilder.CollectionPage(
                         .margin(bottom = 12.dp),
                 ) {
                     Button(
-                        text = "2 列",
+                        text = stringResource(R.string.demo_collections_columns, 2),
                         variant = if (spanCountState.value == 2) ButtonVariant.Primary else ButtonVariant.Outlined,
                         onClick = { spanCountState.value = 2 },
                         modifier = Modifier
@@ -514,7 +641,7 @@ internal fun UiTreeBuilder.CollectionPage(
                             .testTag(DemoTestTags.COLLECTIONS_GRID_TWO_COLS),
                     )
                     Button(
-                        text = "3 列",
+                        text = stringResource(R.string.demo_collections_columns, 3),
                         variant = if (spanCountState.value == 3) ButtonVariant.Primary else ButtonVariant.Outlined,
                         onClick = { spanCountState.value = 3 },
                         modifier = Modifier
@@ -522,6 +649,15 @@ internal fun UiTreeBuilder.CollectionPage(
                             .testTag(DemoTestTags.COLLECTIONS_GRID_THREE_COLS),
                     )
                 }
+                Button(
+                    text = stringResource(R.string.demo_collections_reset_columns),
+                    variant = ButtonVariant.Outlined,
+                    onClick = { spanCountState.value = 2 },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(bottom = 12.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                )
                 LazyVerticalGrid(
                     items = gridItems,
                     spanCount = spanCountState.value,
@@ -553,7 +689,11 @@ internal fun UiTreeBuilder.CollectionPage(
                                     .cornerRadius(8.dp),
                             ) {}
                             Text(
-                                text = "${item.title} · ${spanCountState.value}列",
+                                text = stringResource(
+                                    R.string.demo_collections_grid_item_span,
+                                    item.title,
+                                    spanCountState.value,
+                                ),
                                 style = UiTextStyle(fontSizeSp = 13.sp),
                                 modifier = if (item.id == "1") {
                                     Modifier.testTag(DemoTestTags.COLLECTIONS_GRID_FIRST_ITEM)
@@ -568,17 +708,27 @@ internal fun UiTreeBuilder.CollectionPage(
 
             "pull_refresh" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "PullToRefresh 下拉刷新",
-                subtitle = "PullToRefresh 包裹 ScrollableColumn，支持下拉触发刷新回调。",
+                title = stringResource(R.string.demo_collections_pull_refresh_title),
+                subtitle = stringResource(R.string.demo_collections_pull_refresh_summary),
             ) {
                 Text(
-                    text = "刷新次数: ${refreshCountState.value}",
+                    text = pluralStringResource(
+                        R.plurals.demo_collections_refresh_count,
+                        refreshCountState.value,
+                        refreshCountState.value,
+                    ),
                     style = UiTextStyle(fontSizeSp = 13.sp),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
                 Button(
-                    text = if (refreshingState.value) "正在刷新…" else "模拟刷新",
+                    text = stringResource(
+                        if (refreshingState.value) {
+                            R.string.demo_collections_refreshing
+                        } else {
+                            R.string.demo_collections_simulate_refresh
+                        },
+                    ),
                     onClick = {
                         refreshingState.value = true
                         refreshCountState.value += 1
@@ -588,12 +738,16 @@ internal fun UiTreeBuilder.CollectionPage(
                         .margin(bottom = 8.dp),
                 )
                 Button(
-                    text = "停止刷新",
+                    text = stringResource(R.string.demo_collections_reset_refresh),
                     variant = ButtonVariant.Outlined,
-                    onClick = { refreshingState.value = false },
+                    onClick = {
+                        refreshingState.value = false
+                        refreshCountState.value = 0
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .margin(bottom = 12.dp),
+                        .margin(bottom = 12.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
                 )
                 PullToRefresh(
                     isRefreshing = refreshingState.value,
@@ -624,28 +778,19 @@ internal fun UiTreeBuilder.CollectionPage(
                     }
                 }
                 Text(
-                    text = "向下拉动上方区域触发刷新，或点击模拟刷新按钮。",
+                    text = stringResource(R.string.demo_collections_pull_refresh_hint),
                     style = UiTextStyle(fontSizeSp = 13.sp),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier.margin(top = 8.dp),
                 )
             }
 
-            else -> VerificationNotesSection(
-                what = "集合组件应验证键控复用、LazyRow/LazyVerticalGrid 的渲染、PullToRefresh 的刷新流程。",
-                howToVerify = listOf(
-                    "对单个 item 连续点击计数，再切换顺序，确认同 key 的计数被保留。",
-                    "横向滑动 LazyRow，确认滚动流畅，卡片不重叠。",
-                    "切换网格列数（2列/3列），确认布局即时重排。",
-                    "下拉 PullToRefresh 区域，确认刷新指示器出现。",
-                    "点击停止刷新，确认指示器消失。",
-                ),
-                expected = listOf(
-                    "键控 reorder 只移动节点，不重建 item session。",
-                    "LazyRow 横向滚动和 LazyVerticalGrid 网格布局稳定。",
-                    "PullToRefresh 刷新指示器跟随状态正确显隐。",
-                ),
-            )
+            else -> error("Unknown collection section: $section")
         }
     }
 }
+
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier = scenario?.automation?.get(role)?.let(::demoAutomationTarget) ?: this

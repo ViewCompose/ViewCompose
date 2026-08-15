@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_scenario_design_bundle_material3_title">Design system · Material 3 bundle</string>
+    <string name="demo_scenario_design_bundle_material3_summary">Verify the rounded reference bundle through the shared pressure fixture.</string>
+    <string name="demo_scenario_design_bundle_contrast_title">Design system · Contrast bundle</string>
+    <string name="demo_scenario_design_bundle_contrast_summary">Verify cut-contrast and Cupertino pressure variants without leaking Material recipes.</string>
+    <string name="demo_design_system_kind_rounded">Rounded reference</string>
+    <string name="demo_design_system_kind_cut_contrast">Cut contrast</string>
+    <string name="demo_design_system_kind_cupertino">Cupertino pressure</string>
+
+    <string name="demo_design_system_ready">Multi-design-system fixture ready</string>
+    <string name="demo_design_system_title">Multi-design-system verification</string>
+    <string name="demo_design_system_summary">Every screenshot includes visible identity, recipe, token source, motion, and fallback evidence.</string>
+    <string name="demo_design_system_button_confirm">Confirm</string>
+    <string name="demo_design_system_button_disabled">Disabled</string>
+    <string name="demo_design_system_button_status">Button clicks: %1$d</string>
+    <string name="demo_design_system_reset">Reset fixture</string>
+    <string name="demo_design_system_root_coherence">Root and Session coherence</string>
+    <string name="demo_design_system_lazy_identity">Lazy system: %1$s</string>
+    <string name="demo_design_system_switch_kind">Switch to %1$s</string>
+    <string name="demo_design_system_open_dialog">Open dialog</string>
+    <string name="demo_design_system_surface_section">Surface and Card · shared BasicSurface</string>
+    <string name="demo_design_system_resolved_surface">Resolved surface</string>
+    <string name="demo_design_system_surface_summary">Fill, border, shape, clip, and interaction share one resolved contract.</string>
+    <string name="demo_design_system_switch_section">Switch · design-system composite</string>
+    <string name="demo_design_system_switch_label">Synchronize workspace</string>
+    <string name="demo_design_system_switch_disabled">Disabled control</string>
+    <string name="demo_design_system_checked_status">Checked: %1$s</string>
+    <string name="demo_design_system_text_field_section">TextField · native editing core</string>
+    <string name="demo_design_system_account_name">Account name</string>
+    <string name="demo_design_system_name_placeholder">Name</string>
+    <string name="demo_design_system_text_field_support">IME, selection, and autofill remain native.</string>
+    <string name="demo_design_system_required_field">Required field</string>
+    <string name="demo_design_system_required_placeholder">Required</string>
+    <string name="demo_design_system_required_support">A value is required</string>
+    <string name="demo_design_system_segmented_section">SegmentedControl · design-system composite</string>
+    <string name="demo_design_system_day">Day</string>
+    <string name="demo_design_system_week">Week</string>
+    <string name="demo_design_system_month">Month</string>
+    <string name="demo_design_system_segment_status">Segment: %1$s</string>
+    <string name="demo_design_system_navigation_section">NavigationBar · design-system composite</string>
+    <string name="demo_design_system_home">Home</string>
+    <string name="demo_design_system_search">Search</string>
+    <string name="demo_design_system_profile">Profile</string>
+    <string name="demo_design_system_selected_status">Selected: %1$s</string>
+    <string name="demo_design_system_overlay_identity">Overlay system: %1$s</string>
+    <string name="demo_design_system_overlay_token">Overlay token: demo-design-system/%1$s</string>
+    <string name="demo_design_system_overlay_switch">Switch overlay to %1$s</string>
+    <string name="demo_design_system_overlay_close">Close coherent dialog</string>
+
+    <string name="demo_design_system_screenshot_identity">Screenshot identity</string>
+    <string name="demo_design_system_fact_fixture">Fixture</string>
+    <string name="demo_design_system_fact_design_system">Design system</string>
+    <string name="demo_design_system_fact_token_source">Token source</string>
+    <string name="demo_design_system_fact_recipe_identity">Recipe identity</string>
+    <string name="demo_design_system_fact_root_context">Root context</string>
+    <string name="demo_design_system_fact_android_primary">Android colorPrimary</string>
+    <string name="demo_design_system_fact_component_backends">Component backends</string>
+    <string name="demo_design_system_component_backends_value">Button=DSL/DeclarativeBoxLayout; Switch=DSL/DeclarativeBoxLayout; TextField=native/ViewComposeEditText</string>
+    <string name="demo_design_system_fact_mode">Mode</string>
+    <string name="demo_design_system_fact_reduced_motion">Reduced motion</string>
+    <string name="demo_design_system_fact_font_scale">Font scale</string>
+    <string name="demo_design_system_fact_layout_direction">Layout direction</string>
+    <string name="demo_design_system_fact_shape">Shape</string>
+    <string name="demo_design_system_fact_primary">Primary</string>
+    <string name="demo_design_system_fact_surface">Surface</string>
+    <string name="demo_design_system_fact_capability">Capability</string>
+    <string name="demo_design_system_mode_light">Light</string>
+    <string name="demo_design_system_mode_dark">Dark</string>
+    <string name="demo_design_system_conformance">Conformance</string>
+</resources>

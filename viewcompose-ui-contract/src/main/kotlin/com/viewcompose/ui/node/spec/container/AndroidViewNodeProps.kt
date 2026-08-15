@@ -10,7 +10,8 @@ package com.viewcompose.ui.node.spec
  * @property factory creates the platform view from an opaque platform context
  * @property update replay-safe binding invoked with the current platform view
  * @property onReset replay-safe reset invoked before a retained view is rebound for another node
- * @property onRelease one-shot cleanup after committed removal or render-session disposal
+ * @property onRelease one-shot cleanup whenever a created view is permanently abandoned, including
+ * candidate rollback, committed removal, final reuse-cache eviction, or render-session disposal
  * @property onCommit action deferred until the complete view-tree transaction commits
  */
 data class AndroidViewNodeProps(

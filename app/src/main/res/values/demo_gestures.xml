@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_gesture_reset">Reset fixture</string>
+    <string name="demo_gesture_pointer_none">None</string>
+    <string name="demo_gesture_pointer_event">Pointer: %1$s</string>
+
+    <string name="demo_gesture_tap_title">Tap / Double / Long</string>
+    <string name="demo_gesture_tap_summary">combinedClickable and pointerInput verify click-family dispatch and pointer consumption.</string>
+    <string name="demo_gesture_tap_state">Tap=%1$d · consumed click=%2$d · blocked=%3$d</string>
+    <string name="demo_gesture_tap_action">Perform deterministic tap</string>
+    <string name="demo_gesture_tap_target">Tap target (single + double + long)</string>
+    <string name="demo_gesture_tap_count">Tap count: %1$d</string>
+    <string name="demo_gesture_consumed_target">PointerInput consumed target</string>
+    <string name="demo_gesture_consumed_state">Consumed click count: %1$d · Blocked taps: %2$d</string>
+    <string name="demo_gesture_consumed_pointer_event">Consumed pointer: %1$s</string>
+
+    <string name="demo_gesture_drag_swipe_title">Drag / Swipe</string>
+    <string name="demo_gesture_drag_swipe_summary">draggable and anchoredDraggable share one fixture with direction lock, slop, and three anchors.</string>
+    <string name="demo_gesture_drag_state">Drag=%1$d · current=%2$s · target=%3$s · offset=%4$d</string>
+    <string name="demo_gesture_drag_action">Move to right anchor</string>
+    <string name="demo_gesture_drag_target">Drag horizontally</string>
+    <string name="demo_gesture_drag_value">Drag x = %1$d</string>
+    <string name="demo_gesture_swipe_target">Swipe horizontally · %1$s</string>
+    <string name="demo_gesture_swipe_current">Swipe current = %1$s</string>
+    <string name="demo_gesture_swipe_target_value">Swipe target = %1$s</string>
+    <string name="demo_gesture_swipe_offset">Swipe offset(px) = %1$d</string>
+    <string name="demo_gesture_anchor_left">Left</string>
+    <string name="demo_gesture_anchor_center">Center</string>
+    <string name="demo_gesture_anchor_right">Right</string>
+    <string name="demo_gesture_swipe_feedback_left">Visual feedback: the card moves left and turns blue.</string>
+    <string name="demo_gesture_swipe_feedback_center">Visual feedback: the card returns to the center and light gray.</string>
+    <string name="demo_gesture_swipe_feedback_right">Visual feedback: the card moves right and turns green.</string>
+
+    <string name="demo_gesture_transform_title">Transform</string>
+    <string name="demo_gesture_transform_summary">A large high-priority target verifies scale, pan, and rotation.</string>
+    <string name="demo_gesture_transform_state">scale=%1$.2f · pan=(%2$d, %3$d) · rot=%4$.1f</string>
+    <string name="demo_gesture_transform_action">Apply deterministic transform</string>
+    <string name="demo_gesture_transform_target">Transform target</string>
+    <string name="demo_gesture_transform_instruction">Use two fingers on the blue block to scale, pan, and rotate it.</string>
+    <string name="demo_gesture_transform_delta">delta pan=(%1$d, %2$d) · delta rot=%3$.2f</string>
+    <string name="demo_gesture_transform_idle">No transform delta yet</string>
+    <string name="demo_gesture_transform_observation">Check that the transformed block stays crisp without text ghosting.</string>
+</resources>

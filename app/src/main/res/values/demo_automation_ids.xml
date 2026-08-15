@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="demo_catalog_root" type="id" />
+    <item name="demo_catalog_ready" type="id" />
+    <item name="demo_catalog_primary_action" type="id" />
+    <item name="demo_catalog_secondary_action" type="id" />
+    <item name="demo_catalog_state" type="id" />
+    <item name="demo_catalog_target" type="id" />
+    <item name="demo_runtime_state_root" type="id" />
+    <item name="demo_runtime_state_ready" type="id" />
+    <item name="demo_runtime_state_primary_action" type="id" />
+    <item name="demo_runtime_state_reset" type="id" />
+    <item name="demo_runtime_state_state" type="id" />
+    <item name="demo_runtime_state_target" type="id" />
+
+    <item name="demo_runtime_key_identity_root" type="id" />
+    <item name="demo_runtime_key_identity_ready" type="id" />
+    <item name="demo_runtime_key_identity_primary_action" type="id" />
+    <item name="demo_runtime_key_identity_reset" type="id" />
+    <item name="demo_runtime_key_identity_state" type="id" />
+    <item name="demo_runtime_key_identity_target" type="id" />
+
+    <item name="demo_runtime_view_patch_root" type="id" />
+    <item name="demo_runtime_view_patch_ready" type="id" />
+    <item name="demo_runtime_view_patch_primary_action" type="id" />
+    <item name="demo_runtime_view_patch_reset" type="id" />
+    <item name="demo_runtime_view_patch_state" type="id" />
+    <item name="demo_runtime_view_patch_target" type="id" />
+
+    <item name="demo_input_fields_root" type="id" />
+    <item name="demo_input_fields_ready" type="id" />
+    <item name="demo_input_fields_primary_action" type="id" />
+    <item name="demo_input_fields_reset" type="id" />
+    <item name="demo_input_fields_state" type="id" />
+    <item name="demo_input_fields_target" type="id" />
+
+    <item name="demo_input_selection_root" type="id" />
+    <item name="demo_input_selection_ready" type="id" />
+    <item name="demo_input_selection_primary_action" type="id" />
+    <item name="demo_input_selection_reset" type="id" />
+    <item name="demo_input_selection_state" type="id" />
+    <item name="demo_input_selection_target" type="id" />
+
+    <item name="demo_input_stress_root" type="id" />
+    <item name="demo_input_stress_ready" type="id" />
+    <item name="demo_input_stress_primary_action" type="id" />
+    <item name="demo_input_stress_secondary_action" type="id" />
+    <item name="demo_input_stress_reset" type="id" />
+    <item name="demo_input_stress_state" type="id" />
+    <item name="demo_input_stress_target" type="id" />
+
+    <item name="demo_input_search_root" type="id" />
+    <item name="demo_input_search_ready" type="id" />
+    <item name="demo_input_search_primary_action" type="id" />
+    <item name="demo_input_search_reset" type="id" />
+    <item name="demo_input_search_state" type="id" />
+    <item name="demo_input_search_target" type="id" />
+
+    <item name="demo_input_derived_summary_root" type="id" />
+    <item name="demo_input_derived_summary_ready" type="id" />
+    <item name="demo_input_derived_summary_primary_action" type="id" />
+    <item name="demo_input_derived_summary_reset" type="id" />
+    <item name="demo_input_derived_summary_state" type="id" />
+    <item name="demo_input_derived_summary_target" type="id" />
+
+    <item name="demo_gesture_tap_root" type="id" />
+    <item name="demo_gesture_tap_ready" type="id" />
+    <item name="demo_gesture_tap_primary_action" type="id" />
+    <item name="demo_gesture_tap_reset" type="id" />
+    <item name="demo_gesture_tap_state" type="id" />
+    <item name="demo_gesture_tap_target" type="id" />
+    <item name="demo_gesture_tap_secondary_target" type="id" />
+
+    <item name="demo_gesture_drag_swipe_root" type="id" />
+    <item name="demo_gesture_drag_swipe_ready" type="id" />
+    <item name="demo_gesture_drag_swipe_primary_action" type="id" />
+    <item name="demo_gesture_drag_swipe_reset" type="id" />
+    <item name="demo_gesture_drag_swipe_state" type="id" />
+    <item name="demo_gesture_drag_swipe_target" type="id" />
+    <item name="demo_gesture_drag_swipe_secondary_target" type="id" />
+
+    <item name="demo_gesture_transform_root" type="id" />
+    <item name="demo_gesture_transform_ready" type="id" />
+    <item name="demo_gesture_transform_primary_action" type="id" />
+    <item name="demo_gesture_transform_reset" type="id" />
+    <item name="demo_gesture_transform_state" type="id" />
+    <item name="demo_gesture_transform_target" type="id" />
+
+    <item name="demo_graphics_drawing_root" type="id" />
+    <item name="demo_graphics_drawing_ready" type="id" />
+    <item name="demo_graphics_drawing_primary_action" type="id" />
+    <item name="demo_graphics_drawing_reset" type="id" />
+    <item name="demo_graphics_drawing_state" type="id" />
+    <item name="demo_graphics_drawing_target" type="id" />
+
+    <item name="demo_graphics_outer_shadow_root" type="id" />
+    <item name="demo_graphics_outer_shadow_ready" type="id" />
+    <item name="demo_graphics_outer_shadow_target" type="id" />
+
+    <item name="demo_graphics_inner_shadow_root" type="id" />
+    <item name="demo_graphics_inner_shadow_ready" type="id" />
+    <item name="demo_graphics_inner_shadow_primary_action" type="id" />
+    <item name="demo_graphics_inner_shadow_reset" type="id" />
+    <item name="demo_graphics_inner_shadow_state" type="id" />
+    <item name="demo_graphics_inner_shadow_target" type="id" />
+
+    <item name="demo_graphics_shadow_list_root" type="id" />
+    <item name="demo_graphics_shadow_list_ready" type="id" />
+    <item name="demo_graphics_shadow_list_primary_action" type="id" />
+    <item name="demo_graphics_shadow_list_secondary_action" type="id" />
+    <item name="demo_graphics_shadow_list_reset" type="id" />
+    <item name="demo_graphics_shadow_list_state" type="id" />
+    <item name="demo_graphics_shadow_list_target" type="id" />
+
+    <item name="demo_animation_core_root" type="id" />
+    <item name="demo_animation_core_ready" type="id" />
+    <item name="demo_animation_core_primary_action" type="id" />
+    <item name="demo_animation_core_secondary_action" type="id" />
+    <item name="demo_animation_core_reset" type="id" />
+    <item name="demo_animation_core_state" type="id" />
+    <item name="demo_animation_core_target" type="id" />
+
+    <item name="demo_animation_content_root" type="id" />
+    <item name="demo_animation_content_ready" type="id" />
+    <item name="demo_animation_content_primary_action" type="id" />
+    <item name="demo_animation_content_secondary_action" type="id" />
+    <item name="demo_animation_content_reset" type="id" />
+    <item name="demo_animation_content_state" type="id" />
+    <item name="demo_animation_content_target" type="id" />
+
+    <item name="demo_animation_list_motion_root" type="id" />
+    <item name="demo_animation_list_motion_ready" type="id" />
+    <item name="demo_animation_list_motion_primary_action" type="id" />
+    <item name="demo_animation_list_motion_secondary_action" type="id" />
+    <item name="demo_animation_list_motion_reset" type="id" />
+    <item name="demo_animation_list_motion_state" type="id" />
+    <item name="demo_animation_list_motion_target" type="id" />
+
+    <item name="demo_animation_specs_root" type="id" />
+    <item name="demo_animation_specs_ready" type="id" />
+    <item name="demo_animation_specs_primary_action" type="id" />
+    <item name="demo_animation_specs_secondary_action" type="id" />
+    <item name="demo_animation_specs_reset" type="id" />
+    <item name="demo_animation_specs_state" type="id" />
+    <item name="demo_animation_specs_target" type="id" />
+
+    <item name="demo_animation_transition_root" type="id" />
+    <item name="demo_animation_transition_ready" type="id" />
+    <item name="demo_animation_transition_primary_action" type="id" />
+    <item name="demo_animation_transition_secondary_action" type="id" />
+    <item name="demo_animation_transition_reset" type="id" />
+    <item name="demo_animation_transition_state" type="id" />
+    <item name="demo_animation_transition_target" type="id" />
+
+    <item name="demo_animation_infinite_root" type="id" />
+    <item name="demo_animation_infinite_ready" type="id" />
+    <item name="demo_animation_infinite_primary_action" type="id" />
+    <item name="demo_animation_infinite_secondary_action" type="id" />
+    <item name="demo_animation_infinite_reset" type="id" />
+    <item name="demo_animation_infinite_state" type="id" />
+    <item name="demo_animation_infinite_target" type="id" />
+
+    <item name="demo_modifier_visual_root" type="id" />
+    <item name="demo_modifier_visual_ready" type="id" />
+    <item name="demo_modifier_visual_target" type="id" />
+    <item name="demo_modifier_visual_secondary_target" type="id" />
+
+    <item name="demo_modifier_sizing_root" type="id" />
+    <item name="demo_modifier_sizing_ready" type="id" />
+    <item name="demo_modifier_sizing_target" type="id" />
+
+    <item name="demo_modifier_accessibility_root" type="id" />
+    <item name="demo_modifier_accessibility_ready" type="id" />
+    <item name="demo_modifier_accessibility_target" type="id" />
+    <item name="demo_modifier_accessibility_secondary_target" type="id" />
+
+    <item name="demo_diagnostics_runtime_root" type="id" />
+    <item name="demo_diagnostics_runtime_ready" type="id" />
+    <item name="demo_diagnostics_runtime_target" type="id" />
+
+    <item name="demo_diagnostics_theme_root" type="id" />
+    <item name="demo_diagnostics_theme_ready" type="id" />
+    <item name="demo_diagnostics_theme_state" type="id" />
+    <item name="demo_diagnostics_theme_target" type="id" />
+    <item name="demo_diagnostics_theme_secondary_target" type="id" />
+
+    <item name="demo_diagnostics_renderer_root" type="id" />
+    <item name="demo_diagnostics_renderer_ready" type="id" />
+    <item name="demo_diagnostics_renderer_primary_action" type="id" />
+    <item name="demo_diagnostics_renderer_reset" type="id" />
+    <item name="demo_diagnostics_renderer_state" type="id" />
+    <item name="demo_diagnostics_renderer_target" type="id" />
+
+    <item name="demo_collection_controls_root" type="id" />
+    <item name="demo_collection_controls_ready" type="id" />
+    <item name="demo_collection_controls_primary_action" type="id" />
+    <item name="demo_collection_controls_reset" type="id" />
+    <item name="demo_collection_controls_state" type="id" />
+    <item name="demo_collection_controls_target" type="id" />
+
+    <item name="demo_collection_lazy_list_root" type="id" />
+    <item name="demo_collection_lazy_list_ready" type="id" />
+    <item name="demo_collection_lazy_list_reset" type="id" />
+
+    <item name="demo_collection_stress_root" type="id" />
+    <item name="demo_collection_stress_ready" type="id" />
+    <item name="demo_collection_stress_primary_action" type="id" />
+    <item name="demo_collection_stress_secondary_action" type="id" />
+    <item name="demo_collection_stress_reset" type="id" />
+    <item name="demo_collection_stress_state" type="id" />
+    <item name="demo_collection_stress_target" type="id" />
+
+    <item name="demo_collection_android_view_root" type="id" />
+    <item name="demo_collection_android_view_ready" type="id" />
+
+    <item name="demo_collection_lazy_row_root" type="id" />
+    <item name="demo_collection_lazy_row_ready" type="id" />
+
+    <item name="demo_collection_grid_root" type="id" />
+    <item name="demo_collection_grid_ready" type="id" />
+    <item name="demo_collection_grid_reset" type="id" />
+
+    <item name="demo_collection_pull_refresh_root" type="id" />
+    <item name="demo_collection_pull_refresh_ready" type="id" />
+    <item name="demo_collection_pull_refresh_reset" type="id" />
+
+    <item name="demo_layout_linear_root" type="id" />
+    <item name="demo_layout_linear_ready" type="id" />
+    <item name="demo_layout_linear_primary_action" type="id" />
+    <item name="demo_layout_linear_reset" type="id" />
+    <item name="demo_layout_linear_state" type="id" />
+    <item name="demo_layout_linear_target" type="id" />
+
+    <item name="demo_layout_stack_root" type="id" />
+    <item name="demo_layout_stack_ready" type="id" />
+    <item name="demo_layout_stack_primary_action" type="id" />
+    <item name="demo_layout_stack_reset" type="id" />
+    <item name="demo_layout_stack_state" type="id" />
+
+    <item name="demo_layout_edges_root" type="id" />
+    <item name="demo_layout_edges_ready" type="id" />
+    <item name="demo_layout_edges_primary_action" type="id" />
+    <item name="demo_layout_edges_reset" type="id" />
+    <item name="demo_layout_edges_state" type="id" />
+    <item name="demo_layout_edges_target" type="id" />
+
+    <item name="demo_layout_flow_root" type="id" />
+    <item name="demo_layout_flow_ready" type="id" />
+    <item name="demo_layout_flow_primary_action" type="id" />
+    <item name="demo_layout_flow_secondary_action" type="id" />
+    <item name="demo_layout_flow_reset" type="id" />
+    <item name="demo_layout_flow_state" type="id" />
+
+    <item name="demo_layout_scroll_root" type="id" />
+    <item name="demo_layout_scroll_ready" type="id" />
+
+    <item name="demo_layout_constraint_root" type="id" />
+    <item name="demo_layout_constraint_ready" type="id" />
+    <item name="demo_layout_constraint_reset" type="id" />
+
+    <item name="demo_environment_resources_root" type="id" />
+    <item name="demo_environment_resources_ready" type="id" />
+    <item name="demo_environment_resources_primary_action" type="id" />
+    <item name="demo_environment_resources_reset" type="id" />
+    <item name="demo_environment_resources_state" type="id" />
+    <item name="demo_environment_resources_target" type="id" />
+    <item name="demo_environment_cross_activity_theme_root" type="id" />
+    <item name="demo_environment_cross_activity_theme_ready" type="id" />
+    <item name="demo_environment_cross_activity_theme_primary_action" type="id" />
+    <item name="demo_environment_cross_activity_theme_secondary_action" type="id" />
+    <item name="demo_environment_cross_activity_theme_reset" type="id" />
+    <item name="demo_environment_cross_activity_theme_state" type="id" />
+    <item name="demo_environment_cross_activity_theme_target" type="id" />
+    <item name="demo_cross_activity_theme_secondary_state" type="id" />
+    <item name="demo_cross_activity_theme_secondary_action" type="id" />
+    <item name="demo_cross_activity_theme_secondary_return" type="id" />
+
+    <item name="demo_interop_android_view_root" type="id" />
+    <item name="demo_interop_android_view_ready" type="id" />
+    <item name="demo_interop_android_view_primary_action" type="id" />
+    <item name="demo_interop_android_view_reset" type="id" />
+    <item name="demo_interop_android_view_state" type="id" />
+    <item name="demo_interop_android_view_target" type="id" />
+    <item name="demo_interop_android_view_secondary_target" type="id" />
+
+    <item name="demo_overlay_transient_root" type="id" />
+    <item name="demo_overlay_transient_ready" type="id" />
+    <item name="demo_overlay_transient_primary_action" type="id" />
+    <item name="demo_overlay_transient_secondary_action" type="id" />
+    <item name="demo_overlay_transient_reset" type="id" />
+    <item name="demo_overlay_transient_state" type="id" />
+    <item name="demo_overlay_transient_target" type="id" />
+    <item name="demo_overlay_transient_secondary_target" type="id" />
+
+    <item name="demo_overlay_dialog_root" type="id" />
+    <item name="demo_overlay_dialog_ready" type="id" />
+    <item name="demo_overlay_dialog_primary_action" type="id" />
+    <item name="demo_overlay_dialog_secondary_action" type="id" />
+    <item name="demo_overlay_dialog_reset" type="id" />
+    <item name="demo_overlay_dialog_state" type="id" />
+    <item name="demo_overlay_dialog_target" type="id" />
+
+    <item name="demo_overlay_menu_root" type="id" />
+    <item name="demo_overlay_menu_ready" type="id" />
+    <item name="demo_overlay_menu_primary_action" type="id" />
+    <item name="demo_overlay_menu_secondary_action" type="id" />
+    <item name="demo_overlay_menu_reset" type="id" />
+    <item name="demo_overlay_menu_state" type="id" />
+    <item name="demo_overlay_menu_target" type="id" />
+
+    <item name="demo_navigation_system_root" type="id" />
+    <item name="demo_navigation_system_ready" type="id" />
+    <item name="demo_navigation_system_primary_action" type="id" />
+    <item name="demo_navigation_system_reset" type="id" />
+    <item name="demo_navigation_system_state" type="id" />
+    <item name="demo_navigation_system_target" type="id" />
+
+    <item name="demo_design_material3_xml_root" type="id" />
+    <item name="demo_design_material3_xml_ready" type="id" />
+    <item name="demo_design_material3_xml_primary_action" type="id" />
+    <item name="demo_design_material3_xml_reset" type="id" />
+    <item name="demo_design_material3_xml_state" type="id" />
+    <item name="demo_design_material3_xml_target" type="id" />
+
+    <item name="demo_design_material3_static_root" type="id" />
+    <item name="demo_design_material3_static_ready" type="id" />
+    <item name="demo_design_material3_static_primary_action" type="id" />
+    <item name="demo_design_material3_static_reset" type="id" />
+    <item name="demo_design_material3_static_state" type="id" />
+    <item name="demo_design_material3_static_target" type="id" />
+
+    <item name="demo_design_material3_custom_root" type="id" />
+    <item name="demo_design_material3_custom_ready" type="id" />
+    <item name="demo_design_material3_custom_primary_action" type="id" />
+    <item name="demo_design_material3_custom_reset" type="id" />
+    <item name="demo_design_material3_custom_state" type="id" />
+    <item name="demo_design_material3_custom_target" type="id" />
+
+    <item name="demo_design_bundle_material3_root" type="id" />
+    <item name="demo_design_bundle_material3_ready" type="id" />
+    <item name="demo_design_bundle_material3_primary_action" type="id" />
+    <item name="demo_design_bundle_material3_secondary_action" type="id" />
+    <item name="demo_design_bundle_material3_reset" type="id" />
+    <item name="demo_design_bundle_material3_state" type="id" />
+    <item name="demo_design_bundle_material3_target" type="id" />
+    <item name="demo_design_bundle_material3_secondary_target" type="id" />
+
+    <item name="demo_design_bundle_contrast_root" type="id" />
+    <item name="demo_design_bundle_contrast_ready" type="id" />
+    <item name="demo_design_bundle_contrast_primary_action" type="id" />
+    <item name="demo_design_bundle_contrast_secondary_action" type="id" />
+    <item name="demo_design_bundle_contrast_reset" type="id" />
+    <item name="demo_design_bundle_contrast_state" type="id" />
+    <item name="demo_design_bundle_contrast_target" type="id" />
+    <item name="demo_design_bundle_contrast_secondary_target" type="id" />
+
+    <item name="demo_design_oneui7_root" type="id" />
+    <item name="demo_design_oneui7_ready" type="id" />
+    <item name="demo_design_oneui7_primary_action" type="id" />
+    <item name="demo_design_oneui7_secondary_action" type="id" />
+    <item name="demo_design_oneui7_reset" type="id" />
+    <item name="demo_design_oneui7_state" type="id" />
+    <item name="demo_design_oneui7_target" type="id" />
+    <item name="demo_design_oneui7_secondary_target" type="id" />
+
+    <item name="demo_oneui7_snackbar_show" type="id" />
+    <item name="demo_oneui7_sheet_show" type="id" />
+    <item name="demo_oneui7_sheet_content" type="id" />
+    <item name="demo_oneui7_sheet_dismiss" type="id" />
+
+    <item name="demo_component_card_root" type="id" />
+    <item name="demo_component_card_ready" type="id" />
+    <item name="demo_component_card_primary_action" type="id" />
+    <item name="demo_component_card_reset" type="id" />
+    <item name="demo_component_card_state" type="id" />
+    <item name="demo_component_card_target" type="id" />
+
+    <item name="demo_component_fab_root" type="id" />
+    <item name="demo_component_fab_ready" type="id" />
+    <item name="demo_component_fab_primary_action" type="id" />
+    <item name="demo_component_fab_reset" type="id" />
+    <item name="demo_component_fab_state" type="id" />
+    <item name="demo_component_fab_target" type="id" />
+
+    <item name="demo_component_chip_root" type="id" />
+    <item name="demo_component_chip_ready" type="id" />
+    <item name="demo_component_chip_primary_action" type="id" />
+    <item name="demo_component_chip_reset" type="id" />
+    <item name="demo_component_chip_state" type="id" />
+    <item name="demo_component_chip_target" type="id" />
+
+    <item name="demo_component_list_item_root" type="id" />
+    <item name="demo_component_list_item_ready" type="id" />
+    <item name="demo_component_list_item_primary_action" type="id" />
+    <item name="demo_component_list_item_reset" type="id" />
+    <item name="demo_component_list_item_state" type="id" />
+    <item name="demo_component_list_item_target" type="id" />
+
+    <item name="demo_component_app_bars_root" type="id" />
+    <item name="demo_component_app_bars_ready" type="id" />
+    <item name="demo_component_app_bars_primary_action" type="id" />
+    <item name="demo_component_app_bars_reset" type="id" />
+    <item name="demo_component_app_bars_state" type="id" />
+    <item name="demo_component_app_bars_target" type="id" />
+
+    <item name="demo_component_navigation_bar_root" type="id" />
+    <item name="demo_component_navigation_bar_ready" type="id" />
+    <item name="demo_component_navigation_bar_primary_action" type="id" />
+    <item name="demo_component_navigation_bar_reset" type="id" />
+    <item name="demo_component_navigation_bar_state" type="id" />
+    <item name="demo_component_navigation_bar_target" type="id" />
+
+    <item name="demo_component_scaffold_root" type="id" />
+    <item name="demo_component_scaffold_ready" type="id" />
+    <item name="demo_component_scaffold_primary_action" type="id" />
+    <item name="demo_component_scaffold_reset" type="id" />
+    <item name="demo_component_scaffold_state" type="id" />
+    <item name="demo_component_scaffold_target" type="id" />
+
+    <item name="demo_component_button_root" type="id" />
+    <item name="demo_component_button_ready" type="id" />
+    <item name="demo_component_button_primary_action" type="id" />
+    <item name="demo_component_button_reset" type="id" />
+    <item name="demo_component_button_state" type="id" />
+    <item name="demo_component_button_target" type="id" />
+
+    <item name="demo_component_icon_button_root" type="id" />
+    <item name="demo_component_icon_button_ready" type="id" />
+    <item name="demo_component_icon_button_primary_action" type="id" />
+    <item name="demo_component_icon_button_reset" type="id" />
+    <item name="demo_component_icon_button_state" type="id" />
+    <item name="demo_component_icon_button_target" type="id" />
+
+    <item name="demo_component_segmented_control_root" type="id" />
+    <item name="demo_component_segmented_control_ready" type="id" />
+    <item name="demo_component_segmented_control_primary_action" type="id" />
+    <item name="demo_component_segmented_control_reset" type="id" />
+    <item name="demo_component_segmented_control_state" type="id" />
+    <item name="demo_component_segmented_control_target" type="id" />
+
+    <item name="demo_component_divider_root" type="id" />
+    <item name="demo_component_divider_ready" type="id" />
+    <item name="demo_component_divider_target" type="id" />
+
+    <item name="demo_component_progress_root" type="id" />
+    <item name="demo_component_progress_ready" type="id" />
+    <item name="demo_component_progress_primary_action" type="id" />
+    <item name="demo_component_progress_reset" type="id" />
+    <item name="demo_component_progress_state" type="id" />
+    <item name="demo_component_progress_target" type="id" />
+
+    <item name="demo_foundations_locals_root" type="id" />
+    <item name="demo_foundations_locals_ready" type="id" />
+    <item name="demo_foundations_locals_target" type="id" />
+
+    <item name="demo_foundations_theme_root" type="id" />
+    <item name="demo_foundations_theme_ready" type="id" />
+    <item name="demo_foundations_theme_target" type="id" />
+    <item name="demo_foundations_theme_secondary_target" type="id" />
+
+    <item name="demo_foundations_media_root" type="id" />
+    <item name="demo_foundations_media_ready" type="id" />
+    <item name="demo_foundations_media_primary_action" type="id" />
+    <item name="demo_foundations_media_reset" type="id" />
+    <item name="demo_foundations_media_state" type="id" />
+    <item name="demo_foundations_media_target" type="id" />
+    <item name="demo_foundations_media_secondary_target" type="id" />
+
+    <item name="demo_foundations_typography_root" type="id" />
+    <item name="demo_foundations_typography_ready" type="id" />
+    <item name="demo_foundations_typography_target" type="id" />
+
+    <item name="demo_design_system_dialog_open" type="id" />
+    <item name="demo_design_system_dialog_state" type="id" />
+    <item name="demo_design_system_dialog_switch" type="id" />
+    <item name="demo_design_system_dialog_close" type="id" />
+
+    <item name="demo_performance_list_root" type="id" />
+    <item name="demo_performance_list_ready" type="id" />
+    <item name="demo_performance_list_primary_action" type="id" />
+    <item name="demo_performance_list_reset" type="id" />
+    <item name="demo_performance_list_state" type="id" />
+    <item name="demo_performance_list_target" type="id" />
+    <item name="demo_performance_complex_layout_root" type="id" />
+    <item name="demo_performance_complex_layout_ready" type="id" />
+    <item name="demo_performance_complex_layout_primary_action" type="id" />
+    <item name="demo_performance_complex_layout_reset" type="id" />
+    <item name="demo_performance_complex_layout_state" type="id" />
+    <item name="demo_performance_complex_layout_target" type="id" />
+    <item name="demo_performance_shadow_list_root" type="id" />
+    <item name="demo_performance_shadow_list_ready" type="id" />
+    <item name="demo_performance_shadow_list_primary_action" type="id" />
+    <item name="demo_performance_shadow_list_reset" type="id" />
+    <item name="demo_performance_shadow_list_state" type="id" />
+    <item name="demo_performance_shadow_list_target" type="id" />
+    <item name="demo_performance_shadow_complex_layout_root" type="id" />
+    <item name="demo_performance_shadow_complex_layout_ready" type="id" />
+    <item name="demo_performance_shadow_complex_layout_primary_action" type="id" />
+    <item name="demo_performance_shadow_complex_layout_reset" type="id" />
+    <item name="demo_performance_shadow_complex_layout_state" type="id" />
+    <item name="demo_performance_shadow_complex_layout_target" type="id" />
+</resources>

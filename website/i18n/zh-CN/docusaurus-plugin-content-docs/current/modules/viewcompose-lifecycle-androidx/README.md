@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-lifecycle-androidx/README.md
-translation_source_hash: 405c7a975d29227693cb542bef7430f770979c8fdecafbdc5c4f4118737a8f2e
+translation_source_hash: d6a1ae599780bf345b91a69bef68b16c614db75e3ab0942b000295ef4e0717d9
 translation_status: current
 ---
 
@@ -82,7 +82,9 @@ fun UiTreeBuilder.Profile(model: ProfileModel) {
 
 每个 Setup 必须以 `onStopOrDispose { ... }` 或 `onPauseOrDispose { ... }` 结束。Key 是强制的，
 并使用结构相等性。替换 Cleanup 会先于替换 Setup 完成；Abort 候选不会分离已提交 Observer，
-也不会启动替换对象。Setup 抛出会分离该 Observer，并在身份变化前不再重试；Cleanup 抛出后
+也不会启动替换对象。如果已处于活跃状态的 Owner 在 Composition Commit 安装期间执行初始
+Setup 并抛出，Effect 会保持 Pending 并在后续 Commit 重试，因此 Setup 必须可安全重试。若 Setup
+在之后的 Lifecycle 转换中抛出，则会分离该 Observer，并在身份变化前不再重试；Cleanup 抛出后
 进入终态。这些回调同步运行在 Lifecycle Dispatch Thread，不得阻塞。Composition Local 必须在
 声明 Effect 时解析；后续 Lifecycle Callback 读取 Local 时，会用 Local Diagnostic Name 失败，
 即使该线程上恰好有另一个无关 Provider 处于活跃状态也不会读取它。

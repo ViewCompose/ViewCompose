@@ -31,7 +31,11 @@ class RenderSession internal constructor(
     val lastFrameReport: RenderFrameReport?
         get() = delegate.lastFrameReport
 
-    /** Immediately evaluates and synchronously renders the current content. */
+    /**
+     * Immediately evaluates and synchronously renders the current content.
+     *
+     * @throws IllegalStateException after [dispose] has been requested
+     */
     fun render() {
         delegate.render()
     }
@@ -41,6 +45,8 @@ class RenderSession internal constructor(
      *
      * Explicit [render] calls still run while inactive. Invalidations received while inactive are
      * retained and coalesced into a frame after rendering becomes active again.
+     *
+     * @throws IllegalStateException after [dispose] has been requested
      */
     fun setRenderingActive(active: Boolean) {
         delegate.setRenderingActive(active)

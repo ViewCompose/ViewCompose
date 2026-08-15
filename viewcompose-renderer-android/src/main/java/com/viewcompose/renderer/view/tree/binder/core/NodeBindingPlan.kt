@@ -53,6 +53,9 @@ internal sealed interface NodeBindingPlan {
      */
     data object Rebind : NodeBindingPlan
 
+    /** Applies only modifier-owned behavior while preserving the node's semantic binding. */
+    data object ModifierOnly : NodeBindingPlan
+
     /**
      * Applies a targeted patch and records whether modifiers changed.
      * Applies a fine-grained patch and records whether modifiers changed.

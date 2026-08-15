@@ -45,6 +45,12 @@ Goals:
    within one pass.
 6. The runtime tracks the `readId` of active snapshots. Commits retain versions required by active
    readers and prune history that is no longer visible after snapshots are released.
+7. One successful global apply gathers affected `Observation` instances in stable unique order and
+   invokes each at most once on the applying thread after runtime and state locks are released.
+   Separate applies are never debounced together. A conflict or no-op apply emits no invalidation.
+8. Framework-owned fields that form one public logical tuple use one existing mutable-snapshot
+   transaction. Writer serialization, including `synchronized`, does not make separate commits
+   atomically visible to snapshot readers.
 
 ## 4. Concurrency and conflict constraints
 
@@ -65,6 +71,9 @@ Goals:
    consistency tests.
 4. Call `dispose()` on `Snapshot`/`MutableSnapshot` after use, or close it through `use`, to avoid
    retaining historical versions indefinitely.
+5. When adding several framework-owned observable fields, classify whether they are one invariant
+   or independent events. Group only the invariant writes in `Snapshot.withMutableSnapshot` and add
+   a test that reads the complete tuple from an invalidation callback.
 
 ## 6. Related documents
 

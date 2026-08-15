@@ -1,5 +1,11 @@
 package com.viewcompose
 
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioId
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.demo.registry.DemoScenarioIds
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.shape
@@ -58,174 +64,260 @@ import com.viewcompose.ui.unit.sp
 
 @ViewComposePreview(name = "Input · Fields", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewInputFields() {
-    InputPage(initialPageIndex = 0)
+    InputPage(InputFixture.Fields)
 }
 
 @ViewComposePreview(name = "Input · Selection", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewInputSelection() {
-    InputPage(initialPageIndex = 1)
+    InputPage(InputFixture.Selection)
 }
 
 @ViewComposePreview(name = "Input · Stress", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewInputStress() {
-    InputPage(initialPageIndex = 2)
+    InputPage(InputFixture.Stress)
 }
 
 @ViewComposePreview(name = "Input · Search", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewInputSearch() {
-    InputPage(initialPageIndex = 3)
+    InputPage(InputFixture.Search)
 }
 
 @ViewComposePreview(name = "Input · Summary", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewInputSummary() {
-    InputPage(initialPageIndex = 4)
+    InputPage(InputFixture.DerivedSummary)
+}
+
+internal enum class InputFixture(
+    val scenarioId: DemoScenarioId,
+) {
+    Fields(DemoScenarioIds.InputFields),
+    Selection(DemoScenarioIds.InputSelection),
+    Stress(DemoScenarioIds.InputStress),
+    Search(DemoScenarioIds.InputSearch),
+    DerivedSummary(DemoScenarioIds.InputDerivedSummary),
+    ;
+
+    companion object {
+        fun from(scenarioId: DemoScenarioId): InputFixture =
+            entries.singleOrNull { fixture -> fixture.scenarioId == scenarioId }
+                ?: error("Unsupported input scenario: $scenarioId")
+    }
 }
 
 internal fun UiTreeBuilder.InputPage(
-    initialPageIndex: Int = 0,
+    fixture: InputFixture,
+    scenario: DemoScenarioSpec? = null,
 ) {
-    val benchmarkExpandedState = remember { mutableStateOf(false) }
-    val nameState = rememberTextFieldState("GZQ")
-    val emailState = rememberTextFieldState("demo@viewcompose.dev")
-    val passwordState = rememberTextFieldState()
-    val ageState = rememberTextFieldState("3")
-    val bioState = rememberTextFieldState("基于虚拟节点、键控 diff 和 Android View 互操作构建。")
-    val notificationsEnabledState = remember { mutableStateOf(true) }
-    val analyticsEnabledState = remember { mutableStateOf(false) }
-    val selectedTierState = remember { mutableStateOf("Alpha") }
-    val intensityState = remember { mutableStateOf(32) }
-    val stressExpandedState = remember { mutableStateOf(false) }
-    val stressReadonlyState = remember { mutableStateOf(true) }
-    val stressErrorState = remember { mutableStateOf(true) }
-    val searchQueryState = rememberTextFieldState()
-    val searchHistoryState = rememberTextFieldState()
-    val disabledSearchState = rememberTextFieldState()
-    val searchResultState = remember { mutableStateOf("") }
-    val scrollableSearchQueryState = rememberTextFieldState()
-    val verticalPagerSearchQueryState = rememberTextFieldState()
-    val pullRefreshSearchQueryState = rememberTextFieldState()
-    val benchmarkFieldState = rememberTextFieldState("紧凑数据")
-    val disabledEmailState = rememberTextFieldState("disabled@viewcompose.dev")
-    val stressTitleFieldState = rememberTextFieldState("紧凑标题")
-    val stressNotesFieldState = rememberTextFieldState("只读笔记")
-    val stressPasswordFieldState = rememberTextFieldState()
-    val focusFollowVerticalPagerPageState = remember { mutableStateOf(0) }
-    val pullRefreshFocusRefreshingState = remember { mutableStateOf(false) }
-    val summaryState = remember {
-        derivedStateOf {
-            "预览: ${nameState.text.ifBlank { "匿名" }} · " +
-                "${emailState.text.ifBlank { "无邮箱" }} · " +
-                "${ageState.text.ifBlank { "-" }}y"
-        }
+    val fieldsActive = fixture == InputFixture.Fields
+    val selectionActive = fixture == InputFixture.Selection
+    val stressActive = fixture == InputFixture.Stress
+    val searchActive = fixture == InputFixture.Search
+    val summaryActive = fixture == InputFixture.DerivedSummary
+
+    // A strict fixture owns only the state it renders. Inactive scenario state must not enter the
+    // composition observer graph or contaminate benchmark allocation and invalidation counts.
+    val bioInitial = if (fieldsActive) stringResource(R.string.demo_input_bio_initial) else ""
+    val benchmarkCompactData = if (fieldsActive) {
+        stringResource(R.string.demo_input_benchmark_compact_data)
+    } else {
+        ""
     }
-    val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 4)) }
-    val pageItems = when (selectedPageState.value) {
-        0 -> listOf("benchmark", "page", "page_filter", "intro", "form", "verify")
-        1 -> listOf("page", "page_filter", "controls", "verify")
-        2 -> listOf("page", "page_filter", "stress", "verify")
-        3 -> listOf("page", "page_filter", "search", "verify")
-        else -> listOf("page", "page_filter", "summary", "verify")
+    val benchmarkExpandedData = if (fieldsActive) {
+        stringResource(R.string.demo_input_benchmark_expanded_data)
+    } else {
+        ""
+    }
+    val benchmarkExpandedState = if (fieldsActive) remember { mutableStateOf(false) } else null
+    val nameState = if (fieldsActive) rememberTextFieldState("GZQ") else null
+    val emailState = if (fieldsActive) rememberTextFieldState("demo@viewcompose.dev") else null
+    val passwordState = if (fieldsActive) rememberTextFieldState() else null
+    val ageState = if (fieldsActive) rememberTextFieldState("3") else null
+    val bioState = if (fieldsActive) rememberTextFieldState(bioInitial) else null
+    val benchmarkFieldState = if (fieldsActive) rememberTextFieldState(benchmarkCompactData) else null
+    val disabledEmailState = if (fieldsActive) {
+        rememberTextFieldState("disabled@viewcompose.dev")
+    } else {
+        null
+    }
+
+    val notificationsEnabledState = if (selectionActive) remember { mutableStateOf(true) } else null
+    val analyticsEnabledState = if (selectionActive) remember { mutableStateOf(false) } else null
+    val selectedTierState = if (selectionActive) remember { mutableStateOf("Alpha") } else null
+    val intensityState = if (selectionActive) remember { mutableStateOf(32) } else null
+
+    val stressExpandedState = if (stressActive) remember { mutableStateOf(false) } else null
+    val stressReadonlyState = if (stressActive) remember { mutableStateOf(true) } else null
+    val stressErrorState = if (stressActive) remember { mutableStateOf(true) } else null
+    val stressCompactTitle = if (stressActive) {
+        stringResource(R.string.demo_input_stress_compact_title)
+    } else {
+        ""
+    }
+    val stressReadonlyNote = if (stressActive) {
+        stringResource(R.string.demo_input_stress_readonly_note)
+    } else {
+        ""
+    }
+    val stressExpandedTitle = if (stressActive) {
+        stringResource(R.string.demo_input_stress_expanded_title)
+    } else {
+        ""
+    }
+    val stressExpandedNotes = if (stressActive) {
+        stringResource(R.string.demo_input_stress_expanded_notes)
+    } else {
+        ""
+    }
+    val stressTitleFieldState = if (stressActive) rememberTextFieldState(stressCompactTitle) else null
+    val stressNotesFieldState = if (stressActive) rememberTextFieldState(stressReadonlyNote) else null
+    val stressPasswordFieldState = if (stressActive) rememberTextFieldState() else null
+
+    val searchQueryState = if (searchActive) rememberTextFieldState() else null
+    val searchHistoryState = if (searchActive) rememberTextFieldState() else null
+    val disabledSearchState = if (searchActive) rememberTextFieldState() else null
+    val searchResultState = if (searchActive) remember { mutableStateOf("") } else null
+    val scrollableSearchQueryState = if (searchActive) rememberTextFieldState() else null
+    val verticalPagerSearchQueryState = if (searchActive) rememberTextFieldState() else null
+    val pullRefreshSearchQueryState = if (searchActive) rememberTextFieldState() else null
+    val focusFollowVerticalPagerPageState = if (searchActive) {
+        remember { mutableStateOf(0) }
+    } else {
+        null
+    }
+    val pullRefreshFocusRefreshingState = if (searchActive) {
+        remember { mutableStateOf(false) }
+    } else {
+        null
+    }
+
+    val summaryAlternateState = if (summaryActive) remember { mutableStateOf(false) } else null
+    val summaryState = if (summaryActive) {
+        val activeSummaryAlternateState = requireNotNull(summaryAlternateState)
+        val defaultSummary = stringResource(R.string.demo_input_summary_default)
+        val alternateSummary = stringResource(R.string.demo_input_summary_alternate)
+        remember(defaultSummary, alternateSummary) {
+            derivedStateOf {
+                if (activeSummaryAlternateState.value) {
+                    alternateSummary
+                } else {
+                    defaultSummary
+                }
+            }
+        }
+    } else {
+        null
+    }
+    val pageItems = when (fixture) {
+        InputFixture.Fields -> listOf("benchmark", "form")
+        InputFixture.Selection -> listOf("controls")
+        InputFixture.Stress -> listOf("stress")
+        InputFixture.Search -> listOf("search")
+        InputFixture.DerivedSummary -> listOf("summary")
     }
 
     LazyColumn(
         items = pageItems,
         key = { it },
-        focusFollowKeyboard = selectedPageState.value == 3,
+        focusFollowKeyboard = fixture == InputFixture.Search,
         modifier = Modifier
             .fillMaxSize(),
     ) { section ->
         when (section) {
-            "page" -> ChapterPageOverviewSection(
-                title = "输入组件",
-                goal = "验证文本输入、选择控件和搜索栏在值更新、错误态、变体和主题覆盖下的声明式行为。",
-                modules = listOf("TextField family", "selection widgets", "SearchBar", "input defaults", "theme components"),
-            )
-
-            "page_filter" -> ChapterPageFilterSection(
-                pages = listOf("字段", "选择", "压力", "搜索", "摘要"),
-                selectedIndex = selectedPageState.value,
-                onSelectionChange = { selectedPageState.value = it },
-            )
-
             "benchmark" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
-                title = "输入 Benchmark 锚点",
-                subtitle = "默认字段页的 benchmark 控件。",
+                title = stringResource(R.string.demo_input_benchmark_title),
+                subtitle = stringResource(R.string.demo_input_benchmark_summary),
             ) {
+                val benchmarkExpandedState = requireNotNull(benchmarkExpandedState)
+                val benchmarkFieldState = requireNotNull(benchmarkFieldState)
+                val nameState = requireNotNull(nameState)
+                val emailState = requireNotNull(emailState)
+                val passwordState = requireNotNull(passwordState)
+                val ageState = requireNotNull(ageState)
+                val bioState = requireNotNull(bioState)
                 Text(
-                    text = "稳定路径: launcher -> input -> benchmark anchor",
-                    style = UiTextStyle(fontSizeSp = 12.sp),
-                    color = TextDefaults.secondaryColor(),
-                    modifier = Modifier.margin(bottom = 8.dp),
+                    text = stringResource(
+                        if (benchmarkExpandedState.value) {
+                            R.string.demo_input_benchmark_state_expanded
+                        } else {
+                            R.string.demo_input_benchmark_state_collapsed
+                        },
+                    ),
+                    modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Button(
-                    text = if (benchmarkExpandedState.value) "输入 Benchmark 已展开" else "输入 Benchmark 已收起",
+                    text = stringResource(
+                        if (benchmarkExpandedState.value) {
+                            R.string.demo_input_benchmark_action_expanded
+                        } else {
+                            R.string.demo_input_benchmark_action_collapsed
+                        },
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.INPUT_BENCHMARK_TOGGLE),
+                        .inputScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     onClick = {
                         benchmarkExpandedState.value = !benchmarkExpandedState.value
                         benchmarkFieldState.setTextAndPlaceCursorAtEnd(
                             if (benchmarkExpandedState.value) {
-                                "展开的 benchmark 数据"
+                                benchmarkExpandedData
                             } else {
-                                "紧凑数据"
+                                benchmarkCompactData
                             },
                         )
                     },
                 )
                 Button(
-                    text = "重置输入 Benchmark",
+                    text = stringResource(R.string.demo_input_benchmark_reset),
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.INPUT_BENCHMARK_RESET),
+                        .inputScenarioTarget(scenario, DemoAutomationRole.Reset),
                     onClick = {
                         benchmarkExpandedState.value = false
-                        benchmarkFieldState.setTextAndPlaceCursorAtEnd("紧凑数据")
+                        benchmarkFieldState.setTextAndPlaceCursorAtEnd(benchmarkCompactData)
+                        nameState.setTextAndPlaceCursorAtEnd("GZQ")
+                        emailState.setTextAndPlaceCursorAtEnd("demo@viewcompose.dev")
+                        passwordState.clearText()
+                        ageState.setTextAndPlaceCursorAtEnd("3")
+                        bioState.setTextAndPlaceCursorAtEnd(bioInitial)
                     },
                 )
                 TextField(
                     state = benchmarkFieldState,
-                    label = "Benchmark 字段",
+                    label = stringResource(R.string.demo_input_benchmark_field_label),
                     supportingText = if (benchmarkExpandedState.value) {
-                        "展开的辅助文案保持场景确定性，同时压力测试 TextField 容器布局。"
+                        stringResource(R.string.demo_input_benchmark_support_expanded)
                     } else {
-                        "紧凑辅助文案。"
+                        stringResource(R.string.demo_input_benchmark_support_compact)
                     },
                     readOnly = true,
                     variant = TextFieldVariant.Outlined,
                     size = TextFieldSize.Medium,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.INPUT_BENCHMARK_FIELD),
-                )
-            }
-
-            "intro" -> ScenarioSection(
-                kind = ScenarioKind.Guide,
-                title = "文本和输入家族",
-                subtitle = "框架现在映射多个 EditText 变体: text, password, email, number, multiline。",
-            ) {
-                Text(
-                    text = "排版也使用正式的 dp/sp DSL。",
-                    style = UiTextStyle(fontSizeSp = 13.sp),
-                    color = TextDefaults.secondaryColor(),
+                        .inputScenarioTarget(scenario, DemoAutomationRole.Target),
                 )
             }
 
             "form" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "表单控件",
-                subtitle = "所有字段由状态驱动，更新同一个 render session。",
+                title = stringResource(R.string.demo_input_form_title),
+                subtitle = stringResource(R.string.demo_input_form_summary),
             ) {
+                val nameState = requireNotNull(nameState)
+                val emailState = requireNotNull(emailState)
+                val passwordState = requireNotNull(passwordState)
+                val ageState = requireNotNull(ageState)
+                val bioState = requireNotNull(bioState)
+                val disabledEmailState = requireNotNull(disabledEmailState)
                 TextField(
                     state = nameState,
-                    hint = "姓名",
-                    label = "显示名称",
-                    supportingText = "显示在个人资料头部",
+                    hint = stringResource(R.string.demo_input_name_hint),
+                    label = stringResource(R.string.demo_input_name_label),
+                    supportingText = stringResource(R.string.demo_input_name_support),
                     keyboardOptions = TextFieldKeyboardOptions(
                         imeAction = TextFieldImeAction.Next,
                     ),
@@ -237,9 +329,9 @@ internal fun UiTreeBuilder.InputPage(
                 )
                 EmailField(
                     state = emailState,
-                    hint = "邮箱",
-                    label = "工作邮箱",
-                    supportingText = "仅用于通知",
+                    hint = stringResource(R.string.demo_input_email_hint),
+                    label = stringResource(R.string.demo_input_email_label),
+                    supportingText = stringResource(R.string.demo_input_email_support),
                     keyboardOptions = TextFieldKeyboardOptions(
                         keyboardType = com.viewcompose.ui.node.TextFieldType.Email,
                         imeAction = TextFieldImeAction.Next,
@@ -252,9 +344,9 @@ internal fun UiTreeBuilder.InputPage(
                 )
                 PasswordField(
                     state = passwordState,
-                    hint = "密码",
-                    label = "访问密钥",
-                    supportingText = "留空保持当前密码",
+                    hint = stringResource(R.string.demo_input_password_hint),
+                    label = stringResource(R.string.demo_input_password_label),
+                    supportingText = stringResource(R.string.demo_input_password_support),
                     keyboardOptions = TextFieldKeyboardOptions(
                         keyboardType = com.viewcompose.ui.node.TextFieldType.Password,
                         imeAction = TextFieldImeAction.Done,
@@ -269,9 +361,9 @@ internal fun UiTreeBuilder.InputPage(
                 )
                 NumberField(
                     state = ageState,
-                    hint = "版本年龄",
-                    label = "项目年龄",
-                    supportingText = "语义版本代数",
+                    hint = stringResource(R.string.demo_input_age_hint),
+                    label = stringResource(R.string.demo_input_age_label),
+                    supportingText = stringResource(R.string.demo_input_age_support),
                     variant = TextFieldVariant.Outlined,
                     size = TextFieldSize.Compact,
                     modifier = Modifier
@@ -280,9 +372,9 @@ internal fun UiTreeBuilder.InputPage(
                 )
                 EmailField(
                     state = disabledEmailState,
-                    hint = "禁用邮箱",
-                    label = "只读联系人",
-                    supportingText = "从组织设置继承",
+                    hint = stringResource(R.string.demo_input_disabled_email_hint),
+                    label = stringResource(R.string.demo_input_disabled_email_label),
+                    supportingText = stringResource(R.string.demo_input_disabled_email_support),
                     variant = TextFieldVariant.Tonal,
                     size = TextFieldSize.Medium,
                     enabled = false,
@@ -292,9 +384,9 @@ internal fun UiTreeBuilder.InputPage(
                 )
                 TextArea(
                     state = bioState,
-                    hint = "简介",
-                    label = "摘要",
-                    supportingText = "支持多行编辑和本地状态更新",
+                    hint = stringResource(R.string.demo_input_bio_hint),
+                    label = stringResource(R.string.demo_input_bio_label),
+                    supportingText = stringResource(R.string.demo_input_bio_support),
                     maxLines = 6,
                     keyboardOptions = TextFieldKeyboardOptions(
                         imeAction = TextFieldImeAction.Done,
@@ -307,7 +399,7 @@ internal fun UiTreeBuilder.InputPage(
                         .margin(bottom = 12.dp),
                 )
                 Button(
-                    text = "重置表单",
+                    text = stringResource(R.string.demo_input_form_reset),
                     leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
                     trailingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
                     size = ButtonSize.Large,
@@ -316,44 +408,85 @@ internal fun UiTreeBuilder.InputPage(
                         emailState.setTextAndPlaceCursorAtEnd("demo@viewcompose.dev")
                         passwordState.clearText()
                         ageState.setTextAndPlaceCursorAtEnd("3")
-                        bioState.setTextAndPlaceCursorAtEnd(
-                            "基于虚拟节点、键控 diff 和 Android View 互操作构建。",
-                        )
+                        bioState.setTextAndPlaceCursorAtEnd(bioInitial)
                     },
                 )
             }
 
             "controls" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "选择 + Slider 控件",
-                subtitle = "Checkbox、Switch、RadioButton 和 Slider 属于同一声明式输入家族。",
+                title = stringResource(R.string.demo_input_selection_title),
+                subtitle = stringResource(R.string.demo_input_selection_summary),
             ) {
+                val notificationsEnabledState = requireNotNull(notificationsEnabledState)
+                val analyticsEnabledState = requireNotNull(analyticsEnabledState)
+                val selectedTierState = requireNotNull(selectedTierState)
+                val intensityState = requireNotNull(intensityState)
+                Text(
+                    text = stringResource(
+                        R.string.demo_input_selection_state,
+                        notificationsEnabledState.value,
+                        analyticsEnabledState.value,
+                        selectedTierState.value,
+                        intensityState.value,
+                    ),
+                    modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.State),
+                )
+                Row(
+                    spacing = 8.dp,
+                    modifier = Modifier.margin(bottom = 12.dp),
+                ) {
+                    Button(
+                        text = stringResource(R.string.demo_input_selection_toggle),
+                        modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+                        onClick = {
+                            val alternate = notificationsEnabledState.value
+                            notificationsEnabledState.value = !alternate
+                            analyticsEnabledState.value = alternate
+                            selectedTierState.value = if (alternate) "Beta" else "Alpha"
+                            intensityState.value = if (alternate) 68 else 32
+                        },
+                    )
+                    Button(
+                        text = stringResource(R.string.demo_input_selection_reset),
+                        variant = ButtonVariant.Outlined,
+                        modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.Reset),
+                        onClick = {
+                            notificationsEnabledState.value = true
+                            analyticsEnabledState.value = false
+                            selectedTierState.value = "Alpha"
+                            intensityState.value = 32
+                        },
+                    )
+                }
                 Checkbox(
-                    text = "通知",
+                    text = stringResource(R.string.demo_input_notifications),
                     checked = notificationsEnabledState.value,
                     onCheckedChange = { notificationsEnabledState.value = it },
-                    modifier = Modifier.margin(bottom = 8.dp),
+                    modifier = Modifier
+                        .margin(bottom = 8.dp)
+                        .inputScenarioTarget(scenario, DemoAutomationRole.Target),
                 )
                 Switch(
-                    text = "数据分析",
+                    text = stringResource(R.string.demo_input_analytics),
                     checked = analyticsEnabledState.value,
                     onCheckedChange = { analyticsEnabledState.value = it },
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
                 RadioButton(
-                    text = "Alpha 层级",
+                    text = stringResource(R.string.demo_input_tier_alpha),
                     checked = selectedTierState.value == "Alpha",
                     onCheckedChange = { checked -> if (checked) selectedTierState.value = "Alpha" },
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
                 RadioButton(
-                    text = "Beta 层级",
+                    text = stringResource(R.string.demo_input_tier_beta),
                     checked = selectedTierState.value == "Beta",
                     onCheckedChange = { checked -> if (checked) selectedTierState.value = "Beta" },
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
                 Text(
-                    text = "强度: ${intensityState.value}",
+                    text = stringResource(R.string.demo_input_intensity, intensityState.value),
                     modifier = Modifier.padding(bottom = 6.dp),
                 )
                 Slider(
@@ -401,10 +534,23 @@ internal fun UiTreeBuilder.InputPage(
                             .shape(SurfaceDefaults.shape())
                             .padding(12.dp),
                     ) {
-                        Text(text = "输入控件颜色覆盖")
-                        Checkbox(text = "本地 Accent Checkbox", checked = true, onCheckedChange = {})
-                        Switch(text = "禁用 Accent Switch", checked = false, enabled = false, onCheckedChange = {})
-                        RadioButton(text = "本地 Accent Radio", checked = true, onCheckedChange = {})
+                        Text(text = stringResource(R.string.demo_input_color_override))
+                        Checkbox(
+                            text = stringResource(R.string.demo_input_local_checkbox),
+                            checked = true,
+                            onCheckedChange = {},
+                        )
+                        Switch(
+                            text = stringResource(R.string.demo_input_disabled_switch),
+                            checked = false,
+                            enabled = false,
+                            onCheckedChange = {},
+                        )
+                        RadioButton(
+                            text = stringResource(R.string.demo_input_local_radio),
+                            checked = true,
+                            onCheckedChange = {},
+                        )
                         Slider(value = 56, min = 0, max = 100, enabled = false, onValueChange = {}, modifier = Modifier.fillMaxWidth())
                     }
                 }
@@ -415,51 +561,79 @@ internal fun UiTreeBuilder.InputPage(
 
             "stress" -> ScenarioSection(
                 kind = ScenarioKind.Stress,
-                title = "输入边界用例",
-                subtitle = "长标签、只读文本、多行增长和持久错误样式的压力测试。",
+                title = stringResource(R.string.demo_input_stress_title),
+                subtitle = stringResource(R.string.demo_input_stress_summary),
             ) {
-                BenchmarkRouteCallout(
-                    route = "Catalog -> Input -> 压力页",
-                    stableTargets = listOf("展开/紧凑", "可编辑/只读", "清除错误/显示错误"),
+                val stressExpandedState = requireNotNull(stressExpandedState)
+                val stressReadonlyState = requireNotNull(stressReadonlyState)
+                val stressErrorState = requireNotNull(stressErrorState)
+                val stressTitleFieldState = requireNotNull(stressTitleFieldState)
+                val stressNotesFieldState = requireNotNull(stressNotesFieldState)
+                val stressPasswordFieldState = requireNotNull(stressPasswordFieldState)
+                Text(
+                    text = stringResource(
+                        R.string.demo_input_stress_state,
+                        stressExpandedState.value,
+                        stressReadonlyState.value,
+                        stressErrorState.value,
+                    ),
+                    modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Row(
                     spacing = 8.dp,
                     modifier = Modifier.margin(bottom = 12.dp),
                 ) {
                     Button(
-                        text = if (stressExpandedState.value) "紧凑文案" else "展开文案",
+                        text = stringResource(
+                            if (stressExpandedState.value) {
+                                R.string.demo_input_stress_use_compact_copy
+                            } else {
+                                R.string.demo_input_stress_expand_copy
+                            },
+                        ),
                         size = ButtonSize.Compact,
-                        modifier = Modifier.testTag(DemoTestTags.INPUT_STRESS_EXPAND),
+                        modifier = Modifier
+                            .inputScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                         onClick = {
                             stressExpandedState.value = !stressExpandedState.value
                             stressTitleFieldState.setTextAndPlaceCursorAtEnd(
                                 if (stressExpandedState.value) {
-                                    "一个很长的项目标题，应该仍然保持标签、占位符和辅助文案可读而不被裁切。"
+                                    stressExpandedTitle
                                 } else {
-                                    "紧凑标题"
+                                    stressCompactTitle
                                 },
                             )
                             stressNotesFieldState.setTextAndPlaceCursorAtEnd(
                                 if (stressExpandedState.value) {
-                                    "只读压力笔记:\n" +
-                                        "- 本地主题覆盖保持活跃\n" +
-                                        "- 多行容器应保持 padding 稳定\n" +
-                                        "- 长文案不应把辅助文本推出卡片"
+                                    stressExpandedNotes
                                 } else {
-                                    "只读笔记"
+                                    stressReadonlyNote
                                 },
                             )
                         },
                     )
                     Button(
-                        text = if (stressReadonlyState.value) "可编辑" else "只读",
+                        text = stringResource(
+                            if (stressReadonlyState.value) {
+                                R.string.demo_input_stress_editable
+                            } else {
+                                R.string.demo_input_stress_read_only
+                            },
+                        ),
                         size = ButtonSize.Compact,
                         variant = ButtonVariant.Outlined,
-                        modifier = Modifier.testTag(DemoTestTags.INPUT_STRESS_READONLY),
+                        modifier = Modifier
+                            .inputScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                         onClick = { stressReadonlyState.value = !stressReadonlyState.value },
                     )
                     Button(
-                        text = if (stressErrorState.value) "清除错误" else "显示错误",
+                        text = stringResource(
+                            if (stressErrorState.value) {
+                                R.string.demo_input_stress_clear_error
+                            } else {
+                                R.string.demo_input_stress_show_error
+                            },
+                        ),
                         size = ButtonSize.Compact,
                         variant = ButtonVariant.Tonal,
                         modifier = Modifier.testTag(DemoTestTags.INPUT_STRESS_ERROR),
@@ -473,14 +647,30 @@ internal fun UiTreeBuilder.InputPage(
                         },
                     )
                 }
+                Button(
+                    text = stringResource(R.string.demo_input_stress_reset),
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(bottom = 12.dp)
+                        .inputScenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = {
+                        stressExpandedState.value = false
+                        stressReadonlyState.value = true
+                        stressErrorState.value = true
+                        stressTitleFieldState.setTextAndPlaceCursorAtEnd(stressCompactTitle)
+                        stressNotesFieldState.setTextAndPlaceCursorAtEnd(stressReadonlyNote)
+                        stressPasswordFieldState.clearText()
+                    },
+                )
                 TextField(
                     state = stressTitleFieldState,
                     readOnly = true,
-                    label = "发布渠道显示名称",
+                    label = stringResource(R.string.demo_input_stress_channel_label),
                     supportingText = if (stressExpandedState.value) {
-                        "长辅助文案应该整齐换行，并与字段容器保持对齐。"
+                        stringResource(R.string.demo_input_stress_support_long)
                     } else {
-                        "短辅助文案"
+                        stringResource(R.string.demo_input_stress_support_short)
                     },
                     variant = TextFieldVariant.Outlined,
                     size = TextFieldSize.Large,
@@ -490,8 +680,8 @@ internal fun UiTreeBuilder.InputPage(
                 )
                 TextArea(
                     state = stressNotesFieldState,
-                    label = "审阅者笔记",
-                    supportingText = "切换只读和展开文案检查多行稳定性。",
+                    label = stringResource(R.string.demo_input_stress_notes_label),
+                    supportingText = stringResource(R.string.demo_input_stress_notes_support),
                     readOnly = stressReadonlyState.value,
                     maxLines = 6,
                     variant = TextFieldVariant.Tonal,
@@ -503,40 +693,87 @@ internal fun UiTreeBuilder.InputPage(
                 )
                 PasswordField(
                     state = stressPasswordFieldState,
-                    label = "受保护字段",
+                    label = stringResource(R.string.demo_input_stress_protected_label),
                     supportingText = if (stressErrorState.value) {
-                        "错误态必须在主题切换和页面变化中保持可见。"
+                        stringResource(R.string.demo_input_stress_error_support)
                     } else {
-                        "解决态应恢复标准主题样式。"
+                        stringResource(R.string.demo_input_stress_resolved_support)
                     },
                     isError = stressErrorState.value,
                     variant = TextFieldVariant.Filled,
                     size = TextFieldSize.Medium,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.INPUT_STRESS_PROTECTED_FIELD),
+                        .inputScenarioTarget(scenario, DemoAutomationRole.Target),
                 )
             }
 
             "search" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "SearchBar 搜索栏",
-                subtitle = "SearchBar 提供搜索输入框，支持 query 绑定、onSearch 回调和清除按钮。",
+                title = stringResource(R.string.demo_input_search_title),
+                subtitle = stringResource(R.string.demo_input_search_summary),
             ) {
+                val searchQueryState = requireNotNull(searchQueryState)
+                val searchHistoryState = requireNotNull(searchHistoryState)
+                val disabledSearchState = requireNotNull(disabledSearchState)
+                val searchResultState = requireNotNull(searchResultState)
+                val scrollableSearchQueryState = requireNotNull(scrollableSearchQueryState)
+                val verticalPagerSearchQueryState = requireNotNull(verticalPagerSearchQueryState)
+                val pullRefreshSearchQueryState = requireNotNull(pullRefreshSearchQueryState)
+                val focusFollowVerticalPagerPageState = requireNotNull(focusFollowVerticalPagerPageState)
+                val pullRefreshFocusRefreshingState = requireNotNull(pullRefreshFocusRefreshingState)
+                val searchResultFormat = stringResource(R.string.demo_input_search_result)
                 Text(
-                    text = "基础搜索栏",
+                    text = if (searchQueryState.text.isBlank()) {
+                        stringResource(R.string.demo_input_search_state_idle)
+                    } else {
+                        stringResource(R.string.demo_input_search_state_query, searchQueryState.text)
+                    },
+                    modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.State),
+                )
+                Row(
+                    spacing = 8.dp,
+                    modifier = Modifier.margin(bottom = 12.dp),
+                ) {
+                    Button(
+                        text = stringResource(R.string.demo_input_search_fill),
+                        modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+                        onClick = {
+                            searchQueryState.setTextAndPlaceCursorAtEnd("ViewCompose")
+                            searchResultState.value = searchResultFormat.format("ViewCompose")
+                        },
+                    )
+                    Button(
+                        text = stringResource(R.string.demo_input_search_reset),
+                        variant = ButtonVariant.Outlined,
+                        modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.Reset),
+                        onClick = {
+                            searchQueryState.clearText()
+                            searchHistoryState.clearText()
+                            disabledSearchState.clearText()
+                            searchResultState.value = ""
+                            scrollableSearchQueryState.clearText()
+                            verticalPagerSearchQueryState.clearText()
+                            pullRefreshSearchQueryState.clearText()
+                            focusFollowVerticalPagerPageState.value = 0
+                            pullRefreshFocusRefreshingState.value = false
+                        },
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.demo_input_search_basic),
                     style = UiTextStyle(fontSizeSp = 14.sp),
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
                 SearchBar(
                     state = searchQueryState,
-                    onSearch = { query -> searchResultState.value = "搜索: $query" },
-                    placeholder = "搜索商品…",
+                    onSearch = { query -> searchResultState.value = searchResultFormat.format(query) },
+                    placeholder = stringResource(R.string.demo_input_search_products_placeholder),
                     leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(bottom = 12.dp)
-                        .testTag(DemoTestTags.INPUT_SEARCH_PRIMARY),
+                        .inputScenarioTarget(scenario, DemoAutomationRole.Target),
                 )
                 if (searchResultState.value.isNotEmpty()) {
                     Text(
@@ -547,20 +784,22 @@ internal fun UiTreeBuilder.InputPage(
                     )
                 }
                 Text(
-                    text = "带清除按钮的搜索栏",
+                    text = stringResource(R.string.demo_input_search_clearable),
                     style = UiTextStyle(fontSizeSp = 14.sp),
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
                 SearchBar(
                     state = searchHistoryState,
-                    onSearch = { query -> searchResultState.value = "搜索: $query" },
-                    placeholder = "搜索历史…",
+                    onSearch = { query -> searchResultState.value = searchResultFormat.format(query) },
+                    placeholder = stringResource(R.string.demo_input_search_history_placeholder),
                     leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
                     trailingIcon = {
                         if (searchHistoryState.text.isNotEmpty()) {
                             IconButton(
                                 icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                                contentDescription = "清除",
+                                contentDescription = stringResource(
+                                    R.string.demo_input_search_clear_description,
+                                ),
                                 onClick = searchHistoryState::clearText,
                             )
                         }
@@ -570,18 +809,18 @@ internal fun UiTreeBuilder.InputPage(
                         .margin(bottom = 12.dp),
                 )
                 Text(
-                    text = "禁用搜索栏",
+                    text = stringResource(R.string.demo_input_search_disabled),
                     style = UiTextStyle(fontSizeSp = 14.sp),
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
                 SearchBar(
                     state = disabledSearchState,
-                    placeholder = "搜索不可用",
+                    placeholder = stringResource(R.string.demo_input_search_unavailable_placeholder),
                     enabled = false,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text(
-                    text = "ScrollableColumn + focusFollowKeyboard",
+                    text = stringResource(R.string.demo_input_search_scrollable_title),
                     style = UiTextStyle(fontSizeSp = 14.sp),
                     modifier = Modifier.margin(top = 12.dp, bottom = 8.dp),
                 )
@@ -597,27 +836,29 @@ internal fun UiTreeBuilder.InputPage(
                         .margin(bottom = 12.dp),
                 ) {
                     Text(
-                        text = "滚动容器内聚焦输入框时，焦点跟随策略应只影响当前垂直容器。",
+                        text = stringResource(R.string.demo_input_search_scrollable_note),
                         style = UiTextStyle(fontSizeSp = 13.sp),
                         color = TextDefaults.secondaryColor(),
                     )
                     SearchBar(
                         state = scrollableSearchQueryState,
-                        placeholder = "ScrollableColumn 内搜索…",
+                        placeholder = stringResource(
+                            R.string.demo_input_search_scrollable_placeholder,
+                        ),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag(DemoTestTags.INPUT_FOCUS_SCROLLABLE_SEARCH),
                     )
                     (1..4).forEach { index ->
                         Text(
-                            text = "滚动占位行 $index",
+                            text = stringResource(R.string.demo_input_search_placeholder_row, index),
                             style = UiTextStyle(fontSizeSp = 13.sp),
                             color = TextDefaults.secondaryColor(),
                         )
                     }
                 }
                 Text(
-                    text = "VerticalPager + focusFollowKeyboard",
+                    text = stringResource(R.string.demo_input_search_pager_title),
                     style = UiTextStyle(fontSizeSp = 14.sp),
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
@@ -640,13 +881,15 @@ internal fun UiTreeBuilder.InputPage(
                                 .padding(12.dp),
                         ) {
                             Text(
-                                text = "第一页用于回归输入框焦点跟随。",
+                                text = stringResource(R.string.demo_input_search_pager_first_note),
                                 style = UiTextStyle(fontSizeSp = 13.sp),
                                 color = TextDefaults.secondaryColor(),
                             )
                             SearchBar(
                                 state = verticalPagerSearchQueryState,
-                                placeholder = "VerticalPager 页内搜索…",
+                                placeholder = stringResource(
+                                    R.string.demo_input_search_pager_placeholder,
+                                ),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag(DemoTestTags.INPUT_FOCUS_VERTICAL_PAGER_SEARCH),
@@ -662,9 +905,9 @@ internal fun UiTreeBuilder.InputPage(
                                 .shape(SurfaceDefaults.shape())
                                 .padding(12.dp),
                         ) {
-                            Text(text = "第二页用于手动切换验证")
+                            Text(text = stringResource(R.string.demo_input_search_pager_second_title))
                             Text(
-                                text = "切换页面后再聚焦输入框，应保持 page 内可见区域稳定。",
+                                text = stringResource(R.string.demo_input_search_pager_second_note),
                                 style = UiTextStyle(fontSizeSp = 13.sp),
                                 color = TextDefaults.secondaryColor(),
                             )
@@ -672,7 +915,7 @@ internal fun UiTreeBuilder.InputPage(
                     }
                 }
                 Text(
-                    text = "PullToRefresh 子容器 focus follow",
+                    text = stringResource(R.string.demo_input_search_refresh_title),
                     style = UiTextStyle(fontSizeSp = 14.sp),
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
@@ -693,13 +936,21 @@ internal fun UiTreeBuilder.InputPage(
                     ) {
                         SearchBar(
                             state = pullRefreshSearchQueryState,
-                            placeholder = "PullToRefresh 子容器搜索…",
+                            placeholder = stringResource(
+                                R.string.demo_input_search_refresh_placeholder,
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag(DemoTestTags.INPUT_FOCUS_PULL_REFRESH_SEARCH),
                         )
                         Button(
-                            text = if (pullRefreshFocusRefreshingState.value) "停止刷新" else "模拟刷新",
+                            text = stringResource(
+                                if (pullRefreshFocusRefreshingState.value) {
+                                    R.string.demo_input_search_stop_refresh
+                                } else {
+                                    R.string.demo_input_search_simulate_refresh
+                                },
+                            ),
                             variant = ButtonVariant.Outlined,
                             modifier = Modifier.fillMaxWidth(),
                             onClick = {
@@ -707,14 +958,14 @@ internal fun UiTreeBuilder.InputPage(
                             },
                         )
                         Text(
-                            text = "PullToRefresh 容器本身不处理 focus follow，行为由内部 ScrollableColumn 负责。",
+                            text = stringResource(R.string.demo_input_search_refresh_note),
                             style = UiTextStyle(fontSizeSp = 13.sp),
                             color = TextDefaults.secondaryColor(),
                         )
                     }
                 }
                 Text(
-                    text = "聚焦以上输入框后，外层列表锚点不应跳变到顶部。",
+                    text = stringResource(R.string.demo_input_search_outer_anchor_note),
                     style = UiTextStyle(fontSizeSp = 13.sp),
                     color = TextDefaults.secondaryColor(),
                 )
@@ -722,40 +973,52 @@ internal fun UiTreeBuilder.InputPage(
 
             "summary" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
-                title = "派生摘要",
-                subtitle = "此区域由 derivedStateOf 驱动，非命令式重复更新。",
+                title = stringResource(R.string.demo_input_summary_title),
+                subtitle = stringResource(R.string.demo_input_summary_summary),
             ) {
-                Text(text = summaryState.value)
+                val summaryAlternateState = requireNotNull(summaryAlternateState)
+                val summaryState = requireNotNull(summaryState)
                 Text(
-                    text = "通知=${notificationsEnabledState.value}, " +
-                        "分析=${analyticsEnabledState.value}, " +
-                        "层级=${selectedTierState.value}, " +
-                        "强度=${intensityState.value}",
-                    style = UiTextStyle(fontSizeSp = 13.sp),
+                    text = stringResource(
+                        if (summaryAlternateState.value) {
+                            R.string.demo_input_summary_state_alternate
+                        } else {
+                            R.string.demo_input_summary_state_default
+                        },
+                    ),
+                    modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Text(
-                    text = bioState.text,
-                    style = UiTextStyle(fontSizeSp = 13.sp),
-                    color = TextDefaults.secondaryColor(),
+                    text = summaryState.value,
+                    modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.Target),
                 )
+                Row(
+                    spacing = 8.dp,
+                    modifier = Modifier.margin(top = 12.dp),
+                ) {
+                    Button(
+                        text = stringResource(R.string.demo_input_summary_toggle),
+                        modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+                        onClick = { summaryAlternateState.value = !summaryAlternateState.value },
+                    )
+                    Button(
+                        text = stringResource(R.string.demo_input_summary_reset),
+                        variant = ButtonVariant.Outlined,
+                        modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.Reset),
+                        onClick = { summaryAlternateState.value = false },
+                    )
+                }
             }
 
-            else -> VerificationNotesSection(
-                what = "输入组件应验证值、启用/错误状态、组件变体和本地覆盖与运行时的同步。",
-                howToVerify = listOf(
-                    "输入文本并点击重置表单，确认所有字段一起回到初始值。",
-                    "观察空密码时的错误态，并切换 theme mode，确认错误色和容器色同步变化。",
-                    "打开压力页切换展开/只读/错误，确认长文案和多行布局稳定。",
-                    "在搜索栏输入文字并提交，确认 onSearch 回调正确触发。",
-                    "点击清除按钮，确认查询内容被清空。",
-                ),
-                expected = listOf(
-                    "TextField label、supportingText、placeholder 和内容布局稳定。",
-                    "禁用态和错误态不会丢失主题样式。",
-                    "SearchBar 输入/清除/提交流程完整。",
-                    "派生摘要始终和输入状态保持一致。",
-                ),
-            )
+            else -> error("Unsupported input section: $section")
         }
     }
+}
+
+private fun Modifier.inputScenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
 }

@@ -57,8 +57,11 @@ native descendants, and default overlays.
 When the root design system requires a different Android Context, resolve that Context first and
 pass it to `rootContext`. Switching between root design systems must call `setUiContent` again with
 the new Context and token provider so Views are reconstructed under one coherent platform/theme
-snapshot. Repeated calls dispose the previous session. Fragment sessions follow the current View
-lifecycle; Activity sessions end when the Activity is destroyed.
+snapshot. Repeated calls dispose the previous session. A Fragment call made from `onCreateView`
+returns the root first, then starts rendering as soon as Android publishes that root's
+`viewLifecycleOwner`. Content receives that View owner, and the session ends at `onDestroyView`;
+Fragment-scoped ViewModel and saved-state ownership remain stable across View recreation. Activity
+sessions render synchronously and end when the Activity is destroyed.
 
 The standard roots automatically install `AndroidResourceEnvironment`, so content may use the
 lookup functions from `com.viewcompose.host.android.resources` without a page-owned invalidation

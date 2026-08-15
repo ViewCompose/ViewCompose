@@ -52,9 +52,26 @@ SCENARIOS = (
     ),
 )
 
+# Report rows may split one fixture into several measured actions, but every row must retain the
+# owning scenario identity and workload revision so unlike workloads cannot be compared silently.
+SCENARIO_CONTRACTS = {
+    "list_scroll": ("performance.list", 3),
+    "list_mutation": ("performance.list", 3),
+    "complex_layout_scroll": ("performance.complex-layout", 3),
+    "complex_layout_update": ("performance.complex-layout", 3),
+    "shadow_list_scroll": ("performance.shadow-list", 2),
+    "shadow_list_mutation": ("performance.shadow-list", 2),
+    "shadow_complex_layout_scroll": ("performance.shadow-complex-layout", 2),
+    "shadow_complex_layout_update": ("performance.shadow-complex-layout", 2),
+}
+
 SAMPLED_METRICS = ("frameDurationCpuMs", "frameOverrunMs")
 SAMPLED_PERCENTILES = ("P50", "P95")
 MEMORY_METRICS = ("memoryHeapSizeMaxKb", "memoryRssAnonMaxKb")
+# Coefficient of variation is meaningful only for ratio-scale metrics with a strictly positive
+# origin. Frame overrun is signed around zero, so its CV can explode as the mean approaches zero
+# even when the underlying frame distribution is stable.
+STABILITY_METRICS = ("frameDurationCpuMs",)
 
 
 @dataclass(frozen=True)
@@ -64,6 +81,8 @@ class Comparison:
     """
 
     scenario: str
+    scenario_id: str
+    workload_revision: int
     metric: str
     statistic: str
     viewcompose: float
@@ -79,6 +98,8 @@ class Stability:
     """
 
     scenario: str
+    scenario_id: str
+    workload_revision: int
     engine: str
     metric: str
     statistic: str
@@ -93,6 +114,8 @@ class Regression:
     """
 
     scenario: str
+    scenario_id: str
+    workload_revision: int
     metric: str
     statistic: str
     current: float
@@ -121,11 +144,17 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "viewcompose-benchmark/build/outputs/"
             "connected_android_test_additional_output"
         ),
-        help="Current benchmarkData.json file or directory containing one.",
+        help=(
+            "Current benchmarkData.json file or directory containing split method results. "
+            "Directory inputs merge matching contexts and reject duplicate benchmark names."
+        ),
     )
     parser.add_argument(
         "--baseline",
-        help="Previous benchmarkData.json file or directory used for regression checks.",
+        help=(
+            "Previous revisioned compose-comparison.json file or directory used for "
+            "regression checks."
+        ),
     )
     parser.add_argument(
         "--policy",
@@ -155,19 +184,19 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def resolve_result_path(value: str | Path) -> Path:
-    """解析 benchmarkData.json 文件路径，目录输入会选择最新结果。
-    Resolves a benchmarkData.json path, choosing the newest result when a directory is passed.
+def resolve_baseline_path(value: str | Path) -> Path:
+    """解析带工作负载修订信息的历史报告路径。
+    Resolves a revisioned historical report path.
     """
 
     path = Path(value)
     if path.is_file():
         return path
     if not path.exists():
-        raise ValueError(f"Benchmark result path does not exist: {path}")
-    candidates = list(path.rglob("*benchmarkData.json"))
+        raise ValueError(f"Benchmark baseline path does not exist: {path}")
+    candidates = list(path.rglob("*compose-comparison.json"))
     if not candidates:
-        raise ValueError(f"No benchmarkData.json found under: {path}")
+        raise ValueError(f"No revisioned compose-comparison.json found under: {path}")
     return max(candidates, key=lambda candidate: candidate.stat().st_mtime)
 
 
@@ -181,6 +210,66 @@ def load_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"Expected an object in {path}")
     return value
+
+
+def load_current_result(value: str | Path) -> tuple[Path, dict[str, Any]]:
+    """加载一个完整结果，或合并按方法冷却后产生的同上下文结果。
+    Loads one complete result or merges same-context results captured with per-method cooldown.
+
+    目录合并是确定性的：所有文件必须属于同一设备/系统/编译上下文，benchmark 方法名
+    不得重复。这样报告不会静默选择一个较新的局部结果，也不会覆盖一次失败的重跑。
+    Directory merging is deterministic: every file must share device/system/compilation context and
+    benchmark names must be unique. The report never silently selects one newer partial run or
+    overwrites a failed retry.
+    """
+
+    path = Path(value)
+    if path.is_file():
+        return path, load_json(path)
+    if not path.exists():
+        raise ValueError(f"Benchmark result path does not exist: {path}")
+    candidates = sorted(path.rglob("*benchmarkData.json"))
+    if not candidates:
+        raise ValueError(f"No benchmarkData.json found under: {path}")
+
+    results = [(candidate, load_json(candidate)) for candidate in candidates]
+    expected_context = context_identity(results[0][1])
+    observed_cpu_locked: set[bool] = set()
+    merged_entries: list[dict[str, Any]] = []
+    owners: dict[str, Path] = {}
+    for candidate, result in results:
+        actual_context = context_identity(result)
+        mismatches = context_mismatches(expected_context, actual_context)
+        if mismatches:
+            raise ValueError(
+                "Split current benchmark contexts differ: "
+                f"{', '.join(mismatches)}; "
+                f"{results[0][0]}={expected_context!r}, "
+                f"{candidate}={actual_context!r}",
+            )
+        for value in actual_context.get("cpuLockedSnapshots", []):
+            if isinstance(value, bool):
+                observed_cpu_locked.add(value)
+        entries = result.get("benchmarks")
+        if not isinstance(entries, list):
+            raise ValueError(f"Macrobenchmark result has no benchmarks array: {candidate}")
+        for entry in entries:
+            if not isinstance(entry, dict) or not isinstance(entry.get("name"), str):
+                raise ValueError(f"Invalid benchmark entry in: {candidate}")
+            name = entry["name"]
+            previous_owner = owners.get(name)
+            if previous_owner is not None:
+                raise ValueError(
+                    f"Duplicate benchmark name {name!r} in split results: "
+                    f"{previous_owner} and {candidate}",
+                )
+            owners[name] = candidate
+            merged_entries.append(entry)
+
+    merged = dict(results[0][1])
+    merged["benchmarks"] = merged_entries
+    merged["viewcomposeCpuLockedSnapshots"] = sorted(observed_cpu_locked)
+    return path, merged
 
 
 def benchmark_entries(result: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -298,11 +387,14 @@ def create_comparison(
 
     if viewcompose is None or compose is None:
         return None
+    scenario_id, workload_revision = SCENARIO_CONTRACTS[scenario]
     relative_percent = None
     if compose > 0 and metric != "frameOverrunMs":
         relative_percent = (viewcompose / compose - 1.0) * 100.0
     return Comparison(
         scenario=scenario,
+        scenario_id=scenario_id,
+        workload_revision=workload_revision,
         metric=metric,
         statistic=statistic,
         viewcompose=viewcompose,
@@ -355,12 +447,13 @@ def build_stability(
 
     stability: list[Stability] = []
     for scenario, viewcompose_name, compose_name in available_scenarios(entries):
+        scenario_id, workload_revision = SCENARIO_CONTRACTS[scenario]
         for engine, benchmark_name in (
             ("ViewCompose", viewcompose_name),
             ("Compose", compose_name),
         ):
             entry = entries[benchmark_name]
-            for metric in SAMPLED_METRICS:
+            for metric in STABILITY_METRICS:
                 runs = entry.get("sampledMetrics", {}).get(metric, {}).get("runs", [])
                 if not isinstance(runs, list):
                     continue
@@ -378,6 +471,8 @@ def build_stability(
                 stability.append(
                     Stability(
                         scenario=scenario,
+                        scenario_id=scenario_id,
+                        workload_revision=workload_revision,
                         engine=engine,
                         metric=metric,
                         statistic="run-P50",
@@ -397,17 +492,90 @@ def context_identity(result: dict[str, Any]) -> dict[str, Any]:
     """
 
     context = result.get("context", {})
+    if isinstance(context, dict) and "build" not in context:
+        cpu_locked = context.get("cpuLocked")
+        snapshots = context.get("cpuLockedSnapshots", [cpu_locked])
+        return {
+            "brand": context.get("brand"),
+            "model": context.get("model"),
+            "fingerprint": context.get("fingerprint"),
+            "sdk": context.get("sdk"),
+            "cpuLocked": cpu_locked,
+            "cpuLockedSnapshots": snapshots,
+            "cpuMaxFreqHz": context.get("cpuMaxFreqHz"),
+            "compilationMode": context.get("compilationMode"),
+            "clockPolicy": context.get("clockPolicy"),
+        }
     build = context.get("build", {})
     version = build.get("version", {})
+    cpu_locked = context.get("cpuLocked")
+    payload = context.get("payload", {})
+    clock_policy = payload.get("clockPolicy") if isinstance(payload, dict) else None
+    snapshots = result.get("viewcomposeCpuLockedSnapshots", [cpu_locked])
     return {
         "brand": build.get("brand"),
         "model": build.get("model"),
         "fingerprint": build.get("fingerprint"),
         "sdk": version.get("sdk"),
-        "cpuLocked": context.get("cpuLocked"),
+        "cpuLocked": cpu_locked,
+        "cpuLockedSnapshots": snapshots,
         "cpuMaxFreqHz": context.get("cpuMaxFreqHz"),
         "compilationMode": context.get("compilationMode"),
+        "clockPolicy": clock_policy,
     }
+
+
+def context_mismatches(
+    expected: dict[str, Any],
+    actual: dict[str, Any],
+) -> list[str]:
+    """比较可复现的设备/编译/时钟协议，而不是瞬态 AndroidX 锁频快照。
+    Compares reproducible device, compilation, and clock policy rather than a transient snapshot.
+
+    AndroidX reads ``scaling_min_freq`` while the instrumentation process starts. OEM launch
+    boosting can therefore alternate ``cpuLocked`` on one unlocked consumer device. A caller may
+    opt into the explicit, host-verified clock protocol carried in BenchmarkData payload. Legacy
+    results without that protocol retain the strict ``cpuLocked`` comparison.
+    """
+
+    keys = ("brand", "model", "fingerprint", "sdk", "cpuMaxFreqHz", "compilationMode")
+    mismatches = [
+        key
+        for key in keys
+        if expected.get(key) != actual.get(key)
+    ]
+    expected_policy = expected.get("clockPolicy")
+    actual_policy = actual.get("clockPolicy")
+    if expected_policy is not None or actual_policy is not None:
+        if expected_policy != actual_policy:
+            mismatches.append("clockPolicy")
+    elif expected.get("cpuLocked") != actual.get("cpuLocked"):
+        mismatches.append("cpuLocked")
+    return mismatches
+
+
+def revisioned_baseline_comparisons(result: dict[str, Any]) -> list[Comparison]:
+    """Loads comparisons from a report that preserved scenario IDs and workload revisions."""
+
+    entries = result.get("comparisons")
+    if not isinstance(entries, list):
+        raise ValueError(
+            "Baseline must be a revisioned compose-comparison.json report, not raw "
+            "benchmarkData.json.",
+        )
+    comparisons: list[Comparison] = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise ValueError("Baseline report contains an invalid comparison entry.")
+        try:
+            comparisons.append(Comparison(**entry))
+        except (TypeError, ValueError) as error:
+            raise ValueError(
+                "Baseline report comparison is missing revisioned workload metadata.",
+            ) from error
+    if not comparisons:
+        raise ValueError("Baseline report contains no comparisons.")
+    return comparisons
 
 
 def require_matching_context(
@@ -420,12 +588,7 @@ def require_matching_context(
 
     current_identity = context_identity(current)
     baseline_identity = context_identity(baseline)
-    keys = ("model", "fingerprint", "sdk", "cpuLocked", "compilationMode")
-    mismatches = [
-        key
-        for key in keys
-        if current_identity.get(key) != baseline_identity.get(key)
-    ]
+    mismatches = context_mismatches(baseline_identity, current_identity)
     if mismatches:
         detail = ", ".join(
             f"{key}={baseline_identity.get(key)!r}->{current_identity.get(key)!r}"
@@ -473,6 +636,17 @@ def build_regressions(
             baseline_value = baseline_index.get(index_key)
             if current_value is None or baseline_value is None:
                 continue
+            if (
+                current_value.scenario_id != baseline_value.scenario_id
+                or current_value.workload_revision
+                != baseline_value.workload_revision
+            ):
+                raise ValueError(
+                    "Cannot compare different workload contracts for "
+                    f"{scenario}: "
+                    f"{baseline_value.scenario_id}@{baseline_value.workload_revision} -> "
+                    f"{current_value.scenario_id}@{current_value.workload_revision}",
+                )
             raw_percent = percentage_change(
                 current_value.viewcompose,
                 baseline_value.viewcompose,
@@ -497,6 +671,8 @@ def build_regressions(
             regressions.append(
                 Regression(
                     scenario=scenario,
+                    scenario_id=current_value.scenario_id,
+                    workload_revision=current_value.workload_revision,
                     metric=metric,
                     statistic=statistic,
                     current=current_value.viewcompose,
@@ -548,7 +724,8 @@ def render_markdown(
         f"- Current: `{current_path}`",
         f"- Device: `{context.get('brand')} {context.get('model')}`",
         f"- SDK: `{context.get('sdk')}`",
-        f"- CPU locked: `{context.get('cpuLocked')}`",
+        f"- Clock policy: `{context.get('clockPolicy') or 'androidx-cpu-lock-snapshot'}`",
+        f"- AndroidX CPU locked snapshots: `{context.get('cpuLockedSnapshots')}`",
         f"- Compilation mode: `{context.get('compilationMode')}`",
     ]
     if baseline_path is not None:
@@ -558,8 +735,8 @@ def render_markdown(
             "",
             "## Paired results",
             "",
-            "| Scenario | Metric | Stat | ViewCompose | Compose | Delta | Relative |",
-            "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
+            "| Workload | Action | Metric | Stat | ViewCompose | Compose | Delta | Relative |",
+            "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |",
         ],
     )
     for comparison in comparisons:
@@ -570,6 +747,7 @@ def render_markdown(
         )
         lines.append(
             "| "
+            f"{comparison.scenario_id}@{comparison.workload_revision} | "
             f"{comparison.scenario} | {comparison.metric} | {comparison.statistic} | "
             f"{comparison.viewcompose:.3f} | {comparison.compose:.3f} | "
             f"{comparison.delta:+.3f} | {relative} |",
@@ -579,8 +757,8 @@ def render_markdown(
             "",
             "## Run stability",
             "",
-            "| Scenario | Engine | Metric | CV | Status |",
-            "| --- | --- | --- | ---: | --- |",
+            "| Workload | Action | Engine | Metric | CV | Status |",
+            "| --- | --- | --- | --- | ---: | --- |",
         ],
     )
     for item in stability:
@@ -590,7 +768,8 @@ def render_markdown(
             else f"{item.coefficient_of_variation:.3f}"
         )
         lines.append(
-            f"| {item.scenario} | {item.engine} | {item.metric} | "
+            f"| {item.scenario_id}@{item.workload_revision} | {item.scenario} | "
+            f"{item.engine} | {item.metric} | "
             f"{variation} | {'stable' if item.stable else 'unstable'} |",
         )
     if baseline_path is not None:
@@ -599,13 +778,14 @@ def render_markdown(
                 "",
                 "## Regression gate",
                 "",
-                "| Scenario | Metric | Stat | Raw | Normalized | Delta | Status |",
-                "| --- | --- | ---: | ---: | ---: | ---: | --- |",
+                "| Workload | Action | Metric | Stat | Raw | Normalized | Delta | Status |",
+                "| --- | --- | --- | ---: | ---: | ---: | ---: | --- |",
             ],
         )
         for regression in regressions:
             lines.append(
-                f"| {regression.scenario} | {regression.metric} | "
+                f"| {regression.scenario_id}@{regression.workload_revision} | "
+                f"{regression.scenario} | {regression.metric} | "
                 f"{regression.statistic} | "
                 f"{regression.raw_regression_percent:+.1f}% | "
                 f"{regression.normalized_regression_percent:+.1f}% | "
@@ -640,8 +820,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     if args.enforce and not args.baseline:
         raise ValueError("--enforce requires --baseline.")
-    current_path = resolve_result_path(args.current)
-    current_result = load_json(current_path)
+    current_path, current_result = load_current_result(args.current)
     policy = load_json(Path(args.policy))
     current_entries = benchmark_entries(current_result)
     comparisons = build_comparisons(current_entries)
@@ -654,13 +833,11 @@ def main(argv: list[str] | None = None) -> int:
     baseline_path: Path | None = None
     regressions: list[Regression] = []
     if args.baseline:
-        baseline_path = resolve_result_path(args.baseline)
+        baseline_path = resolve_baseline_path(args.baseline)
         baseline_result = load_json(baseline_path)
         if not args.allow_context_mismatch:
             require_matching_context(current_result, baseline_result)
-        baseline_comparisons = build_comparisons(
-            benchmark_entries(baseline_result),
-        )
+        baseline_comparisons = revisioned_baseline_comparisons(baseline_result)
         regressions = build_regressions(
             current=comparisons,
             baseline=baseline_comparisons,

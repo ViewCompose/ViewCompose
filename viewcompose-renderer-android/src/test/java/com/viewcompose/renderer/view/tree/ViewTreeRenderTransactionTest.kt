@@ -19,6 +19,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime
 import com.viewcompose.renderer.decoration.RecordingDecorationBackend
+import com.viewcompose.renderer.view.requireUiEnvironment
 import com.viewcompose.renderer.view.shape.UiShapeDrawable
 import com.viewcompose.text.TextDocument
 import com.viewcompose.text.TextFieldState
@@ -30,10 +31,17 @@ import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.NativeViewElement
+import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.innerShadow
+import com.viewcompose.ui.modifier.marginRelative
+import com.viewcompose.ui.modifier.offsetRelative
 import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.paddingRelative
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.systemBarsInsetsPadding
+import com.viewcompose.ui.modifier.systemBarsInsetsPaddingRelative
+import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
@@ -55,6 +63,7 @@ import com.viewcompose.ui.shape.UiCornerSize
 import com.viewcompose.ui.unit.UiDensity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.After
@@ -240,6 +249,55 @@ class ViewTreeRenderTransactionTest {
     }
 
     @Test
+    fun `relative layout modifiers re-resolve on runtime direction changes`() {
+        val container = FrameLayout(context)
+        val relativeModifier = Modifier
+            .padding(left = 1.dp, right = 2.dp)
+            .paddingRelative(start = 10.dp, end = 20.dp)
+            .marginRelative(start = 6.dp, end = 8.dp)
+            .offsetRelative(horizontal = 4.dp, vertical = 5.dp)
+            .systemBarsInsetsPaddingRelative(
+                start = true,
+                top = false,
+                end = false,
+                bottom = false,
+            )
+        val first = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(relativeTextNode(UiLayoutDirection.Ltr, relativeModifier)),
+        )
+        val view = first.mountedNodes.single().view as TextView
+        val insets = WindowInsetsCompat.Builder()
+            .setInsets(WindowInsetsCompat.Type.systemBars(), Insets.of(3, 0, 7, 0))
+            .build()
+        ViewCompat.dispatchApplyWindowInsets(view, insets)
+
+        assertEquals(13, view.paddingLeft)
+        assertEquals(20, view.paddingRight)
+        assertEquals(4f, view.translationX)
+        assertEquals(5f, view.translationY)
+        assertEquals(6, (view.layoutParams as FrameLayout.LayoutParams).leftMargin)
+        assertEquals(8, (view.layoutParams as FrameLayout.LayoutParams).rightMargin)
+
+        val second = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = first.mountedNodes,
+            nodes = listOf(relativeTextNode(UiLayoutDirection.Rtl, relativeModifier)),
+        )
+        ViewCompat.dispatchApplyWindowInsets(view, insets)
+
+        assertSame(view, second.mountedNodes.single().view)
+        assertEquals(UiLayoutDirection.Rtl, view.requireUiEnvironment().layoutDirection)
+        assertEquals(20, view.paddingLeft)
+        assertEquals(17, view.paddingRight)
+        assertEquals(-4f, view.translationX)
+        assertEquals(5f, view.translationY)
+        assertEquals(8, (view.layoutParams as FrameLayout.LayoutParams).leftMargin)
+        assertEquals(6, (view.layoutParams as FrameLayout.LayoutParams).rightMargin)
+    }
+
+    @Test
     fun `node style patch preserves modifier shape override`() {
         val container = FrameLayout(context)
         val state = TextFieldState(TextFieldValue("value"))
@@ -325,6 +383,10 @@ class ViewTreeRenderTransactionTest {
         )
 
         assertSame(editText, patched.mountedNodes.single().view)
+        assertEquals(0, patched.stats.reboundNodes)
+        assertEquals(1, patched.stats.patchedNodes)
+        assertEquals(RenderPatchOperation.Patch, patched.patches.single().operation)
+        assertEquals("TextFieldNodePatch", patched.patches.single().detail)
         assertEquals("vaXlue", editText.text.toString())
         assertEquals(3, editText.selectionStart)
         assertEquals(
@@ -332,6 +394,163 @@ class ViewTreeRenderTransactionTest {
             requireNotNull(decorationBackend.requestOrNull(editText))
                 .innerShadows.single().shadows.single().blurRadius,
         )
+    }
+
+    @Test
+    fun `visual-only modifier patch preserves layout params identity`() {
+        val container = FrameLayout(context)
+        val state = TextFieldState(TextFieldValue("value"))
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                textFieldNode(
+                    state = state,
+                    modifier = Modifier.backgroundColor(0xFF112233.toInt()),
+                ),
+            ),
+        )
+        val view = initial.mountedNodes.single().view
+        val layoutParams = view.layoutParams
+
+        val patched = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = initial.mountedNodes,
+            nodes = listOf(
+                textFieldNode(
+                    state = state,
+                    modifier = Modifier.backgroundColor(0xFF445566.toInt()),
+                ),
+            ),
+        )
+
+        assertSame(view, patched.mountedNodes.single().view)
+        assertSame(layoutParams, view.layoutParams)
+        assertEquals(0, patched.stats.reboundNodes)
+        assertEquals(1, patched.stats.patchedNodes)
+        assertEquals("ModifierOnly", patched.patches.single().detail)
+    }
+
+    @Test
+    fun `layout modifier patch replaces layout params without rebinding`() {
+        val container = FrameLayout(context)
+        val state = TextFieldState(TextFieldValue("value"))
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(textFieldNode(state = state, modifier = Modifier.width(40.dp))),
+        )
+        val view = initial.mountedNodes.single().view
+        val layoutParams = view.layoutParams
+
+        val patched = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = initial.mountedNodes,
+            nodes = listOf(textFieldNode(state = state, modifier = Modifier.width(80.dp))),
+        )
+
+        assertSame(view, patched.mountedNodes.single().view)
+        assertNotSame(layoutParams, view.layoutParams)
+        assertEquals(80, view.layoutParams.width)
+        assertEquals(0, patched.stats.reboundNodes)
+        assertEquals(1, patched.stats.patchedNodes)
+    }
+
+    @Test
+    fun `modifier-only failure restores previous native configuration`() {
+        val container = FrameLayout(context)
+        val state = TextFieldState(TextFieldValue("value"))
+        val previousNode = textFieldNode(
+            state = state,
+            modifier = Modifier.then(
+                NativeViewElement(stableKey = "old") { nativeView ->
+                    (nativeView as View).tag = "old"
+                },
+            ),
+        )
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(previousNode),
+        )
+        val view = initial.mountedNodes.single().view
+        assertEquals("old", view.tag)
+
+        val error = runCatching {
+            ViewTreeRenderer.renderInto(
+                container = container,
+                previous = initial.mountedNodes,
+                nodes = listOf(
+                    textFieldNode(
+                        state = state,
+                        modifier = Modifier.then(
+                            NativeViewElement(stableKey = "failing") { nativeView ->
+                                (nativeView as View).tag = "new"
+                                error("native config failed")
+                            },
+                        ),
+                    ),
+                ),
+            )
+        }.exceptionOrNull()
+
+        assertTrue(error is IllegalStateException)
+        assertEquals("native config failed", error?.message)
+        assertSame(previousNode, initial.mountedNodes.single().vnode)
+        assertEquals("old", view.tag)
+    }
+
+    @Test
+    fun `android view modifier-only patch skips native lifecycle callbacks`() {
+        val container = FrameLayout(context)
+        var updates = 0
+        var resets = 0
+        var releases = 0
+        var commits = 0
+        val spec = AndroidViewNodeProps(
+            factory = { rawContext -> View(rawContext as Context) },
+            update = { updates += 1 },
+            onReset = { resets += 1 },
+            onRelease = { releases += 1 },
+            onCommit = { commits += 1 },
+        )
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                VNode(
+                    type = NodeType.AndroidView,
+                    key = "interop",
+                    spec = spec,
+                    modifier = Modifier.backgroundColor(0xFF112233.toInt()),
+                ),
+            ),
+        )
+        val view = initial.mountedNodes.single().view
+        assertEquals(1, updates)
+        assertEquals(1, initial.commitEffects.size)
+
+        val patched = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = initial.mountedNodes,
+            nodes = listOf(
+                VNode(
+                    type = NodeType.AndroidView,
+                    key = "interop",
+                    spec = spec,
+                    modifier = Modifier.backgroundColor(0xFF445566.toInt()),
+                ),
+            ),
+        )
+
+        assertSame(view, patched.mountedNodes.single().view)
+        assertEquals(1, updates)
+        assertEquals(0, resets)
+        assertEquals(0, releases)
+        assertEquals(0, commits)
+        assertTrue(patched.commitEffects.isEmpty())
+        assertEquals(0, patched.stats.reboundNodes)
+        assertEquals(1, patched.stats.patchedNodes)
     }
 
     @Test
@@ -896,6 +1115,22 @@ class ViewTreeRenderTransactionTest {
                     density = density,
                     fontScale = fontScale,
                 ),
+            ),
+        )
+    }
+
+    private fun relativeTextNode(
+        layoutDirection: UiLayoutDirection,
+        modifier: Modifier,
+    ): VNode {
+        return environmentTextNode(
+            density = 1f,
+            fontScale = 1f,
+        ).copy(
+            modifier = modifier,
+            environment = UiEnvironmentValues.Default.copy(
+                density = UiDensity(density = 1f, fontScale = 1f),
+                layoutDirection = layoutDirection,
             ),
         )
     }

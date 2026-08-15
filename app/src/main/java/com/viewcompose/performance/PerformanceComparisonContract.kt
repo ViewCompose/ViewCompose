@@ -57,18 +57,23 @@ internal enum class PerformanceEngine(
  */
 internal enum class PerformanceScenario(
     val wireValue: String,
+    val demoScenarioId: String,
 ) {
     List(
         wireValue = "list",
+        demoScenarioId = "performance.list",
     ),
     ComplexLayout(
         wireValue = "complex_layout",
+        demoScenarioId = "performance.complex-layout",
     ),
     ShadowList(
         wireValue = "shadow_list",
+        demoScenarioId = "performance.shadow-list",
     ),
     ShadowComplexLayout(
         wireValue = "shadow_complex_layout",
+        demoScenarioId = "performance.shadow-complex-layout",
     ),
     ;
 

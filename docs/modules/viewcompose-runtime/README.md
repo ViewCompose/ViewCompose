@@ -51,7 +51,9 @@ Snapshot.withMutableSnapshot {
 - [`Snapshot` and `MutableSnapshot`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime/-snapshot/)
   provide consistent reads and atomic buffered writes with conflict reporting.
 - [`RuntimeObservation`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.observation/-runtime-observation/)
-  turns state reads into an explicit invalidation subscription.
+  is the Q3 explicit invalidation subscription for state reads. One successful global apply calls
+  each affected observation at most once on the applying thread, even when several dependencies
+  changed; separate applies remain separate opportunities.
 - [`snapshotFlow`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime/snapshot-flow.html)
   creates a cold Flow that tracks snapshot reads per collector, conflates invalidations, replaces
   conditional dependencies, and emits structurally distinct calculated values.
@@ -74,15 +76,19 @@ alpha, the documentation site intentionally does not expose a stable `latest` al
   Kotlin `use` when a read snapshot is no longer needed.
 - A `MutableSnapshot` is either applied or abandoned, then disposed. A failed conflict apply leaves
   its destination unchanged and may be retried; a successful apply is terminal.
-- An `Observation` owns subscriptions to every state read during collection. Dispose it to prevent
-  the observed states from retaining that subscription.
+- An `Observation` owns subscriptions to every state read during collection. One successful global
+  apply invalidates it at most once, with stable first-observed delivery order across affected
+  observations. Dispose it to prevent the observed states from retaining that subscription; a
+  callback already racing with disposal may finish.
 - Each `snapshotFlow` collector owns an independent read observation. Cancellation and calculation
   failure release it; the calculation is side-effect-free and may run more often than it emits.
 - `ComposerLite` and derived-state instances are intended for thread-confined use. Hosts serialize
   composition, prepared commit/abort, effect delivery, and disposal.
-- Remembered lifecycle objects are pending until prepared commit, active after `onRemembered`, and
-  terminal after exactly one `onForgotten` or `onAbandoned` callback. Abort cannot retire a
-  previously committed object or activate a candidate replacement.
+- Remembered lifecycle objects remain pending until `onRemembered` returns successfully. A throwing
+  activation is retried by a later successful composition commit without reactivating successful
+  siblings. Removal before activation invokes `onAbandoned`; an active value terminates through
+  exactly one `onForgotten`. Abort cannot retire a previously committed object or activate a
+  candidate replacement.
 - `ComposerLite.composeRoot` commits runtime state but does not execute one-shot side effects. The
   host calls `commitSideEffects` only after the corresponding rendered tree and remember lifecycle
   transaction have committed successfully.
@@ -94,6 +100,9 @@ alpha, the documentation site intentionally does not expose a stable `latest` al
   changing physical holders never changes the derived logical owner. Unequal active keyed groups
   that produce the same structural-path hash fail before saveable provider registration instead of
   sharing restoration state; custom saveable keys therefore require stable, collision-free hashes.
+- Explicitly keyed sibling groups may move without losing their complete scope identity, including
+  remember slots, observations, children, and saveable paths. Duplicate effective key/signature
+  pairs under one parent fail the composition attempt before either logical item can alias state.
 - Callback failures keep their original throwable and append bounded effect kind, operation,
   structural scope, slot, and non-retaining key metadata. Hosts may opt into a non-negative
   synchronous callback warning threshold through the `ComposerLite` constructor.
@@ -125,4 +134,5 @@ This release adds `snapshotFlow`, exposing Kotlin Coroutines as an API dependenc
 alpha `ComposerLite.disposableEffect` slot API. Custom composition integrations migrate owned work
 to a remembered `RememberObserver`; application UI uses the effect APIs from
 `viewcompose-ui-foundation`. Prepared composition now enforces owner-thread, terminal-disposal, and
-callback re-entry boundaries.
+callback re-entry boundaries. Remember activation failures are retryable, and explicit keyed
+siblings move as complete scopes while duplicate effective identities fail fast.

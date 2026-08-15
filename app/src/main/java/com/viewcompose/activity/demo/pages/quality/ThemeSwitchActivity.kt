@@ -2,38 +2,91 @@ package com.viewcompose
 
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import android.view.ViewGroup
+import androidx.annotation.IdRes
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.host.android.nativeView
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.Column
-import com.viewcompose.ui.foundation.SegmentedControl
-import com.viewcompose.ui.foundation.SegmentedControlSize
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.padding
-import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.unit.dp
 
-/** Demonstrates one observable application theme choice across two independent Activity sessions. */
+/** Hosts the deterministic primary Session for cross-Activity theme propagation verification. */
 class ThemeSwitchActivity : DemoRenderActivity() {
-    override val demoTitle: String = "跨 Activity 主题切换"
+    override val demoTitleRes: Int = R.string.demo_activity_theme_switch_title
+
+    private var originalThemeMode: DemoThemeMode = DemoThemeMode.System
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        originalThemeMode = savedInstanceState
+            ?.getInt(STATE_ORIGINAL_THEME_MODE, DemoThemeMode.System.ordinal)
+            ?.let { ordinal -> DemoThemeMode.entries.getOrElse(ordinal) { DemoThemeMode.System } }
+            ?: DemoThemeSession.mode.also {
+                DemoThemeSession.mode = DemoThemeMode.Light
+            }
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt(STATE_ORIGINAL_THEME_MODE, originalThemeMode.ordinal)
+        super.onSaveInstanceState(outState)
+    }
 
     override fun buildDemoContent(
         root: ViewGroup,
         builder: UiTreeBuilder,
     ) {
-        builder.ThemeSwitchPage(root)
+        val scenario = requireNotNull(currentScenario()) {
+            "ThemeSwitchActivity requires environment.cross-activity-theme"
+        }
+        builder.CrossActivityThemePage(root, scenario)
     }
 
-    companion object {
-        internal fun newIntent(context: Context): Intent = Intent(context, ThemeSwitchActivity::class.java)
+    override fun onDestroy() {
+        val restoreOriginalTheme = isFinishing && !isChangingConfigurations
+        super.onDestroy()
+        if (restoreOriginalTheme) {
+            DemoThemeSession.mode = originalThemeMode
+        }
+    }
+
+    private companion object {
+        const val STATE_ORIGINAL_THEME_MODE = "cross_activity_theme_original_mode"
     }
 }
 
-private fun UiTreeBuilder.ThemeSwitchPage(root: ViewGroup) {
+/** Hosts the second independent render Session used by the cross-Activity fixture. */
+class ThemeSwitchSecondaryActivity : DemoRenderActivity() {
+    override val demoTitleRes: Int = R.string.demo_activity_theme_switch_secondary_title
+
+    override fun buildDemoContent(
+        root: ViewGroup,
+        builder: UiTreeBuilder,
+    ) {
+        builder.CrossActivityThemeSecondaryPage(root)
+    }
+
+    companion object {
+        internal fun newIntent(context: Context): Intent =
+            Intent(context, ThemeSwitchSecondaryActivity::class.java)
+    }
+}
+
+private fun UiTreeBuilder.CrossActivityThemePage(
+    root: ViewGroup,
+    scenario: DemoScenarioSpec,
+) {
     val themeModeState = DemoThemeSession.modeState
+    val currentMode = themeModeState.value
     Column(
         spacing = 12.dp,
         modifier = Modifier
@@ -41,32 +94,99 @@ private fun UiTreeBuilder.ThemeSwitchPage(root: ViewGroup) {
             .padding(vertical = 16.dp),
     ) {
         Text(
-            text = "当前二级 Activity 主题: ${themeModeState.value.name}",
+            text = stringResource(
+                R.string.demo_cross_activity_theme_primary_state,
+                DemoThemeTokens.modeLabel(currentMode, root.context),
+            ),
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag(DemoTestTags.THEME_SWITCH_SECONDARY_STATUS),
+                .scenarioTarget(scenario, DemoAutomationRole.State),
         )
         Text(
-            text = "这里与首页持有不同 RenderSession，但共同观察应用级 DemoThemeSession。切换后返回，首页应立即显示相同主题。",
+            text = stringResource(R.string.demo_cross_activity_theme_goal),
             color = TextDefaults.secondaryColor(),
-        )
-        SegmentedControl(
-            items = listOf("System", "Light", "Dark"),
-            selectedIndex = themeModeState.value.ordinal,
-            onSelectionChange = { index ->
-                themeModeState.value = DemoThemeMode.entries[index]
-            },
-            size = SegmentedControlSize.Medium,
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag(DemoTestTags.THEME_SWITCH_SECONDARY_CONTROL),
+                .scenarioTarget(scenario, DemoAutomationRole.Target),
         )
         Button(
-            text = "切换后返回",
+            text = stringResource(R.string.demo_cross_activity_theme_toggle_primary),
+            onClick = { themeModeState.value = currentMode.toggledExplicitMode() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+        )
+        Button(
+            text = stringResource(R.string.demo_cross_activity_theme_open_secondary),
+            onClick = {
+                root.context.startActivity(ThemeSwitchSecondaryActivity.newIntent(root.context))
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .scenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
+        )
+        Button(
+            text = stringResource(R.string.demo_cross_activity_theme_reset),
+            onClick = { themeModeState.value = DemoThemeMode.Light },
+            modifier = Modifier
+                .fillMaxWidth()
+                .scenarioTarget(scenario, DemoAutomationRole.Reset),
+        )
+    }
+}
+
+private fun UiTreeBuilder.CrossActivityThemeSecondaryPage(root: ViewGroup) {
+    val themeModeState = DemoThemeSession.modeState
+    val currentMode = themeModeState.value
+    Column(
+        spacing = 12.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+    ) {
+        Text(
+            text = stringResource(
+                R.string.demo_cross_activity_theme_secondary_state,
+                DemoThemeTokens.modeLabel(currentMode, root.context),
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .androidResourceId(R.id.demo_cross_activity_theme_secondary_state),
+        )
+        Text(
+            text = stringResource(R.string.demo_cross_activity_theme_secondary_goal),
+            color = TextDefaults.secondaryColor(),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Button(
+            text = stringResource(R.string.demo_cross_activity_theme_toggle_secondary),
+            onClick = { themeModeState.value = currentMode.toggledExplicitMode() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .androidResourceId(R.id.demo_cross_activity_theme_secondary_action),
+        )
+        Button(
+            text = stringResource(R.string.demo_cross_activity_theme_return),
             onClick = { root.context.findAppCompatActivity()?.finish() },
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag(DemoTestTags.THEME_SWITCH_SECONDARY_RETURN),
+                .androidResourceId(R.id.demo_cross_activity_theme_secondary_return),
         )
+    }
+}
+
+private fun DemoThemeMode.toggledExplicitMode(): DemoThemeMode =
+    if (this == DemoThemeMode.Dark) DemoThemeMode.Light else DemoThemeMode.Dark
+
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec,
+    role: DemoAutomationRole,
+): Modifier = demoAutomationTarget(scenario.automation.require(role))
+
+private fun Modifier.androidResourceId(@IdRes id: Int): Modifier = nativeView(
+    key = "demo-resource-id:$id",
+) { view ->
+    if (view.id != id) {
+        view.id = id
     }
 }

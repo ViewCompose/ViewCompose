@@ -1,12 +1,17 @@
 package com.viewcompose.ui.samples
 
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.imeInsetsPaddingRelative
+import com.viewcompose.ui.modifier.marginRelative
+import com.viewcompose.ui.modifier.offsetRelative
+import com.viewcompose.ui.modifier.paddingRelative
 import com.viewcompose.ui.modifier.SemanticsCollectionInfo
 import com.viewcompose.ui.modifier.SemanticsCollectionItemInfo
 import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
 import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.modifier.testTag
+import com.viewcompose.ui.modifier.systemBarsInsetsPaddingRelative
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.LazyListItem
@@ -33,6 +38,17 @@ import com.viewcompose.ui.node.PlatformRenderContainerHandle
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.dp
 import java.io.File
+
+fun relativeLayoutModifierSample() {
+    val modifier = Modifier
+        .paddingRelative(start = 16.dp, end = 24.dp)
+        .marginRelative(start = 8.dp, end = 12.dp)
+        .offsetRelative(horizontal = 4.dp)
+        .systemBarsInsetsPaddingRelative(start = true, top = false, end = false, bottom = false)
+        .imeInsetsPaddingRelative(bottom = true)
+
+    check(modifier.elements.size == 5)
+}
 
 fun lazyListItemSessionUpdateSample() {
     val session = object : LazyListItemSession {

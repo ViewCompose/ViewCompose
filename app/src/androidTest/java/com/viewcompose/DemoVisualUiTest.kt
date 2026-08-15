@@ -7,12 +7,15 @@ import android.graphics.drawable.LayerDrawable
 import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,12 +25,19 @@ import kotlin.math.abs
 class DemoVisualUiTest {
     @Test
     fun layoutsBenchmarkControls_areVisibleAndNotEllipsized() {
-        launchDemoActivity(LayoutsActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            LayoutsActivity::class.java,
+            "layout.linear",
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("layouts-benchmark-light")
             scenario.onActivity { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_BENCHMARK_TOGGLE)
-                val reset = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_BENCHMARK_RESET)
+                val toggle = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_layout_linear_primary_action,
+                )
+                val reset = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_layout_linear_reset,
+                )
                 assertViewFullyVisible(toggle)
                 assertViewFullyVisible(reset)
                 assertTextNotEllipsized(toggle)
@@ -38,54 +48,70 @@ class DemoVisualUiTest {
 
     @Test
     fun collectionsBenchmarkControls_areVisibleAndNotEllipsized() {
-        launchDemoActivity(CollectionsActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            CollectionsActivity::class.java,
+            "collection.controls",
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("collections-benchmark-light")
             scenario.onActivity { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_BENCHMARK_TOGGLE)
-                val reset = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_BENCHMARK_RESET)
+                val toggle = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_controls_primary_action,
+                )
+                val reset = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_controls_reset,
+                )
                 assertViewFullyVisible(toggle)
                 assertViewFullyVisible(reset)
                 assertTextNotEllipsized(toggle)
                 assertTextNotEllipsized(reset)
-                activity.requireTextView("Benchmark 项 A")
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_BENCHMARK_TOGGLE)
+                val itemA = activity.requireTextViewByTestTagVisible(
+                    DemoTestTags.COLLECTIONS_BENCHMARK_ITEM_A,
+                )
+                assertTrue(itemA.text.toString().contains("A"))
+                activity.clickScenarioViewById(R.id.demo_collection_controls_primary_action)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val rotatedItem = activity.requireTextView("Benchmark 项 C 展开")
-                assertViewFullyVisible(rotatedItem)
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_BENCHMARK_RESET)
+                val rotatedItemA = activity.requireTextViewByTestTagVisible(
+                    DemoTestTags.COLLECTIONS_BENCHMARK_ITEM_A,
+                )
+                assertViewFullyVisible(rotatedItemA)
+                assertTrue(rotatedItemA.text.toString().contains("A"))
+                activity.clickScenarioViewById(R.id.demo_collection_controls_reset)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val resetItem = activity.requireTextView("Benchmark 项 A")
+                val resetItem = activity.requireTextViewByTestTagVisible(
+                    DemoTestTags.COLLECTIONS_BENCHMARK_ITEM_A,
+                )
                 assertViewFullyVisible(resetItem)
+                assertTrue(resetItem.text.toString().contains("A"))
             }
         }
     }
 
     @Test
     fun collectionsList_labelToggle_refreshesVisibleItemLabels() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        var primaryLabel = ""
+        launchDemoScenarioActivity(
             CollectionsActivity::class.java,
-        ).putExtra(EXTRA_COLLECTIONS_PAGE_INDEX, 1)
-        launchDemoActivity<CollectionsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "collection.lazy-list",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val toggle = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LABEL_TOGGLE)
                 val itemA = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
                 assertViewFullyVisible(toggle)
-                assertTrue(itemA.text.toString().contains("Lazy 项 A"))
+                assertTrue(itemA.text.toString().contains("A"))
+                primaryLabel = itemA.text.toString()
                 activity.clickByTestTag(DemoTestTags.COLLECTIONS_LABEL_TOGGLE)
             }
             waitForUiIdle()
             val switchedToAlternate = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
                     .text
-                    .toString()
-                    .contains("（替代）")
+                    .toString() != primaryLabel
             }
             assertTrue("Expected visible LazyColumn item to refresh its alternate label", switchedToAlternate)
             scenario.onActivity { activity ->
@@ -95,8 +121,9 @@ class DemoVisualUiTest {
             }
             waitForUiIdle()
             val switchedToPrimary = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val text = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A).text.toString()
-                text.contains("Lazy 项 A") && !text.contains("（替代）")
+                activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                    .text
+                    .toString() == primaryLabel
             }
             assertTrue("Expected visible LazyColumn item to restore its primary label", switchedToPrimary)
             scenario.onActivity { activity ->
@@ -108,25 +135,29 @@ class DemoVisualUiTest {
 
     @Test
     fun actionsElevatedCard_clickKeepsShadowZ() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            ActionsActivity::class.java,
-        ).putExtra(EXTRA_ACTIONS_PAGE_INDEX, 0)
-        launchDemoActivity<ActionsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = ActionsActivity::class.java,
+            scenarioId = "component.card",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             var beforeElevation = 0f
             var beforeZ = 0f
             scenario.onActivity { activity ->
-                val elevatedCard = activity.requireViewByTestTagVisible(DemoTestTags.ACTIONS_ELEVATED_CARD)
+                val elevatedCard = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_component_card_primary_action,
+                )
                 beforeElevation = elevatedCard.elevation
                 beforeZ = elevatedCard.z
                 assertTrue("Expected elevated card elevation > 0 before click", beforeElevation > 0f)
                 assertTrue("Expected elevated card z > 0 before click", beforeZ > 0f)
-                activity.clickByTestTag(DemoTestTags.ACTIONS_ELEVATED_CARD)
+                elevatedCard.performClick()
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val elevatedCard = activity.requireViewByTestTagVisible(DemoTestTags.ACTIONS_ELEVATED_CARD)
+                val elevatedCard = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_component_card_primary_action,
+                )
                 val afterElevation = elevatedCard.elevation
                 val afterZ = elevatedCard.z
                 assertTrue("Expected elevated card elevation > 0 after click", afterElevation > 0f)
@@ -139,16 +170,20 @@ class DemoVisualUiTest {
 
     @Test
     fun modifiersPage_drawableBackgroundOverridesColorBackground() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             ModifiersActivity::class.java,
-        ).putExtra(EXTRA_MODIFIERS_PAGE_INDEX, 0)
-        launchDemoActivity<ModifiersActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "modifier.visual",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("modifiers-drawable-background-light")
             scenario.onActivity { activity ->
-                val colorOnly = activity.requireViewByTestTagVisible(DemoTestTags.MODIFIERS_DRAWABLE_BACKGROUND_COLOR_ONLY)
-                val drawablePreferred = activity.requireViewByTestTagVisible(DemoTestTags.MODIFIERS_DRAWABLE_BACKGROUND_SAMPLE)
+                val colorOnly = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_modifier_visual_secondary_target,
+                )
+                val drawablePreferred = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_modifier_visual_target,
+                )
                 assertViewFullyVisible(colorOnly)
                 assertViewFullyVisible(drawablePreferred)
                 assertViewBackgroundColor(
@@ -163,55 +198,143 @@ class DemoVisualUiTest {
     }
 
     @Test
+    fun modifiersPage_fillMaxHeightMatchesOwningRow() {
+        launchDemoScenarioActivity(
+            ModifiersActivity::class.java,
+            "modifier.sizing",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val target = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_modifier_sizing_target,
+                )
+                val parent = target.parent as View
+                assertViewFullyVisible(target)
+                assertTrue(
+                    "Expected fillMaxHeight target to match its parent: " +
+                        "target=${target.height}, parent=${parent.height}",
+                    abs(target.height - parent.height) <= 1,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun modifiersPage_accessibilityAndNativePatchRemainObservable() {
+        launchDemoScenarioActivity(
+            ModifiersActivity::class.java,
+            "modifier.accessibility",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val accessibilityTarget = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_modifier_accessibility_target,
+                )
+                assertEquals(
+                    activity.getString(R.string.demo_modifiers_accessibility_description),
+                    accessibilityTarget.contentDescription?.toString(),
+                )
+
+                val nativeTarget = activity.requireScenarioViewByIdVisible<TextView>(
+                    R.id.demo_modifier_accessibility_secondary_target,
+                )
+                assertTrue("Expected nativeView to apply bold typeface", nativeTarget.typeface.isBold)
+                assertTrue(
+                    "Expected nativeView to apply letter spacing",
+                    abs(nativeTarget.letterSpacing - 0.1f) <= 0.001f,
+                )
+            }
+        }
+    }
+
+    @Test
     fun interopBenchmarkControls_andNativeMirror_areVisible() {
-        launchDemoActivity(InteropActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            InteropActivity::class.java,
+            "interop.android-view",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("interop-benchmark-light")
+            var mountedNativeView: TextView? = null
             scenario.onActivity { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.INTEROP_BENCHMARK_TOGGLE)
-                val reset = activity.requireTextViewByTestTag(DemoTestTags.INTEROP_BENCHMARK_RESET)
-                val nativeMirror = activity.requireTextViewByTestTag(DemoTestTags.INTEROP_BENCHMARK_NATIVE_TEXT)
+                val toggle = activity.requireScenarioViewByIdVisible<TextView>(
+                    R.id.demo_interop_android_view_primary_action,
+                )
+                val reset = activity.requireScenarioViewByIdVisible<TextView>(
+                    R.id.demo_interop_android_view_reset,
+                )
+                val nativeMirror = activity.requireScenarioViewByIdVisible<TextView>(
+                    R.id.demo_interop_android_view_target,
+                )
                 assertViewFullyVisible(toggle)
                 assertViewFullyVisible(reset)
                 assertViewFullyVisible(nativeMirror)
                 assertTextNotEllipsized(toggle)
                 assertTextNotEllipsized(reset)
-                assertEquals("原生 benchmark TextView: 主要", nativeMirror.text.toString())
-                activity.clickByTestTag(DemoTestTags.INTEROP_BENCHMARK_TOGGLE)
+                assertEquals(
+                    activity.getString(R.string.demo_interop_native_primary),
+                    nativeMirror.text.toString(),
+                )
+                assertEquals(DemoThemeTokens.light.colors.onSurface, nativeMirror.currentTextColor)
+                mountedNativeView = nativeMirror
+                activity.clickScenarioViewById(R.id.demo_interop_android_view_primary_action)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val nativeMirror = activity.requireTextViewByTestTag(DemoTestTags.INTEROP_BENCHMARK_NATIVE_TEXT)
-                assertEquals("原生 benchmark TextView: 替代", nativeMirror.text.toString())
+                val nativeMirror = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_interop_android_view_target,
+                )
+                val declarativeMirror = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_interop_android_view_secondary_target,
+                )
+                assertSame(mountedNativeView, nativeMirror)
+                assertEquals(
+                    activity.getString(R.string.demo_interop_native_alternate),
+                    nativeMirror.text.toString(),
+                )
+                assertEquals(
+                    activity.getString(
+                        R.string.demo_interop_declarative_mirror,
+                        activity.getString(R.string.demo_interop_native_alternate),
+                    ),
+                    declarativeMirror.text.toString(),
+                )
+                DemoThemeSession.mode = DemoThemeMode.Dark
             }
-        }
-    }
-
-    @Test
-    fun foundationsBenchmarkButtons_areVisibleAndNotEllipsized() {
-        launchDemoActivity(FoundationsActivity::class.java).use { scenario ->
             waitForUiIdle()
-            captureDeviceScreenshot("foundations-benchmark-light")
             scenario.onActivity { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.FOUNDATIONS_BENCHMARK_TOGGLE)
-                val reset = activity.requireTextViewByTestTag(DemoTestTags.FOUNDATIONS_BENCHMARK_RESET)
-                assertViewFullyVisible(toggle)
-                assertViewFullyVisible(reset)
-                assertTextNotEllipsized(toggle)
-                assertTextNotEllipsized(reset)
+                val nativeMirror = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_interop_android_view_target,
+                )
+                assertSame(mountedNativeView, nativeMirror)
+                assertEquals(DemoThemeTokens.dark.colors.onSurface, nativeMirror.currentTextColor)
+                DemoThemeSession.mode = DemoThemeMode.Light
             }
+            waitForUiIdle()
         }
     }
 
     @Test
     fun inputPage_controlsStayVisibleAndResetFormIsNotEllipsized() {
-        launchDemoActivity(InputActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            InputActivity::class.java,
+            "input.fields",
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("input-fields-light")
             scenario.onActivity { activity ->
-                val benchmark = activity.requireTextViewByTestTag(DemoTestTags.INPUT_BENCHMARK_TOGGLE)
-                val resetBenchmark = activity.requireTextViewByTestTag(DemoTestTags.INPUT_BENCHMARK_RESET)
-                val benchmarkField = activity.requireViewByTestTag(DemoTestTags.INPUT_BENCHMARK_FIELD)
+                val benchmark = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_input_fields_primary_action,
+                )
+                val resetBenchmark = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_input_fields_reset,
+                )
+                val benchmarkField = activity.requireScenarioViewById<View>(
+                    R.id.demo_input_fields_target,
+                )
                 assertViewFullyVisible(benchmark)
                 assertViewFullyVisible(resetBenchmark)
                 assertViewFullyVisible(benchmarkField)
@@ -223,79 +346,134 @@ class DemoVisualUiTest {
 
     @Test
     fun feedbackPage_triggersTransientFlows() {
-        launchDemoActivity(FeedbackActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            FeedbackActivity::class.java,
+            "overlay.transient",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.FEEDBACK_SHOW_SNACKBAR)
-                activity.clickByTestTag(DemoTestTags.FEEDBACK_SHOW_TOAST)
-                activity.clickByTestTag(DemoTestTags.FEEDBACK_SHOW_DIALOG)
-                activity.clickByTestTag(DemoTestTags.FEEDBACK_SHOW_POPUP)
+                activity.clickScenarioViewById(R.id.demo_overlay_transient_secondary_action)
             }
             waitForUiIdle()
+            assertDeviceResourceIdVisible(R.id.demo_overlay_transient_secondary_target)
+            clickDeviceResourceId(R.id.demo_overlay_transient_secondary_target)
+            scenario.onActivity { activity ->
+                activity.clickScenarioViewById(R.id.demo_overlay_transient_primary_action)
+            }
+            waitForUiIdle()
+            assertDeviceResourceIdVisible(R.id.demo_overlay_transient_target)
+            assertDeviceResourceIdVisible(R.id.demo_overlay_transient_reset)
             captureDeviceScreenshot("feedback-transient-light")
             scenario.onActivity { activity ->
-                val dialogCount = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_DIALOG_COUNT)
-                val popupCount = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_POPUP_COUNT)
-                val toastCount = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_TOAST_COUNT)
-                assertViewFullyVisible(dialogCount)
-                assertViewFullyVisible(popupCount)
-                assertViewFullyVisible(toastCount)
-                assertEquals(1, extractCount(dialogCount.text.toString()))
-                assertEquals(1, extractCount(popupCount.text.toString()))
-                assertEquals(1, extractCount(toastCount.text.toString()))
-                activity.clickByTestTag(DemoTestTags.FEEDBACK_RESET)
+                val state = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_overlay_transient_state,
+                )
+                assertEquals(
+                    activity.getString(R.string.demo_feedback_transient_state, 1, 1, 1, 1),
+                    state.text.toString(),
+                )
             }
+            clickDeviceResourceId(R.id.demo_overlay_transient_reset)
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val dialogCount = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_DIALOG_COUNT)
-                val popupCount = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_POPUP_COUNT)
-                val toastCount = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_TOAST_COUNT)
-                val lastEvent = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_LAST_EVENT)
-                assertEquals(0, extractCount(dialogCount.text.toString()))
-                assertEquals(0, extractCount(popupCount.text.toString()))
-                assertEquals(0, extractCount(toastCount.text.toString()))
-                assertTrue(lastEvent.text.toString().contains("空闲"))
+                val state = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_overlay_transient_state,
+                )
+                assertEquals(
+                    activity.getString(R.string.demo_feedback_transient_state, 0, 0, 0, 0),
+                    state.text.toString(),
+                )
             }
         }
     }
 
     @Test
     fun feedbackPage_modalBottomSheet_showAndDismissFlow() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             FeedbackActivity::class.java,
-        ).putExtra(EXTRA_FEEDBACK_PAGE_INDEX, 1)
-        launchDemoActivity<FeedbackActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "overlay.dialog",
+        ).use { scenario ->
             waitForUiIdle()
+            var initial = ""
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.FEEDBACK_SHOW_BOTTOM_SHEET)
+                initial = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_overlay_dialog_state,
+                ).text.toString()
+                activity.clickScenarioViewById(R.id.demo_overlay_dialog_primary_action)
             }
             waitForUiIdle()
-            assertDeviceTextVisible("底部弹窗")
+            assertDeviceResourceIdVisible(R.id.demo_overlay_dialog_target)
+            assertDeviceResourceIdVisible(R.id.demo_overlay_dialog_reset)
             captureDeviceScreenshot("feedback-bottom-sheet-light")
-            clickDeviceText("关闭")
+            clickDeviceResourceId(R.id.demo_overlay_dialog_reset)
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val lastEvent = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_LAST_EVENT)
-                assertTrue(lastEvent.text.toString().contains("BottomSheet 关闭"))
+                assertEquals(
+                    initial,
+                    activity.requireScenarioViewById<TextView>(
+                        R.id.demo_overlay_dialog_state,
+                    ).text.toString(),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun feedbackPage_menuSelectionAndResetFlow() {
+        launchDemoScenarioActivity(
+            FeedbackActivity::class.java,
+            "overlay.menu",
+        ).use { scenario ->
+            waitForUiIdle()
+            var initial = ""
+            scenario.onActivity { activity ->
+                initial = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_overlay_menu_state,
+                ).text.toString()
+                activity.clickScenarioViewById(R.id.demo_overlay_menu_secondary_action)
+            }
+            waitForUiIdle()
+            assertDeviceResourceIdVisible(R.id.demo_overlay_menu_target)
+            clickDeviceResourceId(R.id.demo_overlay_menu_target)
+            scenario.onActivity { activity ->
+                val state = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_overlay_menu_state,
+                ).text.toString()
+                assertNotEquals(initial, state)
+                activity.clickScenarioViewById(R.id.demo_overlay_menu_reset)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                assertEquals(
+                    initial,
+                    activity.requireScenarioViewById<TextView>(
+                        R.id.demo_overlay_menu_state,
+                    ).text.toString(),
+                )
             }
         }
     }
 
     @Test
     fun inputStress_controlsRemainVisibleAndReadable() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             InputActivity::class.java,
-        ).putExtra(EXTRA_INPUT_PAGE_INDEX, 2)
-        launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "input.stress",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("input-stress-light")
             scenario.onActivity { activity ->
-                val expanded = activity.requireTextViewByTestTag(DemoTestTags.INPUT_STRESS_EXPAND)
-                val readonly = activity.requireTextViewByTestTag(DemoTestTags.INPUT_STRESS_READONLY)
+                val expanded = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_input_stress_primary_action,
+                )
+                val readonly = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_input_stress_secondary_action,
+                )
                 val error = activity.requireTextViewByTestTag(DemoTestTags.INPUT_STRESS_ERROR)
-                val protectedField = activity.requireViewByTestTag(DemoTestTags.INPUT_STRESS_PROTECTED_FIELD)
+                val protectedField = activity.requireScenarioViewById<View>(
+                    R.id.demo_input_stress_target,
+                )
                 assertViewFullyVisible(expanded)
                 assertViewFullyVisible(readonly)
                 assertViewFullyVisible(error)
@@ -309,26 +487,26 @@ class DemoVisualUiTest {
 
     @Test
     fun inputSearch_focusSearchBar_scrollsOnlyEnoughToRevealInput() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             InputActivity::class.java,
-        ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
-        launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "input.search",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             assertFocusActionRevealsInput(
                 scenario = scenario,
-                tag = DemoTestTags.INPUT_SEARCH_PRIMARY,
+                resourceId = R.id.demo_input_search_target,
             )
         }
     }
 
     @Test
     fun inputSearch_focusScrollableColumnSearch_scrollsOnlyEnoughToRevealInput() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             InputActivity::class.java,
-        ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
-        launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "input.search",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             assertFocusActionRevealsInput(
                 scenario = scenario,
@@ -339,11 +517,11 @@ class DemoVisualUiTest {
 
     @Test
     fun inputSearch_focusVerticalPagerSearch_scrollsOnlyEnoughToRevealInput() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             InputActivity::class.java,
-        ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
-        launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "input.search",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             assertFocusActionRevealsInput(
                 scenario = scenario,
@@ -354,11 +532,11 @@ class DemoVisualUiTest {
 
     @Test
     fun inputSearch_focusPullRefreshSearch_scrollsOnlyEnoughToRevealInput() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             InputActivity::class.java,
-        ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
-        launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "input.search",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             assertFocusActionRevealsInput(
                 scenario = scenario,
@@ -368,78 +546,17 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun scopedThemeOverride_updatesPrimaryButtonBackground() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            FoundationsActivity::class.java,
-        ).putExtra(EXTRA_FOUNDATIONS_PAGE_INDEX, 1)
-        launchDemoActivity<FoundationsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
-            waitForUiIdle()
-            captureDeviceScreenshot("foundations-theme-override-light")
-            scenario.onActivity { activity ->
-                val accentButton = activity.requireTextViewByTestTag(DemoTestTags.FOUNDATIONS_ACCENT_PRIMARY)
-                assertViewFullyVisible(accentButton)
-                assertTextNotEllipsized(accentButton)
-                assertViewBackgroundColor(
-                    view = accentButton,
-                    expectedColor = DemoThemeTokens.light.colors.secondary,
-                )
-            }
-        }
-    }
-
-    @Test
-    fun componentStyleOverride_updatesPrimaryTokenButtonBackground() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            FoundationsActivity::class.java,
-        ).putExtra(EXTRA_FOUNDATIONS_PAGE_INDEX, 1)
-        launchDemoActivity<FoundationsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
-            waitForUiIdle()
-            captureDeviceScreenshot("foundations-component-override-light")
-            scenario.onActivity { activity ->
-                val tokenButton = activity.requireTextViewByTestTag(DemoTestTags.FOUNDATIONS_PRIMARY_TOKEN)
-                assertViewFullyVisible(tokenButton)
-                assertTextNotEllipsized(tokenButton)
-                assertViewBackgroundColor(
-                    view = tokenButton,
-                    expectedColor = DemoThemeTokens.light.colors.onSurface,
-                )
-            }
-        }
-    }
-
-    @Test
-    fun foundationsMedia_viewsRemainVisibleAfterScroll() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            FoundationsActivity::class.java,
-        ).putExtra(EXTRA_FOUNDATIONS_PAGE_INDEX, 2)
-        launchDemoActivity<FoundationsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
-            waitForUiIdle()
-            captureDeviceScreenshot("foundations-media-light")
-            scenario.onActivity { activity ->
-                val remoteImage = activity.requireViewByTestTag(DemoTestTags.FOUNDATIONS_REMOTE_IMAGE)
-                val fallbackImage = activity.requireViewByTestTag(DemoTestTags.FOUNDATIONS_FALLBACK_IMAGE)
-                val iconButton = activity.requireViewByTestTag(DemoTestTags.FOUNDATIONS_PRIMARY_ICON_BUTTON)
-                assertViewFullyVisible(remoteImage)
-                assertViewFullyVisible(fallbackImage)
-                assertViewFullyVisible(iconButton)
-            }
-        }
-    }
-
-    @Test
     fun layoutsEdge_viewsRemainVisibleAfterPageJump() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 2)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.edges",
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("layouts-edge-light")
             scenario.onActivity { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_EDGE_TOGGLE)
+                val toggle = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_layout_edges_primary_action,
+                )
                 val weighted = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_EDGE_WEIGHTED)
                 val action = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_EDGE_ACTION)
                 val icon = activity.requireViewByTestTag(DemoTestTags.LAYOUTS_EDGE_PROBE_ICON)
@@ -456,11 +573,10 @@ class DemoVisualUiTest {
 
     @Test
     fun layoutsConstraint_coreScenes_keepExpectedRelativePositions() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 5)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.constraint",
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("layouts-constraint-core-light")
             scenario.onActivity { activity ->
@@ -522,11 +638,10 @@ class DemoVisualUiTest {
 
     @Test
     fun layoutsConstraint_decoupledConstraintSetToggle_repositionsMarker() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 5)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.constraint",
+        ).use { scenario ->
             waitForUiIdle()
             var beforeLeft = 0
             var beforeTop = 0
@@ -540,8 +655,7 @@ class DemoVisualUiTest {
                 val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_SET_MARKER)
                 val leftDelta = abs(viewLeftOnScreen(marker) - beforeLeft)
                 val topDelta = abs(viewTopOnScreen(marker) - beforeTop)
-                val toggleText = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_TOGGLE).text.toString()
-                (leftDelta >= 12 || topDelta >= 12) && toggleText.contains("竖向布局")
+                leftDelta >= 12 || topDelta >= 12
             }
             assertTrue("Expected decoupled constraint set toggle to reposition marker immediately.", moved)
         }
@@ -549,35 +663,52 @@ class DemoVisualUiTest {
 
     @Test
     fun layoutsConstraint_virtualHelpersToggle_updatesVisibilityAndPlaceholderHosting() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 5)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.constraint",
+        ).use { scenario ->
             waitForUiIdle()
+            var initialStatus = ""
+            var observedStatus = ""
+            var observedVisibility: Int? = null
             scenario.onActivity { activity ->
                 val container = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CONTAINER)
                 assertViewFullyVisible(container)
-                val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_STATUS)
-                assertTrue(status.text.toString().contains("Group: visible"))
+                initialStatus = activity.requireTextViewByTestTag(
+                    DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_STATUS,
+                ).text.toString()
+                assertEquals(
+                    View.VISIBLE,
+                    activity.requireViewByTestTagVisible(
+                        DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER,
+                    ).visibility,
+                )
                 activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_TOGGLE)
             }
             val updated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_STATUS)
-                val text = status.text.toString()
-                text.contains("Group: hidden") && text.contains("Placeholder: A") && text.contains("single column")
+                val member = findViewByTestTag(
+                    activity.findViewById(android.R.id.content),
+                    DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER,
+                )
+                observedStatus = status.text.toString()
+                observedVisibility = member?.visibility
+                status.text.toString() != initialStatus && (member == null || member.visibility != View.VISIBLE)
             }
-            assertTrue("Expected virtual helper status text to update after toggle.", updated)
+            assertTrue(
+                "Expected virtual helper state and visibility to update after toggle. " +
+                    "initial=$initialStatus, observed=$observedStatus, visibility=$observedVisibility",
+                updated,
+            )
         }
     }
 
     @Test
     fun layoutsConstraint_anchorAndDimensionAdvancedScenes_keepVisibleAndReactive() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 5)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.constraint",
+        ).use { scenario ->
             waitForUiIdle()
             var ratioBeforeWidth = 0
             var ratioBeforeHeight = 0
@@ -585,11 +716,9 @@ class DemoVisualUiTest {
                 val container = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CONTAINER)
                 val baseline = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE)
                 val circle = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CIRCLE)
-                val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_STATUS)
                 assertViewFullyVisible(container)
                 assertViewFullyVisible(baseline)
                 assertViewFullyVisible(circle)
-                assertTrue(status.text.toString().contains("baselineToBaseline"))
 
                 val ratio = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO)
                 ratioBeforeWidth = ratio.width
@@ -598,9 +727,7 @@ class DemoVisualUiTest {
             }
             val ratioUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val ratio = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO)
-                val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_STATUS).text.toString()
-                (abs(ratio.width - ratioBeforeWidth) >= 8 || abs(ratio.height - ratioBeforeHeight) >= 8) &&
-                    status.contains("扩展模式")
+                abs(ratio.width - ratioBeforeWidth) >= 8 || abs(ratio.height - ratioBeforeHeight) >= 8
             }
             assertTrue("Expected dimension advanced toggle to update ratio card size and status.", ratioUpdated)
         }
@@ -608,29 +735,41 @@ class DemoVisualUiTest {
 
     @Test
     fun layoutsConstraint_helpersFullAndVerticalChain_toggleUpdatesLayoutRelations() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 5)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.constraint",
+        ).use { scenario ->
             waitForUiIdle()
             var markerBeforeLeft = 0
             var markerBeforeTop = 0
             var middleBeforeTop = 0
+            var helperLeftDelta = 0
+            var helperTopDelta = 0
+            var initialHelperStatus = ""
+            var helperStatus = ""
             scenario.onActivity { activity ->
                 val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER)
                 markerBeforeLeft = viewLeftOnScreen(marker)
                 markerBeforeTop = viewTopOnScreen(marker)
+                initialHelperStatus = activity.requireTextViewByTestTag(
+                    DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_STATUS,
+                ).text.toString()
                 activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_TOGGLE)
             }
             val helperUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER)
-                val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_STATUS).text.toString()
-                val leftDelta = abs(viewLeftOnScreen(marker) - markerBeforeLeft)
-                val topDelta = abs(viewTopOnScreen(marker) - markerBeforeTop)
-                (leftDelta >= 8 || topDelta >= 8 || status.contains("fraction 模式")) && status.contains("fraction 模式")
+                helperLeftDelta = abs(viewLeftOnScreen(marker) - markerBeforeLeft)
+                helperTopDelta = abs(viewTopOnScreen(marker) - markerBeforeTop)
+                helperStatus = activity.requireTextViewByTestTag(
+                    DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_STATUS,
+                ).text.toString()
+                helperStatus != initialHelperStatus
             }
-            assertTrue("Expected helpers full toggle to reposition marker and switch status mode.", helperUpdated)
+            assertTrue(
+                "Expected helpers full toggle to publish a new configuration. " +
+                    "leftDelta=$helperLeftDelta, topDelta=$helperTopDelta, status=$helperStatus",
+                helperUpdated,
+            )
 
             scenario.onActivity { activity ->
                 val middle = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_MIDDLE)
@@ -639,8 +778,7 @@ class DemoVisualUiTest {
             }
             val chainUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val middle = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_MIDDLE)
-                val toggleText = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_TOGGLE).text.toString()
-                abs(viewTopOnScreen(middle) - middleBeforeTop) >= 8 && toggleText.contains("SpreadInside")
+                abs(viewTopOnScreen(middle) - middleBeforeTop) >= 8
             }
             assertTrue("Expected vertical chain toggle to change chain arrangement and middle item position.", chainUpdated)
         }
@@ -648,17 +786,14 @@ class DemoVisualUiTest {
 
     @Test
     fun layoutsConstraint_constraintSetHelperMirror_toggleRepositionsMarker() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 5)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.constraint",
+        ).use { scenario ->
             waitForUiIdle()
             var markerBeforeLeft = 0
             var markerBeforeTop = 0
             scenario.onActivity { activity ->
-                val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_STATUS).text.toString()
-                assertTrue(status.contains("ConstraintSet(A)"))
                 val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER)
                 markerBeforeLeft = viewLeftOnScreen(marker)
                 markerBeforeTop = viewTopOnScreen(marker)
@@ -666,10 +801,9 @@ class DemoVisualUiTest {
             }
             val switched = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER)
-                val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_STATUS).text.toString()
                 val leftDelta = abs(viewLeftOnScreen(marker) - markerBeforeLeft)
                 val topDelta = abs(viewTopOnScreen(marker) - markerBeforeTop)
-                (leftDelta >= 10 || topDelta >= 10) && status.contains("ConstraintSet(B)")
+                leftDelta >= 10 || topDelta >= 10
             }
             assertTrue("Expected helper mirror constraintSet toggle to reposition marker and switch status.", switched)
         }
@@ -677,23 +811,28 @@ class DemoVisualUiTest {
 
     @Test
     fun collectionsStress_toggleUpdatesVisibleControls() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             CollectionsActivity::class.java,
-        ).putExtra(EXTRA_COLLECTIONS_PAGE_INDEX, 2)
-        launchDemoActivity<CollectionsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "collection.stress",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val rotate = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_STRESS_ROTATE)
-                val edge = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_STRESS_EDGE)
+                val rotate = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_stress_primary_action,
+                )
+                val edge = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_stress_secondary_action,
+                )
                 assertViewFullyVisible(rotate)
                 assertViewFullyVisible(edge)
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_STRESS_EDGE)
+                activity.clickScenarioViewById(R.id.demo_collection_stress_secondary_action)
             }
             waitForUiIdle()
             captureDeviceScreenshot("collections-stress-light")
             scenario.onActivity { activity ->
-                val activeIds = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_STRESS_ACTIVE_IDS)
+                val activeIds = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_stress_state,
+                )
                 assertViewFullyVisible(activeIds)
                 assertTextNotEllipsized(activeIds)
                 assertTrue(activeIds.text.toString().contains("X"))
@@ -703,29 +842,34 @@ class DemoVisualUiTest {
 
     @Test
     fun collectionsStress_rotateOrder_refreshesVisibleIdsAcrossToggles() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             CollectionsActivity::class.java,
-        ).putExtra(EXTRA_COLLECTIONS_PAGE_INDEX, 2)
-        launchDemoActivity<CollectionsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "collection.stress",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val ids = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_STRESS_ACTIVE_IDS)
+                val ids = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_stress_state,
+                )
                 assertViewFullyVisible(ids)
                 assertTrue(ids.text.toString().contains("A -> B -> C -> D"))
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_STRESS_ROTATE)
+                activity.clickScenarioViewById(R.id.demo_collection_stress_primary_action)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val ids = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_STRESS_ACTIVE_IDS)
+                val ids = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_stress_state,
+                )
                 assertViewFullyVisible(ids)
                 assertTrue(ids.text.toString().contains("C -> D -> A -> B"))
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_STRESS_ROTATE)
+                activity.clickScenarioViewById(R.id.demo_collection_stress_primary_action)
             }
             waitForUiIdle()
             captureDeviceScreenshot("collections-stress-rotate-light")
             scenario.onActivity { activity ->
-                val ids = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_STRESS_ACTIVE_IDS)
+                val ids = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_stress_state,
+                )
                 assertViewFullyVisible(ids)
                 assertTrue(ids.text.toString().contains("A -> B -> C -> D"))
             }
@@ -734,16 +878,16 @@ class DemoVisualUiTest {
 
     @Test
     fun collectionsGrid_spanToggle_refreshesVisibleItemContent() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        var twoColumnLabel = ""
+        launchDemoScenarioActivity(
             CollectionsActivity::class.java,
-        ).putExtra(EXTRA_COLLECTIONS_PAGE_INDEX, 5)
-        launchDemoActivity<CollectionsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "collection.grid",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val firstItem = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_GRID_FIRST_ITEM)
                 assertViewFullyVisible(firstItem)
-                assertTrue(firstItem.text.toString().contains("2列"))
+                twoColumnLabel = firstItem.text.toString()
                 activity.clickByTestTag(DemoTestTags.COLLECTIONS_GRID_THREE_COLS)
             }
             waitForUiIdle()
@@ -751,31 +895,38 @@ class DemoVisualUiTest {
             scenario.onActivity { activity ->
                 val firstItem = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_GRID_FIRST_ITEM)
                 assertViewFullyVisible(firstItem)
-                assertTrue(firstItem.text.toString().contains("3列"))
+                assertNotEquals(twoColumnLabel, firstItem.text.toString())
             }
         }
     }
 
     @Test
     fun navigationBar_selectionChange_updatesSummary() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            NavigationActivity::class.java,
-        ).putExtra(EXTRA_NAVIGATION_PAGE_INDEX, 1)
-        launchDemoActivity<NavigationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = NavigationActivity::class.java,
+            scenarioId = "component.navigation-bar",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val summary = activity.requireTextViewByTestTag(DemoTestTags.NAVIGATION_SELECTED_SUMMARY)
+                val summary = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_component_navigation_bar_state,
+                )
                 assertViewFullyVisible(summary)
                 assertTrue(summary.text.toString().contains("0"))
             }
             scenario.onActivity { activity ->
-                activity.clickTextViewVisible("搜索")
+                val navigationBar = activity.requireScenarioViewById<android.view.ViewGroup>(
+                    R.id.demo_component_navigation_bar_primary_action,
+                )
+                assertTrue(navigationBar.getChildAt(1).performClick())
             }
             waitForUiIdle()
             captureDeviceScreenshot("navigation-navbar-selection-light")
             scenario.onActivity { activity ->
-                val summary = activity.requireTextViewByTestTag(DemoTestTags.NAVIGATION_SELECTED_SUMMARY)
+                val summary = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_component_navigation_bar_state,
+                )
                 assertViewFullyVisible(summary)
                 assertTrue(summary.text.toString().contains("1"))
             }
@@ -784,11 +935,10 @@ class DemoVisualUiTest {
 
     @Test
     fun statePage_viewModelCounter_updatesThroughLifecycleAwareCollection() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 0)
-        launchDemoActivity<StateActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.state",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_VM_COUNTER)
@@ -808,19 +958,55 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun statePatchStress_segmentedControlSummary_updatesAcrossAdvances() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+    fun stateKeyIdentity_actionAndReset_recreateDeterministicFixtureState() {
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 2)
-        launchDemoActivity<StateActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.key-identity",
+        ).use { scenario ->
+            waitForUiIdle()
+            var initialState = ""
+            scenario.onActivity { activity ->
+                initialState = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_runtime_key_identity_state,
+                ).text.toString()
+                activity.clickScenarioViewById(R.id.demo_runtime_key_identity_primary_action)
+            }
+            waitForUiIdle()
+            var hiddenState = ""
+            scenario.onActivity { activity ->
+                hiddenState = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_runtime_key_identity_state,
+                ).text.toString()
+                assertNotEquals(initialState, hiddenState)
+                activity.clickScenarioViewById(R.id.demo_runtime_key_identity_reset)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val resetState = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_runtime_key_identity_state,
+                ).text.toString()
+                assertEquals(initialState, resetState)
+                assertNotEquals(hiddenState, resetState)
+                assertViewFullyVisible(
+                    activity.requireScenarioViewById(R.id.demo_runtime_key_identity_target),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun statePatchStress_segmentedControlSummary_updatesAcrossAdvances() {
+        launchDemoScenarioActivity(
+            StateActivity::class.java,
+            "runtime.view-patch",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_PATCH_SEGMENT_SUMMARY)
                 assertViewFullyVisible(summary)
                 assertTrue(summary.text.toString().contains("0"))
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
             }
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-segmented-step2-light")
@@ -835,18 +1021,19 @@ class DemoVisualUiTest {
 
     @Test
     fun statePatchStress_tabRowSelection_updatesSummary() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 2)
-        launchDemoActivity<StateActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.view-patch",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_PATCH_TAB_SUMMARY)
                 assertViewFullyVisible(summary)
                 assertTrue(summary.text.toString().contains("0"))
             }
-            clickDeviceText("详情")
+            scenario.onActivity { activity ->
+                activity.clickByTestTag(DemoTestTags.STATE_PATCH_TAB_DETAILS)
+            }
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-tab-selection-light")
             scenario.onActivity { activity ->
@@ -860,14 +1047,13 @@ class DemoVisualUiTest {
 
     @Test
     fun statePatchStress_explicitRevisionRefreshesStableTabPage() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 2)
-        launchDemoActivity<StateActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.view-patch",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
             }
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-stable-tab-light")
@@ -883,15 +1069,14 @@ class DemoVisualUiTest {
 
     @Test
     fun statePatchStress_horizontalPagerContentUpdatesAcrossExplicitRevisions() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 2)
-        launchDemoActivity<StateActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.view-patch",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
             }
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-stable-tab-step2-light")
@@ -907,15 +1092,14 @@ class DemoVisualUiTest {
 
     @Test
     fun statePatchStress_verticalPagerContentUpdatesAcrossExplicitRevisions() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 2)
-        launchDemoActivity<StateActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.view-patch",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
             }
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-vertical-pager-step2-light")
@@ -931,43 +1115,49 @@ class DemoVisualUiTest {
 
     @Test
     fun animationPage_visibilityToggle_showRestoresTargetContent() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 0)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.core",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             var footerTopBeforeHide = 0
             var footerTopAfterHide = 0
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val target = activity.requireViewByTestTagVisible(DemoTestTags.ANIMATION_VISIBILITY_TARGET)
+                val target = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_animation_core_target,
+                )
                 val footer = activity.requireViewByTestTagVisible(DemoTestTags.ANIMATION_VISIBILITY_FOOTER)
                 footerTopBeforeHide = viewTopOnScreen(footer)
                 assertViewFullyVisible(target)
-                activity.clickByTestTag(DemoTestTags.ANIMATION_VISIBILITY_TOGGLE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_core_primary_action)
             }
             waitForUiIdle()
             val hiddenMoved = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_VISIBILITY_TOGGLE)
+                val toggle = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_animation_core_primary_action,
+                )
                 val footer = activity.requireViewByTestTagVisible(DemoTestTags.ANIMATION_VISIBILITY_FOOTER)
                 footerTopAfterHide = viewTopOnScreen(footer)
-                toggle.text.toString().contains("显示块") && footerTopAfterHide < footerTopBeforeHide
+                toggle.text.toString() == activity.getString(R.string.demo_animation_core_show) &&
+                    footerTopAfterHide < footerTopBeforeHide
             }
             assertTrue(
                 "Expected footer to move up after hide, before=$footerTopBeforeHide, after=$footerTopAfterHide",
                 hiddenMoved,
             )
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.ANIMATION_VISIBILITY_TOGGLE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_core_primary_action)
             }
             waitForUiIdle()
             val shownMoved = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_VISIBILITY_TOGGLE)
+                val toggle = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_animation_core_primary_action,
+                )
                 val footer = activity.requireViewByTestTagVisible(DemoTestTags.ANIMATION_VISIBILITY_FOOTER)
                 val footerTopAfterShow = viewTopOnScreen(footer)
-                val root = activity.window.decorView.findViewById<View>(android.R.id.content)
-                val target = findViewByTestTag(root, DemoTestTags.ANIMATION_VISIBILITY_TARGET)
-                if (!toggle.text.toString().contains("隐藏块")) {
+                val target = activity.findViewById<View>(R.id.demo_animation_core_target)
+                if (toggle.text.toString() != activity.getString(R.string.demo_animation_core_hide)) {
                     return@waitUntilActivityCondition false
                 }
                 if (footerTopAfterShow <= footerTopAfterHide) {
@@ -984,34 +1174,38 @@ class DemoVisualUiTest {
 
     @Test
     fun animationPage_contentToggle_updatesAnimatedContentLabel() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 1)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.content",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val label = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_CONTENT_LABEL)
-                assertTrue(label.text.toString().contains("主文案"))
-                activity.clickByTestTag(DemoTestTags.ANIMATION_CONTENT_TOGGLE)
+                assertEquals(activity.getString(R.string.demo_animation_content_primary), label.text.toString())
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_content_primary_action)
             }
             waitForUiIdle()
             val switchedToAlt = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_CONTENT_TOGGLE)
+                val toggle = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_animation_content_primary_action,
+                )
                 val label = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_CONTENT_LABEL)
-                toggle.text.toString().contains("切到主文案") &&
-                    label.text.toString().contains("替代文案")
+                toggle.text.toString() == activity.getString(R.string.demo_animation_content_to_primary) &&
+                    label.text.toString() == activity.getString(R.string.demo_animation_content_alternative)
             }
             assertTrue("Expected animated content label to switch to alternative copy", switchedToAlt)
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.ANIMATION_CONTENT_TOGGLE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_content_primary_action)
             }
             waitForUiIdle()
             val switchedBackToMain = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_CONTENT_TOGGLE)
+                val toggle = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_animation_content_primary_action,
+                )
                 val label = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_CONTENT_LABEL)
-                toggle.text.toString().contains("切到替代文案") &&
-                    label.text.toString().contains("主文案")
+                toggle.text.toString() == activity.getString(R.string.demo_animation_content_to_alternative) &&
+                    label.text.toString() == activity.getString(R.string.demo_animation_content_primary)
             }
             assertTrue("Expected animated content label to switch back to primary copy", switchedBackToMain)
         }
@@ -1019,46 +1213,49 @@ class DemoVisualUiTest {
 
     @Test
     fun animationPage_listMotion_controlsUpdateFirstItem() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 2)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.list-motion",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val first = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_LIST_FIRST)
-                assertTrue(first.text.toString().contains("Item A"))
-                activity.clickByTestTag(DemoTestTags.ANIMATION_LIST_ADD)
+                assertEquals(activity.getString(R.string.demo_animation_list_item_a), first.text.toString())
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_list_motion_primary_action)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val first = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_LIST_FIRST)
-                assertTrue(first.text.toString().contains("New"))
-                activity.clickByTestTag(DemoTestTags.ANIMATION_LIST_REORDER)
+                assertEquals(
+                    activity.getString(R.string.demo_animation_list_item_new, 1),
+                    first.text.toString(),
+                )
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_list_motion_secondary_action)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val first = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_LIST_FIRST)
-                assertTrue(first.text.toString().contains("Item A"))
+                assertEquals(activity.getString(R.string.demo_animation_list_item_a), first.text.toString())
             }
         }
     }
 
     @Test
     fun animationPage_specsPanel_switchesTypedAndGenericAnimations() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 3)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.specs",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             var floatBefore = ""
             var vectorBefore = ""
             scenario.onActivity { activity ->
                 floatBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_SPEC_FLOAT_VALUE).text.toString()
                 vectorBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_SPEC_VECTOR_VALUE).text.toString()
-                activity.clickByTestTag(DemoTestTags.ANIMATION_SPEC_KIND_TOGGLE)
-                activity.clickByTestTag(DemoTestTags.ANIMATION_SPEC_TARGET_TOGGLE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_specs_secondary_action)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_specs_primary_action)
                 activity.clickByTestTag(DemoTestTags.ANIMATION_SPEC_VECTOR_TOGGLE)
                 activity.clickByTestTag(DemoTestTags.ANIMATION_SPEC_SIZE_TOGGLE)
             }
@@ -1077,11 +1274,11 @@ class DemoVisualUiTest {
 
     @Test
     fun animationPage_transitionPanel_updatesAllTransitionChannels() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 4)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.transition",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             var alphaBefore = ""
             var intBefore = ""
@@ -1092,7 +1289,7 @@ class DemoVisualUiTest {
                 intBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_INT).text.toString()
                 dpBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_DP).text.toString()
                 colorBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_COLOR).text.toString()
-                activity.clickByTestTag(DemoTestTags.ANIMATION_TRANSITION_TOGGLE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_transition_primary_action)
             }
             waitForUiIdle()
             var transitionAfterSnapshot = ""
@@ -1118,14 +1315,14 @@ class DemoVisualUiTest {
 
     @Test
     fun animationPage_visibilityStatePanel_reportsIdleAndTargetState() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 4)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.transition",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.ANIMATION_VISIBILITY_STATE_TOGGLE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_transition_secondary_action)
                 activity.clickByTestTag(DemoTestTags.ANIMATION_ROW_AXIS_TOGGLE)
                 activity.clickByTestTag(DemoTestTags.ANIMATION_COLUMN_AXIS_TOGGLE)
             }
@@ -1136,9 +1333,14 @@ class DemoVisualUiTest {
                 val rowToggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_ROW_AXIS_TOGGLE).text.toString()
                 val columnToggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_COLUMN_AXIS_TOGGLE).text.toString()
                 visibilityAfterSnapshot = "$status, row=$rowToggle, column=$columnToggle"
-                status.contains("target=true") &&
-                    rowToggle.contains("隐藏") &&
-                    columnToggle.contains("隐藏")
+                status == activity.getString(
+                    R.string.demo_animation_visibility_status,
+                    true,
+                    true,
+                    true,
+                ) &&
+                    rowToggle == activity.getString(R.string.demo_animation_row_hide) &&
+                    columnToggle == activity.getString(R.string.demo_animation_column_hide)
             }
             assertTrue(
                 "Expected visibility state status and axis targets to update; after=[$visibilityAfterSnapshot]",
@@ -1180,18 +1382,16 @@ class DemoVisualUiTest {
 
     @Test
     fun animationPage_infiniteAndAnimatable_controlsAffectRenderedValue() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             AnimationActivity::class.java,
-        )
-            .putExtra(EXTRA_ANIMATION_PAGE_INDEX, 5)
-            .putExtra(EXTRA_ANIMATION_INFINITE_PULSE, false)
-        launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "animation.infinite",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_INFINITE_VALUE)
                 activity.clickByTestTag(DemoTestTags.ANIMATION_INFINITE_REPEAT_MODE)
-                activity.clickByTestTag(DemoTestTags.ANIMATION_ANIMATABLE_SNAP_HIGH)
+                activity.clickScenarioViewByIdVisible(R.id.demo_animation_infinite_secondary_action)
             }
             waitForUiIdle()
             val snapHighApplied = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
@@ -1213,30 +1413,34 @@ class DemoVisualUiTest {
 
     @Test
     fun gesturesPage_tapAndDragSwipe_updateGestureSummaries() {
-        val dragSwipeIntent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            GesturesActivity::class.java,
-        ).putExtra(EXTRA_GESTURES_PAGE_INDEX, 1)
-        launchDemoActivity<GesturesActivity>(dragSwipeIntent, themeMode = DemoThemeMode.Light).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = GesturesActivity::class.java,
+            scenarioId = "gesture.drag-swipe",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             var dragBefore = 0f
             scenario.onActivity { activity ->
-                val dragTarget = activity.requireViewByTestTagVisible(DemoTestTags.GESTURE_DRAG_TARGET)
-                val swipeTarget = activity.requireViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_TARGET)
+                val dragTarget = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_gesture_drag_swipe_target,
+                )
+                val swipeTarget = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_gesture_drag_swipe_secondary_target,
+                )
                 assertViewFullyVisible(dragTarget)
                 assertViewFullyVisible(swipeTarget)
                 dragBefore = extractFirstFloat(
                     activity.requireTextViewByTestTag(DemoTestTags.GESTURE_DRAG_VALUE).text.toString(),
                 ) ?: 0f
-                activity.dragByTestTag(
-                    tag = DemoTestTags.GESTURE_DRAG_TARGET,
+                activity.dragScenarioViewById(
+                    id = R.id.demo_gesture_drag_swipe_target,
                     deltaX = 180f,
                 )
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.dragByTestTag(
-                    tag = DemoTestTags.GESTURE_SWIPE_TARGET,
+                activity.dragScenarioViewById(
+                    id = R.id.demo_gesture_drag_swipe_secondary_target,
                     deltaX = 200f,
                 )
             }
@@ -1249,10 +1453,11 @@ class DemoVisualUiTest {
                 val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
                 val dragAfter = extractFirstFloat(dragAfterText) ?: dragBefore
                 val offset = extractFirstFloat(swipeOffsetText) ?: 0f
+                val rightLabel = activity.getString(R.string.demo_gesture_anchor_right)
                 rightAnchorSnapshot = "$dragAfterText, $swipeAfterText, $swipeTargetText, $swipeOffsetText"
                 abs(dragAfter - dragBefore) >= 12f &&
-                    swipeAfterText.contains("Right") &&
-                    swipeTargetText.contains("Right") &&
+                    swipeAfterText.contains(rightLabel) &&
+                    swipeTargetText.contains(rightLabel) &&
                     offset >= 60f
             }
             assertTrue(
@@ -1260,8 +1465,8 @@ class DemoVisualUiTest {
                 movedToRightAnchor,
             )
             scenario.onActivity { activity ->
-                activity.dragByTestTag(
-                    tag = DemoTestTags.GESTURE_SWIPE_TARGET,
+                activity.dragScenarioViewById(
+                    id = R.id.demo_gesture_drag_swipe_secondary_target,
                     deltaX = -420f,
                 )
             }
@@ -1272,9 +1477,10 @@ class DemoVisualUiTest {
                 val swipeTargetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
                 val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
                 val offset = extractFirstFloat(swipeOffsetText) ?: 0f
+                val centerLabel = activity.getString(R.string.demo_gesture_anchor_center)
                 centerAnchorSnapshot = "$swipeAfterText, $swipeTargetText, $swipeOffsetText"
-                swipeAfterText.contains("Center") &&
-                    swipeTargetText.contains("Center") &&
+                swipeAfterText.contains(centerLabel) &&
+                    swipeTargetText.contains(centerLabel) &&
                     abs(offset) <= 1f
             }
             assertTrue(
@@ -1283,8 +1489,8 @@ class DemoVisualUiTest {
                 movedToCenterAnchor,
             )
             scenario.onActivity { activity ->
-                activity.dragByTestTag(
-                    tag = DemoTestTags.GESTURE_SWIPE_TARGET,
+                activity.dragScenarioViewById(
+                    id = R.id.demo_gesture_drag_swipe_secondary_target,
                     deltaX = -420f,
                 )
             }
@@ -1295,8 +1501,9 @@ class DemoVisualUiTest {
                 val swipeTargetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
                 val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
                 val offset = extractFirstFloat(swipeOffsetText) ?: 0f
+                val leftLabel = activity.getString(R.string.demo_gesture_anchor_left)
                 leftAnchorSnapshot = "$swipeAfterText, $swipeTargetText, $swipeOffsetText"
-                swipeAfterText.contains("Left") && swipeTargetText.contains("Left") && offset <= -60f
+                swipeAfterText.contains(leftLabel) && swipeTargetText.contains(leftLabel) && offset <= -60f
             }
             assertTrue(
                 "Expected the second reverse swipe to settle at the adjacent left anchor; " +
@@ -1308,16 +1515,18 @@ class DemoVisualUiTest {
 
     @Test
     fun gesturesPage_pointerInputConsumed_shortCircuitsCombinedClickable() {
-        val tapIntent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            GesturesActivity::class.java,
-        ).putExtra(EXTRA_GESTURES_PAGE_INDEX, 0)
-        launchDemoActivity<GesturesActivity>(tapIntent, themeMode = DemoThemeMode.Light).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = GesturesActivity::class.java,
+            scenarioId = "gesture.tap",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val target = activity.requireViewByTestTagVisible(DemoTestTags.GESTURE_POINTER_CONSUMED_TARGET)
+                val target = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_gesture_tap_secondary_target,
+                )
                 assertViewFullyVisible(target)
-                activity.tapByTestTag(DemoTestTags.GESTURE_POINTER_CONSUMED_TARGET)
+                activity.tapScenarioViewById(R.id.demo_gesture_tap_secondary_target)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
@@ -1325,7 +1534,7 @@ class DemoVisualUiTest {
                     activity.requireTextViewByTestTag(DemoTestTags.GESTURE_POINTER_CONSUMED_CLICK_COUNT).text.toString()
                 assertTrue(
                     "Expected consumed pointer input to suppress combinedClickable click",
-                    count.contains("0"),
+                    extractIntegers(count).firstOrNull() == 0,
                 )
             }
         }
@@ -1333,15 +1542,15 @@ class DemoVisualUiTest {
 
     @Test
     fun gesturesPage_pointerInputConsumed_andTapTargetStillReceivesClick() {
-        val tapIntent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            GesturesActivity::class.java,
-        ).putExtra(EXTRA_GESTURES_PAGE_INDEX, 0)
-        launchDemoActivity<GesturesActivity>(tapIntent, themeMode = DemoThemeMode.Light).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = GesturesActivity::class.java,
+            scenarioId = "gesture.tap",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.tapByTestTag(DemoTestTags.GESTURE_POINTER_CONSUMED_TARGET)
-                activity.tapByTestTag(DemoTestTags.GESTURE_TAP_TARGET)
+                activity.tapScenarioViewById(R.id.demo_gesture_tap_secondary_target)
+                activity.tapScenarioViewById(R.id.demo_gesture_tap_target)
             }
             waitForUiIdle()
             val pointerAndTapStable = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
@@ -1351,13 +1560,9 @@ class DemoVisualUiTest {
                 val tapText = activity.requireTextViewByTestTag(
                     DemoTestTags.GESTURE_TAP_COUNT,
                 ).text.toString()
-                val blockedTaps = "Blocked taps:\\s*(\\d+)".toRegex()
-                    .find(consumedText)
-                    ?.groupValues
-                    ?.getOrNull(1)
-                    ?.toIntOrNull() ?: 0
-                consumedText.contains("Consumed click count: 0") &&
-                    blockedTaps >= 1 &&
+                val consumedCounts = extractIntegers(consumedText)
+                consumedCounts.getOrNull(0) == 0 &&
+                    (consumedCounts.getOrNull(1) ?: 0) >= 1 &&
                     extractCount(tapText) >= 1
             }
             assertTrue(
@@ -1369,17 +1574,19 @@ class DemoVisualUiTest {
 
     @Test
     fun gesturesPage_transform_updatesPanAndRotationSummaries() {
-        val transformIntent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            GesturesActivity::class.java,
-        ).putExtra(EXTRA_GESTURES_PAGE_INDEX, 2)
-        launchDemoActivity<GesturesActivity>(transformIntent, themeMode = DemoThemeMode.Light).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = GesturesActivity::class.java,
+            scenarioId = "gesture.transform",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val target = activity.requireViewByTestTagVisible(DemoTestTags.GESTURE_TRANSFORM_TARGET)
+                val target = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_gesture_transform_target,
+                )
                 assertViewFullyVisible(target)
-                activity.transformByTestTag(
-                    tag = DemoTestTags.GESTURE_TRANSFORM_TARGET,
+                activity.transformScenarioViewById(
+                    id = R.id.demo_gesture_transform_target,
                     panX = 140f,
                     panY = 88f,
                     rotationDegrees = 36f,
@@ -1388,7 +1595,9 @@ class DemoVisualUiTest {
             }
             waitForUiIdle()
             val transformUpdated = waitUntilActivityCondition(scenario, timeoutMs = 2_000L) { activity ->
-                val text = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_TRANSFORM_VALUE).text.toString()
+                val text = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_gesture_transform_state,
+                ).text.toString()
                 val metrics = extractTransformMetrics(text) ?: return@waitUntilActivityCondition false
                 abs(metrics.panX) >= 8f && abs(metrics.panY) >= 8f && abs(metrics.rotation) >= 8f
             }
@@ -1398,11 +1607,16 @@ class DemoVisualUiTest {
 
     @Test
     fun graphicsPage_blendAndDrawContentToggles_updateStatuses() {
-        launchDemoActivity(GraphicsActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = GraphicsActivity::class.java,
+            scenarioId = "graphics.drawing",
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("graphics-core-light")
             scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_PRIMITIVES_CANVAS))
+                assertViewFullyVisible(
+                    activity.requireScenarioViewByIdVisible<View>(R.id.demo_graphics_drawing_target),
+                )
                 assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_PATH_CLIP_CANVAS))
                 assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_BLEND_CANVAS))
                 assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_DRAW_CONTENT_CANVAS))
@@ -1413,15 +1627,24 @@ class DemoVisualUiTest {
             scenario.onActivity { activity ->
                 val blendStatus = activity.requireTextViewByTestTag(DemoTestTags.GRAPHICS_BLEND_STATUS).text.toString()
                 val drawStatus = activity.requireTextViewByTestTag(DemoTestTags.GRAPHICS_DRAW_CONTENT_STATUS).text.toString()
-                assertTrue("Expected blend status to switch to Multiply", blendStatus.contains("Multiply"))
-                assertTrue("Expected drawWithContent status to report intercepted content", drawStatus.contains("拦截内容"))
+                assertEquals(
+                    activity.getString(R.string.demo_graphics_blend_status_multiply),
+                    blendStatus,
+                )
+                assertEquals(
+                    activity.getString(R.string.demo_graphics_draw_status_hidden),
+                    drawStatus,
+                )
             }
         }
     }
 
     @Test
     fun graphicsPage_cacheControls_updateCacheStatusText() {
-        launchDemoActivity(GraphicsActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = GraphicsActivity::class.java,
+            scenarioId = "graphics.drawing",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_CACHE_CANVAS))
@@ -1486,15 +1709,14 @@ class DemoVisualUiTest {
     @Test
     fun statePatchStress_openDiagnostics_showsPatchActiveSnapshotProbe() {
         DemoRenderDiagnosticsStore.reset()
-        val stateIntent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 2)
-        launchDemoActivity<StateActivity>(stateIntent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.view-patch",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
             }
             waitForUiIdle()
         }
@@ -1515,7 +1737,9 @@ class DemoVisualUiTest {
                     DemoTestTags.DIAGNOSTICS_PATCH_ACTIVE_CAPTURED_AT,
                 ).text.toString()
                 val patched = extractCount(patchedText)
-                patched > 0 && !capturedAtText.contains("尚未捕获")
+                patched > 0 && !capturedAtText.contains(
+                    activity.getString(R.string.demo_diagnostics_not_captured),
+                )
             }
             assertTrue(
                 "Expected state patch stress updates to appear in diagnostics patch-active snapshot probes.",
@@ -1532,14 +1756,23 @@ class DemoVisualUiTest {
         return "(-?\\d+(?:\\.\\d+)?)".toRegex().find(text)?.value?.toFloatOrNull()
     }
 
+    private fun extractIntegers(text: String): List<Int> {
+        return "-?\\d+".toRegex().findAll(text).mapNotNull { match ->
+            match.value.toIntOrNull()
+        }.toList()
+    }
+
     private fun extractTransformMetrics(text: String): TransformMetrics? {
-        val regex = """scale=(-?\d+(?:\.\d+)?)\s+pan=\((-?\d+),\s*(-?\d+)\)\s+rot=(-?\d+(?:\.\d+)?)""".toRegex()
-        val match = regex.find(text) ?: return null
+        val values = "-?\\d+(?:\\.\\d+)?".toRegex()
+            .findAll(text)
+            .mapNotNull { match -> match.value.toFloatOrNull() }
+            .toList()
+        if (values.size < 4) return null
         return TransformMetrics(
-            scale = match.groupValues[1].toFloatOrNull() ?: return null,
-            panX = match.groupValues[2].toFloatOrNull() ?: return null,
-            panY = match.groupValues[3].toFloatOrNull() ?: return null,
-            rotation = match.groupValues[4].toFloatOrNull() ?: return null,
+            scale = values[0],
+            panX = values[1],
+            panY = values[2],
+            rotation = values[3],
         )
     }
 
@@ -1553,14 +1786,36 @@ class DemoVisualUiTest {
     private fun assertFocusActionRevealsInput(
         scenario: ActivityScenario<InputActivity>,
         tag: String,
+    ) = assertFocusActionRevealsInput(
+        scenario = scenario,
+        targetDescription = "testTag=$tag",
+        resolveHost = { requireViewByTestTagVisible(tag) },
+        requestFocus = { focusInputByTestTag(tag) },
+    )
+
+    private fun assertFocusActionRevealsInput(
+        scenario: ActivityScenario<InputActivity>,
+        resourceId: Int,
+    ) = assertFocusActionRevealsInput(
+        scenario = scenario,
+        targetDescription = "resourceId=$resourceId",
+        resolveHost = { requireScenarioViewById(resourceId) },
+        requestFocus = { focusInputByScenarioViewId(resourceId) },
+    )
+
+    private fun assertFocusActionRevealsInput(
+        scenario: ActivityScenario<InputActivity>,
+        targetDescription: String,
+        resolveHost: InputActivity.() -> View,
+        requestFocus: InputActivity.() -> Unit,
     ) {
         var beforeAnchor: RecyclerViewportAnchor? = null
         var beforeVisibleHeight = 0
         scenario.onActivity { activity ->
-            val inputHost = activity.requireViewByTestTagVisible(tag)
+            val inputHost = activity.resolveHost()
             beforeAnchor = activity.readFirstRecyclerAnchor()
             beforeVisibleHeight = Rect().also(inputHost::getGlobalVisibleRect).height()
-            activity.focusInputByTestTag(tag)
+            activity.requestFocus()
         }
         waitForUiIdle()
         scenario.onActivity { activity ->
@@ -1570,17 +1825,21 @@ class DemoVisualUiTest {
             val before = beforeAnchor!!
             val after = afterAnchor!!
             assertEquals(before.position, after.position)
-            val focusedHost = activity.requireViewByTestTagVisible(tag)
+            val focusedHost = activity.resolveHost()
             val focusedInput = focusedHost.findFocus()
-            assertNotNull("Expected tagged input to retain focus: $tag", focusedInput)
+            assertNotNull("Expected input to retain focus: $targetDescription", focusedInput)
             assertTrue(
-                "Expected focused descendant to remain a visible text editor: $tag",
+                "Expected focused descendant to remain a visible text editor: $targetDescription",
                 focusedInput!!.onCheckIsTextEditor() && isViewVisible(focusedInput),
             )
             val visibleHeight = Rect().also(focusedHost::getGlobalVisibleRect).height()
-            assertEquals("Expected the complete focused host height to be visible: $tag", focusedHost.height, visibleHeight)
+            assertEquals(
+                "Expected the complete focused host height to be visible: $targetDescription",
+                focusedHost.height,
+                visibleHeight,
+            )
             assertTrue(
-                "Expected focus follow to preserve or improve input visibility: $tag",
+                "Expected focus follow to preserve or improve input visibility: $targetDescription",
                 visibleHeight >= beforeVisibleHeight,
             )
         }

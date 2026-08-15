@@ -19,6 +19,14 @@ import com.viewcompose.ui.modifier.dropShadows
 import com.viewcompose.ui.modifier.layoutId
 import com.viewcompose.ui.modifier.innerShadow
 import com.viewcompose.ui.modifier.innerShadows
+import com.viewcompose.ui.modifier.margin
+import com.viewcompose.ui.modifier.marginRelative
+import com.viewcompose.ui.modifier.offset
+import com.viewcompose.ui.modifier.offsetRelative
+import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.paddingRelative
+import com.viewcompose.ui.modifier.systemBarsInsetsPadding
+import com.viewcompose.ui.modifier.systemBarsInsetsPaddingRelative
 import com.viewcompose.ui.modifier.zIndex
 import com.viewcompose.ui.modifier.CombinedClickableModifierElement
 import com.viewcompose.ui.modifier.ConstraintModifierElement
@@ -36,6 +44,49 @@ import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class ResolvedModifiersTest {
+    @Test
+    fun `last physical or relative declaration wins each layout category`() {
+        val logicalWins = Modifier
+            .padding(left = 1.dp)
+            .paddingRelative(start = 2.dp)
+            .margin(left = 3.dp)
+            .marginRelative(start = 4.dp)
+            .offset(x = 5.dp)
+            .offsetRelative(horizontal = 6.dp)
+            .systemBarsInsetsPadding(left = true, right = false)
+            .systemBarsInsetsPaddingRelative(start = false, end = true)
+            .resolve()
+
+        assertEquals(null, logicalWins.padding)
+        assertEquals(2.dp, logicalWins.relativePadding?.start)
+        assertEquals(null, logicalWins.margin)
+        assertEquals(4.dp, logicalWins.relativeMargin?.start)
+        assertEquals(null, logicalWins.offset)
+        assertEquals(6.dp, logicalWins.relativeOffset?.horizontal)
+        assertEquals(null, logicalWins.systemBarsInsetsPadding)
+        assertEquals(true, logicalWins.relativeSystemBarsInsetsPadding?.end)
+
+        val physicalWins = Modifier
+            .paddingRelative(start = 2.dp)
+            .padding(left = 1.dp)
+            .marginRelative(start = 4.dp)
+            .margin(left = 3.dp)
+            .offsetRelative(horizontal = 6.dp)
+            .offset(x = 5.dp)
+            .systemBarsInsetsPaddingRelative(start = false, end = true)
+            .systemBarsInsetsPadding(left = true, right = false)
+            .resolve()
+
+        assertEquals(1.dp, physicalWins.padding?.left)
+        assertEquals(null, physicalWins.relativePadding)
+        assertEquals(3.dp, physicalWins.margin?.left)
+        assertEquals(null, physicalWins.relativeMargin)
+        assertEquals(5.dp, physicalWins.offset?.x)
+        assertEquals(null, physicalWins.relativeOffset)
+        assertEquals(true, physicalWins.systemBarsInsetsPadding?.left)
+        assertEquals(null, physicalWins.relativeSystemBarsInsetsPadding)
+    }
+
     @Test
     fun `resolve sums repeated zIndex modifiers`() {
         val resolved = Modifier

@@ -38,6 +38,37 @@ fun Modifier.padding(
 }
 
 /**
+ * Appends independently sized logical-edge padding.
+ *
+ * The renderer maps [start] and [end] from the VNode's captured layout direction on every bind.
+ * Existing [padding] overloads remain physical. A later physical or relative padding declaration
+ * replaces the earlier declaration as one complete padding value.
+ *
+ * @sample com.viewcompose.ui.samples.relativeLayoutModifierSample
+ * @receiver modifier chain to extend
+ * @param start padding at the logical start edge in dp
+ * @param top padding at the physical top edge in dp
+ * @param end padding at the logical end edge in dp
+ * @param bottom padding at the physical bottom edge in dp
+ * @return a new modifier chain
+ */
+fun Modifier.paddingRelative(
+    start: UiDp = UiDp.Zero,
+    top: UiDp = UiDp.Zero,
+    end: UiDp = UiDp.Zero,
+    bottom: UiDp = UiDp.Zero,
+): Modifier {
+    return then(
+        RelativePaddingModifierElement(
+            start = start,
+            top = top,
+            end = end,
+            bottom = bottom,
+        ),
+    )
+}
+
+/**
  * Appends independently sized physical-edge padding.
  *
  * Padding participates in measurement inside the node's requested outer size. Later padding
@@ -96,6 +127,37 @@ fun Modifier.systemBarsInsetsPadding(
 }
 
 /**
+ * Adds selected logical system-bar insets to the node's inner padding.
+ *
+ * The renderer maps [start] and [end] from the VNode's captured layout direction. A later physical
+ * or relative system-bar declaration replaces the earlier declaration. Insets remain unconsumed
+ * for platform descendants, matching [systemBarsInsetsPadding].
+ *
+ * @sample com.viewcompose.ui.samples.relativeLayoutModifierSample
+ * @receiver modifier chain to extend
+ * @param start whether to include the logical start inset
+ * @param top whether to include the physical top inset
+ * @param end whether to include the logical end inset
+ * @param bottom whether to include the physical bottom inset
+ * @return a new modifier chain
+ */
+fun Modifier.systemBarsInsetsPaddingRelative(
+    start: Boolean = true,
+    top: Boolean = true,
+    end: Boolean = true,
+    bottom: Boolean = true,
+): Modifier {
+    return then(
+        RelativeSystemBarsInsetsPaddingModifierElement(
+            start = start,
+            top = top,
+            end = end,
+            bottom = bottom,
+        ),
+    )
+}
+
+/**
  * Adds selected physical IME insets to the node's inner padding.
  *
  * Insets follow host updates; the default consumes only the bottom edge used by common soft
@@ -119,6 +181,37 @@ fun Modifier.imeInsetsPadding(
             left = left,
             top = top,
             right = right,
+            bottom = bottom,
+        ),
+    )
+}
+
+/**
+ * Adds selected logical IME insets to the node's inner padding.
+ *
+ * The renderer maps [start] and [end] from the VNode's captured layout direction. A later physical
+ * or relative IME declaration replaces the earlier declaration. Insets remain unconsumed for
+ * platform descendants, matching [imeInsetsPadding].
+ *
+ * @sample com.viewcompose.ui.samples.relativeLayoutModifierSample
+ * @receiver modifier chain to extend
+ * @param start whether to include the logical start IME inset
+ * @param top whether to include the physical top IME inset
+ * @param end whether to include the logical end IME inset
+ * @param bottom whether to include the physical bottom IME inset
+ * @return a new modifier chain
+ */
+fun Modifier.imeInsetsPaddingRelative(
+    start: Boolean = false,
+    top: Boolean = false,
+    end: Boolean = false,
+    bottom: Boolean = true,
+): Modifier {
+    return then(
+        RelativeImeInsetsPaddingModifierElement(
+            start = start,
+            top = top,
+            end = end,
             bottom = bottom,
         ),
     )
@@ -155,6 +248,37 @@ fun Modifier.margin(
         top = vertical,
         right = horizontal,
         bottom = vertical,
+    )
+}
+
+/**
+ * Appends independently sized logical-edge margins.
+ *
+ * The renderer maps [start] and [end] from the VNode's captured layout direction when creating
+ * native parent LayoutParams. Existing [margin] overloads remain physical. A later physical or
+ * relative margin declaration replaces the earlier declaration as one complete margin value.
+ *
+ * @sample com.viewcompose.ui.samples.relativeLayoutModifierSample
+ * @receiver modifier chain to extend
+ * @param start margin at the logical start edge in dp
+ * @param top margin at the physical top edge in dp
+ * @param end margin at the logical end edge in dp
+ * @param bottom margin at the physical bottom edge in dp
+ * @return a new modifier chain
+ */
+fun Modifier.marginRelative(
+    start: UiDp = UiDp.Zero,
+    top: UiDp = UiDp.Zero,
+    end: UiDp = UiDp.Zero,
+    bottom: UiDp = UiDp.Zero,
+): Modifier {
+    return then(
+        RelativeMarginModifierElement(
+            start = start,
+            top = top,
+            end = end,
+            bottom = bottom,
+        ),
     )
 }
 
@@ -289,6 +413,32 @@ fun Modifier.offset(
         OffsetModifierElement(
             x = x,
             y = y,
+        ),
+    )
+}
+
+/**
+ * Offsets final placement along logical horizontal and physical vertical axes.
+ *
+ * Positive [horizontal] moves toward end: right in LTR and left in RTL. Positive [vertical] moves
+ * down. The renderer re-resolves the translation after a captured layout-direction change.
+ * Existing [offset] remains a physical x/y translation. A later physical or relative offset
+ * declaration replaces the earlier declaration.
+ *
+ * @sample com.viewcompose.ui.samples.relativeLayoutModifierSample
+ * @receiver modifier chain to extend
+ * @param horizontal logical horizontal offset in dp, positive toward end
+ * @param vertical physical vertical offset in dp, positive down
+ * @return a new modifier chain
+ */
+fun Modifier.offsetRelative(
+    horizontal: UiDp = UiDp.Zero,
+    vertical: UiDp = UiDp.Zero,
+): Modifier {
+    return then(
+        RelativeOffsetModifierElement(
+            horizontal = horizontal,
+            vertical = vertical,
         ),
     )
 }

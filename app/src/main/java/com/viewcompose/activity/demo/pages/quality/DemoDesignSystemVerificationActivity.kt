@@ -7,6 +7,10 @@ import android.os.Bundle
 import android.util.TypedValue
 import android.view.ViewGroup
 import androidx.core.view.WindowCompat
+import com.viewcompose.demo.contract.DemoScenarioId
+import com.viewcompose.demo.contract.EXTRA_DEMO_SCENARIO_ID
+import com.viewcompose.demo.registry.DemoScenarioIds
+import com.viewcompose.demo.registry.DemoScenarioRegistry
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.environment.UiLocaleList
@@ -20,10 +24,20 @@ internal const val EXTRA_DEMO_DESIGN_SYSTEM_KIND = "demo_design_system_kind"
 
 /** Hosts the internal multi-design-system fixture under a deterministic configuration. */
 class DemoDesignSystemVerificationActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Multi-design-system verification"
+    override val demoTitleRes: Int = R.string.demo_activity_design_system_title
+
+    private val requestedFixture: DemoDesignSystemFixture
+        get() {
+            val scenario = checkNotNull(currentScenario()) {
+                "DemoDesignSystemVerificationActivity requires a registered design-system scenario"
+            }
+            return DemoDesignSystemFixture.from(scenario.id)
+        }
 
     private val requestedKind: DemoDesignSystemKind
-        get() = DemoDesignSystemKind.fromId(intent?.getStringExtra(EXTRA_DEMO_DESIGN_SYSTEM_KIND))
+        get() = requestedFixture.resolveVariant(
+            intent?.getStringExtra(EXTRA_DEMO_DESIGN_SYSTEM_KIND),
+        )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val dark = intent?.getBooleanExtra(EXTRA_DARK, false) ?: false
@@ -61,6 +75,7 @@ class DemoDesignSystemVerificationActivity : DemoRenderActivity() {
                 ProvideDemoDesignSystem(bundle) {
                     DemoDesignSystemVerificationPage(
                         hostContext = DemoHostContextSnapshot.from(root),
+                        scenario = checkNotNull(currentScenario()),
                         onReplaceDesignSystem = ::replaceDesignSystem,
                     )
                 }
@@ -70,6 +85,8 @@ class DemoDesignSystemVerificationActivity : DemoRenderActivity() {
 
     private fun replaceDesignSystem(kind: DemoDesignSystemKind) {
         if (kind == requestedKind) return
+        val fixture = DemoDesignSystemFixture.from(kind)
+        intent.putExtra(EXTRA_DEMO_SCENARIO_ID, fixture.scenarioId.value)
         intent.putExtra(EXTRA_DEMO_DESIGN_SYSTEM_KIND, kind.id)
         // Recreating the Activity replaces the root RenderSession and every session-bound overlay
         // together while Android's saved-state owner preserves caller-owned rememberSaveable state.
@@ -89,12 +106,54 @@ class DemoDesignSystemVerificationActivity : DemoRenderActivity() {
             rtl: Boolean = false,
             fontScale: Float = 1f,
             reducedMotionEnabled: Boolean = false,
-        ): Intent = Intent(context, DemoDesignSystemVerificationActivity::class.java)
-            .putExtra(EXTRA_DEMO_DESIGN_SYSTEM_KIND, kind.id)
-            .putExtra(EXTRA_DARK, dark)
-            .putExtra(EXTRA_RTL, rtl)
-            .putExtra(EXTRA_FONT_SCALE, fontScale)
-            .putExtra(EXTRA_REDUCED_MOTION, reducedMotionEnabled)
+        ): Intent {
+            val fixture = DemoDesignSystemFixture.from(kind)
+            val scenario = DemoScenarioRegistry.require(fixture.scenarioId.value)
+            return DemoScenarioRegistry.createLaunchIntent(context, scenario)
+                .putExtra(EXTRA_DEMO_DESIGN_SYSTEM_KIND, kind.id)
+                .putExtra(EXTRA_DARK, dark)
+                .putExtra(EXTRA_RTL, rtl)
+                .putExtra(EXTRA_FONT_SCALE, fontScale)
+                .putExtra(EXTRA_REDUCED_MOTION, reducedMotionEnabled)
+        }
+    }
+}
+
+internal enum class DemoDesignSystemFixture(
+    val scenarioId: DemoScenarioId,
+    val defaultKind: DemoDesignSystemKind,
+    val allowedKinds: Set<DemoDesignSystemKind>,
+) {
+    Material3(
+        scenarioId = DemoScenarioIds.DesignBundleMaterial3,
+        defaultKind = DemoDesignSystemKind.RoundedReference,
+        allowedKinds = setOf(DemoDesignSystemKind.RoundedReference),
+    ),
+    Contrast(
+        scenarioId = DemoScenarioIds.DesignBundleContrast,
+        defaultKind = DemoDesignSystemKind.CutContrast,
+        allowedKinds = setOf(
+            DemoDesignSystemKind.CutContrast,
+            DemoDesignSystemKind.CupertinoPressure,
+        ),
+    ),
+    ;
+
+    fun resolveVariant(id: String?): DemoDesignSystemKind {
+        val kind = id?.let(DemoDesignSystemKind::fromId) ?: defaultKind
+        require(kind in allowedKinds) {
+            "Variant ${kind.id} does not belong to ${scenarioId.value}"
+        }
+        return kind
+    }
+
+    companion object {
+        fun from(scenarioId: DemoScenarioId): DemoDesignSystemFixture =
+            entries.singleOrNull { fixture -> fixture.scenarioId == scenarioId }
+                ?: error("Unsupported design-system scenario: $scenarioId")
+
+        fun from(kind: DemoDesignSystemKind): DemoDesignSystemFixture =
+            entries.single { fixture -> kind in fixture.allowedKinds }
     }
 }
 

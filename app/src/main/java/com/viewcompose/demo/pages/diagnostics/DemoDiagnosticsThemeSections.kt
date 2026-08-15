@@ -2,6 +2,7 @@ package com.viewcompose
 
 import com.viewcompose.preview.tooling.ViewComposePreview
 import android.view.ViewGroup
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.shape
@@ -81,41 +82,56 @@ internal val DIAGNOSTICS_THEME_PAGE_ITEMS = listOf(
 internal fun UiTreeBuilder.DiagnosticsThemeSection(
     section: String,
     root: ViewGroup?,
+    firstModifier: Modifier = Modifier,
+    lastModifier: Modifier = Modifier,
 ) {
     when (section) {
-        "theme_snapshot_core" -> DiagnosticsThemeSnapshotCoreSection(root)
+        "theme_snapshot_core" -> DiagnosticsThemeSnapshotCoreSection(root, firstModifier)
         "theme_snapshot_palette" -> DiagnosticsThemeSnapshotPaletteSection()
         "theme_snapshot_sizing" -> DiagnosticsThemeSnapshotSizingSection()
         "theme_surface" -> DiagnosticsThemeSurfaceSection()
         "theme_action" -> DiagnosticsThemeActionSection()
         "theme_input" -> DiagnosticsThemeInputSection()
         "theme_navigation" -> DiagnosticsThemeNavigationSection()
-        "theme_shape_size" -> DiagnosticsThemeShapeSizeSection()
+        "theme_shape_size" -> DiagnosticsThemeShapeSizeSection(lastModifier)
         else -> error("Unknown diagnostics theme section: $section")
     }
 }
 
-private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup?) {
+private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(
+    root: ViewGroup?,
+    modifier: Modifier,
+) {
+    val modeFactLabel = stringResource(R.string.demo_diagnostics_theme_mode)
+    val sourceFactLabel = stringResource(R.string.demo_diagnostics_theme_source)
+    val secondaryContainerFactLabel = "SecondaryContainer"
     val modeLabel = root?.context?.let { context ->
         DemoThemeTokens.modeLabel(DemoThemeSession.mode, context)
-    } ?: DemoThemeTokens.modeLabel(
-        mode = DemoThemeSession.mode,
-        isSystemDark = false,
+    } ?: stringResource(
+        DemoThemeTokens.modeLabelRes(
+            mode = DemoThemeSession.mode,
+            isSystemDark = false,
+        ),
     )
     ScenarioSection(
         kind = ScenarioKind.Core,
-        title = "Theme Snapshot",
-        subtitle = "集中查看当前模式和最常用的语义色，作为后续组件视觉诊断的基线。",
+        title = stringResource(R.string.demo_diagnostics_theme_snapshot_title),
+        subtitle = stringResource(R.string.demo_diagnostics_theme_snapshot_summary),
+        modifier = modifier,
     ) {
         DiagnosticFactGroup(
-            title = "当前主题基线",
+            title = stringResource(R.string.demo_diagnostics_theme_current_baseline),
             facts = listOf(
-                DiagnosticFact("Mode", modeLabel),
+                DiagnosticFact(modeFactLabel, modeLabel),
                 DiagnosticFact(
-                    "Source",
-                    "${DemoThemeSource.DemoCustom.id} · ${DemoThemeSource.DemoCustom.label}",
+                    sourceFactLabel,
+                    "${DemoThemeSource.DemoCustom.id} · " +
+                        stringResource(DemoThemeSource.DemoCustom.labelRes),
                 ),
-                DiagnosticFact("Metadata origin", Theme.current.metadata.origin.name),
+                DiagnosticFact(
+                    stringResource(R.string.demo_diagnostics_theme_metadata_origin),
+                    Theme.current.metadata.origin.name,
+                ),
                 DiagnosticFact("Background", Theme.colors.background.asColorHex()),
                 DiagnosticFact("Surface", Theme.colors.surface.asColorHex()),
                 DiagnosticFact("SurfaceVariant", Theme.colors.surfaceVariant.asColorHex()),
@@ -125,17 +141,23 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup?) 
                 DiagnosticFact("OnPrimary", Theme.colors.onPrimary.asColorHex()),
                 DiagnosticFact("Secondary", Theme.colors.secondary.asColorHex()),
                 DiagnosticFact("OnSecondary", Theme.colors.onSecondary.asColorHex()),
-                DiagnosticFact("SecondaryContainer", Theme.colors.secondaryContainer.asColorHex()),
+                DiagnosticFact(secondaryContainerFactLabel, Theme.colors.secondaryContainer.asColorHex()),
                 DiagnosticFact("OnSecondaryContainer", Theme.colors.onSecondaryContainer.asColorHex()),
                 DiagnosticFact(
-                    "Role check",
-                    if (Theme.colors.secondary != Theme.colors.secondaryContainer) "DISTINCT" else "COLLISION",
+                    stringResource(R.string.demo_diagnostics_theme_role_check),
+                    stringResource(
+                        if (Theme.colors.secondary != Theme.colors.secondaryContainer) {
+                            R.string.demo_diagnostics_theme_role_distinct
+                        } else {
+                            R.string.demo_diagnostics_theme_role_collision
+                        },
+                    ),
                 ),
             ),
             valueTagsByLabel = mapOf(
-                "Mode" to DemoTestTags.DIAGNOSTICS_THEME_MODE,
-                "Source" to DemoTestTags.DIAGNOSTICS_THEME_SOURCE,
-                "SecondaryContainer" to DemoTestTags.DIAGNOSTICS_THEME_SECONDARY_CONTAINER,
+                modeFactLabel to DemoTestTags.DIAGNOSTICS_THEME_MODE,
+                sourceFactLabel to DemoTestTags.DIAGNOSTICS_THEME_SOURCE,
+                secondaryContainerFactLabel to DemoTestTags.DIAGNOSTICS_THEME_SECONDARY_CONTAINER,
             ),
         )
     }
@@ -144,11 +166,11 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup?) 
 private fun UiTreeBuilder.DiagnosticsThemeSnapshotPaletteSection() {
     ScenarioSection(
         kind = ScenarioKind.Core,
-        title = "Theme Palette",
-        subtitle = "检查扩展语义色和关键色板组合。",
+        title = stringResource(R.string.demo_diagnostics_theme_palette_title),
+        subtitle = stringResource(R.string.demo_diagnostics_theme_palette_summary),
     ) {
         DiagnosticFactGroup(
-            title = "扩展语义色",
+            title = stringResource(R.string.demo_diagnostics_theme_extended_colors),
             facts = listOf(
                 DiagnosticFact("ErrorContainer", Theme.colors.errorContainer.asColorHex()),
                 DiagnosticFact("OnErrorContainer", Theme.colors.onErrorContainer.asColorHex()),
@@ -160,7 +182,7 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotPaletteSection() {
             ),
         )
         ThemeSwatchRow(
-            label = "Surface / Inverse",
+            label = stringResource(R.string.demo_diagnostics_theme_surface_inverse),
             swatches = listOf(
                 ThemeSwatch("Background", Theme.colors.background),
                 ThemeSwatch("Surface", Theme.colors.surface),
@@ -169,7 +191,7 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotPaletteSection() {
             ),
         )
         ThemeSwatchRow(
-            label = "Primary / Secondary roles",
+            label = stringResource(R.string.demo_diagnostics_theme_primary_secondary_roles),
             swatches = listOf(
                 ThemeSwatch("P", Theme.colors.primary),
                 ThemeSwatch("S", Theme.colors.secondary),
@@ -178,7 +200,7 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotPaletteSection() {
             ),
         )
         ThemeSwatchRow(
-            label = "Error / Outline",
+            label = stringResource(R.string.demo_diagnostics_theme_error_outline),
             swatches = listOf(
                 ThemeSwatch("Error", Theme.colors.error),
                 ThemeSwatch("Outline", Theme.colors.outline),
@@ -190,11 +212,11 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotPaletteSection() {
 private fun UiTreeBuilder.DiagnosticsThemeSnapshotSizingSection() {
     ScenarioSection(
         kind = ScenarioKind.Core,
-        title = "Theme Shape + Sizing",
-        subtitle = "检查 shape tier 和关键 control sizing。",
+        title = stringResource(R.string.demo_diagnostics_theme_sizing_title),
+        subtitle = stringResource(R.string.demo_diagnostics_theme_sizing_summary),
     ) {
         DiagnosticFactGroup(
-            title = "Shape + Control Sizing",
+            title = stringResource(R.string.demo_diagnostics_theme_shape_control_sizing),
             facts = listOf(
                 DiagnosticFact("small / medium / large", "${Theme.shapes.small.demoLabel()} / ${Theme.shapes.medium.demoLabel()} / ${Theme.shapes.large.demoLabel()}"),
                 DiagnosticFact("Button", "${Theme.controls.button.compactHeight}/${Theme.controls.button.mediumHeight}/${Theme.controls.button.largeHeight}px"),
@@ -214,22 +236,22 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotSizingSection() {
 private fun UiTreeBuilder.DiagnosticsThemeSurfaceSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "Surface 家族诊断",
-        subtitle = "验证 surface/container/content 语义、outline 语义和 inverse 语义是否真正进入组件默认值。",
+        title = stringResource(R.string.demo_diagnostics_theme_surface_title),
+        subtitle = stringResource(R.string.demo_diagnostics_theme_surface_summary),
     ) {
         TopAppBar(
-            title = "Theme Top App Bar",
+            title = stringResource(R.string.demo_diagnostics_theme_top_app_bar),
             navigationIcon = {
                 IconButton(
                     icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                    contentDescription = "导航图标",
+                    contentDescription = stringResource(R.string.demo_diagnostics_theme_navigation_icon),
                     onClick = {},
                 )
             },
             actions = {
                 IconButton(
                     icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                    contentDescription = "操作",
+                    contentDescription = stringResource(R.string.demo_diagnostics_theme_action_icon),
                     onClick = {},
                 )
             },
@@ -248,9 +270,9 @@ private fun UiTreeBuilder.DiagnosticsThemeSurfaceSection() {
                     .padding(12.dp),
             ) {
                 Column(spacing = 4.dp, modifier = Modifier.fillMaxWidth()) {
-                    Text(text = "Default Surface")
+                    Text(text = stringResource(R.string.demo_diagnostics_theme_default_surface))
                     Text(
-                        text = "onSurface 文本应可读。",
+                        text = stringResource(R.string.demo_diagnostics_theme_default_surface_note),
                         style = UiTextStyle(fontSizeSp = 13.sp),
                         color = TextDefaults.secondaryColor(),
                     )
@@ -263,9 +285,9 @@ private fun UiTreeBuilder.DiagnosticsThemeSurfaceSection() {
                     .padding(12.dp),
             ) {
                 Column(spacing = 4.dp, modifier = Modifier.fillMaxWidth()) {
-                    Text(text = "Variant Surface")
+                    Text(text = stringResource(R.string.demo_diagnostics_theme_variant_surface))
                     Text(
-                        text = "onSurfaceVariant 辅助文本。",
+                        text = stringResource(R.string.demo_diagnostics_theme_variant_surface_note),
                         style = UiTextStyle(fontSizeSp = 13.sp),
                         color = TextDefaults.secondaryColor(),
                     )
@@ -283,9 +305,9 @@ private fun UiTreeBuilder.DiagnosticsThemeSurfaceSection() {
                     .fillMaxWidth()
                     .padding(12.dp),
             ) {
-                Text(text = "Card")
+                Text(text = stringResource(R.string.demo_diagnostics_theme_card))
                 Text(
-                    text = "medium shape tier 和 onSurface 默认值应同时生效。",
+                    text = stringResource(R.string.demo_diagnostics_theme_card_note),
                     style = UiTextStyle(fontSizeSp = 13.sp),
                     color = TextDefaults.secondaryColor(),
                 )
@@ -297,17 +319,17 @@ private fun UiTreeBuilder.DiagnosticsThemeSurfaceSection() {
                 .padding(bottom = 8.dp),
         ) {
             Text(
-                text = "OutlinedCard 使用 outline 边框。",
+                text = stringResource(R.string.demo_diagnostics_theme_outlined_card_note),
                 modifier = Modifier.padding(12.dp),
             )
         }
         ListItem(
-            overlineText = "ListItem",
-            headlineText = "Surface + text semantic",
-            supportingText = "headline/supporting 应分别跟随 onSurface 与 onSurfaceVariant。",
+            overlineText = stringResource(R.string.demo_diagnostics_theme_list_item),
+            headlineText = stringResource(R.string.demo_diagnostics_theme_list_item_headline),
+            supportingText = stringResource(R.string.demo_diagnostics_theme_list_item_note),
             trailingContent = {
                 Text(
-                    text = "A1",
+                    text = stringResource(R.string.demo_diagnostics_theme_list_item_badge),
                     style = UiTextStyle(fontSizeSp = 12.sp),
                     color = TextDefaults.secondaryColor(),
                 )
@@ -322,8 +344,8 @@ private fun UiTreeBuilder.DiagnosticsThemeSurfaceSection() {
 private fun UiTreeBuilder.DiagnosticsThemeActionSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "Action 家族诊断",
-        subtitle = "验证按钮 variant、FAB、Chip 和 badge 类样本是否匹配当前语义色与小圆角 tier。",
+        title = stringResource(R.string.demo_diagnostics_theme_action_title),
+        subtitle = stringResource(R.string.demo_diagnostics_theme_action_summary),
     ) {
         Row(
             spacing = 8.dp,
@@ -332,14 +354,19 @@ private fun UiTreeBuilder.DiagnosticsThemeActionSection() {
                 .padding(bottom = 8.dp),
         ) {
             Button(
-                text = "Primary",
+                text = stringResource(R.string.demo_diagnostics_theme_primary),
                 onClick = {},
                 variant = ButtonVariant.Primary,
                 modifier = Modifier
                     .weight(1f)
                     .testTag(DemoTestTags.DIAGNOSTICS_THEME_BUTTON_PRIMARY),
             )
-            Button(text = "Secondary", onClick = {}, variant = ButtonVariant.Secondary, modifier = Modifier.weight(1f))
+            Button(
+                text = stringResource(R.string.demo_diagnostics_theme_secondary),
+                onClick = {},
+                variant = ButtonVariant.Secondary,
+                modifier = Modifier.weight(1f),
+            )
         }
         Row(
             spacing = 8.dp,
@@ -347,9 +374,24 @@ private fun UiTreeBuilder.DiagnosticsThemeActionSection() {
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
         ) {
-            Button(text = "Tonal", onClick = {}, variant = ButtonVariant.Tonal, modifier = Modifier.weight(1f))
-            Button(text = "Outlined", onClick = {}, variant = ButtonVariant.Outlined, modifier = Modifier.weight(1f))
-            Button(text = "Text", onClick = {}, variant = ButtonVariant.Text, modifier = Modifier.weight(1f))
+            Button(
+                text = stringResource(R.string.demo_diagnostics_theme_tonal),
+                onClick = {},
+                variant = ButtonVariant.Tonal,
+                modifier = Modifier.weight(1f),
+            )
+            Button(
+                text = stringResource(R.string.demo_diagnostics_theme_outlined),
+                onClick = {},
+                variant = ButtonVariant.Outlined,
+                modifier = Modifier.weight(1f),
+            )
+            Button(
+                text = stringResource(R.string.demo_diagnostics_theme_text),
+                onClick = {},
+                variant = ButtonVariant.Text,
+                modifier = Modifier.weight(1f),
+            )
         }
         Row(
             spacing = 12.dp,
@@ -361,7 +403,7 @@ private fun UiTreeBuilder.DiagnosticsThemeActionSection() {
             FloatingActionButton(onClick = {}, size = FabSize.Small) {
                 Icon(
                     source = ImageSource.Resource(R.drawable.demo_media_icon),
-                    contentDescription = "Fab",
+                    contentDescription = stringResource(R.string.demo_diagnostics_theme_fab_icon),
                 )
             }
             FloatingActionButton(
@@ -371,17 +413,17 @@ private fun UiTreeBuilder.DiagnosticsThemeActionSection() {
             ) {
                 Icon(
                     source = ImageSource.Resource(R.drawable.demo_media_icon),
-                    contentDescription = "Fab",
+                    contentDescription = stringResource(R.string.demo_diagnostics_theme_fab_icon),
                 )
             }
             FloatingActionButton(onClick = {}, size = FabSize.Large) {
                 Icon(
                     source = ImageSource.Resource(R.drawable.demo_media_icon),
-                    contentDescription = "Fab",
+                    contentDescription = stringResource(R.string.demo_diagnostics_theme_fab_icon),
                 )
             }
             ExtendedFloatingActionButton(
-                text = "Extended FAB",
+                text = stringResource(R.string.demo_diagnostics_theme_extended_fab),
                 icon = ImageSource.Resource(R.drawable.demo_media_icon),
                 onClick = {},
             )
@@ -391,13 +433,13 @@ private fun UiTreeBuilder.DiagnosticsThemeActionSection() {
             modifier = Modifier.fillMaxWidth(),
         ) {
             Chip(
-                label = "Assist Chip",
+                label = stringResource(R.string.demo_diagnostics_theme_assist_chip),
                 onClick = {},
                 variant = ChipVariant.Assist,
                 modifier = Modifier.weight(1f),
             )
             Chip(
-                label = "Filter Chip",
+                label = stringResource(R.string.demo_diagnostics_theme_filter_chip),
                 onClick = {},
                 variant = ChipVariant.Filter,
                 selected = true,
@@ -407,25 +449,33 @@ private fun UiTreeBuilder.DiagnosticsThemeActionSection() {
                 badge = { Badge(count = 8) },
                 modifier = Modifier.padding(top = 6.dp),
             ) {
-                Button(text = "Badge", onClick = {}, variant = ButtonVariant.Tonal)
+                Button(
+                    text = stringResource(R.string.demo_diagnostics_theme_badge),
+                    onClick = {},
+                    variant = ButtonVariant.Tonal,
+                )
             }
         }
     }
 }
 
 private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
-    val searchQueryState = rememberTextFieldState("Theme token")
+    val searchQueryState = rememberTextFieldState(
+        stringResource(R.string.demo_diagnostics_theme_search_token_value),
+    )
     val normalFieldState = rememberTextFieldState("theme@viewcompose.dev")
     val errorFieldState = rememberTextFieldState("error@viewcompose.dev")
-    val disabledFieldState = rememberTextFieldState("Disabled field")
+    val disabledFieldState = rememberTextFieldState(
+        stringResource(R.string.demo_diagnostics_theme_disabled_field_value),
+    )
     val checkboxState = remember { mutableStateOf(true) }
     val switchState = remember { mutableStateOf(true) }
     val radioState = remember { mutableStateOf(true) }
     val sliderState = remember { mutableStateOf(68) }
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "Input / Selection 家族诊断",
-        subtitle = "验证 field container、error container、outline variant 和 selection controls 的默认语义。",
+        title = stringResource(R.string.demo_diagnostics_theme_input_title),
+        subtitle = stringResource(R.string.demo_diagnostics_theme_input_summary),
     ) {
         TextField(
             state = normalFieldState,
@@ -456,7 +506,7 @@ private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
         SearchBar(
             state = searchQueryState,
             onSearch = {},
-            placeholder = "Search token",
+            placeholder = stringResource(R.string.demo_diagnostics_theme_search_token_placeholder),
             leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
             modifier = Modifier
                 .fillMaxWidth()
@@ -470,20 +520,20 @@ private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
                 .padding(bottom = 8.dp),
         ) {
             Checkbox(
-                text = "Checkbox",
+                text = stringResource(R.string.demo_diagnostics_theme_checkbox),
                 checked = checkboxState.value,
                 onCheckedChange = { checkboxState.value = it },
                 modifier = Modifier.weight(1f),
             )
             Switch(
-                text = "Switch",
+                text = stringResource(R.string.demo_diagnostics_theme_switch),
                 checked = switchState.value,
                 onCheckedChange = { switchState.value = it },
                 modifier = Modifier.weight(1f),
             )
         }
         RadioButton(
-            text = "RadioButton",
+            text = stringResource(R.string.demo_diagnostics_theme_radio_button),
             checked = radioState.value,
             onCheckedChange = { radioState.value = it },
             modifier = Modifier.padding(bottom = 8.dp),
@@ -508,7 +558,7 @@ private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
         ) {
             CircularProgressIndicator(progress = sliderState.value / 100f)
             Text(
-                text = "Selection controls 应沿用 primary / outlineVariant / surfaceVariant 语义。",
+                text = stringResource(R.string.demo_diagnostics_theme_selection_note),
                 modifier = Modifier.weight(1f),
             )
         }
@@ -521,8 +571,8 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
     val tabIndexState = remember { mutableStateOf(0) }
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "Navigation / Collection 家族诊断",
-        subtitle = "验证 selected/unselected、indicator、badge 和标签排版是否跟随当前主题默认值。",
+        title = stringResource(R.string.demo_diagnostics_theme_navigation_title),
+        subtitle = stringResource(R.string.demo_diagnostics_theme_navigation_summary),
     ) {
         NavigationBar(
             selectedIndex = navIndexState.value,
@@ -531,12 +581,26 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
                 .margin(bottom = 8.dp)
                 .testTag(DemoTestTags.DIAGNOSTICS_THEME_NAVIGATION),
         ) {
-            Item(label = "Home", icon = ImageSource.Resource(R.drawable.demo_media_icon))
-            Item(label = "Search", icon = ImageSource.Resource(R.drawable.demo_media_icon), badgeCount = 3)
-            Item(label = "Profile", icon = ImageSource.Resource(R.drawable.demo_media_icon))
+            Item(
+                label = stringResource(R.string.demo_diagnostics_theme_home),
+                icon = ImageSource.Resource(R.drawable.demo_media_icon),
+            )
+            Item(
+                label = stringResource(R.string.demo_diagnostics_theme_search),
+                icon = ImageSource.Resource(R.drawable.demo_media_icon),
+                badgeCount = 3,
+            )
+            Item(
+                label = stringResource(R.string.demo_diagnostics_theme_profile),
+                icon = ImageSource.Resource(R.drawable.demo_media_icon),
+            )
         }
         SegmentedControl(
-            items = listOf("Alpha", "Beta", "Gamma"),
+            items = listOf(
+                stringResource(R.string.demo_diagnostics_theme_alpha),
+                stringResource(R.string.demo_diagnostics_theme_beta),
+                stringResource(R.string.demo_diagnostics_theme_gamma),
+            ),
             selectedIndex = segmentedIndexState.value,
             onSelectionChange = { segmentedIndexState.value = it },
             size = SegmentedControlSize.Medium,
@@ -550,15 +614,15 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
             onTabSelected = { tabIndexState.value = it },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Tab(key = "overview") { selected ->
+            Tab(key = "overview") { _ ->
                 Text(
-                    text = if (selected) "Overview" else "概览",
+                    text = stringResource(R.string.demo_diagnostics_theme_overview),
                     modifier = Modifier.padding(12.dp),
                 )
             }
-            Tab(key = "theme") { selected ->
+            Tab(key = "theme") { _ ->
                 Text(
-                    text = if (selected) "Theme" else "主题",
+                    text = stringResource(R.string.demo_diagnostics_theme_theme),
                     modifier = Modifier.padding(12.dp),
                 )
             }
@@ -566,17 +630,24 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
     }
 }
 
-private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
+private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection(modifier: Modifier) {
     val compactFieldState = rememberTextFieldState(
-        "Compact / Medium / Large use Theme.controls.textField.*",
+        stringResource(R.string.demo_diagnostics_theme_compact_field_value),
     )
-    val mediumFieldState = rememberTextFieldState("Medium TextField")
-    val largeFieldState = rememberTextFieldState("Large TextField")
-    val searchState = rememberTextFieldState("Large shape sample")
+    val mediumFieldState = rememberTextFieldState(
+        stringResource(R.string.demo_diagnostics_theme_medium_field_value),
+    )
+    val largeFieldState = rememberTextFieldState(
+        stringResource(R.string.demo_diagnostics_theme_large_field_value),
+    )
+    val searchState = rememberTextFieldState(
+        stringResource(R.string.demo_diagnostics_theme_large_shape_value),
+    )
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "Shape / Size 诊断",
-        subtitle = "通过同组件不同尺寸和不同 radius tier，对照当前 theme 的 shape / control sizing 是否真的进入默认值。",
+        title = stringResource(R.string.demo_diagnostics_theme_shape_size_title),
+        subtitle = stringResource(R.string.demo_diagnostics_theme_shape_size_summary),
+        modifier = modifier,
     ) {
         Row(
             spacing = 8.dp,
@@ -585,15 +656,19 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
                 .padding(bottom = 8.dp),
         ) {
             ShapeProbe(
-                label = "Small",
+                label = stringResource(R.string.demo_diagnostics_theme_small),
                 shape = Theme.shapes.small,
                 modifier = Modifier
                     .weight(1f)
                     .testTag(DemoTestTags.DIAGNOSTICS_THEME_SHAPE_SMALL),
             )
-            ShapeProbe("Medium", Theme.shapes.medium, Modifier.weight(1f))
             ShapeProbe(
-                label = "Large",
+                stringResource(R.string.demo_diagnostics_theme_medium),
+                Theme.shapes.medium,
+                Modifier.weight(1f),
+            )
+            ShapeProbe(
+                label = stringResource(R.string.demo_diagnostics_theme_large),
                 shape = Theme.shapes.large,
                 modifier = Modifier
                     .weight(1f)
@@ -606,9 +681,24 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
         ) {
-            Button(text = "Compact", onClick = {}, size = ButtonSize.Compact, modifier = Modifier.weight(1f))
-            Button(text = "Medium", onClick = {}, size = ButtonSize.Medium, modifier = Modifier.weight(1f))
-            Button(text = "Large", onClick = {}, size = ButtonSize.Large, modifier = Modifier.weight(1f))
+            Button(
+                text = stringResource(R.string.demo_diagnostics_theme_compact),
+                onClick = {},
+                size = ButtonSize.Compact,
+                modifier = Modifier.weight(1f),
+            )
+            Button(
+                text = stringResource(R.string.demo_diagnostics_theme_medium),
+                onClick = {},
+                size = ButtonSize.Medium,
+                modifier = Modifier.weight(1f),
+            )
+            Button(
+                text = stringResource(R.string.demo_diagnostics_theme_large),
+                onClick = {},
+                size = ButtonSize.Large,
+                modifier = Modifier.weight(1f),
+            )
         }
         TextField(
             state = compactFieldState,
@@ -642,38 +732,11 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
         )
         SearchBar(
             state = searchState,
-            placeholder = "Search shape",
+            placeholder = stringResource(R.string.demo_diagnostics_theme_search_shape_placeholder),
             leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
             modifier = Modifier.fillMaxWidth(),
         )
     }
-}
-
-@ViewComposePreview(name = "Diagnostics · Theme verification", group = "Demo/Sections")
-internal fun UiTreeBuilder.DiagnosticsThemeVerificationSection() {
-    VerificationNotesSection(
-        what = "该页是 Theme token 实际消费的权威人工回归入口，目标不是看数值对不对，而是确认 token 最终确实驱动了关键组件默认值。",
-        howToVerify = listOf(
-            "本页固定验证 demo-custom 来源；依次切换 Light / Dark / System，确认 Source 不变而 Mode、Theme Snapshot 和组件视觉一起变化。",
-            "如需区分 Android XML、Material3 静态基线和 Demo 自定义 Token，进入设置页的三个独立验证入口，对照相同 fixture 与截图来源标识。",
-            "先看 Surface 家族，确认 Default/Variant surface、ListItem、TopAppBar 的前景文字都保持可读，OutlinedCard 边框跟随 outline。",
-            "看 Action 家族，确认 Primary/Secondary/Tonal/Outlined/Text 五种按钮的强调层级明显不同，FAB 和 Extended FAB 跟随当前主题。",
-            "看 Input / Selection 家族，确认错误态 TextField 与普通 TextField 的 container、text、hint 有明显语义差异，SearchBar 使用较大圆角与较高 control sizing。",
-            "看 Navigation / Collection 家族，确认 NavigationBar 与 SegmentedControl 的 selected/unselected 对比稳定，badge 与 indicator 不会和背景融在一起。",
-            "看 Shape / Size 诊断，确认 small/medium/large radius 探针和 Button/TextField/SegmentedControl/SearchBar 的尺寸都与当前 theme token 一致。",
-            "再到 Feedback / Input / Navigation 页面抽查真实功能页，确认这里定义的主题语义没有在 live 页面里回退。",
-        ),
-        expected = listOf(
-            "Theme Snapshot 是诊断基线，组件视觉与 token 变化保持同向。",
-            "surface/content、outline、inverse、errorContainer 等语义都能从样本中直接看出来，而不是只能靠读代码确认。",
-            "shape tier 和 control sizing 不再停留在 token 定义层，而是能从真实组件高度、圆角、间距中直接观察到。",
-            "真实功能页中的 Dialog / Popup / BottomSheet、SearchBar、NavigationBar / SegmentedControl 与此页口径一致。",
-        ),
-        relatedGaps = listOf(
-            "主题来源矩阵只覆盖稳定的代表性组件，不扩展成所有状态组合的全量 golden 图集。",
-            "overlay 真实主题验证继续依赖既有功能页，不在本页重复堆叠完整交互。",
-        ),
-    )
 }
 
 private fun UiTreeBuilder.MenuVisualSample() {
@@ -689,14 +752,14 @@ private fun UiTreeBuilder.MenuVisualSample() {
             .padding(bottom = 8.dp),
     ) {
         DropdownMenuItem(
-            text = "Menu Item",
+            text = stringResource(R.string.demo_diagnostics_theme_menu_item),
             onClick = {},
             leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
         )
         DropdownMenuItem(
-            text = "Disabled Item",
+            text = stringResource(R.string.demo_diagnostics_theme_disabled_menu_item),
             onClick = {},
-            trailingText = "OFF",
+            trailingText = stringResource(R.string.demo_diagnostics_theme_off),
             enabled = false,
         )
     }
@@ -719,13 +782,13 @@ private fun UiTreeBuilder.TooltipVisualSample() {
                 ),
         ) {
             Text(
-                text = "Inverse Tooltip",
+                text = stringResource(R.string.demo_diagnostics_theme_inverse_tooltip),
                 style = TooltipDefaults.textStyle(),
                 color = TooltipDefaults.contentColor(),
             )
         }
         Text(
-            text = "Tooltip 应使用 inverseSurface / inverseOnSurface。",
+            text = stringResource(R.string.demo_diagnostics_theme_tooltip_note),
             modifier = Modifier.weight(1f),
         )
     }
@@ -749,7 +812,11 @@ private fun UiTreeBuilder.ShapeProbe(
                 .clip(),
         ) {}
         Text(
-            text = "$label (${shape.demoLabel()})",
+            text = stringResource(
+                R.string.demo_diagnostics_theme_shape_probe,
+                label,
+                shape.demoLabel(),
+            ),
             style = UiTextStyle(fontSizeSp = 12.sp),
             color = TextDefaults.secondaryColor(),
         )

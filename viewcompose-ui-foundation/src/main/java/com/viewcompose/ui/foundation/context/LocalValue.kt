@@ -71,7 +71,8 @@ fun <T> withUiLocalSnapshot(
  * Thread-local runtime for Composition Locals.
  */
 internal object LocalContext {
-    private val currentValues = ThreadLocal<Map<LocalValue<*>, Any?>>()
+    private val emptySnapshot = LocalSnapshot(emptyMap())
+    private val currentSnapshot = ThreadLocal<LocalSnapshot>()
 
     fun <T> current(local: LocalValue<T>): T {
         if (CompositionEffectContext.isActive()) {
@@ -81,9 +82,13 @@ internal object LocalContext {
                     "and capture it in the callback.",
             )
         }
-        val values = currentValues.get().orEmpty()
+        val values = installedSnapshot().values
         @Suppress("UNCHECKED_CAST")
-        return values[local] as? T ?: local.default()
+        return if (values.containsKey(local)) {
+            values[local] as T
+        } else {
+            local.default()
+        }
     }
 
     fun <T> provide(
@@ -91,19 +96,32 @@ internal object LocalContext {
         value: T,
         block: () -> Unit,
     ) {
-        val previous = currentValues.get().orEmpty()
-        currentValues.set(previous + (local to value))
-        try {
+        val previous = installedSnapshot()
+        withInstalledSnapshot(
+            snapshot = LocalSnapshot(previous.values + (local to value)),
+            previous = previous,
+            block = block,
+        )
+    }
+
+    fun provide(
+        values: Map<LocalValue<*>, Any?>,
+        block: () -> Unit,
+    ) {
+        if (values.isEmpty()) {
             block()
-        } finally {
-            currentValues.set(previous)
+            return
         }
+        val previous = installedSnapshot()
+        withInstalledSnapshot(
+            snapshot = LocalSnapshot(previous.values + values),
+            previous = previous,
+            block = block,
+        )
     }
 
     fun snapshot(): LocalSnapshot {
-        return LocalSnapshot(
-            values = currentValues.get().orEmpty(),
-        )
+        return installedSnapshot()
     }
 
     fun describeSnapshot(snapshot: Any?): List<CompositionLocalDiagnostic> {
@@ -117,12 +135,30 @@ internal object LocalContext {
         snapshot: LocalSnapshot,
         block: () -> T,
     ): T {
-        val previous = currentValues.get().orEmpty()
-        currentValues.set(snapshot.values)
+        return withInstalledSnapshot(
+            snapshot = snapshot,
+            previous = installedSnapshot(),
+            block = block,
+        )
+    }
+
+    private fun installedSnapshot(): LocalSnapshot {
+        return currentSnapshot.get() ?: emptySnapshot
+    }
+
+    private fun <T> withInstalledSnapshot(
+        snapshot: LocalSnapshot,
+        previous: LocalSnapshot,
+        block: () -> T,
+    ): T {
+        currentSnapshot.set(snapshot)
         return try {
             block()
         } finally {
-            currentValues.set(previous)
+            // Keep the empty snapshot installed just as the previous Map-based runtime retained
+            // its empty value. Removing the slot would allocate a new ThreadLocalMap entry at the
+            // next provider boundary on every composition.
+            currentSnapshot.set(previous)
         }
     }
 }

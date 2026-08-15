@@ -3,11 +3,14 @@ Unit tests for the performance report script.
 """
 
 import json
+import re
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from dataclasses import asdict, replace
 from io import StringIO
 from pathlib import Path
+from typing import Optional
 
 import compare_macrobenchmarks as comparison
 
@@ -56,6 +59,8 @@ def result(
     viewcompose_multiplier: float = 1.0,
     compose_multiplier: float = 1.0,
     fingerprint: str = "device/build",
+    cpu_locked: bool = True,
+    clock_policy: Optional[str] = None,
 ) -> dict:
     """构造包含所有配对场景的 Macrobenchmark 结果。
     Builds a Macrobenchmark result containing all paired scenarios.
@@ -87,9 +92,10 @@ def result(
                 "fingerprint": fingerprint,
                 "version": {"sdk": 36},
             },
-            "cpuLocked": True,
+            "cpuLocked": cpu_locked,
             "cpuMaxFreqHz": 1,
             "compilationMode": "run-from-apk",
+            "payload": {} if clock_policy is None else {"clockPolicy": clock_policy},
         },
         "benchmarks": entries,
     }
@@ -111,6 +117,58 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
             },
         }
 
+    def test_report_contracts_match_demo_registry_revisions(self) -> None:
+        registry_path = (
+            Path(__file__).resolve().parents[2]
+            / "app/src/main/java/com/viewcompose/demo/registry/DemoScenarioRegistry.kt"
+        )
+        source = registry_path.read_text(encoding="utf-8")
+        registry_revisions = {}
+        cursor = 0
+        while True:
+            start = source.find("performanceScenario(", cursor)
+            if start < 0:
+                break
+            depth = 0
+            end = start
+            while end < len(source):
+                character = source[end]
+                if character == "(":
+                    depth += 1
+                elif character == ")":
+                    depth -= 1
+                    if depth == 0:
+                        end += 1
+                        break
+                end += 1
+            block = source[start:end]
+            scenario_id = re.search(r"id\s*=\s*DemoScenarioIds\.(\w+)", block)
+            revision = re.search(r"benchmarkRevision\s*=\s*(\d+)", block)
+            if scenario_id:
+                registry_revisions[scenario_id.group(1)] = (
+                    int(revision.group(1)) if revision else 1
+                )
+            cursor = end
+
+        kotlin_ids = {
+            "performance.list": "PerformanceList",
+            "performance.complex-layout": "PerformanceComplexLayout",
+            "performance.shadow-list": "PerformanceShadowList",
+            "performance.shadow-complex-layout": "PerformanceShadowComplexLayout",
+        }
+        report_revisions = {}
+        for scenario_id, workload_revision in comparison.SCENARIO_CONTRACTS.values():
+            previous = report_revisions.setdefault(scenario_id, workload_revision)
+            self.assertEqual(previous, workload_revision)
+
+        self.assertEqual(
+            {
+                scenario_id: registry_revisions[kotlin_id]
+                for scenario_id, kotlin_id in kotlin_ids.items()
+            },
+            report_revisions,
+        )
+
     def test_builds_all_paired_comparisons(self) -> None:
         entries = comparison.benchmark_entries(result())
         comparisons = comparison.build_comparisons(entries)
@@ -126,6 +184,8 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
         self.assertEqual(4.0, list_scroll.viewcompose)
         self.assertEqual(2.0, list_scroll.compose)
         self.assertEqual(100.0, list_scroll.relative_percent)
+        self.assertEqual("performance.list", list_scroll.scenario_id)
+        self.assertEqual(3, list_scroll.workload_revision)
         self.assertTrue(
             any(item.scenario == "shadow_list_scroll" for item in comparisons),
         )
@@ -154,6 +214,128 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
         )
         self.assertTrue(
             all(item.scenario.startswith("shadow_") for item in stability),
+        )
+
+    def test_stability_excludes_signed_frame_overrun(self) -> None:
+        entries = comparison.benchmark_entries(result())
+
+        stability = comparison.build_stability(entries, 0.15)
+
+        self.assertEqual(len(comparison.SCENARIOS) * 2, len(stability))
+        self.assertEqual(
+            {"frameDurationCpuMs"},
+            {item.metric for item in stability},
+        )
+
+    def test_merges_split_method_results_from_one_context(self) -> None:
+        complete = result()
+        midpoint = len(complete["benchmarks"]) // 2
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = dict(complete)
+            first["benchmarks"] = complete["benchmarks"][:midpoint]
+            second = dict(complete)
+            second["benchmarks"] = complete["benchmarks"][midpoint:]
+            (root / "first-benchmarkData.json").write_text(
+                json.dumps(first),
+                encoding="utf-8",
+            )
+            (root / "second-benchmarkData.json").write_text(
+                json.dumps(second),
+                encoding="utf-8",
+            )
+
+            source, merged = comparison.load_current_result(root)
+
+        self.assertEqual(root, source)
+        self.assertEqual(complete["benchmarks"], merged["benchmarks"])
+
+    def test_rejects_duplicate_method_in_split_results(self) -> None:
+        complete = result()
+        partial = dict(complete)
+        partial["benchmarks"] = complete["benchmarks"][:1]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("first", "second"):
+                (root / f"{name}-benchmarkData.json").write_text(
+                    json.dumps(partial),
+                    encoding="utf-8",
+                )
+
+            with self.assertRaisesRegex(ValueError, "Duplicate benchmark name"):
+                comparison.load_current_result(root)
+
+    def test_rejects_context_mismatch_in_split_results(self) -> None:
+        first = result(fingerprint="device/first")
+        first["benchmarks"] = first["benchmarks"][:1]
+        second = result(fingerprint="device/second")
+        second["benchmarks"] = second["benchmarks"][1:2]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "first-benchmarkData.json").write_text(
+                json.dumps(first),
+                encoding="utf-8",
+            )
+            (root / "second-benchmarkData.json").write_text(
+                json.dumps(second),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "contexts differ"):
+                comparison.load_current_result(root)
+
+    def test_merges_transient_cpu_lock_snapshots_under_explicit_clock_policy(self) -> None:
+        first = result(cpu_locked=False, clock_policy="unlocked-dvfs-preflight-v1")
+        first["benchmarks"] = first["benchmarks"][:1]
+        second = result(cpu_locked=True, clock_policy="unlocked-dvfs-preflight-v1")
+        second["benchmarks"] = second["benchmarks"][1:2]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "first-benchmarkData.json").write_text(
+                json.dumps(first),
+                encoding="utf-8",
+            )
+            (root / "second-benchmarkData.json").write_text(
+                json.dumps(second),
+                encoding="utf-8",
+            )
+
+            _, merged = comparison.load_current_result(root)
+
+        identity = comparison.context_identity(merged)
+        self.assertEqual("unlocked-dvfs-preflight-v1", identity["clockPolicy"])
+        self.assertEqual([False, True], identity["cpuLockedSnapshots"])
+
+    def test_rejects_transient_cpu_lock_mismatch_without_clock_policy(self) -> None:
+        first = result(cpu_locked=False)
+        first["benchmarks"] = first["benchmarks"][:1]
+        second = result(cpu_locked=True)
+        second["benchmarks"] = second["benchmarks"][1:2]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "first-benchmarkData.json").write_text(
+                json.dumps(first),
+                encoding="utf-8",
+            )
+            (root / "second-benchmarkData.json").write_text(
+                json.dumps(second),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "cpuLocked"):
+                comparison.load_current_result(root)
+
+    def test_rejects_explicit_clock_policy_mismatch(self) -> None:
+        first = comparison.context_identity(
+            result(clock_policy="unlocked-dvfs-preflight-v1"),
+        )
+        second = comparison.context_identity(
+            result(clock_policy="locked-clocks-v1"),
+        )
+
+        self.assertEqual(
+            ["clockPolicy"],
+            comparison.context_mismatches(first, second),
         )
 
     def test_rejects_partial_scenario_without_compose_control(self) -> None:
@@ -206,6 +388,51 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
 
         self.assertFalse(any(item.failed for item in regressions))
 
+    def test_rejects_cross_revision_regression_comparison(self) -> None:
+        baseline = comparison.build_comparisons(
+            comparison.benchmark_entries(result()),
+        )
+        current = [
+            replace(item, workload_revision=item.workload_revision + 1)
+            if item.scenario == "list_scroll"
+            else item
+            for item in baseline
+        ]
+
+        with self.assertRaisesRegex(ValueError, "different workload contracts"):
+            comparison.build_regressions(
+                current=current,
+                baseline=baseline,
+                policy=self.policy,
+            )
+
+    def test_revisioned_baseline_report_preserves_workload_contracts(self) -> None:
+        raw = result()
+        baseline_report = {
+            "context": comparison.context_identity(raw),
+            "comparisons": [
+                asdict(item)
+                for item in comparison.build_comparisons(
+                    comparison.benchmark_entries(raw),
+                )
+            ],
+        }
+
+        loaded = comparison.revisioned_baseline_comparisons(baseline_report)
+
+        self.assertTrue(loaded)
+        self.assertTrue(
+            all(
+                item.workload_revision
+                == comparison.SCENARIO_CONTRACTS[item.scenario][1]
+                for item in loaded
+            ),
+        )
+
+    def test_rejects_unrevisioned_raw_baseline(self) -> None:
+        with self.assertRaisesRegex(ValueError, "revisioned compose-comparison.json"):
+            comparison.revisioned_baseline_comparisons(result())
+
     def test_cli_writes_markdown_and_json_reports(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -230,10 +457,19 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
                 )
 
             self.assertEqual(0, exit_code)
-            self.assertIn("list_scroll", markdown.read_text(encoding="utf-8"))
+            self.assertIn(
+                "performance.list@3",
+                markdown.read_text(encoding="utf-8"),
+            )
+            summary = json.loads(json_output.read_text(encoding="utf-8"))
             self.assertEqual(
                 "NOT_RUN",
-                json.loads(json_output.read_text(encoding="utf-8"))["gateStatus"],
+                summary["gateStatus"],
+            )
+            self.assertEqual(
+                {"performance.list", "performance.complex-layout",
+                 "performance.shadow-list", "performance.shadow-complex-layout"},
+                {item["scenario_id"] for item in summary["comparisons"]},
             )
 
 

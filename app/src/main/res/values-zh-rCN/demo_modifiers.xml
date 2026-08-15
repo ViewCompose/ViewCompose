@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_modifiers_elevation_title">高程对比</string>
+    <string name="demo_modifiers_elevation_summary">对比多种 elevation 值下的阴影效果。</string>
+    <string name="demo_modifiers_dp_value">%1$ddp</string>
+    <string name="demo_modifiers_border_title">边框与裁切</string>
+    <string name="demo_modifiers_border_summary">验证边框宽度和颜色，并裁切溢出内容。</string>
+    <string name="demo_modifiers_border_one">1dp 边框</string>
+    <string name="demo_modifiers_border_two">2dp 主色</string>
+    <string name="demo_modifiers_border_three">3dp 圆角</string>
+    <string name="demo_modifiers_clip_heading">裁切溢出内容</string>
+    <string name="demo_modifiers_clip_content">溢出的蓝色方块已被裁切</string>
+    <string name="demo_modifiers_alpha_title">透明度与波纹颜色</string>
+    <string name="demo_modifiers_alpha_summary">验证 View 透明度和自定义按压反馈颜色。</string>
+    <string name="demo_modifiers_alpha_heading">透明度梯度</string>
+    <string name="demo_modifiers_percent_value">%1$d%%</string>
+    <string name="demo_modifiers_ripple_heading">自定义按压颜色</string>
+    <string name="demo_modifiers_ripple_red">红色波纹</string>
+    <string name="demo_modifiers_ripple_green">绿色波纹</string>
+    <string name="demo_modifiers_ripple_blue">蓝色波纹</string>
+    <string name="demo_modifiers_drawable_title">Drawable 资源背景</string>
+    <string name="demo_modifiers_drawable_summary">颜色与 Drawable 背景同时存在时 Drawable 优先，并由 cornerRadius 裁切。</string>
+    <string name="demo_modifiers_drawable_color_only">仅颜色</string>
+    <string name="demo_modifiers_drawable_combined">颜色与 Drawable</string>
+    <string name="demo_modifiers_drawable_note">左侧仅使用颜色且不自动裁切；右侧组合 Drawable 与 cornerRadius 并自动裁切。</string>
+    <string name="demo_modifiers_corner_title">多种圆角</string>
+    <string name="demo_modifiers_corner_summary">验证统一、上下分组与四角独立的圆角半径。</string>
+    <string name="demo_modifiers_corner_grouped">分组圆角：顶部=16，底部=0</string>
+    <string name="demo_modifiers_corner_top">顶部圆角</string>
+    <string name="demo_modifiers_corner_independent">独立圆角：左上=24，右上=0，右下=24，左下=0</string>
+    <string name="demo_modifiers_corner_diagonal">对角圆角</string>
+
+    <string name="demo_modifiers_size_title">尺寸约束</string>
+    <string name="demo_modifiers_size_summary">验证 minWidth、minHeight、fillMaxHeight、固定尺寸、内边距与外边距。</string>
+    <string name="demo_modifiers_min_width_heading">最小宽度</string>
+    <string name="demo_modifiers_min_width_100">最小 100dp</string>
+    <string name="demo_modifiers_min_width_60">最小 60dp</string>
+    <string name="demo_modifiers_min_height_heading">最小高度</string>
+    <string name="demo_modifiers_min_height_80">最小高度 80dp</string>
+    <string name="demo_modifiers_min_height_40">最小高度 40dp</string>
+    <string name="demo_modifiers_fill_height_heading">单独使用 fillMaxHeight</string>
+    <string name="demo_modifiers_fill_height_full">填满高度</string>
+    <string name="demo_modifiers_fixed_height_60">60dp</string>
+    <string name="demo_modifiers_fill_height_note">左侧填满父容器高度；右侧保持固定 60dp。</string>
+    <string name="demo_modifiers_spacing_heading">三级内边距与外边距嵌套</string>
+    <string name="demo_modifiers_spacing_inner">最内层内容</string>
+    <string name="demo_modifiers_spacing_note">蓝色：外层 padding 16；绿色：中层 margin 8 + padding 12；红色：内层 margin 4 + padding 8。</string>
+
+    <string name="demo_modifiers_accessibility_title">无障碍内容描述</string>
+    <string name="demo_modifiers_accessibility_summary">contentDescription 为 Android 无障碍服务提供朗读上下文。</string>
+    <string name="demo_modifiers_accessibility_description">带无障碍描述的示例区块</string>
+    <string name="demo_modifiers_accessibility_present">有描述</string>
+    <string name="demo_modifiers_accessibility_absent">无描述</string>
+    <string name="demo_modifiers_accessibility_note">左侧 Box 带有可供 TalkBack 朗读的 contentDescription；右侧 Box 故意不设置。</string>
+    <string name="demo_modifiers_native_title">原生 View 逃生通道</string>
+    <string name="demo_modifiers_native_summary">nativeView 配置框架 Modifier 覆盖范围外的 Android View 属性。</string>
+    <string name="demo_modifiers_native_sample">带字间距的粗体文字</string>
+    <string name="demo_modifiers_native_note">nativeView 直接 patch TextView 的 typeface 与 letterSpacing。</string>
+    <string name="demo_modifiers_layering_title">偏移与绘制顺序</string>
+    <string name="demo_modifiers_layering_summary">offset 移动 View，zIndex 控制绘制顺序。</string>
+    <string name="demo_modifiers_layering_value">zIndex=%1$d</string>
+    <string name="demo_modifiers_layering_note">三个区块使用不同的偏移与 z-index；较高 z-index 的区块绘制在其他区块上方。</string>
+</resources>

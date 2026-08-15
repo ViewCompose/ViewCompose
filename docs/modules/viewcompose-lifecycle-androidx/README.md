@@ -83,11 +83,14 @@ replacement, composition exit, or session disposal.
 
 Each setup ends with `onStopOrDispose { ... }` or `onPauseOrDispose { ... }`. Keys are mandatory and
 use structural equality. Replacement cleanup completes before replacement setup; an aborted
-candidate neither detaches the committed observer nor starts its replacement. A throwing setup is
-detached and is not retried until identity changes. A throwing cleanup is terminal. These callbacks
-run synchronously on the lifecycle dispatch thread and must not block it. Resolve composition
-locals while declaring the effect; reading a Local from a later lifecycle callback fails with its
-diagnostic name even if an unrelated provider is active on that thread.
+candidate neither detaches the committed observer nor starts its replacement. If initial setup
+throws while an already-active owner is installed during composition commit, the effect remains
+pending and retries on a later commit, so setup must be retry-safe. A setup that throws on a later
+lifecycle transition detaches its observer and is not retried until identity changes. A throwing
+cleanup is terminal. These callbacks run synchronously on the lifecycle dispatch thread and must
+not block it. Resolve composition locals while declaring the effect; reading a Local from a later
+lifecycle callback fails with its diagnostic name even if an unrelated provider is active on that
+thread.
 
 `Lifecycle.currentStateAsState()` returns one stable composition-owned holder, observes every state
 transition after commit, reconciles a transition that races initial installation, and removes its

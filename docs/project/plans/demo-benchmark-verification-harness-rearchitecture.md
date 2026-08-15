@@ -2,24 +2,31 @@
 
 ## Status
 
-Active. The code, test, benchmark, layout-tree, and running-device audit is complete; production
-implementation has not started.
+Active. Phase 0 inventory and workload freeze, Phase 1 contract and automation spine, Phase 2 host
+and catalog hard cut, Phase 3 localization and content hard cut, and Phase 4 scenario migration are
+complete. Phase 5 benchmark rebaseline is device-blocked; release, renderer diagnostics, list revision
+3, complex-layout revision 3, diagnostics-theme revision 2, and collection-stress revision 2
+replacement baselines are accepted. Shadow-list and shadow-complex-layout revision 2 replacement
+baselines are also accepted.
 
 The Demo is being redefined as a deterministic benchmark and framework-verification harness.
 Automated validation owns the primary information architecture. Human verification remains a
 supported secondary workflow, but explanatory copy must not displace the fixture, become a
 selector contract, or enter a measured benchmark hierarchy.
 
-Last verified: 2026-08-14.
+Last verified: 2026-08-15.
 
-Next action: execute Phase 0 by freezing the scenario inventory and current benchmark workload
-revisions, then implement the Phase 1 route and automation-target contracts before changing the
-catalog or fixture layouts.
+Next action: run the Phase 5 navigation-motion revision 6 and design-bundle revision 3 matrices on
+a rootable or otherwise clock-controllable reference device. The current Samsung consumer device
+cannot produce valid run stability for these workloads.
 
-Do not benchmark or begin a performance-only slice from the
-[Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
-until the completion gate in this plan has produced a stable replacement Demo baseline. A
-source-and-contract audit or a focused correctness fix does not depend on that performance gate.
+Performance work from the
+[archived Runtime data propagation and Android View patch optimization record](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/runtime-data-propagation-and-view-patch-optimization.md)
+is gated by the replacement baselines for the scenarios that can exercise that optimization, not
+by unrelated navigation or design-system matrices. The accepted release state-patch, renderer,
+list, and complex-layout baselines satisfy that scoped gate for the two retained Runtime/Patch
+experiments. Navigation revision 6 and design-bundle revision 3 remain blocked on a
+clock-controllable device without delaying unrelated framework work.
 
 ## Maven release changesets
 
@@ -137,7 +144,7 @@ replacing that black-box selector contract would make the benchmark suite unstab
 | Settings | Theme, resource, Material 3, custom-token, and multi-design-system verification are mixed into one long settings document. | Separate global environment controls from independently launchable verification scenarios. |
 | About | Hard-coded module names, DSL counts, Modifier counts, Defaults counts, NodeType counts, and placeholder version/link values can become stale without a code failure. | Remove architecture/statistics content. Show generated build identity only when useful to reproduce a run. |
 | State | The benchmark controls are reachable, but route prose and a stable-target checklist consume most of the first screen; the actual state/effect fixture starts below it. | Keep action, reset, state, and result first; route metadata belongs to the scenario contract, not visible UI. |
-| Widget showcase | The catalog is relatively compact, but each entry is still a human-oriented description and automation must select a visible component name. | Retain human browsing while giving every component/property fixture a direct stable scenario route. |
+| Widget showcase | The catalog is relatively compact, but each entry is still a human-oriented description and automation must select a visible component name. | Remove the nested chooser; assign each detail to its existing owning fixture and create direct routes only for uncovered component families. |
 | Performance comparison / List | The dedicated Activity already has a compact ready marker, mutation/reset actions, and the measured list in the first viewport, with no general Demo shell. | Preserve this isolation pattern and add locale-independent machine targets plus workload revision. |
 
 ### Structural findings
@@ -166,6 +173,89 @@ replacing that black-box selector contract would make the benchmark suite unstab
    `PerformanceComparisonActivity` selects a strict engine/scenario contract, fails on unknown
    values, and mounts only the measured screen. This design should become the baseline for all
    measured fixtures, not remain an exception.
+
+## Frozen scenario inventory
+
+Phase 0 replaces the old module/page identity with the following immutable scenario IDs. The
+legacy page index is recorded only to classify and migrate existing callers; it is not part of the
+new launch contract.
+
+| Legacy owner | Page or variant | Decision | Replacement scenario ID |
+| --- | --- | --- | --- |
+| Home | Catalog | Retain as the unmeasured launcher/catalog | `catalog` |
+| Home | Diagnostics, Settings, About pager pages | Split diagnostics and environment controls; remove About | Direct scenarios below; no page IDs |
+| Foundations | Guide, 0 | Remove architecture prose; retain the business-Local fixture | `foundations.locals` |
+| Foundations | Theme, Media, Typography, 1-3 | Split | `foundations.theme`, `foundations.media`, `foundations.typography` |
+| State | Core, Identity, Patch, 0-2 | Split | `runtime.state`, `runtime.key-identity`, `runtime.view-patch` |
+| State | Checklist, 3 | Remove copied capability inventory | None |
+| Layouts | Linear, Stack, Edges, Flow, Scroll, Constraint, 0-5 | Split | `layout.linear`, `layout.stack`, `layout.edges`, `layout.flow`, `layout.scroll`, `layout.constraint` |
+| Layouts | Checklist, 6 | Remove copied capability inventory | None |
+| Input | Fields, Selection, Stress, Search, Summary, 0-4 | Split | `input.fields`, `input.selection`, `input.stress`, `input.search`, `input.derived-summary` |
+| Feedback | Transient, Dialog, Menu, 0-2 | Split; retain overlay-capable host | `overlay.transient`, `overlay.dialog`, `overlay.menu` |
+| Collections | Controls, List, Stress, Interop, Row, Grid, Refresh, 0-6 | Split | `collection.controls`, `collection.lazy-list`, `collection.stress`, `collection.android-view`, `collection.lazy-row`, `collection.grid`, `collection.pull-refresh` |
+| Interop | Android View and Local propagation | Retain | `interop.android-view` |
+| Diagnostics | Runtime, Theme, Renderer, 0-2 | Split | `diagnostics.runtime`, `diagnostics.theme`, `diagnostics.renderer` |
+| Diagnostics | Gaps, 3 | Remove roadmap content | None |
+| Preview | Bridge, Overlay mock, Snapshot, 0-2 | Remove the on-device proxies; retain the actual debug bridge entrypoints, PreviewCatalog overlay spec, and `qaPreview` snapshot gate | None |
+| Actions | Card, FAB, Chip, List item, 0-3 | Split | `component.card`, `component.fab`, `component.chip`, `component.list-item` |
+| Modifiers | Visual, Sizing, Accessibility/native View, 0-2 | Split | `modifier.visual`, `modifier.sizing`, `modifier.accessibility` |
+| Gestures | Tap, Drag/swipe, Transform, 0-2 | Split | `gesture.tap`, `gesture.drag-swipe`, `gesture.transform` |
+| Animation | Core, Content, List motion, Specs, Transition, Infinite, 0-5 | Split | `animation.core`, `animation.content`, `animation.list-motion`, `animation.specs`, `animation.transition`, `animation.infinite` |
+| Graphics | Drawing, Outer shadow, Inner shadow, Lazy/diagnostics, 0-3 | Split | `graphics.drawing`, `graphics.outer-shadow`, `graphics.inner-shadow`, `graphics.shadow-list` |
+| Navigation components | App bars, Navigation bar, Scaffold, 0-2 | Split | `component.app-bars`, `component.navigation-bar`, `component.scaffold` |
+| System navigation | NavHost, stacks, deep links, predictive Back, adaptive panes | Retain dedicated lifecycle host | `navigation.system` |
+| Theme switch | Cross-Activity propagation | Retain dedicated host | `environment.cross-activity-theme` |
+| Resource configuration | Locale, night, direction, font scale, density | Retain dedicated configuration host | `environment.resources` |
+| Material 3 verification | Android XML, static baseline, custom tokens | Split by declared source | `design.material3-xml`, `design.material3-static`, `design.material3-custom` |
+| Multi-design-system verification | Material 3 and contrast bundles | Split by bundle | `design.bundle-material3`, `design.bundle-contrast` |
+| One UI 7 verification | Five-component slice | Retain dedicated design-system host | `design.oneui7` |
+| Widget showcase | 20 legacy widget keys | Remove the chooser and deduplicate by owning fixture; retain only uncovered component families | `component.button`, `component.icon-button`, `component.segmented-control`, `component.divider`, `component.progress` |
+| Performance comparison | List, complex layout, shadow list, shadow complex layout | Retain isolated host; engine and shadow policy remain workload dimensions | `performance.list`, `performance.complex-layout`, `performance.shadow-list`, `performance.shadow-complex-layout` |
+
+The original 20-key widget list was corrected during implementation after fixture ownership was
+available. Text and Image belong to `foundations.typography` and `foundations.media`; text fields,
+selection controls, and SearchBar belong to `input.*`; Chip, FAB, Badge, ListItem, and Card belong
+to the existing action-component fixtures. The six uncovered legacy details become five strict
+component scenarios because linear and circular progress are two presentations of one progress
+state contract. The retired chooser and all duplicate detail pages have no compatibility route.
+
+### Existing automation ownership
+
+| Existing owner | Frozen disposition |
+| --- | --- |
+| App instrumentation using `DemoTestTags` | Retain behavior assertions; migrate launch and scenario-level targets to the owning scenario contract. Fine-grained in-process fixture tags may remain beside the fixture. |
+| `DemoInteractionBenchmark` | Split into direct scenario workloads; remove catalog and chapter-tab navigation. |
+| `ReleaseBaselineBenchmark` | Retain startup and `runtime.view-patch`; replace text synchronization with role targets. |
+| Diagnostics long-fling benchmark | Retain as `diagnostics.theme`; direct launch makes the old tab-switch prelude non-comparable. |
+| List and complex-layout comparison benchmarks | Retain paired engines and data shape under explicit workload revisions. |
+| Navigation motion benchmarks | Retain `navigation.system` and its dedicated Activity boundary. |
+| Design-system vertical slice | Split by `design.bundle-*`; keep bundle kind as declared scenario identity rather than visible copy. |
+| Shadow comparison benchmarks | Retain the performance scenario plus engine/backend dimensions. |
+| Screenshot tests and preview snapshots | Retain visual assertions; launch the direct scenario or preview fixture without catalog copy. |
+
+### Frozen workload revisions
+
+These revisions describe the pre-migration workloads. A direct-route or hierarchy change that
+alters measured work advances the corresponding revision and establishes a new baseline instead of
+claiming a performance delta against this table.
+
+| Scenario/workload | Frozen revision | Invalidating dimensions |
+| --- | ---: | --- |
+| `catalog` cold startup | 1 | Launcher shell, first-frame catalog hierarchy, startup data set |
+| `runtime.view-patch` state patch | 1 | Patched node set, state fan-out, action sequence, host chrome |
+| `diagnostics.theme` long fling | 1 | Full item tree, tab-switch prelude, fling bounds, host chrome |
+| `interop.android-view` state patch | 1 | Native target, declarative mirror, host hierarchy, action/reset sequence |
+| `collection.stress` mutation | 1 | Item count/order, key/content revisions, action sequence |
+| `performance.list` | 1 | 1,000-row model, row tree/content shape, rotation/update rule, engine |
+| `performance.complex-layout` | 1 | Dashboard-card model, nested tree, update rule, engine |
+| `navigation.system` motion | 1 | Stack seed, destinations, transition duration, gesture/action sequence |
+| `design.bundle-material3` and `design.bundle-contrast` | 2 | Component slice, state fan-out, overlay sequence, bundle |
+| `performance.shadow-list` | 1 | Row model, shadow layers, engine, backend policy |
+| `performance.shadow-complex-layout` | 1 | Dashboard model, shadow layers, engine, backend policy |
+
+Phase 0 is complete: every current catalog module, page selector, dedicated host, instrumentation
+owner, and Macrobenchmark owner now has a retained, split, or removed disposition. The migration is
+allowed to change UI only through the scenario and workload contracts above.
 
 ## Locked design principles
 
@@ -447,12 +537,12 @@ measurement semantics do not change without a workload revision.
 
 | Phase | Status | Primary output | Exit gate |
 | --- | --- | --- | --- |
-| 0. Inventory and freeze | Not started | Scenario map, current selector map, current workload revisions, same-device baseline | Every existing automated path has an owner and replacement scenario ID before UI movement. |
-| 1. Contract and automation spine | Not started | Scenario registry, strict direct route, role-based targets, Android resource-ID bridge | Instrumentation and Macrobenchmark can launch/query a pilot scenario without visible text. |
-| 2. Host and catalog hard cut | Not started | Shared/dedicated/benchmark host policies, compact catalog, environment/build panels | Catalog contains executable scenarios only; top-level pager, About, planned modules, and gaps are removed. |
-| 3. Localization and content policy | Not started | Canonical English and Simplified Chinese resources, hard-coded-copy gate, localized guide model | Both locales pass; selectors and benchmark scripts are unchanged between locales. |
-| 4. Scenario migration | Not started | Fixture-first routes for every retained capability, chapter tabs split or explicitly justified | Primary fixture/action/result are directly reachable; old module/page wrappers have no callers. |
-| 5. Benchmark rebaseline | Not started | Revisioned release/comparison/interaction baselines and reports on the reference device | Same-device results pass the performance policy and record scenario/revision metadata. |
+| 0. Inventory and freeze | Completed | Scenario map, current selector map, current workload revisions, same-device baseline | Every existing automated path has an owner and replacement scenario ID before UI movement. |
+| 1. Contract and automation spine | Completed | Scenario registry, strict direct route, role-based targets, Android resource-ID bridge | Instrumentation and Macrobenchmark can launch/query a pilot scenario without visible text. |
+| 2. Host and catalog hard cut | Completed | Shared/dedicated/benchmark host policies, compact catalog, environment/build panels | Catalog contains executable scenarios only; top-level pager, About, planned modules, and gaps are removed. |
+| 3. Localization and content policy | Completed | Canonical English and Simplified Chinese resources, hard-coded-copy gate, localized guide model | Both locales pass; selectors and benchmark scripts are unchanged between locales. |
+| 4. Scenario migration | Completed | Fixture-first routes for every retained capability, chapter tabs split or explicitly justified | Primary fixture/action/result are directly reachable; old module/page wrappers have no callers. |
+| 5. Benchmark rebaseline | In progress | Revisioned release/comparison/interaction baselines and reports on the reference device | Same-device results pass the performance policy and record scenario/revision metadata. |
 | 6. Cleanup and Runtime-plan unlock | Not started | Old route/tag/section infrastructure removed; durable docs updated | Completion criteria pass, this plan is archived, then the Runtime/Patch plan is re-audited against the new baseline. |
 
 ## Phase 0: Inventory and contract freeze
@@ -494,6 +584,14 @@ rejects Demo-owned `By.text(...)`, text-scroll helpers, and direct visible-copy 
 System UI, IME, and third-party surfaces may use a narrow documented allowlist because the Demo
 does not own their resource IDs.
 
+Completed on 2026-08-14. Six pilot scenarios now cover shared state, dedicated resource,
+overlay, system-navigation, and comparative-performance hosts. Registry tests enforce identity,
+route determinism, resource naming, mutable reset, and workload completeness. The migrated
+instrumentation and Macrobenchmark paths use `By.res(...)`; `verifyDemoAutomationSelectors`
+freezes every remaining visible-copy selector as exact migration debt so new files cannot add one
+and Phase 4 must reduce the baseline. A Samsung SM-G991B running Android 13 passed the black-box
+test that launches and queries all five host classes through `MainActivity` without visible copy.
+
 Phase 1 is a prerequisite for localization. Do not translate the current text-selector protocol
 and then replace it later.
 
@@ -509,6 +607,21 @@ page and all planning/module statistics.
 Keep the current stable launcher component for external benchmark tooling. Validate that launcher
 redirect adds no measured frame after the scenario host begins and leaves no empty Activity in the
 task stack.
+
+Completed on 2026-08-14. The root `HorizontalPager`, bottom navigation, `DemoModule` inventory,
+About, placeholder, and diagnostics-gap surfaces were removed. The validated scenario registry now
+drives one searchable and filterable executable catalog; global theme/runtime facts and generated
+package/build facts live in separate toolbar panels. `MainActivity` accepts strict scenario IDs and
+no longer owns a module-key adapter. The remaining module-key bridge is confined to legacy
+Macrobenchmark test code until Phase 4 migrates those workloads.
+
+Registry and catalog-filter unit tests, AndroidTest and Macrobenchmark compilation, and the
+visible-copy selector gate pass. On the Samsung SM-G991B running Android 13, seven black-box tests
+verified catalog recreation, both toolbar panels, theme propagation across independent sessions,
+strict catalog launch, every pilot host class, resource-ID readiness, and a foreground task history
+containing the scenario host but no launcher shell. Visual inspection of the installed default-
+English catalog confirmed that the first executable scenario and its launch action remain in the
+initial viewport without the removed project-management content.
 
 ## Phase 3: Localization and content hard cut
 
@@ -526,6 +639,18 @@ Add mechanical gates for:
 
 Stable test data that is intentionally not language must be declared in a small allowlist with a
 reason. The allowlist cannot contain explanatory prose.
+
+In progress on 2026-08-14. Default-English and `values-zh-rCN` resources now have mechanical key,
+selector, plural, and format-signature parity checks. The catalog, shared hosts, scenario contract,
+theme/source labels, Activity titles, resource-configuration fixture, and State fixture resolve
+visible copy through resources. A cross-locale device test verifies that the same scenario-owned
+Android resource ID remains usable after an in-process locale switch without leaking the changed
+locale into later tests. `verifyDemoLocalizedVisibleCopy` prevents direct visible assignments from
+returning to already migrated source domains and expands as each domain is converted; it is not a
+legacy-literal count allowlist. The State, Diagnostics, Collections, Layouts, and Input domains are
+now fully resource-backed. The Samsung SM-G991B Android 13 reference device passed all 97 app
+instrumentation tests at the localization-spine milestone; after the Input slice, both locales pass
+all five action-reset contracts and all six focused Input visual and keyboard-follow regressions.
 
 ## Phase 4: Scenario migration and page simplification
 
@@ -545,18 +670,465 @@ callers migrate. Retain a small reusable guide presentation only for localized h
 Do not preserve a chapter tab merely to reduce diff size. A hard cut is preferred when direct
 scenario identity produces a simpler and more reliable model.
 
+The State domain now has three strict direct fixtures: `runtime.state`,
+`runtime.key-identity`, and `runtime.view-patch`. `StateActivity` requires immutable scenario
+identity; the chapter page index, local page switcher, overview, checklist, verification prose,
+and visible benchmark route metadata were deleted. Each fixture creates only its own runtime
+state and observers. Mutable fixtures expose deterministic resets: Core resets benchmark, local,
+and ViewModel state; Key Identity recreates its keyed subtree; View Patch resets text, selection,
+and both pager positions. The Core and View Patch hierarchy changes advance their workload
+revisions to 2. Their Macrobenchmarks now use scenario resource roles, the old `state` module
+bridge has no callers, and the legacy selector baseline fell from 27 to 16. Eight focused State
+device tests plus the registry-wide root/ready device sweep pass on the reference device.
+
+In progress on 2026-08-14. `diagnostics.runtime`, `diagnostics.theme`, and
+`diagnostics.renderer` now have strict registry identities, direct Activity routes, and
+scenario-owned root, ready, state/action where applicable, and fixture-boundary targets. The
+Diagnostics chapter overview, page switcher, benchmark route callout, copied renderer-model
+description, manual-probe checklist, and verification/gaps branches were deleted rather than
+translated or retained behind a compatibility mode. The theme long-fling workload now launches
+the direct scenario and synchronizes against first/last Android resource IDs; its hierarchy change
+advances the workload revision from 1 to 2. The obsolete tab-switch workload was removed because
+chapter tabs no longer exist in the target information architecture. Runtime, renderer, and theme
+visible copy now use paired locale resources. The theme fixture resolves human-facing labels,
+notes, sample values, and accessibility descriptions through resources while keeping framework
+token and API identifiers as stable diagnostic data. The complete Diagnostics domain is in the
+hard-coded-copy gate, and all three strict diagnostics routes pass on the reference device. The
+Collections domain is also fully resource-backed and covered by that gate; localized prose never
+serves as a selector or workload boundary.
+
+All seven retained collection fixtures now have strict `collection.*` identities and direct
+Activity routes. The chapter overview, page switcher, verification checklist, and visible route
+callouts were deleted. Mutable list, stress, grid, and refresh fixtures expose deterministic reset
+roles. The collection-controls interaction and collection-stress mutation workloads use Android
+resource roles and advance to revision 2 because the direct fixture hierarchy replaces the former
+chapter page. The old `collections` Macrobenchmark module bridge has no callers and was removed.
+Nine focused device tests covering strict routes, collection behavior, localization-safe targets,
+and component smoke checks pass on the reference device.
+
+The six retained layout fixtures now use strict `layout.*` identities and direct Activity routes.
+The checklist page, chapter overview, page switcher, verification copy, visible route callouts, and
+the `layouts_page_index` contract were deleted. Linear layout advances to workload revision 2 and
+uses resource-ID roles for benchmark mutation, observation, reset, and fixture targeting. Stack,
+edge, flow, and constraint fixtures expose deterministic reset roles; scroll remains immutable.
+Layout UI tests launch scenario identities directly and assert geometry or state transitions rather
+than localized labels. The old `layouts` Macrobenchmark module bridge has no callers and was
+removed. All retained layout fixture copy, including dynamic counts, constraint-mode diagnostics,
+and accessibility descriptions, now resolves through paired locale resources, and the complete
+Layouts domain is protected by the hard-coded visible-copy gate.
+
+The Input domain now has five strict direct fixtures: `input.fields`, `input.selection`,
+`input.stress`, `input.search`, and `input.derived-summary`. `InputActivity` requires immutable
+scenario identity; the chapter overview, page switcher, verification copy, visible route callout,
+and `input_page_index` contract were deleted. Each fixture creates only its own state, and every
+mutable fixture publishes deterministic action, state, target, and reset roles. The fields workload
+advances to revision 2, uses scenario resource IDs end to end, and no longer needs the old `input`
+Macrobenchmark bridge. Strict automation IDs also replace overlapping legacy test tags, so one
+native view has one unambiguous automation identity. The text-selector baseline fell from 16 to 12.
+Paired resources cover all Input fixture copy, and the hard-coded-copy gate now owns the domain.
+
+The Gestures domain now has three strict direct fixtures: `gesture.tap`,
+`gesture.drag-swipe`, and `gesture.transform`. `GesturesActivity` requires immutable scenario
+identity; the chapter overview, page switcher, verification copy, and `gestures_page_index`
+contract were deleted. The hard cut also fixes the former lifecycle shape in which every route
+created all three fixtures' state, the drag frame callback, and the transform recognizer. Each
+route now enters one fixture function, so inactive gesture state and effects never join its
+Session. Every fixture publishes deterministic action, state, target, and reset roles; tap and
+drag/swipe expose a secondary physical target without reusing a legacy tag identity. Paired
+resources cover the complete domain, and the hard-coded-copy gate now owns it. On the Samsung
+SM-G991B Android 13 reference device, all five registry automation tests passed, including the
+three gesture action-reset contracts in English and Simplified Chinese, followed by four focused
+real-input tests for pointer consumption, tap fallback, drag/anchor settling, and two-pointer
+transform.
+
+The Graphics domain now has four strict direct fixtures: `graphics.drawing`,
+`graphics.outer-shadow`, `graphics.inner-shadow`, and `graphics.shadow-list`. `GraphicsActivity`
+requires immutable scenario identity; the chapter overview, page switcher, verification copy, and
+`graphics_page_index` contract were deleted. Drawing state, inner-shadow interaction state, shadow
+backend lifecycle, diagnostics, and the 1,000-row lazy workload now exist only in their owning
+fixture. The lazy fixture retains stable keys and one shared lazy-row content type without mounting
+the drawing or interactive shadow Sessions. Mutable fixtures publish deterministic action, state,
+target, and reset roles; cache counters remain visible diagnostics but are deliberately excluded
+from the reset identity because they are process-level observations. Paired resources cover all
+visible copy, including Canvas labels resolved during composition before draw callbacks, and the
+hard-coded-copy gate now owns both Graphics source files. Focused device evidence covers all three
+advanced-shadow behaviors and both drawing-control paths, while the strict cross-locale automation
+contract covers drawing, inner shadow, and shadow diagnostics.
+
+The Animation domain now has six strict direct fixtures: `animation.core`,
+`animation.content`, `animation.list-motion`, `animation.specs`, `animation.transition`, and
+`animation.infinite`. `AnimationActivity` requires immutable scenario identity; the chapter page
+index and infinite-pulse extras, page switcher, overview, filtering, and verification prose were
+deleted. Only the selected fixture creates state, animation objects, coroutine context, or
+`LaunchedEffect`, so inactive animation Sessions no longer join an unrelated route. The list-motion
+fixture stores stable logical item identities and resolves labels during composition, preventing a
+locale change from freezing translated text into reusable state. Every fixture exposes localized,
+deterministic action/state/reset roles; the infinite reset state deliberately excludes transient
+command bookkeeping while still snapping the controlled value to its initial target. The
+hard-coded-copy gate now owns the Animation source, and the old Activity extras have no callers.
+On the Samsung SM-G991B Android 13 reference device, the registry-wide root/ready sweep, all six
+action-reset contracts in English and Simplified Chinese, and seven focused animation behavior
+tests passed.
+
+The Modifiers domain now has three strict direct fixtures: `modifier.visual`,
+`modifier.sizing`, and `modifier.accessibility`. `ModifiersActivity` requires immutable scenario
+identity; the page-index extra, local page switcher, overview, copied Modifier inventory, and
+verification checklist were deleted. These fixtures are intentionally immutable, so they publish
+root/ready and visual targets without artificial action or reset roles. Visual verification owns
+separate color-only and Drawable-preferred targets, sizing targets the fill-height sample, and the
+accessibility route targets both the described Box and the native-patched TextView. Paired
+resources cover all visible and accessibility copy, and the hard-coded-copy gate owns the complete
+Modifiers directory. On the Samsung SM-G991B Android 13 reference device, all three strict routes
+passed the registry-wide root/ready sweep; focused tests also passed for Drawable precedence and
+outline clipping, fillMaxHeight parent geometry, localized contentDescription, and replayed
+nativeView typeface/letter-spacing patches.
+
+The existing dedicated `environment.resources` route already satisfied the third-risk-group
+contract and required no duplicate migration. Android View interop now has one strict direct
+fixture, `interop.android-view`; `InteropActivity` requires that immutable scenario identity, and
+the chapter overview, page switcher, route callout, verification checklist, and duplicate basic
+fixture were deleted. State, action, reset, declarative mirror, and native TextView result use
+scenario-owned resource roles. Dynamic state, localized resources, and theme tokens are read
+inside the mounted lazy-item Session so a stable item key cannot freeze ordinary captured values;
+the same native TextView is patched in place across state and light/dark theme changes. The direct
+host and hierarchy advance the workload revision from 1 to 2. Its Macrobenchmark now uses only
+resource-ID roles, the legacy `interop` module bridge has no callers and was removed, and the
+guarded visible-text selector baseline fell by four usages. Paired resources cover the complete
+fixture, and the hard-coded-copy gate owns the Interop domain. On the Samsung SM-G991B Android 13
+reference device, two renderer lifecycle regressions, the in-place state/theme fixture, the
+English and Simplified Chinese action-reset contract, and the registry-wide root/ready sweep
+passed.
+
+The Overlay domain now has three strict direct fixtures: `overlay.transient`, `overlay.dialog`,
+and `overlay.menu`. `FeedbackActivity` requires immutable scenario identity; the chapter page
+index, local page switcher, filter controls, benchmark-route claim, verification checklist, and
+aggregate state object were deleted. Each route creates only the state and overlay requests it
+owns, so an inactive dialog, menu, tooltip, Snackbar, Toast, or popup no longer participates in
+another route's Session. Modal fixtures expose their `target` and deterministic `reset` inside the
+overlay window because Android correctly hides the obscured Activity window from black-box
+accessibility queries; non-modal menu state remains observable in the host. All automation now
+uses app-owned resource IDs, removing the final two guarded visible-text selectors from the
+Feedback tests and all legacy Feedback tags. Paired resources cover the complete domain, and the
+hard-coded-copy gate owns the Feedback directory. No workload revision was created because the
+former page only displayed a benchmark-shaped callout and had no Macrobenchmark owner. On the
+Samsung SM-G991B Android 13 reference device, three focused overlay flows, the English and
+Simplified Chinese action-reset contract, and the registry-wide root/ready sweep passed.
+
+The dedicated `navigation.system` fixture now requires its strict scenario identity for ordinary
+launches; only an external `ACTION_VIEW` deep link may bind the sole owned scenario implicitly.
+The first lazy item owns localized state plus deterministic Push and full-Session Reset roles, and
+the old visible manual checklist and `adb` command were removed. Navigation events, result
+summaries, and deep-link outcomes are stored as semantic values rather than translated strings, so
+an in-process locale change cannot freeze old-language state. Reset advances a generation key and
+recreates the controller, entry and graph owners, saveable state, and ViewModels instead of merely
+popping the active stack. This host and hierarchy change advances the navigation motion workload
+revision from 1 to 2. The hard-coded-copy gate owns both system-navigation source files and the
+dedicated Activity while leaving the separate Navigation-components showcase for the fifth-risk
+group. On the Samsung SM-G991B Android 13 reference device, the bilingual action/reset contract,
+all three focused independent-stack, deep-link, recreation, and owner-lifetime tests, and the
+registry host-role sweep passed. The automation text reader also now reacquires a role node after
+an intentional full-Session reset instead of assuming that an old `UiObject2` remains valid.
+
+Material 3 theme-source verification now has three strict direct fixtures:
+`design.material3-xml`, `design.material3-static`, and `design.material3-custom`. Scenario identity
+is the only source selector; the permissive theme-source extra and unknown-value fallback were
+deleted. All three routes retain the same component and diagnostic shape so source attribution is
+the controlled variable, while localized ready/state/action/reset roles occupy the first item.
+Reset advances both the parent composition generation and every lazy-item key. That second
+identity boundary is required because each lazy item owns an independent logical Session and must
+not retain its old remember, text-field, or callback identity when the fixture is reset. Paired
+resources cover all human-facing source, control, diagnostic-label, and accessibility copy; stable
+token IDs, producer IDs, recipe IDs, enum names, and color-role abbreviations remain diagnostic
+data. The hard-coded-copy gate owns the page and dedicated Activity. These routes have no current
+Macrobenchmark owner, so no workload revision was added. On the Samsung SM-G991B Android 13
+reference device, the bilingual three-source action/full-reset contract, all five existing theme
+source, touch-target, native-switch, and state-layer tests, and the registry-wide host-role sweep
+passed.
+
+Multi-design-system verification now has exactly two public scenario identities:
+`design.bundle-material3` owns the rounded Material 3 reference bundle, while
+`design.bundle-contrast` owns the cut-contrast bundle and its internal `cupertino-pressure`
+verification variant. The variant extra is no longer a launcher route or permissive source
+selector: it is accepted only by the owning strict scenario, and an unknown or cross-bundle value
+fails deterministically. Root replacement updates both scenario and variant identity before
+Activity recreation. Caller state intentionally survives that explicit replacement, while Reset
+advances a generation embedded in every lazy-item key so remember, effect, field, and callback
+identity are recreated throughout the fixture. Paired resources now cover the full page and all
+three variant labels. Scenario roles replace the old root, primary-action/state, and secondary
+action/state tags; common overlay resource IDs cover black-box dialog interaction across Activity
+replacement. This hierarchy and automation hard cut advances both bundle workloads from revision
+1 to 2. It removes all 23 fixture-specific visible-copy selectors from the instrumentation and
+Macrobenchmark owners, plus the obsolete shared launcher readiness lookup. On the Samsung
+SM-G991B Android 13 reference device, both bundles passed the action/full-reset contract in English
+and Simplified Chinese, the five-case light/dark, LTR/RTL, font-scale, reduced-motion, native-input,
+accessibility, recreation, and screenshot matrix passed, root/lazy/overlay replacement coherence
+passed, and the registry-wide host-role sweep passed.
+
+One UI 7 verification now has one strict direct fixture, `design.oneui7`.
+`OneUi7VerificationActivity` requires that immutable scenario identity, so direct launches can no
+longer bypass the registry contract. The page retains the independent One UI five-component and
+overlay-presenter semantics rather than inheriting Material assumptions. Scenario roles own its
+root, ready, primary and secondary actions, state, reset, and visual targets; app resource IDs own
+the bottom-sheet content and actions. The existing presenter accessibility descriptions remain
+framework-owned window identities, while app-visible navigation and overlay copy is no longer an
+automation selector. Reset advances both the parent composition generation and every lazy-item
+key, recreating button, Switch, text-field, navigation, Snackbar, and bottom-sheet state instead of
+leaving independent item Sessions alive. Paired resources cover the complete fixture, and the
+hard-coded-copy gate owns both the page and dedicated Activity. The guarded visible-text selector
+baseline fell by four usages, and obsolete launcher/root/action/state tags were removed. This
+fixture has no Macrobenchmark owner, so no workload revision was added. On the Samsung SM-G991B
+Android 13 reference device, the bilingual action/full-reset contract, the complete light/dark,
+LTR/RTL, 1.0/1.3 font-scale, Switch drag, navigation accessibility, Snackbar, bottom-sheet, and
+screenshot evidence matrix, and the registry-wide host-role sweep passed.
+
+The Actions chapter is now four strict component fixtures: `component.card`, `component.fab`,
+`component.chip`, and `component.list-item`. `ActionsActivity` requires one of those immutable
+scenario identities; the page-index extra, chapter switcher, copied module overview, fake benchmark
+anchor, and manual verification checklist were deleted. Each route mounts only its own state and
+component variants. Its first lazy item exposes the real component action, observable state, and a
+full-Session reset; the remaining items retain only the visual variants needed to verify the
+component family. Reset advances both the parent generation and every lazy-item key. Dynamic state
+copy is resolved inside the owning lazy-item Session rather than captured as a parent String, so a
+stable key/revision cannot retain stale state. Paired resources cover all visible and accessibility
+copy, scenario resource roles replace the two legacy Actions tags, and the hard-coded-copy gate
+owns the page and Activity. These fixtures have no Macrobenchmark owner, so no workload revision
+was added. On the Samsung SM-G991B Android 13 reference device, all four routes passed the English
+and Simplified Chinese action/full-reset contract, the elevated-card shadow regression and
+component-family smoke test passed, and the registry-wide host-role sweep passed.
+Shared-host ready markers now show a workload revision only when the scenario owns a real
+`DemoBenchmarkContract`; visual and manual-only scenarios no longer publish the misleading
+`workload r0` label.
+
+The Navigation-components chapter is now three strict component fixtures:
+`component.app-bars`, `component.navigation-bar`, and `component.scaffold`. `NavigationActivity`
+requires one of those immutable scenario identities; the page-index extra, chapter switcher,
+copied module overview, fake benchmark anchor, and manual verification checklist were deleted.
+System stack, deep-link, lifecycle-owner, and predictive-Back behavior remains exclusively owned
+by the separate `navigation.system` host. Each component fixture creates only its own state and
+places a real AppBar action, NavigationBar selection, or Scaffold floating action together with
+observable state and full-Session reset in the first lazy item. Reset advances both the parent
+generation and every lazy-item key. Paired resources cover all visible and accessibility copy;
+scenario resource roles replace the three obsolete Navigation tags and visible-copy selection in
+the focused NavigationBar test. These visual fixtures have no Macrobenchmark owner, so no workload
+revision was added. On the Samsung SM-G991B Android 13 reference device, all three routes passed
+the English and Simplified Chinese action/full-reset contract, the NavigationBar selection
+regression and component-family smoke tests passed, visual inspection confirmed a non-overlapping
+Scaffold hierarchy, and the registry-wide host-role sweep passed.
+
+The legacy WidgetShowcase audit corrected an over-specified frozen inventory rather than creating
+20 duplicate routes. Fourteen detail pages were already fully owned by Foundations, Input, or the
+action-component fixtures. The remaining Divider, Button, IconButton, SegmentedControl, and paired
+linear/circular Progress coverage now uses five strict `component.*` scenarios under
+`ComponentShowcaseActivity`; the chooser, back row, translated-name navigation, and all seven old
+section files were deleted. Button, IconButton, SegmentedControl, and Progress expose real action,
+state, target, and full-Session reset roles. Divider is intentionally immutable and publishes only
+root, ready, and visual target rather than synthetic state. Paired resources cover the entire new
+domain, and the hard-coded-copy gate owns both the page and Activity. The former Checkbox detail
+touch regression now launches `input.selection` and uses its owning resource target. None of these
+visual fixtures has a Macrobenchmark owner, so no workload revision was added. On the Samsung
+SM-G991B Android 13 reference device, the four mutable fixtures passed their English and
+Simplified Chinese action/full-reset contract, all five visual targets and the SegmentedControl and
+Checkbox native interaction regressions passed, the Button matrix was visually inspected, and the
+registry-wide host-role sweep passed.
+
+The Foundations chapter is now four strict direct fixtures: `foundations.locals`,
+`foundations.theme`, `foundations.media`, and `foundations.typography`. `FoundationsActivity`
+requires one of those immutable scenario identities; the page-index extra, chapter switcher,
+architecture prose, copied component inventory, cross-chapter jump controls, verification
+checklist, and fake benchmark switch were deleted. Locals, Theme, and Typography are intentionally
+immutable visual fixtures and therefore do not manufacture action or reset roles. Media retains
+the real resource, URL/fallback, delayed-model replacement, cancellation, and icon-content-color
+behavior; it alone exposes action, state, target, and full-Session reset roles, with the parent
+generation embedded in every lazy-item key. Component Progress and IconButton matrices remain
+owned by their `component.*` scenarios instead of being duplicated here. Paired resources cover
+the complete domain, and the hard-coded-copy gate owns the page and Activity. The two legacy
+Macrobenchmarks were removed rather than rebaselined: one measured an artificial on/off switch,
+and the other measured a module-to-scenario launch that is not a registered workload. Neither had
+a comparable framework behavior to preserve.
+
+The frozen Preview inventory was corrected after tracing the real preview execution paths. The
+three on-device pages were not executable Preview fixtures: Bridge toggled ordinary Activity state,
+Overlay Mock duplicated the `feedback-overlay-static` PreviewCatalog spec, and Snapshot rendered
+only a Gradle command and report path. `PreviewActivity`, its page-index route, all five test tags,
+and the device smoke assertion were therefore deleted instead of publishing misleading
+`preview.*` scenario IDs. The debug Compose-preview light/dark entrypoints and the static-runner
+light/dark entrypoint now render the real `component.button` fixture directly. Overlay ownership
+remains in PreviewCatalog and Paparazzi, while snapshot truth remains the `qaPreview` gate. These
+tooling-only execution paths stay outside the on-device Demo registry because a normal Activity
+cannot validate Compose Preview session retention, Layoutlib configuration, artifact export, or
+Paparazzi baselines.
+
+The performance-comparison audit found that only `performance.list` had entered the registry and
+that its caller-supplied Compose engine was overwritten by the route default, so both sides of the
+nominal comparison could execute ViewCompose. The host now requires one of four strict workload
+identities: `performance.list`, `performance.complex-layout`, `performance.shadow-list`, or
+`performance.shadow-complex-layout`. Each identity fixes its scenario shape while declaring only
+the engine extra as a caller-overridable dimension; the shadow backend remains an additional
+explicit dimension when applicable. The Activity rejects a mismatched scenario ID and wire
+scenario, both engines publish the same root/ready/action/reset/state/target resources, and all
+comparison Macrobenchmarks use those resources instead of English copy. The obsolete
+engine-without-scenario launcher bridge was removed. Performance copy is now paired Android
+resources and the whole source domain is under the hard-coded visible-copy gate.
+
+The original frozen table's 240-row claim was corrected to 1,000 rows. Source history shows the
+fixture has used 1,000 rows since the comparison workload was introduced; changing it to 240 would
+silently create a different benchmark. Workload revision 1 therefore remains accurate because the
+canonical English row/card trees, data rules, actions, and measured content were preserved while
+route setup and synchronization moved outside the measured block.
+
+On the Samsung SM-G991B Android 13 reference device, the four scenario shapes passed the complete
+ViewCompose/Compose action and reset matrix. The audit also found that Compose's
+`testTagsAsResourceId` bridge publishes the test tag verbatim: an unqualified tag is not selectable
+through the same package-qualified `By.res(package, name)` contract as an Android View. The paired
+Compose fixtures now derive the fully qualified resource name from the scenario-owned `R.id`, so
+both engines expose one identical black-box selector. The registry-wide root/ready sweep, including
+all four default ViewCompose performance routes, passed after this correction.
+
+Cross-Activity theme propagation is now owned by the strict
+`environment.cross-activity-theme` Dedicated scenario instead of an unregistered secondary page.
+The fixture starts from deterministic Light state, exposes resource-backed primary action,
+secondary-Activity action, state, target, and reset roles, and restores the caller's application
+theme when the scenario finishes. The second Activity owns an independent render Session and its
+own Android resource targets, so the device contract verifies propagation in both directions
+rather than inferring it from one Activity. All visible copy is paired English and Simplified
+Chinese resources. The old `themeSwitch` Macrobenchmark is intentionally retired: it measured
+translated controls inside the general Environment page, did not launch a second Activity, and
+was never a frozen framework workload. On the Samsung SM-G991B Android 13 reference device, the
+focused lifecycle/appearance test and the bilingual black-box action/reset test both passed.
+
+The Phase 4 selector migration is complete. The final unused module-launch bridge, catalog/chapter
+text helpers, visible-text click/wait/scroll helpers, and their dead app-instrumentation wrappers
+were deleted. Resource-target scrolling remains as a narrowly named helper and no longer shares a
+text-search abstraction. `verifyDemoAutomationSelectors` now enforces a zero-debt contract instead
+of preserving exact legacy counts: any `By.text(...)` or named visible-copy selector in Demo
+instrumentation or Macrobenchmark source fails the build. There is no current system, IME, or
+third-party exception requiring an allowlist.
+
+The Phase 5 preflight removed one misleading synthetic workload before accepting any measurements.
+`diagnosticsRefreshAfterPatch` changed state in one Activity and measured launching a different
+Activity, so it neither isolated renderer patching nor owned a frozen scenario contract. The real
+`diagnostics.renderer` interaction remains and declares Benchmark ownership. Its Phase 5 stability
+preflight then advanced the workload to revision 3: one refresh produced too few frames and omitted
+reset completion, so each iteration now measures eight complete refresh-and-reset cycles.
+Comparative reports persist scenario ID and workload revision beside each measured
+action; longitudinal gates require the prior revisioned comparison report and reject cross-revision
+rows instead of inferring an old workload revision from current source.
+
 ## Phase 5: Benchmark rebaseline and acceptance
 
 Build the release-like target, run the revised scenarios on the same device and thermal policy,
 and produce reports containing scenario ID and workload revision.
+
+The 2026-08-15 preflight invalidated both a monolithic suite run and a ten-iteration isolated
+state-patch run: each moved the Samsung SM-G991B from `LIGHT` to `SEVERE`, while AndroidX recorded
+no thermal sleep. Formal physical interaction methods therefore hard-cut to five clean iterations.
+Cold startup retains ten iterations because a five-run retry produced one genuine first-run
+cold-cache outlier and failed the `0.15` stability gate. Every method starts at `NONE` or `LIGHT`;
+benchmark and target processes are stopped and the screen is turned off between methods; any batch
+ending at `SEVERE` is rejected regardless of its apparent variance.
+
+Paired ViewCompose/Compose methods are also isolated from ordering heat: each method starts from the
+same accepted thermal state and cools independently. The report tool deterministically merges their
+raw JSON only when device, OS, clock-policy, and compilation identities match, and rejects duplicate
+method names. Legacy input without an explicit clock policy still requires matching AndroidX
+`cpuLocked` snapshots. This preserves one revisioned paired report without making the second engine
+inherit the first engine's heat.
+
+The batch installs its APKs once, then starts each cooled method directly through the already
+installed instrumentation runner. This ordering is part of the protocol, not an operator
+convenience: AndroidX snapshots `cpuLocked` during instrumentation-process initialization, while an
+OEM package-install or wake boost may temporarily raise `scaling_min_freq` and produce a false
+locked classification. Normal minimum frequencies and the accepted thermal state are verified
+before every method. The verified consumer-device runner writes
+`clockPolicy=unlocked-dvfs-preflight-v1` into the AndroidX benchmark payload. Compatibility uses that
+durable policy instead of the racy launch-time boolean, while the report preserves every raw
+`cpuLocked` snapshot and exposes mixed observations. A missing or different policy still fails
+closed; report generation never rewrites captured context.
+
+The launch boost also affected the measured workload itself: two independently cooled Compose
+complex-layout scroll samples made their first iteration roughly 40% faster than the following four
+and failed the stability gate. An initial 1.5-second settling trial still left the first
+complex-layout update iteration at `4.20 ms` versus `5.70`-`6.89 ms` for later iterations, producing
+CV `0.170`. Every paired performance setup therefore waits a conservative 5 seconds after the target
+is ready, outside the measured block. Because this changes the timing contract, list and complex
+layout advance to revision 3; both shadow comparison scenarios advance to revision 2. Revision 2
+list results and partial complex-layout results are retained only as rejected preflight evidence and
+are not accepted as replacement baselines.
+
+The Demo registry and report tool must publish those same revisions. A cross-language report-tool
+test parses the four registered performance scenarios and rejects any disagreement with
+`SCENARIO_CONTRACTS`; a focused registry unit test also pins the accepted values. The registry
+correction from list/complex revision 2 and shadow revision 1 changes metadata only: the isolated
+performance screens do not render or branch on that field, and the accepted revision 3 raw payloads
+already identify the measured workload correctly. The existing list/complex physical results
+therefore remain valid rather than being relabeled after collection.
+
+The same launch-boost invariant applies to the remaining warm navigation and design-system
+interactions. Their setups now wait 5 seconds after fixture positioning or navigation preloading,
+outside measurement. Design-system cold initial-build methods deliberately do not wait because
+launch is the measured operation. This timing-contract correction advances `navigation.system`,
+`design.bundle-material3`, and `design.bundle-contrast` from revision 2 to revision 3 before any
+replacement result is accepted; there is no revision 2 baseline to relabel.
+
+The first isolated revision 3 navigation push preflight still produced too little statistical
+weight: frame counts were stable at 51-57, but the five run-P50 values were
+`9.779/7.545/4.044/8.708/9.637 ms` and CV was `0.265`. Navigation revision 4 therefore attempted
+eight same-direction transitions per iteration while preserving separate push and pop methods. Its
+first instrumentation preflight failed before measurement because consecutive standard pushes to
+the same route produced identical event copy after the second transition, so the scenario `state`
+target could not prove that the active destination changed. Navigation revision 5 makes that
+automation state include the active stack depth and strengthens the bilingual device test to
+require eight distinct consecutive state changes. Revision 5 then completed five iterations of
+eight pushes, but its roughly two-minute measurement window crossed the device thermal boundary:
+the first three run-P50 values were `4.504/4.502/4.320 ms`, the last two rose to
+`8.356/8.614 ms`, and CV reached `0.327`. Navigation revision 6 therefore measures four
+same-direction transitions per iteration. That still contributes roughly 200 transition frames per
+run instead of revision 3's roughly 50 while bounding sustained work. Pop setup preloads four
+destinations outside measurement, then the measured block returns through all four.
+
+Revision 6 proved that workload size was no longer the blocker. Its uncompiled push run produced
+202-216 frames but run-P50 values of `8.134/8.702/9.566/4.572/4.358 ms` (CV `0.308`). Two
+profile-guided retries ended at `LIGHT` and `NONE` yet also failed at CV `0.323` and `0.317`.
+During the latter run, read-only sampling showed Samsung changing `scaling_max_freq` repeatedly
+between full and capped plateaus without a thermal-status change. AndroidX also reported that the
+Runtime Image could not be cleared, and direct shell profile reset is denied on this user build.
+The platform fixed-performance command held one frequency ceiling but still produced CV `0.372`;
+enhanced processing did not create a clock lock. A representative design revision 3 retained-patch
+run failed similarly at CV `0.262`. These results are rejected device-capability evidence. Revisions
+3-5 remain rejected workload preflights; revision 6 is the retained navigation workload, but neither
+navigation revision 6 nor design revision 3 receives a baseline until a clock-controllable reference
+device is available.
 
 For structurally unchanged workloads, apply the repository performance policy: P50 fails only when
 it regresses by more than both 5% and 0.3 ms; P95 fails only when it regresses by more than both 10%
 and 0.8 ms. Unstable runs are rerun rather than interpreted. A changed workload revision receives a
 new baseline and is never presented as an optimization against the old revision.
 
-The new Runtime/Patch plan audit may begin only after state patch, renderer diagnostics, list
-scroll/mutation, and complex-layout baselines have stable revisioned results.
+The Runtime/Patch modifier-binding and LocalSnapshot experiments may begin only after state patch,
+renderer diagnostics, list scroll/mutation, and complex-layout baselines have stable revisioned
+results. Those scoped prerequisites are satisfied by the accepted replacement results above;
+navigation and design-system matrices do not exercise either optimization and are not part of this
+gate.
+
+The fixture-interaction baseline uses the same launch-boost isolation. Direct routing
+removed the old diagnostics tab-switch prelude, and the collection fixture now begins from an
+explicitly settled host, so `diagnostics.theme` and `collection.stress` advance to revision 2. Their
+Macrobenchmark method names carry `Revision2`, while the physical batch also records scenario,
+revision, and clock policy in AndroidX payload metadata.
+
+The accepted interaction workload keeps automation overhead outside measurement. Diagnostics uses
+eight fixed long flings per direction and verifies the real bottom and top anchors. Collection
+scroll resolves the nested LazyColumn bounds during setup, then executes eight fixed swipes per
+direction with a 500 ms settle after every gesture. The settle is explicit because the shared OEM
+workaround disables UiAutomator's implicit idle timeout. Collection mutation executes eight complete
+rotate/insert/reset cycles and verifies the restored state after every cycle.
+
+The shadow comparison baseline uses the same per-method cooling and launch-settling protocol.
+Mutation and update now execute eight complete action/reset cycles per iteration; every reset must
+restore the initial state. All eight `Auto` (`ExactBitmap`) methods passed the `0.15` frame-CPU
+run-P50 stability gate. The owning performance specification records the paired P50/P95 values and
+CVs; the raw batch retains mixed AndroidX `cpuLocked` snapshots and the common host-verified clock
+policy rather than rewriting captured metadata.
 
 ## Explicit removals and non-goals
 
@@ -662,9 +1234,10 @@ This plan is complete only when all of the following are true:
     `docs/archive/`.
 
 The 2026-08-14 source-and-contract re-audit of the Runtime data propagation and Android View patch
-optimization plan is complete. Only after these criteria pass may its performance experiments begin;
-they must use the new scenario IDs and workload revisions rather than reconstructing baselines from
-the retired Demo layout.
+optimization plan is complete. Its performance experiments may begin after their affected-scenario
+gate passes, even while this broader Demo plan retains unrelated device-blocked matrices. They must
+use the new scenario IDs and workload revisions rather than reconstructing baselines from the
+retired Demo layout.
 
 ## Evidence ledger
 
@@ -676,6 +1249,25 @@ the retired Demo layout.
 | 2026-08-14 | Renderer test-tag path audit | Confirmed `testTag` is stored as `R.id.viewcompose_test_tag`, not an external-process Android resource ID. |
 | 2026-08-14 | Running-device layout/screenshot audit on SM-G991B | Captured catalog, four Diagnostics states, Settings, About, State, widget showcase, and performance-list comparison; findings are recorded in the screen matrix. |
 | 2026-08-14 | Debug APK build | `./gradlew :app:assembleDebug` passed. |
+| 2026-08-14 | Phase 0 scenario and workload freeze | Classified every module/page/dedicated host and benchmark owner; assigned direct scenario IDs and revision 1 to each retained measured workload. |
+| 2026-08-15 | Phase 5 thermal preflight on SM-G991B / Android 13 | A combined run and an isolated ten-iteration state-patch run both reached Android thermal status `SEVERE`; results were rejected and the formal interaction protocol was hard-cut to five clean iterations with per-method cooldown. |
+| 2026-08-15 | Phase 5 cold-start stability preflight | Five cold starts ended below `SEVERE`, but one 391.95 ms first-run outlier versus four 260–284 ms samples produced CV `0.185`; the batch was rejected and cold startup retained ten iterations independently of the five-iteration interaction protocol. |
+| 2026-08-15 | Phase 5 renderer-diagnostics stability preflight | The revision 2 one-refresh workload ended below `SEVERE` but produced frame CPU run-P50 CV `0.372`; it also did not await reset completion. The result was rejected, and revision 3 measures eight complete refresh/reset cycles per iteration. |
+| 2026-08-15 | Phase 5 renderer-diagnostics revision 3 and report audit | Five clean runs ended below `SEVERE`; frame CPU P50/P95 were 6.944/14.326 ms with run-P50 CV `0.140`. Signed frame overrun crossed zero, proving CV invalid for that metric; the report retains overrun values and regression gates but limits CV stability to positive ratio-scale frame CPU duration. |
+| 2026-08-15 | Phase 5 comparison-workload stability preflight | The revision 1 Compose list mutation used one mutate/reset cycle and produced frame CPU run-P50 CV `0.291`; the result and all scenario-level revision 1 list measurements were retired. List mutation and complex-layout update now execute eight complete cycles, and both scenario contracts advance to revision 2 before rebaseline. |
+| 2026-08-15 | Phase 5 installed-runner protocol and list revision 2 preflight | Per-method Gradle installation transiently raised OEM CPU minimum frequencies and made AndroidX report `cpuLocked=true` for two otherwise unlocked runs. Installing once, cooling, verifying normal minimum frequencies, and invoking the installed runner produced four same-context `cpuLocked=false` results. All list frame-CPU run-P50 CV values were `0.108` or lower, but the batch remained provisional until the later launch-boost audit rejected revision 2. |
+| 2026-08-15 | Phase 5 launch-boost isolation audit | Two cooled Compose complex-layout scroll samples began with frame-CPU run-P50 near `3.14 ms`, followed by four runs near `5.0`-`5.44 ms`; CV remained above `0.19`. A 1.5-second trial still left complex-layout update at CV `0.170`, so the shared paired-performance setup now includes an unmeasured 5-second post-launch settling window. List and complex-layout contracts advance to revision 3, shadow comparisons to revision 2, and the previously provisional revision 2 list report is rejected. |
+| 2026-08-15 | Phase 5 explicit clock-policy gate | AndroidX `cpuLocked` alternated on the same non-rooted device because instrumentation launch boosting transiently raised `scaling_min_freq`. Formal runs now persist `clockPolicy=unlocked-dvfs-preflight-v1`; the report compares that host-verified policy, exposes all raw lock snapshots, and retains strict snapshot matching for legacy input. Sixteen report-tool tests pass. |
+| 2026-08-15 | Phase 5 list and complex-layout replacement baselines | Five-iteration, per-method-cooled revision 3 batches passed the `0.15` stability gate. List scroll/mutation ViewCompose run-P50 CV values were `0.041/0.009` versus Compose `0.072/0.034`; complex-layout scroll/update values were `0.011/0.079` versus `0.037/0.082`. The owning performance specification records the accepted P50/P95 values. |
+| 2026-08-15 | Phase 5 fixture-interaction workload audit | Diagnostics initially failed to return to its top anchor because the reverse fling began in the fixed header instead of the scrolling surface. Collection's original three-swipe workload produced run-P50 CV `0.755`; enlarging it while resolving targets inside measurement produced CV `0.712`. Moving Accessibility lookup to setup still exposed 3.6/7.2/14.7 ms run plateaus. Fixed 120 Hz and full ART compilation trials did not remove them. Perfetto showed stable RecyclerView and draw work but variable `dequeueBuffer` wait with FrameTimeline `Buffer Stuffing`, proving that zero-idle back-to-back gestures contaminated the workload. A fixed 500 ms inter-gesture settle removed the stuffing. |
+| 2026-08-15 | Phase 5 diagnostics-theme and collection-stress revision 2 baselines | Five clean, per-method-cooled runs passed the `0.15` stability gate. Diagnostics long-fling, collection scroll, and collection mutation frame-CPU P50/P95 values were `3.067/7.336`, `3.357/6.288`, and `4.358/10.507` ms; their run-P50 CV values were `0.008`, `0.018`, and `0.018`. Every raw result records the scenario, revision, and explicit clock policy. |
+| 2026-08-15 | Phase 5 workload-revision consistency gate | Corrected the Demo registry to list/complex revision 3 and shadow revision 2. Kotlin pins the accepted registry values, while the report-tool suite parses the registry and rejects cross-layer drift. The correction is metadata-only for isolated performance screens, so accepted revision 3 list/complex measurements remain valid. |
+| 2026-08-15 | Phase 5 shadow-comparison revision 2 baselines | Eight independently cooled `Auto`/`ExactBitmap` methods passed the `0.15` stability gate. Shadow-list scroll/mutation ViewCompose run-P50 CV values were `0.052/0.023` versus Compose `0.044/0.117`; shadow-complex scroll/update values were `0.016/0.049` versus `0.046/0.044`. Mutation/update use eight complete action/reset cycles, and the owning performance specification records all paired P50/P95 values. |
+| 2026-08-15 | Phase 5 navigation/design launch-settling audit | The remaining warm navigation and design-system methods did not apply the already-proven 5-second OEM launch-boost isolation. Their setup now settles outside measurement; design initial-build remains an unmodified cold-start workload. Navigation and both design-bundle scenario contracts advance from revision 2 to revision 3 before rebaseline. |
+| 2026-08-15 | Phase 5 navigation revision 3 stability preflight | One push per iteration yielded stable 51-57 frame counts but frame-CPU run-P50 values of `9.779/7.545/4.044/8.708/9.637 ms` and CV `0.265`. The result is rejected. Revision 4 keeps push/pop separate and measures eight same-direction transitions per iteration; pop setup preloads the matching depth outside measurement. |
+| 2026-08-15 | Phase 5 navigation revision 4 automation preflight | The first eight-push run failed before metric collection: repeated standard pushes to the same route left the event-only scenario state unchanged after the second transition. Revision 5 adds active stack depth to the state target and requires eight distinct transitions in the bilingual device contract test. |
+| 2026-08-15 | Phase 5 navigation revision 5 thermal preflight | Eight pushes yielded 417-437 frames per run, but a roughly two-minute method crossed the consumer device's thermal boundary. Frame-CPU run-P50 shifted from `4.504/4.502/4.320 ms` to `8.356/8.614 ms` (CV `0.327`), so the result is rejected. Revision 6 uses four same-direction transitions, retaining about 200 frames per run while halving sustained load. |
+| 2026-08-15 | Phase 5 navigation/design reference-device gate | Navigation revision 6 supplied 202-223 frames per run, but unlocked, profile-guided, and platform fixed-performance trials still produced CV `0.308`-`0.372` while ending at `NONE`/`LIGHT`. Read-only sampling proved OEM maximum-frequency plateaus changed without thermal-status changes; shell cannot clear ART profile data. A representative design revision 3 patch run also failed at CV `0.262`. Both remaining matrices now require a clock-controllable reference device; no result was accepted by repetition. |
 
 ## Decision history
 
@@ -687,3 +1279,4 @@ the retired Demo layout.
 | 2026-08-14 | Add an app-owned Android resource-ID bridge before internationalizing text-dependent Macrobenchmarks. |
 | 2026-08-14 | Require explicit workload revisions and a replacement baseline before benchmarking or implementing Runtime/Patch performance work. |
 | 2026-08-14 | Permit Runtime/Patch source auditing and focused correctness work now, while keeping performance experiments blocked on this plan's replacement baseline. |
+| 2026-08-14 | Freeze the replacement inventory before UI movement; widget scenarios use hyphenated wire IDs and paired performance engines remain workload dimensions. |

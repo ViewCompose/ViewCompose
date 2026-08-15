@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_animation_reset">Reset fixture</string>
+    <string name="demo_animation_core_title">Core animation</string>
+    <string name="demo_animation_core_summary">Combine animateFloatAsState and AnimatedVisibility to verify visibility and scale updates.</string>
+    <string name="demo_animation_core_state">visible=%1$b · pulse=%2$b · completed=%3$b</string>
+    <string name="demo_animation_core_hide">Hide block</string>
+    <string name="demo_animation_core_show">Show block</string>
+    <string name="demo_animation_core_scale_low">Scale to 0.92x</string>
+    <string name="demo_animation_core_scale_high">Scale to 1.08x</string>
+    <string name="demo_animation_core_surface">Animation core surface</string>
+    <string name="demo_animation_core_footer">Visibility footer anchor</string>
+    <string name="demo_animation_task_title">Read the tutorial</string>
+    <string name="demo_animation_task_completed">Completed</string>
+    <string name="demo_animation_task_reopen">Reopen %1$s</string>
+    <string name="demo_animation_task_complete">Complete %1$s</string>
+    <string name="demo_animation_task_details">Details for %1$s</string>
+    <string name="demo_animation_task_delete">Delete %1$s</string>
+
+    <string name="demo_animation_content_title">Content transitions</string>
+    <string name="demo_animation_content_summary">Keep AnimatedContent and Crossfade in one focused fixture to verify content replacement.</string>
+    <string name="demo_animation_content_state">content=%1$b · crossfade=%2$b</string>
+    <string name="demo_animation_content_to_primary">Show primary copy</string>
+    <string name="demo_animation_content_to_alternative">Show alternative copy</string>
+    <string name="demo_animation_crossfade_to_primary">Crossfade to primary copy</string>
+    <string name="demo_animation_crossfade_to_alternative">Crossfade to alternative copy</string>
+    <string name="demo_animation_content_primary">Primary copy: ready to transition</string>
+    <string name="demo_animation_content_alternative">Alternative copy: transition applied</string>
+    <string name="demo_animation_crossfade_primary">Crossfade primary copy is visible</string>
+    <string name="demo_animation_crossfade_alternative">Crossfade alternative copy is visible</string>
+
+    <string name="demo_animation_list_title">List item motion</string>
+    <string name="demo_animation_list_summary">LazyColumn uses lazyContainerMotion to exercise item add, move, and change policies.</string>
+    <string name="demo_animation_list_state">seed=%1$d · first=%2$s · size=%3$d</string>
+    <string name="demo_animation_list_insert">Insert at start</string>
+    <string name="demo_animation_list_rotate">Rotate order</string>
+    <string name="demo_animation_list_item_a">Item A</string>
+    <string name="demo_animation_list_item_b">Item B</string>
+    <string name="demo_animation_list_item_c">Item C</string>
+    <string name="demo_animation_list_item_new">New %1$d</string>
+    <string name="demo_animation_list_first">First item: %1$s</string>
+
+    <string name="demo_animation_specs_title">Animation specs and generic values</string>
+    <string name="demo_animation_specs_summary">Exercise typed and generic state animation, easing, repeat modes, and animateContentSize.</string>
+    <string name="demo_animation_specs_state">spec=%1$s · target=%2$b · linear=%3$b · reverse=%4$b · vector=%5$b · expanded=%6$b</string>
+    <string name="demo_animation_specs_kind">Spec: %1$s</string>
+    <string name="demo_animation_specs_kind_tween">Tween</string>
+    <string name="demo_animation_specs_kind_spring">Spring</string>
+    <string name="demo_animation_specs_kind_keyframes">Keyframes</string>
+    <string name="demo_animation_specs_kind_snap">Snap</string>
+    <string name="demo_animation_specs_kind_repeatable">Repeatable</string>
+    <string name="demo_animation_specs_target_start">Target: Start</string>
+    <string name="demo_animation_specs_target_end">Target: End</string>
+    <string name="demo_animation_specs_easing_linear">Easing: Linear</string>
+    <string name="demo_animation_specs_easing_fast_out_slow_in">Easing: FastOutSlowIn</string>
+    <string name="demo_animation_specs_repeat_reverse">Repeat: Reverse</string>
+    <string name="demo_animation_specs_repeat_restart">Repeat: Restart</string>
+    <string name="demo_animation_specs_float">Float = %1$s</string>
+    <string name="demo_animation_specs_int">Int = %1$d</string>
+    <string name="demo_animation_specs_dp">Dp(px) = %1$s</string>
+    <string name="demo_animation_specs_color">Color = #%1$s</string>
+    <string name="demo_animation_specs_vector_reset">Vector: Reset</string>
+    <string name="demo_animation_specs_vector_target">Vector: Target</string>
+    <string name="demo_animation_specs_vector_value">Vec2(x=%1$s, y=%2$s)</string>
+    <string name="demo_animation_specs_size_collapse">Collapse size block</string>
+    <string name="demo_animation_specs_size_expand">Expand size block</string>
+    <string name="demo_animation_specs_size_title">animateContentSize compatibility target</string>
+    <string name="demo_animation_specs_size_content_a">Expanded content A</string>
+    <string name="demo_animation_specs_size_content_b">Expanded content B</string>
+    <string name="demo_animation_specs_size_content_c">Expanded content C</string>
+
+    <string name="demo_animation_transition_title">Transition and visibility state</string>
+    <string name="demo_animation_transition_summary">Exercise updateTransition, MutableTransitionState, and row/column visibility axes.</string>
+    <string name="demo_animation_transition_state">transition=%1$b · visibility=%2$b · row=%3$b · column=%4$b</string>
+    <string name="demo_animation_transition_to_primary">Switch to primary state</string>
+    <string name="demo_animation_transition_to_alternative">Switch to alternative state</string>
+    <string name="demo_animation_transition_alpha">alpha=%1$s</string>
+    <string name="demo_animation_transition_int">int=%1$d</string>
+    <string name="demo_animation_transition_dp">dp(px)=%1$s</string>
+    <string name="demo_animation_transition_color">color=#%1$s</string>
+    <string name="demo_animation_visibility_target_false">Set VisibilityState target to false</string>
+    <string name="demo_animation_visibility_target_true">Set VisibilityState target to true</string>
+    <string name="demo_animation_visibility_status">current=%1$b · target=%2$b · idle=%3$b</string>
+    <string name="demo_animation_visibility_content">Content driven by MutableTransitionState</string>
+    <string name="demo_animation_row_hide">Hide row-axis block</string>
+    <string name="demo_animation_row_show">Show row-axis block</string>
+    <string name="demo_animation_row_content">Row axis</string>
+    <string name="demo_animation_column_hide">Hide column-axis block</string>
+    <string name="demo_animation_column_show">Show column-axis block</string>
+    <string name="demo_animation_column_content">Column axis</string>
+
+    <string name="demo_animation_infinite_title">Infinite transition and Animatable</string>
+    <string name="demo_animation_infinite_summary">Exercise rememberInfiniteTransition, infiniteRepeatable, and the Animatable command lifecycle.</string>
+    <string name="demo_animation_infinite_state">pulse=%1$b · reverse=%2$b</string>
+    <string name="demo_animation_infinite_disable">Disable infinite pulse</string>
+    <string name="demo_animation_infinite_enable">Enable infinite pulse</string>
+    <string name="demo_animation_infinite_repeat_reverse">Repeat: Reverse</string>
+    <string name="demo_animation_infinite_repeat_restart">Repeat: Restart</string>
+    <string name="demo_animation_infinite_scale">Infinite scale = %1$s</string>
+    <string name="demo_animation_animatable_panel">Animatable controls</string>
+    <string name="demo_animation_animatable_to_high">animateTo 1.0</string>
+    <string name="demo_animation_animatable_to_low">animateTo 0.0</string>
+    <string name="demo_animation_animatable_snap_high">snapTo 1.0</string>
+    <string name="demo_animation_animatable_snap_low">snapTo 0.0</string>
+    <string name="demo_animation_animatable_stop">Stop the current Animatable task</string>
+    <string name="demo_animation_animatable_value">Animatable value = %1$s</string>
+</resources>

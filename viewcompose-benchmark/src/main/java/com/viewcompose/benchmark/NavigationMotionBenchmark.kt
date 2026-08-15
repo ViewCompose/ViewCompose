@@ -4,6 +4,7 @@ import androidx.benchmark.macro.BaselineProfileMode
 import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.ExperimentalMetricApi
 import androidx.benchmark.macro.FrameTimingMetric
+import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.benchmark.macro.Metric
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.TraceSectionMetric
@@ -37,12 +38,13 @@ class NavigationMotionBenchmark {
         startupMode = StartupMode.WARM,
         setupBlock = {
             startSystemNavigationAndWait()
-            scrollUntilText(PUSH_ACTION_TEXT)
+            scrollUntilScenarioTarget(NAVIGATION_SCENARIO, DemoTargetRole.PrimaryAction)
+            waitForPerformanceMeasurementSettle()
         },
     ) {
-        clickVisibleTextWithoutIdle(PUSH_ACTION_TEXT)
-        waitForNavigationMotion()
-        waitForText(DETAIL_DESTINATION_TEXT)
+        repeat(NAVIGATION_TRANSITIONS_PER_ITERATION) {
+            pushDestinationAndWait()
+        }
     }
 
     @Test
@@ -54,15 +56,16 @@ class NavigationMotionBenchmark {
         startupMode = StartupMode.WARM,
         setupBlock = {
             startSystemNavigationAndWait()
-            scrollUntilText(PUSH_ACTION_TEXT)
-            clickVisibleTextWithoutIdle(PUSH_ACTION_TEXT)
-            waitForNavigationMotion()
-            waitForText(DETAIL_DESTINATION_TEXT)
+            scrollUntilScenarioTarget(NAVIGATION_SCENARIO, DemoTargetRole.PrimaryAction)
+            repeat(NAVIGATION_TRANSITIONS_PER_ITERATION) {
+                pushDestinationAndWait()
+            }
+            waitForPerformanceMeasurementSettle()
         },
     ) {
-        device.pressBack()
-        waitForNavigationMotion()
-        waitForText(PUSH_ACTION_TEXT)
+        repeat(NAVIGATION_TRANSITIONS_PER_ITERATION) {
+            popDestinationAndWait()
+        }
     }
 
     @Test
@@ -74,12 +77,13 @@ class NavigationMotionBenchmark {
         startupMode = StartupMode.WARM,
         setupBlock = {
             startSystemNavigationAndWait()
-            scrollUntilText(PUSH_ACTION_TEXT)
+            scrollUntilScenarioTarget(NAVIGATION_SCENARIO, DemoTargetRole.PrimaryAction)
+            waitForPerformanceMeasurementSettle()
         },
     ) {
-        clickVisibleTextWithoutIdle(PUSH_ACTION_TEXT)
-        waitForNavigationMotion()
-        waitForText(DETAIL_DESTINATION_TEXT)
+        repeat(NAVIGATION_TRANSITIONS_PER_ITERATION) {
+            pushDestinationAndWait()
+        }
     }
 
     @Test
@@ -92,20 +96,38 @@ class NavigationMotionBenchmark {
             startupMode = StartupMode.WARM,
             setupBlock = {
                 startSystemNavigationAndWait()
-                scrollUntilText(PUSH_ACTION_TEXT)
-                clickVisibleTextWithoutIdle(PUSH_ACTION_TEXT)
-                waitForNavigationMotion()
-                waitForText(DETAIL_DESTINATION_TEXT)
+                scrollUntilScenarioTarget(NAVIGATION_SCENARIO, DemoTargetRole.PrimaryAction)
+                repeat(NAVIGATION_TRANSITIONS_PER_ITERATION) {
+                    pushDestinationAndWait()
+                }
+                waitForPerformanceMeasurementSettle()
             },
         ) {
-            device.pressBack()
-            waitForNavigationMotion()
-            waitForText(PUSH_ACTION_TEXT)
+            repeat(NAVIGATION_TRANSITIONS_PER_ITERATION) {
+                popDestinationAndWait()
+            }
         }
 
+    private fun MacrobenchmarkScope.pushDestinationAndWait() {
+        val previous = scenarioTargetText(NAVIGATION_SCENARIO, DemoTargetRole.State)
+        clickScenarioTarget(
+            NAVIGATION_SCENARIO,
+            DemoTargetRole.PrimaryAction,
+            waitForIdle = false,
+        )
+        waitForNavigationMotion()
+        waitForScenarioTargetTextChange(NAVIGATION_SCENARIO, DemoTargetRole.State, previous)
+    }
+
+    private fun MacrobenchmarkScope.popDestinationAndWait() {
+        val previous = scenarioTargetText(NAVIGATION_SCENARIO, DemoTargetRole.State)
+        device.pressBack()
+        waitForNavigationMotion()
+        waitForScenarioTargetTextChange(NAVIGATION_SCENARIO, DemoTargetRole.State, previous)
+    }
+
     private companion object {
-        const val PUSH_ACTION_TEXT = "Push 下一页面"
-        const val DETAIL_DESTINATION_TEXT = "首页详情"
+        const val NAVIGATION_SCENARIO = "navigation.system"
         const val ITERATIONS_ARGUMENT = "navigationMotionIterations"
 
         fun navigationMotionIterations(): Int {
@@ -113,7 +135,7 @@ class NavigationMotionBenchmark {
                 .getString(ITERATIONS_ARGUMENT)
                 ?.toIntOrNull()
                 ?.takeIf { it > 0 }
-                ?: RELEASE_BASELINE_ITERATIONS
+                ?: FORMAL_INTERACTION_ITERATIONS
         }
 
         fun navigationMetrics(): List<Metric> = listOf(
@@ -148,5 +170,6 @@ class NavigationMotionBenchmark {
         }
 
         const val PROFILE_WARMUP_ITERATIONS = 3
+        const val NAVIGATION_TRANSITIONS_PER_ITERATION = 4
     }
 }

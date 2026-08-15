@@ -1,5 +1,11 @@
 package com.viewcompose
 
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioId
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.demo.registry.DemoScenarioIds
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.Visibility
@@ -44,138 +50,136 @@ import com.viewcompose.viewmodel.savedStateHandle
 
 @ViewComposePreview(name = "State · Core", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewStateCore() {
-    StatePage(initialPageIndex = 0, onOpenDiagnostics = {})
+    StatePage(StateFixture.RuntimeState, onOpenDiagnostics = {})
 }
 
 @ViewComposePreview(name = "State · Identity", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewStateIdentity() {
-    StatePage(initialPageIndex = 1, onOpenDiagnostics = {})
+    StatePage(StateFixture.KeyIdentity, onOpenDiagnostics = {})
 }
 
 @ViewComposePreview(name = "State · Patch", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewStatePatch() {
-    StatePage(initialPageIndex = 2, onOpenDiagnostics = {})
+    StatePage(StateFixture.ViewPatch, onOpenDiagnostics = {})
 }
 
-@ViewComposePreview(name = "State · Checklist", group = "Demo/Pages")
-internal fun UiTreeBuilder.PreviewStateChecklist() {
-    StatePage(initialPageIndex = 3, onOpenDiagnostics = {})
+internal enum class StateFixture(
+    val scenarioId: DemoScenarioId,
+) {
+    RuntimeState(DemoScenarioIds.RuntimeState),
+    KeyIdentity(DemoScenarioIds.RuntimeKeyIdentity),
+    ViewPatch(DemoScenarioIds.RuntimeViewPatch),
+    ;
+
+    companion object {
+        fun from(scenarioId: DemoScenarioId): StateFixture =
+            entries.singleOrNull { fixture -> fixture.scenarioId == scenarioId }
+                ?: error("Unsupported state scenario: $scenarioId")
+    }
 }
 
 internal fun UiTreeBuilder.StatePage(
-    initialPageIndex: Int = 0,
+    fixture: StateFixture,
+    scenario: DemoScenarioSpec? = null,
     onOpenDiagnostics: () -> Unit,
 ) {
+    when (fixture) {
+        StateFixture.RuntimeState -> RuntimeStateFixture(scenario)
+        StateFixture.KeyIdentity -> KeyIdentityFixture(scenario)
+        StateFixture.ViewPatch -> ViewPatchFixture(scenario, onOpenDiagnostics)
+    }
+}
+
+private fun UiTreeBuilder.RuntimeStateFixture(scenario: DemoScenarioSpec?) {
     val benchmarkStepState = remember { mutableStateOf(0) }
     val clickCountState = remember { mutableStateOf(0) }
-    val panelVisibleState = remember { mutableStateOf(true) }
-    val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 3)) }
-    val patchStepState = remember { mutableStateOf(0) }
-    val patchFieldValueState = rememberTextFieldState("value-0")
-    val patchSegmentIndexState = remember { mutableStateOf(0) }
-    val patchTabIndexState = remember { mutableStateOf(0) }
-    val stableTabIndexState = remember { mutableStateOf(0) }
-    val stableVerticalPagerIndexState = remember { mutableStateOf(0) }
     val summaryState = remember {
-        derivedStateOf {
-            val value = clickCountState.value
-            when {
-                value == 0 -> "尚无点击"
-                value % 2 == 0 -> "偶数次点击: $value"
-                else -> "奇数次点击: $value"
-            }
-        }
+        derivedStateOf { clickCountState.value }
     }
     val timelineState = produceState(
-        initialValue = "最近更新: 等待中",
+        initialValue = -1,
         clickCountState.value,
     ) {
-        value = "最近更新: 已提交 ${clickCountState.value} 次点击"
+        value = clickCountState.value
     }
     val vmStateHandle = savedStateHandle(key = "state_page_vm_counter")
     val vmCounterState = vmStateHandle
         .getStateFlow("counter", 0)
         .collectAsStateWithLifecycle()
-    val pageItems = when (selectedPageState.value) {
-        0 -> listOf("benchmark", "page", "page_filter", "counter", "viewmodel", "verify")
-        1 -> listOf("page", "page_filter", "panel", "verify")
-        2 -> listOf("page", "page_filter", "patch", "verify")
-        else -> listOf("page", "page_filter", "verify")
-    }
 
     LazyColumn(
-        items = pageItems,
+        items = listOf("benchmark", "counter", "viewmodel"),
         key = { it },
         modifier = Modifier.fillMaxSize(),
     ) { section ->
         when (section) {
-            "page" -> ChapterPageOverviewSection(
-                title = "状态与副作用",
-                goal = "直接操练运行时基元，以便手动检查 remember、derivedState、produceState 和 key 标识的行为。",
-                modules = listOf("ui-runtime", "remember", "effects", "key scopes"),
-            )
-
-            "page_filter" -> ChapterPageFilterSection(
-                pages = listOf("核心", "标识", "Patch", "清单"),
-                selectedIndex = selectedPageState.value,
-                onSelectionChange = { selectedPageState.value = it },
-            )
-
             "benchmark" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
-                title = "State Benchmark 锚点",
-                subtitle = "此区块固定在默认的核心页面，让 benchmark 控件始终保持在首屏可见。",
+                title = stringResource(R.string.demo_state_benchmark_title),
+                subtitle = stringResource(R.string.demo_state_benchmark_summary),
             ) {
                 Text(
-                    text = "Benchmark 步骤 ${benchmarkStepState.value}",
-                    modifier = Modifier.margin(bottom = 8.dp),
+                    text = stringResource(
+                        R.string.demo_state_benchmark_step,
+                        benchmarkStepState.value,
+                    ),
+                    modifier = Modifier
+                        .margin(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Button(
-                    text = "推进 State Benchmark ${benchmarkStepState.value}",
+                    text = stringResource(
+                        R.string.demo_state_benchmark_advance,
+                        benchmarkStepState.value,
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .margin(bottom = 8.dp),
+                        .margin(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     onClick = {
                         benchmarkStepState.value = benchmarkStepState.value + 1
                     },
                 )
                 Button(
-                    text = "重置 State Benchmark",
+                    text = stringResource(R.string.demo_state_benchmark_reset),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .margin(bottom = 8.dp),
+                        .margin(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
                     onClick = {
                         benchmarkStepState.value = 0
+                        clickCountState.value = 0
+                        vmStateHandle["counter"] = 0
                     },
-                )
-                BenchmarkRouteCallout(
-                    route = "Launcher -> MainActivity(extra=state) -> State -> State Benchmark Anchor",
-                    stableTargets = listOf(
-                        "Advance State Benchmark 0",
-                        "Reset State Benchmark",
-                    ),
-                )
-                Text(
-                    text = "稳定路径: launcher -> state module -> benchmark anchor",
-                    style = UiTextStyle(fontSizeSp = 12.sp),
-                    color = TextDefaults.secondaryColor(),
                 )
             }
 
             "counter" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "remember + derivedStateOf + produceState",
-                subtitle = "展示本地状态、派生标签和 produceState 生成的状态文本。",
+                title = stringResource(R.string.demo_state_counter_title),
+                subtitle = stringResource(R.string.demo_state_counter_summary),
             ) {
-                Text(text = "点击次数: ${clickCountState.value}")
+                val summary = summaryState.value
                 Text(
-                    text = summaryState.value,
+                    text = stringResource(R.string.demo_state_click_count, clickCountState.value),
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Target),
+                )
+                Text(
+                    text = when {
+                        summary == 0 -> stringResource(R.string.demo_state_summary_none)
+                        summary % 2 == 0 -> stringResource(R.string.demo_state_summary_even, summary)
+                        else -> stringResource(R.string.demo_state_summary_odd, summary)
+                    },
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(vertical = 4.dp),
                 )
                 Text(
-                    text = timelineState.value,
+                    text = if (timelineState.value < 0) {
+                        stringResource(R.string.demo_state_timeline_waiting)
+                    } else {
+                        stringResource(R.string.demo_state_timeline_committed, timelineState.value)
+                    },
                     style = UiTextStyle(fontSizeSp = 13.sp),
                     color = TextDefaults.secondaryColor(),
                 )
@@ -185,13 +189,13 @@ internal fun UiTreeBuilder.StatePage(
                     modifier = Modifier.margin(top = 12.dp),
                 ) {
                     Button(
-                        text = "递增",
+                        text = stringResource(R.string.demo_state_increment),
                         onClick = {
                             clickCountState.value = clickCountState.value + 1
                         },
                     )
                     Button(
-                        text = "重置",
+                        text = stringResource(R.string.demo_state_reset),
                         onClick = {
                             clickCountState.value = 0
                         },
@@ -201,17 +205,17 @@ internal fun UiTreeBuilder.StatePage(
 
             "viewmodel" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "ViewModel + StateFlow + collectAsStateWithLifecycle",
-                subtitle = "验证宿主默认注入 Local 后，无需手动 provide 即可完成 ViewModel 协作。",
+                title = stringResource(R.string.demo_state_viewmodel_title),
+                subtitle = stringResource(R.string.demo_state_viewmodel_summary),
             ) {
                 Text(
-                    text = "ViewModel 计数: ${vmCounterState.value}",
+                    text = stringResource(R.string.demo_state_viewmodel_count, vmCounterState.value),
                     modifier = Modifier
                         .margin(bottom = 8.dp)
                         .testTag(DemoTestTags.STATE_VM_COUNTER),
                 )
                 Button(
-                    text = "ViewModel 计数 +1",
+                    text = stringResource(R.string.demo_state_viewmodel_increment),
                     onClick = {
                         vmStateHandle["counter"] = vmCounterState.value + 1
                     },
@@ -219,61 +223,130 @@ internal fun UiTreeBuilder.StatePage(
                 )
             }
 
+            else -> error("Unsupported runtime state section: $section")
+        }
+    }
+}
+
+private fun UiTreeBuilder.KeyIdentityFixture(scenario: DemoScenarioSpec?) {
+    val panelVisibleState = remember { mutableStateOf(true) }
+    val panelGenerationState = remember { mutableStateOf(0) }
+
+    LazyColumn(
+        items = listOf("panel"),
+        key = { it },
+        modifier = Modifier.fillMaxSize(),
+    ) { section ->
+        when (section) {
             "panel" -> ScenarioSection(
                 kind = ScenarioKind.Visual,
-                title = "key 作用域 + 条件 UI",
-                subtitle = "临时面板在可见时保持自身状态，切走后再切回时会完全重建。",
+                title = stringResource(R.string.demo_state_panel_title),
+                subtitle = stringResource(R.string.demo_state_panel_summary),
             ) {
-                Button(
-                    text = if (panelVisibleState.value) "隐藏面板" else "显示面板",
-                    modifier = Modifier.margin(bottom = 12.dp),
-                    onClick = {
-                        panelVisibleState.value = !panelVisibleState.value
-                    },
-                )
-                Text(
-                    text = "Visibility 示例: 面板关闭时隐藏",
+                Column(
+                    spacing = 8.dp,
                     modifier = Modifier
-                        .visibility(
+                        .fillMaxWidth()
+                        .scenarioTarget(scenario, DemoAutomationRole.Target),
+                ) {
+                    Text(
+                        text = stringResource(
                             if (panelVisibleState.value) {
-                                Visibility.Visible
+                                R.string.demo_state_identity_visible
                             } else {
-                                Visibility.Gone
+                                R.string.demo_state_identity_hidden
                             },
-                        )
-                        .padding(bottom = 8.dp),
-                )
-                if (panelVisibleState.value) {
-                    key("transient-panel") {
-                        val panelTapState = remember { mutableStateOf(0) }
-                        Column(
-                            spacing = 8.dp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                                .padding(12.dp),
-                        ) {
-                            Text(text = "有 key 的临时面板")
-                            Button(
-                                text = "面板点击次数: ${panelTapState.value}",
-                                onClick = {
-                                    panelTapState.value = panelTapState.value + 1
+                        ),
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
+                    )
+                    Button(
+                        text = if (panelVisibleState.value) {
+                            stringResource(R.string.demo_state_panel_hide)
+                        } else {
+                            stringResource(R.string.demo_state_panel_show)
+                        },
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+                        onClick = {
+                            panelVisibleState.value = !panelVisibleState.value
+                        },
+                    )
+                    Button(
+                        text = stringResource(R.string.demo_state_identity_reset),
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Reset),
+                        onClick = {
+                            panelVisibleState.value = true
+                            panelGenerationState.value = panelGenerationState.value + 1
+                        },
+                    )
+                    Text(
+                        text = stringResource(R.string.demo_state_panel_visibility),
+                        modifier = Modifier
+                            .visibility(
+                                if (panelVisibleState.value) {
+                                    Visibility.Visible
+                                } else {
+                                    Visibility.Gone
                                 },
                             )
+                            .padding(bottom = 8.dp),
+                    )
+                    if (panelVisibleState.value) {
+                        key("transient-panel-${panelGenerationState.value}") {
+                            val panelTapState = remember { mutableStateOf(0) }
+                            Column(
+                                spacing = 8.dp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .backgroundColor(SurfaceDefaults.variantBackgroundColor())
+                                    .padding(12.dp),
+                            ) {
+                                Text(text = stringResource(R.string.demo_state_panel_keyed))
+                                Button(
+                                    text = stringResource(R.string.demo_state_panel_taps, panelTapState.value),
+                                    onClick = {
+                                        panelTapState.value = panelTapState.value + 1
+                                    },
+                                )
+                            }
                         }
                     }
                 }
             }
 
+            else -> error("Unsupported key identity section: $section")
+        }
+    }
+}
+
+private fun UiTreeBuilder.ViewPatchFixture(
+    scenario: DemoScenarioSpec?,
+    onOpenDiagnostics: () -> Unit,
+) {
+    val patchStepState = remember { mutableStateOf(0) }
+    val patchFieldValueState = rememberTextFieldState("value-0")
+    val patchSegmentIndexState = remember { mutableStateOf(0) }
+    val patchTabIndexState = remember { mutableStateOf(0) }
+    val stableTabIndexState = remember { mutableStateOf(0) }
+    val stableVerticalPagerIndexState = remember { mutableStateOf(0) }
+
+    LazyColumn(
+        items = listOf("patch"),
+        key = { it },
+        modifier = Modifier.fillMaxSize(),
+    ) { section ->
+        when (section) {
             "patch" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
-                title = "Patch 压力测试",
-                subtitle = "将第一批节点级 patch 目标放在一起驱动，使手动测试和 benchmark 运行命中同一更新路径。",
+                title = stringResource(R.string.demo_state_patch_title),
+                subtitle = stringResource(R.string.demo_state_patch_summary),
             ) {
                 val step = patchStepState.value
-                Text(text = "Patch 标题 $step")
                 Text(
-                    text = "已 Patch 节点: Text, Button, TextField, SegmentedControl, TabRow, Row, Column, Box, Image",
+                    text = stringResource(R.string.demo_state_patch_heading, step),
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
+                )
+                Text(
+                    text = stringResource(R.string.demo_state_patch_nodes),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier.padding(vertical = 4.dp),
                 )
@@ -284,8 +357,10 @@ internal fun UiTreeBuilder.StatePage(
                         .margin(top = 8.dp, bottom = 12.dp),
                 ) {
                     Button(
-                        text = "推进 Patch 状态 $step",
-                        modifier = Modifier.testTag(DemoTestTags.STATE_PATCH_ADVANCE),
+                        text = stringResource(R.string.demo_state_patch_advance, step),
+                        modifier = Modifier
+                            .testTag(DemoTestTags.STATE_PATCH_ADVANCE)
+                            .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                         onClick = {
                             val nextStep = patchStepState.value + 1
                             patchStepState.value = nextStep
@@ -295,22 +370,25 @@ internal fun UiTreeBuilder.StatePage(
                         },
                     )
                     Button(
-                        text = "重置 Patch 状态",
+                        text = stringResource(R.string.demo_state_patch_reset),
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Reset),
                         onClick = {
                             patchStepState.value = 0
                             patchFieldValueState.setTextAndPlaceCursorAtEnd("value-0")
                             patchSegmentIndexState.value = 0
                             patchTabIndexState.value = 0
+                            stableTabIndexState.value = 0
+                            stableVerticalPagerIndexState.value = 0
                         },
                     )
                 }
                 Button(
-                    text = "Patch 操作 $step",
+                    text = stringResource(R.string.demo_state_patch_action, step),
                     onClick = {},
                     modifier = Modifier.margin(bottom = 12.dp),
                 )
                 Button(
-                    text = "打开诊断渲染器",
+                    text = stringResource(R.string.demo_state_patch_open_diagnostics),
                     onClick = onOpenDiagnostics,
                     modifier = Modifier
                         .margin(bottom = 12.dp)
@@ -318,18 +396,27 @@ internal fun UiTreeBuilder.StatePage(
                 )
                 TextField(
                     state = patchFieldValueState,
-                    label = "已 Patch 字段",
-                    supportingText = "当前 Patch 步骤: $step",
-                    modifier = Modifier.margin(bottom = 12.dp),
+                    label = stringResource(R.string.demo_state_patch_field_label),
+                    supportingText = stringResource(R.string.demo_state_patch_field_support, step),
+                    modifier = Modifier
+                        .margin(bottom = 12.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Target),
                 )
                 SegmentedControl(
-                    items = listOf("Alpha", "Beta", "Gamma"),
+                    items = listOf(
+                        stringResource(R.string.demo_state_patch_segment_alpha),
+                        stringResource(R.string.demo_state_patch_segment_beta),
+                        stringResource(R.string.demo_state_patch_segment_gamma),
+                    ),
                     selectedIndex = patchSegmentIndexState.value,
                     onSelectionChange = { patchSegmentIndexState.value = it },
                     modifier = Modifier.margin(bottom = 12.dp),
                 )
                 Text(
-                    text = "Segment 索引: ${patchSegmentIndexState.value}",
+                    text = stringResource(
+                        R.string.demo_state_patch_segment_index,
+                        patchSegmentIndexState.value,
+                    ),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(bottom = 12.dp)
@@ -343,9 +430,9 @@ internal fun UiTreeBuilder.StatePage(
                         .fillMaxWidth()
                         .margin(bottom = 12.dp),
                 ) {
-                    Text(text = "Row A")
-                    Text(text = "Row B")
-                    Text(text = "Row C")
+                    Text(text = stringResource(R.string.demo_state_patch_row_a))
+                    Text(text = stringResource(R.string.demo_state_patch_row_b))
+                    Text(text = stringResource(R.string.demo_state_patch_row_c))
                 }
                 Column(
                     spacing = if (step % 2 == 0) 4.dp else 12.dp,
@@ -354,8 +441,8 @@ internal fun UiTreeBuilder.StatePage(
                         .fillMaxWidth()
                         .margin(bottom = 12.dp),
                 ) {
-                    Text(text = "Col 项 1")
-                    Text(text = "Col 项 2")
+                    Text(text = stringResource(R.string.demo_state_patch_column_item_one))
+                    Text(text = stringResource(R.string.demo_state_patch_column_item_two))
                 }
                 Box(
                     contentAlignment = if (step % 2 == 0) BoxAlignment.TopStart else BoxAlignment.Center,
@@ -365,7 +452,7 @@ internal fun UiTreeBuilder.StatePage(
                         .padding(12.dp)
                         .margin(bottom = 12.dp),
                 ) {
-                    Text(text = "Box 内容 $step")
+                    Text(text = stringResource(R.string.demo_state_patch_box_content, step))
                 }
                 Image(
                     source = ImageSource.Resource(android.R.drawable.ic_menu_gallery),
@@ -374,7 +461,7 @@ internal fun UiTreeBuilder.StatePage(
                 )
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Tab 索引: ${patchTabIndexState.value}",
+                        text = stringResource(R.string.demo_state_patch_tab_index, patchTabIndexState.value),
                         color = TextDefaults.secondaryColor(),
                         modifier = Modifier
                             .margin(bottom = 8.dp)
@@ -386,14 +473,15 @@ internal fun UiTreeBuilder.StatePage(
                     ) {
                         Tab(key = "summary") { selected ->
                             Text(
-                                text = "摘要",
+                                text = stringResource(R.string.demo_state_patch_tab_summary),
                                 color = if (selected) TextDefaults.primaryColor() else TextDefaults.secondaryColor(),
                             )
                         }
                         Tab(key = "details") { selected ->
                             Text(
-                                text = "详情",
+                                text = stringResource(R.string.demo_state_patch_tab_details),
                                 color = if (selected) TextDefaults.primaryColor() else TextDefaults.secondaryColor(),
+                                modifier = Modifier.testTag(DemoTestTags.STATE_PATCH_TAB_DETAILS),
                             )
                         }
                     }
@@ -410,9 +498,9 @@ internal fun UiTreeBuilder.StatePage(
                                     .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                                     .padding(12.dp),
                             ) {
-                                Text(text = "Tab 摘要 $step")
+                                Text(text = stringResource(R.string.demo_state_patch_page_summary, step))
                                 Text(
-                                    text = "Patch 场景保持 Tab 宿主稳定，同时页面元数据随状态变化。",
+                                    text = stringResource(R.string.demo_state_patch_page_summary_note),
                                     color = TextDefaults.secondaryColor(),
                                 )
                             }
@@ -425,9 +513,9 @@ internal fun UiTreeBuilder.StatePage(
                                     .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                                     .padding(12.dp),
                             ) {
-                                Text(text = "Tab 详情 $step")
+                                Text(text = stringResource(R.string.demo_state_patch_page_details, step))
                                 Text(
-                                    text = "使用此页面检查重复更新时 Tab 选中状态的 Patch 行为。",
+                                    text = stringResource(R.string.demo_state_patch_page_details_note),
                                     color = TextDefaults.secondaryColor(),
                                 )
                             }
@@ -435,7 +523,7 @@ internal fun UiTreeBuilder.StatePage(
                     }
                 }
                 Text(
-                    text = "稳定 key 的 Tab Pager 保持页面标识不变；显式 revision 负责刷新普通捕获值。",
+                    text = stringResource(R.string.demo_state_stable_pager_note),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(top = 12.dp, bottom = 4.dp),
@@ -447,13 +535,13 @@ internal fun UiTreeBuilder.StatePage(
                     ) {
                         Tab(key = "stable-summary") { selected ->
                             Text(
-                                text = "稳定摘要",
+                                text = stringResource(R.string.demo_state_stable_tab_summary),
                                 color = if (selected) TextDefaults.primaryColor() else TextDefaults.secondaryColor(),
                             )
                         }
                         Tab(key = "stable-details") { selected ->
                             Text(
-                                text = "稳定详情",
+                                text = stringResource(R.string.demo_state_stable_tab_details),
                                 color = if (selected) TextDefaults.primaryColor() else TextDefaults.secondaryColor(),
                             )
                         }
@@ -472,11 +560,11 @@ internal fun UiTreeBuilder.StatePage(
                                     .padding(12.dp),
                             ) {
                                 Text(
-                                    text = "稳定摘要 $step",
+                                    text = stringResource(R.string.demo_state_stable_summary, step),
                                     modifier = Modifier.testTag(DemoTestTags.STATE_STABLE_SUMMARY),
                                 )
                                 Text(
-                                    text = "推进 Patch 状态会改变显式 revision，因此此页面应定向刷新。",
+                                    text = stringResource(R.string.demo_state_stable_summary_note),
                                     color = TextDefaults.secondaryColor(),
                                 )
                             }
@@ -489,9 +577,9 @@ internal fun UiTreeBuilder.StatePage(
                                     .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                                     .padding(12.dp),
                             ) {
-                                Text(text = "稳定详情 $step")
+                                Text(text = stringResource(R.string.demo_state_stable_details, step))
                                 Text(
-                                    text = "使用此页面验证 key 稳定且 revision 改变时不会遗留旧闭包。",
+                                    text = stringResource(R.string.demo_state_stable_details_note),
                                     color = TextDefaults.secondaryColor(),
                                 )
                             }
@@ -499,7 +587,7 @@ internal fun UiTreeBuilder.StatePage(
                     }
                 }
                 Text(
-                    text = "VerticalPager 也通过稳定 key 与显式 revision 定向刷新页面内容。",
+                    text = stringResource(R.string.demo_state_vertical_pager_note),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(top = 12.dp, bottom = 4.dp),
@@ -520,11 +608,11 @@ internal fun UiTreeBuilder.StatePage(
                                 .padding(12.dp),
                         ) {
                             Text(
-                                text = "Vertical 摘要 $step",
+                                text = stringResource(R.string.demo_state_vertical_summary, step),
                                 modifier = Modifier.testTag(DemoTestTags.STATE_VERTICAL_PAGER_SUMMARY),
                             )
                             Text(
-                                text = "用于验证 VerticalPager 在无结构变化时也会刷新可见页面内容。",
+                                text = stringResource(R.string.demo_state_vertical_summary_note),
                                 color = TextDefaults.secondaryColor(),
                             )
                         }
@@ -537,9 +625,9 @@ internal fun UiTreeBuilder.StatePage(
                                 .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                                 .padding(12.dp),
                         ) {
-                            Text(text = "Vertical 详情 $step")
+                            Text(text = stringResource(R.string.demo_state_vertical_details, step))
                             Text(
-                                text = "切换到第二页后继续推进 patch，页面文案也应与外部状态同步。",
+                                text = stringResource(R.string.demo_state_vertical_details_note),
                                 color = TextDefaults.secondaryColor(),
                             )
                         }
@@ -547,25 +635,15 @@ internal fun UiTreeBuilder.StatePage(
                 }
             }
 
-            else -> VerificationNotesSection(
-                what = "State 章节应揭示根重渲染、本地标识和条件重建在反复操作下是否行为可预测。",
-                howToVerify = listOf(
-                    "连续点击递增和重置，确认派生文案与 timeline 一起更新。",
-                    "隐藏再显示 transient panel，确认 panel 内点击计数会被重建。",
-                    "进入 Patch 页面，连续点击推进 Patch 状态，确认 Text、Button、TextField、SegmentedControl 和 TabRow 都同步更新。",
-                    "切换 theme mode 后再继续点击，确认状态值不受主题刷新影响。",
-                ),
-                expected = listOf(
-                    "remember 状态在同一 identity 下保留，在 key 变化后重建。",
-                    "derivedStateOf 和 produceState 不会落后于源状态。",
-                    "Patch 页面里的第一批节点会优先走 patch，而不是退回全量重绑。",
-                    "条件 UI 显隐不会留下脏状态。",
-                ),
-                relatedGaps = listOf(
-                    "还没有更细粒度的通用 subtree recomposition。",
-                    "还没有把 patch/rebind/skipped 统计直接可视化到页面上。",
-                ),
-            )
+            else -> error("Unsupported view patch section: $section")
         }
     }
+}
+
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
 }

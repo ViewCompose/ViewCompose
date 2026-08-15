@@ -5,7 +5,7 @@ defines a migration path from a Compose-owned UI to a ViewCompose-owned Android 
 an engineering comparison, not a source-compatibility promise: similarly named APIs do not imply
 identical compiler, invalidation, identity, or restoration behavior.
 
-Last verified: **2026-08-06**
+Last verified: **2026-08-15**
 
 Re-verification owner: **maintainers of `viewcompose-runtime`, `viewcompose-ui-foundation`,
 `viewcompose-android`, and the AndroidX lifecycle integrations**
@@ -19,7 +19,7 @@ The supported comparison target is the following independently versioned ViewCom
 | `viewcompose-runtime` | `0.1.0-alpha02` | Mutable state, derived state, snapshots, observation, and `ComposerLite` |
 | `viewcompose-ui-foundation` | `0.1.0-alpha01` | `remember`, `key`, effects, `Saver`, and `rememberSaveable` |
 | `viewcompose-android` | `0.1.0-alpha01` | Activity/Fragment entry points and default Android owner installation |
-| `viewcompose-host-android` | `0.1.0-alpha03` | Low-level custom-container hosting and Android SavedState bridge |
+| `viewcompose-host-android` | `0.1.0-alpha04` | Low-level custom-container hosting and Android SavedState bridge |
 | `viewcompose-lifecycle-androidx` | `0.1.0-alpha01` | Composition- and lifecycle-scoped state collection |
 | `viewcompose-viewmodel-androidx` | `0.1.0-alpha01` | AndroidX ViewModel and `SavedStateHandle` ownership |
 
@@ -175,9 +175,10 @@ Repository evidence:
 - compiled samples in
   `viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt`.
 
-One multi-state commit may invoke one `RuntimeObservation` callback for each changed observed state.
-The composition invalidation queue coalesces repeated dirty scopes, but application code must not
-depend on callback-count equivalence with Compose.
+One successful global apply invokes an affected `RuntimeObservation` at most once on the applying
+thread, even when several observed states changed. Separate applies remain separate callback
+opportunities; ViewCompose does not debounce observations across transactions, frames, or time.
+This is a ViewCompose callback contract, not a promise of callback-count equivalence with Compose.
 
 ## Derived state and invalidation differences
 
@@ -301,11 +302,10 @@ that replacement transactional: commit invokes remember lifecycle callbacks, whi
 the previous slot and abandons the new value.
 
 ViewCompose `key` extends the current key namespace used by group signatures, remember slots,
-effects, and automatic saveable keys. It prevents a changed structural branch from silently reusing
-an unrelated slot. It does **not** currently implement Compose-style keyed sibling movement:
-`runGroup` first selects a child by sibling index, and a signature mismatch truncates that position
-and following children before creating a new scope. A matching keyed scope at a different sibling
-position is not searched and moved.
+effects, observations, child scopes, and automatic saveable keys. An explicitly keyed sibling scope
+can move to a different sibling position as one complete logical identity. Duplicate effective
+key/signature pairs under one parent fail the composition attempt before either item can alias
+state. Prepared abort restores the previous order, observations, and invalidation ownership.
 
 Repository evidence:
 
@@ -315,10 +315,10 @@ Repository evidence:
 - `viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt`;
 - `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberTest.kt`.
 
-Use stable `key` scopes to isolate branches and effect identity, but use a lazy container's item-key
-contract when items can reorder. Do not promise that ordinary keyed siblings retain their
-remembered object or effect instance across reordering until a dedicated reorder test and movement
-implementation establish that contract.
+Use stable `key` scopes to preserve ordinary sibling identity across insertion, deletion, and
+reordering. Keys must remain unique at that structural boundary. Lazy containers still use their
+separate item-key, revision, Session, and native-tree reuse contract; ordinary scope movement does
+not replace it.
 
 ## Effects and committed-frame boundaries
 
@@ -355,9 +355,11 @@ Repository evidence:
 
 Failures after the renderer establishes the new native tree are reported as committed-frame
 failures and do not roll that tree back. Effects must therefore contain only post-commit work and
-must handle their own failure cleanup. `DisposableEffect` and `LaunchedEffect` require at least one
-key in this release. Disposable setup must finish with `onDispose { ... }`; the former lambda-return
-cleanup shape is not accepted. ViewCompose also provides keyed `SideEffect` overloads for
+must handle their own failure cleanup. A throwing remembered activation remains pending and is
+retried on a later successful commit; a `DisposableEffect` setup must therefore tolerate retry until
+it returns its cleanup. `DisposableEffect` and `LaunchedEffect` require at least one key in this
+release. Disposable setup must finish with `onDispose { ... }`; the former lambda-return cleanup
+shape is not accepted. ViewCompose also provides keyed `SideEffect` overloads for
 change-only publication, while the unkeyed overload remains the every-invocation form. A launched
 effect's dispatcher and parent job come from the installed ViewCompose host context rather than a
 Compose `Recomposer`.
@@ -412,8 +414,9 @@ tree commits. Its registry uses a claim transaction:
 2. A claimed value remains included in `performSave`, protecting a host save that races the
    in-flight frame.
 3. After composition commit, the holder registers its provider and commits the restored claim.
-4. Composition abort, restore failure, abandonment, or forgetting releases an uncommitted claim so
-   a later attempt can restore it.
+4. Provider-registration failure leaves the claim saveable and retries on a later composition
+   commit. Composition abort, restore failure, abandonment, or forgetting releases an uncommitted
+   claim so a later owner can restore it.
 
 Repository evidence:
 
@@ -426,10 +429,10 @@ Repository evidence:
   lines 39-163.
 
 A custom ViewCompose host registry must implement this claim protocol; a Compose-style immediate
-consume is not a compatible substitute. One edge needs additional regression evidence:
-`SaveableHolder.onRemembered` registers the provider before committing its claim. If provider
-registration throws after the runtime transaction becomes committed, no focused test currently
-proves that the claim becomes available again before the holder is later forgotten or disposed.
+consume is not a compatible substitute. Provider registration and restored-claim commit are
+retry-safe as one remembered activation: a failed registration does not consume the claim,
+`performSave` continues to include it, and a later commit can finish ownership without recreating
+the holder.
 
 ## Activity, Fragment, custom-host, and process-death behavior
 
@@ -453,21 +456,25 @@ Repository evidence:
   lines 18-254;
 - `viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt`, lines 52-93;
 - `viewcompose-host-android/src/test/java/com/viewcompose/host/android/AndroidSaveableStateRegistryTest.kt`;
-- `app/src/androidTest/java/com/viewcompose/SaveableStateRestorationUiTest.kt`.
+- `app/src/androidTest/java/com/viewcompose/SaveableStateRestorationUiTest.kt`;
+- `app/src/debug/java/com/viewcompose/SaveableStateTestActivity.kt`; and
+- `tools/state/validate_android_activity_root_process_death.sh`.
 
-`SaveableStateRestorationUiTest` verifies Activity recreation, not actual process death. The
-repository's real process-death evidence is the navigation certification runner at
-`tools/navigation/validate_android_process_death.sh`. It backgrounds the task, terminates only the
-application process without force-stopping the package, restores the existing task, requires a new
-PID, and compares the full restored navigation and state report. See the
+`SaveableStateRestorationUiTest` remains the fast Activity-recreation regression path. The
+Activity-root certification runner at
+`tools/state/validate_android_activity_root_process_death.sh` seeds automatic-key
+`rememberSaveable` state, backgrounds the retained task, terminates only the application process,
+restores the task under a new PID, and verifies the restored value. The navigation certification
+runner at `tools/navigation/validate_android_process_death.sh` similarly backgrounds the task,
+terminates only the application process without force-stopping the package, restores the existing
+task, requires a new PID, and compares the full restored navigation and state report. See the
 [navigation restoration guide](../guides/navigation.md#stage-5-restoration-and-platform-back)
 for its exact scope.
 
-The current evidence therefore supports standard-host restoration, but only **Partially supported**
-as an all-host claim: `renderInto` requires manual integration, Activity recreation is not process
-death, and the real process-kill certification is navigation-specific. Like Compose, ViewCompose
-does not promise saved-instance-state restoration after a user force-stop or explicit removal from
-recents.
+The current evidence supports standard Android host restoration through both ordinary Activity
+roots and navigation hosts. Custom `renderInto` restoration remains **Partially supported** because
+the caller must install and own SavedState services explicitly. Like Compose, ViewCompose does not
+promise saved-instance-state restoration after a user force-stop or explicit removal from recents.
 
 ## Capability matrix
 
@@ -480,13 +487,13 @@ recents.
 | Compiler-generated restart/skipping/stability | **Intentionally different** | Explicit `runGroup` and observed reads replace Compose compiler groups | `ComposerLite.kt`; `ComposerDiagnosticsTest.kt` |
 | Fine-grained invalidation and clean-sibling reuse | **Partially supported** | Depends on explicit group boundaries; no stability inference | `ComposerLiteTest.kt`; `SubtreeRecompositionTest.kt` |
 | Positional `remember` | **Supported** | Structural keys and transactional commit/abort | `Remember.kt`; `ComposerLiteTest.kt` |
-| `key` identity across ordinary sibling reorder | **Partially supported** | Isolates identity but does not move a matching scope between sibling positions | `Key.kt`; `ComposerLite.kt` group matching |
+| `key` identity across ordinary sibling reorder | **Supported** | Explicit keys move complete scopes; duplicate effective identities fail | `Key.kt`; `ComposerLiteTest.kt` keyed movement, ownership, and abort tests |
 | `SideEffect`, `DisposableEffect`, `LaunchedEffect`, and `produceState` | **Supported** | Execute at ViewCompose committed-frame boundaries | Effect sources; `RenderSession.kt`; effect tests |
 | `rememberSaveable`, inputs, and `Saver` | **Partially supported** | Explicit-key API and registry fallback differ from current Compose | `RememberSaveable.kt`; `Saver.kt`; `RememberSaveableTest.kt` |
 | Restored claim/commit/release | **Intentionally different** | Required to survive abandoned render preparation | `SaveableStateRegistry.kt`; abort and in-flight-save tests |
 | Standard Android host restoration | **Supported** | Activity/Fragment hosts install the registry automatically | `AndroidHostBridge.kt`; `AndroidSaveableStateRegistry.kt` |
 | Custom-host restoration | **Partially supported** | `renderInto` installs no SavedState services | `RenderInto.kt` |
-| General process-death certification | **Partially supported** | Actual process-kill runner currently certifies navigation-host state | process-death runner; navigation guide |
+| General process-death certification | **Supported** | Real process-kill runners certify ordinary Activity-root and navigation-host state; custom `renderInto` ownership remains manual | Activity-root and navigation process-death runners |
 
 ## Migration checklist and known risks
 
@@ -502,8 +509,8 @@ Before replacing a Compose stateful subtree:
    matters.
 5. Replace snapshot collections with immutable values in `MutableState`; use `snapshotFlow` only
    for side-effect-free state calculations whose collection lifetime is explicitly owned.
-6. Keep `remember` call order stable. Use `key` for branch isolation, but do not rely on ordinary
-   keyed sibling movement across reorder.
+6. Keep unkeyed `remember` call order stable. Use unique stable `key` values when ordinary siblings
+   can be inserted, removed, or reordered.
 7. Move all external work into committed effects. Treat an effect failure as a committed-frame
    failure that cannot restore the previous native tree.
 8. Prefer automatic `rememberSaveable` keys, keep Saver output small and Bundle-compatible, and
@@ -518,9 +525,6 @@ Known risks requiring new executable evidence before stronger documentation clai
 
 - equal-result and nested `derivedStateOf` invalidation behavior;
 - mutable snapshot creation under a read-only snapshot;
-- remembered state and effects across ordinary keyed sibling reorder;
-- restored-claim recovery when provider registration fails during commit;
-- a non-navigation Activity-root process-kill certification;
 - direct semantic comparison tests against the official Compose `1.11.4` baseline rather than the
   repository's older `1.7.8` fixture.
 

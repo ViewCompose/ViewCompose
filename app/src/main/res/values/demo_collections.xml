@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_collections_order">Collection order: %1$s</string>
+    <string name="demo_collections_horizontal_card">Horizontal card %1$d</string>
+    <string name="demo_collections_grid_item">Grid item %1$d</string>
+    <plurals name="demo_collections_refresh_item">
+        <item quantity="one">Refresh item %1$d · refreshed %2$d time</item>
+        <item quantity="other">Refresh item %1$d · refreshed %2$d times</item>
+    </plurals>
+    <string name="demo_collections_benchmark_title">Collection mutation benchmark</string>
+    <string name="demo_collections_benchmark_summary">A deterministic keyed-list reorder and reset workload.</string>
+    <string name="demo_collections_benchmark_item">Benchmark item %1$s</string>
+    <string name="demo_collections_benchmark_item_expanded">Benchmark item %1$s expanded</string>
+    <string name="demo_collections_current_order">Current order: %1$s</string>
+    <string name="demo_collections_benchmark_reset">Reset benchmark</string>
+    <string name="demo_collections_stable_key">Stable key: %1$s</string>
+    <string name="demo_collections_controls_title">Collection controls</string>
+    <string name="demo_collections_controls_summary">Change the data order and labels while preserving keyed item state.</string>
+    <string name="demo_collections_show_order">Show %1$s</string>
+    <string name="demo_collections_primary_labels">Primary labels</string>
+    <string name="demo_collections_alternate_labels">Alternate labels</string>
+    <string name="demo_collections_reset_list">Reset list</string>
+    <string name="demo_collections_lazy_list_title">LazyColumn</string>
+    <string name="demo_collections_lazy_list_summary">Full layout state, sticky header, content type, prefetch, and keyed item state.</string>
+    <string name="demo_collections_lazy_item">Lazy item %1$s</string>
+    <string name="demo_collections_lazy_item_alternate">Lazy item %1$s (alternate)</string>
+    <string name="demo_collections_layout_info">Visible %1$s · can scroll forward %2$b · scrolling %3$b</string>
+    <plurals name="demo_collections_sticky_header">
+        <item quantity="one">Sticky header · %1$d item</item>
+        <item quantity="other">Sticky header · %1$d items</item>
+    </plurals>
+    <string name="demo_collections_item_click_count">Item %1$s clicks: %2$d</string>
+    <string name="demo_collections_stress_title">Lazy collection stress</string>
+    <string name="demo_collections_stress_summary">Reorder, insertion, label changes, and constrained height in one repeatable workload.</string>
+    <string name="demo_collections_inserted_item">Inserted item X</string>
+    <string name="demo_collections_stress_item">Stress item %1$s</string>
+    <string name="demo_collections_stress_item_alternate">Stress item %1$s (alternate)</string>
+    <string name="demo_collections_linear_order">Linear order</string>
+    <string name="demo_collections_rotated_order">Rotate order</string>
+    <string name="demo_collections_insert_x">Insert X</string>
+    <string name="demo_collections_remove_x">Remove X</string>
+    <string name="demo_collections_active_ids">Active IDs: %1$s</string>
+    <string name="demo_collections_reset_stress">Reset stress fixture</string>
+    <string name="demo_collections_android_view_title">AndroidView interop</string>
+    <string name="demo_collections_android_view_summary">Bind a native View from declarative state.</string>
+    <string name="demo_collections_android_view_bound">Native TextView bound</string>
+    <string name="demo_collections_lazy_row_title">LazyRow</string>
+    <string name="demo_collections_lazy_row_summary">A horizontal RecyclerView with keys, spacing, and content padding.</string>
+    <string name="demo_collections_horizontal_cards">Horizontal image cards</string>
+    <string name="demo_collections_horizontal_labels">Horizontal text labels</string>
+    <string name="demo_collections_label">Label %1$d</string>
+    <string name="demo_collections_grid_title">LazyVerticalGrid</string>
+    <string name="demo_collections_grid_summary">A GridLayoutManager-backed collection with switchable span count.</string>
+    <string name="demo_collections_columns">%1$d columns</string>
+    <string name="demo_collections_reset_columns">Reset to 2 columns</string>
+    <string name="demo_collections_grid_item_span">%1$s · %2$d columns</string>
+    <string name="demo_collections_pull_refresh_title">PullToRefresh</string>
+    <string name="demo_collections_pull_refresh_summary">A refresh gesture and callback wrapped around a ScrollableColumn.</string>
+    <plurals name="demo_collections_refresh_count">
+        <item quantity="one">Refreshed %1$d time</item>
+        <item quantity="other">Refreshed %1$d times</item>
+    </plurals>
+    <string name="demo_collections_refreshing">Refreshing…</string>
+    <string name="demo_collections_simulate_refresh">Simulate refresh</string>
+    <string name="demo_collections_reset_refresh">Reset refresh</string>
+    <string name="demo_collections_pull_refresh_hint">Pull down on the region above, or use the simulate refresh action.</string>
+</resources>

@@ -59,6 +59,16 @@ For historical analysis, see
 23. Application-process development tooling follows a zero-recurring-work contract. The optional
     running-device DSL locator performs no report write or live View inspection during scrolling;
     one explicit nonce-bearing IDE request produces one bounded snapshot and response.
+24. Warm interaction benchmarks wait 5 seconds after launch and fixture positioning outside the
+    measured block. Cold-start workloads do not wait because launch is the measured operation.
+25. Navigation motion keeps push and pop separate while executing eight same-direction transitions
+    per measured iteration. Pop setup preloads eight destinations outside measurement.
+26. Reused nodes whose type, environment, and NodeSpec are unchanged use a modifier-only patch.
+    Visual-only updates retain LayoutParams and skip full Node binding; layout modifiers replace
+    LayoutParams without recreating or semantically rebinding the native View.
+27. `LocalContext` stores the installed immutable `LocalSnapshot` rather than rebuilding a snapshot
+    object for every group or emitted node. Snapshot creation scales with provider boundaries; a
+    batch `ProvideLocals` call installs one snapshot for all of its bindings.
 
 ### 2.2 Release benchmark entry points
 
@@ -95,20 +105,59 @@ Regenerate from an existing result:
   -PbenchmarkResult=/path/to/current-benchmarkData.json
 ```
 
-Compare with a same-device historical baseline and apply the regression gate:
+For a thermally constrained physical device, run each ViewCompose or Compose method from the same
+`NONE`/`LIGHT` starting state, cool between methods, and place the resulting JSON files in one clean
+directory. Passing that directory as `benchmarkResult` merges the split methods only when their
+device, OS, clock-policy, and compilation identities match. Duplicate benchmark names and context
+mismatches fail closed; the tool never selects an arbitrary newest partial run. Legacy results
+without an explicit clock policy continue to require the AndroidX `cpuLocked` snapshots to match.
+
+Install the benchmark and target APKs once before a split-method batch. After installation, stop
+both processes, turn the screen off, and wait until the accepted thermal state and normal CPU
+minimum-frequency state have returned. Then invoke each method directly through the installed
+`AndroidJUnitRunner`, pull its `com.viewcompose.benchmark-benchmarkData.json`, stop both processes,
+and cool again. Do not use a fresh `connectedBenchmarkAndroidTest` installation for every method:
+AndroidX snapshots `cpuLocked` when the instrumentation process starts, and an OEM package-install
+or wake boost can temporarily raise `scaling_min_freq` and misclassify an unlocked device. The
+host-verified consumer-device protocol passes
+`androidx.benchmark.output.payload.clockPolicy=unlocked-dvfs-preflight-v1` to every method. Reports
+then compare that durable protocol and retain all observed AndroidX lock snapshots, including a
+mixed value, as diagnostic metadata. A missing or different policy fails closed; raw lock snapshots
+are never rewritten after collection.
+
+An explicit unlocked-DVFS policy identifies the host protocol; it does not claim that an OEM will
+hold a stable working frequency. The run-P50 CV gate remains mandatory. If a method produces two
+frequency plateaus, changes `scaling_max_freq` while thermal status is unchanged, or reports that
+AndroidX cannot clear the Runtime Image, reject it instead of rerunning until one sample happens to
+pass. `cmd power set-fixed-performance-mode-enabled` is not equivalent to a clock lock unless the
+device proves stable minimum and maximum frequencies throughout measurement. Use a rootable or
+otherwise clock-controllable reference device when the consumer device cannot satisfy this gate.
+
+Compare with a same-device historical baseline and apply the regression gate. The baseline input is
+the previously generated revisioned comparison report, not raw Macrobenchmark JSON:
 
 ```bash
 ./gradlew benchmarkComparisonReport \
   -PbenchmarkResult=/path/to/current-benchmarkData.json \
-  -PbenchmarkBaseline=/path/to/baseline-benchmarkData.json
+  -PbenchmarkBaseline=/path/to/baseline-compose-comparison.json
 ```
+
+Both Markdown and JSON comparison reports identify every row by scenario ID, workload revision,
+and measured action. The gate rejects a baseline row whose scenario identity or workload revision
+differs from the current row. Raw `benchmarkData.json` remains the current-run input, but it is not
+a valid longitudinal baseline because it does not preserve the Demo workload contract.
 
 `ReleaseBaselineBenchmark` is the release authority:
 
 1. The target is R8-optimized, resource-shrunk, and non-debuggable.
 2. `CompilationMode.None` isolates ART precompilation benefit and exposes the delivered binary.
 3. Fixed scenarios are cold start and state patch.
-4. Compare results longitudinally only on the same device, system version, and thermal state.
+4. Formal physical interaction methods use five clean iterations. Cold startup uses ten because its
+   genuine first-run cold-cache variance otherwise lets one sample dominate the stability result.
+   Start each method at Android thermal status `NONE` or `LIGHT`, stop and cool between methods,
+   and reject a batch that reaches `SEVERE`.
+5. Compare results longitudinally only on the same device, system version, iteration protocol, and
+   thermal policy.
 
 `ListPerformanceComparisonBenchmark` is the Compose list control:
 
@@ -116,28 +165,107 @@ Compare with a same-device historical baseline and apply the regression gate:
 2. `CompilationMode.None` prevents precompilation from hiding framework delivery cost.
 3. `viewComposeListScroll/composeListScroll` use identical gestures.
 4. `viewComposeListMutation/composeListMutation` use the same 37-item rotation and update every
-   sixteenth item.
-5. Conclusions come from one device run; never divide results from different devices.
+   sixteenth item. Each measured iteration executes eight complete mutate/reset cycles so the
+   run-level frame distribution is large enough for the stability gate.
+5. Every iteration waits 5 seconds after the target is ready, outside the measured block, so OEM
+   Activity-launch boosting cannot make the first interaction artificially fast.
+6. Conclusions come from one device run; never divide results from different devices.
 
 `ComplexLayoutPerformanceComparisonBenchmark` is the complex-tree control:
 
 1. `viewComposeComplexLayoutScroll/composeComplexLayoutScroll` compare non-Lazy whole-tree scroll.
 2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` update all 18 cards and toggle the
-   conditional detail subtree.
-3. Cards, metrics, labels, conditional counts, and nesting order are equal.
-4. This scenario measures ViewGroup depth, whole-tree measure/layout, and local patches; it does not
+   conditional detail subtree through eight complete update/reset cycles per measured iteration.
+3. The same 5-second unmeasured post-launch settling window applies to both engines.
+4. Cards, metrics, labels, conditional counts, and nesting order are equal.
+5. This scenario measures ViewGroup depth, whole-tree measure/layout, and local patches; it does not
    evaluate Lazy containers.
+
+Accepted Samsung SM-G991B / Android 13 replacement baselines from 2026-08-15 use five iterations,
+per-method `NONE`/`LIGHT` starts, the 5-second setup settling window, and clock policy
+`unlocked-dvfs-preflight-v1`:
+
+| Workload | ViewCompose P50/P95 | Compose P50/P95 | ViewCompose/Compose run-P50 CV |
+| --- | ---: | ---: | ---: |
+| `performance.list@3` scroll | 4.620 / 9.048 ms | 5.098 / 8.554 ms | 0.041 / 0.072 |
+| `performance.list@3` mutation | 4.651 / 9.278 ms | 9.163 / 24.855 ms | 0.009 / 0.034 |
+| `performance.complex-layout@3` scroll | 5.596 / 8.603 ms | 5.221 / 8.457 ms | 0.011 / 0.037 |
+| `performance.complex-layout@3` update | 6.063 / 42.505 ms | 9.527 / 50.296 ms | 0.079 / 0.082 |
+
+These are revisioned baseline values, not a claim that one engine is universally faster. In
+particular, list and complex-layout update exercise different framework strategies from scrolling.
+
+`DemoInteractionBenchmark` retains focused fixture baselines outside the Compose comparisons:
+
+1. `diagnosticsThemeLongFlingToBottomAndBackRevision2` executes eight fixed forceful flings in each
+   direction and proves the real bottom and top anchors after their respective gesture sequences.
+2. `collectionsScrollRevision2` captures the nested LazyColumn bounds during setup, then executes
+   eight fixed swipes in each direction without performing Accessibility queries inside the measured
+   block. Each swipe has a 500 ms physical settle window because benchmark setup disables
+   UiAutomator's implicit idle timeout; omitting that window overlaps inertial scrolls and causes
+   non-workload `Buffer Stuffing` in FrameTimeline.
+3. `collectionsStressMutationRevision2` executes eight complete rotate/insert/reset cycles and
+   asserts that every reset restores the original logical order.
+4. All three wait through the same 5-second unmeasured launch-settling window. Formal raw results
+   record `scenario`, `workloadRevision`, and `clockPolicy` through AndroidX benchmark payload.
+
+Accepted Samsung SM-G991B / Android 13 fixture baselines from 2026-08-15 use five iterations,
+per-method `NONE`/`LIGHT` starts, `CompilationMode.Partial`, and clock policy
+`unlocked-dvfs-preflight-v1`:
+
+| Workload | Frame CPU P50/P95 | Run-P50 CV |
+| --- | ---: | ---: |
+| `diagnostics.theme@2` fixed long-fling round trip | 3.067 / 7.336 ms | 0.008 |
+| `collection.stress@2` nested-list scroll round trip | 3.357 / 6.288 ms | 0.018 |
+| `collection.stress@2` eight-cycle mutation | 4.358 / 10.507 ms | 0.018 |
+
+The collection-scroll preflight is also the reference for gesture-driver contamination. Repeated
+target lookup inside measurement first added Accessibility traversal. After that was removed,
+back-to-back swipes still produced run-P50 plateaus near 3.6, 7.2, and 14.7 ms. Perfetto showed
+stable `RV Scroll`, display-list recording, and RenderThread draw cost across those runs; only
+`dequeueBuffer` wait changed, and FrameTimeline classified the slow spans as `Buffer Stuffing`.
+Changing refresh-rate or ART compilation policy did not remove it. The explicit per-gesture settle
+did, reducing run-P50 CV to 0.018. Never interpret an unpaced synthetic input loop as framework
+scroll cost.
 
 `ShadowPerformanceComparisonBenchmark` is the shadow control:
 
 1. ViewCompose and Compose use the same layers, colors, sizes, shapes, list data, and complex layout.
-2. Eight paired methods cover shadow-list scroll/mutation and shadow-complex scroll/update.
+2. Eight paired methods cover shadow-list scroll/mutation and shadow-complex scroll/update. Every
+   mutation/update iteration executes eight complete action/reset cycles and asserts restoration,
+   matching the accepted non-shadow comparison protocol and producing enough frames for the
+   run-stability gate.
 3. `shadowRenderPolicy=exact_bitmap|render_node|auto` changes only the ViewCompose backend; the
    Compose result normalizes thermal and background noise.
 4. Ten runs per backend on Samsung SM-G991B / Android 13 on 2026-07-30 showed mixed P50, P95, and RSS
    direction for RenderNode versus ExactBitmap, with no stable benefit.
 5. `Auto` therefore remains `ExactBitmap`; `RenderNodeDisplayList` is an explicit experiment, not a
    release default.
+
+Accepted Samsung SM-G991B / Android 13 `Auto` (`ExactBitmap`) replacement baselines from
+2026-08-15 use five iterations, per-method `NONE`/`LIGHT` starts, the 5-second setup settling
+window, eight mutation/update cycles, and clock policy `unlocked-dvfs-preflight-v1`:
+
+| Workload | ViewCompose P50/P95 | Compose P50/P95 | ViewCompose/Compose run-P50 CV |
+| --- | ---: | ---: | ---: |
+| `performance.shadow-list@2` scroll | 4.613 / 9.650 ms | 5.022 / 8.708 ms | 0.052 / 0.044 |
+| `performance.shadow-list@2` mutation | 4.860 / 9.750 ms | 9.035 / 24.787 ms | 0.023 / 0.117 |
+| `performance.shadow-complex-layout@2` scroll | 5.728 / 8.724 ms | 5.481 / 8.695 ms | 0.016 / 0.046 |
+| `performance.shadow-complex-layout@2` update | 6.236 / 41.506 ms | 10.348 / 46.824 ms | 0.049 / 0.044 |
+
+All eight methods pass the `0.15` run-stability gate. The comparison report preserves mixed raw
+AndroidX `cpuLocked` snapshots while accepting the batch through its explicit host-verified clock
+policy. High update P95 values remain part of the baseline: both engines rebuild many shadowed
+cards and a conditional subtree, so P50 alone is not an adequate interpretation.
+
+Navigation revision 6 and design-bundle revision 3 do not yet have accepted physical baselines.
+On the same Samsung device, four navigation transitions supplied 202-223 frames per run, but OEM
+frequency ceilings alternated between full and capped values even when Android thermal status ended
+at `NONE`. Unlocked and fixed-performance trials produced run-P50 CV values from `0.308` to `0.372`.
+The representative Cut Contrast patch method also failed at `0.262`. The device denies clearing ART
+profile data to shell, and fixed-performance plus enhanced-processing modes did not provide a real
+clock lock. These results are rejected capability evidence, not framework regressions or baselines;
+finish those two matrices on a clock-controllable reference device.
 
 Same-device backend commands:
 
@@ -160,26 +288,87 @@ Automated report and regression rules:
 1. Comparison output always includes frame CPU P50/P95, frame overrun P50/P95, heap max, and RSS anon
    max.
 2. ViewCompose and Compose for one scenario come from the same benchmark JSON.
-3. A historical comparison requires the same device model, system fingerprint, CPU-lock state, and
-   compilation mode.
+   That JSON may be the deterministic in-memory merge of separately cooled method results from the
+   same context.
+3. A historical comparison requires the same device model, system fingerprint, explicit clock
+   policy, and compilation mode. Legacy results without a clock policy fall back to strict AndroidX
+   CPU-lock snapshot matching.
 4. The gate fails only when both the raw ViewCompose threshold and normalized ViewCompose/Compose
    ratio threshold are exceeded.
 5. Defaults live in `tools/performance/benchmark_policy.json`; changes below the absolute noise floor
    do not fail.
-6. The report computes coefficient of variation across iteration P50 values. A value above `0.15`
-   is unstable and must be rerun rather than interpreted.
+6. The report computes coefficient of variation across iteration P50 values for positive
+   ratio-scale frame CPU duration. A value above `0.15` is unstable and must be rerun rather than
+   interpreted. Signed `frameOverrunMs` remains a reported and gated result, but does not use CV:
+   division by a mean near its meaningful zero would manufacture instability.
+7. More repetitions are not automatically stronger evidence: a continuously heating run is
+   invalid even when its aggregate coefficient of variation is below the threshold.
 
-### 2.3 Current conclusion
+### 2.3 Benchmark conclusion contract
 
-The priority is regression control and correct usage, not maximizing headline FPS. The highest
-value comes from correct reuse, group-level invalidation plus skipped work, and stable container
-refresh semantics.
+An accepted run is not complete documentation until its result is interpreted here or in a more
+specific owning active page. Every conclusion records the workload and revision, comparison
+environment, absolute values, normalized deltas, stability result, limitations, decision, and next
+action. Use exactly one primary classification:
 
-SlotTable Lite and subtree recomposition are on the main path and `qaQuick` passes. Current device
-gate status remains recorded in the [roadmap](../project/roadmap.md) rather than inferred from an old
-local `qaFull` run.
+- `improved`: decision metrics are materially better and no important counter-metric regresses;
+- `regressed`: at least one decision metric is materially worse and the other decision metrics do
+  not reverse the interpretation;
+- `mixed`: important metrics move in opposite directions, including a better median with a worse
+  tail;
+- `no material change`: no decision metric crosses the applicable combined normalized and absolute
+  gate, and opposing directions do not require a `mixed` classification;
+- `inconclusive`: instability, environment mismatch, insufficient coverage, or another validity
+  failure prevents a directional claim.
 
-### 2.4 Debug tooling regression gate
+For frame CPU duration, lower is better. The normalized delta is
+`(ViewCompose / control - 1) * 100`; reports use the less ambiguous words `lower` and `higher`
+instead of relying on the sign. Interpretation uses the owning gate's normalized and absolute
+thresholds together. The current comparison policy treats P50 as material only beyond both 10% and
+0.3 ms, and P95 only beyond both 15% and 0.8 ms; the Debug Tooling policy below is intentionally
+different. Conclusions must report P50 and P95 separately, retain absolute values when a relative
+result is favorable but still misses a frame budget, and preserve rejected runs as capability
+evidence rather than silently selecting a passing sample. Raw data, a green task, or a favorable
+single metric is not a conclusion.
+
+### 2.4 Current comparative conclusion
+
+The accepted 2026-08-15 Samsung SM-G991B / Android 13 data above produces this durable comparison
+against the same-run Compose control:
+
+| Workload | P50 delta | P95 delta | Classification | Interpretation |
+| --- | ---: | ---: | --- | --- |
+| `performance.list@3` scroll | 9.4% lower | 5.8% higher | `mixed` | The median is directionally lower and the tail directionally higher; neither crosses the combined comparison gate. |
+| `performance.list@3` mutation | 49.2% lower | 62.7% lower | `improved` | Keyed mutation and payload update are a clear comparative strength. |
+| `performance.complex-layout@3` scroll | 7.2% higher | 1.7% higher | `no material change` | Both metrics are directionally slower, but neither crosses the combined comparison gate. |
+| `performance.complex-layout@3` update | 36.4% lower | 15.5% lower | `improved` | Whole-tree update is faster than the control, but the absolute 42.505 ms P95 remains a tail-latency risk. |
+| `performance.shadow-list@2` scroll | 8.1% lower | 10.8% higher | `mixed` | Median and tail move in opposite directions. The 0.942 ms absolute P95 gap exceeds the noise floor, but its 10.8% increase remains below the 15% failure threshold. |
+| `performance.shadow-list@2` mutation | 46.2% lower | 60.7% lower | `improved` | Shadowed keyed mutation retains the non-shadow mutation advantage. |
+| `performance.shadow-complex-layout@2` scroll | 4.5% higher | 0.3% higher | `no material change` | Both absolute changes remain inside the noise floors; the direction is slightly slower but does not support a regression claim. |
+| `performance.shadow-complex-layout@2` update | 39.7% lower | 11.4% lower | `improved` | Relative update cost improves, but the absolute 41.506 ms P95 remains a tail-latency risk. |
+
+The current conclusion is therefore scoped, not universal:
+
+1. mutation and whole-tree update workloads are consistently faster than the Compose control in
+   this accepted batch;
+2. scrolling is not consistently faster, although no accepted scrolling row crosses the automated
+   regression gate: shadow-list P95 is the first directional optimization target, followed by
+   non-Lazy complex-layout P50; ordinary-list P95 also remains a monitored directional gap;
+3. the two complex update workloads remain absolute tail-latency targets even though their
+   relative comparison is favorable;
+4. diagnostics and collection fixtures have accepted ViewCompose-only stability baselines, not a
+   Compose ranking;
+5. navigation revision 6 and design-bundle revision 3 remain `inconclusive` until a
+   clock-controllable device can produce valid evidence;
+6. the accepted tables do not yet contain a durable same-run memory comparison, so no memory winner
+   is claimed.
+
+Correct reuse, group-level invalidation plus skipped work, and stable container refresh semantics
+remain the optimization strategy. SlotTable Lite and subtree recomposition are on the main path and
+`qaQuick` passes, but those implementation facts do not override the measured mixed scrolling
+result. Device-gate status remains recorded in the [roadmap](../project/roadmap.md).
+
+### 2.5 Debug tooling regression gate
 
 Release macrobenchmarks cannot detect costs that exist only in debuggable builds. Any tooling that
 executes in an application process therefore adds a same-device debug comparison for every hot path

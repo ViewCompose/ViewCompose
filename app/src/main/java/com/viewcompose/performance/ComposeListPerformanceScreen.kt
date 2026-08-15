@@ -30,6 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
 
 /**
  * Compose 对照版本的列表性能场景。
@@ -38,20 +40,23 @@ import androidx.compose.ui.unit.sp
 @Composable
 internal fun ComposeListPerformanceScreen(
     shadowsEnabled: Boolean,
+    scenario: DemoScenarioSpec,
+    fixtures: PerformanceFixtures,
 ) {
     var revision by remember { mutableIntStateOf(0) }
-    val rows = performanceListRows(revision)
+    val rows = fixtures.listRows(revision)
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(PERFORMANCE_BACKGROUND_COLOR)),
+            .background(Color(PERFORMANCE_BACKGROUND_COLOR))
+            .performanceScenarioTarget(
+                scenario,
+                DemoAutomationRole.Root,
+                enableResourceIds = true,
+            ),
     ) {
         ComposeListPerformanceHeader(
-            engineName = if (shadowsEnabled) {
-                "${PerformanceEngine.Compose.displayName} Shadow"
-            } else {
-                PerformanceEngine.Compose.displayName
-            },
+            engineName = fixtures.copy.engineName(PerformanceEngine.Compose, shadowsEnabled),
             revision = revision,
             onMutate = {
                 revision += 1
@@ -59,11 +64,14 @@ internal fun ComposeListPerformanceScreen(
             onReset = {
                 revision = 0
             },
+            scenario = scenario,
+            copy = fixtures.copy,
         )
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
+                .weight(1f)
+                .performanceScenarioTarget(scenario, DemoAutomationRole.Target),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
@@ -87,6 +95,8 @@ private fun ComposeListPerformanceHeader(
     revision: Int,
     onMutate: () -> Unit,
     onReset: () -> Unit,
+    scenario: DemoScenarioSpec,
+    copy: PerformanceCopy,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -96,27 +106,34 @@ private fun ComposeListPerformanceHeader(
             .padding(12.dp),
     ) {
         PerformanceText(
-            text = "$engineName List Ready",
+            text = copy.listReady(engineName),
             sizeSp = 18,
             weight = FontWeight.SemiBold,
             color = PERFORMANCE_PRIMARY_TEXT_COLOR,
+            modifier = Modifier.performanceScenarioTarget(scenario, DemoAutomationRole.Ready),
         )
         PerformanceText(
-            text = "List revision $revision",
+            text = copy.listRevision(revision),
             sizeSp = 14,
             color = PERFORMANCE_SECONDARY_TEXT_COLOR,
+            modifier = Modifier.performanceScenarioTarget(scenario, DemoAutomationRole.State),
         )
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ComposePerformanceAction(
-                text = "Mutate list",
+                text = copy.mutateList,
                 onClick = onMutate,
+                modifier = Modifier.performanceScenarioTarget(
+                    scenario,
+                    DemoAutomationRole.PrimaryAction,
+                ),
             )
             ComposePerformanceAction(
-                text = "Reset list",
+                text = copy.resetList,
                 onClick = onReset,
+                modifier = Modifier.performanceScenarioTarget(scenario, DemoAutomationRole.Reset),
             )
         }
     }
@@ -126,10 +143,11 @@ private fun ComposeListPerformanceHeader(
 private fun ComposePerformanceAction(
     text: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
+        modifier = modifier
             .background(
                 color = Color(PERFORMANCE_PRIMARY_COLOR),
                 shape = RoundedCornerShape(8.dp),
@@ -233,9 +251,11 @@ internal fun PerformanceText(
     sizeSp: Int,
     color: Int,
     weight: FontWeight = FontWeight.Normal,
+    modifier: Modifier = Modifier,
 ) {
     BasicText(
         text = text,
+        modifier = modifier,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         style = TextStyle(

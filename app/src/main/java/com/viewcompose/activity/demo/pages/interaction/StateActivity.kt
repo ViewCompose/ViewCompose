@@ -3,17 +3,20 @@ package com.viewcompose
 import android.view.ViewGroup
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
-internal const val EXTRA_STATE_PAGE_INDEX = "state_page_index"
-
+/** Hosts one strict runtime fixture selected by immutable scenario identity. */
 class StateActivity : DemoRenderActivity() {
-    override val demoTitle: String = "State"
+    override val demoTitleRes: Int = R.string.demo_activity_state_title
 
     override fun buildDemoContent(
         root: ViewGroup,
         builder: UiTreeBuilder,
     ) {
+        val scenario = checkNotNull(currentScenario()) {
+            "StateActivity requires a registered runtime scenario"
+        }
         builder.StatePage(
-            initialPageIndex = intent?.getIntExtra(EXTRA_STATE_PAGE_INDEX, 0) ?: 0,
+            fixture = StateFixture.from(scenario.id),
+            scenario = scenario,
             onOpenDiagnostics = {
                 startActivity(
                     DiagnosticsActivity.newIntent(

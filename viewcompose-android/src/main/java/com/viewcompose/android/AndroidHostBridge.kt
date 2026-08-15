@@ -38,12 +38,14 @@ private val defaultAnimationCoroutineContext: CoroutineContext = Dispatchers.Mai
 /**
  * Creates a Fragment ViewCompose root and binds its render session to the view lifecycle.
  *
- * The returned root should be returned from `onCreateView`. Its session is disposed when either the
- * current view lifecycle or the Fragment lifecycle is destroyed. A repeated call first disposes the
- * previous session. Lifecycle, ViewModel, saved state, Android environment, frame clock, and
- * overlay services are provided to [content]. This neutral entry point does not select a design
- * system or wrap [rootContext]; install design-system tokens inside [content], or use a named
- * Android design-system integration.
+ * The returned root should be returned from `onCreateView`. Rendering starts as soon as Android
+ * publishes that root's `viewLifecycleOwner`, so [content] always receives the View lifecycle rather
+ * than the longer-lived Fragment lifecycle. Its session is disposed when either the current View
+ * lifecycle or the Fragment lifecycle is destroyed. A repeated call first disposes the previous
+ * session. ViewModel and saved-state ownership remain scoped to the Fragment. Android environment,
+ * frame clock, and overlay services are also provided to [content]. This neutral entry point does
+ * not select a design system or wrap [rootContext]; install design-system tokens inside [content],
+ * or use a named Android design-system integration.
  *
  * @sample com.viewcompose.android.samples.fragmentHostSample
  * @param debug enables render diagnostics and logging
@@ -88,28 +90,29 @@ fun Fragment.setUiContent(
     val root = buildUiContentRoot(
         context = platform.rootContext,
     )
-    val session = renderInto(
-        container = root,
-        debug = debug,
-        debugTag = debugTag,
-        overlayHost = overlayHostFactory(root),
-        onRenderStats = onRenderStats,
-        onRenderResult = onRenderResult,
-        onRenderFailure = onRenderFailure,
-    ) {
-        withHostEnvironment(
-            root = root,
-            lifecycleOwner = this@setUiContent,
-            viewModelStoreOwner = this@setUiContent,
-            saveableStateRegistry = saveableStateRegistry,
-            platform = platform,
-            onRenderResult = onRenderResult,
-            content = content,
-        )
-    }
     FragmentRenderSessionRegistry.bind(
         fragment = this,
-        session = session,
+        createSession = { viewLifecycleOwner ->
+            renderInto(
+                container = root,
+                debug = debug,
+                debugTag = debugTag,
+                overlayHost = overlayHostFactory(root),
+                onRenderStats = onRenderStats,
+                onRenderResult = onRenderResult,
+                onRenderFailure = onRenderFailure,
+            ) {
+                withHostEnvironment(
+                    root = root,
+                    lifecycleOwner = viewLifecycleOwner,
+                    viewModelStoreOwner = this@setUiContent,
+                    saveableStateRegistry = saveableStateRegistry,
+                    platform = platform,
+                    onRenderResult = onRenderResult,
+                    content = content,
+                )
+            }
+        },
     )
     return root
 }
@@ -289,11 +292,13 @@ private object ActivityRenderSessionRegistry {
  */
 private object FragmentRenderSessionRegistry {
     private class Binding(
-        val session: RenderSession,
+        val createSession: (LifecycleOwner) -> RenderSession,
     ) {
         var disposed: Boolean = false
+        var session: RenderSession? = null
+        var viewLifecycleOwner: LifecycleOwner? = null
         var fragmentObserver: DefaultLifecycleObserver? = null
-        var ownerObserver: Observer<LifecycleOwner>? = null
+        var ownerObserver: Observer<LifecycleOwner?>? = null
         var viewLifecycleBinding: LifecycleBoundDisposer? = null
     }
 
@@ -301,10 +306,10 @@ private object FragmentRenderSessionRegistry {
 
     fun bind(
         fragment: Fragment,
-        session: RenderSession,
+        createSession: (LifecycleOwner) -> RenderSession,
     ) {
         clear(fragment)
-        val binding = Binding(session)
+        val binding = Binding(createSession)
         bindings[fragment] = binding
         binding.viewLifecycleBinding = LifecycleBoundDisposer {
             clear(fragment)
@@ -318,15 +323,20 @@ private object FragmentRenderSessionRegistry {
         binding.fragmentObserver = fragmentObserver
         fragment.lifecycle.addObserver(fragmentObserver)
 
-        val ownerObserver = Observer<LifecycleOwner> { owner ->
-            bindViewLifecycle(
-                fragment = fragment,
-                binding = binding,
-                owner = owner,
-            )
+        val ownerObserver = object : Observer<LifecycleOwner?> {
+            override fun onChanged(owner: LifecycleOwner?) {
+                if (owner == null) return
+                bindViewLifecycle(
+                    fragment = fragment,
+                    binding = binding,
+                    owner = owner,
+                )
+            }
         }
         binding.ownerObserver = ownerObserver
-        fragment.viewLifecycleOwnerLiveData.observe(fragment, ownerObserver)
+        // onCreateView returns before the View owner is published. An always-active observer lets
+        // the first frame mount immediately at publication instead of waiting for Fragment STARTED.
+        fragment.viewLifecycleOwnerLiveData.observeForever(ownerObserver)
         fragment.viewLifecycleOwnerLiveData.value?.let { owner ->
             bindViewLifecycle(
                 fragment = fragment,
@@ -343,6 +353,19 @@ private object FragmentRenderSessionRegistry {
     ) {
         if (binding.disposed || bindings[fragment] !== binding) {
             return
+        }
+        if (binding.viewLifecycleOwner === owner) {
+            return
+        }
+        check(binding.session == null) {
+            "Fragment View lifecycle changed without disposing its previous render session."
+        }
+        binding.viewLifecycleOwner = owner
+        binding.session = try {
+            binding.createSession(owner)
+        } catch (error: Throwable) {
+            clear(fragment)
+            throw error
         }
         binding.viewLifecycleBinding?.bind(owner)
     }
@@ -364,6 +387,8 @@ private object FragmentRenderSessionRegistry {
             return
         }
         binding.disposed = true
-        binding.session.dispose()
+        binding.session?.dispose()
+        binding.session = null
+        binding.viewLifecycleOwner = null
     }
 }

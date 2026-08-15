@@ -9,6 +9,7 @@ import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.UiSp
 import com.viewcompose.ui.modifier.CornerRadiusModifierElement
 import com.viewcompose.ui.modifier.PaddingModifierElement
+import com.viewcompose.ui.modifier.RelativePaddingModifierElement
 import com.viewcompose.ui.node.policy.LazyContentPadding
 
 internal fun UiEnvironmentValues.roundToPx(value: UiDp): Int = density.roundToPx(value)
@@ -56,6 +57,19 @@ internal fun UiEnvironmentValues.resolve(value: PaddingModifierElement): Padding
         left = roundToPx(value.left),
         top = roundToPx(value.top),
         right = roundToPx(value.right),
+        bottom = roundToPx(value.bottom),
+    )
+}
+
+internal fun UiEnvironmentValues.resolve(value: RelativePaddingModifierElement): PaddingPx {
+    val (left, right) = when (layoutDirection) {
+        UiLayoutDirection.Ltr -> value.start to value.end
+        UiLayoutDirection.Rtl -> value.end to value.start
+    }
+    return PaddingPx(
+        left = roundToPx(left),
+        top = roundToPx(value.top),
+        right = roundToPx(right),
         bottom = roundToPx(value.bottom),
     )
 }

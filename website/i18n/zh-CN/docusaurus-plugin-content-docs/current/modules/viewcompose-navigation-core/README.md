@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: 987383f043907b9afb05b6eaffaea1be76b148f4c5e8d1c4721da04ac62c530c
+translation_source_hash: 0ae8a73c2a98ffa2a64391a183b5975f5cb385cd274806690ddd7f9ea1722121
 translation_status: current
 ---
 
@@ -116,6 +116,10 @@ val profileLink = NavDeepLink(
 pattern 是严格白名单。占位符必须完整占据一个路径段或查询值。URI fragment、userinfo、非法
 百分号编码、无效 UTF-8、重复查询名、未声明类型和局部占位符都会被拒绝。浮点类型必须有限，
 布尔值只接受小写 `true` 或 `false`。
+
+输入中额外的 query 参数会被容忍，但完全不参与导航。未声明值不会进入
+`NavRoute.arguments`、改变匹配具体度、消除歧义、选择保留栈或决定 launch mode。若应用要求
+精确或已签名 URL，应在交给 resolver 前验证完整输入。
 
 解析返回四种结果之一：
 

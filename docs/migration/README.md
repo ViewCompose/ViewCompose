@@ -10,7 +10,7 @@ migration preserves ownership, lifecycle, and observable behavior rather than re
 named functions. Use this section to identify semantic gaps before moving a screen to the native
 Android View renderer.
 
-Last verified: **2026-08-12**
+Last verified: **2026-08-15**
 
 Re-verification owner: **maintainers of the Kernel, UI Foundation, Android Engine, Android
 aggregate, and navigation module families**
@@ -91,7 +91,7 @@ evidence. Status terms have one meaning across all pages:
 | Modifier | Structural equality and renderer reuse | **Supported** | Use semantic stable keys; a fresh callback object is not necessarily an update signal. | [Modifier equality](compose-layout-modifier-and-environment.md#modifier-ordering-folding-and-equality) |
 | Modifier | Application-defined `Modifier.Node` lifecycle | **Unsupported** | Use supported modifiers, interop, or a reviewed UI-contract and renderer feature. | [Modifier.Node](compose-layout-modifier-and-environment.md#why-modifiernode-does-not-migrate-directly) |
 | Environment | Density and font scale | **Supported** | Retain logical dp/sp values and convert only at the renderer boundary. | [Environment](compose-layout-modifier-and-environment.md#density-locales-and-layout-direction) |
-| Environment | Locales, layout direction, and physical edges | **Partially supported** | Audit every logical start/end mapping and test RTL behavior. | [Environment](compose-layout-modifier-and-environment.md#density-locales-and-layout-direction) |
+| Environment | Locales, layout direction, and logical/physical edges | **Supported** | Use relative APIs for start/end intent, retain physical APIs for deliberate left/right behavior, and test RTL output. | [Environment](compose-layout-modifier-and-environment.md#density-locales-and-layout-direction) |
 | Environment | `UiLocal` as a `CompositionLocal` replacement | **Intentionally different** | Back changing locals with observable state; local lookup alone does not invalidate readers. | [UiLocal](compose-layout-modifier-and-environment.md#uilocal-versus-compositionlocal) |
 | Insets | System bars, IME, and nested consumption | **Partially supported** | Assign one owner per edge and verify mixed View/ViewCompose handling. | [Insets](compose-layout-modifier-and-environment.md#system-bar-and-ime-insets) |
 | Interop | ViewCompose `AndroidView` callback lifecycle | **Intentionally different** | Separate replay-safe update/reset, post-transaction commit, and permanent-release cleanup. | [Android View interop](compose-host-lifecycle-and-android-interop.md#android-view-interop-callback-mapping) |
@@ -102,10 +102,10 @@ evidence. Status terms have one meaning across all pages:
 | Interop | Direct ViewBinding and Fragment-in-tree APIs | **Unsupported** | Keep Fragment ownership outside the render tree and manage inflated XML explicitly. | [Unsupported interop](compose-host-lifecycle-and-android-interop.md#unsupported-direct-interop) |
 | Navigation | Controller, destination, and multiple-stack ownership | **Intentionally different** | Translate desired state transitions rather than Navigation 2 or 3 API names. | [Navigation model](compose-navigation.md#choosing-the-source-navigation-model) |
 | Navigation | Graphs, typed routes, and stack operations | **Partially supported** | Use supported primitive `NavValue` arguments and one transactional command. | [Routes and transactions](compose-navigation.md#graphs-routes-and-arguments) |
-| Navigation | Entry/graph owners and Lifecycle 2.11 factory inheritance | **Partially supported** | Verify every factory, extra, SavedStateHandle, and repeated-key stack scope. | [Entry ownership](compose-navigation.md#entry-and-graph-ownership) |
+| Navigation | Entry/graph owners and Lifecycle 2.11 factory inheritance | **Supported** | Preserve the inherited parent Factory/extras and keep repeated-route stack owners isolated. | [Entry ownership](compose-navigation.md#entry-and-graph-ownership) |
 | Navigation | Destination lifecycle and adaptive panes | **Intentionally different** | Allow multiple resumed entries and do not infer sole visibility from `RESUMED`. | [Lifecycle](compose-navigation.md#lifecycle-and-adaptive-panes) |
 | Navigation | Hidden destination composition retention | **Partially supported** | Make background work lifecycle-aware; hidden sessions retain effects and native Views. | [Retention](compose-navigation.md#hidden-destination-retention) |
-| Navigation | Deep links | **Partially supported** | Replace action/MIME rules and avoid depending on unresolved extra-query behavior. | [Deep links](compose-navigation.md#deep-links) |
+| Navigation | Deep links | **Partially supported** | Replace action/MIME rules; undeclared query values are tolerated but cannot affect navigation policy. | [Deep links](compose-navigation.md#deep-links) |
 | Navigation | Save/restore, system Back, and Predictive Back | **Supported** | Recreate live objects after restore and retain device validation in the release procedure. | [Restoration and Back](compose-navigation.md#save-restore-and-process-death) |
 | Navigation | Direct NavigationEvent integration | **Unsupported** | Keep direct dispatcher-owner, forward-event, test-fake, and Preview needs outside ViewCompose. | [NavigationEvent](compose-navigation.md#system-back-and-predictive-back) |
 
@@ -147,29 +147,21 @@ Documentation snippets are not a second source of truth. Use these compiled repo
 The root `qaQuick` task compiles these sample source sets or the tests that consume them. It also
 runs `verifyMigrationPairedSamples`, which rejects missing, extra, reordered, or stale paired
 snippets in both canonical English pages and required Chinese mirrors. Device-only restoration and
-Predictive Back evidence remains governed by the procedures linked from the [navigation
-guide](../guides/navigation.md).
+Predictive Back evidence remains governed by the procedures linked from the
+[state/restoration comparison](./compose-state-recomposition-and-restoration.md) and
+[navigation guide](../guides/navigation.md).
 
 ## Known contract gaps
 
 Do not strengthen a capability label until source documentation, implementation, and executable
 evidence agree on these points:
 
-- Fragment content currently receives the Fragment lifecycle owner while disposal follows the
-  Fragment view lifecycle.
-- Some `renderInto` post-disposal operations no-op although public wording describes fail-fast
-  behavior.
-- Android View rollback releases an uncommitted candidate even though current public `onRelease`
-  wording names only committed removal and session disposal.
-- The navigation guide and deep-link tests disagree about additional unregistered query keys.
-- Equal-result and nested derived state, read-only snapshot nesting, and ordinary keyed-sibling
-  reorder need focused regression coverage.
+- Equal-result and nested derived state plus read-only snapshot nesting need focused regression
+  coverage.
 - Repeated size/padding rules, nested inset consumption, and native-view callback identity need
   broader executable coverage.
-- Lifecycle `2.11.0` arbitrary UI scopes and complete parent factory/`CreationExtras` inheritance
-  do not have ViewCompose parity evidence.
-- General non-navigation process-death certification and a fresh Predictive Back device run remain
-  narrower than the full semantic baseline.
+- Lifecycle `2.11.0` arbitrary UI scopes do not have ViewCompose parity evidence.
+- A fresh Predictive Back device run remains narrower than the full semantic baseline.
 
 Re-verification must review official upstream documentation first, then immutable ViewCompose
 source contracts, tests, compiled samples, and applicable device procedures. A signature match or

@@ -87,9 +87,5 @@ class DemoThemeTokensTest {
         assertEquals("viewcompose-material3/static", custom.metadata.provenance.sourceId)
         assertEquals(UiThemeOrigin.Override, custom.metadata.provenance.originOf("colors.primary"))
         assertEquals(UiThemeOrigin.Override, custom.metadata.provenance.originOf("shapes.medium"))
-        assertEquals(
-            DemoThemeSource.Material3Defaults,
-            DemoThemeSource.fromId("unknown-source"),
-        )
     }
 }

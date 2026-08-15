@@ -1,5 +1,12 @@
 package com.viewcompose
 
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioId
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.demo.registry.DemoScenarioIds
+import com.viewcompose.host.android.resources.pluralStringResource
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.HorizontalAlignment
@@ -54,41 +61,55 @@ import com.viewcompose.ui.unit.sp
 
 @ViewComposePreview(name = "Layouts · Linear", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewLayoutsLinear() {
-    LayoutPage(initialPageIndex = 0)
+    LayoutPage(LayoutFixture.Linear)
 }
 
 @ViewComposePreview(name = "Layouts · Overlay", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewLayoutsOverlay() {
-    LayoutPage(initialPageIndex = 1)
+    LayoutPage(LayoutFixture.Stack)
 }
 
 @ViewComposePreview(name = "Layouts · Bounds", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewLayoutsBounds() {
-    LayoutPage(initialPageIndex = 2)
+    LayoutPage(LayoutFixture.Edges)
 }
 
 @ViewComposePreview(name = "Layouts · Flow", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewLayoutsFlow() {
-    LayoutPage(initialPageIndex = 3)
+    LayoutPage(LayoutFixture.Flow)
 }
 
 @ViewComposePreview(name = "Layouts · Scroll", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewLayoutsScroll() {
-    LayoutPage(initialPageIndex = 4)
+    LayoutPage(LayoutFixture.Scroll)
 }
 
 @ViewComposePreview(name = "Layouts · Constraint", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewLayoutsConstraint() {
-    LayoutPage(initialPageIndex = 5)
+    LayoutPage(LayoutFixture.Constraint)
 }
 
-@ViewComposePreview(name = "Layouts · Checklist", group = "Demo/Pages")
-internal fun UiTreeBuilder.PreviewLayoutsChecklist() {
-    LayoutPage(initialPageIndex = 6)
+internal enum class LayoutFixture(
+    val scenarioId: DemoScenarioId,
+) {
+    Linear(DemoScenarioIds.LayoutLinear),
+    Stack(DemoScenarioIds.LayoutStack),
+    Edges(DemoScenarioIds.LayoutEdges),
+    Flow(DemoScenarioIds.LayoutFlow),
+    Scroll(DemoScenarioIds.LayoutScroll),
+    Constraint(DemoScenarioIds.LayoutConstraint),
+    ;
+
+    companion object {
+        fun from(scenarioId: DemoScenarioId): LayoutFixture =
+            entries.singleOrNull { fixture -> fixture.scenarioId == scenarioId }
+                ?: error("Unsupported layout scenario: $scenarioId")
+    }
 }
 
 internal fun UiTreeBuilder.LayoutPage(
-    initialPageIndex: Int = 0,
+    fixture: LayoutFixture,
+    scenario: DemoScenarioSpec? = null,
 ) {
     val boxTapState = remember { mutableStateOf(0) }
     val benchmarkState = remember { mutableStateOf(false) }
@@ -101,16 +122,13 @@ internal fun UiTreeBuilder.LayoutPage(
     val constraintVerticalChainPackedState = remember { mutableStateOf(false) }
     val constraintSetHelpersAlternateState = remember { mutableStateOf(false) }
     val constraintVirtualAlternateState = remember { mutableStateOf(false) }
-    val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 6)) }
-    val pageItems = when (selectedPageState.value) {
-        0 -> listOf("benchmark", "page", "page_filter", "row", "column", "verify")
-        1 -> listOf("page", "page_filter", "box", "verify")
-        2 -> listOf("page", "page_filter", "edge", "verify")
-        3 -> listOf("page", "page_filter", "flow", "verify")
-        4 -> listOf("page", "page_filter", "scrollable", "verify")
-        5 -> listOf(
-            "page",
-            "page_filter",
+    val pageItems = when (fixture) {
+        LayoutFixture.Linear -> listOf("benchmark", "row", "column")
+        LayoutFixture.Stack -> listOf("box")
+        LayoutFixture.Edges -> listOf("edge")
+        LayoutFixture.Flow -> listOf("flow")
+        LayoutFixture.Scroll -> listOf("scrollable")
+        LayoutFixture.Constraint -> listOf(
             "constraint_basic",
             "constraint_helpers",
             "constraint_chain",
@@ -121,9 +139,7 @@ internal fun UiTreeBuilder.LayoutPage(
             "constraint_helpers_full",
             "constraint_vertical_chain",
             "constraint_set_helpers_mirror",
-            "verify",
         )
-        else -> listOf("page", "page_filter", "verify")
     }
     LazyColumn(
         items = pageItems,
@@ -131,43 +147,32 @@ internal fun UiTreeBuilder.LayoutPage(
         modifier = Modifier.fillMaxSize(),
     ) { section ->
         when (section) {
-            "page" -> ChapterPageOverviewSection(
-                title = "布局组件",
-                goal = "验证线性容器、Box 叠加、流式布局和滚动容器的测量、摆放、间距和子项覆盖的稳定性。",
-                modules = listOf(
-                    "DeclarativeLinearLayout",
-                    "DeclarativeBoxLayout",
-                    "FlowRow",
-                    "FlowColumn",
-                    "ScrollableColumn",
-                    "ScrollableRow",
-                    "DeclarativeConstraintLayout",
-                ),
-            )
-
-            "page_filter" -> ChapterPageFilterSection(
-                pages = listOf("线性", "叠加", "边界", "流式", "滚动", "约束", "清单"),
-                selectedIndex = selectedPageState.value,
-                onSelectionChange = { selectedPageState.value = it },
-            )
-
             "benchmark" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
-                title = "布局 Benchmark 锚点",
-                subtitle = "线性布局 benchmark 路径，不依赖分页过滤器。",
+                title = stringResource(R.string.demo_layouts_benchmark_title),
+                subtitle = stringResource(R.string.demo_layouts_benchmark_summary),
             ) {
-                BenchmarkRouteCallout(
-                    route = "Launcher -> Layouts -> 线性页 -> Benchmark 锚点",
-                    stableTargets = listOf(
-                        "Layouts Benchmark Compact / Expanded",
-                        "Reset Layouts Benchmark",
+                Text(
+                    text = stringResource(
+                        if (benchmarkState.value) {
+                            R.string.demo_layouts_state_expanded
+                        } else {
+                            R.string.demo_layouts_state_compact
+                        },
                     ),
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Button(
-                    text = if (benchmarkState.value) "布局 Benchmark 已展开" else "布局 Benchmark 已收起",
+                    text = stringResource(
+                        if (benchmarkState.value) {
+                            R.string.demo_layouts_benchmark_expanded
+                        } else {
+                            R.string.demo_layouts_benchmark_collapsed
+                        },
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.LAYOUTS_BENCHMARK_TOGGLE),
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     onClick = { benchmarkState.value = !benchmarkState.value },
                 )
                 Row(
@@ -177,21 +182,22 @@ internal fun UiTreeBuilder.LayoutPage(
                         .fillMaxWidth()
                         .backgroundColor(SurfaceDefaults.backgroundColor())
                         .shape(SurfaceDefaults.shape())
-                        .padding(12.dp),
+                        .padding(12.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Target),
                 ) {
-                    Text(text = "前导")
+                    Text(text = stringResource(R.string.demo_layouts_leading))
                     Button(
                         text = if (benchmarkState.value) {
-                            "展开的 benchmark 标签，应该保持兄弟布局稳定"
+                            stringResource(R.string.demo_layouts_benchmark_long_label)
                         } else {
-                            "紧凑"
+                            stringResource(R.string.demo_layouts_compact)
                         },
                         modifier = Modifier.weight(1f),
                     )
                     Button(
-                        text = "重置",
+                        text = stringResource(R.string.demo_layouts_reset),
                         variant = ButtonVariant.Outlined,
-                        modifier = Modifier.testTag(DemoTestTags.LAYOUTS_BENCHMARK_RESET),
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Reset),
                         onClick = { benchmarkState.value = false },
                     )
                 }
@@ -199,8 +205,8 @@ internal fun UiTreeBuilder.LayoutPage(
 
             "row" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "Row + Spacer + 交叉轴对齐",
-                subtitle = "自定义线性布局支持 spacing、arrangement 和子级交叉轴覆盖。",
+                title = stringResource(R.string.demo_layouts_row_title),
+                subtitle = stringResource(R.string.demo_layouts_row_summary),
             ) {
                 Row(
                     arrangement = MainAxisArrangement.Start,
@@ -211,7 +217,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .padding(12.dp),
                 ) {
                     Text(
-                        text = "顶部",
+                        text = stringResource(R.string.demo_layouts_top),
                         modifier = Modifier
                             .align(VerticalAlignment.Top)
                             .backgroundColor(Theme.colors.surfaceVariant)
@@ -219,7 +225,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     )
                     FlexibleSpacer()
                     Text(
-                        text = "底部",
+                        text = stringResource(R.string.demo_layouts_bottom),
                         modifier = Modifier
                             .align(VerticalAlignment.Bottom)
                             .backgroundColor(Theme.colors.secondary)
@@ -230,9 +236,13 @@ internal fun UiTreeBuilder.LayoutPage(
 
             "box" -> ScenarioSection(
                 kind = ScenarioKind.Visual,
-                title = "Box 叠加",
-                subtitle = "默认对齐、子级覆盖、offset 和 zIndex 在同一容器中协同工作。",
+                title = stringResource(R.string.demo_layouts_stack_title),
+                subtitle = stringResource(R.string.demo_layouts_stack_summary),
             ) {
+                Text(
+                    text = stringResource(R.string.demo_layouts_click_state, boxTapState.value),
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
+                )
                 Box(
                     contentAlignment = BoxAlignment.Center,
                     modifier = Modifier
@@ -241,16 +251,17 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .clickable { boxTapState.value = boxTapState.value + 1 }
-                        .padding(12.dp),
+                        .padding(12.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                 ) {
                     Text(
-                        text = "居中内容 · 点击 ${boxTapState.value}",
+                        text = stringResource(R.string.demo_layouts_center_clicks, boxTapState.value),
                         modifier = Modifier
                             .backgroundColor(Theme.colors.primary)
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                     )
                     Text(
-                        text = "固定标签",
+                        text = stringResource(R.string.demo_layouts_fixed_label),
                         modifier = Modifier
                             .align(BoxAlignment.BottomEnd)
                             .offset(x = (-8).dp, y = (-8).dp)
@@ -259,12 +270,21 @@ internal fun UiTreeBuilder.LayoutPage(
                             .padding(horizontal = 10.dp, vertical = 6.dp),
                     )
                 }
+                Button(
+                    text = stringResource(R.string.demo_layouts_reset_clicks),
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(top = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = { boxTapState.value = 0 },
+                )
             }
 
             "column" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "Column 排列",
-                subtitle = "主轴 arrangement 和 Divider 在自定义线性容器中的稳定性。",
+                title = stringResource(R.string.demo_layouts_column_title),
+                subtitle = stringResource(R.string.demo_layouts_column_summary),
             ) {
                 Column(
                     arrangement = MainAxisArrangement.SpaceEvenly,
@@ -275,28 +295,40 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.backgroundColor())
                         .padding(12.dp),
                 ) {
-                    Text(text = "一")
+                    Text(text = stringResource(R.string.demo_layouts_one))
                     Divider()
-                    Text(text = "二")
+                    Text(text = stringResource(R.string.demo_layouts_two))
                     Divider()
-                    Text(text = "三")
+                    Text(text = stringResource(R.string.demo_layouts_three))
                 }
             }
 
             "edge" -> ScenarioSection(
                 kind = ScenarioKind.Stress,
-                title = "布局边界用例",
-                subtitle = "wrap、weight 和嵌套容器 sizing 的极端组合。",
+                title = stringResource(R.string.demo_layouts_edges_title),
+                subtitle = stringResource(R.string.demo_layouts_edges_summary),
             ) {
-                BenchmarkRouteCallout(
-                    route = "Catalog -> Layouts -> 边界页",
-                    stableTargets = listOf("长标签 / 短标签", "Weighted", "Action", "Wrap"),
+                Text(
+                    text = stringResource(
+                        if (useLongLabelsState.value) {
+                            R.string.demo_layouts_label_mode_long
+                        } else {
+                            R.string.demo_layouts_label_mode_short
+                        },
+                    ),
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Button(
-                    text = if (useLongLabelsState.value) "使用短标签" else "使用长标签",
+                    text = stringResource(
+                        if (useLongLabelsState.value) {
+                            R.string.demo_layouts_use_short_labels
+                        } else {
+                            R.string.demo_layouts_use_long_labels
+                        },
+                    ),
                     modifier = Modifier
                         .margin(bottom = 12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_EDGE_TOGGLE),
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     onClick = { useLongLabelsState.value = !useLongLabelsState.value },
                 )
                 Row(
@@ -307,33 +339,43 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.backgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .margin(bottom = 12.dp),
+                        .margin(bottom = 12.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Target),
                 ) {
                     Surface(modifier = Modifier.padding(8.dp)) {
                         Icon(
                             source = ImageSource.Resource(R.drawable.demo_media_icon),
-                            contentDescription = "布局探测图标",
+                            contentDescription = stringResource(R.string.demo_layouts_probe_icon_description),
                             modifier = Modifier.testTag(DemoTestTags.LAYOUTS_EDGE_PROBE_ICON),
                         )
                     }
                     Button(
                         text = if (useLongLabelsState.value) {
-                            "一个很长的 weighted 标签，应该在不破坏兄弟布局的情况下换行"
+                            stringResource(R.string.demo_layouts_weighted_long)
                         } else {
-                            "Weighted"
+                            stringResource(R.string.demo_layouts_weighted)
                         },
                         modifier = Modifier
                             .weight(1f)
                             .testTag(DemoTestTags.LAYOUTS_EDGE_WEIGHTED),
                     )
                     Button(
-                        text = "操作",
+                        text = stringResource(R.string.demo_layouts_action),
                         variant = ButtonVariant.Outlined,
                         modifier = Modifier
                             .weight(1f)
                             .testTag(DemoTestTags.LAYOUTS_EDGE_ACTION),
                     )
                 }
+                Button(
+                    text = stringResource(R.string.demo_layouts_reset_edges),
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(top = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = { useLongLabelsState.value = false },
+                )
                 Row(
                     spacing = 8.dp,
                     verticalAlignment = VerticalAlignment.Center,
@@ -344,16 +386,16 @@ internal fun UiTreeBuilder.LayoutPage(
                         .padding(12.dp),
                 ) {
                     Surface(modifier = Modifier.padding(8.dp)) {
-                        Text(text = "Wrap")
+                        Text(text = stringResource(R.string.demo_layouts_wrap))
                     }
                     Surface(
                         variant = SurfaceVariant.Variant,
                         modifier = Modifier.padding(8.dp),
                     ) {
-                        Text(text = "仍然 Wrap")
+                        Text(text = stringResource(R.string.demo_layouts_still_wrap))
                     }
                     Text(
-                        text = "嵌套的 Surface 应该紧贴内容，把剩余宽度留给这段文本。",
+                        text = stringResource(R.string.demo_layouts_nested_surface_note),
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -361,13 +403,19 @@ internal fun UiTreeBuilder.LayoutPage(
 
             "flow" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "流式布局",
-                subtitle = "FlowRow 实现标签云，FlowColumn 实现竖向流。支持 spacing 和 maxItemsInEachRow/Column。",
+                title = stringResource(R.string.demo_layouts_flow_title),
+                subtitle = stringResource(R.string.demo_layouts_flow_summary),
             ) {
                 Text(
-                    text = "FlowRow 标签云（${flowItemCountState.value} 个标签）",
+                    text = pluralStringResource(
+                        R.plurals.demo_layouts_flow_count,
+                        flowItemCountState.value,
+                        flowItemCountState.value,
+                    ),
                     style = UiTextStyle(fontSizeSp = 14.sp),
-                    modifier = Modifier.margin(bottom = 8.dp),
+                    modifier = Modifier
+                        .margin(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Row(
                     spacing = 8.dp,
@@ -376,17 +424,28 @@ internal fun UiTreeBuilder.LayoutPage(
                         .margin(bottom = 8.dp),
                 ) {
                     Button(
-                        text = "增加标签",
+                        text = stringResource(R.string.demo_layouts_add_tags),
                         size = ButtonSize.Compact,
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                         onClick = { flowItemCountState.value = (flowItemCountState.value + 2).coerceAtMost(20) },
                     )
                     Button(
-                        text = "减少标签",
+                        text = stringResource(R.string.demo_layouts_remove_tags),
                         size = ButtonSize.Compact,
                         variant = ButtonVariant.Outlined,
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                         onClick = { flowItemCountState.value = (flowItemCountState.value - 2).coerceAtLeast(2) },
                     )
                 }
+                Button(
+                    text = stringResource(R.string.demo_layouts_reset_tags),
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = { flowItemCountState.value = 8 },
+                )
                 FlowRow(
                     horizontalSpacing = 8.dp,
                     verticalSpacing = 8.dp,
@@ -400,13 +459,13 @@ internal fun UiTreeBuilder.LayoutPage(
                             variant = SurfaceVariant.Variant,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         ) {
-                            Text(text = "标签 $i")
+                            Text(text = stringResource(R.string.demo_layouts_tag, i))
                         }
                     }
                 }
                 Divider(modifier = Modifier.margin(bottom = 12.dp))
                 Text(
-                    text = "FlowColumn 竖向流（maxItemsInEachColumn = 3）",
+                    text = stringResource(R.string.demo_layouts_flow_column_summary),
                     style = UiTextStyle(fontSizeSp = 14.sp),
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
@@ -423,7 +482,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             variant = SurfaceVariant.Default,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         ) {
-                            Text(text = "竖向项 $i")
+                            Text(text = stringResource(R.string.demo_layouts_vertical_item, i))
                         }
                     }
                 }
@@ -431,11 +490,11 @@ internal fun UiTreeBuilder.LayoutPage(
 
             "scrollable" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "滚动容器",
-                subtitle = "ScrollableColumn 和 ScrollableRow 提供可滚动的线性容器。",
+                title = stringResource(R.string.demo_layouts_scroll_title),
+                subtitle = stringResource(R.string.demo_layouts_scroll_summary),
             ) {
                 Text(
-                    text = "ScrollableColumn（超长内容可滚动）",
+                    text = stringResource(R.string.demo_layouts_scroll_column_label),
                     style = UiTextStyle(fontSizeSp = 14.sp),
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
@@ -456,18 +515,18 @@ internal fun UiTreeBuilder.LayoutPage(
                                 .fillMaxWidth()
                                 .padding(12.dp),
                         ) {
-                            Text(text = "滚动内容行 $i")
+                            Text(text = stringResource(R.string.demo_layouts_scroll_content_row, i))
                         }
                     }
                     Text(
-                        text = "更多内容在下方 ↓",
+                        text = stringResource(R.string.demo_layouts_more_below),
                         style = UiTextStyle(fontSizeSp = 13.sp),
                         color = TextDefaults.secondaryColor(),
                     )
                 }
                 Divider(modifier = Modifier.margin(vertical = 12.dp))
                 Text(
-                    text = "ScrollableRow（横向可滚动标签行）",
+                    text = stringResource(R.string.demo_layouts_scroll_row_label),
                     style = UiTextStyle(fontSizeSp = 14.sp),
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
@@ -485,7 +544,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             variant = SurfaceVariant.Default,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                         ) {
-                            Text(text = "横向标签 $i")
+                            Text(text = stringResource(R.string.demo_layouts_horizontal_label, i))
                         }
                     }
                 }
@@ -493,9 +552,26 @@ internal fun UiTreeBuilder.LayoutPage(
 
             "constraint_basic" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "Constraint 基础锚点",
-                subtitle = "anchors + dimension + bias 组合，验证约束节点在 renderer 主链路可稳定布局。",
+                title = stringResource(R.string.demo_layouts_constraint_basic_title),
+                subtitle = stringResource(R.string.demo_layouts_constraint_basic_summary),
             ) {
+                Button(
+                    text = stringResource(R.string.demo_layouts_constraint_reset),
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = {
+                        constraintHelperLongState.value = false
+                        constraintSetExpandedState.value = false
+                        constraintDimensionAdvancedState.value = false
+                        constraintHelpersFullState.value = false
+                        constraintVerticalChainPackedState.value = false
+                        constraintSetHelpersAlternateState.value = false
+                        constraintVirtualAlternateState.value = false
+                    },
+                )
                 ConstraintLayout(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -507,7 +583,7 @@ internal fun UiTreeBuilder.LayoutPage(
                 ) {
                     val (titleRef, contentRef, badgeRef) = createRefs("title", "content", "badge")
                     Text(
-                        text = "约束基础卡片",
+                        text = stringResource(R.string.demo_layouts_constraint_card),
                         style = UiTextStyle(fontSizeSp = 15.sp),
                         modifier = Modifier.constrainAs(titleRef) {
                             topToTop(parent)
@@ -526,7 +602,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         }.padding(12.dp),
                     ) {
                         Text(
-                            text = "content 通过 FillToConstraints 拉伸；badge 由 bias 控制位置。",
+                            text = stringResource(R.string.demo_layouts_constraint_content_note),
                             style = UiTextStyle(fontSizeSp = 13.sp),
                             color = TextDefaults.secondaryColor(),
                         )
@@ -543,18 +619,24 @@ internal fun UiTreeBuilder.LayoutPage(
                             .padding(horizontal = 10.dp, vertical = 6.dp)
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_BASIC_BADGE),
                     ) {
-                        Text(text = "Bias")
+                        Text(text = stringResource(R.string.demo_layouts_bias))
                     }
                 }
             }
 
             "constraint_helpers" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "Guideline + Barrier",
-                subtitle = "guideline 控制分区，barrier 在文本宽度变化后仍给右侧内容稳定锚点。",
+                title = stringResource(R.string.demo_layouts_helpers_title),
+                subtitle = stringResource(R.string.demo_layouts_helpers_summary),
             ) {
                 Button(
-                    text = if (constraintHelperLongState.value) "使用短文案" else "使用长文案",
+                    text = stringResource(
+                        if (constraintHelperLongState.value) {
+                            R.string.demo_layouts_use_short_copy
+                        } else {
+                            R.string.demo_layouts_use_long_copy
+                        },
+                    ),
                     size = ButtonSize.Compact,
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
@@ -575,7 +657,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     val (headlineRef, summaryRef, markerRef) = createRefs("headline", "summary", "marker")
                     val endBarrier = createEndBarrier(headlineRef, summaryRef, margin = 6.dp)
                     Text(
-                        text = "Helper 区",
+                        text = stringResource(R.string.demo_layouts_helper_area),
                         style = UiTextStyle(fontSizeSp = 14.sp),
                         modifier = Modifier.constrainAs(headlineRef) {
                             startToStart(parent)
@@ -586,9 +668,9 @@ internal fun UiTreeBuilder.LayoutPage(
                     )
                     Text(
                         text = if (constraintHelperLongState.value) {
-                            "这是一段更长的说明文案，用于验证 barrier 会跟随最长文本边界。"
+                            stringResource(R.string.demo_layouts_helper_long_copy)
                         } else {
-                            "简短说明文案。"
+                            stringResource(R.string.demo_layouts_helper_short_copy)
                         },
                         style = UiTextStyle(fontSizeSp = 12.sp),
                         color = TextDefaults.secondaryColor(),
@@ -609,15 +691,15 @@ internal fun UiTreeBuilder.LayoutPage(
                             .padding(horizontal = 10.dp, vertical = 6.dp)
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_MARKER),
                     ) {
-                        Text(text = "Barrier Marker")
+                        Text(text = stringResource(R.string.demo_layouts_barrier_marker))
                     }
                 }
             }
 
             "constraint_chain" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "Chain 编排",
-                subtitle = "horizontal chain 统一分配空间，验证链式布局在 patch 后保持稳定。",
+                title = stringResource(R.string.demo_layouts_chain_title),
+                subtitle = stringResource(R.string.demo_layouts_chain_summary),
             ) {
                 ConstraintLayout(
                     modifier = Modifier
@@ -645,7 +727,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 height = ConstraintDimension.Fixed(56.dp)
                             }
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_START),
-                    ) { Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) { Text(text = "A") } }
+                    ) { Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) { Text(text = stringResource(R.string.demo_layouts_node_a)) } }
                     Surface(
                         variant = SurfaceVariant.Default,
                         modifier = Modifier
@@ -656,7 +738,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 height = ConstraintDimension.Fixed(56.dp)
                             }
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_MIDDLE),
-                    ) { Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) { Text(text = "B") } }
+                    ) { Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) { Text(text = stringResource(R.string.demo_layouts_node_b)) } }
                     Surface(
                         variant = SurfaceVariant.Variant,
                         modifier = Modifier
@@ -667,17 +749,23 @@ internal fun UiTreeBuilder.LayoutPage(
                                 height = ConstraintDimension.Fixed(56.dp)
                             }
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_END),
-                    ) { Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) { Text(text = "C") } }
+                    ) { Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) { Text(text = stringResource(R.string.demo_layouts_node_c)) } }
                 }
             }
 
             "constraint_set" -> ScenarioSection(
                 kind = ScenarioKind.Visual,
-                title = "Decoupled ConstraintSet",
-                subtitle = "constraintSet 动态切换，验证约束重算与布局即时刷新。",
+                title = stringResource(R.string.demo_layouts_constraint_set_title),
+                subtitle = stringResource(R.string.demo_layouts_constraint_set_summary),
             ) {
                 Button(
-                    text = if (constraintSetExpandedState.value) "切换到竖向布局" else "切换到横向布局",
+                    text = stringResource(
+                        if (constraintSetExpandedState.value) {
+                            R.string.demo_layouts_switch_vertical
+                        } else {
+                            R.string.demo_layouts_switch_horizontal
+                        },
+                    ),
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
@@ -722,7 +810,13 @@ internal fun UiTreeBuilder.LayoutPage(
                         .padding(12.dp),
                 ) {
                     Text(
-                        text = if (constraintSetExpandedState.value) "横向模式" else "竖向模式",
+                        text = stringResource(
+                            if (constraintSetExpandedState.value) {
+                                R.string.demo_layouts_horizontal_mode
+                            } else {
+                                R.string.demo_layouts_vertical_mode
+                            },
+                        ),
                         style = UiTextStyle(fontSizeSp = 14.sp),
                         modifier = Modifier.layoutId("title"),
                     )
@@ -735,9 +829,9 @@ internal fun UiTreeBuilder.LayoutPage(
                     ) {
                         Text(
                             text = if (constraintSetExpandedState.value) {
-                                "marker 已切换到标题右侧。"
+                                stringResource(R.string.demo_layouts_marker_right)
                             } else {
-                                "marker 位于标题下方。"
+                                stringResource(R.string.demo_layouts_marker_below)
                             },
                         )
                     }
@@ -746,8 +840,8 @@ internal fun UiTreeBuilder.LayoutPage(
 
             "constraint_anchor_advanced" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "Anchor Advanced",
-                subtitle = "覆盖 bottomToTop / baseline* / center* / circular 等高级锚点 API。",
+                title = stringResource(R.string.demo_layouts_anchor_title),
+                subtitle = stringResource(R.string.demo_layouts_anchor_summary),
             ) {
                 ConstraintLayout(
                     modifier = Modifier
@@ -768,7 +862,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     val targetRef = createRef("anchor-target")
                     val linkedRef = createRef("anchor-linked")
                     Text(
-                        text = "Leader 16sp",
+                        text = stringResource(R.string.demo_layouts_leader),
                         style = UiTextStyle(fontSizeSp = 16.sp),
                         modifier = Modifier.constrainAs(leaderRef) {
                             topToTop(parent)
@@ -776,7 +870,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         },
                     )
                     Text(
-                        text = "Baseline",
+                        text = stringResource(R.string.demo_layouts_baseline),
                         style = UiTextStyle(fontSizeSp = 12.sp),
                         modifier = Modifier
                             .constrainAs(baselineRef) {
@@ -786,7 +880,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE),
                     )
                     Text(
-                        text = "B→Top",
+                        text = stringResource(R.string.demo_layouts_baseline_top),
                         style = UiTextStyle(fontSizeSp = 12.sp),
                         modifier = Modifier.constrainAs(baselineTopRef) {
                             startToEnd(baselineRef, margin = 10.dp)
@@ -794,7 +888,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         },
                     )
                     Text(
-                        text = "B→Bottom",
+                        text = stringResource(R.string.demo_layouts_baseline_bottom),
                         style = UiTextStyle(fontSizeSp = 12.sp),
                         modifier = Modifier.constrainAs(baselineBottomRef) {
                             startToEnd(baselineTopRef, margin = 10.dp)
@@ -812,7 +906,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             },
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = "center*")
+                            Text(text = stringResource(R.string.demo_layouts_center_apis))
                         }
                     }
                     Surface(
@@ -826,7 +920,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             },
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = "C")
+                            Text(text = stringResource(R.string.demo_layouts_node_c))
                         }
                     }
                     Surface(
@@ -844,7 +938,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CIRCLE),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = "circular")
+                            Text(text = stringResource(R.string.demo_layouts_circular))
                         }
                     }
                     Surface(
@@ -858,7 +952,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             },
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = "Target")
+                            Text(text = stringResource(R.string.demo_layouts_target))
                         }
                     }
                     Surface(
@@ -872,12 +966,12 @@ internal fun UiTreeBuilder.LayoutPage(
                             },
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = "bottomToTop")
+                            Text(text = stringResource(R.string.demo_layouts_bottom_to_top))
                         }
                     }
                 }
                 Text(
-                    text = "已覆盖：bottomToTop / baselineToBaseline / baselineToTop / baselineToBottom / centerHorizontallyTo / centerVerticallyTo / circular。",
+                    text = stringResource(R.string.demo_layouts_anchor_status),
                     style = UiTextStyle(fontSizeSp = 12.sp),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
@@ -888,11 +982,17 @@ internal fun UiTreeBuilder.LayoutPage(
 
             "constraint_dimension_advanced" -> ScenarioSection(
                 kind = ScenarioKind.Visual,
-                title = "Dimension Advanced",
-                subtitle = "覆盖 min/max/percent、constrainedWidth/Height 和 dimensionRatio。",
+                title = stringResource(R.string.demo_layouts_dimension_title),
+                subtitle = stringResource(R.string.demo_layouts_dimension_summary),
             ) {
                 Button(
-                    text = if (constraintDimensionAdvancedState.value) "切回紧凑尺寸" else "切到扩展尺寸",
+                    text = stringResource(
+                        if (constraintDimensionAdvancedState.value) {
+                            R.string.demo_layouts_dimension_compact
+                        } else {
+                            R.string.demo_layouts_dimension_expanded
+                        },
+                    ),
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
@@ -925,7 +1025,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             }
                             .padding(horizontal = 10.dp, vertical = 6.dp),
                     ) {
-                        Text(text = "widthPercent + widthMin/Max + constrainedWidth")
+                        Text(text = stringResource(R.string.demo_layouts_width_dimension))
                     }
                     Surface(
                         variant = SurfaceVariant.Variant,
@@ -943,7 +1043,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             }
                             .padding(horizontal = 8.dp, vertical = 6.dp),
                     ) {
-                        Text(text = "heightPercent\nmin/max")
+                        Text(text = stringResource(R.string.demo_layouts_height_dimension))
                     }
                     Surface(
                         variant = SurfaceVariant.Default,
@@ -960,15 +1060,23 @@ internal fun UiTreeBuilder.LayoutPage(
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = if (constraintDimensionAdvancedState.value) "ratio 16:9" else "ratio 1:1")
+                            Text(
+                                text = stringResource(
+                                    if (constraintDimensionAdvancedState.value) {
+                                        R.string.demo_layouts_ratio_16_9
+                                    } else {
+                                        R.string.demo_layouts_ratio_1_1
+                                    },
+                                ),
+                            )
                         }
                     }
                 }
                 Text(
                     text = if (constraintDimensionAdvancedState.value) {
-                        "扩展模式：widthPercent=0.82, heightPercent=0.62, ratio=16:9"
+                        stringResource(R.string.demo_layouts_dimension_status_expanded)
                     } else {
-                        "紧凑模式：widthPercent=0.56, heightPercent=0.38, ratio=1:1"
+                        stringResource(R.string.demo_layouts_dimension_status_compact)
                     },
                     style = UiTextStyle(fontSizeSp = 12.sp),
                     color = TextDefaults.secondaryColor(),
@@ -980,11 +1088,17 @@ internal fun UiTreeBuilder.LayoutPage(
 
             "constraint_helpers_full" -> ScenarioSection(
                 kind = ScenarioKind.Visual,
-                title = "Guideline + Barrier Full",
-                subtitle = "覆盖 End/Top/Bottom guideline 与 Start/Top/Bottom barrier（含 margin/allowsGoneWidgets）。",
+                title = stringResource(R.string.demo_layouts_helpers_full_title),
+                subtitle = stringResource(R.string.demo_layouts_helpers_full_summary),
             ) {
                 Button(
-                    text = if (constraintHelpersFullState.value) "切到 fraction 模式" else "切到 offset 模式",
+                    text = stringResource(
+                        if (constraintHelpersFullState.value) {
+                            R.string.demo_layouts_switch_fraction
+                        } else {
+                            R.string.demo_layouts_switch_offset
+                        },
+                    ),
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
@@ -1054,7 +1168,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             },
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = "Top Probe")
+                            Text(text = stringResource(R.string.demo_layouts_top_probe))
                         }
                     }
                     Surface(
@@ -1068,7 +1182,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             },
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = "Middle Probe")
+                            Text(text = stringResource(R.string.demo_layouts_middle_probe))
                         }
                     }
                     Surface(
@@ -1082,7 +1196,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             },
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = "Bottom Probe")
+                            Text(text = stringResource(R.string.demo_layouts_bottom_probe))
                         }
                     }
                     Surface(
@@ -1098,15 +1212,15 @@ internal fun UiTreeBuilder.LayoutPage(
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = "Barrier Marker")
+                            Text(text = stringResource(R.string.demo_layouts_barrier_marker))
                         }
                     }
                 }
                 Text(
                     text = if (constraintHelpersFullState.value) {
-                        "fraction 模式：Guideline=End/Top/Bottom fraction，Barrier margin 更大且 allowsGoneWidgets=true。"
+                        stringResource(R.string.demo_layouts_helpers_fraction_status)
                     } else {
-                        "offset 模式：Guideline=End/Top/Bottom offset，Barrier margin 较小且 allowsGoneWidgets=false。"
+                        stringResource(R.string.demo_layouts_helpers_offset_status)
                     },
                     style = UiTextStyle(fontSizeSp = 12.sp),
                     color = TextDefaults.secondaryColor(),
@@ -1118,11 +1232,17 @@ internal fun UiTreeBuilder.LayoutPage(
 
             "constraint_vertical_chain" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "Vertical Chain",
-                subtitle = "覆盖 createVerticalChain 的 weights + bias + style。",
+                title = stringResource(R.string.demo_layouts_vertical_chain_title),
+                subtitle = stringResource(R.string.demo_layouts_vertical_chain_summary),
             ) {
                 Button(
-                    text = if (constraintVerticalChainPackedState.value) "切到 SpreadInside" else "切到 Packed",
+                    text = stringResource(
+                        if (constraintVerticalChainPackedState.value) {
+                            R.string.demo_layouts_switch_spread_inside
+                        } else {
+                            R.string.demo_layouts_switch_packed
+                        },
+                    ),
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
@@ -1168,7 +1288,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_TOP),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = "Top")
+                            Text(text = stringResource(R.string.demo_layouts_top))
                         }
                     }
                     Surface(
@@ -1183,7 +1303,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_MIDDLE),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = "Middle")
+                            Text(text = stringResource(R.string.demo_layouts_middle))
                         }
                     }
                     Surface(
@@ -1199,7 +1319,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_BOTTOM),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = "Bottom")
+                            Text(text = stringResource(R.string.demo_layouts_bottom))
                         }
                     }
                 }
@@ -1207,11 +1327,17 @@ internal fun UiTreeBuilder.LayoutPage(
 
             "constraint_set_helpers_mirror" -> ScenarioSection(
                 kind = ScenarioKind.Visual,
-                title = "ConstraintSet Helper Mirror",
-                subtitle = "在 decoupled constraintSet 中复用 helper + chain，验证 builder 入口完整可用。",
+                title = stringResource(R.string.demo_layouts_set_helpers_title),
+                subtitle = stringResource(R.string.demo_layouts_set_helpers_summary),
             ) {
                 Button(
-                    text = if (constraintSetHelpersAlternateState.value) "切回横向 helper-set" else "切到纵向 helper-set",
+                    text = stringResource(
+                        if (constraintSetHelpersAlternateState.value) {
+                            R.string.demo_layouts_set_helpers_horizontal
+                        } else {
+                            R.string.demo_layouts_set_helpers_vertical
+                        },
+                    ),
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
@@ -1315,19 +1441,19 @@ internal fun UiTreeBuilder.LayoutPage(
                         variant = SurfaceVariant.Default,
                         modifier = Modifier.layoutId("set-h-a").padding(horizontal = 8.dp, vertical = 6.dp),
                     ) {
-                        Text(text = "A")
+                        Text(text = stringResource(R.string.demo_layouts_node_a))
                     }
                     Surface(
                         variant = SurfaceVariant.Variant,
                         modifier = Modifier.layoutId("set-h-b").padding(horizontal = 8.dp, vertical = 6.dp),
                     ) {
-                        Text(text = "B")
+                        Text(text = stringResource(R.string.demo_layouts_node_b))
                     }
                     Surface(
                         variant = SurfaceVariant.Default,
                         modifier = Modifier.layoutId("set-h-c").padding(horizontal = 8.dp, vertical = 6.dp),
                     ) {
-                        Text(text = "C")
+                        Text(text = stringResource(R.string.demo_layouts_node_c))
                     }
                     Surface(
                         variant = SurfaceVariant.Variant,
@@ -1336,14 +1462,22 @@ internal fun UiTreeBuilder.LayoutPage(
                             .padding(horizontal = 8.dp, vertical = 6.dp)
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER),
                     ) {
-                        Text(text = if (constraintSetHelpersAlternateState.value) "vertical helper-set" else "horizontal helper-set")
+                        Text(
+                            text = stringResource(
+                                if (constraintSetHelpersAlternateState.value) {
+                                    R.string.demo_layouts_vertical_helper_set
+                                } else {
+                                    R.string.demo_layouts_horizontal_helper_set
+                                },
+                            ),
+                        )
                     }
                 }
                 Text(
                     text = if (constraintSetHelpersAlternateState.value) {
-                        "ConstraintSet(B): createVerticalChain + createTopBarrier 生效。"
+                        stringResource(R.string.demo_layouts_set_helpers_status_vertical)
                     } else {
-                        "ConstraintSet(A): createHorizontalChain + createEndBarrier 生效。"
+                        stringResource(R.string.demo_layouts_set_helpers_status_horizontal)
                     },
                     style = UiTextStyle(fontSizeSp = 12.sp),
                     color = TextDefaults.secondaryColor(),
@@ -1355,14 +1489,14 @@ internal fun UiTreeBuilder.LayoutPage(
 
             "constraint_virtual_helpers" -> ScenarioSection(
                 kind = ScenarioKind.Visual,
-                title = "Virtual Helpers",
-                subtitle = "Flow/Group/Layer/Placeholder 对比模式：一键切换后，排布、可见性、占位承载与成组变换都应有明显变化。",
+                title = stringResource(R.string.demo_layouts_virtual_title),
+                subtitle = stringResource(R.string.demo_layouts_virtual_summary),
             ) {
                 Button(
                     text = if (constraintVirtualAlternateState.value) {
-                        "切回基线模式（A）"
+                        stringResource(R.string.demo_layouts_virtual_baseline)
                     } else {
-                        "切到对比模式（B）"
+                        stringResource(R.string.demo_layouts_virtual_compare)
                     },
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
@@ -1381,9 +1515,9 @@ internal fun UiTreeBuilder.LayoutPage(
                 ) {
                     Text(
                         text = if (constraintVirtualAlternateState.value) {
-                            "模式 B：Flow 单列 · Group 隐藏 · Placeholder=A · Layer 强变换"
+                            stringResource(R.string.demo_layouts_virtual_mode_b)
                         } else {
-                            "模式 A：Flow 双列 · Group 显示 · Placeholder=D · Layer 中性"
+                            stringResource(R.string.demo_layouts_virtual_mode_a)
                         },
                         style = UiTextStyle(fontSizeSp = 14.sp),
                     )
@@ -1412,10 +1546,10 @@ internal fun UiTreeBuilder.LayoutPage(
                             verticalGap = if (constraintVirtualAlternateState.value) 14.dp else 8.dp,
                             maxElementsWrap = if (constraintVirtualAlternateState.value) 1 else 2,
                         )
-                        Surface(variant = SurfaceVariant.Default, modifier = Modifier.layoutId("flow-a").padding(horizontal = 10.dp, vertical = 6.dp)) { Text("Flow-1") }
-                        Surface(variant = SurfaceVariant.Variant, modifier = Modifier.layoutId("flow-b").padding(horizontal = 10.dp, vertical = 6.dp)) { Text("Flow-2") }
-                        Surface(variant = SurfaceVariant.Default, modifier = Modifier.layoutId("flow-c").padding(horizontal = 10.dp, vertical = 6.dp)) { Text("Flow-3") }
-                        Surface(variant = SurfaceVariant.Variant, modifier = Modifier.layoutId("flow-d").padding(horizontal = 10.dp, vertical = 6.dp)) { Text("Flow-4") }
+                        Surface(variant = SurfaceVariant.Default, modifier = Modifier.layoutId("flow-a").padding(horizontal = 10.dp, vertical = 6.dp)) { Text(stringResource(R.string.demo_layouts_flow_node, 1)) }
+                        Surface(variant = SurfaceVariant.Variant, modifier = Modifier.layoutId("flow-b").padding(horizontal = 10.dp, vertical = 6.dp)) { Text(stringResource(R.string.demo_layouts_flow_node, 2)) }
+                        Surface(variant = SurfaceVariant.Default, modifier = Modifier.layoutId("flow-c").padding(horizontal = 10.dp, vertical = 6.dp)) { Text(stringResource(R.string.demo_layouts_flow_node, 3)) }
+                        Surface(variant = SurfaceVariant.Variant, modifier = Modifier.layoutId("flow-d").padding(horizontal = 10.dp, vertical = 6.dp)) { Text(stringResource(R.string.demo_layouts_flow_node, 4)) }
                     }
 
                     val groupSet = constraintSet {
@@ -1457,13 +1591,13 @@ internal fun UiTreeBuilder.LayoutPage(
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
                                 .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER),
                         ) {
-                            Text(text = "Group-A")
+                            Text(text = stringResource(R.string.demo_layouts_group_a))
                         }
                         Surface(
                             variant = SurfaceVariant.Default,
                             modifier = Modifier.layoutId("group-b").padding(horizontal = 10.dp, vertical = 6.dp),
                         ) {
-                            Text(text = "Group-B")
+                            Text(text = stringResource(R.string.demo_layouts_group_b))
                         }
                     }
 
@@ -1499,13 +1633,13 @@ internal fun UiTreeBuilder.LayoutPage(
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
                                 .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_A),
                         ) {
-                            Text(text = "Layer-A")
+                            Text(text = stringResource(R.string.demo_layouts_layer_a))
                         }
                         Surface(
                             variant = SurfaceVariant.Variant,
                             modifier = Modifier.layoutId("layer-b").padding(horizontal = 10.dp, vertical = 6.dp),
                         ) {
-                            Text(text = "Layer-B")
+                            Text(text = stringResource(R.string.demo_layouts_layer_b))
                         }
                     }
 
@@ -1545,27 +1679,35 @@ internal fun UiTreeBuilder.LayoutPage(
                             variant = SurfaceVariant.Default,
                             modifier = Modifier.layoutId("placeholder-a").padding(horizontal = 8.dp, vertical = 4.dp),
                         ) {
-                            Text(text = "Placeholder-A")
+                            Text(text = stringResource(R.string.demo_layouts_placeholder_a))
                         }
                         Surface(
                             variant = SurfaceVariant.Variant,
                             modifier = Modifier.layoutId("placeholder-b").padding(horizontal = 8.dp, vertical = 4.dp),
                         ) {
-                            Text(text = "Placeholder-B")
+                            Text(text = stringResource(R.string.demo_layouts_placeholder_b))
                         }
                         Surface(
                             variant = SurfaceVariant.Default,
                             modifier = Modifier.layoutId("placeholder-note").padding(horizontal = 8.dp, vertical = 4.dp),
                         ) {
-                            Text(text = if (constraintVirtualAlternateState.value) "当前承载 A" else "当前承载 B")
+                            Text(
+                                text = stringResource(
+                                    if (constraintVirtualAlternateState.value) {
+                                        R.string.demo_layouts_host_a
+                                    } else {
+                                        R.string.demo_layouts_host_b
+                                    },
+                                ),
+                            )
                         }
                     }
 
                     Text(
                         text = if (constraintVirtualAlternateState.value) {
-                            "Group: hidden(A/B) · Placeholder: A · Layer: rotate+scale+translate · Flow: single column"
+                            stringResource(R.string.demo_layouts_virtual_status_hidden)
                         } else {
-                            "Group: visible(A/B) · Placeholder: B · Layer: neutral · Flow: 2-column wrap"
+                            stringResource(R.string.demo_layouts_virtual_status_visible)
                         },
                         style = UiTextStyle(fontSizeSp = 12.sp),
                         color = TextDefaults.secondaryColor(),
@@ -1574,25 +1716,12 @@ internal fun UiTreeBuilder.LayoutPage(
                 }
             }
 
-            else -> VerificationNotesSection(
-                what = "布局组件应验证线性容器、Box 叠加、流式布局和滚动容器的稳定性。",
-                howToVerify = listOf(
-                    "反复点击 Box 区域，确认点击态和固定标签不会错位。",
-                    "在不同宽度设备上观察 Row 中顶部/底部对齐文本。",
-                    "切换长短标签，确认 weighted button 与嵌套 surface 布局稳定。",
-                    "增减 FlowRow 标签数量，确认自动换行正确。",
-                    "上下滑动 ScrollableColumn，确认滚动流畅。",
-                    "左右滑动 ScrollableRow，确认横向滚动正常。",
-                    "切到约束页，按分区验证 API 覆盖矩阵：Anchor Advanced、Dimension Advanced、Guideline+Barrier Full、Vertical Chain、ConstraintSet Helper Mirror、Virtual Helpers。",
-                    "切换约束场景中的 toggle 按钮，确认状态文案、关键 marker、位置/尺寸关系有可见变化。",
-                ),
-                expected = listOf(
-                    "线性容器默认子项不会意外扩展成整行。",
-                    "FlowRow/FlowColumn 自动换行/换列，spacing 均匀。",
-                    "ScrollableColumn/ScrollableRow 滚动流畅无卡顿。",
-                    "ConstraintLayout 全部业务 API 在 demo 中均有可见锚点；场景切换后布局即时刷新，无崩溃与错位。",
-                ),
-            )
+            else -> error("Unknown layout section: $section")
         }
     }
 }
+
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier = scenario?.automation?.get(role)?.let(::demoAutomationTarget) ?: this

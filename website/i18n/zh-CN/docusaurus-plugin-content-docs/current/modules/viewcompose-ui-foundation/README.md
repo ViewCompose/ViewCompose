@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: c2dde3f5a27558654fc71a0ee65aaaa58cd0cd81f49a9f916cc4416688211ab6
+translation_source_hash: 1cd2cb9549858167c440004b39379f3ac6533fc2f63156ff59faaaebb0c49e4b
 translation_status: current
 ---
 
@@ -98,7 +98,11 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   因此切换选中项时也会切换交互角色；静态或禁用组合控件保持空的多状态契约。
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   与各类 Local Provider 为密度、语言、布局方向、内容颜色、文本样式、图片加载、焦点、帧时钟
-  和宿主能力划定作用域。
+  和宿主能力划定作用域。`UiLocals.current` 是 Q2 作用域查询：Binding 缺失时计算默认值；
+  可空 Local 显式提供的 `null` 会在嵌套、批量 Provider、Snapshot 与延迟 Child Session 中始终
+  保持 `null`。每个 Provider 边界只安装一份不可变内部 Snapshot；同一 Scope 内重复捕获会复用
+  该对象身份，`ProvideLocals` 会一次性原子安装完整批次。公开 `UiLocalSnapshot` Wrapper 仍保持
+  不透明，并且每次独立分配。
 - `Image`、`Icon`、[`ProvideImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/current/com.viewcompose.ui.foundation/-provide-image-loader.html)
   与 `UiImageRequestOptions` 暴露图片语义，但不选择 Coil、Glide 或其他解码器。子树可以安装
   一个 `UiImageLoader`，也可以不安装，让资源图片继续渲染。
@@ -135,6 +139,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Foundation 之外的
 `viewcompose-host-android` 负责，任何具名设计系统都不拥有这个中立 Local。
 
+Local Binding 是否存在与值是否可空相互独立。只有当前 Snapshot 中完全没有该 Local 的条目时
+才会执行默认值；显式提供的 `null` 不会回退到默认值。
+
 - `UiTreeBuilder` 是临时记录器。内容块返回后，不要持有它或再次调用捕获的 Builder；应持有状态
   与稳定 Key。
 - ViewCompose 没有编译器转换，无法推断所有普通 Kotlin 捕获值。因此，新安装的发射内容闭包
@@ -146,14 +153,16 @@ Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Fou
 - Lazy Item 与 Pager 子 Revision 只会在 `activate` 或 `render` 报告已 Commit 帧时推进。组合或
   原生树 Rollback 会保留逻辑 Session 并重试同一语义 Revision；帧 Commit 后的失败仍可观察，
   但不会撤销该帧。
-- `remember` 与 Effect 需要活跃组合。位置标识跟随结构调用路径；内容可能移动时，应使用稳定
-  `key` 分组和 Lazy Item Key。
+- `remember` 与 Effect 需要活跃组合。位置标识跟随结构调用路径。稳定的普通 `key` Group 会在
+  Sibling 之间移动完整逻辑 Scope；重复有效 Key 会在状态串用前失败。Lazy 容器仍使用独立的
+  Item Session Key 契约。
 - 候选 Effect 变化属于事务。组合或原生 Tree Render 失败不会启动候选工作，会保留已提交的
   Subscription 与 Job，并丢弃 `rememberUpdatedState` 候选发布。原生提交成功后，Committed
   Value 发布及全部退出生命周期回调先于进入回调，然后才执行 `SideEffect`、原生
   `AndroidView.onCommit`、Overlay 与诊断工作。
-- `DisposableEffect` 的 Setup 与 Cleanup 都是同步且终止性的。Setup 抛出时不拥有 Cleanup，
-  相同 Key 不会重试；Cleanup 抛出后不会再次调用。Runtime 仍会尝试其他独立生命周期回调。
+- `DisposableEffect` 的 Setup 与 Cleanup 都是同步的。Setup 抛出时不拥有 Cleanup，并保持 Pending，
+  在后续成功的 Composition Commit 中重试，因此 Setup 必须可安全重试。成功 Setup 只激活一次；
+  Cleanup 抛出后不会再次调用。Runtime 仍会尝试其他独立生命周期回调。
 - `LaunchedEffect` 继承 Render Session Coroutine Context，并要求显式重启身份。
   `rememberCoroutineScope` 用于事件回调并持有普通子 Job。传入包含 Job 的 Context 会返回失败
   Scope，而不会把工作从组合所有权中分离。
@@ -161,8 +170,9 @@ Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Fou
   Provider Stack 不会在回调周围被隐式恢复；内置 Effect Scope 会用具名 Local Diagnostic
   拒绝 Local 读取，即使回调线程上存在另一个 Provider 也不会误读。Debug Render Session 会在
   同步 Callback 超过 16 ms 时发出警告。
-- `rememberSaveable` 只在组合提交后注册 Provider。组合失败或被放弃时会释放已 Claim 的恢复值，
-  让后续尝试仍能恢复它。
+- `rememberSaveable` 只在组合提交后注册 Provider。Provider 注册失败时会让恢复 Claim 继续出现在
+  `performSave` 中，并在后续 Commit 重试注册。Abort 或被放弃的候选会释放未提交 Claim，让后续
+  Owner 仍可恢复该值。
 - 延迟子组合不会共享 Host Registry 的扁平 Provider Key 命名空间。Lazy、Pager 与 Overlay 按
   逻辑 Key Remember 分层子 Registry，在回收期间保留状态，并在 Keyed Reorder 时恢复且不串状态。
   Tab Child 使用父组合的 Keyed Saveable Namespace。并发视觉副本不拥有持久化权，不能覆盖逻辑
@@ -180,7 +190,8 @@ Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Fou
   Small/Large 派生，Full 默认是相对边界的胶囊形。这些只是兼容回退，不是 Material 数值；
   Material 应用会从 `viewcompose-material3` 获得具体比例。
 - 每个 `RenderSession` 独占一个容器、其挂载节点、组合、协程 Scope 与 Session 范围浮层。应随
-  宿主生命周期调用 `dispose`；释放后的 Session 不能再次使用。
+  宿主生命周期调用 `dispose`。Dispose 幂等；之后由调用方发起的 `render` 或
+  `setRenderingActive` 会快速失败，已排队的内部失效和帧回调则安全忽略且不会发布工作。
 - 源码工具默认关闭。已安装的 Adapter 会在首次构建树之前接受检查，接收成功构建产生的有界源码
   候选，只在原生树建立后注册，由 `setRenderingActive` 更新，并随 Session 释放。候选调用链允许
   平台在导航前移除共享 Scaffold 调用方。工具失败只属于诊断，不能成为应用渲染依赖。

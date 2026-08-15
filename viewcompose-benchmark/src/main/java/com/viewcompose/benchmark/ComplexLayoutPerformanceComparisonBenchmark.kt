@@ -25,7 +25,6 @@ class ComplexLayoutPerformanceComparisonBenchmark {
     fun viewComposeComplexLayoutScroll() {
         measureComplexLayoutScroll(
             engine = "viewcompose",
-            expectedText = "ViewCompose Complex Ready",
         )
     }
 
@@ -33,7 +32,6 @@ class ComplexLayoutPerformanceComparisonBenchmark {
     fun composeComplexLayoutScroll() {
         measureComplexLayoutScroll(
             engine = "compose",
-            expectedText = "Compose Complex Ready",
         )
     }
 
@@ -41,7 +39,6 @@ class ComplexLayoutPerformanceComparisonBenchmark {
     fun viewComposeComplexLayoutUpdate() {
         measureComplexLayoutUpdate(
             engine = "viewcompose",
-            expectedText = "ViewCompose Complex Ready",
         )
     }
 
@@ -49,24 +46,21 @@ class ComplexLayoutPerformanceComparisonBenchmark {
     fun composeComplexLayoutUpdate() {
         measureComplexLayoutUpdate(
             engine = "compose",
-            expectedText = "Compose Complex Ready",
         )
     }
 
     private fun measureComplexLayoutScroll(
         engine: String,
-        expectedText: String,
     ) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = performanceComparisonMetrics(),
         compilationMode = CompilationMode.None(),
-        iterations = RELEASE_BASELINE_ITERATIONS,
+        iterations = FORMAL_INTERACTION_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startPerformanceComparisonAndWait(
+            startPerformanceScenarioAndWait(
+                scenarioId = PERFORMANCE_COMPLEX_LAYOUT_SCENARIO,
                 engine = engine,
-                scenario = "complex_layout",
-                expectedText = expectedText,
             )
         },
     ) {
@@ -80,30 +74,48 @@ class ComplexLayoutPerformanceComparisonBenchmark {
 
     private fun measureComplexLayoutUpdate(
         engine: String,
-        expectedText: String,
     ) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = performanceComparisonMetrics(),
         compilationMode = CompilationMode.None(),
-        iterations = RELEASE_BASELINE_ITERATIONS,
+        iterations = FORMAL_INTERACTION_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startPerformanceComparisonAndWait(
+            startPerformanceScenarioAndWait(
+                scenarioId = PERFORMANCE_COMPLEX_LAYOUT_SCENARIO,
                 engine = engine,
-                scenario = "complex_layout",
-                expectedText = expectedText,
             )
-            waitForText("Dashboard revision 0")
         },
     ) {
-        clickText("Update dashboard")
-        waitForText("Dashboard revision 1")
-        clickText("Reset dashboard")
-        waitForText("Dashboard revision 0")
+        repeat(PERFORMANCE_UPDATE_CYCLES_PER_ITERATION) {
+            val initial = scenarioTargetText(
+                PERFORMANCE_COMPLEX_LAYOUT_SCENARIO,
+                DemoTargetRole.State,
+            )
+            clickScenarioTarget(PERFORMANCE_COMPLEX_LAYOUT_SCENARIO, DemoTargetRole.PrimaryAction)
+            val updated = waitForScenarioTargetTextChange(
+                PERFORMANCE_COMPLEX_LAYOUT_SCENARIO,
+                DemoTargetRole.State,
+                initial,
+            )
+            clickScenarioTarget(PERFORMANCE_COMPLEX_LAYOUT_SCENARIO, DemoTargetRole.Reset)
+            val reset = waitForScenarioTargetTextChange(
+                PERFORMANCE_COMPLEX_LAYOUT_SCENARIO,
+                DemoTargetRole.State,
+                updated,
+            )
+            org.junit.Assert.assertEquals(initial, reset)
+        }
     }
 
     private fun performanceComparisonMetrics() = listOf(
         FrameTimingMetric(),
         MemoryUsageMetric(MemoryUsageMetric.Mode.Max),
     )
+
+    private companion object {
+        const val PERFORMANCE_COMPLEX_LAYOUT_SCENARIO = "performance.complex-layout"
+    }
 }
+
+private const val PERFORMANCE_UPDATE_CYCLES_PER_ITERATION = 8

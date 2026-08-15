@@ -62,10 +62,11 @@ fun DisposableEffect(
  * successful setup must return [DisposableEffectScope.onDispose] as its final expression.
  *
  * Setup and cleanup are serialized on the render session's composition thread. If setup throws,
- * no cleanup exists and equal-key recomposition does not retry it. If cleanup throws, it remains
- * terminal; unrelated lifecycle operations are still attempted. Resolve composition locals while
- * declaring the effect: a missing provider read from setup or cleanup fails with a named diagnostic
- * instead of silently using its default.
+ * no cleanup exists and the setup remains pending for retry on a later successful composition
+ * commit, so setup must be retry-safe. If cleanup throws, it remains terminal; unrelated lifecycle
+ * operations are still attempted. Resolve composition locals while declaring the effect: a missing
+ * provider read from setup or cleanup fails with a named diagnostic instead of silently using its
+ * default.
  *
  * @sample com.viewcompose.ui.foundation.samples.disposableEffectSample
  * @param key1 value compared by structural equality to decide whether to retain or replace setup

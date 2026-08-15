@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/render-failures.md
-translation_source_hash: 495189e68fc0a6d7b03862a5d30635a98819b5184675aa71a3e1cfd50c276c1c
+translation_source_hash: 0711ac4906d2884132c77061d98076a06788e7333a1c734eaa3e0d233a61d440
 translation_status: current
 ---
 
@@ -36,7 +36,9 @@ val session = renderInto(
   `PreviousFrameRestored`。渲染器尽力恢复此前 VNode 绑定、已挂载子节点、布局参数和 View
   顺序，并释放本轮新插入节点。
 - commit、副作用、overlay、诊断和原生 commit 失败报告 `FrameCommitted`。这些失败发生在
-  新 View 树已经成为权威结果之后；各回调相互隔离，一个失败不会阻止其余回调执行。
+  新 View 树已经成为权威结果之后；各回调相互隔离，一个失败不会阻止其余回调执行。Remembered
+  激活抛错后保持 Pending，并由后续成功的 Composition Commit 重试；成功的兄弟不会重复激活，
+  而成功前移除会 Abandon 该 Pending 值。
 - 组合协程失败报告 `FrameUnchanged`。
 - dispose 失败报告 `SessionDisposed`，其余节点和宿主仍继续清理。
 
@@ -64,7 +66,7 @@ AndroidView(
         analytics.recordPlayerAttached(playerId)
     },
     onRelease = { view ->
-        // 节点移除提交或 Session 销毁后执行一次性资源释放。
+        // 任何永久放弃之后执行一次性资源释放。
         view.player = null
     },
 )
@@ -76,7 +78,7 @@ AndroidView(
    恢复旧节点时，`update` 可能再次执行；这些回调必须幂等，且只能修改所提供的 View。
 2. 网络写入、分析打点、数据库写入、服务调用等不可重放外部副作用放入 `onCommit`。只有
    完整递归 View 树事务提交后才发布这些回调；回滚候选永远不会发布或执行它们。
-3. `onRelease` 用于资源清理，不是通用 commit effect。挂载节点成功移除或 Session dispose
-   时至多执行一次。
+3. `onRelease` 用于资源清理，不是通用 commit effect。已创建节点永久放弃时至多执行一次，
+   包括候选回滚、成功移除、复用缓存最终淘汰或 Session Dispose。
 4. 原生平台状态无法通用克隆。回滚保证覆盖框架拥有的树结构和旧 View 配置重放，不覆盖第三方
    View 内部隐藏的任意状态。

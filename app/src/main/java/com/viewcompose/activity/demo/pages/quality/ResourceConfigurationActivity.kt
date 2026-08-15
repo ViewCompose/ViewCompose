@@ -11,6 +11,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.demo.registry.DemoScenarioRegistry
 import com.viewcompose.host.android.resources.AndroidResourceRefreshController
 import com.viewcompose.host.android.resources.LocalAndroidResources
 import com.viewcompose.host.android.resources.booleanResource
@@ -72,6 +76,7 @@ class ResourceConfigurationActivity : AppCompatActivity() {
                 root = root,
                 controller = configurationController,
                 hostActivity = this@ResourceConfigurationActivity,
+                scenario = DemoScenarioRegistry.fromIntent(intent),
             )
         }
     }
@@ -130,6 +135,15 @@ internal class DemoResourceConfigurationController(
         publish()
     }
 
+    fun reset() {
+        language = Locale.ENGLISH
+        dark = false
+        largeFont = false
+        highDensity = false
+        rtl = false
+        publish()
+    }
+
     private fun publish() {
         mutableContext.setBaseContext(themedContext(currentConfiguration()))
         refreshController.refresh()
@@ -163,6 +177,7 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
     root: ViewGroup,
     controller: DemoResourceConfigurationController,
     hostActivity: AppCompatActivity,
+    scenario: DemoScenarioSpec?,
 ) {
     val resources = LocalAndroidResources.current
     val configuration = resources.configuration
@@ -210,7 +225,8 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
             .systemBarsInsetsPadding()
             .backgroundColor(Theme.colors.background)
             .padding(horizontal = 16.dp)
-            .testTag(DemoTestTags.RESOURCE_CONFIGURATION_ROOT),
+            .testTag(DemoTestTags.RESOURCE_CONFIGURATION_ROOT)
+            .scenarioTarget(scenario, DemoAutomationRole.Root),
     ) { section ->
         when (section) {
             "header" -> Column(
@@ -222,7 +238,8 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
                     style = UiTextStyle(fontSizeSp = 24.sp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.RESOURCE_CONFIGURATION_TITLE),
+                        .testTag(DemoTestTags.RESOURCE_CONFIGURATION_TITLE)
+                        .scenarioTarget(scenario, DemoAutomationRole.Ready),
                 )
                 Text(
                     text = stringResource(R.string.resource_configuration_description),
@@ -237,7 +254,10 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
                 Button(
                     text = stringResource(R.string.resource_configuration_language_action),
                     onClick = controller::toggleLanguage,
-                    modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.RESOURCE_CONFIGURATION_LANGUAGE),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(DemoTestTags.RESOURCE_CONFIGURATION_LANGUAGE)
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                 )
                 Button(
                     text = stringResource(R.string.resource_configuration_night_action),
@@ -259,6 +279,13 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
                     onClick = controller::toggleLayoutDirection,
                     modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.RESOURCE_CONFIGURATION_DIRECTION),
                 )
+                Button(
+                    text = stringResource(R.string.resource_configuration_reset_action),
+                    onClick = controller::reset,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                )
             }
 
             "facts" -> Text(
@@ -266,7 +293,8 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
                 modifier = Modifier
                     .fillMaxWidth()
                     .margin(top = 16.dp)
-                    .testTag(DemoTestTags.RESOURCE_CONFIGURATION_FACTS),
+                    .testTag(DemoTestTags.RESOURCE_CONFIGURATION_FACTS)
+                    .scenarioTarget(scenario, DemoAutomationRole.State),
             )
 
             "resources" -> Text(
@@ -284,10 +312,19 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
                 modifier = Modifier
                     .size(96.dp, 96.dp)
                     .margin(top = 16.dp, bottom = 24.dp)
-                    .testTag(DemoTestTags.RESOURCE_CONFIGURATION_IMAGE),
+                    .testTag(DemoTestTags.RESOURCE_CONFIGURATION_IMAGE)
+                    .scenarioTarget(scenario, DemoAutomationRole.Target),
             )
         }
     }
+}
+
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
 }
 
 private fun formatFloat(value: Float): String = String.format(Locale.US, "%.2f", value)

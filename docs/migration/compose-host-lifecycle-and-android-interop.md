@@ -8,8 +8,8 @@ have identical semantics.
   and SavedState 1.5.0.
 - **Target state:** `viewcompose-android`, `viewcompose-lifecycle-androidx`,
   `viewcompose-viewmodel-androidx`, and `viewcompose-renderer-android` 0.1.0-alpha01, plus the
-  low-level `viewcompose-host-android` 0.1.0-alpha03 engine.
-- **Last verified:** 2026-08-06.
+  low-level `viewcompose-host-android` 0.1.0-alpha04 engine.
+- **Last verified:** 2026-08-14.
 - **Re-verification owner:** maintainers of `viewcompose-android`, `viewcompose-host-android`,
   `viewcompose-lifecycle-androidx`, `viewcompose-viewmodel-androidx`, and
   `viewcompose-renderer-android`.
@@ -99,15 +99,15 @@ and **Unsupported**.
 | Concept | Compose / AndroidX behavior | ViewCompose behavior | Status | Local evidence and verification note |
 | --- | --- | --- | --- | --- |
 | Activity root host | `ComponentActivity.setContent` installs Compose content into the Activity and owns the Composition through the host. | Neutral `ComponentActivity.setUiContent` and named Material `setMaterial3UiContent` replace the Activity content view, render the first frame synchronously, return the new root `ViewGroup`, and keep the `RenderSession` in an internal registry until replacement or Activity destruction. | Partially supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt), [`Material3AndroidHostBridge.kt`](../../viewcompose-material3-android/src/main/java/com/viewcompose/material3/android/Material3AndroidHostBridge.kt), and their compiled samples. The synchronous first frame and internally owned session are ViewCompose-specific. |
-| Fragment host | A Fragment-hosted `ComposeView` is normally disposed with the Fragment view tree through `DisposeOnViewTreeLifecycleDestroyed`. | Neutral `Fragment.setUiContent` and named Material `setMaterial3UiContent` create and return a root `ViewGroup` for `onCreateView`. Their internal session is disposed with the current `viewLifecycleOwner`, but the lifecycle owner installed into ViewCompose content is currently the Fragment instance. | Partially supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt), Fragment path and registry; [`LifecycleBoundDisposerTest.kt`](../../viewcompose-android/src/test/java/com/viewcompose/android/LifecycleBoundDisposerTest.kt). The installed-owner mismatch is a known verification gap. |
+| Fragment host | A Fragment-hosted `ComposeView` is normally disposed with the Fragment view tree through `DisposeOnViewTreeLifecycleDestroyed`. | Neutral `Fragment.setUiContent` and named Material `setMaterial3UiContent` return a root for `onCreateView`, start its session when that root's `viewLifecycleOwner` is published, provide that owner to content, and dispose at `onDestroyView`. | Supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt) and [`FragmentHostLifecycleIntegrationTest.kt`](../../viewcompose-android/src/test/java/com/viewcompose/android/FragmentHostLifecycleIntegrationTest.kt) verify owner identity, View recreation, cleanup, and independently retained Fragment-scoped ViewModel/saveable ownership. |
 | Existing View hierarchy | `ComposeView` supplies composition disposal strategies and discovers ViewTree owners. | `renderInto` renders into a supplied `ViewGroup`; it supplies no lifecycle, ViewModel, saved-state, environment, theme, or frame-clock owner and requires explicit session disposal. | Partially supported | [`RenderInto.kt`](../../viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt) and the compiled `renderIntoSample` in [`HostAndroidSamples.kt`](../../viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt). |
-| Lifecycle owner propagation | Compose host integrations resolve AndroidX owners from the Activity, Fragment view, or ViewTree. | Activity content receives the Activity owner. Fragment content currently receives the Fragment owner while session disposal follows the Fragment view lifecycle. Custom containers receive no automatic owner. | Partially supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt), [`LifecycleBoundDisposer.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/LifecycleBoundDisposer.kt), and [`LifecycleHostGuards.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/LifecycleHostGuards.kt). |
+| Lifecycle owner propagation | Compose host integrations resolve AndroidX owners from the Activity, Fragment view, or ViewTree. | Activity content receives the Activity owner, and Fragment content receives its current View owner. Custom `renderInto` containers receive no automatic owner. | Partially supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt), [`FragmentHostLifecycleIntegrationTest.kt`](../../viewcompose-android/src/test/java/com/viewcompose/android/FragmentHostLifecycleIntegrationTest.kt), and [`LifecycleHostGuards.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/LifecycleHostGuards.kt). The remaining difference is deliberate low-level custom-host ownership. |
 | ViewModel owner propagation | Lifecycle 2.11 can create arbitrary child UI scopes with `ViewModelStoreProvider` and can inherit parent factories and `CreationExtras`. | Activity, Fragment, navigation-entry, and navigation-graph scopes exist. There is no equivalent public provider for arbitrary ViewCompose UI subtrees, and navigation owners do not yet have evidence of inheriting every custom parent factory and `CreationExtras`. | Partially supported | [`NavEntryOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt), [`NavGraphOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavGraphOwner.kt), and [`NavEntryOwnerTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerTest.kt). Lifecycle 2.11 behavior is official semantic evidence only. |
 | Saved state | Compose host integrations combine `SavedStateRegistryOwner`, `SavedStateHandle`, and saveable-state facilities. | ViewCompose hosts install a ViewCompose `SaveableStateRegistry`; applicable Activity, Fragment, and navigation owners also participate in AndroidX saved state. These are related layers, not one interchangeable owner API. | Partially supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt), [`NavEntryOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt), and saved-state coverage in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). |
 | Frame scheduling and explicit rendering | Compose recomposition is coordinated by its Recomposer and frame clock. | An explicit `render` is synchronous. State invalidations are coalesced to an Android frame, and an inactive session retains invalidation until reactivated. | Intentionally different | [`AndroidFrameAlignedRenderSessionRuntime.kt`](../../viewcompose-host-android/src/main/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntime.kt) and [`AndroidFrameAlignedRenderSessionRuntimeTest.kt`](../../viewcompose-host-android/src/test/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntimeTest.kt). |
-| Effect ownership and terminal disposal | Effects leave with their Composition scope; disposing a `Composition` is terminal. | A `RenderSession` owns one composition coroutine scope, render state, overlays, native views, and cleanup. Disposal cancels the composition scope before clearing the mounted tree and is idempotent. Some operations after disposal currently no-op rather than fail. | Partially supported | [`RenderSession.kt`](../../viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt), runtime tests, and [`RenderSessionFailureTest.kt`](../../viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt). The post-disposal contract is a known verification gap. |
+| Effect ownership and terminal disposal | Effects leave with their Composition scope; disposing a `Composition` is terminal. | A `RenderSession` owns one composition coroutine scope, render state, overlays, native views, and cleanup. Disposal is idempotent; later public render or activation work fails fast, while already queued internal callbacks safely no-op. | Supported | [`RenderSession.kt`](../../viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt), [`RenderSessionFailureTest.kt`](../../viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt), and [`AndroidFrameAlignedRenderSessionRuntimeTest.kt`](../../viewcompose-host-android/src/test/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntimeTest.kt). |
 | Android View factory and update | `AndroidView` creates the View once for an instance and runs `update` on applicable recompositions. | `AndroidView` uses a factory for new nodes and replay-safe update binding inside a transactional native-tree patch. Failed candidate insertion is rolled back. | Supported | [`AndroidInteropDsl.kt`](../../viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidInteropDsl.kt), [`ViewTreePatchPipeline.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreePatchPipeline.kt), and [`AndroidInteropRenderingUiTest.kt`](../../app/src/androidTest/java/com/viewcompose/AndroidInteropRenderingUiTest.kt). |
-| Android View reset, commit, and release | Compose uses non-null `onReset` to opt into reusable content and `onRelease` when content permanently leaves composition. It has no equivalent transaction-commit callback. | `onReset` may run when a same-key, same-type node receives changed props; `onCommit` runs only after the complete native-tree transaction succeeds; `onRelease` is one-shot cleanup for a created node that is permanently abandoned, including rollback candidates. | Intentionally different | [`AndroidViewNodeProps.kt`](../../viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/node/spec/container/AndroidViewNodeProps.kt), [`ViewTreeDisposer.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreeDisposer.kt), and [`ViewTreeRenderTransactionTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt). Existing public wording that limits release to committed removal or session disposal is a known verification gap. |
+| Android View reset, commit, and release | Compose uses non-null `onReset` to opt into reusable content and `onRelease` when content permanently leaves composition. It has no equivalent transaction-commit callback. | `onReset` may run when a same-key, same-type node receives changed props; `onCommit` runs only after the complete native-tree transaction succeeds; `onRelease` is one-shot cleanup for a created node that is permanently abandoned, including rollback candidates. | Intentionally different | [`AndroidViewNodeProps.kt`](../../viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/node/spec/container/AndroidViewNodeProps.kt), [`ViewTreeDisposer.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreeDisposer.kt), and [`ViewTreeRenderTransactionTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt). |
 | ViewBinding and Fragment-in-tree interop | Compose supplies `AndroidViewBinding` and `AndroidFragment` integrations. | XML can be inflated manually inside an Android View factory, but there is no direct ViewBinding integration or supported Fragment-in-render-tree counterpart. | Unsupported | No corresponding public API or compiled sample was found in the reviewed modules. |
 
 ## Choosing a host entry point
@@ -120,11 +120,13 @@ not a ViewCompose spelling of `ComposeView`:
 | Source pattern | Target pattern | Ownership change |
 | --- | --- | --- |
 | `ComponentActivity.setContent` | Neutral `ComponentActivity.setUiContent` or Material `setMaterial3UiContent` | ViewCompose owns the internal session; the return value is the installed root `ViewGroup`, not a session handle. |
-| Fragment `ComposeView` | Return neutral `Fragment.setUiContent()` or Material `setMaterial3UiContent()` from `onCreateView` | ViewCompose owns the internal session and follows the Fragment view lifecycle, but see the Fragment-owner verification gap below. |
+| Fragment `ComposeView` | Return neutral `Fragment.setUiContent()` or Material `setMaterial3UiContent()` from `onCreateView` | ViewCompose starts after the View owner is published, provides that owner to content, and disposes the internal session at `onDestroyView`. |
 | Embedded `ComposeView` | `renderInto(existingViewGroup)` | The caller becomes responsible for owner provision and disposal. |
 
-All host entry points must be called for an active host. Rendering is main-thread Android work, and
-the first ViewCompose frame is committed before the entry-point call returns.
+All host entry points must be called for an active host, and rendering is main-thread Android work.
+Activity `setUiContent` and low-level `renderInto` commit their first frame before returning.
+Fragment `setUiContent` returns the root from `onCreateView`, then commits its first frame when
+Android publishes that root's View lifecycle owner.
 
 ## Activity hosting
 
@@ -143,19 +145,9 @@ session disposal. Replacing the content or destroying the Activity disposes the 
 Neutral `Fragment.setUiContent` and named Material `setMaterial3UiContent` create and return the
 Fragment root `ViewGroup`; call the selected entry from `onCreateView` and return that root. The
 internal session registry binds disposal when the current `viewLifecycleOwner` becomes available.
-A recreated Fragment view gets a new session, and the old view session is disposed at
-`onDestroyView`.
-
-### Known verification gap: Fragment owner identity
-
-The implementation currently passes the Fragment itself as the content lifecycle owner while the
-session registry disposes against `viewLifecycleOwner`. This is not the same owner identity as the
-recommended Fragment `ComposeView` arrangement. Until the contract and implementation agree:
-
-- do not document the installed owner as `viewLifecycleOwner`;
-- do not assume `onDestroyView` moves the installed owner to `DESTROYED`;
-- scope View-bound collection and cleanup to the actual Fragment view lifecycle explicitly; and
-- re-verify both owner identity and disposal when this gap is resolved.
+The same owner is installed into content. A recreated Fragment view gets a new owner and session;
+the old session is disposed exactly once at `onDestroyView`. ViewModel and saveable-state ownership
+remain Fragment-scoped and therefore survive that View-only recreation.
 
 ## Rendering into an existing View hierarchy
 
@@ -167,27 +159,25 @@ required ViewCompose locals around the content and bind disposal to the owning A
 The caller must dispose the returned session before permanently abandoning the container. It must
 also avoid retaining the session beyond the lifetime of the Android Views that it owns.
 
-### Known verification gap: operations after `renderInto` disposal
-
-The public `renderInto` wording describes post-disposal operations as fail-fast, while the current
-Android frame-aligned runtime silently ignores some render and activation calls after disposal.
-Migration code must not depend on either behavior. Treat disposal as terminal and guard the session
-reference in the caller until the implementation, documentation, and tests establish one contract.
+After `renderInto` disposal, another caller-initiated `render` or `setRenderingActive` call throws
+`IllegalStateException`. Disposal itself remains idempotent. An invalidation or Android frame
+callback already queued inside the session is cancelled or ignored and cannot publish another
+frame.
 
 ## Lifecycle, ViewModel, and saved-state owners
 
 Owner migration is a semantic task, not a type-name substitution:
 
 - an Activity host receives Activity-scoped owners;
-- a Fragment host currently combines Fragment owner propagation with Fragment-view session
-  disposal;
+- a Fragment host uses the current View lifecycle for content and session disposal, while retaining
+  Fragment-scoped ViewModel and saved-state ownership;
 - navigation entries and graphs own separate lifecycle, ViewModel, and saved-state scopes; and
 - `renderInto` supplies none of these scopes automatically.
 
 Lifecycle 2.11 adds general scoped ViewModels for arbitrary Compose UI regions. A
 `ViewModelStoreProvider` can keep child stores across configuration changes, clear them when their
 UI scope permanently leaves, and inherit the parent's factory and `CreationExtras`. ViewCompose
-0.1.0-alpha03 has comparable permanent-removal behavior for navigation entry and graph owners, but
+0.1.0-alpha04 has comparable permanent-removal behavior for navigation entry and graph owners, but
 does not expose an equivalent general provider for arbitrary UI subtrees. Its navigation owner
 factory behavior must also not be described as full parent-factory or `CreationExtras` propagation
 without additional implementation and tests.
@@ -222,27 +212,17 @@ ViewCompose Android View callbacks participate in the renderer's native-tree tra
 | `onCommit` | Runs only after the complete native-tree transaction succeeds. Put irreversible work that requires a committed tree here. |
 | `onRelease` | Performs one-shot cleanup whenever a created node is permanently abandoned, including successful removal, session disposal, and rollback of an uncommitted candidate. |
 
-### Known verification gap: release wording and rollback
-
-Renderer tests establish that rollback of a newly created candidate invokes `onRelease`, while
-some current public wording limits release to committed removal or session disposal. Migration
-code must implement `onRelease` as one-shot cleanup for any permanently abandoned created View.
-Re-verify the KDoc, module manual, rollback test, and this page together when the wording is fixed.
-
 ## Unsupported direct interop
 
-ViewCompose 0.1.0-alpha03 has no direct equivalent of Compose `AndroidViewBinding` or
+ViewCompose 0.1.0-alpha04 has no direct equivalent of Compose `AndroidViewBinding` or
 `AndroidFragment`. A factory can inflate an XML layout, but ViewBinding lifecycle management and
 Fragment ownership remain application responsibilities. Do not place a Fragment directly inside a
 ViewCompose render tree or infer support from the ability to host its root View.
 
 ## Migration risks
 
-- Fragment content currently receives the Fragment lifecycle owner while session disposal follows
-  the Fragment view lifecycle.
-- The `renderInto` post-disposal fail-fast wording conflicts with runtime no-op behavior.
-- Android View `onRelease` can run for a rollback candidate even though some public wording only
-  names committed removal and session disposal.
+- Fragment content begins after `setUiContent` returns, when Android publishes the View owner; code
+  must not require content-side work to finish inside `onCreateView` itself.
 - A hidden navigation destination retains its composition scope and effects while frame rendering
   is inactive.
 - Lifecycle 2.11 arbitrary scoped ViewModels and complete parent factory/`CreationExtras`
@@ -258,7 +238,7 @@ ViewCompose render tree or infer support from the ability to host its root View.
 4. Move replay-safe View binding into `update` or `onReset`; move irreversible committed-tree work
    into `onCommit`.
 5. Make `onRelease` safe for rollback candidates as well as committed removals.
-6. Treat session disposal as terminal and do not depend on current post-disposal no-op behavior.
+6. Treat session disposal as terminal; clear caller references instead of catching fail-fast misuse.
 7. Test Fragment view recreation independently from Fragment destruction.
 8. Test configuration change, permanent removal, and process recreation as distinct state events.
 9. Keep lifecycle-aware work lifecycle-aware when a navigation destination is retained but hidden.
@@ -271,7 +251,7 @@ Re-verify this page when any of the following changes:
 - a host entry point, owner local, session disposal rule, or Android View callback contract;
 - Compose UI/Runtime, Activity, Lifecycle, or SavedState stable baselines;
 - the repository's executable Compose/AndroidX comparison baseline; or
-- any known verification gap listed above.
+- any retained verification gap listed above.
 
 The minimum evidence is the owning module contract, the cited JVM tests, Android interop
 instrumentation, compiled host samples, and a fresh review of the linked official AndroidX

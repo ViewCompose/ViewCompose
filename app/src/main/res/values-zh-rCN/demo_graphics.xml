@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_graphics_reset">重置场景</string>
+    <string name="demo_graphics_primitives_title">Canvas 基础图元</string>
+    <string name="demo_graphics_primitives_summary">通过矩形、线、圆和文字命令验证 Canvas 稳定绘制。</string>
+    <string name="demo_graphics_drawing_state">混合=%1$s · 内容=%2$s · 缓存键=%3$d · 强调色=%4$s</string>
+    <string name="demo_graphics_drawing_action">变更绘制场景</string>
+    <string name="demo_graphics_state_blend_multiply">正片叠底</string>
+    <string name="demo_graphics_state_blend_src_over">源覆盖</string>
+    <string name="demo_graphics_state_content_visible">显示</string>
+    <string name="demo_graphics_state_content_hidden">隐藏</string>
+    <string name="demo_graphics_state_accent_orange">橙色</string>
+    <string name="demo_graphics_state_accent_indigo">靛蓝色</string>
+    <string name="demo_graphics_primitives_canvas_label">Canvas 基础图元</string>
+    <string name="demo_graphics_path_clip_title">路径与裁剪</string>
+    <string name="demo_graphics_path_clip_summary">叠加路径裁剪和描边，验证 clipPath 与路径绘制顺序。</string>
+    <string name="demo_graphics_blend_title">渐变、混合与滤镜</string>
+    <string name="demo_graphics_blend_summary">在高对比重叠图层上切换正片叠底，并保留模糊图像滤镜的降级路径。</string>
+    <string name="demo_graphics_blend_button_multiply">混合：正片叠底</string>
+    <string name="demo_graphics_blend_button_src_over">混合：源覆盖</string>
+    <string name="demo_graphics_blend_status_multiply">当前混合模式：正片叠底</string>
+    <string name="demo_graphics_blend_status_src_over">当前混合模式：源覆盖</string>
+    <string name="demo_graphics_blend_canvas_label">混合目标</string>
+    <string name="demo_graphics_draw_modifiers_title">绘制 Modifier 顺序</string>
+    <string name="demo_graphics_draw_modifiers_summary">切换内容透传，验证 drawBehind 和 drawWithContent 的顺序稳定。</string>
+    <string name="demo_graphics_draw_hide_content">隐藏内容层</string>
+    <string name="demo_graphics_draw_show_content">显示内容层</string>
+    <string name="demo_graphics_draw_status_visible">drawWithContent 已透传内容</string>
+    <string name="demo_graphics_draw_status_hidden">drawWithContent 已拦截内容</string>
+    <string name="demo_graphics_draw_canvas_label">Canvas 内容层</string>
+    <string name="demo_graphics_cache_title">drawWithCache 语义</string>
+    <string name="demo_graphics_cache_summary">改变缓存键时重建缓存命令；改变强调色只影响内容层。</string>
+    <string name="demo_graphics_cache_key_action">切换缓存键（%1$d）</string>
+    <string name="demo_graphics_cache_accent_orange">强调色：橙色</string>
+    <string name="demo_graphics_cache_accent_indigo">强调色：靛蓝色</string>
+    <string name="demo_graphics_cache_state">cacheKey=%1$d · 强调色=%2$s</string>
+    <string name="demo_graphics_cache_canvas_key">cacheKey=%1$d</string>
+    <string name="demo_graphics_inner_field_initial">内阴影输入</string>
+    <string name="demo_graphics_inner_click">验证点击（%1$d）</string>
+    <string name="demo_graphics_inner_click_count">点击次数 %1$d</string>
+    <string name="demo_graphics_shadow_diagnostics_state">修订=%1$d · 策略=%2$s</string>
+    <string name="demo_graphics_shadow_policy_auto">自动</string>
+    <string name="demo_graphics_shadow_policy_bitmap">Bitmap</string>
+    <string name="demo_graphics_shadow_policy_render_node">RenderNode</string>
+    <string name="demo_graphics_shadow_refresh">刷新诊断</string>
+    <string name="demo_graphics_shadow_clear_cache">清空缓存</string>
+    <string name="demo_graphics_outer_single_title">单层精确外阴影</string>
+    <string name="demo_graphics_outer_single_summary">显式设置模糊、偏移与颜色，不依赖 View.elevation。</string>
+    <string name="demo_graphics_outer_single_sample_title">柔和悬浮效果</string>
+    <string name="demo_graphics_outer_single_sample_description">模糊=14dp · 垂直偏移=7dp</string>
+    <string name="demo_graphics_outer_multi_title">多层彩色阴影</string>
+    <string name="demo_graphics_outer_multi_summary">按声明顺序合成蓝色左上光晕与紫红右下阴影。</string>
+    <string name="demo_graphics_outer_multi_sample_title">有序彩色图层</string>
+    <string name="demo_graphics_outer_multi_sample_description">2 层 · 独立模糊与偏移</string>
+    <string name="demo_graphics_outer_spread_title">扩散对照</string>
+    <string name="demo_graphics_outer_spread_summary">在相同模糊半径下对比向外扩张与向内收缩的遮罩。</string>
+    <string name="demo_graphics_outer_positive_spread_title">正向扩散</string>
+    <string name="demo_graphics_outer_positive_spread_description">扩散=6dp</string>
+    <string name="demo_graphics_outer_negative_spread_title">负向扩散</string>
+    <string name="demo_graphics_outer_negative_spread_description">扩散=-4dp</string>
+    <string name="demo_graphics_outer_shape_title">形状映射</string>
+    <string name="demo_graphics_outer_shape_summary">切角内容与阴影共用一个 UiShape，验证轮廓桥接精度。</string>
+    <string name="demo_graphics_outer_shape_sample_title">切角阴影</string>
+    <string name="demo_graphics_outer_shape_sample_description">UiShape.cut(18dp)</string>
+    <string name="demo_graphics_inner_single_title">单层内阴影</string>
+    <string name="demo_graphics_inner_single_summary">内容绘制完成后绘制前景装饰，并裁切到圆角轮廓。</string>
+    <string name="demo_graphics_inner_single_sample_title">内凹深度</string>
+    <string name="demo_graphics_inner_single_sample_description">模糊=10dp · 偏移=(3dp, 4dp)</string>
+    <string name="demo_graphics_inner_multi_title">多层内阴影</string>
+    <string name="demo_graphics_inner_multi_summary">通过冷色顶部层和深色底部层验证声明顺序与独立偏移。</string>
+    <string name="demo_graphics_inner_multi_sample_title">双层内凹效果</string>
+    <string name="demo_graphics_inner_multi_sample_description">2 层 · 有序前景绘制</string>
+    <string name="demo_graphics_inner_interop_title">输入与手势互操作</string>
+    <string name="demo_graphics_inner_interop_summary">前景阴影不能拦截 TextField 焦点、波纹或 Button 点击。</string>
+    <string name="demo_graphics_inner_interop_note">前景装饰保持输入透明。</string>
+    <string name="demo_graphics_shadow_diagnostics_title">阴影缓存与后端诊断</string>
+    <string name="demo_graphics_shadow_diagnostics_summary">策略变化后重建样本，再检查实际绘制、缓存命中和降级原因。</string>
+    <string name="demo_graphics_shadow_probe_title">后端绘制探针</string>
+    <string name="demo_graphics_shadow_probe_description">策略变化或缓存清空时重建</string>
+    <string name="demo_graphics_shadow_backend_group">后端</string>
+    <string name="demo_graphics_shadow_fact_policy">策略</string>
+    <string name="demo_graphics_shadow_fact_latest_backend">最近后端</string>
+    <string name="demo_graphics_shadow_fact_decision_reason">选择原因</string>
+    <string name="demo_graphics_shadow_fact_bitmap_draws">Bitmap 绘制</string>
+    <string name="demo_graphics_shadow_fact_render_node_draws">RenderNode 绘制</string>
+    <string name="demo_graphics_shadow_fact_render_node_records">RenderNode 录制</string>
+    <string name="demo_graphics_shadow_fact_render_node_hits">RenderNode 命中</string>
+    <string name="demo_graphics_shadow_fact_render_node_cache">RenderNode 缓存</string>
+    <string name="demo_graphics_shadow_raster_group">光栅缓存</string>
+    <string name="demo_graphics_shadow_fact_outer_hits">外阴影命中</string>
+    <string name="demo_graphics_shadow_fact_outer_misses">外阴影未命中</string>
+    <string name="demo_graphics_shadow_fact_outer_evictions">外阴影淘汰</string>
+    <string name="demo_graphics_shadow_fact_outer_oversized">外阴影超预算</string>
+    <string name="demo_graphics_shadow_fact_outer_cache">外阴影缓存</string>
+    <string name="demo_graphics_shadow_fact_inner_hits">内阴影命中</string>
+    <string name="demo_graphics_shadow_fact_inner_misses">内阴影未命中</string>
+    <string name="demo_graphics_shadow_fact_inner_cache">内阴影缓存</string>
+    <string name="demo_graphics_shadow_not_drawn">尚未绘制</string>
+    <string name="demo_graphics_shadow_kib">%1$d KiB</string>
+    <string name="demo_graphics_shadow_decisions">决策：%1$s</string>
+    <string name="demo_graphics_shadow_lazy_title">千项惰性阴影列表</string>
+    <string name="demo_graphics_shadow_lazy_summary">全部条目使用稳定键、相同尺寸与双层阴影；快速滑动返回后可观察缓存复用。</string>
+    <string name="demo_graphics_shadow_lazy_facts">%1$d 项 · 稳定键 · 共享光栅规格</string>
+    <string name="demo_graphics_shadow_lazy_instruction">快速滑动到底部，返回此处并刷新上方诊断。</string>
+    <string name="demo_graphics_shadow_row_title">阴影行 #%1$d</string>
+    <string name="demo_graphics_shadow_row_summary">稳定键 · 共享形状 · 缓存光栅</string>
+</resources>

@@ -26,6 +26,8 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `compose-migration-capability-convergence.md` | Runtime 事务与 Key 身份、Fragment/Session 所有权、AndroidView 释放、Navigation owner/deep link、逻辑 RTL 边以及普通 Activity 根节点真实进程死亡认证均已闭环；未触发的便利能力继续保留为有条件的独立候选项 |
+| `runtime-data-propagation-and-view-patch-optimization.md` | 可空 Local、框架状态原子发布与每次 Apply 唯一通知已修正；Modifier-only View Patch 和不可变 LocalSnapshot 身份复用通过确定性测试、相邻版本性能归因及完整仓库门禁 |
 | `lazy-collection-three-layer-hard-cut.md` | Lazy 集合的逻辑快照、Key Session 与物理树三层所有权已经硬切完成；AndroidView Reset/Release、Pager 驻留、TabRow eager children、失败重试与真机长 Fling 门禁已闭环 |
 | `android-resource-environment.md` | Android 资源 API、宿主配置失效、设计系统中立的修订传播、保留 Session 与 Preview 收敛已经闭环；事务式子 Session 修复及 Demo 96 项真机回归、仓库 `qaFull` 全部通过 |
 | `effect-runtime-convergence.md` | 事务式 Remember/Effect 生命周期、候选回滚、协程所有权、Lifecycle Effect、公共 API 硬切与完整测试矩阵已经闭环；Demo 96 项设备回归及仓库 `qaFull` 全部通过 |

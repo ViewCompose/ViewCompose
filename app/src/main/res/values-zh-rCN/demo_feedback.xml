@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_feedback_visible">已显示</string>
+    <string name="demo_feedback_hidden">已隐藏</string>
+    <string name="demo_feedback_reset">重置场景</string>
+
+    <string name="demo_feedback_transient_title">瞬态反馈</string>
+    <string name="demo_feedback_transient_summary">在不创建无关浮层状态的前提下，验证自定义 Dialog、Popup、Snackbar 和 Toast 请求。</string>
+    <string name="demo_feedback_transient_state">Dialog=%1$d · Popup=%2$d · Snackbar=%3$d · Toast=%4$d</string>
+    <string name="demo_feedback_transient_primary_action">显示 Dialog、Snackbar 和 Toast</string>
+    <string name="demo_feedback_transient_popup_action">显示锚定 Popup</string>
+    <string name="demo_feedback_custom_dialog_title">自定义 Dialog %1$d</string>
+    <string name="demo_feedback_custom_dialog_body">该内容通过浮层宿主挂载到当前渲染 Session。</string>
+    <string name="demo_feedback_custom_dialog_confirm">确认</string>
+    <string name="demo_feedback_popup_title">Popup %1$d</string>
+    <string name="demo_feedback_popup_body">锚定内容会跟随其声明的目标。</string>
+    <string name="demo_feedback_popup_close">关闭 Popup</string>
+    <string name="demo_feedback_snackbar_message">Snackbar 通知 %1$d</string>
+    <string name="demo_feedback_snackbar_action">知道了</string>
+    <string name="demo_feedback_toast_message">Toast 提示 %1$d</string>
+
+    <string name="demo_feedback_dialog_title">AlertDialog 与 ModalBottomSheet</string>
+    <string name="demo_feedback_dialog_summary">验证标准对话框操作和可通过资源 ID 定位的底部面板生命周期。</string>
+    <string name="demo_feedback_dialog_state">结果=%1$s · 底部面板=%2$s · 对话框=%3$s</string>
+    <string name="demo_feedback_show_bottom_sheet">显示 ModalBottomSheet</string>
+    <string name="demo_feedback_show_alert">显示标准 AlertDialog</string>
+    <string name="demo_feedback_show_icon_alert">显示带图标 AlertDialog</string>
+    <string name="demo_feedback_outcome_idle">空闲</string>
+    <string name="demo_feedback_outcome_alert_confirmed">对话框已确认</string>
+    <string name="demo_feedback_outcome_alert_dismissed">对话框已关闭</string>
+    <string name="demo_feedback_outcome_icon_confirmed">图标对话框已确认</string>
+    <string name="demo_feedback_outcome_icon_dismissed">图标对话框已关闭</string>
+    <string name="demo_feedback_outcome_sheet_saved">底部面板已保存</string>
+    <string name="demo_feedback_outcome_sheet_discarded">底部面板已丢弃</string>
+    <string name="demo_feedback_alert_title">确认删除？</string>
+    <string name="demo_feedback_alert_body">此操作无法撤销。</string>
+    <string name="demo_feedback_alert_confirm">删除</string>
+    <string name="demo_feedback_alert_cancel">取消</string>
+    <string name="demo_feedback_icon_alert_title">有可用更新</string>
+    <string name="demo_feedback_icon_alert_body">是否现在安装新版本？</string>
+    <string name="demo_feedback_icon_alert_confirm">更新</string>
+    <string name="demo_feedback_icon_alert_cancel">稍后</string>
+    <string name="demo_feedback_bottom_sheet_title">底部面板</string>
+    <string name="demo_feedback_bottom_sheet_body">面板通过浮层路径渲染，并支持手势下滑关闭。</string>
+    <string name="demo_feedback_bottom_sheet_save">保存草稿</string>
+    <string name="demo_feedback_bottom_sheet_discard">丢弃更改</string>
+
+    <string name="demo_feedback_menu_title">DropdownMenu 与 PlainTooltip</string>
+    <string name="demo_feedback_menu_summary">分别验证可聚焦菜单选择和非聚焦 Tooltip 锚定。</string>
+    <string name="demo_feedback_menu_state">选择=%1$s · 菜单=%2$s · Tooltip=%3$s</string>
+    <string name="demo_feedback_show_tooltip">显示 Tooltip</string>
+    <string name="demo_feedback_hide_tooltip">隐藏 Tooltip</string>
+    <string name="demo_feedback_open_menu">打开菜单</string>
+    <string name="demo_feedback_menu_reset">重置菜单场景</string>
+    <string name="demo_feedback_menu_none">未选择</string>
+    <string name="demo_feedback_menu_edit">编辑</string>
+    <string name="demo_feedback_menu_copy">复制</string>
+    <string name="demo_feedback_menu_share">分享</string>
+    <string name="demo_feedback_menu_delete">删除</string>
+    <string name="demo_feedback_menu_shortcut">Ctrl+S</string>
+    <string name="demo_feedback_tooltip_text">锚定的提示信息</string>
+</resources>

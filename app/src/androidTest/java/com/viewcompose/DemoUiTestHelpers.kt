@@ -21,6 +21,8 @@ import android.view.ViewParent
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
+import androidx.annotation.IdRes
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
@@ -30,8 +32,8 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-import androidx.lifecycle.Lifecycle
 import com.google.android.material.shape.MaterialShapeDrawable
+import com.viewcompose.demo.contract.EXTRA_DEMO_SCENARIO_ID
 import com.viewcompose.renderer.R as RendererR
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -65,6 +67,104 @@ internal fun <A : Activity> launchDemoActivity(
     return ActivityScenario.launch(activityClass).also { scenario ->
         scenario.moveToState(Lifecycle.State.RESUMED)
     }
+}
+
+/** Launches a strict scenario Activity without relying on a legacy page-index extra. */
+internal fun <A : Activity> launchDemoScenarioActivity(
+    activityClass: Class<A>,
+    scenarioId: String,
+    themeMode: DemoThemeMode = DemoThemeMode.Light,
+): ActivityScenario<A> {
+    val context = InstrumentationRegistry.getInstrumentation().targetContext
+    return launchDemoActivity(
+        intent = Intent(context, activityClass).putExtra(EXTRA_DEMO_SCENARIO_ID, scenarioId),
+        themeMode = themeMode,
+    )
+}
+
+/** Returns a required native view addressed by the scenario-owned Android resource ID bridge. */
+internal fun <V : View> Activity.requireScenarioViewById(@IdRes id: Int): V {
+    val view = findViewById<V>(id)
+    assertNotNull("Expected to find view with resource ID: $id", view)
+    return requireNotNull(view)
+}
+
+/** Returns a visible scenario resource target, scrolling attached RecyclerViews when necessary. */
+internal fun <V : View> Activity.requireScenarioViewByIdVisible(
+    @IdRes id: Int,
+    maxScrollAttempts: Int = 24,
+): V {
+    val root = findViewById<ViewGroup>(android.R.id.content)
+    fun visibleTarget(): V? = findViewById<V>(id)?.takeIf(::isViewVisible)
+
+    visibleTarget()?.let { return it }
+    findRecyclerViews(root)
+        .filter { recyclerView -> recyclerView.isShown && recyclerView.height > 0 }
+        .forEach { recyclerView ->
+            val delta = (recyclerView.height * 0.7f).toInt().coerceAtLeast(1)
+            fun scrollUntilVisible(direction: Int): V? {
+                repeat(maxScrollAttempts) {
+                    visibleTarget()?.let { return it }
+                    if (!recyclerView.canScrollVertically(direction)) return null
+                    recyclerView.scrollBy(0, direction * delta)
+                }
+                return visibleTarget()
+            }
+
+            scrollUntilVisible(direction = 1)?.let { return it }
+            scrollUntilVisible(direction = -1)?.let { return it }
+        }
+
+    val target = visibleTarget()
+    assertNotNull("Expected visible scenario resource target: $id", target)
+    assertViewFullyVisible(requireNotNull(target))
+    return requireNotNull(target)
+}
+
+/** Clicks a required scenario-owned native resource target on the Activity thread. */
+internal fun Activity.clickScenarioViewById(@IdRes id: Int) {
+    val target = requireScenarioViewById<View>(id)
+    assertTrue("Expected resource target to accept click: $id", target.performClick())
+}
+
+/** Scrolls a RecyclerView as needed before clicking a scenario-owned resource target. */
+internal fun Activity.clickScenarioViewByIdVisible(
+    @IdRes id: Int,
+    maxScrollAttempts: Int = 24,
+) {
+    val root = findViewById<ViewGroup>(android.R.id.content)
+    fun visibleTarget(): View? = findViewById<View>(id)?.takeIf(::isViewVisible)
+
+    visibleTarget()?.let { target ->
+        assertTrue("Expected resource target to accept click: $id", target.performClick())
+        return
+    }
+    findRecyclerViews(root)
+        .filter { recyclerView -> recyclerView.isShown && recyclerView.height > 0 }
+        .forEach { recyclerView ->
+            val delta = (recyclerView.height * 0.7f).toInt().coerceAtLeast(1)
+            fun scrollUntilVisible(direction: Int): View? {
+                repeat(maxScrollAttempts) {
+                    visibleTarget()?.let { return it }
+                    if (!recyclerView.canScrollVertically(direction)) return null
+                    recyclerView.scrollBy(0, direction * delta)
+                }
+                return visibleTarget()
+            }
+
+            scrollUntilVisible(direction = 1)?.let { target ->
+                assertTrue("Expected resource target to accept click: $id", target.performClick())
+                return
+            }
+            scrollUntilVisible(direction = -1)?.let { target ->
+                assertTrue("Expected resource target to accept click: $id", target.performClick())
+                return
+            }
+        }
+
+    val target = visibleTarget()
+    assertNotNull("Expected visible resource target: $id", target)
+    assertTrue("Expected resource target to accept click: $id", target!!.performClick())
 }
 
 /**
@@ -116,33 +216,31 @@ internal fun captureDeviceScreenshot(
     return output
 }
 
-/**
- * 通过 UiAutomator 点击指定文本。
- * Clicks the given text through UiAutomator.
- */
-internal fun clickDeviceText(text: String) {
-    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    val node = device.wait(Until.hasObject(By.text(text)), 5_000)
-    assertTrue("Expected device text target: $text", node)
-    val target = device.findObject(By.text(text))
-    assertNotNull("Expected device object for text: $text", target)
-    target!!.click()
+/** Returns a visible device node addressed by an app-owned Android resource ID. */
+internal fun requireDeviceResourceId(@IdRes id: Int): androidx.test.uiautomator.UiObject2 {
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    val context = instrumentation.targetContext
+    val resourceName = context.resources.getResourceEntryName(id)
+    val target = UiDevice.getInstance(instrumentation).wait(
+        Until.findObject(By.res(context.packageName, resourceName)),
+        5_000,
+    )
+    assertNotNull("Expected device resource target: $resourceName", target)
+    return requireNotNull(target)
+}
+
+/** Clicks an app-owned device resource target, including targets hosted in overlay windows. */
+internal fun clickDeviceResourceId(@IdRes id: Int) {
+    requireDeviceResourceId(id).click()
     waitForUiIdle()
 }
 
-/**
- * 断言指定文本在设备可见区域内。
- * Asserts that the given text is visible on the device.
- */
-internal fun assertDeviceTextVisible(text: String) {
-    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    val node = device.wait(Until.hasObject(By.text(text)), 5_000)
-    assertTrue("Expected device text target: $text", node)
-    val target = device.findObject(By.text(text))
-    assertNotNull("Expected visible device object for text: $text", target)
-    val bounds = target!!.visibleBounds
-    assertTrue("Expected visible width > 0 for device text: $text", bounds.width() > 0)
-    assertTrue("Expected visible height > 0 for device text: $text", bounds.height() > 0)
+/** Asserts that an app-owned device resource target has non-empty visible bounds. */
+internal fun assertDeviceResourceIdVisible(@IdRes id: Int) {
+    val target = requireDeviceResourceId(id)
+    val bounds = target.visibleBounds
+    assertTrue("Expected visible width > 0 for resource ID: $id", bounds.width() > 0)
+    assertTrue("Expected visible height > 0 for resource ID: $id", bounds.height() > 0)
 }
 
 /**
@@ -310,6 +408,11 @@ internal fun Activity.tapByTestTag(tag: String) {
     tapView(requireViewByTestTagVisible(tag))
 }
 
+/** Injects a real tap at the center of a strict scenario resource target. */
+internal fun Activity.tapScenarioViewById(@IdRes id: Int) {
+    tapView(requireScenarioViewByIdVisible<View>(id))
+}
+
 /**
  * Injects real down/up touch events at the center of the supplied View.
  */
@@ -357,7 +460,25 @@ internal fun Activity.dragByTestTag(
     deltaY: Float = 0f,
     steps: Int = 8,
 ) {
-    val view = requireViewByTestTagVisible(tag)
+    dragView(requireViewByTestTagVisible(tag), deltaX, deltaY, steps)
+}
+
+/** Injects a real drag gesture into a strict scenario resource target. */
+internal fun Activity.dragScenarioViewById(
+    @IdRes id: Int,
+    deltaX: Float,
+    deltaY: Float = 0f,
+    steps: Int = 8,
+) {
+    dragView(requireScenarioViewByIdVisible(id), deltaX, deltaY, steps)
+}
+
+private fun Activity.dragView(
+    view: View,
+    deltaX: Float,
+    deltaY: Float,
+    steps: Int,
+) {
     assertTrue("Expected drag steps >= 2", steps >= 2)
     val location = IntArray(2)
     view.getLocationOnScreen(location)
@@ -405,7 +526,43 @@ internal fun Activity.transformByTestTag(
     zoomRatio: Float = 1.2f,
     steps: Int = 10,
 ) {
-    val view = requireViewByTestTagVisible(tag)
+    transformView(
+        view = requireViewByTestTagVisible(tag),
+        panX = panX,
+        panY = panY,
+        rotationDegrees = rotationDegrees,
+        zoomRatio = zoomRatio,
+        steps = steps,
+    )
+}
+
+/** Injects a two-pointer transform gesture into a strict scenario resource target. */
+internal fun Activity.transformScenarioViewById(
+    @IdRes id: Int,
+    panX: Float = 120f,
+    panY: Float = 72f,
+    rotationDegrees: Float = 28f,
+    zoomRatio: Float = 1.2f,
+    steps: Int = 10,
+) {
+    transformView(
+        view = requireScenarioViewByIdVisible(id),
+        panX = panX,
+        panY = panY,
+        rotationDegrees = rotationDegrees,
+        zoomRatio = zoomRatio,
+        steps = steps,
+    )
+}
+
+private fun Activity.transformView(
+    view: View,
+    panX: Float,
+    panY: Float,
+    rotationDegrees: Float,
+    zoomRatio: Float,
+    steps: Int,
+) {
     assertTrue("Expected transform steps >= 2", steps >= 2)
     val centerX = view.width * 0.5f
     val centerY = view.height * 0.5f
@@ -489,6 +646,14 @@ internal fun Activity.focusInputByTestTag(tag: String) {
     val host = requireViewByTestTagVisible(tag)
     val input = findFirstEditText(host)
     assertNotNull("Expected EditText descendant for testTag: $tag", input)
+    input!!.requestFocus()
+}
+
+/** Focuses the first EditText under a strict scenario-owned native resource target. */
+internal fun Activity.focusInputByScenarioViewId(@IdRes id: Int) {
+    val host = requireScenarioViewById<View>(id)
+    val input = findFirstEditText(host)
+    assertNotNull("Expected EditText descendant for scenario resource ID: $id", input)
     input!!.requestFocus()
 }
 

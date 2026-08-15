@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 9903a2a87e9f3f069cc68be3aeae209edfa0fd918727aa082148556723755514
+translation_source_hash: e5c3c1fba193e76aae2aee236a9823f42a351f46f1d3d8748984b14d269f54e3
 translation_status: current
 ---
 
@@ -19,7 +19,7 @@ translation_status: current
 
 - [PERFORMANCE_FULL_2026-03-06.md](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/PERFORMANCE_FULL_2026-03-06.md)
 
-## 2. 当前性能基线（2026-07）
+## 2. 当前性能基线（2026-08）
 
 ### 2.1 已建立能力
 
@@ -47,6 +47,16 @@ translation_status: current
 22. 高级阴影建立独立有界外/内栅格缓存，平移/缩放/旋转/alpha 重绘复用同一栅格；`ShadowPerformanceComparisonBenchmark` 覆盖 1000 项 Lazy 与复杂布局的滚动/变更，并用 Compose 作为同轮设备波动控制组。
 23. 应用进程内开发工具遵守“零持续工作”契约。可选的真机 DSL 定位器在滚动期间不写报告、也不
     检查实时 View；一次带 Nonce 的显式 IDE 请求只产生一次有界快照与响应。
+24. warm interaction benchmark 在启动并定位 fixture 后，于 measured block 之外等待 5 秒；
+    cold-start workload 不等待，因为启动本身就是被测操作。
+25. 导航动效继续分开测量 push 与 pop，但每个 measured iteration 执行 8 次同方向转场；
+    pop 在 measured block 外预先压入 8 个 destination。
+26. Type、Environment 与 NodeSpec 均未变化的复用节点会执行仅 Modifier Patch。纯视觉更新会
+    保留 LayoutParams 并跳过完整 Node Binding；布局 Modifier 只替换 LayoutParams，不会重建或
+    重新执行原生 View 的语义绑定。
+27. `LocalContext` 会保存已安装的不可变 `LocalSnapshot`，不再为每个 Group 或发射 Node 重建
+    Snapshot 对象。Snapshot 创建量只随 Provider 边界增长；一次批量 `ProvideLocals` 调用会为全部
+    Binding 只安装一份 Snapshot。
 
 ### 2.2 发布态基准入口
 
@@ -83,43 +93,138 @@ instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
   -PbenchmarkResult=/path/to/current-benchmarkData.json
 ```
 
+对容易升温的真机，应让每个 ViewCompose 或 Compose 方法都从相同的 `NONE`/`LIGHT` 温控
+等级开始，方法之间完成冷却，并把各自 JSON 放入一个干净目录。将该目录作为
+`benchmarkResult` 时，工具只会合并设备、系统、时钟策略和编译上下文完全一致的结果；
+benchmark 方法重名或上下文不同会直接失败，不会任意选择最新的局部结果。没有显式时钟
+策略的旧结果仍要求 AndroidX `cpuLocked` 快照一致。
+
+拆分方法批次开始前只安装一次 target 和 benchmark APK。安装后停止两个进程、熄屏，等待
+温控等级和 CPU 最低频率回到正常状态，再直接调用已安装的 `AndroidJUnitRunner`。每个方法
+都通过 `androidx.benchmark.output.payload.clockPolicy=unlocked-dvfs-preflight-v1` 记录经过主机
+预检的消费设备协议；报告比较该协议并保留全部 AndroidX 原始锁定快照，不能事后改写。
+
+显式的 unlocked-DVFS 策略只标识主机协议，不代表 OEM 会保持稳定工作频率，run-P50 CV 门禁
+仍然必须执行。如果方法出现两个频率平台、温控等级不变时 `scaling_max_freq` 仍切换，或者
+AndroidX 报告无法清理 Runtime Image，应直接拒绝，不能重跑到偶然通过为止。
+`cmd power set-fixed-performance-mode-enabled` 只有在设备证明整个测量期间最低和最高频率稳定
+时才能视为锁频。消费设备无法满足门禁时，必须改用可 root 或其他可控制时钟的参考设备。
+
 与同设备历史基线比较并执行回归门禁：
 
 ```bash
 ./gradlew benchmarkComparisonReport \
   -PbenchmarkResult=/path/to/current-benchmarkData.json \
-  -PbenchmarkBaseline=/path/to/baseline-benchmarkData.json
+  -PbenchmarkBaseline=/path/to/baseline-compose-comparison.json
 ```
+
+两份 Markdown/JSON 对照报告都按场景 ID、工作负载修订号和动作标识每一行。纵向门禁的
+baseline 必须是上一份带修订信息的对照 JSON，不能直接传入原始 Macrobenchmark JSON；
+工作负载修订号不同的结果会被拒绝比较。
 
 发布态权威基线是 `ReleaseBaselineBenchmark`：
 
 1. target 为 R8 优化、resource shrink、非 debuggable 的 benchmark variant。
 2. `CompilationMode.None` 隔离 ART 预编译收益，直接暴露交付二进制回归。
 3. 固定场景为冷启动和 state patch。
-4. 结果只在同设备、同系统版本、同温控状态下纵向比较。
+4. 正式物理交互基准使用 5 次洁净迭代；冷启动保留 10 次，因为真实的首轮冷缓存波动
+   会让单个样本支配较小样本集的稳定性判断。每个方法开始时 Android 温控等级必须为
+   `NONE` 或 `LIGHT`，方法之间必须停进程并冷却，达到 `SEVERE` 的批次直接作废。
+5. 结果只在同设备、同系统版本、同迭代协议和同温控策略下纵向比较。
 
 Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 
 1. 两个引擎运行在同一个 R8 target 中，排除应用配置、资源和进程环境差异。
 2. 使用 `CompilationMode.None`，避免 ART 预编译掩盖框架交付成本。
 3. `viewComposeListScroll/composeListScroll` 使用相同手势轨迹。
-4. `viewComposeListMutation/composeListMutation` 使用相同的 37 项旋转和每 16 项内容更新。
-5. 对比结论必须来自同一次设备运行；不同设备产生的数据不能横向相除。
+4. `viewComposeListMutation/composeListMutation` 使用相同的 37 项旋转和每 16 项内容更新；
+   每个测量 iteration 执行 8 个完整 mutation/reset 闭环，确保 run 级帧分布足以进行稳定性门禁。
+5. target 就绪后，每个 iteration 都会在 measured block 外等待 5 秒，避免 OEM Activity 启动
+   boost 让第一次交互出现不真实的加速。
+6. 对比结论必须来自同一次设备运行；不同设备产生的数据不能横向相除。
 
 复杂布局对照基线是 `ComplexLayoutPerformanceComparisonBenchmark`：
 
 1. `viewComposeComplexLayoutScroll/composeComplexLayoutScroll` 对比非 Lazy 整树滚动。
-2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` 同时更新 18 个卡片的数据，并切换条件详情子树。
-3. 两端保持相同的卡片、指标、标签、条件内容数量和嵌套顺序。
-4. 该场景专门观察 ViewGroup 深度、全树 measure/layout 与局部 patch 成本，不用于评价 Lazy 容器。
+2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` 同时更新 18 个卡片的数据，并在
+   每个测量 iteration 中执行 8 个完整 update/reset 闭环来切换条件详情子树。
+3. 两个引擎都采用相同的 measured block 外 5 秒启动稳定窗口。
+4. 两端保持相同的卡片、指标、标签、条件内容数量和嵌套顺序。
+5. 该场景专门观察 ViewGroup 深度、全树 measure/layout 与局部 patch 成本，不用于评价 Lazy 容器。
+
+2026-08-15 在 Samsung SM-G991B / Android 13 上验收的替换基线使用 5 次 iteration、每个方法从
+`NONE`/`LIGHT` 起跑、5 秒 setup 稳定窗口和 `unlocked-dvfs-preflight-v1` 时钟策略：
+
+| 工作负载 | ViewCompose P50/P95 | Compose P50/P95 | ViewCompose/Compose run-P50 CV |
+| --- | ---: | ---: | ---: |
+| `performance.list@3` 滚动 | 4.620 / 9.048 ms | 5.098 / 8.554 ms | 0.041 / 0.072 |
+| `performance.list@3` 变更 | 4.651 / 9.278 ms | 9.163 / 24.855 ms | 0.009 / 0.034 |
+| `performance.complex-layout@3` 滚动 | 5.596 / 8.603 ms | 5.221 / 8.457 ms | 0.011 / 0.037 |
+| `performance.complex-layout@3` 更新 | 6.063 / 42.505 ms | 9.527 / 50.296 ms | 0.079 / 0.082 |
+
+这些数值是带工作负载修订号的基线，不代表某个引擎在所有场景都更快。列表与复杂布局的更新路径
+也采用不同于滚动的框架策略。
+
+`DemoInteractionBenchmark` 保留下列不参与 Compose 对照的 fixture 基线：
+
+1. `diagnosticsThemeLongFlingToBottomAndBackRevision2` 在每个方向执行 8 次固定大力度 fling，并在
+   对应手势序列后分别验证真实底部和顶部锚点。
+2. `collectionsScrollRevision2` 在 setup 阶段捕获嵌套 LazyColumn 边界，然后在 measured block 内
+   每个方向执行 8 次固定 swipe，期间不执行 Accessibility 查询。每次 swipe 使用 500 ms 物理
+   稳定窗口，因为 benchmark setup 会关闭 UiAutomator 隐式 idle timeout；省略该窗口会让惯性
+   滚动重叠，并在 FrameTimeline 中产生与工作负载无关的 `Buffer Stuffing`。
+3. `collectionsStressMutationRevision2` 执行 8 个完整 rotate/insert/reset 闭环，并断言每次 reset
+   都恢复原始逻辑顺序。
+4. 三个方法都使用相同的 measured block 外 5 秒启动稳定窗口。正式原始结果通过 AndroidX
+   benchmark payload 记录 `scenario`、`workloadRevision` 和 `clockPolicy`。
+
+2026-08-15 在 Samsung SM-G991B / Android 13 上验收的 fixture 基线使用 5 次 iteration、每个方法
+从 `NONE`/`LIGHT` 起跑、`CompilationMode.Partial` 和 `unlocked-dvfs-preflight-v1` 时钟策略：
+
+| 工作负载 | Frame CPU P50/P95 | Run-P50 CV |
+| --- | ---: | ---: |
+| `diagnostics.theme@2` 固定长 fling 往返 | 3.067 / 7.336 ms | 0.008 |
+| `collection.stress@2` 嵌套列表滚动往返 | 3.357 / 6.288 ms | 0.018 |
+| `collection.stress@2` 8 轮变更 | 4.358 / 10.507 ms | 0.018 |
+
+集合滚动预检也是手势驱动污染的参考案例。最初在 measured block 中重复定位 target 会增加
+Accessibility 遍历；移除后，连续无间隔 swipe 仍产生约 3.6、7.2 与 14.7 ms 的 run-P50 平台。
+Perfetto 显示 `RV Scroll`、display-list recording 与 RenderThread draw 成本稳定，只有
+`dequeueBuffer` 等待变化，FrameTimeline 把慢帧归类为 `Buffer Stuffing`。调整刷新率和 ART 编译
+策略都没有消除它；显式的逐手势稳定窗口把 run-P50 CV 降到 0.018。因此不得把没有节奏控制的
+合成输入循环解释为框架滚动成本。
 
 高级阴影对照基线是 `ShadowPerformanceComparisonBenchmark`：
 
 1. ViewCompose 与 Compose 使用相同的阴影层数、颜色、尺寸、shape、列表数据和复杂布局模型。
-2. 固定覆盖阴影列表滚动/变更、阴影复杂布局滚动/更新，共 8 个成对方法。
+2. 固定覆盖阴影列表滚动/变更、阴影复杂布局滚动/更新，共 8 个成对方法。每个变更/更新
+   iteration 执行 8 个完整 action/reset 闭环并断言恢复结果，与已验收的非阴影对照协议一致，
+   同时为 run 稳定性门禁提供足够的帧样本。
 3. `shadowRenderPolicy=exact_bitmap|render_node|auto` 只切换 ViewCompose 后端，不改变工作负载；Compose 结果用于归一化设备温度和后台噪声。
 4. 2026-07-30 在 Samsung SM-G991B / Android 13 上各运行 10 轮，RenderNode 相对 ExactBitmap 的 P50、P95 与 RSS 方向混杂，没有证明稳定收益。
 5. 因此 `Auto` 继续固定为 `ExactBitmap`；`RenderNodeDisplayList` 保留为显式实验策略，不能作为发布默认值。
+
+2026-08-15 在 Samsung SM-G991B / Android 13 上验收的 `Auto`（`ExactBitmap`）替换基线使用
+5 次 iteration、每个方法从 `NONE`/`LIGHT` 起跑、5 秒 setup 稳定窗口、8 个变更/更新闭环，
+并记录 `unlocked-dvfs-preflight-v1` 时钟策略：
+
+| 工作负载 | ViewCompose P50/P95 | Compose P50/P95 | ViewCompose/Compose run-P50 CV |
+| --- | ---: | ---: | ---: |
+| `performance.shadow-list@2` 滚动 | 4.613 / 9.650 ms | 5.022 / 8.708 ms | 0.052 / 0.044 |
+| `performance.shadow-list@2` 变更 | 4.860 / 9.750 ms | 9.035 / 24.787 ms | 0.023 / 0.117 |
+| `performance.shadow-complex-layout@2` 滚动 | 5.728 / 8.724 ms | 5.481 / 8.695 ms | 0.016 / 0.046 |
+| `performance.shadow-complex-layout@2` 更新 | 6.236 / 41.506 ms | 10.348 / 46.824 ms | 0.049 / 0.044 |
+
+8 个方法全部通过 `0.15` run 稳定性门禁。对照报告保留 AndroidX 原始 `cpuLocked` 混合快照，
+同时依据主机预检并显式记录的时钟策略验收该批次。更新场景的高 P95 仍属于基线的一部分：
+两个引擎都会重建多张带阴影卡片和条件子树，不能只用 P50 解释结果。
+
+导航 revision 6 和设计系统 bundle revision 3 尚无已验收的物理基线。在同一台三星设备上，
+每个 run 的 4 次导航转场已经提供 202--223 帧，但 Android 温控最终为 `NONE` 时，OEM 频率
+上限仍在满速和受限值之间切换。unlocked 与 fixed-performance 试验的 run-P50 CV 为
+`0.308`--`0.372`，代表性的 Cut Contrast patch 方法也以 `0.262` 失败。该设备拒绝 shell 清理
+ART profile，fixed-performance 和增强处理模式也无法形成真正锁频。这些结果属于被拒绝的
+设备能力证据，不是框架回归或正式基线；两组矩阵必须在可控制时钟的参考设备上完成。
 
 同机后端对比入口：
 
@@ -138,22 +243,69 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 自动报告与回归规则：
 
 1. 对照表固定输出 frame CPU P50/P95、frame overrun P50/P95、heap max 与 RSS anon max。
-2. 每个场景的 ViewCompose 与 Compose 结果必须来自同一份 benchmark JSON。
+2. 每个场景的 ViewCompose 与 Compose 结果必须来自同一份 benchmark JSON；该 JSON 可以是
+   同一上下文中分别冷却的方法结果在内存中的确定性合并结果。
 3. 历史回归只允许同设备型号、系统 fingerprint、CPU lock 状态和 compilation mode。
 4. 门禁必须同时满足“ViewCompose 原始指标超过阈值”和“ViewCompose/Compose 归一化比值超过阈值”才失败。
 5. 默认阈值维护在 `tools/performance/benchmark_policy.json`，小于绝对噪声下限的变化不会失败。
-6. 报告会计算各 iteration P50 的变异系数；超过 `0.15` 标记为不稳定，数据应重跑而不是直接形成结论。
+6. 报告只对严格为正、具备比例尺度的 frame CPU duration 计算各 iteration P50 的变异系数；
+   超过 `0.15` 标记为不稳定，数据应重跑而不是直接形成结论。`frameOverrunMs` 是围绕零点的
+   有符号指标，仍保留结果和回归门禁，但不计算会因均值接近零而失真的 CV。
+7. 迭代更多不等于证据更强；持续升温的批次即使总体变异系数低于阈值也属于无效数据。
 
-### 2.3 当前结论
+### 2.3 Benchmark 结论契约
 
-1. 当前阶段优先级不是“追求极限 FPS”，而是先控制回归风险和错误用法。
-2. 最关键收益来自：
-   - 正确复用
-   - 组级脏区重组 + 跳过不必要更新
-   - 容器刷新语义稳定
-3. 基线更新（2026-03-08）：`SlotTable Lite` + 子树级重组已接入主链路，`qaQuick` 通过；`qaFull` 结果按当前设备门禁状态在 roadmap 持续登记。
+一次运行通过验收后，只有在本文或更具体的所属有效页中完成解释，文档才算闭环。每项结论必须记录
+workload 及其 revision、对照环境、绝对值、归一化变化、稳定性结果、局限、决策和后续行动，并且
+只能选择一个主要分类：
 
-### 2.4 Debug Tooling 回归门禁
+- `improved`：决策指标实质改善，且没有重要反向指标退化；
+- `regressed`：至少一项决策指标实质变差，其他决策指标也没有改变这一解释；
+- `mixed`：重要指标方向相反，包括中位数更好但尾部更差；
+- `no material change`：没有决策指标跨过适用的归一化与绝对组合门禁，且相反方向也不需要归类为
+  `mixed`；
+- `inconclusive`：稳定性、环境不匹配、覆盖不足或其他有效性问题阻止形成方向性结论。
+
+Frame CPU duration 越低越好。归一化变化采用
+`(ViewCompose / control - 1) * 100`；报告使用更明确的“降低”和“升高”，避免只靠正负号解释。
+结论同时应用所属门禁的归一化阈值与绝对阈值，必须分别解释 P50 和 P95。当相对结果有利但绝对值
+仍超出帧预算时，要保留绝对风险。当前对照策略只在 P50 同时超过 10% 和 0.3 ms、P95 同时超过
+15% 和 0.8 ms 时视为实质变化；后文 Debug Tooling 使用的是刻意不同的门槛。被拒绝的运行也要
+作为设备能力证据保留，不能静默挑选偶然通过的样本。原始数据、绿色任务或单个有利指标都不等于
+结论。
+
+### 2.4 当前对照结论
+
+上文已验收的 2026-08-15 Samsung SM-G991B / Android 13 数据，与同轮 Compose control 形成以下
+长期结论：
+
+| 工作负载 | P50 变化 | P95 变化 | 分类 | 解释 |
+| --- | ---: | ---: | --- | --- |
+| `performance.list@3` 滚动 | 降低 9.4% | 升高 5.8% | `mixed` | 中位数方向更低、尾部方向更高；两者都没有跨过组合对照门禁。 |
+| `performance.list@3` 变更 | 降低 49.2% | 降低 62.7% | `improved` | Keyed 变更和 payload 更新是明确的相对优势。 |
+| `performance.complex-layout@3` 滚动 | 升高 7.2% | 升高 1.7% | `no material change` | 两项指标方向都更慢，但均未跨过组合对照门禁。 |
+| `performance.complex-layout@3` 更新 | 降低 36.4% | 降低 15.5% | `improved` | 整树更新快于 control，但 42.505 ms 的绝对 P95 仍有尾延迟风险。 |
+| `performance.shadow-list@2` 滚动 | 降低 8.1% | 升高 10.8% | `mixed` | 中位数与尾部方向相反。P95 的 0.942 ms 绝对差超过噪声下限，但 10.8% 增幅仍低于 15% 失败阈值。 |
+| `performance.shadow-list@2` 变更 | 降低 46.2% | 降低 60.7% | `improved` | 带阴影的 keyed 变更延续了无阴影场景的变更优势。 |
+| `performance.shadow-complex-layout@2` 滚动 | 升高 4.5% | 升高 0.3% | `no material change` | 两项绝对变化都在噪声下限内；方向略慢，但不足以支持回归结论。 |
+| `performance.shadow-complex-layout@2` 更新 | 降低 39.7% | 降低 11.4% | `improved` | 相对更新成本改善，但 41.506 ms 的绝对 P95 仍有尾延迟风险。 |
+
+因此，当前结论有明确边界，不能概括为“整体比 Compose 更快”：
+
+1. 在这批已验收数据中，变更与整树更新工作负载持续快于 Compose control；
+2. 滚动并非持续占优，但已验收滚动行都没有触发自动回归门禁：阴影列表 P95 是首要方向性优化
+   目标，其次是非 Lazy 复杂布局 P50；普通列表 P95 也仍是需要监测的方向性缺口；
+3. 两个复杂布局更新场景即使相对结果有利，仍是绝对尾延迟优化目标；
+4. 诊断与集合 fixture 只有已验收的 ViewCompose 稳定性基线，不构成 Compose 排名；
+5. 导航 revision 6 和设计系统 bundle revision 3 在可控时钟设备产出有效证据前保持
+   `inconclusive`；
+6. 当前已验收表格尚未包含可长期引用的同轮内存对照，因此不声明任何一方在内存上胜出。
+
+正确复用、组级失效与跳过无效工作、稳定的容器刷新语义仍是优化方向。`SlotTable Lite` 和子树级
+重组已进入主链路且 `qaQuick` 通过，但这些实现事实不能覆盖已测得的混合滚动结果。设备门禁状态
+继续记录在 [roadmap](../project/roadmap.md)。
+
+### 2.5 Debug Tooling 回归门禁
 
 Release Macrobenchmark 无法发现只存在于可调试构建中的开销。因此，任何在应用进程中执行的
 Tooling 都必须为它可能观察的每条热路径增加同设备 Debug 对照。设备型号、系统 Build、应用

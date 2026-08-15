@@ -3,7 +3,10 @@ package com.viewcompose.renderer.view.tree
 import android.graphics.Color
 import com.viewcompose.graphics.core.Brush
 import com.viewcompose.ui.modifier.CornerRadiusModifierElement
+import com.viewcompose.ui.modifier.ImeInsetsPaddingModifierElement
 import com.viewcompose.ui.modifier.PaddingModifierElement
+import com.viewcompose.ui.modifier.SystemBarsInsetsPaddingModifierElement
+import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.BoxNodeProps
@@ -19,6 +22,7 @@ import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.view.PaddingPx
 import com.viewcompose.renderer.view.roundToPx
+import com.viewcompose.renderer.view.resolve
 import com.viewcompose.renderer.view.toPx
 
 /**
@@ -47,7 +51,7 @@ internal object ModifierNodeStyleResolver {
             cornerRadius = resolved.cornerRadius,
             shape = resolved.shape?.shape
                 ?: if (resolved.cornerRadius == null) readNodeShape(node) else null,
-            padding = (resolved.padding ?: readNodePadding(node))?.toPx(node),
+            padding = resolvePadding(node, resolved),
             minHeight = node.environment.roundToPx(
                 resolved.minHeight?.minHeight ?: readNodeMinHeight(node) ?: com.viewcompose.ui.unit.UiDp.Zero,
             ),
@@ -74,15 +78,73 @@ internal object ModifierNodeStyleResolver {
      * Resolves padding/min-size that must be retained by the host layer.
      */
     fun resolveHostStyle(
+        node: VNode,
         resolved: ResolvedModifiers,
         nodeStyle: NodeStyle,
     ): HostStyle {
-        val hasWindowInsetsPadding = resolved.systemBarsInsetsPadding != null || resolved.imeInsetsPadding != null
+        val physicalOffset = resolved.offset
+        val relativeOffset = resolved.relativeOffset
+        val relativeOffsetDirection = when (node.environment.layoutDirection) {
+            UiLayoutDirection.Ltr -> 1f
+            UiLayoutDirection.Rtl -> -1f
+        }
         return HostStyle(
-            hasWindowInsetsPadding = hasWindowInsetsPadding,
             padding = nodeStyle.padding,
             minHeight = nodeStyle.minHeight,
             minWidth = nodeStyle.minWidth,
+            offsetX = physicalOffset?.x?.let(node.environment::toPx)
+                ?: relativeOffset?.horizontal?.let(node.environment::toPx)?.times(relativeOffsetDirection)
+                ?: 0f,
+            offsetY = physicalOffset?.y?.let(node.environment::toPx)
+                ?: relativeOffset?.vertical?.let(node.environment::toPx)
+                ?: 0f,
+            systemBarsInsetsPadding = resolveSystemBarsInsets(node, resolved),
+            imeInsetsPadding = resolveImeInsets(node, resolved),
+        )
+    }
+
+    private fun resolvePadding(
+        node: VNode,
+        resolved: ResolvedModifiers,
+    ): PaddingPx? {
+        resolved.relativePadding?.let { return node.environment.resolve(it) }
+        resolved.padding?.let { return node.environment.resolve(it) }
+        return readNodePadding(node)?.toPx(node)
+    }
+
+    private fun resolveSystemBarsInsets(
+        node: VNode,
+        resolved: ResolvedModifiers,
+    ): SystemBarsInsetsPaddingModifierElement? {
+        resolved.systemBarsInsetsPadding?.let { return it }
+        val relative = resolved.relativeSystemBarsInsetsPadding ?: return null
+        val (left, right) = when (node.environment.layoutDirection) {
+            UiLayoutDirection.Ltr -> relative.start to relative.end
+            UiLayoutDirection.Rtl -> relative.end to relative.start
+        }
+        return SystemBarsInsetsPaddingModifierElement(
+            left = left,
+            top = relative.top,
+            right = right,
+            bottom = relative.bottom,
+        )
+    }
+
+    private fun resolveImeInsets(
+        node: VNode,
+        resolved: ResolvedModifiers,
+    ): ImeInsetsPaddingModifierElement? {
+        resolved.imeInsetsPadding?.let { return it }
+        val relative = resolved.relativeImeInsetsPadding ?: return null
+        val (left, right) = when (node.environment.layoutDirection) {
+            UiLayoutDirection.Ltr -> relative.start to relative.end
+            UiLayoutDirection.Rtl -> relative.end to relative.start
+        }
+        return ImeInsetsPaddingModifierElement(
+            left = left,
+            top = relative.top,
+            right = right,
+            bottom = relative.bottom,
         )
     }
 
@@ -336,8 +398,14 @@ private fun ResolvedModifiers.hasExplicitSurfaceOverride(): Boolean {
  * Style used by the outer host for layout and inset handling.
  */
 internal data class HostStyle(
-    val hasWindowInsetsPadding: Boolean,
     val padding: PaddingPx?,
     val minHeight: Int,
     val minWidth: Int,
-)
+    val offsetX: Float,
+    val offsetY: Float,
+    val systemBarsInsetsPadding: SystemBarsInsetsPaddingModifierElement?,
+    val imeInsetsPadding: ImeInsetsPaddingModifierElement?,
+) {
+    val hasWindowInsetsPadding: Boolean
+        get() = systemBarsInsetsPadding != null || imeInsetsPadding != null
+}

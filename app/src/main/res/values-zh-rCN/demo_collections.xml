@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_collections_order">列表顺序：%1$s</string>
+    <string name="demo_collections_horizontal_card">横向卡片 %1$d</string>
+    <string name="demo_collections_grid_item">网格项 %1$d</string>
+    <plurals name="demo_collections_refresh_item">
+        <item quantity="one">刷新列表项 %1$d · 刷新 %2$d 次</item>
+        <item quantity="other">刷新列表项 %1$d · 刷新 %2$d 次</item>
+    </plurals>
+    <string name="demo_collections_benchmark_title">集合变更 Benchmark</string>
+    <string name="demo_collections_benchmark_summary">可确定重放的键控列表重排与重置负载。</string>
+    <string name="demo_collections_benchmark_item">Benchmark 项 %1$s</string>
+    <string name="demo_collections_benchmark_item_expanded">Benchmark 项 %1$s 展开</string>
+    <string name="demo_collections_current_order">当前顺序：%1$s</string>
+    <string name="demo_collections_benchmark_reset">重置 Benchmark</string>
+    <string name="demo_collections_stable_key">稳定 Key：%1$s</string>
+    <string name="demo_collections_controls_title">集合控制</string>
+    <string name="demo_collections_controls_summary">变更数据顺序和标签，同时保持键控条目状态。</string>
+    <string name="demo_collections_show_order">显示 %1$s</string>
+    <string name="demo_collections_primary_labels">主要标签</string>
+    <string name="demo_collections_alternate_labels">替代标签</string>
+    <string name="demo_collections_reset_list">重置列表</string>
+    <string name="demo_collections_lazy_list_title">LazyColumn</string>
+    <string name="demo_collections_lazy_list_summary">验证完整布局状态、固定标题、内容类型、预取与键控条目状态。</string>
+    <string name="demo_collections_lazy_item">Lazy 项 %1$s</string>
+    <string name="demo_collections_lazy_item_alternate">Lazy 项 %1$s（替代）</string>
+    <string name="demo_collections_layout_info">可见 %1$s · 可前滚 %2$b · 滚动中 %3$b</string>
+    <plurals name="demo_collections_sticky_header">
+        <item quantity="one">固定标题 · %1$d 项</item>
+        <item quantity="other">固定标题 · %1$d 项</item>
+    </plurals>
+    <string name="demo_collections_item_click_count">条目 %1$s 点击：%2$d</string>
+    <string name="demo_collections_stress_title">Lazy 集合压力测试</string>
+    <string name="demo_collections_stress_summary">将排序、插入、标签变更和受限高度集中在一个可重复负载中。</string>
+    <string name="demo_collections_inserted_item">插入项 X</string>
+    <string name="demo_collections_stress_item">压力项 %1$s</string>
+    <string name="demo_collections_stress_item_alternate">压力项 %1$s（替代）</string>
+    <string name="demo_collections_linear_order">线性顺序</string>
+    <string name="demo_collections_rotated_order">旋转顺序</string>
+    <string name="demo_collections_insert_x">插入 X</string>
+    <string name="demo_collections_remove_x">移除 X</string>
+    <string name="demo_collections_active_ids">当前 IDs：%1$s</string>
+    <string name="demo_collections_reset_stress">重置压力测试</string>
+    <string name="demo_collections_android_view_title">AndroidView 互操作</string>
+    <string name="demo_collections_android_view_summary">从声明式状态绑定原生 View。</string>
+    <string name="demo_collections_android_view_bound">原生 TextView 已绑定</string>
+    <string name="demo_collections_lazy_row_title">LazyRow</string>
+    <string name="demo_collections_lazy_row_summary">支持 Key、间距和内容内边距的横向 RecyclerView。</string>
+    <string name="demo_collections_horizontal_cards">横向图片卡片</string>
+    <string name="demo_collections_horizontal_labels">横向文字标签</string>
+    <string name="demo_collections_label">标签 %1$d</string>
+    <string name="demo_collections_grid_title">LazyVerticalGrid</string>
+    <string name="demo_collections_grid_summary">基于 GridLayoutManager 并支持切换列数的集合。</string>
+    <string name="demo_collections_columns">%1$d 列</string>
+    <string name="demo_collections_reset_columns">重置为 2 列</string>
+    <string name="demo_collections_grid_item_span">%1$s · %2$d 列</string>
+    <string name="demo_collections_pull_refresh_title">PullToRefresh</string>
+    <string name="demo_collections_pull_refresh_summary">在 ScrollableColumn 外层验证刷新手势与回调。</string>
+    <plurals name="demo_collections_refresh_count">
+        <item quantity="one">已刷新 %1$d 次</item>
+        <item quantity="other">已刷新 %1$d 次</item>
+    </plurals>
+    <string name="demo_collections_refreshing">正在刷新…</string>
+    <string name="demo_collections_simulate_refresh">模拟刷新</string>
+    <string name="demo_collections_reset_refresh">重置刷新</string>
+    <string name="demo_collections_pull_refresh_hint">向下拉动上方区域触发刷新，或点击模拟刷新按钮。</string>
+</resources>

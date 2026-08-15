@@ -24,6 +24,7 @@ import com.viewcompose.ui.tooling.UiSourceCallSite
 import kotlin.coroutines.EmptyCoroutineContext
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -307,6 +308,29 @@ class RenderSessionFailureTest {
     }
 
     @Test
+    fun `delayed item session preserves an explicitly provided nullable local`() {
+        val nullable = uiLocalOf<String?>(debugName = "DelayedNullableLocal") { "default" }
+        lateinit var captured: LocalSnapshot
+        var observed: String? = "unset"
+        LocalContext.provide(nullable.holder, null) {
+            captured = LocalContext.snapshot()
+        }
+        val itemSession = WidgetLazyListItemSession(
+            container = childContainer(),
+            localSnapshot = captured,
+            saveableStateHolder = null,
+            saveableStateKey = "nullable-item",
+            content = {
+                observed = UiLocals.current(nullable)
+            },
+        )
+
+        assertTrue(itemSession.render())
+        assertNull(observed)
+        itemSession.dispose()
+    }
+
+    @Test
     fun `view tree rollback does not publish remember updated state candidate`() {
         val failures = mutableListOf<RenderFailure>()
         var input = "committed"
@@ -438,6 +462,24 @@ class RenderSessionFailureTest {
         session.dispose()
 
         assertEquals(listOf("registered", "active=false", "disposed"), events)
+    }
+
+    @Test
+    fun `disposed session rejects explicit render and activation changes`() {
+        session = createSession(failures = mutableListOf())
+        session.render()
+        session.dispose()
+
+        val renderFailure = runCatching(session::render).exceptionOrNull()
+        val activationFailure = runCatching {
+            session.setRenderingActive(false)
+        }.exceptionOrNull()
+
+        assertTrue(renderFailure is IllegalStateException)
+        assertTrue(renderFailure?.message.orEmpty().contains("disposed"))
+        assertTrue(activationFailure is IllegalStateException)
+        assertTrue(activationFailure?.message.orEmpty().contains("disposed"))
+        session.dispose()
     }
 
     @Test

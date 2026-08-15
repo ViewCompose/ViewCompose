@@ -38,6 +38,54 @@ class NavDeepLinkTest {
     }
 
     @Test
+    fun `unknown query values stay outside route arguments and declared navigation policy`() {
+        val accountStack = NavStackId("account")
+        val deepLink = NavDeepLink(
+            uriPattern = "https://example.com/users/{userId}?source={source}",
+            argumentTypes = mapOf("userId" to NavDeepLinkArgumentType.Long),
+            targetStackId = accountStack,
+        )
+        val graph = graphWith("profile" to listOf(deepLink))
+
+        val resolution = graph.resolveDeepLink(
+            "https://example.com/users/42?source=push" +
+                "&userId=999&targetStackId=attacker&launchMode=Reset",
+        )
+        val match = (resolution as NavDeepLinkResolution.Matched).match
+
+        assertEquals(
+            mapOf(
+                "userId" to NavValue.LongValue(42L),
+                "source" to NavValue.Text("push"),
+            ),
+            match.route.arguments,
+        )
+        assertEquals(accountStack, match.deepLink.targetStackId)
+    }
+
+    @Test
+    fun `unknown query values do not break an otherwise ambiguous best match`() {
+        val graph = graphWith(
+            "article" to listOf(
+                NavDeepLink("https://example.com/content/{articleId}"),
+            ),
+            "video" to listOf(
+                NavDeepLink("https://example.com/content/{videoId}"),
+            ),
+        )
+
+        val resolution = graph.resolveDeepLink(
+            "https://example.com/content/42?articleId=42&type=article",
+        )
+
+        assertEquals(
+            NavDeepLinkRejectionReason.AmbiguousMatch,
+            (resolution as NavDeepLinkResolution.Rejected).rejection.reason,
+        )
+        assertEquals(2, resolution.rejection.matchingPatterns.size)
+    }
+
+    @Test
     fun `static path wins over a placeholder path`() {
         val graph = graphWith(
             "profile" to listOf(

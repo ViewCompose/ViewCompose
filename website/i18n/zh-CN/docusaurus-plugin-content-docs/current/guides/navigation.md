@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 93129f2059d3587bb4accba321a4b1aeedaaee734016a5568579acd6be30e61c
+translation_source_hash: 59a941d454cf347435278172fcb499bf2fd865f76e67f60f92e309cd5e118841
 translation_status: current
 ---
 
@@ -221,6 +221,11 @@ ViewModel、SavedState 和 saveable-state Local。候选只创建 committed stac
 只销毁候选 owner。commit 后 parent graph 先启动，leaf/child 先销毁；转场可见 graph 至少
 `STARTED`，隐藏保留 graph 为 `CREATED`。
 
+原生 host 创建时会捕获最近的 `LocalViewModelStoreOwner`。目的地和 graph owner 继承该父级的
+默认 ViewModel Factory 与初始 `CreationExtras`，再只替换自己的 ViewModelStore owner、
+saved-state owner 以及 route 或 graph 默认参数。这样既保留 Application/DI extra，又隔离重复
+route 与保留栈。父 owner 身份变化时会重建 host，不会混用两套 provider 契约。
+
 ### Stage 8：独立保留的 tab back stack
 
 `NavStackConfiguration` 声明稳定 stack ID、各自 start route、初始选择和 root Back 策略。
@@ -251,8 +256,10 @@ preview 都保留此前 committed selection、history、Session、owner 与可�
 
 ### Stage 9：严格 graph deep link
 
-`NavDeepLink` 在 graph 或 destination 登记白名单 URI pattern。scheme、host、可选 port、path
-segment 与 query key 必须严格匹配。placeholder 占完整 segment/value，并解析为声明的 typed
+`NavDeepLink` 在 graph 或 destination 登记白名单 URI pattern。scheme、host、可选 port、已声明
+path segment 与 query 约束必须严格匹配。输入中额外 query 参数可以存在，但完全不参与导航：
+它们不会进入 route 参数、改变具体度、消除歧义、选择 stack 或决定 launch mode。placeholder
+占完整 segment/value，并解析为声明的 typed
 route argument。损坏编码、fragment、userinfo、重复 query、错误 typed value、歧义 pattern，
 以及更具体 pattern 失败后退到更宽 pattern 都会拒绝。
 

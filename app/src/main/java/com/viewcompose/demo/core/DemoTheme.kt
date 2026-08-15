@@ -2,6 +2,7 @@ package com.viewcompose
 
 import android.content.Context
 import android.content.res.Configuration
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import com.viewcompose.material3.Material3ThemeDefaults
@@ -36,23 +37,23 @@ enum class DemoThemeMode {
 /** Identifies the isolated theme source rendered by the theme verification fixture. */
 internal enum class DemoThemeSource(
     val id: String,
-    val label: String,
-    val description: String,
+    @StringRes val labelRes: Int,
+    @StringRes val descriptionRes: Int,
 ) {
     AndroidXml(
         id = "android-xml",
-        label = "Android XML",
-        description = "Theme.ViewCompose resolved through the Android Material3 bridge",
+        labelRes = R.string.demo_theme_source_android_xml,
+        descriptionRes = R.string.demo_theme_source_android_xml_description,
     ),
     Material3Defaults(
         id = "material3-static",
-        label = "Material3 Static",
-        description = "Deterministic Material3ThemeDefaults without app token overrides",
+        labelRes = R.string.demo_theme_source_material3_static,
+        descriptionRes = R.string.demo_theme_source_material3_static_description,
     ),
     DemoCustom(
         id = "demo-custom",
-        label = "Demo Custom",
-        description = "The app-owned DemoThemeTokens palette and sizing profile",
+        labelRes = R.string.demo_theme_source_demo_custom,
+        descriptionRes = R.string.demo_theme_source_demo_custom_description,
     ),
     ;
 
@@ -75,11 +76,6 @@ internal enum class DemoThemeSource(
         }
     }
 
-    companion object {
-        fun fromId(id: String?): DemoThemeSource {
-            return entries.firstOrNull { source -> source.id == id } ?: Material3Defaults
-        }
-    }
 }
 
 /**
@@ -303,24 +299,26 @@ object DemoThemeTokens {
         mode: DemoThemeMode,
         context: Context,
     ): String {
-        return modeLabel(
-            mode = mode,
-            isSystemDark = isSystemDark(context),
-        )
+        return context.getString(modeLabelRes(mode, isSystemDark(context)))
     }
 
     /**
      * 使用显式系统明暗状态生成主题模式标签。
      * Builds a theme-mode label from an explicit system-dark flag.
      */
-    fun modeLabel(
+    @StringRes
+    fun modeLabelRes(
         mode: DemoThemeMode,
         isSystemDark: Boolean,
-    ): String {
+    ): Int {
         return when (mode) {
-            DemoThemeMode.System -> if (isSystemDark) "System (Dark)" else "System (Light)"
-            DemoThemeMode.Light -> "Light"
-            DemoThemeMode.Dark -> "Dark"
+            DemoThemeMode.System -> if (isSystemDark) {
+                R.string.demo_theme_mode_system_dark
+            } else {
+                R.string.demo_theme_mode_system_light
+            }
+            DemoThemeMode.Light -> R.string.demo_theme_mode_light
+            DemoThemeMode.Dark -> R.string.demo_theme_mode_dark
         }
     }
 

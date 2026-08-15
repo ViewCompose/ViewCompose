@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: 42bc81c22cbeb66cfc06f42df512a411effdce2517be5b0b0461e5eefef5e5f0
+translation_source_hash: a5a316ff156903dd43c2184c59b7c979f9d687b2bd6fff8dcb4eecd65a47e0ed
 translation_status: current
 ---
 
@@ -87,6 +87,12 @@ Controller 提供即时不可变 `snapshot` 和 `stackState`，以及可观察 `
 - 页面独享的 ViewCompose saveable-state registry 命名空间。
 
 同一个 route 连续 push 两次会创建两个 owner，不会共享页面状态。
+
+原生 `NavHost` 创建时，目的地和 graph owner 会捕获最近的 `LocalViewModelStoreOwner`。若它实现
+`HasDefaultViewModelProviderFactory`，则继承其默认 Factory 和初始 `CreationExtras`。每个子
+owner 只替换自己的 ViewModelStore owner、saved-state owner 以及 route 或 graph 默认参数，
+保留无关的 Application 与 DI extra。父 owner 身份变化会重建原生 host，因此保留栈不会混用
+两个父级的 provider 契约。
 
 嵌套图实例拥有 `NavGraphOwner`。同一个图实例内的目的地共享 Lifecycle、ViewModelStore 和
 SavedStateRegistry，直到最后一个后代离栈。之后再次进入同名图 route 会创建新 owner。
