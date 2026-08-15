@@ -15,6 +15,7 @@
     "architecture/decisions/0010-hierarchical-saveable-state-ownership.md",
     "architecture/decisions/0011-prefetched-session-activation-boundary.md",
     "architecture/decisions/0012-lazy-collection-logical-and-physical-ownership.md",
+    "architecture/decisions/0013-component-appearance-resolution-boundary.md",
     "architecture/decisions/README.md",
     "architecture/design-systems.md",
     "architecture/effects.md",

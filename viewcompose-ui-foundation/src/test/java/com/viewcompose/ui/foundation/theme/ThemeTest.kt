@@ -385,11 +385,11 @@ class ThemeTest {
 
         val tree = buildVNodeTree {
             UiTheme(baseTheme) {
-                ProvideButtonColors(
-                    ButtonColorOverride(
-                        primaryContainer = 0xFF556677.toInt(),
-                        primaryDisabledContainer = 103,
-                        primaryDisabledContent = 104,
+                ProvideButtonOverrides(
+                    ButtonOverrides(
+                        containerColor = 0xFF556677.toInt(),
+                        disabledContainerColor = 103,
+                        disabledContentColor = 104,
                     ),
                 ) {
                     Button(text = "Custom", enabled = false)
@@ -751,7 +751,7 @@ class ThemeTest {
     }
 
     @Test
-    fun `color override via ProvideButtonColors changes targeted defaults`() {
+    fun `component overrides change targeted defaults`() {
         val baseTheme = UiThemeDefaults.light()
         var buttonPrimary = 0
         var segmentedIndicator = 0
@@ -760,23 +760,23 @@ class ThemeTest {
 
         buildVNodeTree {
             UiTheme(baseTheme) {
-                ProvideButtonColors(
-                    ButtonColorOverride(
-                        primaryContainer = 0xFF778899.toInt(),
+                ProvideButtonOverrides(
+                    ButtonOverrides(
+                        containerColor = 0xFF778899.toInt(),
                     ),
                 ) {
                     buttonPrimary = ButtonDefaults.containerColor(ButtonVariant.Primary)
                 }
-                ProvideSegmentedControlColors(
-                    SegmentedControlColorOverride(
-                        indicator = 0xFF998877.toInt(),
+                ProvideSegmentedControlOverrides(
+                    SegmentedControlOverrides(
+                        indicatorColor = 0xFF998877.toInt(),
                     ),
                 ) {
                     segmentedIndicator = SegmentedControlDefaults.indicatorColor()
                 }
-                ProvideCheckboxColors(
-                    InputControlColorOverride(
-                        controlDisabled = 0xFF556677.toInt(),
+                ProvideCheckboxOverrides(
+                    CheckboxOverrides(
+                        disabledCheckedColor = 0xFF556677.toInt(),
                     ),
                 ) {
                     disabledControl = InputControlDefaults.checkboxControlColor(enabled = false)
@@ -792,7 +792,32 @@ class ThemeTest {
     }
 
     @Test
-    fun `color override supports disabled button and text field states`() {
+    fun `component override fallback follows the current theme environment`() {
+        val light = UiThemeDefaults.light()
+        val alternate = light.copy(
+            colors = light.colors.copy(onPrimary = 0xFF102938.toInt()),
+        )
+
+        fun resolve(theme: UiThemeTokens): Pair<Int, Int> {
+            var container = 0
+            var content = 0
+            buildVNodeTree {
+                UiTheme(theme) {
+                    ProvideButtonOverrides(ButtonOverrides(containerColor = 101)) {
+                        container = ButtonDefaults.containerColor()
+                        content = ButtonDefaults.contentColor()
+                    }
+                }
+            }
+            return container to content
+        }
+
+        assertEquals(101 to light.colors.onPrimary, resolve(light))
+        assertEquals(101 to alternate.colors.onPrimary, resolve(alternate))
+    }
+
+    @Test
+    fun `component overrides support disabled button and text field states`() {
         val baseTheme = UiThemeDefaults.light()
         var disabledButton = 0
         var disabledField = 0
@@ -800,9 +825,9 @@ class ThemeTest {
 
         buildVNodeTree {
             UiTheme(baseTheme) {
-                ProvideButtonColors(
-                    ButtonColorOverride(
-                        primaryDisabledContainer = 0xFF111122.toInt(),
+                ProvideButtonOverrides(
+                    ButtonOverrides(
+                        disabledContainerColor = 0xFF111122.toInt(),
                     ),
                 ) {
                     disabledButton = ButtonDefaults.containerColor(
@@ -810,10 +835,10 @@ class ThemeTest {
                         enabled = false,
                     )
                 }
-                ProvideTextFieldColors(
-                    TextFieldColorOverride(
-                        filledDisabledContainer = 0xFF222233.toInt(),
-                        outlinedErrorBorder = 0xFF333344.toInt(),
+                ProvideTextFieldOverrides(
+                    TextFieldOverrides(
+                        disabledContainerColor = 0xFF222233.toInt(),
+                        errorBorderColor = 0xFF333344.toInt(),
                     ),
                 ) {
                     disabledField = TextFieldDefaults.containerColor(

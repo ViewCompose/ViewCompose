@@ -425,21 +425,23 @@ internal fun UiTreeBuilder.ExperimentalRecipeTextField(
         }
         BasicTextField(
             state = state,
+            style = BasicTextFieldStyle(
+                cursorColor = recipe.cursorColor,
+                textColor = textColor,
+                textStyle = recipe.textStyle,
+                placeholderColor = hintColor,
+                containerColor = containerColor,
+                borderWidth = if (isError) recipe.errorBorderWidth else recipe.borderWidth,
+                borderColor = borderColor,
+                shape = recipe.shape,
+                minimumHeight = if (singleLine) recipe.minimumHeight else UiDp.Zero,
+                horizontalPadding = recipe.horizontalPadding,
+                verticalPadding = recipe.verticalPadding,
+            ),
             placeholder = resolvedPlaceholder,
             enabled = enabled,
             singleLine = singleLine,
             readOnly = readOnly,
-            cursorColor = recipe.cursorColor,
-            textColor = textColor,
-            textStyle = recipe.textStyle,
-            hintColor = hintColor,
-            backgroundColor = containerColor,
-            borderWidth = if (isError) recipe.errorBorderWidth else recipe.borderWidth,
-            borderColor = borderColor,
-            shape = recipe.shape,
-            minHeight = if (singleLine) recipe.minimumHeight else UiDp.Zero,
-            paddingHorizontal = recipe.horizontalPadding,
-            paddingVertical = recipe.verticalPadding,
             modifier = Modifier
                 .fillMaxWidth()
                 .semantics {

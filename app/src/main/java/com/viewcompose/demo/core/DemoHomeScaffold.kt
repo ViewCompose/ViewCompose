@@ -16,7 +16,6 @@ import com.viewcompose.ui.foundation.Scaffold
 import com.viewcompose.ui.foundation.SideEffect
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.TopAppBar
-import com.viewcompose.ui.foundation.TopAppBarDefaults
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.remember
@@ -69,7 +68,6 @@ internal fun UiTreeBuilder.DemoHomeScaffold(
                                         Intent(root.context, DemoEnvironmentActivity::class.java),
                                     )
                                 },
-                                tint = TopAppBarDefaults.titleColor(),
                                 modifier = Modifier.demoAutomationTarget(
                                     DemoCatalogAutomation.contract.require(
                                         DemoAutomationRole.PrimaryAction,
@@ -84,7 +82,6 @@ internal fun UiTreeBuilder.DemoHomeScaffold(
                                         Intent(root.context, DemoBuildInfoActivity::class.java),
                                     )
                                 },
-                                tint = TopAppBarDefaults.titleColor(),
                                 modifier = Modifier.demoAutomationTarget(
                                     DemoCatalogAutomation.contract.require(
                                         DemoAutomationRole.SecondaryAction,

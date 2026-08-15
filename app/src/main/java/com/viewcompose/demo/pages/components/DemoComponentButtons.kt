@@ -9,6 +9,7 @@ import com.viewcompose.ui.foundation.ButtonSize
 import com.viewcompose.ui.foundation.ButtonVariant
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.IconButton
+import com.viewcompose.ui.foundation.IconButtonOverrides
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextButton
@@ -208,7 +209,7 @@ private fun UiTreeBuilder.ComponentIconButtonVariants(
                         R.string.demo_component_icon_button_tint_description,
                         index + 1,
                     ),
-                    tint = tint,
+                    overrides = IconButtonOverrides(contentColor = tint),
                     onClick = onClick,
                 )
             }

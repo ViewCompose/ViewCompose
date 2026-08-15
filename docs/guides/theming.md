@@ -121,24 +121,41 @@ Constraints:
 
 ## 4. Local override rules
 
-Local overrides remain supported, but they are sparse:
+Local customization has two distinct scopes:
 
-1. Override only required fields.
-2. Unspecified fields fall back to the parent theme or default.
-3. Overrides propagate through `LocalContext` scope.
-4. Public usage goes through `UiLocal/uiLocalOf/ProvideLocal(s)/UiLocals.current` to prevent
-   specialized wrapper APIs from proliferating.
+1. `UiThemeOverride` changes semantic theme tokens for a subtree.
+2. A component-owned `XxxOverrides` changes low-frequency appearance slots for one component
+   family without expanding its primary DSL signature.
+
+Component overrides are sparse and merge field by field. Resolution order is instance overrides,
+nearest matching provider, outer matching providers, component Defaults or a named design-system
+recipe, then semantic theme tokens. An unspecified inner field preserves the outer value. The
+complete contract is [ADR-0013](../architecture/decisions/0013-component-appearance-resolution-boundary.md).
+
+The activated families are Button/IconButton, TextField, independent input controls, linear and
+circular progress, SegmentedControl, TabRow, NavigationBar, regular and extended FAB, top and
+bottom app bars, Badge, AlertDialog, and modal bottom sheet. App-bar providers also define the
+default content role of their slots. Modal-bottom-sheet overrides are resolved before request
+submission, so a same-key platform sheet receives theme/configuration changes without reopening
+its logical overlay session.
+
+Scaffold and raw Dialog are deliberate exclusions. Their direct parameters describe primary page
+surface/layout or overlay lifecycle/placement, and their visual content remains caller-owned.
 
 Appropriate uses:
 
-1. a local brand or accent color;
-2. a local typography adjustment;
-3. contrast or readability improvements within one region.
+1. one action with a different border or interaction layer;
+2. a subtree with a local component accent, shape, typography, or visual dimension;
+3. state-specific contrast or readability corrections that do not belong in the design-system
+   recipe.
 
 Non-goals:
 
-1. a complete per-component field matrix in every override;
-2. replacing explicit component parameters with overrides.
+1. moving controlled state, callbacks, identity, keyboard behavior, navigation, lifecycle, or
+   resource ownership into an appearance object;
+2. passing sparse overrides to `Basic*` primitives, which consume complete resolved
+   `BasicXxxStyle` values;
+3. creating one Foundation-wide component recipe registry.
 
 ### 4.1 Application-defined Locals
 
@@ -147,7 +164,7 @@ When an application token system differs from the framework theme:
 1. define application tokens in the application module with `uiLocalOf { ... }`;
 2. inject them into a subtree through `ProvideLocal(...)` or `ProvideLocals(...)`;
 3. read them inside a component through `UiLocals.current(...)`;
-4. prefer the unified APIs and do not add a new specialized `ProvideXxx` wrapper.
+4. use a typed component override only when the value is appearance owned by that component.
 
 Boundary constraints:
 

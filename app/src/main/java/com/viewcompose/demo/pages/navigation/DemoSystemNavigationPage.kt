@@ -31,7 +31,6 @@ import com.viewcompose.ui.foundation.Scaffold
 import com.viewcompose.ui.foundation.SideEffect
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.TopAppBar
-import com.viewcompose.ui.foundation.TopAppBarDefaults
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.key
 import com.viewcompose.ui.foundation.remember
@@ -126,7 +125,6 @@ private fun UiTreeBuilder.SystemNavigationSession(
                         icon = ImageSource.Resource(R.drawable.ic_arrow_back),
                         contentDescription = stringResource(R.string.demo_system_nav_exit_description),
                         onClick = onExit,
-                        tint = TopAppBarDefaults.titleColor(),
                     )
                 },
             )

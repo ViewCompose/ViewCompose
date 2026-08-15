@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-material3-android/README.md
-translation_source_hash: b3684a4cc65ba8d051fd02bb487196540abf1e5a270c7979ce1b1eb88a4a83ce
+translation_source_hash: 5e86f2c99e16ea3a8cd8304a0159c6507f2cea01ba14322bf699f3181e33c58a
 translation_status: current
 ---
 
@@ -21,7 +21,8 @@ dependencies {
 
 - 稳定性：**Alpha**。
 - API 依赖：UI Contract 与 UI Foundation。
-- 实现依赖：中立 Android Overlay、Host Android、AppCompat 与 Material Components。
+- 实现依赖：中立 Android Overlay、Host Android、Android Renderer Shape Bridge、AppCompat 与
+  Material Components。
 - 普通 Material 应用通过 `viewcompose-material3-android` 传递获得本产物。
 
 API 质量：Material `AndroidOverlayHost` 仍是 Q3 Root 集成 API。其公开 Attribution 快照是诊断
@@ -45,7 +46,13 @@ Material，因此仅把本产物放入 One UI 或中立应用的 Classpath 不�
 
 Material Snackbar 会把 Action、Timeout、Swipe、Replacement 与通用平台终止事件映射到 UI
 Foundation 队列。Material Modal Bottom Sheet 在同 Key 更新时保留 Dialog 与嵌套 Surface，应用
-Dismiss Policy、Scrim、Expansion 与 Navigation Bar 设置，而不接管 Session Ownership。
+Foundation 已解析的完整容器色、内容角色、逻辑 Shape、Scrim、Expansion Policy 与“精确颜色/
+平台默认值”Navigation Bar 策略，而不接管 Session Ownership。每次变化的同 Key 更新都会重新应用
+完整快照；`skipPartiallyExpanded` 从 `true` 改为 `false` 时会清除旧 Material `skipCollapsed`
+策略，不保留陈旧行为。
+
+逻辑 Shape 由中立 Android Renderer Bridge 转换，本 Adapter 不解释 Material 专用 Shape。
+恢复 `PlatformDefault` 时，还会恢复精确颜色曾关闭的 Android Q+ Contrast Enforcement。
 
 所有 Root、Window、Presenter、Callback 与清理工作都在 Android 主线程执行；Adapter 不得超过
 Root View 的 Window 生命周期。

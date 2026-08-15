@@ -17,8 +17,8 @@ dependencies {
 - Stability: **Alpha**.
 - API dependencies: UI Contract and UI Foundation because `AndroidOverlayHost` exposes their
   overlay contracts.
-- Implementation dependencies: the neutral Android overlay transport, Host Android, AppCompat,
-  and Material Components.
+- Implementation dependencies: the neutral Android overlay transport, Host Android, Android
+  Renderer shape bridge, AppCompat, and Material Components.
 - Normal Material applications receive this artifact transitively from
   `viewcompose-material3-android`.
 
@@ -50,8 +50,15 @@ to the UI Foundation transient queue. An explicit framework dismissal reason win
 Material callback.
 
 Material modal bottom sheet preserves its platform dialog and nested surface for same-key updates.
-It applies dismissal policy, scrim opacity, expansion policy, and navigation-bar treatment without
-moving session ownership into this adapter.
+It applies the complete Foundation-resolved container color, content role, logical shape, scrim,
+expansion policy, and exact-versus-platform-default navigation-bar treatment without moving
+session ownership into this adapter. Every changed same-key update reapplies that complete
+snapshot. Changing `skipPartiallyExpanded` from `true` to `false` clears the old Material
+`skipCollapsed` policy rather than retaining stale behavior.
+
+Logical shapes are converted by the neutral Android Renderer bridge; this adapter does not contain
+Material-only shape interpretation. Restoring `PlatformDefault` also restores Android Q+ contrast
+enforcement after an exact color disabled it.
 
 All root, window, presenter, callback, and cleanup work is confined to the Android main thread.
 The adapter must not outlive its root View's window.

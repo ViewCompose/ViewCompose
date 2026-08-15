@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-oneui7-android/README.md
-translation_source_hash: b3b4d2dd19b2ad116eaa08b2cbefa9fd1e08401120f94886d96a06b4874da73a
+translation_source_hash: d48e8945a09486533eeb7277ea2b7812d5db579512fa790523cd704cab0747c1
 translation_status: current
 ---
 
@@ -29,8 +29,8 @@ UI Foundation 的共享 Token 类型；仅使用 Host 默认 Token 快照的代�
 - 平台：Android Library，`minSdk 24`、`compileSdk 36`、Java 11 Bytecode。
 - API 依赖：UI Contract 与 UI Foundation，因为 `AndroidOverlayHost` 暴露共享 Overlay 契约和
   Attribution 模型。
-- 实现依赖：Host Android、中立 Android Overlay 传输和 `viewcompose-oneui7`；禁止依赖 Google
-  Material Components 与 AppCompat。
+- 实现依赖：Host Android、中立 Android Overlay 传输、Android Renderer Shape Bridge 和
+  `viewcompose-oneui7`；禁止依赖 Google Material Components 与 AppCompat。
 
 API 质量：`AndroidOverlayHost` 是 Q3 Root 集成 API。规范 KDoc 与可编译 Sample 定义 Window
 Ownership、主线程约束、清理、Token 快照和 Attribution 契约。
@@ -73,6 +73,11 @@ Adapter 保留中立 Android Dialog、PopupWindow、Toast、嵌套 Render Sessio
 
 首个底部 Dialog Presenter 只有一个内在展开状态。它为了协议兼容接收
 `skipPartiallyExpanded`，但不暴露中间半展开状态，因此该选项不会制造 Presenter 并未拥有的行为。
+
+底部 Dialog 会在首次展示与每次变化的同 Key 更新时应用 Foundation 已解析的完整外观快照。容器
+颜色与逻辑 Shape 会替换初始 One UI Fallback Chrome；Scrim 为零时清除过时的 Dim Flag；导航栏
+策略会区分精确颜色与恢复已捕获平台默认值及 Android Q+ Contrast Enforcement。Adapter 的 Margin、
+Drag Handle 与手势仍属于 One UI 自有呈现细节。
 
 `integrationAttribution` 把 Dialog 与 Popup 报告为捕获的 One UI 内容，Snackbar 与 Modal Bottom
 Sheet 报告为 `Equivalent`，Android Toast 是显式的 `Degraded` 平台 Fallback。所有 Root、Window、

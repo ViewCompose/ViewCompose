@@ -33,6 +33,7 @@ dependencies {
     implementation(project(":viewcompose-host-android"))
     implementation(project(":viewcompose-oneui7"))
     implementation(project(":viewcompose-overlay-android"))
+    implementation(project(":viewcompose-renderer-android"))
     implementation(libs.androidx.core.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

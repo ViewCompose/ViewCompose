@@ -136,6 +136,32 @@ class AdditionalWidgetCoverageTest {
     }
 
     @Test
+    fun `navigation bar merges scoped appearance and instance overrides`() {
+        val tree = buildVNodeTree {
+            ProvideNavigationBarOverrides(
+                NavigationBarOverrides(
+                    containerColor = 101,
+                    selectedIconColor = 102,
+                ),
+            ) {
+                NavigationBar(
+                    selectedIndex = 0,
+                    onItemSelected = {},
+                    overrides = NavigationBarOverrides(indicatorColor = 201),
+                ) {
+                    Item(label = "Home", icon = ImageSource.Resource(1))
+                }
+            }
+        }
+
+        val spec = tree.single().spec as NavigationBarNodeProps
+
+        assertEquals(101, spec.containerColor)
+        assertEquals(102, spec.selectedIconColor)
+        assertEquals(201, spec.indicatorColor)
+    }
+
+    @Test
     fun `scaffold composes top content fab and bottom slots`() {
         val tree = buildVNodeTree {
             Scaffold(

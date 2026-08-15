@@ -14,6 +14,7 @@ import com.viewcompose.ui.node.TextFieldType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
+import com.viewcompose.ui.shape.UiShape
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -184,10 +185,10 @@ class TextFieldTest {
 
         val disabledTree = buildVNodeTree {
             UiTheme(baseTheme) {
-                ProvideTextFieldColors(
-                    TextFieldColorOverride(
-                        filledDisabledContainer = 202,
-                        outlinedErrorBorder = 209,
+                ProvideTextFieldOverrides(
+                    TextFieldOverrides(
+                        disabledContainerColor = 202,
+                        errorBorderColor = 209,
                     ),
                 ) {
                     TextField(
@@ -199,10 +200,10 @@ class TextFieldTest {
         }
         val errorTree = buildVNodeTree {
             UiTheme(baseTheme) {
-                ProvideTextFieldColors(
-                    TextFieldColorOverride(
-                        filledDisabledContainer = 202,
-                        outlinedErrorBorder = 209,
+                ProvideTextFieldOverrides(
+                    TextFieldOverrides(
+                        disabledContainerColor = 202,
+                        errorBorderColor = 209,
                     ),
                 ) {
                     TextField(
@@ -223,6 +224,77 @@ class TextFieldTest {
         assertEquals(Theme.colors.onSurfaceVariant, errorSpec.hintColor)
     }
 
+    @Test
+    fun `error state inherits generic state override before semantic fallback`() {
+        val tree = buildVNodeTree {
+            ProvideTextFieldOverrides(
+                TextFieldOverrides(
+                    containerColor = 101,
+                    disabledContainerColor = 102,
+                ),
+            ) {
+                TextField(state = textState("enabled"), isError = true)
+                TextField(state = textState("disabled"), enabled = false, isError = true)
+                TextField(
+                    state = textState("exact"),
+                    isError = true,
+                    overrides = TextFieldOverrides(errorContainerColor = 103),
+                )
+            }
+        }
+
+        assertEquals(101, (findTextFieldNodes(tree)[0].spec as TextFieldNodeProps).backgroundColor)
+        assertEquals(102, (findTextFieldNodes(tree)[1].spec as TextFieldNodeProps).backgroundColor)
+        assertEquals(103, (findTextFieldNodes(tree)[2].spec as TextFieldNodeProps).backgroundColor)
+    }
+
+    @Test
+    fun `basic text field consumes a complete style without theme lookup`() {
+        val style = BasicTextFieldStyle(
+            cursorColor = 101,
+            textColor = 102,
+            textStyle = UiTextStyle(
+                fontSizeSp = 17.sp,
+                fontWeight = 600,
+                letterSpacingEm = 0.04f,
+                lineHeightSp = 23.sp,
+                includeFontPadding = true,
+            ),
+            placeholderColor = 103,
+            containerColor = 104,
+            borderWidth = 2.dp,
+            borderColor = 105,
+            shape = UiShape.rounded(7.dp),
+            minimumHeight = 51.dp,
+            horizontalPadding = 13.dp,
+            verticalPadding = 9.dp,
+        )
+
+        val spec = buildVNodeTree {
+            BasicTextField(
+                state = textState("value"),
+                style = style,
+                placeholder = "placeholder",
+            )
+        }.single().spec as TextFieldNodeProps
+
+        assertEquals(101, spec.cursorColor)
+        assertEquals(102, spec.textColor)
+        assertEquals(17.sp, spec.textSizeSp)
+        assertEquals(600, spec.fontWeight)
+        assertEquals(0.04f, spec.letterSpacingEm)
+        assertEquals(23.sp, spec.lineHeightSp)
+        assertTrue(spec.includeFontPadding)
+        assertEquals(103, spec.hintColor)
+        assertEquals(104, spec.backgroundColor)
+        assertEquals(2.dp, spec.borderWidth)
+        assertEquals(105, spec.borderColor)
+        assertEquals(UiShape.rounded(7.dp), spec.shape)
+        assertEquals(51.dp, spec.minHeight)
+        assertEquals(13.dp, spec.paddingHorizontal)
+        assertEquals(9.dp, spec.paddingVertical)
+    }
+
     private fun com.viewcompose.ui.modifier.Modifier.readModifierElements(): List<Any?> {
         val field = com.viewcompose.ui.modifier.Modifier::class.java.getDeclaredField("elements")
         field.isAccessible = true
@@ -235,19 +307,17 @@ class TextFieldTest {
     }
 
     private fun findFirstTextFieldNode(tree: List<VNode>): VNode {
-        fun visit(node: VNode): VNode? {
-            if (node.type == NodeType.TextField) return node
-            node.children.forEach { child ->
-                val match = visit(child)
-                if (match != null) return match
-            }
-            return null
+        return findTextFieldNodes(tree).firstOrNull() ?: error("No TextField node found")
+    }
+
+    private fun findTextFieldNodes(tree: List<VNode>): List<VNode> {
+        val result = mutableListOf<VNode>()
+        fun visit(node: VNode) {
+            if (node.type == NodeType.TextField) result += node
+            node.children.forEach(::visit)
         }
-        tree.forEach { node ->
-            val match = visit(node)
-            if (match != null) return match
-        }
-        error("No TextField node found")
+        tree.forEach(::visit)
+        return result
     }
 
     private fun collectTextNodes(node: VNode): List<TextNodeProps> {

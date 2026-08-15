@@ -4,6 +4,7 @@ import com.viewcompose.demo.contract.DemoAutomationRole
 import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.ui.foundation.AlertDialog
+import com.viewcompose.ui.foundation.AlertDialogOverrides
 import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.ButtonVariant
@@ -14,7 +15,8 @@ import com.viewcompose.ui.foundation.Divider
 import com.viewcompose.ui.foundation.DropdownMenu
 import com.viewcompose.ui.foundation.DropdownMenuItem
 import com.viewcompose.ui.foundation.ModalBottomSheet
-import com.viewcompose.ui.foundation.ModalBottomSheetDefaults
+import com.viewcompose.ui.foundation.ModalBottomSheetNavigationBarColor
+import com.viewcompose.ui.foundation.ModalBottomSheetOverrides
 import com.viewcompose.ui.foundation.PlainTooltip
 import com.viewcompose.ui.foundation.Popup
 import com.viewcompose.ui.foundation.PopupAlignment
@@ -24,6 +26,7 @@ import com.viewcompose.ui.foundation.SnackbarDuration
 import com.viewcompose.ui.foundation.SurfaceDefaults
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.Toast
 import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -190,19 +193,27 @@ internal fun UiTreeBuilder.DeclareDialogFeedbackOverlays(
             state.outcome.value = DialogFeedbackOutcome.IconDismissed
         },
         icon = ImageSource.Resource(R.drawable.demo_media_icon),
+        overrides = AlertDialogOverrides(
+            titleColor = Theme.colors.primary,
+            shape = Theme.shapes.large,
+        ),
         requestKey = "feedback_icon_alert_dialog",
     )
 
     ModalBottomSheet(
         visible = state.bottomSheetVisible.value,
         requestKey = "feedback_bottom_sheet",
+        overrides = ModalBottomSheetOverrides(
+            containerColor = Theme.colors.surfaceContainerHigh,
+            contentColor = Theme.colors.onSurface,
+            scrimOpacity = 0.4f,
+            navigationBarColor = ModalBottomSheetNavigationBarColor.PlatformDefault,
+        ),
         onDismissRequest = { resetDialogFeedback(state) },
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .shape(SurfaceDefaults.shape())
-                .backgroundColor(ModalBottomSheetDefaults.containerColor()),
+                .fillMaxWidth(),
         ) {
             Column(
                 spacing = 12.dp,

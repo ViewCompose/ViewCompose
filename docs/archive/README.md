@@ -26,6 +26,8 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `remaining-component-appearance-convergence.md` | FAB、AppBar、Badge 与 AlertDialog 已完成稀疏 Overrides 硬切，ModalBottomSheet 已以统一解析快照贯穿 Material 3 与 One UI presenter 的展示及同 key 更新；Scaffold 与原始 Dialog 明确保留布局和 Overlay 协议职责，测试、样例、Demo、文档与 `qaQuick` 已闭环 |
+| `component-appearance-override-convergence.md` | 高层组件已硬切到可按字段合并的稀疏 Overrides，`BasicTextField` 已改用完整 Style，输入控件状态模型、下游设计系统、重构后 Demo、测试与文档门禁均已闭环；未触发的其他组件审计进入统一路线图 |
 | `compose-migration-capability-convergence.md` | Runtime 事务与 Key 身份、Fragment/Session 所有权、AndroidView 释放、Navigation owner/deep link、逻辑 RTL 边以及普通 Activity 根节点真实进程死亡认证均已闭环；未触发的便利能力继续保留为有条件的独立候选项 |
 | `runtime-data-propagation-and-view-patch-optimization.md` | 可空 Local、框架状态原子发布与每次 Apply 唯一通知已修正；Modifier-only View Patch 和不可变 LocalSnapshot 身份复用通过确定性测试、相邻版本性能归因及完整仓库门禁 |
 | `lazy-collection-three-layer-hard-cut.md` | Lazy 集合的逻辑快照、Key Session 与物理树三层所有权已经硬切完成；AndroidView Reset/Release、Pager 驻留、TabRow eager children、失败重试与真机长 Fling 门禁已闭环 |

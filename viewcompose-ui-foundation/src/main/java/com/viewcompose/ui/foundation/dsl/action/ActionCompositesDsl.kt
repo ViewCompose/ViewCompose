@@ -17,33 +17,44 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * Composite FloatingActionButton built from Box, theme tokens, and click modifiers.
+ * Emits a semantic floating action button with a caller-owned content slot.
+ *
+ * [size] selects the design-system tier. Appearance resolves from [FabDefaults], nested
+ * [ProvideFloatingActionButtonOverrides] scopes, and instance [overrides] in increasing
+ * precedence. The button is always enabled; omit it instead of supplying an inactive callback.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.remainingComponentOverridesSample
+ * @receiver active tree builder receiving the FAB
+ * @param onClick callback invoked synchronously on the renderer thread after an accepted click
+ * @param size semantic bounds and shape tier
+ * @param overrides sparse instance appearance applied after scoped FAB overrides
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended after resolved FAB geometry and interaction
+ * @param content subtree built synchronously with the resolved content color
  */
 fun UiTreeBuilder.FloatingActionButton(
     onClick: () -> Unit,
     size: FabSize = FabSize.Medium,
-    containerColor: Int = FabDefaults.containerColor(),
-    contentColor: Int = FabDefaults.contentColor(),
+    overrides: FloatingActionButtonOverrides = FloatingActionButtonOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
     content: UiTreeBuilder.() -> Unit,
 ) {
-    val fabSize = FabDefaults.size(size)
-    val shape = FabDefaults.shape(size)
+    val appearance = FabDefaults.resolve(size, overrides)
     val semanticModifier = Modifier
-        .size(width = fabSize, height = fabSize)
-        .backgroundColor(containerColor)
-        .shape(shape)
-        .elevation(FabDefaults.elevation())
+        .size(width = appearance.size, height = appearance.size)
+        .backgroundColor(appearance.containerColor)
+        .shape(appearance.shape)
+        .elevation(appearance.elevation)
         .clip()
         .clickable(onClick)
         .then(modifier)
-    ProvideLocal(LocalContentColor, contentColor) {
+    ProvideLocal(LocalContentColor, appearance.contentColor) {
         StateLayerBox(
             key = key,
             contentAlignment = BoxAlignment.Center,
-            rippleColor = FabDefaults.pressedColor(),
-            stateLayerColors = stateLayerColorsFor(contentColor),
+            rippleColor = appearance.rippleColor,
+            stateLayerColors = appearance.stateLayerColors,
             modifier = semanticModifier,
         ) {
             content()
@@ -52,47 +63,58 @@ fun UiTreeBuilder.FloatingActionButton(
 }
 
 /**
- * Extended FloatingActionButton with text and an optional icon.
+ * Emits an extended floating action button with a label and optional icon.
+ *
+ * Appearance resolves from [FabDefaults], nested
+ * [ProvideExtendedFloatingActionButtonOverrides] scopes, and instance [overrides].
+ *
+ * @sample com.viewcompose.ui.foundation.samples.remainingComponentOverridesSample
+ * @receiver active tree builder receiving the extended FAB
+ * @param text label displayed by the action
+ * @param onClick callback invoked synchronously on the renderer thread after an accepted click
+ * @param icon optional decorative icon rendered before [text]
+ * @param overrides sparse instance appearance applied after scoped extended-FAB overrides
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended after resolved geometry and interaction
  */
 fun UiTreeBuilder.ExtendedFloatingActionButton(
     text: String,
     onClick: () -> Unit,
     icon: ImageSource? = null,
-    containerColor: Int = FabDefaults.containerColor(),
-    contentColor: Int = FabDefaults.contentColor(),
+    overrides: ExtendedFloatingActionButtonOverrides = ExtendedFloatingActionButtonOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
-    val shape = FabDefaults.extendedShape()
+    val appearance = FabDefaults.resolveExtended(overrides)
     val semanticModifier = Modifier
-        .height(FabDefaults.extendedHeight())
-        .backgroundColor(containerColor)
-        .shape(shape)
-        .elevation(FabDefaults.elevation())
+        .height(appearance.height)
+        .backgroundColor(appearance.containerColor)
+        .shape(appearance.shape)
+        .elevation(appearance.elevation)
         .clip()
         .clickable(onClick)
-        .padding(horizontal = FabDefaults.extendedHorizontalPadding())
+        .padding(horizontal = appearance.horizontalPadding)
         .then(modifier)
-    ProvideLocal(LocalContentColor, contentColor) {
+    ProvideLocal(LocalContentColor, appearance.contentColor) {
         StateLayerRow(
             key = key,
-            spacing = if (icon != null) FabDefaults.extendedIconSpacing() else UiDp.Zero,
+            spacing = if (icon != null) appearance.iconSpacing else UiDp.Zero,
             verticalAlignment = VerticalAlignment.Center,
-            rippleColor = FabDefaults.pressedColor(),
-            stateLayerColors = stateLayerColorsFor(contentColor),
+            rippleColor = appearance.rippleColor,
+            stateLayerColors = appearance.stateLayerColors,
             modifier = semanticModifier,
         ) {
             if (icon != null) {
                 Icon(
                     source = icon,
-                    tint = contentColor,
-                    size = FabDefaults.iconSize(FabSize.Medium),
+                    tint = appearance.contentColor,
+                    size = appearance.iconSize,
                 )
             }
             Text(
                 text = text,
-                style = FabDefaults.extendedTextStyle(),
-                color = contentColor,
+                style = appearance.textStyle,
+                color = appearance.contentColor,
             )
         }
     }

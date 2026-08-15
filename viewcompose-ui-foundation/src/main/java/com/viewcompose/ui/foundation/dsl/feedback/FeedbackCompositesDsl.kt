@@ -22,7 +22,25 @@ import com.viewcompose.ui.unit.UiDp
 /**
  * Emits a standard confirmation dialog composite.
  *
- * AlertDialog reuses the Dialog overlay and builds title, body, optional icon, and action buttons inside its surface content.
+ * AlertDialog reuses the raw [Dialog] lifecycle while owning its surface, title, body, optional
+ * icon, and actions. Appearance resolves from [AlertDialogDefaults], nested
+ * [ProvideAlertDialogOverrides] scopes, and instance [overrides].
+ *
+ * @sample com.viewcompose.ui.foundation.samples.remainingComponentOverridesSample
+ * @receiver active tree builder submitting the dialog request
+ * @param visible whether this render keeps the dialog request active
+ * @param title dialog title text
+ * @param text supporting text
+ * @param confirmButtonText label for the required confirmation action
+ * @param onConfirm callback invoked synchronously when confirmation is clicked
+ * @param dismissButtonText optional label for a secondary dismiss action
+ * @param onDismiss callback paired with [dismissButtonText]
+ * @param icon optional decorative leading icon
+ * @param overrides sparse instance appearance applied after scoped AlertDialog overrides
+ * @param requestKey stable request identity within the current render session
+ * @param dismissOnBackPress whether platform Back requests dismissal
+ * @param dismissOnClickOutside whether an outside click requests dismissal
+ * @param onDismissRequest callback invoked by platform dismissal; the owner removes [visible]
  */
 fun UiTreeBuilder.AlertDialog(
     visible: Boolean,
@@ -33,11 +51,13 @@ fun UiTreeBuilder.AlertDialog(
     dismissButtonText: String? = null,
     onDismiss: (() -> Unit)? = null,
     icon: ImageSource? = null,
+    overrides: AlertDialogOverrides = AlertDialogOverrides.None,
     requestKey: String = "alert_dialog",
     dismissOnBackPress: Boolean = true,
     dismissOnClickOutside: Boolean = true,
     onDismissRequest: (() -> Unit)? = null,
 ) {
+    val appearance = AlertDialogDefaults.resolve(overrides)
     Dialog(
         visible = visible,
         requestKey = requestKey,
@@ -46,14 +66,13 @@ fun UiTreeBuilder.AlertDialog(
         onDismissRequest = onDismissRequest,
     ) {
         // The composite owns Material-like layout and token defaults, while Dialog owns overlay lifecycle.
-        val shape = AlertDialogDefaults.shape()
         Box(
             modifier = Modifier
-                .minWidth(AlertDialogDefaults.minWidth())
-                .backgroundColor(AlertDialogDefaults.containerColor())
-                .shape(shape)
+                .minWidth(appearance.minWidth)
+                .backgroundColor(appearance.containerColor)
+                .shape(appearance.shape)
                 .clip()
-                .padding(AlertDialogDefaults.contentPadding()),
+                .padding(appearance.contentPadding),
         ) {
             Column(
                 horizontalAlignment = HorizontalAlignment.Center,
@@ -61,25 +80,25 @@ fun UiTreeBuilder.AlertDialog(
                 if (icon != null) {
                     Icon(
                         source = icon,
-                        tint = AlertDialogDefaults.iconTint(),
-                        size = AlertDialogDefaults.iconSize(),
+                        tint = appearance.iconTint,
+                        size = appearance.iconSize,
                     )
-                    Spacer(modifier = Modifier.padding(bottom = AlertDialogDefaults.iconBottomSpacing()))
+                    Spacer(modifier = Modifier.padding(bottom = appearance.iconBottomSpacing))
                 }
                 Text(
                     text = title,
-                    style = AlertDialogDefaults.titleStyle(),
-                    color = AlertDialogDefaults.titleColor(),
+                    style = appearance.titleStyle,
+                    color = appearance.titleColor,
                 )
-                Spacer(modifier = Modifier.padding(bottom = AlertDialogDefaults.titleToTextSpacing()))
+                Spacer(modifier = Modifier.padding(bottom = appearance.titleToTextSpacing))
                 Text(
                     text = text,
-                    style = AlertDialogDefaults.textStyle(),
-                    color = AlertDialogDefaults.textColor(),
+                    style = appearance.textStyle,
+                    color = appearance.textColor,
                 )
-                Spacer(modifier = Modifier.padding(bottom = AlertDialogDefaults.textToButtonsSpacing()))
+                Spacer(modifier = Modifier.padding(bottom = appearance.textToButtonsSpacing))
                 Row(
-                    spacing = AlertDialogDefaults.buttonSpacing(),
+                    spacing = appearance.buttonSpacing,
                     arrangement = MainAxisArrangement.End,
                     modifier = Modifier.align(HorizontalAlignment.End),
                 ) {

@@ -132,17 +132,18 @@ class InputControlTest {
     }
 
     @Test
-    fun `input control color override supports disabled state`() {
+    fun `input control overrides support disabled state`() {
         val baseTheme = UiThemeDefaults.light()
 
         val tree = buildVNodeTree {
             UiTheme(baseTheme) {
-                ProvideCheckboxColors(
-                    InputControlColorOverride(
-                        label = 101,
-                        labelDisabled = 102,
-                        control = 103,
-                        controlDisabled = 104,
+                ProvideCheckboxOverrides(
+                    CheckboxOverrides(
+                        labelColor = 101,
+                        disabledLabelColor = 102,
+                        checkedColor = 103,
+                        disabledCheckedColor = 104,
+                        disabledUncheckedColor = 105,
                     ),
                 ) {
                     Checkbox(
@@ -158,6 +159,7 @@ class InputControlTest {
         val spec = tree.single().spec as ToggleNodeProps
 
         assertEquals(104, spec.controlColor)
+        assertEquals(105, spec.uncheckedColor)
         assertEquals(102, spec.textColor)
     }
 
@@ -167,10 +169,21 @@ class InputControlTest {
 
         val tree = buildVNodeTree {
             UiTheme(baseTheme) {
-                ProvideCheckboxColors(InputControlColorOverride(control = 203)) {
-                    ProvideSwitchColors(InputControlColorOverride(control = 207)) {
-                        ProvideRadioButtonColors(InputControlColorOverride(control = 211)) {
-                            ProvideSliderColors(InputControlColorOverride(control = 213)) {
+                ProvideCheckboxOverrides(CheckboxOverrides(checkedColor = 203)) {
+                    ProvideSwitchOverrides(
+                        SwitchOverrides(
+                            checkedThumbColor = 206,
+                            checkedTrackColor = 207,
+                        ),
+                    ) {
+                        ProvideRadioButtonOverrides(RadioButtonOverrides(checkedColor = 211)) {
+                            ProvideSliderOverrides(
+                                SliderOverrides(
+                                    thumbColor = 213,
+                                    activeTrackColor = 214,
+                                    inactiveTrackColor = 215,
+                                ),
+                            ) {
                                 Column {
                                     Checkbox(
                                         text = "Checkbox",
@@ -207,9 +220,12 @@ class InputControlTest {
 
         assertEquals(203, checkboxSpec.controlColor)
         assertEquals(207, switchSpec.controlColor)
+        assertEquals(206, switchSpec.thumbColor)
+        assertEquals(207, switchSpec.trackColor)
         assertEquals(211, radioSpec.controlColor)
         assertEquals(213, sliderSpec.thumbColor)
-        assertEquals(213, sliderSpec.inactiveTrackColor)
+        assertEquals(214, sliderSpec.trackColor)
+        assertEquals(215, sliderSpec.inactiveTrackColor)
     }
 
     @Test
@@ -256,5 +272,56 @@ class InputControlTest {
         assertEquals(primary, slider.thumbColor)
         assertEquals(primary, slider.trackColor)
         assertEquals(inactiveTrack, slider.inactiveTrackColor)
+    }
+
+    @Test
+    fun `exact input states and instance patches preserve independent roles`() {
+        val tree = buildVNodeTree {
+            ProvideCheckboxOverrides(CheckboxOverrides(uncheckedColor = 101)) {
+                ProvideRadioButtonOverrides(RadioButtonOverrides(uncheckedColor = 102)) {
+                    ProvideSwitchOverrides(
+                        SwitchOverrides(
+                            disabledUncheckedThumbColor = 103,
+                            disabledUncheckedTrackColor = 104,
+                        ),
+                    ) {
+                        ProvideSliderOverrides(
+                            SliderOverrides(
+                                disabledThumbColor = 105,
+                                disabledActiveTrackColor = 106,
+                                disabledInactiveTrackColor = 107,
+                            ),
+                        ) {
+                            Column {
+                                Checkbox(text = "Checkbox", checked = false, onCheckedChange = {})
+                                RadioButton(text = "Radio", checked = false, onCheckedChange = {})
+                                Switch(
+                                    text = "Switch",
+                                    checked = false,
+                                    enabled = false,
+                                    onCheckedChange = {},
+                                    overrides = SwitchOverrides(disabledUncheckedThumbColor = 203),
+                                )
+                                Slider(value = 50, enabled = false, onValueChange = {})
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        val children = tree.single().children
+        val checkbox = children[0].spec as ToggleNodeProps
+        val radio = children[1].spec as ToggleNodeProps
+        val switch = children[2].spec as ToggleNodeProps
+        val slider = children[3].spec as SliderNodeProps
+
+        assertEquals(101, checkbox.uncheckedColor)
+        assertEquals(102, radio.uncheckedColor)
+        assertEquals(203, switch.thumbColor)
+        assertEquals(104, switch.trackColor)
+        assertEquals(105, slider.thumbColor)
+        assertEquals(106, slider.trackColor)
+        assertEquals(107, slider.inactiveTrackColor)
     }
 }

@@ -22,6 +22,7 @@ import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.modifier.zIndex
 import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.ButtonOverrides
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Divider
 import com.viewcompose.ui.foundation.Row
@@ -31,6 +32,7 @@ import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 
@@ -187,21 +189,39 @@ internal fun UiTreeBuilder.ModifierAlphaRippleSection() {
             Button(
                 text = stringResource(R.string.demo_modifiers_ripple_red),
                 onClick = {},
-                rippleColor = 0xFFFF0000.toInt(),
+                overrides = ButtonOverrides(
+                    stateLayerColors = UiStateLayerColors(
+                        pressedColor = 0xFFFF0000.toInt(),
+                        focusedColor = 0xFFFF0000.toInt(),
+                        hoveredColor = 0xFFFF0000.toInt(),
+                    ),
+                ),
                 modifier = Modifier
                     .weight(1f),
             )
             Button(
                 text = stringResource(R.string.demo_modifiers_ripple_green),
                 onClick = {},
-                rippleColor = 0xFF00FF00.toInt(),
+                overrides = ButtonOverrides(
+                    stateLayerColors = UiStateLayerColors(
+                        pressedColor = 0xFF00FF00.toInt(),
+                        focusedColor = 0xFF00FF00.toInt(),
+                        hoveredColor = 0xFF00FF00.toInt(),
+                    ),
+                ),
                 modifier = Modifier
                     .weight(1f),
             )
             Button(
                 text = stringResource(R.string.demo_modifiers_ripple_blue),
                 onClick = {},
-                rippleColor = 0xFF0000FF.toInt(),
+                overrides = ButtonOverrides(
+                    stateLayerColors = UiStateLayerColors(
+                        pressedColor = 0xFF0000FF.toInt(),
+                        focusedColor = 0xFF0000FF.toInt(),
+                        hoveredColor = 0xFF0000FF.toInt(),
+                    ),
+                ),
                 modifier = Modifier
                     .weight(1f),
             )

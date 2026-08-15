@@ -66,12 +66,12 @@ class SegmentedControlTest {
 
         val tree = buildVNodeTree {
             UiTheme(baseTheme) {
-                ProvideSegmentedControlColors(
-                    SegmentedControlColorOverride(
-                        background = 401,
-                        indicator = 406,
-                        text = 408,
-                        selectedText = 410,
+                ProvideSegmentedControlOverrides(
+                    SegmentedControlOverrides(
+                        containerColor = 401,
+                        indicatorColor = 406,
+                        contentColor = 408,
+                        selectedContentColor = 410,
                     ),
                 ) {
                     SegmentedControl(
@@ -141,12 +141,12 @@ class SegmentedControlTest {
 
         val tree = buildVNodeTree {
             UiTheme(baseTheme) {
-                ProvideSegmentedControlColors(
-                    SegmentedControlColorOverride(
-                        backgroundDisabled = 502,
-                        indicatorDisabled = 504,
-                        textDisabled = 506,
-                        selectedTextDisabled = 508,
+                ProvideSegmentedControlOverrides(
+                    SegmentedControlOverrides(
+                        disabledContainerColor = 502,
+                        disabledIndicatorColor = 504,
+                        disabledContentColor = 506,
+                        disabledSelectedContentColor = 508,
                     ),
                 ) {
                     SegmentedControl(
@@ -167,6 +167,32 @@ class SegmentedControlTest {
         assertEquals(506, spec.textColor)
         assertEquals(508, spec.selectedTextColor)
         assertEquals(0x00000000, spec.rippleColor)
+    }
+
+    @Test
+    fun `segmented control merges scopes before applying instance overrides`() {
+        val tree = buildVNodeTree {
+            ProvideSegmentedControlOverrides(
+                SegmentedControlOverrides(containerColor = 101),
+            ) {
+                ProvideSegmentedControlOverrides(
+                    SegmentedControlOverrides(contentColor = 102),
+                ) {
+                    SegmentedControl(
+                        items = listOf("A", "B"),
+                        selectedIndex = 0,
+                        onSelectionChange = {},
+                        overrides = SegmentedControlOverrides(selectedContentColor = 201),
+                    )
+                }
+            }
+        }
+
+        val spec = tree.single().spec as SegmentedControlNodeProps
+
+        assertEquals(101, spec.backgroundColor)
+        assertEquals(102, spec.textColor)
+        assertEquals(201, spec.selectedTextColor)
     }
 
     private fun com.viewcompose.ui.modifier.Modifier.readModifierElements(): List<Any?> {

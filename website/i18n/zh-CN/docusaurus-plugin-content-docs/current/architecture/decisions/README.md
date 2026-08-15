@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: 1b8e792bb8fd342b6bc2a4cee33238b35c6fbbc722067bffa61337fdb8721f8d
+translation_source_hash: e5cbba11b451a733d25de306bf595371335e8a9498fdd59a7bbcda37ec7b1072
 translation_status: current
 ---
 
@@ -23,6 +23,7 @@ translation_status: current
 - [ADR-0010：分层可保存状态所有权](./0010-hierarchical-saveable-state-ownership.md)
 - [ADR-0011：预取 Session 激活边界](./0011-prefetched-session-activation-boundary.md)
 - [ADR-0012：Lazy 集合的逻辑与物理所有权](./0012-lazy-collection-logical-and-physical-ownership.md)
+- [ADR-0013：组件外观解析边界](./0013-component-appearance-resolution-boundary.md)
 
 ## 规则
 

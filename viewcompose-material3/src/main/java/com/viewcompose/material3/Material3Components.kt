@@ -7,11 +7,14 @@ import com.viewcompose.ui.foundation.BasicButtonStyle
 import com.viewcompose.ui.foundation.BasicSurface
 import com.viewcompose.ui.foundation.BasicSurfaceStyle
 import com.viewcompose.ui.foundation.BasicTextField
+import com.viewcompose.ui.foundation.BasicTextFieldStyle
 import com.viewcompose.ui.foundation.BoxScope
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.NavigationBar
+import com.viewcompose.ui.foundation.NavigationBarOverrides
 import com.viewcompose.ui.foundation.NavigationBarScope
 import com.viewcompose.ui.foundation.Switch
+import com.viewcompose.ui.foundation.SwitchOverrides
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiColors
 import com.viewcompose.ui.foundation.UiInteractionTokens
@@ -270,17 +273,17 @@ fun UiTreeBuilder.Material3Switch(
         checked = checked,
         onCheckedChange = onCheckedChange,
         enabled = enabled,
-        thumbColor = when {
-            !enabled -> recipes.colors.onSurface.withAlpha(0.38f)
-            checked -> recipes.colors.onPrimary
-            else -> recipes.colors.outline
-        },
-        trackColor = when {
-            !enabled -> recipes.colors.onSurface.withAlpha(0.12f)
-            checked -> recipes.colors.primary
-            else -> recipes.colors.surfaceContainerHighest
-        },
-        style = recipes.bodyTextStyle,
+        overrides = SwitchOverrides(
+            checkedThumbColor = recipes.colors.onPrimary,
+            uncheckedThumbColor = recipes.colors.outline,
+            disabledCheckedThumbColor = recipes.colors.onSurface.withAlpha(0.38f),
+            disabledUncheckedThumbColor = recipes.colors.onSurface.withAlpha(0.38f),
+            checkedTrackColor = recipes.colors.primary,
+            uncheckedTrackColor = recipes.colors.surfaceContainerHighest,
+            disabledCheckedTrackColor = recipes.colors.onSurface.withAlpha(0.12f),
+            disabledUncheckedTrackColor = recipes.colors.onSurface.withAlpha(0.12f),
+            textStyle = recipes.bodyTextStyle,
+        ),
         key = key,
         modifier = modifier,
     )
@@ -335,35 +338,41 @@ fun UiTreeBuilder.Material3TextField(
         }
         BasicTextField(
             state = state,
+            style = BasicTextFieldStyle(
+                textColor = if (enabled) {
+                    recipes.colors.onSurface
+                } else {
+                    recipes.colors.onSurface.withAlpha(0.38f)
+                },
+                placeholderColor = if (enabled) {
+                    recipes.colors.onSurfaceVariant
+                } else {
+                    recipes.colors.onSurface.withAlpha(0.38f)
+                },
+                cursorColor = if (isError) recipes.colors.error else recipes.colors.primary,
+                textStyle = recipes.bodyTextStyle,
+                containerColor = if (variant == Material3TextFieldVariant.Filled) {
+                    recipes.colors.surfaceContainerHighest
+                } else {
+                    0x00000000
+                },
+                borderWidth = when {
+                    isError -> 2.dp
+                    variant == Material3TextFieldVariant.Outlined -> 1.dp
+                    else -> UiDp.Zero
+                },
+                borderColor = when {
+                    isError -> recipes.colors.error
+                    variant == Material3TextFieldVariant.Outlined -> recipes.colors.outline
+                    else -> 0x00000000
+                },
+                shape = recipes.fieldShape,
+                minimumHeight = 56.dp,
+                horizontalPadding = 16.dp,
+                verticalPadding = 8.dp,
+            ),
             placeholder = placeholder,
             enabled = enabled,
-            textColor = if (enabled) recipes.colors.onSurface else recipes.colors.onSurface.withAlpha(0.38f),
-            hintColor = if (enabled) {
-                recipes.colors.onSurfaceVariant
-            } else {
-                recipes.colors.onSurface.withAlpha(0.38f)
-            },
-            cursorColor = if (isError) recipes.colors.error else recipes.colors.primary,
-            textStyle = recipes.bodyTextStyle,
-            backgroundColor = if (variant == Material3TextFieldVariant.Filled) {
-                recipes.colors.surfaceContainerHighest
-            } else {
-                0x00000000
-            },
-            borderWidth = when {
-                isError -> 2.dp
-                variant == Material3TextFieldVariant.Outlined -> 1.dp
-                else -> UiDp.Zero
-            },
-            borderColor = when {
-                isError -> recipes.colors.error
-                variant == Material3TextFieldVariant.Outlined -> recipes.colors.outline
-                else -> 0x00000000
-            },
-            shape = recipes.fieldShape,
-            minHeight = 56.dp,
-            paddingHorizontal = 16.dp,
-            paddingVertical = 8.dp,
             autofillHints = autofillHints,
             modifier = Modifier.fillMaxWidth().semantics {
                 if (isError && supportingText.isNotBlank()) error = supportingText
@@ -405,18 +414,19 @@ fun UiTreeBuilder.Material3NavigationBar(
     NavigationBar(
         selectedIndex = selectedIndex,
         onItemSelected = onItemSelected,
-        containerColor = recipes.colors.surfaceContainer,
-        selectedIconColor = recipes.colors.onSecondaryContainer,
-        unselectedIconColor = recipes.colors.onSurfaceVariant,
-        selectedLabelColor = recipes.colors.onSecondaryContainer,
-        unselectedLabelColor = recipes.colors.onSurfaceVariant,
-        indicatorColor = recipes.colors.secondaryContainer,
-        rippleColor = recipes.colors.onSurface.withAlpha(recipes.interactions.pressedStateLayerOpacity),
-        iconSize = 24.dp,
-        labelSizeSp = recipes.navigationTextStyle.fontSizeSp,
-        labelStyle = recipes.navigationTextStyle,
-        badgeColor = recipes.colors.error,
-        badgeTextColor = recipes.colors.onError,
+        overrides = NavigationBarOverrides(
+            containerColor = recipes.colors.surfaceContainer,
+            selectedIconColor = recipes.colors.onSecondaryContainer,
+            unselectedIconColor = recipes.colors.onSurfaceVariant,
+            selectedLabelColor = recipes.colors.onSecondaryContainer,
+            unselectedLabelColor = recipes.colors.onSurfaceVariant,
+            indicatorColor = recipes.colors.secondaryContainer,
+            rippleColor = recipes.colors.onSurface.withAlpha(recipes.interactions.pressedStateLayerOpacity),
+            iconSize = 24.dp,
+            labelStyle = recipes.navigationTextStyle,
+            badgeColor = recipes.colors.error,
+            badgeTextColor = recipes.colors.onError,
+        ),
         key = key,
         modifier = modifier,
         items = items,

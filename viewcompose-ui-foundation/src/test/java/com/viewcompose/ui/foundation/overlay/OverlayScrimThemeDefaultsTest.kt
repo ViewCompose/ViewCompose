@@ -6,6 +6,8 @@ package com.viewcompose.ui.foundation
  */
 
 import com.viewcompose.ui.node.VNode
+import com.viewcompose.ui.node.spec.TextNodeProps
+import com.viewcompose.ui.shape.UiShape
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -39,7 +41,14 @@ class OverlayScrimThemeDefaultsTest {
     @Test
     fun `bottom sheet default scrim opacity follows theme overlays`() {
         val store = OverlayRequestStore()
-        val customTheme = UiThemeDefaults.light().copy(
+        val baseTheme = UiThemeDefaults.light()
+        val customShape = UiShape.rounded(17.dp)
+        val customTheme = baseTheme.copy(
+            colors = baseTheme.colors.copy(
+                surface = 0xFF123456.toInt(),
+                onSurface = 0xFFABCDEF.toInt(),
+            ),
+            shapes = baseTheme.shapes.copy(extraLarge = customShape),
             overlays = UiOverlays(scrimOpacity = 0.61f),
         )
 
@@ -59,6 +68,16 @@ class OverlayScrimThemeDefaultsTest {
         assertEquals(emptyList<VNode>(), tree)
         val request = store.currentRequests().single()
         val spec = request.payload as ModalBottomSheetOverlaySpec
-        assertEquals(0.61f, spec.scrimOpacity)
+        assertEquals(0.61f, spec.appearance.scrimOpacity)
+        assertEquals(0xFF123456.toInt(), spec.appearance.containerColor)
+        assertEquals(0xFFABCDEF.toInt(), spec.appearance.contentColor)
+        assertEquals(customShape, spec.appearance.shape)
+        assertEquals(
+            ModalBottomSheetNavigationBarColor.Exact(0xFF123456.toInt()),
+            spec.appearance.navigationBarColor,
+        )
+        val content = request.contentToken as ModalBottomSheetOverlayContent
+        val text = content.surface.buildNodes().single().spec as TextNodeProps
+        assertEquals(0xFFABCDEF.toInt(), text.textColor)
     }
 }

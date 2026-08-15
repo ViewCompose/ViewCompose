@@ -1,35 +1,13 @@
 package com.viewcompose.ui.foundation
 
-/**
- * Resolves Checkbox, Switch, RadioButton, and Slider colors from theme and scoped overrides.
- *
- * Each control family has an independent local override, preventing one customization from leaking
- * into other input controls.
- */
-object InputControlDefaults {
-    /**
-     * Returns the theme's minimum effective height for native compact input controls.
-     *
-     * A zero value preserves the native control's intrinsic measurement. A positive value is
-     * applied before the caller's [com.viewcompose.ui.modifier.Modifier], so an explicit exact
-     * application height or tighter parent constraint remains authoritative.
-     *
-     * @return immutable density-independent minimum height from the current theme snapshot
-     */
-    fun minimumInteractiveHeight(): com.viewcompose.ui.unit.UiDp {
-        return Theme.controls.minimumInteractiveHeight
-    }
+import com.viewcompose.ui.unit.UiDp
 
-    /**
-     * Returns the visible geometry snapshot for a design-owned Switch composite.
-     *
-     * Native Android Switch rendering may retain platform geometry. Design-system recipes that
-     * own their track and thumb should consume this snapshot while resolving the effective target
-     * independently through [minimumInteractiveHeight].
-     *
-     * @sample com.viewcompose.ui.foundation.samples.switchSizingTokenSample
-     * @return immutable Switch sizing from the current theme snapshot
-     */
+/** Resolves native input-control appearance from theme tokens and family-specific overrides. */
+object InputControlDefaults {
+    /** Returns the theme minimum effective height shared by compact native input controls. */
+    fun minimumInteractiveHeight(): UiDp = Theme.controls.minimumInteractiveHeight
+
+    /** Returns the visible geometry snapshot for a design-owned Switch composite. */
     fun switchSizing(): UiSwitchSizing = Theme.controls.switch
 
     /** Returns the shared body typography used by labeled controls. */
@@ -37,212 +15,330 @@ object InputControlDefaults {
 
     /** Resolves Checkbox label color for [enabled] state. */
     fun checkboxLabelColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalCheckboxColors)
-        return if (enabled) {
-            override?.label ?: Theme.stateColors.primaryText.resolve()
-        } else {
-            override?.labelDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        }
+        val overrides = checkboxOverrides()
+        return resolveStateValue(
+            enabled,
+            overrides.labelColor,
+            overrides.disabledLabelColor,
+            Theme.stateColors.primaryText.resolve(),
+            disabledContentColor(),
+        )
     }
 
-    /**
-     * Resolves the semantic Checkbox indicator color for [enabled] state.
-     *
-     * @param enabled whether enabled or disabled component roles are selected
-     * @return the current primary color when enabled, otherwise the disabled control color
-     */
-    fun checkboxControlColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalCheckboxColors)
-        return if (enabled) {
-            override?.control ?: Theme.colors.primary
-        } else {
-            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        }
-    }
+    /** Resolves the Checkbox base control color for [enabled] state. */
+    fun checkboxControlColor(enabled: Boolean = true): Int = checkboxCheckedColor(enabled)
 
-    /**
-     * Resolves the checked Checkbox indicator color for [enabled] state.
-     *
-     * @param enabled whether enabled or disabled component roles are selected
-     * @return the current primary color when enabled, otherwise the disabled control color
-     */
+    /** Resolves checked Checkbox color for [enabled] state. */
     fun checkboxCheckedColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalCheckboxColors)
-        return if (enabled) {
-            override?.control ?: Theme.colors.primary
-        } else {
-            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        }
+        val overrides = checkboxOverrides()
+        return resolveStateValue(
+            enabled,
+            overrides.checkedColor,
+            overrides.disabledCheckedColor,
+            Theme.colors.primary,
+            disabledContentColor(),
+        )
     }
 
     /** Resolves unchecked Checkbox color for [enabled] state. */
     fun checkboxUncheckedColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalCheckboxColors)
-        return if (enabled) {
-            Theme.stateColors.control.resolve()
-        } else {
-            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        }
+        val overrides = checkboxOverrides()
+        return resolveStateValue(
+            enabled,
+            overrides.uncheckedColor,
+            overrides.disabledUncheckedColor,
+            Theme.stateColors.control.resolve(),
+            disabledContentColor(),
+        )
     }
 
     /** Resolves Switch label color for [enabled] state. */
     fun switchLabelColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalSwitchColors)
-        return if (enabled) {
-            override?.label ?: Theme.stateColors.primaryText.resolve()
-        } else {
-            override?.labelDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        }
+        val overrides = switchOverrides()
+        return resolveStateValue(
+            enabled,
+            overrides.labelColor,
+            overrides.disabledLabelColor,
+            Theme.stateColors.primaryText.resolve(),
+            disabledContentColor(),
+        )
     }
 
-    /**
-     * Resolves the semantic Switch control color for [enabled] state.
-     *
-     * @param enabled whether enabled or disabled component roles are selected
-     * @return the current primary color when enabled, otherwise the disabled control color
-     */
-    fun switchControlColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalSwitchColors)
-        return if (enabled) {
-            override?.control ?: Theme.colors.primary
-        } else {
-            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        }
-    }
+    /** Resolves the Switch base control color for [checked] and [enabled] state. */
+    fun switchControlColor(checked: Boolean = true, enabled: Boolean = true): Int =
+        switchTrackColor(checked, enabled)
 
     /** Resolves Switch thumb color for [checked] and [enabled] state. */
     fun switchThumbColor(checked: Boolean = true, enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalSwitchColors)
+        val overrides = switchOverrides()
         return when {
-            !enabled && checked -> override?.controlDisabled ?: Theme.colors.surface
-            !enabled -> override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-            checked -> override?.control ?: Theme.colors.onPrimary
-            else -> Theme.colors.outline
+            enabled && checked -> overrides.checkedThumbColor ?: Theme.colors.onPrimary
+            enabled -> overrides.uncheckedThumbColor ?: Theme.colors.outline
+            checked -> overrides.disabledCheckedThumbColor ?: Theme.colors.surface
+            else -> overrides.disabledUncheckedThumbColor ?: disabledContentColor()
         }
     }
 
-    /** Resolves the semantic Switch track color for [checked] and [enabled] state. */
+    /** Resolves Switch track color for [checked] and [enabled] state. */
     fun switchTrackColor(checked: Boolean = true, enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalSwitchColors)
+        val overrides = switchOverrides()
         return when {
-            !enabled && checked -> override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.12f)
-            !enabled -> override?.controlDisabled ?: colorWithAlpha(Theme.colors.surfaceContainerHighest, 0.12f)
-            checked -> override?.control ?: Theme.colors.primary
-            else -> Theme.colors.surfaceContainerHighest
+            enabled && checked -> overrides.checkedTrackColor ?: Theme.colors.primary
+            enabled -> overrides.uncheckedTrackColor ?: Theme.colors.surfaceContainerHighest
+            checked -> overrides.disabledCheckedTrackColor ?: disabledContainerColor()
+            else -> overrides.disabledUncheckedTrackColor
+                ?: colorWithAlpha(Theme.colors.surfaceContainerHighest, 0.12f)
         }
     }
 
     /** Resolves RadioButton label color for [enabled] state. */
     fun radioButtonLabelColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalRadioButtonColors)
-        return if (enabled) {
-            override?.label ?: Theme.stateColors.primaryText.resolve()
-        } else {
-            override?.labelDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        }
+        val overrides = radioOverrides()
+        return resolveStateValue(
+            enabled,
+            overrides.labelColor,
+            overrides.disabledLabelColor,
+            Theme.stateColors.primaryText.resolve(),
+            disabledContentColor(),
+        )
     }
 
-    /**
-     * Resolves the semantic RadioButton indicator color for [enabled] state.
-     *
-     * @param enabled whether enabled or disabled component roles are selected
-     * @return the current primary color when enabled, otherwise the disabled control color
-     */
-    fun radioButtonControlColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalRadioButtonColors)
-        return if (enabled) {
-            override?.control ?: Theme.colors.primary
-        } else {
-            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        }
-    }
+    /** Resolves the RadioButton base control color for [enabled] state. */
+    fun radioButtonControlColor(enabled: Boolean = true): Int = radioButtonCheckedColor(enabled)
 
-    /**
-     * Resolves the checked RadioButton indicator color for [enabled] state.
-     *
-     * @param enabled whether enabled or disabled component roles are selected
-     * @return the current primary color when enabled, otherwise the disabled control color
-     */
+    /** Resolves checked RadioButton color for [enabled] state. */
     fun radioButtonCheckedColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalRadioButtonColors)
-        return if (enabled) {
-            override?.control ?: Theme.colors.primary
-        } else {
-            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        }
+        val overrides = radioOverrides()
+        return resolveStateValue(
+            enabled,
+            overrides.checkedColor,
+            overrides.disabledCheckedColor,
+            Theme.colors.primary,
+            disabledContentColor(),
+        )
     }
 
     /** Resolves unchecked RadioButton color for [enabled] state. */
     fun radioButtonUncheckedColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalRadioButtonColors)
-        return if (enabled) {
-            Theme.stateColors.control.resolve()
-        } else {
-            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        }
+        val overrides = radioOverrides()
+        return resolveStateValue(
+            enabled,
+            overrides.uncheckedColor,
+            overrides.disabledUncheckedColor,
+            Theme.stateColors.control.resolve(),
+            disabledContentColor(),
+        )
     }
 
-    /**
-     * Resolves the semantic Slider control color for [enabled] state.
-     *
-     * @param enabled whether enabled or disabled component roles are selected
-     * @return the current primary color when enabled, otherwise the disabled control color
-     */
-    fun sliderControlColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalSliderColors)
-        return if (enabled) {
-            override?.control ?: Theme.colors.primary
-        } else {
-            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        }
-    }
+    /** Resolves the Slider base control color for [enabled] state. */
+    fun sliderControlColor(enabled: Boolean = true): Int = sliderThumbColor(enabled)
 
-    /**
-     * Resolves the Slider thumb color for [enabled] state.
-     *
-     * @param enabled whether enabled or disabled component roles are selected
-     * @return the current primary color when enabled, otherwise the disabled control color
-     */
+    /** Resolves Slider thumb color for [enabled] state. */
     fun sliderThumbColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalSliderColors)
-        return if (enabled) {
-            override?.control ?: Theme.colors.primary
-        } else {
-            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        }
+        val overrides = sliderOverrides()
+        return resolveStateValue(
+            enabled,
+            overrides.thumbColor,
+            overrides.disabledThumbColor,
+            Theme.colors.primary,
+            disabledContentColor(),
+        )
     }
 
-    /**
-     * Resolves the active Slider track color for [enabled] state.
-     *
-     * @param enabled whether enabled or disabled component roles are selected
-     * @return the current primary color when enabled, otherwise the disabled active-track color
-     */
+    /** Resolves Slider active-track color for [enabled] state. */
     fun sliderTrackColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalSliderColors)
-        return if (enabled) {
-            override?.control ?: Theme.colors.primary
-        } else {
-            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        }
+        val overrides = sliderOverrides()
+        return resolveStateValue(
+            enabled,
+            overrides.activeTrackColor,
+            overrides.disabledActiveTrackColor,
+            Theme.colors.primary,
+            disabledContentColor(),
+        )
     }
 
-    /**
-     * Resolves the inactive Slider track color for [enabled] state.
-     *
-     * @param enabled whether enabled or disabled component roles are selected
-     * @return the current secondary-container color when enabled, otherwise the disabled
-     * inactive-track color
-     */
+    /** Resolves Slider inactive-track color for [enabled] state. */
     fun sliderInactiveTrackColor(enabled: Boolean = true): Int {
-        val override = UiLocals.current(LocalSliderColors)
-        return if (enabled) {
-            override?.control ?: Theme.colors.secondaryContainer
-        } else {
-            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.12f)
-        }
+        val overrides = sliderOverrides()
+        return resolveStateValue(
+            enabled,
+            overrides.inactiveTrackColor,
+            overrides.disabledInactiveTrackColor,
+            Theme.colors.secondaryContainer,
+            disabledContainerColor(),
+        )
     }
 
     /** Returns the current pressed-state control highlight. */
     fun pressedColor(): Int = Theme.stateColors.controlHighlight.resolve(pressed = true)
+
+    internal fun resolveCheckbox(
+        enabled: Boolean,
+        instance: CheckboxOverrides,
+    ): ResolvedToggleAppearance {
+        val overrides = checkboxOverrides().merge(instance)
+        val checked = resolveStateValue(
+            enabled,
+            overrides.checkedColor,
+            overrides.disabledCheckedColor,
+            Theme.colors.primary,
+            disabledContentColor(),
+        )
+        return ResolvedToggleAppearance(
+            labelColor = resolveStateValue(
+                enabled,
+                overrides.labelColor,
+                overrides.disabledLabelColor,
+                Theme.stateColors.primaryText.resolve(),
+                disabledContentColor(),
+            ),
+            controlColor = checked,
+            checkedColor = checked,
+            uncheckedColor = resolveStateValue(
+                enabled,
+                overrides.uncheckedColor,
+                overrides.disabledUncheckedColor,
+                Theme.stateColors.control.resolve(),
+                disabledContentColor(),
+            ),
+            textStyle = overrides.textStyle ?: TextDefaults.bodyStyle(),
+            rippleColor = overrides.rippleColor ?: pressedColor(),
+            minimumHeight = overrides.minimumHeight ?: minimumInteractiveHeight(),
+        )
+    }
+
+    internal fun resolveSwitch(
+        checked: Boolean,
+        enabled: Boolean,
+        instance: SwitchOverrides,
+    ): ResolvedSwitchAppearance {
+        val overrides = switchOverrides().merge(instance)
+        val thumbColor = when {
+            enabled && checked -> overrides.checkedThumbColor ?: Theme.colors.onPrimary
+            enabled -> overrides.uncheckedThumbColor ?: Theme.colors.outline
+            checked -> overrides.disabledCheckedThumbColor ?: Theme.colors.surface
+            else -> overrides.disabledUncheckedThumbColor ?: disabledContentColor()
+        }
+        val trackColor = when {
+            enabled && checked -> overrides.checkedTrackColor ?: Theme.colors.primary
+            enabled -> overrides.uncheckedTrackColor ?: Theme.colors.surfaceContainerHighest
+            checked -> overrides.disabledCheckedTrackColor ?: disabledContainerColor()
+            else -> overrides.disabledUncheckedTrackColor
+                ?: colorWithAlpha(Theme.colors.surfaceContainerHighest, 0.12f)
+        }
+        return ResolvedSwitchAppearance(
+            labelColor = resolveStateValue(
+                enabled,
+                overrides.labelColor,
+                overrides.disabledLabelColor,
+                Theme.stateColors.primaryText.resolve(),
+                disabledContentColor(),
+            ),
+            controlColor = trackColor,
+            thumbColor = thumbColor,
+            trackColor = trackColor,
+            textStyle = overrides.textStyle ?: TextDefaults.bodyStyle(),
+            rippleColor = overrides.rippleColor ?: pressedColor(),
+            minimumHeight = overrides.minimumHeight ?: minimumInteractiveHeight(),
+        )
+    }
+
+    internal fun resolveRadioButton(
+        enabled: Boolean,
+        instance: RadioButtonOverrides,
+    ): ResolvedToggleAppearance {
+        val overrides = radioOverrides().merge(instance)
+        val checked = resolveStateValue(
+            enabled,
+            overrides.checkedColor,
+            overrides.disabledCheckedColor,
+            Theme.colors.primary,
+            disabledContentColor(),
+        )
+        return ResolvedToggleAppearance(
+            labelColor = resolveStateValue(
+                enabled,
+                overrides.labelColor,
+                overrides.disabledLabelColor,
+                Theme.stateColors.primaryText.resolve(),
+                disabledContentColor(),
+            ),
+            controlColor = checked,
+            checkedColor = checked,
+            uncheckedColor = resolveStateValue(
+                enabled,
+                overrides.uncheckedColor,
+                overrides.disabledUncheckedColor,
+                Theme.stateColors.control.resolve(),
+                disabledContentColor(),
+            ),
+            textStyle = overrides.textStyle ?: TextDefaults.bodyStyle(),
+            rippleColor = overrides.rippleColor ?: pressedColor(),
+            minimumHeight = overrides.minimumHeight ?: minimumInteractiveHeight(),
+        )
+    }
+
+    internal fun resolveSlider(enabled: Boolean, instance: SliderOverrides): ResolvedSliderAppearance {
+        val overrides = sliderOverrides().merge(instance)
+        return ResolvedSliderAppearance(
+            thumbColor = resolveStateValue(
+                enabled,
+                overrides.thumbColor,
+                overrides.disabledThumbColor,
+                Theme.colors.primary,
+                disabledContentColor(),
+            ),
+            activeTrackColor = resolveStateValue(
+                enabled,
+                overrides.activeTrackColor,
+                overrides.disabledActiveTrackColor,
+                Theme.colors.primary,
+                disabledContentColor(),
+            ),
+            inactiveTrackColor = resolveStateValue(
+                enabled,
+                overrides.inactiveTrackColor,
+                overrides.disabledInactiveTrackColor,
+                Theme.colors.secondaryContainer,
+                disabledContainerColor(),
+            ),
+            minimumHeight = overrides.minimumHeight ?: minimumInteractiveHeight(),
+        )
+    }
+
+    private fun checkboxOverrides() = UiLocals.current(LocalCheckboxOverrides)
+    private fun switchOverrides() = UiLocals.current(LocalSwitchOverrides)
+    private fun radioOverrides() = UiLocals.current(LocalRadioButtonOverrides)
+    private fun sliderOverrides() = UiLocals.current(LocalSliderOverrides)
 }
+
+internal data class ResolvedToggleAppearance(
+    val labelColor: Int,
+    val controlColor: Int,
+    val checkedColor: Int,
+    val uncheckedColor: Int,
+    val textStyle: UiTextStyle,
+    val rippleColor: Int,
+    val minimumHeight: UiDp,
+)
+
+internal data class ResolvedSwitchAppearance(
+    val labelColor: Int,
+    val controlColor: Int,
+    val thumbColor: Int,
+    val trackColor: Int,
+    val textStyle: UiTextStyle,
+    val rippleColor: Int,
+    val minimumHeight: UiDp,
+)
+
+internal data class ResolvedSliderAppearance(
+    val thumbColor: Int,
+    val activeTrackColor: Int,
+    val inactiveTrackColor: Int,
+    val minimumHeight: UiDp,
+)
+
+private fun disabledContentColor(): Int = colorWithAlpha(Theme.colors.onSurface, 0.38f)
+
+private fun disabledContainerColor(): Int = colorWithAlpha(Theme.colors.onSurface, 0.12f)

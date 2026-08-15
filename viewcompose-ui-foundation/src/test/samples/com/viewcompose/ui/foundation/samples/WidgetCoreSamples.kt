@@ -2,33 +2,98 @@ package com.viewcompose.ui.foundation.samples
 
 import com.viewcompose.graphics.core.Brush
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.text.TextFieldState
+import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.foundation.BasicButton
 import com.viewcompose.ui.foundation.BasicButtonStyle
+import com.viewcompose.ui.foundation.BasicTextField
+import com.viewcompose.ui.foundation.BasicTextFieldStyle
 import com.viewcompose.ui.foundation.BasicSurface
 import com.viewcompose.ui.foundation.BasicSurfaceStyle
+import com.viewcompose.ui.foundation.Badge
+import com.viewcompose.ui.foundation.BadgeOverrides
+import com.viewcompose.ui.foundation.BottomAppBar
+import com.viewcompose.ui.foundation.BottomAppBarOverrides
 import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.ButtonOverrides
+import com.viewcompose.ui.foundation.CheckboxOverrides
 import com.viewcompose.ui.foundation.Checkbox
+import com.viewcompose.ui.foundation.CircularProgressIndicator
+import com.viewcompose.ui.foundation.CircularProgressIndicatorOverrides
+import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.CompositionEffectContext
 import com.viewcompose.ui.foundation.DisposableEffect
+import com.viewcompose.ui.foundation.EmailField
+import com.viewcompose.ui.foundation.ExtendedFloatingActionButton
+import com.viewcompose.ui.foundation.ExtendedFloatingActionButtonOverrides
+import com.viewcompose.ui.foundation.FloatingActionButton
+import com.viewcompose.ui.foundation.FloatingActionButtonOverrides
 import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
+import com.viewcompose.ui.foundation.IconButtonOverrides
 import com.viewcompose.ui.foundation.Image
 import com.viewcompose.ui.foundation.HorizontalPager
 import com.viewcompose.ui.foundation.InputControlDefaults
 import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.LinearProgressIndicator
+import com.viewcompose.ui.foundation.LinearProgressIndicatorOverrides
+import com.viewcompose.ui.foundation.NavigationBar
+import com.viewcompose.ui.foundation.NavigationBarOverrides
+import com.viewcompose.ui.foundation.NumberField
+import com.viewcompose.ui.foundation.AlertDialog
+import com.viewcompose.ui.foundation.AlertDialogOverrides
+import com.viewcompose.ui.foundation.ModalBottomSheet
+import com.viewcompose.ui.foundation.ModalBottomSheetNavigationBarColor
+import com.viewcompose.ui.foundation.ModalBottomSheetOverrides
+import com.viewcompose.ui.foundation.OverlayRequestContext
+import com.viewcompose.ui.foundation.OverlayRequestStore
 import com.viewcompose.ui.foundation.PopupAlignment
 import com.viewcompose.ui.foundation.PopupBounds
 import com.viewcompose.ui.foundation.PopupOverflowPolicy
 import com.viewcompose.ui.foundation.PopupPositioner
 import com.viewcompose.ui.foundation.PopupSize
+import com.viewcompose.ui.foundation.PasswordField
 import com.viewcompose.ui.foundation.ProvideImageLoader
+import com.viewcompose.ui.foundation.ProvideButtonOverrides
+import com.viewcompose.ui.foundation.ProvideAlertDialogOverrides
+import com.viewcompose.ui.foundation.ProvideBadgeOverrides
+import com.viewcompose.ui.foundation.ProvideBottomAppBarOverrides
+import com.viewcompose.ui.foundation.ProvideCheckboxOverrides
+import com.viewcompose.ui.foundation.ProvideCircularProgressIndicatorOverrides
+import com.viewcompose.ui.foundation.ProvideLinearProgressIndicatorOverrides
+import com.viewcompose.ui.foundation.ProvideExtendedFloatingActionButtonOverrides
+import com.viewcompose.ui.foundation.ProvideFloatingActionButtonOverrides
+import com.viewcompose.ui.foundation.ProvideModalBottomSheetOverrides
+import com.viewcompose.ui.foundation.ProvideNavigationBarOverrides
+import com.viewcompose.ui.foundation.ProvideIconButtonOverrides
+import com.viewcompose.ui.foundation.ProvideRadioButtonOverrides
 import com.viewcompose.ui.foundation.ProvideSaveableStateRegistry
+import com.viewcompose.ui.foundation.ProvideSegmentedControlOverrides
+import com.viewcompose.ui.foundation.ProvideSliderOverrides
+import com.viewcompose.ui.foundation.ProvideSwitchOverrides
+import com.viewcompose.ui.foundation.ProvideTabRowOverrides
+import com.viewcompose.ui.foundation.ProvideTextFieldOverrides
+import com.viewcompose.ui.foundation.ProvideTopAppBarOverrides
+import com.viewcompose.ui.foundation.RadioButton
+import com.viewcompose.ui.foundation.RadioButtonOverrides
+import com.viewcompose.ui.foundation.SegmentedControl
+import com.viewcompose.ui.foundation.SegmentedControlOverrides
 import com.viewcompose.ui.foundation.SideEffect
 import com.viewcompose.ui.foundation.Slider
+import com.viewcompose.ui.foundation.SliderOverrides
+import com.viewcompose.ui.foundation.Switch
+import com.viewcompose.ui.foundation.SwitchOverrides
 import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextButton
 import com.viewcompose.ui.foundation.TabRow
+import com.viewcompose.ui.foundation.TabRowOverrides
+import com.viewcompose.ui.foundation.TextField
+import com.viewcompose.ui.foundation.TextFieldOverrides
+import com.viewcompose.ui.foundation.TextArea
 import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.TopAppBar
+import com.viewcompose.ui.foundation.TopAppBarOverrides
 import com.viewcompose.ui.foundation.UiStateColor
 import com.viewcompose.ui.foundation.UiSwitchSizing
 import com.viewcompose.ui.foundation.UiTheme
@@ -56,6 +121,7 @@ import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
+import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
@@ -168,10 +234,12 @@ fun buttonSample() {
             Button(
                 text = "Confirm",
                 onClick = {},
-                stateLayerColors = UiStateLayerColors(
-                    pressedColor = 0x1AFFFFFF,
-                    focusedColor = 0x1AFFFFFF,
-                    hoveredColor = 0x14FFFFFF,
+                overrides = ButtonOverrides(
+                    stateLayerColors = UiStateLayerColors(
+                        pressedColor = 0x1AFFFFFF,
+                        focusedColor = 0x1AFFFFFF,
+                        hoveredColor = 0x14FFFFFF,
+                    ),
                 ),
             )
         }
@@ -181,6 +249,221 @@ fun buttonSample() {
     check(spec.minHeight == 48.dp)
     check(spec.visualHeight == 40.dp)
     check(spec.stateLayerColors?.hoveredColor == 0x14FFFFFF)
+}
+
+fun componentOverridesSample() {
+    val node = buildVNodeTree {
+        ProvideButtonOverrides(ButtonOverrides(contentColor = 0xFFFFFFFF.toInt())) {
+            ProvideButtonOverrides(ButtonOverrides(containerColor = 0xFF0055AA.toInt())) {
+                Button(
+                    text = "Scoped action",
+                    overrides = ButtonOverrides(borderWidth = 2.dp),
+                )
+            }
+        }
+    }.single()
+    val spec = node.spec as ButtonNodeProps
+
+    check(spec.textColor == 0xFFFFFFFF.toInt())
+    check(spec.backgroundColor == 0xFF0055AA.toInt())
+    check(spec.borderWidth == 2.dp)
+
+    val actionNodes = buildVNodeTree {
+        Column {
+            TextButton(text = "Learn more", onClick = {})
+            ProvideIconButtonOverrides(IconButtonOverrides(contentColor = 0xFF0055AA.toInt())) {
+                IconButton(
+                    icon = ImageSource.Resource(1),
+                    contentDescription = "Close",
+                    onClick = {},
+                )
+            }
+        }
+    }.single()
+    check(actionNodes.children.size == 2)
+
+    val inputNodes = buildVNodeTree {
+        ProvideTextFieldOverrides(TextFieldOverrides(containerColor = 0xFFF4F6F8.toInt())) {
+            ProvideCheckboxOverrides(CheckboxOverrides(uncheckedColor = 0xFF667788.toInt())) {
+                ProvideSwitchOverrides(
+                    SwitchOverrides(
+                        checkedThumbColor = 0xFFFFFFFF.toInt(),
+                        checkedTrackColor = 0xFF0055AA.toInt(),
+                    ),
+                ) {
+                    ProvideRadioButtonOverrides(
+                        RadioButtonOverrides(checkedColor = 0xFF0055AA.toInt()),
+                    ) {
+                        ProvideSliderOverrides(
+                            SliderOverrides(activeTrackColor = 0xFF0055AA.toInt()),
+                        ) {
+                            Column {
+                                TextField(state = TextFieldState(), placeholder = "Name")
+                                Checkbox(text = "Email updates", checked = false, onCheckedChange = {})
+                                Switch(text = "Sync", checked = true, onCheckedChange = {})
+                                RadioButton(text = "Primary", checked = true, onCheckedChange = {})
+                                Slider(value = 50, onValueChange = {})
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }.single()
+    check(inputNodes.children.size == 5)
+
+    val navigationNodes = buildVNodeTree {
+        Column {
+            ProvideSegmentedControlOverrides(
+                SegmentedControlOverrides(indicatorColor = 0xFF0055AA.toInt()),
+            ) {
+                SegmentedControl(
+                    items = listOf("Day", "Week"),
+                    selectedIndex = 0,
+                    onSelectionChange = {},
+                )
+            }
+            ProvideTabRowOverrides(TabRowOverrides(indicatorColor = 0xFF0055AA.toInt())) {
+                TabRow(selectedIndex = 0, onTabSelected = {}) {
+                    Tab(key = "summary") { Text("Summary") }
+                }
+            }
+            ProvideNavigationBarOverrides(
+                NavigationBarOverrides(indicatorColor = 0xFFCCE4FF.toInt()),
+            ) {
+                NavigationBar(selectedIndex = 0, onItemSelected = {}) {
+                    Item(label = "Home", icon = ImageSource.Resource(1))
+                }
+            }
+            ProvideLinearProgressIndicatorOverrides(
+                LinearProgressIndicatorOverrides(indicatorColor = 0xFF0055AA.toInt()),
+            ) {
+                LinearProgressIndicator(progress = 0.5f)
+            }
+            ProvideCircularProgressIndicatorOverrides(
+                CircularProgressIndicatorOverrides(indicatorColor = 0xFF0055AA.toInt()),
+            ) {
+                CircularProgressIndicator(progress = 0.5f)
+            }
+        }
+    }.single()
+    check(navigationNodes.children.size == 5)
+}
+
+fun remainingComponentOverridesSample() {
+    val overlayStore = OverlayRequestStore()
+    OverlayRequestContext.withStore(overlayStore) {
+        buildVNodeTree {
+            ProvideFloatingActionButtonOverrides(
+                FloatingActionButtonOverrides(containerColor = 0xFF0055AA.toInt()),
+            ) {
+                FloatingActionButton(onClick = {}) {
+                    Text("+")
+                }
+            }
+            ProvideExtendedFloatingActionButtonOverrides(
+                ExtendedFloatingActionButtonOverrides(contentColor = 0xFFFFFFFF.toInt()),
+            ) {
+                ExtendedFloatingActionButton(text = "Create", onClick = {})
+            }
+            ProvideTopAppBarOverrides(
+                TopAppBarOverrides(actionIconColor = 0xFF0055AA.toInt()),
+            ) {
+                TopAppBar(title = "Library")
+            }
+            ProvideBottomAppBarOverrides(
+                BottomAppBarOverrides(contentColor = 0xFF0055AA.toInt()),
+            ) {
+                BottomAppBar { Text("Actions") }
+            }
+            ProvideBadgeOverrides(BadgeOverrides(containerColor = 0xFFB3261E.toInt())) {
+                Badge(count = 3)
+            }
+            ProvideAlertDialogOverrides(
+                AlertDialogOverrides(containerColor = 0xFFF7F2FA.toInt()),
+            ) {
+                AlertDialog(
+                    visible = true,
+                    title = "Discard draft?",
+                    text = "This action cannot be undone.",
+                    confirmButtonText = "Discard",
+                    onConfirm = {},
+                )
+            }
+        }
+    }
+    check(overlayStore.currentRequests().size == 1)
+}
+
+fun modalBottomSheetAppearanceSample() {
+    val overlayStore = OverlayRequestStore()
+    OverlayRequestContext.withStore(overlayStore) {
+        buildVNodeTree {
+            ProvideModalBottomSheetOverrides(
+                ModalBottomSheetOverrides(
+                    containerColor = 0xFFF7F2FA.toInt(),
+                    contentColor = 0xFF1D1B20.toInt(),
+                    navigationBarColor = ModalBottomSheetNavigationBarColor.PlatformDefault,
+                ),
+            ) {
+                ModalBottomSheet(
+                    visible = true,
+                    requestKey = "account-actions",
+                    overrides = ModalBottomSheetOverrides(scrimOpacity = 0.4f),
+                ) {
+                    Text("Account actions")
+                }
+            }
+        }
+    }
+    check(overlayStore.currentRequests().size == 1)
+}
+
+fun basicTextFieldStyleSample() {
+    val style = BasicTextFieldStyle(
+        cursorColor = 0xFF0055AA.toInt(),
+        textColor = 0xFF101820.toInt(),
+        textStyle = com.viewcompose.ui.foundation.UiTextStyle(fontSizeSp = 16.sp),
+        placeholderColor = 0xFF667788.toInt(),
+        containerColor = 0xFFF4F6F8.toInt(),
+        borderWidth = 1.dp,
+        borderColor = 0xFF8899AA.toInt(),
+        shape = UiShape.rounded(8.dp),
+        minimumHeight = 48.dp,
+        horizontalPadding = 12.dp,
+        verticalPadding = 8.dp,
+    )
+    val node = buildVNodeTree {
+        BasicTextField(
+            state = TextFieldState(TextFieldValue("Ready")),
+            style = style,
+        )
+    }.single()
+    val spec = node.spec as TextFieldNodeProps
+
+    check(spec.backgroundColor == style.containerColor)
+    check(spec.cursorColor == style.cursorColor)
+    check(spec.minHeight == style.minimumHeight)
+}
+
+fun textFieldVariantsSample() {
+    val tree = buildVNodeTree {
+        ProvideTextFieldOverrides(TextFieldOverrides(horizontalPadding = 14.dp)) {
+            Column {
+                TextField(
+                    state = TextFieldState(TextFieldValue("Ada")),
+                    label = "Name",
+                    overrides = TextFieldOverrides(containerColor = 0xFFF4F6F8.toInt()),
+                )
+                PasswordField(state = TextFieldState(), label = "Password")
+                EmailField(state = TextFieldState(), label = "Email")
+                NumberField(state = TextFieldState(), label = "Age")
+                TextArea(state = TextFieldState(), label = "Notes", minLines = 3)
+            }
+        }
+    }.single()
+
+    check(tree.children.size == 5)
 }
 
 fun switchSizingTokenSample() {
@@ -281,9 +564,11 @@ fun compactInputTargetSample() {
             Slider(
                 value = 50,
                 onValueChange = {},
-                thumbColor = 0xFF6750A4.toInt(),
-                trackColor = 0xFF6750A4.toInt(),
-                inactiveTrackColor = 0xFFE8DEF8.toInt(),
+                overrides = SliderOverrides(
+                    thumbColor = 0xFF6750A4.toInt(),
+                    activeTrackColor = 0xFF6750A4.toInt(),
+                    inactiveTrackColor = 0xFFE8DEF8.toInt(),
+                ),
             )
         }
     }
@@ -363,10 +648,12 @@ fun imageLoadingSample() {
                 icon = ImageSource.Resource(2),
                 contentDescription = "Close",
                 onClick = {},
-                stateLayerColors = UiStateLayerColors(
-                    pressedColor = 0x1A000000,
-                    focusedColor = 0x1A000000,
-                    hoveredColor = 0x14000000,
+                overrides = IconButtonOverrides(
+                    stateLayerColors = UiStateLayerColors(
+                        pressedColor = 0x1A000000,
+                        focusedColor = 0x1A000000,
+                        hoveredColor = 0x14000000,
+                    ),
                 ),
             )
         }

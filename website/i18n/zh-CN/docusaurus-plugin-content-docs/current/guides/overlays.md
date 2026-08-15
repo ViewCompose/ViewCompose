@@ -1,6 +1,6 @@
 ---
 translation_source: guides/overlays.md
-translation_source_hash: 147ed70a926e9037a0d72d10791fb9462049fc8425b3e120115633023355a8e7
+translation_source_hash: e957e593f70750127f0610ff293825d7cc8159d7fb504da175d56675e1e41330
 translation_status: current
 ---
 
@@ -30,6 +30,35 @@ Service Discovery 只接受一个中立 Provider，永远不选择设计系统�
 当前设计系统 Attribution 会报告每种 Overlay 的 Transport、Presenter、Conformance 与 Fallback。
 未安装 Adapter 的 One UI Theme 会把 Snackbar 与 Modal Bottom Sheet 报告为 `Unsupported`；显式
 装配 Adapter 后升级为 `Equivalent`，始终不会静默回退 Material。
+
+## Modal Bottom Sheet 外观更新
+
+`ModalBottomSheet` 会在提交请求前，把主题值与稀疏 `ModalBottomSheetOverrides` 解析为一份不可变
+`ModalBottomSheetAppearance`。快照包含容器/内容色、Shape、Scrim 透明度与导航栏策略，并参与
+Overlay Spec 相等性判断。因此主题或 Overrides 变化时，已有同 Key 平台 Sheet 会原地更新，而不
+丢弃逻辑请求身份或嵌套 Saveable State 作用域。
+
+```kotlin
+ModalBottomSheet(
+    visible = sheetVisible,
+    requestKey = "account-actions",
+    overrides = ModalBottomSheetOverrides(
+        containerColor = Theme.colors.surfaceContainerHigh,
+        navigationBarColor = ModalBottomSheetNavigationBarColor.PlatformDefault,
+    ),
+    onDismissRequest = { sheetVisible = false },
+) {
+    AccountActions()
+}
+```
+
+单个可空颜色无法表达全部状态：稀疏 Overrides 中的 `null` 表示继承，`Exact(color)` 请求精确 ARGB
+颜色，`PlatformDefault` 恢复当前 Presenter 捕获的平台值。Material 与 One UI Presenter 会在首次
+展示及每次变化的同 Key 更新时应用完整快照。Material 还会让 `skipPartiallyExpanded` 可逆；One UI
+只有一个内在展开状态，因此该策略仅用于协议兼容。
+
+Presenter 特有的 Margin、Handle、拖拽手势与品牌 Chrome 继续由下游持有。原始 `Dialog` 仍是调用
+方自有内容/生命周期协议，不共用 Bottom Sheet 外观对象。
 
 ## Popup 定位
 

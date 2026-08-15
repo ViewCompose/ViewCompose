@@ -2,43 +2,70 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.unit.UiDp
 
-/**
- * Resolves default colors and dimensions for linear and circular progress indicators.
- *
- * Color methods honor the nearest [ProvideProgressIndicatorColors] provider. Dimensions always resolve
- * from the current theme.
- */
+/** Resolves linear and circular progress appearance from theme tokens and independent overrides. */
 object ProgressIndicatorDefaults {
     /** Returns the active linear-indicator color. */
-    fun linearIndicatorColor(): Int {
-        val override = UiLocals.current(LocalProgressIndicatorColors)
-        return override?.linearIndicator ?: Theme.colors.primary
-    }
+    fun linearIndicatorColor(): Int =
+        linearOverrides().indicatorColor ?: Theme.colors.primary
 
     /** Returns the inactive linear-track color. */
-    fun linearTrackColor(): Int {
-        val override = UiLocals.current(LocalProgressIndicatorColors)
-        return override?.linearTrack ?: Theme.colors.secondaryContainer
-    }
+    fun linearTrackColor(): Int =
+        linearOverrides().trackColor ?: Theme.colors.secondaryContainer
 
-    /** Returns the thickness of a linear indicator and its track. */
-    fun linearTrackThickness(): UiDp = Theme.controls.progressIndicator.linearTrackThickness
+    /** Returns linear indicator and track thickness. */
+    fun linearTrackThickness(): UiDp = linearOverrides().trackThickness
+        ?: Theme.controls.progressIndicator.linearTrackThickness
 
     /** Returns the active circular-indicator color. */
-    fun circularIndicatorColor(): Int {
-        val override = UiLocals.current(LocalProgressIndicatorColors)
-        return override?.circularIndicator ?: Theme.colors.primary
-    }
+    fun circularIndicatorColor(): Int =
+        circularOverrides().indicatorColor ?: Theme.colors.primary
 
     /** Returns the inactive circular-track color. */
-    fun circularTrackColor(): Int {
-        val override = UiLocals.current(LocalProgressIndicatorColors)
-        return override?.circularTrack ?: Theme.colors.secondaryContainer
+    fun circularTrackColor(): Int =
+        circularOverrides().trackColor ?: Theme.colors.secondaryContainer
+
+    /** Returns circular indicator square bounds. */
+    fun circularSize(): UiDp = circularOverrides().size
+        ?: Theme.controls.progressIndicator.circularSize
+
+    /** Returns circular indicator and track stroke thickness. */
+    fun circularTrackThickness(): UiDp = circularOverrides().trackThickness
+        ?: Theme.controls.progressIndicator.circularTrackThickness
+
+    internal fun resolveLinear(instance: LinearProgressIndicatorOverrides): ResolvedLinearProgressAppearance {
+        val overrides = linearOverrides().merge(instance)
+        return ResolvedLinearProgressAppearance(
+            indicatorColor = overrides.indicatorColor ?: Theme.colors.primary,
+            trackColor = overrides.trackColor ?: Theme.colors.secondaryContainer,
+            trackThickness = overrides.trackThickness
+                ?: Theme.controls.progressIndicator.linearTrackThickness,
+        )
     }
 
-    /** Returns the default square bounds of a circular indicator. */
-    fun circularSize(): UiDp = Theme.controls.progressIndicator.circularSize
+    internal fun resolveCircular(instance: CircularProgressIndicatorOverrides): ResolvedCircularProgressAppearance {
+        val overrides = circularOverrides().merge(instance)
+        return ResolvedCircularProgressAppearance(
+            indicatorColor = overrides.indicatorColor ?: Theme.colors.primary,
+            trackColor = overrides.trackColor ?: Theme.colors.secondaryContainer,
+            size = overrides.size ?: Theme.controls.progressIndicator.circularSize,
+            trackThickness = overrides.trackThickness
+                ?: Theme.controls.progressIndicator.circularTrackThickness,
+        )
+    }
 
-    /** Returns the stroke thickness of a circular indicator and its track. */
-    fun circularTrackThickness(): UiDp = Theme.controls.progressIndicator.circularTrackThickness
+    private fun linearOverrides() = UiLocals.current(LocalLinearProgressIndicatorOverrides)
+    private fun circularOverrides() = UiLocals.current(LocalCircularProgressIndicatorOverrides)
 }
+
+internal data class ResolvedLinearProgressAppearance(
+    val indicatorColor: Int,
+    val trackColor: Int,
+    val trackThickness: UiDp,
+)
+
+internal data class ResolvedCircularProgressAppearance(
+    val indicatorColor: Int,
+    val trackColor: Int,
+    val size: UiDp,
+    val trackThickness: UiDp,
+)

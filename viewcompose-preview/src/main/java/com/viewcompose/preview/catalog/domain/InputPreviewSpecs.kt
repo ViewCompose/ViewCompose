@@ -8,6 +8,7 @@ import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.BasicTextField
+import com.viewcompose.ui.foundation.BasicTextFieldStyle
 import com.viewcompose.ui.foundation.Checkbox
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.IconButton
@@ -18,6 +19,9 @@ import com.viewcompose.ui.foundation.Slider
 import com.viewcompose.ui.foundation.Switch
 import com.viewcompose.ui.foundation.TextArea
 import com.viewcompose.ui.foundation.TextField
+import com.viewcompose.ui.foundation.TextFieldDefaults
+import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.remember
 import com.viewcompose.ui.foundation.rememberTextFieldState
@@ -96,6 +100,19 @@ internal object InputPreviewSpecs {
                     )
                     BasicTextField(
                         state = basicTextState,
+                        style = BasicTextFieldStyle(
+                            cursorColor = TextFieldDefaults.cursorColor(),
+                            textColor = TextFieldDefaults.textColor(),
+                            textStyle = TextFieldDefaults.textStyle(),
+                            placeholderColor = TextFieldDefaults.hintColor(),
+                            containerColor = 0x00000000,
+                            borderWidth = UiDp.Zero,
+                            borderColor = 0x00000000,
+                            shape = UiShape.rounded(UiDp.Zero),
+                            minimumHeight = UiDp.Zero,
+                            horizontalPadding = UiDp.Zero,
+                            verticalPadding = UiDp.Zero,
+                        ),
                         placeholder = "BasicTextField",
                         modifier = Modifier.fillMaxWidth(),
                     )

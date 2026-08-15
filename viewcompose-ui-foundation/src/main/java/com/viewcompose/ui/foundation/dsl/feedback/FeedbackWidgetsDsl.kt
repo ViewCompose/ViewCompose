@@ -9,63 +9,77 @@ import com.viewcompose.ui.node.spec.ProgressIndicatorNodeProps
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * Emits a linear progress indicator node.
+ * Emits a linear determinate or indeterminate progress indicator.
  *
- * A null progress represents indeterminate mode; non-null values are clamped/mapped by the renderer to platform progress.
+ * A `null` [progress] selects indeterminate mode. Non-null values are mapped to the platform
+ * progress range by the renderer. Appearance resolves once from instance, scoped, and semantic
+ * defaults in that order.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.componentOverridesSample
+ * @receiver active tree builder that receives the emitted indicator node
+ * @param progress determinate fraction interpreted by the renderer, or `null` for indeterminate mode
+ * @param overrides sparse instance appearance applied after scoped [ProvideLinearProgressIndicatorOverrides]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended after fill-width and resolved thickness
  */
 fun UiTreeBuilder.LinearProgressIndicator(
     progress: Float? = null,
-    indicatorColor: Int = ProgressIndicatorDefaults.linearIndicatorColor(),
-    trackColor: Int = ProgressIndicatorDefaults.linearTrackColor(),
-    trackThickness: UiDp = ProgressIndicatorDefaults.linearTrackThickness(),
+    overrides: LinearProgressIndicatorOverrides = LinearProgressIndicatorOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
+    val appearance = ProgressIndicatorDefaults.resolveLinear(overrides)
     emit(
         type = NodeType.LinearProgressIndicator,
         key = key,
         spec = ProgressIndicatorNodeProps(
             enabled = true,
             progress = progress,
-            indicatorColor = indicatorColor,
-            trackColor = trackColor,
-            trackThickness = trackThickness,
+            indicatorColor = appearance.indicatorColor,
+            trackColor = appearance.trackColor,
+            trackThickness = appearance.trackThickness,
             indicatorSize = UiDp.Zero,
         ),
         modifier = Modifier
             .fillMaxWidth()
-            .height(trackThickness)
+            .height(appearance.trackThickness)
             .then(modifier),
     )
 }
 
 /**
- * Emits a circular progress indicator node.
+ * Emits a circular determinate or indeterminate progress indicator.
  *
- * size and trackThickness describe measurement/drawing parameters, while colors default from current theme tokens.
+ * A `null` [progress] selects indeterminate mode. Appearance resolves once from instance, scoped,
+ * and semantic defaults in that order.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.componentOverridesSample
+ * @receiver active tree builder that receives the emitted indicator node
+ * @param progress determinate fraction interpreted by the renderer, or `null` for indeterminate mode
+ * @param overrides sparse instance appearance applied after scoped [ProvideCircularProgressIndicatorOverrides]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended after the resolved square size
  */
 fun UiTreeBuilder.CircularProgressIndicator(
     progress: Float? = null,
-    indicatorColor: Int = ProgressIndicatorDefaults.circularIndicatorColor(),
-    trackColor: Int = ProgressIndicatorDefaults.circularTrackColor(),
-    size: UiDp = ProgressIndicatorDefaults.circularSize(),
-    trackThickness: UiDp = ProgressIndicatorDefaults.circularTrackThickness(),
+    overrides: CircularProgressIndicatorOverrides = CircularProgressIndicatorOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
+    val appearance = ProgressIndicatorDefaults.resolveCircular(overrides)
     emit(
         type = NodeType.CircularProgressIndicator,
         key = key,
         spec = ProgressIndicatorNodeProps(
             enabled = true,
             progress = progress,
-            indicatorColor = indicatorColor,
-            trackColor = trackColor,
-            trackThickness = trackThickness,
-            indicatorSize = size,
+            indicatorColor = appearance.indicatorColor,
+            trackColor = appearance.trackColor,
+            trackThickness = appearance.trackThickness,
+            indicatorSize = appearance.size,
         ),
         modifier = Modifier
-            .size(width = size, height = size)
+            .size(width = appearance.size, height = appearance.size)
             .then(modifier),
     )
 }
@@ -245,9 +259,24 @@ fun UiTreeBuilder.Popup(
 }
 
 /**
- * Requests a modal bottom sheet overlay.
+ * Requests a modal bottom sheet with a stable session-scoped identity.
  *
- * The sheet also captures DSL content, while expansion state and system-bar handling are delegated to Android presenters.
+ * [visible] controls whether the request exists. Behavior remains explicit while appearance
+ * resolves from [ModalBottomSheetDefaults], nested [ProvideModalBottomSheetOverrides] scopes, and
+ * instance [overrides]. The complete appearance and captured content are sent to the active
+ * presenter on first show and every changed same-key commit. The owner must remove the request
+ * after [onDismissRequest].
+ *
+ * @sample com.viewcompose.ui.foundation.samples.modalBottomSheetAppearanceSample
+ * @receiver active tree builder submitting the overlay request
+ * @param visible whether this render keeps the bottom-sheet request active
+ * @param requestKey stable request identity within the current render session
+ * @param dismissOnBackPress whether platform Back requests dismissal
+ * @param dismissOnClickOutside whether a scrim click requests dismissal
+ * @param skipPartiallyExpanded whether presenters with a partial state must omit it
+ * @param overrides sparse instance appearance applied after scoped bottom-sheet overrides
+ * @param onDismissRequest callback invoked by platform dismissal on the presenter thread
+ * @param content subtree captured with the resolved content color for the overlay session
  */
 fun UiTreeBuilder.ModalBottomSheet(
     visible: Boolean,
@@ -255,8 +284,7 @@ fun UiTreeBuilder.ModalBottomSheet(
     dismissOnBackPress: Boolean = true,
     dismissOnClickOutside: Boolean = true,
     skipPartiallyExpanded: Boolean = false,
-    scrimOpacity: Float = ModalBottomSheetDefaults.scrimOpacity(),
-    navigationBarColor: Int? = ModalBottomSheetDefaults.navigationBarColor(),
+    overrides: ModalBottomSheetOverrides = ModalBottomSheetOverrides.None,
     onDismissRequest: (() -> Unit)? = null,
     content: UiTreeBuilder.() -> Unit,
 ) {
@@ -264,6 +292,7 @@ fun UiTreeBuilder.ModalBottomSheet(
     if (!visible) {
         return
     }
+    val appearance = ModalBottomSheetDefaults.resolve(overrides)
     val saveableStateKey = overlaySaveableStateKey(
         type = OverlayType.ModalBottomSheet,
         requestKey = requestKey,
@@ -280,13 +309,14 @@ fun UiTreeBuilder.ModalBottomSheet(
                 dismissOnBackPress = dismissOnBackPress,
                 dismissOnClickOutside = dismissOnClickOutside,
                 skipPartiallyExpanded = skipPartiallyExpanded,
-                scrimOpacity = scrimOpacity,
-                navigationBarColor = navigationBarColor,
+                appearance = appearance,
                 onDismissRequest = onDismissRequest,
             ),
             contentToken = ModalBottomSheetOverlayContent(
                 surface = captureOverlaySurfaceContent(
-                    content = content,
+                    content = {
+                        ProvideLocal(LocalContentColor, appearance.contentColor, content)
+                    },
                     saveableStateHolder = saveableStateHolder,
                     saveableStateKey = saveableStateKey.takeIf { saveableStateHolder != null },
                 ),

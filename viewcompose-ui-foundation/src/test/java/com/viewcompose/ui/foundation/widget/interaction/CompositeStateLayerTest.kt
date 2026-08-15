@@ -15,14 +15,14 @@ class CompositeStateLayerTest {
         val tree = buildVNodeTree {
             FloatingActionButton(
                 onClick = {},
-                contentColor = contentColor,
+                overrides = FloatingActionButtonOverrides(contentColor = contentColor),
             ) {
                 Icon(source = ImageSource.Resource(1))
             }
             ExtendedFloatingActionButton(
                 text = "Create",
                 onClick = {},
-                contentColor = contentColor,
+                overrides = ExtendedFloatingActionButtonOverrides(contentColor = contentColor),
             )
         }
 

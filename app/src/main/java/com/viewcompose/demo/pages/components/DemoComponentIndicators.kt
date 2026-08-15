@@ -6,10 +6,12 @@ import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.CircularProgressIndicator
+import com.viewcompose.ui.foundation.CircularProgressIndicatorOverrides
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Divider
 import com.viewcompose.ui.foundation.LazyColumn
 import com.viewcompose.ui.foundation.LinearProgressIndicator
+import com.viewcompose.ui.foundation.LinearProgressIndicatorOverrides
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextDefaults
@@ -149,13 +151,17 @@ private fun UiTreeBuilder.ComponentProgressVariants() {
         )
         LinearProgressIndicator(
             progress = 0.6f,
-            indicatorColor = Theme.colors.secondary,
-            trackColor = Theme.colors.surfaceVariant,
+            overrides = LinearProgressIndicatorOverrides(
+                indicatorColor = Theme.colors.secondary,
+                trackColor = Theme.colors.surfaceVariant,
+            ),
         )
         CircularProgressIndicator(
             progress = 0.5f,
-            size = 64.dp,
-            trackThickness = 6.dp,
+            overrides = CircularProgressIndicatorOverrides(
+                size = 64.dp,
+                trackThickness = 6.dp,
+            ),
         )
     }
 }
