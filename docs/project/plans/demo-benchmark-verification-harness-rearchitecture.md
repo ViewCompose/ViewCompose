@@ -20,10 +20,13 @@ Next action: run the Phase 5 navigation-motion revision 6 and design-bundle revi
 a rootable or otherwise clock-controllable reference device. The current Samsung consumer device
 cannot produce valid run stability for these workloads.
 
-Do not benchmark or begin a performance-only slice from the
+Performance work from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
-until the completion gate in this plan has produced a stable replacement Demo baseline. A
-source-and-contract audit or a focused correctness fix does not depend on that performance gate.
+is gated by the replacement baselines for the scenarios that can exercise that optimization, not
+by unrelated navigation or design-system matrices. The accepted release state-patch, renderer,
+list, and complex-layout baselines satisfy that scoped gate for the two retained Runtime/Patch
+experiments. Navigation revision 6 and design-bundle revision 3 remain blocked on a
+clock-controllable device without delaying unrelated framework work.
 
 ## Maven release changesets
 
@@ -1101,8 +1104,11 @@ it regresses by more than both 5% and 0.3 ms; P95 fails only when it regresses b
 and 0.8 ms. Unstable runs are rerun rather than interpreted. A changed workload revision receives a
 new baseline and is never presented as an optimization against the old revision.
 
-The new Runtime/Patch plan audit may begin only after state patch, renderer diagnostics, list
-scroll/mutation, and complex-layout baselines have stable revisioned results.
+The Runtime/Patch modifier-binding and LocalSnapshot experiments may begin only after state patch,
+renderer diagnostics, list scroll/mutation, and complex-layout baselines have stable revisioned
+results. Those scoped prerequisites are satisfied by the accepted replacement results above;
+navigation and design-system matrices do not exercise either optimization and are not part of this
+gate.
 
 The fixture-interaction baseline uses the same launch-boost isolation. Direct routing
 removed the old diagnostics tab-switch prelude, and the collection fixture now begins from an
@@ -1228,9 +1234,10 @@ This plan is complete only when all of the following are true:
     `docs/archive/`.
 
 The 2026-08-14 source-and-contract re-audit of the Runtime data propagation and Android View patch
-optimization plan is complete. Only after these criteria pass may its performance experiments begin;
-they must use the new scenario IDs and workload revisions rather than reconstructing baselines from
-the retired Demo layout.
+optimization plan is complete. Its performance experiments may begin after their affected-scenario
+gate passes, even while this broader Demo plan retains unrelated device-blocked matrices. They must
+use the new scenario IDs and workload revisions rather than reconstructing baselines from the
+retired Demo layout.
 
 ## Evidence ledger
 

@@ -2,10 +2,13 @@
 
 ## Status
 
-Active after a 2026-08-14 implementation and necessity re-audit. Phases 0 and 1 are implemented:
+Active after a 2026-08-15 implementation, necessity, and benchmark-gate re-audit. Phases 0 and 1 are implemented:
 nullable Local lookup is correct, framework-owned logical tuples publish atomically, and one global
 Snapshot Apply invalidates each affected Observation at most once. The remaining active work is two
-bounded Android View/runtime allocation experiments gated by the replacement Demo baseline. The
+bounded Android View/runtime allocation experiments. Their affected-scenario replacement baseline
+gate is satisfied by the accepted release state-patch, renderer, list, and complex-layout results.
+Unrelated navigation and design-system matrices remain device-blocked but do not exercise either
+experiment. The
 plan no longer treats a broad diagnostics system, a shared frame scheduler, or general Compose
 parity as prerequisites.
 
@@ -14,11 +17,11 @@ configuration-aware Android resources, resource and environment revisions, trans
 deferred child-session activation, and the logical-session/physical-tree collection reuse model.
 Those capabilities are audited as current foundations below, not repeated as unfinished phases.
 
-Last verified: 2026-08-14.
+Last verified: 2026-08-15.
 
-Next action: execute the replacement scenario and workload-revision baseline from the
-[Demo benchmark and verification harness rearchitecture plan](./demo-benchmark-verification-harness-rearchitecture.md)
-before beginning modifier-only binding or LocalSnapshot allocation work.
+Next action: execute Phase 2 as a test-first modifier-only binding experiment, retain or revert it
+against deterministic operation counts and the accepted replacement baselines, then execute the
+independent Phase 3 LocalSnapshot identity-reuse experiment under the same rule.
 
 ## Maven release changesets
 
@@ -254,9 +257,9 @@ Phase 1 completed after focused runtime, animation, gesture, text, Local, delaye
 `snapshotFlow` tests passed and public contracts were aligned. Repository-wide gates are recorded
 in the evidence ledger for the retained revision.
 
-## Performance implementation gate
+## Performance implementation gate — satisfied 2026-08-15
 
-Phases 2 and 3 remain blocked until the Demo rearchitecture provides:
+Phases 2 and 3 were blocked until the Demo rearchitecture provided:
 
 1. a stable direct scenario ID and workload revision for the affected state/modifier and Local-heavy
    fixtures;
@@ -269,6 +272,13 @@ Phases 2 and 3 remain blocked until the Demo rearchitecture provides:
 Use the variance and regression thresholds from
 [Performance](../../tooling/performance.md) and `tools/performance/benchmark_policy.json`. If the
 workload revision changes, establish a new baseline instead of comparing unlike fixtures.
+
+The accepted release state-patch, renderer diagnostics revision 3, list revision 3, and complex-
+layout revision 3 results satisfy this gate. Diagnostics-theme, collection-stress, and shadow
+comparisons provide additional representative coverage. Navigation revision 6 and design-bundle
+revision 3 remain unaccepted because the current device cannot hold a stable clock policy, but
+those workloads do not exercise modifier-only binding or LocalSnapshot allocation and therefore do
+not block these experiments.
 
 ## Phase 2: Modifier-only Android View patch experiment
 
@@ -406,6 +416,7 @@ This plan is complete when all of the following are true:
 | 2026-08-14 | Current working tree | `snapshotFlow`, configuration-aware resources, resource/environment revisions, transactional effects, delayed-session activation, and collection ownership/reuse evidence | Marked these as independently implemented foundations rather than unfinished Runtime/Patch work. |
 | 2026-08-14 | Current working tree | Demo benchmark and automation audit | Performance experiments blocked on direct scenario IDs and explicit workload revisions; correctness work remains unblocked. |
 | 2026-08-14 | Current working tree | Focused RuntimeObservation, nullable Local/delayed Session, Transition, Animatable, MutableTransitionState, anchored drag, TextFieldState, and snapshotFlow tests | Phase 0 and Phase 1 correctness hard cut implemented; modifier-only Patch and LocalSnapshot experiments remain gated by the replacement Demo baseline. |
+| 2026-08-15 | Demo revisioned release, renderer, list, complex-layout, diagnostics, collection, and shadow results | All affected and representative Runtime/Patch workloads pass the repository stability gate; only unrelated navigation/design matrices remain device-blocked | Unlock Phase 2 and Phase 3 independently; each still requires deterministic operation-count improvement and no accepted-workload policy regression. |
 
 ## Decision history
 
