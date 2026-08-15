@@ -112,4 +112,4 @@ The production audit found:
 
 ## Maven release changesets
 
-- `release/changes/20260814-composition-runtime-correctness.json`
+- `release/changes/20260815-component-appearance-convergence.json`

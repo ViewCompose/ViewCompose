@@ -68,17 +68,25 @@ service, credentials, analytics, or network request after deployment. Search UI 
 reviewed in the standard `zh-CN` message catalog, while the index is generated from the locale's
 rendered documents during every production build.
 
-The per-locale search-index budget is 5.5 MiB. It was first raised from 4 MiB after the searchable
+The per-locale search-index budget is 6 MiB. It was first raised from 4 MiB after the searchable
 [multi-design-system architecture standard](../architecture/design-systems.md), ADR-0005, and its
 evidence-heavy [active execution plan](./plans/multi-design-system-high-fidelity.md) measured about
 4.1 MiB for English and 4.4 MiB for Chinese. After the complete One UI and overlay architecture
 record plus nine additional Chinese mirrors were indexed, the complete build measured 4.4 MiB for
 English and 4.7 MiB for Chinese, so the reviewed ceiling moved to 5 MiB. Adding the host-owned
 Android resource environment and transactional effect lifecycle contracts measured 4.7 MiB for
-English and 5.1 MiB for Chinese, so the reviewed ceiling moved to 5.5 MiB. Keeping these core
-runtime contracts searchable has direct reader value and is preferred over path exclusions. A
-later increase still requires a new measurement and reader-value explanation; ordinary document
-growth does not raise the budget automatically.
+English and 5.1 MiB for Chinese, so the reviewed ceiling moved to 5.5 MiB. The component-appearance
+convergence then added one searchable ADR plus expanded theming, overlay, and module contracts. A
+clean `main` build contained 103 canonical documents and measured 5,349,372 bytes for English and
+5,757,926 bytes for Chinese; the failing candidate contained 104 and measured 5,422,767 and
+5,838,085 bytes. That is an absolute increase of 73,395 bytes (1.37%) for English and 80,159 bytes
+(1.39%) for Chinese, while Chinese bytes per canonical document rose by about 0.42%. The conclusion
+is **regressed** in absolute payload but without anomalous index amplification: the new contracts have
+direct reader value, and `main` had only 9,242 bytes of headroom. The reviewed ceiling therefore
+moves to 6 MiB; that measured candidate leaves 453,371 bytes, or about 7.2% of the budget, as
+Chinese headroom. If either locale reaches 6 MiB, the next action is to review search partitioning
+or index representation before another increase; code and command content remains indexed because
+API and build-command search has direct reader value.
 
 Compatibility redirects preserve `/docs`, `/getting-started`, `/compose-migration`, and
 `/migrate-from-compose`, including their locale-prefixed forms. Add a redirect only for an
@@ -97,7 +105,7 @@ both locale search entries measured 40.427350 MiB, so the reviewed ceiling moved
 working-tree `current` Dokka for unpublished artifacts share the API-tree budget: they may average
 at most 4.5 MiB and no individual tree may exceed 24 MiB. Only manifests and redirect aliases use
 the separate 1 MiB routing allowance. The other ceilings remain 120 seconds for the Docusaurus
-build, 8 MiB total and 768 KiB largest-file for JavaScript, 128 KiB for CSS, and 5.5 MiB for each
+build, 8 MiB total and 768 KiB largest-file for JavaScript, 128 KiB for CSS, and 6 MiB for each
 locale's search index. The gate also rejects any locale-prefixed API copy. Raise a threshold only
 with a measured explanation of the reader or release value that requires the additional cost.
 

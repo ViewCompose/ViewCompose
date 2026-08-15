@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Harden composition, host, navigation, local snapshots, RTL, Group visibility, and modifier-only View patching; hard-cut component appearance to typed overrides and complete Basic styles.",
+  "summary": "Harden composition, host, and navigation ownership; publish state atomically; add logical RTL edges; reuse Local snapshots; preserve Group visibility; and patch modifier-only Views safely.",
   "changes": [
     { "artifact": "viewcompose-runtime", "impact": "breaking" },
     { "artifact": "viewcompose-ui-contract", "impact": "feature" },
@@ -13,22 +13,7 @@
     { "artifact": "viewcompose-text-core", "impact": "fix" },
     { "artifact": "viewcompose-renderer-android", "impact": "feature" },
     { "artifact": "viewcompose-navigation-core", "impact": "fix" },
-    { "artifact": "viewcompose-navigation-android", "impact": "fix" },
-    { "artifact": "viewcompose-overlay-material3-android", "impact": "fix" },
-    { "artifact": "viewcompose-overlay-oneui7-android", "impact": "fix" }
+    { "artifact": "viewcompose-navigation-android", "impact": "fix" }
   ],
-  "ignored": [
-    {
-      "artifact": "viewcompose-material3",
-      "reason": "Production source only maps the same resolved Material recipes into the new Foundation override and Basic style contracts; the Material 3 public API and observable appearance are unchanged."
-    },
-    {
-      "artifact": "viewcompose-oneui7",
-      "reason": "Production source only constructs the new complete BasicTextFieldStyle required by the Foundation hard cut; the One UI public contract and resolved appearance are unchanged."
-    },
-    {
-      "artifact": "viewcompose-preview",
-      "reason": "The preview catalog only constructs the new complete BasicTextFieldStyle required by the Foundation hard cut; preview descriptors and public behavior are unchanged."
-    }
-  ]
+  "ignored": []
 }

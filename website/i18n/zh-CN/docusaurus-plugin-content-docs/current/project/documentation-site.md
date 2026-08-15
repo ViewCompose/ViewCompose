@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: b9b389b3519cffe38b2d9f566f025499735385109254b5b028310ebad80c4d24
+translation_source_hash: 2793bae40525e03e33e2f97b2d10a735f789e624c3c0f5966f8260e2053779ce
 translation_status: current
 ---
 
@@ -62,15 +62,21 @@ React、navbar、footer 或 sidebar 新增消息 key 时运行 `npm run write-tr
 英文和简体中文都在构建时生成本地全文索引；部署后无需托管服务、凭据、分析或网络请求。
 搜索 UI 文案来自标准 `zh-CN` 消息目录。
 
-单 Locale 搜索索引预算为 5.5 MiB。加入可搜索的[多设计系统架构标准](../architecture/design-systems.md)、
+单 Locale 搜索索引预算为 6 MiB。加入可搜索的[多设计系统架构标准](../architecture/design-systems.md)、
 ADR-0005 及包含大量证据的
 [有效执行计划](https://docs.viewcompose.com/project/plans/multi-design-system-high-fidelity)后，实测英文
 索引约 4.1 MiB、中文约 4.4 MiB，因此预算首次从 4 MiB 上调。完整 One UI 与 Overlay 架构记录
 以及新增的九份中文镜像进入索引后，完整构建实测英文约 4.4 MiB、中文约 4.7 MiB，因此经审查的
 上限调整为 5 MiB。加入 Host 所有的 Android 资源环境与事务式 Effect 生命周期契约后，实测
-英文索引约 4.7 MiB、中文约 5.1 MiB，因此经审查的上限调整为 5.5 MiB。保持这些 Runtime 核心
-契约可搜索具有直接读者价值，优先级高于按路径排除。后续提升仍必须提供新的测量结果与读者价值
-说明；普通文档增长不会自动放宽预算。
+英文索引约 4.7 MiB、中文约 5.1 MiB，因此经审查的上限调整为 5.5 MiB。组件外观收敛随后新增
+一份可搜索 ADR，并扩展主题、Overlay 与模块契约。`main` 干净构建包含 103 份英文权威文档，
+英文和中文索引分别为 5,349,372 与 5,757,926 字节；触发失败的候选版本包含 104 份，分别为
+5,422,767 与 5,838,085 字节。英文绝对增加 73,395 字节（1.37%），中文增加 80,159 字节
+（1.39%），而每份英文权威文档对应的中文索引密度约增加 0.42%。结论是绝对体积**回退**，但不
+存在异常索引放大：新增契约对读者有直接价值，且 `main` 只剩 9,242 字节余量。因此经审查的上限
+调整为 6 MiB，该实测候选版本的中文仍保留 453,371 字节、占预算约 7.2% 的余量。任一 Locale
+达到 6 MiB 时，下一步必须先审查搜索分区或索引表示，再考虑继续上调；代码与命令内容仍参与
+索引，因为 API 与构建命令搜索具有直接读者价值。
 
 兼容重定向保留 `/docs`、`/getting-started`、`/compose-migration` 和
 `/migrate-from-compose`，包括 locale 前缀形式。只为明确的历史或推广路由增加重定向，权威
@@ -88,7 +94,7 @@ Docusaurus 完成各 locale 构建后，受支持的构建入口会删除 `/zh-C
 制品的工作树 `current` Dokka 共用 API 树预算，平均上限为 4.5 MiB，任一单独树不得超过
 24 MiB。只有 manifest 与重定向别名使用独立的 1 MiB 路由配额。其他上限保持不变：Docusaurus
 构建 120 秒、JavaScript 总计 8 MiB/单文件 768 KiB、CSS 128 KiB、各 locale 搜索索引
-5.5 MiB。门禁也会拒绝任何带 locale 前缀的 API 副本。提高阈值必须附有读者或发布价值的测量
+6 MiB。门禁也会拒绝任何带 locale 前缀的 API 副本。提高阈值必须附有读者或发布价值的测量
 说明。
 
 无障碍检查覆盖站点自有英文与本地化页面，检查文档语言、title/main landmark、标题顺序、

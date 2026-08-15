@@ -11,7 +11,7 @@ Last verified: 2026-08-15.
 
 ## Maven release changesets
 
-- `release/changes/20260814-composition-runtime-correctness.json`
+- `release/changes/20260815-component-appearance-convergence.json`
 
 ## Objective
 
@@ -119,7 +119,7 @@ This plan does not:
 
 - Update ADR-0013 consequences, theming guidance, overlay guidance, the UI Foundation manual, and
   required Simplified Chinese mirrors.
-- Update the existing unreleased changeset with every affected published artifact classification.
+- Add one immutable changeset with every affected published artifact classification.
 - Pass focused unit tests, presenter tests, compiled samples, Dokka, documentation gates,
   development-tooling isolation, and `qaQuick`.
 - Record comparison context and limitations for any accepted performance or device evidence, then
