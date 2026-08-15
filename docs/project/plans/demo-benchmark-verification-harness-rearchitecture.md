@@ -5,7 +5,8 @@
 Active. Phase 0 inventory and workload freeze, Phase 1 contract and automation spine, Phase 2 host
 and catalog hard cut, Phase 3 localization and content hard cut, and Phase 4 scenario migration are
 complete. Phase 5 benchmark rebaseline is in progress; release, renderer diagnostics, list revision
-3, and complex-layout revision 3 replacement baselines are accepted.
+3, complex-layout revision 3, diagnostics-theme revision 2, and collection-stress revision 2
+replacement baselines are accepted.
 
 The Demo is being redefined as a deterministic benchmark and framework-verification harness.
 Automated validation owns the primary information architecture. Human verification remains a
@@ -14,7 +15,7 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-15.
 
-Next action: complete the Phase 5 diagnostics-theme and collection-stress interaction baselines.
+Next action: complete the Phase 5 shadow-comparison revision 2 baselines.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -1056,6 +1057,19 @@ new baseline and is never presented as an optimization against the old revision.
 The new Runtime/Patch plan audit may begin only after state patch, renderer diagnostics, list
 scroll/mutation, and complex-layout baselines have stable revisioned results.
 
+The fixture-interaction baseline uses the same launch-boost isolation. Direct routing
+removed the old diagnostics tab-switch prelude, and the collection fixture now begins from an
+explicitly settled host, so `diagnostics.theme` and `collection.stress` advance to revision 2. Their
+Macrobenchmark method names carry `Revision2`, while the physical batch also records scenario,
+revision, and clock policy in AndroidX payload metadata.
+
+The accepted interaction workload keeps automation overhead outside measurement. Diagnostics uses
+eight fixed long flings per direction and verifies the real bottom and top anchors. Collection
+scroll resolves the nested LazyColumn bounds during setup, then executes eight fixed swipes per
+direction with a 500 ms settle after every gesture. The settle is explicit because the shared OEM
+workaround disables UiAutomator's implicit idle timeout. Collection mutation executes eight complete
+rotate/insert/reset cycles and verifies the restored state after every cycle.
+
 ## Explicit removals and non-goals
 
 This plan removes or rejects:
@@ -1184,6 +1198,8 @@ the retired Demo layout.
 | 2026-08-15 | Phase 5 launch-boost isolation audit | Two cooled Compose complex-layout scroll samples began with frame-CPU run-P50 near `3.14 ms`, followed by four runs near `5.0`-`5.44 ms`; CV remained above `0.19`. A 1.5-second trial still left complex-layout update at CV `0.170`, so the shared paired-performance setup now includes an unmeasured 5-second post-launch settling window. List and complex-layout contracts advance to revision 3, shadow comparisons to revision 2, and the previously provisional revision 2 list report is rejected. |
 | 2026-08-15 | Phase 5 explicit clock-policy gate | AndroidX `cpuLocked` alternated on the same non-rooted device because instrumentation launch boosting transiently raised `scaling_min_freq`. Formal runs now persist `clockPolicy=unlocked-dvfs-preflight-v1`; the report compares that host-verified policy, exposes all raw lock snapshots, and retains strict snapshot matching for legacy input. Sixteen report-tool tests pass. |
 | 2026-08-15 | Phase 5 list and complex-layout replacement baselines | Five-iteration, per-method-cooled revision 3 batches passed the `0.15` stability gate. List scroll/mutation ViewCompose run-P50 CV values were `0.041/0.009` versus Compose `0.072/0.034`; complex-layout scroll/update values were `0.011/0.079` versus `0.037/0.082`. The owning performance specification records the accepted P50/P95 values. |
+| 2026-08-15 | Phase 5 fixture-interaction workload audit | Diagnostics initially failed to return to its top anchor because the reverse fling began in the fixed header instead of the scrolling surface. Collection's original three-swipe workload produced run-P50 CV `0.755`; enlarging it while resolving targets inside measurement produced CV `0.712`. Moving Accessibility lookup to setup still exposed 3.6/7.2/14.7 ms run plateaus. Fixed 120 Hz and full ART compilation trials did not remove them. Perfetto showed stable RecyclerView and draw work but variable `dequeueBuffer` wait with FrameTimeline `Buffer Stuffing`, proving that zero-idle back-to-back gestures contaminated the workload. A fixed 500 ms inter-gesture settle removed the stuffing. |
+| 2026-08-15 | Phase 5 diagnostics-theme and collection-stress revision 2 baselines | Five clean, per-method-cooled runs passed the `0.15` stability gate. Diagnostics long-fling, collection scroll, and collection mutation frame-CPU P50/P95 values were `3.067/7.336`, `3.357/6.288`, and `4.358/10.507` ms; their run-P50 CV values were `0.008`, `0.018`, and `0.018`. Every raw result records the scenario, revision, and explicit clock policy. |
 
 ## Decision history
 

@@ -177,6 +177,39 @@ per-method `NONE`/`LIGHT` starts, the 5-second setup settling window, and clock 
 These are revisioned baseline values, not a claim that one engine is universally faster. In
 particular, list and complex-layout update exercise different framework strategies from scrolling.
 
+`DemoInteractionBenchmark` retains focused fixture baselines outside the Compose comparisons:
+
+1. `diagnosticsThemeLongFlingToBottomAndBackRevision2` executes eight fixed forceful flings in each
+   direction and proves the real bottom and top anchors after their respective gesture sequences.
+2. `collectionsScrollRevision2` captures the nested LazyColumn bounds during setup, then executes
+   eight fixed swipes in each direction without performing Accessibility queries inside the measured
+   block. Each swipe has a 500 ms physical settle window because benchmark setup disables
+   UiAutomator's implicit idle timeout; omitting that window overlaps inertial scrolls and causes
+   non-workload `Buffer Stuffing` in FrameTimeline.
+3. `collectionsStressMutationRevision2` executes eight complete rotate/insert/reset cycles and
+   asserts that every reset restores the original logical order.
+4. All three wait through the same 5-second unmeasured launch-settling window. Formal raw results
+   record `scenario`, `workloadRevision`, and `clockPolicy` through AndroidX benchmark payload.
+
+Accepted Samsung SM-G991B / Android 13 fixture baselines from 2026-08-15 use five iterations,
+per-method `NONE`/`LIGHT` starts, `CompilationMode.Partial`, and clock policy
+`unlocked-dvfs-preflight-v1`:
+
+| Workload | Frame CPU P50/P95 | Run-P50 CV |
+| --- | ---: | ---: |
+| `diagnostics.theme@2` fixed long-fling round trip | 3.067 / 7.336 ms | 0.008 |
+| `collection.stress@2` nested-list scroll round trip | 3.357 / 6.288 ms | 0.018 |
+| `collection.stress@2` eight-cycle mutation | 4.358 / 10.507 ms | 0.018 |
+
+The collection-scroll preflight is also the reference for gesture-driver contamination. Repeated
+target lookup inside measurement first added Accessibility traversal. After that was removed,
+back-to-back swipes still produced run-P50 plateaus near 3.6, 7.2, and 14.7 ms. Perfetto showed
+stable `RV Scroll`, display-list recording, and RenderThread draw cost across those runs; only
+`dequeueBuffer` wait changed, and FrameTimeline classified the slow spans as `Buffer Stuffing`.
+Changing refresh-rate or ART compilation policy did not remove it. The explicit per-gesture settle
+did, reducing run-P50 CV to 0.018. Never interpret an unpaced synthetic input loop as framework
+scroll cost.
+
 `ShadowPerformanceComparisonBenchmark` is the shadow control:
 
 1. ViewCompose and Compose use the same layers, colors, sizes, shapes, list data, and complex layout.

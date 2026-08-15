@@ -1,6 +1,7 @@
 package com.viewcompose.benchmark
 
 import android.content.Intent
+import android.graphics.Rect
 import android.os.SystemClock
 import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.uiautomator.By
@@ -274,6 +275,11 @@ internal fun MacrobenchmarkScope.startPerformanceScenarioAndWait(
         }
     }
     waitForScenarioTarget(scenarioId, DemoTargetRole.Target)
+    waitForPerformanceMeasurementSettle()
+}
+
+/** Waits outside the measured block until OEM launch-frequency boosting has expired. */
+internal fun waitForPerformanceMeasurementSettle() {
     // OEM launch boosting can otherwise leak into the first measured gesture or mutation and make
     // the first iteration materially faster than the rest. Setup is outside the measured block, so
     // wait for the launch-frequency floor to expire before every performance iteration.
@@ -405,6 +411,49 @@ internal fun MacrobenchmarkScope.swipePageDown() {
     device.waitForIdle()
 }
 
+/** Resolves a scenario-owned surface once during setup so measurement does not traverse accessibility. */
+internal fun MacrobenchmarkScope.scenarioTargetBounds(
+    scenarioId: String,
+    role: DemoTargetRole,
+): Rect = Rect(waitForScenarioTarget(scenarioId, role).visibleBounds)
+
+/** Swipes inside bounds captured outside the measured block. */
+internal fun MacrobenchmarkScope.swipeWithinBounds(
+    bounds: Rect,
+    direction: PageSwipeDirection,
+) {
+    val horizontalCenter = bounds.centerX()
+    val verticalInset = (bounds.height() * 0.12f).toInt().coerceAtLeast(1)
+    val top = bounds.top + verticalInset
+    val bottom = bounds.bottom - verticalInset
+    assertTrue("Expected non-empty scroll bounds", bottom > top)
+    when (direction) {
+        PageSwipeDirection.TowardBottom -> device.swipe(
+            horizontalCenter,
+            bottom,
+            horizontalCenter,
+            top,
+            20,
+        )
+
+        PageSwipeDirection.TowardTop -> device.swipe(
+            horizontalCenter,
+            top,
+            horizontalCenter,
+            bottom,
+            20,
+        )
+    }
+    // UiAutomator's idle timeout is disabled for OEM reliability, so wait explicitly until the
+    // previous nested-list gesture has stopped producing frames before injecting the next one.
+    SystemClock.sleep(NESTED_SCROLL_GESTURE_SETTLE_MILLIS)
+}
+
+internal enum class PageSwipeDirection {
+    TowardBottom,
+    TowardTop,
+}
+
 /**
  * Performs a forceful short-duration swipe and lets Android continue the resulting fling.
  *
@@ -429,7 +478,8 @@ internal fun MacrobenchmarkScope.flingPageDown() {
     val height = device.displayHeight
     device.swipe(
         width / 2,
-        (height * 0.12f).toInt(),
+        // Start below fixed edge-to-edge headers so the scrolling surface owns the gesture.
+        (height * 0.22f).toInt(),
         width / 2,
         (height * 0.86f).toInt(),
         4,
@@ -456,3 +506,4 @@ internal fun MacrobenchmarkScope.scrollToPageTop(
 private const val NAVIGATION_MOTION_WAIT_MILLIS = 650L
 private const val TARGET_SEARCH_SCROLL_SETTLE_MILLIS = 100L
 private const val LONG_FLING_SETTLE_MILLIS = 1_200L
+private const val NESTED_SCROLL_GESTURE_SETTLE_MILLIS = 500L

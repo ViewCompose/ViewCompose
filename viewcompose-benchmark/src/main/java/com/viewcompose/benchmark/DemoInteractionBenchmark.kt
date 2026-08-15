@@ -1,10 +1,12 @@
 package com.viewcompose.benchmark
 
+import android.graphics.Rect
 import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.FrameTimingMetric
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -141,7 +143,7 @@ class DemoInteractionBenchmark {
     }
 
     @Test
-    fun diagnosticsThemeLongFlingToBottomAndBack() = benchmarkRule.measureRepeated(
+    fun diagnosticsThemeLongFlingToBottomAndBackRevision2() = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),
         compilationMode = CompilationMode.Partial(),
@@ -149,6 +151,7 @@ class DemoInteractionBenchmark {
         startupMode = StartupMode.WARM,
         setupBlock = {
             startDiagnosticsThemeAndWait()
+            waitForPerformanceMeasurementSettle()
         },
     ) {
         repeat(DIAGNOSTICS_THEME_FLING_COUNT) {
@@ -184,24 +187,31 @@ class DemoInteractionBenchmark {
     }
 
     @Test
-    fun collectionsScroll() = benchmarkRule.measureRepeated(
-        packageName = TARGET_PACKAGE,
-        metrics = listOf(FrameTimingMetric()),
-        compilationMode = CompilationMode.Partial(),
-        iterations = DEFAULT_ITERATIONS,
-        startupMode = StartupMode.WARM,
-        setupBlock = {
-            startDemoScenarioAndWait("collection.stress")
-            waitForScenarioTarget("collection.stress", DemoTargetRole.Target)
-        },
-    ) {
-        swipePageUp()
-        swipePageUp()
-        swipePageUp()
+    fun collectionsScrollRevision2() {
+        var scrollBounds = Rect()
+        benchmarkRule.measureRepeated(
+            packageName = TARGET_PACKAGE,
+            metrics = listOf(FrameTimingMetric()),
+            compilationMode = CompilationMode.Partial(),
+            iterations = DEFAULT_ITERATIONS,
+            startupMode = StartupMode.WARM,
+            setupBlock = {
+                startDemoScenarioAndWait("collection.stress")
+                scrollBounds = scenarioTargetBounds("collection.stress", DemoTargetRole.Target)
+                waitForPerformanceMeasurementSettle()
+            },
+        ) {
+            repeat(COLLECTION_SCROLL_SWIPES_PER_DIRECTION) {
+                swipeWithinBounds(scrollBounds, PageSwipeDirection.TowardBottom)
+            }
+            repeat(COLLECTION_SCROLL_SWIPES_PER_DIRECTION) {
+                swipeWithinBounds(scrollBounds, PageSwipeDirection.TowardTop)
+            }
+        }
     }
 
     @Test
-    fun collectionsStressMutation() = benchmarkRule.measureRepeated(
+    fun collectionsStressMutationRevision2() = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),
         compilationMode = CompilationMode.Partial(),
@@ -209,23 +219,31 @@ class DemoInteractionBenchmark {
         startupMode = StartupMode.WARM,
         setupBlock = {
             startDemoScenarioAndWait("collection.stress")
+            waitForPerformanceMeasurementSettle()
         },
     ) {
-        val initial = scenarioTargetText("collection.stress", DemoTargetRole.State)
-        clickScenarioTarget("collection.stress", DemoTargetRole.PrimaryAction)
-        val rotated = waitForScenarioTargetTextChange(
-            "collection.stress",
-            DemoTargetRole.State,
-            initial,
-        )
-        clickScenarioTarget("collection.stress", DemoTargetRole.SecondaryAction)
-        val inserted = waitForScenarioTargetTextChange(
-            "collection.stress",
-            DemoTargetRole.State,
-            rotated,
-        )
-        clickScenarioTarget("collection.stress", DemoTargetRole.Reset)
-        waitForScenarioTargetTextChange("collection.stress", DemoTargetRole.State, inserted)
+        repeat(COLLECTION_MUTATION_CYCLES_PER_ITERATION) {
+            val initial = scenarioTargetText("collection.stress", DemoTargetRole.State)
+            clickScenarioTarget("collection.stress", DemoTargetRole.PrimaryAction)
+            val rotated = waitForScenarioTargetTextChange(
+                "collection.stress",
+                DemoTargetRole.State,
+                initial,
+            )
+            clickScenarioTarget("collection.stress", DemoTargetRole.SecondaryAction)
+            val inserted = waitForScenarioTargetTextChange(
+                "collection.stress",
+                DemoTargetRole.State,
+                rotated,
+            )
+            clickScenarioTarget("collection.stress", DemoTargetRole.Reset)
+            val reset = waitForScenarioTargetTextChange(
+                "collection.stress",
+                DemoTargetRole.State,
+                inserted,
+            )
+            assertEquals(initial, reset)
+        }
     }
 
     @Test
@@ -260,3 +278,5 @@ class DemoInteractionBenchmark {
 
 private const val DIAGNOSTICS_THEME_FLING_COUNT = 8
 private const val DIAGNOSTICS_RENDERER_CYCLES_PER_ITERATION = 8
+private const val COLLECTION_SCROLL_SWIPES_PER_DIRECTION = 8
+private const val COLLECTION_MUTATION_CYCLES_PER_ITERATION = 8
