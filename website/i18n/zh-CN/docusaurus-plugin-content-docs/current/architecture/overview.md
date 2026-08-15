@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: e16ef7740bb2badb4e1051b881bbd22c7115c8f66239685a4c6510a01fb9edea
+translation_source_hash: 5c3c2c5392d94851a858736a45fbc1d1182e9b3f2a9a89aba1b8b246bb5b6a1f
 translation_status: current
 ---
 
@@ -262,7 +262,7 @@ flowchart TD
 1. 业务侧自定义 token 必须通过统一 Local API：`uiLocalOf`、`UiLocals.current`、`ProvideLocal`、`ProvideLocals`。
 2. `viewcompose-ui-foundation` 内置 Local 也统一走上述 API，不再新增专用 `ProvideXxx` 调用范式。
 3. `viewcompose-renderer-android` 不新增 Local 语义入口；只消费 reconcile 后的 `NodeSpec`。
-4. Local 的 snapshot/restore 必须与 Lazy、Pager、Overlay 和 Navigation Destination 一致传播，包括资源版本，不允许能力回退。
+4. Local 的 Snapshot/Restore 必须与 Lazy、Pager、Overlay 和 Navigation Destination 一致传播，包括资源版本，不允许能力回退。`LocalContext` 按对象身份安装不可变 Snapshot：Provider 边界负责分配，同一 Scope 内重复的 Group/Node 捕获直接返回已安装实例。
 5. Lifecycle 与 ViewModel 相关 Local 的对外包名固定为 `com.viewcompose.lifecycle` 与 `com.viewcompose.viewmodel`；默认注入由 `viewcompose-android` 的组合根完成。
 
 ### 4.7 SlotTable Lite 重组边界

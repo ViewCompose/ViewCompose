@@ -6,11 +6,79 @@ package com.viewcompose.ui.foundation
  */
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LocalValueTest {
+    @Test
+    fun `snapshot identity stays stable until a provider boundary`() {
+        val local = LocalValue { "default" }
+        val outside = LocalContext.snapshot()
+
+        assertSame(outside, LocalContext.snapshot())
+        LocalContext.provide(local, "provided") {
+            val provided = LocalContext.snapshot()
+
+            assertNotSame(outside, provided)
+            assertSame(provided, LocalContext.snapshot())
+            assertEquals("provided", LocalContext.current(local))
+        }
+        assertSame(outside, LocalContext.snapshot())
+    }
+
+    @Test
+    fun `nested providers restore exact previous snapshot identities`() {
+        val first = LocalValue { "first-default" }
+        val second = LocalValue { "second-default" }
+        val outside = LocalContext.snapshot()
+
+        LocalContext.provide(first, "outer") {
+            val outer = LocalContext.snapshot()
+            LocalContext.provide(second, "inner") {
+                val inner = LocalContext.snapshot()
+
+                assertNotSame(outer, inner)
+                assertSame(inner, LocalContext.snapshot())
+            }
+            assertSame(outer, LocalContext.snapshot())
+        }
+
+        assertSame(outside, LocalContext.snapshot())
+    }
+
+    @Test
+    fun `with snapshot installs supplied identity and restores caller after failure`() {
+        val local = LocalValue { "default" }
+        lateinit var captured: LocalSnapshot
+        LocalContext.provide(local, "captured") {
+            captured = LocalContext.snapshot()
+        }
+        val caller = LocalContext.snapshot()
+
+        val failure = runCatching {
+            LocalContext.withSnapshot(captured) {
+                assertSame(captured, LocalContext.snapshot())
+                assertEquals("captured", LocalContext.current(local))
+                error("expected failure")
+            }
+        }.exceptionOrNull()
+
+        assertTrue(failure is IllegalStateException)
+        assertSame(caller, LocalContext.snapshot())
+    }
+
+    @Test
+    fun `public captures share installed delegate without sharing wrappers`() {
+        val first = captureUiLocalSnapshot()
+        val second = captureUiLocalSnapshot()
+
+        assertNotSame(first, second)
+        assertSame(first.delegate, second.delegate)
+    }
+
     @Test
     fun `local uses default outside provider`() {
         val local = LocalValue { 7 }
@@ -101,6 +169,28 @@ class LocalValueTest {
             listOf("default", null, "inner", null, null, "inside", "default"),
             values,
         )
+    }
+
+    @Test
+    fun `batch provider exposes one stable snapshot and restores its caller`() {
+        val first = uiLocalOf(debugName = "BatchFirst") { "first-default" }
+        val second = uiLocalOf(debugName = "BatchSecond") { "second-default" }
+        lateinit var caller: LocalSnapshot
+
+        buildVNodeTree {
+            caller = LocalContext.snapshot()
+            ProvideLocals(
+                first provides "first-provided",
+                second provides "second-provided",
+            ) {
+                val batch = LocalContext.snapshot()
+
+                assertSame(batch, LocalContext.snapshot())
+                assertEquals("first-provided", UiLocals.current(first))
+                assertEquals("second-provided", UiLocals.current(second))
+            }
+            assertSame(caller, LocalContext.snapshot())
+        }
     }
 
     @Test

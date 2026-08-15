@@ -66,6 +66,9 @@ For historical analysis, see
 26. Reused nodes whose type, environment, and NodeSpec are unchanged use a modifier-only patch.
     Visual-only updates retain LayoutParams and skip full Node binding; layout modifiers replace
     LayoutParams without recreating or semantically rebinding the native View.
+27. `LocalContext` stores the installed immutable `LocalSnapshot` rather than rebuilding a snapshot
+    object for every group or emitted node. Snapshot creation scales with provider boundaries; a
+    batch `ProvideLocals` call installs one snapshot for all of its bindings.
 
 ### 2.2 Release benchmark entry points
 

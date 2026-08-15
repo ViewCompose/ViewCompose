@@ -27,10 +27,6 @@ This directory contains multi-step work that is currently active and must surviv
   locale-independent automation targets, fixture-first benchmark hosts, complete English and
   Simplified Chinese resources, and optional human guidance before benchmarking Runtime/View patch
   optimizations against a new stable baseline.
-- [Runtime data propagation and Android View patch optimization](./runtime-data-propagation-and-view-patch-optimization.md) —
-  fix nullable-Local and related-state publication defects, harden one-apply observation delivery,
-  and retain modifier-only View binding plus LocalSnapshot identity reuse only behind revisioned
-  Demo baselines; shared scheduling and broad diagnostics are no longer active phases.
 - [Compose migration capability convergence](./compose-migration-capability-convergence.md) —
   fix audited runtime-transaction, Fragment lifecycle, terminal-session, keyed-identity, navigation
   owner, and RTL correctness gaps while retaining AndroidX-compatible deep-link behavior and moving

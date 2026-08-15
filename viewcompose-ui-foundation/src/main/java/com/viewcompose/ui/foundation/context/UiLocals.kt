@@ -94,22 +94,11 @@ fun UiTreeBuilder.ProvideLocals(
     vararg values: UiLocalProvider,
     content: UiTreeBuilder.() -> Unit,
 ) {
-    provideLocalsRecursively(values = values, index = 0, content = content)
-}
-
-private fun UiTreeBuilder.provideLocalsRecursively(
-    values: Array<out UiLocalProvider>,
-    index: Int,
-    content: UiTreeBuilder.() -> Unit,
-) {
-    if (index >= values.size) {
-        content()
-        return
+    val bindings = LinkedHashMap<LocalValue<*>, Any?>(values.size)
+    values.forEach { provider ->
+        bindings[provider.local.holder] = provider.value
     }
-    val entry = values[index]
-    @Suppress("UNCHECKED_CAST")
-    val local = entry.local as UiLocal<Any?>
-    LocalContext.provide(local.holder, entry.value) {
-        provideLocalsRecursively(values = values, index = index + 1, content = content)
+    LocalContext.provide(bindings) {
+        content()
     }
 }

@@ -110,7 +110,10 @@ by a later renderer or child render session.
   and the local-provider APIs scope density, locales, layout direction, content color, text style,
   image loading, focus, frame clock, and host capabilities. `UiLocals.current` is a Q2 scoped lookup:
   an absent binding evaluates its default, while an explicitly provided `null` for a nullable Local
-  remains `null` through nesting, batch providers, snapshots, and delayed child sessions.
+  remains `null` through nesting, batch providers, snapshots, and delayed child sessions. Each
+  provider boundary installs one immutable internal snapshot; repeated captures in the same scope
+  reuse that identity, and `ProvideLocals` installs its complete batch atomically. Public
+  `UiLocalSnapshot` wrappers remain opaque and independently allocated.
 - `Image`, `Icon`, [`ProvideImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/current/com.viewcompose.ui.foundation/-provide-image-loader.html),
   and `UiImageRequestOptions` expose image semantics without selecting Coil, Glide, or another
   decoder. A subtree may install one `UiImageLoader` or leave it absent for resource-only rendering.

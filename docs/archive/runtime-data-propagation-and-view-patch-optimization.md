@@ -2,17 +2,14 @@
 
 ## Status
 
-Active after a 2026-08-15 implementation, necessity, and benchmark-gate re-audit. Phases 0, 1, and
-2 are implemented: nullable Local lookup is correct, framework-owned logical tuples publish
-atomically, one global Snapshot Apply invalidates each affected Observation at most once, and a
-modifier-only Android View update no longer repeats semantic Node binding or unchanged
-LayoutParams work. The remaining active work is the bounded LocalSnapshot identity-reuse
-experiment. Its affected-scenario replacement baseline
-gate is satisfied by the accepted release state-patch, renderer, list, and complex-layout results.
-Unrelated navigation and design-system matrices remain device-blocked but do not exercise either
-experiment. The
-plan no longer treats a broad diagnostics system, a shared frame scheduler, or general Compose
-parity as prerequisites.
+Completed on 2026-08-15 after an implementation, necessity, and benchmark-gate re-audit. Phases 0
+through 3 are implemented: nullable Local lookup is correct, framework-owned logical tuples publish
+atomically, one global Snapshot Apply invalidates each affected Observation at most once,
+modifier-only Android View updates avoid semantic Node rebinding and unchanged LayoutParams work,
+and immutable LocalSnapshot identity now changes only at provider boundaries. Unrelated navigation
+and design-system matrices remain device-blocked but do not exercise these changes. The plan no
+longer treats a broad diagnostics system, a shared frame scheduler, or general Compose parity as
+prerequisites.
 
 The old statement that all related work was unstarted is obsolete: later work independently added `snapshotFlow`,
 configuration-aware Android resources, resource and environment revisions, transactional effects,
@@ -21,8 +18,8 @@ Those capabilities are audited as current foundations below, not repeated as unf
 
 Last verified: 2026-08-15.
 
-Next action: execute the independent Phase 3 LocalSnapshot identity-reuse experiment under the same
-deterministic operation-count and accepted-workload rule.
+Archived after the final repository gates passed. Durable contracts live in current architecture,
+module, migration, and performance documentation; this file remains historical evidence only.
 
 ## Maven release changesets
 
@@ -327,6 +324,28 @@ retain only independently useful tests.
 
 ## Phase 3: LocalSnapshot identity-reuse experiment
 
+**Implemented and retained on 2026-08-15.** `LocalContext` now stores the installed immutable
+`LocalSnapshot`, returns that exact instance from repeated same-scope captures, creates one snapshot
+for a `ProvideLocals` batch, and restores the exact prior identity after nested or exceptional
+execution. Public `UiLocalSnapshot` captures remain fresh opaque wrappers around the installed
+delegate, so no public identity or mutability contract was introduced.
+
+The first implementation removed the ThreadLocal slot when the outer provider exited and fetched
+the prior snapshot twice at provider entry. A same-device diagnostic run then showed an anomalous
+`52.945 ms` frame-CPU P95. Review found that `remove()` forced a new `ThreadLocalMap.Entry` at the
+next provider boundary, unlike the previous Map-based runtime, which retained its empty value. The
+retained implementation restores the singleton empty snapshot instead and passes the already-read
+prior identity into the installer.
+
+Under the same adjacent `LIGHT` thermal and OEM-capped-frequency condition, the Phase 2-only build
+reported `6.172/42.697 ms` frame-CPU P50/P95, while the corrected Phase 3 build reported
+`5.874/40.070 ms`; its five run-P50 values had population CV `0.0178`. This adjacent comparison is
+attribution evidence, not a replacement longitudinal baseline: the device held CPU ceilings at
+`1.586/1.352 GHz`, AndroidX reported that it could not clear the Runtime Image, and the active
+performance contract rejects changing frequency ceilings. The keep authority is therefore the
+deterministic identity/allocation model plus the complete UI Foundation test suite; the device run
+shows no adjacent-version regression signal without weakening the accepted baseline.
+
 After the nullable correctness fix, test the smallest representation change:
 
 1. store the current immutable `LocalSnapshot` in the ThreadLocal;
@@ -441,6 +460,9 @@ This plan is complete when all of the following are true:
 | 2026-08-15 | Demo revisioned release, renderer, list, complex-layout, diagnostics, collection, and shadow results | All affected and representative Runtime/Patch workloads pass the repository stability gate; only unrelated navigation/design matrices remain device-blocked | Unlock Phase 2 and Phase 3 independently; each still requires deterministic operation-count improvement and no accepted-workload policy regression. |
 | 2026-08-15 | `NodeBindingDifferTest`, `ViewTreePatchPipelinePlanTest`, `ViewTreeRenderTransactionTest`, and the complete renderer unit suite | Pure visual modifier update reports zero rebound/one patch and preserves LayoutParams identity; layout changes replace only LayoutParams; native configuration rollback and AndroidView lifecycle isolation pass | Retain Phase 2 `ModifierOnly`; it removes the measured redundant operations without new binder branches or lifecycle escape paths. |
 | 2026-08-15 | Five-iteration release `runtime.view-patch` post-change run on SM-G991B / Android 13 | Start thermal `NONE`, end `MODERATE`; frame CPU P50/P95 `2.507/4.457 ms` versus accepted pre-change `2.864/4.470 ms`; explicit clock policy present, but the legacy baseline identity and Runtime Image warning prevent replacement-baseline status | No regression signal; retain the deterministic Phase 2 decision and leave the accepted longitudinal baseline unchanged. |
+| 2026-08-15 | `LocalValueTest` identity, nesting, batch, public-wrapper, and exceptional-restoration cases plus the complete UI Foundation unit suite | Same-scope capture returns the installed immutable snapshot; each provider boundary creates one identity; nested and failed execution restore the exact caller; one `ProvideLocals` batch installs one snapshot | Retain the Phase 3 representation hard cut without a persistent collection, mutable cache, or public identity contract. |
+| 2026-08-15 | Adjacent Phase 2-only and corrected Phase 3 five-iteration `performance.complex-layout@3` update runs on SM-G991B / Android 13 | Phase 2-only P50/P95 `6.172/42.697 ms`; corrected Phase 3 `5.874/40.070 ms`, run-P50 CV `0.0178`; both used the explicit clock policy, but the OEM frequency ceiling was capped and Runtime Image clearing failed | No adjacent-version regression signal. Treat as attribution evidence only, keep the accepted longitudinal baseline unchanged, and reject the first `remove()` implementation whose diagnostic P95 reached `52.945 ms`. |
+| 2026-08-15 | Final `qaQuick`, `qaRelease`, and documentation structure gates | `qaQuick` passed 1,619 tasks; `qaRelease` passed 837 tasks; focused UI Foundation and renderer suites and the documentation mirror/fingerprint checks passed | All retained phases satisfy their repository gates; archive the plan and continue from current architecture and module contracts. |
 
 ## Decision history
 
@@ -451,6 +473,7 @@ This plan is complete when all of the following are true:
 | 2026-08-14 | Narrow immediate work to nullable Local lookup, atomic related-state publication, and one-apply observation delivery | These are current contract defects or deterministic transaction-level redundancy. |
 | 2026-08-14 | Retain modifier-only binding and LocalSnapshot identity reuse behind the replacement Demo baseline | Their redundant-work paths are concrete, but end-to-end keep decisions require stable workload identity. |
 | 2026-08-15 | Retain the implemented modifier-only binding plan | It reaches zero full binds and zero LayoutParams replacement for visual-only changes, preserves renderer rollback and AndroidView lifecycle, passes the full renderer suite, and shows no affected-workload regression signal. |
+| 2026-08-15 | Retain LocalSnapshot identity reuse but restore, rather than remove, the empty ThreadLocal value | The retained form makes allocation follow provider boundaries, preserves exact nesting/restoration identity, avoids per-composition ThreadLocal entry churn, and has no adjacent-version benchmark regression signal. |
 | 2026-08-14 | Remove shared Session scheduling from this plan | Callback batching does not reduce independent render work, and no evidence justifies its global lifecycle complexity. |
 | 2026-08-14 | Remove broad trace correlation and diagnostics productization | Existing focused diagnostics are sufficient for retained work; more hot-path instrumentation is not a product goal. |
 | 2026-08-14 | Reject persistent maps, dependency-set reuse, derived suppression, tracked Locals, environment partial patches, and object pools from the active sequence | Their current benefit is unproven and their semantic or maintenance risk is disproportionate. |

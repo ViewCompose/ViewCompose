@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 21af49f781496eea705da82095817759b250c5413d07c217830221cac6587df5
+translation_source_hash: 1cd2cb9549858167c440004b39379f3ac6533fc2f63156ff59faaaebb0c49e4b
 translation_status: current
 ---
 
@@ -100,7 +100,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   与各类 Local Provider 为密度、语言、布局方向、内容颜色、文本样式、图片加载、焦点、帧时钟
   和宿主能力划定作用域。`UiLocals.current` 是 Q2 作用域查询：Binding 缺失时计算默认值；
   可空 Local 显式提供的 `null` 会在嵌套、批量 Provider、Snapshot 与延迟 Child Session 中始终
-  保持 `null`。
+  保持 `null`。每个 Provider 边界只安装一份不可变内部 Snapshot；同一 Scope 内重复捕获会复用
+  该对象身份，`ProvideLocals` 会一次性原子安装完整批次。公开 `UiLocalSnapshot` Wrapper 仍保持
+  不透明，并且每次独立分配。
 - `Image`、`Icon`、[`ProvideImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/current/com.viewcompose.ui.foundation/-provide-image-loader.html)
   与 `UiImageRequestOptions` 暴露图片语义，但不选择 Coil、Glide 或其他解码器。子树可以安装
   一个 `UiImageLoader`，也可以不安装，让资源图片继续渲染。

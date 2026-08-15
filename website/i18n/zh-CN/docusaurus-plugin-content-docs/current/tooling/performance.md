@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: affe67c18dc4f4f199bcf98b161c803139a8b593a4a865142faaa59c79397dbb
+translation_source_hash: 4f5635c679c017eb34a5008cebb6a600f7209dc96bfa0c81ea43d24f5bc3e6f3
 translation_status: current
 ---
 
@@ -54,6 +54,9 @@ translation_status: current
 26. Type、Environment 与 NodeSpec 均未变化的复用节点会执行仅 Modifier Patch。纯视觉更新会
     保留 LayoutParams 并跳过完整 Node Binding；布局 Modifier 只替换 LayoutParams，不会重建或
     重新执行原生 View 的语义绑定。
+27. `LocalContext` 会保存已安装的不可变 `LocalSnapshot`，不再为每个 Group 或发射 Node 重建
+    Snapshot 对象。Snapshot 创建量只随 Provider 边界增长；一次批量 `ProvideLocals` 调用会为全部
+    Binding 只安装一份 Snapshot。
 
 ### 2.2 发布态基准入口
 
