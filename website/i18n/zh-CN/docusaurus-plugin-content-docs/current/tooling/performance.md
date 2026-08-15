@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 9903a2a87e9f3f069cc68be3aeae209edfa0fd918727aa082148556723755514
+translation_source_hash: 88f6d37fcfb4dd9c18ad3479f2465c1dcabc3cbd8410e1db34594a4f824ab384
 translation_status: current
 ---
 
@@ -130,7 +130,9 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 高级阴影对照基线是 `ShadowPerformanceComparisonBenchmark`：
 
 1. ViewCompose 与 Compose 使用相同的阴影层数、颜色、尺寸、shape、列表数据和复杂布局模型。
-2. 固定覆盖阴影列表滚动/变更、阴影复杂布局滚动/更新，共 8 个成对方法。
+2. 固定覆盖阴影列表滚动/变更、阴影复杂布局滚动/更新，共 8 个成对方法。每个变更/更新
+   iteration 执行 8 个完整 action/reset 闭环并断言恢复结果，与已验收的非阴影对照协议一致，
+   同时为 run 稳定性门禁提供足够的帧样本。
 3. `shadowRenderPolicy=exact_bitmap|render_node|auto` 只切换 ViewCompose 后端，不改变工作负载；Compose 结果用于归一化设备温度和后台噪声。
 4. 2026-07-30 在 Samsung SM-G991B / Android 13 上各运行 10 轮，RenderNode 相对 ExactBitmap 的 P50、P95 与 RSS 方向混杂，没有证明稳定收益。
 5. 因此 `Auto` 继续固定为 `ExactBitmap`；`RenderNodeDisplayList` 保留为显式实验策略，不能作为发布默认值。

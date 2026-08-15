@@ -213,7 +213,10 @@ scroll cost.
 `ShadowPerformanceComparisonBenchmark` is the shadow control:
 
 1. ViewCompose and Compose use the same layers, colors, sizes, shapes, list data, and complex layout.
-2. Eight paired methods cover shadow-list scroll/mutation and shadow-complex scroll/update.
+2. Eight paired methods cover shadow-list scroll/mutation and shadow-complex scroll/update. Every
+   mutation/update iteration executes eight complete action/reset cycles and asserts restoration,
+   matching the accepted non-shadow comparison protocol and producing enough frames for the
+   run-stability gate.
 3. `shadowRenderPolicy=exact_bitmap|render_node|auto` changes only the ViewCompose backend; the
    Compose result normalizes thermal and background noise.
 4. Ten runs per backend on Samsung SM-G991B / Android 13 on 2026-07-30 showed mixed P50, P95, and RSS

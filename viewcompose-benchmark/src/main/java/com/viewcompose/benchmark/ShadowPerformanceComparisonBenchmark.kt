@@ -135,20 +135,22 @@ class ShadowPerformanceComparisonBenchmark {
             )
         },
     ) {
-        val initial = scenarioTargetText(scenarioId, DemoTargetRole.State)
-        clickScenarioTarget(scenarioId, DemoTargetRole.PrimaryAction)
-        val updated = waitForScenarioTargetTextChange(
-            scenarioId,
-            DemoTargetRole.State,
-            initial,
-        )
-        clickScenarioTarget(scenarioId, DemoTargetRole.Reset)
-        val reset = waitForScenarioTargetTextChange(
-            scenarioId,
-            DemoTargetRole.State,
-            updated,
-        )
-        assertEquals(initial, reset)
+        repeat(SHADOW_MUTATION_CYCLES_PER_ITERATION) {
+            val initial = scenarioTargetText(scenarioId, DemoTargetRole.State)
+            clickScenarioTarget(scenarioId, DemoTargetRole.PrimaryAction)
+            val updated = waitForScenarioTargetTextChange(
+                scenarioId,
+                DemoTargetRole.State,
+                initial,
+            )
+            clickScenarioTarget(scenarioId, DemoTargetRole.Reset)
+            val reset = waitForScenarioTargetTextChange(
+                scenarioId,
+                DemoTargetRole.State,
+                updated,
+            )
+            assertEquals(initial, reset)
+        }
     }
 
     private fun shadowMetrics() = listOf(
@@ -185,3 +187,5 @@ class ShadowPerformanceComparisonBenchmark {
         )
     }
 }
+
+private const val SHADOW_MUTATION_CYCLES_PER_ITERATION = 8
