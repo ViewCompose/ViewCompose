@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-state-recomposition-and-restoration.md
-translation_source_hash: ee07ee26d7b21155c27c9584a51ce793d80d469f318a13d2696995a77b4cec25
+translation_source_hash: a5cf889e2e69a2f3361f67a0dab567b186428bb1137dca8a4f50fc7929308763
 translation_status: current
 ---
 
@@ -10,7 +10,7 @@ translation_status: current
 迁移到 ViewCompose 所有的 Android `View` 树的路径。这是一份工程对比，而不是源码兼容承诺：
 API 名称相似，并不表示编译器、失效、Identity 或恢复行为完全相同。
 
-最后验证日期：**2026-08-14**
+最后验证日期：**2026-08-15**
 
 重新验证负责人：**`viewcompose-runtime`、`viewcompose-ui-foundation`、
 `viewcompose-android` 与 AndroidX lifecycle 集成的维护者**
@@ -406,19 +406,23 @@ Saved State、Environment、Theme 或 Frame Clock 服务。其 Owner 必须显�
 - [`AndroidSaveableStateRegistry.kt` 第 18–254 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidSaveableStateRegistry.kt#L18-L254)；
 - [`RenderInto.kt` 第 52–93 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt#L52-L93)；
 - [`AndroidSaveableStateRegistryTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/test/java/com/viewcompose/host/android/AndroidSaveableStateRegistryTest.kt)；
-- [`SaveableStateRestorationUiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/app/src/androidTest/java/com/viewcompose/SaveableStateRestorationUiTest.kt)。
+- [`SaveableStateRestorationUiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/app/src/androidTest/java/com/viewcompose/SaveableStateRestorationUiTest.kt)；
+- `app/src/debug/java/com/viewcompose/SaveableStateTestActivity.kt`；以及
+- `tools/state/validate_android_activity_root_process_death.sh`。
 
-`SaveableStateRestorationUiTest` 验证的是 Activity 重建，而不是真实进程死亡。仓库中的真实进程
-死亡证据是
+`SaveableStateRestorationUiTest` 继续作为快速 Activity 重建回归路径。Activity 根节点认证 Runner
+`tools/state/validate_android_activity_root_process_death.sh` 会写入自动 Key 的
+`rememberSaveable` 状态、把保留的 Task 移至后台、只终止应用进程、在新 PID 下恢复 Task，并
+验证恢复值。导航认证 Runner
 [`validate_android_process_death.sh`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/tools/navigation/validate_android_process_death.sh)
-导航认证 Runner。它把 Task 移至后台，只终止应用进程而不 Force Stop Package，再恢复既有 Task，
-要求产生新 PID，并比较完整的导航与状态恢复报告。准确覆盖范围请参阅公开英文站点的
+同样把 Task 移至后台，只终止应用进程而不 Force Stop Package，再恢复既有 Task，要求产生新
+PID，并比较完整的导航与状态恢复报告。准确覆盖范围请参阅公开英文站点的
 [导航恢复指南](https://docs.viewcompose.com/guides/navigation#stage-5-restoration-and-platform-back)。
 
-因此，当前证据支持标准宿主恢复，但作为覆盖所有宿主的声明只能定为**部分支持
-（Partially supported）**：`renderInto` 需要手动集成，Activity 重建不等于进程死亡，而真实
-Process-kill 认证仅覆盖导航。与 Compose 相同，ViewCompose 不承诺在用户 Force Stop 或显式从
-Recents 移除应用后恢复 Saved Instance State。
+因此，当前证据支持普通 Activity 根节点和导航宿主的标准 Android 宿主恢复。自定义
+`renderInto` 恢复仍为**部分支持（Partially supported）**，因为调用方必须显式安装并拥有
+SavedState 服务。与 Compose 相同，ViewCompose 不承诺在用户 Force Stop 或显式从 Recents
+移除应用后恢复 Saved Instance State。
 
 ## 能力矩阵
 
@@ -437,7 +441,7 @@ Recents 移除应用后恢复 Saved Instance State。
 | Restored Claim/Commit/Release | **刻意不同（Intentionally different）** | 用于安全放弃 Render Preparation | [`SaveableStateRegistry.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/SaveableStateRegistry.kt)；[Abort 与 In-flight-save 测试](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberSaveableTest.kt) |
 | 标准 Android 宿主恢复 | **支持（Supported）** | Activity/Fragment 宿主自动安装 Registry | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)；[`AndroidSaveableStateRegistry.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidSaveableStateRegistry.kt) |
 | 自定义宿主恢复 | **部分支持（Partially supported）** | `renderInto` 不安装任何 SavedState 服务 | [`RenderInto.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt) |
-| 通用进程死亡认证 | **部分支持（Partially supported）** | 真实 Process-kill Runner 当前只认证导航宿主状态 | [进程死亡 Runner](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/tools/navigation/validate_android_process_death.sh)；[导航指南](https://docs.viewcompose.com/guides/navigation#stage-5-restoration-and-platform-back) |
+| 通用进程死亡认证 | **支持（Supported）** | 真实 Process-kill Runner 已认证普通 Activity 根节点和导航宿主状态；自定义 `renderInto` 所有权仍由调用方管理 | Activity 根节点与导航进程死亡 Runner |
 
 ## 迁移检查清单与已知风险
 
@@ -465,7 +469,6 @@ Recents 移除应用后恢复 Saved Instance State。
 
 - 相等结果及嵌套 `derivedStateOf` 的失效行为；
 - 在只读快照中创建可变快照；
-- 不依赖导航的 Activity 根级 Process-kill 认证；
 - 直接针对官方 Compose `1.11.4` 基线的语义对比测试，而不是仓库中较旧的 `1.7.8` Fixture。
 
 ## 验证基线与重新验证负责人

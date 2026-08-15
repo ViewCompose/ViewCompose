@@ -5,7 +5,7 @@ defines a migration path from a Compose-owned UI to a ViewCompose-owned Android 
 an engineering comparison, not a source-compatibility promise: similarly named APIs do not imply
 identical compiler, invalidation, identity, or restoration behavior.
 
-Last verified: **2026-08-14**
+Last verified: **2026-08-15**
 
 Re-verification owner: **maintainers of `viewcompose-runtime`, `viewcompose-ui-foundation`,
 `viewcompose-android`, and the AndroidX lifecycle integrations**
@@ -456,21 +456,25 @@ Repository evidence:
   lines 18-254;
 - `viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt`, lines 52-93;
 - `viewcompose-host-android/src/test/java/com/viewcompose/host/android/AndroidSaveableStateRegistryTest.kt`;
-- `app/src/androidTest/java/com/viewcompose/SaveableStateRestorationUiTest.kt`.
+- `app/src/androidTest/java/com/viewcompose/SaveableStateRestorationUiTest.kt`;
+- `app/src/debug/java/com/viewcompose/SaveableStateTestActivity.kt`; and
+- `tools/state/validate_android_activity_root_process_death.sh`.
 
-`SaveableStateRestorationUiTest` verifies Activity recreation, not actual process death. The
-repository's real process-death evidence is the navigation certification runner at
-`tools/navigation/validate_android_process_death.sh`. It backgrounds the task, terminates only the
-application process without force-stopping the package, restores the existing task, requires a new
-PID, and compares the full restored navigation and state report. See the
+`SaveableStateRestorationUiTest` remains the fast Activity-recreation regression path. The
+Activity-root certification runner at
+`tools/state/validate_android_activity_root_process_death.sh` seeds automatic-key
+`rememberSaveable` state, backgrounds the retained task, terminates only the application process,
+restores the task under a new PID, and verifies the restored value. The navigation certification
+runner at `tools/navigation/validate_android_process_death.sh` similarly backgrounds the task,
+terminates only the application process without force-stopping the package, restores the existing
+task, requires a new PID, and compares the full restored navigation and state report. See the
 [navigation restoration guide](../guides/navigation.md#stage-5-restoration-and-platform-back)
 for its exact scope.
 
-The current evidence therefore supports standard-host restoration, but only **Partially supported**
-as an all-host claim: `renderInto` requires manual integration, Activity recreation is not process
-death, and the real process-kill certification is navigation-specific. Like Compose, ViewCompose
-does not promise saved-instance-state restoration after a user force-stop or explicit removal from
-recents.
+The current evidence supports standard Android host restoration through both ordinary Activity
+roots and navigation hosts. Custom `renderInto` restoration remains **Partially supported** because
+the caller must install and own SavedState services explicitly. Like Compose, ViewCompose does not
+promise saved-instance-state restoration after a user force-stop or explicit removal from recents.
 
 ## Capability matrix
 
@@ -489,7 +493,7 @@ recents.
 | Restored claim/commit/release | **Intentionally different** | Required to survive abandoned render preparation | `SaveableStateRegistry.kt`; abort and in-flight-save tests |
 | Standard Android host restoration | **Supported** | Activity/Fragment hosts install the registry automatically | `AndroidHostBridge.kt`; `AndroidSaveableStateRegistry.kt` |
 | Custom-host restoration | **Partially supported** | `renderInto` installs no SavedState services | `RenderInto.kt` |
-| General process-death certification | **Partially supported** | Actual process-kill runner currently certifies navigation-host state | process-death runner; navigation guide |
+| General process-death certification | **Supported** | Real process-kill runners certify ordinary Activity-root and navigation-host state; custom `renderInto` ownership remains manual | Activity-root and navigation process-death runners |
 
 ## Migration checklist and known risks
 
@@ -521,7 +525,6 @@ Known risks requiring new executable evidence before stronger documentation clai
 
 - equal-result and nested `derivedStateOf` invalidation behavior;
 - mutable snapshot creation under a read-only snapshot;
-- a non-navigation Activity-root process-kill certification;
 - direct semantic comparison tests against the official Compose `1.11.4` baseline rather than the
   repository's older `1.7.8` fixture.
 

@@ -2,11 +2,11 @@
 
 ## Status
 
-Active after a 2026-08-14 implementation and contract re-audit. The retained plan now owns proven
-ViewCompose correctness and Android-ecosystem compatibility work, not general Compose API parity.
-Diagnostics are supporting test infrastructure only; they are not a product goal or an independent
-delivery phase. The Phase 0 evidence, Phase 1-3 runtime/host/navigation slices, and Phase 4 logical
-edge API are implemented; only general Activity-root process-restoration certification remains.
+Completed on 2026-08-15 after an implementation and contract re-audit. The retained plan resolved
+the proven ViewCompose correctness and Android-ecosystem compatibility work without turning
+general Compose API parity or diagnostics into product goals. Phase 0 evidence, Phase 1-3
+runtime/host/navigation slices, Phase 4 logical edge APIs, and ordinary Activity-root process-death
+certification are complete.
 
 The first production slice is recorded by
 `release/changes/20260814-composition-runtime-correctness.json`. It adds retry-safe remember and
@@ -17,8 +17,8 @@ Android View reuse/release behavior.
 
 Last verified: 2026-08-15.
 
-Next action: run the general Activity-root process-death certification. Do not begin a convenience
-API or conditional protocol while a retained correctness defect remains open.
+There is no remaining implementation action in this plan. Conditional convenience candidates stay
+untriggered and require independently indexed plans if their recorded product evidence appears.
 
 ## Maven release changesets
 
@@ -280,11 +280,18 @@ The five API families are classified Q3 and include canonical KDoc, a compiled s
 module manuals, migration guidance, Chinese mirrors, compatibility notes, and release intent. The
 slice passed focused module tests, `verifyDocumentationStructure`, and `qaQuick`.
 
-### General Activity-root restoration
+### General Activity-root restoration — completed 2026-08-15
 
-Add one real process-death certification path for ordinary Activity-root `rememberSaveable` state.
-Keep existing recreation tests. Change production code only if the device path reproduces state
-loss, owner leakage, or an invalid persistence boundary.
+The existing Activity-recreation instrumentation remains the fast regression path. A debug-only
+host and `tools/state/validate_android_activity_root_process_death.sh` now provide the real
+process-death certification: seed an automatic-key Activity-root `rememberSaveable` value, move the
+task to the background, let Android terminate the process, restore the retained task, prove a new
+PID, and compare the restored value.
+
+Two consecutive runs on an Android 13 Samsung SM-G991B changed PID (`16036 -> 16277` and
+`16709 -> 16856`) while preserving the value `41`. No state loss, owner leakage, or invalid
+persistence boundary was reproduced, so this certification slice intentionally changes no
+framework production implementation.
 
 Focused snapshot and derived-state tests may accompany this phase when they exercise an existing
 contract, but they do not authorize new snapshot collections, mutation policies, or equal-result
@@ -405,6 +412,7 @@ This plan is complete when:
 | 2026-08-14 | Existing test baseline | Runtime, UI Foundation, Host, Android aggregate, Navigation Core/Android, and Renderer unit tests | Seven relevant module test tasks pass; gaps remain uncovered behavior, not existing red tests |
 | 2026-08-15 | Navigation contract and ownership | Core resolver tests, public-host destination/graph Factory tests, SavedStateHandle recreation, same-route retained-stack isolation, compiled sample, module/migration docs, `verifyDocumentationStructure`, and `qaQuick` | Unknown query values are contractually inert; destination and graph owners inherit parent Factory/extras while replacing child ownership inputs; Phase 3 complete |
 | 2026-08-15 | Logical layout edges | Q3 relative padding/margin/offset/system-bar/IME contracts, compiled sample, physical/relative precedence, runtime LTR/RTL rebind, delayed lazy/pager environment revision, native ConstraintLayout-compatible margin, WindowInsets selector rebinding, module/migration docs, `verifyDocumentationStructure`, and `qaQuick` | Existing APIs remain physical; relative APIs resolve only from captured VNode direction; the later physical or relative declaration owns the complete family; logical-edge slice complete |
+| 2026-08-15 | General Activity-root restoration | Existing Activity recreation instrumentation plus `tools/state/validate_android_activity_root_process_death.sh`; two Android 13 SM-G991B runs changed PID (`16036 -> 16277`, `16709 -> 16856`) and preserved automatic-key `rememberSaveable` value `41` | Ordinary Activity-root system restoration succeeds after real process death; retain production implementation unchanged and complete Phase 4 |
 
 ## Decision history
 
@@ -423,3 +431,6 @@ This plan is complete when:
   per native host, recreating on parent-owner identity change, and keeping extra query values inert.
 - 2026-08-15: complete logical edge APIs additively; preserve physical forms, resolve relative
   forms from captured VNode direction, and make cross-form precedence explicitly last-wins.
+- 2026-08-15: certify automatic-key Activity-root saveable state across real Android process death;
+  because two new-process restorations preserve the expected value, make no speculative production
+  change and close the plan.

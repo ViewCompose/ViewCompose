@@ -27,10 +27,6 @@ This directory contains multi-step work that is currently active and must surviv
   locale-independent automation targets, fixture-first benchmark hosts, complete English and
   Simplified Chinese resources, and optional human guidance before benchmarking Runtime/View patch
   optimizations against a new stable baseline.
-- [Compose migration capability convergence](./compose-migration-capability-convergence.md) —
-  fix audited runtime-transaction, Fragment lifecycle, terminal-session, keyed-identity, navigation
-  owner, and RTL correctness gaps while retaining AndroidX-compatible deep-link behavior and moving
-  untriggered Insets, layout, hosting, and navigation conveniences out of the core defect path.
 Completed tutorial, language-consistency, migration-sample, hosted-documentation, and
 version-retention plans are retained in the
 [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).

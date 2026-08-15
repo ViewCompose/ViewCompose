@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: e864863defa2349628b62d3231d2c4b17142a8b858cb00f32959f7d8d4eb49f3
+translation_source_hash: 4100e0d568c0435396e65b60d399fd1f4bb7bffeecd279946fd9b5c3cb6e11ec
 translation_status: current
 ---
 
@@ -12,7 +12,7 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 生命周期和可观察行为，而不是替换名称相似的函数。在把页面迁移到原生 Android View
 渲染器之前，先用本节识别语义缺口。
 
-最后验证日期：**2026-08-12**
+最后验证日期：**2026-08-15**
 
 复核责任人：**Kernel、UI Foundation、Android Engine、Android 聚合层与 navigation 模块族的维护者**
 
@@ -141,19 +141,17 @@ Kotlin `2.0.21`，声明位置是
 
 根 `qaQuick` 任务会编译这些样例源码集或使用它们的测试。它还会运行
 `verifyMigrationPairedSamples`，拒绝中英文页面中缺失、额外、乱序或过期的成对片段。仅设备
-可验证的恢复和 Predictive Back 证据仍由[英文导航指南](https://docs.viewcompose.com/guides/navigation)
-链接的流程治理。
+可验证的恢复和 Predictive Back 证据仍由[状态与恢复对照](https://docs.viewcompose.com/migration/compose-state-recomposition-and-restoration)
+及[英文导航指南](https://docs.viewcompose.com/guides/navigation)链接的流程治理。
 
 ## 已知契约缺口
 
 在源码文档、实现和可执行证据就以下问题达成一致前，不要提高能力状态：
 
-- 导航指南与深链测试对额外未注册 query key 的行为存在冲突。
 - 相等结果与嵌套派生状态以及只读快照嵌套需要专项回归覆盖。
 - 重复 size/padding、嵌套 inset 消费和 native-view 回调身份需要更广的可执行覆盖。
-- Lifecycle `2.11.0` 任意 UI 作用域和完整 parent factory/`CreationExtras` 继承没有
-  ViewCompose 等价证据。
-- 通用的非导航进程死亡认证和最新 Predictive Back 设备运行仍比完整语义基线更窄。
+- Lifecycle `2.11.0` 任意 UI 作用域没有 ViewCompose 等价证据。
+- 最新 Predictive Back 设备运行仍比完整语义基线更窄。
 
 复核必须先检查上游官方文档，再检查不可变 ViewCompose 源码契约、测试、可编译样例和适用的
 设备流程。签名匹配或 API 名称相似永远不足以证明语义等价。

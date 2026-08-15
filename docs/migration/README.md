@@ -10,7 +10,7 @@ migration preserves ownership, lifecycle, and observable behavior rather than re
 named functions. Use this section to identify semantic gaps before moving a screen to the native
 Android View renderer.
 
-Last verified: **2026-08-12**
+Last verified: **2026-08-15**
 
 Re-verification owner: **maintainers of the Kernel, UI Foundation, Android Engine, Android
 aggregate, and navigation module families**
@@ -147,23 +147,21 @@ Documentation snippets are not a second source of truth. Use these compiled repo
 The root `qaQuick` task compiles these sample source sets or the tests that consume them. It also
 runs `verifyMigrationPairedSamples`, which rejects missing, extra, reordered, or stale paired
 snippets in both canonical English pages and required Chinese mirrors. Device-only restoration and
-Predictive Back evidence remains governed by the procedures linked from the [navigation
-guide](../guides/navigation.md).
+Predictive Back evidence remains governed by the procedures linked from the
+[state/restoration comparison](./compose-state-recomposition-and-restoration.md) and
+[navigation guide](../guides/navigation.md).
 
 ## Known contract gaps
 
 Do not strengthen a capability label until source documentation, implementation, and executable
 evidence agree on these points:
 
-- The navigation guide and deep-link tests disagree about additional unregistered query keys.
 - Equal-result and nested derived state plus read-only snapshot nesting need focused regression
   coverage.
 - Repeated size/padding rules, nested inset consumption, and native-view callback identity need
   broader executable coverage.
-- Lifecycle `2.11.0` arbitrary UI scopes and complete parent factory/`CreationExtras` inheritance
-  do not have ViewCompose parity evidence.
-- General non-navigation process-death certification and a fresh Predictive Back device run remain
-  narrower than the full semantic baseline.
+- Lifecycle `2.11.0` arbitrary UI scopes do not have ViewCompose parity evidence.
+- A fresh Predictive Back device run remains narrower than the full semantic baseline.
 
 Re-verification must review official upstream documentation first, then immutable ViewCompose
 source contracts, tests, compiled samples, and applicable device procedures. A signature match or
