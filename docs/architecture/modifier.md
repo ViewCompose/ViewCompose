@@ -68,8 +68,8 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 
 Current 2026-08 result:
 
-1. `fun Modifier.*` declarations, including overloads and scoped internals: `88`;
-2. unique `fun Modifier.*` API names: `74`;
+1. `fun Modifier.*` declarations, including overloads and scoped internals: `91`;
+2. unique `fun Modifier.*` API names: `77`;
 3. scoped modifier declarations: `5` across `RowScope/ColumnScope/BoxScope`;
 4. renderer-internal modifier extensions: `1`, used only for resolution.
 
@@ -95,6 +95,8 @@ Current 2026-08 result:
 | `size` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Width and height | Global | Fixed framework-unit semantics |
 | `width` / `height` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | One dimension | Global | Cooperates with parent layout rules |
 | `minWidth` / `minHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Minimum dimension | Global | Maps to native minimum size |
+| `maxWidth` / `maxHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Maximum dimension | Layout-aware | One renderer-owned constraint host |
+| `aspectRatio` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Width-to-height ratio | Layout-aware | Resolved with min/max and incoming constraints |
 | `fillMaxWidth` / `fillMaxHeight` / `fillMaxSize` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Fill parent dimension(s) | Global | Maps to `MATCH_PARENT` semantics |
 | `offset` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Translation offset | Global | Maps to `translationX/translationY` |
 | `offsetRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Direction-aware translation | Global | Positive horizontal moves toward logical end |
@@ -208,7 +210,7 @@ Surface(
 Modifier owns:
 
 1. dimensions and occupancy:
-   `size/width/height/minWidth/minHeight/padding/paddingRelative/margin/marginRelative`;
+   `size/width/height/minWidth/minHeight/maxWidth/maxHeight/aspectRatio/padding/paddingRelative/margin/marginRelative`;
 2. appearance: `backgroundColor/backgroundDrawableRes/border/cornerRadius/alpha/elevation`;
 3. visibility and layering: `visibility/offset/offsetRelative/zIndex`;
 4. general interaction, focus, keys, and accessibility;
@@ -271,6 +273,14 @@ ViewCompose does not reproduce the Compose runtime or compiler, but keeps the AP
 2. Parent data is a scoped API.
 3. Component semantics are parameters and `NodeSpec`.
 4. Theme provides defaults.
+
+`maxWidth`, `maxHeight`, and `aspectRatio` are portable intent, not raw Android setters. The
+Android renderer folds them into one synthetic `LayoutConstraintHost` around the complete node so
+their order does not create stacked wrappers. Invalid positive/finite values fail in the contract;
+declared exact/minimum values above a declared maximum fail before rendering. During measurement,
+an incoming exact parent constraint remains authoritative; otherwise the declared maximum applies,
+and an aspect ratio is preserved whenever the resulting min/max interval is feasible. A custom
+renderer must provide the same one-boundary behavior before accepting these elements.
 
 ## 8. Change gate
 

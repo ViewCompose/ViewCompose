@@ -26,6 +26,7 @@ import com.viewcompose.ui.unit.UiSp
  * @property labelIncludeFontPadding whether platform font top and bottom padding is included
  * @property badgeColor badge background color
  * @property badgeTextColor badge text color
+ * @throws IllegalArgumentException for duplicate item keys or a selected index outside [items]
  */
 data class NavigationBarNodeProps(
     val items: List<NavigationBarItem>,
@@ -47,4 +48,17 @@ data class NavigationBarNodeProps(
     val labelIncludeFontPadding: Boolean = false,
     val badgeColor: Int,
     val badgeTextColor: Int,
-) : NodeSpec
+) : NodeSpec {
+    init {
+        require(items.map(NavigationBarItem::key).toSet().size == items.size) {
+            "NavigationBar item keys must be unique."
+        }
+        require(selectedIndex.isValidSelectionFor(items)) {
+            "NavigationBar selectedIndex must identify an item, or be -1 for an empty bar."
+        }
+    }
+}
+
+private fun Int.isValidSelectionFor(items: List<NavigationBarItem>): Boolean {
+    return if (items.isEmpty()) this == -1 else this in items.indices
+}

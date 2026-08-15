@@ -470,10 +470,10 @@ private fun UiTreeBuilder.GraphicsShadowDiagnosticsSection(
             modifier = Modifier.shadowScenarioTarget(scenario, DemoAutomationRole.State),
         )
         SegmentedControl(
-            items = listOf(
-                stringResource(R.string.demo_graphics_shadow_policy_auto),
-                stringResource(R.string.demo_graphics_shadow_policy_bitmap),
-                stringResource(R.string.demo_graphics_shadow_policy_render_node),
+            items = demoSegmentedItems(
+                "auto" to stringResource(R.string.demo_graphics_shadow_policy_auto),
+                "bitmap" to stringResource(R.string.demo_graphics_shadow_policy_bitmap),
+                "render-node" to stringResource(R.string.demo_graphics_shadow_policy_render_node),
             ),
             selectedIndex = GraphicsShadowPolicies.indexOf(state.policy.value).coerceAtLeast(0),
             onSelectionChange = { index ->

@@ -24,6 +24,7 @@ import com.viewcompose.renderer.view.container.DeclarativeFlowRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeHorizontalPagerLayout
 import com.viewcompose.renderer.view.container.DeclarativeLazyListView
 import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
+import com.viewcompose.renderer.view.container.DeclarativeLayoutConstraintHost
 import com.viewcompose.renderer.view.container.DeclarativeLinearLayout
 import com.viewcompose.renderer.view.container.DeclarativeNavigationBarLayout
 import com.viewcompose.renderer.view.container.DeclarativeNestedScrollHostLayout
@@ -132,6 +133,10 @@ class ViewNodeBackendInventoryTest {
             NodeType.AnimatedSizeHost to neutral(
                 DeclarativeAnimatedSizeHostLayout::class.java,
                 "animated measurement bounds",
+            ),
+            NodeType.LayoutConstraintHost to neutral(
+                DeclarativeLayoutConstraintHost::class.java,
+                "portable maximum-size and aspect-ratio measurement",
             ),
             NodeType.NestedScrollHost to neutral(
                 DeclarativeNestedScrollHostLayout::class.java,

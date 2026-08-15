@@ -7,6 +7,7 @@ import android.widget.FrameLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.renderer.interop.asRenderContainerHandle
 import com.viewcompose.renderer.reconcile.LazyListDiff
@@ -151,7 +152,8 @@ internal class LazyListAdapter(
 
     fun itemContentTypeAt(position: Int): Any? = items.getOrNull(position)?.contentType
 
-    fun itemSpanAt(position: Int): Int = items.getOrNull(position)?.span ?: 1
+    fun itemSpanAt(position: Int): GridItemSpan =
+        items.getOrNull(position)?.span ?: GridItemSpan.Single
 
     fun configureMountedTreeCache(size: Int) {
         mountedTreeCache.capacity = size

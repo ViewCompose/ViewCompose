@@ -55,8 +55,16 @@ fun UiTreeBuilder.material3ComponentsSample() {
             Material3Switch(text = "Dynamic color", checked = true, onCheckedChange = {})
             Material3TextField(state = fieldState, label = "Name")
             Material3NavigationBar(selectedIndex = 0, onItemSelected = {}) {
-                Item(label = "Home", icon = ImageSource.Resource(android.R.drawable.ic_menu_view))
-                Item(label = "Settings", icon = ImageSource.Resource(android.R.drawable.ic_menu_preferences))
+                Item(
+                    key = "home",
+                    label = "Home",
+                    icon = ImageSource.Resource(android.R.drawable.ic_menu_view),
+                )
+                Item(
+                    key = "settings",
+                    label = "Settings",
+                    icon = ImageSource.Resource(android.R.drawable.ic_menu_preferences),
+                )
             }
         }
     }

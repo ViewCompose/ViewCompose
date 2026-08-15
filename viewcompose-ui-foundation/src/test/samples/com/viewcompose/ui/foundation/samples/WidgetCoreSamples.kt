@@ -36,6 +36,7 @@ import com.viewcompose.ui.foundation.HorizontalPager
 import com.viewcompose.ui.foundation.InputControlDefaults
 import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.LazyVerticalGrid
 import com.viewcompose.ui.foundation.LinearProgressIndicator
 import com.viewcompose.ui.foundation.LinearProgressIndicatorOverrides
 import com.viewcompose.ui.foundation.NavigationBar
@@ -75,6 +76,7 @@ import com.viewcompose.ui.foundation.ProvideSwitchOverrides
 import com.viewcompose.ui.foundation.ProvideTabRowOverrides
 import com.viewcompose.ui.foundation.ProvideTextFieldOverrides
 import com.viewcompose.ui.foundation.ProvideTopAppBarOverrides
+import com.viewcompose.ui.foundation.PullToRefresh
 import com.viewcompose.ui.foundation.RadioButton
 import com.viewcompose.ui.foundation.RadioButtonOverrides
 import com.viewcompose.ui.foundation.SegmentedControl
@@ -84,6 +86,7 @@ import com.viewcompose.ui.foundation.Slider
 import com.viewcompose.ui.foundation.SliderOverrides
 import com.viewcompose.ui.foundation.Switch
 import com.viewcompose.ui.foundation.SwitchOverrides
+import com.viewcompose.ui.foundation.ScrollableColumn
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextButton
 import com.viewcompose.ui.foundation.TabRow
@@ -109,7 +112,10 @@ import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.MinHeightModifierElement
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.policy.GridCells
+import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.UiImageDecodeSize
 import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageLoader
@@ -120,9 +126,15 @@ import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
+import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
+import com.viewcompose.ui.node.spec.NavigationBarNodeProps
+import com.viewcompose.ui.node.spec.PullToRefreshNodeProps
+import com.viewcompose.ui.node.spec.SegmentedControlNodeProps
+import com.viewcompose.ui.node.spec.SliderNodeProps
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.state.ScrollState
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
@@ -318,7 +330,10 @@ fun componentOverridesSample() {
                 SegmentedControlOverrides(indicatorColor = 0xFF0055AA.toInt()),
             ) {
                 SegmentedControl(
-                    items = listOf("Day", "Week"),
+                    items = listOf(
+                        SegmentedControlItem(key = "day", label = "Day"),
+                        SegmentedControlItem(key = "week", label = "Week"),
+                    ),
                     selectedIndex = 0,
                     onSelectionChange = {},
                 )
@@ -332,7 +347,7 @@ fun componentOverridesSample() {
                 NavigationBarOverrides(indicatorColor = 0xFFCCE4FF.toInt()),
             ) {
                 NavigationBar(selectedIndex = 0, onItemSelected = {}) {
-                    Item(label = "Home", icon = ImageSource.Resource(1))
+                    Item(key = "home", label = "Home", icon = ImageSource.Resource(1))
                 }
             }
             ProvideLinearProgressIndicatorOverrides(
@@ -577,6 +592,99 @@ fun compactInputTargetSample() {
         val target = node.modifier.elements.first() as MinHeightModifierElement
         check(target.minHeight == 48.dp)
     }
+}
+
+fun sliderInteractionSample() {
+    val events = mutableListOf<String>()
+    val node = buildVNodeTree {
+        Slider(
+            value = 4,
+            onValueChange = { value -> events += "change:$value" },
+            min = 0,
+            max = 12,
+            step = 4,
+            onValueChangeStarted = { events += "start" },
+            onValueChangeFinished = { events += "finish" },
+        )
+    }.single()
+    val slider = node.spec as SliderNodeProps
+
+    slider.onValueChangeStarted?.invoke()
+    slider.onValueChange?.invoke(8)
+    slider.onValueChangeFinished?.invoke()
+    check(events == listOf("start", "change:8", "finish"))
+}
+
+fun eagerScrollStateSample() {
+    val state = ScrollState()
+    buildVNodeTree {
+        ScrollableColumn(state = state, userScrollEnabled = true) {
+            Text("Scrollable content")
+        }
+    }
+
+    state.scrollTo(24)
+    check(state.value == 24)
+}
+
+fun adaptiveGridSample() {
+    val node = buildVNodeTree {
+        LazyVerticalGrid(cells = GridCells.Adaptive(minSize = 120.dp)) {
+            item(key = "heading", span = GridItemSpan.FullLine) {
+                Text("Gallery")
+            }
+            items(items = listOf("one", "two"), key = { it }) { label ->
+                Text(label)
+            }
+        }
+    }.single()
+    val grid = node.spec as LazyVerticalGridNodeProps
+
+    check(grid.cells == GridCells.Adaptive(120.dp))
+    check(grid.items.first().span == GridItemSpan.FullLine)
+}
+
+fun stableSelectionItemIdentitySample() {
+    val nodes = buildVNodeTree {
+        NavigationBar(selectedIndex = 0, onItemSelected = {}) {
+            Item(key = "inbox", label = "Inbox", icon = ImageSource.Resource(1))
+            Item(
+                key = "archive",
+                label = "Archive",
+                icon = ImageSource.Resource(2),
+                enabled = false,
+            )
+        }
+        SegmentedControl(
+            items = listOf(
+                SegmentedControlItem(key = "day", label = "Day"),
+                SegmentedControlItem(key = "week", label = "Week", enabled = false),
+            ),
+            selectedIndex = 0,
+            onSelectionChange = {},
+        )
+    }
+
+    val navigation = nodes.first().spec as NavigationBarNodeProps
+    val segments = nodes.last().spec as SegmentedControlNodeProps
+    check(navigation.items.map { it.key } == listOf("inbox", "archive"))
+    check(!segments.items.last().enabled)
+}
+
+fun pullToRefreshEnablementSample() {
+    val node = buildVNodeTree {
+        PullToRefresh(
+            isRefreshing = false,
+            onRefresh = {},
+            enabled = false,
+        ) {
+            ScrollableColumn {
+                Text("Refresh disabled; content input remains available")
+            }
+        }
+    }.single()
+
+    check(!(node.spec as PullToRefreshNodeProps).enabled)
 }
 
 fun popupPositioningSample() {

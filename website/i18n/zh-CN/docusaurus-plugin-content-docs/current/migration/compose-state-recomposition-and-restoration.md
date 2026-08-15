@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-state-recomposition-and-restoration.md
-translation_source_hash: a5cf889e2e69a2f3361f67a0dab567b186428bb1137dca8a4f50fc7929308763
+translation_source_hash: 4eb1a0892bb9abdf85024bf8fce8a8e33ff56eb7569d403ea48964dda2e1ef4e
 translation_status: current
 ---
 
@@ -134,6 +134,8 @@ fun UiTreeBuilder.ViewComposeStateCounter() {
 | 一个已提交的组合位置 | `remember` | 用于可替换的内存对象与状态持有者 |
 | 组合以及 Activity/Fragment 重建 | 安装了 `SaveableStateRegistry` 的 `rememberSaveable` | 只保存重建页面所需的最小 UI 状态 |
 | 页面或导航目的地的业务状态 | 通过 `viewcompose-viewmodel-androidx` 使用 AndroidX `ViewModel` | 生命周期由 `ViewModelStoreOwner` 而非调用位置定义 |
+| 已挂载 Eager Scroll 位置 | Q3 `ScrollState` | 保留调用方持有的 State；它只连接一个已挂载的 ScrollableColumn/Row Backend |
+| 已挂载 Pager 观察与命令 | Q3 `PagerState` 加受控 `currentPage` | 保持 `currentPage` 权威性；把 `onPageChanged` 视为 Idle 停稳事件 |
 | 系统发起的进程重建期间保留 ViewModel 状态 | `SavedStateHandle` | 保存少量重建输入，不要保存派生页面模型 |
 | 持久应用数据 | 组合之外的 Repository 或数据库 | `rememberSaveable` 和 `SavedStateHandle` 都不是持久存储 |
 
@@ -442,6 +444,7 @@ SavedState 服务。与 Compose 相同，ViewCompose 不承诺在用户 Force St
 | 标准 Android 宿主恢复 | **支持（Supported）** | Activity/Fragment 宿主自动安装 Registry | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)；[`AndroidSaveableStateRegistry.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidSaveableStateRegistry.kt) |
 | 自定义宿主恢复 | **部分支持（Partially supported）** | `renderInto` 不安装任何 SavedState 服务 | [`RenderInto.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt) |
 | 通用进程死亡认证 | **支持（Supported）** | 真实 Process-kill Runner 已认证普通 Activity 根节点和导航宿主状态；自定义 `renderInto` 所有权仍由调用方管理 | Activity 根节点与导航进程死亡 Runner |
+| Eager Scroll 与 Pager Snapshot | **支持（Supported）** | Connector 所有权受挂载生命周期约束；横向偏移与页面索引在 RTL 中保持逻辑顺序 | `ScrollState.kt`；`PagerState.kt`；Connector 与 Renderer 生命周期测试 |
 
 ## 迁移检查清单与已知风险
 
@@ -456,14 +459,16 @@ SavedState 服务。与 Compose 相同，ViewCompose 不承诺在用户 Force St
    Collection Lifetime 的无副作用 State 计算。
 6. 保持 Unkeyed `remember` 调用顺序稳定。普通 Sibling 可能插入、删除或重排时，使用唯一且
    稳定的 `key` 值。
-7. 把全部外部工作移入已提交 Effect。Effect 失败属于无法恢复上一棵原生树的 Committed-frame
+7. 在所需组合位置保留 `ScrollState` 或 `PagerState`。不要持有原生 Connector，也不要把声明绑定
+   期间的 Pager Callback 当作业务事件。
+8. 把全部外部工作移入已提交 Effect。Effect 失败属于无法恢复上一棵原生树的 Committed-frame
    Failure。
-8. 优先使用自动 `rememberSaveable` Key，保持 Saver 输出精简且与 Bundle 兼容，并验证由 Input
+9. 优先使用自动 `rememberSaveable` Key，保持 Saver 输出精简且与 Bundle 兼容，并验证由 Input
    驱动的重置行为。
-9. 实现自定义 Registry 时，保留 Claim/Commit/Release 协议。
-10. 尽量使用 Activity/Fragment 宿主。使用 `renderInto` 时，显式安装 Lifecycle、ViewModel、
+10. 实现自定义 Registry 时，保留 Claim/Commit/Release 协议。
+11. 尽量使用 Activity/Fragment 宿主。使用 `renderInto` 时，显式安装 Lifecycle、ViewModel、
     Saveable State、Environment 和 Frame Clock 服务。
-11. 分别测试配置重建与系统风格进程死亡；仅测试 Activity 重建不足以作为证据。
+12. 分别测试配置重建与系统风格进程死亡；仅测试 Activity 重建不足以作为证据。
 
 在形成更强文档声明之前，以下已知风险需要新的可执行证据：
 

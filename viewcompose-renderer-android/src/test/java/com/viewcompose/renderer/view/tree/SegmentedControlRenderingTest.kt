@@ -1,26 +1,23 @@
 package com.viewcompose.renderer.view.tree
 
-import com.viewcompose.ui.unit.sp
-
-import com.viewcompose.ui.unit.dp
-
-/*
- * 测试职责：覆盖 renderer view/tree 中的 Segmented Control Rendering 行为，防止渲染和 patch 契约在后续重构中回退。
- * Test responsibility: covers Segmented Control Rendering behavior in renderer view/tree and guards render and patch contracts against regressions.
- */
-
 import android.graphics.Color
 import android.graphics.drawable.RippleDrawable
 import android.widget.FrameLayout
 import android.widget.TextView
-import com.viewcompose.renderer.view.shape.UiShapeDrawable
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import com.viewcompose.renderer.view.container.DeclarativeSegmentedControlLayout
+import com.viewcompose.renderer.view.shape.UiShapeDrawable
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.SegmentedControlNodeProps
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDensity
+import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.unit.sp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
@@ -129,9 +126,125 @@ class SegmentedControlRenderingTest {
         assertTrue((second.background as RippleDrawable).hasFocusStateSpecified())
     }
 
+    @Test
+    fun `segment reorder reuses keyed views and respects item enabled state`() {
+        val container = FrameLayout(context)
+        val initialItems = listOf(
+            SegmentedControlItem(key = "runtime", label = "Runtime"),
+            SegmentedControlItem(key = "theme", label = "Theme"),
+        )
+        val selected = mutableListOf<Int>()
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                segmentedControlNode(
+                    selectedIndex = 0,
+                    backgroundColor = Color.WHITE,
+                    items = initialItems,
+                    onSelectionChange = selected::add,
+                ),
+            ),
+        )
+        val view = initial.mountedNodes.single().view as DeclarativeSegmentedControlLayout
+        val runtime = view.getChildAt(0)
+        val theme = view.getChildAt(1)
+
+        ViewTreeRenderer.renderInto(
+            container = container,
+            previous = initial.mountedNodes,
+            nodes = listOf(
+                segmentedControlNode(
+                    selectedIndex = 0,
+                    backgroundColor = Color.WHITE,
+                    items = listOf(
+                        initialItems[1].copy(enabled = false),
+                        initialItems[0],
+                    ),
+                    onSelectionChange = selected::add,
+                ),
+            ),
+        )
+        view.getChildAt(0).performClick()
+        view.getChildAt(1).performClick()
+
+        assertSame(theme, view.getChildAt(0))
+        assertSame(runtime, view.getChildAt(1))
+        assertEquals(false, view.getChildAt(0).isEnabled)
+        assertEquals(listOf(1), selected)
+    }
+
+    @Test
+    fun `density change recreates the container shape drawable`() {
+        val container = FrameLayout(context)
+        val initialNode = segmentedControlNode(
+            selectedIndex = 0,
+            backgroundColor = Color.WHITE,
+        ).copy(
+            environment = UiEnvironmentValues(
+                density = UiDensity(density = 1f, fontScale = 1f),
+            ),
+        )
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(initialNode),
+        )
+        val view = initial.mountedNodes.single().view as DeclarativeSegmentedControlLayout
+        val originalBackground = view.background
+
+        ViewTreeRenderer.renderInto(
+            container = container,
+            previous = initial.mountedNodes,
+            nodes = listOf(
+                initialNode.copy(
+                    environment = UiEnvironmentValues(
+                        density = UiDensity(density = 2f, fontScale = 1f),
+                    ),
+                ),
+            ),
+        )
+
+        assertNotSame(originalBackground, view.background)
+        assertEquals(Color.WHITE, view.materialBackgroundColor())
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun `segments expose stable collection item semantics`() {
+        val container = FrameLayout(context)
+        val result = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                segmentedControlNode(
+                    selectedIndex = 1,
+                    backgroundColor = Color.WHITE,
+                    items = listOf(
+                        SegmentedControlItem(key = "runtime", label = "Runtime"),
+                        SegmentedControlItem(key = "theme", label = "Theme", enabled = false),
+                    ),
+                ),
+            ),
+        )
+        val view = result.mountedNodes.single().view as DeclarativeSegmentedControlLayout
+        val selected = accessibilityNode(view.getChildAt(1))
+
+        assertEquals(android.widget.Button::class.java.name, selected.className)
+        assertEquals(0, selected.collectionItemInfo?.rowIndex)
+        assertEquals(1, selected.collectionItemInfo?.columnIndex)
+        assertTrue(selected.collectionItemInfo?.isSelected == true)
+        assertEquals(false, selected.isEnabled)
+    }
+
     private fun segmentedControlNode(
         selectedIndex: Int,
         backgroundColor: Int,
+        items: List<SegmentedControlItem> = listOf(
+            SegmentedControlItem(key = "runtime", label = "Runtime"),
+            SegmentedControlItem(key = "theme", label = "Theme"),
+        ),
+        onSelectionChange: (Int) -> Unit = {},
         unselectedStateLayerColors: UiStateLayerColors? = null,
         selectedStateLayerColors: UiStateLayerColors? = null,
     ): VNode {
@@ -139,12 +252,9 @@ class SegmentedControlRenderingTest {
             type = NodeType.SegmentedControl,
             key = "tabs",
             spec = SegmentedControlNodeProps(
-                items = listOf(
-                    SegmentedControlItem("Runtime"),
-                    SegmentedControlItem("Theme"),
-                ),
+                items = items,
                 selectedIndex = selectedIndex,
-                onSelectionChange = {},
+                onSelectionChange = onSelectionChange,
                 enabled = true,
                 backgroundColor = backgroundColor,
                 indicatorColor = 0xFF7B9E68.toInt(),
@@ -168,6 +278,14 @@ class SegmentedControlRenderingTest {
     private fun TextView.indicatorColor(): Int {
         val ripple = background as RippleDrawable
         return (ripple.getDrawable(0) as UiShapeDrawable).currentFillColor
+    }
+
+    @Suppress("DEPRECATION")
+    private fun accessibilityNode(view: android.view.View): AccessibilityNodeInfoCompat {
+        return AccessibilityNodeInfoCompat.obtain().also { node ->
+            requireNotNull(ViewCompat.getAccessibilityDelegate(view))
+                .onInitializeAccessibilityNodeInfo(view, node)
+        }
     }
 
 }

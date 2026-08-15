@@ -4,29 +4,23 @@ import android.content.res.ColorStateList
 import android.widget.CompoundButton
 import android.widget.SeekBar
 import android.widget.Switch
+import com.viewcompose.renderer.view.requireUiEnvironment
+import com.viewcompose.renderer.view.roundToPx
+import com.viewcompose.renderer.view.toPx
 import com.viewcompose.renderer.view.tree.ContentViewBinder
 import com.viewcompose.renderer.view.tree.InputViewBinder
 import com.viewcompose.renderer.view.tree.SliderNodePatch
 import com.viewcompose.renderer.view.tree.TextFieldNodePatch
 import com.viewcompose.renderer.view.tree.ToggleNodePatch
-import com.viewcompose.renderer.view.requireUiEnvironment
-import com.viewcompose.renderer.view.toPx
-import com.viewcompose.renderer.view.tree.ViewModifierApplier
 import com.viewcompose.renderer.view.tree.ViewComposeEditText
+import com.viewcompose.renderer.view.tree.ViewModifierApplier
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
-import com.viewcompose.renderer.view.requireUiEnvironment
-import com.viewcompose.renderer.view.roundToPx
-import com.viewcompose.renderer.view.toPx
 
-/**
- * Targeted patch applier for input nodes.
- * Fine-grained patch applier for input nodes.
- */
+/** Targeted patch applier for input nodes. */
 internal object InputNodePatchApplier {
     /**
      * Updates a text input View's keyboard, text controller, styling, and autofill configuration.
-     * Updates keyboard, text controller, styling, and autofill configuration for a text input View.
      */
     fun applyTextFieldPatch(
         view: ViewComposeEditText,
@@ -61,8 +55,7 @@ internal object InputNodePatchApplier {
             previous.keyboardOptions != next.keyboardOptions ||
             previous.singleLine != next.singleLine
         ) {
-            // textController owns input type and IME action so native EditText state cannot diverge from TextFieldState.
-            // Input type and IME action are managed by textController to keep native EditText state aligned with TextFieldState.
+            // textController owns editor configuration so native state cannot diverge from TextFieldState.
             view.textController.updateEditorConfiguration(
                 inputType = nextSpec.inputType,
                 editorOptions = nextSpec.editorOptions,
@@ -127,7 +120,6 @@ internal object InputNodePatchApplier {
 
     /**
      * Updates checkbox, switch, or radio selection, listeners, colors, and text style.
-     * Updates checked state, listener, colors, and text style for checkbox/switch/radio.
      */
     fun applyTogglePatch(
         view: CompoundButton,
@@ -135,8 +127,7 @@ internal object InputNodePatchApplier {
     ) {
         val previous = patch.previous
         val next = patch.next
-        // Rebind the listener before assigning isChecked so programmatic synchronization cannot invoke an old callback.
-        // Rebind the listener before setting isChecked so programmatic state sync cannot invoke a stale callback.
+        // Rebind before setting isChecked so programmatic synchronization cannot invoke a stale callback.
         InputViewBinder.updateToggleListener(
             view = view,
             expectedChecked = next.checked,
@@ -199,7 +190,6 @@ internal object InputNodePatchApplier {
 
     /**
      * Updates SeekBar range, progress, listener, and tint.
-     * Updates SeekBar range, progress, listener, and tint.
      */
     fun applySliderPatch(
         view: SeekBar,
@@ -207,20 +197,19 @@ internal object InputNodePatchApplier {
     ) {
         val previous = patch.previous
         val next = patch.next
-        val resolvedValue = next.value.coerceIn(next.min, next.max)
-        // Represent progress as value minus min so the DSL can expose arbitrary integer ranges.
-        // progress is represented as value - min so the DSL can expose any integer range.
         InputViewBinder.updateSliderListener(
             view = view,
             min = next.min,
-            expectedValue = resolvedValue,
+            step = next.step,
             onValueChange = next.onValueChange,
+            onValueChangeStarted = next.onValueChangeStarted,
+            onValueChangeFinished = next.onValueChangeFinished,
         )
-        if (previous.min != next.min || previous.max != next.max) {
-            view.max = (next.max - next.min).coerceAtLeast(0)
+        if (previous.min != next.min || previous.max != next.max || previous.step != next.step) {
+            view.max = ((next.max.toLong() - next.min.toLong()) / next.step.toLong()).toInt()
         }
-        if (previous.value != next.value || previous.min != next.min || previous.max != next.max) {
-            view.progress = resolvedValue - next.min
+        if (previous.value != next.value || previous.min != next.min || previous.step != next.step) {
+            view.progress = ((next.value.toLong() - next.min.toLong()) / next.step.toLong()).toInt()
         }
         if (previous.enabled != next.enabled) {
             view.isEnabled = next.enabled

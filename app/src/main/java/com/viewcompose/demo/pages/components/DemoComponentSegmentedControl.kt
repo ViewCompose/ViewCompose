@@ -15,6 +15,7 @@ import com.viewcompose.ui.foundation.rememberSaveable
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
+import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.unit.dp
 
 internal fun UiTreeBuilder.ComponentSegmentedControlFixture(
@@ -56,15 +57,15 @@ internal fun UiTreeBuilder.ComponentSegmentedControlFixture(
     }
 }
 
-private fun UiTreeBuilder.segmentedControlItems(): List<String> = listOf(
-    stringResource(R.string.demo_component_option_a),
-    stringResource(R.string.demo_component_option_b),
-    stringResource(R.string.demo_component_option_c),
+private fun UiTreeBuilder.segmentedControlItems(): List<SegmentedControlItem> = listOf(
+    SegmentedControlItem("a", stringResource(R.string.demo_component_option_a)),
+    SegmentedControlItem("b", stringResource(R.string.demo_component_option_b)),
+    SegmentedControlItem("c", stringResource(R.string.demo_component_option_c)),
 )
 
 private fun UiTreeBuilder.ComponentSegmentedControlVariants(
     scenario: DemoScenarioSpec?,
-    items: List<String>,
+    items: List<SegmentedControlItem>,
 ) {
     Column(
         spacing = 12.dp,

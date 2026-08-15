@@ -403,10 +403,10 @@ private fun UiTreeBuilder.ViewPatchFixture(
                         .scenarioTarget(scenario, DemoAutomationRole.Target),
                 )
                 SegmentedControl(
-                    items = listOf(
-                        stringResource(R.string.demo_state_patch_segment_alpha),
-                        stringResource(R.string.demo_state_patch_segment_beta),
-                        stringResource(R.string.demo_state_patch_segment_gamma),
+                    items = demoSegmentedItems(
+                        "alpha" to stringResource(R.string.demo_state_patch_segment_alpha),
+                        "beta" to stringResource(R.string.demo_state_patch_segment_beta),
+                        "gamma" to stringResource(R.string.demo_state_patch_segment_gamma),
                     ),
                     selectedIndex = patchSegmentIndexState.value,
                     onSelectionChange = { patchSegmentIndexState.value = it },

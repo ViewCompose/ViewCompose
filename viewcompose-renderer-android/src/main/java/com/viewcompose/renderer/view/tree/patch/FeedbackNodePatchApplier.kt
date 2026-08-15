@@ -21,7 +21,6 @@ internal object FeedbackNodePatchApplier {
         val next = patch.next
         val environment = view.requireUiEnvironment()
         view.bind(
-            enabled = next.enabled,
             progress = next.progress,
             indicatorColor = next.indicatorColor,
             trackColor = next.trackColor,

@@ -6,6 +6,7 @@ import com.viewcompose.ui.node.spec.ColumnNodeProps
 import com.viewcompose.ui.node.spec.ConstraintLayoutNodeProps
 import com.viewcompose.ui.node.spec.DividerNodeProps
 import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
+import com.viewcompose.ui.node.spec.LayoutConstraintHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedVisibilityHostNodeProps
 import com.viewcompose.ui.node.spec.CanvasNodeProps
 import com.viewcompose.ui.node.spec.FlowColumnNodeProps
@@ -32,24 +33,20 @@ import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 
 /**
  * Binding strategy for a reused node.
- * Binding strategy for a reused node.
  */
 internal sealed interface NodeBindingPlan {
     /**
      * Skips this node's binding while continuing child reconciliation.
-     * Skips binding this node while continuing to reconcile children.
      */
     data object SkipSelfOnly : NodeBindingPlan
 
     /**
      * Skips this node and its complete subtree.
-     * Skips this node and the entire subtree.
      */
     data object SkipSubtree : NodeBindingPlan
 
     /**
      * Executes a complete bind again.
-     * Re-runs a full bind.
      */
     data object Rebind : NodeBindingPlan
 
@@ -58,7 +55,6 @@ internal sealed interface NodeBindingPlan {
 
     /**
      * Applies a targeted patch and records whether modifiers changed.
-     * Applies a fine-grained patch and records whether modifiers changed.
      */
     data class Patch(
         val patch: NodeViewPatch,
@@ -68,10 +64,8 @@ internal sealed interface NodeBindingPlan {
 
 /**
  * Common marker interface for targeted View patches.
- * Marker interface for fine-grained View patches.
  *
  * Concrete patches carry previous and next specs; their applier determines the actual changed fields.
- * Concrete patches only carry previous/next specs; the matching applier performs property-level diffing.
  */
 internal sealed interface NodeViewPatch
 
@@ -148,6 +142,11 @@ internal data class AnimatedVisibilityHostNodePatch(
 internal data class AnimatedSizeHostNodePatch(
     val previous: AnimatedSizeHostNodeProps,
     val next: AnimatedSizeHostNodeProps,
+) : NodeViewPatch
+
+internal data class LayoutConstraintHostNodePatch(
+    val previous: LayoutConstraintHostNodeProps,
+    val next: LayoutConstraintHostNodeProps,
 ) : NodeViewPatch
 
 internal data class ImageNodePatch(

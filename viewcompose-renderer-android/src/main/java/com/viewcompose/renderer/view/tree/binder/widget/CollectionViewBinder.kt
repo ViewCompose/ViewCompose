@@ -2,32 +2,34 @@ package com.viewcompose.renderer.view.tree
 
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.viewcompose.renderer.view.PaddingPx
+import com.viewcompose.renderer.view.container.DeclarativeLazyListView
+import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
+import com.viewcompose.renderer.view.container.DeclarativeNavigationBarLayout
+import com.viewcompose.renderer.view.container.LazyGridCellsPx
+import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
+import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
 import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
+import com.viewcompose.renderer.view.resolvePadding
+import com.viewcompose.renderer.view.roundToPx
+import com.viewcompose.renderer.view.toPx
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
+import com.viewcompose.ui.node.policy.GridCells
+import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.LazyRowNodeProps
 import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
 import com.viewcompose.ui.node.spec.NavigationBarNodeProps
 import com.viewcompose.ui.node.spec.UiFontFamily
-import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
-import com.viewcompose.renderer.view.container.DeclarativeLazyListView
-import com.viewcompose.renderer.view.container.DeclarativeNavigationBarLayout
 import com.viewcompose.ui.state.LazyListState
-import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
-import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
-import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
-import com.viewcompose.renderer.view.PaddingPx
-import com.viewcompose.renderer.view.resolvePadding
-import com.viewcompose.renderer.view.roundToPx
-import com.viewcompose.renderer.view.toPx
 
 /**
- * Binds lazy lists, grids, and navigation bars by converting declarative collection specs into stable container updates.
  * Binds lazy lists, grids, and navigation bars by translating declarative collection specs into
  * stable RecyclerView/container updates.
  */
@@ -68,7 +70,7 @@ internal object CollectionViewBinder {
     )
 
     data class LazyVerticalGridSpec(
-        val spanCount: Int,
+        val cells: LazyGridCellsPx,
         val contentPadding: PaddingPx,
         val horizontalSpacing: Int,
         val verticalSpacing: Int,
@@ -211,7 +213,7 @@ internal object CollectionViewBinder {
         )
         view.setFocusFollowKeyboardEnabled(spec.focusFollowKeyboard)
         view.bind(
-            spanCount = spec.spanCount,
+            cells = spec.cells,
             contentPadding = spec.contentPadding,
             horizontalSpacing = spec.horizontalSpacing,
             verticalSpacing = spec.verticalSpacing,
@@ -285,7 +287,7 @@ internal object CollectionViewBinder {
     fun readLazyVerticalGridSpec(node: VNode): LazyVerticalGridSpec {
         val spec = node.requireSpec<LazyVerticalGridNodeProps>()
         return LazyVerticalGridSpec(
-            spanCount = spec.spanCount,
+            cells = spec.cells.toPixels(node.environment),
             contentPadding = node.environment.resolvePadding(spec.contentPadding),
             horizontalSpacing = node.environment.roundToPx(spec.horizontalSpacing),
             verticalSpacing = node.environment.roundToPx(spec.verticalSpacing),
@@ -297,6 +299,13 @@ internal object CollectionViewBinder {
             reusePolicy = spec.reusePolicy,
             motionPolicy = spec.motionPolicy,
             focusFollowKeyboard = spec.focusFollowKeyboard,
+        )
+    }
+
+    internal fun GridCells.toPixels(environment: UiEnvironmentValues): LazyGridCellsPx = when (this) {
+        is GridCells.Fixed -> LazyGridCellsPx.Fixed(count)
+        is GridCells.Adaptive -> LazyGridCellsPx.Adaptive(
+            environment.roundToPx(minSize).coerceAtLeast(1),
         )
     }
 

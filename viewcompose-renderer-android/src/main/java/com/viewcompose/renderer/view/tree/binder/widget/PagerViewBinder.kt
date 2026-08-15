@@ -1,5 +1,11 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.renderer.view.container.DeclarativeHorizontalPagerLayout
+import com.viewcompose.renderer.view.container.DeclarativeSegmentedControlLayout
+import com.viewcompose.renderer.view.container.DeclarativeTabRowLayout
+import com.viewcompose.renderer.view.container.DeclarativeVerticalPagerLayout
+import com.viewcompose.renderer.view.roundToPx
+import com.viewcompose.renderer.view.toPx
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.UiStateLayerColors
@@ -13,18 +19,11 @@ import com.viewcompose.ui.node.spec.SegmentedControlNodeProps
 import com.viewcompose.ui.node.spec.TabRowNodeProps
 import com.viewcompose.ui.node.spec.UiFontFamily
 import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
-import com.viewcompose.renderer.view.container.DeclarativeHorizontalPagerLayout
-import com.viewcompose.renderer.view.container.DeclarativeSegmentedControlLayout
-import com.viewcompose.renderer.view.container.DeclarativeTabRowLayout
-import com.viewcompose.renderer.view.container.DeclarativeVerticalPagerLayout
-import com.viewcompose.ui.state.PagerState
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.state.PagerState
 import com.viewcompose.ui.unit.UiDensity
-import com.viewcompose.renderer.view.roundToPx
-import com.viewcompose.renderer.view.toPx
 
 /**
- * Binds pager, segmented-control, and tab-row nodes while synchronizing PagerState with Android scrolling state.
  * Binds pagers, segmented controls, and tab rows while keeping PagerState aligned with Android
  * container scroll state.
  */

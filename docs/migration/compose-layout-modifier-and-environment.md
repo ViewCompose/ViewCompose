@@ -107,7 +107,7 @@ rules, and treats `UiLocal` as scoped lookup rather than an invalidation subscri
 | --- | --- | --- | --- | --- |
 | Built-in layout containers | `Row`, `Column`, `Box`, and Foundation layouts measure Compose layout nodes under `Constraints`. | `Row`, `Column`, `Box`, flow layouts, scrolling containers, and ConstraintLayout emit VNodes that become Android `ViewGroup` implementations. | Partially supported | Recheck defaults, overflow, clipping, weight, and intrinsic-size assumptions on the native View implementation. |
 | Custom measurement | `Layout`, `MeasurePolicy`, and layout modifier nodes let application code measure and place Compose children. Ordinary measurement permits each child to be measured once. | No public general-purpose measure policy, measurable/placeable contract, or layout modifier was found. Custom multi-child measurement requires a renderer extension or an Android `ViewGroup` hosted through interop. | Unsupported | Redesign custom Compose layouts around a built-in container or a lifecycle-owned Android View implementation. |
-| Size and fill | Layout modifiers transform or constrain a chain; `size` remains subject to incoming constraints, and fill APIs can accept fractions where defined. | Exact dp dimensions become pixel LayoutParams; fill helpers become `MATCH_PARENT`. Axis-specific width or height has fixed renderer precedence over `size`. | Partially supported | Replace the final measured contract, not just the function name. Audit constrained, fractional-fill, required-size, and intrinsic-size behavior. |
+| Size and fill | Layout modifiers transform or constrain a chain; `size` remains subject to incoming constraints, and fill APIs can accept fractions where defined. | Exact dp dimensions become pixel LayoutParams; fill helpers become `MATCH_PARENT`. `maxWidth`, `maxHeight`, and `aspectRatio` share one renderer measurement boundary around the complete node. | Partially supported | Replace the final measured contract, not just the function name. Audit exact/min/max conflicts, ratio axis preference, fractional fill, required size, and intrinsic sizing. |
 | Padding and margin | Each layout modifier participates at its position in the modifier chain. Compose normally represents outside space with layout structure or padding rather than a margin property. | Padding is native View content padding. Margin is explicit native parent LayoutParams data. Repeated padding or margin elements resolve to the last element of that type. | Intentionally different | Flatten repeated padding and decide explicitly whether former outer padding belongs in parent structure, View padding, or ViewCompose margin. |
 | Scoped parent data | Scope-safe modifiers such as `RowScope.weight`, `ColumnScope.weight`, alignment, and `BoxScope.matchParentSize` provide data to a compatible direct parent. | `RowScope` and `ColumnScope` expose weight and cross-axis alignment; `BoxScope` exposes alignment. Invalid parent-data use is diagnosed with a warning. There is no verified `matchParentSize` equivalent. | Partially supported | Keep scoped modifiers on direct children of the matching container. Redesign `matchParentSize`; do not replace it blindly with `fillMaxSize`. |
 | Constraint parent data | Compose ConstraintLayout consumes layout IDs and constraint parent data inside its own measurement model. | The optional ConstraintLayout module maps layout IDs and constraint specs to AndroidX ConstraintLayout LayoutParams and ConstraintSet operations. | Partially supported | Revalidate dimensions, baselines, RTL anchors, and dependency cycles against the AndroidX View implementation. |
@@ -166,6 +166,15 @@ This precedence is implemented in
 [`ViewLayoutParamsFactory.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt),
 lines 73–99. Exact dp dimensions are converted with the VNode's captured density. Fill helpers map
 to Android `MATCH_PARENT`; they do not preserve every fractional or intrinsic Compose option.
+
+Portable maximum bounds and ratios are the exception to direct LayoutParams mapping. The renderer
+folds `maxWidth`, `maxHeight`, and `aspectRatio` into one synthetic measurement host around the
+complete modified node. Positive finite values are required. An exact or minimum size that exceeds
+the declared maximum fails deterministically instead of silently selecting one source; ratio
+selection uses width first unless `matchHeightConstraintsFirst` is set. Android's incoming
+`EXACTLY` constraint remains authoritative when no size can satisfy both axes and the ratio. This
+is not a public custom measurement API and does not make arbitrary Compose `LayoutModifier` code
+portable.
 
 Edge modifiers have distinct native destinations:
 
@@ -466,14 +475,16 @@ and renderer tests both include rollback of an uncommitted candidate as permanen
 3. Replace layout behavior before translating visual modifier names.
 4. Normalize repeated size, padding, margin, graphics-layer, and draw elements according to the
    ViewCompose folding rules.
-5. Keep parent-data modifiers on direct children of the matching scope and redesign
+5. Replace compatible maximum-size and ratio chains with `maxWidth`, `maxHeight`, and `aspectRatio`,
+   then test exact/minimum conflicts and bounded versus unbounded parents.
+6. Keep parent-data modifiers on direct children of the matching scope and redesign
    `matchParentSize` uses.
-6. Map logical start/end intent to relative modifiers; keep physical APIs only for deliberate
+7. Map logical start/end intent to relative modifiers; keep physical APIs only for deliberate
    left/right behavior.
-7. Move changing provided values behind ViewCompose state; do not rely on `UiLocal` read tracking.
-8. Assign system-bar and IME inset ownership explicitly across View and ViewCompose boundaries.
-9. Separate Android View replay-safe configuration, post-commit work, and release cleanup.
-10. Add behavior tests for measurement, RTL, local updates, delayed sessions, inset dispatch, and
+8. Move changing provided values behind ViewCompose state; do not rely on `UiLocal` read tracking.
+9. Assign system-bar and IME inset ownership explicitly across View and ViewCompose boundaries.
+10. Separate Android View replay-safe configuration, post-commit work, and release cleanup.
+11. Add behavior tests for measurement, RTL, local updates, delayed sessions, inset dispatch, and
     interop rollback before declaring the migration complete.
 
 ## Source and executable evidence
@@ -485,6 +496,10 @@ The following local evidence protects the claims in this page:
   [`ModifierContractTest.kt`](../../viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/modifier/ModifierContractTest.kt),
   including the five public relative modifier contracts. Their Q3 compiled usage is in
   [`UiContractNodeSamples.kt`](../../viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt).
+- Maximum and aspect-ratio contract validation and compiled use:
+  [`NativeWidgetContractValidationTest.kt`](../../viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/state/NativeWidgetContractValidationTest.kt)
+  and `layoutConstraintModifierSample`; Android measurement is covered by
+  `LayoutConstraintHostTest` and `LayoutConstraintNodeWrapperTest` in the renderer module.
 - Modifier folding, additive z-index, ordered shadows, and ConstraintLayout parent data:
   [`ResolvedModifiersTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/ResolvedModifiersTest.kt),
   including last-declaration-wins across physical and relative edge forms.

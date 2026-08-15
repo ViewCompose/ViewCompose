@@ -26,6 +26,7 @@ import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageLoader
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.NavigationBarItem
+import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
@@ -295,8 +296,8 @@ class NodeBindingDifferTest {
 
     @Test
     fun `patches lazy vertical grid semantic updates`() {
-        val previous = lazyVerticalGridNode(spanCount = 2)
-        val next = lazyVerticalGridNode(spanCount = 3)
+        val previous = lazyVerticalGridNode(cellCount = 2)
+        val next = lazyVerticalGridNode(cellCount = 3)
 
         val plan = NodeBindingDiffer.plan(previous, next)
 
@@ -633,7 +634,10 @@ class NodeBindingDifferTest {
         return VNode(
             type = NodeType.SegmentedControl,
             spec = SegmentedControlNodeProps(
-                items = emptyList(),
+                items = listOf(
+                    SegmentedControlItem(key = "first", label = "First"),
+                    SegmentedControlItem(key = "second", label = "Second"),
+                ),
                 selectedIndex = selectedIndex,
                 onSelectionChange = null,
                 enabled = true,
@@ -666,12 +670,12 @@ class NodeBindingDifferTest {
     }
 
     private fun lazyVerticalGridNode(
-        spanCount: Int = 2,
+        cellCount: Int = 2,
     ): VNode {
         return VNode(
             type = NodeType.LazyVerticalGrid,
             spec = LazyVerticalGridNodeProps(
-                spanCount = spanCount,
+                cells = com.viewcompose.ui.node.policy.GridCells.Fixed(cellCount),
                 contentPadding = com.viewcompose.ui.node.policy.LazyContentPadding.all(8.dp),
                 horizontalSpacing = 8.dp,
                 verticalSpacing = 8.dp,
@@ -848,7 +852,6 @@ class NodeBindingDifferTest {
         return VNode(
             type = NodeType.LinearProgressIndicator,
             spec = ProgressIndicatorNodeProps(
-                enabled = true,
                 progress = progress,
                 indicatorColor = 0xFF000000.toInt(),
                 trackColor = 0x33000000,
@@ -1052,10 +1055,12 @@ class NodeBindingDifferTest {
             spec = NavigationBarNodeProps(
                 items = listOf(
                     NavigationBarItem(
+                        key = "home",
                         label = "Home",
                         icon = ImageSource.Resource(1),
                     ),
                     NavigationBarItem(
+                        key = "search",
                         label = "Search",
                         icon = ImageSource.Resource(2),
                         badgeCount = 1,

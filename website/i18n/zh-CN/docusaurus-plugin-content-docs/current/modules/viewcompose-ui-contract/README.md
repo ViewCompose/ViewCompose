@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 1342b8cf42c879cd13d977481399f1ee38215562ed68c9a247af4047a348eca3
+translation_source_hash: 5816e07f3bd52c0d0f6f686751bdd7c5ead3a0842995432e3baf15d001a5e223
 translation_status: current
 ---
 
@@ -64,8 +64,18 @@ val gap = VNode(
   已编译的 `relativeLayoutModifierSample` 展示完整 API 族。
 - [`UiEnvironmentValues`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.environment/-ui-environment-values/)
   捕获子树的密度、语言标签与逻辑布局方向。
-- [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
-  与 Pager 状态把平台滚动能力桥接到可观察的 Runtime 状态。
+- [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)、
+  Q3 `ScrollState` 与 Q3 `PagerState` 分别把 Lazy、Eager 与页面式平台滚动桥接为不可变可观察
+  Snapshot。Connector 只允许一个活动 Renderer Owner，替换或释放时断开，并明确区分立即命令与
+  动画命令。
+- Q3 `GridCells.Fixed` 与 `GridCells.Adaptive` 定义物理列数计算，不暴露 Android LayoutManager。
+  Q3 `GridItemSpan.Single`、`Fixed` 与 `FullLine` 在自适应网格改变列数后仍保持语义；编译样例
+  `gridPolicySample` 覆盖该策略模型。
+- `maxWidth`、`maxHeight` 与 `aspectRatio` 是通过 `NodeType.LayoutConstraintHost` 实现的可移植
+  测量 Modifier。自定义 Renderer 必须用一个测量边界约束完整节点，遵守父级传入的精确约束，
+  其余情况下应用声明的最大值，并在可行区间内保持请求的宽高比。
+- `NavigationBarItem` 与 `SegmentedControlItem` 必须提供显式且唯一的逻辑 Key。非空集合的
+  NodeSpec 要求选中索引位于范围内，空集合使用 `-1`；Navigation Badge 是可空的非负值。
 - `LazyListItem` 是 Q3、Renderer 中立的 Snapshot/Session 契约。逻辑相等由 Key、`contentType`、
   调用方 `contentRevision`、框架 `environmentRevision`、Kind 与 Span 构成，Callback 身份被明确
   排除。Key 与 Revision 相等时完全跳过 Session；Revision 变化只更新该 Session，而
@@ -137,8 +147,14 @@ val gap = VNode(
   Heading 与 Selected 元数据来自同一份 `SemanticsConfiguration` 字段，避免重复持有状态。
 - 每个 VNode 子树都捕获 `UiEnvironmentValues`。渲染器必须使用捕获值，不能改用无关的进程
   全局密度、语言或方向状态。
-- `LazyListState`、Pager 状态、焦点请求器与嵌套滚动分发器只连接一个当前渲染器 Connector。
-  替换或释放时，宿主必须断开旧 Connector。
+- `LazyListState`、`ScrollState`、`PagerState`、焦点请求器与嵌套滚动分发器只连接一个当前
+  Renderer Connector。替换或释放时，Host 必须断开旧 Connector。Eager 横向偏移与全部页面索引
+  在 RTL 中仍使用逻辑顺序。
+- `PagerStateSnapshot` 分别发布当前页、已停稳页与目标页。受控 `currentPage` 在重建后仍是唯一
+  权威来源；`onPageChanged` 是停稳到 Idle 后的事件，不是声明绑定期间的 `onPageSelected` 回显。
+- `GridCells.Adaptive` 根据当前内部宽度、间距、密度与配置重新计算物理列数，同时保留 Keyed
+  逻辑 Session。`GridItemSpan.FullLine` 按当前列数解析；Foundation 会把 `Fixed(1)` 规范化为
+  `Single`。
 - Renderer 保留 `LazyListItem` Session 时，若 Key 和两个 Revision 相等，必须忽略新的 Callback
   对象。任一 Revision 改变时，安装最新 Updater 并恰好 Render 一次。Key 不同则始终创建不同逻辑
   Session；兼容物理呈现只能在旧 State 与 Effect Dispose 后转移。
@@ -194,6 +210,18 @@ val gap = VNode(
 五个相对布局 Modifier 元素是新增的 Q3 契约，但自定义 Renderer 必须识别它们，应用代码才能
 安全使用对应 DSL。Renderer 必须只根据 VNode 环境解析 start/end，保留旧元素的物理语义，并在
 每一族的物理与相对形式之间执行“后声明者覆盖”规则。
+
+原生控件契约收敛属于 Alpha 硬切。旧命令式 Pager State 与固定整数网格契约已删除：调用方改用
+不可变 `PagerStateSnapshot`、`GridCells` 与 `GridItemSpan`。`ScrollableColumnNodeProps` 与
+`ScrollableRowNodeProps` 现携带 `ScrollState` 和 `userScrollEnabled`；Slider Snapshot 新增步长
+与交互边界回调；下拉刷新新增 `enabled`；Navigation 与 Segmented Item 新增显式 Key 和 Enabled
+状态；无实际行为的 Progress `enabled` 字段已删除。预编译 NodeSpec 直接构造点与自定义 Renderer
+必须重新构建并完整实现新契约。
+
+`MaxWidthModifierElement`、`MaxHeightModifierElement`、`AspectRatioModifierElement`、
+`LayoutConstraintHostNodeProps` 与 `NodeType.LayoutConstraintHost` 是新增源码 API，但也扩展了
+Renderer 注册表。自定义 Renderer 必须先识别全部契约，应用才能使用这些 Modifier；静默忽略
+测量 Host 会破坏正确性。
 
 新增 `LazyListItemSession.prepare` 与 `activate` 是 Q3 生命周期硬切。Kotlin 源码实现可以继承安全
 默认值，但接口 JVM 形状已经变化，因此预编译自定义 Session 与 Renderer 必须重新构建。覆写

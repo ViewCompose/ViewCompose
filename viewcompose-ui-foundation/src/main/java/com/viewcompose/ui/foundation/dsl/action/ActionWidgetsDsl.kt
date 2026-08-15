@@ -1,8 +1,11 @@
 package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.SemanticsCollectionInfo
+import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
 import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.height
+import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
@@ -229,19 +232,20 @@ fun UiTreeBuilder.TextButton(
  * synchronously with the requested index; the caller must publish the accepted state in a later
  * render. Appearance resolves once from instance, scoped, and semantic defaults in that order.
  *
- * @sample com.viewcompose.ui.foundation.samples.componentOverridesSample
+ * @sample com.viewcompose.ui.foundation.samples.stableSelectionItemIdentitySample
  * @receiver active tree builder that receives the emitted SegmentedControl node
- * @param items ordered visible labels for the segments
- * @param selectedIndex currently selected index, or the renderer's supported unselected sentinel
+ * @param items ordered stable segment snapshots with label and per-item enabled state
+ * @param selectedIndex currently selected item index, or `-1` only when [items] is empty
  * @param onSelectionChange callback receiving a requested item index on the renderer thread
  * @param size interaction-density tier used for typography, padding, and minimum height
  * @param enabled whether selection input is accepted and enabled appearance roles are used
  * @param overrides sparse instance appearance applied after scoped [ProvideSegmentedControlOverrides]
  * @param key optional stable sibling identity used during reconciliation
  * @param modifier ordered configuration appended after the resolved minimum height
+ * @throws IllegalArgumentException for duplicate keys or a selected index outside [items]
  */
 fun UiTreeBuilder.SegmentedControl(
-    items: List<String>,
+    items: List<SegmentedControlItem>,
     selectedIndex: Int,
     onSelectionChange: (Int) -> Unit,
     size: SegmentedControlSize = SegmentedControlSize.Medium,
@@ -251,12 +255,11 @@ fun UiTreeBuilder.SegmentedControl(
     modifier: Modifier = Modifier,
 ) {
     val appearance = SegmentedControlDefaults.resolve(size, enabled, overrides)
-    val resolvedItems = items.map { label -> SegmentedControlItem(label = label) }
     emit(
         type = NodeType.SegmentedControl,
         key = key,
         spec = SegmentedControlNodeProps(
-            items = resolvedItems,
+            items = items,
             selectedIndex = selectedIndex,
             onSelectionChange = onSelectionChange,
             enabled = enabled,
@@ -279,6 +282,13 @@ fun UiTreeBuilder.SegmentedControl(
         ),
         modifier = Modifier
             .height(appearance.minimumHeight)
+            .semantics {
+                collectionInfo = SemanticsCollectionInfo(
+                    rowCount = 1,
+                    columnCount = items.size,
+                    selectionMode = SemanticsCollectionSelectionMode.Single,
+                )
+            }
             .then(modifier),
     )
 }

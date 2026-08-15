@@ -125,7 +125,11 @@ private fun UiTreeBuilder.Material3ActionsBaseline() {
         }
     }
     SegmentedControl(
-        items = listOf("Day", "Week", "Month"),
+        items = demoSegmentedItems(
+            "day" to "Day",
+            "week" to "Week",
+            "month" to "Month",
+        ),
         selectedIndex = 1,
         onSelectionChange = {},
         modifier = Modifier.fillMaxWidth(),
@@ -302,8 +306,8 @@ private fun UiTreeBuilder.Material3SurfacesBaseline() {
         onItemSelected = {},
         modifier = Modifier.testTag(DemoTestTags.MATERIAL3_BASELINE_SURFACE_NAVIGATION),
     ) {
-        Item(label = "Home", icon = ImageSource.Resource(R.drawable.demo_media_icon))
-        Item(label = "Library", icon = ImageSource.Resource(R.drawable.demo_media_icon), badgeCount = 3)
-        Item(label = "Profile", icon = ImageSource.Resource(R.drawable.demo_media_icon))
+        Item(key = "home", label = "Home", icon = ImageSource.Resource(R.drawable.demo_media_icon))
+        Item(key = "library", label = "Library", icon = ImageSource.Resource(R.drawable.demo_media_icon), badgeCount = 3)
+        Item(key = "profile", label = "Profile", icon = ImageSource.Resource(R.drawable.demo_media_icon))
     }
 }

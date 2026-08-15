@@ -79,7 +79,7 @@ class ContainerPolicySpecReaderTest {
             node = VNode(
                 type = NodeType.LazyVerticalGrid,
                 spec = LazyVerticalGridNodeProps(
-                    spanCount = 2,
+                    cells = com.viewcompose.ui.node.policy.GridCells.Fixed(2),
                     contentPadding = LazyContentPadding.all(8.dp),
                     horizontalSpacing = 4.dp,
                     verticalSpacing = 4.dp,

@@ -660,7 +660,7 @@ internal fun UiTreeBuilder.CollectionPage(
                 )
                 LazyVerticalGrid(
                     items = gridItems,
-                    spanCount = spanCountState.value,
+                    cells = com.viewcompose.ui.node.policy.GridCells.Fixed(spanCountState.value),
                     key = { item -> item.id },
                     horizontalSpacing = 8.dp,
                     verticalSpacing = 8.dp,

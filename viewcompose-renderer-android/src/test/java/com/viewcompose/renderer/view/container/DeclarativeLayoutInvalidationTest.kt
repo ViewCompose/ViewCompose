@@ -7,8 +7,10 @@ import com.viewcompose.ui.unit.dp
  * Test responsibility: covers Declarative Layout Invalidation behavior in renderer view/container and guards render and patch contracts against regressions.
  */
 
+import android.content.pm.ApplicationInfo
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import com.viewcompose.renderer.view.tree.ViewLayoutParamsFactory
@@ -26,6 +28,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class DeclarativeLayoutInvalidationTest {
@@ -266,10 +269,70 @@ class DeclarativeLayoutInvalidationTest {
         assertTrue(view.isLayoutRequested)
     }
 
+    @Test
+    @Config(qualifiers = "ldrtl")
+    fun `flow row places logical first child at the right edge in rtl`() {
+        val context = RuntimeEnvironment.getApplication()
+        context.applicationInfo.flags = context.applicationInfo.flags or ApplicationInfo.FLAG_SUPPORTS_RTL
+        val view = DeclarativeFlowRowLayout(context).apply {
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            horizontalSpacing = 10
+        }
+        val first = View(context)
+        val second = View(context)
+        view.addView(first, ViewGroup.MarginLayoutParams(20, 20))
+        view.addView(second, ViewGroup.MarginLayoutParams(20, 20))
+        val host = FrameLayout(context).apply {
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            addView(view, FrameLayout.LayoutParams(100, 40))
+        }
+        host.measure(
+            View.MeasureSpec.makeMeasureSpec(100, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(40, View.MeasureSpec.EXACTLY),
+        )
+        host.layout(0, 0, 100, 40)
+
+        assertEquals(View.LAYOUT_DIRECTION_RTL, view.layoutDirection)
+        assertEquals(20, first.measuredWidth)
+        assertEquals(80, first.left)
+        assertEquals(50, second.left)
+    }
+
+    @Test
+    @Config(qualifiers = "ldrtl")
+    fun `flow column advances wrapped columns from right to left in rtl`() {
+        val context = RuntimeEnvironment.getApplication()
+        context.applicationInfo.flags = context.applicationInfo.flags or ApplicationInfo.FLAG_SUPPORTS_RTL
+        val view = DeclarativeFlowColumnLayout(context).apply {
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            horizontalSpacing = 10
+            maxItemsInEachColumn = 1
+        }
+        val first = View(context)
+        val second = View(context)
+        view.addView(first, ViewGroup.MarginLayoutParams(20, 20))
+        view.addView(second, ViewGroup.MarginLayoutParams(20, 20))
+        val host = FrameLayout(context).apply {
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            addView(view, FrameLayout.LayoutParams(100, 40))
+        }
+        host.measure(
+            View.MeasureSpec.makeMeasureSpec(100, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(40, View.MeasureSpec.EXACTLY),
+        )
+        host.layout(0, 0, 100, 40)
+
+        assertEquals(View.LAYOUT_DIRECTION_RTL, view.layoutDirection)
+        assertEquals(20, first.measuredWidth)
+        assertEquals(80, first.left)
+        assertEquals(50, second.left)
+    }
+
     private fun settleLayout(view: View) {
         val measureSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.EXACTLY)
         view.measure(measureSpec, measureSpec)
         view.layout(0, 0, 200, 200)
         assertFalse(view.isLayoutRequested)
     }
+
 }

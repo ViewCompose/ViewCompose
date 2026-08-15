@@ -169,28 +169,38 @@ fun UiTreeBuilder.RadioButton(
 /**
  * Displays an integer-valued slider and reports accepted value changes.
  *
- * State remains caller-owned. Callers should keep [value] within the inclusive [min] to [max]
- * range; this DSL does not normalize inconsistent inputs. The current theme supplies a minimum
- * effective height before [modifier] is appended. Android Renderer keeps the native track and
- * thumb centered inside that height, while an explicit exact application or parent height remains
- * authoritative.
+ * State remains caller-owned. [value] and the inclusive [min] to [max] range must align exactly to
+ * [step]. A user interaction invokes [onValueChangeStarted] before its first change, reports each
+ * accepted stepped value through [onValueChange], and then invokes [onValueChangeFinished].
+ * Declarative binding never invokes these callbacks.
  *
- * @sample com.viewcompose.ui.foundation.samples.compactInputTargetSample
+ * The current theme supplies a minimum effective height before [modifier] is appended. Android
+ * Renderer keeps the native track and thumb centered inside that height, while an exact
+ * application or parent height remains authoritative.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.sliderInteractionSample
  * @receiver active tree builder that receives the emitted Slider node
  * @param value current caller-owned integer value
  * @param onValueChange callback invoked synchronously on the renderer thread with the requested value
  * @param min inclusive lower bound of the platform progress range
  * @param max inclusive upper bound of the platform progress range
+ * @param step positive interval between adjacent accepted values
+ * @param onValueChangeStarted optional callback invoked before a touch, key, or accessibility interaction
+ * @param onValueChangeFinished optional callback invoked after that interaction completes
  * @param enabled whether input is accepted and enabled color roles are used
  * @param overrides sparse instance appearance applied after scoped [ProvideSliderOverrides]
  * @param key optional stable sibling identity used during reconciliation
  * @param modifier ordered configuration appended after the themed minimum effective height
+ * @throws IllegalArgumentException when the range, value, or step cannot form exact step indexes
  */
 fun UiTreeBuilder.Slider(
     value: Int,
     onValueChange: (Int) -> Unit,
     min: Int = 0,
     max: Int = 100,
+    step: Int = 1,
+    onValueChangeStarted: (() -> Unit)? = null,
+    onValueChangeFinished: (() -> Unit)? = null,
     enabled: Boolean = true,
     overrides: SliderOverrides = SliderOverrides.None,
     key: Any? = null,
@@ -209,6 +219,9 @@ fun UiTreeBuilder.Slider(
             trackColor = appearance.activeTrackColor,
             onValueChange = onValueChange,
             inactiveTrackColor = appearance.inactiveTrackColor,
+            step = step,
+            onValueChangeStarted = onValueChangeStarted,
+            onValueChangeFinished = onValueChangeFinished,
         ),
         modifier = Modifier
             .minHeight(appearance.minimumHeight)

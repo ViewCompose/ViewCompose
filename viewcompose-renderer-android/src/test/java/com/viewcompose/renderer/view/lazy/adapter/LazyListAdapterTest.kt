@@ -285,12 +285,20 @@ class LazyListAdapterTest {
         val parent = FrameLayout(context)
         val events = mutableListOf<String>()
         val adapter = LazyListAdapter()
-        adapter.submitItems(listOf(recordingItem("first", events, span = 1)))
+        adapter.submitItems(listOf(recordingItem("first", events)))
         val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
         adapter.onBindViewHolder(holder, 0)
         adapter.onViewAttachedToWindow(holder)
 
-        adapter.submitItems(listOf(recordingItem("second", events, span = 2)))
+        adapter.submitItems(
+            listOf(
+                recordingItem(
+                    "second",
+                    events,
+                    span = com.viewcompose.ui.node.policy.GridItemSpan.Fixed(2),
+                ),
+            ),
+        )
         adapter.onBindViewHolder(
             holder,
             0,
@@ -298,7 +306,7 @@ class LazyListAdapterTest {
         )
 
         assertEquals(listOf("update:first", "render:first"), events)
-        assertEquals(2, adapter.itemSpanAt(0))
+        assertEquals(com.viewcompose.ui.node.policy.GridItemSpan.Fixed(2), adapter.itemSpanAt(0))
     }
 
     private fun item(
@@ -327,7 +335,7 @@ class LazyListAdapterTest {
         key: Any = "stable",
         contentRevision: Any? = "stable",
         contentType: Any? = null,
-        span: Int = 1,
+        span: com.viewcompose.ui.node.policy.GridItemSpan = com.viewcompose.ui.node.policy.GridItemSpan.Single,
     ): LazyListItem {
         return LazyListItem(
             key = key,

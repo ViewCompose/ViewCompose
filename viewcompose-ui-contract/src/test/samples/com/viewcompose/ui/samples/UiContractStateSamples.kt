@@ -14,6 +14,9 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.PaddingModifierElement
 import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.modifier.backgroundColor
+import com.viewcompose.ui.modifier.aspectRatio
+import com.viewcompose.ui.modifier.maxHeight
+import com.viewcompose.ui.modifier.maxWidth
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.modifier.testTag
@@ -22,6 +25,12 @@ import com.viewcompose.ui.state.LazyListState
 import com.viewcompose.ui.state.LazyListStateSnapshot
 import com.viewcompose.ui.state.PagerConnector
 import com.viewcompose.ui.state.PagerState
+import com.viewcompose.ui.state.PagerStateSnapshot
+import com.viewcompose.ui.state.ScrollConnector
+import com.viewcompose.ui.state.ScrollState
+import com.viewcompose.ui.state.ScrollStateSnapshot
+import com.viewcompose.ui.node.policy.GridCells
+import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.unit.dp
 
 fun modifierChainSample() {
@@ -89,10 +98,65 @@ fun pagerStateSample() {
     state.attach(connector)
     state.scrollToPage(3)
 
-    check(connector.lastPage == 3)
-    state.updateFromPager(currentPage = 3, pageOffset = 0.25f)
+    check(connector.lastScroll == 3 to false)
+    connector.publish(
+        PagerStateSnapshot(
+            currentPage = 3,
+            settledPage = 2,
+            targetPage = 3,
+            pageOffset = 0.25f,
+            pageCount = 5,
+            isScrollInProgress = true,
+            canScrollBackward = true,
+            canScrollForward = true,
+        ),
+    )
     check(state.currentPage == 3)
+    check(state.targetPage == 3)
     check(state.pageOffset == 0.25f)
+}
+
+fun scrollStateSample() {
+    val state = ScrollState(initialValue = 12)
+    val connector = RecordingScrollConnector()
+    state.attach(connector)
+
+    state.scrollTo(48)
+    connector.publish(
+        ScrollStateSnapshot(
+            value = 48,
+            maxValue = 120,
+            viewportSize = 64,
+            isScrollInProgress = false,
+            canScrollBackward = true,
+            canScrollForward = true,
+            lastScrolledBackward = false,
+            lastScrolledForward = true,
+        ),
+    )
+
+    check(connector.lastScroll == 48 to false)
+    check(state.value == 48)
+    check(state.maxValue == 120)
+}
+
+fun gridPolicySample() {
+    val cells: GridCells = GridCells.Adaptive(minSize = 160.dp)
+    val headerSpan: GridItemSpan = GridItemSpan.FullLine
+    val cardSpan: GridItemSpan = GridItemSpan.Fixed(2)
+
+    check(cells is GridCells.Adaptive)
+    check(headerSpan == GridItemSpan.FullLine)
+    check(cardSpan == GridItemSpan.Fixed(2))
+}
+
+fun layoutConstraintModifierSample() {
+    val modifier = Modifier
+        .maxWidth(720.dp)
+        .maxHeight(480.dp)
+        .aspectRatio(ratio = 16f / 9f)
+
+    check(modifier.elements.size == 3)
 }
 
 private class RecordingNestedScrollConnector : NestedScrollDispatcherConnector {
@@ -145,9 +209,35 @@ private class RecordingLazyListConnector : LazyListConnector {
 }
 
 private class RecordingPagerConnector : PagerConnector {
-    var lastPage: Int? = null
+    var lastScroll: Pair<Int, Boolean>? = null
+    private var listener: ((PagerStateSnapshot) -> Unit)? = null
 
-    override fun scrollToPage(page: Int) {
-        lastPage = page
+    override fun scrollToPage(page: Int, animated: Boolean) {
+        lastScroll = page to animated
+    }
+
+    override fun setOnSnapshotChangedListener(listener: ((PagerStateSnapshot) -> Unit)?) {
+        this.listener = listener
+    }
+
+    fun publish(snapshot: PagerStateSnapshot) {
+        listener?.invoke(snapshot)
+    }
+}
+
+private class RecordingScrollConnector : ScrollConnector {
+    var lastScroll: Pair<Int, Boolean>? = null
+    private var listener: ((ScrollStateSnapshot) -> Unit)? = null
+
+    override fun scrollTo(value: Int, animated: Boolean) {
+        lastScroll = value to animated
+    }
+
+    override fun setOnSnapshotChangedListener(listener: ((ScrollStateSnapshot) -> Unit)?) {
+        this.listener = listener
+    }
+
+    fun publish(snapshot: ScrollStateSnapshot) {
+        listener?.invoke(snapshot)
     }
 }

@@ -1,5 +1,7 @@
 package com.viewcompose.ui.node
 
+import com.viewcompose.ui.node.policy.GridItemSpan
+
 /**
  * Describes one keyed, lazily rendered collection item and its child-session lifecycle.
  *
@@ -23,10 +25,9 @@ package com.viewcompose.ui.node
  * @property environmentRevision framework-owned environment version compared during diffing
  * @property contentType optional renderer reuse classification
  * @property kind normal item or sticky-header behavior
- * @property span positive grid span count
+ * @property span renderer-neutral grid span policy
  * @property sessionFactory factory invoked when a renderer needs a child render session
  * @property sessionUpdater callback that installs latest captured content into a retained session
- * @throws IllegalArgumentException if [span] is not greater than zero
  */
 class LazyListItem(
     val key: Any,
@@ -34,14 +35,10 @@ class LazyListItem(
     val environmentRevision: Any? = null,
     val contentType: Any? = null,
     val kind: LazyListItemKind = LazyListItemKind.Item,
-    val span: Int = 1,
+    val span: GridItemSpan = GridItemSpan.Single,
     val sessionFactory: LazyListItemSessionFactory,
     val sessionUpdater: (LazyListItemSession) -> Unit,
 ) {
-    init {
-        require(span > 0) { "Lazy item span must be greater than zero." }
-    }
-
     /**
      * Compares semantic item identity, content version, reuse type, kind, and span.
      *
@@ -70,7 +67,7 @@ class LazyListItem(
         result = 31 * result + (environmentRevision?.hashCode() ?: 0)
         result = 31 * result + (contentType?.hashCode() ?: 0)
         result = 31 * result + kind.hashCode()
-        result = 31 * result + span
+        result = 31 * result + span.hashCode()
         return result
     }
 }

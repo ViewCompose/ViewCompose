@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 37cc4df4760ba3a586d6ce44f786b47f2573699e2600a29396f5111861a6d726
+translation_source_hash: 049e5c85b612e6987eeffbb0fe3a99a9af9ae8309e5a76bde7eb5308d616a8f8
 translation_status: current
 ---
 
@@ -88,6 +88,15 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
   在不修改平台状态的前提下生成插入、复用和移除计划。
 - [`LazyListDiff`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.reconcile/-lazy-list-diff/)
   把稳定 Lazy item key 转换成有序 RecyclerView 更新；身份缺失或有歧义时会主动退化为全量刷新。
+- Eager Scroll Container 使用一个 Renderer Connector 发布逻辑偏移、范围、Viewport、方向与运动，
+  并在布局前保留 Pending Command。Pager Container 使用一个停稳状态协调器，同时处理 ViewPager2
+  观察与 Callback 去重。纵向 Eager Container 嵌套在同轴且不支持 Nested Scrolling 的 Parent 中时，
+  只在自身仍能消费当前方向期间保留 Pointer Stream，并在对应滚动边界把 Stream 交还 Parent；禁用
+  用户滚动时绝不会保留 Parent Stream。
+- Adaptive Grid 会根据可用内部宽度与密度重新计算 `GridLayoutManager.spanCount`，不替换 Adapter
+  或 Keyed Session。Span Lookup 按当前列数解析 `FullLine`，并安全限制固定 Span。
+- 最大尺寸与宽高比 Modifier 会在完整映射节点外安装一个合成测量 Host。该 Host 是 Renderer
+  所有的基础设施，不是语义 Child，也不会产生第二个逻辑 Session。
 - `RenderTreeResult`、`RenderStats`、`RenderStructureStats`、patch 记录和布局过程采样提供不可变
   诊断数据，供 demo、预览工具和性能测试使用。
 - [`AndroidViewDecorationBackend`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.decoration/-android-view-decoration-backend/)
@@ -177,6 +186,12 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
   契约被接受前，平台 Drawable 几何及其内建覆盖率仍具有最终权限。
 - 集合行列索引是从零开始的逻辑位置。Android 在 RTL 中反向排列后代时，Renderer 不得反转这些
   索引。选中态和标题态读取 item 已有的语义字段，防止组件通过重复契约暴露相互矛盾的无障碍状态。
+- Text 对齐只更新 Gravity 的水平位。FlowRow、FlowColumn 与 TabRow 在 RTL 中镜像物理排布，
+  同时保留逻辑 Callback 与无障碍索引。
+- NavigationBar、SegmentedControl 与 TabRow 会发布单选父集合元数据和 Item 位置。Keyed
+  Navigation/Segment View 可以在同一容器内复用，但 Label 或 Index 绝不充当逻辑身份。
+  Density 或布局方向变化时，SegmentedControl 会重建内部 Shape Drawable，避免解析后的圆角继续
+  持有过期环境。
 
 ## Android host 与线程规则
 
@@ -243,3 +258,9 @@ Renderer 的多状态路径实现通用 UI Contract，并非 Material 功能。�
 
 相对 Modifier API 族只能根据每个 VNode 环境解析。Renderer 分支必须同时升级折叠、LayoutParams、
 平移与 Inset 选择路径；从进程 Configuration 映射或重新解释旧物理元素都会违反公共 UI Contract。
+
+原生控件契约收敛删除 Renderer 本地 Pager State，直接消费 Q3 UI Contract State。Renderer 分支
+必须在 Scroll/Pager Connector 替换和释放时断开连接，只在 Idle 停稳后发送 Pager Callback，遵守
+`userScrollEnabled`，实现 Slider 交互阶段与步长，在禁用刷新时保留后代输入，并映射新的 Keyed
+选择 Item 语义。Grid Policy 与 Layout Constraint Host 同样要求升级注册和测量；不得把它们当作
+可忽略 Hint。

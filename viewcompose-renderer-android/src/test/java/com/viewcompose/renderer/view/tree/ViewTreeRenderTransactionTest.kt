@@ -1159,7 +1159,7 @@ class ViewTreeRenderTransactionTest {
                     items = emptyList(),
                 )
                 NodeType.LazyVerticalGrid -> LazyVerticalGridNodeProps(
-                    spanCount = 2,
+                    cells = com.viewcompose.ui.node.policy.GridCells.Fixed(2),
                     contentPadding = contentPadding,
                     horizontalSpacing = 0.dp,
                     verticalSpacing = 0.dp,

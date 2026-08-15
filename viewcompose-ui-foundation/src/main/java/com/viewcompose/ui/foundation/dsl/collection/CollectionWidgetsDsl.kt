@@ -1,6 +1,10 @@
 package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.SemanticsCollectionInfo
+import com.viewcompose.ui.modifier.SemanticsCollectionItemInfo
+import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
+import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSessionFactory
 import com.viewcompose.ui.node.NodeType
@@ -8,8 +12,11 @@ import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
 import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
+import com.viewcompose.ui.node.policy.GridCells
+import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
@@ -187,15 +194,42 @@ fun UiTreeBuilder.LazyRow(
 }
 
 /**
- * Emits a LazyVerticalGrid from list data.
+ * Emits a virtualized vertical grid from list data and stable item identities.
+ *
+ * [cells] may fix the column count or derive it from a minimum cell width. Physical column-count
+ * changes do not replace logical item sessions. [span] uses renderer-neutral policies, so
+ * [GridItemSpan.FullLine] remains correct when an adaptive grid resizes.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.adaptiveGridSample
+ * @param T list element type
+ * @receiver active tree builder receiving the grid node
+ * @param items ordered data snapshot for this render
+ * @param cells fixed or adaptive horizontal cell policy
+ * @param key unique stable logical identity for each item
+ * @param contentType physical-presentation compatibility class for each item
+ * @param contentRevision semantic version of every changing non-State value captured by item content
+ * @param span cell-span policy for each item; `Fixed(1)` is normalized to [GridItemSpan.Single]
+ * @param contentPadding equal logical padding on all content edges
+ * @param horizontalSpacing non-negative gap between adjacent columns
+ * @param verticalSpacing non-negative gap between adjacent rows
+ * @param state optional caller-owned lazy-list position and command state
+ * @param reverseLayout whether rows and scroll start from the opposite main-axis edge
+ * @param userScrollEnabled whether direct user scrolling is accepted
+ * @param prefetchPolicy item preparation and native cache hints
+ * @param reusePolicy native presentation reuse hints
+ * @param motionPolicy native item-mutation animation hints
+ * @param focusFollowKeyboard whether keyboard focus may bring an item into view
+ * @param modifier ordered configuration applied to the grid root
+ * @param itemContent delayed item content evaluated in its keyed session
+ * @throws IllegalArgumentException for duplicate keys or invalid spacing
  */
 fun <T> UiTreeBuilder.LazyVerticalGrid(
     items: List<T>,
-    spanCount: Int = 2,
+    cells: GridCells = GridCells.Fixed(2),
     key: (T) -> Any,
     contentType: (T) -> Any? = { null },
     contentRevision: (T) -> Any? = { it },
-    span: (T) -> Int = { 1 },
+    span: (T) -> GridItemSpan = { GridItemSpan.Single },
     contentPadding: UiDp = UiDp.Zero,
     horizontalSpacing: UiDp = UiDp.Zero,
     verticalSpacing: UiDp = UiDp.Zero,
@@ -210,7 +244,7 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
     LazyVerticalGrid(
-        spanCount = spanCount,
+        cells = cells,
         contentPadding = LazyContentPadding.all(contentPadding),
         horizontalSpacing = horizontalSpacing,
         verticalSpacing = verticalSpacing,
@@ -235,10 +269,31 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
 }
 
 /**
- * Emits a LazyVerticalGrid from LazyGridScope DSL.
+ * Emits a virtualized vertical grid from explicitly keyed [LazyGridScope] entries.
+ *
+ * Adaptive columns are recomputed from available inner width without rebuilding keyed logical
+ * sessions. Sticky headers and [GridItemSpan.FullLine] resolve against the current physical column
+ * count.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.adaptiveGridSample
+ * @receiver active tree builder receiving the grid node
+ * @param cells fixed or adaptive horizontal cell policy
+ * @param contentPadding logical per-edge padding inside the scrollable content
+ * @param horizontalSpacing non-negative gap between adjacent columns
+ * @param verticalSpacing non-negative gap between adjacent rows
+ * @param state optional caller-owned lazy-list position and command state
+ * @param reverseLayout whether rows and scroll start from the opposite main-axis edge
+ * @param userScrollEnabled whether direct user scrolling is accepted
+ * @param prefetchPolicy item preparation and native cache hints
+ * @param reusePolicy native presentation reuse hints
+ * @param motionPolicy native item-mutation animation hints
+ * @param focusFollowKeyboard whether keyboard focus may bring an item into view
+ * @param modifier ordered configuration applied to the grid root
+ * @param content keyed grid-item declarations captured for delayed sessions
+ * @throws IllegalArgumentException for duplicate keys or invalid spacing
  */
 fun UiTreeBuilder.LazyVerticalGrid(
-    spanCount: Int = 2,
+    cells: GridCells = GridCells.Fixed(2),
     contentPadding: LazyContentPadding = LazyContentPadding.None,
     horizontalSpacing: UiDp = UiDp.Zero,
     verticalSpacing: UiDp = UiDp.Zero,
@@ -252,7 +307,6 @@ fun UiTreeBuilder.LazyVerticalGrid(
     modifier: Modifier = Modifier,
     content: LazyGridScope.() -> Unit,
 ) {
-    require(spanCount > 0) { "spanCount must be greater than zero." }
     val collector = LazyItemCollector(
         localSnapshot = LocalContext.snapshot(),
         saveableStateHolder = rememberSaveableStateHolder(),
@@ -261,7 +315,7 @@ fun UiTreeBuilder.LazyVerticalGrid(
     emit(
         type = NodeType.LazyVerticalGrid,
         spec = LazyVerticalGridNodeProps(
-            spanCount = spanCount,
+            cells = cells,
             contentPadding = contentPadding,
             horizontalSpacing = horizontalSpacing,
             verticalSpacing = verticalSpacing,
@@ -327,7 +381,26 @@ class HorizontalPagerScope internal constructor() {
 }
 
 /**
- * Emits a HorizontalPager and creates an independent lazy item session for each page.
+ * Emits a horizontal pager with one keyed lazy session per page.
+ *
+ * [currentPage] is caller-owned. [onPageChanged] runs synchronously only after user or programmatic
+ * motion settles on a different page; initial binding and controlled rebinding do not invoke it.
+ * [pagerState] observes current, settled, target, offset, page-count, and motion snapshots and can
+ * issue immediate or animated page commands while attached.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.pagerAndTabIdentitySample
+ * @receiver active tree builder receiving the pager node
+ * @param currentPage controlled page selected for this render
+ * @param onPageChanged callback receiving a newly settled page index
+ * @param pagerState optional caller-owned observation and command state
+ * @param offscreenPageLimit native adjacent-page residency limit, or `-1` for the platform default
+ * @param userScrollEnabled whether direct user paging is accepted
+ * @param reusePolicy native page-presentation reuse hints
+ * @param motionPolicy native page-mutation animation hints
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration applied to the pager root
+ * @param pages explicitly keyed delayed page declarations
+ * @throws IllegalArgumentException for duplicate page keys or an invalid offscreen limit
  */
 fun UiTreeBuilder.HorizontalPager(
     currentPage: Int,
@@ -407,7 +480,25 @@ internal data class HorizontalPagerPage(
 // VerticalPager.
 
 /**
- * Emits a VerticalPager and creates an independent lazy item session for each page.
+ * Emits a vertical pager with one keyed lazy session per page.
+ *
+ * Settled callback and [pagerState] semantics match [HorizontalPager]. Keyboard focus-follow may
+ * request the focused descendant page into view without transferring page-session identity.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.pagerAndTabIdentitySample
+ * @receiver active tree builder receiving the pager node
+ * @param currentPage controlled page selected for this render
+ * @param onPageChanged callback receiving a newly settled page index
+ * @param pagerState optional caller-owned observation and command state
+ * @param offscreenPageLimit native adjacent-page residency limit, or `-1` for the platform default
+ * @param userScrollEnabled whether direct user paging is accepted
+ * @param reusePolicy native page-presentation reuse hints
+ * @param motionPolicy native page-mutation animation hints
+ * @param focusFollowKeyboard whether keyboard focus may bring a descendant page into view
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration applied to the pager root
+ * @param pages explicitly keyed delayed page declarations
+ * @throws IllegalArgumentException for duplicate page keys or an invalid offscreen limit
  */
 fun UiTreeBuilder.VerticalPager(
     currentPage: Int,
@@ -571,7 +662,15 @@ fun UiTreeBuilder.TabRow(
             itemPaddingVertical = appearance.itemPaddingVertical,
             minItemWidth = appearance.minimumItemWidth,
         ),
-        modifier = modifier,
+        modifier = Modifier
+            .semantics {
+                collectionInfo = SemanticsCollectionInfo(
+                    rowCount = 1,
+                    columnCount = builtTabs.size,
+                    selectionMode = SemanticsCollectionSelectionMode.Single,
+                )
+            }
+            .then(modifier),
     ) {
         builtTabs.forEachIndexed { index, entry ->
             val selected = index == selectedIndex
@@ -584,6 +683,15 @@ fun UiTreeBuilder.TabRow(
                         key = entry.key,
                         rippleColor = appearance.rippleColor,
                         modifier = Modifier
+                            .semantics(mergeDescendants = true) {
+                                role = SemanticsRole.Tab
+                                this.selected = selected
+                                enabled = true
+                                collectionItemInfo = SemanticsCollectionItemInfo(
+                                    rowIndex = 0,
+                                    columnIndex = index,
+                                )
+                            }
                             .clickable {
                                 (currentOnTabSelected?.value ?: onTabSelected)(index)
                             }

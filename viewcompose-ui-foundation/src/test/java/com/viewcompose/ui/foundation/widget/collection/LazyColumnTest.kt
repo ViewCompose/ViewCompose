@@ -7,6 +7,7 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.LazyListItemKind
+import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
@@ -90,7 +91,7 @@ class LazyColumnTest {
             spec.items.map { item -> item.key },
         )
         assertEquals(LazyListItemKind.StickyHeader, spec.items[0].kind)
-        assertEquals(Int.MAX_VALUE, spec.items[0].span)
+        assertEquals(GridItemSpan.FullLine, spec.items[0].span)
         assertEquals("header-type", spec.items[0].contentType)
         assertEquals("row-type", spec.items[1].contentType)
     }

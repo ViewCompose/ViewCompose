@@ -1,30 +1,27 @@
 package com.viewcompose.renderer.view.tree
 
-import com.viewcompose.ui.unit.sp
-
-import com.viewcompose.ui.unit.dp
-
-/*
- * 测试职责：覆盖 renderer view/tree 中的 Collection Advanced Binding 行为，防止渲染和 patch 契约在后续重构中回退。
- * Test responsibility: covers Collection Advanced Binding behavior in renderer view/tree and guards render and patch contracts against regressions.
- */
-
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.viewcompose.renderer.view.PaddingPx
 import com.viewcompose.renderer.view.container.DeclarativeLazyListView
 import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
-import com.viewcompose.renderer.view.PaddingPx
+import com.viewcompose.renderer.view.container.LazyGridCellsPx
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.renderer.view.lazy.focus.LazyLinearLayoutManager
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionFactory
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
+import com.viewcompose.ui.node.policy.GridCells
 import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
+import com.viewcompose.ui.unit.UiDensity
+import com.viewcompose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -82,14 +79,14 @@ class CollectionAdvancedBindingTest {
     fun `lazy grid clamps full line and custom spans to span count`() {
         val view = DeclarativeLazyVerticalGridLayout(context)
         view.bind(
-            spanCount = 3,
+            cells = com.viewcompose.renderer.view.container.LazyGridCellsPx.Fixed(3),
             contentPadding = PaddingPx(0, 0, 0, 0),
             horizontalSpacing = 0,
             verticalSpacing = 0,
             items = listOf(
-                item(key = "header", span = Int.MAX_VALUE),
-                item(key = "wide", span = 2),
-                item(key = "single", span = 1),
+                item(key = "header", span = com.viewcompose.ui.node.policy.GridItemSpan.FullLine),
+                item(key = "wide", span = com.viewcompose.ui.node.policy.GridItemSpan.Fixed(2)),
+                item(key = "single"),
             ),
             state = null,
             reverseLayout = true,
@@ -110,9 +107,73 @@ class CollectionAdvancedBindingTest {
         assertFalse(view.userScrollEnabled)
     }
 
+    @Test
+    fun `adaptive grid recomputes columns without replacing adapter`() {
+        val view = DeclarativeLazyVerticalGridLayout(context)
+        view.bind(
+            cells = com.viewcompose.renderer.view.container.LazyGridCellsPx.Adaptive(100),
+            contentPadding = PaddingPx(0, 0, 0, 0),
+            horizontalSpacing = 0,
+            verticalSpacing = 0,
+            items = listOf(
+                item(
+                    key = "header",
+                    span = com.viewcompose.ui.node.policy.GridItemSpan.FullLine,
+                ),
+            ),
+            state = null,
+            reverseLayout = false,
+            userScrollEnabled = true,
+            prefetchPolicy = LazyLayoutPrefetchPolicy(),
+            mountedTreeCacheSize = 0,
+        )
+        val adapter = view.adapter
+
+        view.measure(exactly(250), exactly(400))
+        assertEquals(2, (view.layoutManager as GridLayoutManager).spanCount)
+        assertEquals(2, (view.layoutManager as GridLayoutManager).spanSizeLookup.getSpanSize(0))
+
+        view.measure(exactly(350), exactly(400))
+        assertEquals(3, (view.layoutManager as GridLayoutManager).spanCount)
+        assertEquals(3, (view.layoutManager as GridLayoutManager).spanSizeLookup.getSpanSize(0))
+        assertSame(adapter, view.adapter)
+    }
+
+    @Test
+    fun `adaptive grid keeps a positive physical minimum for subpixel dp`() {
+        val cells = CollectionViewBinder.run {
+            GridCells.Adaptive(0.1f.dp).toPixels(
+                UiEnvironmentValues(density = UiDensity(density = 1f, fontScale = 1f)),
+            )
+        }
+
+        assertEquals(LazyGridCellsPx.Adaptive(minSize = 1), cells)
+    }
+
+    @Test
+    fun `adaptive grid column resolution does not overflow with extreme spacing`() {
+        val view = DeclarativeLazyVerticalGridLayout(context)
+        view.bind(
+            cells = LazyGridCellsPx.Adaptive(1),
+            contentPadding = PaddingPx(0, 0, 0, 0),
+            horizontalSpacing = Int.MAX_VALUE,
+            verticalSpacing = 0,
+            items = emptyList(),
+            state = null,
+            reverseLayout = false,
+            userScrollEnabled = true,
+            prefetchPolicy = LazyLayoutPrefetchPolicy(),
+            mountedTreeCacheSize = 0,
+        )
+
+        view.measure(exactly(350), exactly(400))
+
+        assertEquals(1, (view.layoutManager as GridLayoutManager).spanCount)
+    }
+
     private fun item(
         key: Any,
-        span: Int = 1,
+        span: com.viewcompose.ui.node.policy.GridItemSpan = com.viewcompose.ui.node.policy.GridItemSpan.Single,
     ): LazyListItem {
         return LazyListItem(
             key = key,
@@ -127,4 +188,7 @@ class CollectionAdvancedBindingTest {
             sessionUpdater = {},
         )
     }
+
+    private fun exactly(size: Int): Int =
+        android.view.View.MeasureSpec.makeMeasureSpec(size, android.view.View.MeasureSpec.EXACTLY)
 }

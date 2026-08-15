@@ -39,6 +39,9 @@ internal class ResolvedModifiers(
     var relativeImeInsetsPadding: RelativeImeInsetsPaddingModifierElement? = null,
     var minHeight: MinHeightModifierElement? = null,
     var minWidth: MinWidthModifierElement? = null,
+    var maxHeight: MaxHeightModifierElement? = null,
+    var maxWidth: MaxWidthModifierElement? = null,
+    var aspectRatio: AspectRatioModifierElement? = null,
     var animateContentSize: AnimateContentSizeModifierElement? = null,
     var visibility: VisibilityModifierElement? = null,
     var zIndex: ZIndexModifierElement? = null,
@@ -149,6 +152,9 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             }
             is MinHeightModifierElement -> result.minHeight = element
             is MinWidthModifierElement -> result.minWidth = element
+            is MaxHeightModifierElement -> result.maxHeight = element
+            is MaxWidthModifierElement -> result.maxWidth = element
+            is AspectRatioModifierElement -> result.aspectRatio = element
             is AnimateContentSizeModifierElement -> result.animateContentSize = element
             is VisibilityModifierElement -> result.visibility = element
             is ZIndexModifierElement -> {
@@ -206,6 +212,9 @@ internal fun layoutModifiersChanged(previous: ResolvedModifiers, next: ResolvedM
         previous.size != next.size ||
         previous.width != next.width ||
         previous.height != next.height ||
+        previous.maxWidth != next.maxWidth ||
+        previous.maxHeight != next.maxHeight ||
+        previous.aspectRatio != next.aspectRatio ||
         previous.weight != next.weight ||
         previous.horizontalAlign != next.horizontalAlign ||
         previous.verticalAlign != next.verticalAlign ||

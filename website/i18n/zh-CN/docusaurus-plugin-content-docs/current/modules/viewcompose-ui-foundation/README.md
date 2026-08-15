@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 01b641993dd2a3ffd1456334a438e93bf1be0238b1c520052360e00286bc2095
+translation_source_hash: d38605e734e778915a9c62c4b3dfec4a5be394170884c4de8aea6e01b4b42206
 translation_status: current
 ---
 
@@ -126,6 +126,17 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   Overload 接受 `contentRevision = { model.version }`；普通捕获值必须是可观察 State 或进入该
   Revision。Pager Page 也声明 `contentType`。`TabRow` 使用父组合中的 Eager Keyed Child，而非
   Lazy Item Session。
+- `ScrollableColumn` 与 `ScrollableRow` 接受 Q3 `ScrollState` 和 `userScrollEnabled`，不需要
+  卸载 Eager Child。`HorizontalPager` 与 `VerticalPager` 接受 Q3 `PagerState`；只有不同页面停稳后
+  才触发变化回调。编译样例 `eagerScrollStateSample` 展示调用方持有的 Eager 滚动状态。
+- `LazyVerticalGrid` 接受 `GridCells.Fixed` 或 `GridCells.Adaptive`，网格 Item 使用
+  `GridItemSpan.Single`、`Fixed` 或 `FullLine`。自适应尺寸变化只改变原生列数，不改变逻辑 Item
+  身份。编译样例 `adaptiveGridSample` 覆盖整行内容。
+- Slider 步长与 Start/Change/Finish 回调、下拉刷新 Enabled 状态，以及 NavigationBar 与
+  SegmentedControl 的显式稳定 Item Key，都属于普通产品行为而非 Android 逃生能力。编译样例
+  `sliderInteractionSample`、`pullToRefreshEnablementSample` 与
+  `stableSelectionItemIdentitySample` 定义其公开用法。非空选择控件要求选中索引位于范围内，
+  空控件使用 `-1`；重复 Key 与负数 Navigation Badge 会直接失败。
 - [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-render-session/)
   为一个不透明 `RenderContainerHandle` 协调组合、渲染器协调、原生提交 Effect、浮层、诊断、
   失败恢复与释放。标准应用使用 `renderInto` 返回的 Host Android Session，不直接构造该协调器。
@@ -186,6 +197,12 @@ Local Binding 是否存在与值是否可空相互独立。只有当前 Snapshot
 - 集合 Item Snapshot 而非 Callback 对象身份划分逻辑子提交。Key 与 Content/Environment Revision
   相等时不执行 Child Composition 或原生 Patch。变化的非 State 捕获值必须进入
   `contentRevision`；省略它就承诺该值对当前 Key 保持稳定。
+- Eager Scroll 与 Pager State 只在原生容器挂载期间连接。替换 State 会断开旧 Owner，释放后
+  Renderer 边界会拒绝后续命令，相等 Snapshot 不会使 Observer 失效。Eager 横向偏移和 Pager
+  索引在 RTL 中仍使用逻辑顺序。
+- NavigationBar 与 SegmentedControl Key 独立于翻译后的 Label 标识逻辑 Item。Disabled Item
+  仍保留在顺序与无障碍结构中，但不会发送选择 Callback。重复 Key、越界选中索引与负数
+  Navigation Badge 在构树时直接失败。
 - Lazy Item 与 Pager 子 Revision 只会在 `activate` 或 `render` 报告已 Commit 帧时推进。组合或
   原生树 Rollback 会保留逻辑 Session 并重试同一语义 Revision；帧 Commit 后的失败仍可观察，
   但不会撤销该帧。
@@ -279,6 +296,12 @@ Lambda-return Cleanup 时，应让 `onDispose { ... }` 成为 Setup Block 的最
 的 `SideEffect` 是 ViewCompose 新增的只在变化时发布形式。Effect 生命周期、Rollback、Coroutine
 Ownership 与 `rememberUpdatedState` 发布现在遵循
 [事务式 Effect 与结构化工作](../../architecture/effects.md)中的事务契约。
+
+原生控件契约硬切把 `LazyVerticalGrid(spanCount = ..., span = Int)` 替换为
+`cells = GridCells...` 与 `span = GridItemSpan...`。它同时替换旧 Pager State 形状，为 Eager
+Scroll Container 新增 `state` 和 `userScrollEnabled`，为 Slider 新增 Step 与交互边界 Callback，
+为下拉刷新新增 `enabled`，并要求稳定的 Navigation 与 Segmented Item Key。这些变更只保留一个
+权威来源；Alpha 版本线不保留并行的 Deprecated 签名。
 
 `RenderSessionPlatformDiagnostics.sourceTooling`、`RenderSessionSourceTooling` 与
 `RenderSessionSourceRegistration` 是新增的 Q3 工具 API。现有平台诊断使用默认空 Adapter，行为

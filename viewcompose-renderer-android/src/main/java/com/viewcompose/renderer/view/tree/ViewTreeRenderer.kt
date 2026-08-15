@@ -90,8 +90,10 @@ object ViewTreeRenderer {
         onReconcile: ((RenderTreeResult) -> Unit)? = null,
     ): RenderTreeResult {
         // Wrappers insert platform host nodes before reconciliation, turning modifier semantics into normal tree structure.
-        val renderNodes = AnimatedSizeNodeWrapper.wrapTree(
-            NestedScrollNodeWrapper.wrapTree(nodes),
+        val renderNodes = LayoutConstraintNodeWrapper.wrapTree(
+            AnimatedSizeNodeWrapper.wrapTree(
+                NestedScrollNodeWrapper.wrapTree(nodes),
+            ),
         )
         val crossOwnerReuse = previous.any(MountedNode::requiresCrossOwnerRebind)
         val transaction = ViewTreePatchPipeline.beginTransaction()

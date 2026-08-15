@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/modifier.md
-translation_source_hash: 91e41c9d9b622aaaeb054e50527c75d96e0105fe4e9c35b18497a1d357bd0f06
+translation_source_hash: 3bd43c9f960fcca79c624d57dd10ad81c801916f0bd965a4ac1ee88967edf4e9
 translation_status: current
 ---
 
@@ -49,8 +49,8 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 
 当前扫描结果（2026-08）：
 
-1. `fun Modifier.*` 声明总数（含重载、含 scoped 内部定义）：`88`
-2. `fun Modifier.*` 唯一 API 名称数：`74`
+1. `fun Modifier.*` 声明总数（含重载、含 scoped 内部定义）：`91`
+2. `fun Modifier.*` 唯一 API 名称数：`77`
 3. scoped modifier 声明总数：`5`（`RowScope/ColumnScope/BoxScope`）
 4. renderer internal modifier 扩展：`1`（仅内部解析能力）
 
@@ -77,6 +77,8 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 | `height` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置高度 | 全局 | 与父容器布局规则共同生效 |
 | `minWidth` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置最小宽度约束 | 全局 | 作用于 `View.minimumWidth` |
 | `minHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置最小高度约束 | 全局 | 作用于 `View.minimumHeight` |
+| `maxWidth` / `maxHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置最大尺寸 | 布局感知 | 使用一个 Renderer 所有的 Constraint Host |
+| `aspectRatio` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置宽高比 | 布局感知 | 与 Min/Max 和输入约束共同解析 |
 | `fillMaxWidth` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 宽度填充父容器 | 全局 | 语义等价 `width(MATCH_PARENT)` |
 | `fillMaxHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 高度填充父容器 | 全局 | 语义等价 `height(MATCH_PARENT)` |
 | `fillMaxSize` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 宽高同时填充父容器 | 全局 | 语义等价 `size(MATCH_PARENT, MATCH_PARENT)` |
@@ -191,7 +193,7 @@ Surface(
 
 适合放入 `Modifier` 的能力：
 
-1. 尺寸与占位：`size/width/height/minWidth/minHeight/padding/paddingRelative/margin/marginRelative`
+1. 尺寸与占位：`size/width/height/minWidth/minHeight/maxWidth/maxHeight/aspectRatio/padding/paddingRelative/margin/marginRelative`
 2. 外观修饰：`backgroundColor/backgroundDrawableRes/border/cornerRadius/alpha/elevation`
 3. 可见性与层级：`visibility/offset/offsetRelative/zIndex`
 4. 通用交互与可访问性：`clickable/focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent/contentDescription`
@@ -261,6 +263,12 @@ Surface(
 2. parent-data = scope API
 3. 组件语义 = 参数/`NodeSpec`
 4. 主题 = 默认值来源
+
+`maxWidth`、`maxHeight` 与 `aspectRatio` 表达可移植意图，不是原始 Android Setter。Android
+Renderer 会把它们折叠为包裹完整节点的一个合成 `LayoutConstraintHost`，声明顺序不会产生多层
+Wrapper。契约层会拒绝非正数或非有限值，声明的 Exact/Minimum 超过声明 Maximum 也会在渲染前
+失败。测量时父级传入的精确约束保持权威；其余情况下应用声明 Maximum，并在 Min/Max 区间可行时
+保持宽高比。自定义 Renderer 必须提供同样的单边界行为，才能接受这些元素。
 
 ## 8. 变更门禁
 

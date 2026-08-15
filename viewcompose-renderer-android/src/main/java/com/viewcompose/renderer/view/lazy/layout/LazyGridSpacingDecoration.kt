@@ -2,14 +2,12 @@ package com.viewcompose.renderer.view.lazy.layout
 
 import android.graphics.Rect
 import android.view.View
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 /**
- * Proportional spacing decoration for LazyVerticalGrid.
- * Proportional spacing decoration for LazyVerticalGrid.
- *
- * Distributes horizontal spacing between left and right offsets by column so each column keeps equal usable width.
- * Horizontal spacing is split by column index so every column keeps the same usable width.
+ * Splits grid spacing by physical span bounds so single, fixed-span, and full-line items retain
+ * equal usable cell widths in LTR and RTL.
  */
 internal class LazyGridSpacingDecoration(
     private var horizontalSpacing: Int,
@@ -50,11 +48,56 @@ internal class LazyGridSpacingDecoration(
             outRect.setEmpty()
             return
         }
-        val column = position % spanCount
-        outRect.left = horizontalSpacing * column / spanCount
-        outRect.right = horizontalSpacing * (spanCount - 1 - column) / spanCount
-        if (position >= spanCount) {
-            outRect.top = verticalSpacing
+        val layoutManager = parent.layoutManager as? GridLayoutManager
+        if (layoutManager == null) {
+            outRect.setEmpty()
+            return
         }
+        val resolvedSpanCount = layoutManager.spanCount.coerceAtLeast(1)
+        val spanLookup = layoutManager.spanSizeLookup
+        val spanSize = spanLookup.getSpanSize(position).coerceIn(1, resolvedSpanCount)
+        val spanIndex = spanLookup.getSpanIndex(position, resolvedSpanCount)
+            .coerceIn(0, resolvedSpanCount - spanSize)
+        val spanGroupIndex = spanLookup.getSpanGroupIndex(position, resolvedSpanCount)
+        val offsets = calculateGridItemOffsets(
+            horizontalSpacing = horizontalSpacing,
+            verticalSpacing = verticalSpacing,
+            spanCount = resolvedSpanCount,
+            spanIndex = spanIndex,
+            spanSize = spanSize,
+            spanGroupIndex = spanGroupIndex,
+            isRtl = parent.layoutDirection == View.LAYOUT_DIRECTION_RTL,
+        )
+        outRect.set(offsets.left, offsets.top, offsets.right, 0)
     }
+}
+
+internal data class LazyGridItemOffsets(
+    val left: Int,
+    val top: Int,
+    val right: Int,
+)
+
+internal fun calculateGridItemOffsets(
+    horizontalSpacing: Int,
+    verticalSpacing: Int,
+    spanCount: Int,
+    spanIndex: Int,
+    spanSize: Int,
+    spanGroupIndex: Int,
+    isRtl: Boolean,
+): LazyGridItemOffsets {
+    val physicalSpanIndex = if (isRtl) {
+        spanCount - spanIndex - spanSize
+    } else {
+        spanIndex
+    }
+    val spacing = horizontalSpacing.toLong()
+    return LazyGridItemOffsets(
+        left = (spacing * physicalSpanIndex / spanCount).toInt(),
+        top = if (spanGroupIndex > 0) verticalSpacing else 0,
+        right = (
+            spacing * (spanCount - physicalSpanIndex - spanSize) / spanCount
+        ).toInt(),
+    )
 }

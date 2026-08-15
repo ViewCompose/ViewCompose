@@ -14,6 +14,7 @@ import com.viewcompose.ui.node.spec.ColumnNodeProps
 import com.viewcompose.ui.node.spec.ConstraintLayoutNodeProps
 import com.viewcompose.ui.node.spec.DividerNodeProps
 import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
+import com.viewcompose.ui.node.spec.LayoutConstraintHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedVisibilityHostNodeProps
 import com.viewcompose.ui.node.spec.CanvasNodeProps
 import com.viewcompose.ui.node.spec.FlowColumnNodeProps
@@ -64,6 +65,7 @@ class NodeBinderDescriptorGuardTest {
             NodeType.ConstraintLayout,
             NodeType.AnimatedVisibilityHost,
             NodeType.AnimatedSizeHost,
+            NodeType.LayoutConstraintHost,
             NodeType.NestedScrollHost,
             NodeType.Spacer,
             NodeType.Divider,
@@ -128,6 +130,7 @@ class NodeBinderDescriptorGuardTest {
         ConstraintLayoutNodePatch::class,
         AnimatedVisibilityHostNodePatch::class,
         AnimatedSizeHostNodePatch::class,
+        LayoutConstraintHostNodePatch::class,
         ImageNodePatch::class,
         IconButtonNodePatch::class,
         DividerNodePatch::class,
@@ -163,6 +166,7 @@ class NodeBinderDescriptorGuardTest {
         NodeType.ConstraintLayout -> "ConstraintLayout"
         NodeType.AnimatedVisibilityHost -> "AnimatedVisibilityHost"
         NodeType.AnimatedSizeHost -> "AnimatedSizeHost"
+        NodeType.LayoutConstraintHost -> "LayoutConstraintHost"
         NodeType.NestedScrollHost -> "NestedScrollHost"
         NodeType.Spacer -> "Spacer"
         NodeType.Divider -> "Divider"
@@ -201,6 +205,7 @@ class NodeBinderDescriptorGuardTest {
         is ConstraintLayoutNodePatch -> "ConstraintLayoutNodePatch"
         is AnimatedVisibilityHostNodePatch -> "AnimatedVisibilityHostNodePatch"
         is AnimatedSizeHostNodePatch -> "AnimatedSizeHostNodePatch"
+        is LayoutConstraintHostNodePatch -> "LayoutConstraintHostNodePatch"
         is ImageNodePatch -> "ImageNodePatch"
         is IconButtonNodePatch -> "IconButtonNodePatch"
         is DividerNodePatch -> "DividerNodePatch"
@@ -234,6 +239,7 @@ class NodeBinderDescriptorGuardTest {
         is ConstraintLayoutNodeProps -> "ConstraintLayoutNodeProps"
         is AnimatedVisibilityHostNodeProps -> "AnimatedVisibilityHostNodeProps"
         is AnimatedSizeHostNodeProps -> "AnimatedSizeHostNodeProps"
+        is LayoutConstraintHostNodeProps -> "LayoutConstraintHostNodeProps"
         is ImageNodeProps -> "ImageNodeProps"
         is IconButtonNodeProps -> "IconButtonNodeProps"
         is DividerNodeProps -> "DividerNodeProps"

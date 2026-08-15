@@ -26,7 +26,6 @@ import com.viewcompose.ui.graphics.DrawBlock
 import com.viewcompose.renderer.view.roundToPx
 
 /**
- * Binds text, button, canvas, and related content nodes while centralizing native style restoration and event bridging.
  * Binds text, button, and canvas content nodes while centralizing Android TextView/Button style
  * restoration and event bridging.
  */
@@ -197,9 +196,9 @@ internal object ContentViewBinder {
 
     private fun com.viewcompose.ui.node.TextAlign.toTextGravity(): Int {
         return when (this) {
-            com.viewcompose.ui.node.TextAlign.Start -> Gravity.START or Gravity.CENTER_VERTICAL
-            com.viewcompose.ui.node.TextAlign.Center -> Gravity.CENTER
-            com.viewcompose.ui.node.TextAlign.End -> Gravity.END or Gravity.CENTER_VERTICAL
+            com.viewcompose.ui.node.TextAlign.Start -> Gravity.START
+            com.viewcompose.ui.node.TextAlign.Center -> Gravity.CENTER_HORIZONTAL
+            com.viewcompose.ui.node.TextAlign.End -> Gravity.END
         }
     }
 

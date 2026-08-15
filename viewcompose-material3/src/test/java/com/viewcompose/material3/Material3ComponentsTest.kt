@@ -31,8 +31,16 @@ class Material3ComponentsTest {
                     Material3Switch(text = "Enabled", checked = true, onCheckedChange = {})
                     Material3TextField(state = TextFieldState(), label = "Account")
                     Material3NavigationBar(selectedIndex = 0, onItemSelected = {}) {
-                        Item("Home", ImageSource.Resource(android.R.drawable.ic_menu_view))
-                        Item("Settings", ImageSource.Resource(android.R.drawable.ic_menu_preferences))
+                        Item(
+                            key = "home",
+                            label = "Home",
+                            icon = ImageSource.Resource(android.R.drawable.ic_menu_view),
+                        )
+                        Item(
+                            key = "settings",
+                            label = "Settings",
+                            icon = ImageSource.Resource(android.R.drawable.ic_menu_preferences),
+                        )
                     }
                 }
             }
@@ -68,8 +76,16 @@ class Material3ComponentsTest {
                 Material3Button(text = "Tonal", onClick = {}, variant = Material3ButtonVariant.FilledTonal)
                 Material3Switch(text = "Enabled", checked = true, onCheckedChange = {})
                 Material3NavigationBar(selectedIndex = 0, onItemSelected = {}) {
-                    Item("Home", ImageSource.Resource(android.R.drawable.ic_menu_view))
-                    Item("Settings", ImageSource.Resource(android.R.drawable.ic_menu_preferences))
+                    Item(
+                        key = "home",
+                        label = "Home",
+                        icon = ImageSource.Resource(android.R.drawable.ic_menu_view),
+                    )
+                    Item(
+                        key = "settings",
+                        label = "Settings",
+                        icon = ImageSource.Resource(android.R.drawable.ic_menu_preferences),
+                    )
                 }
             }
         }
