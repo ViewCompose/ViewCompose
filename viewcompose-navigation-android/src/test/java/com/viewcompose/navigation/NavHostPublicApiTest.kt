@@ -9,12 +9,17 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Parcelable
 import android.widget.FrameLayout
+import androidx.lifecycle.HasDefaultViewModelProviderFactory
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.lifecycle.viewmodel.MutableCreationExtras
 import com.viewcompose.host.android.renderInto
 import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
@@ -22,6 +27,7 @@ import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavDeepLink
+import com.viewcompose.navigation.core.NavDeepLinkLaunchMode
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavStackConfiguration
 import com.viewcompose.navigation.core.NavStackId
@@ -29,6 +35,7 @@ import com.viewcompose.navigation.core.NavStackSelectionMode
 import com.viewcompose.navigation.core.NavStackSpec
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.navigation.core.navGraph
+import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import com.viewcompose.viewmodel.savedStateHandle
 import com.viewcompose.viewmodel.viewModel
 import com.viewcompose.ui.foundation.OverlayHostDefaults
@@ -166,6 +173,122 @@ class NavHostPublicApiTest {
 
         assertEquals(Lifecycle.State.DESTROYED, profileOwner.lifecycle.currentState)
         assertTrue(profileViewModel.cleared)
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `public host inherits parent ViewModel factory and creation extras`() {
+        val factory = HostInheritedFactory()
+        val parentOwner = ParentViewModelOwner(
+            defaultViewModelProviderFactory = factory,
+            extras = MutableCreationExtras().apply {
+                this[HostInheritedValueKey] = "host-di"
+            },
+        )
+        var destinationViewModel: HostInheritedViewModel? = null
+
+        val fixture = renderPublicHost(parentViewModelStoreOwner = parentOwner) { entry ->
+            destinationViewModel = viewModel()
+            Text(entry.route.name)
+        }
+
+        assertEquals("host-di", checkNotNull(destinationViewModel).inheritedValue)
+        assertSame(factory.created, destinationViewModel)
+        fixture.session.dispose()
+        parentOwner.viewModelStore.clear()
+    }
+
+    @Test
+    fun `graph owner inherits parent ViewModel factory and creation extras`() {
+        val graph = navGraph(
+            route = "app",
+            startDestination = NavRoute("home"),
+        ) {
+            destination("home")
+            navigation(
+                route = "account",
+                startDestination = NavRoute("profile"),
+            ) {
+                destination("profile")
+            }
+        }
+        val entryIds = ArrayDeque(listOf("home", "profile"))
+        val controller = createNavHostController(
+            graph = graph,
+            entryIdFactory = NavEntryIdFactory { NavEntryId(entryIds.removeFirst()) },
+        )
+        val factory = HostInheritedFactory()
+        val parentOwner = ParentViewModelOwner(
+            defaultViewModelProviderFactory = factory,
+            extras = MutableCreationExtras().apply {
+                this[HostInheritedValueKey] = "graph-di"
+            },
+        )
+        var graphViewModel: HostInheritedViewModel? = null
+        val fixture = renderPublicHost(
+            controller = controller,
+            parentViewModelStoreOwner = parentOwner,
+        ) { entry ->
+            if (LocalNavGraphOwnerScope.current?.get("account") != null) {
+                ProvideNavGraphOwner("account") {
+                    graphViewModel = viewModel()
+                    Text(entry.route.name)
+                }
+            } else {
+                Text(entry.route.name)
+            }
+        }
+
+        controller.navigate(NavRoute("account"))
+
+        assertEquals("graph-di", checkNotNull(graphViewModel).inheritedValue)
+        assertSame(factory.created, graphViewModel)
+        fixture.session.dispose()
+        parentOwner.viewModelStore.clear()
+    }
+
+    @Test
+    fun `host reports the parent owner when provider defaults cannot be captured`() {
+        val owner = BrokenParentViewModelOwner()
+        val failure = assertThrows<IllegalStateException> {
+            captureNavViewModelProviderDefaults(owner)
+        }
+
+        assertTrue(failure.message.orEmpty().contains(owner.javaClass.name))
+        assertEquals("broken parent factory", failure.cause?.message)
+    }
+
+    @Test
+    fun `same route entries in retained stacks keep isolated ViewModel stores`() {
+        val firstStack = NavStackId("first")
+        val secondStack = NavStackId("second")
+        val ids = ArrayDeque(listOf("first-home", "second-home"))
+        val controller = createNavHostController(
+            stackConfiguration = NavStackConfiguration(
+                initialStackId = firstStack,
+                stacks = listOf(
+                    NavStackSpec(firstStack, NavRoute("home")),
+                    NavStackSpec(secondStack, NavRoute("home")),
+                ),
+            ),
+            entryIdFactory = NavEntryIdFactory { NavEntryId(ids.removeFirst()) },
+        )
+        val viewModels = linkedMapOf<NavEntryId, ReleaseTrackingViewModel>()
+        val fixture = renderPublicHost(controller = controller) { entry ->
+            viewModels[entry.id] = viewModel(
+                key = "same-route",
+                factory = ReleaseTrackingViewModelFactory,
+            )
+            Text(entry.route.name)
+        }
+
+        controller.selectStack(secondStack)
+
+        val first = checkNotNull(viewModels[NavEntryId("first-home")])
+        val second = checkNotNull(viewModels[NavEntryId("second-home")])
+        assertNotSame(first, second)
+        assertFalse(first.cleared)
+        assertFalse(second.cleared)
         fixture.session.dispose()
     }
 
@@ -427,6 +550,61 @@ class NavHostPublicApiTest {
             controller.stackSnapshot(accountStack).entries.map { entry -> entry.route.name },
         )
         assertEquals(2, fixture.navHostView.childCount)
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `unknown deep link query values cannot override stack or launch mode`() {
+        val homeStack = NavStackId("home-tab")
+        val accountStack = NavStackId("account-tab")
+        val entryIds = ArrayDeque(listOf("home-root", "account-root", "account-details"))
+        val graph = navGraph(
+            route = "app",
+            startDestination = NavRoute("home"),
+        ) {
+            destination("home")
+            navigation(
+                route = "account",
+                startDestination = NavRoute("profile"),
+            ) {
+                destination("profile")
+                destination(
+                    route = "details",
+                    deepLinks = listOf(
+                        NavDeepLink(
+                            uriPattern = "viewcompose://account/details",
+                            targetStackId = accountStack,
+                        ),
+                    ),
+                )
+            }
+        }
+        val controller = createNavHostController(
+            stackConfiguration = NavStackConfiguration(
+                initialStackId = homeStack,
+                stacks = listOf(
+                    NavStackSpec(homeStack, NavRoute("home")),
+                    NavStackSpec(accountStack, NavRoute("account")),
+                ),
+            ),
+            graph = graph,
+            entryIdFactory = NavEntryIdFactory { NavEntryId(entryIds.removeFirst()) },
+        )
+        val fixture = renderPublicHost(controller = controller)
+
+        val result = controller.navigateDeepLink(
+            uri = "viewcompose://account/details" +
+                "?targetStackId=home-tab&launchMode=Reset&details=attacker",
+            launchMode = NavDeepLinkLaunchMode.Push,
+        ) as NavDeepLinkResult.Navigated
+
+        assertTrue(result.navigationResult is NavResult.Committed)
+        assertEquals(accountStack, controller.activeStackId)
+        assertEquals(
+            listOf("profile", "details"),
+            controller.stackSnapshot(accountStack).entries.map { entry -> entry.route.name },
+        )
+        assertTrue(result.match.route.arguments.isEmpty())
         fixture.session.dispose()
     }
 
@@ -807,6 +985,7 @@ class NavHostPublicApiTest {
         controller: NavHostController = deterministicController(),
         onFailure: ((NavFailure) -> Unit)? = null,
         contentKey: () -> Any? = { Unit },
+        parentViewModelStoreOwner: ViewModelStoreOwner? = null,
         content: com.viewcompose.ui.foundation.UiTreeBuilder.(
             com.viewcompose.navigation.core.NavEntry,
         ) -> Unit = { entry -> Text(entry.route.name) },
@@ -818,14 +997,21 @@ class NavHostPublicApiTest {
         }
         val session = renderInto(root) {
             ProvideLifecycleOwner(lifecycleOwner) {
-                NavHost(
-                    controller = controller,
-                    transitionSpec = NavTransitionSpec.None,
-                    overlayHostFactory = { OverlayHostDefaults.noOp },
-                    onFailure = onFailure,
-                    contentKey = contentKey(),
-                    content = content,
-                )
+                val hostContent: com.viewcompose.ui.foundation.UiTreeBuilder.() -> Unit = {
+                    NavHost(
+                        controller = controller,
+                        transitionSpec = NavTransitionSpec.None,
+                        overlayHostFactory = { OverlayHostDefaults.noOp },
+                        onFailure = onFailure,
+                        contentKey = contentKey(),
+                        content = content,
+                    )
+                }
+                if (parentViewModelStoreOwner == null) {
+                    hostContent()
+                } else {
+                    ProvideViewModelStoreOwner(parentViewModelStoreOwner, hostContent)
+                }
             }
         }
         val navHostView = root.requireNavHostView()
@@ -951,6 +1137,18 @@ class NavHostPublicApiTest {
         return snapshot.entries.map { entry -> entry.route.name }
     }
 
+    private inline fun <reified T : Throwable> assertThrows(block: () -> Unit): T {
+        try {
+            block()
+        } catch (throwable: Throwable) {
+            if (throwable is T) {
+                return throwable
+            }
+            throw throwable
+        }
+        error("Expected ${T::class.simpleName} to be thrown.")
+    }
+
     private companion object {
         val MultiHomeStack = NavStackId("multi-home")
         val MultiSearchStack = NavStackId("multi-search")
@@ -997,6 +1195,46 @@ private object ReleaseTrackingViewModelFactory : ViewModelProvider.Factory {
         check(modelClass == ReleaseTrackingViewModel::class.java)
         return ReleaseTrackingViewModel() as T
     }
+}
+
+private class HostInheritedViewModel(
+    val inheritedValue: String?,
+) : ViewModel()
+
+private class HostInheritedFactory : ViewModelProvider.Factory {
+    var created: HostInheritedViewModel? = null
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(
+        modelClass: Class<T>,
+        extras: CreationExtras,
+    ): T {
+        check(modelClass == HostInheritedViewModel::class.java)
+        return HostInheritedViewModel(extras[HostInheritedValueKey])
+            .also { created = it } as T
+    }
+}
+
+private class ParentViewModelOwner(
+    override val defaultViewModelProviderFactory: ViewModelProvider.Factory,
+    extras: CreationExtras,
+) : ViewModelStoreOwner,
+    HasDefaultViewModelProviderFactory {
+    override val viewModelStore: ViewModelStore = ViewModelStore()
+    private val capturedExtras = MutableCreationExtras(extras)
+
+    override val defaultViewModelCreationExtras: CreationExtras
+        get() = capturedExtras
+}
+
+private object HostInheritedValueKey : CreationExtras.Key<String>
+
+private class BrokenParentViewModelOwner : ViewModelStoreOwner,
+    HasDefaultViewModelProviderFactory {
+    override val viewModelStore: ViewModelStore = ViewModelStore()
+
+    override val defaultViewModelProviderFactory: ViewModelProvider.Factory
+        get() = error("broken parent factory")
 }
 
 private val RestorableCounterSaver = Saver<RestorableCounter, Int>(

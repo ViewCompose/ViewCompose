@@ -6,9 +6,15 @@ package com.viewcompose.navigation
  */
 
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.DEFAULT_ARGS_KEY
+import androidx.lifecycle.SAVED_STATE_REGISTRY_OWNER_KEY
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.VIEW_MODEL_STORE_OWNER_KEY
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.lifecycle.viewmodel.MutableCreationExtras
 import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
@@ -96,6 +102,82 @@ class NavEntryOwnerTest {
             17,
             restored.viewModel<SavedStateViewModel>("editor-vm").handle["cursor"],
         )
+    }
+
+    @Test
+    fun `owner inherits parent factory and unrelated creation extras`() {
+        val application = RuntimeEnvironment.getApplication()
+        val factory = InheritedFactory()
+        val parentExtras = MutableCreationExtras().apply {
+            this[InheritedValueKey] = "parent-di"
+            this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] = application
+        }
+        val owner = NavEntryOwner(
+            entry = NavEntry(
+                id = NavEntryId("details"),
+                route = NavRoute(
+                    name = "details",
+                    arguments = mapOf("itemId" to NavValue.LongValue(42L)),
+                ),
+            ),
+            application = application,
+            restoredState = null,
+            parentViewModelProviderFactory = factory,
+            parentViewModelCreationExtras = parentExtras,
+        )
+        owner.moveTo(NavEntryLifecycleState.Created)
+
+        val viewModel = owner.viewModel<InheritedExtrasViewModel>("inherited")
+
+        assertSame(factory.created, viewModel)
+        assertEquals("parent-di", viewModel.inheritedValue)
+        assertSame(application, viewModel.application)
+        assertSame(owner, viewModel.storeOwner)
+        assertSame(owner, viewModel.savedStateOwner)
+        assertEquals(42L, viewModel.defaultArguments.getLong("itemId"))
+        assertNull(parentExtras[VIEW_MODEL_STORE_OWNER_KEY])
+        assertNull(parentExtras[SAVED_STATE_REGISTRY_OWNER_KEY])
+        assertNull(parentExtras[DEFAULT_ARGS_KEY])
+    }
+
+    @Test
+    fun `inherited factory creates a restored SavedStateHandle for the entry owner`() {
+        val application = RuntimeEnvironment.getApplication()
+        val factory = InheritedFactory()
+        val parentExtras = MutableCreationExtras().apply {
+            this[InheritedValueKey] = "parent-di"
+        }
+        val entry = NavEntry(
+            id = NavEntryId("editor"),
+            route = NavRoute(
+                name = "editor",
+                arguments = mapOf("documentId" to NavValue.LongValue(7L)),
+            ),
+        )
+        val first = NavEntryOwner(
+            entry = entry,
+            application = application,
+            restoredState = null,
+            parentViewModelProviderFactory = factory,
+            parentViewModelCreationExtras = parentExtras,
+        )
+        first.moveTo(NavEntryLifecycleState.Created)
+        first.viewModel<InheritedSavedStateViewModel>("editor-vm").handle["cursor"] = 19
+        val saved = first.performSave()
+        first.moveTo(NavEntryLifecycleState.Destroyed)
+
+        val restored = NavEntryOwner(
+            entry = entry,
+            application = application,
+            restoredState = saved,
+            parentViewModelProviderFactory = factory,
+            parentViewModelCreationExtras = parentExtras,
+        )
+        restored.moveTo(NavEntryLifecycleState.Created)
+        val restoredViewModel = restored.viewModel<InheritedSavedStateViewModel>("editor-vm")
+
+        assertEquals(7L, restoredViewModel.handle["documentId"])
+        assertEquals(19, restoredViewModel.handle["cursor"])
     }
 
     @Test
@@ -218,4 +300,48 @@ class NavEntryOwnerTest {
             clearCount += 1
         }
     }
+
+    class InheritedExtrasViewModel(
+        val inheritedValue: String?,
+        val application: android.app.Application?,
+        val storeOwner: Any?,
+        val savedStateOwner: Any?,
+        val defaultArguments: android.os.Bundle,
+    ) : ViewModel()
+
+    class InheritedSavedStateViewModel(
+        val handle: SavedStateHandle,
+    ) : ViewModel()
+
+    private class InheritedFactory : ViewModelProvider.Factory {
+        var created: ViewModel? = null
+
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(
+            modelClass: Class<T>,
+            extras: CreationExtras,
+        ): T {
+            val viewModel = when (modelClass) {
+                InheritedExtrasViewModel::class.java -> {
+                    InheritedExtrasViewModel(
+                        inheritedValue = extras[InheritedValueKey],
+                        application = extras[
+                            ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY
+                        ],
+                        storeOwner = extras[VIEW_MODEL_STORE_OWNER_KEY],
+                        savedStateOwner = extras[SAVED_STATE_REGISTRY_OWNER_KEY],
+                        defaultArguments = checkNotNull(extras[DEFAULT_ARGS_KEY]),
+                    )
+                }
+                InheritedSavedStateViewModel::class.java -> {
+                    InheritedSavedStateViewModel(extras.createSavedStateHandle())
+                }
+                else -> error("Unexpected ViewModel class ${modelClass.name}.")
+            }
+            created = viewModel
+            return viewModel as T
+        }
+    }
+
+    private object InheritedValueKey : CreationExtras.Key<String>
 }

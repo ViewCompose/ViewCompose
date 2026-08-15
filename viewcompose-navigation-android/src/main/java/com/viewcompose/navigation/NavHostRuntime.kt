@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModelStoreOwner
 import com.viewcompose.navigation.core.NavCommand
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavStackSetSnapshot
@@ -19,6 +20,7 @@ import com.viewcompose.ui.foundation.UiLocalSnapshot
 internal data class NavHostRuntimeConfig(
     val localSnapshot: UiLocalSnapshot,
     val lifecycleOwner: LifecycleOwner,
+    val parentViewModelStoreOwner: ViewModelStoreOwner? = null,
     val transitionSpec: NavTransitionSpec,
     val panePolicy: NavPanePolicy,
     val systemBackEnabled: Boolean,
@@ -351,9 +353,14 @@ internal class NavHostRuntime private constructor(
                 "NavHost debugTag must not be blank."
             }
             val hostView = NavHostView(context)
+            val viewModelDefaults = captureNavViewModelProviderDefaults(
+                initialConfig.parentViewModelStoreOwner,
+            )
             val ownerStore = NavEntryOwnerStore(
                 application = context.applicationContext as? Application,
                 restoredState = controller.destinationStateForHost(),
+                parentViewModelProviderFactory = viewModelDefaults.factory,
+                parentViewModelCreationExtras = viewModelDefaults.creationExtras,
             )
             val transitionSpecHolder = TransitionSpecHolder(initialConfig.transitionSpec)
             val sessionStore = NavDestinationSessionStore(

@@ -120,6 +120,11 @@ fragments, user info, malformed percent encoding, invalid UTF-8, duplicate query
 types, and partial placeholders are rejected. Typed floating-point values must be finite and
 booleans accept only lowercase `true` or `false`.
 
+Extra input query parameters are tolerated but inert. An undeclared value never enters
+`NavRoute.arguments`, changes specificity, resolves ambiguity, selects a retained stack, or chooses
+a launch mode. Applications that require an exact or signed URL validate the complete input before
+passing it to the resolver.
+
 Resolution returns one of four outcomes:
 
 - `Matched` contains the winning declaration and decoded `NavRoute`;

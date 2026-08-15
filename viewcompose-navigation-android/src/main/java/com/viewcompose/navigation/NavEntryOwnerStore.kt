@@ -3,6 +3,9 @@ package com.viewcompose.navigation
 import android.app.Application
 import android.os.Bundle
 import androidx.annotation.MainThread
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.lifecycle.viewmodel.MutableCreationExtras
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryLifecycleState
@@ -17,11 +20,14 @@ import com.viewcompose.navigation.core.NavLifecyclePlanner
 internal class NavEntryOwnerStore(
     private val application: Application?,
     restoredState: Bundle? = null,
+    private val parentViewModelProviderFactory: ViewModelProvider.Factory? = null,
+    parentViewModelCreationExtras: CreationExtras = CreationExtras.Empty,
 ) {
     private val owners = linkedMapOf<NavEntryId, NavEntryOwner>()
     private val graphOwners = linkedMapOf<NavEntryId, NavGraphOwner>()
     private val ownerDepths = linkedMapOf<NavEntryId, Int>()
     private val restoredOwnerStates = decodeOwnerStates(restoredState)
+    private val inheritedCreationExtras = MutableCreationExtras(parentViewModelCreationExtras)
     private var destroyed = false
 
     @MainThread
@@ -45,6 +51,8 @@ internal class NavEntryOwnerStore(
             entry = entry,
             application = application,
             restoredState = restoredOwnerStates.remove(entry.id),
+            parentViewModelProviderFactory = parentViewModelProviderFactory,
+            parentViewModelCreationExtras = inheritedCreationExtras,
         ).also { owner ->
             owners[entry.id] = owner
             ownerDepths[entry.id] = entry.graphEntries.size
@@ -82,6 +90,8 @@ internal class NavEntryOwnerStore(
             ),
             application = application,
             restoredState = restoredOwnerStates.remove(entry.id),
+            parentViewModelProviderFactory = parentViewModelProviderFactory,
+            parentViewModelCreationExtras = inheritedCreationExtras,
         )
         return NavGraphOwner(
             entry = entry,

@@ -5,8 +5,8 @@
 Active after a 2026-08-14 implementation and contract re-audit. The retained plan now owns proven
 ViewCompose correctness and Android-ecosystem compatibility work, not general Compose API parity.
 Diagnostics are supporting test infrastructure only; they are not a product goal or an independent
-delivery phase. The Phase 0 evidence and Phase 1-2 runtime/host correctness slice are implemented;
-Phase 3 and later retained Android compatibility work remain independently schedulable.
+delivery phase. The Phase 0 evidence and Phase 1-3 runtime, host, and navigation correctness slices
+are implemented; Phase 4 RTL and restoration certification remain independently schedulable.
 
 The first production slice is recorded by
 `release/changes/20260814-composition-runtime-correctness.json`. It adds retry-safe remember and
@@ -15,11 +15,11 @@ public session termination, and Fragment View-lifecycle ownership. Earlier indep
 transactional composition effects, `snapshotFlow`, deferred lazy session activation, and stronger
 Android View reuse/release behavior.
 
-Last verified: 2026-08-14.
+Last verified: 2026-08-15.
 
-Next action: schedule Phase 3 navigation owner compatibility after the higher-priority Runtime/Patch
-correctness and benchmark-Demo work has established its new baseline. Do not begin a convenience
-API or conditional protocol while a retained correctness defect remains open.
+Next action: implement the Phase 4 logical-edge public API slice, then run the general Activity-root
+process-death certification. Do not begin a convenience API or conditional protocol while a
+retained correctness defect remains open.
 
 ## Maven release changesets
 
@@ -236,7 +236,7 @@ uncommitted rollback candidate, committed removal, final reuse-cache eviction, a
 disposal. Preserve the stronger transaction-aware behavior instead of imitating Compose callback
 timing.
 
-## Phase 3: Navigation contract and owner compatibility
+## Phase 3: Navigation contract and owner compatibility — completed 2026-08-15
 
 ### Extra query parameters
 
@@ -402,6 +402,7 @@ This plan is complete when:
 | 2026-08-05 | Initial planning | Migration documents, source contracts, and existing focused tests | Broad capability plan created; no implementation selected |
 | 2026-08-14 | Full re-audit | Current source/tests, commits for transactional effects, lazy activation, and lazy three-layer ownership, plus AndroidX behavior references | Retain proven core defects; recognize partial keyed implementation; correct Deep Link policy; reject broad automatic Insets protocol; defer convenience APIs |
 | 2026-08-14 | Existing test baseline | Runtime, UI Foundation, Host, Android aggregate, Navigation Core/Android, and Renderer unit tests | Seven relevant module test tasks pass; gaps remain uncovered behavior, not existing red tests |
+| 2026-08-15 | Navigation contract and ownership | Core resolver tests, public-host destination/graph Factory tests, SavedStateHandle recreation, same-route retained-stack isolation, compiled sample, module/migration docs, `verifyDocumentationStructure`, and `qaQuick` | Unknown query values are contractually inert; destination and graph owners inherit parent Factory/extras while replacing child ownership inputs; Phase 3 complete |
 
 ## Decision history
 
@@ -416,3 +417,5 @@ This plan is complete when:
 - 2026-08-14: require additive logical edges for RTL correctness while keeping physical APIs stable.
 - 2026-08-14: reject an untriggered general nested Insets runtime and defer atomic pop-to,
   ViewTree-aware hosting, `matchParentSize`, and hidden-session disposal to independent requirements.
+- 2026-08-15: complete navigation owner compatibility by capturing parent provider defaults once
+  per native host, recreating on parent-owner identity change, and keeping extra query values inert.

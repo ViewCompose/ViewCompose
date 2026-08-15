@@ -367,6 +367,13 @@ lifecycle and state. After commit, lifecycle reconciliation starts parent graphs
 destroys leaf/child owners before parents. Visible transition graph paths remain at least `STARTED`;
 hidden retained graphs remain `CREATED`.
 
+The native host captures the nearest `LocalViewModelStoreOwner` when it is created. Destination and
+graph owners inherit that parent's default ViewModel Factory and starting `CreationExtras`, then
+replace only their own ViewModelStore owner, saved-state owner, and route or graph default
+arguments. This preserves Application and DI extras while keeping repeated routes and retained
+stacks isolated. Changing the parent-owner identity recreates the host rather than mixing the two
+provider contracts.
+
 The JVM and public-host suites verify sibling sharing, release boundaries, lifecycle ordering,
 rollback cleanup, graph `SavedStateHandle` recreation, and full host/controller restoration. The
 real-device process-death runner additionally verifies the restored nested graph instance ID,
@@ -421,8 +428,10 @@ format-4 restoration of all stack and owner state.
 
 ### Stage 9: strict graph deep links
 
-`NavDeepLink` registers allowlisted URI patterns on graphs or destinations. Matching is strict:
-scheme, host, optional port, path segments, and query keys must match the registered pattern.
+`NavDeepLink` registers allowlisted URI patterns on graphs or destinations. Matching is strict for
+scheme, host, optional port, declared path segments, and declared query constraints. Extra input
+query parameters are accepted but inert: they do not enter route arguments, change specificity,
+resolve an ambiguity, select a stack, or choose a launch mode.
 Placeholders occupy a complete path segment or query value and decode into declared
 `Text/Int/Long/Boolean/Float/Double` route arguments. Malformed encoding, fragments, user info,
 duplicate query values, invalid typed values, ambiguous patterns, and attempts to fall through from

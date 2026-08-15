@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: ab0d6121f7c21946abe176625f60996b8953f4c0f33b54800733ffc07aa69ec4
+translation_source_hash: 9b7e686a22e9cf4a6f139dfd3ba7e59b9165b2be1e469ce5ebb1627d9db35336
 translation_status: current
 ---
 
@@ -101,10 +101,10 @@ Kotlin `2.0.21`，声明位置是
 | 互操作 | 直接 ViewBinding 和树内 Fragment API | **Unsupported（不支持）** | 把 Fragment 所有权留在渲染树外，并显式管理 XML inflate。 | [不支持的互操作](compose-host-lifecycle-and-android-interop.md#unsupported-direct-interop) |
 | 导航 | controller、目的地和多栈所有权 | **Intentionally different（刻意不同）** | 迁移目标状态转换，不要迁移 Navigation 2 或 3 的 API 名称。 | [导航模型](compose-navigation.md#choosing-the-source-navigation-model) |
 | 导航 | 图、类型化路由和栈操作 | **Partially supported（部分支持）** | 使用受支持的基础 `NavValue` 参数和单个事务命令。 | [路由与事务](compose-navigation.md#graphs-routes-and-arguments) |
-| 导航 | entry/graph owner 和 Lifecycle 2.11 factory 继承 | **Partially supported（部分支持）** | 验证每个 factory、extra、SavedStateHandle 和重复 key 的栈作用域。 | [Entry 所有权](compose-navigation.md#entry-and-graph-ownership) |
+| 导航 | entry/graph owner 和 Lifecycle 2.11 factory 继承 | **Supported（支持）** | 保留继承的父级 Factory/extra，并隔离重复 route 的栈 owner。 | [Entry 所有权](compose-navigation.md#entry-and-graph-ownership) |
 | 导航 | 目的地生命周期和自适应 pane | **Intentionally different（刻意不同）** | 允许多个 resumed entry；不要从 `RESUMED` 推断唯一可见性。 | [生命周期](compose-navigation.md#lifecycle-and-adaptive-panes) |
 | 导航 | 隐藏目的地保留组合 | **Partially supported（部分支持）** | 让后台工作感知生命周期；隐藏 session 会保留 Effect 和原生 View。 | [保留](compose-navigation.md#hidden-destination-retention) |
-| 导航 | 深链 | **Partially supported（部分支持）** | 替换 action/MIME 规则，不要依赖尚未解决的额外 query 行为。 | [深链](compose-navigation.md#deep-links) |
+| 导航 | 深链 | **Partially supported（部分支持）** | 替换 action/MIME 规则；未声明 query 值可存在，但不能影响导航策略。 | [深链](compose-navigation.md#deep-links) |
 | 导航 | 保存/恢复、系统 Back 和 Predictive Back | **Supported（支持）** | 恢复后重建存活对象，并在发布流程中保留设备验证。 | [恢复与 Back](compose-navigation.md#save-restore-and-process-death) |
 | 导航 | 直接 NavigationEvent 集成 | **Unsupported（不支持）** | 把 dispatcher-owner、forward event、测试 fake 和 Preview 需求留在 ViewCompose 外。 | [NavigationEvent](compose-navigation.md#system-back-and-predictive-back) |
 

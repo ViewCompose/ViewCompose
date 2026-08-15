@@ -1,5 +1,7 @@
 package com.viewcompose.navigation.samples
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelStoreOwner
 import com.viewcompose.navigation.NavDestinationMotionSpec
 import com.viewcompose.navigation.NavDestinationTransform
 import com.viewcompose.navigation.NavHost
@@ -10,6 +12,8 @@ import com.viewcompose.navigation.NavResult
 import com.viewcompose.navigation.NavTransitionSpec
 import com.viewcompose.navigation.rememberNavHostController
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
+import com.viewcompose.viewmodel.viewModel
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTheme
@@ -38,6 +42,23 @@ fun UiTreeBuilder.rememberedNavHostSample() {
         }
     }
 }
+
+fun UiTreeBuilder.inheritedNavViewModelFactorySample(
+    controller: NavHostController,
+    parentOwner: ViewModelStoreOwner,
+) {
+    ProvideViewModelStoreOwner(parentOwner) {
+        NavHost(controller = controller) { entry ->
+            // A HasDefaultViewModelProviderFactory parent can create this destination-scoped model.
+            val model = viewModel<InheritedNavViewModel>()
+            Text("${entry.route.name}: ${model.label}")
+        }
+    }
+}
+
+class InheritedNavViewModel(
+    val label: String = "ready",
+) : ViewModel()
 
 fun UiTreeBuilder.retainedDestinationThemeSample(
     controller: NavHostController,

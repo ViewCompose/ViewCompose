@@ -40,11 +40,16 @@ class NavGraphOwner internal constructor(
     override val savedStateRegistry: SavedStateRegistry
         get() = delegate.savedStateRegistry
 
-    /** Default factory backed by this graph owner's saved-state registry. */
+    /**
+     * Parent host's default Factory, or the framework saved-state Factory when no parent supplies
+     * one. [defaultViewModelCreationExtras] always points that Factory at this graph owner.
+     */
     override val defaultViewModelProviderFactory: ViewModelProvider.Factory
         get() = delegate.defaultViewModelProviderFactory
 
-    /** Creation extras exposing this owner and its default arguments. */
+    /**
+     * Parent host extras with this graph's store owner, saved-state owner, and arguments replaced.
+     */
     override val defaultViewModelCreationExtras: CreationExtras
         get() = delegate.defaultViewModelCreationExtras
 }

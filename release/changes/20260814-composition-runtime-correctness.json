@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Harden composition identity and host lifecycles, publish runtime state atomically, reuse immutable Local snapshots, preserve ConstraintLayout Group visibility, and patch modifier-only Android View updates without semantic rebinding.",
+  "summary": "Harden composition, host, and navigation ownership; publish state atomically; reuse Local snapshots; preserve Group visibility; and patch modifier-only Views without semantic rebinding.",
   "changes": [
     { "artifact": "viewcompose-runtime", "impact": "breaking" },
     { "artifact": "viewcompose-ui-contract", "impact": "fix" },
@@ -11,7 +11,9 @@
     { "artifact": "viewcompose-animation", "impact": "fix" },
     { "artifact": "viewcompose-gesture", "impact": "fix" },
     { "artifact": "viewcompose-text-core", "impact": "fix" },
-    { "artifact": "viewcompose-renderer-android", "impact": "fix" }
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" },
+    { "artifact": "viewcompose-navigation-core", "impact": "fix" },
+    { "artifact": "viewcompose-navigation-android", "impact": "fix" }
   ],
   "ignored": []
 }
