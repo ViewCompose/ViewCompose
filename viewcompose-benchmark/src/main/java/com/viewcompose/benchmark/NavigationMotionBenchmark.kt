@@ -170,6 +170,6 @@ class NavigationMotionBenchmark {
         }
 
         const val PROFILE_WARMUP_ITERATIONS = 3
-        const val NAVIGATION_TRANSITIONS_PER_ITERATION = 8
+        const val NAVIGATION_TRANSITIONS_PER_ITERATION = 4
     }
 }

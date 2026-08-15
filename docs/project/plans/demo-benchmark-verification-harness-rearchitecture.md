@@ -16,7 +16,7 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-15.
 
-Next action: complete the Phase 5 navigation-motion revision 5 and design-bundle revision 3
+Next action: complete the Phase 5 navigation-motion revision 6 and design-bundle revision 3
 baselines.
 
 Do not benchmark or begin a performance-only slice from the
@@ -1073,10 +1073,16 @@ eight same-direction transitions per iteration while preserving separate push an
 first instrumentation preflight failed before measurement because consecutive standard pushes to
 the same route produced identical event copy after the second transition, so the scenario `state`
 target could not prove that the active destination changed. Navigation revision 5 makes that
-automation state include the active stack depth, keeps eight push or pop transitions per
-iteration, and strengthens the bilingual device test to require eight distinct consecutive state
-changes. Pop setup preloads eight destinations outside measurement, then the measured block returns
-through all eight. Revisions 3 and 4 remain rejected preflight evidence rather than baselines.
+automation state include the active stack depth and strengthens the bilingual device test to
+require eight distinct consecutive state changes. Revision 5 then completed five iterations of
+eight pushes, but its roughly two-minute measurement window crossed the device thermal boundary:
+the first three run-P50 values were `4.504/4.502/4.320 ms`, the last two rose to
+`8.356/8.614 ms`, and CV reached `0.327`. Navigation revision 6 therefore measures four
+same-direction transitions per iteration. That still contributes roughly 200 transition frames per
+run instead of revision 3's roughly 50, while halving sustained work so a method does not measure a
+thermal-state transition. Pop setup preloads four destinations outside measurement, then the
+measured block returns through all four. Revisions 3-5 remain rejected preflight evidence rather
+than baselines.
 
 For structurally unchanged workloads, apply the repository performance policy: P50 fails only when
 it regresses by more than both 5% and 0.3 ms; P95 fails only when it regresses by more than both 10%
@@ -1241,6 +1247,7 @@ the retired Demo layout.
 | 2026-08-15 | Phase 5 navigation/design launch-settling audit | The remaining warm navigation and design-system methods did not apply the already-proven 5-second OEM launch-boost isolation. Their setup now settles outside measurement; design initial-build remains an unmodified cold-start workload. Navigation and both design-bundle scenario contracts advance from revision 2 to revision 3 before rebaseline. |
 | 2026-08-15 | Phase 5 navigation revision 3 stability preflight | One push per iteration yielded stable 51-57 frame counts but frame-CPU run-P50 values of `9.779/7.545/4.044/8.708/9.637 ms` and CV `0.265`. The result is rejected. Revision 4 keeps push/pop separate and measures eight same-direction transitions per iteration; pop setup preloads the matching depth outside measurement. |
 | 2026-08-15 | Phase 5 navigation revision 4 automation preflight | The first eight-push run failed before metric collection: repeated standard pushes to the same route left the event-only scenario state unchanged after the second transition. Revision 5 adds active stack depth to the state target and requires eight distinct transitions in the bilingual device contract test. |
+| 2026-08-15 | Phase 5 navigation revision 5 thermal preflight | Eight pushes yielded 417-437 frames per run, but a roughly two-minute method crossed the consumer device's thermal boundary. Frame-CPU run-P50 shifted from `4.504/4.502/4.320 ms` to `8.356/8.614 ms` (CV `0.327`), so the result is rejected. Revision 6 uses four same-direction transitions, retaining about 200 frames per run while halving sustained load. |
 
 ## Decision history
 
