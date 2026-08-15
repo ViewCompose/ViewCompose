@@ -379,12 +379,17 @@ class DemoScenarioAutomationUiTest {
             launchScenario(scenarioId)
             val initial = requireTarget(scenarioId, "state").text.orEmpty()
 
-            requireTarget(scenarioId, "primary_action").click()
-            assertNotEquals(
-                "$scenarioId action must publish state",
-                initial,
-                waitForTargetTextChange(scenarioId, initial),
-            )
+            var previous = initial
+            repeat(8) { transitionIndex ->
+                requireTarget(scenarioId, "primary_action").click()
+                val current = waitForTargetTextChange(scenarioId, previous)
+                assertNotEquals(
+                    "$scenarioId transition ${transitionIndex + 1} must publish a distinct state",
+                    previous,
+                    current,
+                )
+                previous = current
+            }
 
             requireTarget(scenarioId, "reset").click()
             assertEquals(

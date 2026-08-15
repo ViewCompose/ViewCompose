@@ -19,7 +19,7 @@
 
     <string name="demo_system_nav_fixture_title">Navigation transaction fixture</string>
     <string name="demo_system_nav_fixture_summary">The primary push, observable result, and full Session reset are kept in the first fixture block.</string>
-    <string name="demo_system_nav_recent_event">Recent action: %1$s</string>
+    <string name="demo_system_nav_recent_event">Recent action: %1$s\nActive stack depth: %2$d</string>
     <string name="demo_system_nav_push">Push next destination</string>
     <string name="demo_system_nav_reset_fixture">Reset all stacks and owners</string>
 

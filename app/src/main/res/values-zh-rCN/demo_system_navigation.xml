@@ -19,7 +19,7 @@
 
     <string name="demo_system_nav_fixture_title">导航事务场景</string>
     <string name="demo_system_nav_fixture_summary">将主 Push、可观察结果和完整 Session 重置固定在首个场景块中。</string>
-    <string name="demo_system_nav_recent_event">最近操作：%1$s</string>
+    <string name="demo_system_nav_recent_event">最近操作：%1$s\n当前栈深度：%2$d</string>
     <string name="demo_system_nav_push">Push 下一页面</string>
     <string name="demo_system_nav_reset_fixture">重置全部栈与 owner</string>
 

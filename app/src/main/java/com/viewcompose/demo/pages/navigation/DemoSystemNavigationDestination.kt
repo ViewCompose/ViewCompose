@@ -101,6 +101,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     text = stringResource(
                         R.string.demo_system_nav_recent_event,
                         systemNavigationEventText(lastEvent.value),
+                        stackState.activeStack.entries.size,
                     ),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),

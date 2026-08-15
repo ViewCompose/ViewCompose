@@ -921,7 +921,7 @@ internal object DemoScenarioRegistry {
                 state = R.id.demo_navigation_system_state,
                 target = R.id.demo_navigation_system_target,
             ),
-            benchmarkRevision = 4,
+            benchmarkRevision = 5,
         ),
         material3ThemeScenario(
             id = DemoScenarioIds.DesignMaterial3Xml,
