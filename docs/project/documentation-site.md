@@ -98,16 +98,25 @@ locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to t
 tree, so those copies add storage but no localized content or supported route.
 
 The budget model separates expected release-history growth from regressions. Non-API output is
-limited to 41 MiB. Before the Demo verification-harness plan was added, a clean `main` build already
+limited to 42 MiB. Before the Demo verification-harness plan was added, a clean `main` build already
 measured 39.999791 MiB. Publishing that searchable English plan, its `zh-CN` fallback route, and
 both locale search entries measured 40.427350 MiB, so the reviewed ceiling moved from 40 MiB to
-41 MiB instead of removing reader-value planning evidence. Immutable artifact/version trees and
-working-tree `current` Dokka for unpublished artifacts share the API-tree budget: they may average
-at most 4.5 MiB and no individual tree may exceed 24 MiB. Only manifests and redirect aliases use
-the separate 1 MiB routing allowance. The other ceilings remain 120 seconds for the Docusaurus
-build, 8 MiB total and 768 KiB largest-file for JavaScript, 128 KiB for CSS, and 6 MiB for each
-locale's search index. The gate also rejects any locale-prefixed API copy. Raise a threshold only
-with a measured explanation of the reader or release value that requires the additional cost.
+41 MiB instead of removing reader-value planning evidence. The native-widget contract convergence
+then expanded required bilingual architecture, migration, guide, and module contracts. Before the
+budget evidence itself was added, the clean candidate increased non-API output from 42,829,400 to
+43,024,465 bytes: 195,065 bytes, or 0.46%, and exceeded the old ceiling by 32,849 bytes. The
+conclusion is **regressed** in absolute payload, but the growth is attributable to reviewed
+reader-facing contracts and no other site ceiling failed. The reviewed ceiling therefore moves to
+42 MiB, leaving approximately 1 MiB of measured headroom; the final build including this evidence
+passed at 41.1 MiB against that 42.0 MiB ceiling. Reaching 42 MiB requires a representation or
+content-partitioning review before another increase. Immutable artifact/version trees and
+working-tree `current` Dokka for unpublished
+artifacts share the API-tree budget: they may average at most 4.5 MiB and no individual tree may
+exceed 24 MiB. Only manifests and redirect aliases use the separate 1 MiB routing allowance. The
+other ceilings remain 120 seconds for the Docusaurus build, 8 MiB total and 768 KiB largest-file for
+JavaScript, 128 KiB for CSS, and 6 MiB for each locale's search index. The gate also rejects any
+locale-prefixed API copy. Raise a threshold only with a measured explanation of the reader or
+release value that requires the additional cost.
 
 The accessibility audit covers the site-owned English and localized pages and checks document
 language, title and main landmarks, heading order, accessible names, image alternatives, table
@@ -214,6 +223,16 @@ identity token.
   verification separately from the documentation build.
 
 ## Last verified
+
+2026-08-15: paired Docusaurus locale builds on the same macOS checkout and dependency set compared
+`main` at `ca3d7985` with PR #99 before its budget evidence was added. Non-API output measured
+42,829,400 and 43,024,465 bytes respectively, a 195,065-byte or 0.46% increase; the candidate was
+32,849 bytes above the 41 MiB ceiling. The conclusion is **regressed** in absolute size but accepted
+for the required bilingual public contracts, so only the non-API ceiling moved to 42 MiB. The final
+remediated build, including this evidence, passed at 41.1 MiB against 42.0 MiB. The baseline worktree
+did not reconstruct API history and stopped at API-route verification, which does not affect this
+metric because its rendered non-API tree was complete and API bytes are excluded. The next action
+at the new ceiling is to review representation or content partitioning before any further increase.
 
 2026-08-14: clean builds of current `main` and the documentation-planning branch measured non-API
 output at 39.999791 MiB and 40.427350 MiB respectively. The reviewed non-API ceiling moved to
