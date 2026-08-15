@@ -8,7 +8,6 @@ import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 
 /**
  * Pull-to-refresh host that supports child decoration drawing planes.
- * Pull-to-refresh host participating in the child Decoration Layer protocol.
  */
 internal class DeclarativePullToRefreshLayout(
     context: Context,

@@ -2,6 +2,7 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
+import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.LazyListItemSessionFactory
 
 /**
@@ -38,7 +39,7 @@ class LazyListScope internal constructor(
             contentType = contentType,
             contentRevision = contentRevision,
             kind = LazyListItemKind.Item,
-            span = 1,
+            span = GridItemSpan.Single,
             content = content,
         )
     }
@@ -67,7 +68,7 @@ class LazyListScope internal constructor(
                 contentType = contentType(item),
                 contentRevision = contentRevision(item),
                 kind = LazyListItemKind.Item,
-                span = 1,
+                span = GridItemSpan.Single,
                 content = { itemContent(item) },
             )
         }
@@ -96,7 +97,7 @@ class LazyListScope internal constructor(
             contentType = contentType,
             contentRevision = contentRevision,
             kind = LazyListItemKind.StickyHeader,
-            span = Int.MAX_VALUE,
+            span = GridItemSpan.FullLine,
             content = content,
         )
     }
@@ -117,15 +118,15 @@ class LazyGridScope internal constructor(
      * @param key unique logical identity that owns remember, saveable state, and effects
      * @param contentType physical-tree compatibility class for renderer reuse
      * @param contentRevision semantic version of every non-State value captured by [content]
-     * @param span positive number of columns occupied by the item
+     * @param span renderer-neutral cell-span policy
      * @param content declaration evaluated when this logical item session renders
-     * @throws IllegalArgumentException when [key] is duplicated or [span] is not positive
+     * @throws IllegalArgumentException when [key] is duplicated
      */
     fun item(
         key: Any,
         contentType: Any? = null,
         contentRevision: Any? = key,
-        span: Int = 1,
+        span: GridItemSpan = GridItemSpan.Single,
         content: UiTreeBuilder.() -> Unit,
     ) {
         collector.add(
@@ -146,16 +147,16 @@ class LazyGridScope internal constructor(
      * @param key unique logical identity selector
      * @param contentType physical-tree compatibility selector
      * @param contentRevision semantic revision selector; immutable values default to themselves
-     * @param span positive column-span selector
+     * @param span renderer-neutral cell-span selector
      * @param itemContent declaration evaluated for the item when its logical session renders
-     * @throws IllegalArgumentException when keys are duplicated or a selected span is not positive
+     * @throws IllegalArgumentException when keys are duplicated
      */
     fun <T> items(
         items: List<T>,
         key: (T) -> Any,
         contentType: (T) -> Any? = { null },
         contentRevision: (T) -> Any? = { it },
-        span: (T) -> Int = { 1 },
+        span: (T) -> GridItemSpan = { GridItemSpan.Single },
         itemContent: UiTreeBuilder.(T) -> Unit,
     ) {
         items.forEach { item ->
@@ -190,7 +191,7 @@ class LazyGridScope internal constructor(
             contentType = contentType,
             contentRevision = contentRevision,
             kind = LazyListItemKind.StickyHeader,
-            span = Int.MAX_VALUE,
+            span = GridItemSpan.FullLine,
             content = content,
         )
     }
@@ -211,20 +212,19 @@ internal class LazyItemCollector(
         contentType: Any?,
         contentRevision: Any?,
         kind: LazyListItemKind,
-        span: Int,
+        span: GridItemSpan,
         content: UiTreeBuilder.() -> Unit,
     ) {
         require(keys.add(key)) {
             "Lazy collection keys must be unique. Duplicate key: $key"
         }
-        require(span > 0) { "Lazy item span must be greater than zero." }
         items += LazyListItem(
             key = key,
             contentRevision = contentRevision,
             environmentRevision = localSnapshot,
             contentType = contentType,
             kind = kind,
-            span = span,
+            span = span.canonical(),
             sessionFactory = LazyListItemSessionFactory { container ->
                 WidgetLazyListItemSession(
                     container = container,
@@ -251,5 +251,13 @@ internal class LazyItemCollector(
             }
         }
         return items.toList()
+    }
+}
+
+private fun GridItemSpan.canonical(): GridItemSpan {
+    return if (this is GridItemSpan.Fixed && count == 1) {
+        GridItemSpan.Single
+    } else {
+        this
     }
 }

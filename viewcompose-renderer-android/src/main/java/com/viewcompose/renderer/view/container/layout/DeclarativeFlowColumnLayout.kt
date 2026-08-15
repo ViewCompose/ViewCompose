@@ -13,7 +13,6 @@ import kotlin.math.max
 
 /**
  * Custom column-wrapping container used by FlowColumn.
- * Custom wrapping container used by FlowColumn.
  */
 internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
     context: Context,
@@ -150,7 +149,6 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
             totalWidth += currentColumnWidth
         } else if (totalWidth > 0) {
             // A maxItemsInEachColumn boundary may end the final column, which must not retain a trailing gap.
-            // The last column can close via maxItemsInEachColumn and should not leave trailing spacing.
             totalWidth = (totalWidth - horizontalSpacing).coerceAtLeast(0)
         }
 
@@ -164,8 +162,9 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         val startNs = LayoutPassTracker.beginTiming()
         val availableHeight = b - t - paddingTop - paddingBottom
+        val rtl = layoutDirection == LAYOUT_DIRECTION_RTL
 
-        var currentX = paddingLeft
+        var completedColumnsWidth = 0
         var currentY = paddingTop
         var currentColumnWidth = 0
         var itemsInCurrentColumn = 0
@@ -180,7 +179,7 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
             val spacingNeeded = if (itemsInCurrentColumn > 0) verticalSpacing else 0
 
             if (currentY - paddingTop + spacingNeeded + childHeight > availableHeight && itemsInCurrentColumn > 0) {
-                currentX += currentColumnWidth + horizontalSpacing
+                completedColumnsWidth += currentColumnWidth + horizontalSpacing
                 currentY = paddingTop
                 currentColumnWidth = 0
                 itemsInCurrentColumn = 0
@@ -190,19 +189,20 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
                 currentY += verticalSpacing
             }
 
-            child.layout(
-                currentX + params.leftMargin,
-                currentY + params.topMargin,
-                currentX + params.leftMargin + child.measuredWidth,
-                currentY + params.topMargin + child.measuredHeight,
-            )
+            val childLeft = if (rtl) {
+                r - l - paddingRight - completedColumnsWidth - params.rightMargin - child.measuredWidth
+            } else {
+                paddingLeft + completedColumnsWidth + params.leftMargin
+            }
+            val childTop = currentY + params.topMargin
+            child.layout(childLeft, childTop, childLeft + child.measuredWidth, childTop + child.measuredHeight)
 
             currentY += childHeight
             currentColumnWidth = max(currentColumnWidth, childWidth)
             itemsInCurrentColumn++
 
             if (itemsInCurrentColumn >= maxItemsInEachColumn) {
-                currentX += currentColumnWidth + horizontalSpacing
+                completedColumnsWidth += currentColumnWidth + horizontalSpacing
                 currentY = paddingTop
                 currentColumnWidth = 0
                 itemsInCurrentColumn = 0

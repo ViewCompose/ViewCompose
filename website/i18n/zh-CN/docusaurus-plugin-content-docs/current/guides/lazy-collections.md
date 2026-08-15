@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: 4a95553b7a2f5fe031dc6ed1eb605ffe05f1774349dd477f2281d8d0c5ad21df
+translation_source_hash: ae4b29c36cedacccc79f588eb9f839111c571349ff04b61590a54f4f0a8c6619
 translation_status: current
 ---
 
@@ -11,7 +11,8 @@ translation_status: current
 延迟集合继续使用 Android `RecyclerView` 和布局管理器承载滚动、回收、焦点、无障碍、嵌套滚动、
 fling 与边缘效果。ViewCompose 拥有平台无关的 item 模型、可观察状态、保存恢复锚点和渲染映射。
 
-支持 `LazyColumn`、`LazyRow` 和 `LazyVerticalGrid`；Pager 状态仍是独立的页面模型。
+支持 `LazyColumn`、`LazyRow` 和 `LazyVerticalGrid`；Pager 状态仍是独立的页面模型，Eager
+`ScrollableColumn`/`ScrollableRow` 则使用 `ScrollState`。
 
 ## 2. 可观察状态
 
@@ -82,6 +83,24 @@ Header 占满整行。`contentRevision` 是正确性契约而不只是性能提�
 是可观察 State，或进入该 Revision；Key 和 Revision 相等时完全跳过 Item Render。均质数据便捷
 重载同样要求稳定 Key，并委托给结构化模型。
 
+网格列使用 Sealed Policy，而不是 Android Span Count：
+
+```kotlin
+LazyVerticalGrid(cells = GridCells.Adaptive(minSize = 120.dp)) {
+    item(key = "heading", span = GridItemSpan.FullLine) {
+        Text("Gallery")
+    }
+    items(items = cards, key = { card -> card.id }) { card ->
+        CardRow(card)
+    }
+}
+```
+
+`GridCells.Fixed` 保留精确正列数。`GridCells.Adaptive` 根据可用内部宽度、最小 Cell 尺寸、间距与
+密度推导至少一列。`GridItemSpan.Fixed` 会限制到当前列数，`FullLine` 会在尺寸变化后跟随当前
+列数，`Fixed(1)` 会规范化为 `Single`。物理列数变化不会改变 Key、Revision、Session、Remember
+状态或 Effect。
+
 ## 4. 渲染器映射
 
 | 契约 | Android 映射 |
@@ -90,6 +109,7 @@ Header 占满整行。`contentRevision` 是正确性契约而不只是性能提�
 | content type | 空 Holder 与 Reset Mounted Tree 的原生兼容分区 |
 | content revision | 调用方所有的语义 Version，用于定向 Item 失效 |
 | item span | `GridLayoutManager.SpanSizeLookup` |
+| fixed/adaptive cells | 当前 `GridLayoutManager.spanCount`，更新时不替换 Adapter |
 | sticky header | 与列表分离、由 Session 承载的 pinned holder，并支持下一 header 推离 |
 | pinned header 指针输入 | 坐标变换后分发给 pinned holder |
 | 非对称 content padding | RecyclerView 相对 padding |
@@ -143,6 +163,8 @@ Attach 或重排时按 Item Key 恢复。分离的 Pinned Header 副本是不拥
    Render 保持正常事务式 Effect 顺序。
 12. 逻辑 Key State 绝不进入 RecyclerView Pool 或 Mounted Tree 缓存；Reset 物理树不携带 Remember、
     Saveable、Subscription 或 Effect 标识。
+13. Adaptive 列数变化只更新物理布局；不得重建 Keyed 逻辑 Item Session，也不属于应用持有的
+    Content Revision。
 
 ## 6. 明确不包含的能力
 

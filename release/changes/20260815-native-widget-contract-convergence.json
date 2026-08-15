@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut native widget contracts to observable eager scroll and pager state, adaptive grids, portable measurement constraints, explicit input behavior, stable selection identity, logical RTL, and complete accessibility semantics.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" }
+  ],
+  "ignored": [
+    {
+      "artifact": "viewcompose-material3",
+      "reason": "Material 3 compiled samples only migrate NavigationBar calls to the hard-cut stable-key Foundation signature; Material 3 production APIs and behavior are unchanged."
+    },
+    {
+      "artifact": "viewcompose-preview",
+      "reason": "Preview production source only migrates catalog fixtures to the hard-cut Foundation signatures; preview descriptors and public behavior are unchanged."
+    }
+  ]
+}

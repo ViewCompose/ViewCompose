@@ -10,6 +10,8 @@ import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.layout.VerticalAlignment
+import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
+import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextFieldImeAction
@@ -115,8 +117,8 @@ class AdditionalWidgetCoverageTest {
                     selectedIndex = 1,
                     onItemSelected = {},
                 ) {
-                    Item(label = "Home", icon = ImageSource.Resource(1), badgeCount = 2)
-                    Item(label = "Profile", icon = ImageSource.Resource(2))
+                    Item(key = "home", label = "Home", icon = ImageSource.Resource(1), badgeCount = 2)
+                    Item(key = "profile", label = "Profile", icon = ImageSource.Resource(2))
                 }
             }
         }
@@ -133,6 +135,30 @@ class AdditionalWidgetCoverageTest {
         assertEquals(theme.typography.labelSmall.letterSpacingEm, spec.labelLetterSpacingEm)
         assertEquals(theme.typography.labelSmall.lineHeightSp, spec.labelLineHeightSp)
         assertEquals(theme.typography.labelSmall.includeFontPadding, spec.labelIncludeFontPadding)
+        val semantics = node.modifier.elements.filterIsInstance<SemanticsModifierElement>().single()
+            .configuration
+        assertEquals(1, semantics.collectionInfo?.rowCount)
+        assertEquals(2, semantics.collectionInfo?.columnCount)
+        assertEquals(SemanticsCollectionSelectionMode.Single, semantics.collectionInfo?.selectionMode)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `navigation bar rejects an invalid selected index`() {
+        buildVNodeTree {
+            NavigationBar(selectedIndex = 1, onItemSelected = {}) {
+                Item(key = "home", label = "Home", icon = ImageSource.Resource(1))
+            }
+        }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `navigation bar rejects duplicate destination keys`() {
+        buildVNodeTree {
+            NavigationBar(selectedIndex = 0, onItemSelected = {}) {
+                Item(key = "same", label = "Home", icon = ImageSource.Resource(1))
+                Item(key = "same", label = "Profile", icon = ImageSource.Resource(2))
+            }
+        }
     }
 
     @Test
@@ -149,7 +175,7 @@ class AdditionalWidgetCoverageTest {
                     onItemSelected = {},
                     overrides = NavigationBarOverrides(indicatorColor = 201),
                 ) {
-                    Item(label = "Home", icon = ImageSource.Resource(1))
+                    Item(key = "home", label = "Home", icon = ImageSource.Resource(1))
                 }
             }
         }
@@ -283,7 +309,7 @@ class AdditionalWidgetCoverageTest {
         )
         val gridTree = buildVNodeTree {
             LazyVerticalGrid(
-                spanCount = 2,
+                cells = com.viewcompose.ui.node.policy.GridCells.Fixed(2),
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
                 focusFollowKeyboard = true,
@@ -302,12 +328,12 @@ class AdditionalWidgetCoverageTest {
         assertTrue(gridSpec.focusFollowKeyboard)
 
         val spannedGridTree = buildVNodeTree {
-            LazyVerticalGrid(spanCount = 3) {
+            LazyVerticalGrid(cells = com.viewcompose.ui.node.policy.GridCells.Fixed(3)) {
                 stickyHeader(key = "header") { Text("Header") }
                 items(
                     items = listOf(1, 2),
                     key = { item -> item },
-                    span = { item -> item },
+                    span = { item -> com.viewcompose.ui.node.policy.GridItemSpan.Fixed(item) },
                 ) { item ->
                     Text(item.toString())
                 }
@@ -315,7 +341,29 @@ class AdditionalWidgetCoverageTest {
         }
         val spannedItems =
             (spannedGridTree.single().spec as LazyVerticalGridNodeProps).items
-        assertEquals(listOf(Int.MAX_VALUE, 1, 2), spannedItems.map { item -> item.span })
+        assertEquals(
+            listOf(
+                com.viewcompose.ui.node.policy.GridItemSpan.FullLine,
+                com.viewcompose.ui.node.policy.GridItemSpan.Single,
+                com.viewcompose.ui.node.policy.GridItemSpan.Fixed(2),
+            ),
+            spannedItems.map { item -> item.span },
+        )
+
+        val nestedGridTree = buildVNodeTree {
+            ScrollableColumn {
+                LazyVerticalGrid(
+                    items = listOf("item" to 7),
+                    key = { item -> item.first },
+                    contentRevision = { item -> item.second },
+                ) { item ->
+                    Text(item.first)
+                }
+            }
+        }
+        val nestedGridSpec =
+            nestedGridTree.single().children.single().spec as LazyVerticalGridNodeProps
+        assertEquals(7, nestedGridSpec.items.single().contentRevision)
 
         val horizontalPagerTree = buildVNodeTree {
             HorizontalPager(

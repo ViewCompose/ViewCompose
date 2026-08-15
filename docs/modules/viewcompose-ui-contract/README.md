@@ -63,8 +63,20 @@ created for the node.
   `relativeLayoutModifierSample` demonstrates the complete family.
 - [`UiEnvironmentValues`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.environment/-ui-environment-values/)
   captures density, locale tags, and logical layout direction for a subtree.
-- [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
-  and pager state bridge platform scrolling to observable runtime state.
+- [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/),
+  Q3 `ScrollState`, and Q3 `PagerState` bridge lazy, eager, and page-oriented platform scrolling to
+  immutable observable snapshots. Connectors have one live renderer owner, detach on replacement
+  or disposal, and keep immediate versus animated commands explicit.
+- Q3 `GridCells.Fixed` and `GridCells.Adaptive` define physical column calculation without exposing
+  Android layout managers. Q3 `GridItemSpan.Single`, `Fixed`, and `FullLine` remain meaningful when
+  an adaptive grid changes column count; the compiled `gridPolicySample` covers the policy model.
+- `maxWidth`, `maxHeight`, and `aspectRatio` are portable measurement modifiers implemented through
+  `NodeType.LayoutConstraintHost`. Custom renderers must constrain the complete modified node in
+  one measurement boundary, honor an incoming exact parent constraint, apply declared maxima
+  otherwise, and preserve the requested ratio whenever the resulting interval is feasible.
+- `NavigationBarItem` and `SegmentedControlItem` require explicit unique logical keys. Their
+  NodeSpecs require an in-range selected index for non-empty collections and `-1` for an empty
+  collection; navigation badges are nullable non-negative values.
 - `LazyListItem` is the Q3 renderer-neutral snapshot/session contract. Logical equality consists of
   key, `contentType`, caller-owned `contentRevision`, framework-owned `environmentRevision`, kind,
   and span; callback identity is deliberately excluded. Equal key and revisions skip the session
@@ -152,8 +164,15 @@ first-party image loaders; its zero default preserves deterministic non-Android/
   from the same `SemanticsConfiguration` fields, avoiding duplicate state ownership.
 - `UiEnvironmentValues` is captured on every VNode subtree. A renderer must use the captured values
   instead of consulting unrelated process-global density, locale, or direction state.
-- `LazyListState`, pager state, focus requesters, and nested-scroll dispatchers attach to one current
-  renderer connector. Hosts must detach old connectors during replacement or disposal.
+- `LazyListState`, `ScrollState`, `PagerState`, focus requesters, and nested-scroll dispatchers
+  attach to one current renderer connector. Hosts must detach old connectors during replacement or
+  disposal. Eager horizontal offsets and all page indexes use logical order in RTL.
+- `PagerStateSnapshot` publishes current, settled, and target pages separately. A pager's controlled
+  `currentPage` remains authoritative across recreation; `onPageChanged` is a settled-idle event,
+  not an `onPageSelected` echo during declarative binding.
+- `GridCells.Adaptive` recomputes physical columns from current inner width, spacing, density, and
+  configuration while keeping keyed logical sessions intact. `GridItemSpan.FullLine` resolves
+  against that current count; `Fixed(1)` is canonicalized to `Single` by Foundation.
 - A renderer retaining a `LazyListItem` session must ignore a newer callback object when key and
 both revisions are equal. When either revision changes, it installs the latest updater and renders
 that logical session until the content reports a successful commit. A different key always creates
@@ -221,6 +240,19 @@ The five relative layout modifier elements are additive Q3 contracts, but a cust
 recognize them before application code can use their DSL functions. Resolve start/end only from the
 VNode environment, keep the existing element types physical, and apply last-declaration-wins
 across the physical and relative form of each family.
+
+The native-widget convergence is an alpha hard cut. The old command-only pager state and
+fixed-integer grid contracts are removed: callers use immutable `PagerStateSnapshot`,
+`GridCells`, and `GridItemSpan`. `ScrollableColumnNodeProps` and `ScrollableRowNodeProps` now carry
+`ScrollState` and `userScrollEnabled`; slider snapshots carry step and interaction-boundary
+callbacks; pull-to-refresh carries `enabled`; navigation and segmented items carry explicit key
+and enabled state; and the dead progress `enabled` field is gone. Precompiled direct NodeSpec
+constructors and custom renderers must rebuild and implement the complete new contracts.
+
+`MaxWidthModifierElement`, `MaxHeightModifierElement`, `AspectRatioModifierElement`,
+`LayoutConstraintHostNodeProps`, and `NodeType.LayoutConstraintHost` are additive source APIs but
+expand the renderer registry. A custom renderer must recognize all of them before application code
+uses the modifiers; silently ignoring the host would violate measurement correctness.
 
 Adding `LazyListItemSession.prepare` and `activate` is a Q3 lifecycle hard cut. Kotlin source
 implementations inherit safe defaults, but the interface JVM shape changes, so precompiled custom

@@ -65,10 +65,10 @@ private fun UiTreeBuilder.DemoEnvironmentPage(root: ViewGroup) {
                     modifier = Modifier.testTag(DemoTestTags.SETTINGS_THEME_STATUS),
                 )
                 SegmentedControl(
-                    items = listOf(
-                        stringResource(R.string.demo_environment_theme_system),
-                        stringResource(R.string.demo_environment_theme_light),
-                        stringResource(R.string.demo_environment_theme_dark),
+                    items = demoSegmentedItems(
+                        "system" to stringResource(R.string.demo_environment_theme_system),
+                        "light" to stringResource(R.string.demo_environment_theme_light),
+                        "dark" to stringResource(R.string.demo_environment_theme_dark),
                     ),
                     selectedIndex = themeModeState.value.ordinal,
                     onSelectionChange = { index ->

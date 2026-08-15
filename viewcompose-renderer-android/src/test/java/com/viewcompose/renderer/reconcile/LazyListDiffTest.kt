@@ -114,8 +114,8 @@ class LazyListDiffTest {
     @Test
     fun `layout metadata change does not claim item content revision changed`() {
         val result = LazyListDiff.calculate(
-            previous = listOf(item("A", span = 1)),
-            next = listOf(item("A", span = 2)),
+            previous = listOf(item("A")),
+            next = listOf(item("A", span = com.viewcompose.ui.node.policy.GridItemSpan.Fixed(2))),
         )
 
         assertEquals(
@@ -127,7 +127,7 @@ class LazyListDiffTest {
     private fun item(
         key: String,
         contentRevision: Any? = key,
-        span: Int = 1,
+        span: com.viewcompose.ui.node.policy.GridItemSpan = com.viewcompose.ui.node.policy.GridItemSpan.Single,
     ): LazyListItem {
         return LazyListItem(
             key = key,

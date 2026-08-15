@@ -97,6 +97,18 @@ precedence.
 - [`LazyListDiff`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.reconcile/-lazy-list-diff/)
   converts stable lazy-item keys into ordered RecyclerView updates and deliberately falls back to a
   full reload when identity is missing or ambiguous.
+- Eager scroll containers use one renderer connector to publish logical offsets, range, viewport,
+  direction, and motion while preserving pending commands until layout. Pager containers use one
+  settled-state coordinator for both ViewPager2 observation and callback de-duplication. A vertical
+  eager container nested inside a same-axis non-nested-scrolling parent reserves the pointer stream
+  only while it can consume that direction, then releases the stream at the matching scroll edge;
+  disabling user scrolling never reserves the parent stream.
+- Adaptive grids recalculate `GridLayoutManager.spanCount` from available inner width and density
+  without replacing the adapter or keyed sessions. The span lookup resolves `FullLine` against the
+  current count and caps fixed spans safely.
+- Maximum-size and aspect-ratio modifiers install one synthetic measurement host around the
+  complete mapped node. The host is renderer-owned infrastructure, not a semantic child and not a
+  second logical session.
 - `RenderTreeResult`, `RenderStats`, `RenderStructureStats`, patch records, and layout-pass sampling
   provide immutable diagnostics used by the demo, preview tooling, and performance tests.
 - [`AndroidViewDecorationBackend`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.decoration/-android-view-decoration-backend/)
@@ -209,6 +221,13 @@ Because the current line is alpha, the documentation site intentionally does not
   reverse them when Android physically lays out descendants in RTL. Selection and heading values
   are read from the item's existing semantic fields so a component cannot expose contradictory
   accessibility state through duplicate contracts.
+- Text alignment updates horizontal gravity bits only. FlowRow, FlowColumn, and TabRow mirror
+  physical placement in RTL while retaining logical callback and accessibility indexes.
+- NavigationBar, SegmentedControl, and TabRow publish single-selection parent collection metadata
+  and item positions. Keyed navigation/segment Views may be reused within the same container, but
+  a label or index is never treated as logical identity. SegmentedControl recreates its internal
+  shape drawable when density or layout direction changes so resolved corners cannot retain an
+  obsolete environment.
 
 ## Android host and threading rules
 
@@ -290,3 +309,10 @@ The relative modifier family is resolved entirely from each VNode environment. R
 upgrade their folding, LayoutParams, translation, and inset-selection paths together; mapping from
 the process configuration or reinterpreting the existing physical elements would violate the
 public UI Contract.
+
+The native-widget convergence removes the renderer-local pager state and consumes the Q3 UI
+Contract state directly. Renderer forks must detach Scroll/Pager connectors on replacement and
+disposal, deliver pager callbacks only after idle settlement, honor `userScrollEnabled`, apply
+slider interaction phases and steps, preserve descendant input when refresh is disabled, and map
+the new keyed selection-item semantics. The grid policy and layout-constraint host also require a
+registry and measurement upgrade; treating them as optional hints is incorrect.

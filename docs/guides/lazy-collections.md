@@ -7,7 +7,7 @@ focus, accessibility, nested-scroll, fling, and edge-effect engine. ViewCompose 
 platform-independent item model, observable state, save/restore anchor, and renderer mapping.
 
 The supported containers are `LazyColumn`, `LazyRow`, and `LazyVerticalGrid`. Pager state remains a
-separate page-oriented model.
+separate page-oriented model, while eager `ScrollableColumn`/`ScrollableRow` use `ScrollState`.
 
 ## 2. Observable state
 
@@ -86,6 +86,25 @@ be observed State or appear in this revision; equal key and revisions skip item 
 The convenience overload for homogeneous data also requires a stable key and delegates to the
 structured model.
 
+Grid columns use a sealed policy rather than an Android span count:
+
+```kotlin
+LazyVerticalGrid(cells = GridCells.Adaptive(minSize = 120.dp)) {
+    item(key = "heading", span = GridItemSpan.FullLine) {
+        Text("Gallery")
+    }
+    items(items = cards, key = { card -> card.id }) { card ->
+        CardRow(card)
+    }
+}
+```
+
+`GridCells.Fixed` keeps an exact positive count. `GridCells.Adaptive` derives at least one column
+from available inner width, minimum cell size, spacing, and density. `GridItemSpan.Fixed` is capped
+to the current column count, `FullLine` tracks that count after resize, and `Fixed(1)` is
+canonicalized to `Single`. A physical column-count change does not change key, revision, session,
+remembered state, or effects.
+
 ## 4. Renderer mapping
 
 | Contract | Android mapping |
@@ -94,6 +113,7 @@ structured model.
 | content type | native compatibility partition for empty holders and reset mounted trees |
 | content revision | caller-owned semantic version used for targeted item invalidation |
 | item span | `GridLayoutManager.SpanSizeLookup` |
+| fixed/adaptive cells | current `GridLayoutManager.spanCount`, updated without adapter replacement |
 | sticky header | detached session-backed pinned holder + next-header push-off |
 | pointer input on pinned header | transformed dispatch to the pinned holder |
 | asymmetric content padding | relative RecyclerView padding |
@@ -153,6 +173,8 @@ revision change cannot temporarily expose content under a system bar or erase th
     activation and later active renders preserve the normal transactional effect order.
 12. Logical key state never enters RecyclerView pools or mounted-tree caches; reset physical trees
     carry no remember, saveable, subscription, or effect identity.
+13. Adaptive column changes update physical layout only; they do not rebuild keyed logical item
+    sessions or become an application-owned content revision.
 
 ## 6. Deliberate non-goals
 

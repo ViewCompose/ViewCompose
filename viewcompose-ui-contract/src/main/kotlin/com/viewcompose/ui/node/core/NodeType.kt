@@ -59,6 +59,9 @@ sealed interface NodeType {
     /** Host that animates measured content-size changes. */
     data object AnimatedSizeHost : NodeType
 
+    /** Transparent host enforcing portable maximum-size and aspect-ratio constraints. */
+    data object LayoutConstraintHost : NodeType
+
     /** Transparent renderer host participating in nested scrolling. */
     data object NestedScrollHost : NodeType
 

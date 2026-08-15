@@ -132,10 +132,10 @@ private fun UiTreeBuilder.FoundationsComponentDefaults(scenario: DemoScenarioSpe
                             style = Theme.typography.titleMedium,
                         )
                         SegmentedControl(
-                            items = listOf(
-                                stringResource(R.string.demo_foundations_theme_alpha),
-                                stringResource(R.string.demo_foundations_theme_beta),
-                                stringResource(R.string.demo_foundations_theme_gamma),
+                            items = demoSegmentedItems(
+                                "alpha" to stringResource(R.string.demo_foundations_theme_alpha),
+                                "beta" to stringResource(R.string.demo_foundations_theme_beta),
+                                "gamma" to stringResource(R.string.demo_foundations_theme_gamma),
                             ),
                             selectedIndex = 1,
                             onSelectionChange = {},

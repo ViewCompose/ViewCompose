@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-layout-modifier-and-environment.md
-translation_source_hash: da3c980148588cee7a3a8a647fca6b2f0824e6ddfe42960f5351d8072d1fb342
+translation_source_hash: db2f76d8deb96eae090eec9f8b21115a584e30ad5ff11ae1444a64b09761743e
 translation_status: current
 ---
 
@@ -106,7 +106,7 @@ ViewCompose 渲染 Android View、按 renderer 规则折叠 Modifier 元素，�
 | --- | --- | --- | --- | --- |
 | 内置布局容器 | `Row`、`Column`、`Box` 和 Foundation 布局在 `Constraints` 下测量 Compose 布局节点。 | `Row`、`Column`、`Box`、流式布局、滚动容器和 ConstraintLayout 发出 VNode，并最终成为 Android `ViewGroup` 实现。 | Partially supported | 在原生 View 实现上重新检查默认值、溢出、裁剪、weight 和固有尺寸假设。 |
 | 自定义测量 | `Layout`、`MeasurePolicy` 和布局 Modifier 节点允许应用代码测量并放置 Compose 子项。普通测量中每个子项只能测量一次。 | 未发现公开的通用测量策略、measurable/placeable 契约或布局 Modifier。自定义多子项测量需要 renderer 扩展，或通过互操作托管 Android `ViewGroup`。 | Unsupported | 围绕内置容器或具有生命周期所有权的 Android View 实现重新设计自定义 Compose 布局。 |
-| 尺寸与填充 | 布局 Modifier 会变换或约束 Modifier 链；`size` 仍受传入约束限制，支持相关重载时 fill API 可接受比例。 | 精确 dp 尺寸会成为像素 LayoutParams；fill 辅助方法会成为 `MATCH_PARENT`。轴向专用的 width 或 height 相对 `size` 具有固定 renderer 优先级。 | Partially supported | 迁移最终测量契约，而不只是函数名。审查受约束尺寸、比例填充、required size 和固有尺寸行为。 |
+| 尺寸与填充 | 布局 Modifier 会变换或约束 Modifier 链；`size` 仍受传入约束限制，支持相关重载时 fill API 可接受比例。 | 精确 dp 尺寸会成为像素 LayoutParams；fill 辅助方法会成为 `MATCH_PARENT`。`maxWidth`、`maxHeight` 与 `aspectRatio` 围绕完整节点共享一个 Renderer 测量边界。 | Partially supported | 迁移最终测量契约，而不只是函数名。审查 Exact/Min/Max 冲突、比例轴优先级、比例填充、required size 和固有尺寸行为。 |
 | Padding 与 margin | 每个布局 Modifier 都在 Modifier 链中的当前位置参与处理。Compose 通常通过布局结构或 padding 表达外部空间，而不是 margin 属性。 | Padding 是原生 View 内容内边距。Margin 是显式的原生父级 LayoutParams 数据。重复 padding 或 margin 元素会解析为该类型的最后一个元素。 | Intentionally different | 将重复 padding 规范化为单个预期值，并明确判断原外层 padding 应属于父级结构、View padding 还是 ViewCompose margin。 |
 | 作用域父数据 | `RowScope.weight`、`ColumnScope.weight`、对齐和 `BoxScope.matchParentSize` 等作用域安全 Modifier 向兼容的直接父级提供数据。 | `RowScope` 和 `ColumnScope` 提供 weight 与交叉轴对齐；`BoxScope` 提供对齐。错误使用父数据会产生警告。没有已验证的 `matchParentSize` 等价能力。 | Partially supported | 仅在匹配容器的直接子项上使用作用域 Modifier。重新设计 `matchParentSize`；不要直接替换为 `fillMaxSize`。 |
 | Constraint 父数据 | Compose ConstraintLayout 在自己的测量模型中消费 layout ID 和 constraint 父数据。 | 可选 ConstraintLayout 模块把 layout ID 和 constraint spec 映射为 AndroidX ConstraintLayout LayoutParams 与 ConstraintSet 操作。 | Partially supported | 针对 AndroidX View 实现重新验证尺寸、baseline、RTL 锚点和依赖环。 |
@@ -162,6 +162,13 @@ ViewCompose 通过原生 LayoutParams 解析尺寸。感知父级的优先级如
 [`ViewLayoutParamsFactory.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt)
 第 73–99 行。精确 dp 尺寸使用 VNode 捕获的 density 转换。Fill 辅助方法映射为 Android
 `MATCH_PARENT`；它们不会保留 Compose 的所有比例或固有尺寸选项。
+
+可移植的最大边界和比例是直接 LayoutParams 映射的例外。Renderer 会把 `maxWidth`、`maxHeight`
+与 `aspectRatio` 折叠为包裹完整节点的一个合成测量 Host。它们必须是正有限值。Exact 或 Minimum
+尺寸超过声明 Maximum 时会确定性失败，而不是静默选择一个来源；比例默认优先使用宽度，除非设置
+`matchHeightConstraintsFirst`。当不存在同时满足双轴精确约束与比例的尺寸时，Android 传入的
+`EXACTLY` 约束保持权威。这不是公开自定义测量 API，也不会让任意 Compose `LayoutModifier`
+代码变得可移植。
 
 边缘 Modifier 有不同的原生落点：
 
@@ -434,12 +441,14 @@ ViewCompose 在根本上不同：每个第一方 VNode 都会成为 Android View
 2. 将每个布局分类为内置布局、基于 constraint 的布局或自定义测量布局。
 3. 先替换布局行为，再翻译视觉 Modifier 名称。
 4. 根据 ViewCompose 折叠规则规范化重复 size、padding、margin、graphics-layer 和 draw 元素。
-5. 仅在匹配 scope 的直接子项上使用父数据 Modifier，并重新设计 `matchParentSize` 用法。
-6. 把逻辑 start/end 意图映射到相对 Modifier；仅为明确的 left/right 行为保留物理 API。
-7. 把会变化的 provided 值移到 ViewCompose state 后面；不要依赖 `UiLocal` 读取追踪。
-8. 跨 View 与 ViewCompose 边界显式分配系统栏和 IME inset 所有权。
-9. 分离 Android View 可重放配置、提交后工作和释放清理。
-10. 声明迁移完成前，为测量、RTL、local 更新、延迟 session、inset 分发和互操作回滚添加行为测试。
+5. 用 `maxWidth`、`maxHeight` 与 `aspectRatio` 替换兼容的最大尺寸和比例链，并测试
+   Exact/Minimum 冲突及有界/无界父容器。
+6. 仅在匹配 scope 的直接子项上使用父数据 Modifier，并重新设计 `matchParentSize` 用法。
+7. 把逻辑 start/end 意图映射到相对 Modifier；仅为明确的 left/right 行为保留物理 API。
+8. 把会变化的 provided 值移到 ViewCompose state 后面；不要依赖 `UiLocal` 读取追踪。
+9. 跨 View 与 ViewCompose 边界显式分配系统栏和 IME inset 所有权。
+10. 分离 Android View 可重放配置、提交后工作和释放清理。
+11. 声明迁移完成前，为测量、RTL、local 更新、延迟 session、inset 分发和互操作回滚添加行为测试。
 
 ## 源码与可执行证据
 
@@ -450,6 +459,9 @@ ViewCompose 在根本上不同：每个第一方 VNode 都会成为 Android View
   [`ModifierContractTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/modifier/ModifierContractTest.kt)，
   其 Q3 已编译用法位于
   [`UiContractNodeSamples.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt)。
+- 最大尺寸与宽高比契约验证及编译用法：
+  `NativeWidgetContractValidationTest.kt` 与 `layoutConstraintModifierSample`；Android 测量由 Renderer
+  模块的 `LayoutConstraintHostTest` 和 `LayoutConstraintNodeWrapperTest` 覆盖。
 - Modifier 折叠、z-index 相加、有序 shadow 与 ConstraintLayout 父数据：固定 revision 的
   [`ResolvedModifiersTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/ResolvedModifiersTest.kt)，
   包括物理与相对边缘形式之间的后声明者覆盖规则。

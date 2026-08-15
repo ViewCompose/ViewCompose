@@ -142,6 +142,19 @@ by a later renderer or child render session.
   values must be observed State or participate in that revision. Pager pages also declare
   `contentType`. `TabRow` uses eager keyed children in the parent composition rather than lazy item
   sessions.
+- `ScrollableColumn` and `ScrollableRow` accept Q3 `ScrollState` plus `userScrollEnabled` without
+  unmounting eager children. `HorizontalPager` and `VerticalPager` accept Q3 `PagerState`; their
+  change callback fires only after a different page settles. The compiled `eagerScrollStateSample`
+  demonstrates caller-owned eager scrolling.
+- `LazyVerticalGrid` accepts `GridCells.Fixed` or `GridCells.Adaptive`, and grid items declare
+  `GridItemSpan.Single`, `Fixed`, or `FullLine`. Adaptive resizing changes the native column count,
+  not logical item identity. The compiled `adaptiveGridSample` covers full-line content.
+- Slider stepping and start/change/finish callbacks, pull-to-refresh enablement, and explicit
+  stable NavigationBar/SegmentedControl item keys are ordinary product behavior rather than
+  Android interop. The compiled `sliderInteractionSample`, `pullToRefreshEnablementSample`, and
+  `stableSelectionItemIdentitySample` define their public use. A non-empty selection control
+  requires an in-range selected index; an empty control uses `-1`, duplicate keys fail, and
+  navigation badge counts cannot be negative.
 - [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-render-session/)
   coordinates composition, renderer reconciliation, native commit effects, overlays, diagnostics,
   failure recovery, and disposal for one opaque `RenderContainerHandle`. Standard applications use
@@ -210,6 +223,14 @@ snapshot has no entry for that Local; they are not a fallback for an explicitly 
   submissions. Equal key plus content/environment revisions perform no child composition or native
   patch. A non-State capture that can change must enter `contentRevision`; omitting it promises the
   capture remains stable for that key.
+- Eager scroll and pager state objects attach only while their native container is mounted. A
+  replacement state detaches the old owner, disposal rejects later commands at the renderer
+  boundary, and equal snapshots do not invalidate observers. Horizontal eager offsets and pager
+  indexes remain logical in RTL.
+- NavigationBar and SegmentedControl keys identify logical items independently from translated
+  labels. Disabled items remain present for ordering and accessibility but do not dispatch
+  selection callbacks. Duplicate keys, out-of-range selected indexes, and negative navigation
+  badge counts fail during tree construction.
 - Lazy item and pager child revisions advance only when their `activate` or `render` attempt reports
   a committed frame. Composition or native-tree rollback retains the logical session and retries
   the same semantic revision; failures after frame commit remain observable without undoing it.
@@ -322,6 +343,13 @@ lambda-return cleanup by making `onDispose { ... }` the setup block's final expr
 `SideEffect` is an additive ViewCompose change-only publication form. Effect lifecycle, rollback,
 coroutine ownership, and `rememberUpdatedState` publication now follow the transactional contract
 in [Transactional effects and structured work](../../architecture/effects.md).
+
+The native-widget contract hard cut replaces `LazyVerticalGrid(spanCount = ..., span = Int)` with
+`cells = GridCells...` and `span = GridItemSpan...`. It also replaces the previous pager-state
+shape, adds `state` and `userScrollEnabled` to eager scroll containers, adds slider step and
+interaction-boundary callbacks, adds pull-to-refresh `enabled`, and requires stable navigation and
+segmented item keys. These changes intentionally keep one source of truth; no deprecated parallel
+signature is retained on the alpha line.
 
 `RenderSessionPlatformDiagnostics.sourceTooling`, `RenderSessionSourceTooling`, and
 `RenderSessionSourceRegistration` are additive Q3 tooling APIs. Existing platform diagnostics use

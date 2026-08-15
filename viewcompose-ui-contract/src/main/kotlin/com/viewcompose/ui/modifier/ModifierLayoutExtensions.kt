@@ -383,6 +383,68 @@ fun Modifier.minWidth(minWidth: UiDp): Modifier {
 }
 
 /**
+ * Constrains the modified node to at most [maxWidth].
+ *
+ * The renderer enforces this through one measurement boundary shared with [maxHeight] and
+ * [aspectRatio]. An exact width larger than this bound, or a minimum width larger than this bound,
+ * is rejected deterministically during rendering.
+ *
+ * @sample com.viewcompose.ui.samples.layoutConstraintModifierSample
+ * @receiver modifier chain to extend
+ * @param maxWidth positive finite maximum width
+ * @return a new modifier chain
+ * @throws IllegalArgumentException when [maxWidth] is not positive and finite
+ */
+fun Modifier.maxWidth(maxWidth: UiDp): Modifier {
+    require(maxWidth.value.isFinite() && maxWidth.value > 0f) {
+        "maxWidth must be positive and finite."
+    }
+    return then(MaxWidthModifierElement(maxWidth))
+}
+
+/**
+ * Constrains the modified node to at most [maxHeight].
+ *
+ * @sample com.viewcompose.ui.samples.layoutConstraintModifierSample
+ * @receiver modifier chain to extend
+ * @param maxHeight positive finite maximum height
+ * @return a new modifier chain
+ * @throws IllegalArgumentException when [maxHeight] is not positive and finite
+ */
+fun Modifier.maxHeight(maxHeight: UiDp): Modifier {
+    require(maxHeight.value.isFinite() && maxHeight.value > 0f) {
+        "maxHeight must be positive and finite."
+    }
+    return then(MaxHeightModifierElement(maxHeight))
+}
+
+/**
+ * Constrains the modified node to the requested width-to-height [ratio].
+ *
+ * The renderer chooses a size inside incoming and declared min/max bounds. Width constraints are
+ * preferred by default; set [matchHeightConstraintsFirst] when height is the authoritative axis.
+ *
+ * @sample com.viewcompose.ui.samples.layoutConstraintModifierSample
+ * @receiver modifier chain to extend
+ * @param ratio positive finite width divided by height
+ * @param matchHeightConstraintsFirst whether height constraints are considered before width
+ * @return a new modifier chain
+ * @throws IllegalArgumentException when [ratio] is not positive and finite
+ */
+fun Modifier.aspectRatio(
+    ratio: Float,
+    matchHeightConstraintsFirst: Boolean = false,
+): Modifier {
+    require(ratio.isFinite() && ratio > 0f) { "aspectRatio must be positive and finite." }
+    return then(
+        AspectRatioModifierElement(
+            ratio = ratio,
+            matchHeightConstraintsFirst = matchHeightConstraintsFirst,
+        ),
+    )
+}
+
+/**
  * Supplies a parent-data identifier consumed by ConstraintLayout helpers.
  *
  * The renderer diagnoses use under an incompatible parent.

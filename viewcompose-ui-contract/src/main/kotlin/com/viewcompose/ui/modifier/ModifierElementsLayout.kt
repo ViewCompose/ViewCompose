@@ -191,6 +191,36 @@ data class MinWidthModifierElement(
 ) : ModifierElement
 
 /**
+ * Supplies a maximum measured width consumed by a renderer-owned measurement boundary.
+ *
+ * @property maxWidth positive finite maximum width in dp
+ */
+data class MaxWidthModifierElement(
+    val maxWidth: UiDp,
+) : ModifierElement
+
+/**
+ * Supplies a maximum measured height consumed by a renderer-owned measurement boundary.
+ *
+ * @property maxHeight positive finite maximum height in dp
+ */
+data class MaxHeightModifierElement(
+    val maxHeight: UiDp,
+) : ModifierElement
+
+/**
+ * Requests a measured width-to-height [ratio] within the incoming constraints.
+ *
+ * @property ratio positive finite width divided by height
+ * @property matchHeightConstraintsFirst whether unconstrained selection should derive width from
+ * height before deriving height from width
+ */
+data class AspectRatioModifierElement(
+    val ratio: Float,
+    val matchHeightConstraintsFirst: Boolean,
+) : ModifierElement
+
+/**
  * Publishes [layoutId] as parent data for ConstraintLayout and related helpers.
  *
  * A renderer diagnoses use under an incompatible parent; the element has no standalone layout

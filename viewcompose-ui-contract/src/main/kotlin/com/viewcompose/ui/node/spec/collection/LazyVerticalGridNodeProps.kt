@@ -1,17 +1,18 @@
 package com.viewcompose.ui.node.spec
-import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
+import com.viewcompose.ui.node.policy.GridCells
 import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.state.LazyListState
+import com.viewcompose.ui.unit.UiDp
 
 /**
- * Immutable renderer properties for a vertically scrolling fixed-span grid.
+ * Immutable renderer properties for a vertically scrolling grid.
  *
- * @property spanCount number of cells across the horizontal axis
+ * @property cells fixed or adaptive horizontal cell policy
  * @property contentPadding logical padding inside the scrollable content
  * @property horizontalSpacing spacing between adjacent columns
  * @property verticalSpacing spacing between adjacent rows
@@ -23,9 +24,10 @@ import com.viewcompose.ui.state.LazyListState
  * @property reusePolicy native item-view pool policy
  * @property motionPolicy native item mutation animation policy
  * @property focusFollowKeyboard whether focus navigation may scroll the focused item into view
+ * @throws IllegalArgumentException when either spacing is negative or non-finite
  */
 data class LazyVerticalGridNodeProps(
-    val spanCount: Int,
+    val cells: GridCells,
     val contentPadding: LazyContentPadding,
     val horizontalSpacing: UiDp,
     val verticalSpacing: UiDp,
@@ -37,4 +39,13 @@ data class LazyVerticalGridNodeProps(
     val reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     val motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
     val focusFollowKeyboard: Boolean = false,
-) : NodeSpec
+) : NodeSpec {
+    init {
+        require(horizontalSpacing.value.isFinite() && horizontalSpacing >= UiDp.Zero) {
+            "Lazy grid horizontalSpacing must be non-negative and finite."
+        }
+        require(verticalSpacing.value.isFinite() && verticalSpacing >= UiDp.Zero) {
+            "Lazy grid verticalSpacing must be non-negative and finite."
+        }
+    }
+}

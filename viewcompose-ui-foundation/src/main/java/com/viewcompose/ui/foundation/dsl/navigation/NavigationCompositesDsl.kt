@@ -2,11 +2,14 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.SemanticsCollectionInfo
+import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.NodeType
@@ -130,21 +133,38 @@ private fun UiTreeBuilder.ProvideAppBarIconColor(
 @UiDslMarker
 class NavigationBarScope internal constructor() {
     private val items = mutableListOf<NavigationBarItem>()
+    private val keys = linkedSetOf<Any>()
 
     /**
-     * Adds one navigation item.
+     * Adds one stable navigation destination.
+     *
+     * [key] owns destination identity across reorder, locale, and label changes. A disabled item
+     * remains visible and accessible but does not invoke the bar selection callback.
+     *
+     * @param key unique logical destination identity
+     * @param label user-visible localized destination label
+     * @param icon drawable resource used while unselected
+     * @param selectedIcon optional drawable resource used while selected
+     * @param badgeCount optional non-negative badge value formatted by the renderer
+     * @param enabled whether this destination accepts selection input
+     * @throws IllegalArgumentException when [key] duplicates another item in this scope
      */
     fun Item(
+        key: Any,
         label: String,
         icon: ImageSource.Resource,
         selectedIcon: ImageSource.Resource? = null,
         badgeCount: Int? = null,
+        enabled: Boolean = true,
     ) {
+        require(keys.add(key)) { "NavigationBar keys must be unique. Duplicate key: $key" }
         items += NavigationBarItem(
+            key = key,
             label = label,
             icon = icon,
             selectedIcon = selectedIcon,
             badgeCount = badgeCount,
+            enabled = enabled,
         )
     }
 
@@ -158,14 +178,19 @@ class NavigationBarScope internal constructor() {
  * synchronously with a requested destination index; the caller publishes accepted state in a
  * later render. Appearance resolves once from instance, scoped, and semantic defaults.
  *
- * @sample com.viewcompose.ui.foundation.samples.componentOverridesSample
+ * Every destination requires a stable key. Selection changes patch only the affected keyed
+ * presentations, and parent/item accessibility metadata uses logical order even when physical
+ * placement follows RTL.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.stableSelectionItemIdentitySample
  * @receiver active tree builder that receives the emitted NavigationBar node
- * @param selectedIndex currently selected destination index
+ * @param selectedIndex currently selected destination index, or `-1` only when the bar is empty
  * @param onItemSelected callback receiving a requested destination index on the renderer thread
  * @param overrides sparse instance appearance applied after scoped [ProvideNavigationBarOverrides]
  * @param key optional stable sibling identity used during reconciliation
  * @param modifier ordered configuration appended after the resolved bar height
- * @param items ordered destination declarations collected synchronously for this render
+ * @param items ordered, explicitly keyed destination declarations collected synchronously
+ * @throws IllegalArgumentException for duplicate keys or an index outside the declared destinations
  */
 fun UiTreeBuilder.NavigationBar(
     selectedIndex: Int,
@@ -204,6 +229,13 @@ fun UiTreeBuilder.NavigationBar(
         modifier = Modifier
             .fillMaxWidth()
             .height(appearance.height)
+            .semantics {
+                collectionInfo = SemanticsCollectionInfo(
+                    rowCount = 1,
+                    columnCount = builtItems.size,
+                    selectionMode = SemanticsCollectionSelectionMode.Single,
+                )
+            }
             .then(modifier),
     )
 }

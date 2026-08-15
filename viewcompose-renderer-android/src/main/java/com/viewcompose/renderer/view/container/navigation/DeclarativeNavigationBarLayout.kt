@@ -15,26 +15,28 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import com.viewcompose.ui.modifier.SemanticsCollectionItemInfo
+import com.viewcompose.ui.modifier.SemanticsConfiguration
+import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.spec.UiFontFamily
 import com.viewcompose.renderer.view.tree.ContentViewBinder
+import com.viewcompose.renderer.view.tree.ModifierSemanticsApplier
 import com.viewcompose.renderer.view.dpToPx
 
 /**
  * Android LinearLayout implementation of NavigationBar.
- * Android LinearLayout implementation for NavigationBar.
  *
  * Caches each item's child Views and separates structural, style, and selection updates to avoid rebuilding the full bar.
- * It caches per-item child view references and separates structural, style, and selection updates to avoid full rebuilds.
  */
 internal class DeclarativeNavigationBarLayout(
     context: Context,
 ) : LinearLayout(context) {
     /**
      * Child View references and last applied visual state for one navigation item.
-     * Child view references and last applied visual state for one navigation item.
      */
     private data class ItemViewRefs(
+        val key: Any,
         val root: LinearLayout,
         val indicator: View,
         val indicatorDrawable: GradientDrawable,
@@ -49,6 +51,7 @@ internal class DeclarativeNavigationBarLayout(
         var badgeCount: Int? = null,
         var badgeColor: Int? = null,
         var badgeTextColor: Int? = null,
+        var rippleColor: Int,
     )
 
     private var items: List<NavigationBarItem> = emptyList()
@@ -108,15 +111,15 @@ internal class DeclarativeNavigationBarLayout(
         } else {
             selectedIndex.coerceIn(0, items.lastIndex)
         }
-        val structureContentChanged = previousItems.size != items.size ||
-            items.indices.any { index ->
-                previousItems[index].label != items[index].label ||
-                    previousItems[index].icon.resId != items[index].icon.resId
-            }
+        require(items.map(NavigationBarItem::key).toSet().size == items.size) {
+            "NavigationBar item keys must be unique."
+        }
+        val structureContentChanged = previousItems.map(NavigationBarItem::key) !=
+            items.map(NavigationBarItem::key)
         val rippleChanged = !styleInitialized || rippleColorState != rippleColor
-        val structureChanged = structureContentChanged || childCount != items.size || rippleChanged
+        val structureChanged = structureContentChanged || childCount != items.size
         if (structureChanged) {
-            rebuild(items, rippleColor)
+            reconcileItems(items, rippleColor)
         }
         val styleChanged = !styleInitialized ||
             selectedIconColorState != selectedIconColor ||
@@ -132,7 +135,8 @@ internal class DeclarativeNavigationBarLayout(
             labelLineHeightPxState != labelLineHeightPx ||
             labelIncludeFontPaddingState != labelIncludeFontPadding ||
             badgeColorState != badgeColor ||
-            badgeTextColorState != badgeTextColor
+            badgeTextColorState != badgeTextColor ||
+            rippleChanged
         val selectionChanged = previousSelectedIndex != resolvedSelectedIndex
         val contentChangedIndices = if (structureChanged) {
             emptySet()
@@ -215,11 +219,13 @@ internal class DeclarativeNavigationBarLayout(
         }
     }
 
-    private fun rebuild(items: List<NavigationBarItem>, rippleColor: Int) {
-        itemRefs.clear()
+    private fun reconcileItems(items: List<NavigationBarItem>, rippleColor: Int) {
+        val existingByKey = itemRefs.associateBy(ItemViewRefs::key)
         removeAllViews()
+        itemRefs.clear()
         items.forEachIndexed { index, item ->
-            val refs = createItemView(index, item, rippleColor)
+            val refs = existingByKey[item.key] ?: createItemView(index, item, rippleColor)
+            refs.root.tag = index
             itemRefs += refs
             addView(refs.root)
         }
@@ -237,21 +243,16 @@ internal class DeclarativeNavigationBarLayout(
             setPadding(0, context.dpToPx(12), 0, context.dpToPx(16))
             isClickable = true
             isFocusable = true
-            background = RippleDrawable(
-                ColorStateList.valueOf(rippleColor),
-                null,
-                GradientDrawable().apply {
-                    shape = GradientDrawable.RECTANGLE
-                    setColor(Color.WHITE)
-                },
-            )
+            tag = index
+            background = createItemRipple(rippleColor)
             setOnClickListener {
-                onItemSelected?.invoke(index)
+                if (isEnabled) {
+                    onItemSelected?.invoke(tag as Int)
+                }
             }
         }
 
         // Icon-layer container stacking the pill indicator, icon, and badge.
-        // Icon layer container for overlaying the pill indicator, icon, and badge.
         val iconContainer = FrameLayout(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 context.dpToPx(INDICATOR_WIDTH),
@@ -262,7 +263,6 @@ internal class DeclarativeNavigationBarLayout(
         }
 
         // Pill-shaped selection indicator drawn behind the icon.
-        // Pill-shaped selected indicator behind the icon.
         val indicatorDrawable = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
         }
@@ -278,7 +278,6 @@ internal class DeclarativeNavigationBarLayout(
         iconContainer.addView(indicator)
 
         // Navigation icon updated incrementally only when its resource or tint changes.
-        // Navigation icon, updated incrementally only when resource or tint changes.
         val iconView = ImageView(context).apply {
             layoutParams = FrameLayout.LayoutParams(
                 context.dpToPx(ICON_SIZE_DEFAULT),
@@ -292,7 +291,6 @@ internal class DeclarativeNavigationBarLayout(
         iconContainer.addView(iconView)
 
         // Optional dot or numeric badge positioned at the icon container's top-right corner.
-        // Optional badge positioned at the top-right of the icon container, supporting dot and numeric modes.
         val badgeDrawable = GradientDrawable()
         val badgeView = TextView(context).apply {
             layoutParams = FrameLayout.LayoutParams(
@@ -312,7 +310,6 @@ internal class DeclarativeNavigationBarLayout(
         itemLayout.addView(iconContainer)
 
         // Text label whose complete typography is reapplied only when needed.
-        // Text label whose full text appearance is reapplied only when needed.
         val label = TextView(context).apply {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -328,6 +325,7 @@ internal class DeclarativeNavigationBarLayout(
         itemLayout.addView(label)
 
         return ItemViewRefs(
+            key = item.key,
             root = itemLayout,
             indicator = indicator,
             indicatorDrawable = indicatorDrawable,
@@ -336,6 +334,7 @@ internal class DeclarativeNavigationBarLayout(
             badgeDrawable = badgeDrawable,
             labelView = label,
             iconResId = item.icon.resId,
+            rippleColor = rippleColor,
         )
     }
 
@@ -442,6 +441,27 @@ internal class DeclarativeNavigationBarLayout(
         val item = items.getOrNull(index) ?: return
         val isSelected = index == selectedIndex
         val refs = itemRefs[index]
+        refs.root.tag = index
+        refs.root.isEnabled = item.enabled
+        if (refs.rippleColor != rippleColorState) {
+            refs.rippleColor = rippleColorState
+            refs.root.background = createItemRipple(rippleColorState)
+        }
+
+        ModifierSemanticsApplier.apply(
+            view = refs.root,
+            semantics = SemanticsConfiguration(
+                contentDescription = item.label,
+                role = SemanticsRole.Tab,
+                collectionItemInfo = SemanticsCollectionItemInfo(
+                    rowIndex = 0,
+                    columnIndex = index,
+                ),
+                selected = isSelected,
+                enabled = item.enabled,
+                mergeDescendants = true,
+            ),
+        )
 
         refs.indicator.apply {
             visibility = if (isSelected) View.VISIBLE else View.INVISIBLE
@@ -571,6 +591,17 @@ internal class DeclarativeNavigationBarLayout(
             }
         }
         return indices
+    }
+
+    private fun createItemRipple(rippleColor: Int): RippleDrawable {
+        return RippleDrawable(
+            ColorStateList.valueOf(rippleColor),
+            null,
+            GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                setColor(Color.WHITE)
+            },
+        )
     }
 
     companion object {

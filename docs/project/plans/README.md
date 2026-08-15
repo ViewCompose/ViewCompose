@@ -27,7 +27,7 @@ This directory contains multi-step work that is currently active and must surviv
   locale-independent automation targets, fixture-first benchmark hosts, complete English and
   Simplified Chinese resources, and optional human guidance before benchmarking Runtime/View patch
   optimizations against a new stable baseline.
-Completed component-appearance, tutorial, language-consistency, migration-sample,
+Completed native-widget, component-appearance, tutorial, language-consistency, migration-sample,
 hosted-documentation, and version-retention plans are retained in the
 [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).
 

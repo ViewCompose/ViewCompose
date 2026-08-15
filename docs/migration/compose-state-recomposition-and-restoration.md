@@ -133,6 +133,8 @@ Do not begin by replacing API names. First decide which lifetime owns each value
 | One committed composition position | `remember` | Use for replaceable in-memory objects and state holders |
 | Composition plus Activity/Fragment recreation | `rememberSaveable` with an installed `SaveableStateRegistry` | Save only the minimum UI state needed to reconstruct the screen |
 | Screen or navigation destination business state | AndroidX `ViewModel` through `viewcompose-viewmodel-androidx` | The `ViewModelStoreOwner`, not the call position, defines lifetime |
+| Mounted eager scroll position | Q3 `ScrollState` | Retain a caller-owned state; it attaches only while one ScrollableColumn/Row backend is mounted |
+| Mounted pager observation and commands | Q3 `PagerState` plus controlled `currentPage` | Keep `currentPage` authoritative; treat `onPageChanged` as a settled-idle event |
 | System-initiated process recreation for ViewModel state | `SavedStateHandle` | Store small reconstruction inputs rather than derived screen models |
 | Durable application data | Repository or database outside composition | Neither `rememberSaveable` nor `SavedStateHandle` is durable storage |
 
@@ -494,6 +496,7 @@ promise saved-instance-state restoration after a user force-stop or explicit rem
 | Standard Android host restoration | **Supported** | Activity/Fragment hosts install the registry automatically | `AndroidHostBridge.kt`; `AndroidSaveableStateRegistry.kt` |
 | Custom-host restoration | **Partially supported** | `renderInto` installs no SavedState services | `RenderInto.kt` |
 | General process-death certification | **Supported** | Real process-kill runners certify ordinary Activity-root and navigation-host state; custom `renderInto` ownership remains manual | Activity-root and navigation process-death runners |
+| Eager scroll and pager snapshots | **Supported** | Connector ownership is mount-scoped; horizontal offsets and page indexes remain logical in RTL | `ScrollState.kt`; `PagerState.kt`; connector and renderer lifecycle tests |
 
 ## Migration checklist and known risks
 
@@ -511,14 +514,16 @@ Before replacing a Compose stateful subtree:
    for side-effect-free state calculations whose collection lifetime is explicitly owned.
 6. Keep unkeyed `remember` call order stable. Use unique stable `key` values when ordinary siblings
    can be inserted, removed, or reordered.
-7. Move all external work into committed effects. Treat an effect failure as a committed-frame
+7. Retain `ScrollState` or `PagerState` at the desired composition position. Do not retain a native
+   connector, and do not use pager callbacks during declarative binding as business events.
+8. Move all external work into committed effects. Treat an effect failure as a committed-frame
    failure that cannot restore the previous native tree.
-8. Prefer automatic `rememberSaveable` keys, keep Saver output small and Bundle-compatible, and
+9. Prefer automatic `rememberSaveable` keys, keep Saver output small and Bundle-compatible, and
    verify input-driven reset behavior.
-9. Preserve claim/commit/release when implementing a custom registry.
-10. Use Activity/Fragment hosts when possible. If using `renderInto`, install lifecycle,
+10. Preserve claim/commit/release when implementing a custom registry.
+11. Use Activity/Fragment hosts when possible. If using `renderInto`, install lifecycle,
     ViewModel, saveable-state, environment, and frame-clock services explicitly.
-11. Test configuration recreation and system-style process death separately; Activity recreation
+12. Test configuration recreation and system-style process death separately; Activity recreation
     alone is insufficient evidence.
 
 Known risks requiring new executable evidence before stronger documentation claims:

@@ -8,6 +8,7 @@ import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.widget.NestedScrollView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -23,6 +24,43 @@ import kotlin.math.abs
 
 @RunWith(AndroidJUnit4::class)
 class DemoVisualUiTest {
+    @Test
+    fun layoutsScroll_verticalDragMovesScrollableColumn() {
+        launchDemoScenarioActivity(
+            LayoutsActivity::class.java,
+            "layout.scroll",
+        ).use { scenario ->
+            waitForUiIdle()
+            var startX = 0
+            var startY = 0
+            var endY = 0
+            scenario.onActivity { activity ->
+                val scrollView = activity.requireViewByTestTag(
+                    DemoTestTags.LAYOUTS_SCROLLABLE_COLUMN,
+                ) as NestedScrollView
+                assertTrue("Expected ScrollableColumn content to overflow", scrollView.canScrollVertically(1))
+                val location = IntArray(2)
+                scrollView.getLocationOnScreen(location)
+                startX = location[0] + scrollView.width / 2
+                startY = location[1] + scrollView.height * 3 / 4
+                endY = location[1] + scrollView.height / 4
+            }
+            androidx.test.uiautomator.UiDevice.getInstance(
+                androidx.test.platform.app.InstrumentationRegistry.getInstrumentation(),
+            ).swipe(startX, startY, startX, endY, 12)
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val scrollView = activity.requireViewByTestTag(
+                    DemoTestTags.LAYOUTS_SCROLLABLE_COLUMN,
+                ) as NestedScrollView
+                assertTrue(
+                    "Expected device swipe from y=$startY to y=$endY to increase ScrollableColumn scrollY",
+                    scrollView.scrollY > 0,
+                )
+            }
+        }
+    }
+
     @Test
     fun layoutsBenchmarkControls_areVisibleAndNotEllipsized() {
         launchDemoScenarioActivity(

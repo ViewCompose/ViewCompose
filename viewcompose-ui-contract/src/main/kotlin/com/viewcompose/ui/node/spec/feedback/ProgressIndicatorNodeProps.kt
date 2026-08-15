@@ -5,7 +5,6 @@ import com.viewcompose.ui.unit.UiDp
 /**
  * Immutable renderer properties for linear or circular progress indicators.
  *
- * @property enabled whether progress animation and enabled semantics are active
  * @property progress determinate progress value, or `null` for indeterminate mode
  * @property indicatorColor active indicator color
  * @property trackColor inactive track color
@@ -13,7 +12,6 @@ import com.viewcompose.ui.unit.UiDp
  * @property indicatorSize requested circular indicator width and height
  */
 data class ProgressIndicatorNodeProps(
-    val enabled: Boolean,
     val progress: Float?,
     val indicatorColor: Int,
     val trackColor: Int,

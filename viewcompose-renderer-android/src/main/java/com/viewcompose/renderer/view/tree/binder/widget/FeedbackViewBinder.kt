@@ -6,13 +6,11 @@ import com.viewcompose.ui.node.spec.ProgressIndicatorNodeProps
 import com.viewcompose.renderer.view.roundToPx
 
 /**
- * Binds progress-feedback nodes and centralizes determinate state, indeterminate state, colors, and visibility.
  * Binds progress feedback nodes and normalizes determinate/indeterminate progress, color, and
  * visibility state.
  */
 internal object FeedbackViewBinder {
     data class ProgressSpec(
-        val enabled: Boolean,
         val progress: Float?,
         val indicatorColor: Int,
         val trackColor: Int,
@@ -25,7 +23,6 @@ internal object FeedbackViewBinder {
         spec: ProgressSpec,
     ) {
         view.bind(
-            enabled = spec.enabled,
             progress = spec.progress,
             indicatorColor = spec.indicatorColor,
             trackColor = spec.trackColor,
@@ -37,7 +34,6 @@ internal object FeedbackViewBinder {
     fun readProgressSpec(node: VNode): ProgressSpec {
         val spec = node.requireSpec<ProgressIndicatorNodeProps>()
         return ProgressSpec(
-            enabled = spec.enabled,
             progress = spec.progress,
             indicatorColor = spec.indicatorColor,
             trackColor = spec.trackColor,

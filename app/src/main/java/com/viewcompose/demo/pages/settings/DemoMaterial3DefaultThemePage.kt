@@ -245,14 +245,17 @@ private fun UiTreeBuilder.Material3DefaultThemeSession(
                     modifier = Modifier.testTag(DemoTestTags.MATERIAL3_DEFAULT_NAVIGATION),
                 ) {
                     Item(
+                        key = "home",
                         label = stringResource(R.string.demo_material3_navigation_home),
                         icon = ImageSource.Resource(R.drawable.demo_media_icon),
                     )
                     Item(
+                        key = "search",
                         label = stringResource(R.string.demo_material3_navigation_search),
                         icon = ImageSource.Resource(R.drawable.demo_media_icon),
                     )
                     Item(
+                        key = "profile",
                         label = stringResource(R.string.demo_material3_navigation_profile),
                         icon = ImageSource.Resource(R.drawable.demo_media_icon),
                     )
@@ -357,9 +360,9 @@ private fun UiTreeBuilder.Material3StateLayerVerification(
             }
         }
         SegmentedControl(
-            items = listOf(
-                stringResource(R.string.demo_material3_segment_selected),
-                stringResource(R.string.demo_material3_segment_other),
+            items = demoSegmentedItems(
+                "selected" to stringResource(R.string.demo_material3_segment_selected),
+                "other" to stringResource(R.string.demo_material3_segment_other),
             ),
             selectedIndex = segmentedIndex,
             onSelectionChange = onSegmentSelected,
@@ -636,14 +639,17 @@ private fun UiTreeBuilder.Material3NamedPressureSlice(
             modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.MATERIAL3_NAMED_NAVIGATION),
         ) {
             Item(
+                key = "home",
                 label = stringResource(R.string.demo_material3_navigation_home),
                 icon = ImageSource.Resource(R.drawable.demo_media_icon),
             )
             Item(
+                key = "search",
                 label = stringResource(R.string.demo_material3_navigation_search),
                 icon = ImageSource.Resource(R.drawable.demo_media_icon),
             )
             Item(
+                key = "profile",
                 label = stringResource(R.string.demo_material3_navigation_profile),
                 icon = ImageSource.Resource(R.drawable.demo_media_icon),
             )

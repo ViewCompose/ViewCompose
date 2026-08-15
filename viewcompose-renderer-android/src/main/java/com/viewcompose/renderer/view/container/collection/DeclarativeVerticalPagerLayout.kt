@@ -13,7 +13,6 @@ import com.viewcompose.renderer.reconcile.LazyListDiff
 import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.session.LazyHolderRegistry
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
-import com.viewcompose.ui.state.PagerConnector
 import com.viewcompose.ui.state.PagerState
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.lazy.reuse.MountedTreeReuseCache
@@ -23,10 +22,8 @@ import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 
 /**
  * Android ViewPager2 host for a vertical pager.
- * Android ViewPager2 host for vertical Pager.
  *
  * Synchronizes page state and applies keyboard focus-follow behavior to the underlying RecyclerView.
- * Besides page state synchronization, it applies keyboard focus-follow policy to the backing RecyclerView.
  */
 internal class DeclarativeVerticalPagerLayout(
     context: Context,
@@ -35,32 +32,12 @@ internal class DeclarativeVerticalPagerLayout(
     private val adapter = VerticalPagerAdapter()
     private var onPageChanged: ((Int) -> Unit)? = null
     private var pagerState: PagerState? = null
-    // Suppress onPageChanged during programmatic selection to avoid bind-to-ViewPager2-to-state feedback.
-    // Temporarily block onPageChanged during programmatic paging to avoid duplicate bind -> ViewPager2 -> state notifications.
-    private var suppressCallback: Boolean = false
     private var focusFollowKeyboardEnabled: Boolean = false
-    private val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
-        override fun onPageSelected(position: Int) {
-            pagerState?.updateFromPager(
-                currentPage = position,
-                pageOffset = 0f,
-            )
-            if (!suppressCallback) {
-                onPageChanged?.invoke(position)
-            }
-        }
-
-        override fun onPageScrolled(
-            position: Int,
-            positionOffset: Float,
-            positionOffsetPixels: Int,
-        ) {
-            pagerState?.updateFromPager(
-                currentPage = position,
-                pageOffset = positionOffset,
-            )
-        }
-    }
+    private val stateCoordinator = PagerStateCoordinator(
+        viewPager = viewPager,
+        pageCount = adapter::getItemCount,
+        onSettledPageChanged = { onPageChanged },
+    )
 
     init {
         viewPager.layoutParams = LayoutParams(
@@ -69,7 +46,7 @@ internal class DeclarativeVerticalPagerLayout(
         )
         viewPager.orientation = ViewPager2.ORIENTATION_VERTICAL
         viewPager.adapter = adapter
-        viewPager.registerOnPageChangeCallback(pageChangeCallback)
+        viewPager.registerOnPageChangeCallback(stateCoordinator.pageChangeCallback)
         applyRecyclerDefaults()
         applyFocusFollowPolicy()
         addView(viewPager)
@@ -102,13 +79,7 @@ internal class DeclarativeVerticalPagerLayout(
             this.pagerState?.attach(null)
         }
         this.pagerState = pagerState
-        pagerState?.attach(
-            object : PagerConnector {
-                override fun scrollToPage(page: Int) {
-                    viewPager.setCurrentItem(page, true)
-                }
-            },
-        )
+        pagerState?.attach(stateCoordinator)
         require(offscreenPageLimit == ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT || offscreenPageLimit >= 1) {
             "offscreenPageLimit must be ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT (-1) or at least 1."
         }
@@ -120,24 +91,17 @@ internal class DeclarativeVerticalPagerLayout(
             if (adapter.submitPages(pages, submission.revision) == PagerSubmissionResult.Rejected) {
                 return@publish
             }
-            if (pages.isEmpty()) return@publish
-            val resolvedPage = currentPage.coerceIn(0, pages.lastIndex)
-            if (viewPager.currentItem != resolvedPage) {
-                suppressCallback = true
-                viewPager.setCurrentItem(resolvedPage, false)
-                suppressCallback = false
+            stateCoordinator.onPageCountChanged()
+            if (pages.isNotEmpty()) {
+                stateCoordinator.applyControlledPage(currentPage)
             }
-            pagerState?.updateFromPager(
-                currentPage = viewPager.currentItem,
-                pageOffset = 0f,
-            )
         }
     }
 
     fun dispose() {
         applyFocusFollowPolicy(enabled = false)
         pagerState?.attach(null)
-        viewPager.unregisterOnPageChangeCallback(pageChangeCallback)
+        viewPager.unregisterOnPageChangeCallback(stateCoordinator.pageChangeCallback)
         adapter.disposeAll()
     }
 
@@ -183,7 +147,6 @@ internal class DeclarativeVerticalPagerLayout(
 
 /**
  * Vertical-pager adapter that preserves session lifecycle during page reuse.
- * Page adapter for vertical Pager, keeping session lifetimes correct across page reuse.
  */
 internal class VerticalPagerAdapter : RecyclerView.Adapter<VerticalPagerViewHolder>() {
     private var pages: List<LazyListItem> = emptyList()

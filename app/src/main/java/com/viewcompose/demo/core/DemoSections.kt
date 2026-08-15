@@ -7,6 +7,7 @@ import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.fillMaxWidth
+import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
@@ -226,12 +227,20 @@ internal fun UiTreeBuilder.ChapterPageFilterSection(
         subtitle = stringResource(R.string.demo_chapter_pages_subtitle),
     ) {
         SegmentedControl(
-            items = pages,
+            items = pages.mapIndexed { index, label ->
+                SegmentedControlItem(key = index, label = label)
+            },
             selectedIndex = selectedIndex,
             onSelectionChange = onSelectionChange,
             modifier = Modifier.fillMaxWidth(),
         )
     }
+}
+
+internal fun demoSegmentedItems(
+    vararg keyedLabels: Pair<Any, String>,
+): List<SegmentedControlItem> = keyedLabels.map { (key, label) ->
+    SegmentedControlItem(key = key, label = label)
 }
 
 internal fun UiTreeBuilder.VerificationNotesSection(

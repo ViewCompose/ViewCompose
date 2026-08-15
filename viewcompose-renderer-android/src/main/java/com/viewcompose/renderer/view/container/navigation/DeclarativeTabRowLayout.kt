@@ -9,6 +9,7 @@ import android.widget.HorizontalScrollView
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
 import com.viewcompose.ui.state.PagerState
+import com.viewcompose.ui.state.PagerStateSnapshot
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
 import com.viewcompose.renderer.view.tree.RetainedSessionSubmission
 
@@ -20,7 +21,7 @@ internal class DeclarativeTabRowLayout(
     private val tabContainer = TabRowContainer(context)
     private var selectedIndex: Int = 0
     private var pagerState: PagerState? = null
-    private var pagerStateListener: ((Int, Float) -> Unit)? = null
+    private var pagerStateListener: ((PagerStateSnapshot) -> Unit)? = null
 
     // Indicator properties.
     private var indicatorColor: Int = 0
@@ -157,16 +158,16 @@ internal class DeclarativeTabRowLayout(
         if (this.pagerState === newState) return
         val existingListener = pagerStateListener
         if (existingListener != null) {
-            this.pagerState?.removeOnPageSnapshotListener(existingListener)
+            this.pagerState?.removeOnSnapshotChangedListener(existingListener)
         }
         pagerStateListener = null
         this.pagerState = newState
         if (newState != null) {
-            val listener: (Int, Float) -> Unit = { page, offset ->
-                tabContainer.updateIndicatorPosition(page, offset)
+            val listener: (PagerStateSnapshot) -> Unit = { snapshot ->
+                tabContainer.updateIndicatorPosition(snapshot.currentPage, snapshot.pageOffset)
             }
             pagerStateListener = listener
-            newState.addOnPageSnapshotListener(listener)
+            newState.addOnSnapshotChangedListener(listener)
             tabContainer.updateIndicatorPosition(newState.currentPage, newState.pageOffset)
         }
     }
@@ -180,7 +181,10 @@ internal class DeclarativeTabRowLayout(
         }
         val child = tabContainer.getChildAt(selectedIndex) ?: return
         val scrollTarget = child.left + child.width / 2 - width / 2
-        val resolvedTarget = scrollTarget.coerceAtLeast(0)
+        val resolvedTarget = scrollTarget.coerceIn(
+            minimumValue = 0,
+            maximumValue = (tabContainer.width - width).coerceAtLeast(0),
+        )
         if (scrollX == resolvedTarget) {
             return
         }
@@ -194,7 +198,7 @@ internal class DeclarativeTabRowLayout(
     fun dispose() {
         val listener = pagerStateListener
         if (listener != null) {
-            pagerState?.removeOnPageSnapshotListener(listener)
+            pagerState?.removeOnSnapshotChangedListener(listener)
         }
         pagerStateListener = null
         pagerState = null
@@ -389,11 +393,20 @@ internal class TabRowContainer(context: Context) : ViewGroup(context) {
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        var left = 0
-        for (i in 0 until childCount) {
-            val child = getChildAt(i)
-            child.layout(left, 0, left + child.measuredWidth, child.measuredHeight)
-            left += child.measuredWidth + itemSpacingPx
+        if (layoutDirection == LAYOUT_DIRECTION_RTL) {
+            var right = r - l
+            for (i in 0 until childCount) {
+                val child = getChildAt(i)
+                child.layout(right - child.measuredWidth, 0, right, child.measuredHeight)
+                right -= child.measuredWidth + itemSpacingPx
+            }
+        } else {
+            var left = 0
+            for (i in 0 until childCount) {
+                val child = getChildAt(i)
+                child.layout(left, 0, left + child.measuredWidth, child.measuredHeight)
+                left += child.measuredWidth + itemSpacingPx
+            }
         }
         if (childCount > 0) {
             // Recalculate from final child bounds so the first frame has a valid indicator.

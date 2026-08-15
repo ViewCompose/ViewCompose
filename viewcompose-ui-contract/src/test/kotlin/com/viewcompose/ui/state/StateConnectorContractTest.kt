@@ -1,16 +1,107 @@
 package com.viewcompose.ui.state
 
-/*
- * 测试职责：覆盖 UI contract 中的 State Connector Contract 行为，防止关键契约在后续重构中回退。
- * Test responsibility: covers State Connector Contract behavior in UI contract and guards the contract against regressions.
- */
-
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StateConnectorContractTest {
+    @Test
+    fun `scroll state retains immediate commands and ignores detached animation`() {
+        val state = ScrollState(initialValue = 12)
+        val commands = mutableListOf<Pair<Int, Boolean>>()
+        var listener: ((ScrollStateSnapshot) -> Unit)? = null
+        val recordingConnector = object : ScrollConnector {
+            override fun scrollTo(value: Int, animated: Boolean) {
+                commands += value to animated
+            }
+
+            override fun setOnSnapshotChangedListener(next: ((ScrollStateSnapshot) -> Unit)?) {
+                listener = next
+            }
+        }
+
+        state.scrollTo(24)
+        state.animateScrollTo(30)
+        state.attach(recordingConnector)
+        state.animateScrollTo(40)
+        listener?.invoke(scrollSnapshot(value = 40, maximum = 100, scrolling = true))
+        state.attach(null)
+        state.scrollTo(60)
+
+        assertEquals(listOf(24 to false, 40 to true), commands)
+        assertEquals(60, state.value)
+        assertEquals(null, listener)
+    }
+
+    @Test
+    fun `scroll state replacement with same native identity does not reset offset`() {
+        val identity = Any()
+        val state = ScrollState(initialValue = 18)
+        val commands = mutableListOf<Int>()
+
+        fun connector() = object : ScrollConnector {
+            override val identity: Any = identity
+
+            override fun scrollTo(value: Int, animated: Boolean) {
+                commands += value
+            }
+        }
+
+        state.attach(connector())
+        state.attach(connector())
+
+        assertEquals(listOf(18), commands)
+    }
+
+    @Test
+    fun `scroll state publishes distinct complete snapshots`() {
+        val state = ScrollState()
+        var listener: ((ScrollStateSnapshot) -> Unit)? = null
+        val connector = object : ScrollConnector {
+            override fun scrollTo(value: Int, animated: Boolean) = Unit
+
+            override fun setOnSnapshotChangedListener(next: ((ScrollStateSnapshot) -> Unit)?) {
+                listener = next
+            }
+        }
+        val observed = mutableListOf<ScrollStateSnapshot>()
+        state.addOnSnapshotChangedListener(observed::add)
+        state.attach(connector)
+        val snapshot = scrollSnapshot(value = 20, maximum = 80, scrolling = true)
+
+        listener?.invoke(snapshot)
+        listener?.invoke(snapshot)
+
+        assertEquals(listOf(snapshot), observed)
+        assertEquals(80, state.maxValue)
+        assertEquals(40, state.viewportSize)
+        assertTrue(state.lastScrolledForward)
+    }
+
+    @Test
+    fun `scrolling to the current value preserves direction and does not notify again`() {
+        val state = ScrollState()
+        var listener: ((ScrollStateSnapshot) -> Unit)? = null
+        val connector = object : ScrollConnector {
+            override fun scrollTo(value: Int, animated: Boolean) = Unit
+
+            override fun setOnSnapshotChangedListener(next: ((ScrollStateSnapshot) -> Unit)?) {
+                listener = next
+            }
+        }
+        val observed = mutableListOf<ScrollStateSnapshot>()
+        state.addOnSnapshotChangedListener(observed::add)
+        state.attach(connector)
+        listener?.invoke(scrollSnapshot(value = 20, maximum = 80, scrolling = false))
+
+        state.scrollTo(20)
+
+        assertEquals(1, observed.size)
+        assertTrue(state.lastScrolledForward)
+        assertFalse(state.lastScrolledBackward)
+    }
+
     @Test
     fun `lazy list state routes scroll commands and stop to attached connector`() {
         val state = LazyListState(
@@ -128,28 +219,46 @@ class StateConnectorContractTest {
     }
 
     @Test
-    fun `pager state notifies listeners and delegates scroll command`() {
+    fun `pager state publishes snapshots and distinguishes immediate and animated commands`() {
         val state = PagerState()
-        val pageSnapshots = mutableListOf<Pair<Int, Float>>()
-        var scrollTarget = -1
+        val pageSnapshots = mutableListOf<PagerStateSnapshot>()
+        val scrollTargets = mutableListOf<Pair<Int, Boolean>>()
+        var platformListener: ((PagerStateSnapshot) -> Unit)? = null
         val connector = object : PagerConnector {
-            override fun scrollToPage(page: Int) {
-                scrollTarget = page
+            override fun scrollToPage(page: Int, animated: Boolean) {
+                scrollTargets += page to animated
+            }
+
+            override fun setOnSnapshotChangedListener(listener: ((PagerStateSnapshot) -> Unit)?) {
+                platformListener = listener
             }
         }
 
-        state.addOnPageSnapshotListener { page, offset ->
-            pageSnapshots += page to offset
-        }
+        state.addOnSnapshotChangedListener { snapshot -> pageSnapshots += snapshot }
         state.attach(connector)
         state.scrollToPage(7)
-        state.updateFromPager(currentPage = 2, pageOffset = 0.25f)
-        state.updateFromPager(currentPage = 2, pageOffset = 0.25f)
+        state.animateScrollToPage(8)
+        val snapshot = PagerStateSnapshot(
+            currentPage = 2,
+            settledPage = 1,
+            targetPage = 3,
+            pageOffset = 0.25f,
+            pageCount = 10,
+            isScrollInProgress = true,
+            canScrollBackward = true,
+            canScrollForward = true,
+        )
+        platformListener?.invoke(snapshot)
+        platformListener?.invoke(snapshot)
+        state.attach(null)
 
-        assertEquals(7, scrollTarget)
-        assertEquals(1, pageSnapshots.size)
-        assertEquals(2, pageSnapshots.single().first)
-        assertTrue(pageSnapshots.single().second == 0.25f)
+        assertEquals(listOf(7 to false, 8 to true), scrollTargets)
+        assertEquals(listOf(snapshot), pageSnapshots)
+        assertEquals(2, state.currentPage)
+        assertEquals(1, state.settledPage)
+        assertEquals(3, state.targetPage)
+        assertTrue(state.isScrollInProgress)
+        assertEquals(null, platformListener)
     }
 
     private fun snapshot(
@@ -193,4 +302,19 @@ class StateConnectorContractTest {
             lastScrolledForward = true,
         )
     }
+
+    private fun scrollSnapshot(
+        value: Int,
+        maximum: Int,
+        scrolling: Boolean,
+    ): ScrollStateSnapshot = ScrollStateSnapshot(
+        value = value,
+        maxValue = maximum,
+        viewportSize = 40,
+        isScrollInProgress = scrolling,
+        canScrollBackward = value > 0,
+        canScrollForward = value < maximum,
+        lastScrolledBackward = false,
+        lastScrolledForward = true,
+    )
 }

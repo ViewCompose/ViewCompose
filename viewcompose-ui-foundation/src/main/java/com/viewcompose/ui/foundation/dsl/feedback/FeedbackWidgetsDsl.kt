@@ -33,7 +33,6 @@ fun UiTreeBuilder.LinearProgressIndicator(
         type = NodeType.LinearProgressIndicator,
         key = key,
         spec = ProgressIndicatorNodeProps(
-            enabled = true,
             progress = progress,
             indicatorColor = appearance.indicatorColor,
             trackColor = appearance.trackColor,
@@ -71,7 +70,6 @@ fun UiTreeBuilder.CircularProgressIndicator(
         type = NodeType.CircularProgressIndicator,
         key = key,
         spec = ProgressIndicatorNodeProps(
-            enabled = true,
             progress = progress,
             indicatorColor = appearance.indicatorColor,
             trackColor = appearance.trackColor,

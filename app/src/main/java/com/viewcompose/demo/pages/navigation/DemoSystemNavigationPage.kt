@@ -148,14 +148,17 @@ private fun UiTreeBuilder.SystemNavigationSession(
                     .scenarioTarget(scenario, DemoAutomationRole.Ready),
             ) {
                 Item(
+                    key = "home",
                     label = stringResource(R.string.demo_system_nav_stack_home),
                     icon = ImageSource.Resource(R.drawable.demo_media_icon),
                 )
                 Item(
+                    key = "discover",
                     label = stringResource(R.string.demo_system_nav_stack_discover),
                     icon = ImageSource.Resource(R.drawable.demo_media_icon),
                 )
                 Item(
+                    key = "account",
                     label = stringResource(R.string.demo_system_nav_stack_account),
                     icon = ImageSource.Resource(R.drawable.demo_media_icon),
                 )

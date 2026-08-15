@@ -207,14 +207,17 @@ private fun UiTreeBuilder.NavigationBarFixture(
                     ),
                 ) {
                     Item(
+                        key = "home",
                         label = stringResource(R.string.demo_navigation_bar_home),
                         icon = ImageSource.Resource(R.drawable.demo_media_icon),
                     )
                     Item(
+                        key = "search",
                         label = stringResource(R.string.demo_navigation_bar_search),
                         icon = ImageSource.Resource(R.drawable.demo_media_icon),
                     )
                     Item(
+                        key = "messages",
                         label = stringResource(R.string.demo_navigation_bar_messages),
                         icon = ImageSource.Resource(R.drawable.demo_media_icon),
                         badgeCount = 3,
@@ -255,15 +258,18 @@ private fun UiTreeBuilder.NavigationBarVariants(
             ),
         ) {
             Item(
+                key = "feed",
                 label = stringResource(R.string.demo_navigation_bar_feed),
                 icon = ImageSource.Resource(R.drawable.demo_media_icon),
             )
             Item(
+                key = "discover",
                 label = stringResource(R.string.demo_navigation_bar_discover),
                 icon = ImageSource.Resource(R.drawable.demo_media_icon),
                 badgeCount = 12,
             )
             Item(
+                key = "notifications",
                 label = stringResource(R.string.demo_navigation_bar_notifications),
                 icon = ImageSource.Resource(R.drawable.demo_media_icon),
             )
@@ -307,15 +313,18 @@ private fun UiTreeBuilder.NavigationScaffoldFixture(
                         onItemSelected = { selectedIndex.value = it },
                     ) {
                         Item(
+                            key = "home",
                             label = stringResource(R.string.demo_navigation_bar_home),
                             icon = ImageSource.Resource(R.drawable.demo_media_icon),
                         )
                         Item(
+                            key = "messages",
                             label = stringResource(R.string.demo_navigation_bar_messages),
                             icon = ImageSource.Resource(R.drawable.demo_media_icon),
                             badgeCount = 5,
                         )
                         Item(
+                            key = "profile",
                             label = stringResource(R.string.demo_navigation_bar_profile),
                             icon = ImageSource.Resource(R.drawable.demo_media_icon),
                         )

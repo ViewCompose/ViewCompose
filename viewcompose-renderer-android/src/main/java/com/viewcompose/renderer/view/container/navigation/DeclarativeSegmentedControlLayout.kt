@@ -11,23 +11,26 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.viewcompose.renderer.view.shape.UiShapeDrawable
+import com.viewcompose.renderer.view.tree.ContentViewBinder
+import com.viewcompose.renderer.view.tree.ModifierSemanticsApplier
+import com.viewcompose.renderer.view.tree.interactionColorStateList
+import com.viewcompose.ui.modifier.SemanticsCollectionItemInfo
+import com.viewcompose.ui.modifier.SemanticsConfiguration
+import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.UiFontFamily
 import com.viewcompose.ui.shape.UiShape
-import com.viewcompose.renderer.view.tree.ContentViewBinder
-import com.viewcompose.renderer.view.tree.interactionColorStateList
-import java.util.IdentityHashMap
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.dp
+import java.util.IdentityHashMap
 
 /**
  * Android LinearLayout implementation of SegmentedControl.
- * Android LinearLayout implementation for SegmentedControl.
  *
- * Uses one TextView per segment and caches backgrounds so selection updates change only the indicator.
- * Each segment is a TextView, and background wrappers are cached so only the selected indicator is updated.
+ * Uses one TextView per segment and caches backgrounds so selection updates change only the
+ * indicator.
  */
 internal class DeclarativeSegmentedControlLayout(
     context: Context,
@@ -54,10 +57,10 @@ internal class DeclarativeSegmentedControlLayout(
     private var paddingHorizontalState: Int = 0
     private var paddingVerticalState: Int = 0
     private var densityState: UiDensity = UiDensity.Default
+    private var layoutDirectionState: Int = layoutDirection
     private val indicatorInset = 2.dp
-    private val containerBackground = UiShapeDrawable(shapeState, layoutDirection, densityState)
+    private var containerBackground = UiShapeDrawable(shapeState, layoutDirection, densityState)
     // Identity mapping prevents equal TextView labels from accidentally sharing background state.
-    // Identity mapping avoids sharing background state between TextViews that happen to have equal content.
     private val segmentBackgrounds = IdentityHashMap<TextView, SegmentBackground>()
 
     init {
@@ -91,15 +94,14 @@ internal class DeclarativeSegmentedControlLayout(
         density: UiDensity,
     ) {
         this.onSelectionChange = onSelectionChange
-        if (background !== containerBackground) {
-            background = containerBackground
+        require(items.map(SegmentedControlItem::key).toSet().size == items.size) {
+            "SegmentedControl item keys must be unique."
         }
-        // Label or count changes rebuild children; style-only and selection changes update incrementally.
-        // Label or count changes rebuild child views; pure style and selection changes use incremental updates.
-        val labelsChanged = this.items.size != items.size ||
-            items.indices.any { index -> this.items[index].label != items[index].label }
-        if (labelsChanged || childCount != items.size) {
-            rebuild(items)
+        val structureChanged = this.items.map(SegmentedControlItem::key) !=
+            items.map(SegmentedControlItem::key) || childCount != items.size
+        val contentChanged = this.items != items
+        if (structureChanged) {
+            reconcileItems(items)
         }
 
         val resolvedSelectedIndex = if (items.isEmpty()) {
@@ -126,12 +128,22 @@ internal class DeclarativeSegmentedControlLayout(
             includeFontPaddingState != includeFontPadding ||
             paddingHorizontalState != paddingHorizontal ||
             paddingVerticalState != paddingVertical ||
-            densityState != density
+            densityState != density ||
+            layoutDirectionState != layoutDirection
 
-        if (!styleInitialized || backgroundColorState != backgroundColor) {
+        val shapeEnvironmentChanged = densityState != density ||
+            layoutDirectionState != layoutDirection
+        if (shapeEnvironmentChanged) {
+            containerBackground = UiShapeDrawable(shape, layoutDirection, density)
+            background = containerBackground
+        } else if (background !== containerBackground) {
+            background = containerBackground
+        }
+
+        if (shapeEnvironmentChanged || !styleInitialized || backgroundColorState != backgroundColor) {
             containerBackground.setFillColor(backgroundColor)
         }
-        if (!styleInitialized || shapeState != shape) {
+        if (!shapeEnvironmentChanged && (!styleInitialized || shapeState != shape)) {
             containerBackground.setShape(shape)
         }
 
@@ -156,10 +168,11 @@ internal class DeclarativeSegmentedControlLayout(
         paddingHorizontalState = paddingHorizontal
         paddingVerticalState = paddingVertical
         densityState = density
+        layoutDirectionState = layoutDirection
         styleInitialized = true
 
         when {
-            labelsChanged || styleChanged -> updateChildren(
+            structureChanged || contentChanged || styleChanged -> updateChildren(
                 enabled = enabled,
                 indicatorColor = indicatorColor,
                 shape = shape,
@@ -188,24 +201,29 @@ internal class DeclarativeSegmentedControlLayout(
         }
     }
 
-    private fun rebuild(items: List<SegmentedControlItem>) {
-        removeAllViews()
-        segmentBackgrounds.clear()
-        items.forEachIndexed { index, _ ->
-            addView(
-                TextView(context).apply {
-                    gravity = Gravity.CENTER
-                    ellipsize = TextUtils.TruncateAt.END
-                    maxLines = 1
-                    layoutParams = LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
-                    setOnClickListener {
-                        if (isEnabled) {
-                            onSelectionChange?.invoke(index)
-                        }
-                    }
-                },
-            )
+    private fun reconcileItems(items: List<SegmentedControlItem>) {
+        val existingByKey = this.items.indices.associate { index ->
+            this.items[index].key to (getChildAt(index) as TextView)
         }
+        removeAllViews()
+        val retainedViews = linkedSetOf<TextView>()
+        items.forEachIndexed { index, item ->
+            val child = existingByKey[item.key] ?: TextView(context).apply {
+                gravity = Gravity.CENTER
+                ellipsize = TextUtils.TruncateAt.END
+                maxLines = 1
+                layoutParams = LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+                setOnClickListener {
+                    if (isEnabled) {
+                        onSelectionChange?.invoke(tag as Int)
+                    }
+                }
+            }
+            child.tag = index
+            retainedViews += child
+            addView(child)
+        }
+        segmentBackgrounds.keys.retainAll(retainedViews)
     }
 
     private fun updateChildren(
@@ -231,8 +249,10 @@ internal class DeclarativeSegmentedControlLayout(
             val child = getChildAt(index) as? TextView ?: continue
             val item = items.getOrNull(index) ?: continue
             val isSelected = index == selectedIndex
+            val itemEnabled = enabled && item.enabled
+            child.tag = index
             child.text = item.label
-            child.isEnabled = enabled
+            child.isEnabled = itemEnabled
             ContentViewBinder.applyTextAppearance(
                 view = child,
                 textColor = if (isSelected) selectedTextColor else textColor,
@@ -257,7 +277,7 @@ internal class DeclarativeSegmentedControlLayout(
                 child.layoutParams = childParams
             }
             val segmentBackground = createSegmentBackground(
-                enabled = enabled,
+                enabled = itemEnabled,
                 selected = isSelected,
                 indicatorColor = indicatorColor,
                 rippleColor = rippleColor,
@@ -271,6 +291,7 @@ internal class DeclarativeSegmentedControlLayout(
             segmentBackgrounds[child] = segmentBackground
             child.background = segmentBackground.drawable
             child.isSelected = isSelected
+            applyItemSemantics(child, index, isSelected, itemEnabled)
         }
     }
 
@@ -309,6 +330,7 @@ internal class DeclarativeSegmentedControlLayout(
         if (index !in 0 until childCount) return
         val child = getChildAt(index) as? TextView ?: return
         val isSelected = index == nextSelectedIndex
+        val itemEnabled = enabledState && items.getOrNull(index)?.enabled == true
         val resolvedTextColor = if (isSelected) selectedTextColor else textColor
         if (child.currentTextColor != resolvedTextColor) {
             child.setTextColor(resolvedTextColor)
@@ -316,7 +338,7 @@ internal class DeclarativeSegmentedControlLayout(
         val stateRolesDiffer = selectedStateLayerColorsState != unselectedStateLayerColorsState
         if (stateRolesDiffer) {
             val segmentBackground = createSegmentBackground(
-                enabled = enabledState,
+                enabled = itemEnabled,
                 selected = isSelected,
                 indicatorColor = indicatorColor,
                 rippleColor = rippleColorState,
@@ -332,7 +354,7 @@ internal class DeclarativeSegmentedControlLayout(
         } else {
             val segmentBackground = segmentBackgrounds[child]
                 ?: createSegmentBackground(
-                    enabled = enabledState,
+                    enabled = itemEnabled,
                     selected = isSelected,
                     indicatorColor = indicatorColor,
                     rippleColor = rippleColorState,
@@ -348,6 +370,27 @@ internal class DeclarativeSegmentedControlLayout(
             )
         }
         child.isSelected = isSelected
+        applyItemSemantics(child, index, isSelected, itemEnabled)
+    }
+
+    private fun applyItemSemantics(
+        child: TextView,
+        index: Int,
+        selected: Boolean,
+        enabled: Boolean,
+    ) {
+        ModifierSemanticsApplier.apply(
+            view = child,
+            semantics = SemanticsConfiguration(
+                role = SemanticsRole.Tab,
+                collectionItemInfo = SemanticsCollectionItemInfo(
+                    rowIndex = 0,
+                    columnIndex = index,
+                ),
+                selected = selected,
+                enabled = enabled,
+            ),
+        )
     }
 
     private fun createSegmentBackground(

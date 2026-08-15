@@ -34,7 +34,6 @@ internal class DeclarativeProgressIndicatorView(
     }
 
     fun bind(
-        enabled: Boolean,
         progress: Float?,
         indicatorColor: Int,
         trackColor: Int,
@@ -42,7 +41,6 @@ internal class DeclarativeProgressIndicatorView(
         indicatorSize: Int,
     ) {
         hasSpec = true
-        isEnabled = enabled
         progressState = progress?.coerceIn(0f, 1f)
         indicatorPaint.color = indicatorColor
         trackPaint.color = trackColor

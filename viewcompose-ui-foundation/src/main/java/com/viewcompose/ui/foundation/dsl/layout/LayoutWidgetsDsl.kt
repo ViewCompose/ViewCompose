@@ -27,6 +27,7 @@ import com.viewcompose.ui.node.spec.ScrollableRowNodeProps
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.state.ScrollState
 
 /**
  * Emits a Box container node.
@@ -314,13 +315,32 @@ fun UiTreeBuilder.Column(
 }
 
 /**
- * Emits a vertically scrollable Column node.
+ * Emits a vertically scrolling container whose complete child tree remains mounted.
+ *
+ * [state] observes pixel offsets in the first-party Android renderer and accepts immediate or
+ * animated commands. Setting [userScrollEnabled] to `false` disables direct pointer scrolling but
+ * does not disable descendants, focus-follow behavior, or [state] commands. Prefer [LazyColumn]
+ * for large or unbounded collections.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.eagerScrollStateSample
+ * @receiver active tree builder receiving the scroll container
+ * @param key optional stable sibling identity used during reconciliation
+ * @param spacing fixed gap between adjacent eager children
+ * @param arrangement main-axis placement when content is smaller than the viewport
+ * @param horizontalAlignment default cross-axis child alignment
+ * @param state optional caller-owned observable position and command state
+ * @param userScrollEnabled whether direct user scrolling is accepted
+ * @param focusFollowKeyboard whether keyboard focus may bring a descendant into view
+ * @param modifier ordered configuration applied to the scroll container root
+ * @param content eager column content retained while the node is mounted
  */
 fun UiTreeBuilder.ScrollableColumn(
     key: Any? = null,
     spacing: UiDp = UiDp.Zero,
     arrangement: MainAxisArrangement = MainAxisArrangement.Start,
     horizontalAlignment: HorizontalAlignment = HorizontalAlignment.Start,
+    state: ScrollState? = null,
+    userScrollEnabled: Boolean = true,
     focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
     content: ColumnScope.() -> Unit,
@@ -332,6 +352,8 @@ fun UiTreeBuilder.ScrollableColumn(
             spacing = spacing,
             arrangement = arrangement,
             horizontalAlignment = horizontalAlignment,
+            state = state,
+            userScrollEnabled = userScrollEnabled,
             focusFollowKeyboard = focusFollowKeyboard,
         ),
         modifier = modifier,
@@ -340,13 +362,30 @@ fun UiTreeBuilder.ScrollableColumn(
 }
 
 /**
- * Emits a horizontally scrollable Row node.
+ * Emits a horizontally scrolling container whose complete child tree remains mounted.
+ *
+ * [state] offsets are measured from logical start, including in RTL. Disabling
+ * [userScrollEnabled] affects only direct scrolling; descendants and state commands remain active.
+ * Prefer [LazyRow] for large or unbounded collections.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.eagerScrollStateSample
+ * @receiver active tree builder receiving the scroll container
+ * @param key optional stable sibling identity used during reconciliation
+ * @param spacing fixed gap between adjacent eager children
+ * @param arrangement main-axis placement when content is smaller than the viewport
+ * @param verticalAlignment default cross-axis child alignment
+ * @param state optional caller-owned observable position and command state
+ * @param userScrollEnabled whether direct user scrolling is accepted
+ * @param modifier ordered configuration applied to the scroll container root
+ * @param content eager row content retained while the node is mounted
  */
 fun UiTreeBuilder.ScrollableRow(
     key: Any? = null,
     spacing: UiDp = UiDp.Zero,
     arrangement: MainAxisArrangement = MainAxisArrangement.Start,
     verticalAlignment: VerticalAlignment = VerticalAlignment.Top,
+    state: ScrollState? = null,
+    userScrollEnabled: Boolean = true,
     modifier: Modifier = Modifier,
     content: RowScope.() -> Unit,
 ) {
@@ -357,6 +396,8 @@ fun UiTreeBuilder.ScrollableRow(
             spacing = spacing,
             arrangement = arrangement,
             verticalAlignment = verticalAlignment,
+            state = state,
+            userScrollEnabled = userScrollEnabled,
         ),
         modifier = modifier,
         children = RowScope().apply(content).build(),
@@ -412,11 +453,26 @@ fun UiTreeBuilder.FlowColumn(
 }
 
 /**
- * Emits a pull-to-refresh container whose content is limited to ScrollableScope.
+ * Emits a controlled pull-to-refresh container around one scrollable-content scope.
+ *
+ * [isRefreshing] is caller-owned. An enabled native pull gesture invokes [onRefresh] once after its
+ * threshold is crossed; the caller updates [isRefreshing] in a later render. Setting [enabled] to
+ * `false` disables only refresh interception, leaving descendant scrolling and input enabled.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.pullToRefreshEnablementSample
+ * @receiver active tree builder receiving the refresh container
+ * @param isRefreshing whether the refresh indicator is currently active
+ * @param onRefresh callback invoked synchronously for an accepted refresh request
+ * @param enabled whether the container may intercept a pull as refresh input
+ * @param indicatorColor resolved refresh-indicator ARGB color
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration applied to the refresh root
+ * @param content scrollable child content built synchronously
  */
 fun UiTreeBuilder.PullToRefresh(
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
+    enabled: Boolean = true,
     indicatorColor: Int = PullToRefreshDefaults.indicatorColor(),
     key: Any? = null,
     modifier: Modifier = Modifier,
@@ -428,6 +484,7 @@ fun UiTreeBuilder.PullToRefresh(
         spec = PullToRefreshNodeProps(
             isRefreshing = isRefreshing,
             onRefresh = onRefresh,
+            enabled = enabled,
             indicatorColor = indicatorColor,
         ),
         modifier = modifier,

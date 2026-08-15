@@ -410,9 +410,9 @@ class ExperimentalComponentRecipesTest {
 
     private fun navigationItems(): List<NavigationBarItem> {
         return listOf(
-            NavigationBarItem(label = "Home", icon = ImageSource.Resource(1)),
-            NavigationBarItem(label = "Search", icon = ImageSource.Resource(2)),
-            NavigationBarItem(label = "Profile", icon = ImageSource.Resource(3)),
+            NavigationBarItem(key = "home", label = "Home", icon = ImageSource.Resource(1)),
+            NavigationBarItem(key = "search", label = "Search", icon = ImageSource.Resource(2)),
+            NavigationBarItem(key = "profile", label = "Profile", icon = ImageSource.Resource(3)),
         )
     }
 

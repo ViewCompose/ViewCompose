@@ -2,28 +2,35 @@ package com.viewcompose.renderer.view.tree.patch
 
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
 import com.viewcompose.renderer.view.container.DeclarativeFlowColumnLayout
 import com.viewcompose.renderer.view.container.DeclarativeFlowRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeHorizontalPagerLayout
 import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
+import com.viewcompose.renderer.view.container.DeclarativeLayoutConstraintHost
 import com.viewcompose.renderer.view.container.DeclarativeLinearLayout
 import com.viewcompose.renderer.view.container.DeclarativeNavigationBarLayout
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.viewcompose.renderer.view.container.DeclarativeScrollableColumnLayout
 import com.viewcompose.renderer.view.container.DeclarativeScrollableRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeSegmentedControlLayout
 import com.viewcompose.renderer.view.container.DeclarativeTabRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeVerticalPagerLayout
-import com.viewcompose.renderer.view.tree.BoxNodePatch
+import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
+import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
+import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
+import com.viewcompose.renderer.view.lazy.focus.ScrollableFocusFollowLayoutMonitor
+import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.tree.AnimatedSizeHostNodePatch
 import com.viewcompose.renderer.view.tree.AnimatedVisibilityHostNodePatch
+import com.viewcompose.renderer.view.tree.BoxNodePatch
 import com.viewcompose.renderer.view.tree.CollectionViewBinder
 import com.viewcompose.renderer.view.tree.ColumnNodePatch
 import com.viewcompose.renderer.view.tree.ContainerViewBinder
+import com.viewcompose.renderer.view.tree.ContainerViewSpecReader
 import com.viewcompose.renderer.view.tree.ConstraintLayoutNodePatch
 import com.viewcompose.renderer.view.tree.FlowColumnNodePatch
 import com.viewcompose.renderer.view.tree.FlowRowNodePatch
@@ -31,36 +38,26 @@ import com.viewcompose.renderer.view.tree.HorizontalPagerNodePatch
 import com.viewcompose.renderer.view.tree.LazyColumnNodePatch
 import com.viewcompose.renderer.view.tree.LazyRowNodePatch
 import com.viewcompose.renderer.view.tree.LazyVerticalGridNodePatch
+import com.viewcompose.renderer.view.tree.LayoutConstraintHostNodePatch
 import com.viewcompose.renderer.view.tree.NavigationBarNodePatch
-import com.viewcompose.renderer.view.tree.RetainedSessionSubmission
 import com.viewcompose.renderer.view.tree.PagerViewBinder
 import com.viewcompose.renderer.view.tree.PullToRefreshNodePatch
+import com.viewcompose.renderer.view.tree.RetainedSessionSubmission
 import com.viewcompose.renderer.view.tree.RowNodePatch
 import com.viewcompose.renderer.view.tree.ScrollableColumnNodePatch
 import com.viewcompose.renderer.view.tree.ScrollableRowNodePatch
+import com.viewcompose.renderer.view.tree.ScrollableViewBinder
 import com.viewcompose.renderer.view.tree.SegmentedControlNodePatch
 import com.viewcompose.renderer.view.tree.TabRowNodePatch
-import com.viewcompose.renderer.view.tree.ContainerViewSpecReader
 import com.viewcompose.renderer.view.tree.VerticalPagerNodePatch
-import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
-import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
-import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
-import com.viewcompose.renderer.view.lazy.focus.ScrollableFocusFollowLayoutMonitor
-import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.requireUiEnvironment
 import com.viewcompose.renderer.view.resolvePadding
 import com.viewcompose.renderer.view.roundToPx
 import com.viewcompose.renderer.view.toPx
 
-/**
- * Targeted patch applier for container, collection, and navigation nodes.
- * Fine-grained patch applier for container, collection, and navigation nodes.
- */
+/** Fine-grained patch applier for container, collection, and navigation nodes. */
 internal object ContainerNodePatchApplier {
-    /**
-     * Updates Row spacing, main-axis arrangement, and cross-axis alignment.
-     * Updates Row spacing, main-axis arrangement, and cross-axis alignment.
-     */
+    /** Updates Row spacing, main-axis arrangement, and cross-axis alignment. */
     fun applyRowPatch(
         view: DeclarativeLinearLayout,
         patch: RowNodePatch,
@@ -105,7 +102,6 @@ internal object ContainerNodePatchApplier {
     ) {
         val previous = patch.previous
         val next = patch.next
-        val environment = view.requireUiEnvironment()
         if (previous.contentAlignment != next.contentAlignment) {
             with(ContainerViewSpecReader) {
                 view.contentGravity = next.contentAlignment.toGravity()
@@ -153,10 +149,25 @@ internal object ContainerNodePatchApplier {
         )
     }
 
-    /**
-     * Updates lazy-column RecyclerView policy, padding, spacing, items, and state connection.
-     * Updates lazy column RecyclerView policies, padding, spacing, items, and state connection.
-     */
+    fun applyLayoutConstraintHostPatch(
+        view: DeclarativeLayoutConstraintHost,
+        patch: LayoutConstraintHostNodePatch,
+    ) {
+        val environment = view.requireUiEnvironment()
+        ContainerViewBinder.bindLayoutConstraintHost(
+            view = view,
+            spec = ContainerViewBinder.LayoutConstraintHostSpec(
+                maxWidthPx = patch.next.maxWidth?.let(environment::roundToPx),
+                maxHeightPx = patch.next.maxHeight?.let(environment::roundToPx),
+                aspectRatio = patch.next.aspectRatio,
+                matchHeightConstraintsFirst = patch.next.matchHeightConstraintsFirst,
+                fillWidth = patch.next.fillWidth,
+                fillHeight = patch.next.fillHeight,
+            ),
+        )
+    }
+
+    /** Updates lazy-column RecyclerView policies, padding, items, and state connection. */
     fun applyLazyColumnPatch(
         view: RecyclerView,
         patch: LazyColumnNodePatch,
@@ -351,6 +362,9 @@ internal object ContainerNodePatchApplier {
                 enabled = next.focusFollowKeyboard,
             )
         }
+        if (previous.state !== next.state || previous.userScrollEnabled != next.userScrollEnabled) {
+            view.bindScrollState(next.state, next.userScrollEnabled)
+        }
     }
 
     fun applyScrollableRowPatch(
@@ -369,6 +383,9 @@ internal object ContainerNodePatchApplier {
             with(ContainerViewSpecReader) {
                 view.innerLayout.gravity = next.verticalAlignment.toGravity()
             }
+        }
+        if (previous.state !== next.state || previous.userScrollEnabled != next.userScrollEnabled) {
+            view.bindScrollState(next.state, next.userScrollEnabled)
         }
     }
 
@@ -521,7 +538,9 @@ internal object ContainerNodePatchApplier {
         CollectionViewBinder.bindLazyVerticalGrid(
             view = view,
             spec = CollectionViewBinder.LazyVerticalGridSpec(
-                spanCount = patch.next.spanCount,
+                cells = with(CollectionViewBinder) {
+                    patch.next.cells.toPixels(environment)
+                },
                 contentPadding = environment.resolvePadding(patch.next.contentPadding),
                 horizontalSpacing = environment.roundToPx(patch.next.horizontalSpacing),
                 verticalSpacing = environment.roundToPx(patch.next.verticalSpacing),
@@ -542,17 +561,16 @@ internal object ContainerNodePatchApplier {
         view: SwipeRefreshLayout,
         patch: PullToRefreshNodePatch,
     ) {
-        val previous = patch.previous
         val next = patch.next
-        if (previous.isRefreshing != next.isRefreshing) {
-            view.isRefreshing = next.isRefreshing
-        }
-        if (previous.onRefresh !== next.onRefresh) {
-            view.setOnRefreshListener { next.onRefresh?.invoke() }
-        }
-        if (previous.indicatorColor != next.indicatorColor) {
-            view.setColorSchemeColors(next.indicatorColor)
-        }
+        ScrollableViewBinder.bindPullToRefresh(
+            view = view,
+            spec = ScrollableViewBinder.PullToRefreshSpec(
+                isRefreshing = next.isRefreshing,
+                onRefresh = next.onRefresh,
+                enabled = next.enabled,
+                indicatorColor = next.indicatorColor,
+            ),
+        )
     }
 
 }

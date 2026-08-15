@@ -12,7 +12,6 @@ import com.viewcompose.ui.tooling.UiSourceSessionRole
 import com.viewcompose.renderer.reconcile.LazyListDiff
 import com.viewcompose.renderer.view.lazy.session.LazyHolderRegistry
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
-import com.viewcompose.ui.state.PagerConnector
 import com.viewcompose.ui.state.PagerState
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.lazy.reuse.MountedTreeReuseCache
@@ -22,10 +21,8 @@ import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 
 /**
  * Android ViewPager2 host for a horizontal pager.
- * Android ViewPager2 host for horizontal Pager.
  *
  * Binds declarative pages to the ViewPager2 adapter and synchronizes PagerState and callbacks.
- * It binds declarative page items to the ViewPager2 adapter and synchronizes PagerState with callbacks.
  */
 internal class DeclarativeHorizontalPagerLayout(
     context: Context,
@@ -34,31 +31,11 @@ internal class DeclarativeHorizontalPagerLayout(
     private val adapter = HorizontalPagerAdapter()
     private var onPageChanged: ((Int) -> Unit)? = null
     private var pagerState: PagerState? = null
-    // Suppress external callbacks during programmatic selection to avoid a state write-back loop.
-    // Suppress external callbacks during programmatic page changes to avoid feedback loops.
-    private var suppressCallback: Boolean = false
-    private val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
-        override fun onPageSelected(position: Int) {
-            pagerState?.updateFromPager(
-                currentPage = position,
-                pageOffset = 0f,
-            )
-            if (!suppressCallback) {
-                onPageChanged?.invoke(position)
-            }
-        }
-
-        override fun onPageScrolled(
-            position: Int,
-            positionOffset: Float,
-            positionOffsetPixels: Int,
-        ) {
-            pagerState?.updateFromPager(
-                currentPage = position,
-                pageOffset = positionOffset,
-            )
-        }
-    }
+    private val stateCoordinator = PagerStateCoordinator(
+        viewPager = viewPager,
+        pageCount = adapter::getItemCount,
+        onSettledPageChanged = { onPageChanged },
+    )
 
     init {
         viewPager.layoutParams = LayoutParams(
@@ -66,7 +43,7 @@ internal class DeclarativeHorizontalPagerLayout(
             ViewGroup.LayoutParams.MATCH_PARENT,
         )
         viewPager.adapter = adapter
-        viewPager.registerOnPageChangeCallback(pageChangeCallback)
+        viewPager.registerOnPageChangeCallback(stateCoordinator.pageChangeCallback)
         applyRecyclerDefaults()
         addView(viewPager)
     }
@@ -98,13 +75,7 @@ internal class DeclarativeHorizontalPagerLayout(
             this.pagerState?.attach(null)
         }
         this.pagerState = pagerState
-        pagerState?.attach(
-            object : PagerConnector {
-                override fun scrollToPage(page: Int) {
-                    viewPager.setCurrentItem(page, true)
-                }
-            },
-        )
+        pagerState?.attach(stateCoordinator)
         require(offscreenPageLimit == ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT || offscreenPageLimit >= 1) {
             "offscreenPageLimit must be ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT (-1) or at least 1."
         }
@@ -115,23 +86,16 @@ internal class DeclarativeHorizontalPagerLayout(
             if (adapter.submitPages(pages, submission.revision) == PagerSubmissionResult.Rejected) {
                 return@publish
             }
-            if (pages.isEmpty()) return@publish
-            val resolvedPage = currentPage.coerceIn(0, pages.lastIndex)
-            if (viewPager.currentItem != resolvedPage) {
-                suppressCallback = true
-                viewPager.setCurrentItem(resolvedPage, false)
-                suppressCallback = false
+            stateCoordinator.onPageCountChanged()
+            if (pages.isNotEmpty()) {
+                stateCoordinator.applyControlledPage(currentPage)
             }
-            pagerState?.updateFromPager(
-                currentPage = viewPager.currentItem,
-                pageOffset = 0f,
-            )
         }
     }
 
     fun dispose() {
         pagerState?.attach(null)
-        viewPager.unregisterOnPageChangeCallback(pageChangeCallback)
+        viewPager.unregisterOnPageChangeCallback(stateCoordinator.pageChangeCallback)
         adapter.disposeAll()
     }
 
@@ -162,7 +126,6 @@ internal class DeclarativeHorizontalPagerLayout(
 }
 
 /**
- * Pager adapter that reuses LazyListItem session creation and diffing.
  * Pager page adapter reusing LazyListItem session creation and diff logic.
  */
 internal class HorizontalPagerAdapter : RecyclerView.Adapter<HorizontalPagerViewHolder>() {

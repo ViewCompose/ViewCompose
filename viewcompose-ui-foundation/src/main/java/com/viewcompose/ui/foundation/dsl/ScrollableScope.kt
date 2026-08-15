@@ -7,10 +7,13 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
+import com.viewcompose.ui.node.policy.GridCells
+import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.state.LazyListState
 import com.viewcompose.ui.state.PagerState
+import com.viewcompose.ui.state.ScrollState
 import com.viewcompose.ui.unit.UiDp
 
 /**
@@ -112,12 +115,17 @@ class ScrollableScope internal constructor() {
      * Adds a vertically scrolling column whose full child tree remains mounted.
      *
      * Prefer [LazyColumn] for large or unbounded collections.
+     *
+     * @param state optional caller-owned logical offset and command state
+     * @param userScrollEnabled whether direct user scrolling is accepted
      */
     fun ScrollableColumn(
         key: Any? = null,
         spacing: UiDp = UiDp.Zero,
         arrangement: MainAxisArrangement = MainAxisArrangement.Start,
         horizontalAlignment: HorizontalAlignment = HorizontalAlignment.Start,
+        state: ScrollState? = null,
+        userScrollEnabled: Boolean = true,
         focusFollowKeyboard: Boolean = false,
         modifier: Modifier = Modifier,
         content: ColumnScope.() -> Unit,
@@ -128,6 +136,8 @@ class ScrollableScope internal constructor() {
                 spacing = spacing,
                 arrangement = arrangement,
                 horizontalAlignment = horizontalAlignment,
+                state = state,
+                userScrollEnabled = userScrollEnabled,
                 focusFollowKeyboard = focusFollowKeyboard,
                 modifier = modifier,
                 content = content,
@@ -218,33 +228,53 @@ class ScrollableScope internal constructor() {
      * Adds a horizontally scrolling row whose full child tree remains mounted.
      *
      * Prefer [LazyRow] for large or unbounded collections.
+     *
+     * @param state optional caller-owned logical offset and command state
+     * @param userScrollEnabled whether direct user scrolling is accepted
      */
     fun ScrollableRow(
         key: Any? = null,
         spacing: UiDp = UiDp.Zero,
         arrangement: MainAxisArrangement = MainAxisArrangement.Start,
         verticalAlignment: VerticalAlignment = VerticalAlignment.Top,
+        state: ScrollState? = null,
+        userScrollEnabled: Boolean = true,
         modifier: Modifier = Modifier,
         content: RowScope.() -> Unit,
     ) {
-        with(delegate) { ScrollableRow(key, spacing, arrangement, verticalAlignment, modifier, content) }
+        with(delegate) {
+            ScrollableRow(
+                key = key,
+                spacing = spacing,
+                arrangement = arrangement,
+                verticalAlignment = verticalAlignment,
+                state = state,
+                userScrollEnabled = userScrollEnabled,
+                modifier = modifier,
+                content = content,
+            )
+        }
     }
 
     /**
      * Adds a keyed lazy vertical grid from [items].
      *
-     * [key] must remain stable and [span] must return a value in `1..spanCount`.
+     * [key] must remain stable and [span] must return a renderer-neutral grid span policy.
      *
+     * @param cells fixed or adaptive horizontal cell policy
      * @param contentType groups structurally compatible items for view reuse
+     * @param contentRevision semantic version of every non-State value captured by item content
      * @param state optional externally owned scroll state
+     * @param userScrollEnabled whether direct user scrolling is accepted
      * @param focusFollowKeyboard whether keyboard focus should request the focused item into view
      */
     fun <T> LazyVerticalGrid(
         items: List<T>,
-        spanCount: Int = 2,
+        cells: GridCells = GridCells.Fixed(2),
         key: (T) -> Any,
         contentType: (T) -> Any? = { null },
-        span: (T) -> Int = { 1 },
+        contentRevision: (T) -> Any? = { it },
+        span: (T) -> GridItemSpan = { GridItemSpan.Single },
         contentPadding: UiDp = UiDp.Zero,
         horizontalSpacing: UiDp = UiDp.Zero,
         verticalSpacing: UiDp = UiDp.Zero,
@@ -261,9 +291,10 @@ class ScrollableScope internal constructor() {
         with(delegate) {
             LazyVerticalGrid(
                 items = items,
-                spanCount = spanCount,
+                cells = cells,
                 key = key,
                 contentType = contentType,
+                contentRevision = contentRevision,
                 span = span,
                 contentPadding = contentPadding,
                 horizontalSpacing = horizontalSpacing,
@@ -284,12 +315,16 @@ class ScrollableScope internal constructor() {
     /**
      * Adds a lazy vertical grid whose items are declared through [LazyGridScope].
      *
-     * @param spanCount number of columns available to item spans
+     * Adaptive columns are recalculated from the available inner width without replacing keyed
+     * logical item sessions.
+     *
+     * @param cells fixed or adaptive horizontal cell policy
      * @param state optional externally owned scroll state
+     * @param userScrollEnabled whether direct user scrolling is accepted
      * @param content declares keyed grid items and their spans
      */
     fun LazyVerticalGrid(
-        spanCount: Int = 2,
+        cells: GridCells = GridCells.Fixed(2),
         contentPadding: LazyContentPadding = LazyContentPadding.None,
         horizontalSpacing: UiDp = UiDp.Zero,
         verticalSpacing: UiDp = UiDp.Zero,
@@ -305,7 +340,7 @@ class ScrollableScope internal constructor() {
     ) {
         with(delegate) {
             LazyVerticalGrid(
-                spanCount = spanCount,
+                cells = cells,
                 contentPadding = contentPadding,
                 horizontalSpacing = horizontalSpacing,
                 verticalSpacing = verticalSpacing,
@@ -330,6 +365,7 @@ class ScrollableScope internal constructor() {
      *
      * @param pagerState optional externally owned pager state
      * @param offscreenPageLimit number of adjacent pages retained on each side
+     * @param userScrollEnabled whether direct user paging is accepted
      */
     fun HorizontalPager(
         currentPage: Int,
@@ -367,6 +403,7 @@ class ScrollableScope internal constructor() {
      *
      * @param pagerState optional externally owned pager state
      * @param offscreenPageLimit number of adjacent pages retained on each side
+     * @param userScrollEnabled whether direct user paging is accepted
      */
     fun VerticalPager(
         currentPage: Int,

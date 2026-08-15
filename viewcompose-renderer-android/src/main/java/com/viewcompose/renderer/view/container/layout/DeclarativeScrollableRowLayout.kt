@@ -9,14 +9,13 @@ import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat
+import com.viewcompose.ui.state.ScrollState
 import kotlin.math.roundToInt
 
 /**
  * HorizontalScrollView host used by ScrollableRow.
- * HorizontalScrollView host used by ScrollableRow.
  *
  * Adds horizontal nested-scrolling-child behavior so parent nested-scroll hosts can cooperatively consume scroll deltas.
- * It adds horizontal nested-scrolling child behavior so parent nested scroll hosts can coordinate consumption.
  */
 internal class DeclarativeScrollableRowLayout(
     context: Context,
@@ -37,6 +36,29 @@ internal class DeclarativeScrollableRowLayout(
     private var activePointerId: Int = MotionEvent.INVALID_POINTER_ID
     private var lastMotionX: Float = 0f
     private var accumulatedNestedOffsetX: Float = 0f
+    private var userScrollEnabled = true
+    private val scrollStateController by lazy(LazyThreadSafetyMode.NONE) {
+        EagerScrollStateController(
+            host = this,
+            currentLogicalValue = {
+                if (layoutDirection == LAYOUT_DIRECTION_RTL) {
+                    (horizontalScrollRange() - scrollX).coerceAtLeast(0)
+                } else {
+                    scrollX
+                }
+            },
+            currentMaxValue = ::horizontalScrollRange,
+            currentViewportSize = { (width - paddingLeft - paddingRight).coerceAtLeast(0) },
+            performScroll = { value, animated ->
+                val physicalValue = if (layoutDirection == LAYOUT_DIRECTION_RTL) {
+                    horizontalScrollRange() - value
+                } else {
+                    value
+                }
+                if (animated) smoothScrollTo(physicalValue, 0) else scrollTo(physicalValue, 0)
+            },
+        )
+    }
 
     init {
         super.addView(
@@ -46,7 +68,22 @@ internal class DeclarativeScrollableRowLayout(
         isFillViewport = true
     }
 
+    fun bindScrollState(state: ScrollState?, userScrollEnabled: Boolean) {
+        scrollStateController.bind(state, userScrollEnabled) { enabled ->
+            this.userScrollEnabled = enabled
+        }
+    }
+
+    override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+        return userScrollEnabled && super.onInterceptTouchEvent(event)
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        return userScrollEnabled && super.onTouchEvent(event)
+    }
+
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (!userScrollEnabled) return super.dispatchTouchEvent(event)
         val transformed = MotionEvent.obtain(event)
         var stopNestedScroll = false
         var cancelNativeFling = false
@@ -54,6 +91,7 @@ internal class DeclarativeScrollableRowLayout(
         var preConsumedX = 0
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
+                scrollStateController.onTouchStarted()
                 activePointerId = event.getPointerId(0)
                 lastMotionX = event.x
                 accumulatedNestedOffsetX = 0f
@@ -119,10 +157,12 @@ internal class DeclarativeScrollableRowLayout(
                     }
                 }
                 stopNestedScroll = true
+                scrollStateController.onTouchEnded()
             }
 
             MotionEvent.ACTION_CANCEL -> {
                 stopNestedScroll = true
+                scrollStateController.onTouchEnded()
             }
         }
 
@@ -160,5 +200,23 @@ internal class DeclarativeScrollableRowLayout(
             velocityTracker = null
         }
         return handled
+    }
+
+    override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
+        super.onScrollChanged(l, t, oldl, oldt)
+        if (l != oldl) scrollStateController.onScrollPositionChanged()
+    }
+
+    override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        super.onLayout(changed, l, t, r, b)
+        scrollStateController.onLayoutChanged()
+    }
+
+    fun dispose() {
+        scrollStateController.dispose()
+    }
+
+    private fun horizontalScrollRange(): Int {
+        return (innerLayout.measuredWidth - (width - paddingLeft - paddingRight)).coerceAtLeast(0)
     }
 }

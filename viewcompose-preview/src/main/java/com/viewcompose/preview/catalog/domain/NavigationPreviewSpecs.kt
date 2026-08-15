@@ -47,9 +47,9 @@ internal object NavigationPreviewSpecs {
                         .fillMaxWidth()
                         .margin(vertical = 8.dp),
                 ) {
-                    Item("首页", ImageSource.Resource(android.R.drawable.ic_menu_view))
-                    Item("发现", ImageSource.Resource(android.R.drawable.ic_menu_compass))
-                    Item("我的", ImageSource.Resource(android.R.drawable.ic_menu_myplaces))
+                    Item("home", "首页", ImageSource.Resource(android.R.drawable.ic_menu_view))
+                    Item("discover", "发现", ImageSource.Resource(android.R.drawable.ic_menu_compass))
+                    Item("profile", "我的", ImageSource.Resource(android.R.drawable.ic_menu_myplaces))
                 }
                 BottomAppBar {
                     IconButton(

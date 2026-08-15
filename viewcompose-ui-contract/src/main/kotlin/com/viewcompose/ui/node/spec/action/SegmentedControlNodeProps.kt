@@ -10,7 +10,7 @@ import com.viewcompose.ui.unit.UiSp
  * Immutable renderer properties for a single-selection segmented control.
  *
  * @property items ordered segment models
- * @property selectedIndex selected item index, interpreted by the renderer against [items]
+ * @property selectedIndex selected item index, or `-1` only when [items] is empty
  * @property onSelectionChange callback receiving an accepted item index
  * @property enabled whether the control and its items accept input
  * @property backgroundColor unselected track color
@@ -29,6 +29,7 @@ import com.viewcompose.ui.unit.UiSp
  * @property includeFontPadding whether platform font top and bottom padding is included
  * @property paddingHorizontal horizontal padding inside each segment
  * @property paddingVertical vertical padding inside each segment
+ * @throws IllegalArgumentException for duplicate item keys or a selected index outside [items]
  */
 data class SegmentedControlNodeProps(
     val items: List<SegmentedControlItem>,
@@ -51,4 +52,17 @@ data class SegmentedControlNodeProps(
     val paddingVertical: UiDp,
     val unselectedStateLayerColors: UiStateLayerColors? = null,
     val selectedStateLayerColors: UiStateLayerColors? = null,
-) : NodeSpec
+) : NodeSpec {
+    init {
+        require(items.map(SegmentedControlItem::key).toSet().size == items.size) {
+            "SegmentedControl item keys must be unique."
+        }
+        require(selectedIndex.isValidSelectionFor(items)) {
+            "SegmentedControl selectedIndex must identify an item, or be -1 when empty."
+        }
+    }
+}
+
+private fun Int.isValidSelectionFor(items: List<SegmentedControlItem>): Boolean {
+    return if (items.isEmpty()) this == -1 else this in items.indices
+}

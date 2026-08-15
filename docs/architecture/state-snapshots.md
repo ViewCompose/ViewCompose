@@ -3,7 +3,7 @@
 ## 1. Scope
 
 This document defines snapshot semantics and usage constraints for the `viewcompose-runtime` state
-system.
+system and the renderer-connected state owners published by `viewcompose-ui-contract`.
 
 Goals:
 
@@ -28,6 +28,10 @@ Goals:
    - `enter { ... }`
    - `apply()`
    - `dispose()`
+5. Renderer-connected state
+   - `LazyListState`: virtualized item position and layout information;
+   - `ScrollState`: eager-container logical offset, range, viewport, motion, and commands;
+   - `PagerState`: current, settled, target, offset, count, motion, capability, and commands.
 
 ## 3. Core semantics
 
@@ -51,6 +55,16 @@ Goals:
 8. Framework-owned fields that form one public logical tuple use one existing mutable-snapshot
    transaction. Writer serialization, including `synchronized`, does not make separate commits
    atomically visible to snapshot readers.
+9. A renderer-connected state publishes one immutable snapshot through normal `MutableState`.
+   Equal snapshots do not invalidate observation or listeners.
+10. One connector is live at a time. Replacement captures the old connector's latest snapshot,
+    clears its listener, and attaches the new connector. Disposal detaches it; stale commands cannot
+    reach an abandoned native View.
+11. `ScrollState.scrollTo` retains a detached target and applies it to a newly attached eager host;
+    `animateScrollTo` is a detached no-op. `PagerState` commands are detached no-ops because the
+    controlled pager declaration remains authoritative across recreation.
+12. Eager horizontal offsets and pager indexes are logical in RTL. Native physical positions are a
+    renderer detail and must not leak into the portable snapshot.
 
 ## 4. Concurrency and conflict constraints
 
@@ -74,6 +88,8 @@ Goals:
 5. When adding several framework-owned observable fields, classify whether they are one invariant
    or independent events. Group only the invariant writes in `Snapshot.withMutableSnapshot` and add
    a test that reads the complete tuple from an invalidation callback.
+6. A state connector change requires replacement, disposal, equal-snapshot, pending-command, and
+   logical-RTL tests. State objects never own Android Views or perform platform configuration.
 
 ## 6. Related documents
 

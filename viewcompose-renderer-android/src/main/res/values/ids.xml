@@ -8,6 +8,7 @@
     <item name="viewcompose_seek_listener" type="id" />
     <item name="viewcompose_toggle_listener" type="id" />
     <item name="viewcompose_button_click_listener" type="id" />
+    <item name="viewcompose_pull_refresh_listener" type="id" />
     <item name="viewcompose_modifier_click_listener" type="id" />
     <item name="viewcompose_lazy_spacing_decoration" type="id" />
     <item name="viewcompose_lazy_grid_spacing_decoration" type="id" />

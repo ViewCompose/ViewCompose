@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/state-snapshots.md
-translation_source_hash: 0aac656ee00e4ed9624a4c70a8ca50174577dc3d5617e2b4ad24fd64b76a1ff7
+translation_source_hash: 26cd355684381303aa9821055a508716b4a2c6ef837c611b06107f94ddf65431
 translation_status: current
 ---
 
@@ -8,7 +8,8 @@ translation_status: current
 
 ## 1. 文档定位
 
-本文档定义 `viewcompose-runtime` 状态系统的 snapshot 语义与使用约束。
+本文档定义 `viewcompose-runtime` 状态系统，以及 `viewcompose-ui-contract` 发布的 Renderer 连接型
+状态 Owner 的 Snapshot 语义与使用约束。
 
 目标：
 
@@ -32,6 +33,10 @@ translation_status: current
    - `enter { ... }`
    - `apply()`
    - `dispose()`
+5. Renderer 连接型状态
+   - `LazyListState`：虚拟化 Item 位置与布局信息；
+   - `ScrollState`：Eager Container 的逻辑偏移、范围、Viewport、运动与命令；
+   - `PagerState`：当前页、已停稳页、目标页、偏移、页数、运动、能力与命令。
 
 ## 3. 核心语义
 
@@ -49,6 +54,15 @@ translation_status: current
    Apply 不发送失效通知。
 8. 构成一个公开逻辑元组的框架字段必须使用一次现有 Mutable Snapshot Transaction。
    `synchronized` 等 Writer 串行化手段不能让多个独立 Commit 对 Snapshot Reader 原子可见。
+9. Renderer 连接型 State 通过普通 `MutableState` 发布一个不可变 Snapshot。相等 Snapshot 不会
+   使 Observation 或 Listener 失效。
+10. 同一时间只允许一个活动 Connector。替换时先捕获旧 Connector 的最新 Snapshot、清除其
+    Listener，再连接新 Connector。释放时断开连接；陈旧命令不得到达已放弃的原生 View。
+11. `ScrollState.scrollTo` 会保留 Detach 目标，并在新 Eager Host Attach 后应用；
+    `animateScrollTo` 在 Detach 时无操作。`PagerState` 命令在 Detach 时无操作，因为受控 Pager
+    声明在重建后仍是权威来源。
+12. Eager 横向偏移与 Pager 索引在 RTL 中使用逻辑顺序。原生物理位置属于 Renderer 细节，不能
+    泄漏到可移植 Snapshot。
 
 ## 4. 并发与冲突约束
 
@@ -65,6 +79,8 @@ translation_status: current
 4. `Snapshot`/`MutableSnapshot` 使用完成后必须调用 `dispose()` 或通过 `use` 关闭，避免长期保留历史版本。
 5. 新增多个框架可观察字段时，必须先判断它们是一个 Invariant 还是独立事件。只把同一 Invariant
    的写入放进 `Snapshot.withMutableSnapshot`，并用失效 Callback 读取完整元组进行测试。
+6. State Connector 变更必须覆盖替换、释放、相等 Snapshot、Pending Command 与逻辑 RTL 测试。
+   State 对象不得持有 Android View 或执行平台配置。
 
 ## 6. 关联文档
 

@@ -29,7 +29,6 @@ import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 
 /**
- * Binds input nodes and encapsulates text editing, toggles, sliders, IME behavior, and accessibility details.
  * Binds input nodes and encapsulates text editing, toggle controls, sliders, and platform IME/accessibility details.
  */
 internal object InputViewBinder {
@@ -75,6 +74,9 @@ internal object InputViewBinder {
         val trackColor: Int,
         val onValueChange: ((Int) -> Unit)?,
         val inactiveTrackColor: Int = trackColor,
+        val step: Int = 1,
+        val onValueChangeStarted: (() -> Unit)? = null,
+        val onValueChangeFinished: (() -> Unit)? = null,
     )
 
     fun bindTextField(
@@ -131,15 +133,16 @@ internal object InputViewBinder {
         view: SeekBar,
         spec: SliderSpec,
     ) {
-        val resolvedValue = spec.value.coerceIn(spec.min, spec.max)
         updateSliderListener(
             view = view,
             min = spec.min,
-            expectedValue = resolvedValue,
+            step = spec.step,
             onValueChange = spec.onValueChange,
+            onValueChangeStarted = spec.onValueChangeStarted,
+            onValueChangeFinished = spec.onValueChangeFinished,
         )
-        view.max = (spec.max - spec.min).coerceAtLeast(0)
-        view.progress = resolvedValue - spec.min
+        view.max = ((spec.max.toLong() - spec.min.toLong()) / spec.step.toLong()).toInt()
+        view.progress = ((spec.value.toLong() - spec.min.toLong()) / spec.step.toLong()).toInt()
         view.isEnabled = spec.enabled
         // Keep native/OEM geometry masks while making every slider segment framework-owned.
         view.progressTintMode = PorterDuff.Mode.SRC_IN
@@ -201,17 +204,25 @@ internal object InputViewBinder {
     internal fun updateSliderListener(
         view: SeekBar,
         min: Int,
-        expectedValue: Int,
+        step: Int,
         onValueChange: ((Int) -> Unit)?,
+        onValueChangeStarted: (() -> Unit)?,
+        onValueChangeFinished: (() -> Unit)?,
     ) {
         val binding = (view.getTag(R.id.viewcompose_seek_listener) as? SliderListenerBinding)
             ?: SliderListenerBinding().also {
                 view.setTag(R.id.viewcompose_seek_listener, it)
                 view.setOnSeekBarChangeListener(it)
-            }
+        }
         binding.min = min
-        binding.expectedValue = expectedValue
+        binding.step = step
         binding.onValueChange = onValueChange
+        binding.onValueChangeStarted = onValueChangeStarted
+        binding.onValueChangeFinished = onValueChangeFinished
+        (view as? ViewComposeSeekBar)?.bindInteractionCallbacks(
+            onStarted = onValueChangeStarted,
+            onFinished = onValueChangeFinished,
+        )
     }
 
     fun readTextFieldSpec(node: VNode): TextFieldSpec {
@@ -270,6 +281,9 @@ internal object InputViewBinder {
             trackColor = spec.trackColor,
             onValueChange = spec.onValueChange,
             inactiveTrackColor = spec.inactiveTrackColor,
+            step = spec.step,
+            onValueChangeStarted = spec.onValueChangeStarted,
+            onValueChangeFinished = spec.onValueChangeFinished,
         )
     }
 
@@ -507,21 +521,27 @@ private class ToggleListenerBinding : CompoundButton.OnCheckedChangeListener {
 
 private class SliderListenerBinding : SeekBar.OnSeekBarChangeListener {
     var min: Int = 0
-    var expectedValue: Int = 0
+    var step: Int = 1
     var onValueChange: ((Int) -> Unit)? = null
+    var onValueChangeStarted: (() -> Unit)? = null
+    var onValueChangeFinished: (() -> Unit)? = null
 
     override fun onProgressChanged(
         seekBar: SeekBar?,
         progress: Int,
         fromUser: Boolean,
     ) {
-        val nextValue = min + progress
-        if (fromUser && nextValue != expectedValue) {
+        val nextValue = (min.toLong() + progress.toLong() * step.toLong()).toInt()
+        if (fromUser) {
             onValueChange?.invoke(nextValue)
         }
     }
 
-    override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+        onValueChangeStarted?.invoke()
+    }
 
-    override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+        onValueChangeFinished?.invoke()
+    }
 }

@@ -2,6 +2,9 @@ package com.viewcompose.renderer.view.tree
 
 import com.viewcompose.ui.modifier.BoxAlignModifierElement
 import com.viewcompose.ui.modifier.HeightModifierElement
+import com.viewcompose.ui.modifier.AspectRatioModifierElement
+import com.viewcompose.ui.modifier.MaxHeightModifierElement
+import com.viewcompose.ui.modifier.MaxWidthModifierElement
 import com.viewcompose.ui.modifier.HorizontalAlignModifierElement
 import com.viewcompose.ui.modifier.MarginModifierElement
 import com.viewcompose.ui.modifier.RelativeMarginModifierElement
@@ -135,6 +138,9 @@ internal object NestedScrollNodeWrapper {
             this is SizeModifierElement ||
             this is WidthModifierElement ||
             this is HeightModifierElement ||
+            this is MaxWidthModifierElement ||
+            this is MaxHeightModifierElement ||
+            this is AspectRatioModifierElement ||
             this is WeightModifierElement ||
             this is BoxAlignModifierElement ||
             this is HorizontalAlignModifierElement ||

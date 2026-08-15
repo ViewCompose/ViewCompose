@@ -13,7 +13,6 @@ import kotlin.math.max
 
 /**
  * Custom wrapping container used by FlowRow.
- * Custom wrapping container used by FlowRow.
  */
 internal class DeclarativeFlowRowLayout @JvmOverloads constructor(
     context: Context,
@@ -150,7 +149,6 @@ internal class DeclarativeFlowRowLayout @JvmOverloads constructor(
             totalHeight += currentRowHeight
         } else if (totalHeight > 0) {
             // A maxItemsInEachRow boundary may end the final line, which must not retain a trailing gap.
-            // The last row can close via maxItemsInEachRow and should not leave trailing spacing.
             totalHeight = (totalHeight - verticalSpacing).coerceAtLeast(0)
         }
 
@@ -164,8 +162,9 @@ internal class DeclarativeFlowRowLayout @JvmOverloads constructor(
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         val startNs = LayoutPassTracker.beginTiming()
         val availableWidth = r - l - paddingLeft - paddingRight
+        val rtl = layoutDirection == LAYOUT_DIRECTION_RTL
 
-        var currentX = paddingLeft
+        var currentRowWidth = 0
         var currentY = paddingTop
         var currentRowHeight = 0
         var itemsInCurrentRow = 0
@@ -179,30 +178,28 @@ internal class DeclarativeFlowRowLayout @JvmOverloads constructor(
             val childHeight = child.measuredHeight + params.topMargin + params.bottomMargin
             val spacingNeeded = if (itemsInCurrentRow > 0) horizontalSpacing else 0
 
-            if (currentX - paddingLeft + spacingNeeded + childWidth > availableWidth && itemsInCurrentRow > 0) {
-                currentX = paddingLeft
+            if (currentRowWidth + spacingNeeded + childWidth > availableWidth && itemsInCurrentRow > 0) {
+                currentRowWidth = 0
                 currentY += currentRowHeight + verticalSpacing
                 currentRowHeight = 0
                 itemsInCurrentRow = 0
             }
 
-            if (itemsInCurrentRow > 0) {
-                currentX += horizontalSpacing
+            currentRowWidth += if (itemsInCurrentRow > 0) horizontalSpacing else 0
+            val childLeft = if (rtl) {
+                r - l - paddingRight - currentRowWidth - params.rightMargin - child.measuredWidth
+            } else {
+                paddingLeft + currentRowWidth + params.leftMargin
             }
+            val childTop = currentY + params.topMargin
+            child.layout(childLeft, childTop, childLeft + child.measuredWidth, childTop + child.measuredHeight)
 
-            child.layout(
-                currentX + params.leftMargin,
-                currentY + params.topMargin,
-                currentX + params.leftMargin + child.measuredWidth,
-                currentY + params.topMargin + child.measuredHeight,
-            )
-
-            currentX += childWidth
+            currentRowWidth += childWidth
             currentRowHeight = max(currentRowHeight, childHeight)
             itemsInCurrentRow++
 
             if (itemsInCurrentRow >= maxItemsInEachRow) {
-                currentX = paddingLeft
+                currentRowWidth = 0
                 currentY += currentRowHeight + verticalSpacing
                 currentRowHeight = 0
                 itemsInCurrentRow = 0

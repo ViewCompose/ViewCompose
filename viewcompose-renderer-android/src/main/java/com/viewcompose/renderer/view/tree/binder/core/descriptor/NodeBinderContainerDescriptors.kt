@@ -4,6 +4,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
+import com.viewcompose.ui.node.spec.LayoutConstraintHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedVisibilityHostNodeProps
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ColumnNodeProps
@@ -17,6 +18,7 @@ import com.viewcompose.ui.node.spec.ScrollableRowNodeProps
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeLayoutConstraintHost
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
 import com.viewcompose.renderer.view.container.DeclarativeFlowColumnLayout
@@ -81,6 +83,15 @@ internal fun MutableList<NodeBinderDescriptor>.addContainerNodeBinderDescriptors
         apply = { view, patch ->
             ContainerNodePatchApplier.applyAnimatedSizeHostPatch(
                 view = view as DeclarativeAnimatedSizeHostLayout,
+                patch = patch,
+            )
+        },
+    )
+    val layoutConstraintHostPatch = patchDescriptor<LayoutConstraintHostNodeProps, LayoutConstraintHostNodePatch>(
+        factory = { previous, next -> LayoutConstraintHostNodePatch(previous, next) },
+        apply = { view, patch ->
+            ContainerNodePatchApplier.applyLayoutConstraintHostPatch(
+                view = view as DeclarativeLayoutConstraintHost,
                 patch = patch,
             )
         },
@@ -212,6 +223,18 @@ internal fun MutableList<NodeBinderDescriptor>.addContainerNodeBinderDescriptors
                 )
             },
             patch = animatedSizeHostPatch,
+        ),
+    )
+    add(
+        descriptor(
+            nodeType = NodeType.LayoutConstraintHost,
+            bind = { view, node ->
+                ContainerViewBinder.bindLayoutConstraintHost(
+                    view = view as DeclarativeLayoutConstraintHost,
+                    spec = ContainerViewBinder.readLayoutConstraintHostSpec(node),
+                )
+            },
+            patch = layoutConstraintHostPatch,
         ),
     )
     add(

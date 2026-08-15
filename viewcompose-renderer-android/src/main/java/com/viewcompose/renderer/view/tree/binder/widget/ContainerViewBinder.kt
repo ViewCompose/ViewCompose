@@ -4,23 +4,23 @@ import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.R
-import com.viewcompose.ui.layout.MainAxisArrangement
-import com.viewcompose.ui.node.VNode
-import com.viewcompose.ui.modifier.ContentSizeAnimationSpecModel
-import com.viewcompose.ui.node.spec.ConstraintHelpersSpec
-import com.viewcompose.ui.node.spec.ConstraintSetSpec
-import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
-import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
+import com.viewcompose.renderer.view.PaddingPx
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
 import com.viewcompose.renderer.view.container.DeclarativeFlowColumnLayout
 import com.viewcompose.renderer.view.container.DeclarativeFlowRowLayout
+import com.viewcompose.renderer.view.container.DeclarativeLayoutConstraintHost
 import com.viewcompose.renderer.view.container.DeclarativeLinearLayout
 import com.viewcompose.renderer.view.lazy.adapter.LazyListSpacingDecoration
-import com.viewcompose.renderer.view.PaddingPx
+import com.viewcompose.ui.layout.MainAxisArrangement
+import com.viewcompose.ui.modifier.ContentSizeAnimationSpecModel
+import com.viewcompose.ui.node.VNode
+import com.viewcompose.ui.node.spec.ConstraintHelpersSpec
+import com.viewcompose.ui.node.spec.ConstraintSetSpec
 
 /**
- * Binds base container nodes and maps direction, alignment, spacing, constraints, and animation hosts to Views.
  * Binds primitive container nodes and maps orientation, alignment, spacing, constraints, and
  * animation-host state onto Android Views.
  */
@@ -54,6 +54,15 @@ internal object ContainerViewBinder {
 
     data class AnimatedSizeHostSpec(
         val animationSpec: ContentSizeAnimationSpecModel,
+    )
+
+    data class LayoutConstraintHostSpec(
+        val maxWidthPx: Int?,
+        val maxHeightPx: Int?,
+        val aspectRatio: Float?,
+        val matchHeightConstraintsFirst: Boolean,
+        val fillWidth: Boolean,
+        val fillHeight: Boolean,
     )
 
     data class AndroidViewSpec(
@@ -127,6 +136,20 @@ internal object ContainerViewBinder {
         view.animationSpec = spec.animationSpec
     }
 
+    fun bindLayoutConstraintHost(
+        view: DeclarativeLayoutConstraintHost,
+        spec: LayoutConstraintHostSpec,
+    ) {
+        view.bind(
+            maxWidthPx = spec.maxWidthPx,
+            maxHeightPx = spec.maxHeightPx,
+            aspectRatio = spec.aspectRatio,
+            matchHeightConstraintsFirst = spec.matchHeightConstraintsFirst,
+            fillWidth = spec.fillWidth,
+            fillHeight = spec.fillHeight,
+        )
+    }
+
     fun bindFlowRow(
         view: DeclarativeFlowRowLayout,
         spec: FlowRowSpec,
@@ -183,6 +206,10 @@ internal object ContainerViewBinder {
 
     fun readAnimatedSizeHostSpec(node: VNode): AnimatedSizeHostSpec {
         return ContainerViewSpecReader.readAnimatedSizeHostSpec(node)
+    }
+
+    fun readLayoutConstraintHostSpec(node: VNode): LayoutConstraintHostSpec {
+        return ContainerViewSpecReader.readLayoutConstraintHostSpec(node)
     }
 
     fun readAndroidViewSpec(node: VNode): AndroidViewSpec {

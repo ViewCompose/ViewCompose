@@ -582,24 +582,27 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
                 .testTag(DemoTestTags.DIAGNOSTICS_THEME_NAVIGATION),
         ) {
             Item(
+                key = "home",
                 label = stringResource(R.string.demo_diagnostics_theme_home),
                 icon = ImageSource.Resource(R.drawable.demo_media_icon),
             )
             Item(
+                key = "search",
                 label = stringResource(R.string.demo_diagnostics_theme_search),
                 icon = ImageSource.Resource(R.drawable.demo_media_icon),
                 badgeCount = 3,
             )
             Item(
+                key = "profile",
                 label = stringResource(R.string.demo_diagnostics_theme_profile),
                 icon = ImageSource.Resource(R.drawable.demo_media_icon),
             )
         }
         SegmentedControl(
-            items = listOf(
-                stringResource(R.string.demo_diagnostics_theme_alpha),
-                stringResource(R.string.demo_diagnostics_theme_beta),
-                stringResource(R.string.demo_diagnostics_theme_gamma),
+            items = demoSegmentedItems(
+                "alpha" to stringResource(R.string.demo_diagnostics_theme_alpha),
+                "beta" to stringResource(R.string.demo_diagnostics_theme_beta),
+                "gamma" to stringResource(R.string.demo_diagnostics_theme_gamma),
             ),
             selectedIndex = segmentedIndexState.value,
             onSelectionChange = { segmentedIndexState.value = it },
@@ -722,7 +725,7 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection(modifier: Modifier) {
                 .padding(bottom = 8.dp),
         )
         SegmentedControl(
-            items = listOf("S", "M", "L"),
+            items = demoSegmentedItems("small" to "S", "medium" to "M", "large" to "L"),
             selectedIndex = 1,
             onSelectionChange = {},
             size = SegmentedControlSize.Large,

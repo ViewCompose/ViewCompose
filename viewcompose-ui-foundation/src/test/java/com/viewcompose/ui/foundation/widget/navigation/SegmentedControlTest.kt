@@ -6,6 +6,8 @@ package com.viewcompose.ui.foundation
  */
 
 import com.viewcompose.ui.modifier.HeightModifierElement
+import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
+import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.unit.UiDimension
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.SegmentedControlItem
@@ -22,7 +24,7 @@ class SegmentedControlTest {
         val tree = buildVNodeTree {
             UiTheme(UiThemeDefaults.light()) {
                 SegmentedControl(
-                    items = listOf("System", "Light", "Dark"),
+                    items = segmentedItems("System", "Light", "Dark"),
                     selectedIndex = 1,
                     onSelectionChange = { selectedIndex = it },
                 )
@@ -55,9 +57,39 @@ class SegmentedControlTest {
         assertEquals("System", spec.items[0].label)
         assertEquals(UiDimension.Exact(SegmentedControlDefaults.height()), height.height)
         assertTrue(node.spec is SegmentedControlNodeProps)
+        val semantics = node.modifier.elements.filterIsInstance<SemanticsModifierElement>().single()
+            .configuration
+        assertEquals(1, semantics.collectionInfo?.rowCount)
+        assertEquals(3, semantics.collectionInfo?.columnCount)
+        assertEquals(SemanticsCollectionSelectionMode.Single, semantics.collectionInfo?.selectionMode)
 
         spec.onSelectionChange?.invoke(2)
         assertEquals(2, selectedIndex)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `segmented control rejects a selected index outside its items`() {
+        buildVNodeTree {
+            SegmentedControl(
+                items = segmentedItems("A", "B"),
+                selectedIndex = 2,
+                onSelectionChange = {},
+            )
+        }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `segmented control rejects duplicate item keys`() {
+        buildVNodeTree {
+            SegmentedControl(
+                items = listOf(
+                    SegmentedControlItem(key = "same", label = "A"),
+                    SegmentedControlItem(key = "same", label = "B"),
+                ),
+                selectedIndex = 0,
+                onSelectionChange = {},
+            )
+        }
     }
 
     @Test
@@ -75,7 +107,7 @@ class SegmentedControlTest {
                     ),
                 ) {
                     SegmentedControl(
-                        items = listOf("A", "B"),
+                        items = segmentedItems("A", "B"),
                         selectedIndex = 0,
                         onSelectionChange = {},
                     )
@@ -119,7 +151,7 @@ class SegmentedControlTest {
         val tree = buildVNodeTree {
             UiTheme(customTheme) {
                 SegmentedControl(
-                    items = listOf("A", "B"),
+                    items = segmentedItems("A", "B"),
                     selectedIndex = 0,
                     onSelectionChange = {},
                     size = SegmentedControlSize.Medium,
@@ -150,7 +182,7 @@ class SegmentedControlTest {
                     ),
                 ) {
                     SegmentedControl(
-                        items = listOf("A", "B"),
+                        items = segmentedItems("A", "B"),
                         selectedIndex = 0,
                         enabled = false,
                         onSelectionChange = {},
@@ -179,7 +211,7 @@ class SegmentedControlTest {
                     SegmentedControlOverrides(contentColor = 102),
                 ) {
                     SegmentedControl(
-                        items = listOf("A", "B"),
+                        items = segmentedItems("A", "B"),
                         selectedIndex = 0,
                         onSelectionChange = {},
                         overrides = SegmentedControlOverrides(selectedContentColor = 201),
@@ -201,4 +233,9 @@ class SegmentedControlTest {
         @Suppress("UNCHECKED_CAST")
         return field.get(this) as List<Any?>
     }
+
+    private fun segmentedItems(vararg labels: String): List<SegmentedControlItem> =
+        labels.mapIndexed { index, label ->
+            SegmentedControlItem(key = index, label = label)
+        }
 }

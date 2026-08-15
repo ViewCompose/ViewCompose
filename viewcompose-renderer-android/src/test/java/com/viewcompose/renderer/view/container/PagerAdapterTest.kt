@@ -5,6 +5,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.state.PagerState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
@@ -36,6 +37,77 @@ class PagerAdapterTest {
         bindVerticalPager(view, pages, currentPage = 1)
 
         assertEquals(1, (view.getChildAt(0) as ViewPager2).currentItem)
+    }
+
+    @Test
+    fun `horizontal pager state commands publish settled page once`() {
+        val view = DeclarativeHorizontalPagerLayout(RuntimeEnvironment.getApplication())
+        val pages = listOf(inertPage("first"), inertPage("second"), inertPage("third"))
+        val state = PagerState()
+        val settled = mutableListOf<Int>()
+
+        bindHorizontalPager(
+            view = view,
+            pages = pages,
+            currentPage = 1,
+            pagerState = state,
+            onPageChanged = settled::add,
+            userScrollEnabled = false,
+        )
+        state.scrollToPage(2)
+
+        val nativePager = view.getChildAt(0) as ViewPager2
+        assertEquals(ViewPager2.ORIENTATION_HORIZONTAL, nativePager.orientation)
+        assertEquals(false, nativePager.isUserInputEnabled)
+        assertEquals(2, nativePager.currentItem)
+        assertEquals(2, state.currentPage)
+        assertEquals(2, state.settledPage)
+        assertEquals(3, state.pageCount)
+        assertEquals(listOf(2), settled)
+    }
+
+    @Test
+    fun `vertical pager state commands publish settled page once`() {
+        val view = DeclarativeVerticalPagerLayout(RuntimeEnvironment.getApplication())
+        val pages = listOf(inertPage("first"), inertPage("second"), inertPage("third"))
+        val state = PagerState()
+        val settled = mutableListOf<Int>()
+
+        bindVerticalPager(
+            view = view,
+            pages = pages,
+            currentPage = 1,
+            pagerState = state,
+            onPageChanged = settled::add,
+            userScrollEnabled = false,
+        )
+        state.scrollToPage(2)
+
+        val nativePager = view.getChildAt(0) as ViewPager2
+        assertEquals(ViewPager2.ORIENTATION_VERTICAL, nativePager.orientation)
+        assertEquals(false, nativePager.isUserInputEnabled)
+        assertEquals(2, nativePager.currentItem)
+        assertEquals(2, state.currentPage)
+        assertEquals(2, state.settledPage)
+        assertEquals(3, state.pageCount)
+        assertEquals(listOf(2), settled)
+    }
+
+    @Test
+    fun `pager disposal detaches portable state commands`() {
+        val view = DeclarativeHorizontalPagerLayout(RuntimeEnvironment.getApplication())
+        val state = PagerState()
+
+        bindHorizontalPager(
+            view = view,
+            pages = listOf(inertPage("first"), inertPage("second")),
+            currentPage = 0,
+            pagerState = state,
+        )
+        view.dispose()
+        state.scrollToPage(1)
+
+        assertEquals(0, (view.getChildAt(0) as ViewPager2).currentItem)
     }
 
     @Test
@@ -230,14 +302,17 @@ class PagerAdapterTest {
         view: DeclarativeHorizontalPagerLayout,
         pages: List<LazyListItem>,
         currentPage: Int,
+        pagerState: PagerState? = null,
+        onPageChanged: ((Int) -> Unit)? = null,
+        userScrollEnabled: Boolean = true,
     ) {
         view.bind(
             pages = pages,
             currentPage = currentPage,
-            onPageChanged = null,
+            onPageChanged = onPageChanged,
             offscreenPageLimit = ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT,
-            pagerState = null,
-            userScrollEnabled = true,
+            pagerState = pagerState,
+            userScrollEnabled = userScrollEnabled,
             mountedTreeCacheSize = 2,
         )
     }
@@ -246,14 +321,17 @@ class PagerAdapterTest {
         view: DeclarativeVerticalPagerLayout,
         pages: List<LazyListItem>,
         currentPage: Int,
+        pagerState: PagerState? = null,
+        onPageChanged: ((Int) -> Unit)? = null,
+        userScrollEnabled: Boolean = true,
     ) {
         view.bind(
             pages = pages,
             currentPage = currentPage,
-            onPageChanged = null,
+            onPageChanged = onPageChanged,
             offscreenPageLimit = ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT,
-            pagerState = null,
-            userScrollEnabled = true,
+            pagerState = pagerState,
+            userScrollEnabled = userScrollEnabled,
             mountedTreeCacheSize = 2,
         )
     }

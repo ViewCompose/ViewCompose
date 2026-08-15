@@ -68,7 +68,7 @@ internal object CollectionPreviewSpecs {
                         .margin(horizontal = 12.dp, vertical = 8.dp),
                 ) {
                     LazyVerticalGrid(
-                        spanCount = 3,
+                        cells = com.viewcompose.ui.node.policy.GridCells.Fixed(3),
                         horizontalSpacing = 8.dp,
                         verticalSpacing = 8.dp,
                         modifier = Modifier

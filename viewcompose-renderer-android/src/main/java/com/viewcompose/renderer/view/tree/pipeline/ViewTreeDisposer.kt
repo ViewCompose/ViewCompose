@@ -8,6 +8,8 @@ import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.LazyRowNodeProps
 import com.viewcompose.renderer.view.container.DeclarativeHorizontalPagerLayout
 import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
+import com.viewcompose.renderer.view.container.DeclarativeScrollableColumnLayout
+import com.viewcompose.renderer.view.container.DeclarativeScrollableRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeTabRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeVerticalPagerLayout
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
@@ -60,6 +62,12 @@ internal object ViewTreeDisposer {
         }
         disposeOperation {
             (mountedNode.view as? DeclarativeTabRowLayout)?.dispose()
+        }
+        disposeOperation {
+            (mountedNode.view as? DeclarativeScrollableColumnLayout)?.dispose()
+        }
+        disposeOperation {
+            (mountedNode.view as? DeclarativeScrollableRowLayout)?.dispose()
         }
         disposeOperation {
             (mountedNode.view as? DeclarativeLazyVerticalGridLayout)?.dispose()
