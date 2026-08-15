@@ -132,17 +132,29 @@ class DemoScenarioAutomationUiTest {
     }
 
     @Test
-    fun performanceFixturesExposeTheSameContractForBothEngines() {
+    fun performanceFixturesExposeTheSameContractForEverySupportedEngine() {
         listOf(
             "performance.list",
             "performance.complex-layout",
             "performance.shadow-list",
             "performance.shadow-complex-layout",
         ).forEach { scenarioId ->
-            listOf("viewcompose", "compose").forEach { engine ->
+            val engines = buildList {
+                add("viewcompose" to "ViewCompose")
+                add("compose" to "Compose")
+                if (!scenarioId.startsWith("performance.shadow-")) {
+                    add("android_views" to "Android Views")
+                }
+            }
+            engines.forEach { (engine, displayName) ->
                 launchPerformanceScenario(scenarioId, engine)
                 requireTarget(scenarioId, "root")
-                assertTrue(requireTarget(scenarioId, "ready").text.contains(engine, ignoreCase = true))
+                assertTrue(
+                    requireTarget(scenarioId, "ready").text.contains(
+                        displayName,
+                        ignoreCase = true,
+                    ),
+                )
                 requireTarget(scenarioId, "target")
                 val initial = requireTarget(scenarioId, "state").text.orEmpty()
 

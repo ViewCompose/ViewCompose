@@ -45,14 +45,17 @@ For historical analysis, see
     and recursively combines `ImageFilterModel.Chain`.
 18. Release baselines use an R8-optimized, resource-shrunk, non-debuggable benchmark target.
     `ReleaseBaselineBenchmark` covers cold start and state-patch frames without ART precompilation.
-19. List comparison runs ViewCompose and Compose LazyColumn in the same target with the same 1,000
-    items and interaction script, covering bidirectional fast scroll and keyed reorder plus payload
-    updates.
+19. List comparison runs ViewCompose LazyColumn, Compose LazyColumn, and an idiomatic Android Views
+    `RecyclerView` in the same target with the same 1,000 items and interaction script, covering
+    bidirectional fast scroll and keyed reorder plus payload updates.
 20. Complex-layout comparison runs the same 18-card dashboard through ViewCompose
-    `ScrollableColumn` and Compose `Column.verticalScroll`, mounting the complete tree and exercising
-    deep scrolling, all-card updates, and conditional detail subtrees.
+    `ScrollableColumn`, Compose `Column.verticalScroll`, and a retained Android Views
+    `ScrollView`/ViewGroup tree, exercising deep scrolling, all-card updates, and conditional detail
+    subtrees.
 21. Both comparisons collect frame timing and peak heap/RSS. `compare_macrobenchmarks.py` emits
-    paired Markdown/JSON and can gate normalized regression against the same-run Compose control.
+    engine-neutral report-v2 Markdown/JSON with absolute values, ViewCompose/Compose and
+    ViewCompose/Android Views observations, while retaining the same-run Compose control for the
+    historical longitudinal gate and reading accepted report-v1 baselines.
 22. Advanced shadows have independent bounded outer/inner raster caches. Translation, scale,
     rotation, and alpha reuse rasters. `ShadowPerformanceComparisonBenchmark` covers 1,000-item Lazy
     and complex-layout scrolling/mutation with Compose as the same-run noise control.
@@ -87,7 +90,7 @@ Device benchmark:
 ./gradlew benchmarkRelease
 ```
 
-Device benchmark plus Compose comparison report:
+Device benchmark plus engine comparison report:
 
 ```bash
 ./gradlew benchmarkCompare
@@ -95,8 +98,8 @@ Device benchmark plus Compose comparison report:
 
 Default reports:
 
-1. `build/reports/benchmarks/compose-comparison.md`
-2. `build/reports/benchmarks/compose-comparison.json`
+1. `build/reports/benchmarks/engine-comparison.md`
+2. `build/reports/benchmarks/engine-comparison.json`
 
 Regenerate from an existing result:
 
@@ -105,12 +108,13 @@ Regenerate from an existing result:
   -PbenchmarkResult=/path/to/current-benchmarkData.json
 ```
 
-For a thermally constrained physical device, run each ViewCompose or Compose method from the same
-`NONE`/`LIGHT` starting state, cool between methods, and place the resulting JSON files in one clean
-directory. Passing that directory as `benchmarkResult` merges the split methods only when their
-device, OS, clock-policy, and compilation identities match. Duplicate benchmark names and context
-mismatches fail closed; the tool never selects an arbitrary newest partial run. Legacy results
-without an explicit clock policy continue to require the AndroidX `cpuLocked` snapshots to match.
+For a thermally constrained physical device, run each required ViewCompose, Compose, or Android
+Views method from the same `NONE`/`LIGHT` starting state, cool between methods, and place the
+resulting JSON files in one clean directory. Passing that directory as `benchmarkResult` merges the
+split methods only when their device, OS, clock-policy, and compilation identities match. Duplicate
+benchmark names, incomplete engine sets, and context mismatches fail closed; the tool never selects
+an arbitrary newest partial run. Legacy results without an explicit clock policy continue to
+require the AndroidX `cpuLocked` snapshots to match.
 
 Install the benchmark and target APKs once before a split-method batch. After installation, stop
 both processes, turn the screen off, and wait until the accepted thermal state and normal CPU
@@ -127,11 +131,17 @@ are never rewritten after collection.
 
 An explicit unlocked-DVFS policy identifies the host protocol; it does not claim that an OEM will
 hold a stable working frequency. The run-P50 CV gate remains mandatory. If a method produces two
-frequency plateaus, changes `scaling_max_freq` while thermal status is unchanged, or reports that
-AndroidX cannot clear the Runtime Image, reject it instead of rerunning until one sample happens to
-pass. `cmd power set-fixed-performance-mode-enabled` is not equivalent to a clock lock unless the
-device proves stable minimum and maximum frequencies throughout measurement. Use a rootable or
-otherwise clock-controllable reference device when the consumer device cannot satisfy this gate.
+frequency plateaus or changes `scaling_max_freq` while thermal status is unchanged, reject it
+instead of rerunning until one sample happens to pass. An AndroidX Runtime Image warning is
+workload-sensitive: reject it for cold start, first build, navigation, or any result that measures
+class loading or claims a clean `CompilationMode.None` context. A steady-state interaction may be
+accepted only when the complete target is ready, a fixed settling window is outside measurement,
+all controls share the reported compilation identity, and stability passes; record that evidence
+as `run-from-apk` and never relabel it as clean uncompiled startup data. The warning narrows the
+claim rather than disappearing from the evidence. `cmd power set-fixed-performance-mode-enabled`
+is not equivalent to a clock lock unless the device proves stable minimum and maximum frequencies
+throughout measurement. Use a rootable or otherwise clock-controllable reference device when the
+consumer device cannot satisfy this gate.
 
 Compare with a same-device historical baseline and apply the regression gate. The baseline input is
 the previously generated revisioned comparison report, not raw Macrobenchmark JSON:
@@ -139,13 +149,15 @@ the previously generated revisioned comparison report, not raw Macrobenchmark JS
 ```bash
 ./gradlew benchmarkComparisonReport \
   -PbenchmarkResult=/path/to/current-benchmarkData.json \
-  -PbenchmarkBaseline=/path/to/baseline-compose-comparison.json
+  -PbenchmarkBaseline=/path/to/baseline-engine-comparison.json
 ```
 
 Both Markdown and JSON comparison reports identify every row by scenario ID, workload revision,
-and measured action. The gate rejects a baseline row whose scenario identity or workload revision
-differs from the current row. Raw `benchmarkData.json` remains the current-run input, but it is not
-a valid longitudinal baseline because it does not preserve the Demo workload contract.
+engine, and measured action. Report v2 reads accepted `compose-comparison.json` report-v1 baselines
+and preserves their ViewCompose/Compose meaning; it never manufactures missing Android Views data.
+The gate rejects a baseline row whose scenario identity or workload revision differs from the
+current row. Raw `benchmarkData.json` remains the current-run input, but it is not a valid
+longitudinal baseline because it does not preserve the Demo workload contract.
 
 `ReleaseBaselineBenchmark` is the release authority:
 
@@ -159,27 +171,35 @@ a valid longitudinal baseline because it does not preserve the Demo workload con
 5. Compare results longitudinally only on the same device, system version, iteration protocol, and
    thermal policy.
 
-`ListPerformanceComparisonBenchmark` is the Compose list control:
+`ListPerformanceComparisonBenchmark` is the three-engine list control:
 
-1. Both engines run in one R8 target, removing application/resource/process differences.
+1. All three engines run in one R8 target, removing application/resource/process differences.
 2. `CompilationMode.None` prevents precompilation from hiding framework delivery cost.
-3. `viewComposeListScroll/composeListScroll` use identical gestures.
-4. `viewComposeListMutation/composeListMutation` use the same 37-item rotation and update every
-   sixteenth item. Each measured iteration executes eight complete mutate/reset cycles so the
-   run-level frame distribution is large enough for the stability gate.
+3. `viewComposeListScroll/composeListScroll/androidViewsListScroll` use identical gestures.
+4. `viewComposeListMutation/composeListMutation/androidViewsListMutation` use the same 37-item
+   rotation and update every sixteenth item. Each measured iteration executes eight complete
+   mutate/reset cycles so the run-level frame distribution is large enough for the stability gate.
 5. Every iteration waits 5 seconds after the target is ready, outside the measured block, so OEM
    Activity-launch boosting cannot make the first interaction artificially fast.
 6. Conclusions come from one device run; never divide results from different devices.
+7. The Android Views control uses `RecyclerView`, stable IDs, synchronous `DiffUtil`, and
+   payload-aware binding. It represents idiomatic direct-platform reuse rather than a simulated
+   declarative full-tree rebuild.
 
-`ComplexLayoutPerformanceComparisonBenchmark` is the complex-tree control:
+`ComplexLayoutPerformanceComparisonBenchmark` is the three-engine complex-tree control:
 
-1. `viewComposeComplexLayoutScroll/composeComplexLayoutScroll` compare non-Lazy whole-tree scroll.
-2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` update all 18 cards and toggle the
-   conditional detail subtree through eight complete update/reset cycles per measured iteration.
-3. The same 5-second unmeasured post-launch settling window applies to both engines.
+1. `viewComposeComplexLayoutScroll/composeComplexLayoutScroll/androidViewsComplexLayoutScroll`
+   compare non-Lazy whole-tree scroll.
+2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate/androidViewsComplexLayoutUpdate`
+   update all 18 cards and toggle the conditional detail subtree through eight complete
+   update/reset cycles per measured iteration.
+3. The same 5-second unmeasured post-launch settling window applies to all three engines.
 4. Cards, metrics, labels, conditional counts, and nesting order are equal.
 5. This scenario measures ViewGroup depth, whole-tree measure/layout, and local patches; it does not
    evaluate Lazy containers.
+6. The Android Views control retains each card hierarchy, patches its text fields, and genuinely
+   adds or removes the conditional detail row. It is the idiomatic imperative reference, not an
+   assertion of algorithmic equivalence with either declarative engine.
 
 Accepted Samsung SM-G991B / Android 13 replacement baselines from 2026-08-15 use five iterations,
 per-method `NONE`/`LIGHT` starts, the 5-second setup settling window, and clock policy
@@ -194,6 +214,28 @@ per-method `NONE`/`LIGHT` starts, the 5-second setup settling window, and clock 
 
 These are revisioned baseline values, not a claim that one engine is universally faster. In
 particular, list and complex-layout update exercise different framework strategies from scrolling.
+The table remains the full two-engine historical baseline; it is not overwritten by a partial
+three-engine batch.
+
+The same-day fail-fast Android Views batch accepted three complete steady-state actions. All nine
+methods started at `NONE`/`LIGHT`, used the same device/build, 5-second unmeasured settling window,
+`unlocked-dvfs-preflight-v1`, and reported `run-from-apk`. Each emitted the Runtime Image warning,
+so these values are valid only for post-ready interaction and are not clean uncompiled startup
+evidence:
+
+| Workload | ViewCompose P50/P95 | Compose P50/P95 | Android Views P50/P95 | Run-P50 CV (VC/C/AV) |
+| --- | ---: | ---: | ---: | ---: |
+| `performance.list@3` mutation | 4.237 / 9.990 ms | 8.236 / 22.222 ms | 3.940 / 8.666 ms | 0.013 / 0.091 / 0.030 |
+| `performance.complex-layout@3` scroll | 5.412 / 7.363 ms | 5.141 / 7.920 ms | 4.662 / 6.913 ms | 0.082 / 0.070 / 0.008 |
+| `performance.complex-layout@3` update | 5.780 / 36.928 ms | 8.620 / 40.324 ms | 6.912 / 16.007 ms | 0.122 / 0.032 / 0.141 |
+
+The ViewCompose list-scroll control was rejected before its other engines ran. Its P50/P95 was
+`4.212/8.624 ms`, but run P50 values `4.296/4.362/2.627/4.648/4.554 ms` produced CV `0.182`.
+List scroll therefore remains `inconclusive`; the full twelve-method baseline requires a
+clock-controllable device. The accepted same-run memory maxima are also mixed: versus Android
+Views, ViewCompose heap/RSS was `12.2%/2.8%` higher for list mutation, `19.9%/3.5%` higher for
+complex scroll, and `15.3%/7.9%` lower for complex update. Those process-level maxima do not support
+a universal memory winner.
 
 `DemoInteractionBenchmark` retains focused fixture baselines outside the Compose comparisons:
 
@@ -287,14 +329,15 @@ Automated report and regression rules:
 
 1. Comparison output always includes frame CPU P50/P95, frame overrun P50/P95, heap max, and RSS anon
    max.
-2. ViewCompose and Compose for one scenario come from the same benchmark JSON.
-   That JSON may be the deterministic in-memory merge of separately cooled method results from the
-   same context.
+2. Every non-shadow scenario requires ViewCompose, Compose, and Android Views entries from the same
+   benchmark context; shadow scenarios continue to require ViewCompose and Compose. The JSON may be
+   the deterministic in-memory merge of separately cooled method results from the same context.
 3. A historical comparison requires the same device model, system fingerprint, explicit clock
    policy, and compilation mode. Legacy results without a clock policy fall back to strict AndroidX
    CPU-lock snapshot matching.
-4. The gate fails only when both the raw ViewCompose threshold and normalized ViewCompose/Compose
-   ratio threshold are exceeded.
+4. The longitudinal gate remains report-v1 compatible and fails only when both the raw ViewCompose
+   threshold and normalized ViewCompose/Compose ratio threshold are exceeded. Android Views is an
+   absolute and pairwise observation until an explicit future policy changes the control.
 5. Defaults live in `tools/performance/benchmark_policy.json`; changes below the absolute noise floor
    do not fail.
 6. The report computes coefficient of variation across iteration P50 values for positive
@@ -360,8 +403,18 @@ The current conclusion is therefore scoped, not universal:
    Compose ranking;
 5. navigation revision 6 and design-bundle revision 3 remain `inconclusive` until a
    clock-controllable device can produce valid evidence;
-6. the accepted tables do not yet contain a durable same-run memory comparison, so no memory winner
-   is claimed.
+6. the accepted same-run memory directions are mixed, so no universal memory winner is claimed;
+7. the accepted Android Views batch proves three steady-state actions, not the complete scenario:
+   list mutation has a native tail regression, complex scroll has a native median regression, and
+   complex update has a better median but a much worse tail; list scroll remains `inconclusive`.
+
+Against the same-run Android Views control, the accepted partial batch is:
+
+| Workload | P50 delta | P95 delta | Classification | Interpretation |
+| --- | ---: | ---: | --- | --- |
+| `performance.list@3` mutation | 7.5% higher | 15.3% higher | `regressed` | P50 remains inside the combined gate, but the `+1.323 ms` P95 gap crosses both tail thresholds. |
+| `performance.complex-layout@3` scroll | 16.1% higher | 6.5% higher | `regressed` | The `+0.750 ms` median gap crosses both P50 thresholds; P95 remains inside the gate. |
+| `performance.complex-layout@3` update | 16.4% lower | 130.7% higher | `mixed` | The median is `1.132 ms` better, but P95 is `20.921 ms` worse; patch throughput and tail latency move in opposite directions. |
 
 Correct reuse, group-level invalidation plus skipped work, and stable container refresh semantics
 remain the optimization strategy. SlotTable Lite and subtree recomposition are on the main path and
@@ -458,8 +511,11 @@ reasons are readable; node highlighting, cross-session correlation, and per-node
 
 ### Phase 4: Containers and layout
 
-Status: list and complex-layout Compose controls, memory metrics, automated reports, and normalized
-gates are established. Continue reducing layout cost in hot containers and complex pages.
+Status: list and complex-layout Compose controls, Android Views source controls, memory metrics,
+engine-neutral reports, and normalized ViewCompose/Compose gates are established. Three
+same-context Android Views actions are accepted; list scroll remains `inconclusive` until a
+clock-controllable device can complete the twelve-method batch. Continue reducing layout cost in
+hot containers and complex pages while keeping the three-engine workload contract aligned.
 
 ### Phase 5: Release optimization
 
@@ -489,3 +545,4 @@ See [Development workflow](../project/workflow.md).
 3. [Unified roadmap](../project/roadmap.md)
 4. [Documentation entrance](../README.md)
 5. [State snapshots](../architecture/state-snapshots.md)
+6. [Android Views performance control plan](../project/plans/android-views-performance-control.md)

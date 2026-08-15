@@ -3,7 +3,7 @@ package com.viewcompose.performance
 import android.content.Context
 import com.viewcompose.R
 
-/** Localized copy shared by both engines so comparison fixtures render the same content. */
+/** Localized copy shared by every engine so comparison fixtures render the same content. */
 internal class PerformanceCopy(
     context: Context,
 ) {

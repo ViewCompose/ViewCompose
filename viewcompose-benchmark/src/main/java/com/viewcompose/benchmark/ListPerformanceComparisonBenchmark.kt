@@ -13,8 +13,7 @@ import org.junit.Assert.assertEquals
 import org.junit.runner.RunWith
 
 /**
- * ViewCompose 与 Compose 大列表场景的帧耗时和内存对照 benchmark。
- * Paired frame-time and memory benchmark for the ViewCompose and Compose large-list scenario.
+ * Frame-time and memory benchmark for the ViewCompose, Compose, and Android Views list scenario.
  */
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalMetricApi::class)
@@ -37,6 +36,13 @@ class ListPerformanceComparisonBenchmark {
     }
 
     @Test
+    fun androidViewsListScroll() {
+        measureListScroll(
+            engine = "android_views",
+        )
+    }
+
+    @Test
     fun viewComposeListMutation() {
         measureListMutation(
             engine = "viewcompose",
@@ -47,6 +53,13 @@ class ListPerformanceComparisonBenchmark {
     fun composeListMutation() {
         measureListMutation(
             engine = "compose",
+        )
+    }
+
+    @Test
+    fun androidViewsListMutation() {
+        measureListMutation(
+            engine = "android_views",
         )
     }
 

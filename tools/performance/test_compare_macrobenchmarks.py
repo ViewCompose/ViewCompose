@@ -1,6 +1,4 @@
-"""性能报告脚本的单元测试。
-Unit tests for the performance report script.
-"""
+"""Unit tests for the engine-neutral performance report script."""
 
 import json
 import re
@@ -21,9 +19,7 @@ def benchmark_entry(
     frame_p95: float,
     memory_kb: float,
 ) -> dict:
-    """构造一个最小 Macrobenchmark 条目。
-    Builds one minimal Macrobenchmark entry.
-    """
+    """Build one minimal Macrobenchmark entry."""
 
     return {
         "name": name,
@@ -58,32 +54,30 @@ def benchmark_entry(
 def result(
     viewcompose_multiplier: float = 1.0,
     compose_multiplier: float = 1.0,
+    android_views_multiplier: float = 1.0,
     fingerprint: str = "device/build",
     cpu_locked: bool = True,
     clock_policy: Optional[str] = None,
 ) -> dict:
-    """构造包含所有配对场景的 Macrobenchmark 结果。
-    Builds a Macrobenchmark result containing all paired scenarios.
-    """
+    """Build a Macrobenchmark result containing each scenario's required engines."""
 
     entries = []
-    for _, viewcompose_name, compose_name in comparison.SCENARIOS:
-        entries.append(
-            benchmark_entry(
-                viewcompose_name,
-                4.0 * viewcompose_multiplier,
-                8.0 * viewcompose_multiplier,
-                20_000 * viewcompose_multiplier,
-            ),
-        )
-        entries.append(
-            benchmark_entry(
-                compose_name,
-                2.0 * compose_multiplier,
-                4.0 * compose_multiplier,
-                10_000 * compose_multiplier,
-            ),
-        )
+    engine_values = {
+        comparison.VIEWCOMPOSE_ENGINE: (4.0, viewcompose_multiplier),
+        comparison.COMPOSE_ENGINE: (2.0, compose_multiplier),
+        comparison.ANDROID_VIEWS_ENGINE: (1.5, android_views_multiplier),
+    }
+    for contract in comparison.SCENARIOS:
+        for engine, benchmark_name in contract.methods.items():
+            base, multiplier = engine_values[engine]
+            entries.append(
+                benchmark_entry(
+                    benchmark_name,
+                    base * multiplier,
+                    base * 2 * multiplier,
+                    base * 5_000 * multiplier,
+                ),
+            )
     return {
         "context": {
             "build": {
@@ -102,9 +96,7 @@ def result(
 
 
 class CompareMacrobenchmarksTest(unittest.TestCase):
-    """验证配对对比、归一化回归门禁和 CLI 输出。
-    Verifies paired comparisons, normalized regression gating, and CLI output.
-    """
+    """Verify three-engine results, compatibility, stability, and regression gating."""
 
     def setUp(self) -> None:
         self.policy = {
@@ -169,23 +161,48 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
             report_revisions,
         )
 
-    def test_builds_all_paired_comparisons(self) -> None:
+    def test_builds_absolute_measurements_and_explicit_comparisons(self) -> None:
         entries = comparison.benchmark_entries(result())
+        measurements = comparison.build_measurements(entries)
         comparisons = comparison.build_comparisons(entries)
 
-        self.assertEqual(len(comparison.SCENARIOS) * 6, len(comparisons))
+        self.assertEqual(
+            sum(len(contract.methods) * 6 for contract in comparison.SCENARIOS),
+            len(measurements),
+        )
+        self.assertEqual(
+            sum(
+                (
+                    2
+                    if comparison.ANDROID_VIEWS_ENGINE in contract.methods
+                    else 1
+                ) * 6
+                for contract in comparison.SCENARIOS
+            ),
+            len(comparisons),
+        )
         list_scroll = next(
             item
             for item in comparisons
             if item.scenario == "list_scroll"
             and item.metric == "frameDurationCpuMs"
             and item.statistic == "P50"
+            and item.control_engine == comparison.COMPOSE_ENGINE
         )
-        self.assertEqual(4.0, list_scroll.viewcompose)
-        self.assertEqual(2.0, list_scroll.compose)
+        self.assertEqual(4.0, list_scroll.subject_value)
+        self.assertEqual(2.0, list_scroll.control_value)
         self.assertEqual(100.0, list_scroll.relative_percent)
         self.assertEqual("performance.list", list_scroll.scenario_id)
         self.assertEqual(3, list_scroll.workload_revision)
+        native_control = next(
+            item
+            for item in comparisons
+            if item.scenario == "list_scroll"
+            and item.metric == "frameDurationCpuMs"
+            and item.statistic == "P50"
+            and item.control_engine == comparison.ANDROID_VIEWS_ENGINE
+        )
+        self.assertEqual(1.5, native_control.control_value)
         self.assertTrue(
             any(item.scenario == "shadow_list_scroll" for item in comparisons),
         )
@@ -194,9 +211,9 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
         partial = result()
         shadow_names = {
             name
-            for scenario, viewcompose_name, compose_name in comparison.SCENARIOS
-            if scenario.startswith("shadow_")
-            for name in (viewcompose_name, compose_name)
+            for contract in comparison.SCENARIOS
+            if contract.name.startswith("shadow_")
+            for name in contract.methods.values()
         }
         partial["benchmarks"] = [
             entry
@@ -221,7 +238,10 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
 
         stability = comparison.build_stability(entries, 0.15)
 
-        self.assertEqual(len(comparison.SCENARIOS) * 2, len(stability))
+        self.assertEqual(
+            sum(len(contract.methods) for contract in comparison.SCENARIOS),
+            len(stability),
+        )
         self.assertEqual(
             {"frameDurationCpuMs"},
             {item.metric for item in stability},
@@ -338,7 +358,7 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
             comparison.context_mismatches(first, second),
         )
 
-    def test_rejects_partial_scenario_without_compose_control(self) -> None:
+    def test_rejects_partial_shadow_scenario_without_compose_control(self) -> None:
         partial = result()
         partial["benchmarks"] = [
             entry
@@ -346,7 +366,21 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
             if entry["name"] == "viewComposeShadowListScroll"
         ]
 
-        with self.assertRaisesRegex(ValueError, "incomplete comparison pairs"):
+        with self.assertRaisesRegex(ValueError, "incomplete engine sets"):
+            comparison.benchmark_entries(partial)
+
+    def test_rejects_non_shadow_scenario_without_android_views_control(self) -> None:
+        partial = result()
+        partial["benchmarks"] = [
+            entry
+            for entry in partial["benchmarks"]
+            if entry["name"] in {
+                "viewComposeListScroll",
+                "composeListScroll",
+            }
+        ]
+
+        with self.assertRaisesRegex(ValueError, "androidViewsListScroll"):
             comparison.benchmark_entries(partial)
 
     def test_detects_regression_when_compose_control_is_stable(self) -> None:
@@ -429,9 +463,53 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
             ),
         )
 
+    def test_loads_accepted_two_engine_v1_baseline(self) -> None:
+        raw = result()
+        current = comparison.build_comparisons(
+            comparison.benchmark_entries(raw),
+        )
+        legacy_rows = []
+        for item in current:
+            if item.control_engine != comparison.COMPOSE_ENGINE:
+                continue
+            legacy_rows.append(
+                {
+                    "scenario": item.scenario,
+                    "scenario_id": item.scenario_id,
+                    "workload_revision": item.workload_revision,
+                    "metric": item.metric,
+                    "statistic": item.statistic,
+                    "viewcompose": item.subject_value,
+                    "compose": item.control_value,
+                    "delta": item.delta,
+                    "relative_percent": item.relative_percent,
+                },
+            )
+
+        loaded = comparison.revisioned_baseline_comparisons(
+            {"comparisons": legacy_rows},
+        )
+
+        self.assertTrue(loaded)
+        self.assertEqual(
+            {comparison.COMPOSE_ENGINE},
+            {item.control_engine for item in loaded},
+        )
+
     def test_rejects_unrevisioned_raw_baseline(self) -> None:
-        with self.assertRaisesRegex(ValueError, "revisioned compose-comparison.json"):
+        with self.assertRaisesRegex(ValueError, "revisioned engine-comparison"):
             comparison.revisioned_baseline_comparisons(result())
+
+    def test_baseline_directory_prefers_engine_report_v2_over_newer_v1(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report_v2 = root / "engine-comparison.json"
+            report_v1 = root / "compose-comparison.json"
+            report_v2.write_text("{}", encoding="utf-8")
+            report_v1.write_text("{}", encoding="utf-8")
+            report_v1.touch()
+
+            self.assertEqual(report_v2, comparison.resolve_baseline_path(root))
 
     def test_cli_writes_markdown_and_json_reports(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -462,9 +540,14 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
                 markdown.read_text(encoding="utf-8"),
             )
             summary = json.loads(json_output.read_text(encoding="utf-8"))
+            self.assertEqual(2, summary["schemaVersion"])
             self.assertEqual(
                 "NOT_RUN",
                 summary["gateStatus"],
+            )
+            self.assertIn(
+                comparison.ANDROID_VIEWS_ENGINE,
+                {item["engine"] for item in summary["measurements"]},
             )
             self.assertEqual(
                 {"performance.list", "performance.complex-layout",

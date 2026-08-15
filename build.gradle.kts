@@ -2248,7 +2248,7 @@ tasks.register("benchmarkRelease") {
 
 tasks.register<Exec>("benchmarkComparisonReport") {
     group = "verification"
-    description = "Generate paired ViewCompose/Compose benchmark Markdown and JSON reports."
+    description = "Generate engine-neutral benchmark Markdown and JSON reports."
     workingDir(rootDir)
     mustRunAfter("benchmarkRelease")
     doFirst {
@@ -2272,7 +2272,7 @@ tasks.register<Exec>("benchmarkComparisonReport") {
 
 tasks.register("benchmarkCompare") {
     group = "verification"
-    description = "Run release macrobenchmarks and generate the paired comparison report."
+    description = "Run release macrobenchmarks and generate the engine comparison report."
     dependsOn(
         "benchmarkRelease",
         "benchmarkComparisonReport",

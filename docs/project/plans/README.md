@@ -4,6 +4,10 @@ This directory contains multi-step work that is currently active and must surviv
 
 ## Active plans
 
+- [Android Views performance control](./android-views-performance-control.md) — add native controls
+  and three-engine reports for non-shadow workloads while preserving the historical Compose gate;
+  three steady-state actions are accepted and the complete list-scroll batch awaits a
+  clock-controllable device.
 - [Cross-session theme propagation](./cross-session-theme-propagation.md) — make one observable
   application theme choice converge across independent Activity roots, add a secondary-Activity
   switch-and-return Demo, and refresh retained NavHost destinations with the latest Local snapshot
