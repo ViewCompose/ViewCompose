@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 88f6d37fcfb4dd9c18ad3479f2465c1dcabc3cbd8410e1db34594a4f824ab384
+translation_source_hash: fd45cc71e55d9755d0a3c46f4ae57ec282564859b1c8ac37d2231d970f8ef819
 translation_status: current
 ---
 
@@ -136,6 +136,21 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 3. `shadowRenderPolicy=exact_bitmap|render_node|auto` 只切换 ViewCompose 后端，不改变工作负载；Compose 结果用于归一化设备温度和后台噪声。
 4. 2026-07-30 在 Samsung SM-G991B / Android 13 上各运行 10 轮，RenderNode 相对 ExactBitmap 的 P50、P95 与 RSS 方向混杂，没有证明稳定收益。
 5. 因此 `Auto` 继续固定为 `ExactBitmap`；`RenderNodeDisplayList` 保留为显式实验策略，不能作为发布默认值。
+
+2026-08-15 在 Samsung SM-G991B / Android 13 上验收的 `Auto`（`ExactBitmap`）替换基线使用
+5 次 iteration、每个方法从 `NONE`/`LIGHT` 起跑、5 秒 setup 稳定窗口、8 个变更/更新闭环，
+并记录 `unlocked-dvfs-preflight-v1` 时钟策略：
+
+| 工作负载 | ViewCompose P50/P95 | Compose P50/P95 | ViewCompose/Compose run-P50 CV |
+| --- | ---: | ---: | ---: |
+| `performance.shadow-list@2` 滚动 | 4.613 / 9.650 ms | 5.022 / 8.708 ms | 0.052 / 0.044 |
+| `performance.shadow-list@2` 变更 | 4.860 / 9.750 ms | 9.035 / 24.787 ms | 0.023 / 0.117 |
+| `performance.shadow-complex-layout@2` 滚动 | 5.728 / 8.724 ms | 5.481 / 8.695 ms | 0.016 / 0.046 |
+| `performance.shadow-complex-layout@2` 更新 | 6.236 / 41.506 ms | 10.348 / 46.824 ms | 0.049 / 0.044 |
+
+8 个方法全部通过 `0.15` run 稳定性门禁。对照报告保留 AndroidX 原始 `cpuLocked` 混合快照，
+同时依据主机预检并显式记录的时钟策略验收该批次。更新场景的高 P95 仍属于基线的一部分：
+两个引擎都会重建多张带阴影卡片和条件子树，不能只用 P50 解释结果。
 
 同机后端对比入口：
 

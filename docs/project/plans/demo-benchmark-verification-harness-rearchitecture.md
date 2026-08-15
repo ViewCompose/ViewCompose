@@ -6,7 +6,8 @@ Active. Phase 0 inventory and workload freeze, Phase 1 contract and automation s
 and catalog hard cut, Phase 3 localization and content hard cut, and Phase 4 scenario migration are
 complete. Phase 5 benchmark rebaseline is in progress; release, renderer diagnostics, list revision
 3, complex-layout revision 3, diagnostics-theme revision 2, and collection-stress revision 2
-replacement baselines are accepted.
+replacement baselines are accepted. Shadow-list and shadow-complex-layout revision 2 replacement
+baselines are also accepted.
 
 The Demo is being redefined as a deterministic benchmark and framework-verification harness.
 Automated validation owns the primary information architecture. Human verification remains a
@@ -15,7 +16,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-15.
 
-Next action: complete the Phase 5 shadow-comparison revision 2 baselines.
+Next action: complete the Phase 5 navigation-motion revision 2 and design-bundle revision 2
+baselines.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -1078,6 +1080,13 @@ direction with a 500 ms settle after every gesture. The settle is explicit becau
 workaround disables UiAutomator's implicit idle timeout. Collection mutation executes eight complete
 rotate/insert/reset cycles and verifies the restored state after every cycle.
 
+The shadow comparison baseline uses the same per-method cooling and launch-settling protocol.
+Mutation and update now execute eight complete action/reset cycles per iteration; every reset must
+restore the initial state. All eight `Auto` (`ExactBitmap`) methods passed the `0.15` frame-CPU
+run-P50 stability gate. The owning performance specification records the paired P50/P95 values and
+CVs; the raw batch retains mixed AndroidX `cpuLocked` snapshots and the common host-verified clock
+policy rather than rewriting captured metadata.
+
 ## Explicit removals and non-goals
 
 This plan removes or rejects:
@@ -1209,6 +1218,7 @@ the retired Demo layout.
 | 2026-08-15 | Phase 5 fixture-interaction workload audit | Diagnostics initially failed to return to its top anchor because the reverse fling began in the fixed header instead of the scrolling surface. Collection's original three-swipe workload produced run-P50 CV `0.755`; enlarging it while resolving targets inside measurement produced CV `0.712`. Moving Accessibility lookup to setup still exposed 3.6/7.2/14.7 ms run plateaus. Fixed 120 Hz and full ART compilation trials did not remove them. Perfetto showed stable RecyclerView and draw work but variable `dequeueBuffer` wait with FrameTimeline `Buffer Stuffing`, proving that zero-idle back-to-back gestures contaminated the workload. A fixed 500 ms inter-gesture settle removed the stuffing. |
 | 2026-08-15 | Phase 5 diagnostics-theme and collection-stress revision 2 baselines | Five clean, per-method-cooled runs passed the `0.15` stability gate. Diagnostics long-fling, collection scroll, and collection mutation frame-CPU P50/P95 values were `3.067/7.336`, `3.357/6.288`, and `4.358/10.507` ms; their run-P50 CV values were `0.008`, `0.018`, and `0.018`. Every raw result records the scenario, revision, and explicit clock policy. |
 | 2026-08-15 | Phase 5 workload-revision consistency gate | Corrected the Demo registry to list/complex revision 3 and shadow revision 2. Kotlin pins the accepted registry values, while the report-tool suite parses the registry and rejects cross-layer drift. The correction is metadata-only for isolated performance screens, so accepted revision 3 list/complex measurements remain valid. |
+| 2026-08-15 | Phase 5 shadow-comparison revision 2 baselines | Eight independently cooled `Auto`/`ExactBitmap` methods passed the `0.15` stability gate. Shadow-list scroll/mutation ViewCompose run-P50 CV values were `0.052/0.023` versus Compose `0.044/0.117`; shadow-complex scroll/update values were `0.016/0.049` versus `0.046/0.044`. Mutation/update use eight complete action/reset cycles, and the owning performance specification records all paired P50/P95 values. |
 
 ## Decision history
 

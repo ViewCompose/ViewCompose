@@ -224,6 +224,22 @@ scroll cost.
 5. `Auto` therefore remains `ExactBitmap`; `RenderNodeDisplayList` is an explicit experiment, not a
    release default.
 
+Accepted Samsung SM-G991B / Android 13 `Auto` (`ExactBitmap`) replacement baselines from
+2026-08-15 use five iterations, per-method `NONE`/`LIGHT` starts, the 5-second setup settling
+window, eight mutation/update cycles, and clock policy `unlocked-dvfs-preflight-v1`:
+
+| Workload | ViewCompose P50/P95 | Compose P50/P95 | ViewCompose/Compose run-P50 CV |
+| --- | ---: | ---: | ---: |
+| `performance.shadow-list@2` scroll | 4.613 / 9.650 ms | 5.022 / 8.708 ms | 0.052 / 0.044 |
+| `performance.shadow-list@2` mutation | 4.860 / 9.750 ms | 9.035 / 24.787 ms | 0.023 / 0.117 |
+| `performance.shadow-complex-layout@2` scroll | 5.728 / 8.724 ms | 5.481 / 8.695 ms | 0.016 / 0.046 |
+| `performance.shadow-complex-layout@2` update | 6.236 / 41.506 ms | 10.348 / 46.824 ms | 0.049 / 0.044 |
+
+All eight methods pass the `0.15` run-stability gate. The comparison report preserves mixed raw
+AndroidX `cpuLocked` snapshots while accepting the batch through its explicit host-verified clock
+policy. High update P95 values remain part of the baseline: both engines rebuild many shadowed
+cards and a conditional subtree, so P50 alone is not an adequate interpretation.
+
 Same-device backend commands:
 
 ```bash
