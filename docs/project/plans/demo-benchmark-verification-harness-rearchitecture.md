@@ -1049,6 +1049,14 @@ layout advance to revision 3; both shadow comparison scenarios advance to revisi
 list results and partial complex-layout results are retained only as rejected preflight evidence and
 are not accepted as replacement baselines.
 
+The Demo registry and report tool must publish those same revisions. A cross-language report-tool
+test parses the four registered performance scenarios and rejects any disagreement with
+`SCENARIO_CONTRACTS`; a focused registry unit test also pins the accepted values. The registry
+correction from list/complex revision 2 and shadow revision 1 changes metadata only: the isolated
+performance screens do not render or branch on that field, and the accepted revision 3 raw payloads
+already identify the measured workload correctly. The existing list/complex physical results
+therefore remain valid rather than being relabeled after collection.
+
 For structurally unchanged workloads, apply the repository performance policy: P50 fails only when
 it regresses by more than both 5% and 0.3 ms; P95 fails only when it regresses by more than both 10%
 and 0.8 ms. Unstable runs are rerun rather than interpreted. A changed workload revision receives a
@@ -1200,6 +1208,7 @@ the retired Demo layout.
 | 2026-08-15 | Phase 5 list and complex-layout replacement baselines | Five-iteration, per-method-cooled revision 3 batches passed the `0.15` stability gate. List scroll/mutation ViewCompose run-P50 CV values were `0.041/0.009` versus Compose `0.072/0.034`; complex-layout scroll/update values were `0.011/0.079` versus `0.037/0.082`. The owning performance specification records the accepted P50/P95 values. |
 | 2026-08-15 | Phase 5 fixture-interaction workload audit | Diagnostics initially failed to return to its top anchor because the reverse fling began in the fixed header instead of the scrolling surface. Collection's original three-swipe workload produced run-P50 CV `0.755`; enlarging it while resolving targets inside measurement produced CV `0.712`. Moving Accessibility lookup to setup still exposed 3.6/7.2/14.7 ms run plateaus. Fixed 120 Hz and full ART compilation trials did not remove them. Perfetto showed stable RecyclerView and draw work but variable `dequeueBuffer` wait with FrameTimeline `Buffer Stuffing`, proving that zero-idle back-to-back gestures contaminated the workload. A fixed 500 ms inter-gesture settle removed the stuffing. |
 | 2026-08-15 | Phase 5 diagnostics-theme and collection-stress revision 2 baselines | Five clean, per-method-cooled runs passed the `0.15` stability gate. Diagnostics long-fling, collection scroll, and collection mutation frame-CPU P50/P95 values were `3.067/7.336`, `3.357/6.288`, and `4.358/10.507` ms; their run-P50 CV values were `0.008`, `0.018`, and `0.018`. Every raw result records the scenario, revision, and explicit clock policy. |
+| 2026-08-15 | Phase 5 workload-revision consistency gate | Corrected the Demo registry to list/complex revision 3 and shadow revision 2. Kotlin pins the accepted registry values, while the report-tool suite parses the registry and rejects cross-layer drift. The correction is metadata-only for isolated performance screens, so accepted revision 3 list/complex measurements remain valid. |
 
 ## Decision history
 

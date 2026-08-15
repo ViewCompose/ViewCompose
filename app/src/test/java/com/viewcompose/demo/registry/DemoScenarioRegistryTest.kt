@@ -88,6 +88,23 @@ class DemoScenarioRegistryTest {
     }
 
     @Test
+    fun `performance workload revisions match the accepted benchmark contracts`() {
+        val expected = mapOf(
+            DemoScenarioIds.PerformanceList to 3,
+            DemoScenarioIds.PerformanceComplexLayout to 3,
+            DemoScenarioIds.PerformanceShadowList to 2,
+            DemoScenarioIds.PerformanceShadowComplexLayout to 2,
+        )
+
+        expected.forEach { (scenarioId, workloadRevision) ->
+            assertEquals(
+                workloadRevision,
+                DemoScenarioRegistry.require(scenarioId.value).benchmark?.workloadRevision,
+            )
+        }
+    }
+
+    @Test
     fun `validation rejects duplicate identity missing reset and invalid workload`() {
         val source = DemoScenarioRegistry.require(DemoScenarioIds.RuntimeState.value)
         assertThrows(IllegalArgumentException::class.java) {

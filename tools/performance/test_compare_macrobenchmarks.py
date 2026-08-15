@@ -3,6 +3,7 @@ Unit tests for the performance report script.
 """
 
 import json
+import re
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -115,6 +116,58 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
                 },
             },
         }
+
+    def test_report_contracts_match_demo_registry_revisions(self) -> None:
+        registry_path = (
+            Path(__file__).resolve().parents[2]
+            / "app/src/main/java/com/viewcompose/demo/registry/DemoScenarioRegistry.kt"
+        )
+        source = registry_path.read_text(encoding="utf-8")
+        registry_revisions = {}
+        cursor = 0
+        while True:
+            start = source.find("performanceScenario(", cursor)
+            if start < 0:
+                break
+            depth = 0
+            end = start
+            while end < len(source):
+                character = source[end]
+                if character == "(":
+                    depth += 1
+                elif character == ")":
+                    depth -= 1
+                    if depth == 0:
+                        end += 1
+                        break
+                end += 1
+            block = source[start:end]
+            scenario_id = re.search(r"id\s*=\s*DemoScenarioIds\.(\w+)", block)
+            revision = re.search(r"benchmarkRevision\s*=\s*(\d+)", block)
+            if scenario_id:
+                registry_revisions[scenario_id.group(1)] = (
+                    int(revision.group(1)) if revision else 1
+                )
+            cursor = end
+
+        kotlin_ids = {
+            "performance.list": "PerformanceList",
+            "performance.complex-layout": "PerformanceComplexLayout",
+            "performance.shadow-list": "PerformanceShadowList",
+            "performance.shadow-complex-layout": "PerformanceShadowComplexLayout",
+        }
+        report_revisions = {}
+        for scenario_id, workload_revision in comparison.SCENARIO_CONTRACTS.values():
+            previous = report_revisions.setdefault(scenario_id, workload_revision)
+            self.assertEqual(previous, workload_revision)
+
+        self.assertEqual(
+            {
+                scenario_id: registry_revisions[kotlin_id]
+                for scenario_id, kotlin_id in kotlin_ids.items()
+            },
+            report_revisions,
+        )
 
     def test_builds_all_paired_comparisons(self) -> None:
         entries = comparison.benchmark_entries(result())
