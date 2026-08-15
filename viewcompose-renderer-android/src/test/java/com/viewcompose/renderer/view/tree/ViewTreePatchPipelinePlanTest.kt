@@ -16,8 +16,9 @@ class ViewTreePatchPipelinePlanTest {
     }
 
     @Test
-    fun `rebind and skip-self plans still reconcile children`() {
+    fun `rebind modifier-only and skip-self plans still reconcile children`() {
         assertTrue(ViewTreePatchPipeline.shouldReconcileChildren(NodeBindingPlan.Rebind))
+        assertTrue(ViewTreePatchPipeline.shouldReconcileChildren(NodeBindingPlan.ModifierOnly))
         assertTrue(ViewTreePatchPipeline.shouldReconcileChildren(NodeBindingPlan.SkipSelfOnly))
         // Patch branch remains "reconcile children" by design and is covered by integration paths.
     }

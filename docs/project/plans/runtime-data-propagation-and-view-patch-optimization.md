@@ -2,10 +2,12 @@
 
 ## Status
 
-Active after a 2026-08-15 implementation, necessity, and benchmark-gate re-audit. Phases 0 and 1 are implemented:
-nullable Local lookup is correct, framework-owned logical tuples publish atomically, and one global
-Snapshot Apply invalidates each affected Observation at most once. The remaining active work is two
-bounded Android View/runtime allocation experiments. Their affected-scenario replacement baseline
+Active after a 2026-08-15 implementation, necessity, and benchmark-gate re-audit. Phases 0, 1, and
+2 are implemented: nullable Local lookup is correct, framework-owned logical tuples publish
+atomically, one global Snapshot Apply invalidates each affected Observation at most once, and a
+modifier-only Android View update no longer repeats semantic Node binding or unchanged
+LayoutParams work. The remaining active work is the bounded LocalSnapshot identity-reuse
+experiment. Its affected-scenario replacement baseline
 gate is satisfied by the accepted release state-patch, renderer, list, and complex-layout results.
 Unrelated navigation and design-system matrices remain device-blocked but do not exercise either
 experiment. The
@@ -19,13 +21,12 @@ Those capabilities are audited as current foundations below, not repeated as unf
 
 Last verified: 2026-08-15.
 
-Next action: execute Phase 2 as a test-first modifier-only binding experiment, retain or revert it
-against deterministic operation counts and the accepted replacement baselines, then execute the
-independent Phase 3 LocalSnapshot identity-reuse experiment under the same rule.
+Next action: execute the independent Phase 3 LocalSnapshot identity-reuse experiment under the same
+deterministic operation-count and accepted-workload rule.
 
 ## Maven release changesets
 
-- `release/changes/20260814-runtime-data-propagation-correctness.json`
+- `release/changes/20260814-composition-runtime-correctness.json`
 
 ## Objective
 
@@ -282,6 +283,27 @@ not block these experiments.
 
 ## Phase 2: Modifier-only Android View patch experiment
 
+**Implemented and retained on 2026-08-15.** `ModifierOnly` is an explicit internal binding plan.
+The renderer reuses the existing modifier-family appliers, resolves the next chain once, replaces
+LayoutParams only for layout or parent-data changes, and keeps type/environment/spec incompatibility
+and cross-owner reuse on full rebind. The path remains inside renderer preflight and rollback,
+continues child reconciliation, replays changed native configuration keys, and does not run
+AndroidView update, reset, commit, or release callbacks.
+
+Focused transaction evidence records zero rebound nodes and one patched node for the target update.
+A visual-only update preserves the exact LayoutParams object, while a width change replaces it
+without semantic rebinding. The renderer's complete unit suite covers the existing draw/property,
+semantics/interaction, insets, nested-scroll, focus, decoration, and removal cleanup appliers;
+new route-level tests cover native configuration, AndroidView lifecycle, and failed-patch rollback.
+
+The post-change five-iteration `runtime.view-patch` release run started at thermal status `NONE` and
+ended at `MODERATE`; frame CPU P50/P95 were `2.507/4.457 ms`, versus `2.864/4.470 ms` in the accepted
+pre-change result. This is a non-regression signal, not a replacement longitudinal baseline: the old
+result predates the explicit clock-policy identity, and AndroidX still reports that this non-rooted
+device cannot clear its Runtime Image. The deterministic operation-count target and full renderer
+suite are therefore the keep authority; the physical result supplies the required affected-workload
+check without rewriting the accepted baseline.
+
 Introduce one explicit modifier-only binding plan only if the baseline reaches the current Rebind
 path. The implementation must:
 
@@ -417,6 +439,8 @@ This plan is complete when all of the following are true:
 | 2026-08-14 | Current working tree | Demo benchmark and automation audit | Performance experiments blocked on direct scenario IDs and explicit workload revisions; correctness work remains unblocked. |
 | 2026-08-14 | Current working tree | Focused RuntimeObservation, nullable Local/delayed Session, Transition, Animatable, MutableTransitionState, anchored drag, TextFieldState, and snapshotFlow tests | Phase 0 and Phase 1 correctness hard cut implemented; modifier-only Patch and LocalSnapshot experiments remain gated by the replacement Demo baseline. |
 | 2026-08-15 | Demo revisioned release, renderer, list, complex-layout, diagnostics, collection, and shadow results | All affected and representative Runtime/Patch workloads pass the repository stability gate; only unrelated navigation/design matrices remain device-blocked | Unlock Phase 2 and Phase 3 independently; each still requires deterministic operation-count improvement and no accepted-workload policy regression. |
+| 2026-08-15 | `NodeBindingDifferTest`, `ViewTreePatchPipelinePlanTest`, `ViewTreeRenderTransactionTest`, and the complete renderer unit suite | Pure visual modifier update reports zero rebound/one patch and preserves LayoutParams identity; layout changes replace only LayoutParams; native configuration rollback and AndroidView lifecycle isolation pass | Retain Phase 2 `ModifierOnly`; it removes the measured redundant operations without new binder branches or lifecycle escape paths. |
+| 2026-08-15 | Five-iteration release `runtime.view-patch` post-change run on SM-G991B / Android 13 | Start thermal `NONE`, end `MODERATE`; frame CPU P50/P95 `2.507/4.457 ms` versus accepted pre-change `2.864/4.470 ms`; explicit clock policy present, but the legacy baseline identity and Runtime Image warning prevent replacement-baseline status | No regression signal; retain the deterministic Phase 2 decision and leave the accepted longitudinal baseline unchanged. |
 
 ## Decision history
 
@@ -426,6 +450,7 @@ This plan is complete when all of the following are true:
 | 2026-08-05 | Prefer existing Snapshot transactions and immutable render inputs | They preserve conflict, observation, rollback, and subtree-skip semantics. |
 | 2026-08-14 | Narrow immediate work to nullable Local lookup, atomic related-state publication, and one-apply observation delivery | These are current contract defects or deterministic transaction-level redundancy. |
 | 2026-08-14 | Retain modifier-only binding and LocalSnapshot identity reuse behind the replacement Demo baseline | Their redundant-work paths are concrete, but end-to-end keep decisions require stable workload identity. |
+| 2026-08-15 | Retain the implemented modifier-only binding plan | It reaches zero full binds and zero LayoutParams replacement for visual-only changes, preserves renderer rollback and AndroidView lifecycle, passes the full renderer suite, and shows no affected-workload regression signal. |
 | 2026-08-14 | Remove shared Session scheduling from this plan | Callback batching does not reduce independent render work, and no evidence justifies its global lifecycle complexity. |
 | 2026-08-14 | Remove broad trace correlation and diagnostics productization | Existing focused diagnostics are sufficient for retained work; more hot-path instrumentation is not a product goal. |
 | 2026-08-14 | Reject persistent maps, dependency-set reuse, derived suppression, tracked Locals, environment partial patches, and object pools from the active sequence | Their current benefit is unproven and their semantic or maintenance risk is disproportionate. |

@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 24dffc822977984f517cefb7452537518f8e033b766a821bdeb6e0eb232a1bcf
+translation_source_hash: affe67c18dc4f4f199bcf98b161c803139a8b593a4a865142faaa59c79397dbb
 translation_status: current
 ---
 
@@ -51,6 +51,9 @@ translation_status: current
     cold-start workload 不等待，因为启动本身就是被测操作。
 25. 导航动效继续分开测量 push 与 pop，但每个 measured iteration 执行 8 次同方向转场；
     pop 在 measured block 外预先压入 8 个 destination。
+26. Type、Environment 与 NodeSpec 均未变化的复用节点会执行仅 Modifier Patch。纯视觉更新会
+    保留 LayoutParams 并跳过完整 Node Binding；布局 Modifier 只替换 LayoutParams，不会重建或
+    重新执行原生 View 的语义绑定。
 
 ### 2.2 发布态基准入口
 

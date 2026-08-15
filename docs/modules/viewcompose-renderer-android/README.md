@@ -161,6 +161,12 @@ Because the current line is alpha, the documentation site intentionally does not
   only when every direct child is the exact VNode instance reused by composition; newly built,
   value-equal children still reconcile because nested session callbacks may have changed. Custom
   host behavior must not infer business state from patch records or diagnostic counters.
+- When type, environment, and NodeSpec are unchanged, a changed Modifier uses a modifier-only
+  patch. It retains the native View and semantic Node binding, applies the existing per-family
+  Modifier diff, and reconciles children. Visual-only changes retain the existing LayoutParams;
+  layout or parent-data changes replace them. A changed `NativeViewElement.stableKey` replays its
+  configuration, while AndroidView update, reset, commit, and release callbacks remain untouched.
+  Diagnostics classify this path as a targeted patch with detail `ModifierOnly`.
 - Gesture dispatch retains an undecided pointer stream until drag recognition. If the stream ends
   without gesture consumption, the retained target receives one normal click; a recognized drag
   consumes the stream and suppresses that click.

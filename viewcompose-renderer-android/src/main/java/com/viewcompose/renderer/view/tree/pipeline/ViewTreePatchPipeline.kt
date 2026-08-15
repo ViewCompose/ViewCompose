@@ -432,6 +432,19 @@ internal object ViewTreePatchPipeline {
                         )
                     }
 
+                    NodeBindingPlan.ModifierOnly -> {
+                        ViewModifierApplier.applyModifier(
+                            view = mountedNode.view,
+                            node = patch.nextVNode,
+                            defaultRippleColor = defaultRippleColor,
+                            resolved = checkNotNull(preparedPatch.nextResolved),
+                        )
+                        ModifierInteractionApplier.applyNativeViewConfigs(
+                            view = mountedNode.view,
+                            node = patch.nextVNode,
+                        )
+                    }
+
                     NodeBindingPlan.SkipSelfOnly,
                     NodeBindingPlan.SkipSubtree,
                     -> Unit
@@ -502,7 +515,12 @@ internal object ViewTreePatchPipeline {
                         moved = needsMove,
                         detail = (bindingPlan as? NodeBindingPlan.Patch)
                             ?.patch
-                            ?.let { nodePatch -> nodePatch::class.simpleName },
+                            ?.let { nodePatch -> nodePatch::class.simpleName }
+                            ?: if (bindingPlan == NodeBindingPlan.ModifierOnly) {
+                                "ModifierOnly"
+                            } else {
+                                null
+                            },
                         toolingMetadata = UiNodeTooling.metadataOf(patch.nextVNode),
                     ))
                 }
@@ -512,6 +530,7 @@ internal object ViewTreePatchPipeline {
                         childResult.stats.withReuse(
                             result = when (bindingPlan) {
                                 NodeBindingPlan.Rebind -> ReuseBindingResult.Rebound
+                                NodeBindingPlan.ModifierOnly -> ReuseBindingResult.Patched
                                 NodeBindingPlan.SkipSelfOnly -> ReuseBindingResult.Skipped
                                 NodeBindingPlan.SkipSubtree -> ReuseBindingResult.SkippedSubtree
                                 is NodeBindingPlan.Patch -> ReuseBindingResult.Patched
@@ -681,6 +700,7 @@ internal object ViewTreePatchPipeline {
                     }
                     val nextResolved = when {
                         bindingPlan == NodeBindingPlan.Rebind -> nextNode.modifier.resolve()
+                        bindingPlan == NodeBindingPlan.ModifierOnly -> nextNode.modifier.resolve()
                         bindingPlan is NodeBindingPlan.Patch && bindingPlan.modifierChanged -> {
                             nextNode.modifier.resolve()
                         }
@@ -691,6 +711,12 @@ internal object ViewTreePatchPipeline {
                     // Only rebind or modifier patches need modifier resolution; spec-only patches can skip it.
                     val updatesLayoutParams = when {
                         bindingPlan == NodeBindingPlan.Rebind -> true
+                        bindingPlan == NodeBindingPlan.ModifierOnly -> {
+                            layoutModifiersChanged(
+                                previous = previousNode.modifier.resolve(),
+                                next = checkNotNull(nextResolved),
+                            )
+                        }
                         bindingPlan is NodeBindingPlan.Patch && bindingPlan.modifierChanged -> {
                             layoutModifiersChanged(
                                 previous = previousNode.modifier.resolve(),
@@ -810,6 +836,7 @@ internal object ViewTreePatchPipeline {
     private fun NodeBindingPlan.toPatchOperation(): RenderPatchOperation {
         return when (this) {
             NodeBindingPlan.Rebind -> RenderPatchOperation.Rebind
+            NodeBindingPlan.ModifierOnly -> RenderPatchOperation.Patch
             NodeBindingPlan.SkipSelfOnly -> RenderPatchOperation.SkipSelf
             NodeBindingPlan.SkipSubtree -> RenderPatchOperation.SkipSubtree
             is NodeBindingPlan.Patch -> RenderPatchOperation.Patch

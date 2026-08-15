@@ -63,6 +63,9 @@ For historical analysis, see
     measured block. Cold-start workloads do not wait because launch is the measured operation.
 25. Navigation motion keeps push and pop separate while executing eight same-direction transitions
     per measured iteration. Pop setup preloads eight destinations outside measurement.
+26. Reused nodes whose type, environment, and NodeSpec are unchanged use a modifier-only patch.
+    Visual-only updates retain LayoutParams and skip full Node binding; layout modifiers replace
+    LayoutParams without recreating or semantically rebinding the native View.
 
 ### 2.2 Release benchmark entry points
 

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 931467352bb6cd128066c7a2c039245f3da62cd9b02116e65639d3e5638376ed
+translation_source_hash: 5cc640cc03f480e8d5865e193062cce7a377a0f0db37edd031c383fcb3ebbf71
 translation_status: current
 ---
 
@@ -143,6 +143,11 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
 - 定向 patch 和子树跳过只是优化。只有每个直接 child 都是组合所复用的完全相同 VNode 实例时，
   才能跳过完整原生子树；新构建但值相等的 child 仍需调和，因为嵌套 Session 回调可能已变化。
   自定义 host 不得从 patch 记录或诊断计数推断业务状态。
+- 当 Type、Environment 与 NodeSpec 均未变化时，Modifier 变化会走仅 Modifier Patch。该路径保留
+  原生 View 与语义 Node 绑定，复用现有的分族 Modifier 差分，并继续调和 Child。纯视觉变化会
+  保留现有 LayoutParams；布局或 Parent Data 变化才会替换参数。`NativeViewElement.stableKey`
+  变化时会重新执行其配置，而 AndroidView 的 Update、Reset、Commit 与 Release Callback 均不
+  会被触发。诊断会把该路径记为定向 Patch，Detail 为 `ModifierOnly`。
 - Gesture 分发会保留尚未判定的 Pointer Stream，直到识别出 Drag。若 Stream 结束时没有被 Gesture
   消费，保留目标会收到一次普通 Click；已识别的 Drag 会消费 Stream 并抑制该 Click。
 - Button Surface 内缩变化会参与定向样式 Patch，不得因此重建原生 View 或改变其有效测量目标。

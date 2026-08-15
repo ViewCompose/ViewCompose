@@ -38,7 +38,7 @@ internal object NodeBindingDiffer {
         val imageLoaderChanged = hasImageLoaderIdentityChange(prevSpec, nextSpec)
         if (prevSpec == nextSpec && !imageLoaderChanged) {
             return if (modifierChanged) {
-                NodeBindingPlan.Rebind
+                NodeBindingPlan.ModifierOnly
             } else {
                 if (previous.children.hasSameElementReferences(next.children)) {
                     NodeBindingPlan.SkipSubtree

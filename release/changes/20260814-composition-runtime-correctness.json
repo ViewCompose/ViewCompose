@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Harden composition identity and host lifecycles, publish runtime state atomically, and keep mutable ConstraintLayout Group visibility authoritative.",
+  "summary": "Harden composition identity and host lifecycles, publish runtime state atomically, keep mutable ConstraintLayout Group visibility authoritative, and patch modifier-only Android View updates without semantic rebinding.",
   "changes": [
     { "artifact": "viewcompose-runtime", "impact": "breaking" },
     { "artifact": "viewcompose-ui-contract", "impact": "fix" },

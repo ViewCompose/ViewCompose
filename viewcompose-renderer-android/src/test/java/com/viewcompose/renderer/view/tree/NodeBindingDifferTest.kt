@@ -182,11 +182,11 @@ class NodeBindingDifferTest {
     }
 
     @Test
-    fun `rebinds when modifier changes`() {
+    fun `uses modifier-only binding when modifier changes`() {
         val previous = textNode()
         val next = textNode(modifier = Modifier.padding(8.dp))
 
-        assertSame(NodeBindingPlan.Rebind, NodeBindingDiffer.plan(previous, next))
+        assertSame(NodeBindingPlan.ModifierOnly, NodeBindingDiffer.plan(previous, next))
     }
 
     @Test
