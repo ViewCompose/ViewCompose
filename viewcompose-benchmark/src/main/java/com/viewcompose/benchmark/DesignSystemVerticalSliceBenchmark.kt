@@ -97,7 +97,7 @@ class DesignSystemVerticalSliceBenchmark {
                 designSystemScenarioId(kind),
                 DemoTargetRole.PrimaryAction,
             )
-            SystemClock.sleep(SCROLL_SETTLE_MILLIS)
+            waitForPerformanceMeasurementSettle()
         },
     ) {
         // A single retained patch can complete without enough frame slices for Perfetto to report
@@ -120,6 +120,7 @@ class DesignSystemVerticalSliceBenchmark {
         setupBlock = {
             startDesignSystemAndWait(kind)
             scrollToPageTop()
+            waitForPerformanceMeasurementSettle()
         },
     ) {
         swipePageUp()
@@ -139,7 +140,7 @@ class DesignSystemVerticalSliceBenchmark {
                 designSystemScenarioId(kind),
                 DemoTargetRole.SecondaryAction,
             )
-            SystemClock.sleep(SCROLL_SETTLE_MILLIS)
+            waitForPerformanceMeasurementSettle()
         },
     ) {
         val scenarioId = designSystemScenarioId(kind)
@@ -171,9 +172,7 @@ class DesignSystemVerticalSliceBenchmark {
         setupBlock = {
             startDesignSystemAndWait(initialKind)
             scrollUntilResourceTarget(DIALOG_OPEN_RESOURCE)
-            // UiAutomator idle waits are disabled for OEM stability, so let the page gesture settle
-            // before the measured overlay lifecycle begins.
-            SystemClock.sleep(SCROLL_SETTLE_MILLIS)
+            waitForPerformanceMeasurementSettle()
         },
     ) {
         // One overlay lifecycle yields too few frame slices on some OEM devices for stable
@@ -215,7 +214,6 @@ private fun designSystemIterations(): Int {
         ?: DEFAULT_ITERATIONS
 }
 
-private const val SCROLL_SETTLE_MILLIS = 2_000L
 private const val ACTIVE_ANIMATION_SETTLE_MILLIS = 600L
 private const val PATCH_UPDATES_PER_ITERATION = 24
 private const val OVERLAY_SHOW_DISMISS_REPEATS_PER_ITERATION = 5

@@ -59,6 +59,8 @@ For historical analysis, see
 23. Application-process development tooling follows a zero-recurring-work contract. The optional
     running-device DSL locator performs no report write or live View inspection during scrolling;
     one explicit nonce-bearing IDE request produces one bounded snapshot and response.
+24. Warm interaction benchmarks wait 5 seconds after launch and fixture positioning outside the
+    measured block. Cold-start workloads do not wait because launch is the measured operation.
 
 ### 2.2 Release benchmark entry points
 

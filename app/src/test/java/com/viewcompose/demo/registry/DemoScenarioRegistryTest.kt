@@ -88,8 +88,11 @@ class DemoScenarioRegistryTest {
     }
 
     @Test
-    fun `performance workload revisions match the accepted benchmark contracts`() {
+    fun `benchmark workload revisions match the accepted contracts`() {
         val expected = mapOf(
+            DemoScenarioIds.NavigationSystem to 3,
+            DemoScenarioIds.DesignBundleMaterial3 to 3,
+            DemoScenarioIds.DesignBundleContrast to 3,
             DemoScenarioIds.PerformanceList to 3,
             DemoScenarioIds.PerformanceComplexLayout to 3,
             DemoScenarioIds.PerformanceShadowList to 2,

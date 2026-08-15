@@ -38,6 +38,7 @@ class NavigationMotionBenchmark {
         setupBlock = {
             startSystemNavigationAndWait()
             scrollUntilScenarioTarget(NAVIGATION_SCENARIO, DemoTargetRole.PrimaryAction)
+            waitForPerformanceMeasurementSettle()
         },
     ) {
         val previous = scenarioTargetText(NAVIGATION_SCENARIO, DemoTargetRole.State)
@@ -67,6 +68,7 @@ class NavigationMotionBenchmark {
             )
             waitForNavigationMotion()
             waitForScenarioTarget(NAVIGATION_SCENARIO, DemoTargetRole.State)
+            waitForPerformanceMeasurementSettle()
         },
     ) {
         val previous = scenarioTargetText(NAVIGATION_SCENARIO, DemoTargetRole.State)
@@ -85,6 +87,7 @@ class NavigationMotionBenchmark {
         setupBlock = {
             startSystemNavigationAndWait()
             scrollUntilScenarioTarget(NAVIGATION_SCENARIO, DemoTargetRole.PrimaryAction)
+            waitForPerformanceMeasurementSettle()
         },
     ) {
         val previous = scenarioTargetText(NAVIGATION_SCENARIO, DemoTargetRole.State)
@@ -115,6 +118,7 @@ class NavigationMotionBenchmark {
                 )
                 waitForNavigationMotion()
                 waitForScenarioTarget(NAVIGATION_SCENARIO, DemoTargetRole.State)
+                waitForPerformanceMeasurementSettle()
             },
         ) {
             val previous = scenarioTargetText(NAVIGATION_SCENARIO, DemoTargetRole.State)

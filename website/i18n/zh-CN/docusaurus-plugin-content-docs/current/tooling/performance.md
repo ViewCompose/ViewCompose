@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: fd45cc71e55d9755d0a3c46f4ae57ec282564859b1c8ac37d2231d970f8ef819
+translation_source_hash: 201d6bb2fdb7f3790e7f161360757bfccbeaf4d137ce9dc00924cfee38f4239b
 translation_status: current
 ---
 
@@ -47,6 +47,8 @@ translation_status: current
 22. 高级阴影建立独立有界外/内栅格缓存，平移/缩放/旋转/alpha 重绘复用同一栅格；`ShadowPerformanceComparisonBenchmark` 覆盖 1000 项 Lazy 与复杂布局的滚动/变更，并用 Compose 作为同轮设备波动控制组。
 23. 应用进程内开发工具遵守“零持续工作”契约。可选的真机 DSL 定位器在滚动期间不写报告、也不
     检查实时 View；一次带 Nonce 的显式 IDE 请求只产生一次有界快照与响应。
+24. warm interaction benchmark 在启动并定位 fixture 后，于 measured block 之外等待 5 秒；
+    cold-start workload 不等待，因为启动本身就是被测操作。
 
 ### 2.2 发布态基准入口
 

@@ -921,7 +921,7 @@ internal object DemoScenarioRegistry {
                 state = R.id.demo_navigation_system_state,
                 target = R.id.demo_navigation_system_target,
             ),
-            benchmarkRevision = 2,
+            benchmarkRevision = 3,
         ),
         material3ThemeScenario(
             id = DemoScenarioIds.DesignMaterial3Xml,
@@ -1575,7 +1575,7 @@ internal object DemoScenarioRegistry {
             target = target,
             secondaryTarget = secondaryTarget,
         ),
-        benchmarkRevision = 2,
+        benchmarkRevision = 3,
     )
 
     private fun performanceScenario(
