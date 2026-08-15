@@ -21,7 +21,7 @@ a rootable or otherwise clock-controllable reference device. The current Samsung
 cannot produce valid run stability for these workloads.
 
 Performance work from the
-[archived Runtime data propagation and Android View patch optimization record](../../archive/runtime-data-propagation-and-view-patch-optimization.md)
+[archived Runtime data propagation and Android View patch optimization record](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/runtime-data-propagation-and-view-patch-optimization.md)
 is gated by the replacement baselines for the scenarios that can exercise that optimization, not
 by unrelated navigation or design-system matrices. The accepted release state-patch, renderer,
 list, and complex-layout baselines satisfy that scoped gate for the two retained Runtime/Patch
