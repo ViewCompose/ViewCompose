@@ -10,6 +10,7 @@ import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.Badge
+import com.viewcompose.ui.foundation.BadgeOverrides
 import com.viewcompose.ui.foundation.BadgedBox
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.ButtonVariant
@@ -21,6 +22,7 @@ import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Divider
 import com.viewcompose.ui.foundation.ElevatedCard
 import com.viewcompose.ui.foundation.ExtendedFloatingActionButton
+import com.viewcompose.ui.foundation.ExtendedFloatingActionButtonOverrides
 import com.viewcompose.ui.foundation.FabSize
 import com.viewcompose.ui.foundation.FloatingActionButton
 import com.viewcompose.ui.foundation.FlowRow
@@ -319,8 +321,10 @@ private fun UiTreeBuilder.ActionsFabVariants(
             text = stringResource(R.string.demo_actions_fab_custom_color),
             onClick = onClick,
             icon = ImageSource.Resource(R.drawable.demo_media_icon),
-            containerColor = Theme.colors.secondary,
-            contentColor = Theme.colors.background,
+            overrides = ExtendedFloatingActionButtonOverrides(
+                containerColor = Theme.colors.secondary,
+                contentColor = Theme.colors.background,
+            ),
         )
     }
 }
@@ -514,7 +518,12 @@ private fun UiTreeBuilder.ActionsBadgeVariants() {
             )
             Column(spacing = 4.dp) {
                 BadgedBox(
-                    badge = { Badge(count = 3, containerColor = Theme.colors.secondary) },
+                    badge = {
+                        Badge(
+                            count = 3,
+                            overrides = BadgeOverrides(containerColor = Theme.colors.secondary),
+                        )
+                    },
                 ) {
                     IconButton(
                         icon = ImageSource.Resource(R.drawable.demo_media_icon),

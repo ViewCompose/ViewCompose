@@ -108,6 +108,26 @@ class UiShapeDrawableTest {
     }
 
     @Test
+    fun `public solid drawable factory preserves shape color direction and density`() {
+        val expectedShape = UiShape.rounded(17.dp)
+        val expectedDensity = UiDensity(density = 2f, fontScale = 1f)
+
+        val drawable = AndroidUiShapeDrawables.solid(
+            shape = expectedShape,
+            color = 0xFF123456.toInt(),
+            layoutDirection = View.LAYOUT_DIRECTION_RTL,
+            density = expectedDensity,
+        ) as UiShapeDrawable
+
+        assertEquals(expectedShape, drawable.currentShape)
+        assertEquals(0xFF123456.toInt(), drawable.currentFillColor)
+        drawable.setBounds(0, 0, 100, 60)
+        val outline = Outline()
+        drawable.getOutline(outline)
+        assertEquals(30f, outline.radius, 0.001f)
+    }
+
+    @Test
     fun `non uniform and continuous shapes keep the generic path`() {
         val nonUniform = UiShapeDrawable(
             shape = shape,

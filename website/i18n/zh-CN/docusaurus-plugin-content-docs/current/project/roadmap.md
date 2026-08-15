@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: 542264012c126c1a96484bfbfc0704fcc143f7804887336c94e8acce0782b35d
+translation_source_hash: 1286364937f516d2d8fc004f29bb1ac0333ebe4462326ae40a13511da11a6d30
 translation_status: current
 ---
 
@@ -151,6 +151,11 @@ translation_status: current
 | --- | --- | --- | --- |
 | Material 3 TextField 结构保真 | 保留当前受支持的原生 TextField 结构和现有主题桥接 | 已排定优先级的产品需求，或经过评审的视觉基线证明当前实现与锁定版本的标准 Material 3 行为存在明显且实质性的差异 | 新建 `material3-textfield-structural-fidelity` 计划，完整负责 IME、选区、无障碍、RTL、字体缩放、测量、保存恢复、视觉、性能和回滚证据；不得向 UI Foundation 或 Android Renderer 引入 Material 依赖 |
 | Material 3 Switch 与 Slider 的精确几何和动效 | 保留已验收的颜色、触控目标、语义、原生行为和当前几何实现 | 产品评审确认普通密度下存在明显的几何或动效差异，或确认存在无障碍影响 | 新建 `material3-switch-slider-geometry` 计划，覆盖截图与几何、触控、键盘、无障碍、RTL、密度、帧耗时与内存分配证据，并保证每个控件都可独立回滚 |
+
+原“其他组件外观”候选已由 2026-08-15 的逐字段审计正式启动，并在已归档的
+[剩余组件外观收敛计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/remaining-component-appearance-convergence.md)
+中完成。FAB、应用栏、Badge、AlertDialog 和底部弹层外观现已遵循 ADR-0013；同一次审计
+已否决为 Scaffold 和原始 Dialog 增加 Overrides，它们继续保持布局与 Overlay 协议职责。
 
 ## 5. 里程碑计划
 

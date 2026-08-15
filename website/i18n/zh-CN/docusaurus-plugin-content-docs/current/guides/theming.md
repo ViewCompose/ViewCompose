@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: b8a1376482924b965cd21a46cc7459419d238c6ea6e9c14a41715eaa9cc6e26f
+translation_source_hash: 3f1483bc9ea594ba07a0912fc454481a74451e85b50ba088757ad0f870ab3079
 translation_status: current
 ---
 
@@ -112,23 +112,36 @@ translation_status: current
 
 ## 4. 局部覆盖（Override）规则
 
-局部覆盖能力保留，但必须是稀疏覆盖：
+局部定制分为两个边界明确的层级：
 
-1. 只覆盖必要字段
-2. 未覆盖字段回落到上层主题或默认值
-3. 覆盖逻辑通过 `LocalContext` 作用域传播
-4. 对外统一通过 `UiLocal/uiLocalOf/ProvideLocal(s)/UiLocals.current` 使用，避免专用包装 API 漂移
+1. `UiThemeOverride` 修改子树内的语义主题 Token。
+2. 组件自有的 `XxxOverrides` 修改某一组件族的低频外观槽位，不扩张主 DSL 签名。
+
+组件 Overrides 是稀疏且逐字段合并的。解析顺序固定为：实例 Overrides、最近的同类 Provider、
+更外层的同类 Provider、组件 Defaults 或具名设计系统 Recipe，最后是语义主题 Token。内层未指定
+的字段会保留外层值。完整契约见
+[ADR-0013](../architecture/decisions/0013-component-appearance-resolution-boundary.md)。
+
+已经启用的组件族包括 Button/IconButton、TextField、彼此独立的输入控件、Linear/Circular
+Progress、SegmentedControl、TabRow、NavigationBar、普通/扩展 FAB、顶部/底部 AppBar、Badge、
+AlertDialog 与 Modal Bottom Sheet。AppBar Provider 同时定义各内容槽的默认内容角色。Modal
+Bottom Sheet Overrides 会在请求提交前完成解析，因此同 Key 平台 Sheet 可以接收主题/配置变化，
+而无需重开逻辑 Overlay Session。
+
+Scaffold 与原始 Dialog 是有意排除项。它们的直接参数分别描述页面 Surface/布局的主要输入，或
+Overlay 生命周期/位置；视觉内容仍由调用方持有。
 
 适用场景：
 
-1. 局部品牌色/强调色
-2. 局部文本样式调整
-3. 单区域对比度或可读性增强
+1. 单个操作控件使用不同的边框或交互状态层；
+2. 一个子树使用局部的组件强调色、形状、排版或视觉尺寸；
+3. 不应进入设计系统 Recipe 的状态级对比度或可读性修正。
 
 非目标：
 
-1. 把 override 做成“每个组件所有字段都能填”的全量配置
-2. 用 override 替代组件参数
+1. 把受控状态、回调、身份、键盘行为、导航、生命周期或资源所有权放入外观对象；
+2. 向 `Basic*` 原语传递稀疏 Overrides；这些原语消费完整解析后的 `BasicXxxStyle`；
+3. 在 Foundation 中建立一份覆盖所有组件的 Recipe 注册表。
 
 ## 4.1 业务自定义 Local 扩展
 
@@ -137,7 +150,7 @@ translation_status: current
 1. 在业务模块通过 `uiLocalOf { ... }` 定义自有 token。
 2. 在局部子树通过 `ProvideLocal(...)` 或 `ProvideLocals(...)` 注入。
 3. 在组件内部通过 `UiLocals.current(...)` 读取。
-4. 新增 Local 能力时优先复用统一 API，不再新增专用 `ProvideXxx` 包装。
+4. 只有当值确实属于组件外观时，才使用组件自有的强类型 Overrides。
 
 边界约束：
 

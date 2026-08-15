@@ -28,6 +28,38 @@ fallback. A One UI theme without its adapter reports Snackbar and modal bottom s
 `Unsupported`; explicit adapter assembly upgrades them to `Equivalent`. It never silently falls
 back to Material.
 
+## Modal bottom-sheet appearance updates
+
+`ModalBottomSheet` resolves theme values and sparse `ModalBottomSheetOverrides` into one immutable
+`ModalBottomSheetAppearance` before submitting its request. The snapshot contains container and
+content colors, shape, scrim opacity, and navigation-bar policy. It participates in overlay-spec
+equality, so changing the active theme or an override updates an existing same-key platform sheet
+without discarding its logical request identity or nested saveable-state scope.
+
+```kotlin
+ModalBottomSheet(
+    visible = sheetVisible,
+    requestKey = "account-actions",
+    overrides = ModalBottomSheetOverrides(
+        containerColor = Theme.colors.surfaceContainerHigh,
+        navigationBarColor = ModalBottomSheetNavigationBarColor.PlatformDefault,
+    ),
+    onDismissRequest = { sheetVisible = false },
+) {
+    AccountActions()
+}
+```
+
+A nullable color alone cannot express all required states. `null` in the sparse override means
+inherit; `Exact(color)` requests one ARGB color; `PlatformDefault` restores the value captured by
+the active presenter. Material and One UI presenters apply the full snapshot on first show and
+every changed same-key update. Material also makes `skipPartiallyExpanded` reversible; One UI has
+only one intrinsic expanded state and therefore treats that policy as protocol compatibility.
+
+Presenter-specific margins, handles, drag gestures, and branded chrome remain downstream. Raw
+`Dialog` remains a caller-owned content/lifecycle protocol and does not share the bottom-sheet
+appearance object.
+
 ## Popup positioning
 
 `Popup` resolves the anchor and popup in window coordinates. The Android presenter observes global

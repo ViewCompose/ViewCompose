@@ -26,7 +26,6 @@ import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.TopAppBar
-import com.viewcompose.ui.foundation.TopAppBarDefaults
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.remember
@@ -87,7 +86,6 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
                                 icon = ImageSource.Resource(R.drawable.ic_arrow_back),
                                 contentDescription = stringResource(R.string.demo_back),
                                 onClick = { activity?.finish() },
-                                tint = TopAppBarDefaults.titleColor(),
                             )
                         },
                     )

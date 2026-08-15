@@ -18,6 +18,9 @@ import androidx.core.view.WindowInsetsCompat
 import com.viewcompose.overlay.android.asOverlayRenderContainerHandle
 import com.viewcompose.overlay.oneui7.android.OneUi7OverlayStyle
 import com.viewcompose.overlay.oneui7.android.roundedDrawable
+import com.viewcompose.host.android.environment.AndroidEnvironmentBridge
+import com.viewcompose.renderer.view.shape.AndroidUiShapeDrawables
+import com.viewcompose.ui.foundation.ModalBottomSheetNavigationBarColor
 import com.viewcompose.ui.foundation.ModalBottomSheetOverlayContent
 import com.viewcompose.ui.foundation.ModalBottomSheetOverlayHandle
 import com.viewcompose.ui.foundation.ModalBottomSheetOverlayPresenter
@@ -53,6 +56,7 @@ private class AndroidOneUi7ModalBottomSheetHandle(
     content: ModalBottomSheetOverlayContent,
 ) : ModalBottomSheetOverlayHandle {
     private val context = rootView.context
+    private val density = AndroidEnvironmentBridge.fromContext(context).density
     private val contentContainer = FrameLayout(context).apply {
         layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -137,18 +141,34 @@ private class AndroidOneUi7ModalBottomSheetHandle(
         currentSpec = spec
         dialog.setCancelable(spec.dismissOnBackPress)
         dialog.setCanceledOnTouchOutside(spec.dismissOnClickOutside)
+        val appearance = spec.appearance
+        sheet.background = AndroidUiShapeDrawables.solid(
+            shape = appearance.shape,
+            color = appearance.containerColor,
+            layoutDirection = sheet.layoutDirection,
+            density = density,
+        )
+        sheet.clipToOutline = true
         dialog.window?.apply {
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             setGravity(Gravity.BOTTOM)
-            val clampedScrim = spec.scrimOpacity.coerceIn(0f, 1f)
-            if (clampedScrim > 0f) {
+            if (appearance.scrimOpacity > 0f) {
                 addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-                setDimAmount(clampedScrim)
+                setDimAmount(appearance.scrimOpacity)
             } else {
                 clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             }
-            (spec.navigationBarColor ?: defaultNavigationBarColor)?.let(::applyNavigationBarColorCompat)
+            when (val navigationBar = appearance.navigationBarColor) {
+                is ModalBottomSheetNavigationBarColor.Exact -> {
+                    applyNavigationBarColorCompat(navigationBar.color, enforceContrast = false)
+                }
+                ModalBottomSheetNavigationBarColor.PlatformDefault -> {
+                    defaultNavigationBarColor?.let { color ->
+                        applyNavigationBarColorCompat(color, enforceContrast = true)
+                    }
+                }
+            }
         }
         surfaceSession.update(content.surface)
         if (!dialog.isShowing) {
@@ -241,9 +261,12 @@ private fun View.systemBottomInset(): Int =
 private fun android.content.Context.dp(value: Float): Float = value * resources.displayMetrics.density
 
 @Suppress("DEPRECATION")
-private fun Window.applyNavigationBarColorCompat(color: Int) {
+private fun Window.applyNavigationBarColorCompat(
+    color: Int,
+    enforceContrast: Boolean,
+) {
     navigationBarColor = color
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        isNavigationBarContrastEnforced = false
+        isNavigationBarContrastEnforced = enforceContrast
     }
 }

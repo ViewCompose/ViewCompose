@@ -16,13 +16,79 @@ import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 
 /**
+ * Defines the complete resolved appearance consumed by [BasicTextField].
+ *
+ * This Q2 snapshot contains no theme, variant, or scoped-override lookup. Design-system recipes
+ * and high-level components resolve every value before constructing it.
+ *
+ * @property cursorColor cursor ARGB color
+ * @property textColor editable-text ARGB color
+ * @property textStyle editable text typography
+ * @property placeholderColor placeholder ARGB color
+ * @property containerColor editable container ARGB color
+ * @property borderWidth border thickness in dp
+ * @property borderColor border ARGB color
+ * @property shape editable container shape
+ * @property minimumHeight minimum editable-area height in dp
+ * @property horizontalPadding content padding on each horizontal edge in dp
+ * @property verticalPadding content padding on each vertical edge in dp
+ * @throws IllegalArgumentException when a dimension is negative
+ */
+data class BasicTextFieldStyle(
+    val cursorColor: Int,
+    val textColor: Int,
+    val textStyle: UiTextStyle,
+    val placeholderColor: Int,
+    val containerColor: Int,
+    val borderWidth: UiDp,
+    val borderColor: Int,
+    val shape: UiShape,
+    val minimumHeight: UiDp,
+    val horizontalPadding: UiDp,
+    val verticalPadding: UiDp,
+) {
+    init {
+        require(borderWidth >= UiDp.Zero) { "BasicTextFieldStyle borderWidth must be non-negative." }
+        require(minimumHeight >= UiDp.Zero) { "BasicTextFieldStyle minimumHeight must be non-negative." }
+        require(horizontalPadding >= UiDp.Zero) {
+            "BasicTextFieldStyle horizontalPadding must be non-negative."
+        }
+        require(verticalPadding >= UiDp.Zero) {
+            "BasicTextFieldStyle verticalPadding must be non-negative."
+        }
+    }
+}
+
+/**
  * Emits the low-level text input node without outer label or supporting text.
  *
- * BasicTextField passes TextFieldState plus keyboard/transformation/content receiving options directly to the renderer,
- * making it suitable for higher-level composite widgets.
+ * BasicTextField passes TextFieldState plus keyboard, transformation, and content-receiving options
+ * directly to the renderer. [style] is complete and the primitive performs no Theme or component
+ * Local lookup, making it suitable for design-system-owned composite widgets.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.basicTextFieldStyleSample
+ * @receiver active tree builder receiving the editable node
+ * @param state caller-owned editable text, selection, and composition state
+ * @param style complete resolved appearance for the current component state
+ * @param hint legacy placeholder fallback used when [placeholder] is empty
+ * @param placeholder visible text displayed while [state] is empty
+ * @param enabled whether editing and focus input are accepted
+ * @param singleLine whether input is constrained to one visual line
+ * @param readOnly whether selection remains available while mutation is disabled
+ * @param maxLines maximum visual line count when [singleLine] is `false`
+ * @param minLines minimum visual line count when [singleLine] is `false`
+ * @param keyboardOptions keyboard type, capitalization, correction, and IME action policy
+ * @param inputTransformation optional synchronous edit filter
+ * @param receiveContent accepted rich-content policy
+ * @param onKeyboardAction callback that may consume an IME action on the renderer thread
+ * @param onFocusChange callback invoked when native focus changes
+ * @param autofillHints semantic Android autofill categories
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended to the emitted editable node
  */
 fun UiTreeBuilder.BasicTextField(
     state: TextFieldState,
+    style: BasicTextFieldStyle,
     hint: String = "",
     placeholder: String = hint,
     enabled: Boolean = true,
@@ -36,17 +102,6 @@ fun UiTreeBuilder.BasicTextField(
     onKeyboardAction: ((TextFieldImeAction) -> Boolean)? = null,
     onFocusChange: ((Boolean) -> Unit)? = null,
     autofillHints: Set<TextFieldAutofillHint> = emptySet(),
-    cursorColor: Int = TextFieldDefaults.cursorColor(),
-    textColor: Int = TextFieldDefaults.textColor(enabled),
-    textStyle: UiTextStyle = TextFieldDefaults.textStyle(),
-    hintColor: Int = TextFieldDefaults.hintColor(enabled = enabled),
-    backgroundColor: Int = 0x00000000,
-    borderWidth: UiDp = UiDp.Zero,
-    borderColor: Int = 0x00000000,
-    shape: UiShape = UiShape.rounded(UiDp.Zero),
-    minHeight: UiDp = UiDp.Zero,
-    paddingHorizontal: UiDp = UiDp.Zero,
-    paddingVertical: UiDp = UiDp.Zero,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -66,18 +121,18 @@ fun UiTreeBuilder.BasicTextField(
             onKeyboardAction = onKeyboardAction,
             onFocusChange = onFocusChange,
             autofillHints = autofillHints,
-            hintColor = hintColor,
+            hintColor = style.placeholderColor,
             readOnly = readOnly,
-            textColor = textColor,
-            textStyle = textStyle,
-            backgroundColor = backgroundColor,
-            borderWidth = borderWidth,
-            borderColor = borderColor,
-            shape = shape,
-            minHeight = minHeight,
-            paddingHorizontal = paddingHorizontal,
-            paddingVertical = paddingVertical,
-            cursorColor = cursorColor,
+            textColor = style.textColor,
+            textStyle = style.textStyle,
+            backgroundColor = style.containerColor,
+            borderWidth = style.borderWidth,
+            borderColor = style.borderColor,
+            shape = style.shape,
+            minHeight = style.minimumHeight,
+            paddingHorizontal = style.horizontalPadding,
+            paddingVertical = style.verticalPadding,
+            cursorColor = style.cursorColor,
         ),
         modifier = modifier,
     )
@@ -86,7 +141,34 @@ fun UiTreeBuilder.BasicTextField(
 /**
  * Emits a standard text field composite with label, placeholder, and supporting text.
  *
- * The outer Column only lays out helper text; the editable area is still produced by BasicTextField as the same TextField node type.
+ * [state] owns text, selection, composition, and undo history. The outer Column only lays out
+ * helper text; [BasicTextField] emits the editable node. Appearance resolves once from instance,
+ * scoped, and semantic defaults in that order.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.textFieldVariantsSample
+ * @receiver active tree builder receiving the composite
+ * @param state caller-owned editable state retained independently from the emitted node
+ * @param hint legacy placeholder fallback used when [placeholder] is empty
+ * @param label optional text displayed above the editable area
+ * @param placeholder text displayed while [state] is empty
+ * @param supportingText optional guidance or error text displayed below the editable area
+ * @param singleLine whether input and layout are constrained to one visual line
+ * @param readOnly whether selection remains available while user edits are rejected
+ * @param maxLines maximum visual line count when [singleLine] is `false`
+ * @param minLines minimum visual line count when [singleLine] is `false`
+ * @param keyboardOptions keyboard type, capitalization, correction, and IME action policy
+ * @param inputTransformation optional synchronous filter for proposed edits
+ * @param receiveContent accepted rich-content policy
+ * @param onKeyboardAction callback that may consume an IME action on the renderer thread
+ * @param onFocusChange callback invoked on the renderer thread when native focus changes
+ * @param autofillHints semantic Android autofill categories
+ * @param variant visual treatment used to resolve container and border roles
+ * @param size interaction-density tier used for typography, padding, and minimum height
+ * @param enabled whether editing and focus input are accepted
+ * @param isError whether error appearance roles are selected
+ * @param overrides sparse instance appearance applied after scoped [ProvideTextFieldOverrides]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration applied to the outer composite
  */
 fun UiTreeBuilder.TextField(
     state: TextFieldState,
@@ -108,22 +190,16 @@ fun UiTreeBuilder.TextField(
     size: TextFieldSize = TextFieldSize.Medium,
     enabled: Boolean = true,
     isError: Boolean = false,
-    cursorColor: Int = TextFieldDefaults.cursorColor(),
-    style: UiTextStyle = TextFieldDefaults.textStyle(size),
+    overrides: TextFieldOverrides = TextFieldOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
-    val hintColor = TextFieldDefaults.hintColor(
+    val appearance = TextFieldDefaults.resolve(
+        variant = variant,
+        size = size,
         enabled = enabled,
         isError = isError,
-    )
-    val labelColor = TextFieldDefaults.labelColor(
-        enabled = enabled,
-        isError = isError,
-    )
-    val supportingTextColor = TextFieldDefaults.supportingTextColor(
-        enabled = enabled,
-        isError = isError,
+        instance = overrides,
     )
     // Visual structure stays in the composite layer so the renderer only binds the editable field.
     Column(
@@ -133,13 +209,26 @@ fun UiTreeBuilder.TextField(
         if (label.isNotBlank()) {
             Text(
                 text = label,
-                style = TextFieldDefaults.labelTextStyle(),
-                color = labelColor,
+                style = appearance.labelTextStyle,
+                color = appearance.labelColor,
                 modifier = Modifier.margin(bottom = 4.dp),
             )
         }
         BasicTextField(
             state = state,
+            style = BasicTextFieldStyle(
+                cursorColor = appearance.cursorColor,
+                textColor = appearance.textColor,
+                textStyle = appearance.textStyle,
+                placeholderColor = appearance.placeholderColor,
+                containerColor = appearance.containerColor,
+                borderWidth = appearance.borderWidth,
+                borderColor = appearance.borderColor,
+                shape = appearance.shape,
+                minimumHeight = if (singleLine) appearance.minimumHeight else UiDp.Zero,
+                horizontalPadding = appearance.horizontalPadding,
+                verticalPadding = appearance.verticalPadding,
+            ),
             hint = hint,
             placeholder = placeholder.ifEmpty { hint },
             enabled = enabled,
@@ -152,36 +241,14 @@ fun UiTreeBuilder.TextField(
             onKeyboardAction = onKeyboardAction,
             onFocusChange = onFocusChange,
             autofillHints = autofillHints,
-            hintColor = hintColor,
             readOnly = readOnly,
-            textColor = TextFieldDefaults.textColor(
-                enabled = enabled,
-                isError = isError,
-            ),
-            textStyle = style,
-            backgroundColor = TextFieldDefaults.containerColor(
-                variant = variant,
-                enabled = enabled,
-                isError = isError,
-            ),
-            borderWidth = TextFieldDefaults.borderWidth(variant),
-            borderColor = TextFieldDefaults.borderColor(
-                variant = variant,
-                enabled = enabled,
-                isError = isError,
-            ),
-            shape = TextFieldDefaults.shape(),
-            minHeight = if (singleLine) TextFieldDefaults.height(size) else UiDp.Zero,
-            paddingHorizontal = TextFieldDefaults.horizontalPadding(size),
-            paddingVertical = TextFieldDefaults.verticalPadding(size),
-            cursorColor = cursorColor,
             modifier = Modifier.fillMaxWidth(),
         )
         if (supportingText.isNotBlank()) {
             Text(
                 text = supportingText,
-                style = TextFieldDefaults.supportingTextStyle(),
-                color = supportingTextColor,
+                style = appearance.supportingTextStyle,
+                color = appearance.supportingTextColor,
                 modifier = Modifier.margin(top = 4.dp),
             )
         }
@@ -255,7 +322,28 @@ private fun basicTextFieldSpec(
 /**
  * Emits a single-line text field configured for password input.
  *
- * Auto-correct is disabled and the Password autofill hint is declared by default; callers can still override keyboardOptions.
+ * Auto-correct is disabled and the Password autofill hint is declared by default. Appearance and
+ * editable-state ownership otherwise follow [TextField].
+ *
+ * @sample com.viewcompose.ui.foundation.samples.textFieldVariantsSample
+ * @receiver active tree builder receiving the composite
+ * @param state caller-owned editable password state
+ * @param hint placeholder text displayed while [state] is empty
+ * @param label optional text displayed above the editable area
+ * @param supportingText optional guidance or error text displayed below the editable area
+ * @param keyboardOptions password-oriented keyboard and IME policy
+ * @param inputTransformation optional synchronous filter for proposed edits
+ * @param receiveContent accepted rich-content policy
+ * @param onKeyboardAction callback that may consume an IME action on the renderer thread
+ * @param onFocusChange callback invoked on the renderer thread when native focus changes
+ * @param autofillHints semantic Android autofill categories, Password by default
+ * @param variant visual treatment used to resolve container and border roles
+ * @param size interaction-density tier used for typography, padding, and minimum height
+ * @param enabled whether editing and focus input are accepted
+ * @param isError whether error appearance roles are selected
+ * @param overrides sparse instance appearance applied after scoped [ProvideTextFieldOverrides]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration applied to the outer composite
  */
 fun UiTreeBuilder.PasswordField(
     state: TextFieldState,
@@ -275,7 +363,7 @@ fun UiTreeBuilder.PasswordField(
     size: TextFieldSize = TextFieldSize.Medium,
     enabled: Boolean = true,
     isError: Boolean = false,
-    style: UiTextStyle = TextFieldDefaults.textStyle(size),
+    overrides: TextFieldOverrides = TextFieldOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -295,7 +383,7 @@ fun UiTreeBuilder.PasswordField(
         size = size,
         enabled = enabled,
         isError = isError,
-        style = style,
+        overrides = overrides,
         key = key,
         modifier = modifier,
     )
@@ -304,7 +392,27 @@ fun UiTreeBuilder.PasswordField(
 /**
  * Emits a single-line text field configured for email input.
  *
- * The default keyboard type and autofill hint target email flows while preserving the standard TextField styling.
+ * The default keyboard type and autofill hint target email flows. Appearance and editable-state
+ * ownership otherwise follow [TextField].
+ *
+ * @sample com.viewcompose.ui.foundation.samples.textFieldVariantsSample
+ * @receiver active tree builder receiving the composite
+ * @param state caller-owned editable email state
+ * @param hint placeholder text displayed while [state] is empty
+ * @param label optional text displayed above the editable area
+ * @param supportingText optional guidance text displayed below the editable area
+ * @param keyboardOptions email-oriented keyboard and IME policy
+ * @param inputTransformation optional synchronous filter for proposed edits
+ * @param receiveContent accepted rich-content policy
+ * @param onKeyboardAction callback that may consume an IME action on the renderer thread
+ * @param onFocusChange callback invoked on the renderer thread when native focus changes
+ * @param autofillHints semantic Android autofill categories, EmailAddress by default
+ * @param variant visual treatment used to resolve container and border roles
+ * @param size interaction-density tier used for typography, padding, and minimum height
+ * @param enabled whether editing and focus input are accepted
+ * @param overrides sparse instance appearance applied after scoped [ProvideTextFieldOverrides]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration applied to the outer composite
  */
 fun UiTreeBuilder.EmailField(
     state: TextFieldState,
@@ -322,7 +430,7 @@ fun UiTreeBuilder.EmailField(
     variant: TextFieldVariant = TextFieldVariant.Filled,
     size: TextFieldSize = TextFieldSize.Medium,
     enabled: Boolean = true,
-    style: UiTextStyle = TextFieldDefaults.textStyle(size),
+    overrides: TextFieldOverrides = TextFieldOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -341,7 +449,7 @@ fun UiTreeBuilder.EmailField(
         variant = variant,
         size = size,
         enabled = enabled,
-        style = style,
+        overrides = overrides,
         key = key,
         modifier = modifier,
     )
@@ -350,7 +458,27 @@ fun UiTreeBuilder.EmailField(
 /**
  * Emits a single-line text field configured for numeric input.
  *
- * Auto-correct is disabled by default to keep numeric input independent from suggestion or spelling logic.
+ * Auto-correct is disabled by default. Appearance and editable-state ownership otherwise follow
+ * [TextField].
+ *
+ * @sample com.viewcompose.ui.foundation.samples.textFieldVariantsSample
+ * @receiver active tree builder receiving the composite
+ * @param state caller-owned editable numeric state
+ * @param hint placeholder text displayed while [state] is empty
+ * @param label optional text displayed above the editable area
+ * @param supportingText optional guidance text displayed below the editable area
+ * @param keyboardOptions numeric keyboard and IME policy
+ * @param inputTransformation optional synchronous filter for proposed edits
+ * @param receiveContent accepted rich-content policy
+ * @param onKeyboardAction callback that may consume an IME action on the renderer thread
+ * @param onFocusChange callback invoked on the renderer thread when native focus changes
+ * @param autofillHints semantic Android autofill categories
+ * @param variant visual treatment used to resolve container and border roles
+ * @param size interaction-density tier used for typography, padding, and minimum height
+ * @param enabled whether editing and focus input are accepted
+ * @param overrides sparse instance appearance applied after scoped [ProvideTextFieldOverrides]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration applied to the outer composite
  */
 fun UiTreeBuilder.NumberField(
     state: TextFieldState,
@@ -369,7 +497,7 @@ fun UiTreeBuilder.NumberField(
     variant: TextFieldVariant = TextFieldVariant.Filled,
     size: TextFieldSize = TextFieldSize.Medium,
     enabled: Boolean = true,
-    style: UiTextStyle = TextFieldDefaults.textStyle(size),
+    overrides: TextFieldOverrides = TextFieldOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -388,7 +516,7 @@ fun UiTreeBuilder.NumberField(
         variant = variant,
         size = size,
         enabled = enabled,
-        style = style,
+        overrides = overrides,
         key = key,
         modifier = modifier,
     )
@@ -397,7 +525,32 @@ fun UiTreeBuilder.NumberField(
 /**
  * Emits a multi-line text input area.
  *
- * TextArea reuses TextField visual rules, only disabling singleLine and applying multi-line line constraints.
+ * TextArea reuses [TextField] visual and state rules, disables single-line layout, and applies the
+ * supplied line constraints.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.textFieldVariantsSample
+ * @receiver active tree builder receiving the composite
+ * @param state caller-owned editable multi-line state
+ * @param hint legacy placeholder fallback used when [placeholder] is empty
+ * @param label optional text displayed above the editable area
+ * @param placeholder text displayed while [state] is empty
+ * @param supportingText optional guidance or error text displayed below the editable area
+ * @param variant visual treatment used to resolve container and border roles
+ * @param size interaction-density tier used for typography, padding, and minimum height
+ * @param enabled whether editing and focus input are accepted
+ * @param isError whether error appearance roles are selected
+ * @param readOnly whether selection remains available while user edits are rejected
+ * @param minLines minimum visual line count
+ * @param maxLines maximum visual line count
+ * @param keyboardOptions keyboard type, capitalization, correction, and IME action policy
+ * @param inputTransformation optional synchronous filter for proposed edits
+ * @param receiveContent accepted rich-content policy
+ * @param onKeyboardAction callback that may consume an IME action on the renderer thread
+ * @param onFocusChange callback invoked on the renderer thread when native focus changes
+ * @param autofillHints semantic Android autofill categories
+ * @param overrides sparse instance appearance applied after scoped [ProvideTextFieldOverrides]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration applied to the outer composite
  */
 fun UiTreeBuilder.TextArea(
     state: TextFieldState,
@@ -418,7 +571,7 @@ fun UiTreeBuilder.TextArea(
     onKeyboardAction: ((TextFieldImeAction) -> Boolean)? = null,
     onFocusChange: ((Boolean) -> Unit)? = null,
     autofillHints: Set<TextFieldAutofillHint> = emptySet(),
-    style: UiTextStyle = TextFieldDefaults.textStyle(size),
+    overrides: TextFieldOverrides = TextFieldOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -442,7 +595,7 @@ fun UiTreeBuilder.TextArea(
         size = size,
         enabled = enabled,
         isError = isError,
-        style = style,
+        overrides = overrides,
         key = key,
         modifier = modifier,
     )

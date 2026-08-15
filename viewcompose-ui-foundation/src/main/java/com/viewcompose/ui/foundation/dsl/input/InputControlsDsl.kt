@@ -21,9 +21,7 @@ import com.viewcompose.ui.node.spec.uiFontFamily
  * @param checked current caller-owned checked state
  * @param onCheckedChange callback invoked synchronously on the renderer thread with the requested state
  * @param enabled whether input is accepted and enabled color roles are used
- * @param checkedColor ARGB indicator color used for the checked state
- * @param uncheckedColor ARGB indicator color used for the unchecked state
- * @param style immutable text appearance snapshot for [text]
+ * @param overrides sparse instance appearance applied after scoped [ProvideCheckboxOverrides]
  * @param key optional stable sibling identity used during reconciliation
  * @param modifier ordered configuration appended after the themed minimum effective height
  */
@@ -32,14 +30,11 @@ fun UiTreeBuilder.Checkbox(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     enabled: Boolean = true,
-    checkedColor: Int = InputControlDefaults.checkboxCheckedColor(enabled),
-    uncheckedColor: Int = InputControlDefaults.checkboxUncheckedColor(enabled),
-    style: UiTextStyle = InputControlDefaults.labelStyle(),
+    overrides: CheckboxOverrides = CheckboxOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
-    // controlColor is the base control tint, while checked/unchecked colors remain for platform state lists.
-    val controlColor = InputControlDefaults.checkboxControlColor(enabled)
+    val appearance = InputControlDefaults.resolveCheckbox(enabled, overrides)
     emit(
         type = NodeType.Checkbox,
         key = key,
@@ -47,21 +42,21 @@ fun UiTreeBuilder.Checkbox(
             text = text,
             enabled = enabled,
             checked = checked,
-            controlColor = controlColor,
-            checkedColor = checkedColor,
-            uncheckedColor = uncheckedColor,
+            controlColor = appearance.controlColor,
+            checkedColor = appearance.checkedColor,
+            uncheckedColor = appearance.uncheckedColor,
             onCheckedChange = onCheckedChange,
-            textColor = InputControlDefaults.checkboxLabelColor(enabled),
-            textSizeSp = style.fontSizeSp,
-            fontWeight = style.fontWeight,
-            fontFamily = uiFontFamily(style.fontFamily),
-            letterSpacingEm = style.letterSpacingEm,
-            lineHeightSp = style.lineHeightSp,
-            includeFontPadding = style.includeFontPadding,
-            rippleColor = InputControlDefaults.pressedColor(),
+            textColor = appearance.labelColor,
+            textSizeSp = appearance.textStyle.fontSizeSp,
+            fontWeight = appearance.textStyle.fontWeight,
+            fontFamily = uiFontFamily(appearance.textStyle.fontFamily),
+            letterSpacingEm = appearance.textStyle.letterSpacingEm,
+            lineHeightSp = appearance.textStyle.lineHeightSp,
+            includeFontPadding = appearance.textStyle.includeFontPadding,
+            rippleColor = appearance.rippleColor,
         ),
         modifier = Modifier
-            .minHeight(InputControlDefaults.minimumInteractiveHeight())
+            .minHeight(appearance.minimumHeight)
             .then(modifier),
     )
 }
@@ -79,9 +74,7 @@ fun UiTreeBuilder.Checkbox(
  * @param checked current caller-owned checked state
  * @param onCheckedChange callback invoked synchronously on the renderer thread with the requested state
  * @param enabled whether input is accepted and enabled color roles are used
- * @param thumbColor optional ARGB thumb color, or `null` to retain the renderer-native value
- * @param trackColor optional ARGB track color, or `null` to retain the renderer-native value
- * @param style immutable text appearance snapshot for [text]
+ * @param overrides sparse instance appearance applied after scoped [ProvideSwitchOverrides]
  * @param key optional stable sibling identity used during reconciliation
  * @param modifier ordered configuration appended after the themed minimum effective height
  */
@@ -90,14 +83,11 @@ fun UiTreeBuilder.Switch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     enabled: Boolean = true,
-    thumbColor: Int? = InputControlDefaults.switchThumbColor(checked, enabled),
-    trackColor: Int? = InputControlDefaults.switchTrackColor(checked, enabled),
-    style: UiTextStyle = InputControlDefaults.labelStyle(),
+    overrides: SwitchOverrides = SwitchOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
-    // Switch shares ToggleNodeProps with checkbox/radio; the renderer picks the native control from NodeType.
-    val controlColor = InputControlDefaults.switchControlColor(enabled)
+    val appearance = InputControlDefaults.resolveSwitch(checked, enabled, overrides)
     emit(
         type = NodeType.Switch,
         key = key,
@@ -105,21 +95,21 @@ fun UiTreeBuilder.Switch(
             text = text,
             enabled = enabled,
             checked = checked,
-            controlColor = controlColor,
-            thumbColor = thumbColor,
-            trackColor = trackColor,
+            controlColor = appearance.controlColor,
+            thumbColor = appearance.thumbColor,
+            trackColor = appearance.trackColor,
             onCheckedChange = onCheckedChange,
-            textColor = InputControlDefaults.switchLabelColor(enabled),
-            textSizeSp = style.fontSizeSp,
-            fontWeight = style.fontWeight,
-            fontFamily = uiFontFamily(style.fontFamily),
-            letterSpacingEm = style.letterSpacingEm,
-            lineHeightSp = style.lineHeightSp,
-            includeFontPadding = style.includeFontPadding,
-            rippleColor = InputControlDefaults.pressedColor(),
+            textColor = appearance.labelColor,
+            textSizeSp = appearance.textStyle.fontSizeSp,
+            fontWeight = appearance.textStyle.fontWeight,
+            fontFamily = uiFontFamily(appearance.textStyle.fontFamily),
+            letterSpacingEm = appearance.textStyle.letterSpacingEm,
+            lineHeightSp = appearance.textStyle.lineHeightSp,
+            includeFontPadding = appearance.textStyle.includeFontPadding,
+            rippleColor = appearance.rippleColor,
         ),
         modifier = Modifier
-            .minHeight(InputControlDefaults.minimumInteractiveHeight())
+            .minHeight(appearance.minimumHeight)
             .then(modifier),
     )
 }
@@ -136,9 +126,7 @@ fun UiTreeBuilder.Switch(
  * @param checked whether this option is currently selected
  * @param onCheckedChange callback invoked synchronously on the renderer thread with the requested state
  * @param enabled whether input is accepted and enabled color roles are used
- * @param checkedColor ARGB indicator color used for the selected state
- * @param uncheckedColor ARGB indicator color used for the unselected state
- * @param style immutable text appearance snapshot for [text]
+ * @param overrides sparse instance appearance applied after scoped [ProvideRadioButtonOverrides]
  * @param key optional stable sibling identity used during reconciliation
  * @param modifier ordered configuration appended after the themed minimum effective height
  */
@@ -147,14 +135,11 @@ fun UiTreeBuilder.RadioButton(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     enabled: Boolean = true,
-    checkedColor: Int = InputControlDefaults.radioButtonCheckedColor(enabled),
-    uncheckedColor: Int = InputControlDefaults.radioButtonUncheckedColor(enabled),
-    style: UiTextStyle = InputControlDefaults.labelStyle(),
+    overrides: RadioButtonOverrides = RadioButtonOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
-    // Radio buttons use separate defaults so themes can differentiate input controls.
-    val controlColor = InputControlDefaults.radioButtonControlColor(enabled)
+    val appearance = InputControlDefaults.resolveRadioButton(enabled, overrides)
     emit(
         type = NodeType.RadioButton,
         key = key,
@@ -162,21 +147,21 @@ fun UiTreeBuilder.RadioButton(
             text = text,
             enabled = enabled,
             checked = checked,
-            controlColor = controlColor,
-            checkedColor = checkedColor,
-            uncheckedColor = uncheckedColor,
+            controlColor = appearance.controlColor,
+            checkedColor = appearance.checkedColor,
+            uncheckedColor = appearance.uncheckedColor,
             onCheckedChange = onCheckedChange,
-            textColor = InputControlDefaults.radioButtonLabelColor(enabled),
-            textSizeSp = style.fontSizeSp,
-            fontWeight = style.fontWeight,
-            fontFamily = uiFontFamily(style.fontFamily),
-            letterSpacingEm = style.letterSpacingEm,
-            lineHeightSp = style.lineHeightSp,
-            includeFontPadding = style.includeFontPadding,
-            rippleColor = InputControlDefaults.pressedColor(),
+            textColor = appearance.labelColor,
+            textSizeSp = appearance.textStyle.fontSizeSp,
+            fontWeight = appearance.textStyle.fontWeight,
+            fontFamily = uiFontFamily(appearance.textStyle.fontFamily),
+            letterSpacingEm = appearance.textStyle.letterSpacingEm,
+            lineHeightSp = appearance.textStyle.lineHeightSp,
+            includeFontPadding = appearance.textStyle.includeFontPadding,
+            rippleColor = appearance.rippleColor,
         ),
         modifier = Modifier
-            .minHeight(InputControlDefaults.minimumInteractiveHeight())
+            .minHeight(appearance.minimumHeight)
             .then(modifier),
     )
 }
@@ -197,9 +182,7 @@ fun UiTreeBuilder.RadioButton(
  * @param min inclusive lower bound of the platform progress range
  * @param max inclusive upper bound of the platform progress range
  * @param enabled whether input is accepted and enabled color roles are used
- * @param thumbColor ARGB color applied to the slider thumb
- * @param trackColor ARGB color applied to the active slider track
- * @param inactiveTrackColor ARGB color applied to the track after the current value
+ * @param overrides sparse instance appearance applied after scoped [ProvideSliderOverrides]
  * @param key optional stable sibling identity used during reconciliation
  * @param modifier ordered configuration appended after the themed minimum effective height
  */
@@ -209,12 +192,11 @@ fun UiTreeBuilder.Slider(
     min: Int = 0,
     max: Int = 100,
     enabled: Boolean = true,
-    thumbColor: Int = InputControlDefaults.sliderThumbColor(enabled),
-    trackColor: Int = InputControlDefaults.sliderTrackColor(enabled),
-    inactiveTrackColor: Int = InputControlDefaults.sliderInactiveTrackColor(enabled),
+    overrides: SliderOverrides = SliderOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
+    val appearance = InputControlDefaults.resolveSlider(enabled, overrides)
     emit(
         type = NodeType.Slider,
         key = key,
@@ -223,13 +205,13 @@ fun UiTreeBuilder.Slider(
             max = max,
             value = value,
             enabled = enabled,
-            thumbColor = thumbColor,
-            trackColor = trackColor,
+            thumbColor = appearance.thumbColor,
+            trackColor = appearance.activeTrackColor,
             onValueChange = onValueChange,
-            inactiveTrackColor = inactiveTrackColor,
+            inactiveTrackColor = appearance.inactiveTrackColor,
         ),
         modifier = Modifier
-            .minHeight(InputControlDefaults.minimumInteractiveHeight())
+            .minHeight(appearance.minimumHeight)
             .then(modifier),
     )
 }

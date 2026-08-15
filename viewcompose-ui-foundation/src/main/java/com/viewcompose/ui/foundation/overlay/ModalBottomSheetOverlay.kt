@@ -4,21 +4,19 @@ package com.viewcompose.ui.foundation
  * Describes platform-neutral behavior for one modal bottom-sheet overlay.
  *
  * Callback identity does not participate in equality. Recomposition therefore updates a platform
- * sheet only when a visual, navigation-bar, or dismissal policy changes.
+ * sheet only when [appearance] or a dismissal/expansion policy changes.
  *
  * @property dismissOnBackPress whether a platform back action requests dismissal
  * @property dismissOnClickOutside whether tapping the scrim requests dismissal
  * @property skipPartiallyExpanded whether the presenter must omit a partially expanded state
- * @property scrimOpacity opacity in `0.0..1.0` requested for the background scrim
- * @property navigationBarColor optional platform navigation-bar color while the sheet is visible
+ * @property appearance complete resolved appearance applied by every presenter update
  * @property onDismissRequest invoked when the platform requests dismissal; the owner must remove the declaration
  */
 class ModalBottomSheetOverlaySpec(
     val dismissOnBackPress: Boolean = true,
     val dismissOnClickOutside: Boolean = true,
     val skipPartiallyExpanded: Boolean = false,
-    val scrimOpacity: Float = 0.32f,
-    val navigationBarColor: Int? = null,
+    val appearance: ModalBottomSheetAppearance,
     val onDismissRequest: (() -> Unit)? = null,
 ) {
     /** Compares the visual and dismissal policy while intentionally ignoring callback identity. */
@@ -32,8 +30,7 @@ class ModalBottomSheetOverlaySpec(
         return dismissOnBackPress == other.dismissOnBackPress &&
             dismissOnClickOutside == other.dismissOnClickOutside &&
             skipPartiallyExpanded == other.skipPartiallyExpanded &&
-            scrimOpacity == other.scrimOpacity &&
-            navigationBarColor == other.navigationBarColor
+            appearance == other.appearance
     }
 
     /** Returns a hash of the visual and dismissal policy. */
@@ -41,8 +38,7 @@ class ModalBottomSheetOverlaySpec(
         var result = dismissOnBackPress.hashCode()
         result = 31 * result + dismissOnClickOutside.hashCode()
         result = 31 * result + skipPartiallyExpanded.hashCode()
-        result = 31 * result + scrimOpacity.hashCode()
-        result = 31 * result + (navigationBarColor ?: 0)
+        result = 31 * result + appearance.hashCode()
         return result
     }
 }

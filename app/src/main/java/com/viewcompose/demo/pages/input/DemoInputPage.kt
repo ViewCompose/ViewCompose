@@ -26,26 +26,29 @@ import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.ButtonSize
 import com.viewcompose.ui.foundation.ButtonVariant
 import com.viewcompose.ui.foundation.Checkbox
+import com.viewcompose.ui.foundation.CheckboxOverrides
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.EmailField
 import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
-import com.viewcompose.ui.foundation.InputControlColorOverride
 import com.viewcompose.ui.foundation.LazyColumn
 import com.viewcompose.ui.foundation.NumberField
 import com.viewcompose.ui.foundation.PasswordField
-import com.viewcompose.ui.foundation.ProvideCheckboxColors
-import com.viewcompose.ui.foundation.ProvideRadioButtonColors
-import com.viewcompose.ui.foundation.ProvideSliderColors
-import com.viewcompose.ui.foundation.ProvideSwitchColors
+import com.viewcompose.ui.foundation.ProvideCheckboxOverrides
+import com.viewcompose.ui.foundation.ProvideRadioButtonOverrides
+import com.viewcompose.ui.foundation.ProvideSliderOverrides
+import com.viewcompose.ui.foundation.ProvideSwitchOverrides
 import com.viewcompose.ui.foundation.PullToRefresh
 import com.viewcompose.ui.foundation.RadioButton
+import com.viewcompose.ui.foundation.RadioButtonOverrides
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.SearchBar
 import com.viewcompose.ui.foundation.ScrollableColumn
 import com.viewcompose.ui.foundation.Slider
+import com.viewcompose.ui.foundation.SliderOverrides
 import com.viewcompose.ui.foundation.SurfaceDefaults
 import com.viewcompose.ui.foundation.Switch
+import com.viewcompose.ui.foundation.SwitchOverrides
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextArea
 import com.viewcompose.ui.foundation.TextDefaults
@@ -496,66 +499,90 @@ internal fun UiTreeBuilder.InputPage(
                     onValueChange = { intensityState.value = it },
                     modifier = Modifier.fillMaxWidth(),
                 )
-                ProvideCheckboxColors(
-                    InputControlColorOverride(
-                        control = Theme.colors.secondary,
-                        controlDisabled = Theme.colors.outlineVariant,
-                        label = Theme.colors.onSurface,
-                        labelDisabled = Theme.colors.onSurfaceVariant,
+                ProvideCheckboxOverrides(
+                    CheckboxOverrides(
+                        checkedColor = Theme.colors.secondary,
+                        uncheckedColor = Theme.colors.outline,
+                        disabledCheckedColor = Theme.colors.outlineVariant,
+                        disabledUncheckedColor = Theme.colors.outlineVariant,
+                        labelColor = Theme.colors.onSurface,
+                        disabledLabelColor = Theme.colors.onSurfaceVariant,
                     ),
                 ) {
-                ProvideSwitchColors(
-                    InputControlColorOverride(
-                        control = Theme.colors.secondary,
-                        controlDisabled = Theme.colors.outlineVariant,
-                        label = Theme.colors.onSurface,
-                        labelDisabled = Theme.colors.onSurfaceVariant,
-                    ),
-                ) {
-                ProvideRadioButtonColors(
-                    InputControlColorOverride(
-                        control = Theme.colors.secondary,
-                        controlDisabled = Theme.colors.outlineVariant,
-                        label = Theme.colors.onSurface,
-                        labelDisabled = Theme.colors.onSurfaceVariant,
-                    ),
-                ) {
-                ProvideSliderColors(
-                    InputControlColorOverride(
-                        control = Theme.colors.secondary,
-                        controlDisabled = Theme.colors.outlineVariant,
-                    ),
-                ) {
-                    Column(
-                        spacing = 8.dp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .backgroundColor(SurfaceDefaults.backgroundColor())
-                            .shape(SurfaceDefaults.shape())
-                            .padding(12.dp),
+                    ProvideSwitchOverrides(
+                        SwitchOverrides(
+                            checkedThumbColor = Theme.colors.onSecondary,
+                            uncheckedThumbColor = Theme.colors.outline,
+                            checkedTrackColor = Theme.colors.secondary,
+                            uncheckedTrackColor = Theme.colors.surfaceVariant,
+                            disabledCheckedThumbColor = Theme.colors.outlineVariant,
+                            disabledUncheckedThumbColor = Theme.colors.outlineVariant,
+                            disabledCheckedTrackColor = Theme.colors.surfaceVariant,
+                            disabledUncheckedTrackColor = Theme.colors.surfaceVariant,
+                            labelColor = Theme.colors.onSurface,
+                            disabledLabelColor = Theme.colors.onSurfaceVariant,
+                        ),
                     ) {
-                        Text(text = stringResource(R.string.demo_input_color_override))
-                        Checkbox(
-                            text = stringResource(R.string.demo_input_local_checkbox),
-                            checked = true,
-                            onCheckedChange = {},
-                        )
-                        Switch(
-                            text = stringResource(R.string.demo_input_disabled_switch),
-                            checked = false,
-                            enabled = false,
-                            onCheckedChange = {},
-                        )
-                        RadioButton(
-                            text = stringResource(R.string.demo_input_local_radio),
-                            checked = true,
-                            onCheckedChange = {},
-                        )
-                        Slider(value = 56, min = 0, max = 100, enabled = false, onValueChange = {}, modifier = Modifier.fillMaxWidth())
+                        ProvideRadioButtonOverrides(
+                            RadioButtonOverrides(
+                                checkedColor = Theme.colors.secondary,
+                                uncheckedColor = Theme.colors.outline,
+                                disabledCheckedColor = Theme.colors.outlineVariant,
+                                disabledUncheckedColor = Theme.colors.outlineVariant,
+                                labelColor = Theme.colors.onSurface,
+                                disabledLabelColor = Theme.colors.onSurfaceVariant,
+                            ),
+                        ) {
+                            ProvideSliderOverrides(
+                                SliderOverrides(
+                                    thumbColor = Theme.colors.secondary,
+                                    activeTrackColor = Theme.colors.secondary,
+                                    inactiveTrackColor = Theme.colors.surfaceVariant,
+                                    disabledThumbColor = Theme.colors.outlineVariant,
+                                    disabledActiveTrackColor = Theme.colors.outlineVariant,
+                                    disabledInactiveTrackColor = Theme.colors.surfaceVariant,
+                                ),
+                            ) {
+                                Column(
+                                    spacing = 8.dp,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .backgroundColor(SurfaceDefaults.backgroundColor())
+                                        .shape(SurfaceDefaults.shape())
+                                        .padding(12.dp),
+                                ) {
+                                    Text(text = stringResource(R.string.demo_input_color_override))
+                                    Checkbox(
+                                        text = stringResource(R.string.demo_input_local_checkbox),
+                                        checked = false,
+                                        onCheckedChange = {},
+                                    )
+                                    Switch(
+                                        text = stringResource(R.string.demo_input_disabled_switch),
+                                        checked = false,
+                                        enabled = false,
+                                        onCheckedChange = {},
+                                    )
+                                    RadioButton(
+                                        text = stringResource(R.string.demo_input_local_radio),
+                                        checked = true,
+                                        onCheckedChange = {},
+                                    )
+                                    Slider(
+                                        value = 56,
+                                        min = 0,
+                                        max = 100,
+                                        enabled = false,
+                                        onValueChange = {},
+                                        overrides = SliderOverrides(
+                                            disabledThumbColor = Theme.colors.secondary,
+                                        ),
+                                        modifier = Modifier.fillMaxWidth(),
+                                    )
+                                }
+                            }
+                        }
                     }
-                }
-                }
-                }
                 }
             }
 

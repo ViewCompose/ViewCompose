@@ -520,29 +520,31 @@ class TabRowScope internal constructor() {
 
 /**
  * Emits a TabRow whose tabs are eager keyed children in the parent composition.
+ *
+ * Selection changes invalidate only the previously selected and newly selected keyed children.
+ * The row never creates lazy item sessions; appearance resolves once from instance, scoped, and
+ * semantic defaults in that order.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.componentOverridesSample
+ * @receiver active tree builder that receives the emitted eager TabRow
+ * @param selectedIndex currently selected tab index
+ * @param onTabSelected callback receiving a requested index synchronously on the renderer thread
+ * @param pagerState optional pager state used to synchronize selection and indicator progress
+ * @param overrides sparse instance appearance applied after scoped [ProvideTabRowOverrides]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended to the emitted TabRow node
+ * @param tabs eager keyed tab declarations evaluated in the parent composition
  */
 fun UiTreeBuilder.TabRow(
     selectedIndex: Int,
     onTabSelected: (Int) -> Unit,
     pagerState: PagerState? = null,
-    indicatorColor: Int = TabRowDefaults.indicatorColor(),
-    indicatorHeight: UiDp = TabRowDefaults.indicatorHeight(),
-    indicatorCornerRadius: UiDp = TabRowDefaults.indicatorCornerRadius(),
-    indicatorPosition: TabIndicatorPosition = TabIndicatorPosition.Bottom,
-    indicatorWidthMode: TabIndicatorWidthMode = TabIndicatorWidthMode.MatchItem,
-    indicatorFixedWidth: UiDp = UiDp.Zero,
-    containerColor: Int = TabRowDefaults.containerColor(),
-    scrollable: Boolean = false,
-    equalWidth: Boolean = true,
-    rippleColor: Int = TabRowDefaults.rippleColor(),
-    itemSpacing: UiDp = UiDp.Zero,
-    itemPaddingHorizontal: UiDp = TabRowDefaults.itemPaddingHorizontal(),
-    itemPaddingVertical: UiDp = TabRowDefaults.itemPaddingVertical(),
-    minItemWidth: UiDp = TabRowDefaults.minItemWidth(),
+    overrides: TabRowOverrides = TabRowOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
     tabs: TabRowScope.() -> Unit,
 ) {
+    val appearance = TabRowDefaults.resolve(overrides)
     val builtTabs = TabRowScope().apply(tabs).build()
     val environmentRevision = LocalContext.snapshot()
     val currentOnTabSelected = ComposerContext.currentComposer()?.let {
@@ -554,20 +556,20 @@ fun UiTreeBuilder.TabRow(
         spec = TabRowNodeProps(
             selectedIndex = selectedIndex,
             pagerState = pagerState,
-            indicatorColor = indicatorColor,
-            indicatorHeight = indicatorHeight,
-            indicatorCornerRadius = indicatorCornerRadius,
-            indicatorPosition = indicatorPosition,
-            indicatorWidthMode = indicatorWidthMode,
-            indicatorFixedWidth = indicatorFixedWidth,
-            containerColor = containerColor,
-            scrollable = scrollable,
-            equalWidth = equalWidth,
-            rippleColor = rippleColor,
-            itemSpacing = itemSpacing,
-            itemPaddingHorizontal = itemPaddingHorizontal,
-            itemPaddingVertical = itemPaddingVertical,
-            minItemWidth = minItemWidth,
+            indicatorColor = appearance.indicatorColor,
+            indicatorHeight = appearance.indicatorHeight,
+            indicatorCornerRadius = appearance.indicatorCornerRadius,
+            indicatorPosition = appearance.indicatorPosition,
+            indicatorWidthMode = appearance.indicatorWidthMode,
+            indicatorFixedWidth = appearance.indicatorFixedWidth,
+            containerColor = appearance.containerColor,
+            scrollable = appearance.scrollable,
+            equalWidth = appearance.equalWidth,
+            rippleColor = appearance.rippleColor,
+            itemSpacing = appearance.itemSpacing,
+            itemPaddingHorizontal = appearance.itemPaddingHorizontal,
+            itemPaddingVertical = appearance.itemPaddingVertical,
+            minItemWidth = appearance.minimumItemWidth,
         ),
         modifier = modifier,
     ) {
@@ -580,14 +582,14 @@ fun UiTreeBuilder.TabRow(
                 ) {
                     Box(
                         key = entry.key,
-                        rippleColor = rippleColor,
+                        rippleColor = appearance.rippleColor,
                         modifier = Modifier
                             .clickable {
                                 (currentOnTabSelected?.value ?: onTabSelected)(index)
                             }
                             .padding(
-                                horizontal = itemPaddingHorizontal,
-                                vertical = itemPaddingVertical,
+                                horizontal = appearance.itemPaddingHorizontal,
+                                vertical = appearance.itemPaddingVertical,
                             ),
                     ) {
                         entry.content(this, selected)

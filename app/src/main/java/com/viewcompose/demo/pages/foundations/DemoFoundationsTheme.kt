@@ -5,19 +5,19 @@ import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Button
-import com.viewcompose.ui.foundation.ButtonColorOverride
+import com.viewcompose.ui.foundation.ButtonOverrides
 import com.viewcompose.ui.foundation.Column
-import com.viewcompose.ui.foundation.ProvideButtonColors
-import com.viewcompose.ui.foundation.ProvideSegmentedControlColors
-import com.viewcompose.ui.foundation.ProvideTextFieldColors
+import com.viewcompose.ui.foundation.ProvideButtonOverrides
+import com.viewcompose.ui.foundation.ProvideSegmentedControlOverrides
+import com.viewcompose.ui.foundation.ProvideTextFieldOverrides
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.SegmentedControl
-import com.viewcompose.ui.foundation.SegmentedControlColorOverride
+import com.viewcompose.ui.foundation.SegmentedControlOverrides
 import com.viewcompose.ui.foundation.SurfaceDefaults
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.TextField
-import com.viewcompose.ui.foundation.TextFieldColorOverride
+import com.viewcompose.ui.foundation.TextFieldOverrides
 import com.viewcompose.ui.foundation.TextFieldVariant
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTextStyle
@@ -90,70 +90,77 @@ private fun UiTreeBuilder.FoundationsColorOverride(scenario: DemoScenarioSpec?) 
 }
 
 private fun UiTreeBuilder.FoundationsComponentDefaults(scenario: DemoScenarioSpec?) {
-    ProvideButtonColors(
-        ButtonColorOverride(
-            primaryContainer = Theme.colors.onSurface,
-            primaryContent = Theme.colors.background,
-            primaryDisabledContainer = Theme.colors.outlineVariant,
-            primaryDisabledContent = Theme.colors.onSurfaceVariant,
-            outlinedBorder = Theme.colors.secondary,
-            outlinedDisabledBorder = Theme.colors.onSurfaceVariant,
+    ProvideButtonOverrides(
+        ButtonOverrides(
+            contentColor = Theme.colors.background,
+            disabledContainerColor = Theme.colors.outlineVariant,
+            disabledContentColor = Theme.colors.onSurfaceVariant,
+            disabledBorderColor = Theme.colors.onSurfaceVariant,
         ),
     ) {
-        ProvideTextFieldColors(
-            TextFieldColorOverride(
-                filledDisabledContainer = Theme.colors.surfaceVariant,
-                outlinedErrorBorder = Theme.colors.secondary,
+        ProvideTextFieldOverrides(
+            TextFieldOverrides(
+                disabledContainerColor = Theme.colors.surfaceVariant,
+                errorContainerColor = Theme.colors.surfaceVariant,
+                errorBorderColor = Theme.colors.secondary,
             ),
         ) {
-            ProvideSegmentedControlColors(
-                SegmentedControlColorOverride(
-                    indicator = Theme.colors.secondary,
-                    indicatorDisabled = Theme.colors.outlineVariant,
-                    selectedText = Theme.colors.background,
-                    selectedTextDisabled = Theme.colors.onSurfaceVariant,
+            ProvideSegmentedControlOverrides(
+                SegmentedControlOverrides(
+                    indicatorColor = Theme.colors.secondary,
+                    disabledIndicatorColor = Theme.colors.outlineVariant,
+                    selectedContentColor = Theme.colors.background,
+                    disabledSelectedContentColor = Theme.colors.onSurfaceVariant,
                 ),
             ) {
-                Column(
-                    spacing = 8.dp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .backgroundColor(SurfaceDefaults.backgroundColor())
-                        .shape(SurfaceDefaults.shape())
-                        .padding(12.dp),
+                ProvideButtonOverrides(
+                    ButtonOverrides(
+                        borderColor = Theme.colors.secondary,
+                        borderWidth = 2.dp,
+                    ),
                 ) {
-                    Text(
-                        text = stringResource(R.string.demo_foundations_theme_component_defaults),
-                        style = Theme.typography.titleMedium,
-                    )
-                    SegmentedControl(
-                        items = listOf(
-                            stringResource(R.string.demo_foundations_theme_alpha),
-                            stringResource(R.string.demo_foundations_theme_beta),
-                            stringResource(R.string.demo_foundations_theme_gamma),
-                        ),
-                        selectedIndex = 1,
-                        onSelectionChange = {},
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Button(
-                        text = stringResource(R.string.demo_foundations_theme_primary_token),
-                        leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
+                    Column(
+                        spacing = 8.dp,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .foundationsScenarioTarget(
-                                scenario,
-                                DemoAutomationRole.SecondaryTarget,
+                            .backgroundColor(SurfaceDefaults.backgroundColor())
+                            .shape(SurfaceDefaults.shape())
+                            .padding(12.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.demo_foundations_theme_component_defaults),
+                            style = Theme.typography.titleMedium,
+                        )
+                        SegmentedControl(
+                            items = listOf(
+                                stringResource(R.string.demo_foundations_theme_alpha),
+                                stringResource(R.string.demo_foundations_theme_beta),
+                                stringResource(R.string.demo_foundations_theme_gamma),
                             ),
-                    )
-                    TextField(
-                        state = rememberTextFieldState(
-                            stringResource(R.string.demo_foundations_theme_error_value),
-                        ),
-                        variant = TextFieldVariant.Outlined,
-                        isError = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                            selectedIndex = 1,
+                            onSelectionChange = {},
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Button(
+                            text = stringResource(R.string.demo_foundations_theme_primary_token),
+                            leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
+                            overrides = ButtonOverrides(containerColor = Theme.colors.onSurface),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .foundationsScenarioTarget(
+                                    scenario,
+                                    DemoAutomationRole.SecondaryTarget,
+                                ),
+                        )
+                        TextField(
+                            state = rememberTextFieldState(
+                                stringResource(R.string.demo_foundations_theme_error_value),
+                            ),
+                            variant = TextFieldVariant.Outlined,
+                            isError = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
             }
         }

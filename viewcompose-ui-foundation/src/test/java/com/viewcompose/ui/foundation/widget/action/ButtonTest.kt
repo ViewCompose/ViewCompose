@@ -10,6 +10,8 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -80,18 +82,19 @@ class ButtonTest {
     }
 
     @Test
-    fun `explicit legacy ripple color keeps single-color renderer fallback`() {
+    fun `instance state layers override every interaction color`() {
+        val colors = UiStateLayerColors(0x33445566, 0x22445566, 0x11445566)
         val tree = buildVNodeTree {
             Button(
-                text = "Legacy",
-                rippleColor = 0x33445566,
+                text = "Override",
+                overrides = ButtonOverrides(stateLayerColors = colors),
             )
         }
 
         val spec = tree.single().spec as ButtonNodeProps
 
         assertEquals(0x33445566, spec.rippleColor)
-        assertEquals(null, spec.stateLayerColors)
+        assertEquals(colors, spec.stateLayerColors)
     }
 
     @Test
@@ -107,7 +110,7 @@ class ButtonTest {
         val tree = buildVNodeTree {
             Button(
                 text = "Styled",
-                style = style,
+                overrides = ButtonOverrides(textStyle = style),
             )
         }
 
@@ -117,5 +120,98 @@ class ButtonTest {
         assertEquals(style.letterSpacingEm, spec.letterSpacingEm)
         assertEquals(style.lineHeightSp, spec.lineHeightSp)
         assertEquals(style.includeFontPadding, spec.includeFontPadding)
+    }
+
+    @Test
+    fun `nested scopes merge fieldwise and instance overrides win`() {
+        val tree = buildVNodeTree {
+            ProvideButtonOverrides(
+                ButtonOverrides(
+                    containerColor = 101,
+                    contentColor = 102,
+                ),
+            ) {
+                Button(text = "Outer")
+                ProvideButtonOverrides(
+                    ButtonOverrides(
+                        contentColor = 202,
+                        borderColor = 203,
+                        borderWidth = 2.dp,
+                    ),
+                ) {
+                    Button(
+                        text = "Inner",
+                        overrides = ButtonOverrides(containerColor = 301),
+                    )
+                }
+                Button(text = "Restored")
+            }
+        }
+
+        val outer = tree[0].spec as ButtonNodeProps
+        val inner = tree[1].spec as ButtonNodeProps
+        val restored = tree[2].spec as ButtonNodeProps
+
+        assertEquals(101, outer.backgroundColor)
+        assertEquals(102, outer.textColor)
+        assertEquals(301, inner.backgroundColor)
+        assertEquals(202, inner.textColor)
+        assertEquals(203, inner.borderColor)
+        assertEquals(2.dp, inner.borderWidth)
+        assertEquals(101, restored.backgroundColor)
+        assertEquals(102, restored.textColor)
+    }
+
+    @Test
+    fun `generic appearance fields apply across variants until an instance replaces them`() {
+        val tree = buildVNodeTree {
+            ProvideButtonOverrides(ButtonOverrides(containerColor = 101)) {
+                Button(text = "Primary")
+                Button(text = "Text", variant = ButtonVariant.Text)
+                Button(
+                    text = "Restored text",
+                    variant = ButtonVariant.Text,
+                    overrides = ButtonOverrides(containerColor = 202),
+                )
+            }
+        }
+
+        assertEquals(101, (tree[0].spec as ButtonNodeProps).backgroundColor)
+        assertEquals(101, (tree[1].spec as ButtonNodeProps).backgroundColor)
+        assertEquals(202, (tree[2].spec as ButtonNodeProps).backgroundColor)
+    }
+
+    @Test
+    fun `empty instance patch keeps the scoped patch identity`() {
+        val scoped = ButtonOverrides(containerColor = 101)
+
+        assertSame(scoped, scoped.merge(ButtonOverrides.None))
+        assertSame(scoped, ButtonOverrides.None.merge(scoped))
+    }
+
+    @Test
+    fun `button overrides reject negative dimensions`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            ButtonOverrides(borderWidth = (-1).dp)
+        }
+    }
+
+    @Test
+    fun `button override scope restores after content throws`() {
+        val theme = UiThemeDefaults.light()
+        var restoredColor = 0
+
+        buildVNodeTree {
+            UiTheme(theme) {
+                runCatching {
+                    ProvideButtonOverrides(ButtonOverrides(containerColor = 101)) {
+                        error("failure")
+                    }
+                }
+                restoredColor = ButtonDefaults.containerColor()
+            }
+        }
+
+        assertEquals(theme.colors.primary, restoredColor)
     }
 }

@@ -32,6 +32,7 @@ dependencies {
     api(project(":viewcompose-ui-foundation"))
     implementation(project(":viewcompose-host-android"))
     implementation(project(":viewcompose-overlay-android"))
+    implementation(project(":viewcompose-renderer-android"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

@@ -102,6 +102,10 @@ precedence.
 - [`AndroidViewDecorationBackend`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.decoration/-android-view-decoration-backend/)
   is the optional SPI for effects such as advanced shadows. Without a backend, decoration requests
   stay on a no-op path and no shadow implementation is loaded.
+- `AndroidUiShapeDrawables.solid` is the Q2 Android boundary for downstream platform presenters
+  that already own a native container. It converts one immutable logical `UiShape`, ARGB color,
+  captured layout direction, and density into a newly owned bounds-aware Drawable. Semantic theme
+  lookup and presenter lifecycle remain outside Renderer.
 - `ViewDecorationHostLayout` and `DecorationChildDrawingOrder` support custom drawing planes and
   declarative `zIndex` without wrapping every child in another View.
 - `ViewNodeToolingRegistry` weakly associates mounted Views with source metadata only when tooling

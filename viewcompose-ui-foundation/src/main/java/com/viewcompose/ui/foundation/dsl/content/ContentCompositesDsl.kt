@@ -4,55 +4,62 @@ import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clip
-import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.minWidth
 import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.size
+import com.viewcompose.ui.modifier.shape
 
 /**
- * Composite Badge; null count renders a dot, and values above 99 render 99+.
+ * Emits a dot or labeled badge using one resolved appearance snapshot.
+ *
+ * A `null` [count] emits a dot, a non-positive count emits nothing, and values above 99 display
+ * `99+`. Appearance resolves from [BadgeDefaults], nested [ProvideBadgeOverrides] scopes, and
+ * instance [overrides].
+ *
+ * @sample com.viewcompose.ui.foundation.samples.remainingComponentOverridesSample
+ * @receiver active tree builder receiving the badge when [count] permits one
+ * @param count optional numeric content; `null` selects a dot and non-positive values omit output
+ * @param overrides sparse instance appearance applied after scoped Badge overrides
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended after resolved badge geometry and clipping
  */
 fun UiTreeBuilder.Badge(
     count: Int? = null,
-    containerColor: Int = BadgeDefaults.containerColor(),
-    contentColor: Int = BadgeDefaults.contentColor(),
+    overrides: BadgeOverrides = BadgeOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
     if (count != null && count <= 0) return
+    val appearance = BadgeDefaults.resolve(overrides)
     if (count == null) {
-        val dotSize = BadgeDefaults.dotSize()
         Box(
             key = key,
             modifier = Modifier
-                .size(width = dotSize, height = dotSize)
-                .backgroundColor(containerColor)
-                .cornerRadius(dotSize / 2)
+                .size(width = appearance.dotSize, height = appearance.dotSize)
+                .backgroundColor(appearance.containerColor)
+                .shape(appearance.shape)
                 .clip()
                 .then(modifier),
         ) {}
     } else {
         val displayText = if (count > 99) "99+" else count.toString()
-        val pillHeight = BadgeDefaults.pillHeight()
-        val hPadding = BadgeDefaults.pillHorizontalPadding()
-        val style = BadgeDefaults.textStyle()
         Box(
             key = key,
             contentAlignment = BoxAlignment.Center,
             modifier = Modifier
-                .height(pillHeight)
-                .minWidth(BadgeDefaults.pillMinWidth())
-                .backgroundColor(containerColor)
-                .cornerRadius(pillHeight / 2)
+                .height(appearance.pillHeight)
+                .minWidth(appearance.pillMinWidth)
+                .backgroundColor(appearance.containerColor)
+                .shape(appearance.shape)
                 .clip()
-                .padding(horizontal = hPadding)
+                .padding(horizontal = appearance.pillHorizontalPadding)
                 .then(modifier),
         ) {
             Text(
                 text = displayText,
-                style = style,
-                color = contentColor,
+                style = appearance.textStyle,
+                color = appearance.contentColor,
             )
         }
     }

@@ -6,6 +6,7 @@ package com.viewcompose.ui.foundation
  */
 
 import com.viewcompose.ui.node.spec.TextNodeProps
+import com.viewcompose.ui.shape.UiShape
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -79,7 +80,7 @@ class ModalBottomSheetOverlayHostTest {
                     message = "Action sheet",
                     spec = ModalBottomSheetOverlaySpec(
                         skipPartiallyExpanded = false,
-                        scrimOpacity = 0.32f,
+                        appearance = defaultAppearance,
                     ),
                 ),
             ),
@@ -92,7 +93,7 @@ class ModalBottomSheetOverlayHostTest {
                     message = "Action sheet",
                     spec = ModalBottomSheetOverlaySpec(
                         skipPartiallyExpanded = true,
-                        scrimOpacity = 0.56f,
+                        appearance = defaultAppearance.copy(scrimOpacity = 0.56f),
                     ),
                 ),
             ),
@@ -175,7 +176,9 @@ class ModalBottomSheetOverlayHostTest {
     private fun bottomSheetRequest(
         key: String,
         message: String,
-        spec: ModalBottomSheetOverlaySpec = ModalBottomSheetOverlaySpec(),
+        spec: ModalBottomSheetOverlaySpec = ModalBottomSheetOverlaySpec(
+            appearance = defaultAppearance,
+        ),
     ): OverlayRequest {
         return OverlayRequest(
             key = key,
@@ -188,6 +191,14 @@ class ModalBottomSheetOverlayHostTest {
             ),
         )
     }
+
+    private val defaultAppearance = ModalBottomSheetAppearance(
+        containerColor = 0xFFEEEEEE.toInt(),
+        contentColor = 0xFF111111.toInt(),
+        shape = UiShape.rounded(28.dp),
+        scrimOpacity = 0.32f,
+        navigationBarColor = ModalBottomSheetNavigationBarColor.Exact(0xFFEEEEEE.toInt()),
+    )
 
     private class RecordingBottomSheetPresenter : ModalBottomSheetOverlayPresenter {
         val events = mutableListOf<String>()

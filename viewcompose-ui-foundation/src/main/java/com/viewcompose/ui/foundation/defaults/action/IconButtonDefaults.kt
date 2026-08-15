@@ -1,75 +1,147 @@
 package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.node.UiStateLayerColors
+import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 
-import com.viewcompose.ui.shape.UiShape
-
-/**
- * Resolves IconButton defaults by reusing Button hierarchy with a square touch target.
- */
+/** Resolves IconButton appearance from semantic Button roles and independent scoped overrides. */
 object IconButtonDefaults {
-    /** Delegates container color resolution to [ButtonDefaults]. */
+    /** Resolves the container color for [variant] and [enabled] state. */
     fun containerColor(
         variant: ButtonVariant = ButtonVariant.Text,
         enabled: Boolean = true,
-    ): Int = ButtonDefaults.containerColor(variant, enabled)
+    ): Int {
+        val overrides = scopedOverrides()
+        return resolveStateValue(
+            enabled = enabled,
+            enabledOverride = overrides.containerColor,
+            disabledOverride = overrides.disabledContainerColor,
+            enabledDefault = ButtonDefaults.semanticContainerColor(variant, enabled = true),
+            disabledDefault = ButtonDefaults.semanticContainerColor(variant, enabled = false),
+        )
+    }
 
-    /** Delegates icon color resolution to [ButtonDefaults]. */
+    /** Resolves icon color for [variant] and [enabled] state. */
     fun contentColor(
         variant: ButtonVariant = ButtonVariant.Text,
         enabled: Boolean = true,
     ): Int {
-        return if (variant == ButtonVariant.Text) {
-            if (enabled) Theme.colors.onSurfaceVariant else colorWithAlpha(Theme.colors.onSurface, 0.38f)
-        } else {
-            ButtonDefaults.contentColor(variant, enabled)
-        }
+        val overrides = scopedOverrides()
+        return resolveStateValue(
+            enabled = enabled,
+            enabledOverride = overrides.contentColor,
+            disabledOverride = overrides.disabledContentColor,
+            enabledDefault = semanticContentColor(variant, enabled = true),
+            disabledDefault = semanticContentColor(variant, enabled = false),
+        )
     }
 
-    /** Delegates border color resolution to [ButtonDefaults]. */
+    /** Resolves border color for [variant] and [enabled] state. */
     fun borderColor(
         variant: ButtonVariant = ButtonVariant.Text,
         enabled: Boolean = true,
-    ): Int = ButtonDefaults.borderColor(variant, enabled)
+    ): Int {
+        val overrides = scopedOverrides()
+        return resolveStateValue(
+            enabled = enabled,
+            enabledOverride = overrides.borderColor,
+            disabledOverride = overrides.disabledBorderColor,
+            enabledDefault = ButtonDefaults.semanticBorderColor(variant, enabled = true),
+            disabledDefault = ButtonDefaults.semanticBorderColor(variant, enabled = false),
+        )
+    }
 
-    /** Delegates border width resolution to [ButtonDefaults]. */
-    fun borderWidth(
-        variant: ButtonVariant = ButtonVariant.Text,
-    ): UiDp = ButtonDefaults.borderWidth(variant)
+    /** Resolves border width for [variant]. */
+    fun borderWidth(variant: ButtonVariant = ButtonVariant.Text): UiDp =
+        scopedOverrides().borderWidth ?: ButtonDefaults.semanticBorderWidth(variant)
 
-    /** Returns the full shape used by standard icon buttons. */
-    fun shape(): UiShape = Theme.shapes.full
+    /** Resolves the standard full shape or a scoped override. */
+    fun shape(): UiShape = scopedOverrides().shape ?: Theme.shapes.full
 
-    /** Uses the corresponding Button height as square IconButton bounds. */
-    fun size(
-        size: ButtonSize = ButtonSize.Medium,
-    ): UiDp = ButtonDefaults.height(size)
+    /** Resolves square IconButton bounds for [size]. */
+    fun size(size: ButtonSize = ButtonSize.Medium): UiDp =
+        scopedOverrides().size ?: ButtonDefaults.semanticHeight(size)
 
     /** Resolves uniform icon padding for [size]. */
-    fun contentPadding(
-        size: ButtonSize = ButtonSize.Medium,
-    ): UiDp {
-        return when (size) {
-            ButtonSize.Compact -> 12.dp
-            ButtonSize.Medium -> 12.dp
-            ButtonSize.Large -> 16.dp
+    fun contentPadding(size: ButtonSize = ButtonSize.Medium): UiDp =
+        scopedOverrides().contentPadding ?: semanticContentPadding(size)
+
+    /** Returns the current pressed-state control highlight. */
+    fun pressedColor(): Int = Theme.stateColors.controlHighlight.resolve(pressed = true)
+
+    /** Resolves transient interaction colors from the effective enabled icon role. */
+    fun stateLayerColors(variant: ButtonVariant = ButtonVariant.Text): UiStateLayerColors {
+        val overrides = scopedOverrides()
+        return overrides.stateLayerColors ?: stateLayerColorsFor(
+            overrides.contentColor ?: semanticContentColor(variant, enabled = true),
+        )
+    }
+
+    internal fun resolve(
+        variant: ButtonVariant,
+        size: ButtonSize,
+        enabled: Boolean,
+        instance: IconButtonOverrides,
+    ): ResolvedIconButtonAppearance {
+        val overrides = scopedOverrides().merge(instance)
+        val contentColor = resolveStateValue(
+            enabled = enabled,
+            enabledOverride = overrides.contentColor,
+            disabledOverride = overrides.disabledContentColor,
+            enabledDefault = semanticContentColor(variant, enabled = true),
+            disabledDefault = semanticContentColor(variant, enabled = false),
+        )
+        return ResolvedIconButtonAppearance(
+            containerColor = resolveStateValue(
+                enabled = enabled,
+                enabledOverride = overrides.containerColor,
+                disabledOverride = overrides.disabledContainerColor,
+                enabledDefault = ButtonDefaults.semanticContainerColor(variant, enabled = true),
+                disabledDefault = ButtonDefaults.semanticContainerColor(variant, enabled = false),
+            ),
+            contentColor = contentColor,
+            borderColor = resolveStateValue(
+                enabled = enabled,
+                enabledOverride = overrides.borderColor,
+                disabledOverride = overrides.disabledBorderColor,
+                enabledDefault = ButtonDefaults.semanticBorderColor(variant, enabled = true),
+                disabledDefault = ButtonDefaults.semanticBorderColor(variant, enabled = false),
+            ),
+            borderWidth = overrides.borderWidth ?: ButtonDefaults.semanticBorderWidth(variant),
+            shape = overrides.shape ?: Theme.shapes.full,
+            stateLayerColors = overrides.stateLayerColors ?: stateLayerColorsFor(
+                overrides.contentColor ?: semanticContentColor(variant, enabled = true),
+            ),
+            size = overrides.size ?: ButtonDefaults.semanticHeight(size),
+            contentPadding = overrides.contentPadding ?: semanticContentPadding(size),
+        )
+    }
+
+    private fun semanticContentColor(variant: ButtonVariant, enabled: Boolean): Int {
+        if (!enabled) return colorWithAlpha(Theme.colors.onSurface, 0.38f)
+        return if (variant == ButtonVariant.Text) {
+            Theme.colors.onSurfaceVariant
+        } else {
+            ButtonDefaults.semanticContentColor(variant, enabled = true)
         }
     }
 
-    /** Returns the Button pressed-state highlight. */
-    fun pressedColor(): Int = ButtonDefaults.pressedColor()
-
-    /**
-     * Resolves transient interaction colors from the enabled icon role for [variant].
-     *
-     * @param variant visual hierarchy whose enabled icon role supplies the state-layer base
-     * @return immutable pressed, focused, and hovered state-layer colors
-     */
-    fun stateLayerColors(
-        variant: ButtonVariant = ButtonVariant.Text,
-    ): UiStateLayerColors {
-        val baseColor = contentColor(variant = variant, enabled = true)
-        return stateLayerColorsFor(baseColor)
+    private fun semanticContentPadding(size: ButtonSize): UiDp = when (size) {
+        ButtonSize.Compact -> 12.dp
+        ButtonSize.Medium -> 12.dp
+        ButtonSize.Large -> 16.dp
     }
+
+    private fun scopedOverrides(): IconButtonOverrides = UiLocals.current(LocalIconButtonOverrides)
 }
+
+internal data class ResolvedIconButtonAppearance(
+    val containerColor: Int,
+    val contentColor: Int,
+    val borderColor: Int,
+    val borderWidth: UiDp,
+    val shape: UiShape,
+    val stateLayerColors: UiStateLayerColors,
+    val size: UiDp,
+    val contentPadding: UiDp,
+)

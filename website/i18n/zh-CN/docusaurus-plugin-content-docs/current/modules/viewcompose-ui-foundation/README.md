@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 1cd2cb9549858167c440004b39379f3ac6533fc2f63156ff59faaaebb0c49e4b
+translation_source_hash: 01b641993dd2a3ffd1456334a438e93bf1be0238b1c520052360e00286bc2095
 translation_status: current
 ---
 
@@ -84,6 +84,13 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - `BasicButton` 是建立在 `BasicSurface`、Row、Text 与 Icon 上的 Q3 动作组合。其 Q2
   `BasicButtonStyle` 只包含已经解析的几何、排版、内容与交互值。它不会发射原生 Button 节点，
   现有 `Button` API 则继续保留该兼容路径。编译样例 `basicButtonSample` 展示连续圆角动作。
+- 高层组件使用 Q2 稀疏强类型外观值，例如 `ButtonOverrides`、`TextFieldOverrides`，以及相互独立的
+  Checkbox、Switch、RadioButton 和 Slider 模型。Q3 `ProvideXxxOverrides` 作用域逐字段合并嵌套值，
+  实例 Patch 的优先级高于合并后的作用域。行为、状态、回调、身份与生命周期仍是显式参数。
+  编译样例 `componentOverridesSample` 展示嵌套与实例优先级。
+- `BasicTextField` 是 Q3 编辑原语，其 Q2 `BasicTextFieldStyle` 包含全部已解析视觉输入，并且不读取
+  Theme 或组件 Local。高层 `TextField` 在构造完整 Style 前解析语义默认值和稀疏 Overrides；具名
+  设计系统则从自己的私有 Recipe 构造该 Style。
 - `UiControlSizing.minimumInteractiveHeight` 是 Checkbox、RadioButton、Switch 与 Slider 使用的
   设计系统无关有效高度策略。它的中性默认值是零，因此保留原生固有测量。设计系统可以提供
   正的最小值；组件会在调用方 Modifier 之前应用它，所以应用显式指定的精确高度仍具有最终权限。
@@ -91,8 +98,8 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   `Theme.colors.primary` 解析。Slider 还从 `Theme.colors.secondaryContainer` 解析非激活轨道。
   AppCompat `controlActivated` 继续作为通用状态 Token 提供，但不会覆盖这些组件语义角色。
 - Button 与 IconButton Defaults 会把自身启用态语义内容角色与 `UiInteractionTokens` 组合，
-  发出已解析的按下、聚焦和悬停颜色。调用方可通过 `stateLayerColors` 替换完整集合；Button 的
-  显式旧 `rippleColor` 重载会有意让所有活动状态继续使用同一个颜色。
+  发出已解析的按下、聚焦和悬停颜色。调用方通过组件强类型 Overrides 中的 `stateLayerColors`
+  槽位替换完整集合；已经移除的直接 `rippleColor` 与 `stateLayerColors` 参数不会形成第二条优先级路径。
 - Chip、FAB、Extended FAB、可点击 Surface、Card、ListItem 和 DropdownMenuItem 通过内部
   Box/Row NodeSpec 字段复用同一内容角色解析。SegmentedControl 分别解析选中与未选中集合，
   因此切换选中项时也会切换交互角色；静态或禁用组合控件保持空的多状态契约。
@@ -131,6 +138,35 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 完整生成参考位于
 [`viewcompose-ui-foundation` API 树](https://docs.viewcompose.com/api/viewcompose-ui-foundation/current/)。
 由于当前版本仍为 Alpha，文档站不会提供稳定的 `latest` 别名。
+
+## 组件外观 API 硬切
+
+Alpha API 不再同时保留颜色专用路径和低频外观直接参数：
+
+| 旧调用 | 替代方案 |
+| --- | --- |
+| `ButtonColorOverride` 与 `ProvideButtonColors` | `ButtonOverrides` 与 `ProvideButtonOverrides` |
+| `TextFieldColorOverride` 与 `ProvideTextFieldColors` | `TextFieldOverrides` 与 `ProvideTextFieldOverrides` |
+| 共用的 `InputControlColorOverride` | 相互独立的 Checkbox、Switch、RadioButton 与 Slider Overrides |
+| `ProgressIndicatorColorOverride` | 相互独立的 Linear 与 Circular Progress Overrides |
+| Button、输入控件、Progress、TabRow 或 NavigationBar 的直接外观参数 | 对应组件的 `overrides` 参数 |
+| FAB、AppBar 或 Badge 的直接外观参数 | 相互独立的普通/扩展 FAB、顶部/底部 AppBar 或 Badge `overrides` |
+| AlertDialog 视觉常量 | `AlertDialogOverrides` 或 `ProvideAlertDialogOverrides` |
+| Modal Bottom Sheet 的容器/内容/Scrim/系统栏外观 | 请求提交前解析为 `ModalBottomSheetAppearance` 的 `ModalBottomSheetOverrides` |
+| `BasicTextField` 的多个独立外观参数 | 一份完整的 `BasicTextFieldStyle` |
+
+嵌套 Provider 现在逐字段合并，不再整体替换外层 Patch；实例值具有最高优先级。除非字段名声明
+了具体状态，否则组件族字段不区分 Variant；只有一个 Variant 需要变化时，应把它放在实例上。
+如果需要在更宽的 Provider 下恢复语义值，调用方应显式传入该已解析值。
+
+TopAppBar 分别提供导航/操作内容角色，BottomAppBar 提供 Row 内容角色；嵌套 IconButton 会继承
+该角色，除非其实例 Overrides 替换它。普通/扩展 FAB 与顶部/底部 AppBar 继续使用独立类型，避免
+无关几何被静默忽略。Scaffold 与原始 Dialog 不提供外观 Overrides：两者分别保留页面 Surface
+或 Overlay 生命周期的直接输入，以及调用方自有内容。
+
+ModalBottomSheet 是 Overlay 特例。Foundation 会把容器/内容色、Shape、Scrim 透明度与“精确颜色/
+平台默认值”导航栏策略解析为不可变 `ModalBottomSheetAppearance`。Overlay Spec 会比较这份快照，
+因此同 Key 请求可更新 Presenter，而不会替换逻辑身份或捕获的 Saveable State。
 
 ## 状态、渲染与生命周期规则
 

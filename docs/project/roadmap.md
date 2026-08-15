@@ -197,6 +197,13 @@ Do not reopen an archived parent plan as a mutable backlog.
 | Material 3 TextField structural fidelity | Retain the supported native TextField structure and current theme bridge | A prioritized product requirement or reviewed visual baseline demonstrates a materially visible incompatibility with the pinned standard Material 3 behavior | Create a `material3-textfield-structural-fidelity` plan that owns IME, selection, accessibility, RTL, font-scale, measurement, save/restore, visual, performance, and rollback evidence; do not add Material dependencies to UI Foundation or Android Renderer |
 | Material 3 Switch and Slider exact geometry and motion | Retain the accepted colors, touch targets, semantics, native behavior, and current geometry | Product review demonstrates a visible normal-density geometry or motion gap, or an accessibility impact | Create a `material3-switch-slider-geometry` plan with screenshot/geometry, touch, keyboard, accessibility, RTL, density, frame/allocation, and independently revertible per-control evidence |
 
+The former additional-component-appearance candidate was activated by the 2026-08-15 field audit
+and completed in the archived
+[remaining component appearance convergence](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/remaining-component-appearance-convergence.md)
+plan. FAB, app-bar, Badge, AlertDialog, and modal-bottom-sheet appearance now follows ADR-0013.
+Scaffold and raw Dialog were rejected as override families after the same audit and retain their
+layout and overlay contracts.
+
 ## 5. Milestone contracts
 
 ### Milestone A: Overlay stability

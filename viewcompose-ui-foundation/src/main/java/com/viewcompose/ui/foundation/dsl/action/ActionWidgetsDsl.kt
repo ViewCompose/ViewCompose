@@ -9,7 +9,6 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.UiImageRequestOptions
-import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.IconButtonNodeProps
 import com.viewcompose.ui.node.spec.SegmentedControlNodeProps
@@ -33,9 +32,7 @@ import com.viewcompose.ui.node.spec.uiFontFamily
  * @param variant visual hierarchy used to resolve container, content, and border roles
  * @param size interaction-density tier used for target, visible container, padding, icon, and text
  * @param enabled whether input is accepted and enabled color roles are used
- * @param stateLayerColors resolved pressed, focused, and hovered colors clipped to the visible
- * container
- * @param style immutable text appearance snapshot for the label
+ * @param overrides sparse instance appearance applied after scoped [ProvideButtonOverrides] values
  * @param key optional stable sibling identity used during reconciliation
  * @param modifier ordered configuration appended to the emitted Button node
  */
@@ -47,73 +44,23 @@ fun UiTreeBuilder.Button(
     variant: ButtonVariant = ButtonVariant.Primary,
     size: ButtonSize = ButtonSize.Medium,
     enabled: Boolean = true,
-    stateLayerColors: UiStateLayerColors = ButtonDefaults.stateLayerColors(variant),
-    style: UiTextStyle = ButtonDefaults.textStyle(size),
+    overrides: ButtonOverrides = ButtonOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
-    emitButton(
-        text = text,
-        onClick = onClick,
-        leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
+    val appearance = ButtonDefaults.resolve(
         variant = variant,
         size = size,
         enabled = enabled,
-        rippleColor = stateLayerColors.pressedColor,
-        stateLayerColors = stateLayerColors,
-        style = style,
-        key = key,
-        modifier = modifier,
+        instance = overrides,
     )
-}
-
-/**
- * Displays a themed text action with one compatibility feedback color for every active state.
- *
- * Prefer the state-layer overload for distinct pressed, focused, and hovered feedback. This
- * overload preserves source compatibility for callers that explicitly supplied the former
- * single-color `rippleColor` parameter; Android Renderer also retains the corresponding nullable
- * NodeSpec fallback for custom emitters.
- *
- * @sample com.viewcompose.ui.foundation.samples.buttonSample
- * @receiver active tree builder that receives the emitted Button node
- * @param text visible action label
- * @param onClick callback invoked synchronously on the renderer thread for an enabled click
- * @param leadingIcon optional resource icon placed before [text]
- * @param trailingIcon optional resource icon placed after [text]
- * @param variant visual hierarchy used to resolve container, content, and border roles
- * @param size interaction-density tier used for target, visible container, padding, icon, and text
- * @param enabled whether input is accepted and enabled color roles are used
- * @param rippleColor ARGB feedback color used for pressed, focused, and hovered states
- * @param style immutable text appearance snapshot for the label
- * @param key optional stable sibling identity used during reconciliation
- * @param modifier ordered configuration appended to the emitted Button node
- */
-fun UiTreeBuilder.Button(
-    text: String,
-    onClick: (() -> Unit)? = null,
-    leadingIcon: ImageSource.Resource? = null,
-    trailingIcon: ImageSource.Resource? = null,
-    variant: ButtonVariant = ButtonVariant.Primary,
-    size: ButtonSize = ButtonSize.Medium,
-    enabled: Boolean = true,
-    rippleColor: Int,
-    style: UiTextStyle = ButtonDefaults.textStyle(size),
-    key: Any? = null,
-    modifier: Modifier = Modifier,
-) {
     emitButton(
         text = text,
         onClick = onClick,
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
-        variant = variant,
-        size = size,
         enabled = enabled,
-        rippleColor = rippleColor,
-        stateLayerColors = null,
-        style = style,
+        appearance = appearance,
         key = key,
         modifier = modifier,
     )
@@ -124,18 +71,11 @@ private fun UiTreeBuilder.emitButton(
     onClick: (() -> Unit)?,
     leadingIcon: ImageSource.Resource?,
     trailingIcon: ImageSource.Resource?,
-    variant: ButtonVariant,
-    size: ButtonSize,
     enabled: Boolean,
-    rippleColor: Int,
-    stateLayerColors: UiStateLayerColors?,
-    style: UiTextStyle,
+    appearance: ResolvedButtonAppearance,
     key: Any?,
     modifier: Modifier,
 ) {
-    val contentColor = ButtonDefaults.contentColor(variant, enabled)
-    val iconSizeValue = ButtonDefaults.iconSize(size)
-    val iconSpacingValue = ButtonDefaults.iconSpacing(size)
     emit(
         type = NodeType.Button,
         key = key,
@@ -143,28 +83,28 @@ private fun UiTreeBuilder.emitButton(
             text = text,
             enabled = enabled,
             onClick = onClick,
-            textColor = contentColor,
-            textSizeSp = style.fontSizeSp,
-            fontWeight = style.fontWeight,
-            fontFamily = uiFontFamily(style.fontFamily),
-            letterSpacingEm = style.letterSpacingEm,
-            lineHeightSp = style.lineHeightSp,
-            includeFontPadding = style.includeFontPadding,
-            backgroundColor = ButtonDefaults.containerColor(variant, enabled),
-            borderWidth = ButtonDefaults.borderWidth(variant),
-            borderColor = ButtonDefaults.borderColor(variant, enabled),
-            shape = ButtonDefaults.shape(),
-            rippleColor = rippleColor,
-            minHeight = ButtonDefaults.height(size),
-            paddingHorizontal = ButtonDefaults.horizontalPadding(size, variant),
-            paddingVertical = ButtonDefaults.verticalPadding(size),
+            textColor = appearance.contentColor,
+            textSizeSp = appearance.textStyle.fontSizeSp,
+            fontWeight = appearance.textStyle.fontWeight,
+            fontFamily = uiFontFamily(appearance.textStyle.fontFamily),
+            letterSpacingEm = appearance.textStyle.letterSpacingEm,
+            lineHeightSp = appearance.textStyle.lineHeightSp,
+            includeFontPadding = appearance.textStyle.includeFontPadding,
+            backgroundColor = appearance.containerColor,
+            borderWidth = appearance.borderWidth,
+            borderColor = appearance.borderColor,
+            shape = appearance.shape,
+            rippleColor = appearance.stateLayerColors.pressedColor,
+            minHeight = appearance.minimumHeight,
+            paddingHorizontal = appearance.horizontalPadding,
+            paddingVertical = appearance.verticalPadding,
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,
-            iconTint = contentColor,
-            iconSize = iconSizeValue,
-            iconSpacing = iconSpacingValue,
-            visualHeight = ButtonDefaults.visualHeight(size),
-            stateLayerColors = stateLayerColors,
+            iconTint = appearance.contentColor,
+            iconSize = appearance.iconSize,
+            iconSpacing = appearance.iconSpacing,
+            visualHeight = appearance.visualHeight,
+            stateLayerColors = appearance.stateLayerColors,
         ),
         modifier = modifier,
     )
@@ -185,10 +125,9 @@ private fun UiTreeBuilder.emitButton(
  * @param onClick callback invoked synchronously for an enabled click, or `null` for no action
  * @param variant visual button variant used to resolve theme colors and shape
  * @param size control size used for bounds, padding, and theme defaults
- * @param tint optional ARGB icon tint; `null` resolves the themed content color
  * @param requestOptions immutable decode, cache, transition, and adapter-extension policy
  * @param enabled whether the button accepts clicks and uses enabled theme tokens
- * @param stateLayerColors resolved pressed, focused, and hovered colors clipped to the button shape
+ * @param overrides sparse instance appearance applied after scoped [ProvideIconButtonOverrides]
  * @param key optional stable sibling identity used during reconciliation
  * @param modifier ordered configuration appended after required size and click semantics
  */
@@ -198,19 +137,22 @@ fun UiTreeBuilder.IconButton(
     onClick: (() -> Unit)? = null,
     variant: ButtonVariant = ButtonVariant.Text,
     size: ButtonSize = ButtonSize.Medium,
-    tint: Int? = null,
     requestOptions: UiImageRequestOptions = UiImageRequestOptions(),
     enabled: Boolean = true,
-    stateLayerColors: UiStateLayerColors = IconButtonDefaults.stateLayerColors(variant),
+    overrides: IconButtonOverrides = IconButtonOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
-    val resolvedTint = tint ?: IconButtonDefaults.contentColor(variant, enabled)
-    val contentPaddingValue = IconButtonDefaults.contentPadding(size)
+    val appearance = IconButtonDefaults.resolve(
+        variant = variant,
+        size = size,
+        enabled = enabled,
+        instance = overrides,
+    )
     val semanticModifier = Modifier
         .size(
-            width = IconButtonDefaults.size(size),
-            height = IconButtonDefaults.size(size),
+            width = appearance.size,
+            height = appearance.size,
         )
         .then(
             if (enabled && onClick != null) {
@@ -226,7 +168,7 @@ fun UiTreeBuilder.IconButton(
         spec = IconButtonNodeProps(
             contentDescription = contentDescription,
             contentScale = ImageContentScale.Inside,
-            tint = resolvedTint,
+            tint = appearance.contentColor,
             source = icon,
             placeholder = null,
             error = null,
@@ -234,27 +176,37 @@ fun UiTreeBuilder.IconButton(
             imageLoader = ImageLoading.current,
             requestOptions = requestOptions,
             enabled = enabled,
-            backgroundColor = IconButtonDefaults.containerColor(variant, enabled),
-            borderWidth = IconButtonDefaults.borderWidth(variant),
-            borderColor = IconButtonDefaults.borderColor(variant, enabled),
-            shape = IconButtonDefaults.shape(),
-            rippleColor = stateLayerColors.pressedColor,
-            contentPadding = contentPaddingValue,
-            stateLayerColors = stateLayerColors,
+            backgroundColor = appearance.containerColor,
+            borderWidth = appearance.borderWidth,
+            borderColor = appearance.borderColor,
+            shape = appearance.shape,
+            rippleColor = appearance.stateLayerColors.pressedColor,
+            contentPadding = appearance.contentPadding,
+            stateLayerColors = appearance.stateLayerColors,
         ),
         modifier = semanticModifier,
     )
 }
 
 /**
- * Text-style convenience variant of Button.
+ * Emits a text-hierarchy [Button] while preserving the standard action contract.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.componentOverridesSample
+ * @receiver active tree builder that receives the emitted Button node
+ * @param text visible action label
+ * @param onClick callback invoked synchronously on the renderer thread for an enabled click
+ * @param size interaction-density tier used for target, padding, icon, and text defaults
+ * @param enabled whether input is accepted and enabled appearance roles are used
+ * @param overrides sparse instance appearance applied after scoped [ProvideButtonOverrides]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended to the emitted Button node
  */
 fun UiTreeBuilder.TextButton(
     text: String,
     onClick: (() -> Unit)? = null,
     size: ButtonSize = ButtonSize.Medium,
     enabled: Boolean = true,
-    style: UiTextStyle = ButtonDefaults.textStyle(size),
+    overrides: ButtonOverrides = ButtonOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -264,14 +216,29 @@ fun UiTreeBuilder.TextButton(
         variant = ButtonVariant.Text,
         size = size,
         enabled = enabled,
-        style = style,
+        overrides = overrides,
         key = key,
         modifier = modifier,
     )
 }
 
 /**
- * Emits a SegmentedControl node.
+ * Emits a mutually exclusive segmented selection control backed by caller-owned state.
+ *
+ * [selectedIndex] is snapshotted for this render. The renderer invokes [onSelectionChange]
+ * synchronously with the requested index; the caller must publish the accepted state in a later
+ * render. Appearance resolves once from instance, scoped, and semantic defaults in that order.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.componentOverridesSample
+ * @receiver active tree builder that receives the emitted SegmentedControl node
+ * @param items ordered visible labels for the segments
+ * @param selectedIndex currently selected index, or the renderer's supported unselected sentinel
+ * @param onSelectionChange callback receiving a requested item index on the renderer thread
+ * @param size interaction-density tier used for typography, padding, and minimum height
+ * @param enabled whether selection input is accepted and enabled appearance roles are used
+ * @param overrides sparse instance appearance applied after scoped [ProvideSegmentedControlOverrides]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended after the resolved minimum height
  */
 fun UiTreeBuilder.SegmentedControl(
     items: List<String>,
@@ -279,19 +246,12 @@ fun UiTreeBuilder.SegmentedControl(
     onSelectionChange: (Int) -> Unit,
     size: SegmentedControlSize = SegmentedControlSize.Medium,
     enabled: Boolean = true,
+    overrides: SegmentedControlOverrides = SegmentedControlOverrides.None,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
-    val style = SegmentedControlDefaults.textStyle(size)
+    val appearance = SegmentedControlDefaults.resolve(size, enabled, overrides)
     val resolvedItems = items.map { label -> SegmentedControlItem(label = label) }
-    val backgroundColor = SegmentedControlDefaults.backgroundColor(enabled)
-    val indicatorColor = SegmentedControlDefaults.indicatorColor(enabled)
-    val shape = SegmentedControlDefaults.shape()
-    val textColor = SegmentedControlDefaults.textColor(enabled)
-    val selectedTextColor = SegmentedControlDefaults.selectedTextColor(enabled)
-    val rippleColor = SegmentedControlDefaults.rippleColor(enabled)
-    val paddingHorizontal = SegmentedControlDefaults.paddingHorizontal(size)
-    val paddingVertical = SegmentedControlDefaults.paddingVertical(size)
     emit(
         type = NodeType.SegmentedControl,
         key = key,
@@ -300,25 +260,25 @@ fun UiTreeBuilder.SegmentedControl(
             selectedIndex = selectedIndex,
             onSelectionChange = onSelectionChange,
             enabled = enabled,
-            backgroundColor = backgroundColor,
-            indicatorColor = indicatorColor,
-            shape = shape,
-            textColor = textColor,
-            selectedTextColor = selectedTextColor,
-            rippleColor = rippleColor,
-            textSizeSp = style.fontSizeSp,
-            fontWeight = style.fontWeight,
-            fontFamily = uiFontFamily(style.fontFamily),
-            letterSpacingEm = style.letterSpacingEm,
-            lineHeightSp = style.lineHeightSp,
-            includeFontPadding = style.includeFontPadding,
-            paddingHorizontal = paddingHorizontal,
-            paddingVertical = paddingVertical,
-            unselectedStateLayerColors = SegmentedControlDefaults.stateLayerColors(selected = false),
-            selectedStateLayerColors = SegmentedControlDefaults.stateLayerColors(selected = true),
+            backgroundColor = appearance.containerColor,
+            indicatorColor = appearance.indicatorColor,
+            shape = appearance.shape,
+            textColor = appearance.contentColor,
+            selectedTextColor = appearance.selectedContentColor,
+            rippleColor = appearance.rippleColor,
+            textSizeSp = appearance.textStyle.fontSizeSp,
+            fontWeight = appearance.textStyle.fontWeight,
+            fontFamily = uiFontFamily(appearance.textStyle.fontFamily),
+            letterSpacingEm = appearance.textStyle.letterSpacingEm,
+            lineHeightSp = appearance.textStyle.lineHeightSp,
+            includeFontPadding = appearance.textStyle.includeFontPadding,
+            paddingHorizontal = appearance.horizontalPadding,
+            paddingVertical = appearance.verticalPadding,
+            unselectedStateLayerColors = appearance.unselectedStateLayerColors,
+            selectedStateLayerColors = appearance.selectedStateLayerColors,
         ),
         modifier = Modifier
-            .height(SegmentedControlDefaults.height(size))
+            .height(appearance.minimumHeight)
             .then(modifier),
     )
 }

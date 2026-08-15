@@ -90,6 +90,15 @@ by a later renderer or child render session.
   `BasicButtonStyle` contains only resolved geometry, typography, content, and interaction values.
   It emits no native Button node, while the existing `Button` API keeps that compatibility path.
   The compiled `basicButtonSample` demonstrates a continuous-corner action.
+- High-level components use Q2 sparse typed appearance values such as `ButtonOverrides`,
+  `TextFieldOverrides`, and independent Checkbox, Switch, RadioButton, and Slider models. Q3
+  `ProvideXxxOverrides` scopes merge nested values field by field; an instance patch wins over the
+  merged scope. Behavior, state, callbacks, identity, and lifecycle stay explicit. The compiled
+  `componentOverridesSample` demonstrates nesting and instance precedence.
+- `BasicTextField` is a Q3 editing primitive whose Q2 `BasicTextFieldStyle` contains every resolved
+  visual input. It performs no Theme or component-Local lookup. High-level `TextField` resolves
+  semantic defaults and sparse overrides before constructing that complete style; named design
+  systems construct it from their private recipes.
 - `UiControlSizing.minimumInteractiveHeight` is the design-system-neutral effective-height policy
   used by Checkbox, RadioButton, Switch, and Slider. Its neutral default is zero, preserving native
   intrinsic measurement. A design system may supply a positive minimum; the component applies it
@@ -99,9 +108,9 @@ by a later renderer or child render session.
   `Theme.colors.secondaryContainer`. AppCompat `controlActivated` remains available as a general
   state token but does not override these component semantic roles.
 - Button and IconButton defaults combine their enabled semantic content role with
-  `UiInteractionTokens` and emit resolved pressed, focused, and hovered colors. Callers can replace
-  the complete set through `stateLayerColors`; Button's explicit legacy `rippleColor` overload
-  intentionally retains one color for every active state.
+  `UiInteractionTokens` and emit resolved pressed, focused, and hovered colors. A caller replaces
+  the complete set through the component's typed `stateLayerColors` override slot; the retired
+  direct `rippleColor` and `stateLayerColors` parameters are not parallel precedence paths.
 - Chip, FAB, extended FAB, clickable Surface, Card, ListItem, and DropdownMenuItem use the same
   content-role resolution through internal Box/Row NodeSpec fields. SegmentedControl resolves
   independent selected and unselected sets so switching selection also switches the interaction
@@ -148,6 +157,38 @@ The complete generated reference is available under the
 [`viewcompose-ui-foundation` API tree](https://docs.viewcompose.com/api/viewcompose-ui-foundation/current/).
 Because the current line is alpha, the documentation site intentionally does not expose a stable
 `latest` alias.
+
+## Component appearance hard cut
+
+The alpha API no longer retains parallel color-only and direct low-frequency appearance paths:
+
+| Previous call | Replacement |
+| --- | --- |
+| `ButtonColorOverride` and `ProvideButtonColors` | `ButtonOverrides` and `ProvideButtonOverrides` |
+| `TextFieldColorOverride` and `ProvideTextFieldColors` | `TextFieldOverrides` and `ProvideTextFieldOverrides` |
+| shared `InputControlColorOverride` | independent Checkbox, Switch, RadioButton, and Slider overrides |
+| `ProgressIndicatorColorOverride` | independent linear and circular progress overrides |
+| direct Button, input, progress, TabRow, or NavigationBar appearance parameters | the component's `overrides` argument |
+| direct FAB, app-bar, or Badge appearance parameters | independent regular/extended FAB, top/bottom app-bar, or Badge `overrides` |
+| AlertDialog visual constants | `AlertDialogOverrides` or `ProvideAlertDialogOverrides` |
+| modal-bottom-sheet container/content/scrim/system-bar appearance | `ModalBottomSheetOverrides`, resolved into `ModalBottomSheetAppearance` before submission |
+| individual `BasicTextField` appearance arguments | one complete `BasicTextFieldStyle` |
+
+Nested providers now merge instead of replacing an outer patch. Instance values have the highest
+precedence. A component-family field is variant-agnostic unless its name declares a specific
+state; apply it at the instance when only one variant should differ. Callers that need to restore a
+semantic value under a broader provider pass that resolved value explicitly.
+
+TopAppBar supplies independent navigation/action content roles and BottomAppBar supplies its row
+content role; nested IconButtons inherit that role unless their instance override replaces it.
+Regular/extended FAB and top/bottom app-bar types remain separate so irrelevant geometry cannot be
+silently ignored. Scaffold and raw Dialog have no appearance override family: they retain direct
+page-surface or overlay-lifecycle inputs and caller-owned content.
+
+ModalBottomSheet is the overlay-specific case. Foundation resolves container/content colors,
+shape, scrim opacity, and exact-versus-platform-default navigation-bar policy into one immutable
+`ModalBottomSheetAppearance`. The overlay spec compares that snapshot so a same-key request updates
+its presenter without replacing logical identity or captured saveable state.
 
 ## State, rendering, and lifecycle rules
 

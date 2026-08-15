@@ -13,9 +13,11 @@ import com.viewcompose.ui.foundation.ModalBottomSheetOverlayContent
 import com.viewcompose.ui.foundation.ModalBottomSheetOverlayHandle
 import com.viewcompose.ui.foundation.ModalBottomSheetOverlayPresenter
 import com.viewcompose.ui.foundation.ModalBottomSheetOverlaySpec
+import com.viewcompose.ui.foundation.ModalBottomSheetNavigationBarColor
 import com.viewcompose.ui.foundation.OverlayEntryId
 import com.viewcompose.ui.foundation.OverlaySurfaceSession
 import com.viewcompose.ui.foundation.createOverlaySurfaceSession
+import com.viewcompose.renderer.view.shape.AndroidUiShapeDrawables
 
 /**
  * Creates Material [BottomSheetDialog] handles for declarative modal bottom sheets.
@@ -54,6 +56,7 @@ private class AndroidModalBottomSheetHandle(
     spec: ModalBottomSheetOverlaySpec,
     content: ModalBottomSheetOverlayContent,
 ) : ModalBottomSheetOverlayHandle {
+    private val density = AndroidEnvironmentBridge.fromContext(rootView.context).density
     private val dialogContainer = FrameLayout(rootView.context).apply {
         layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -77,11 +80,11 @@ private class AndroidModalBottomSheetHandle(
                 currentSpec.onDismissRequest?.invoke()
             }
         }
+        dialog.show()
         update(
             spec = spec,
             content = content,
         )
-        dialog.show()
     }
 
     override fun update(
@@ -91,21 +94,35 @@ private class AndroidModalBottomSheetHandle(
         currentSpec = spec
         dialog.setCancelable(spec.dismissOnBackPress)
         dialog.setCanceledOnTouchOutside(spec.dismissOnClickOutside)
+        val appearance = spec.appearance
+        val sheetContainer = dialog.findViewById<View>(
+            com.google.android.material.R.id.design_bottom_sheet,
+        ) ?: dialogContainer
+        sheetContainer.background = AndroidUiShapeDrawables.solid(
+            shape = appearance.shape,
+            color = appearance.containerColor,
+            layoutDirection = sheetContainer.layoutDirection,
+            density = density,
+        )
+        sheetContainer.clipToOutline = true
         dialog.window?.apply {
-            setDimAmount(spec.scrimOpacity.coerceIn(0f, 1f))
-            // Restore the dialog default when no override is declared and keep platform contrast.
-            val color = spec.navigationBarColor ?: defaultNavigationBarColor
-            if (color != null) {
-                applyNavigationBarColorCompat(
-                    color = color,
-                    enforceContrast = spec.navigationBarColor == null,
+            setDimAmount(appearance.scrimOpacity)
+            when (val navigationBar = appearance.navigationBarColor) {
+                is ModalBottomSheetNavigationBarColor.Exact -> applyNavigationBarColorCompat(
+                    color = navigationBar.color,
+                    enforceContrast = false,
                 )
+                ModalBottomSheetNavigationBarColor.PlatformDefault -> {
+                    defaultNavigationBarColor?.let { color ->
+                        applyNavigationBarColorCompat(color = color, enforceContrast = true)
+                    }
+                }
             }
         }
+        dialog.behavior.skipCollapsed = spec.skipPartiallyExpanded
         if (spec.skipPartiallyExpanded) {
             // The Material behavior represents partial expansion with its collapsed intermediate state.
             dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-            dialog.behavior.skipCollapsed = true
         }
         surfaceSession.update(content.surface)
         if (!dialog.isShowing) {

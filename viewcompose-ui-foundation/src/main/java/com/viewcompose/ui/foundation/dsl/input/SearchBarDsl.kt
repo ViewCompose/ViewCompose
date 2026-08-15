@@ -56,6 +56,19 @@ fun UiTreeBuilder.SearchBar(
         }
         BasicTextField(
             state = state,
+            style = BasicTextFieldStyle(
+                cursorColor = SearchBarDefaults.contentColor(),
+                textColor = SearchBarDefaults.contentColor(),
+                textStyle = SearchBarDefaults.textStyle(),
+                placeholderColor = SearchBarDefaults.placeholderColor(),
+                containerColor = 0x00000000,
+                borderWidth = UiDp.Zero,
+                borderColor = 0x00000000,
+                shape = UiShape.rounded(UiDp.Zero),
+                minimumHeight = UiDp.Zero,
+                horizontalPadding = UiDp.Zero,
+                verticalPadding = UiDp.Zero,
+            ),
             placeholder = placeholder,
             enabled = enabled,
             singleLine = true,
@@ -81,16 +94,6 @@ fun UiTreeBuilder.SearchBar(
                     }
                 }
             },
-            hintColor = SearchBarDefaults.placeholderColor(),
-            textColor = SearchBarDefaults.contentColor(),
-            textStyle = SearchBarDefaults.textStyle(),
-            backgroundColor = 0x00000000,
-            borderWidth = UiDp.Zero,
-            borderColor = 0x00000000,
-            shape = UiShape.rounded(UiDp.Zero),
-            minHeight = UiDp.Zero,
-            paddingHorizontal = UiDp.Zero,
-            paddingVertical = UiDp.Zero,
             modifier = Modifier.weight(1f).fillMaxHeight(),
         )
         if (trailingIcon != null) {

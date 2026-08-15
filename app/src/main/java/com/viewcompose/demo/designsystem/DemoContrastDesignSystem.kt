@@ -20,6 +20,7 @@ import com.viewcompose.ui.foundation.BasicButtonStyle
 import com.viewcompose.ui.foundation.BasicSurface
 import com.viewcompose.ui.foundation.BasicSurfaceStyle
 import com.viewcompose.ui.foundation.BasicTextField
+import com.viewcompose.ui.foundation.BasicTextFieldStyle
 import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Environment
@@ -821,18 +822,20 @@ internal fun UiTreeBuilder.DemoDesignTextField(
         }
         BasicTextField(
             state = state,
+            style = BasicTextFieldStyle(
+                textColor = recipe.textColor,
+                placeholderColor = recipe.hintColor,
+                cursorColor = recipe.labelColor,
+                textStyle = recipe.textStyle,
+                containerColor = if (isError) recipe.errorContainerColor else recipe.containerColor,
+                borderWidth = if (isError) recipe.errorBorderWidth else recipe.borderWidth,
+                borderColor = if (isError) recipe.errorColor else recipe.borderColor,
+                shape = recipe.shape,
+                minimumHeight = recipe.minimumHeight,
+                horizontalPadding = recipe.horizontalPadding,
+                verticalPadding = recipe.verticalPadding,
+            ),
             placeholder = if (recipe.stackedLabel) placeholder else label,
-            textColor = recipe.textColor,
-            hintColor = recipe.hintColor,
-            cursorColor = recipe.labelColor,
-            textStyle = recipe.textStyle,
-            backgroundColor = if (isError) recipe.errorContainerColor else recipe.containerColor,
-            borderWidth = if (isError) recipe.errorBorderWidth else recipe.borderWidth,
-            borderColor = if (isError) recipe.errorColor else recipe.borderColor,
-            shape = recipe.shape,
-            minHeight = recipe.minimumHeight,
-            paddingHorizontal = recipe.horizontalPadding,
-            paddingVertical = recipe.verticalPadding,
             autofillHints = autofillHints,
             modifier = Modifier.fillMaxWidth().semantics {
                 if (isError) error = supportingText

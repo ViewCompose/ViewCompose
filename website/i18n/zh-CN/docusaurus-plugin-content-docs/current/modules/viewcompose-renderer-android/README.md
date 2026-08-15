@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: f6d3028f8db46dd9736a00bc9162bb1a25b0b9e0d6adecea333c09d026f9bad7
+translation_source_hash: 37cc4df4760ba3a586d6ce44f786b47f2573699e2600a29396f5111861a6d726
 translation_status: current
 ---
 
@@ -93,6 +93,9 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
 - [`AndroidViewDecorationBackend`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.decoration/-android-view-decoration-backend/)
   是高级阴影等普通 View 状态无法表达的效果的可选 SPI。没有后端时，装饰请求走空操作路径，
   也不会加载阴影实现。
+- `AndroidUiShapeDrawables.solid` 是供已经持有原生容器的下游 Platform Presenter 使用的 Q2 Android
+  边界。它把不可变逻辑 `UiShape`、ARGB 颜色、捕获的布局方向与密度转换为调用方新持有且感知边界
+  的 Drawable；Renderer 不负责语义主题查询或 Presenter 生命周期。
 - `ViewDecorationHostLayout` 和 `DecorationChildDrawingOrder` 支持自定义绘制平面与声明式
   `zIndex`，无需为每个 child 再包一层 View。
 - `ViewNodeToolingRegistry` 仅在工具元数据存在时，以弱引用方式关联 View 与源码信息；普通

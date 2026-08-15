@@ -116,17 +116,22 @@ class ProgressIndicatorTest {
 
         val tree = buildVNodeTree {
             UiTheme(baseTheme) {
-                ProvideProgressIndicatorColors(
-                    ProgressIndicatorColorOverride(
-                        linearIndicator = 701,
-                        linearTrack = 702,
-                        circularIndicator = 703,
-                        circularTrack = 704,
+                ProvideLinearProgressIndicatorOverrides(
+                    LinearProgressIndicatorOverrides(
+                        indicatorColor = 701,
+                        trackColor = 702,
                     ),
                 ) {
+                    ProvideCircularProgressIndicatorOverrides(
+                        CircularProgressIndicatorOverrides(
+                            indicatorColor = 703,
+                            trackColor = 704,
+                        ),
+                    ) {
                     Column {
                         LinearProgressIndicator(progress = 0.4f)
                         CircularProgressIndicator(progress = 0.6f)
+                    }
                     }
                 }
             }
@@ -139,6 +144,29 @@ class ProgressIndicatorTest {
         assertEquals(702, linearSpec.trackColor)
         assertEquals(703, circularSpec.indicatorColor)
         assertEquals(704, circularSpec.trackColor)
+    }
+
+    @Test
+    fun `progress scopes merge and instance overrides retain precedence`() {
+        val tree = buildVNodeTree {
+            ProvideLinearProgressIndicatorOverrides(
+                LinearProgressIndicatorOverrides(indicatorColor = 101),
+            ) {
+                ProvideLinearProgressIndicatorOverrides(
+                    LinearProgressIndicatorOverrides(trackColor = 102),
+                ) {
+                    LinearProgressIndicator(
+                        progress = 0.5f,
+                        overrides = LinearProgressIndicatorOverrides(indicatorColor = 201),
+                    )
+                }
+            }
+        }
+
+        val spec = tree.single().spec as ProgressIndicatorNodeProps
+
+        assertEquals(201, spec.indicatorColor)
+        assertEquals(102, spec.trackColor)
     }
 
     private fun com.viewcompose.ui.modifier.Modifier.readModifierElements(): List<Any?> {

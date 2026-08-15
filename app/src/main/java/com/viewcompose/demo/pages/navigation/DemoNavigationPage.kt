@@ -17,6 +17,7 @@ import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.LazyColumn
 import com.viewcompose.ui.foundation.NavigationBar
+import com.viewcompose.ui.foundation.NavigationBarOverrides
 import com.viewcompose.ui.foundation.Scaffold
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextDefaults
@@ -246,10 +247,12 @@ private fun UiTreeBuilder.NavigationBarVariants(
         NavigationBar(
             selectedIndex = selectedIndex,
             onItemSelected = onItemSelected,
-            containerColor = Theme.colors.surfaceVariant,
-            selectedIconColor = Theme.colors.secondary,
-            selectedLabelColor = Theme.colors.secondary,
-            indicatorColor = Theme.colors.background,
+            overrides = NavigationBarOverrides(
+                containerColor = Theme.colors.surfaceVariant,
+                selectedIconColor = Theme.colors.secondary,
+                selectedLabelColor = Theme.colors.secondary,
+                indicatorColor = Theme.colors.background,
+            ),
         ) {
             Item(
                 label = stringResource(R.string.demo_navigation_bar_feed),

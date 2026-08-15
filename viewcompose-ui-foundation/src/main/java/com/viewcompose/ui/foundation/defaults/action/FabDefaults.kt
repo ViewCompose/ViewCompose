@@ -71,4 +71,65 @@ object FabDefaults {
 
     /** Returns the current ripple color. */
     fun pressedColor(): Int = Theme.colors.ripple
+
+    internal fun resolve(
+        size: FabSize,
+        instance: FloatingActionButtonOverrides,
+    ): ResolvedFloatingActionButtonAppearance {
+        val overrides = UiLocals.current(LocalFloatingActionButtonOverrides).merge(instance)
+        val contentColor = overrides.contentColor ?: contentColor()
+        return ResolvedFloatingActionButtonAppearance(
+            containerColor = overrides.containerColor ?: containerColor(),
+            contentColor = contentColor,
+            size = size(size),
+            shape = overrides.shape ?: shape(size),
+            elevation = overrides.elevation ?: elevation(),
+            rippleColor = overrides.rippleColor ?: pressedColor(),
+            stateLayerColors = overrides.stateLayerColors ?: stateLayerColorsFor(contentColor),
+        )
+    }
+
+    internal fun resolveExtended(
+        instance: ExtendedFloatingActionButtonOverrides,
+    ): ResolvedExtendedFloatingActionButtonAppearance {
+        val overrides = UiLocals.current(LocalExtendedFloatingActionButtonOverrides).merge(instance)
+        val contentColor = overrides.contentColor ?: contentColor()
+        return ResolvedExtendedFloatingActionButtonAppearance(
+            containerColor = overrides.containerColor ?: containerColor(),
+            contentColor = contentColor,
+            shape = overrides.shape ?: extendedShape(),
+            elevation = overrides.elevation ?: elevation(),
+            rippleColor = overrides.rippleColor ?: pressedColor(),
+            stateLayerColors = overrides.stateLayerColors ?: stateLayerColorsFor(contentColor),
+            textStyle = overrides.textStyle ?: extendedTextStyle(),
+            iconSize = overrides.iconSize ?: iconSize(FabSize.Medium),
+            height = overrides.height ?: extendedHeight(),
+            horizontalPadding = overrides.horizontalPadding ?: extendedHorizontalPadding(),
+            iconSpacing = overrides.iconSpacing ?: extendedIconSpacing(),
+        )
+    }
 }
+
+internal data class ResolvedFloatingActionButtonAppearance(
+    val containerColor: Int,
+    val contentColor: Int,
+    val size: UiDp,
+    val shape: UiShape,
+    val elevation: UiDp,
+    val rippleColor: Int,
+    val stateLayerColors: com.viewcompose.ui.node.UiStateLayerColors,
+)
+
+internal data class ResolvedExtendedFloatingActionButtonAppearance(
+    val containerColor: Int,
+    val contentColor: Int,
+    val shape: UiShape,
+    val elevation: UiDp,
+    val rippleColor: Int,
+    val stateLayerColors: com.viewcompose.ui.node.UiStateLayerColors,
+    val textStyle: UiTextStyle,
+    val iconSize: UiDp,
+    val height: UiDp,
+    val horizontalPadding: UiDp,
+    val iconSpacing: UiDp,
+)

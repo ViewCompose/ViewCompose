@@ -14,6 +14,7 @@ import com.viewcompose.ui.foundation.BasicButtonStyle
 import com.viewcompose.ui.foundation.BasicSurface
 import com.viewcompose.ui.foundation.BasicSurfaceStyle
 import com.viewcompose.ui.foundation.BasicTextField
+import com.viewcompose.ui.foundation.BasicTextFieldStyle
 import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.DesignSystemAttributionProvider
@@ -736,19 +737,25 @@ fun UiTreeBuilder.OneUi7TextField(
         }
         BasicTextField(
             state = state,
+            style = BasicTextFieldStyle(
+                textColor = if (enabled) recipes.colors.onSurface else recipes.disabledContentColor,
+                placeholderColor = recipes.colors.onSurfaceVariant,
+                cursorColor = if (isError) recipes.colors.error else recipes.colors.primary,
+                textStyle = recipes.bodyTextStyle,
+                containerColor = if (isError) {
+                    recipes.colors.errorContainer
+                } else {
+                    recipes.colors.surfaceVariant
+                },
+                borderWidth = if (isError) 1.dp else UiDp.Zero,
+                borderColor = if (isError) recipes.colors.error else 0x00000000,
+                shape = recipes.fieldShape,
+                minimumHeight = recipes.textFieldSizing.mediumHeight,
+                horizontalPadding = recipes.textFieldSizing.mediumHorizontalPadding,
+                verticalPadding = recipes.textFieldSizing.mediumVerticalPadding,
+            ),
             placeholder = placeholder,
             enabled = enabled,
-            textColor = if (enabled) recipes.colors.onSurface else recipes.disabledContentColor,
-            hintColor = recipes.colors.onSurfaceVariant,
-            cursorColor = if (isError) recipes.colors.error else recipes.colors.primary,
-            textStyle = recipes.bodyTextStyle,
-            backgroundColor = if (isError) recipes.colors.errorContainer else recipes.colors.surfaceVariant,
-            borderWidth = if (isError) 1.dp else UiDp.Zero,
-            borderColor = if (isError) recipes.colors.error else 0x00000000,
-            shape = recipes.fieldShape,
-            minHeight = recipes.textFieldSizing.mediumHeight,
-            paddingHorizontal = recipes.textFieldSizing.mediumHorizontalPadding,
-            paddingVertical = recipes.textFieldSizing.mediumVerticalPadding,
             autofillHints = autofillHints,
             modifier = Modifier.fillMaxWidth().semantics {
                 if (isError && supportingText.isNotBlank()) error = supportingText

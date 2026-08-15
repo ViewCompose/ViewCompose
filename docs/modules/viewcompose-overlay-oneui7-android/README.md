@@ -25,8 +25,9 @@ name One UI APIs.
 - Platform: Android library, `minSdk 24`, `compileSdk 36`, and Java 11 bytecode.
 - API dependencies: UI Contract and UI Foundation because `AndroidOverlayHost` exposes the shared
   overlay contracts and attribution model.
-- Implementation dependencies: Host Android, the neutral Android overlay transport, and
-  `viewcompose-oneui7`. Google Material Components and AppCompat are forbidden dependencies.
+- Implementation dependencies: Host Android, the neutral Android overlay transport, Android
+  Renderer shape bridge, and `viewcompose-oneui7`. Google Material Components and AppCompat are
+  forbidden dependencies.
 
 API quality: `AndroidOverlayHost` is a Q3 root-integration API. Its canonical KDoc and compiled
 sample define window ownership, main-thread confinement, cleanup, token snapshot, and attribution
@@ -71,6 +72,12 @@ session cleanup. It adds:
 The initial bottom-dialog presenter has one intrinsic expanded state. It accepts
 `skipPartiallyExpanded` for protocol compatibility but exposes no intermediate partial state, so
 the option cannot create behavior that the presenter does not own.
+
+The bottom dialog applies the complete Foundation-resolved appearance snapshot on show and every
+changed same-key update. Container color and logical shape replace the initial One UI fallback
+chrome, scrim zero clears the obsolete dim flag, and navigation-bar policy distinguishes an exact
+color from restoring the captured platform default and Android Q+ contrast enforcement. The
+adapter's margin, drag handle, and gesture remain One UI-owned presentation details.
 
 `integrationAttribution` reports Dialog and Popup as captured One UI content, Snackbar and modal
 bottom sheet as `Equivalent`, and Android Toast as a documented `Degraded` platform fallback. All
