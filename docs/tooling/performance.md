@@ -61,6 +61,8 @@ For historical analysis, see
     one explicit nonce-bearing IDE request produces one bounded snapshot and response.
 24. Warm interaction benchmarks wait 5 seconds after launch and fixture positioning outside the
     measured block. Cold-start workloads do not wait because launch is the measured operation.
+25. Navigation motion keeps push and pop separate while executing eight same-direction transitions
+    per measured iteration. Pop setup preloads eight destinations outside measurement.
 
 ### 2.2 Release benchmark entry points
 

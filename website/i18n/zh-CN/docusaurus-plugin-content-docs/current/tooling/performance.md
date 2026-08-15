@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 201d6bb2fdb7f3790e7f161360757bfccbeaf4d137ce9dc00924cfee38f4239b
+translation_source_hash: 1e5a0427ebaac44925e617a30588ec851388837ee9a72922ed120b0b0382eedb
 translation_status: current
 ---
 
@@ -49,6 +49,8 @@ translation_status: current
     检查实时 View；一次带 Nonce 的显式 IDE 请求只产生一次有界快照与响应。
 24. warm interaction benchmark 在启动并定位 fixture 后，于 measured block 之外等待 5 秒；
     cold-start workload 不等待，因为启动本身就是被测操作。
+25. 导航动效继续分开测量 push 与 pop，但每个 measured iteration 执行 8 次同方向转场；
+    pop 在 measured block 外预先压入 8 个 destination。
 
 ### 2.2 发布态基准入口
 

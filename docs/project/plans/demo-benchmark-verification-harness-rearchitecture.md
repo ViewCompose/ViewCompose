@@ -16,7 +16,7 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-15.
 
-Next action: complete the Phase 5 navigation-motion revision 3 and design-bundle revision 3
+Next action: complete the Phase 5 navigation-motion revision 4 and design-bundle revision 3
 baselines.
 
 Do not benchmark or begin a performance-only slice from the
@@ -1066,6 +1066,13 @@ launch is the measured operation. This timing-contract correction advances `navi
 `design.bundle-material3`, and `design.bundle-contrast` from revision 2 to revision 3 before any
 replacement result is accepted; there is no revision 2 baseline to relabel.
 
+The first isolated revision 3 navigation push preflight still produced too little statistical
+weight: frame counts were stable at 51-57, but the five run-P50 values were
+`9.779/7.545/4.044/8.708/9.637 ms` and CV was `0.265`. Navigation revision 4 therefore executes
+eight same-direction transitions per iteration while preserving separate push and pop methods. Pop
+setup preloads eight destinations outside measurement, then the measured block returns through all
+eight. Revision 3 remains rejected preflight evidence rather than a baseline.
+
 For structurally unchanged workloads, apply the repository performance policy: P50 fails only when
 it regresses by more than both 5% and 0.3 ms; P95 fails only when it regresses by more than both 10%
 and 0.8 ms. Unstable runs are rerun rather than interpreted. A changed workload revision receives a
@@ -1227,6 +1234,7 @@ the retired Demo layout.
 | 2026-08-15 | Phase 5 workload-revision consistency gate | Corrected the Demo registry to list/complex revision 3 and shadow revision 2. Kotlin pins the accepted registry values, while the report-tool suite parses the registry and rejects cross-layer drift. The correction is metadata-only for isolated performance screens, so accepted revision 3 list/complex measurements remain valid. |
 | 2026-08-15 | Phase 5 shadow-comparison revision 2 baselines | Eight independently cooled `Auto`/`ExactBitmap` methods passed the `0.15` stability gate. Shadow-list scroll/mutation ViewCompose run-P50 CV values were `0.052/0.023` versus Compose `0.044/0.117`; shadow-complex scroll/update values were `0.016/0.049` versus `0.046/0.044`. Mutation/update use eight complete action/reset cycles, and the owning performance specification records all paired P50/P95 values. |
 | 2026-08-15 | Phase 5 navigation/design launch-settling audit | The remaining warm navigation and design-system methods did not apply the already-proven 5-second OEM launch-boost isolation. Their setup now settles outside measurement; design initial-build remains an unmodified cold-start workload. Navigation and both design-bundle scenario contracts advance from revision 2 to revision 3 before rebaseline. |
+| 2026-08-15 | Phase 5 navigation revision 3 stability preflight | One push per iteration yielded stable 51-57 frame counts but frame-CPU run-P50 values of `9.779/7.545/4.044/8.708/9.637 ms` and CV `0.265`. The result is rejected. Revision 4 keeps push/pop separate and measures eight same-direction transitions per iteration; pop setup preloads the matching depth outside measurement. |
 
 ## Decision history
 
