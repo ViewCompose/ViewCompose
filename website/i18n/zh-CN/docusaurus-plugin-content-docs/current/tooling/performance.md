@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 499acfc1abb0b8c008cc51d1520b3c1151fe7a984ff6f3cd033edcbf774946e9
+translation_source_hash: e5c3c1fba193e76aae2aee236a9823f42a351f46f1d3d8748984b14d269f54e3
 translation_status: current
 ---
 
@@ -262,14 +262,17 @@ workload 及其 revision、对照环境、绝对值、归一化变化、稳定�
 - `improved`：决策指标实质改善，且没有重要反向指标退化；
 - `regressed`：至少一项决策指标实质变差，其他决策指标也没有改变这一解释；
 - `mixed`：重要指标方向相反，包括中位数更好但尾部更差；
-- `no material change`：观测变化仍位于适用的归一化与绝对噪声下限内；
+- `no material change`：没有决策指标跨过适用的归一化与绝对组合门禁，且相反方向也不需要归类为
+  `mixed`；
 - `inconclusive`：稳定性、环境不匹配、覆盖不足或其他有效性问题阻止形成方向性结论。
 
 Frame CPU duration 越低越好。归一化变化采用
 `(ViewCompose / control - 1) * 100`；报告使用更明确的“降低”和“升高”，避免只靠正负号解释。
 结论同时应用所属门禁的归一化阈值与绝对阈值，必须分别解释 P50 和 P95。当相对结果有利但绝对值
-仍超出帧预算时，要保留绝对风险；被拒绝的运行也要作为设备能力证据保留，不能静默挑选偶然通过的
-样本。原始数据、绿色任务或单个有利指标都不等于结论。
+仍超出帧预算时，要保留绝对风险。当前对照策略只在 P50 同时超过 10% 和 0.3 ms、P95 同时超过
+15% 和 0.8 ms 时视为实质变化；后文 Debug Tooling 使用的是刻意不同的门槛。被拒绝的运行也要
+作为设备能力证据保留，不能静默挑选偶然通过的样本。原始数据、绿色任务或单个有利指标都不等于
+结论。
 
 ### 2.4 当前对照结论
 
@@ -278,11 +281,11 @@ Frame CPU duration 越低越好。归一化变化采用
 
 | 工作负载 | P50 变化 | P95 变化 | 分类 | 解释 |
 | --- | ---: | ---: | --- | --- |
-| `performance.list@3` 滚动 | 降低 9.4% | 升高 5.8% | `mixed` | 中位数有实质改善；尾部方向变差，但仍低于 P95 回归门禁。 |
+| `performance.list@3` 滚动 | 降低 9.4% | 升高 5.8% | `mixed` | 中位数方向更低、尾部方向更高；两者都没有跨过组合对照门禁。 |
 | `performance.list@3` 变更 | 降低 49.2% | 降低 62.7% | `improved` | Keyed 变更和 payload 更新是明确的相对优势。 |
-| `performance.complex-layout@3` 滚动 | 升高 7.2% | 升高 1.7% | `regressed` | P50 同时超过归一化和绝对回归阈值；P95 仍接近 control。 |
+| `performance.complex-layout@3` 滚动 | 升高 7.2% | 升高 1.7% | `no material change` | 两项指标方向都更慢，但均未跨过组合对照门禁。 |
 | `performance.complex-layout@3` 更新 | 降低 36.4% | 降低 15.5% | `improved` | 整树更新快于 control，但 42.505 ms 的绝对 P95 仍有尾延迟风险。 |
-| `performance.shadow-list@2` 滚动 | 降低 8.1% | 升高 10.8% | `mixed` | 中位数改善，但 9.650 ms 的 P95 同时超过两个尾部回归阈值，是最高优先级的相对滚动缺口。 |
+| `performance.shadow-list@2` 滚动 | 降低 8.1% | 升高 10.8% | `mixed` | 中位数与尾部方向相反。P95 的 0.942 ms 绝对差超过噪声下限，但 10.8% 增幅仍低于 15% 失败阈值。 |
 | `performance.shadow-list@2` 变更 | 降低 46.2% | 降低 60.7% | `improved` | 带阴影的 keyed 变更延续了无阴影场景的变更优势。 |
 | `performance.shadow-complex-layout@2` 滚动 | 升高 4.5% | 升高 0.3% | `no material change` | 两项绝对变化都在噪声下限内；方向略慢，但不足以支持回归结论。 |
 | `performance.shadow-complex-layout@2` 更新 | 降低 39.7% | 降低 11.4% | `improved` | 相对更新成本改善，但 41.506 ms 的绝对 P95 仍有尾延迟风险。 |
@@ -290,8 +293,8 @@ Frame CPU duration 越低越好。归一化变化采用
 因此，当前结论有明确边界，不能概括为“整体比 Compose 更快”：
 
 1. 在这批已验收数据中，变更与整树更新工作负载持续快于 Compose control；
-2. 滚动并非持续占优：阴影列表 P95 是首要相对优化目标，其次是非 Lazy 复杂布局 P50；普通列表
-   P95 仍是需要监测、但尚未达到失败阈值的方向性缺口；
+2. 滚动并非持续占优，但已验收滚动行都没有触发自动回归门禁：阴影列表 P95 是首要方向性优化
+   目标，其次是非 Lazy 复杂布局 P50；普通列表 P95 也仍是需要监测的方向性缺口；
 3. 两个复杂布局更新场景即使相对结果有利，仍是绝对尾延迟优化目标；
 4. 诊断与集合 fixture 只有已验收的 ViewCompose 稳定性基线，不构成 Compose 排名；
 5. 导航 revision 6 和设计系统 bundle revision 3 在可控时钟设备产出有效证据前保持

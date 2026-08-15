@@ -316,15 +316,17 @@ action. Use exactly one primary classification:
   not reverse the interpretation;
 - `mixed`: important metrics move in opposite directions, including a better median with a worse
   tail;
-- `no material change`: observed movement remains inside the applicable normalized and absolute
-  noise floors;
+- `no material change`: no decision metric crosses the applicable combined normalized and absolute
+  gate, and opposing directions do not require a `mixed` classification;
 - `inconclusive`: instability, environment mismatch, insufficient coverage, or another validity
   failure prevents a directional claim.
 
 For frame CPU duration, lower is better. The normalized delta is
 `(ViewCompose / control - 1) * 100`; reports use the less ambiguous words `lower` and `higher`
 instead of relying on the sign. Interpretation uses the owning gate's normalized and absolute
-thresholds together. It must report P50 and P95 separately, retain absolute values when a relative
+thresholds together. The current comparison policy treats P50 as material only beyond both 10% and
+0.3 ms, and P95 only beyond both 15% and 0.8 ms; the Debug Tooling policy below is intentionally
+different. Conclusions must report P50 and P95 separately, retain absolute values when a relative
 result is favorable but still misses a frame budget, and preserve rejected runs as capability
 evidence rather than silently selecting a passing sample. Raw data, a green task, or a favorable
 single metric is not a conclusion.
@@ -336,11 +338,11 @@ against the same-run Compose control:
 
 | Workload | P50 delta | P95 delta | Classification | Interpretation |
 | --- | ---: | ---: | --- | --- |
-| `performance.list@3` scroll | 9.4% lower | 5.8% higher | `mixed` | The median improves materially; the tail is directionally worse but remains below the P95 regression gate. |
+| `performance.list@3` scroll | 9.4% lower | 5.8% higher | `mixed` | The median is directionally lower and the tail directionally higher; neither crosses the combined comparison gate. |
 | `performance.list@3` mutation | 49.2% lower | 62.7% lower | `improved` | Keyed mutation and payload update are a clear comparative strength. |
-| `performance.complex-layout@3` scroll | 7.2% higher | 1.7% higher | `regressed` | P50 exceeds both its normalized and absolute regression thresholds; P95 remains close. |
+| `performance.complex-layout@3` scroll | 7.2% higher | 1.7% higher | `no material change` | Both metrics are directionally slower, but neither crosses the combined comparison gate. |
 | `performance.complex-layout@3` update | 36.4% lower | 15.5% lower | `improved` | Whole-tree update is faster than the control, but the absolute 42.505 ms P95 remains a tail-latency risk. |
-| `performance.shadow-list@2` scroll | 8.1% lower | 10.8% higher | `mixed` | Median work improves, while the 9.650 ms P95 exceeds both tail-regression thresholds and is the highest-priority comparative scrolling gap. |
+| `performance.shadow-list@2` scroll | 8.1% lower | 10.8% higher | `mixed` | Median and tail move in opposite directions. The 0.942 ms absolute P95 gap exceeds the noise floor, but its 10.8% increase remains below the 15% failure threshold. |
 | `performance.shadow-list@2` mutation | 46.2% lower | 60.7% lower | `improved` | Shadowed keyed mutation retains the non-shadow mutation advantage. |
 | `performance.shadow-complex-layout@2` scroll | 4.5% higher | 0.3% higher | `no material change` | Both absolute changes remain inside the noise floors; the direction is slightly slower but does not support a regression claim. |
 | `performance.shadow-complex-layout@2` update | 39.7% lower | 11.4% lower | `improved` | Relative update cost improves, but the absolute 41.506 ms P95 remains a tail-latency risk. |
@@ -349,9 +351,9 @@ The current conclusion is therefore scoped, not universal:
 
 1. mutation and whole-tree update workloads are consistently faster than the Compose control in
    this accepted batch;
-2. scrolling is not consistently faster: shadow-list P95 is the first comparative optimization
-   target, followed by non-Lazy complex-layout P50; ordinary-list P95 remains a monitored
-   directional gap below the failure threshold;
+2. scrolling is not consistently faster, although no accepted scrolling row crosses the automated
+   regression gate: shadow-list P95 is the first directional optimization target, followed by
+   non-Lazy complex-layout P50; ordinary-list P95 also remains a monitored directional gap;
 3. the two complex update workloads remain absolute tail-latency targets even though their
    relative comparison is favorable;
 4. diagnostics and collection fixtures have accepted ViewCompose-only stability baselines, not a
