@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 4f5635c679c017eb34a5008cebb6a600f7209dc96bfa0c81ea43d24f5bc3e6f3
+translation_source_hash: 499acfc1abb0b8c008cc51d1520b3c1151fe7a984ff6f3cd033edcbf774946e9
 translation_status: current
 ---
 
@@ -19,7 +19,7 @@ translation_status: current
 
 - [PERFORMANCE_FULL_2026-03-06.md](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/PERFORMANCE_FULL_2026-03-06.md)
 
-## 2. 当前性能基线（2026-07）
+## 2. 当前性能基线（2026-08）
 
 ### 2.1 已建立能力
 
@@ -139,15 +139,60 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 3. `viewComposeListScroll/composeListScroll` 使用相同手势轨迹。
 4. `viewComposeListMutation/composeListMutation` 使用相同的 37 项旋转和每 16 项内容更新；
    每个测量 iteration 执行 8 个完整 mutation/reset 闭环，确保 run 级帧分布足以进行稳定性门禁。
-5. 对比结论必须来自同一次设备运行；不同设备产生的数据不能横向相除。
+5. target 就绪后，每个 iteration 都会在 measured block 外等待 5 秒，避免 OEM Activity 启动
+   boost 让第一次交互出现不真实的加速。
+6. 对比结论必须来自同一次设备运行；不同设备产生的数据不能横向相除。
 
 复杂布局对照基线是 `ComplexLayoutPerformanceComparisonBenchmark`：
 
 1. `viewComposeComplexLayoutScroll/composeComplexLayoutScroll` 对比非 Lazy 整树滚动。
 2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` 同时更新 18 个卡片的数据，并在
    每个测量 iteration 中执行 8 个完整 update/reset 闭环来切换条件详情子树。
-3. 两端保持相同的卡片、指标、标签、条件内容数量和嵌套顺序。
-4. 该场景专门观察 ViewGroup 深度、全树 measure/layout 与局部 patch 成本，不用于评价 Lazy 容器。
+3. 两个引擎都采用相同的 measured block 外 5 秒启动稳定窗口。
+4. 两端保持相同的卡片、指标、标签、条件内容数量和嵌套顺序。
+5. 该场景专门观察 ViewGroup 深度、全树 measure/layout 与局部 patch 成本，不用于评价 Lazy 容器。
+
+2026-08-15 在 Samsung SM-G991B / Android 13 上验收的替换基线使用 5 次 iteration、每个方法从
+`NONE`/`LIGHT` 起跑、5 秒 setup 稳定窗口和 `unlocked-dvfs-preflight-v1` 时钟策略：
+
+| 工作负载 | ViewCompose P50/P95 | Compose P50/P95 | ViewCompose/Compose run-P50 CV |
+| --- | ---: | ---: | ---: |
+| `performance.list@3` 滚动 | 4.620 / 9.048 ms | 5.098 / 8.554 ms | 0.041 / 0.072 |
+| `performance.list@3` 变更 | 4.651 / 9.278 ms | 9.163 / 24.855 ms | 0.009 / 0.034 |
+| `performance.complex-layout@3` 滚动 | 5.596 / 8.603 ms | 5.221 / 8.457 ms | 0.011 / 0.037 |
+| `performance.complex-layout@3` 更新 | 6.063 / 42.505 ms | 9.527 / 50.296 ms | 0.079 / 0.082 |
+
+这些数值是带工作负载修订号的基线，不代表某个引擎在所有场景都更快。列表与复杂布局的更新路径
+也采用不同于滚动的框架策略。
+
+`DemoInteractionBenchmark` 保留下列不参与 Compose 对照的 fixture 基线：
+
+1. `diagnosticsThemeLongFlingToBottomAndBackRevision2` 在每个方向执行 8 次固定大力度 fling，并在
+   对应手势序列后分别验证真实底部和顶部锚点。
+2. `collectionsScrollRevision2` 在 setup 阶段捕获嵌套 LazyColumn 边界，然后在 measured block 内
+   每个方向执行 8 次固定 swipe，期间不执行 Accessibility 查询。每次 swipe 使用 500 ms 物理
+   稳定窗口，因为 benchmark setup 会关闭 UiAutomator 隐式 idle timeout；省略该窗口会让惯性
+   滚动重叠，并在 FrameTimeline 中产生与工作负载无关的 `Buffer Stuffing`。
+3. `collectionsStressMutationRevision2` 执行 8 个完整 rotate/insert/reset 闭环，并断言每次 reset
+   都恢复原始逻辑顺序。
+4. 三个方法都使用相同的 measured block 外 5 秒启动稳定窗口。正式原始结果通过 AndroidX
+   benchmark payload 记录 `scenario`、`workloadRevision` 和 `clockPolicy`。
+
+2026-08-15 在 Samsung SM-G991B / Android 13 上验收的 fixture 基线使用 5 次 iteration、每个方法
+从 `NONE`/`LIGHT` 起跑、`CompilationMode.Partial` 和 `unlocked-dvfs-preflight-v1` 时钟策略：
+
+| 工作负载 | Frame CPU P50/P95 | Run-P50 CV |
+| --- | ---: | ---: |
+| `diagnostics.theme@2` 固定长 fling 往返 | 3.067 / 7.336 ms | 0.008 |
+| `collection.stress@2` 嵌套列表滚动往返 | 3.357 / 6.288 ms | 0.018 |
+| `collection.stress@2` 8 轮变更 | 4.358 / 10.507 ms | 0.018 |
+
+集合滚动预检也是手势驱动污染的参考案例。最初在 measured block 中重复定位 target 会增加
+Accessibility 遍历；移除后，连续无间隔 swipe 仍产生约 3.6、7.2 与 14.7 ms 的 run-P50 平台。
+Perfetto 显示 `RV Scroll`、display-list recording 与 RenderThread draw 成本稳定，只有
+`dequeueBuffer` 等待变化，FrameTimeline 把慢帧归类为 `Buffer Stuffing`。调整刷新率和 ART 编译
+策略都没有消除它；显式的逐手势稳定窗口把 run-P50 CV 降到 0.018。因此不得把没有节奏控制的
+合成输入循环解释为框架滚动成本。
 
 高级阴影对照基线是 `ShadowPerformanceComparisonBenchmark`：
 
@@ -208,16 +253,56 @@ ART profile，fixed-performance 和增强处理模式也无法形成真正锁频
    有符号指标，仍保留结果和回归门禁，但不计算会因均值接近零而失真的 CV。
 7. 迭代更多不等于证据更强；持续升温的批次即使总体变异系数低于阈值也属于无效数据。
 
-### 2.3 当前结论
+### 2.3 Benchmark 结论契约
 
-1. 当前阶段优先级不是“追求极限 FPS”，而是先控制回归风险和错误用法。
-2. 最关键收益来自：
-   - 正确复用
-   - 组级脏区重组 + 跳过不必要更新
-   - 容器刷新语义稳定
-3. 基线更新（2026-03-08）：`SlotTable Lite` + 子树级重组已接入主链路，`qaQuick` 通过；`qaFull` 结果按当前设备门禁状态在 roadmap 持续登记。
+一次运行通过验收后，只有在本文或更具体的所属有效页中完成解释，文档才算闭环。每项结论必须记录
+workload 及其 revision、对照环境、绝对值、归一化变化、稳定性结果、局限、决策和后续行动，并且
+只能选择一个主要分类：
 
-### 2.4 Debug Tooling 回归门禁
+- `improved`：决策指标实质改善，且没有重要反向指标退化；
+- `regressed`：至少一项决策指标实质变差，其他决策指标也没有改变这一解释；
+- `mixed`：重要指标方向相反，包括中位数更好但尾部更差；
+- `no material change`：观测变化仍位于适用的归一化与绝对噪声下限内；
+- `inconclusive`：稳定性、环境不匹配、覆盖不足或其他有效性问题阻止形成方向性结论。
+
+Frame CPU duration 越低越好。归一化变化采用
+`(ViewCompose / control - 1) * 100`；报告使用更明确的“降低”和“升高”，避免只靠正负号解释。
+结论同时应用所属门禁的归一化阈值与绝对阈值，必须分别解释 P50 和 P95。当相对结果有利但绝对值
+仍超出帧预算时，要保留绝对风险；被拒绝的运行也要作为设备能力证据保留，不能静默挑选偶然通过的
+样本。原始数据、绿色任务或单个有利指标都不等于结论。
+
+### 2.4 当前对照结论
+
+上文已验收的 2026-08-15 Samsung SM-G991B / Android 13 数据，与同轮 Compose control 形成以下
+长期结论：
+
+| 工作负载 | P50 变化 | P95 变化 | 分类 | 解释 |
+| --- | ---: | ---: | --- | --- |
+| `performance.list@3` 滚动 | 降低 9.4% | 升高 5.8% | `mixed` | 中位数有实质改善；尾部方向变差，但仍低于 P95 回归门禁。 |
+| `performance.list@3` 变更 | 降低 49.2% | 降低 62.7% | `improved` | Keyed 变更和 payload 更新是明确的相对优势。 |
+| `performance.complex-layout@3` 滚动 | 升高 7.2% | 升高 1.7% | `regressed` | P50 同时超过归一化和绝对回归阈值；P95 仍接近 control。 |
+| `performance.complex-layout@3` 更新 | 降低 36.4% | 降低 15.5% | `improved` | 整树更新快于 control，但 42.505 ms 的绝对 P95 仍有尾延迟风险。 |
+| `performance.shadow-list@2` 滚动 | 降低 8.1% | 升高 10.8% | `mixed` | 中位数改善，但 9.650 ms 的 P95 同时超过两个尾部回归阈值，是最高优先级的相对滚动缺口。 |
+| `performance.shadow-list@2` 变更 | 降低 46.2% | 降低 60.7% | `improved` | 带阴影的 keyed 变更延续了无阴影场景的变更优势。 |
+| `performance.shadow-complex-layout@2` 滚动 | 升高 4.5% | 升高 0.3% | `no material change` | 两项绝对变化都在噪声下限内；方向略慢，但不足以支持回归结论。 |
+| `performance.shadow-complex-layout@2` 更新 | 降低 39.7% | 降低 11.4% | `improved` | 相对更新成本改善，但 41.506 ms 的绝对 P95 仍有尾延迟风险。 |
+
+因此，当前结论有明确边界，不能概括为“整体比 Compose 更快”：
+
+1. 在这批已验收数据中，变更与整树更新工作负载持续快于 Compose control；
+2. 滚动并非持续占优：阴影列表 P95 是首要相对优化目标，其次是非 Lazy 复杂布局 P50；普通列表
+   P95 仍是需要监测、但尚未达到失败阈值的方向性缺口；
+3. 两个复杂布局更新场景即使相对结果有利，仍是绝对尾延迟优化目标；
+4. 诊断与集合 fixture 只有已验收的 ViewCompose 稳定性基线，不构成 Compose 排名；
+5. 导航 revision 6 和设计系统 bundle revision 3 在可控时钟设备产出有效证据前保持
+   `inconclusive`；
+6. 当前已验收表格尚未包含可长期引用的同轮内存对照，因此不声明任何一方在内存上胜出。
+
+正确复用、组级失效与跳过无效工作、稳定的容器刷新语义仍是优化方向。`SlotTable Lite` 和子树级
+重组已进入主链路且 `qaQuick` 通过，但这些实现事实不能覆盖已测得的混合滚动结果。设备门禁状态
+继续记录在 [roadmap](../project/roadmap.md)。
+
+### 2.5 Debug Tooling 回归门禁
 
 Release Macrobenchmark 无法发现只存在于可调试构建中的开销。因此，任何在应用进程中执行的
 Tooling 都必须为它可能观察的每条热路径增加同设备 Debug 对照。设备型号、系统 Build、应用

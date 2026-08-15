@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: f7534316fb214c54f30c3b8eb649c475e82253b789520f1b8c7ddf7893d0611a
+translation_source_hash: b1d69ccf2d9a7891bf6fba3e5871f428f42cb71faf8aa0930ea431040949dc77
 translation_status: current
 ---
 
@@ -216,9 +216,33 @@ URL 和真实 UI literal 原样保留；叙述中的外语 literal 用行内代�
 | Tooling/Preview | tooling 页、支持版本、必要 screenshot |
 | Breaking/deprecation | 替代 KDoc、migration、release note、保留版本页 |
 | 修正已记录行为的 bug | 修正有效页并加 regression evidence |
+| 测试或 benchmark 改变长期结论 | 在所属有效页记录对照上下文、解释后的结果、局限与后续行动 |
 | 无契约影响的内部 refactor | PR 中写明 `No documentation impact` 理由 |
 
 `No documentation impact` 是审查结论，不是默认 checkbox。
+
+## 测试证据与结论闭环
+
+执行测试或保存原始 benchmark 输出只是采集证据，不等于完成文档闭环。已验收证据只要验证、
+否定或实质修正了长期结论，就必须在同一次变更或验收步骤中更新拥有该结论的有效文档。计划可以
+保留命令和原始产物，但当解释后的结果仍只存在于 PR 评论、聊天、本地报告或 archive 时，不得将
+计划标为完成或归档。
+
+长期结论必须记录：
+
+1. 被测场景或契约、workload revision、实现 revision、build mode、设备或环境，以及有效对照所需
+   的控制条件；
+2. 每项决策指标的 control/before 与 candidate/after 绝对值；样本可比时还要记录归一化变化；
+3. 只能选择一个主要分类：`improved`、`regressed`、`mixed`、`no material change` 或
+   `inconclusive`；
+4. 分开解释中位数或稳态表现、尾部表现以及重要的绝对预算风险，不能让有利的平均值掩盖用户可感
+   的退化；
+5. 稳定性检查、被拒绝证据、局限、该结果支持的决策，以及剩余缺口的后续行动。
+
+分类采用所属规范规定的阈值和噪声下限。关键指标方向相反时为 `mixed`；数据不稳定、上下文不匹配、
+样本不足或其他无效情况为 `inconclusive`，不得包装成改善或退化。不得只选择有利指标，也不得比较
+不兼容环境。已验收证据若不改变任何长期结论，必须在 PR 或计划中明确记录理由，不能静默省略文档
+影响。
 
 ## 命名、链接与资产
 
@@ -251,12 +275,14 @@ deprecated 公共文档保留到支持 release line EOL，标记 deprecated、�
 AI agent 必须从 `docs/README.md` 开始，阅读所属模块与有效文档；用代码/测试验证行为；编辑前后
 应用影响矩阵；修正错误有效文档而非新建平行说明；通常不从 archive 恢复上下文；不提交临时
 note/生成 HTML；保持模块边界、版本、链接和权威语言；新增/移动/删除内容时更新 index；交付前
-运行文档门禁并报告无法运行项。影响制品发布时必须新增每 PR 不可变 Changeset，禁止在 release
-planner 外推断或手写反向依赖发布影响。根 `AGENTS.md` 是最短入口，本文保持权威。
+把已验收的测试与 benchmark 证据闭环为所属有效文档中的解释性结论，并运行文档门禁、报告无法
+运行项。影响制品发布时必须新增每 PR 不可变 Changeset，禁止在 release planner 外推断或手写
+反向依赖发布影响。根 `AGENTS.md` 是最短入口，本文保持权威。
 
 ## 审查与自动门禁
 
-审查页面目的/owner、框架与模块边界、版本/兼容/稳定性、行为证据、源码注释、sample、模块目录、
-README 可达性、相对链接、计划归档、本地化诚实性和目录语言。`verifyDocumentationStructure` 必须
-通过且已包含在 `qaQuick`。文档工作流还生成完整版本 Dokka/手册目录、type-check Docusaurus、
-严格检查生产链接与站点自有页无障碍，并只从 `main` 部署；生成输出和凭据不入库。
+审查页面目的/owner、框架与模块边界、版本/兼容/稳定性、行为证据、已验收测试或 benchmark 是否
+在所属有效文档中形成带上下文、局限和后续行动的解释性结论、源码注释、sample、模块目录、README
+可达性、相对链接、计划归档、本地化诚实性和目录语言。`verifyDocumentationStructure` 必须通过且
+已包含在 `qaQuick`。文档工作流还生成完整版本 Dokka/手册目录、type-check Docusaurus、严格检查
+生产链接与站点自有页无障碍，并只从 `main` 部署；生成输出和凭据不入库。

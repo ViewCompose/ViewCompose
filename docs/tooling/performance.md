@@ -304,17 +304,69 @@ Automated report and regression rules:
 7. More repetitions are not automatically stronger evidence: a continuously heating run is
    invalid even when its aggregate coefficient of variation is below the threshold.
 
-### 2.3 Current conclusion
+### 2.3 Benchmark conclusion contract
 
-The priority is regression control and correct usage, not maximizing headline FPS. The highest
-value comes from correct reuse, group-level invalidation plus skipped work, and stable container
-refresh semantics.
+An accepted run is not complete documentation until its result is interpreted here or in a more
+specific owning active page. Every conclusion records the workload and revision, comparison
+environment, absolute values, normalized deltas, stability result, limitations, decision, and next
+action. Use exactly one primary classification:
 
-SlotTable Lite and subtree recomposition are on the main path and `qaQuick` passes. Current device
-gate status remains recorded in the [roadmap](../project/roadmap.md) rather than inferred from an old
-local `qaFull` run.
+- `improved`: decision metrics are materially better and no important counter-metric regresses;
+- `regressed`: at least one decision metric is materially worse and the other decision metrics do
+  not reverse the interpretation;
+- `mixed`: important metrics move in opposite directions, including a better median with a worse
+  tail;
+- `no material change`: observed movement remains inside the applicable normalized and absolute
+  noise floors;
+- `inconclusive`: instability, environment mismatch, insufficient coverage, or another validity
+  failure prevents a directional claim.
 
-### 2.4 Debug tooling regression gate
+For frame CPU duration, lower is better. The normalized delta is
+`(ViewCompose / control - 1) * 100`; reports use the less ambiguous words `lower` and `higher`
+instead of relying on the sign. Interpretation uses the owning gate's normalized and absolute
+thresholds together. It must report P50 and P95 separately, retain absolute values when a relative
+result is favorable but still misses a frame budget, and preserve rejected runs as capability
+evidence rather than silently selecting a passing sample. Raw data, a green task, or a favorable
+single metric is not a conclusion.
+
+### 2.4 Current comparative conclusion
+
+The accepted 2026-08-15 Samsung SM-G991B / Android 13 data above produces this durable comparison
+against the same-run Compose control:
+
+| Workload | P50 delta | P95 delta | Classification | Interpretation |
+| --- | ---: | ---: | --- | --- |
+| `performance.list@3` scroll | 9.4% lower | 5.8% higher | `mixed` | The median improves materially; the tail is directionally worse but remains below the P95 regression gate. |
+| `performance.list@3` mutation | 49.2% lower | 62.7% lower | `improved` | Keyed mutation and payload update are a clear comparative strength. |
+| `performance.complex-layout@3` scroll | 7.2% higher | 1.7% higher | `regressed` | P50 exceeds both its normalized and absolute regression thresholds; P95 remains close. |
+| `performance.complex-layout@3` update | 36.4% lower | 15.5% lower | `improved` | Whole-tree update is faster than the control, but the absolute 42.505 ms P95 remains a tail-latency risk. |
+| `performance.shadow-list@2` scroll | 8.1% lower | 10.8% higher | `mixed` | Median work improves, while the 9.650 ms P95 exceeds both tail-regression thresholds and is the highest-priority comparative scrolling gap. |
+| `performance.shadow-list@2` mutation | 46.2% lower | 60.7% lower | `improved` | Shadowed keyed mutation retains the non-shadow mutation advantage. |
+| `performance.shadow-complex-layout@2` scroll | 4.5% higher | 0.3% higher | `no material change` | Both absolute changes remain inside the noise floors; the direction is slightly slower but does not support a regression claim. |
+| `performance.shadow-complex-layout@2` update | 39.7% lower | 11.4% lower | `improved` | Relative update cost improves, but the absolute 41.506 ms P95 remains a tail-latency risk. |
+
+The current conclusion is therefore scoped, not universal:
+
+1. mutation and whole-tree update workloads are consistently faster than the Compose control in
+   this accepted batch;
+2. scrolling is not consistently faster: shadow-list P95 is the first comparative optimization
+   target, followed by non-Lazy complex-layout P50; ordinary-list P95 remains a monitored
+   directional gap below the failure threshold;
+3. the two complex update workloads remain absolute tail-latency targets even though their
+   relative comparison is favorable;
+4. diagnostics and collection fixtures have accepted ViewCompose-only stability baselines, not a
+   Compose ranking;
+5. navigation revision 6 and design-bundle revision 3 remain `inconclusive` until a
+   clock-controllable device can produce valid evidence;
+6. the accepted tables do not yet contain a durable same-run memory comparison, so no memory winner
+   is claimed.
+
+Correct reuse, group-level invalidation plus skipped work, and stable container refresh semantics
+remain the optimization strategy. SlotTable Lite and subtree recomposition are on the main path and
+`qaQuick` passes, but those implementation facts do not override the measured mixed scrolling
+result. Device-gate status remains recorded in the [roadmap](../project/roadmap.md).
+
+### 2.5 Debug tooling regression gate
 
 Release macrobenchmarks cannot detect costs that exist only in debuggable builds. Any tooling that
 executes in an application process therefore adds a same-device debug comparison for every hot path
