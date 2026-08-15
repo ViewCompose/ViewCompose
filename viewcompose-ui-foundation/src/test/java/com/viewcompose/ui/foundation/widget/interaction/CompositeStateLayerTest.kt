@@ -26,13 +26,8 @@ class CompositeStateLayerTest {
             )
         }
 
-        val fab = tree[0].spec as BoxNodeProps
-        val extendedFab = tree[1].spec as RowNodeProps
-
-        assertEquals(FabDefaults.pressedColor(), fab.rippleColor)
-        assertEquals(stateLayerColorsFor(contentColor), fab.stateLayerColors)
-        assertEquals(FabDefaults.pressedColor(), extendedFab.rippleColor)
-        assertEquals(stateLayerColorsFor(contentColor), extendedFab.stateLayerColors)
+        assertEquals(stateLayerColorsFor(contentColor), tree[0].requireStateLayerColors())
+        assertEquals(stateLayerColorsFor(contentColor), tree[1].requireStateLayerColors())
     }
 
     @Test
@@ -44,21 +39,16 @@ class CompositeStateLayerTest {
             Card(onClick = null) {}
         }
 
-        val clickableSurface = tree[0].spec as SurfaceNodeProps
-        val passiveSurface = tree[1].spec as SurfaceNodeProps
-        val clickableCard = tree[2].spec as BoxNodeProps
-        val passiveCard = tree[3].spec as BoxNodeProps
-
         assertEquals(
             stateLayerColorsFor(SurfaceDefaults.contentColor()),
-            clickableSurface.stateLayerColors,
+            tree[0].requireStateLayerColors(),
         )
-        assertNull(passiveSurface.stateLayerColors)
+        assertNull(tree[1].stateLayerColorsOrNull())
         assertEquals(
             stateLayerColorsFor(CardDefaults.contentColor()),
-            clickableCard.stateLayerColors,
+            tree[2].requireStateLayerColors(),
         )
-        assertNull(passiveCard.stateLayerColors)
+        assertNull(tree[3].stateLayerColorsOrNull())
     }
 
     @Test
@@ -68,13 +58,10 @@ class CompositeStateLayerTest {
             DropdownMenuItem(text = "Rename", onClick = {})
         }
 
-        val listItem = tree[0].spec as RowNodeProps
-        val menuItem = tree[1].spec as RowNodeProps
-
-        assertEquals(stateLayerColorsFor(Theme.colors.onSurface), listItem.stateLayerColors)
+        assertEquals(stateLayerColorsFor(Theme.colors.onSurface), tree[0].requireStateLayerColors())
         assertEquals(
             stateLayerColorsFor(DropdownMenuDefaults.contentColor()),
-            menuItem.stateLayerColors,
+            tree[1].requireStateLayerColors(),
         )
     }
 }

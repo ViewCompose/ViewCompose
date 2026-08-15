@@ -19,7 +19,6 @@ import com.viewcompose.ui.state.PagerState
  * @property containerColor tab-row surface color
  * @property scrollable whether tabs may exceed and scroll within the available width
  * @property equalWidth whether available width is divided equally among tabs
- * @property rippleColor pressed-state ripple color
  * @property itemSpacing spacing between adjacent tabs
  * @property itemPaddingHorizontal horizontal padding inside each tab
  * @property itemPaddingVertical vertical padding inside each tab
@@ -37,7 +36,6 @@ data class TabRowNodeProps(
     val containerColor: Int,
     val scrollable: Boolean,
     val equalWidth: Boolean,
-    val rippleColor: Int,
     val itemSpacing: UiDp,
     val itemPaddingHorizontal: UiDp,
     val itemPaddingVertical: UiDp,

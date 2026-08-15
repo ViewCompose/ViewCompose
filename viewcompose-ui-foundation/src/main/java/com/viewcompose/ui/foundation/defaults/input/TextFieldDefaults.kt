@@ -148,9 +148,6 @@ object TextFieldDefaults {
     fun verticalPadding(size: TextFieldSize = TextFieldSize.Medium): UiDp =
         scopedOverrides().verticalPadding ?: semanticVerticalPadding(size)
 
-    /** Returns the current pressed-state control highlight. */
-    fun pressedColor(): Int = Theme.stateColors.controlHighlight.resolve(pressed = true)
-
     /** Resolves the activated cursor color. */
     fun cursorColor(): Int = scopedOverrides().cursorColor ?: Theme.stateColors.controlActivated.resolve()
 

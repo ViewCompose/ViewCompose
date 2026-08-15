@@ -45,10 +45,11 @@ dependencies {
   its background, border, ripple, and outline inside the View without changing measurement,
   hit-testing, or accessibility bounds. An explicit background, border, corner radius, or shape
   modifier disables that component-provided inset so application styling remains authoritative.
-- Button, IconButton, interactive Box/Row composites, and SegmentedControl state layers use
-  resolved `UiStateLayerColors` from their NodeSpecs. The engine applies enabled pressed, focused,
-  and hovered selector states inside the existing shape mask and visual-surface inset; it does not
-  select semantic roles or Material opacity values.
+- General interactive surfaces receive `UiInteractionIndication.StateLayer` through resolved
+  modifiers. The engine maps its pressed, focused, and hovered values into the existing shape mask
+  and visual-surface inset without selecting semantic roles or Material opacity values.
+  SegmentedControl and NavigationBar receive complete selected and unselected state-layer values
+  in their NodeSpecs because they own multiple internal targets.
 - Generic collection semantics map to AndroidX accessibility collection metadata. Parent nodes own
   row/column counts and selection cardinality; child nodes own logical positions and spans while
   existing `selected` and `heading` semantics remain the single source of item state.
@@ -200,12 +201,11 @@ Because the current line is alpha, the documentation site intentionally does not
   explicit `BoxScope.align` retain inherited content alignment in their layout parameters, so a
   content-alignment patch updates only those children instead of rescanning every child during
   every layout pass; explicitly aligned children remain unchanged.
-- Button and IconButton state-layer changes participate in targeted style patching and rebuild only
-  the surface drawable. Interactive Box/Row changes re-run their existing style binding, while
-  SegmentedControl rebuilds only segment backgrounds whose selected role changed. Pressed takes
-  precedence over focused and hovered, focused takes precedence over hovered, and inactive or
-  disabled multi-state layers are transparent. A null multi-state contract keeps the previous
-  value-only ripple selector unchanged.
+- An indication modifier change uses modifier-only binding and rebuilds only the retained View's
+  affected surface drawable. SegmentedControl and NavigationBar rebuild only internal backgrounds
+  whose selected role or state-layer snapshot changed. Pressed takes precedence over focused and
+  hovered, focused takes precedence over hovered, and inactive or disabled high-level targets have
+  no indication. Android's value-only ripple fallback remains private to low-level renderer code.
 - Slider binding uses a renderer-neutral `AppCompatSeekBar` subclass because the platform widget
   can ignore `minimumHeight` under an `AT_MOST` measure spec. It honors the declared minimum while
   leaving an exact application or parent height authoritative; no Material policy or token is

@@ -69,9 +69,6 @@ object FabDefaults {
     /** Returns the large label typography style. */
     fun extendedTextStyle(): UiTextStyle = TextDefaults.labelLargeStyle()
 
-    /** Returns the current ripple color. */
-    fun pressedColor(): Int = Theme.colors.ripple
-
     internal fun resolve(
         size: FabSize,
         instance: FloatingActionButtonOverrides,
@@ -84,7 +81,6 @@ object FabDefaults {
             size = size(size),
             shape = overrides.shape ?: shape(size),
             elevation = overrides.elevation ?: elevation(),
-            rippleColor = overrides.rippleColor ?: pressedColor(),
             stateLayerColors = overrides.stateLayerColors ?: stateLayerColorsFor(contentColor),
         )
     }
@@ -99,7 +95,6 @@ object FabDefaults {
             contentColor = contentColor,
             shape = overrides.shape ?: extendedShape(),
             elevation = overrides.elevation ?: elevation(),
-            rippleColor = overrides.rippleColor ?: pressedColor(),
             stateLayerColors = overrides.stateLayerColors ?: stateLayerColorsFor(contentColor),
             textStyle = overrides.textStyle ?: extendedTextStyle(),
             iconSize = overrides.iconSize ?: iconSize(FabSize.Medium),
@@ -116,7 +111,6 @@ internal data class ResolvedFloatingActionButtonAppearance(
     val size: UiDp,
     val shape: UiShape,
     val elevation: UiDp,
-    val rippleColor: Int,
     val stateLayerColors: com.viewcompose.ui.node.UiStateLayerColors,
 )
 
@@ -125,7 +119,6 @@ internal data class ResolvedExtendedFloatingActionButtonAppearance(
     val contentColor: Int,
     val shape: UiShape,
     val elevation: UiDp,
-    val rippleColor: Int,
     val stateLayerColors: com.viewcompose.ui.node.UiStateLayerColors,
     val textStyle: UiTextStyle,
     val iconSize: UiDp,

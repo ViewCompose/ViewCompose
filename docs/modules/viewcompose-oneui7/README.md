@@ -77,6 +77,10 @@ systems, replace the root content/session with a new provider snapshot; do not m
 snapshot in place. The neutral `viewcompose-android` host installs no design system, so applications
 depend on this artifact and install `OneUi7Theme` explicitly without an implicit Material Context.
 
+Interaction feedback is defined by the snapshot's `UiInteractionTokens` and each One UI recipe's
+semantic content role. The adapter does not use a parallel `UiColors.ripple` slot; applications
+customize pressed, focused, and hovered policy by replacing `tokens.interactions`.
+
 The complete compiled example is
 [`OneUi7Samples.kt`](../../../viewcompose-oneui7/src/test/samples/com/viewcompose/oneui7/samples/OneUi7Samples.kt).
 

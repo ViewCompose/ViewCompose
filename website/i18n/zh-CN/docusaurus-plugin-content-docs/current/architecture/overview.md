@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: 5c3c2c5392d94851a858736a45fbc1d1182e9b3f2a9a89aba1b8b246bb5b6a1f
+translation_source_hash: 989fe9f2251005122dad983ca5e1dad72579e38fbcab88be025647ad8eb76525
 translation_status: current
 ---
 
@@ -277,7 +277,9 @@ flowchart TD
 ### 4.8 文本编辑边界
 
 1. `viewcompose-text-core` 是文本、方向选区、IME 组合区、编辑事务和撤销历史的唯一平台无关真相源。
-2. `TextField/TextArea/SearchBar` 公开 API 只接受稳定的 `TextFieldState`；禁止重新增加 `String + onValueChange` 双状态入口。
+2. `TextField` 与 `SearchBar` 公开 API 只接受稳定的 `TextFieldState`；输入用途和行行为通过
+   `TextFieldInputProfile` 与 `TextFieldLinePolicy` 表达，不增加平行组件 Wrapper 或
+   `String + onValueChange` 双状态入口。
 3. Android renderer 必须保留原生 `AppCompatEditText` 的输入法、无障碍、硬件键盘和系统选择能力，不实现自有文本布局或完整 `InputConnection`。
 4. 原生输入在 `InputConnection`/batch edit 边界内合并后同步到状态；状态回写必须使用最小 `Editable.replace()` 并恢复 selection/composition。
 5. `InputTransformation` 只处理用户输入，程序调用 `TextFieldState.edit` 不经过输入过滤。

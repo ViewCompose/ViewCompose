@@ -17,7 +17,6 @@ import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.LinearProgressIndicator
 import com.viewcompose.ui.foundation.NavigationBar
-import com.viewcompose.ui.foundation.OutlinedCard
 import com.viewcompose.ui.foundation.RadioButton
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.SearchBar
@@ -279,7 +278,8 @@ private fun UiTreeBuilder.Material3SurfacesBaseline() {
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 20.dp),
             )
         }
-        OutlinedCard(
+        Card(
+            variant = CardVariant.Outlined,
             modifier = Modifier.weight(1f),
         ) {
             Text(

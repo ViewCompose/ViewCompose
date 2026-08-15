@@ -24,13 +24,16 @@ into `viewcompose-text-core`.
 
 ## 2. Ownership
 
-`TextFieldState` is the single source of truth. `TextField`, `TextArea`, typed fields, and `SearchBar` only accept a stable state instance.
+`TextFieldState` is the single source of truth. `TextField` and `SearchBar` accept only a stable
+state instance. Input purpose and line behavior are values rather than component aliases:
 
 ```kotlin
 val state = rememberTextFieldState("initial")
 
 TextField(
     state = state,
+    inputProfile = TextFieldInputProfile.Email,
+    linePolicy = TextFieldLinePolicy.SingleLine,
     inputTransformation = InputTransformation.maxCodePoints(40),
 )
 ```
@@ -52,7 +55,10 @@ val document = textDocument {
 val state = rememberTextFieldState(document)
 
 RichText(document)
-TextArea(state = state)
+TextField(
+    state = state,
+    linePolicy = TextFieldLinePolicy.MultiLine(minLines = 3, maxLines = 8),
+)
 ```
 
 The old `value: String` plus `onValueChange(String)` API is removed. Reintroducing it as a second core path would discard selection and composition and is not allowed.
@@ -104,8 +110,9 @@ remaining payload instead of being silently discarded.
 Fields can narrow MIME types or transform/reject a received document before insertion:
 
 ```kotlin
-TextArea(
+TextField(
     state = state,
+    linePolicy = TextFieldLinePolicy.MultiLine(),
     receiveContent = ReceiveContentConfiguration(
         mimeTypes = setOf("text/*", "image/png"),
         transformation = { received ->

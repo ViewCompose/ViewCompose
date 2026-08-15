@@ -6,7 +6,6 @@ import com.viewcompose.demo.contract.DemoScenarioId
 import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.demo.registry.DemoScenarioIds
 import com.viewcompose.preview.tooling.ViewComposePreview
-import com.viewcompose.animation.AnimatedContent
 import com.viewcompose.animation.AnimatedVisibility
 import com.viewcompose.animation.Crossfade
 import com.viewcompose.animation.MutableTransitionState
@@ -454,9 +453,9 @@ internal fun UiTreeBuilder.AnimationPage(
                         .margin(bottom = 8.dp)
                         .animationScenarioTarget(scenario, DemoAutomationRole.Reset),
                 )
-                AnimatedContent(
+                Crossfade(
                     targetState = contentState.value,
-                    transitionSpec = { tween(260) },
+                    animationSpec = tween(260),
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(bottom = 10.dp)

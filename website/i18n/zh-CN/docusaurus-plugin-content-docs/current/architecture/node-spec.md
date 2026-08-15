@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/node-spec.md
-translation_source_hash: 830f43351b453d6193a904bc050dc60766f2c2e7e649837823ab8ccef0551df3
+translation_source_hash: 82822a63d233fc6acf83d9335b99bc132a19612e3b37914a97b076e23c7b8a27
 translation_status: current
 ---
 
@@ -53,12 +53,17 @@ payload 必须不可变、可按结构比较且平台无关。不能仅仅因为
 ## 5. 已解析 Surface 边界
 
 `NodeType.Surface` 与 `SurfaceNodeProps` 配对，不再使用通用 `BoxNodeProps`。设计系统组件在
-发射前解析 Brush、Shape、Border、交互颜色、有效尺寸、可选可见高度和裁剪策略。Android
-Renderer 只执行这些值，不接收设计系统标识或语义 Token 角色。
+发射前解析 Brush、Shape、Border、有效尺寸、可选可见高度和裁剪策略。通用交互反馈通过有序
+`UiInteractionIndication` Modifier 契约传递，而不是 Surface、Box 或 Row NodeSpec 字段。
+Android Renderer 执行两类快照，不接收设计系统标识或语义 Token 角色。
 
 通用调用方 Modifier 仍按顺序追加在已解析 Surface 之后。调用方 Background、Border、Corner
 或 Shape 会替换组件提供的可见 Surface，并使用完整有效边界。Basic 组件可以通过普通有序
 Modifier 契约提供精确 Shadow 与 Elevation，因为 Renderer 已经以通用方式执行它们。
+
+只有当原生后端拥有单个外层 Modifier 无法寻址的多个内部目标时，组件 NodeSpec 才保留交互值。
+因此 SegmentedControl 与 NavigationBar 携带完整的已选和未选 `UiStateLayerColors`；TabRow 则
+发出 eager keyed 子 Box，并让每个子项拥有自己的 indication Modifier。
 
 ## 6. 新节点接入清单
 

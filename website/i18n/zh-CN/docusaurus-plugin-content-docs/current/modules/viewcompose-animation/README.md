@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: f35f925a5573c402a4b8d3d8b0d42f7f54b02b8b6e27afdf6bb7f71d5496c25a
+translation_source_hash: 4082ffc0f72a96a67f6c03a812e7d57659c2f108502eed5e67cf95122c9ad325
 translation_status: current
 ---
 
@@ -179,18 +179,17 @@ Tree-builder 默认影响双轴；`RowScope` 默认影响宽度；`ColumnScope` 
 `MutableTransitionState<Boolean>`。一个对象只能绑定一个活动 Host。本版本中，在 Host 首次组合
 前改变目标不会播放首次 Enter；需要该动效时，应先组合隐藏态，再改变目标。
 
-## AnimatedContent 与 Crossfade
+## Crossfade 转场
 
-`AnimatedContent` 当前实现 Alpha Cross-fade。转场时，它会分别以最后提交状态和最新目标调用
+`Crossfade` 实现仅 Alpha 的转场。转场时，它会分别以最后提交状态和最新目标调用
 Content，把两个 Fill-size 子树叠放，并在旧内容透明后通过组合后 Side Effect 移除旧内容。
 不同内容 Identity 需要独立后代 State 时，应以逻辑状态加 Key。
 
 Fade 中途到达新目标时，Incoming Content 会在现有进度上替换，而不是从零重启；最后提交状态
-仍为 Outgoing。此前显示的 nullable 状态无法作为 Outgoing 保留，因为 `null` 同时是内部“无旧
-内容”哨兵；需要区分时请使用非空 Wrapper State。
+仍为 Outgoing。nullable 状态通过显式 Displayed State Wrapper 保留，生命周期与非空状态一致。
 
-`Crossfade` 是固定规格的便捷包装。二者当前都不提供 Content Key、Transition Scope、尺寸变换、
-Slide 动效或逐状态对规格。
+原 `AnimatedContent` 名称会承诺比实现更广的转场语义，因此已移除。`Crossfade` 不提供 Content
+Key、Transition Scope、尺寸变换、Slide 动效或逐状态对规格。
 
 ## animateContentSize 与原生布局成本
 

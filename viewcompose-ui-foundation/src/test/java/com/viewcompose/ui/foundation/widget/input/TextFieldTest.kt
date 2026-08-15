@@ -57,9 +57,11 @@ class TextFieldTest {
                     hint = "Type here",
                     label = "Display name",
                     supportingText = "Shown in profile",
-                    maxLines = 3,
-                    keyboardOptions = TextFieldKeyboardOptions(
-                        imeAction = TextFieldImeAction.Next,
+                    linePolicy = TextFieldLinePolicy.MultiLine(maxLines = 3),
+                    inputProfile = TextFieldInputProfile(
+                        keyboardOptions = TextFieldKeyboardOptions(
+                            imeAction = TextFieldImeAction.Next,
+                        ),
                     ),
                 )
             }
@@ -75,7 +77,7 @@ class TextFieldTest {
         assertEquals("Type here", spec.placeholder)
         assertTrue(collectTextNodes(root).any { it.document.text == "Display name" })
         assertTrue(collectTextNodes(root).any { it.document.text == "Shown in profile" })
-        assertEquals(true, spec.singleLine)
+        assertEquals(false, spec.singleLine)
         assertEquals(TextFieldType.Text, spec.keyboardOptions.keyboardType)
         assertEquals(3, spec.maxLines)
         assertEquals(TextFieldImeAction.Next, spec.keyboardOptions.imeAction)
@@ -95,11 +97,12 @@ class TextFieldTest {
     @Test
     fun `password field uses password input type`() {
         val tree = buildVNodeTree {
-            PasswordField(
+            TextField(
                 state = textState("secret"),
                 hint = "Password",
                 label = "Password",
                 supportingText = "At least 8 characters",
+                inputProfile = TextFieldInputProfile.Password,
             )
         }
 
@@ -116,15 +119,16 @@ class TextFieldTest {
     @Test
     fun `text area exposes read only and multiline semantics`() {
         val tree = buildVNodeTree {
-            TextArea(
+            TextField(
                 state = textState("Line 1"),
                 label = "Bio",
                 supportingText = "Visible to collaborators",
                 readOnly = true,
-                minLines = 4,
-                maxLines = 6,
-                keyboardOptions = TextFieldKeyboardOptions(
-                    imeAction = TextFieldImeAction.Done,
+                linePolicy = TextFieldLinePolicy.MultiLine(minLines = 4, maxLines = 6),
+                inputProfile = TextFieldInputProfile(
+                    keyboardOptions = TextFieldKeyboardOptions(
+                        imeAction = TextFieldImeAction.Done,
+                    ),
                 ),
             )
         }

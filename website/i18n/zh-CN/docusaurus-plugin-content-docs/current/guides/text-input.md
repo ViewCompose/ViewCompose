@@ -1,6 +1,6 @@
 ---
 translation_source: guides/text-input.md
-translation_source_hash: d7a39ff475659f298ae2a752cd726e2fd802e695e37b661287322c4d502dbbd9
+translation_source_hash: fd2f8abb6fbce7a07e6d878530ee0e869b1a0f95f532e6cfaccd3b485585a9a6
 translation_status: current
 ---
 
@@ -23,14 +23,16 @@ translation_status: current
 
 ## 2. 所有权
 
-`TextFieldState` 是唯一真相源。`TextField`、`TextArea`、typed field 和 `SearchBar` 只接受
-稳定状态实例。
+`TextFieldState` 是唯一真相源。`TextField` 与 `SearchBar` 只接受稳定状态实例；输入用途与
+行行为使用值契约，而不是组件别名。
 
 ```kotlin
 val state = rememberTextFieldState("initial")
 
 TextField(
     state = state,
+    inputProfile = TextFieldInputProfile.Email,
+    linePolicy = TextFieldLinePolicy.SingleLine,
     inputTransformation = InputTransformation.maxCodePoints(40),
 )
 ```
@@ -52,7 +54,10 @@ val document = textDocument {
 val state = rememberTextFieldState(document)
 
 RichText(document)
-TextArea(state = state)
+TextField(
+    state = state,
+    linePolicy = TextFieldLinePolicy.MultiLine(minLines = 3, maxLines = 8),
+)
 ```
 
 旧的 `value: String + onValueChange(String)` API 已移除。重新引入第二条核心路径会丢失 selection
@@ -91,8 +96,9 @@ styled/HTML 文本从 `Spanned` 转为 `TextDocument`，URI item 转为 `InlineT
 不支持的 clip item 返回平台作为剩余 payload，不会静默丢弃。
 
 ```kotlin
-TextArea(
+TextField(
     state = state,
+    linePolicy = TextFieldLinePolicy.MultiLine(),
     receiveContent = ReceiveContentConfiguration(
         mimeTypes = setOf("text/*", "image/png"),
         transformation = { received ->

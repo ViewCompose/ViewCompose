@@ -19,10 +19,12 @@ import com.viewcompose.ui.modifier.SemanticsCollectionItemInfo
 import com.viewcompose.ui.modifier.SemanticsConfiguration
 import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.node.NavigationBarItem
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.UiFontFamily
 import com.viewcompose.renderer.view.tree.ContentViewBinder
 import com.viewcompose.renderer.view.tree.ModifierSemanticsApplier
 import com.viewcompose.renderer.view.dpToPx
+import com.viewcompose.renderer.view.tree.toColorStateList
 
 /**
  * Android LinearLayout implementation of NavigationBar.
@@ -51,7 +53,7 @@ internal class DeclarativeNavigationBarLayout(
         var badgeCount: Int? = null,
         var badgeColor: Int? = null,
         var badgeTextColor: Int? = null,
-        var rippleColor: Int,
+        var stateLayerColors: UiStateLayerColors,
     )
 
     private var items: List<NavigationBarItem> = emptyList()
@@ -64,7 +66,8 @@ internal class DeclarativeNavigationBarLayout(
     private var selectedLabelColorState: Int = Color.TRANSPARENT
     private var unselectedLabelColorState: Int = Color.TRANSPARENT
     private var indicatorColorState: Int = Color.TRANSPARENT
-    private var rippleColorState: Int = Color.TRANSPARENT
+    private var selectedStateLayerColorsState: UiStateLayerColors? = null
+    private var unselectedStateLayerColorsState: UiStateLayerColors? = null
     private var iconSizeState: Int = 0
     private var labelSizePxState: Float = 0f
     private var labelFontWeightState: Int? = null
@@ -91,7 +94,8 @@ internal class DeclarativeNavigationBarLayout(
         selectedLabelColor: Int,
         unselectedLabelColor: Int,
         indicatorColor: Int,
-        rippleColor: Int,
+        selectedStateLayerColors: UiStateLayerColors,
+        unselectedStateLayerColors: UiStateLayerColors,
         iconSize: Int,
         labelSizePx: Float,
         labelFontWeight: Int?,
@@ -116,10 +120,12 @@ internal class DeclarativeNavigationBarLayout(
         }
         val structureContentChanged = previousItems.map(NavigationBarItem::key) !=
             items.map(NavigationBarItem::key)
-        val rippleChanged = !styleInitialized || rippleColorState != rippleColor
+        val stateLayersChanged = !styleInitialized ||
+            selectedStateLayerColorsState != selectedStateLayerColors ||
+            unselectedStateLayerColorsState != unselectedStateLayerColors
         val structureChanged = structureContentChanged || childCount != items.size
         if (structureChanged) {
-            reconcileItems(items, rippleColor)
+            reconcileItems(items, unselectedStateLayerColors)
         }
         val styleChanged = !styleInitialized ||
             selectedIconColorState != selectedIconColor ||
@@ -136,7 +142,7 @@ internal class DeclarativeNavigationBarLayout(
             labelIncludeFontPaddingState != labelIncludeFontPadding ||
             badgeColorState != badgeColor ||
             badgeTextColorState != badgeTextColor ||
-            rippleChanged
+            stateLayersChanged
         val selectionChanged = previousSelectedIndex != resolvedSelectedIndex
         val contentChangedIndices = if (structureChanged) {
             emptySet()
@@ -159,7 +165,8 @@ internal class DeclarativeNavigationBarLayout(
         selectedLabelColorState = selectedLabelColor
         unselectedLabelColorState = unselectedLabelColor
         indicatorColorState = indicatorColor
-        rippleColorState = rippleColor
+        selectedStateLayerColorsState = selectedStateLayerColors
+        unselectedStateLayerColorsState = unselectedStateLayerColors
         iconSizeState = iconSize
         labelSizePxState = labelSizePx
         labelFontWeightState = labelFontWeight
@@ -219,12 +226,12 @@ internal class DeclarativeNavigationBarLayout(
         }
     }
 
-    private fun reconcileItems(items: List<NavigationBarItem>, rippleColor: Int) {
+    private fun reconcileItems(items: List<NavigationBarItem>, stateLayerColors: UiStateLayerColors) {
         val existingByKey = itemRefs.associateBy(ItemViewRefs::key)
         removeAllViews()
         itemRefs.clear()
         items.forEachIndexed { index, item ->
-            val refs = existingByKey[item.key] ?: createItemView(index, item, rippleColor)
+            val refs = existingByKey[item.key] ?: createItemView(index, item, stateLayerColors)
             refs.root.tag = index
             itemRefs += refs
             addView(refs.root)
@@ -234,7 +241,7 @@ internal class DeclarativeNavigationBarLayout(
     private fun createItemView(
         index: Int,
         item: NavigationBarItem,
-        rippleColor: Int,
+        stateLayerColors: UiStateLayerColors,
     ): ItemViewRefs {
         val itemLayout = LinearLayout(context).apply {
             orientation = VERTICAL
@@ -244,7 +251,7 @@ internal class DeclarativeNavigationBarLayout(
             isClickable = true
             isFocusable = true
             tag = index
-            background = createItemRipple(rippleColor)
+            background = createItemRipple(stateLayerColors)
             setOnClickListener {
                 if (isEnabled) {
                     onItemSelected?.invoke(tag as Int)
@@ -334,7 +341,7 @@ internal class DeclarativeNavigationBarLayout(
             badgeDrawable = badgeDrawable,
             labelView = label,
             iconResId = item.icon.resId,
-            rippleColor = rippleColor,
+            stateLayerColors = stateLayerColors,
         )
     }
 
@@ -443,9 +450,14 @@ internal class DeclarativeNavigationBarLayout(
         val refs = itemRefs[index]
         refs.root.tag = index
         refs.root.isEnabled = item.enabled
-        if (refs.rippleColor != rippleColorState) {
-            refs.rippleColor = rippleColorState
-            refs.root.background = createItemRipple(rippleColorState)
+        val stateLayerColors = if (isSelected) {
+            requireNotNull(selectedStateLayerColorsState)
+        } else {
+            requireNotNull(unselectedStateLayerColorsState)
+        }
+        if (refs.stateLayerColors != stateLayerColors) {
+            refs.stateLayerColors = stateLayerColors
+            refs.root.background = createItemRipple(stateLayerColors)
         }
 
         ModifierSemanticsApplier.apply(
@@ -593,9 +605,9 @@ internal class DeclarativeNavigationBarLayout(
         return indices
     }
 
-    private fun createItemRipple(rippleColor: Int): RippleDrawable {
+    private fun createItemRipple(stateLayerColors: UiStateLayerColors): RippleDrawable {
         return RippleDrawable(
-            ColorStateList.valueOf(rippleColor),
+            stateLayerColors.toColorStateList(),
             null,
             GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: d38605e734e778915a9c62c4b3dfec4a5be394170884c4de8aea6e01b4b42206
+translation_source_hash: adb5e3d264fdc9a4e36b5bffb9ccbeccea325dc5203c5a61fe6279747a6c82b0
 translation_status: current
 ---
 
@@ -78,9 +78,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   内缩与 Label 间距。它有意不拥有有效触控目标；编译样例 `switchSizingTokenSample` 展示如何在
   独立的 `minimumInteractiveHeight` 策略中放置紧凑可见 Track。
 - `BasicSurface` 是 Q3 设计系统中立基础组件。其 Q2 `BasicSurfaceStyle` 接受已经解析的纯色或
-  渐变 Brush、逻辑 Shape、Border、裁剪、Elevation 与精确 Shadow，并把最小有效边界与可选的
-  居中可见高度分开。设计系统在发射前选择这些值，Android Renderer 只接收中立的
-  `SurfaceNodeProps` 快照。编译样例 `basicSurfaceSample` 展示了该契约。
+  渐变 Brush、逻辑 Shape、Border、裁剪、Elevation、精确 Shadow 与可选的渲染器中立交互指示，
+  并把最小有效边界与可选的居中可见高度分开。设计系统在发射前选择这些值，Android Renderer
+  只接收中立 NodeSpec 与 Modifier 快照。编译样例 `basicSurfaceSample` 展示了该契约。
 - `BasicButton` 是建立在 `BasicSurface`、Row、Text 与 Icon 上的 Q3 动作组合。其 Q2
   `BasicButtonStyle` 只包含已经解析的几何、排版、内容与交互值。它不会发射原生 Button 节点，
   现有 `Button` API 则继续保留该兼容路径。编译样例 `basicButtonSample` 展示连续圆角动作。
@@ -90,7 +90,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   编译样例 `componentOverridesSample` 展示嵌套与实例优先级。
 - `BasicTextField` 是 Q3 编辑原语，其 Q2 `BasicTextFieldStyle` 包含全部已解析视觉输入，并且不读取
   Theme 或组件 Local。高层 `TextField` 在构造完整 Style 前解析语义默认值和稀疏 Overrides；具名
-  设计系统则从自己的私有 Recipe 构造该 Style。
+  设计系统则从自己的私有 Recipe 构造该 Style。`TextFieldInputProfile` 组合键盘与 Autofill
+  用途，`TextFieldLinePolicy` 强制单行或已验证的多行行为；Password、Email、Number 和 TextArea
+  不再各自形成平行 Wrapper API。
 - `UiControlSizing.minimumInteractiveHeight` 是 Checkbox、RadioButton、Switch 与 Slider 使用的
   设计系统无关有效高度策略。它的中性默认值是零，因此保留原生固有测量。设计系统可以提供
   正的最小值；组件会在调用方 Modifier 之前应用它，所以应用显式指定的精确高度仍具有最终权限。
@@ -100,9 +102,10 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - Button 与 IconButton Defaults 会把自身启用态语义内容角色与 `UiInteractionTokens` 组合，
   发出已解析的按下、聚焦和悬停颜色。调用方通过组件强类型 Overrides 中的 `stateLayerColors`
   槽位替换完整集合；已经移除的直接 `rippleColor` 与 `stateLayerColors` 参数不会形成第二条优先级路径。
-- Chip、FAB、Extended FAB、可点击 Surface、Card、ListItem 和 DropdownMenuItem 通过内部
-  Box/Row NodeSpec 字段复用同一内容角色解析。SegmentedControl 分别解析选中与未选中集合，
-  因此切换选中项时也会切换交互角色；静态或禁用组合控件保持空的多状态契约。
+- Chip、FAB、Extended FAB、可点击 Surface、Card、ListItem 和 DropdownMenuItem 复用同一
+  内容角色解析，并通过有序 Modifier 安装 `UiInteractionIndication.StateLayer`。Box 与 Row
+  保持纯布局原语。SegmentedControl 和 NavigationBar 因原生后端拥有多个内部目标而保留独立的
+  已选与未选集合；静态或禁用组合控件不安装指示。
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   与各类 Local Provider 为密度、语言、布局方向、内容颜色、文本样式、图片加载、焦点、帧时钟
   和宿主能力划定作用域。`UiLocals.current` 是 Q2 作用域查询：Binding 缺失时计算默认值；
@@ -165,6 +168,9 @@ Alpha API 不再同时保留颜色专用路径和低频外观直接参数：
 | AlertDialog 视觉常量 | `AlertDialogOverrides` 或 `ProvideAlertDialogOverrides` |
 | Modal Bottom Sheet 的容器/内容/Scrim/系统栏外观 | 请求提交前解析为 `ModalBottomSheetAppearance` 的 `ModalBottomSheetOverrides` |
 | `BasicTextField` 的多个独立外观参数 | 一份完整的 `BasicTextFieldStyle` |
+| `PasswordField`、`EmailField`、`NumberField` 或 `TextArea` | `TextField(inputProfile = ..., linePolicy = ...)` |
+| `TextButton` | `Button(variant = ButtonVariant.Text)` |
+| `ElevatedCard` 或 `OutlinedCard` | `Card(variant = CardVariant.Elevated/Outlined)` |
 
 嵌套 Provider 现在逐字段合并，不再整体替换外层 Patch；实例值具有最高优先级。除非字段名声明
 了具体状态，否则组件族字段不区分 Variant；只有一个 Variant 需要变化时，应把它放在实例上。
@@ -331,9 +337,11 @@ Slider 新增的 `inactiveTrackColor` 参数属于 Q3 组件 API 变更。它提
 Q2 `SliderNodeProps` 快照中；预编译调用方与自定义渲染器必须随对应 Alpha 版本重新构建。
 
 `UiInteractionTokens` 是 Q2 不可变主题值；将它加入 `UiThemeTokens` 后，预编译构造调用和穷举
-解构会发生二进制变化。Button 与 IconButton 状态层参数属于 Q3 组件 API 变更。源码调用方会
-获得语义化多状态默认值；曾显式提供旧 `rippleColor` 的 Button 调用方保留专用兼容重载。预编译
-默认参数调用点必须随本次 Alpha 版本重新构建。
+解构会发生二进制变化。Button 与 IconButton 状态层 Override 槽位属于 Q3 组件 API 变更。源码
+调用方会获得语义化多状态默认值。旧 `rippleColor` 兼容路径以及无人消费的
+`UiColors.ripple`/`UiStateColors.controlHighlight` 主题槽位均已移除。自定义交互 Surface 使用
+`Modifier.interactionIndication`；主题生产者通过 `UiInteractionTokens` 配置状态层策略。
+预编译默认参数调用点必须随本次 Alpha 版本重新构建。
 
 `BasicSurfaceStyle` 是 Q2 已解析值契约，`BasicSurface` 是 Q3 组件 API。`BasicSurface` 会在
 已解析样式与行为之后追加调用方 Modifier：调用方 Surface Modifier 替换默认可见 Surface，

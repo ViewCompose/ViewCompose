@@ -20,7 +20,6 @@ import com.viewcompose.ui.foundation.Chip
 import com.viewcompose.ui.foundation.ChipVariant
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Divider
-import com.viewcompose.ui.foundation.ElevatedCard
 import com.viewcompose.ui.foundation.ExtendedFloatingActionButton
 import com.viewcompose.ui.foundation.ExtendedFloatingActionButtonOverrides
 import com.viewcompose.ui.foundation.FabSize
@@ -30,10 +29,8 @@ import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.LazyColumn
 import com.viewcompose.ui.foundation.ListItem
-import com.viewcompose.ui.foundation.OutlinedCard
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.Text
-import com.viewcompose.ui.foundation.TextButton
 import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTextStyle
@@ -146,7 +143,8 @@ private fun UiTreeBuilder.ActionsCardFixture(
                 state = { stringResource(R.string.demo_actions_click_count, clicks.value) },
                 onReset = onReset,
             ) {
-                ElevatedCard(
+                Card(
+                    variant = CardVariant.Elevated,
                     onClick = { clicks.value += 1 },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -196,7 +194,11 @@ private fun UiTreeBuilder.ActionsCardVariants(
                 R.string.demo_actions_card_filled_summary,
             )
         }
-        OutlinedCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Card(
+            variant = CardVariant.Outlined,
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             CardCopy(
                 R.string.demo_actions_card_outlined,
                 R.string.demo_actions_card_outlined_summary,
@@ -213,14 +215,16 @@ private fun UiTreeBuilder.ActionsCardVariants(
             )
         }
         Row(spacing = 8.dp, modifier = Modifier.fillMaxWidth()) {
-            TextButton(
+            Button(
                 text = stringResource(R.string.demo_actions_text_button),
                 onClick = onClick,
+                variant = ButtonVariant.Text,
                 modifier = Modifier.weight(1f),
             )
-            TextButton(
+            Button(
                 text = stringResource(R.string.demo_actions_text_button_disabled),
                 onClick = {},
+                variant = ButtonVariant.Text,
                 enabled = false,
                 modifier = Modifier.weight(1f),
             )

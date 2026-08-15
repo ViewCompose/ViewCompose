@@ -43,7 +43,6 @@ class SegmentedControlTest {
         assertEquals(SegmentedControlDefaults.shape(), spec.shape)
         assertEquals(SegmentedControlDefaults.textColor(), spec.textColor)
         assertEquals(SegmentedControlDefaults.selectedTextColor(), spec.selectedTextColor)
-        assertEquals(SegmentedControlDefaults.rippleColor(), spec.rippleColor)
         assertEquals(
             SegmentedControlDefaults.stateLayerColors(selected = false),
             spec.unselectedStateLayerColors,
@@ -198,7 +197,8 @@ class SegmentedControlTest {
         assertEquals(504, spec.indicatorColor)
         assertEquals(506, spec.textColor)
         assertEquals(508, spec.selectedTextColor)
-        assertEquals(0x00000000, spec.rippleColor)
+        assertEquals(stateLayerColorsFor(508), spec.selectedStateLayerColors)
+        assertEquals(stateLayerColorsFor(506), spec.unselectedStateLayerColors)
     }
 
     @Test

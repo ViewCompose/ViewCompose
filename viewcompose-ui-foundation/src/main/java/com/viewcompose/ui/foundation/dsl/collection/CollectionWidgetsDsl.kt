@@ -8,9 +8,11 @@ import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSessionFactory
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
 import com.viewcompose.ui.modifier.clickable
+import com.viewcompose.ui.modifier.interactionIndication
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
@@ -30,7 +32,30 @@ import com.viewcompose.ui.state.PagerState
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * Emits a LazyColumn from list data.
+ * Virtualizes vertical list data with explicit logical identity and revision contracts.
+ *
+ * A stable [key] owns item state and effects. Equal keys and [contentRevision] values skip item
+ * rendering; [contentType] permits native presentation reuse across different keys without sharing
+ * their logical sessions. Captured mutable values must be observable State or enter the revision.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
+ * @param T item model type
+ * @receiver active tree builder receiving the lazy list
+ * @param items ordered data snapshot represented by the list
+ * @param key stable unique logical identity for each item
+ * @param contentType reusable presentation category, or `null` to disable cross-key typed reuse
+ * @param contentRevision value that changes whenever visible content not held in State changes
+ * @param contentPadding uniform viewport content padding in dp
+ * @param spacing fixed gap in dp between adjacent items
+ * @param state optional caller-owned scroll position and command state
+ * @param reverseLayout whether logical item order starts at the trailing edge
+ * @param userScrollEnabled whether direct user scrolling is accepted
+ * @param prefetchPolicy ahead-of-viewport session preparation policy
+ * @param reusePolicy mounted-tree capacity and reuse policy
+ * @param motionPolicy item placement and change animation policy
+ * @param focusFollowKeyboard whether keyboard focus may bring a descendant into view
+ * @param modifier ordered configuration applied to the lazy-list host
+ * @param itemContent content factory invoked only while an item session is active
  */
 fun <T> UiTreeBuilder.LazyColumn(
     items: List<T>,
@@ -72,7 +97,24 @@ fun <T> UiTreeBuilder.LazyColumn(
 }
 
 /**
- * Emits a LazyColumn from LazyListScope DSL and captures current locals for item sessions.
+ * Virtualizes scoped vertical items while preserving captured locals per active item session.
+ *
+ * Item declarations must provide stable keys and accurate revisions through [LazyListScope]. Sticky
+ * headers are supported. Sessions outside the active and reuse windows may be disposed.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.lazyListDslSample
+ * @receiver active tree builder receiving the lazy list
+ * @param contentPadding independent start, top, end, and bottom viewport padding
+ * @param spacing fixed gap in dp between adjacent items
+ * @param state optional caller-owned scroll position and command state
+ * @param reverseLayout whether logical item order starts at the trailing edge
+ * @param userScrollEnabled whether direct user scrolling is accepted
+ * @param prefetchPolicy ahead-of-viewport session preparation policy
+ * @param reusePolicy mounted-tree capacity and reuse policy
+ * @param motionPolicy item placement and change animation policy
+ * @param focusFollowKeyboard whether keyboard focus may bring a descendant into view
+ * @param modifier ordered configuration applied to the lazy-list host
+ * @param content scoped item declarations evaluated synchronously for the list snapshot
  */
 fun UiTreeBuilder.LazyColumn(
     contentPadding: LazyContentPadding = LazyContentPadding.None,
@@ -114,7 +156,29 @@ fun UiTreeBuilder.LazyColumn(
 }
 
 /**
- * Emits a LazyRow from list data.
+ * Virtualizes horizontal list data with explicit logical identity and revision contracts.
+ *
+ * A stable [key] owns item state and effects. Equal keys and [contentRevision] values skip item
+ * rendering; [contentType] permits native presentation reuse across different keys without sharing
+ * their logical sessions.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.lazyListDslSample
+ * @param T item model type
+ * @receiver active tree builder receiving the lazy list
+ * @param items ordered data snapshot represented by the list
+ * @param key stable unique logical identity for each item
+ * @param contentType reusable presentation category, or `null` to disable cross-key typed reuse
+ * @param contentRevision value that changes whenever visible content not held in State changes
+ * @param contentPadding uniform viewport content padding in dp
+ * @param spacing fixed gap in dp between adjacent items
+ * @param state optional caller-owned scroll position and command state
+ * @param reverseLayout whether logical item order starts at the trailing edge
+ * @param userScrollEnabled whether direct user scrolling is accepted
+ * @param prefetchPolicy ahead-of-viewport session preparation policy
+ * @param reusePolicy mounted-tree capacity and reuse policy
+ * @param motionPolicy item placement and change animation policy
+ * @param modifier ordered configuration applied to the lazy-list host
+ * @param itemContent content factory invoked only while an item session is active
  */
 fun <T> UiTreeBuilder.LazyRow(
     items: List<T>,
@@ -154,7 +218,23 @@ fun <T> UiTreeBuilder.LazyRow(
 }
 
 /**
- * Emits a LazyRow from LazyListScope DSL; LazyRow does not support sticky headers.
+ * Virtualizes scoped horizontal items while preserving captured locals per active item session.
+ *
+ * Item declarations must provide stable keys and accurate revisions through [LazyListScope]. Sticky
+ * headers are rejected because a horizontal list has no sticky-header contract.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.lazyListDslSample
+ * @receiver active tree builder receiving the lazy list
+ * @param contentPadding independent start, top, end, and bottom viewport padding
+ * @param spacing fixed gap in dp between adjacent items
+ * @param state optional caller-owned scroll position and command state
+ * @param reverseLayout whether logical item order starts at the trailing edge
+ * @param userScrollEnabled whether direct user scrolling is accepted
+ * @param prefetchPolicy ahead-of-viewport session preparation policy
+ * @param reusePolicy mounted-tree capacity and reuse policy
+ * @param motionPolicy item placement and change animation policy
+ * @param modifier ordered configuration applied to the lazy-list host
+ * @param content scoped item declarations evaluated synchronously for the list snapshot
  */
 fun UiTreeBuilder.LazyRow(
     contentPadding: LazyContentPadding = LazyContentPadding.None,
@@ -656,7 +736,6 @@ fun UiTreeBuilder.TabRow(
             containerColor = appearance.containerColor,
             scrollable = appearance.scrollable,
             equalWidth = appearance.equalWidth,
-            rippleColor = appearance.rippleColor,
             itemSpacing = appearance.itemSpacing,
             itemPaddingHorizontal = appearance.itemPaddingHorizontal,
             itemPaddingVertical = appearance.itemPaddingVertical,
@@ -681,8 +760,16 @@ fun UiTreeBuilder.TabRow(
                 ) {
                     Box(
                         key = entry.key,
-                        rippleColor = appearance.rippleColor,
                         modifier = Modifier
+                            .interactionIndication(
+                                UiInteractionIndication.StateLayer(
+                                    if (selected) {
+                                        appearance.selectedStateLayerColors
+                                    } else {
+                                        appearance.unselectedStateLayerColors
+                                    },
+                                ),
+                            )
                             .semantics(mergeDescendants = true) {
                                 role = SemanticsRole.Tab
                                 this.selected = selected

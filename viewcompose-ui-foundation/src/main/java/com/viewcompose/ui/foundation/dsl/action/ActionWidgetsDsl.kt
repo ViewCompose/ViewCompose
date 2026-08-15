@@ -5,6 +5,7 @@ import com.viewcompose.ui.modifier.SemanticsCollectionInfo
 import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
 import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.height
+import com.viewcompose.ui.modifier.interactionIndication
 import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.node.ImageContentScale
@@ -12,6 +13,7 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.UiImageRequestOptions
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.IconButtonNodeProps
 import com.viewcompose.ui.node.spec.SegmentedControlNodeProps
@@ -97,7 +99,6 @@ private fun UiTreeBuilder.emitButton(
             borderWidth = appearance.borderWidth,
             borderColor = appearance.borderColor,
             shape = appearance.shape,
-            rippleColor = appearance.stateLayerColors.pressedColor,
             minHeight = appearance.minimumHeight,
             paddingHorizontal = appearance.horizontalPadding,
             paddingVertical = appearance.verticalPadding,
@@ -107,9 +108,10 @@ private fun UiTreeBuilder.emitButton(
             iconSize = appearance.iconSize,
             iconSpacing = appearance.iconSpacing,
             visualHeight = appearance.visualHeight,
-            stateLayerColors = appearance.stateLayerColors,
         ),
-        modifier = modifier,
+        modifier = Modifier
+            .interactionIndication(UiInteractionIndication.StateLayer(appearance.stateLayerColors))
+            .then(modifier),
     )
 }
 
@@ -157,6 +159,7 @@ fun UiTreeBuilder.IconButton(
             width = appearance.size,
             height = appearance.size,
         )
+        .interactionIndication(UiInteractionIndication.StateLayer(appearance.stateLayerColors))
         .then(
             if (enabled && onClick != null) {
                 Modifier.clickable(onClick)
@@ -183,45 +186,9 @@ fun UiTreeBuilder.IconButton(
             borderWidth = appearance.borderWidth,
             borderColor = appearance.borderColor,
             shape = appearance.shape,
-            rippleColor = appearance.stateLayerColors.pressedColor,
             contentPadding = appearance.contentPadding,
-            stateLayerColors = appearance.stateLayerColors,
         ),
         modifier = semanticModifier,
-    )
-}
-
-/**
- * Emits a text-hierarchy [Button] while preserving the standard action contract.
- *
- * @sample com.viewcompose.ui.foundation.samples.componentOverridesSample
- * @receiver active tree builder that receives the emitted Button node
- * @param text visible action label
- * @param onClick callback invoked synchronously on the renderer thread for an enabled click
- * @param size interaction-density tier used for target, padding, icon, and text defaults
- * @param enabled whether input is accepted and enabled appearance roles are used
- * @param overrides sparse instance appearance applied after scoped [ProvideButtonOverrides]
- * @param key optional stable sibling identity used during reconciliation
- * @param modifier ordered configuration appended to the emitted Button node
- */
-fun UiTreeBuilder.TextButton(
-    text: String,
-    onClick: (() -> Unit)? = null,
-    size: ButtonSize = ButtonSize.Medium,
-    enabled: Boolean = true,
-    overrides: ButtonOverrides = ButtonOverrides.None,
-    key: Any? = null,
-    modifier: Modifier = Modifier,
-) {
-    Button(
-        text = text,
-        onClick = onClick,
-        variant = ButtonVariant.Text,
-        size = size,
-        enabled = enabled,
-        overrides = overrides,
-        key = key,
-        modifier = modifier,
     )
 }
 
@@ -268,7 +235,6 @@ fun UiTreeBuilder.SegmentedControl(
             shape = appearance.shape,
             textColor = appearance.contentColor,
             selectedTextColor = appearance.selectedContentColor,
-            rippleColor = appearance.rippleColor,
             textSizeSp = appearance.textStyle.fontSizeSp,
             fontWeight = appearance.textStyle.fontWeight,
             fontFamily = uiFontFamily(appearance.textStyle.fontFamily),

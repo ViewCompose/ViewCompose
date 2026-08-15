@@ -12,6 +12,7 @@ import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
 import com.viewcompose.ui.modifier.SemanticsModifierElement
+import com.viewcompose.ui.modifier.ClickableModifierElement
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextFieldImeAction
@@ -30,6 +31,7 @@ import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -54,7 +56,6 @@ class AdditionalWidgetCoverageTest {
         assertEquals(NodeType.Row, node.type)
         assertEquals(ChipDefaults.iconSpacing(), spec.spacing)
         assertEquals(VerticalAlignment.Center, spec.verticalAlignment)
-        assertEquals(ChipDefaults.pressedColor(), spec.rippleColor)
         assertEquals(
             stateLayerColorsFor(
                 ChipDefaults.contentColor(
@@ -63,10 +64,26 @@ class AdditionalWidgetCoverageTest {
                     enabled = true,
                 ),
             ),
-            spec.stateLayerColors,
+            node.requireStateLayerColors(),
         )
         assertTrue(textChildren.any { it.document.text == "Sync" })
         assertTrue(node.children.size >= 2)
+    }
+
+    @Test
+    fun `disabled chip installs no body or trailing action`() {
+        val node = buildVNodeTree {
+            Chip(
+                label = "Disabled",
+                onClick = {},
+                onTrailingIconClick = {},
+                enabled = false,
+            )
+        }.single()
+
+        assertFalse(node.modifier.elements.any { it is ClickableModifierElement })
+        assertFalse(node.children.last().modifier.elements.any { it is ClickableModifierElement })
+        assertEquals(null, node.stateLayerColorsOrNull())
     }
 
     @Test

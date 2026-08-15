@@ -15,6 +15,7 @@ import com.viewcompose.renderer.R
 import com.viewcompose.ui.modifier.CornerRadiusModifierElement
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.view.shape.UiShapeDrawable
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
@@ -71,8 +72,8 @@ internal object ModifierSurfaceStyleApplier {
             borderWidth = nodeStyle.borderWidth,
             borderColor = nodeStyle.borderColor,
             cornerRadius = nodeStyle.cornerRadius,
-            rippleColor = nodeStyle.rippleColor,
-            stateLayerColors = nodeStyle.stateLayerColors,
+            defaultRippleColor = nodeStyle.defaultRippleColor,
+            interactionIndication = nodeStyle.interactionIndication,
             clickable = nodeStyle.clickable,
             forceClip = resolved.graphicsLayer?.clip
                 ?: resolved.clip?.clip
@@ -94,8 +95,8 @@ internal object ModifierSurfaceStyleApplier {
         borderWidth: Int,
         borderColor: Int,
         cornerRadius: CornerRadiusModifierElement?,
-        rippleColor: Int,
-        stateLayerColors: UiStateLayerColors? = null,
+        defaultRippleColor: Int,
+        interactionIndication: UiInteractionIndication? = null,
         clickable: Boolean,
         forceClip: Boolean = false,
         shape: UiShape? = null,
@@ -123,8 +124,8 @@ internal object ModifierSurfaceStyleApplier {
                     backgroundDrawable = backgroundDrawable,
                     borderWidth = borderWidth,
                     borderColor = borderColor,
-                    rippleColor = rippleColor,
-                    stateLayerColors = stateLayerColors,
+                    defaultRippleColor = defaultRippleColor,
+                    interactionIndication = interactionIndication,
                     clickable = clickable,
                     shape = resolvedShape,
                     layoutDirection = view.layoutDirection,
@@ -137,8 +138,8 @@ internal object ModifierSurfaceStyleApplier {
                         ?: Brush.SolidColor(Color.TRANSPARENT),
                     borderWidth = borderWidth,
                     borderColor = borderColor,
-                    rippleColor = rippleColor,
-                    stateLayerColors = stateLayerColors,
+                    defaultRippleColor = defaultRippleColor,
+                    interactionIndication = interactionIndication,
                     clickable = clickable,
                     shape = resolvedShape,
                     layoutDirection = view.layoutDirection,
@@ -153,7 +154,7 @@ internal object ModifierSurfaceStyleApplier {
             restoreOriginalBackground(view)
             if (clickable) {
                 view.foreground = RippleDrawable(
-                    interactionColorStateList(rippleColor, stateLayerColors),
+                    interactionColorStateList(defaultRippleColor, interactionIndication),
                     null,
                     null,
                 )
@@ -191,8 +192,8 @@ internal object ModifierSurfaceStyleApplier {
         fill: Brush,
         borderWidth: Int,
         borderColor: Int,
-        rippleColor: Int,
-        stateLayerColors: UiStateLayerColors?,
+        defaultRippleColor: Int,
+        interactionIndication: UiInteractionIndication?,
         clickable: Boolean,
         shape: UiShape?,
         layoutDirection: Int,
@@ -208,7 +209,7 @@ internal object ModifierSurfaceStyleApplier {
             return content
         }
         return RippleDrawable(
-            interactionColorStateList(rippleColor, stateLayerColors),
+            interactionColorStateList(defaultRippleColor, interactionIndication),
             content,
             UiShapeDrawable(shape, layoutDirection, density).apply {
                 setFillColor(Color.WHITE)
@@ -220,8 +221,8 @@ internal object ModifierSurfaceStyleApplier {
         backgroundDrawable: Drawable,
         borderWidth: Int,
         borderColor: Int,
-        rippleColor: Int,
-        stateLayerColors: UiStateLayerColors?,
+        defaultRippleColor: Int,
+        interactionIndication: UiInteractionIndication?,
         clickable: Boolean,
         shape: UiShape?,
         layoutDirection: Int,
@@ -244,7 +245,7 @@ internal object ModifierSurfaceStyleApplier {
             return layeredContent
         }
         return RippleDrawable(
-            interactionColorStateList(rippleColor, stateLayerColors),
+            interactionColorStateList(defaultRippleColor, interactionIndication),
             layeredContent,
             UiShapeDrawable(shape, layoutDirection, density).apply {
                 setFillColor(Color.WHITE)
@@ -335,8 +336,11 @@ internal fun UiStateLayerColors.toColorStateList(): ColorStateList {
     )
 }
 
-/** Preserves the previous value-only selector when no multi-state contract is supplied. */
+/** Uses the Android renderer default only when no resolved indication is supplied. */
 internal fun interactionColorStateList(
-    rippleColor: Int,
-    stateLayerColors: UiStateLayerColors?,
-): ColorStateList = stateLayerColors?.toColorStateList() ?: ColorStateList.valueOf(rippleColor)
+    defaultRippleColor: Int,
+    indication: UiInteractionIndication?,
+): ColorStateList = when (indication) {
+    is UiInteractionIndication.StateLayer -> indication.colors.toColorStateList()
+    null -> ColorStateList.valueOf(defaultRippleColor)
+}

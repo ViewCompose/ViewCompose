@@ -213,7 +213,8 @@ Modifier owns:
    `size/width/height/minWidth/minHeight/maxWidth/maxHeight/aspectRatio/padding/paddingRelative/margin/marginRelative`;
 2. appearance: `backgroundColor/backgroundDrawableRes/border/cornerRadius/alpha/elevation`;
 3. visibility and layering: `visibility/offset/offsetRelative/zIndex`;
-4. general interaction, focus, keys, and accessibility;
+4. general interaction, including renderer-neutral `interactionIndication`, focus, keys, and
+   accessibility;
 5. test identity through `testTag`;
 6. physical or direction-aware system-bar and IME padding;
 7. the `nativeView` escape hatch;
@@ -240,9 +241,17 @@ Component semantics belong in parameters and `NodeSpec`, for example:
 3. `Button`: `variant/size/enabled/leadingIcon/trailingIcon`;
 4. `TextField`: `label/placeholder/supportingText/readOnly/imeAction/isError`.
 
+General feedback does not become a component field merely because a native View draws it.
+`Modifier.interactionIndication(UiInteractionIndication.StateLayer(...))` carries complete pressed,
+focused, and hovered colors in modifier order. High-level components resolve this value from their
+design-system recipe and typed overrides before installing it. Native-backed components with
+multiple internal targets may retain typed selected/unselected state-layer snapshots in their
+NodeSpec because one outer modifier cannot identify those internal targets.
+
 ### 4.4 Theme / Defaults: default sources
 
-The fixed path is `Theme -> Defaults -> NodeSpec -> Renderer`.
+The fixed path is `Theme -> design-system recipe or Defaults -> typed overrides ->
+NodeSpec/Modifier -> Renderer`.
 
 Do not encode theme defaults as general modifiers or component business defaults inside the
 renderer.

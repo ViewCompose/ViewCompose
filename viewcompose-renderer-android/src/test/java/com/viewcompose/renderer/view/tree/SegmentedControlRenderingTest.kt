@@ -245,8 +245,8 @@ class SegmentedControlRenderingTest {
             SegmentedControlItem(key = "theme", label = "Theme"),
         ),
         onSelectionChange: (Int) -> Unit = {},
-        unselectedStateLayerColors: UiStateLayerColors? = null,
-        selectedStateLayerColors: UiStateLayerColors? = null,
+        unselectedStateLayerColors: UiStateLayerColors = stateLayerColors(0x22000000),
+        selectedStateLayerColors: UiStateLayerColors = stateLayerColors(0x22000000),
     ): VNode {
         return VNode(
             type = NodeType.SegmentedControl,
@@ -261,7 +261,6 @@ class SegmentedControlRenderingTest {
                 shape = UiShape.rounded(18.dp),
                 textColor = 0xFF6A5A4A.toInt(),
                 selectedTextColor = 0xFFFFFFFF.toInt(),
-                rippleColor = 0x22000000,
                 textSizeSp = 14.sp,
                 paddingHorizontal = 14.dp,
                 paddingVertical = 8.dp,
@@ -270,6 +269,12 @@ class SegmentedControlRenderingTest {
             ),
         )
     }
+
+    private fun stateLayerColors(color: Int) = UiStateLayerColors(
+        pressedColor = color,
+        focusedColor = color,
+        hoveredColor = color,
+    )
 
     private fun DeclarativeSegmentedControlLayout.materialBackgroundColor(): Int {
         return (background as UiShapeDrawable).currentFillColor

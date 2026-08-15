@@ -28,12 +28,9 @@ import com.viewcompose.ui.foundation.ButtonVariant
 import com.viewcompose.ui.foundation.Checkbox
 import com.viewcompose.ui.foundation.CheckboxOverrides
 import com.viewcompose.ui.foundation.Column
-import com.viewcompose.ui.foundation.EmailField
 import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.LazyColumn
-import com.viewcompose.ui.foundation.NumberField
-import com.viewcompose.ui.foundation.PasswordField
 import com.viewcompose.ui.foundation.ProvideCheckboxOverrides
 import com.viewcompose.ui.foundation.ProvideRadioButtonOverrides
 import com.viewcompose.ui.foundation.ProvideSliderOverrides
@@ -50,7 +47,8 @@ import com.viewcompose.ui.foundation.SurfaceDefaults
 import com.viewcompose.ui.foundation.Switch
 import com.viewcompose.ui.foundation.SwitchOverrides
 import com.viewcompose.ui.foundation.Text
-import com.viewcompose.ui.foundation.TextArea
+import com.viewcompose.ui.foundation.TextFieldInputProfile
+import com.viewcompose.ui.foundation.TextFieldLinePolicy
 import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.TextField
 import com.viewcompose.ui.foundation.TextFieldSize
@@ -321,8 +319,10 @@ internal fun UiTreeBuilder.InputPage(
                     hint = stringResource(R.string.demo_input_name_hint),
                     label = stringResource(R.string.demo_input_name_label),
                     supportingText = stringResource(R.string.demo_input_name_support),
-                    keyboardOptions = TextFieldKeyboardOptions(
-                        imeAction = TextFieldImeAction.Next,
+                    inputProfile = TextFieldInputProfile(
+                        keyboardOptions = TextFieldKeyboardOptions(
+                            imeAction = TextFieldImeAction.Next,
+                        ),
                     ),
                     variant = TextFieldVariant.Filled,
                     size = TextFieldSize.Large,
@@ -330,14 +330,17 @@ internal fun UiTreeBuilder.InputPage(
                         .fillMaxWidth()
                         .margin(bottom = 12.dp),
                 )
-                EmailField(
+                TextField(
                     state = emailState,
                     hint = stringResource(R.string.demo_input_email_hint),
                     label = stringResource(R.string.demo_input_email_label),
                     supportingText = stringResource(R.string.demo_input_email_support),
-                    keyboardOptions = TextFieldKeyboardOptions(
-                        keyboardType = com.viewcompose.ui.node.TextFieldType.Email,
-                        imeAction = TextFieldImeAction.Next,
+                    inputProfile = TextFieldInputProfile(
+                        keyboardOptions = TextFieldKeyboardOptions(
+                            keyboardType = com.viewcompose.ui.node.TextFieldType.Email,
+                            imeAction = TextFieldImeAction.Next,
+                        ),
+                        autofillHints = TextFieldInputProfile.Email.autofillHints,
                     ),
                     variant = TextFieldVariant.Tonal,
                     size = TextFieldSize.Medium,
@@ -345,15 +348,18 @@ internal fun UiTreeBuilder.InputPage(
                         .fillMaxWidth()
                         .margin(bottom = 12.dp),
                 )
-                PasswordField(
+                TextField(
                     state = passwordState,
                     hint = stringResource(R.string.demo_input_password_hint),
                     label = stringResource(R.string.demo_input_password_label),
                     supportingText = stringResource(R.string.demo_input_password_support),
-                    keyboardOptions = TextFieldKeyboardOptions(
-                        keyboardType = com.viewcompose.ui.node.TextFieldType.Password,
-                        imeAction = TextFieldImeAction.Done,
-                        autoCorrectEnabled = false,
+                    inputProfile = TextFieldInputProfile(
+                        keyboardOptions = TextFieldKeyboardOptions(
+                            keyboardType = com.viewcompose.ui.node.TextFieldType.Password,
+                            imeAction = TextFieldImeAction.Done,
+                            autoCorrectEnabled = false,
+                        ),
+                        autofillHints = TextFieldInputProfile.Password.autofillHints,
                     ),
                     variant = TextFieldVariant.Outlined,
                     size = TextFieldSize.Medium,
@@ -362,22 +368,24 @@ internal fun UiTreeBuilder.InputPage(
                         .fillMaxWidth()
                         .margin(bottom = 12.dp),
                 )
-                NumberField(
+                TextField(
                     state = ageState,
                     hint = stringResource(R.string.demo_input_age_hint),
                     label = stringResource(R.string.demo_input_age_label),
                     supportingText = stringResource(R.string.demo_input_age_support),
+                    inputProfile = TextFieldInputProfile.Number,
                     variant = TextFieldVariant.Outlined,
                     size = TextFieldSize.Compact,
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(bottom = 12.dp),
                 )
-                EmailField(
+                TextField(
                     state = disabledEmailState,
                     hint = stringResource(R.string.demo_input_disabled_email_hint),
                     label = stringResource(R.string.demo_input_disabled_email_label),
                     supportingText = stringResource(R.string.demo_input_disabled_email_support),
+                    inputProfile = TextFieldInputProfile.Email,
                     variant = TextFieldVariant.Tonal,
                     size = TextFieldSize.Medium,
                     enabled = false,
@@ -385,14 +393,16 @@ internal fun UiTreeBuilder.InputPage(
                         .fillMaxWidth()
                         .margin(bottom = 12.dp),
                 )
-                TextArea(
+                TextField(
                     state = bioState,
                     hint = stringResource(R.string.demo_input_bio_hint),
                     label = stringResource(R.string.demo_input_bio_label),
                     supportingText = stringResource(R.string.demo_input_bio_support),
-                    maxLines = 6,
-                    keyboardOptions = TextFieldKeyboardOptions(
-                        imeAction = TextFieldImeAction.Done,
+                    linePolicy = TextFieldLinePolicy.MultiLine(maxLines = 6),
+                    inputProfile = TextFieldInputProfile(
+                        keyboardOptions = TextFieldKeyboardOptions(
+                            imeAction = TextFieldImeAction.Done,
+                        ),
                     ),
                     variant = TextFieldVariant.Filled,
                     size = TextFieldSize.Large,
@@ -705,12 +715,12 @@ internal fun UiTreeBuilder.InputPage(
                         .fillMaxWidth()
                         .margin(bottom = 12.dp),
                 )
-                TextArea(
+                TextField(
                     state = stressNotesFieldState,
                     label = stringResource(R.string.demo_input_stress_notes_label),
                     supportingText = stringResource(R.string.demo_input_stress_notes_support),
                     readOnly = stressReadonlyState.value,
-                    maxLines = 6,
+                    linePolicy = TextFieldLinePolicy.MultiLine(maxLines = 6),
                     variant = TextFieldVariant.Tonal,
                     size = TextFieldSize.Large,
                     modifier = Modifier
@@ -718,7 +728,7 @@ internal fun UiTreeBuilder.InputPage(
                         .height(132.dp)
                         .margin(bottom = 12.dp),
                 )
-                PasswordField(
+                TextField(
                     state = stressPasswordFieldState,
                     label = stringResource(R.string.demo_input_stress_protected_label),
                     supportingText = if (stressErrorState.value) {
@@ -726,6 +736,7 @@ internal fun UiTreeBuilder.InputPage(
                     } else {
                         stringResource(R.string.demo_input_stress_resolved_support)
                     },
+                    inputProfile = TextFieldInputProfile.Password,
                     isError = stressErrorState.value,
                     variant = TextFieldVariant.Filled,
                     size = TextFieldSize.Medium,

@@ -11,7 +11,6 @@ import com.viewcompose.ui.foundation.UiOverlays
 import com.viewcompose.ui.foundation.UiShapes
 import com.viewcompose.ui.foundation.UiStateColor
 import com.viewcompose.ui.foundation.UiStateColorDefaults
-import com.viewcompose.ui.foundation.UiStateColors
 import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiThemeMetadata
 import com.viewcompose.ui.foundation.UiThemeOrigin
@@ -256,11 +255,9 @@ internal object Material3ThemeTokenMapper {
                     android.R.attr.textColorSecondary -> snapshot.colors.secondaryText
                     androidx.appcompat.R.attr.colorControlNormal -> snapshot.colors.control
                     androidx.appcompat.R.attr.colorControlActivated -> snapshot.colors.controlActivated
-                    androidx.appcompat.R.attr.colorControlHighlight -> snapshot.colors.controlHighlight
                     else -> null
                 }
             },
-            readRippleColor = { snapshot.colors.ripple },
             readScrimOpacity = { snapshot.scrimOpacity },
             isDarkMode = isDarkMode,
         )
@@ -366,12 +363,10 @@ internal object Material3ThemeTokenMapper {
             mapped("colors.errorContainer", errorContainer)
             mapped("colors.outline", outline)
             mapped("colors.outlineVariant", outlineVariant)
-            mapped("colors.ripple", ripple)
             mapped("stateColors.primaryText", primaryText)
             mapped("stateColors.secondaryText", secondaryText)
             mapped("stateColors.control", control)
             mapped("stateColors.controlActivated", controlActivated)
-            mapped("stateColors.controlHighlight", controlHighlight)
         }
         with(snapshot.typography) {
             mapped("typography.bodyMedium", bodyMedium)
@@ -405,7 +400,6 @@ internal object Material3ThemeTokenMapper {
         readColor: (Int) -> Int?,
         readTextSizeSp: (Int) -> UiSp? = { null },
         readStateColor: (Int) -> UiStateColor? = { null },
-        readRippleColor: () -> Int? = { null },
         readScrimOpacity: () -> Float? = { null },
         isDarkMode: Boolean = false,
     ): UiThemeTokens {
@@ -483,12 +477,11 @@ internal object Material3ThemeTokenMapper {
             inversePrimary = readColor(com.google.android.material.R.attr.colorPrimaryInverse)
                 ?: fallback.colors.inversePrimary,
             scrim = fallback.colors.scrim,
-            ripple = readRippleColor() ?: fallback.colors.ripple,
         )
         val fallbackStateColors = UiStateColorDefaults.from(colors)
         return UiThemeTokens(
             colors = colors,
-            stateColors = UiStateColors(
+            stateColors = fallbackStateColors.copy(
                 primaryText = readStateColor(android.R.attr.textColorPrimary)
                     ?: fallbackStateColors.primaryText,
                 secondaryText = readStateColor(android.R.attr.textColorSecondary)
@@ -497,8 +490,6 @@ internal object Material3ThemeTokenMapper {
                     ?: fallbackStateColors.control,
                 controlActivated = readStateColor(androidx.appcompat.R.attr.colorControlActivated)
                     ?: fallbackStateColors.controlActivated,
-                controlHighlight = readStateColor(androidx.appcompat.R.attr.colorControlHighlight)
-                    ?: fallbackStateColors.controlHighlight,
             ),
             typography = fallback.typography.copy(
                 titleMedium = fallback.typography.titleMedium.copy(

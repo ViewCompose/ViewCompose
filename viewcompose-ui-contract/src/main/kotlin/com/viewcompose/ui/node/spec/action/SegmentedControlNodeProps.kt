@@ -18,7 +18,6 @@ import com.viewcompose.ui.unit.UiSp
  * @property shape outline shared by track and indicator
  * @property textColor unselected label color
  * @property selectedTextColor selected label color
- * @property rippleColor pressed-state ripple color
  * @property unselectedStateLayerColors interaction colors based on the enabled unselected content role
  * @property selectedStateLayerColors interaction colors based on the enabled selected content role
  * @property textSizeSp label size in scale-independent pixels
@@ -41,7 +40,6 @@ data class SegmentedControlNodeProps(
     val shape: UiShape,
     val textColor: Int,
     val selectedTextColor: Int,
-    val rippleColor: Int,
     val textSizeSp: UiSp,
     val fontWeight: Int? = null,
     val fontFamily: UiFontFamily? = null,
@@ -50,8 +48,8 @@ data class SegmentedControlNodeProps(
     val includeFontPadding: Boolean = false,
     val paddingHorizontal: UiDp,
     val paddingVertical: UiDp,
-    val unselectedStateLayerColors: UiStateLayerColors? = null,
-    val selectedStateLayerColors: UiStateLayerColors? = null,
+    val unselectedStateLayerColors: UiStateLayerColors,
+    val selectedStateLayerColors: UiStateLayerColors,
 ) : NodeSpec {
     init {
         require(items.map(SegmentedControlItem::key).toSet().size == items.size) {

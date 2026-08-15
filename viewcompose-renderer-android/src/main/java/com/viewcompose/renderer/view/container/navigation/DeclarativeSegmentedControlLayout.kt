@@ -13,7 +13,7 @@ import android.widget.TextView
 import com.viewcompose.renderer.view.shape.UiShapeDrawable
 import com.viewcompose.renderer.view.tree.ContentViewBinder
 import com.viewcompose.renderer.view.tree.ModifierSemanticsApplier
-import com.viewcompose.renderer.view.tree.interactionColorStateList
+import com.viewcompose.renderer.view.tree.toColorStateList
 import com.viewcompose.ui.modifier.SemanticsCollectionItemInfo
 import com.viewcompose.ui.modifier.SemanticsConfiguration
 import com.viewcompose.ui.modifier.SemanticsRole
@@ -45,7 +45,6 @@ internal class DeclarativeSegmentedControlLayout(
     private var shapeState: UiShape = UiShape.rounded(UiDp.Zero)
     private var textColorState: Int = Color.BLACK
     private var selectedTextColorState: Int = Color.WHITE
-    private var rippleColorState: Int = Color.TRANSPARENT
     private var unselectedStateLayerColorsState: UiStateLayerColors? = null
     private var selectedStateLayerColorsState: UiStateLayerColors? = null
     private var textSizePxState: Float = 14f
@@ -80,9 +79,8 @@ internal class DeclarativeSegmentedControlLayout(
         shape: UiShape,
         textColor: Int,
         selectedTextColor: Int,
-        rippleColor: Int,
-        unselectedStateLayerColors: UiStateLayerColors?,
-        selectedStateLayerColors: UiStateLayerColors?,
+        unselectedStateLayerColors: UiStateLayerColors,
+        selectedStateLayerColors: UiStateLayerColors,
         textSizePx: Float,
         fontWeight: Int?,
         fontFamily: UiFontFamily?,
@@ -117,7 +115,6 @@ internal class DeclarativeSegmentedControlLayout(
             shapeState != shape ||
             textColorState != textColor ||
             selectedTextColorState != selectedTextColor ||
-            rippleColorState != rippleColor ||
             unselectedStateLayerColorsState != unselectedStateLayerColors ||
             selectedStateLayerColorsState != selectedStateLayerColors ||
             textSizePxState != textSizePx ||
@@ -156,7 +153,6 @@ internal class DeclarativeSegmentedControlLayout(
         shapeState = shape
         textColorState = textColor
         selectedTextColorState = selectedTextColor
-        rippleColorState = rippleColor
         unselectedStateLayerColorsState = unselectedStateLayerColors
         selectedStateLayerColorsState = selectedStateLayerColors
         textSizePxState = textSizePx
@@ -178,7 +174,6 @@ internal class DeclarativeSegmentedControlLayout(
                 shape = shape,
                 textColor = textColor,
                 selectedTextColor = selectedTextColor,
-                rippleColor = rippleColor,
                 unselectedStateLayerColors = unselectedStateLayerColors,
                 selectedStateLayerColors = selectedStateLayerColors,
                 textSizePx = textSizePx,
@@ -232,9 +227,8 @@ internal class DeclarativeSegmentedControlLayout(
         shape: UiShape,
         textColor: Int,
         selectedTextColor: Int,
-        rippleColor: Int,
-        unselectedStateLayerColors: UiStateLayerColors?,
-        selectedStateLayerColors: UiStateLayerColors?,
+        unselectedStateLayerColors: UiStateLayerColors,
+        selectedStateLayerColors: UiStateLayerColors,
         textSizePx: Float,
         fontWeight: Int?,
         fontFamily: UiFontFamily?,
@@ -280,7 +274,6 @@ internal class DeclarativeSegmentedControlLayout(
                 enabled = itemEnabled,
                 selected = isSelected,
                 indicatorColor = indicatorColor,
-                rippleColor = rippleColor,
                 stateLayerColors = if (isSelected) {
                     selectedStateLayerColors
                 } else {
@@ -341,12 +334,11 @@ internal class DeclarativeSegmentedControlLayout(
                 enabled = itemEnabled,
                 selected = isSelected,
                 indicatorColor = indicatorColor,
-                rippleColor = rippleColorState,
-                stateLayerColors = if (isSelected) {
+                stateLayerColors = requireNotNull(if (isSelected) {
                     selectedStateLayerColorsState
                 } else {
                     unselectedStateLayerColorsState
-                },
+                }),
                 shape = shapeState.inset(indicatorInset),
             )
             segmentBackgrounds[child] = segmentBackground
@@ -357,8 +349,7 @@ internal class DeclarativeSegmentedControlLayout(
                     enabled = itemEnabled,
                     selected = isSelected,
                     indicatorColor = indicatorColor,
-                    rippleColor = rippleColorState,
-                    stateLayerColors = selectedStateLayerColorsState,
+                    stateLayerColors = requireNotNull(selectedStateLayerColorsState),
                     shape = shapeState.inset(indicatorInset),
                 ).also { created ->
                     segmentBackgrounds[child] = created
@@ -397,8 +388,7 @@ internal class DeclarativeSegmentedControlLayout(
         enabled: Boolean,
         selected: Boolean,
         indicatorColor: Int,
-        rippleColor: Int,
-        stateLayerColors: UiStateLayerColors?,
+        stateLayerColors: UiStateLayerColors,
         shape: UiShape,
     ): SegmentBackground {
         val indicator = UiShapeDrawable(shape, layoutDirection, densityState).apply {
@@ -408,7 +398,7 @@ internal class DeclarativeSegmentedControlLayout(
         }
         val drawable = if (enabled) {
             RippleDrawable(
-                interactionColorStateList(rippleColor, stateLayerColors),
+                stateLayerColors.toColorStateList(),
                 indicator,
                 UiShapeDrawable(shape, layoutDirection, densityState).apply {
                     setFillColor(Color.WHITE)

@@ -83,9 +83,21 @@ fun UiTreeBuilder.CircularProgressIndicator(
 }
 
 /**
- * Requests a snackbar transient feedback overlay.
+ * Submits a keyed snackbar request to the active overlay presenter.
  *
- * When visible is false no overlay request is submitted, preventing stale feedback from surviving the next render.
+ * No request is submitted when [visible] is `false`. Duration and queueing are presenter-owned;
+ * callbacks run on the presenter thread and do not mutate [visible] automatically.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.feedbackDslSample
+ * @receiver active tree builder submitting the transient request
+ * @param visible whether this render includes the snackbar request
+ * @param message message displayed by the presenter
+ * @param actionLabel optional label for the snackbar action
+ * @param duration presenter duration category
+ * @param queuePolicy behavior when another transient item is active
+ * @param requestKey stable identity used for deduplication and replacement
+ * @param onAction optional callback invoked when the action is accepted
+ * @param onDismiss optional callback receiving the terminal dismissal reason
  */
 fun UiTreeBuilder.Snackbar(
     visible: Boolean,
@@ -118,9 +130,19 @@ fun UiTreeBuilder.Snackbar(
 }
 
 /**
- * Requests a toast transient feedback overlay.
+ * Submits a keyed toast request to the active overlay presenter.
  *
- * queuePolicy tells the host how to merge, replace, or queue while another feedback item is visible.
+ * No request is submitted when [visible] is `false`. Queue and duration policy are resolved by the
+ * presenter, and dismissal does not mutate caller state.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.feedbackDslSample
+ * @receiver active tree builder submitting the transient request
+ * @param visible whether this render includes the toast request
+ * @param message message displayed by the presenter
+ * @param duration presenter duration category
+ * @param queuePolicy behavior when another transient item is active
+ * @param requestKey stable identity used for deduplication and replacement
+ * @param onDismiss optional callback receiving the terminal dismissal reason
  */
 fun UiTreeBuilder.Toast(
     visible: Boolean,
@@ -149,9 +171,22 @@ fun UiTreeBuilder.Toast(
 }
 
 /**
- * Requests a dialog overlay that hosts custom UI content.
+ * Submits custom DSL content as a keyed modal dialog overlay.
  *
- * content is captured as OverlaySurfaceContent so the host can render the same DSL nodes in a separate window/container.
+ * Content is captured during the current render and mounted by the presenter in a separate host.
+ * The request remains caller-controlled: dismissal invokes [onDismissRequest], and the owner must
+ * render [visible] as `false`. Saveable state is scoped to the request identity.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.feedbackDslSample
+ * @receiver active tree builder submitting the modal request
+ * @param visible whether this render includes the dialog request
+ * @param requestKey stable dialog and saveable-state identity within the session
+ * @param dismissOnBackPress whether platform Back requests dismissal
+ * @param dismissOnClickOutside whether a scrim click requests dismissal
+ * @param position placement of dialog content within the host window
+ * @param scrimOpacity scrim alpha in the inclusive `0..1` range
+ * @param onDismissRequest optional callback invoked when the presenter requests removal
+ * @param content DSL content captured synchronously for the overlay surface
  */
 fun UiTreeBuilder.Dialog(
     visible: Boolean,
@@ -199,9 +234,26 @@ fun UiTreeBuilder.Dialog(
 }
 
 /**
- * Requests a popup overlay anchored to the given anchorId.
+ * Submits custom DSL content as a keyed popup anchored to a rendered semantics id.
  *
- * anchorId should match a host view the renderer can locate; overflowPolicy decides flip/clamp behavior near edges.
+ * [anchorId] must resolve in the same host window. Placement is recomputed by the presenter from
+ * the current anchor and environment; dismissal requests do not mutate [visible]. Saveable state
+ * is scoped to [requestKey].
+ *
+ * @sample com.viewcompose.ui.foundation.samples.feedbackDslSample
+ * @receiver active tree builder submitting the popup request
+ * @param visible whether this render includes the popup request
+ * @param anchorId semantics id of the rendered anchor view
+ * @param requestKey stable popup and saveable-state identity within the session
+ * @param alignment preferred placement relative to the anchor
+ * @param overflowPolicy flip and clamp behavior near window edges
+ * @param windowMargin minimum logical distance from the window edge
+ * @param dismissOnClickOutside whether an outside click requests dismissal
+ * @param focusable whether the popup may receive focus and keyboard input
+ * @param offsetX horizontal logical offset applied after anchored placement
+ * @param offsetY vertical logical offset applied after anchored placement
+ * @param onDismissRequest optional callback invoked when the presenter requests removal
+ * @param content DSL content captured synchronously for the overlay surface
  */
 fun UiTreeBuilder.Popup(
     visible: Boolean,

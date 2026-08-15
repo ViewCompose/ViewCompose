@@ -61,6 +61,7 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.TextFieldAutofillHint
 import com.viewcompose.ui.node.UiStateLayerColors
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.dp
@@ -648,11 +649,10 @@ internal fun UiTreeBuilder.DemoDesignCard(
             borderWidth = recipe.borderWidth,
             borderColor = recipe.borderColor,
             clipContent = true,
+            interactionIndication = UiInteractionIndication.StateLayer(recipe.stateLayers),
         ),
         contentColor = recipe.contentColor,
         onClick = onClick,
-        stateLayerColors = recipe.stateLayers,
-        rippleColor = recipe.stateLayers.pressedColor,
         modifier = modifier,
     ) {
         Box(modifier = Modifier.padding(16.dp)) {
@@ -768,11 +768,11 @@ internal fun UiTreeBuilder.DemoDesignSwitch(
         style = BasicSurfaceStyle(
             fill = Brush.SolidColor(0x00000000),
             shape = UiShape.rounded(0.dp),
+            interactionIndication = UiInteractionIndication.StateLayer(recipe.stateLayers),
         ),
         contentColor = if (enabled) recipe.labelColor else recipe.disabledLabelColor,
         enabled = enabled,
         onClick = { onCheckedChange(!checked) },
-        stateLayerColors = recipe.stateLayers,
         minimumHeight = 48.dp,
         role = SemanticsRole.Switch,
         modifier = modifier
@@ -882,10 +882,10 @@ internal fun UiTreeBuilder.DemoDesignNavigationBar(
                 style = BasicSurfaceStyle(
                     fill = Brush.SolidColor(0x00000000),
                     shape = UiShape.rounded(0.dp),
+                    interactionIndication = UiInteractionIndication.StateLayer(recipe.stateLayers),
                 ),
                 contentColor = if (selected) recipe.selectedColor else recipe.unselectedColor,
                 onClick = { onItemSelected(index) },
-                stateLayerColors = recipe.stateLayers,
                 minimumHeight = recipe.height,
                 role = SemanticsRole.Tab,
                 key = item.key,
@@ -983,6 +983,7 @@ internal fun UiTreeBuilder.DemoDesignSegmentedControl(
                         ),
                         shape = recipe.itemShape,
                         clipContent = true,
+                        interactionIndication = UiInteractionIndication.StateLayer(recipe.stateLayers),
                     ),
                     contentColor = if (selected) {
                         recipe.selectedContentColor
@@ -990,7 +991,6 @@ internal fun UiTreeBuilder.DemoDesignSegmentedControl(
                         recipe.unselectedContentColor
                     },
                     onClick = { onItemSelected(index) },
-                    stateLayerColors = recipe.stateLayers,
                     minimumHeight = 40.dp,
                     role = SemanticsRole.Tab,
                     key = label,

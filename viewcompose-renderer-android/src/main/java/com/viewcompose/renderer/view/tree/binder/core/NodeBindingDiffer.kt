@@ -1,10 +1,8 @@
 package com.viewcompose.renderer.view.tree
 
 import com.viewcompose.ui.node.VNode
-import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ImageNodeSpec
 import com.viewcompose.ui.node.spec.NodeSpec
-import com.viewcompose.ui.node.spec.RowNodeProps
 
 /**
  * Compares previous and next VNodes and chooses the smallest valid binding strategy.
@@ -48,22 +46,6 @@ internal object NodeBindingDiffer {
             }
         }
         if (prevSpec::class != nextSpec::class) {
-            return NodeBindingPlan.Rebind
-        }
-        val containerInteractionChanged = when {
-            prevSpec is BoxNodeProps && nextSpec is BoxNodeProps -> {
-                prevSpec.rippleColor != nextSpec.rippleColor ||
-                    prevSpec.stateLayerColors != nextSpec.stateLayerColors
-            }
-            prevSpec is RowNodeProps && nextSpec is RowNodeProps -> {
-                prevSpec.rippleColor != nextSpec.rippleColor ||
-                    prevSpec.stateLayerColors != nextSpec.stateLayerColors
-            }
-            else -> false
-        }
-        if (containerInteractionChanged) {
-            // Container ripple participates in style binding through NodeSpec, so changes require modifier and style rebinding.
-            // Container ripple is resolved from NodeSpec, so this change must re-run modifier/style binding.
             return NodeBindingPlan.Rebind
         }
         val factory = patchFactories[prevSpec::class]

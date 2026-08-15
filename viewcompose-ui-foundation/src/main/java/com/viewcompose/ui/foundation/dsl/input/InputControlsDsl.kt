@@ -2,7 +2,9 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.minHeight
+import com.viewcompose.ui.modifier.interactionIndication
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.spec.SliderNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
@@ -53,10 +55,18 @@ fun UiTreeBuilder.Checkbox(
             letterSpacingEm = appearance.textStyle.letterSpacingEm,
             lineHeightSp = appearance.textStyle.lineHeightSp,
             includeFontPadding = appearance.textStyle.includeFontPadding,
-            rippleColor = appearance.rippleColor,
         ),
         modifier = Modifier
             .minHeight(appearance.minimumHeight)
+            .then(
+                if (enabled) {
+                    Modifier.interactionIndication(
+                        UiInteractionIndication.StateLayer(appearance.stateLayerColors),
+                    )
+                } else {
+                    Modifier
+                },
+            )
             .then(modifier),
     )
 }
@@ -106,10 +116,18 @@ fun UiTreeBuilder.Switch(
             letterSpacingEm = appearance.textStyle.letterSpacingEm,
             lineHeightSp = appearance.textStyle.lineHeightSp,
             includeFontPadding = appearance.textStyle.includeFontPadding,
-            rippleColor = appearance.rippleColor,
         ),
         modifier = Modifier
             .minHeight(appearance.minimumHeight)
+            .then(
+                if (enabled) {
+                    Modifier.interactionIndication(
+                        UiInteractionIndication.StateLayer(appearance.stateLayerColors),
+                    )
+                } else {
+                    Modifier
+                },
+            )
             .then(modifier),
     )
 }
@@ -158,10 +176,18 @@ fun UiTreeBuilder.RadioButton(
             letterSpacingEm = appearance.textStyle.letterSpacingEm,
             lineHeightSp = appearance.textStyle.lineHeightSp,
             includeFontPadding = appearance.textStyle.includeFontPadding,
-            rippleColor = appearance.rippleColor,
         ),
         modifier = Modifier
             .minHeight(appearance.minimumHeight)
+            .then(
+                if (enabled) {
+                    Modifier.interactionIndication(
+                        UiInteractionIndication.StateLayer(appearance.stateLayerColors),
+                    )
+                } else {
+                    Modifier
+                },
+            )
             .then(modifier),
     )
 }

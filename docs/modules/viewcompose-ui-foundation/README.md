@@ -82,10 +82,11 @@ by a later renderer or child render session.
   target; the compiled `switchSizingTokenSample` keeps a compact visual track inside an independent
   `minimumInteractiveHeight` policy.
 - `BasicSurface` is a Q3 design-system-neutral primitive. Its Q2 `BasicSurfaceStyle` accepts a
-  resolved solid or gradient brush, logical shape, border, clipping, elevation, and exact shadows;
-  it also separates minimum effective bounds from an optional centered visual height. Design
-  systems select those values before emission, while the Android Renderer receives only a neutral
-  `SurfaceNodeProps` snapshot. The compiled `basicSurfaceSample` demonstrates the contract.
+  resolved solid or gradient brush, logical shape, border, clipping, elevation, exact shadows, and
+  optional renderer-neutral interaction indication; it also separates minimum effective bounds
+  from an optional centered visual height. Design systems select those values before emission,
+  while Android Renderer receives only neutral NodeSpec and Modifier snapshots. The compiled
+  `basicSurfaceSample` demonstrates the contract.
 - `BasicButton` is a Q3 action composite over `BasicSurface`, Row, Text, and Icon. Its Q2
   `BasicButtonStyle` contains only resolved geometry, typography, content, and interaction values.
   It emits no native Button node, while the existing `Button` API keeps that compatibility path.
@@ -98,7 +99,9 @@ by a later renderer or child render session.
 - `BasicTextField` is a Q3 editing primitive whose Q2 `BasicTextFieldStyle` contains every resolved
   visual input. It performs no Theme or component-Local lookup. High-level `TextField` resolves
   semantic defaults and sparse overrides before constructing that complete style; named design
-  systems construct it from their private recipes.
+  systems construct it from their private recipes. `TextFieldInputProfile` couples keyboard and
+  autofill purpose, while `TextFieldLinePolicy` enforces single-line or validated multiline
+  behavior. Separate password, email, number, and text-area wrappers are not parallel APIs.
 - `UiControlSizing.minimumInteractiveHeight` is the design-system-neutral effective-height policy
   used by Checkbox, RadioButton, Switch, and Slider. Its neutral default is zero, preserving native
   intrinsic measurement. A design system may supply a positive minimum; the component applies it
@@ -112,9 +115,10 @@ by a later renderer or child render session.
   the complete set through the component's typed `stateLayerColors` override slot; the retired
   direct `rippleColor` and `stateLayerColors` parameters are not parallel precedence paths.
 - Chip, FAB, extended FAB, clickable Surface, Card, ListItem, and DropdownMenuItem use the same
-  content-role resolution through internal Box/Row NodeSpec fields. SegmentedControl resolves
-  independent selected and unselected sets so switching selection also switches the interaction
-  role. Passive and disabled composites keep a null multi-state contract.
+  content-role resolution and install `UiInteractionIndication.StateLayer` through an ordered
+  Modifier. Box and Row remain pure layout primitives. SegmentedControl and NavigationBar retain
+  independent selected and unselected sets because their native backends own multiple internal
+  targets. Passive and disabled composites install no indication.
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   and the local-provider APIs scope density, locales, layout direction, content color, text style,
   image loading, focus, frame clock, and host capabilities. `UiLocals.current` is a Q2 scoped lookup:
@@ -186,6 +190,9 @@ The alpha API no longer retains parallel color-only and direct low-frequency app
 | AlertDialog visual constants | `AlertDialogOverrides` or `ProvideAlertDialogOverrides` |
 | modal-bottom-sheet container/content/scrim/system-bar appearance | `ModalBottomSheetOverrides`, resolved into `ModalBottomSheetAppearance` before submission |
 | individual `BasicTextField` appearance arguments | one complete `BasicTextFieldStyle` |
+| `PasswordField`, `EmailField`, `NumberField`, or `TextArea` | `TextField(inputProfile = ..., linePolicy = ...)` |
+| `TextButton` | `Button(variant = ButtonVariant.Text)` |
+| `ElevatedCard` or `OutlinedCard` | `Card(variant = CardVariant.Elevated/Outlined)` |
 
 Nested providers now merge instead of replacing an outer patch. Instance values have the highest
 precedence. A component-family field is variant-agnostic unless its name declares a specific
@@ -387,9 +394,11 @@ renderers must be rebuilt for the corresponding alpha release.
 
 `UiInteractionTokens` is a Q2 immutable theme value, and its addition to `UiThemeTokens` is a
 binary change for precompiled constructors and exhaustive destructuring. Button and IconButton
-state-layer parameters are Q3 component API changes. Source callers receive semantic multi-state
-defaults, and Button callers that explicitly supplied the former `rippleColor` retain a dedicated
-compatibility overload; precompiled default-argument call sites must be rebuilt for this alpha
+state-layer override slots are Q3 component API changes. Source callers receive semantic
+multi-state defaults. The former `rippleColor` compatibility path and the unused
+`UiColors.ripple`/`UiStateColors.controlHighlight` theme slots are removed. Custom interaction
+surfaces use `Modifier.interactionIndication`; theme producers configure state-layer policy through
+`UiInteractionTokens`, and precompiled default-argument call sites must be rebuilt for this alpha
 release.
 
 `BasicSurfaceStyle` is a Q2 resolved-value contract and `BasicSurface` is a Q3 component API.

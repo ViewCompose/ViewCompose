@@ -89,7 +89,6 @@ internal class DeclarativeTabRowLayout(
         containerColor: Int,
         scrollable: Boolean,
         equalWidth: Boolean,
-        rippleColor: Int,
         itemSpacing: Int,
         itemPaddingHorizontal: Int,
         itemPaddingVertical: Int,

@@ -144,11 +144,11 @@ first-party image loaders; its zero default preserves deterministic non-Android/
   semantic bounds. Its nullable `visualHeight` affects only fill, border, ripple, shape outline,
   and default clipping. Explicit caller surface modifiers remain authoritative and disable that
   visual inset. Solid and gradient brush coordinates are resolved in local surface pixels.
-- Button, IconButton, Box, Row, and SegmentedControl state layers use
-  pressed-before-focused-before-hovered precedence while an enabled target is active; inactive and
-  disabled states are transparent. A null `stateLayerColors` preserves the legacy value-only
-  `rippleColor` contract for direct emitters and older custom renderers. SegmentedControl carries
-  separate selected and unselected sets because their semantic content roles differ.
+- `UiInteractionIndication.StateLayer` carries complete renderer-neutral pressed, focused, and
+  hovered colors through `Modifier.interactionIndication`. Box, Row, Surface, Button, and
+  IconButton NodeSpecs contain no ripple or parallel state-layer fields. Native multi-target
+  SegmentedControl and NavigationBar NodeSpecs carry separate selected and unselected sets because
+  their semantic roles differ. Inactive and disabled high-level components install no indication.
 - `SliderNodeProps.trackColor` is the active segment at or before the current value, while
   `inactiveTrackColor` is the remaining segment. Renderers must bind both resolved colors and must
   not recover either segment from a platform theme.
@@ -271,11 +271,11 @@ Adding `SliderNodeProps.inactiveTrackColor` is also a Q2 immutable snapshot-cont
 source default equals `trackColor` so direct source construction remains concise, but precompiled
 constructor call sites and custom renderers must be rebuilt for the corresponding alpha release.
 
-`UiStateLayerColors` is a Q2 immutable resolved-color value. Adding nullable fields to
-`ButtonNodeProps`, `IconButtonNodeProps`, `BoxNodeProps`, `RowNodeProps`, and
-`SegmentedControlNodeProps` preserves source construction and the one-color renderer fallback, but
-it changes their binary constructor contracts. Precompiled direct constructors and custom
-renderers must be rebuilt for the corresponding alpha release.
+`UiStateLayerColors` and `UiInteractionIndication` are Q2 immutable resolved-value contracts.
+Removing ripple and state-layer fields from generic and single-target NodeSpecs changes their
+binary constructor contracts. Custom renderers must consume indication modifier elements and
+exhaustively handle every indication subtype in the UI Contract version they use. Precompiled
+direct constructors and custom renderers must be rebuilt for the corresponding alpha release.
 
 `SurfaceNodeProps` replaces `BoxNodeProps` for `NodeType.Surface` and is a Q2 immutable snapshot.
 Custom renderers must add the new type/spec pairing and rebuild precompiled callers. Adding

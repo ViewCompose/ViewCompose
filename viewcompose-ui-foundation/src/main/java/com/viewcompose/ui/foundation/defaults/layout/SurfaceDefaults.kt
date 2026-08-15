@@ -41,9 +41,6 @@ object SurfaceDefaults {
     /** Returns the tonal variant content color. */
     fun variantContentColor(): Int = TextDefaults.secondaryColor()
 
-    /** Returns the interaction feedback color for a pressed surface. */
-    fun pressedColor(): Int = Theme.colors.ripple
-
     /** Returns the alpha applied to disabled surface content. */
     fun disabledAlpha(): Float = 0.72f
 }

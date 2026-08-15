@@ -55,10 +55,10 @@ class ExperimentalComponentRecipesTest {
         )
         assertNotEquals(roundedSurface.fill, cutSurface.fill)
         assertNotEquals(roundedSurface.shape, cutSurface.shape)
-        assertEquals(rounded.action.stateLayerColors, roundedAction.stateLayerColors)
-        assertEquals(cut.action.stateLayerColors, cutAction.stateLayerColors)
-        assertEquals(rounded.surface.stateLayerColors, roundedSurface.stateLayerColors)
-        assertEquals(cut.surface.stateLayerColors, cutSurface.stateLayerColors)
+        assertEquals(rounded.action.stateLayerColors, roundedTree[0].requireStateLayerColors())
+        assertEquals(cut.action.stateLayerColors, cutTree[0].requireStateLayerColors())
+        assertEquals(rounded.surface.stateLayerColors, roundedTree[1].requireStateLayerColors())
+        assertEquals(cut.surface.stateLayerColors, cutTree[1].requireStateLayerColors())
 
         val renderedContracts = roundedTree.map { node -> node.spec.toString() } +
             cutTree.map { node -> node.spec.toString() }
@@ -83,8 +83,7 @@ class ExperimentalComponentRecipesTest {
         assertEquals(recipes.action.disabledContainerColor, (spec.fill as Brush.SolidColor).color)
         assertEquals(recipes.action.disabledContentColor, label.textColor)
         assertEquals(recipes.action.disabledBorderColor, spec.borderColor)
-        assertEquals(0x00000000, spec.rippleColor)
-        assertNull(spec.stateLayerColors)
+        assertNull(root.stateLayerColorsOrNull())
     }
 
     @Test
@@ -132,7 +131,7 @@ class ExperimentalComponentRecipesTest {
         assertTrue(rounded.modifier.toString().contains("ClickableModifierElement"))
         assertEquals(
             roundedRecipes().switch.stateLayerColors,
-            (rounded.spec as RowNodeProps).stateLayerColors,
+            rounded.requireStateLayerColors(),
         )
     }
 
@@ -151,7 +150,7 @@ class ExperimentalComponentRecipesTest {
         assertEquals(false, semantics.enabled)
         assertEquals(true, semantics.checked)
         assertFalse(node.modifier.toString().contains("ClickableModifierElement"))
-        assertNull((node.spec as com.viewcompose.ui.node.spec.RowNodeProps).stateLayerColors)
+        assertNull(node.stateLayerColorsOrNull())
     }
 
     @Test
@@ -246,7 +245,7 @@ class ExperimentalComponentRecipesTest {
             }
             assertEquals(
                 expectedStateLayers,
-                (destination.spec as BoxNodeProps).stateLayerColors,
+                destination.requireStateLayerColors(),
             )
         }
         val visibleLabels = composed.flatten()
@@ -308,7 +307,7 @@ class ExperimentalComponentRecipesTest {
             recipes.action.enabledContainerColor,
             ((restoredTree[0].spec as SurfaceNodeProps).fill as Brush.SolidColor).color,
         )
-        assertEquals(recipes.switch.stateLayerColors, (restoredTree[1].spec as RowNodeProps).stateLayerColors)
+        assertEquals(recipes.switch.stateLayerColors, restoredTree[1].requireStateLayerColors())
     }
 
     @Test

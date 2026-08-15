@@ -17,6 +17,7 @@ import com.viewcompose.renderer.view.toPx
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.NavigationBarItem
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
@@ -57,7 +58,8 @@ internal object CollectionViewBinder {
         val selectedLabelColor: Int,
         val unselectedLabelColor: Int,
         val indicatorColor: Int,
-        val rippleColor: Int,
+        val selectedStateLayerColors: UiStateLayerColors,
+        val unselectedStateLayerColors: UiStateLayerColors,
         val iconSize: Int,
         val labelSizePx: Float,
         val labelFontWeight: Int? = null,
@@ -185,7 +187,8 @@ internal object CollectionViewBinder {
             selectedLabelColor = spec.selectedLabelColor,
             unselectedLabelColor = spec.unselectedLabelColor,
             indicatorColor = spec.indicatorColor,
-            rippleColor = spec.rippleColor,
+            selectedStateLayerColors = spec.selectedStateLayerColors,
+            unselectedStateLayerColors = spec.unselectedStateLayerColors,
             iconSize = spec.iconSize,
             labelSizePx = spec.labelSizePx,
             labelFontWeight = spec.labelFontWeight,
@@ -271,7 +274,8 @@ internal object CollectionViewBinder {
             selectedLabelColor = spec.selectedLabelColor,
             unselectedLabelColor = spec.unselectedLabelColor,
             indicatorColor = spec.indicatorColor,
-            rippleColor = spec.rippleColor,
+            selectedStateLayerColors = spec.selectedStateLayerColors,
+            unselectedStateLayerColors = spec.unselectedStateLayerColors,
             iconSize = node.environment.roundToPx(spec.iconSize),
             labelSizePx = node.environment.toPx(spec.labelSizeSp),
             labelFontWeight = spec.labelFontWeight,

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-oneui7/README.md
-translation_source_hash: 4587ac87bfe12c9fd39b8e82a2fff2a8ba65f431e36c6fcc55335210abeaf741
+translation_source_hash: 23d26a5dd23a178a5422c3a7fcf23dba31ec993e304a2a474fa6c01ca49f62b8
 translation_status: current
 ---
 
@@ -77,6 +77,9 @@ setUiContent {
 语义角色后再提供。切换 Design System 时，应使用新的 Provider 快照替换根内容与 Session，不要
 原地修改活动快照。中立的 `viewcompose-android` Host 不安装任何设计系统，因此应用显式依赖本产物
 并安装 `OneUi7Theme` 时不会再经过隐式 Material Context。
+
+交互反馈由快照中的 `UiInteractionTokens` 与各 One UI Recipe 的语义内容角色定义。适配器不使用
+平行的 `UiColors.ripple` 槽位；应用通过替换 `tokens.interactions` 自定义按下、聚焦和悬停策略。
 
 完整的可编译示例见
 [`OneUi7Samples.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-oneui7/src/test/samples/com/viewcompose/oneui7/samples/OneUi7Samples.kt)。

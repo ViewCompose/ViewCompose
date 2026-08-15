@@ -277,7 +277,9 @@ Use the [session-container checklist](session-containers.md).
 ### 4.7 Text editing
 
 1. text-core is the sole platform-independent source of truth for text, directional selection, IME composition, editing transactions, and undo history.
-2. `TextField`, `TextArea`, and `SearchBar` accept stable `TextFieldState`; do not restore a parallel `String + onValueChange` API.
+2. `TextField` and `SearchBar` accept stable `TextFieldState`; input purpose and line behavior use
+   `TextFieldInputProfile` and `TextFieldLinePolicy`, not parallel component wrappers or a
+   `String + onValueChange` path.
 3. Android renderer preserves native IME, accessibility, hardware keyboard, and selection behavior through AppCompatEditText instead of implementing its own text layout or full `InputConnection`.
 4. Native input is merged at InputConnection/batch-edit boundaries. State-to-View updates use minimal `Editable.replace()` calls and restore selection/composition.
 5. `InputTransformation` applies only to user input; programmatic `TextFieldState.edit` bypasses it.

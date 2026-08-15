@@ -60,8 +60,7 @@ class BasicButtonTest {
             )
         }.single()
 
-        val spec = root.spec as SurfaceNodeProps
-        assertEquals(null, spec.stateLayerColors)
+        assertEquals(null, root.stateLayerColorsOrNull())
         assertFalse(root.modifier.elements.any { it is ClickableModifierElement })
         val semantics = root.modifier.elements.filterIsInstance<SemanticsModifierElement>().single()
         assertEquals(false, semantics.configuration.enabled)

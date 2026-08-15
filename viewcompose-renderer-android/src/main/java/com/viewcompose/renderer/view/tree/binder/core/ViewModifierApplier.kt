@@ -11,6 +11,7 @@ import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.modifier.resolve
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.node.UiStateLayerColors
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
@@ -110,8 +111,9 @@ internal object ViewModifierApplier {
             borderWidth = environment.roundToPx(resolved?.border?.width ?: borderWidth),
             borderColor = resolved?.border?.color ?: borderColor,
             cornerRadius = resolved?.cornerRadius,
-            rippleColor = rippleColor,
-            stateLayerColors = stateLayerColors,
+            defaultRippleColor = rippleColor,
+            interactionIndication = resolved?.interactionIndication?.indication
+                ?: stateLayerColors?.let(UiInteractionIndication::StateLayer),
             clickable = resolved?.clickable != null || clickable,
             forceClip = resolved?.graphicsLayer?.clip ?: (resolved?.clip?.clip ?: false),
             shape = resolved?.shape?.shape
@@ -260,8 +262,8 @@ internal object ViewModifierApplier {
             previousStyle.borderColor != nextStyle.borderColor ||
             previousStyle.cornerRadius != nextStyle.cornerRadius ||
             previousStyle.shape != nextStyle.shape ||
-            previousStyle.rippleColor != nextStyle.rippleColor ||
-            previousStyle.stateLayerColors != nextStyle.stateLayerColors ||
+            previousStyle.defaultRippleColor != nextStyle.defaultRippleColor ||
+            previousStyle.interactionIndication != nextStyle.interactionIndication ||
             previousStyle.clickable != nextStyle.clickable ||
             previousStyle.surfaceInsets != nextStyle.surfaceInsets ||
             previousStyle.clipContent != nextStyle.clipContent ||

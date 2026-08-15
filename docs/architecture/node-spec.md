@@ -49,14 +49,21 @@ compare differently or a changed value compare equal for the wrong reason.
 ## 5. Resolved surface boundary
 
 `NodeType.Surface` pairs with `SurfaceNodeProps`, not the general `BoxNodeProps`. A design-system
-component resolves its brush, shape, border, interaction colors, effective dimensions, optional
-visual height, and clipping policy before emission. The Android Renderer executes those values
-without receiving design-system identity or semantic token roles.
+component resolves its brush, shape, border, effective dimensions, optional visual height, and
+clipping policy before emission. General interaction feedback travels through the ordered
+`UiInteractionIndication` modifier contract rather than Surface, Box, or Row NodeSpec fields. The
+Android Renderer executes both snapshots without receiving design-system identity or semantic
+token roles.
 
 General caller modifiers remain ordered after the resolved surface. A caller background, border,
 corner, or shape replaces the component-provided visual surface and uses the complete effective
 bounds. Exact shadows and elevation may be supplied by the Basic component as ordinary ordered
 modifier contracts because the renderer already executes them generically.
+
+Component NodeSpecs retain interaction values only when the native backend owns multiple internal
+targets that one outer modifier cannot address. Segmented controls and navigation bars therefore
+carry complete selected and unselected `UiStateLayerColors`; a TabRow instead emits eager keyed
+child boxes and gives each child its own indication modifier.
 
 ## 6. New-node checklist
 

@@ -7,10 +7,12 @@ import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.modifier.ClickableModifierElement
 import com.viewcompose.ui.modifier.DropShadowModifierElement
 import com.viewcompose.ui.modifier.ElevationModifierElement
+import com.viewcompose.ui.modifier.InteractionIndicationModifierElement
 import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiStateLayerColors
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.dp
@@ -53,10 +55,10 @@ class BasicSurfaceTest {
                     elevation = 3.dp,
                     dropShadows = listOf(shadow),
                     clipContent = true,
+                    interactionIndication = UiInteractionIndication.StateLayer(interaction),
                 ),
                 contentColor = 0xFFF0F1F2.toInt(),
                 onClick = {},
-                stateLayerColors = interaction,
                 minimumWidth = 64.dp,
                 minimumHeight = 48.dp,
                 visualHeight = 40.dp,
@@ -75,7 +77,11 @@ class BasicSurfaceTest {
         assertEquals(48.dp, spec.minimumHeight)
         assertEquals(40.dp, spec.visualHeight)
         assertTrue(spec.clipContent)
-        assertEquals(interaction, spec.stateLayerColors)
+        assertEquals(
+            UiInteractionIndication.StateLayer(interaction),
+            node.modifier.elements.filterIsInstance<InteractionIndicationModifierElement>()
+                .single().indication,
+        )
         assertTrue(node.modifier.elements.any { it is ClickableModifierElement })
         assertTrue(node.modifier.elements.any { it is ElevationModifierElement })
         assertEquals(
@@ -95,17 +101,18 @@ class BasicSurfaceTest {
                 style = BasicSurfaceStyle(
                     fill = Brush.SolidColor(0xFF112233.toInt()),
                     shape = UiShape.cut(6.dp),
+                    interactionIndication = UiInteractionIndication.StateLayer(
+                        UiStateLayerColors(1, 2, 3),
+                    ),
                 ),
                 contentColor = 0xFFFFFFFF.toInt(),
                 enabled = false,
                 onClick = {},
-                stateLayerColors = UiStateLayerColors(1, 2, 3),
                 role = SemanticsRole.Button,
             ) {}
         }.single()
 
-        val spec = node.spec as SurfaceNodeProps
-        assertNull(spec.stateLayerColors)
+        assertFalse(node.modifier.elements.any { it is InteractionIndicationModifierElement })
         assertFalse(node.modifier.elements.any { it is ClickableModifierElement })
         val semantics = node.modifier.elements.filterIsInstance<SemanticsModifierElement>().single()
         assertEquals(false, semantics.configuration.enabled)

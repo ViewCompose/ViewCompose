@@ -51,7 +51,6 @@ import kotlin.math.roundToInt
  * @property inverseOnSurface content color placed on [inverseSurface]
  * @property inversePrimary primary accent suitable for [inverseSurface]
  * @property scrim color placed behind modal surfaces before opacity is applied
- * @property ripple default pressed-state ripple color
  */
 data class UiColors(
     val background: Int,
@@ -93,7 +92,6 @@ data class UiColors(
     val inverseOnSurface: Int = background,
     val inversePrimary: Int = primary,
     val scrim: Int = 0xFF000000.toInt(),
-    val ripple: Int = pressedOverlayColorFor(onSurface),
 )
 
 /**
@@ -148,14 +146,12 @@ data class UiStateColor(
  * @property secondaryText secondary text state colors
  * @property control normal control state colors
  * @property controlActivated activated control state colors
- * @property controlHighlight transient pressed/focused highlight colors
  */
 data class UiStateColors(
     val primaryText: UiStateColor,
     val secondaryText: UiStateColor,
     val control: UiStateColor,
     val controlActivated: UiStateColor,
-    val controlHighlight: UiStateColor,
 )
 
 /**
@@ -220,14 +216,6 @@ object UiStateColorDefaults {
                 focusedColor = colors.primary,
                 checkedColor = colors.primary,
                 selectedColor = colors.primary,
-            ),
-            controlHighlight = UiStateColor(
-                defaultColor = colors.ripple,
-                disabledColor = 0x00000000,
-                pressedColor = colors.ripple,
-                focusedColor = colors.ripple,
-                checkedColor = colors.ripple,
-                selectedColor = colors.ripple,
             ),
         )
     }
@@ -341,7 +329,7 @@ data class UiThemeTokens(
     val stateColors: UiStateColors = UiStateColorDefaults.from(colors),
     val shapes: UiShapes = UiShapeDefaults.default(),
     val controls: UiControlSizing = UiControlSizeDefaults.default(),
-    val interactions: UiInteractionTokens = defaultInteractionTokens(colors),
+    val interactions: UiInteractionTokens = defaultInteractionTokens(),
     val overlays: UiOverlays = UiOverlayDefaults.default(),
     val metadata: UiThemeMetadata = UiThemeMetadata(),
 )
@@ -448,14 +436,6 @@ data class UiThemeMetadata(
     ),
 )
 
-/**
- * Builds a pressed-state overlay color from the content color.
- */
-internal fun pressedOverlayColorFor(contentColor: Int): Int {
-    val base = contentColor and 0x00FFFFFF
-    return 0x1A000000 or base
-}
-
 /** Returns [color] with its alpha channel replaced by the clamped [alpha] fraction. */
 internal fun colorWithAlpha(color: Int, alpha: Float): Int {
     val alphaChannel = (alpha.coerceIn(0f, 1f) * 255f).toInt()
@@ -486,12 +466,11 @@ internal fun stateLayerColorsFor(contentColor: Int): UiStateLayerColors {
     )
 }
 
-private fun defaultInteractionTokens(colors: UiColors): UiInteractionTokens {
-    val legacyOpacity = ((colors.ripple ushr 24) and 0xFF) / 255f
+private fun defaultInteractionTokens(): UiInteractionTokens {
     return UiInteractionTokens(
-        pressedStateLayerOpacity = legacyOpacity,
-        focusedStateLayerOpacity = legacyOpacity,
-        hoveredStateLayerOpacity = legacyOpacity,
+        pressedStateLayerOpacity = 0.10f,
+        focusedStateLayerOpacity = 0.10f,
+        hoveredStateLayerOpacity = 0.08f,
     )
 }
 

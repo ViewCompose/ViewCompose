@@ -15,6 +15,7 @@ import com.viewcompose.ui.modifier.clip
 import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.height
+import com.viewcompose.ui.modifier.interactionIndication
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.minHeight
 import com.viewcompose.ui.modifier.padding
@@ -25,6 +26,7 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiStateLayerColors
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.spec.NavigationBarNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
 import com.viewcompose.ui.modifier.SemanticsRole
@@ -264,11 +266,11 @@ internal fun UiTreeBuilder.ExperimentalRecipeSurface(
             borderColor = recipe.borderColor,
             elevation = recipe.elevation,
             clipContent = true,
+            interactionIndication = UiInteractionIndication.StateLayer(recipe.stateLayerColors),
         ),
         contentColor = recipe.contentColor,
         enabled = enabled,
         onClick = onClick,
-        stateLayerColors = recipe.stateLayerColors,
         key = key,
         contentAlignment = contentAlignment,
         modifier = Modifier
@@ -315,7 +317,15 @@ internal fun UiTreeBuilder.ExperimentalRecipeSwitch(
     val semanticModifier = Modifier
         .minHeight(recipe.minimumInteractiveHeight)
         .let { current ->
-            if (enabled) current.clickable { onCheckedChange(!checked) } else current
+            if (enabled) {
+                current
+                    .interactionIndication(
+                        UiInteractionIndication.StateLayer(recipe.stateLayerColors),
+                    )
+                    .clickable { onCheckedChange(!checked) }
+            } else {
+                current
+            }
         }
         .semantics(mergeDescendants = true) {
             role = SemanticsRole.Switch
@@ -324,12 +334,10 @@ internal fun UiTreeBuilder.ExperimentalRecipeSwitch(
         }
         .then(modifier)
 
-    StateLayerRow(
+    Row(
         key = key,
         spacing = recipe.labelSpacing,
         verticalAlignment = VerticalAlignment.Center,
-        rippleColor = recipe.stateLayerColors.pressedColor.takeIf { enabled },
-        stateLayerColors = recipe.stateLayerColors.takeIf { enabled },
         modifier = semanticModifier,
     ) {
         if (recipe.controlPlacement == ExperimentalControlPlacement.Leading) control()
@@ -489,7 +497,8 @@ internal fun UiTreeBuilder.ExperimentalRecipeNavigationBar(
                     selectedLabelColor = recipe.selectedLabelColor,
                     unselectedLabelColor = recipe.unselectedLabelColor,
                     indicatorColor = recipe.indicatorColor,
-                    rippleColor = recipe.unselectedStateLayerColors.pressedColor,
+                    selectedStateLayerColors = recipe.selectedStateLayerColors,
+                    unselectedStateLayerColors = recipe.unselectedStateLayerColors,
                     iconSize = recipe.iconSize,
                     labelSizeSp = style.fontSizeSp,
                     labelFontWeight = style.fontWeight,
@@ -527,13 +536,12 @@ internal fun UiTreeBuilder.ExperimentalRecipeNavigationBar(
                     } else {
                         recipe.unselectedStateLayerColors
                     }
-                    StateLayerBox(
+                    Box(
                         key = item.key,
                         contentAlignment = BoxAlignment.Center,
-                        rippleColor = stateLayers.pressedColor,
-                        stateLayerColors = stateLayers,
                         modifier = Modifier
                             .weight(1f)
+                            .interactionIndication(UiInteractionIndication.StateLayer(stateLayers))
                             .clickable { onItemSelected(index) }
                             .semantics(mergeDescendants = true) {
                                 role = SemanticsRole.Tab

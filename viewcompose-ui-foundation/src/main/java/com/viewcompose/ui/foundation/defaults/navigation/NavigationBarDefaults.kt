@@ -1,5 +1,6 @@
 package com.viewcompose.ui.foundation
 
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.UiSp
 
@@ -22,9 +23,6 @@ object NavigationBarDefaults {
 
     /** Returns the selection-indicator color. */
     fun indicatorColor(): Int = scoped().indicatorColor ?: Theme.colors.secondaryContainer
-
-    /** Returns the interaction ripple color. */
-    fun rippleColor(): Int = scoped().rippleColor ?: Theme.colors.ripple
 
     /** Returns the navigation-bar height. */
     fun height(): UiDp = scoped().height ?: Theme.controls.navigationBar.height
@@ -53,7 +51,10 @@ object NavigationBarDefaults {
             selectedLabelColor = overrides.selectedLabelColor ?: Theme.colors.onSecondaryContainer,
             unselectedLabelColor = overrides.unselectedLabelColor ?: Theme.colors.onSurfaceVariant,
             indicatorColor = overrides.indicatorColor ?: Theme.colors.secondaryContainer,
-            rippleColor = overrides.rippleColor ?: Theme.colors.ripple,
+            selectedStateLayerColors = overrides.selectedStateLayerColors
+                ?: stateLayerColorsFor(overrides.selectedIconColor ?: Theme.colors.onSecondaryContainer),
+            unselectedStateLayerColors = overrides.unselectedStateLayerColors
+                ?: stateLayerColorsFor(overrides.unselectedIconColor ?: Theme.colors.onSurfaceVariant),
             iconSize = overrides.iconSize ?: Theme.controls.navigationBar.iconSize,
             labelStyle = overrides.labelStyle ?: semanticLabelStyle(),
             badgeColor = overrides.badgeColor ?: Theme.colors.error,
@@ -76,7 +77,8 @@ internal data class ResolvedNavigationBarAppearance(
     val selectedLabelColor: Int,
     val unselectedLabelColor: Int,
     val indicatorColor: Int,
-    val rippleColor: Int,
+    val selectedStateLayerColors: UiStateLayerColors,
+    val unselectedStateLayerColors: UiStateLayerColors,
     val iconSize: UiDp,
     val labelStyle: UiTextStyle,
     val badgeColor: Int,

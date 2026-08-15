@@ -10,10 +10,12 @@ import com.viewcompose.ui.gesture.NestedScrollSource
 import com.viewcompose.ui.gesture.ScrollDelta
 import com.viewcompose.ui.gesture.ScrollVelocity
 import com.viewcompose.ui.modifier.BackgroundColorModifierElement
+import com.viewcompose.ui.modifier.InteractionIndicationModifierElement
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.PaddingModifierElement
 import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.modifier.backgroundColor
+import com.viewcompose.ui.modifier.interactionIndication
 import com.viewcompose.ui.modifier.aspectRatio
 import com.viewcompose.ui.modifier.maxHeight
 import com.viewcompose.ui.modifier.maxWidth
@@ -31,6 +33,8 @@ import com.viewcompose.ui.state.ScrollState
 import com.viewcompose.ui.state.ScrollStateSnapshot
 import com.viewcompose.ui.node.policy.GridCells
 import com.viewcompose.ui.node.policy.GridItemSpan
+import com.viewcompose.ui.node.UiInteractionIndication
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.unit.dp
 
 fun modifierChainSample() {
@@ -46,6 +50,20 @@ fun modifierChainSample() {
     check(modifier.elements[1] is BackgroundColorModifierElement)
     val semantics = modifier.elements[2] as SemanticsModifierElement
     check(semantics.configuration.contentDescription == "Account avatar")
+}
+
+fun interactionIndicationSample() {
+    val indication = UiInteractionIndication.StateLayer(
+        colors = UiStateLayerColors(
+            pressedColor = 0x1F000000,
+            focusedColor = 0x1A000000,
+            hoveredColor = 0x14000000,
+        ),
+    )
+    val modifier = Modifier.interactionIndication(indication)
+
+    val element = modifier.elements.single() as InteractionIndicationModifierElement
+    check(element.indication == indication)
 }
 
 fun nestedScrollDispatcherSample() {

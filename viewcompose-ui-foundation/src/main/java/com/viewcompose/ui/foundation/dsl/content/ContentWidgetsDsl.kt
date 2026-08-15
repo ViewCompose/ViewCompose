@@ -16,7 +16,22 @@ import com.viewcompose.ui.node.spec.uiFontFamily
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * Emits a plain text node.
+ * Displays plain text with theme-resolved typography and color defaults.
+ *
+ * The node is patched in place when text or style values change. Resource-backed localized text
+ * should be resolved during composition so environment revisions update it automatically.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.contentDslSample
+ * @receiver active tree builder receiving the text node
+ * @param text immutable plain-text snapshot displayed by the node
+ * @param style resolved typography including size, weight, family, spacing, and line height
+ * @param color packed ARGB text color
+ * @param maxLines positive maximum visual line count
+ * @param overflow handling applied when content exceeds [maxLines]
+ * @param textAlign horizontal paragraph alignment
+ * @param textDecoration explicit decoration, defaulting to the value in [style]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered layout, drawing, input, and semantics configuration
  */
 fun UiTreeBuilder.Text(
     text: String,
@@ -51,7 +66,22 @@ fun UiTreeBuilder.Text(
 }
 
 /**
- * Emits a rich text node while preserving TextDocument span/paragraph data.
+ * Displays an immutable rich-text document while preserving span and paragraph ranges.
+ *
+ * Values in [document] take part in node equality and patching; callers should replace the
+ * document snapshot when its styled content changes.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.contentDslSample
+ * @receiver active tree builder receiving the rich-text node
+ * @param document immutable text, span, and paragraph snapshot
+ * @param style fallback typography for ranges not overridden by the document
+ * @param color fallback packed ARGB color for ranges without a foreground color
+ * @param maxLines positive maximum visual line count
+ * @param overflow handling applied when content exceeds [maxLines]
+ * @param textAlign horizontal paragraph alignment
+ * @param textDecoration fallback decoration, defaulting to the value in [style]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered layout, drawing, input, and semantics configuration
  */
 fun UiTreeBuilder.RichText(
     document: TextDocument,

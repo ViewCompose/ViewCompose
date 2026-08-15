@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 5816e07f3bd52c0d0f6f686751bdd7c5ead3a0842995432e3baf15d001a5e223
+translation_source_hash: 8aa57528a415fb49e603cb5f6ec157d99590523020dbbe50265314504102a1c3
 translation_status: current
 ---
 
@@ -132,10 +132,10 @@ val gap = VNode(
   可空的 `visualHeight` 只影响 Fill、Border、Ripple、Shape Outline 与默认裁剪。显式调用方
   Surface Modifier 保持最终权限，并关闭该可见内缩。纯色和渐变 Brush 坐标在 Surface 本地
   像素空间解析。
-- Button、IconButton、Box、Row 与 SegmentedControl 状态层在启用目标处于活动状态时使用
-  “按下优先于聚焦、聚焦优先于悬停”的顺序；非活动态和禁用态保持透明。`stateLayerColors`
-  为空时，为直接发射者和旧自定义 Renderer 保留原有的单值 `rippleColor` 契约。
-  SegmentedControl 会分别携带选中与未选中集合，因为二者使用不同的语义内容角色。
+- `UiInteractionIndication.StateLayer` 通过 `Modifier.interactionIndication` 携带完整且渲染器
+  中立的按下、聚焦和悬停颜色。Box、Row、Surface、Button 与 IconButton NodeSpec 不再包含
+  Ripple 或平行状态层字段。拥有多个原生内部目标的 SegmentedControl 和 NavigationBar NodeSpec
+  分别携带已选与未选集合。非活动或禁用的高层组件不安装指示。
 - `SliderNodeProps.trackColor` 表示当前值之前（含当前值）的激活轨道，`inactiveTrackColor`
   表示其余轨道。渲染器必须绑定这两个已解析颜色，不得再从平台主题恢复任一轨道颜色。
 - Modifier 顺序具有语义。布局与 Parent Data 收集、视觉装饰、输入、Semantics 与绘制阶段会

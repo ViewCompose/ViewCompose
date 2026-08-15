@@ -2052,6 +2052,158 @@ tasks.register("verifyDocumentationStructure") {
     }
 }
 
+tasks.register("verifyDslApiContracts") {
+    group = "verification"
+    description =
+        "Verifies the compact DSL surface, renderer-neutral interaction contract, and Q3 KDoc shape."
+
+    val foundationDslRoot =
+        rootDir.resolve("viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl")
+    val forbiddenContractRoots =
+        listOf(
+            rootDir.resolve("viewcompose-ui-contract/src/main"),
+            rootDir.resolve("viewcompose-ui-foundation/src/main"),
+        )
+    val animationRoot = rootDir.resolve("viewcompose-animation/src/main")
+    inputs.dir(foundationDslRoot)
+    forbiddenContractRoots.forEach(inputs::dir)
+    inputs.dir(animationRoot)
+
+    doLast {
+        val violations = mutableListOf<String>()
+        val forbiddenAliases =
+            setOf(
+                "TextButton",
+                "ElevatedCard",
+                "OutlinedCard",
+                "PasswordField",
+                "EmailField",
+                "NumberField",
+                "TextArea",
+            )
+        val forbiddenDeclaration = Regex(
+            """fun\s+(?:<[^>]+>\s+)?(?:UiTreeBuilder\.)?(${forbiddenAliases.joinToString("|")})\s*\(""",
+        )
+        val animatedContentDeclaration = Regex(
+            """(?:public\s+)?fun\s+(?:<[^>]+>\s+)?UiTreeBuilder\.AnimatedContent\s*\(""",
+        )
+        val builderDeclaration = Regex(
+            """fun\s+(?:<[^>]+>\s+)?UiTreeBuilder\.([A-Za-z_][A-Za-z0-9_]*)\s*\(""",
+        )
+
+        forbiddenContractRoots.forEach { root ->
+            root.walkTopDown()
+                .filter { file -> file.isFile && file.extension == "kt" }
+                .forEach { file ->
+                    file.readLines().forEachIndexed { index, line ->
+                        if ("rippleColor" in line) {
+                            violations +=
+                                "${file.relativeTo(rootDir)}:${index + 1} -> rippleColor is a renderer detail"
+                        }
+                        if (Regex("""\bval\s+ripple\s*:\s*Int\b""").containsMatchIn(line)) {
+                            violations +=
+                                "${file.relativeTo(rootDir)}:${index + 1} -> " +
+                                    "ripple is not a public semantic theme token"
+                        }
+                        if (Regex("""\bval\s+controlHighlight\s*:\s*UiStateColor\b""")
+                                .containsMatchIn(line)
+                        ) {
+                            violations +=
+                                "${file.relativeTo(rootDir)}:${index + 1} -> " +
+                                    "controlHighlight is an Android theme detail"
+                        }
+                    }
+                }
+        }
+
+        (foundationDslRoot.walkTopDown() + animationRoot.walkTopDown())
+            .filter { file -> file.isFile && file.extension == "kt" }
+            .forEach { file ->
+                val source = file.readText()
+                forbiddenDeclaration.findAll(source).forEach { match ->
+                    violations +=
+                        "${file.relativeTo(rootDir)} -> redundant DSL alias ${match.groupValues[1]}"
+                }
+                animatedContentDeclaration.findAll(source).forEach {
+                    violations +=
+                        "${file.relativeTo(rootDir)} -> alpha-only animation must be named Crossfade"
+                }
+            }
+
+        foundationDslRoot.walkTopDown()
+            .filter { file -> file.isFile && file.extension == "kt" }
+            .forEach { file ->
+                val source = file.readText()
+                builderDeclaration.findAll(source).forEach declaration@ { match ->
+                    val functionName = match.groupValues[1]
+                    val lineStart = source.lastIndexOf('\n', match.range.first).let { it + 1 }
+                    val declarationPrefix = source.substring(lineStart, match.range.first)
+                    if (
+                        Regex("""\b(?:private|internal)\s*$""")
+                            .containsMatchIn(declarationPrefix)
+                    ) {
+                        return@declaration
+                    }
+                    val openParenthesis = source.indexOf('(', match.range.first)
+                    var cursor = openParenthesis + 1
+                    var depth = 1
+                    while (cursor < source.length && depth > 0) {
+                        when (source[cursor]) {
+                            '(' -> depth += 1
+                            ')' -> depth -= 1
+                        }
+                        cursor += 1
+                    }
+                    if (depth != 0) {
+                        violations +=
+                            "${file.relativeTo(rootDir)} -> cannot parse $functionName parameters"
+                        return@declaration
+                    }
+                    val declarationStart = match.range.first
+                    val kdocStart = source.lastIndexOf("/**", declarationStart)
+                    val kdocEnd = if (kdocStart >= 0) source.indexOf("*/", kdocStart) else -1
+                    val hasAdjacentKdoc =
+                        kdocStart >= 0 &&
+                            kdocEnd >= 0 &&
+                            source.substring(kdocEnd + 2, declarationStart).isBlank()
+                    if (!hasAdjacentKdoc) {
+                        violations +=
+                            "${file.relativeTo(rootDir)} -> $functionName has no adjacent KDoc"
+                        return@declaration
+                    }
+                    val kdoc = source.substring(kdocStart, kdocEnd + 2)
+                    if ("@receiver" !in kdoc) {
+                        violations +=
+                            "${file.relativeTo(rootDir)} -> $functionName KDoc misses @receiver"
+                    }
+                    if ("@sample" !in kdoc) {
+                        violations +=
+                            "${file.relativeTo(rootDir)} -> $functionName KDoc misses compiled @sample"
+                    }
+                    val parameterBlock = source.substring(openParenthesis + 1, cursor - 1)
+                    Regex(
+                        """(?m)^\s*(?:crossinline\s+|noinline\s+|vararg\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*:""",
+                    ).findAll(parameterBlock).forEach { parameter ->
+                        val parameterName = parameter.groupValues[1]
+                        if ("@param $parameterName" !in kdoc) {
+                            violations +=
+                                "${file.relativeTo(rootDir)} -> $functionName KDoc misses @param $parameterName"
+                        }
+                    }
+                }
+            }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("DSL API contract verification failed:")
+                    violations.distinct().sorted().forEach { violation -> appendLine("- $violation") }
+                },
+            )
+        }
+    }
+}
+
 tasks.register("qaQuick") {
     group = "verification"
     description = "Run compile + unit-test quality gate for all core modules."
@@ -2065,6 +2217,7 @@ tasks.register("qaQuick") {
     dependsOn("verifyDesignSystemIsolation")
     dependsOn("verifyUiFoundationPlatformBoundary")
     dependsOn("verifyDocumentationStructure")
+    dependsOn("verifyDslApiContracts")
     dependsOn("verifyMigrationPairedSamples")
     dependsOn("verifyTutorialSamples")
     dependsOn("verifyViewComposePublishingConfiguration")

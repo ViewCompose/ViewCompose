@@ -1,7 +1,6 @@
 package com.viewcompose.animation.samples
 
 import com.viewcompose.animation.Animatable
-import com.viewcompose.animation.AnimatedContent
 import com.viewcompose.animation.AnimatedVisibility
 import com.viewcompose.animation.Crossfade
 import com.viewcompose.animation.EnterTransition
@@ -133,8 +132,8 @@ fun UiTreeBuilder.mutableTransitionStateSample(showDetails: Boolean): MutableTra
 }
 
 /** Cross-fades two state-derived content subtrees. */
-fun UiTreeBuilder.animatedContentSample(selection: String) {
-    AnimatedContent(targetState = selection) { state ->
+fun UiTreeBuilder.crossfadeSample(selection: String) {
+    Crossfade(targetState = selection) { state ->
         Text("Selected: $state")
     }
     Crossfade(targetState = selection, animationSpec = tween(durationMillis = 160)) { state ->

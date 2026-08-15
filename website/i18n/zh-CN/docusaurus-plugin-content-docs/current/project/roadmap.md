@@ -240,7 +240,7 @@ translation_status: current
 
 交付：
 
-1. `viewcompose-animation-core` + `viewcompose-animation`：`AnimationSpec`、`Animatable`、`animate*AsState`、`Transition`、`AnimatedVisibility/AnimatedContent/Crossfade/animateContentSize`
+1. `viewcompose-animation-core` + `viewcompose-animation`：`AnimationSpec`、`Animatable`、`animate*AsState`、`Transition`、`AnimatedVisibility/Crossfade/animateContentSize`
 2. `viewcompose-gesture-core` + `viewcompose-gesture`：策略内核（axis/slop/anchored settle）+ `pointerInput`、`combinedClickable`、`draggable/anchoredDraggable/transformable` 状态与 DSL 入口
 3. `graphicsLayer` + renderer patch 语义接入，Android 高阶动画 interop（`TransitionManager/MotionLayout/Animator`）
 4. demo 与 preview 覆盖：Animation 页已升级为 6 标签 API 索引（typed/generic/spec/transition/visibility-state/infinite/animatable），并形成 7 条 animation instrumentation 回归；PreviewCatalog 与 Paparazzi 快照已接入

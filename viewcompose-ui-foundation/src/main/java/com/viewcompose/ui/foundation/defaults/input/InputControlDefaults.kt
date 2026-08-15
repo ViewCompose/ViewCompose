@@ -1,5 +1,6 @@
 package com.viewcompose.ui.foundation
 
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.unit.UiDp
 
 /** Resolves native input-control appearance from theme tokens and family-specific overrides. */
@@ -169,9 +170,6 @@ object InputControlDefaults {
         )
     }
 
-    /** Returns the current pressed-state control highlight. */
-    fun pressedColor(): Int = Theme.stateColors.controlHighlight.resolve(pressed = true)
-
     internal fun resolveCheckbox(
         enabled: Boolean,
         instance: CheckboxOverrides,
@@ -202,7 +200,7 @@ object InputControlDefaults {
                 disabledContentColor(),
             ),
             textStyle = overrides.textStyle ?: TextDefaults.bodyStyle(),
-            rippleColor = overrides.rippleColor ?: pressedColor(),
+            stateLayerColors = overrides.stateLayerColors ?: stateLayerColorsFor(checked),
             minimumHeight = overrides.minimumHeight ?: minimumInteractiveHeight(),
         )
     }
@@ -238,7 +236,7 @@ object InputControlDefaults {
             thumbColor = thumbColor,
             trackColor = trackColor,
             textStyle = overrides.textStyle ?: TextDefaults.bodyStyle(),
-            rippleColor = overrides.rippleColor ?: pressedColor(),
+            stateLayerColors = overrides.stateLayerColors ?: stateLayerColorsFor(trackColor),
             minimumHeight = overrides.minimumHeight ?: minimumInteractiveHeight(),
         )
     }
@@ -273,7 +271,7 @@ object InputControlDefaults {
                 disabledContentColor(),
             ),
             textStyle = overrides.textStyle ?: TextDefaults.bodyStyle(),
-            rippleColor = overrides.rippleColor ?: pressedColor(),
+            stateLayerColors = overrides.stateLayerColors ?: stateLayerColorsFor(checked),
             minimumHeight = overrides.minimumHeight ?: minimumInteractiveHeight(),
         )
     }
@@ -318,7 +316,7 @@ internal data class ResolvedToggleAppearance(
     val checkedColor: Int,
     val uncheckedColor: Int,
     val textStyle: UiTextStyle,
-    val rippleColor: Int,
+    val stateLayerColors: UiStateLayerColors,
     val minimumHeight: UiDp,
 )
 
@@ -328,7 +326,7 @@ internal data class ResolvedSwitchAppearance(
     val thumbColor: Int,
     val trackColor: Int,
     val textStyle: UiTextStyle,
-    val rippleColor: Int,
+    val stateLayerColors: UiStateLayerColors,
     val minimumHeight: UiDp,
 )
 

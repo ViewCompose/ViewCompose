@@ -7,12 +7,10 @@ import com.viewcompose.ui.modifier.ImeInsetsPaddingModifierElement
 import com.viewcompose.ui.modifier.PaddingModifierElement
 import com.viewcompose.ui.modifier.SystemBarsInsetsPaddingModifierElement
 import com.viewcompose.ui.environment.UiLayoutDirection
-import com.viewcompose.ui.node.UiStateLayerColors
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.VNode
-import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.IconButtonNodeProps
-import com.viewcompose.ui.node.spec.RowNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
@@ -58,8 +56,8 @@ internal object ModifierNodeStyleResolver {
             minWidth = node.environment.roundToPx(
                 resolved.minWidth?.minWidth ?: readNodeMinWidth(node) ?: com.viewcompose.ui.unit.UiDp.Zero,
             ),
-            rippleColor = readNodeRippleColor(node) ?: defaultRippleColor,
-            stateLayerColors = readNodeStateLayerColors(node),
+            defaultRippleColor = defaultRippleColor,
+            interactionIndication = resolved.interactionIndication?.indication,
             textColor = readNodeTextColor(node),
             textSizePx = readNodeTextSize(node)?.let(node.environment::toPx),
             fontWeight = readNodeFontWeight(node),
@@ -198,25 +196,6 @@ internal object ModifierNodeStyleResolver {
         else -> null
     }
 
-    private fun readNodeRippleColor(node: VNode): Int? = when (val spec = node.spec) {
-        is ButtonNodeProps -> spec.rippleColor
-        is IconButtonNodeProps -> spec.rippleColor
-        is ToggleNodeProps -> spec.rippleColor
-        is BoxNodeProps -> spec.rippleColor
-        is RowNodeProps -> spec.rippleColor
-        is SurfaceNodeProps -> spec.rippleColor
-        else -> null
-    }
-
-    private fun readNodeStateLayerColors(node: VNode): UiStateLayerColors? = when (val spec = node.spec) {
-        is ButtonNodeProps -> spec.stateLayerColors
-        is IconButtonNodeProps -> spec.stateLayerColors
-        is BoxNodeProps -> spec.stateLayerColors
-        is RowNodeProps -> spec.stateLayerColors
-        is SurfaceNodeProps -> spec.stateLayerColors
-        else -> null
-    }
-
     private fun readNodeClickable(node: VNode): Boolean = when (val spec = node.spec) {
         is ButtonNodeProps -> spec.onClick != null && spec.enabled
         is IconButtonNodeProps -> spec.enabled
@@ -346,8 +325,8 @@ internal data class NodeStyle(
     val padding: PaddingPx?,
     val minHeight: Int,
     val minWidth: Int,
-    val rippleColor: Int,
-    val stateLayerColors: UiStateLayerColors?,
+    val defaultRippleColor: Int,
+    val interactionIndication: UiInteractionIndication?,
     val textColor: Int?,
     val textSizePx: Float?,
     val fontWeight: Int?,
