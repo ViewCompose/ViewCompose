@@ -23,6 +23,25 @@ data class PaddingModifierElement(
 ) : ModifierElement
 
 /**
+ * Adds logical-edge padding inside the node's measured content bounds.
+ *
+ * A renderer resolves [start] and [end] from the VNode's captured layout direction. Callers should
+ * normally create this Q3 coordinate contract through [paddingRelative].
+ *
+ * @sample com.viewcompose.ui.samples.relativeLayoutModifierSample
+ * @property start padding at the logical start edge in dp
+ * @property top padding at the physical top edge in dp
+ * @property end padding at the logical end edge in dp
+ * @property bottom padding at the physical bottom edge in dp
+ */
+data class RelativePaddingModifierElement(
+    val start: UiDp,
+    val top: UiDp,
+    val end: UiDp,
+    val bottom: UiDp,
+) : ModifierElement
+
+/**
  * Requests selected physical system-bar insets as additional inner padding.
  *
  * @property left whether to consume the left system-bar inset
@@ -34,6 +53,25 @@ data class SystemBarsInsetsPaddingModifierElement(
     val left: Boolean,
     val top: Boolean,
     val right: Boolean,
+    val bottom: Boolean,
+) : ModifierElement
+
+/**
+ * Requests logical start/end system-bar insets as additional inner padding.
+ *
+ * A renderer resolves [start] and [end] from the VNode's captured layout direction. Callers should
+ * normally create this Q3 Android-boundary contract through [systemBarsInsetsPaddingRelative].
+ *
+ * @sample com.viewcompose.ui.samples.relativeLayoutModifierSample
+ * @property start whether to include the logical start system-bar inset
+ * @property top whether to include the physical top system-bar inset
+ * @property end whether to include the logical end system-bar inset
+ * @property bottom whether to include the physical bottom system-bar inset
+ */
+data class RelativeSystemBarsInsetsPaddingModifierElement(
+    val start: Boolean,
+    val top: Boolean,
+    val end: Boolean,
     val bottom: Boolean,
 ) : ModifierElement
 
@@ -53,6 +91,25 @@ data class ImeInsetsPaddingModifierElement(
 ) : ModifierElement
 
 /**
+ * Requests logical start/end IME insets as additional inner padding.
+ *
+ * A renderer resolves [start] and [end] from the VNode's captured layout direction. Callers should
+ * normally create this Q3 Android-boundary contract through [imeInsetsPaddingRelative].
+ *
+ * @sample com.viewcompose.ui.samples.relativeLayoutModifierSample
+ * @property start whether to include the logical start IME inset
+ * @property top whether to include the physical top IME inset
+ * @property end whether to include the logical end IME inset
+ * @property bottom whether to include the physical bottom IME inset
+ */
+data class RelativeImeInsetsPaddingModifierElement(
+    val start: Boolean,
+    val top: Boolean,
+    val end: Boolean,
+    val bottom: Boolean,
+) : ModifierElement
+
+/**
  * Supplies physical-edge margins to the native parent layout parameters.
  *
  * @property left left margin in dp
@@ -64,6 +121,25 @@ data class MarginModifierElement(
     val left: UiDp,
     val top: UiDp,
     val right: UiDp,
+    val bottom: UiDp,
+) : ModifierElement
+
+/**
+ * Supplies logical-edge margins to the native parent layout parameters.
+ *
+ * A renderer resolves [start] and [end] from the VNode's captured layout direction. Callers should
+ * normally create this Q3 parent-layout contract through [marginRelative].
+ *
+ * @sample com.viewcompose.ui.samples.relativeLayoutModifierSample
+ * @property start margin at the logical start edge in dp
+ * @property top margin at the physical top edge in dp
+ * @property end margin at the logical end edge in dp
+ * @property bottom margin at the physical bottom edge in dp
+ */
+data class RelativeMarginModifierElement(
+    val start: UiDp,
+    val top: UiDp,
+    val end: UiDp,
     val bottom: UiDp,
 ) : ModifierElement
 
@@ -185,4 +261,20 @@ data class VerticalAlignModifierElement(
 data class OffsetModifierElement(
     val x: UiDp,
     val y: UiDp,
+) : ModifierElement
+
+/**
+ * Offsets final placement along the logical horizontal axis without changing measured size.
+ *
+ * Positive [horizontal] moves toward the logical end edge: right in LTR and left in RTL. Positive
+ * [vertical] moves down. Callers should normally create this Q3 coordinate contract through
+ * [offsetRelative].
+ *
+ * @sample com.viewcompose.ui.samples.relativeLayoutModifierSample
+ * @property horizontal logical horizontal offset in dp, positive toward end
+ * @property vertical physical vertical offset in dp, positive down
+ */
+data class RelativeOffsetModifierElement(
+    val horizontal: UiDp,
+    val vertical: UiDp,
 ) : ModifierElement

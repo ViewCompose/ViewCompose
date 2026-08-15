@@ -50,6 +50,41 @@ class ModifierContractTest {
     }
 
     @Test
+    fun `relative layout modifiers retain logical coordinates without changing physical APIs`() {
+        val modifier = Modifier
+            .paddingRelative(start = 1.dp, top = 2.dp, end = 3.dp, bottom = 4.dp)
+            .marginRelative(start = 5.dp, top = 6.dp, end = 7.dp, bottom = 8.dp)
+            .offsetRelative(horizontal = 9.dp, vertical = 10.dp)
+            .systemBarsInsetsPaddingRelative(
+                start = true,
+                top = false,
+                end = false,
+                bottom = true,
+            )
+            .imeInsetsPaddingRelative(start = false, top = true, end = true, bottom = false)
+            .padding(left = 11.dp, right = 12.dp)
+
+        assertEquals(
+            RelativePaddingModifierElement(1.dp, 2.dp, 3.dp, 4.dp),
+            modifier.elements[0],
+        )
+        assertEquals(
+            RelativeMarginModifierElement(5.dp, 6.dp, 7.dp, 8.dp),
+            modifier.elements[1],
+        )
+        assertEquals(RelativeOffsetModifierElement(9.dp, 10.dp), modifier.elements[2])
+        assertEquals(
+            RelativeSystemBarsInsetsPaddingModifierElement(true, false, false, true),
+            modifier.elements[3],
+        )
+        assertEquals(
+            RelativeImeInsetsPaddingModifierElement(false, true, true, false),
+            modifier.elements[4],
+        )
+        assertEquals(PaddingModifierElement(11.dp, 0.dp, 12.dp, 0.dp), modifier.elements[5])
+    }
+
+    @Test
     fun `background drawable resource modifier appends expected element`() {
         val modifier = Modifier
             .backgroundColor(0xFF112233.toInt())

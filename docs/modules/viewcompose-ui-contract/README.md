@@ -56,6 +56,11 @@ created for the node.
   `CharSequence` implementations are converted only at a platform renderer boundary.
 - [`Modifier`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.modifier/-modifier/)
   carries ordered layout, drawing, interaction, semantics, focus, and parent-data elements.
+- `paddingRelative`, `marginRelative`, `offsetRelative`,
+  `systemBarsInsetsPaddingRelative`, and `imeInsetsPaddingRelative` are Q3 coordinate and Android
+  boundary contracts. Their logical start/end values resolve from each VNode's captured layout
+  direction; the existing APIs keep physical left/right semantics. The compiled
+  `relativeLayoutModifierSample` demonstrates the complete family.
 - [`UiEnvironmentValues`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.environment/-ui-environment-values/)
   captures density, locale tags, and logical layout direction for a subtree.
 - [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
@@ -138,6 +143,10 @@ first-party image loaders; its zero default preserves deterministic non-Android/
 - Modifier order is semantic. Layout and parent-data collection, visual decoration, input,
   semantics, and drawing phases consume the ordered elements according to their documented phase
   rules; reordering elements may change behavior.
+- Physical and relative declarations for padding, margin, offset, or one inset type share one
+  resolved slot per family. The later declaration replaces the earlier complete value. Relative
+  horizontal offset is positive toward logical end; all other relative start/end values map from
+  the VNode's captured `UiLayoutDirection` whenever a renderer binds that node.
 - Collection semantics use logical indexes. RTL may reverse physical placement but does not change
   row/column metadata or callback identity. A collection item derives heading and selected metadata
   from the same `SemanticsConfiguration` fields, avoiding duplicate state ownership.
@@ -207,6 +216,11 @@ concrete `NodeSpec`, or a modifier element can require a renderer update even wh
 source remains unchanged. Custom renderers should fail clearly for unknown contracts and should not
 persist enum ordinals, sealed-subtype names, tooling metadata, native view identities, or callback
 instances as long-lived external data.
+
+The five relative layout modifier elements are additive Q3 contracts, but a custom renderer must
+recognize them before application code can use their DSL functions. Resolve start/end only from the
+VNode environment, keep the existing element types physical, and apply last-declaration-wins
+across the physical and relative form of each family.
 
 Adding `LazyListItemSession.prepare` and `activate` is a Q3 lifecycle hard cut. Kotlin source
 implementations inherit safe defaults, but the interface JVM shape changes, so precompiled custom

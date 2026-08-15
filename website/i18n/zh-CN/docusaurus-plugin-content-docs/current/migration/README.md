@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: 9b7e686a22e9cf4a6f139dfd3ba7e59b9165b2be1e469ce5ebb1627d9db35336
+translation_source_hash: e864863defa2349628b62d3231d2c4b17142a8b858cb00f32959f7d8d4eb49f3
 translation_status: current
 ---
 
@@ -90,7 +90,7 @@ Kotlin `2.0.21`，声明位置是
 | Modifier | 结构相等性和渲染器复用 | **Supported（支持）** | 使用具有语义的稳定 key；新的回调对象不一定是更新信号。 | [Modifier 相等性](compose-layout-modifier-and-environment.md#modifier-ordering-folding-and-equality) |
 | Modifier | 应用自定义 `Modifier.Node` 生命周期 | **Unsupported（不支持）** | 使用受支持 Modifier、互操作或经过审查的 UI-contract 与 renderer 能力。 | [Modifier.Node](compose-layout-modifier-and-environment.md#why-modifiernode-does-not-migrate-directly) |
 | 环境 | density 和 font scale | **Supported（支持）** | 保留逻辑 dp/sp 值，只在渲染器边界转换。 | [环境](compose-layout-modifier-and-environment.md#density-locales-and-layout-direction) |
-| 环境 | locale、布局方向和物理边 | **Partially supported（部分支持）** | 审计所有逻辑 start/end 映射并测试 RTL。 | [环境](compose-layout-modifier-and-environment.md#density-locales-and-layout-direction) |
+| 环境 | locale、布局方向以及逻辑/物理边 | **Supported（支持）** | start/end 意图使用相对 API，明确 left/right 行为才使用物理 API，并测试 RTL 输出。 | [环境](compose-layout-modifier-and-environment.md#density-locales-and-layout-direction) |
 | 环境 | 用 `UiLocal` 替代 `CompositionLocal` | **Intentionally different（刻意不同）** | 用可观察状态支撑变化的 local；只读取 local 不会让读取者失效。 | [UiLocal](compose-layout-modifier-and-environment.md#uilocal-versus-compositionlocal) |
 | Insets | 系统栏、IME 和嵌套消费 | **Partially supported（部分支持）** | 每条边指定一个所有者，并验证 View/ViewCompose 混合处理。 | [Insets](compose-layout-modifier-and-environment.md#system-bar-and-ime-insets) |
 | 互操作 | ViewCompose `AndroidView` 回调生命周期 | **Intentionally different（刻意不同）** | 分离可重放 update/reset、事务后 commit 和永久 release 清理。 | [Android View 互操作](compose-host-lifecycle-and-android-interop.md#android-view-interop-callback-mapping) |

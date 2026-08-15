@@ -168,7 +168,11 @@ class ModifierNodeStyleResolverTest {
             resolved = node.modifier.resolve(),
             defaultRippleColor = 0,
         )
-        val host = ModifierNodeStyleResolver.resolveHostStyle(node.modifier.resolve(), style)
+        val host = ModifierNodeStyleResolver.resolveHostStyle(
+            node = node,
+            resolved = node.modifier.resolve(),
+            nodeStyle = style,
+        )
 
         assertEquals(fill, style.surfaceFill)
         assertEquals(shape, style.shape)

@@ -11,9 +11,9 @@ across layers.
 1. The identity entry is `Modifier`; `Modifier.Empty` has been removed.
 2. Historical text-semantic modifiers such as `textColor/textSize` have been removed.
 3. `weight/align/FlexibleSpacer` are exposed only through `RowScope/ColumnScope/BoxScope`.
-4. System-bar and IME adaptation uses `Modifier.systemBarsInsetsPadding(...)` and
-   `Modifier.imeInsetsPadding(...)`. An Activity using `adjustResize` normally does not add
-   `imeInsetsPadding`, which would move content twice.
+4. System-bar and IME adaptation uses physical `Modifier.systemBarsInsetsPadding(...)` /
+   `Modifier.imeInsetsPadding(...)` or their direction-aware `Relative` forms. An Activity using
+   `adjustResize` normally does not add IME padding, which would move content twice.
 5. Collection policies are container parameters: `reusePolicy` (`sharePool`) and `motionPolicy`
    (`disableItemAnimator/animateInsert/animateRemove/animateMove/animateChange`).
 6. Keyboard focus following is the vertical-container parameter `focusFollowKeyboard`, implemented
@@ -50,6 +50,10 @@ across layers.
     `Modifier.padding`, and selected system-bar/IME inset edges are composed before writing the
     View; binders must not overwrite another layer's contribution during a patch or environment
     rebind.
+17. Physical `padding/margin/offset` and inset selectors remain physical. Their `Relative`
+    counterparts resolve start/end from the VNode's captured layout direction on every bind. A
+    later physical or relative declaration replaces the earlier declaration for that complete
+    modifier family.
 
 ## 3. API inventory
 
@@ -64,8 +68,8 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 
 Current 2026-08 result:
 
-1. `fun Modifier.*` declarations, including overloads and scoped internals: `76`;
-2. unique `fun Modifier.*` API names: `62`;
+1. `fun Modifier.*` declarations, including overloads and scoped internals: `88`;
+2. unique `fun Modifier.*` API names: `74`;
 3. scoped modifier declarations: `5` across `RowScope/ColumnScope/BoxScope`;
 4. renderer-internal modifier extensions: `1`, used only for resolution.
 
@@ -85,15 +89,20 @@ Current 2026-08 result:
 | API | Module / namespace | Visibility | Purpose | Scope | Notes |
 | --- | --- | --- | --- | --- | --- |
 | `padding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Content padding | Global | Three overloads: all, horizontal/vertical, four edges |
+| `paddingRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Direction-aware content padding | Global | Logical start/end; physical top/bottom |
 | `margin` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Outer layout-param margin | Global | Three overloads |
+| `marginRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Direction-aware layout-param margin | Global | Logical start/end; physical top/bottom |
 | `size` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Width and height | Global | Fixed framework-unit semantics |
 | `width` / `height` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | One dimension | Global | Cooperates with parent layout rules |
 | `minWidth` / `minHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Minimum dimension | Global | Maps to native minimum size |
 | `fillMaxWidth` / `fillMaxHeight` / `fillMaxSize` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Fill parent dimension(s) | Global | Maps to `MATCH_PARENT` semantics |
 | `offset` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Translation offset | Global | Maps to `translationX/translationY` |
+| `offsetRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Direction-aware translation | Global | Positive horizontal moves toward logical end |
 | `layoutId` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Child layout identity | Container-specific | Primarily matches `ConstraintLayout` children |
 | `systemBarsInsetsPadding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | System-bar inset padding | Container-aware | Individual edge switches |
+| `systemBarsInsetsPaddingRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Direction-aware system-bar inset padding | Container-aware | Logical start/end selectors |
 | `imeInsetsPadding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | IME inset padding | Container-aware | Bottom only by default |
+| `imeInsetsPaddingRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Direction-aware IME inset padding | Container-aware | Logical start/end selectors; bottom only by default |
 | `backgroundColor` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Color background | Global | Lower priority than drawable background |
 | `backgroundDrawableRes` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Drawable resource background | Global | Auto-clips with corner radius |
 | `border` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Border width and color | Global | Uses the surface-style pipeline |
@@ -198,12 +207,13 @@ Surface(
 
 Modifier owns:
 
-1. dimensions and occupancy: `size/width/height/minWidth/minHeight/padding/margin`;
+1. dimensions and occupancy:
+   `size/width/height/minWidth/minHeight/padding/paddingRelative/margin/marginRelative`;
 2. appearance: `backgroundColor/backgroundDrawableRes/border/cornerRadius/alpha/elevation`;
-3. visibility and layering: `visibility/offset/zIndex`;
+3. visibility and layering: `visibility/offset/offsetRelative/zIndex`;
 4. general interaction, focus, keys, and accessibility;
 5. test identity through `testTag`;
-6. system-bar and IME padding;
+6. physical or direction-aware system-bar and IME padding;
 7. the `nativeView` escape hatch;
 8. drawing, gesture, nested-scroll, shadow, and layout-size-animation decoration.
 

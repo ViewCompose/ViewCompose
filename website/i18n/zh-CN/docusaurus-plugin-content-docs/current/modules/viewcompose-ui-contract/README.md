@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 5b7db91ad253796892958b32782ff25abfa241cab4d3f996d85c7628032d6712
+translation_source_hash: 1342b8cf42c879cd13d977481399f1ee38215562ed68c9a247af4047a348eca3
 translation_status: current
 ---
 
@@ -58,6 +58,10 @@ val gap = VNode(
   边界转换。
 - [`Modifier`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.modifier/-modifier/)
   携带有序的布局、绘制、交互、语义、焦点与 Parent Data 元素。
+- `paddingRelative`、`marginRelative`、`offsetRelative`、
+  `systemBarsInsetsPaddingRelative` 与 `imeInsetsPaddingRelative` 是 Q3 坐标和 Android 边界
+  契约。其逻辑 start/end 根据每个 VNode 捕获的布局方向解析；原 API 保持物理 left/right 语义。
+  已编译的 `relativeLayoutModifierSample` 展示完整 API 族。
 - [`UiEnvironmentValues`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.environment/-ui-environment-values/)
   捕获子树的密度、语言标签与逻辑布局方向。
 - [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
@@ -126,6 +130,9 @@ val gap = VNode(
   表示其余轨道。渲染器必须绑定这两个已解析颜色，不得再从平台主题恢复任一轨道颜色。
 - Modifier 顺序具有语义。布局与 Parent Data 收集、视觉装饰、输入、Semantics 与绘制阶段会
   按各自阶段规则消费有序元素；调整顺序可能改变行为。
+- Padding、Margin、Offset 或单一 Inset 类型的物理与相对声明共享一个解析槽位，同一族中后声明
+  的值会整体替换先声明的值。相对水平 Offset 的正值朝逻辑 end 移动；其他相对 start/end 值都在
+  Renderer Bind 时根据 VNode 捕获的 `UiLayoutDirection` 映射。
 - 集合语义使用逻辑索引。RTL 可以反转物理排布，但不会改变行列元数据或回调身份。集合子项的
   Heading 与 Selected 元数据来自同一份 `SemanticsConfiguration` 字段，避免重复持有状态。
 - 每个 VNode 子树都捕获 `UiEnvironmentValues`。渲染器必须使用捕获值，不能改用无关的进程
@@ -183,6 +190,10 @@ val gap = VNode(
 `NodeSpec` 或 Modifier 元素也可能要求渲染器同步升级。自定义渲染器应对未知契约明确失败，
 也不应把枚举序号、密封子类型名称、工具元数据、原生 View 标识或回调实例持久化为长期外部
 数据。
+
+五个相对布局 Modifier 元素是新增的 Q3 契约，但自定义 Renderer 必须识别它们，应用代码才能
+安全使用对应 DSL。Renderer 必须只根据 VNode 环境解析 start/end，保留旧元素的物理语义，并在
+每一族的物理与相对形式之间执行“后声明者覆盖”规则。
 
 新增 `LazyListItemSession.prepare` 与 `activate` 是 Q3 生命周期硬切。Kotlin 源码实现可以继承安全
 默认值，但接口 JVM 形状已经变化，因此预编译自定义 Session 与 Renderer 必须重新构建。覆写

@@ -27,6 +27,8 @@ internal object ModifierInteractionApplier {
         resolved: ResolvedModifiers,
         minHeight: Int,
         minWidth: Int,
+        offsetX: Float,
+        offsetY: Float,
     ) {
         val layer = resolved.graphicsLayer
         val environment = view.requireUiEnvironment()
@@ -40,8 +42,8 @@ internal object ModifierInteractionApplier {
             Visibility.Invisible -> View.INVISIBLE
             Visibility.Gone -> View.GONE
         }
-        view.translationX = layer?.translationX ?: resolved.offset?.x?.let(environment::toPx) ?: 0f
-        view.translationY = layer?.translationY ?: resolved.offset?.y?.let(environment::toPx) ?: 0f
+        view.translationX = layer?.translationX ?: offsetX
+        view.translationY = layer?.translationY ?: offsetY
         // Parent drawing order owns zIndex; writing translationZ would incorrectly alter platform shadows.
         // Parent-side stable drawing order owns zIndex; translationZ would alter platform shadows.
         view.translationZ = 0f

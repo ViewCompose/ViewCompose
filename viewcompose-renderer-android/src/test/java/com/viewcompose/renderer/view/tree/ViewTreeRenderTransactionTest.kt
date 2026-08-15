@@ -19,6 +19,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime
 import com.viewcompose.renderer.decoration.RecordingDecorationBackend
+import com.viewcompose.renderer.view.requireUiEnvironment
 import com.viewcompose.renderer.view.shape.UiShapeDrawable
 import com.viewcompose.text.TextDocument
 import com.viewcompose.text.TextFieldState
@@ -33,9 +34,13 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.NativeViewElement
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.innerShadow
+import com.viewcompose.ui.modifier.marginRelative
+import com.viewcompose.ui.modifier.offsetRelative
 import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.paddingRelative
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.systemBarsInsetsPadding
+import com.viewcompose.ui.modifier.systemBarsInsetsPaddingRelative
 import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.LazyListItem
@@ -241,6 +246,55 @@ class ViewTreeRenderTransactionTest {
         assertSame(recyclerView, container.getChildAt(0))
         assertEquals(23, recyclerView.paddingLeft)
         assertEquals(19, recyclerView.paddingRight)
+    }
+
+    @Test
+    fun `relative layout modifiers re-resolve on runtime direction changes`() {
+        val container = FrameLayout(context)
+        val relativeModifier = Modifier
+            .padding(left = 1.dp, right = 2.dp)
+            .paddingRelative(start = 10.dp, end = 20.dp)
+            .marginRelative(start = 6.dp, end = 8.dp)
+            .offsetRelative(horizontal = 4.dp, vertical = 5.dp)
+            .systemBarsInsetsPaddingRelative(
+                start = true,
+                top = false,
+                end = false,
+                bottom = false,
+            )
+        val first = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(relativeTextNode(UiLayoutDirection.Ltr, relativeModifier)),
+        )
+        val view = first.mountedNodes.single().view as TextView
+        val insets = WindowInsetsCompat.Builder()
+            .setInsets(WindowInsetsCompat.Type.systemBars(), Insets.of(3, 0, 7, 0))
+            .build()
+        ViewCompat.dispatchApplyWindowInsets(view, insets)
+
+        assertEquals(13, view.paddingLeft)
+        assertEquals(20, view.paddingRight)
+        assertEquals(4f, view.translationX)
+        assertEquals(5f, view.translationY)
+        assertEquals(6, (view.layoutParams as FrameLayout.LayoutParams).leftMargin)
+        assertEquals(8, (view.layoutParams as FrameLayout.LayoutParams).rightMargin)
+
+        val second = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = first.mountedNodes,
+            nodes = listOf(relativeTextNode(UiLayoutDirection.Rtl, relativeModifier)),
+        )
+        ViewCompat.dispatchApplyWindowInsets(view, insets)
+
+        assertSame(view, second.mountedNodes.single().view)
+        assertEquals(UiLayoutDirection.Rtl, view.requireUiEnvironment().layoutDirection)
+        assertEquals(20, view.paddingLeft)
+        assertEquals(17, view.paddingRight)
+        assertEquals(-4f, view.translationX)
+        assertEquals(5f, view.translationY)
+        assertEquals(8, (view.layoutParams as FrameLayout.LayoutParams).leftMargin)
+        assertEquals(6, (view.layoutParams as FrameLayout.LayoutParams).rightMargin)
     }
 
     @Test
@@ -1061,6 +1115,22 @@ class ViewTreeRenderTransactionTest {
                     density = density,
                     fontScale = fontScale,
                 ),
+            ),
+        )
+    }
+
+    private fun relativeTextNode(
+        layoutDirection: UiLayoutDirection,
+        modifier: Modifier,
+    ): VNode {
+        return environmentTextNode(
+            density = 1f,
+            fontScale = 1f,
+        ).copy(
+            modifier = modifier,
+            environment = UiEnvironmentValues.Default.copy(
+                density = UiDensity(density = 1f, fontScale = 1f),
+                layoutDirection = layoutDirection,
             ),
         )
     }

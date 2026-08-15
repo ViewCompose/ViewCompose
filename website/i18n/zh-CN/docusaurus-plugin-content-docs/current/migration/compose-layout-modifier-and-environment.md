@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-layout-modifier-and-environment.md
-translation_source_hash: 3d881f37bad0355ed13d593d8b64f624828df87d5415df1cbf0dbdde8c9a88a0
+translation_source_hash: da3c980148588cee7a3a8a647fca6b2f0824e6ddfe42960f5351d8072d1fb342
 translation_status: current
 ---
 
@@ -114,10 +114,10 @@ ViewCompose 渲染 Android View、按 renderer 规则折叠 Modifier 元素，�
 | Modifier 相等性与更新 | `ModifierNodeElement` 通过相等性决定是否更新已有 `Modifier.Node`。 | Modifier 链按有序元素序列进行结构比较。相等的链可使 renderer diff 跳过子树。`NativeViewElement` 的相等性只使用稳定 key，忽略回调身份。 | Supported | 当原生配置的语义发生变化时使用会变化的 key，不要依赖新的 lambda 实例强制更新。 |
 | 自定义 `Modifier.Node` 生命周期 | 公开节点 API 提供 create/update、attach/detach、失效、local 读取，以及专门的布局、绘制、输入或语义节点接口。 | `ModifierElement` 是 renderer 标记，不是应用生命周期节点。内置元素由已知 renderer 分支解释。不存在自定义节点 attach/detach 或能力接口的公开等价物。 | Unsupported | 使用受支持 Modifier、可重放的 `nativeView`、具备事务语义的 `AndroidView`，或经过评审的 renderer 功能。不要从应用代码发布 renderer 无法识别的元素。 |
 | Density 与字体缩放 | `LocalDensity` 为布局和绘制代码提供 dp/sp 转换。 | `UiDensity` 会被捕获进每个 VNode 环境。Android host 从资源读取 density 和 font scale；renderer 在原生边界转换单位。 | Supported | 在声明中保留逻辑 dp/sp，不要跨新的环境快照保留已转换像素。 |
-| 布局方向与 locale | CompositionLocal 提供布局方向和 locale 数据；逻辑 start/end API 根据该环境解析。 | 方向和 locale 列表会被捕获到 VNode。Renderer 应用原生 View 方向和 TextView locale，但 padding、margin、offset 与 inset 边参数使用物理 left/right。 | Partially supported | 审查所有 start/end 假设并执行真实 RTL 布局检查；不要把 Compose 逻辑边直接翻译成 ViewCompose 物理边。 |
+| 布局方向与 locale | CompositionLocal 提供布局方向和 locale 数据；逻辑 start/end API 根据该环境解析。 | 方向和 locale 列表会被捕获到 VNode。Renderer 应用原生 View 方向和 TextView locale。通用边缘 API 同时提供显式物理与相对形式，延迟 Session 会携带环境 Revision。 | Supported | 逻辑 start/end 意图使用相对形式；只有明确的 left/right 行为才保留物理 API，并执行真实 RTL 布局检查。 |
 | CompositionLocal 传播 | `compositionLocalOf` 跟踪读取点；提供值发生变化时使读取者失效。`staticCompositionLocalOf` 以更大粒度使 provider 内容失效。 | `UiLocal` 在构建树时使用线程作用域 map。Emit 会把完整 local 快照作为输入比较，但读取 `UiLocals.current` 本身不会登记失效依赖。 | Intentionally different | 用 ViewCompose state 或其他 host 失效来源承载会变化的 local 值。把 local 读取视为作用域值查询，而不是观察。 |
 | 延迟内容 local | Lazy 和其他 subcompose 内容通过拥有它的 Compose composition 观察 local。 | Lazy、pager、tab、overlay 和 navigation session 会显式捕获不透明 local 快照，并在延迟内容渲染时恢复。快照变化会参与 content token 或 session 更新。 | Supported | 保持稳定的 item/page key 与 content token，让容器刷新捕获的快照，而不是保留 builder。 |
-| 系统栏与 IME inset | Inset padding 感知布局、参与自动嵌套消费、避免重复应用已消费部分，并跟随 IME 更新和动画。 | 系统栏与 IME Modifier 在目标 View 上安装 AndroidX listener，并把选中的物理边加到基础 padding。嵌套 ViewCompose Modifier 不交换已消费 inset 状态；同一 View 上的系统栏与 IME 值会相加。 | Partially supported | 为 inset 指定明确的所有者层级，避免祖先和后代重复应用，并避免把 `adjustResize` 与重复的 IME padding 组合。 |
+| 系统栏与 IME inset | Inset padding 感知布局、参与自动嵌套消费、避免重复应用已消费部分，并跟随 IME 更新和动画。 | 系统栏与 IME Modifier 在目标 View 上安装 AndroidX listener，并把选中的物理边或按方向解析后的边加到基础 padding。嵌套 ViewCompose Modifier 不交换已消费 inset 状态；同一 View 上的系统栏与 IME 值会相加。 | Partially supported | 为 inset 指定明确的所有者层级，避免祖先和后代重复应用，并避免把 `adjustResize` 与重复的 IME padding 组合。 |
 | Android 输出与 View 互操作 | Compose 通常渲染 Compose 节点；`AndroidView` 嵌入平台 View，并提供 factory/update 以及可选的复用/释放回调。 | 所有第一方节点最终都成为 Android View。ViewCompose `AndroidView` 增加事务回滚和事务后提交语义；`nativeView` 对已挂载 View 应用可重放配置。 | Intentionally different | 将可重复配置、一次性工作和清理分开，分别放入 update/native 配置、`onCommit` 和 `onRelease`。 |
 
 ## 两种布局引擎：Compose Constraints 与 Android Views {/* #two-layout-engines-compose-constraints-and-android-views */}
@@ -163,15 +163,19 @@ ViewCompose 通过原生 LayoutParams 解析尺寸。感知父级的优先级如
 第 73–99 行。精确 dp 尺寸使用 VNode 捕获的 density 转换。Fill 辅助方法映射为 Android
 `MATCH_PARENT`；它们不会保留 Compose 的所有比例或固有尺寸选项。
 
-Padding 与 margin 有不同的原生落点：
+边缘 Modifier 有不同的原生落点：
 
-- padding 成为已挂载 View 的内容内边距；
-- margin 成为父级 LayoutParams 上的物理 left、top、right 和 bottom 值；
-- offset 成为 View translation，不改变兄弟节点的测量或放置；
+- `padding` 成为物理内容内边距；`paddingRelative` 会在 Renderer 写入已挂载 View 前映射逻辑
+  start/end；
+- `margin` 提供物理 LayoutParams Margin；`marginRelative` 会在创建父级 LayoutParams 前映射
+  逻辑 start/end；
+- `offset` 是物理 View Translation；正 `offsetRelative.horizontal` 朝逻辑 end 移动，且两种
+  Offset 都不改变兄弟节点测量或放置；
 - minimum width 和 height 成为 View 最小尺寸。
 
-重复 padding 不会创建嵌套布局层。Resolver 只保留最后一个 padding 元素。重复 margin 也遵循
-同一规则。因此迁移时应先规范化 Compose Modifier 链，并通过容器结构保留预期的内外边界。
+重复 Padding 不会创建嵌套布局层。物理与相对声明在每一族中共享一个解析槽，因此后声明的
+Padding、Margin 或 Offset 会整体替换先声明值，即使二者形式不同。迁移时应先规范化 Compose
+Modifier 链，并通过容器结构保留预期的内外边界。
 
 公开尺寸与边缘契约见固定 revision 的
 [`ModifierLayoutExtensions.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt)
@@ -240,7 +244,8 @@ fill-to-constraints 使用 Android ConstraintLayout 的零尺寸约定。
 | Draw 与高级 shadow 分组 | 分组保留声明顺序。 |
 | 轴向 `width`/`height` 与 `size` | 轴向专用值通过固定 LayoutParams 优先级胜出，与跨类型链顺序无关。 |
 | `graphicsLayer` 与简单 alpha、offset 或 clip | 提供 graphics-layer 值时，它具有固定 renderer 优先级。 |
-| 系统栏与 IME inset padding | 两者都会保留，选中的物理边会相加。 |
+| 物理与相对 Padding、Margin 或 Offset | 同一族中后声明的值整体替换先声明值。 |
+| 系统栏与 IME Inset Padding | 每个 Inset 类型内由后声明的物理或相对值获胜，随后系统栏与 IME 贡献相加。 |
 
 折叠逻辑实现在固定 revision 的
 [`ResolvedModifiers.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/modifier/ResolvedModifiers.kt)
@@ -307,14 +312,14 @@ revision 的
 [`ViewModifierApplier.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/ViewModifierApplier.kt)
 第 41–55 行。环境变化会强制完整节点 rebind，而不是只执行视觉 patch。
 
-Modifier API 边界的方向支持并不完整。Row、Column、Box 和 Constraint 对齐类型可以表达逻辑
-start/end 行为，但以下 API 使用物理边：
+Modifier 边界显式区分方向语义。现有 `padding`、`margin`、`offset`、
+`systemBarsInsetsPadding` 与 `imeInsetsPadding` 保持物理语义；对应的 `Relative` API 会在每次
+Bind 和环境重绑时根据捕获的 `UiLayoutDirection` 解析逻辑 start/end。相对水平 Offset 正值朝
+end 移动：LTR 向右、RTL 向左。Top、Bottom 与垂直 Offset 保持物理语义。
 
-- padding 与 margin：left 和 right；
-- offset：正 x 向右移动；
-- 系统栏或 IME 边选择：left 和 right。
-
-每次迁移非对称水平空间都必须明确 RTL 决策。Compose 中的 `start` 不能静默变为 `left`。
+迁移非对称水平空间仍必须显式选择。Compose start/end 意图应映射到相对 API；只有产品需求确实
+表示物理 left/right 时才使用原 API。不要在应用代码中预先交换数值，因为运行时方向变化以及
+延迟 Lazy/Pager Session 都是框架所有的失效输入。
 
 ## UiLocal 与 CompositionLocal {/* #uilocal-versus-compositionlocal */}
 
@@ -367,13 +372,17 @@ Compose inset padding 会在布局期间使用当前 inset 值，并向嵌套 Mo
 官方 [inset UI 指南](https://developer.android.com/develop/ui/compose/system/insets-ui)解释了嵌套
 消费、尺寸 Modifier 与 IME 动画行为。
 
-ViewCompose 提供两个聚焦的 Modifier：
+ViewCompose 为每种受支持的 Inset 类型提供物理与相对形式：
 
 - `systemBarsInsetsPadding`，用于选择物理系统栏边；
-- `imeInsetsPadding`，默认选择物理 bottom 边。
+- `systemBarsInsetsPaddingRelative`，用于选择逻辑 start/end 系统栏边；
+- `imeInsetsPadding`，默认选择物理 bottom 边；
+- `imeInsetsPaddingRelative`，同样默认选择 bottom，也可选择逻辑 start/end 边。
 
-Renderer 会安装 AndroidX `WindowInsetsCompat` listener、记录基础 padding，并加上选中的 inset
-像素。移除两个 Modifier 后会恢复基础 padding 并移除 listener。实现位于固定 revision 的
+Renderer 会安装 AndroidX `WindowInsetsCompat` Listener、记录基础 Padding，并加上选中的 Inset
+像素。方向变化会根据节点环境重新解析相对选择器；Root Insets 可用时立即使用，否则先清除旧
+物理边贡献，等待平台分发替代值。移除两个 Modifier 后会恢复基础 Padding 并移除 Listener。
+实现位于固定 revision 的
 [`ModifierInsetsApplier.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/modifier/ModifierInsetsApplier.kt)
 第 11–128 行。
 
@@ -389,8 +398,8 @@ Renderer 会安装 AndroidX `WindowInsetsCompat` listener、记录基础 padding
 4. 在真实托管页面上测试手势导航、三键导航、横屏、RTL、display cutout 和一次 IME 过渡。
 5. 不要声明 Compose 嵌套消费或同帧布局对等性。
 
-当前单元测试只保护 Modifier 默认值和解析，不覆盖真实 WindowInsets 分发、嵌套消费或动画。
-该限制记录在下方可执行证据中。
+单元测试保护默认值、物理/相对优先级、方向重解析与兼容 WindowInsets 分发。设备级动画、混合树
+消费和平台版本分发行为仍是下文记录的认证边界。
 
 ## Android View 输出与互操作
 
@@ -417,9 +426,7 @@ ViewCompose 在根本上不同：每个第一方 VNode 都会成为 Android View
 
 `update`、`onReset` 和 `nativeView` 不得启动不可重复的外部工作。失败帧可能恢复之前已提交的
 原生树并重放配置。只在成功后运行的操作应放入 `onCommit`，所拥有资源的清理应放入
-`onRelease`。Renderer 测试会释放新创建的回滚候选项，尽管当前公开 `AndroidView` 文案只提到
-已提交移除和 session disposal。在公开契约与实现对齐之前，应把 `onRelease` 视为任何永久放弃的
-已创建 View 的清理回调。
+`onRelease`。公共契约与 Renderer 测试都把未提交候选项的回滚视为永久放弃。
 
 ## 迁移检查清单
 
@@ -428,7 +435,7 @@ ViewCompose 在根本上不同：每个第一方 VNode 都会成为 Android View
 3. 先替换布局行为，再翻译视觉 Modifier 名称。
 4. 根据 ViewCompose 折叠规则规范化重复 size、padding、margin、graphics-layer 和 draw 元素。
 5. 仅在匹配 scope 的直接子项上使用父数据 Modifier，并重新设计 `matchParentSize` 用法。
-6. 映射物理 Modifier 参数前，识别每个逻辑 start/end 边。
+6. 把逻辑 start/end 意图映射到相对 Modifier；仅为明确的 left/right 行为保留物理 API。
 7. 把会变化的 provided 值移到 ViewCompose state 后面；不要依赖 `UiLocal` 读取追踪。
 8. 跨 View 与 ViewCompose 边界显式分配系统栏和 IME inset 所有权。
 9. 分离 Android View 可重放配置、提交后工作和释放清理。
@@ -438,12 +445,14 @@ ViewCompose 在根本上不同：每个第一方 VNode 都会成为 Android View
 
 以下本地证据保护本文中的声明：
 
-- Modifier 不可变性、结构相等性、声明顺序、draw 顺序和父数据构造：固定 revision 的
+- Modifier 不可变性、结构相等性、声明顺序、Draw 顺序、父数据构造与五个公开相对 Modifier
+  契约：固定 revision 的
   [`ModifierContractTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/modifier/ModifierContractTest.kt)，
-  第 20–49、85–117 和 170–212 行。
+  其 Q3 已编译用法位于
+  [`UiContractNodeSamples.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt)。
 - Modifier 折叠、z-index 相加、有序 shadow 与 ConstraintLayout 父数据：固定 revision 的
   [`ResolvedModifiersTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/ResolvedModifiersTest.kt)，
-  第 38–47、82–129 和 165–205 行。
+  包括物理与相对边缘形式之间的后声明者覆盖规则。
 - 兼容与不兼容的作用域父数据：固定 revision 的
   [`ModifierParentDataValidatorTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/layout/ModifierParentDataValidatorTest.kt)，
   第 31–159 行。
@@ -462,12 +471,16 @@ ViewCompose 在根本上不同：每个第一方 VNode 都会成为 Android View
 - Local 快照稳定性与环境驱动的子树替换：固定 revision 的
   [`SubtreeRecompositionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/SubtreeRecompositionTest.kt)，
   第 59–123 行。
-- 随捕获 local 变化的延迟 lazy、pager 与 tab content token：固定 revision 的
+- 随捕获 Local 变化的延迟 Lazy、Pager 与 Tab Content Token：固定 revision 的
   [`LazyContentLocalPropagationTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/context/LazyContentLocalPropagationTest.kt)，
-  第 16–90 行。
+  包括延迟 Lazy 与 Pager Session 随方向变化更新环境 Revision。
+- 运行时方向变化、物理 Padding/Margin/Offset 结果与 Inset 选择器重绑：固定 revision 的
+  [`ViewTreeRenderTransactionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt)。
+- 原生 ConstraintLayout 兼容 LayoutParams 下的相对 Margin：固定 revision 的
+  [`ViewLayoutParamsFactoryRelativeTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewLayoutParamsFactoryRelativeTest.kt)。
 - Insets Modifier 默认值与共存：固定 revision 的
   [`InsetsPaddingModifierTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/InsetsPaddingModifierTest.kt)，
-  第 14–48 行。该测试**不**覆盖真实分发、嵌套、消费或动画。
+  上述事务测试覆盖兼容分发；二者均不证明设备动画或嵌套消费。
 - 原生 Modifier 稳定 key 相等性：固定 revision 的
   [`NativeViewElementTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/NativeViewElementTest.kt)，
   第 14–55 行。
@@ -475,9 +488,9 @@ ViewCompose 在根本上不同：每个第一方 VNode 都会成为 Android View
   [`ViewTreeRenderTransactionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt)，
   第 330–341 行和第 393–470 行。
 
-现有已编译 API sample 覆盖 Modifier 链构造和 AndroidView 互操作，但当前没有已编译迁移 sample
-演示 Compose 自定义布局替代方案或真实嵌套 WindowInsets 行为。本文刻意避免嵌入第二份未编译的
-事实来源。
+已编译 API Sample 覆盖 Modifier 链构造、相对布局边和 AndroidView 互操作，但当前没有已编译
+迁移 Sample 演示 Compose 自定义布局替代方案或真实嵌套 WindowInsets 行为。本文刻意避免嵌入
+第二份未编译的事实来源。
 
 ## 已知缺口与复核触发条件
 
@@ -486,10 +499,9 @@ ViewCompose 在根本上不同：每个第一方 VNode 都会成为 Android View
 - 没有公开的自定义测量或 `Modifier.Node` 等价能力；
 - 没有已验证的 `BoxScope.matchParentSize` 等价能力；
 - 没有 tracked 与 static 两种 `UiLocal` 变体；
-- 通用 padding、margin、offset 或 inset 边选择没有逻辑 start/end 变体；
 - 没有嵌套 inset 消费协议；
 - 没有端到端 WindowInsets 动画或 View/ViewCompose 混合消费测试；
-- 公开 `AndroidView` release 文案尚未覆盖 renderer 测试所保护的回滚候选行为。
+- 尚无设备矩阵认证全部受支持 Android 版本上的相对 Inset 选择。
 
 发生以下任何事件时，负责人必须复核本文：
 

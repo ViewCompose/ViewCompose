@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/modifier.md
-translation_source_hash: 83fce7ff5b775c7d4f05c326c78462fb142eecb82c4e69e3f27c9b9fbceeee32
+translation_source_hash: 91e41c9d9b622aaaeb054e50527c75d96e0105fe4e9c35b18497a1d357bd0f06
 translation_status: current
 ---
 
@@ -12,12 +12,12 @@ translation_status: current
 
 目标是保证新增能力时落点明确，避免语义混放。
 
-## 2. 当前基线（2026-07）
+## 2. 当前基线（2026-08）
 
 1. identity 入口统一为 `Modifier`（`Modifier.Empty` 已移除）
 2. 文本语义类历史 modifier（如 `textColor/textSize`）已退场
 3. `weight/align/FlexibleSpacer` 仅通过 `RowScope/ColumnScope/BoxScope` 暴露
-4. 系统栏/键盘 inset 适配走组件侧 `Modifier.systemBarsInsetsPadding(...)` 与 `Modifier.imeInsetsPadding(...)`（若 Activity 使用 `adjustResize`，通常不再叠加 `imeInsetsPadding`，避免双重位移）
+4. 系统栏/键盘 Inset 适配可使用物理 `Modifier.systemBarsInsetsPadding(...)` / `Modifier.imeInsetsPadding(...)` 或感知方向的 `Relative` 形式（若 Activity 使用 `adjustResize`，通常不再叠加 IME Padding，避免双重位移）
 5. 列表容器策略已收口为容器参数：`reusePolicy`（`sharePool`）与 `motionPolicy`（`disableItemAnimator/animateInsert/animateRemove/animateMove/animateChange`）
 6. 键盘焦点跟随已收口为垂直容器参数：`focusFollowKeyboard`；当前覆盖 `LazyColumn`、`LazyVerticalGrid`、`VerticalPager`、`ScrollableColumn`
 7. `LazyRow`、`HorizontalPager`、`ScrollableRow` 不暴露 `focusFollowKeyboard`，避免“可调用但无效”的 API 漂移
@@ -32,6 +32,9 @@ translation_status: current
 16. 原生 View Padding 只有一个 Renderer 所有者。容器专属 Content Padding、已解析的
     `Modifier.padding` 与选定的系统栏/IME Insets 边会先合成再写入 View；Binder 不得在 Patch
     或环境重绑期间覆盖其他层的贡献。
+17. 物理 `padding/margin/offset` 与 Inset 选择器保持物理语义；对应的 `Relative` API 会在每次
+    Bind 时根据 VNode 捕获的布局方向解析 start/end。同一族内，后声明的物理或相对值会整体
+    替换先声明的值。
 
 ## 3. API 清单（全量扫描）
 
@@ -44,10 +47,10 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(<[^>]+>\s*)?Modifier\.([A-Za-z0-9_]+)\(
 rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|ConstraintLayoutScope)\."
 ```
 
-当前扫描结果（2026-07）：
+当前扫描结果（2026-08）：
 
-1. `fun Modifier.*` 声明总数（含重载、含 scoped 内部定义）：`76`
-2. `fun Modifier.*` 唯一 API 名称数：`62`
+1. `fun Modifier.*` 声明总数（含重载、含 scoped 内部定义）：`88`
+2. `fun Modifier.*` 唯一 API 名称数：`74`
 3. scoped modifier 声明总数：`5`（`RowScope/ColumnScope/BoxScope`）
 4. renderer internal modifier 扩展：`1`（仅内部解析能力）
 
@@ -66,7 +69,9 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 | API | 模块/命名空间 | 可见性 | 用途备注 | 生效范围 | 补充说明 |
 | --- | --- | --- | --- | --- | --- |
 | `padding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置内容内边距 | 全局 | 3 个重载（all/horizontal+vertical/四边） |
+| `paddingRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置感知方向的内容内边距 | 全局 | 逻辑 start/end，物理 top/bottom |
 | `margin` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置外边距（layout params 侧） | 全局 | 3 个重载 |
+| `marginRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置感知方向的 LayoutParams 外边距 | 全局 | 逻辑 start/end，物理 top/bottom |
 | `size` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 同时设置宽高 | 全局 | 固定像素语义（框架单位） |
 | `width` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置宽度 | 全局 | 与父容器布局规则共同生效 |
 | `height` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置高度 | 全局 | 与父容器布局规则共同生效 |
@@ -76,9 +81,12 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 | `fillMaxHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 高度填充父容器 | 全局 | 语义等价 `height(MATCH_PARENT)` |
 | `fillMaxSize` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 宽高同时填充父容器 | 全局 | 语义等价 `size(MATCH_PARENT, MATCH_PARENT)` |
 | `offset` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置平移偏移 | 全局 | 映射 `translationX/translationY` |
+| `offsetRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置感知方向的平移偏移 | 全局 | 正水平值朝逻辑 end 移动 |
 | `layoutId` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 标记子项布局 ID | 指定容器 | 主要用于 `ConstraintLayout` 子项匹配 |
 | `systemBarsInsetsPadding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 应用系统栏 inset 内边距 | 全局（容器感知） | 可按四边开关 |
+| `systemBarsInsetsPaddingRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 应用感知方向的系统栏 inset 内边距 | 全局（容器感知） | 逻辑 start/end 选择器 |
 | `imeInsetsPadding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 应用软键盘 inset 内边距 | 全局（容器感知） | 默认仅 bottom=true |
+| `imeInsetsPaddingRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 应用感知方向的软键盘 inset 内边距 | 全局（容器感知） | 逻辑 start/end 选择器；默认仅 bottom=true |
 | `backgroundColor` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置背景色 | 全局 | 与 `backgroundDrawableRes` 同时存在时优先级较低 |
 | `backgroundDrawableRes` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置 drawable 资源背景 | 全局 | 与 `cornerRadius` 组合时自动裁剪 |
 | `border` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置边框宽度与颜色 | 全局 | 依赖 surface style 管线渲染 |
@@ -183,13 +191,13 @@ Surface(
 
 适合放入 `Modifier` 的能力：
 
-1. 尺寸与占位：`size/width/height/minWidth/minHeight/padding/margin`
+1. 尺寸与占位：`size/width/height/minWidth/minHeight/padding/paddingRelative/margin/marginRelative`
 2. 外观修饰：`backgroundColor/backgroundDrawableRes/border/cornerRadius/alpha/elevation`
-3. 可见性与层级：`visibility/offset/zIndex`
+3. 可见性与层级：`visibility/offset/offsetRelative/zIndex`
 4. 通用交互与可访问性：`clickable/focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent/contentDescription`
 5. 测试定位：`testTag`
-6. 系统栏内边距：`systemBarsInsetsPadding`
-7. 软键盘内边距：`imeInsetsPadding`
+6. 系统栏内边距：`systemBarsInsetsPadding/systemBarsInsetsPaddingRelative`
+7. 软键盘内边距：`imeInsetsPadding/imeInsetsPaddingRelative`
 8. 逃生通道：`nativeView(key, configure)`
 9. 列表性能策略：容器参数 `reusePolicy/motionPolicy`
 10. 容器输入跟随策略：垂直容器参数 `focusFollowKeyboard`

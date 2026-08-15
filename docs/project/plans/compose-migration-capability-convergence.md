@@ -5,8 +5,8 @@
 Active after a 2026-08-14 implementation and contract re-audit. The retained plan now owns proven
 ViewCompose correctness and Android-ecosystem compatibility work, not general Compose API parity.
 Diagnostics are supporting test infrastructure only; they are not a product goal or an independent
-delivery phase. The Phase 0 evidence and Phase 1-3 runtime, host, and navigation correctness slices
-are implemented; Phase 4 RTL and restoration certification remain independently schedulable.
+delivery phase. The Phase 0 evidence, Phase 1-3 runtime/host/navigation slices, and Phase 4 logical
+edge API are implemented; only general Activity-root process-restoration certification remains.
 
 The first production slice is recorded by
 `release/changes/20260814-composition-runtime-correctness.json`. It adds retry-safe remember and
@@ -17,9 +17,8 @@ Android View reuse/release behavior.
 
 Last verified: 2026-08-15.
 
-Next action: implement the Phase 4 logical-edge public API slice, then run the general Activity-root
-process-death certification. Do not begin a convenience API or conditional protocol while a
-retained correctness defect remains open.
+Next action: run the general Activity-root process-death certification. Do not begin a convenience
+API or conditional protocol while a retained correctness defect remains open.
 
 ## Maven release changesets
 
@@ -269,15 +268,17 @@ scheduled.
 
 ## Phase 4: RTL correctness and restoration certification
 
-### Logical edges
+### Logical edges — completed 2026-08-15
 
-Add narrowly scoped logical start/end forms for general padding, margin, direction-aware horizontal
-offset, and inset edge selection. Resolve them from the captured `UiLayoutDirection`; preserve
-existing physical forms. Cover LTR, RTL, runtime direction changes, delayed child Sessions,
-applicable ConstraintLayout integration, and mixed logical/physical declarations.
+The public API now has narrowly scoped logical start/end forms for general padding, margin,
+direction-aware horizontal offset, and inset edge selection. The Android renderer resolves them
+from captured `UiLayoutDirection` while existing forms remain physical. LTR/RTL resolution,
+runtime direction changes, delayed lazy/pager Sessions, native ConstraintLayout-compatible margins,
+WindowInsets selector rebinding, and mixed logical/physical precedence have focused tests.
 
-This is a public API slice and must complete its Q-level, KDoc, sample, module manual, migration,
-localized documentation, compatibility, and changeset requirements in the same change.
+The five API families are classified Q3 and include canonical KDoc, a compiled sample, both owning
+module manuals, migration guidance, Chinese mirrors, compatibility notes, and release intent. The
+slice passed focused module tests, `verifyDocumentationStructure`, and `qaQuick`.
 
 ### General Activity-root restoration
 
@@ -403,6 +404,7 @@ This plan is complete when:
 | 2026-08-14 | Full re-audit | Current source/tests, commits for transactional effects, lazy activation, and lazy three-layer ownership, plus AndroidX behavior references | Retain proven core defects; recognize partial keyed implementation; correct Deep Link policy; reject broad automatic Insets protocol; defer convenience APIs |
 | 2026-08-14 | Existing test baseline | Runtime, UI Foundation, Host, Android aggregate, Navigation Core/Android, and Renderer unit tests | Seven relevant module test tasks pass; gaps remain uncovered behavior, not existing red tests |
 | 2026-08-15 | Navigation contract and ownership | Core resolver tests, public-host destination/graph Factory tests, SavedStateHandle recreation, same-route retained-stack isolation, compiled sample, module/migration docs, `verifyDocumentationStructure`, and `qaQuick` | Unknown query values are contractually inert; destination and graph owners inherit parent Factory/extras while replacing child ownership inputs; Phase 3 complete |
+| 2026-08-15 | Logical layout edges | Q3 relative padding/margin/offset/system-bar/IME contracts, compiled sample, physical/relative precedence, runtime LTR/RTL rebind, delayed lazy/pager environment revision, native ConstraintLayout-compatible margin, WindowInsets selector rebinding, module/migration docs, `verifyDocumentationStructure`, and `qaQuick` | Existing APIs remain physical; relative APIs resolve only from captured VNode direction; the later physical or relative declaration owns the complete family; logical-edge slice complete |
 
 ## Decision history
 
@@ -419,3 +421,5 @@ This plan is complete when:
   ViewTree-aware hosting, `matchParentSize`, and hidden-session disposal to independent requirements.
 - 2026-08-15: complete navigation owner compatibility by capturing parent provider defaults once
   per native host, recreating on parent-owner identity change, and keeping extra query values inert.
+- 2026-08-15: complete logical edge APIs additively; preserve physical forms, resolve relative
+  forms from captured VNode direction, and make cross-form precedence explicitly last-wins.

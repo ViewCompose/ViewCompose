@@ -10,6 +10,7 @@ import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 import com.viewcompose.ui.environment.UiEnvironmentValues
+import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.runtime.composition.ComposerLite
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -44,6 +45,17 @@ class LazyContentLocalPropagationTest {
 
         assertEquals(first.size, second.size)
         first.zip(second).forEach { (previous, next) ->
+            assertNotEquals(previous, next)
+        }
+    }
+
+    @Test
+    fun `delayed sessions receive a new environment revision after direction changes`() {
+        val ltr = delayedDirectionTokens(UiLayoutDirection.Ltr)
+        val rtl = delayedDirectionTokens(UiLayoutDirection.Rtl)
+
+        assertEquals(ltr.size, rtl.size)
+        ltr.zip(rtl).forEach { (previous, next) ->
             assertNotEquals(previous, next)
         }
     }
@@ -165,6 +177,36 @@ class LazyContentLocalPropagationTest {
             (tree[1].spec as HorizontalPagerNodeProps).pages.single().environmentRevision,
             (tree[2].spec as VerticalPagerNodeProps).pages.single().environmentRevision,
             tree[3].children.single().children.single().environment.resourceRevision,
+        )
+    }
+
+    private fun delayedDirectionTokens(layoutDirection: UiLayoutDirection): List<Any?> {
+        val tree = buildVNodeTree {
+            UiEnvironment(
+                values = UiEnvironmentValues(layoutDirection = layoutDirection),
+            ) {
+                LazyColumn {
+                    item(key = "lazy-item", contentRevision = "stable-content") {
+                        Text("lazy")
+                    }
+                }
+                HorizontalPager(currentPage = 0, onPageChanged = {}) {
+                    Page(key = "horizontal-page", contentRevision = "stable-content") {
+                        Text("pager")
+                    }
+                }
+                VerticalPager(currentPage = 0, onPageChanged = {}) {
+                    Page(key = "vertical-page", contentRevision = "stable-content") {
+                        Text("pager")
+                    }
+                }
+            }
+        }
+
+        return listOf(
+            (tree[0].spec as LazyColumnNodeProps).items.single().environmentRevision,
+            (tree[1].spec as HorizontalPagerNodeProps).pages.single().environmentRevision,
+            (tree[2].spec as VerticalPagerNodeProps).pages.single().environmentRevision,
         )
     }
 }

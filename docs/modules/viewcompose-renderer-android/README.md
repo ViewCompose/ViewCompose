@@ -167,6 +167,11 @@ Because the current line is alpha, the documentation site intentionally does not
   layout or parent-data changes replace them. A changed `NativeViewElement.stableKey` replays its
   configuration, while AndroidView update, reset, commit, and release callbacks remain untouched.
   Diagnostics classify this path as a targeted patch with detail `ModifierOnly`.
+- Physical padding, margin, offset, and inset selectors retain left/right semantics. Their
+  `Relative` counterparts map logical start/end from the VNode's captured layout direction during
+  every bind or environment rebind. A later physical or relative declaration replaces the earlier
+  complete value for that family. Positive `offsetRelative.horizontal` translates toward logical
+  end without changing measurement.
 - Gesture dispatch retains an undecided pointer stream until drag recognition. If the stream ends
   without gesture consumption, the retained target receives one normal click; a recognized drag
   consumes the stream and suppresses that click.
@@ -214,10 +219,12 @@ than a pixel line height captured at an earlier text size. Their natural line he
 tracks the resolved typeface, text size, and font scale across reuse and environment rebinds. An
 explicit `lineHeightSp` remains authoritative.
 
-For lazy collections, the renderer owns one composite native padding value: logical `contentPadding`,
-physical `Modifier.padding`, and selected system-bar/IME insets are additive. Logical start/end
-values resolve against the captured layout direction, and a resource or configuration rebind must
-retain the last delivered inset snapshot until Android dispatches a newer one.
+For lazy collections, the renderer owns one composite native padding value: logical
+`contentPadding`, resolved physical or relative Modifier padding, and selected system-bar/IME
+insets are additive. All logical start/end values resolve against the captured layout direction.
+When a direction change also changes relative inset selectors, the renderer immediately resolves
+available root insets or clears the obsolete physical contribution until Android dispatches the
+new snapshot; it never renders one frame with the prior side selected.
 
 - Render, disposal, View binding, pager updates, and decoration callbacks are UI-thread confined.
 - One container has one mounted-tree owner. Do not share mounted nodes between containers or render
@@ -274,3 +281,8 @@ Custom renderers that consume collection semantics must preserve logical row/col
 item spans, selection, and heading state to equivalent platform accessibility metadata. Renderers
 that do not yet recognize the nullable collection fields may ignore them during the alpha line,
 but their accessibility output will not announce collection position.
+
+The relative modifier family is resolved entirely from each VNode environment. Renderer forks must
+upgrade their folding, LayoutParams, translation, and inset-selection paths together; mapping from
+the process configuration or reinterpreting the existing physical elements would violate the
+public UI Contract.

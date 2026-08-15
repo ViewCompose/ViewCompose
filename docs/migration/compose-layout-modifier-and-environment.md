@@ -115,10 +115,10 @@ rules, and treats `UiLocal` as scoped lookup rather than an invalidation subscri
 | Modifier equality and update | A `ModifierNodeElement` uses equality to decide whether an existing `Modifier.Node` is updated. | Modifier chains compare their ordered element sequences structurally. Renderer diffing can skip a subtree for equal chains. `NativeViewElement` equality uses only its stable key and ignores callback identity. | Supported | Give native configuration a key that changes when its semantic configuration changes, and do not rely on a fresh lambda instance to force an update. |
 | Custom `Modifier.Node` lifecycle | Public node APIs provide create/update, attach/detach, invalidation, local reads, and specialized layout, draw, input, or semantics node interfaces. | `ModifierElement` is a renderer marker, not an application lifecycle node. Built-in elements are interpreted by known renderer branches. No public equivalent of custom node attach/detach or capability interfaces exists. | Unsupported | Use a supported modifier, replay-safe `nativeView`, transaction-aware `AndroidView`, or a reviewed renderer feature. Do not publish an unrecognized element from application code. |
 | Density and font scale | `LocalDensity` provides dp/sp conversion to layout and drawing code. | `UiDensity` is captured into each VNode environment. Android hosts read density and font scale from resources; renderers convert units at the native boundary. | Supported | Keep logical dp/sp in declarations and avoid retaining converted pixels across a new environment snapshot. |
-| Layout direction and locales | Composition locals provide layout direction and locale data; logical start/end APIs resolve from that environment. | Direction and locale lists are captured in the VNode. The renderer applies native View direction and TextView locales, but padding, margin, offset, and inset-side parameters are physical left/right. | Partially supported | Audit every start/end assumption and run real RTL layout checks; do not translate logical Compose edges directly to physical ViewCompose edges. |
+| Layout direction and locales | Composition locals provide layout direction and locale data; logical start/end APIs resolve from that environment. | Direction and locale lists are captured in the VNode. The renderer applies native View direction and TextView locales. General edge families provide explicit physical and relative forms, and delayed sessions carry the environment revision. | Supported | Select the relative form for logical start/end intent, retain physical APIs only for deliberate left/right behavior, and run real RTL layout checks. |
 | Composition-local propagation | `compositionLocalOf` tracks read sites; changing a provided value invalidates the readers. `staticCompositionLocalOf` invalidates the provider content as a broader unit. | `UiLocal` uses a thread-scoped map while a tree is built. Emits compare a complete local snapshot as an input, but reading `UiLocals.current` does not itself register an invalidation dependency. | Intentionally different | Back changing local values with ViewCompose state or another host invalidation source. Treat local reads as scoped value lookup, not observation. |
 | Delayed content locals | Lazy and other subcomposed content observes locals through the Compose composition that owns it. | Lazy, pager, tab, overlay, and navigation sessions explicitly capture opaque local snapshots and restore them when delayed content renders. Snapshot changes participate in content tokens or session updates. | Supported | Preserve stable item/page keys and content tokens, and let the container refresh its captured snapshot rather than retaining a builder. |
-| System bars and IME insets | Insets padding is layout-aware, participates in automatic nested consumption, avoids reapplying an already consumed portion, and follows IME updates and animations. | System-bar and IME modifiers install an AndroidX listener on the target View and add selected physical sides to base padding. Nested ViewCompose modifiers do not exchange consumed-inset state; system-bar and IME values on one View are summed. | Partially supported | Assign inset ownership to a deliberate level, avoid duplicate ancestor/descendant application, and avoid combining `adjustResize` with redundant IME padding. |
+| System bars and IME insets | Insets padding is layout-aware, participates in automatic nested consumption, avoids reapplying an already consumed portion, and follows IME updates and animations. | System-bar and IME modifiers install an AndroidX listener on the target View and add selected physical or direction-resolved sides to base padding. Nested ViewCompose modifiers do not exchange consumed-inset state; system-bar and IME values on one View are summed. | Partially supported | Assign inset ownership to a deliberate level, avoid duplicate ancestor/descendant application, and avoid combining `adjustResize` with redundant IME padding. |
 | Android output and View interop | Compose normally renders Compose nodes; `AndroidView` embeds a platform View with factory/update and optional reuse/release callbacks. | Every first-party node ultimately becomes an Android View. ViewCompose `AndroidView` adds transactional rollback and post-transaction commit semantics; `nativeView` applies replay-safe configuration to the mounted View. | Intentionally different | Separate repeatable configuration from one-shot work and cleanup. Put them in update/native configuration, `onCommit`, and `onRelease` respectively. |
 
 ## Two layout engines: Compose constraints and Android Views
@@ -167,16 +167,20 @@ This precedence is implemented in
 lines 73–99. Exact dp dimensions are converted with the VNode's captured density. Fill helpers map
 to Android `MATCH_PARENT`; they do not preserve every fractional or intrinsic Compose option.
 
-Padding and margin have distinct native destinations:
+Edge modifiers have distinct native destinations:
 
-- padding becomes content padding on the mounted View;
-- margin becomes physical left, top, right, and bottom values on the parent LayoutParams;
-- offset becomes View translation and does not change sibling measurement or placement; and
+- `padding` becomes physical content padding; `paddingRelative` maps logical start/end before the
+  renderer writes the mounted View;
+- `margin` supplies physical LayoutParams margins; `marginRelative` maps logical start/end before
+  the parent LayoutParams are created;
+- `offset` is a physical View translation; positive `offsetRelative.horizontal` moves toward
+  logical end and neither form changes sibling measurement or placement; and
 - minimum width and height become View minimum dimensions.
 
-Repeated padding does not create nested layout layers. The resolver retains the final padding
-element. The same rule applies to repeated margin elements. Migration should therefore normalize a
-Compose chain before translating it and preserve the intended outer and inner boundaries in the
+Repeated padding does not create nested layout layers. Physical and relative declarations share
+one resolved slot per family, so the later padding, margin, or offset declaration replaces the
+earlier complete value even when their forms differ. Migration should therefore normalize a
+Compose chain before translating it and preserve intended outer and inner boundaries in the
 container structure.
 
 The public dimension and edge contracts are in
@@ -250,7 +254,8 @@ separate renderer phases. The verified folding rules include:
 | Draw and advanced-shadow groups | Groups retain declaration order. |
 | Axis `width`/`height` and `size` | Axis-specific values win through fixed LayoutParams precedence, regardless of cross-type chain order. |
 | `graphicsLayer` and simple alpha, offset, or clip | The graphics-layer value has fixed renderer precedence when supplied. |
-| System-bar and IME inset padding | Both values are retained and their selected physical sides are added. |
+| Physical and relative padding, margin, or offset | The later declaration replaces the earlier complete value in that family. |
+| System-bar and IME inset padding | The later physical or relative declaration wins within each inset type; system-bar and IME contributions are then added. |
 
 The fold is implemented in
 [`ResolvedModifiers.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/modifier/ResolvedModifiers.kt),
@@ -321,15 +326,16 @@ sets TextView locales. That boundary is in
 [`ViewModifierApplier.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/ViewModifierApplier.kt),
 lines 41–55. A changed environment forces a full node rebind rather than a visual-only patch.
 
-Direction support is incomplete at the modifier API boundary. Row, Column, Box, and Constraint
-alignment types can express logical start/end behavior, but these APIs use physical edges:
+Direction support is explicit at the modifier boundary. Existing `padding`, `margin`, `offset`,
+`systemBarsInsetsPadding`, and `imeInsetsPadding` APIs remain physical. Their `Relative`
+counterparts resolve logical start/end from the captured `UiLayoutDirection` on every bind and
+environment rebind. Positive relative horizontal offset moves toward end: right in LTR and left in
+RTL. Top, bottom, and vertical offset remain physical.
 
-- padding and margin: left and right;
-- offset: positive x moves right; and
-- system-bar or IME selection: left and right.
-
-Every migration involving asymmetric horizontal space needs an RTL decision. A value that was
-`start` in Compose must not silently become `left`.
+Every migration involving asymmetric horizontal space still needs an explicit choice. Map Compose
+start/end intent to a relative API; use the original API only when the product requirement truly
+means physical left/right. Do not pre-swap values in application code because runtime direction
+changes and delayed lazy or pager sessions are framework-owned invalidation inputs.
 
 ## UiLocal versus CompositionLocal
 
@@ -388,13 +394,19 @@ to nested modifiers. The official
 [insets UI guide](https://developer.android.com/develop/ui/compose/system/insets-ui) explains nested
 consumption, size modifiers, and IME animation behavior.
 
-ViewCompose offers two focused modifiers:
+ViewCompose offers physical and relative forms for each supported inset type:
 
 - `systemBarsInsetsPadding`, which selects physical system-bar sides; and
-- `imeInsetsPadding`, which defaults to the physical bottom side.
+- `systemBarsInsetsPaddingRelative`, which selects logical start/end system-bar sides;
+- `imeInsetsPadding`, which defaults to the physical bottom side; and
+- `imeInsetsPaddingRelative`, which defaults to the same bottom side and can select logical
+  start/end sides.
 
 The renderer installs an AndroidX `WindowInsetsCompat` listener, records base padding, and adds the
-selected inset pixels. Removing both modifiers restores base padding and removes the listener. The
+selected inset pixels. A direction change re-resolves relative selectors from the node environment;
+the renderer uses current root insets when available, otherwise clears the obsolete physical
+contribution until the platform dispatches the replacement. Removing both modifiers restores base
+padding and removes the listener. The
 implementation is in
 [`ModifierInsetsApplier.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/modifier/ModifierInsetsApplier.kt),
 lines 11–128.
@@ -414,8 +426,9 @@ Migration rules:
    transition on a real hosted screen.
 5. Do not claim Compose nested-consumption or same-frame layout parity.
 
-The current unit test protects modifier defaults and resolution but not real WindowInsets dispatch,
-nested consumption, or animation. That limitation is recorded under executable evidence below.
+Unit tests protect defaults, physical/relative precedence, direction re-resolution, and compatible
+WindowInsets dispatch. Device-level animation, mixed-tree consumption, and platform-version
+dispatch behavior remain certification boundaries recorded below.
 
 ## Android View output and interop
 
@@ -443,10 +456,8 @@ lines 527–579.
 
 `update`, `onReset`, and `nativeView` must not start non-repeatable external work. A failed frame can
 restore the previously committed native tree and replay configuration. Use `onCommit` for operations
-that must happen only after success and `onRelease` for owned-resource cleanup. Renderer tests
-release newly created rollback candidates, although the current public `AndroidView` wording names
-only committed removal and session disposal. Treat `onRelease` as cleanup for any permanently
-abandoned created View until the public contract and implementation are aligned.
+that must happen only after success and `onRelease` for owned-resource cleanup. The public contract
+and renderer tests both include rollback of an uncommitted candidate as permanent abandonment.
 
 ## Migration checklist
 
@@ -457,7 +468,8 @@ abandoned created View until the public contract and implementation are aligned.
    ViewCompose folding rules.
 5. Keep parent-data modifiers on direct children of the matching scope and redesign
    `matchParentSize` uses.
-6. Identify every logical start/end edge before mapping physical modifier parameters.
+6. Map logical start/end intent to relative modifiers; keep physical APIs only for deliberate
+   left/right behavior.
 7. Move changing provided values behind ViewCompose state; do not rely on `UiLocal` read tracking.
 8. Assign system-bar and IME inset ownership explicitly across View and ViewCompose boundaries.
 9. Separate Android View replay-safe configuration, post-commit work, and release cleanup.
@@ -471,10 +483,11 @@ The following local evidence protects the claims in this page:
 - Modifier immutability, structural equality, declaration order, draw order, and parent-data
   construction:
   [`ModifierContractTest.kt`](../../viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/modifier/ModifierContractTest.kt),
-  lines 20–49, 85–117, and 170–212.
+  including the five public relative modifier contracts. Their Q3 compiled usage is in
+  [`UiContractNodeSamples.kt`](../../viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt).
 - Modifier folding, additive z-index, ordered shadows, and ConstraintLayout parent data:
   [`ResolvedModifiersTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/ResolvedModifiersTest.kt),
-  lines 38–47, 82–129, and 165–205.
+  including last-declaration-wins across physical and relative edge forms.
 - Compatible and incompatible scoped parent data:
   [`ModifierParentDataValidatorTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/layout/ModifierParentDataValidatorTest.kt),
   lines 31–159.
@@ -495,10 +508,15 @@ The following local evidence protects the claims in this page:
   lines 59–123.
 - Delayed lazy, pager, and tab content tokens changing with captured locals:
   [`LazyContentLocalPropagationTest.kt`](../../viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/context/LazyContentLocalPropagationTest.kt),
-  lines 16–90.
+  including direction-driven environment revisions for delayed lazy and pager sessions.
+- Runtime direction changes, physical padding/margin/offset results, and inset selector rebinding:
+  [`ViewTreeRenderTransactionTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt).
+- Relative margins under native ConstraintLayout-compatible LayoutParams:
+  [`ViewLayoutParamsFactoryRelativeTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewLayoutParamsFactoryRelativeTest.kt).
 - Insets modifier defaults and coexistence:
   [`InsetsPaddingModifierTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/InsetsPaddingModifierTest.kt),
-  lines 14–48. This does **not** cover real dispatch, nesting, consumption, or animation.
+  while the transaction test above covers compatible dispatch. Neither proves device animation or
+  nested consumption.
 - Native modifier stable-key equality:
   [`NativeViewElementTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/NativeViewElementTest.kt),
   lines 14–55.
@@ -506,8 +524,8 @@ The following local evidence protects the claims in this page:
   [`ViewTreeRenderTransactionTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt),
   lines 330–341 and 393–470.
 
-Existing compiled API samples cover Modifier chain construction and AndroidView interop, but no
-compiled migration sample currently demonstrates a Compose custom layout replacement or real
+Compiled API samples cover Modifier chain construction, relative layout edges, and AndroidView
+interop, but no compiled migration sample demonstrates a Compose custom layout replacement or real
 nested WindowInsets behavior. This page intentionally avoids embedding a second, non-compiled
 source of truth.
 
@@ -518,11 +536,9 @@ The following gaps remain part of the migration contract:
 - no public custom measurement or `Modifier.Node` equivalent;
 - no verified `BoxScope.matchParentSize` equivalent;
 - no tracked-versus-static `UiLocal` variants;
-- no logical start/end variants for general padding, margin, offset, or inset selection;
 - no nested inset-consumption protocol;
 - no end-to-end WindowInsets animation or mixed View/ViewCompose consumption test; and
-- public `AndroidView` release wording does not yet cover the rollback-candidate behavior protected
-  by renderer tests.
+- no device matrix yet certifies relative inset selection across every supported Android version.
 
 The owner must re-verify this page when any of these events occurs:
 

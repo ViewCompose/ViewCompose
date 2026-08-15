@@ -133,6 +133,7 @@ internal object ViewModifierApplier {
             defaultRippleColor = defaultRippleColor,
         )
         val hostStyle = ModifierNodeStyleResolver.resolveHostStyle(
+            node = node,
             resolved = resolved,
             nodeStyle = nodeStyle,
         )
@@ -186,6 +187,8 @@ internal object ViewModifierApplier {
                 resolved = resolved,
                 minHeight = hostStyle.minHeight,
                 minWidth = hostStyle.minWidth,
+                offsetX = hostStyle.offsetX,
+                offsetY = hostStyle.offsetY,
             )
         }
         if (previous == null || previous.resolved.semantics != resolved.semantics) {
@@ -215,8 +218,8 @@ internal object ViewModifierApplier {
             )
             ModifierInsetsApplier.applyWindowInsetsPadding(
                 view = view,
-                systemBarsModifier = resolved.systemBarsInsetsPadding,
-                imeModifier = resolved.imeInsetsPadding,
+                systemBarsModifier = hostStyle.systemBarsInsetsPadding,
+                imeModifier = hostStyle.imeInsetsPadding,
                 basePadding = if (hostStyle.hasWindowInsetsPadding) {
                     nodeStyle.padding
                 } else {
@@ -280,6 +283,8 @@ internal object ViewModifierApplier {
             previousResolved.zIndex != nextResolved.zIndex ||
             previousResolved.elevation != nextResolved.elevation ||
             previousResolved.graphicsLayer != nextResolved.graphicsLayer ||
+            previous.hostStyle.offsetX != next.hostStyle.offsetX ||
+            previous.hostStyle.offsetY != next.hostStyle.offsetY ||
             previous.hostStyle.minHeight != next.hostStyle.minHeight ||
             previous.hostStyle.minWidth != next.hostStyle.minWidth ||
             previousResolved.layoutId != nextResolved.layoutId ||
@@ -314,9 +319,7 @@ internal object ViewModifierApplier {
         previous: AppliedModifierState,
         next: AppliedModifierState,
     ): Boolean {
-        return previous.hostStyle != next.hostStyle ||
-            previous.resolved.systemBarsInsetsPadding != next.resolved.systemBarsInsetsPadding ||
-            previous.resolved.imeInsetsPadding != next.resolved.imeInsetsPadding
+        return previous.hostStyle != next.hostStyle
     }
 
     private fun textAppearanceChanged(

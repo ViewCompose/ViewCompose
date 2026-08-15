@@ -11,6 +11,8 @@ import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.node.spec.ConstraintDimension
 import com.viewcompose.ui.modifier.MarginModifierElement
+import com.viewcompose.ui.modifier.RelativeMarginModifierElement
+import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.renderer.layout.LayoutParamDefaultsResolver
@@ -52,6 +54,7 @@ internal object ViewLayoutParamsFactory {
         )
         val boxAlign = resolved.boxAlign
         val margin = resolved.margin
+        val relativeMargin = resolved.relativeMargin
         val size = resolved.size
         val widthModifier = resolved.width
         val heightModifier = resolved.height
@@ -122,6 +125,7 @@ internal object ViewLayoutParamsFactory {
                 }
                 android.widget.LinearLayout.LayoutParams(resolvedWidth, resolvedHeight).applyLayoutParams(
                     margin = margin,
+                    relativeMargin = relativeMargin,
                     node = node,
                 ) {
                     this.weight = weight?.weight ?: 0f
@@ -140,6 +144,7 @@ internal object ViewLayoutParamsFactory {
                     inheritsContentGravity = inheritsContentGravity,
                 ).applyLayoutParams(
                     margin = margin,
+                    relativeMargin = relativeMargin,
                     node = node,
                 ) {
                     gravity = boxAlign?.alignment?.toGravity() ?: parent.contentGravity
@@ -148,11 +153,20 @@ internal object ViewLayoutParamsFactory {
 
             is DeclarativeConstraintLayout -> ConstraintLayout.LayoutParams(width, height).applyLayoutParams(
                 margin = margin,
+                relativeMargin = relativeMargin,
                 node = node,
             )
 
-            is FrameLayout -> FrameLayout.LayoutParams(width, height).applyLayoutParams(margin = margin, node = node)
-            else -> ViewGroup.MarginLayoutParams(width, height).applyMargin(margin, node)
+            is FrameLayout -> FrameLayout.LayoutParams(width, height).applyLayoutParams(
+                margin = margin,
+                relativeMargin = relativeMargin,
+                node = node,
+            )
+            else -> ViewGroup.MarginLayoutParams(width, height).applyMargin(
+                margin = margin,
+                relativeMargin = relativeMargin,
+                node = node,
+            )
         }
     }
 
@@ -174,22 +188,38 @@ internal object ViewLayoutParamsFactory {
 
     private fun <T : ViewGroup.MarginLayoutParams> T.applyLayoutParams(
         margin: MarginModifierElement?,
+        relativeMargin: RelativeMarginModifierElement?,
         node: VNode,
         block: T.() -> Unit = {},
     ): T {
-        applyMargin(margin, node)
+        applyMargin(margin, relativeMargin, node)
         block()
         return this
     }
 
     private fun <T : ViewGroup.MarginLayoutParams> T.applyMargin(
         margin: MarginModifierElement?,
+        relativeMargin: RelativeMarginModifierElement?,
         node: VNode,
     ): T {
-        if (margin == null) {
+        if (margin == null && relativeMargin == null) {
             setMargins(0, 0, 0, 0)
             return this
         }
+        if (relativeMargin != null) {
+            val (left, right) = when (node.environment.layoutDirection) {
+                UiLayoutDirection.Ltr -> relativeMargin.start to relativeMargin.end
+                UiLayoutDirection.Rtl -> relativeMargin.end to relativeMargin.start
+            }
+            setMargins(
+                node.environment.roundToPx(left),
+                node.environment.roundToPx(relativeMargin.top),
+                node.environment.roundToPx(right),
+                node.environment.roundToPx(relativeMargin.bottom),
+            )
+            return this
+        }
+        checkNotNull(margin)
         setMargins(
             node.environment.roundToPx(margin.left),
             node.environment.roundToPx(margin.top),

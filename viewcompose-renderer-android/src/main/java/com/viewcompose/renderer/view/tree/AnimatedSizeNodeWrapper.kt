@@ -8,6 +8,8 @@ import com.viewcompose.ui.modifier.MarginModifierElement
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.ModifierElement
 import com.viewcompose.ui.modifier.OffsetModifierElement
+import com.viewcompose.ui.modifier.RelativeMarginModifierElement
+import com.viewcompose.ui.modifier.RelativeOffsetModifierElement
 import com.viewcompose.ui.modifier.SizeModifierElement
 import com.viewcompose.ui.modifier.VerticalAlignModifierElement
 import com.viewcompose.ui.modifier.WeightModifierElement
@@ -111,6 +113,7 @@ internal object AnimatedSizeNodeWrapper {
 
     private fun ModifierElement.isHostLayoutElement(): Boolean {
         return this is MarginModifierElement ||
+            this is RelativeMarginModifierElement ||
             this is SizeModifierElement ||
             this is WidthModifierElement ||
             this is HeightModifierElement ||
@@ -119,6 +122,7 @@ internal object AnimatedSizeNodeWrapper {
             this is HorizontalAlignModifierElement ||
             this is VerticalAlignModifierElement ||
             this is OffsetModifierElement ||
+            this is RelativeOffsetModifierElement ||
             this is ZIndexModifierElement
     }
 
