@@ -119,6 +119,14 @@ then compare that durable protocol and retain all observed AndroidX lock snapsho
 mixed value, as diagnostic metadata. A missing or different policy fails closed; raw lock snapshots
 are never rewritten after collection.
 
+An explicit unlocked-DVFS policy identifies the host protocol; it does not claim that an OEM will
+hold a stable working frequency. The run-P50 CV gate remains mandatory. If a method produces two
+frequency plateaus, changes `scaling_max_freq` while thermal status is unchanged, or reports that
+AndroidX cannot clear the Runtime Image, reject it instead of rerunning until one sample happens to
+pass. `cmd power set-fixed-performance-mode-enabled` is not equivalent to a clock lock unless the
+device proves stable minimum and maximum frequencies throughout measurement. Use a rootable or
+otherwise clock-controllable reference device when the consumer device cannot satisfy this gate.
+
 Compare with a same-device historical baseline and apply the regression gate. The baseline input is
 the previously generated revisioned comparison report, not raw Macrobenchmark JSON:
 
@@ -243,6 +251,15 @@ All eight methods pass the `0.15` run-stability gate. The comparison report pres
 AndroidX `cpuLocked` snapshots while accepting the batch through its explicit host-verified clock
 policy. High update P95 values remain part of the baseline: both engines rebuild many shadowed
 cards and a conditional subtree, so P50 alone is not an adequate interpretation.
+
+Navigation revision 6 and design-bundle revision 3 do not yet have accepted physical baselines.
+On the same Samsung device, four navigation transitions supplied 202-223 frames per run, but OEM
+frequency ceilings alternated between full and capped values even when Android thermal status ended
+at `NONE`. Unlocked and fixed-performance trials produced run-P50 CV values from `0.308` to `0.372`.
+The representative Cut Contrast patch method also failed at `0.262`. The device denies clearing ART
+profile data to shell, and fixed-performance plus enhanced-processing modes did not provide a real
+clock lock. These results are rejected capability evidence, not framework regressions or baselines;
+finish those two matrices on a clock-controllable reference device.
 
 Same-device backend commands:
 

@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 1e5a0427ebaac44925e617a30588ec851388837ee9a72922ed120b0b0382eedb
+translation_source_hash: 24dffc822977984f517cefb7452537518f8e033b766a821bdeb6e0eb232a1bcf
 translation_status: current
 ---
 
@@ -89,8 +89,20 @@ instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
 
 对容易升温的真机，应让每个 ViewCompose 或 Compose 方法都从相同的 `NONE`/`LIGHT` 温控
 等级开始，方法之间完成冷却，并把各自 JSON 放入一个干净目录。将该目录作为
-`benchmarkResult` 时，工具只会合并设备、系统、CPU 锁定和编译上下文完全一致的结果；
-benchmark 方法重名或上下文不同会直接失败，不会任意选择最新的局部结果。
+`benchmarkResult` 时，工具只会合并设备、系统、时钟策略和编译上下文完全一致的结果；
+benchmark 方法重名或上下文不同会直接失败，不会任意选择最新的局部结果。没有显式时钟
+策略的旧结果仍要求 AndroidX `cpuLocked` 快照一致。
+
+拆分方法批次开始前只安装一次 target 和 benchmark APK。安装后停止两个进程、熄屏，等待
+温控等级和 CPU 最低频率回到正常状态，再直接调用已安装的 `AndroidJUnitRunner`。每个方法
+都通过 `androidx.benchmark.output.payload.clockPolicy=unlocked-dvfs-preflight-v1` 记录经过主机
+预检的消费设备协议；报告比较该协议并保留全部 AndroidX 原始锁定快照，不能事后改写。
+
+显式的 unlocked-DVFS 策略只标识主机协议，不代表 OEM 会保持稳定工作频率，run-P50 CV 门禁
+仍然必须执行。如果方法出现两个频率平台、温控等级不变时 `scaling_max_freq` 仍切换，或者
+AndroidX 报告无法清理 Runtime Image，应直接拒绝，不能重跑到偶然通过为止。
+`cmd power set-fixed-performance-mode-enabled` 只有在设备证明整个测量期间最低和最高频率稳定
+时才能视为锁频。消费设备无法满足门禁时，必须改用可 root 或其他可控制时钟的参考设备。
 
 与同设备历史基线比较并执行回归门禁：
 
@@ -155,6 +167,13 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 8 个方法全部通过 `0.15` run 稳定性门禁。对照报告保留 AndroidX 原始 `cpuLocked` 混合快照，
 同时依据主机预检并显式记录的时钟策略验收该批次。更新场景的高 P95 仍属于基线的一部分：
 两个引擎都会重建多张带阴影卡片和条件子树，不能只用 P50 解释结果。
+
+导航 revision 6 和设计系统 bundle revision 3 尚无已验收的物理基线。在同一台三星设备上，
+每个 run 的 4 次导航转场已经提供 202--223 帧，但 Android 温控最终为 `NONE` 时，OEM 频率
+上限仍在满速和受限值之间切换。unlocked 与 fixed-performance 试验的 run-P50 CV 为
+`0.308`--`0.372`，代表性的 Cut Contrast patch 方法也以 `0.262` 失败。该设备拒绝 shell 清理
+ART profile，fixed-performance 和增强处理模式也无法形成真正锁频。这些结果属于被拒绝的
+设备能力证据，不是框架回归或正式基线；两组矩阵必须在可控制时钟的参考设备上完成。
 
 同机后端对比入口：
 

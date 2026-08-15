@@ -4,7 +4,7 @@
 
 Active. Phase 0 inventory and workload freeze, Phase 1 contract and automation spine, Phase 2 host
 and catalog hard cut, Phase 3 localization and content hard cut, and Phase 4 scenario migration are
-complete. Phase 5 benchmark rebaseline is in progress; release, renderer diagnostics, list revision
+complete. Phase 5 benchmark rebaseline is device-blocked; release, renderer diagnostics, list revision
 3, complex-layout revision 3, diagnostics-theme revision 2, and collection-stress revision 2
 replacement baselines are accepted. Shadow-list and shadow-complex-layout revision 2 replacement
 baselines are also accepted.
@@ -16,8 +16,9 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-15.
 
-Next action: complete the Phase 5 navigation-motion revision 6 and design-bundle revision 3
-baselines.
+Next action: run the Phase 5 navigation-motion revision 6 and design-bundle revision 3 matrices on
+a rootable or otherwise clock-controllable reference device. The current Samsung consumer device
+cannot produce valid run stability for these workloads.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -1079,10 +1080,21 @@ eight pushes, but its roughly two-minute measurement window crossed the device t
 the first three run-P50 values were `4.504/4.502/4.320 ms`, the last two rose to
 `8.356/8.614 ms`, and CV reached `0.327`. Navigation revision 6 therefore measures four
 same-direction transitions per iteration. That still contributes roughly 200 transition frames per
-run instead of revision 3's roughly 50, while halving sustained work so a method does not measure a
-thermal-state transition. Pop setup preloads four destinations outside measurement, then the
-measured block returns through all four. Revisions 3-5 remain rejected preflight evidence rather
-than baselines.
+run instead of revision 3's roughly 50 while bounding sustained work. Pop setup preloads four
+destinations outside measurement, then the measured block returns through all four.
+
+Revision 6 proved that workload size was no longer the blocker. Its uncompiled push run produced
+202-216 frames but run-P50 values of `8.134/8.702/9.566/4.572/4.358 ms` (CV `0.308`). Two
+profile-guided retries ended at `LIGHT` and `NONE` yet also failed at CV `0.323` and `0.317`.
+During the latter run, read-only sampling showed Samsung changing `scaling_max_freq` repeatedly
+between full and capped plateaus without a thermal-status change. AndroidX also reported that the
+Runtime Image could not be cleared, and direct shell profile reset is denied on this user build.
+The platform fixed-performance command held one frequency ceiling but still produced CV `0.372`;
+enhanced processing did not create a clock lock. A representative design revision 3 retained-patch
+run failed similarly at CV `0.262`. These results are rejected device-capability evidence. Revisions
+3-5 remain rejected workload preflights; revision 6 is the retained navigation workload, but neither
+navigation revision 6 nor design revision 3 receives a baseline until a clock-controllable reference
+device is available.
 
 For structurally unchanged workloads, apply the repository performance policy: P50 fails only when
 it regresses by more than both 5% and 0.3 ms; P95 fails only when it regresses by more than both 10%
@@ -1248,6 +1260,7 @@ the retired Demo layout.
 | 2026-08-15 | Phase 5 navigation revision 3 stability preflight | One push per iteration yielded stable 51-57 frame counts but frame-CPU run-P50 values of `9.779/7.545/4.044/8.708/9.637 ms` and CV `0.265`. The result is rejected. Revision 4 keeps push/pop separate and measures eight same-direction transitions per iteration; pop setup preloads the matching depth outside measurement. |
 | 2026-08-15 | Phase 5 navigation revision 4 automation preflight | The first eight-push run failed before metric collection: repeated standard pushes to the same route left the event-only scenario state unchanged after the second transition. Revision 5 adds active stack depth to the state target and requires eight distinct transitions in the bilingual device contract test. |
 | 2026-08-15 | Phase 5 navigation revision 5 thermal preflight | Eight pushes yielded 417-437 frames per run, but a roughly two-minute method crossed the consumer device's thermal boundary. Frame-CPU run-P50 shifted from `4.504/4.502/4.320 ms` to `8.356/8.614 ms` (CV `0.327`), so the result is rejected. Revision 6 uses four same-direction transitions, retaining about 200 frames per run while halving sustained load. |
+| 2026-08-15 | Phase 5 navigation/design reference-device gate | Navigation revision 6 supplied 202-223 frames per run, but unlocked, profile-guided, and platform fixed-performance trials still produced CV `0.308`-`0.372` while ending at `NONE`/`LIGHT`. Read-only sampling proved OEM maximum-frequency plateaus changed without thermal-status changes; shell cannot clear ART profile data. A representative design revision 3 patch run also failed at CV `0.262`. Both remaining matrices now require a clock-controllable reference device; no result was accepted by repetition. |
 
 ## Decision history
 
