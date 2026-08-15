@@ -12,8 +12,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * ViewCompose 与 Compose 复杂布局场景的帧耗时和内存对照 benchmark。
- * Paired frame-time and memory benchmark for the ViewCompose and Compose complex-layout scenario.
+ * Frame-time and memory benchmark for all three complex-layout implementations.
  */
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalMetricApi::class)
@@ -36,6 +35,13 @@ class ComplexLayoutPerformanceComparisonBenchmark {
     }
 
     @Test
+    fun androidViewsComplexLayoutScroll() {
+        measureComplexLayoutScroll(
+            engine = "android_views",
+        )
+    }
+
+    @Test
     fun viewComposeComplexLayoutUpdate() {
         measureComplexLayoutUpdate(
             engine = "viewcompose",
@@ -46,6 +52,13 @@ class ComplexLayoutPerformanceComparisonBenchmark {
     fun composeComplexLayoutUpdate() {
         measureComplexLayoutUpdate(
             engine = "compose",
+        )
+    }
+
+    @Test
+    fun androidViewsComplexLayoutUpdate() {
+        measureComplexLayoutUpdate(
+            engine = "android_views",
         )
     }
 

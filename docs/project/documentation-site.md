@@ -109,14 +109,17 @@ conclusion is **regressed** in absolute payload, but the growth is attributable 
 reader-facing contracts and no other site ceiling failed. The reviewed ceiling therefore moves to
 42 MiB, leaving approximately 1 MiB of measured headroom; the final build including this evidence
 passed at 41.1 MiB against that 42.0 MiB ceiling. Reaching 42 MiB requires a representation or
-content-partitioning review before another increase. Immutable artifact/version trees and
-working-tree `current` Dokka for unpublished
-artifacts share the API-tree budget: they may average at most 4.5 MiB and no individual tree may
-exceed 24 MiB. Only manifests and redirect aliases use the separate 1 MiB routing allowance. The
-other ceilings remain 120 seconds for the Docusaurus build, 8 MiB total and 768 KiB largest-file for
-JavaScript, 128 KiB for CSS, and 6 MiB for each locale's search index. The gate also rejects any
-locale-prefixed API copy. Raise a threshold only with a measured explanation of the reader or
-release value that requires the additional cost.
+content-partitioning review before another increase. The Android Views performance-control plan,
+its generated route, and the reviewed bilingual physical-result tables remain inside that same
+42 MiB ceiling; they provide the durable interpretation needed to distinguish accepted, rejected,
+and device-blocked benchmark evidence. Immutable artifact/version trees and working-tree `current`
+Dokka for unpublished artifacts share the API-tree
+budget: they may average at most 4.5 MiB and no individual tree may exceed 24 MiB. Only manifests
+and redirect aliases use the separate 1 MiB routing allowance. The other ceilings remain 120
+seconds for the Docusaurus build, 8 MiB total and 768 KiB largest-file for JavaScript, 128 KiB for
+CSS, and 6 MiB for each locale's search index. The gate also rejects any locale-prefixed API copy.
+Raise a threshold only with a measured explanation of the reader or release value that requires the
+additional cost.
 
 The accessibility audit covers the site-owned English and localized pages and checks document
 language, title and main landmarks, heading order, accessible names, image alternatives, table

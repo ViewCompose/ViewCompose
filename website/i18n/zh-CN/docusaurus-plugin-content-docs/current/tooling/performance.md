@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: e5c3c1fba193e76aae2aee236a9823f42a351f46f1d3d8748984b14d269f54e3
+translation_source_hash: 99786c45303855a2067b481aee947d37db49c39d371e37e1e9d38531d22a641b
 translation_status: current
 ---
 
@@ -41,9 +41,15 @@ translation_status: current
 16. graphics 主链已落地 Canvas 节点与 draw modifiers；`drawWithCache` 支持跨帧缓存命中/失效，避免高频绘制场景重复构建命令。
 17. graphics 执行器已收口 v2 基线：`DrawRoundRect` 四角半径语义正确、`Drawable` 绘制支持 `DrawPaint` 组合、`ImageFilterModel.Chain` 可递归合并生效。
 18. 发布态基线使用 R8 + resource shrink 的非 debuggable `benchmark` target；`ReleaseBaselineBenchmark` 固定覆盖无 ART 预编译的冷启动与 state patch 帧耗时。
-19. 列表性能对比使用同一 target、同一份 1000 项数据与完全一致的交互脚本，分别运行 ViewCompose `LazyColumn` 和 Jetpack Compose `LazyColumn`；覆盖双向快速滚动与 keyed reorder + payload 内容更新。
-20. 复杂布局对比使用同一份 18 卡片仪表盘模型，分别运行 ViewCompose `ScrollableColumn` 与 Compose `Column.verticalScroll`；全部子树一次挂载，覆盖深层嵌套滚动、全卡片字段更新和条件详情子树变更。
-21. 两组对照均采集帧耗时与最大 heap/RSS；`compare_macrobenchmarks.py` 自动生成 Markdown/JSON 配对报告，并支持以 Compose 为同次运行控制组的归一化回归门禁。
+19. 列表性能对比在同一 target 中，以同一份 1000 项数据和同一套交互脚本运行 ViewCompose
+    `LazyColumn`、Compose `LazyColumn` 与惯用的 Android Views `RecyclerView`，覆盖双向快速滚动、
+    keyed reorder 和 payload 更新。
+20. 复杂布局对比以同一份 18 卡片仪表盘模型运行 ViewCompose `ScrollableColumn`、Compose
+    `Column.verticalScroll` 与保留式 Android Views `ScrollView`/ViewGroup 树，覆盖深层滚动、
+    全卡片更新和条件详情子树变更。
+21. 两组对照均采集帧耗时与最大 heap/RSS。`compare_macrobenchmarks.py` 生成引擎中立的 report-v2
+    Markdown/JSON，输出绝对值、ViewCompose/Compose 与 ViewCompose/Android Views 对照；历史纵向
+    门禁仍以同轮 Compose 为控制组，并可读取已验收的 report-v1 基线。
 22. 高级阴影建立独立有界外/内栅格缓存，平移/缩放/旋转/alpha 重绘复用同一栅格；`ShadowPerformanceComparisonBenchmark` 覆盖 1000 项 Lazy 与复杂布局的滚动/变更，并用 Compose 作为同轮设备波动控制组。
 23. 应用进程内开发工具遵守“零持续工作”契约。可选的真机 DSL 定位器在滚动期间不写报告、也不
     检查实时 View；一次带 Nonce 的显式 IDE 请求只产生一次有界快照与响应。
@@ -75,7 +81,7 @@ instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
 ./gradlew benchmarkRelease
 ```
 
-设备基准并生成 Compose 对照报告：
+设备基准并生成引擎对照报告：
 
 ```bash
 ./gradlew benchmarkCompare
@@ -83,8 +89,8 @@ instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
 
 结果默认写入：
 
-1. `build/reports/benchmarks/compose-comparison.md`
-2. `build/reports/benchmarks/compose-comparison.json`
+1. `build/reports/benchmarks/engine-comparison.md`
+2. `build/reports/benchmarks/engine-comparison.json`
 
 对已有结果重新生成报告：
 
@@ -93,10 +99,11 @@ instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
   -PbenchmarkResult=/path/to/current-benchmarkData.json
 ```
 
-对容易升温的真机，应让每个 ViewCompose 或 Compose 方法都从相同的 `NONE`/`LIGHT` 温控
+对容易升温的真机，应让每个必需的 ViewCompose、Compose 或 Android Views 方法都从相同的
+`NONE`/`LIGHT` 温控
 等级开始，方法之间完成冷却，并把各自 JSON 放入一个干净目录。将该目录作为
 `benchmarkResult` 时，工具只会合并设备、系统、时钟策略和编译上下文完全一致的结果；
-benchmark 方法重名或上下文不同会直接失败，不会任意选择最新的局部结果。没有显式时钟
+benchmark 方法重名、引擎集合不完整或上下文不同会直接失败，不会任意选择最新的局部结果。没有显式时钟
 策略的旧结果仍要求 AndroidX `cpuLocked` 快照一致。
 
 拆分方法批次开始前只安装一次 target 和 benchmark APK。安装后停止两个进程、熄屏，等待
@@ -105,22 +112,27 @@ benchmark 方法重名或上下文不同会直接失败，不会任意选择最�
 预检的消费设备协议；报告比较该协议并保留全部 AndroidX 原始锁定快照，不能事后改写。
 
 显式的 unlocked-DVFS 策略只标识主机协议，不代表 OEM 会保持稳定工作频率，run-P50 CV 门禁
-仍然必须执行。如果方法出现两个频率平台、温控等级不变时 `scaling_max_freq` 仍切换，或者
-AndroidX 报告无法清理 Runtime Image，应直接拒绝，不能重跑到偶然通过为止。
-`cmd power set-fixed-performance-mode-enabled` 只有在设备证明整个测量期间最低和最高频率稳定
-时才能视为锁频。消费设备无法满足门禁时，必须改用可 root 或其他可控制时钟的参考设备。
+仍然必须执行。如果方法出现两个频率平台，或温控等级不变时 `scaling_max_freq` 仍切换，应直接
+拒绝，不能重跑到偶然通过为止。AndroidX 的 Runtime Image 警告需要结合工作负载解释：冷启动、
+首次构建、导航、任何把类加载纳入 measured block 的结果，或任何宣称为洁净
+`CompilationMode.None` 的结果都必须拒绝。只有完整 target 已就绪、固定稳定窗口位于 measured
+block 外、所有 control 共享报告中的编译身份且稳定性通过时，steady-state 交互结果才可以按
+`run-from-apk` 身份验收，绝不能改写成洁净未编译启动数据。该警告会收窄结论范围，不会从证据中
+消失。`cmd power set-fixed-performance-mode-enabled` 只有在设备证明整个测量期间最低和最高频率
+稳定时才能视为锁频。消费设备无法满足门禁时，必须改用可 root 或其他可控制时钟的参考设备。
 
 与同设备历史基线比较并执行回归门禁：
 
 ```bash
 ./gradlew benchmarkComparisonReport \
   -PbenchmarkResult=/path/to/current-benchmarkData.json \
-  -PbenchmarkBaseline=/path/to/baseline-compose-comparison.json
+  -PbenchmarkBaseline=/path/to/baseline-engine-comparison.json
 ```
 
-两份 Markdown/JSON 对照报告都按场景 ID、工作负载修订号和动作标识每一行。纵向门禁的
-baseline 必须是上一份带修订信息的对照 JSON，不能直接传入原始 Macrobenchmark JSON；
-工作负载修订号不同的结果会被拒绝比较。
+两份 Markdown/JSON 对照报告都按场景 ID、工作负载修订号、引擎和动作标识每一行。report v2
+可以读取已验收的 `compose-comparison.json` report-v1 基线并保持其 ViewCompose/Compose 语义，
+但不会为旧基线虚构缺失的 Android Views 数据。纵向门禁的 baseline 必须是上一份带修订信息的
+对照 JSON，不能直接传入原始 Macrobenchmark JSON；工作负载修订号不同的结果会被拒绝比较。
 
 发布态权威基线是 `ReleaseBaselineBenchmark`：
 
@@ -132,25 +144,32 @@ baseline 必须是上一份带修订信息的对照 JSON，不能直接传入原
    `NONE` 或 `LIGHT`，方法之间必须停进程并冷却，达到 `SEVERE` 的批次直接作废。
 5. 结果只在同设备、同系统版本、同迭代协议和同温控策略下纵向比较。
 
-Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
+三引擎列表对照基线是 `ListPerformanceComparisonBenchmark`：
 
-1. 两个引擎运行在同一个 R8 target 中，排除应用配置、资源和进程环境差异。
+1. 三个引擎运行在同一个 R8 target 中，排除应用配置、资源和进程环境差异。
 2. 使用 `CompilationMode.None`，避免 ART 预编译掩盖框架交付成本。
-3. `viewComposeListScroll/composeListScroll` 使用相同手势轨迹。
-4. `viewComposeListMutation/composeListMutation` 使用相同的 37 项旋转和每 16 项内容更新；
+3. `viewComposeListScroll/composeListScroll/androidViewsListScroll` 使用相同手势轨迹。
+4. `viewComposeListMutation/composeListMutation/androidViewsListMutation` 使用相同的 37 项旋转和
+   每 16 项内容更新；
    每个测量 iteration 执行 8 个完整 mutation/reset 闭环，确保 run 级帧分布足以进行稳定性门禁。
 5. target 就绪后，每个 iteration 都会在 measured block 外等待 5 秒，避免 OEM Activity 启动
    boost 让第一次交互出现不真实的加速。
 6. 对比结论必须来自同一次设备运行；不同设备产生的数据不能横向相除。
+7. Android Views 对照使用 `RecyclerView`、稳定 ID、同步 `DiffUtil` 与 payload-aware binding，
+   表示惯用的直接平台复用，而不是模拟声明式全树重建。
 
-复杂布局对照基线是 `ComplexLayoutPerformanceComparisonBenchmark`：
+三引擎复杂布局对照基线是 `ComplexLayoutPerformanceComparisonBenchmark`：
 
-1. `viewComposeComplexLayoutScroll/composeComplexLayoutScroll` 对比非 Lazy 整树滚动。
-2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` 同时更新 18 个卡片的数据，并在
+1. `viewComposeComplexLayoutScroll/composeComplexLayoutScroll/androidViewsComplexLayoutScroll`
+   对比非 Lazy 整树滚动。
+2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate/androidViewsComplexLayoutUpdate`
+   同时更新 18 个卡片的数据，并在
    每个测量 iteration 中执行 8 个完整 update/reset 闭环来切换条件详情子树。
-3. 两个引擎都采用相同的 measured block 外 5 秒启动稳定窗口。
-4. 两端保持相同的卡片、指标、标签、条件内容数量和嵌套顺序。
+3. 三个引擎都采用相同的 measured block 外 5 秒启动稳定窗口。
+4. 三端保持相同的卡片、指标、标签、条件内容数量和嵌套顺序。
 5. 该场景专门观察 ViewGroup 深度、全树 measure/layout 与局部 patch 成本，不用于评价 Lazy 容器。
+6. Android Views 对照保留每个卡片层级、原地 patch 文本，并真实添加或移除条件详情行。它是惯用的
+   imperative 参考，不宣称与两个声明式引擎的算法完全等价。
 
 2026-08-15 在 Samsung SM-G991B / Android 13 上验收的替换基线使用 5 次 iteration、每个方法从
 `NONE`/`LIGHT` 起跑、5 秒 setup 稳定窗口和 `unlocked-dvfs-preflight-v1` 时钟策略：
@@ -163,7 +182,24 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 | `performance.complex-layout@3` 更新 | 6.063 / 42.505 ms | 9.527 / 50.296 ms | 0.079 / 0.082 |
 
 这些数值是带工作负载修订号的基线，不代表某个引擎在所有场景都更快。列表与复杂布局的更新路径
-也采用不同于滚动的框架策略。
+也采用不同于滚动的框架策略。该表继续作为完整的历史双引擎基线，不会被局部三引擎批次覆盖。
+
+同日按 fail-fast 协议执行的 Android Views 批次验收了 3 个完整 steady-state action。9 个方法都
+从 `NONE`/`LIGHT` 起跑，使用同一设备/构建、measured block 外 5 秒稳定窗口、
+`unlocked-dvfs-preflight-v1`，并报告为 `run-from-apk`。所有方法都带 Runtime Image 警告，因此这些
+数值只适用于 target 就绪后的交互，不是洁净未编译启动证据：
+
+| 工作负载 | ViewCompose P50/P95 | Compose P50/P95 | Android Views P50/P95 | Run-P50 CV（VC/C/AV） |
+| --- | ---: | ---: | ---: | ---: |
+| `performance.list@3` 变更 | 4.237 / 9.990 ms | 8.236 / 22.222 ms | 3.940 / 8.666 ms | 0.013 / 0.091 / 0.030 |
+| `performance.complex-layout@3` 滚动 | 5.412 / 7.363 ms | 5.141 / 7.920 ms | 4.662 / 6.913 ms | 0.082 / 0.070 / 0.008 |
+| `performance.complex-layout@3` 更新 | 5.780 / 36.928 ms | 8.620 / 40.324 ms | 6.912 / 16.007 ms | 0.122 / 0.032 / 0.141 |
+
+ViewCompose 列表滚动 control 在另外两个引擎运行前就被拒绝。其 P50/P95 为 `4.212/8.624 ms`，
+但 run P50 `4.296/4.362/2.627/4.648/4.554 ms` 产生 CV `0.182`。因此列表滚动保持
+`inconclusive`，完整 12 方法基线需要可控时钟设备。已验收的同轮内存峰值方向同样混合：相对
+Android Views，ViewCompose 在列表变更中的 heap/RSS 高 `12.2%/2.8%`，复杂布局滚动高
+`19.9%/3.5%`，复杂布局更新低 `15.3%/7.9%`。这些进程级峰值不支持声明通用内存赢家。
 
 `DemoInteractionBenchmark` 保留下列不参与 Compose 对照的 fixture 基线：
 
@@ -243,10 +279,14 @@ ART profile，fixed-performance 和增强处理模式也无法形成真正锁频
 自动报告与回归规则：
 
 1. 对照表固定输出 frame CPU P50/P95、frame overrun P50/P95、heap max 与 RSS anon max。
-2. 每个场景的 ViewCompose 与 Compose 结果必须来自同一份 benchmark JSON；该 JSON 可以是
-   同一上下文中分别冷却的方法结果在内存中的确定性合并结果。
-3. 历史回归只允许同设备型号、系统 fingerprint、CPU lock 状态和 compilation mode。
-4. 门禁必须同时满足“ViewCompose 原始指标超过阈值”和“ViewCompose/Compose 归一化比值超过阈值”才失败。
+2. 每个无阴影场景都要求同一 benchmark 上下文中的 ViewCompose、Compose 和 Android Views
+   结果；阴影场景继续要求 ViewCompose 与 Compose。JSON 可以是同一上下文中分别冷却的方法结果
+   在内存中的确定性合并结果。
+3. 历史回归只允许同设备型号、系统 fingerprint、显式时钟策略和 compilation mode；没有时钟
+   策略的旧结果回退为严格比较 AndroidX CPU-lock 快照。
+4. 纵向门禁保持 report-v1 兼容，只有“ViewCompose 原始指标超过阈值”和
+   “ViewCompose/Compose 归一化比值超过阈值”同时成立才失败。在未来显式调整控制组策略前，
+   Android Views 只作为绝对值与成对观察。
 5. 默认阈值维护在 `tools/performance/benchmark_policy.json`，小于绝对噪声下限的变化不会失败。
 6. 报告只对严格为正、具备比例尺度的 frame CPU duration 计算各 iteration P50 的变异系数；
    超过 `0.15` 标记为不稳定，数据应重跑而不是直接形成结论。`frameOverrunMs` 是围绕零点的
@@ -299,7 +339,18 @@ Frame CPU duration 越低越好。归一化变化采用
 4. 诊断与集合 fixture 只有已验收的 ViewCompose 稳定性基线，不构成 Compose 排名；
 5. 导航 revision 6 和设计系统 bundle revision 3 在可控时钟设备产出有效证据前保持
    `inconclusive`；
-6. 当前已验收表格尚未包含可长期引用的同轮内存对照，因此不声明任何一方在内存上胜出。
+6. 已验收同轮内存方向混合，因此不声明通用内存赢家。
+7. 已验收 Android Views 批次只证明 3 个 steady-state action，不代表完整场景：列表变更存在原生
+   尾部回退，复杂布局滚动存在原生中位数回退，复杂布局更新则中位数更好但尾部明显更差；列表
+   滚动保持 `inconclusive`。
+
+相对同轮 Android Views control，已验收的局部批次结论为：
+
+| 工作负载 | P50 变化 | P95 变化 | 分类 | 解释 |
+| --- | ---: | ---: | --- | --- |
+| `performance.list@3` 变更 | 升高 7.5% | 升高 15.3% | `regressed` | P50 仍在组合门禁内，但 `+1.323 ms` P95 差距同时跨过两个尾部阈值。 |
+| `performance.complex-layout@3` 滚动 | 升高 16.1% | 升高 6.5% | `regressed` | `+0.750 ms` 中位数差距同时跨过两个 P50 阈值，P95 仍在门禁内。 |
+| `performance.complex-layout@3` 更新 | 降低 16.4% | 升高 130.7% | `mixed` | 中位数改善 `1.132 ms`，但 P95 恶化 `20.921 ms`；patch 吞吐与尾延迟方向相反。 |
 
 正确复用、组级失效与跳过无效工作、稳定的容器刷新语义仍是优化方向。`SlotTable Lite` 和子树级
 重组已进入主链路且 `qaQuick` 通过，但这些实现事实不能覆盖已测得的混合滚动结果。设备门禁状态
@@ -385,8 +436,10 @@ Commit、Workload、刷新率、电源模式与温度状态必须保持一致，
 
 ### Phase 4：容器与布局收口
 
-状态：列表、复杂布局 Compose 对照、内存指标、自动报告与归一化回归门禁已建立
-目标：收敛高频容器和复杂页面的布局开销
+状态：列表与复杂布局的 Compose control、Android Views 源码对照、内存指标、引擎中立报告和
+ViewCompose/Compose 归一化门禁已建立；3 个同上下文 Android Views action 已验收，列表滚动在
+可控时钟设备完成 12 方法批次前保持 `inconclusive`。
+目标：继续收敛高频容器和复杂页面的布局开销，同时保持三引擎工作负载契约一致。
 
 ### Phase 5：发布态优化
 
@@ -422,3 +475,4 @@ Commit、Workload、刷新率、电源模式与温度状态必须保持一致，
 3. 统一路线图：[roadmap.md](../project/roadmap.md)
 4. 文档入口：[docs/README.md](../README.md)
 5. 状态快照规范：[state-snapshots.md](../architecture/state-snapshots.md)
+6. [Android Views 性能对照计划](https://docs.viewcompose.com/project/plans/android-views-performance-control)

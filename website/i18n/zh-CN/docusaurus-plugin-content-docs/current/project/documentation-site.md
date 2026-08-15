@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 3fd258a67b57a14e58d5292659120ee9b1648cf544e80881806cbbe1044fc0c6
+translation_source_hash: 03ee70246f78d6286418c1220e4aebafbd29fb650c3e1475bb7b260280fc98ac
 translation_status: current
 ---
 
@@ -96,8 +96,10 @@ Docusaurus 完成各 locale 构建后，受支持的构建入口会删除 `/zh-C
 32,849 字节。结论是绝对体积**回退**，但增长来自已审阅、面向读者的公共契约，且其他站点预算
 均未失败。因此，经审查的上限调整为 42 MiB，按该实测约保留 1 MiB 余量；包含本段证据的最终
 构建以 41.1 MiB/42.0 MiB 通过。达到 42 MiB 后，继续上调前必须先审查表示方式或内容分区。
-不可变 artifact/version 树与未发布制品的工作树 `current` Dokka 共用 API 树预算，平均上限为
-4.5 MiB，任一单独树不得超过 24 MiB。只有 manifest 与
+Android Views 性能对照计划、生成路由和经过审查的双语真机结果表继续包含在同一个 42 MiB
+上限内；这些内容承担区分已验收、已拒绝和设备受阻基准证据的长期解释职责。不可变
+artifact/version 树与未发布制品的工作树 `current` Dokka 共用 API 树预算，平均上限为 4.5 MiB，
+任一单独树不得超过 24 MiB。只有 manifest 与
 重定向别名使用独立的 1 MiB 路由配额。其他上限保持不变：Docusaurus 构建 120 秒、JavaScript
 总计 8 MiB/单文件 768 KiB、CSS 128 KiB、各 locale 搜索索引 6 MiB。门禁也会拒绝任何带
 locale 前缀的 API 副本。提高阈值必须附有读者或发布价值的测量说明。

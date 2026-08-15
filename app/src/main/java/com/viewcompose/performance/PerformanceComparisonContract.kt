@@ -36,6 +36,10 @@ internal enum class PerformanceEngine(
         wireValue = "compose",
         displayName = "Compose",
     ),
+    AndroidViews(
+        wireValue = "android_views",
+        displayName = "Android Views",
+    ),
     ;
 
     companion object {

@@ -12,6 +12,34 @@ import org.robolectric.annotation.Config
 @Config(sdk = [31])
 class PerformanceComparisonContractTest {
     @Test
+    fun `every wire engine maps to one strict implementation`() {
+        val expected = mapOf(
+            "viewcompose" to PerformanceEngine.ViewCompose,
+            "compose" to PerformanceEngine.Compose,
+            "android_views" to PerformanceEngine.AndroidViews,
+        )
+
+        expected.forEach { (wireValue, engine) ->
+            val parsed = PerformanceEngine.fromIntent(
+                Intent().putExtra(EXTRA_PERFORMANCE_ENGINE, wireValue),
+            )
+            assertEquals(engine, parsed)
+        }
+    }
+
+    @Test
+    fun `unknown engine fails fast`() {
+        val intent = Intent().putExtra(
+            EXTRA_PERFORMANCE_ENGINE,
+            "unknown",
+        )
+
+        assertThrows(IllegalStateException::class.java) {
+            PerformanceEngine.fromIntent(intent)
+        }
+    }
+
+    @Test
     fun `every wire scenario maps to one strict demo scenario`() {
         val expected = mapOf(
             "list" to "performance.list",

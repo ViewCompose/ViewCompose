@@ -110,6 +110,29 @@ class PerformanceComparisonActivity : AppCompatActivity() {
                     },
                 )
             }
+
+            PerformanceEngine.AndroidViews -> {
+                val content = when (performanceScenario) {
+                    PerformanceScenario.List -> createAndroidViewsListPerformanceScreen(
+                        context = this,
+                        scenario = demoScenario,
+                        fixtures = fixtures,
+                    )
+                    PerformanceScenario.ComplexLayout ->
+                        createAndroidViewsComplexLayoutPerformanceScreen(
+                            context = this,
+                            scenario = demoScenario,
+                            fixtures = fixtures,
+                        )
+                    PerformanceScenario.ShadowList,
+                    PerformanceScenario.ShadowComplexLayout,
+                    -> error(
+                        "Android Views control does not support shadow scenario: " +
+                            performanceScenario.wireValue,
+                    )
+                }
+                setContentView(content)
+            }
         }
     }
 

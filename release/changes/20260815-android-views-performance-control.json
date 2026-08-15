@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add repository-only Android Views benchmark controls and engine-neutral performance reporting.",
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "This change only registers repository benchmark report and test tasks for the Demo and internal benchmark target; it does not alter any published artifact output or publication metadata."
+    }
+  ]
+}
