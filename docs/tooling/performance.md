@@ -601,44 +601,14 @@ authoritative detached preparation cost and fails closed after an over-budget sa
 retain key identity, logical Item Session ownership, native Holder reuse, and reset/release
 boundaries.
 
-The root-controlled evidence uses a Xiaomi MI 6 on API 28, the R8-optimized benchmark target,
-`performance.list@4`, `run-from-apk`, five runs, fixed CPU policies at
-`1401600/1804800 kHz`, a fixed `515000000 Hz` GPU, and the OEM performance HAL stopped. The durable
-policy identity is
-`root-fixed-cpu-1401600-1804800-gpu-515000000-perf-hal-off-v3`.
-
-| Build | Frames by run | P50/P90/P95/P99, ms | Median peak heap, KiB | Run-P50 CV | Acceptance |
-| --- | --- | ---: | ---: | ---: | --- |
-| `2695fbfb` control A | `48/48/48/48/48` | 4.399 / 25.157 / 25.474 / 27.501 | 8365 | 0.192 | Rejected: stability gate failed. |
-| `2695fbfb` control B | `48/48/48/48/48` | 4.508 / 24.947 / 25.351 / 34.353 | 8440 | 0.157 | Rejected: stability gate failed and the durable policy payload was accidentally omitted. The raw JSON was not rewritten. |
-| Historical hard-cut candidate, APK `020582a9` | `48/48/48/48/48` | 5.505 / 14.433 / 16.534 / 30.841 | 8212 | 0.075 | Accepted as an absolute result for that APK; it is not the current DSL contract. |
-
-The formal longitudinal conclusion is `inconclusive` because neither historical control passes the
-mandatory run-P50 stability gate; control B also fails protocol identity. The candidate APK
-nevertheless establishes a stable absolute result. Two precursor checks made before the
-failure-recovery hardening reported `14.269/16.329 ms` and `14.185/16.201 ms` P90/P95,
-independently reproducing the candidate tail. As directional diagnostic evidence only, that APK
-versus rejected control A lowers raw P90/P95 by 42.6%/35.1%, while raw P50 rises 25.2% and P99 rises
-12.1%. Because the candidate combined the removed aggregate skip with the retained item and adapter
-optimizations, these measurements cannot attribute an improvement to the aggregate mechanism. A
-fresh same-policy run of the current selector-evaluating DSL is required before accepting a new
-longitudinal result.
-
-Each mutation action normally contributes three consecutive measured frames. The candidate moves
-work out of the former dominant frame and into smaller follow-up work, so raw frame P50 is not a
-transaction median. In the same rejected-control diagnostic, the three-frame transaction-sum
-P50/P95 changes from `29.736/36.052 ms` to `22.268/33.817 ms` (-25.1%/-6.2%), and transaction
-maximum-frame P50/P95 changes from `24.466/27.175 ms` to `12.904/25.075 ms` (-47.3%/-7.7%). These
-normalized deltas explain the distribution shift but do not override the failed control gate.
-
-The candidate APK's P99 remains a cold-path limitation: the first interaction is dominated by
-concurrent ART JIT rather than the steady list planner. A named Material host boundary experiment
-introduced an approximately 45 ms cold JIT event, regressed P99, and was fully reverted; no Material
-host change is part of this result. The next acceptance step was a stable same-policy control
-followed by a fresh ViewCompose/Compose/Android Views matrix. The revision-5 A/B below supplies the
-same-policy ViewCompose control; the cross-engine matrix remains outstanding. Before that
-follow-up, the only accepted claim was the candidate's absolute tail, not a relative winner or a
-clean `CompilationMode.None` result.
+Historical revision-4 diagnostics first established the Xiaomi MI 6 / API 28 root-controlled
+protocol later reused below. Both `2695fbfb` controls were rejected (`0.192/0.157` run-P50 CV), and
+the second also omitted the policy payload. The hard-cut candidate was stable at
+`5.505/16.534/30.841 ms` P50/P95/P99, `8212 KiB` peak heap, and `0.075` CV, but combined the later
+removed aggregate skip with retained item/adapter changes. Its longitudinal classification remains
+`inconclusive`; it is only an absolute result for APK `020582a9`. A Material-host JIT experiment
+also regressed the cold tail and was reverted. The revision-5 A/B below supplied the valid
+same-policy ViewCompose control, and the 2026-08-17 matrix closes the cross-engine follow-up.
 
 The 2026-08-16 revision-5 A/B used the same Xiaomi MI 6 / API 28 device, R8 benchmark target,
 five-run and 48-frame protocol, `run-from-apk` compilation identity, and
@@ -681,14 +651,60 @@ regresses materially, while P95/P99 and the three-frame transaction tail are mat
 The narrower tail-latency conclusion is `improved`; this is not a claim of universal frame-time
 improvement.
 
-This evidence covers only a steady alternation between two already-constructed revision-5
-snapshots, which directly favors the bounded two-generation identity cache. It does not measure
-`toLazyItemsSnapshot()` construction, first evaluation, a monotonic stream of never-reused
-identities, list scrolling, or another rendering engine, and therefore cannot be extrapolated to
-those costs. Accept the strong snapshot path as an explicit tail-latency tradeoff while retaining
-the plain `List` path for general feeds. The next actions are to add separate cold-construction and
-monotonic-feed workloads, monitor the snapshot P50 regression, and rerun the revision-5
-ViewCompose/Compose/Android Views matrix before making a cross-engine claim.
+The accepted 2026-08-17 three-engine matrix ran commit `3e0cc43a` and
+`performance.list@5` on the same Xiaomi MI 6 / API 28 device. The target APK SHA-256 was
+`88eeacc3e4add75551088a9fdab7c0514414be747909223a22ec266b858ca55d`. AndroidX Benchmark 1.4.1
+uses the AOSP-only `su root` command form, which Magisk 30.6 does not execute on this device. The
+test APK was therefore adapted only at that command-transport boundary: original SHA-256
+`d36f6a138c949fddd334c2c1b55f65b6ba02b2d296a2a45efa79439c53701c9c`, adapted SHA-256
+`cc9cce7c00de8c6f530c713257f91ecc2012473b644384cec971c3f2ef73d562`, with an equal-length
+command alias forwarding to `magisk su -c`. The target APK, benchmark workload, metric capture,
+and result JSON were not rewritten. The alias, installed benchmark packages, and temporary APKs
+were removed after collection.
+
+All six methods used five runs, `run-from-apk`, the exact v3 policy, locked CPU/GPU, stopped
+performance HAL, zero thermal-throttle sleep, and per-method screen-off cooling at 34--37 degrees
+Celsius. MIUI resets CPU policy on screen-off, so it was reapplied after wake; UiAutomation required
+an interactive screen, and the failed off-screen preflight produced no sample.
+
+| Action | Engine | Frames by run | P50/P90/P95/P99, ms | Median peak heap, KiB | Run-P50 CV |
+| --- | --- | --- | ---: | ---: | ---: |
+| Scroll | ViewCompose | `160/163/166/162/163` | 5.328 / 8.964 / 9.538 / 10.702 | 7650 | 0.107 |
+| Scroll | Compose | `163/163/163/162/162` | 4.743 / 7.063 / 7.616 / 8.495 | 7398 | 0.091 |
+| Scroll | Android Views | `112/114/112/112/113` | 4.991 / 6.425 / 7.188 / 8.826 | 4049 | 0.045 |
+| Mutation | ViewCompose | `48/48/48/48/48` | 4.247 / 10.907 / 12.698 / 15.155 | 8128 | 0.082 |
+| Mutation | Compose | `41/41/41/41/41` | 5.207 / 15.040 / 18.568 / 26.250 | 8597 | 0.141 |
+| Mutation | Android Views | `48/48/48/48/48` | 4.287 / 6.658 / 7.849 / 9.076 | 5864 | 0.125 |
+
+Every engine passes the `0.15` stability gate. For scroll, ViewCompose is 12.3% (`+0.585 ms`)
+higher at P50 and 25.2% (`+1.922 ms`) higher at P95 than Compose; it is 6.8%
+(`+0.337 ms`) higher at P50 and 32.7% (`+2.350 ms`) higher at P95 than Android Views. P99 is
+26.0% and 21.3% higher respectively. Both scroll comparisons are `regressed`: the P95 increase
+crosses the combined normalized and absolute gate even where the Android Views P50 increase does
+not. ViewCompose scroll heap is 3.4% higher than Compose and 88.9% higher than Android Views.
+
+For mutation, ViewCompose is 18.4% (`-0.960 ms`) lower at P50, 31.6% (`-5.870 ms`) lower at P95,
+and 42.3% (`-11.095 ms`) lower at P99 than Compose, with 5.5% lower heap. That comparison is
+`improved`. Against Android Views, ViewCompose P50 is effectively equal at 0.9% (`-0.040 ms`)
+lower, but P95 is 61.8% (`+4.849 ms`) higher, P99 is 67.0% (`+6.079 ms`) higher, and heap is
+38.6% higher. That comparison is `regressed`. The matrix-level conclusion is therefore `mixed`:
+the strong-snapshot mutation path beats Compose and reaches native median cost, but native
+RecyclerView still owns the mutation tail and both controls beat ViewCompose scrolling.
+
+The action protocol is identical, but engines may coalesce or emit different numbers of measured
+frames; Compose mutation consistently emitted 41 while the other two emitted 48. This matrix
+therefore compares the accepted per-frame distributions and does not manufacture three-frame
+cross-engine transactions. It is also post-Ready steady-state evidence for two preconstructed
+snapshots under `run-from-apk`, not startup, snapshot-construction, monotonic-feed, or clean
+uncompiled-ART evidence. The next actions are to profile the ViewCompose scroll P95/heap gap and the
+remaining Android Views mutation-tail gap, then add cold-construction and monotonic-feed workloads.
+
+The preceding A/B evidence covers only a steady alternation between two already-constructed
+revision-5 snapshots, which directly favors the bounded two-generation identity cache. It does not
+measure `toLazyItemsSnapshot()` construction, first evaluation, a monotonic stream of never-reused
+identities, or list scrolling, and therefore cannot be extrapolated to those costs. Accept the
+strong snapshot path as an explicit tail-latency tradeoff while retaining the plain `List` path for
+general feeds; the three-engine matrix above is the separate cross-engine conclusion.
 
 #### 2.4.4 Navigation and design-system diagnostics
 

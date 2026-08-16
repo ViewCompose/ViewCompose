@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 7990dc07fc2c2ebfd14a88eea864e69fd61638683903df0a6f2e7ffe4991ed4e
+translation_source_hash: 88e57fec3c55decc473f650bd8c33c6b51e46b54992c5feebcfef48f11d50e10
 translation_status: current
 ---
 
@@ -505,36 +505,12 @@ Android Adapter 现在以线性复杂度规划同顺序变更和循环位移，�
 预取计费会分离冷激活与权威的 detached prepare 成本，并在一次超预算样本后保守熔断。以上路径都
 保留 key 身份、逻辑 Item Session 所有权、原生 Holder 复用和 reset/release 边界。
 
-Root 控制证据使用 API 28 的 Xiaomi MI 6、R8 优化 benchmark target、
-`performance.list@4`、`run-from-apk` 和五轮协议；CPU policy 固定为
-`1401600/1804800 kHz`，GPU 固定为 `515000000 Hz`，并停止 OEM performance HAL。持久化
-策略标识为 `root-fixed-cpu-1401600-1804800-gpu-515000000-perf-hal-off-v3`。
-
-| 构建 | 每轮帧数 | P50/P90/P95/P99，ms | 最大 heap 中位数，KiB | Run-P50 CV | 验收 |
-| --- | --- | ---: | ---: | ---: | --- |
-| `2695fbfb` 对照 A | `48/48/48/48/48` | 4.399 / 25.157 / 25.474 / 27.501 | 8365 | 0.192 | 拒绝：稳定性门禁失败。 |
-| `2695fbfb` 对照 B | `48/48/48/48/48` | 4.508 / 24.947 / 25.351 / 34.353 | 8440 | 0.157 | 拒绝：稳定性门禁失败，且意外遗漏持久化策略 payload；未改写原始 JSON。 |
-| 历史硬切候选，APK `020582a9` | `48/48/48/48/48` | 5.505 / 14.433 / 16.534 / 30.841 | 8212 | 0.075 | 作为该 APK 的绝对结果验收；它不代表当前 DSL 契约。 |
-
-正式纵向结论为 `inconclusive`：两组历史对照都未通过强制 run-P50 稳定性门禁，对照 B 还缺失
-协议身份。候选 APK 仍建立了稳定绝对结果；异常恢复加固前的两组候选检查分别得到
-`14.269/16.329 ms` 和 `14.185/16.201 ms` P90/P95，独立复现了候选尾部。仅作为方向性诊断，
-该 APK 相对已拒绝的对照 A 将原始 P90/P95 降低 42.6%/35.1%，但原始 P50 上升 25.2%，P99
-上升 12.1%。由于候选同时包含已删除的聚合跳过与保留的 Item/Adapter 优化，这些测量不能把收益
-归因到聚合机制。接受新的纵向结果前，必须按同一策略重新测量当前会执行 Selector 的 DSL。
-
-每次 mutation 动作通常贡献连续三个测量帧。候选实现将工作从原先的主导帧移到更小的后续工作，
-因此原始 frame P50 并不是事务中位数。在同一份已拒绝对照的诊断中，三帧事务总和 P50/P95 从
-`29.736/36.052 ms` 变为 `22.268/33.817 ms`（-25.1%/-6.2%），事务最大帧 P50/P95 从
-`24.466/27.175 ms` 变为 `12.904/25.075 ms`（-47.3%/-7.7%）。这些归一化变化解释了分布
-迁移，但不能覆盖失败的对照门禁。
-
-候选 APK 的 P99 仍受冷路径限制：第一次交互主要由并发 ART JIT 主导，而不是 steady list planner。
-一个具名 Material host 边界实验引入了约 45 ms 的冷 JIT 事件并使 P99 回退，因此已完整撤销；
-本结果不包含 Material host 改动。下一验收步骤原本是取得稳定的同策略对照，再重跑新的
-ViewCompose/Compose/Android Views 矩阵。下方 revision 5 A/B 已提供同策略 ViewCompose 对照；
-跨引擎矩阵仍未完成。在该跟进之前，可接受的结论只覆盖候选绝对尾部，不能宣称相对赢家，也不能
-把它视为洁净的 `CompilationMode.None` 结果。
+历史 revision 4 诊断首先在 Xiaomi MI 6 / API 28 上建立了下文继续使用的 Root 控制协议。
+`2695fbfb` 的两组对照都因 run-P50 CV `0.192/0.157` 被拒绝，第二组还遗漏了策略 Payload。
+硬切候选的 P50/P95/P99 为 `5.505/16.534/30.841 ms`，最大 heap `8212 KiB`，CV `0.075`；
+但它同时包含后来删除的聚合跳过与保留的 Item/Adapter 改动，所以纵向结论仍为 `inconclusive`，
+只作为 APK `020582a9` 的绝对结果。Material Host JIT 实验也使冷尾部回退并已撤销。下方
+revision 5 A/B 提供有效的同策略 ViewCompose 对照，2026-08-17 的矩阵则完成跨引擎跟进。
 
 2026-08-16 的 revision 5 A/B 使用同一台 Xiaomi MI 6 / API 28 设备、R8 benchmark target、
 五轮与 48 帧协议、`run-from-apk` 编译身份，以及
@@ -571,12 +547,52 @@ P50/P95 高 3.4%/2.7%，三帧最大值 P50/P95 高 1.1%/1.9%，最大 heap 中�
 归一化决策。因此 Snapshot 的主要分类是 `mixed`：Frame 中位数发生实质回退，P95/P99 和三帧
 事务尾部则有实质改善。更窄的尾延迟结论为 `improved`；这不代表所有 Frame Time 都得到改善。
 
-这份证据只覆盖 revision 5 两份已构建 Snapshot 的 steady 交替，直接有利于有界的两代身份
-Cache。它没有测量 `toLazyItemsSnapshot()` 构造、首次求值、从不复用身份的单调数据流、List
-滚动或其他渲染引擎，因此不能外推到这些成本。应把强 Snapshot 路径作为显式尾延迟取舍接受，同时
-保留普通 `List` 路径处理一般数据流。下一步是增加独立的冷构造与单调数据流工作负载，持续监控
-Snapshot P50 回退，并在作出跨引擎结论前重跑 revision 5 的 ViewCompose/Compose/Android Views
-矩阵。
+已验收的 2026-08-17 三引擎矩阵在同一台 Xiaomi MI 6 / API 28 设备上运行 commit
+`3e0cc43a` 与 `performance.list@5`。Target APK SHA-256 为
+`88eeacc3e4add75551088a9fdab7c0514414be747909223a22ec266b858ca55d`。AndroidX Benchmark
+1.4.1 使用 AOSP 专属的 `su root` 命令形式，Magisk 30.6 无法在该设备上执行它，因此只在该命令
+传输边界适配了 Test APK：原始 SHA-256 为
+`d36f6a138c949fddd334c2c1b55f65b6ba02b2d296a2a45efa79439c53701c9c`，适配后 SHA-256 为
+`cc9cce7c00de8c6f530c713257f91ecc2012473b644384cec971c3f2ef73d562`，通过等长命令别名转发至
+`magisk su -c`。Target APK、Benchmark Workload、指标采集和结果 JSON 均未改写。采集结束后已
+删除该别名、安装的 Benchmark 包和临时 APK。
+
+六个方法均使用五轮、`run-from-apk`、精确 v3 策略、锁定 CPU/GPU、停止 Performance HAL、零
+温控等待，并分别熄屏冷却至 34--37 摄氏度。MIUI 熄屏后会重置 CPU Policy，因此唤醒后重新应用；
+UiAutomation 要求屏幕可交互，失败的熄屏预检未产生样本。
+
+| 动作 | 引擎 | 每轮帧数 | P50/P90/P95/P99，ms | 最大 heap 中位数，KiB | Run-P50 CV |
+| --- | --- | --- | ---: | ---: | ---: |
+| 滚动 | ViewCompose | `160/163/166/162/163` | 5.328 / 8.964 / 9.538 / 10.702 | 7650 | 0.107 |
+| 滚动 | Compose | `163/163/163/162/162` | 4.743 / 7.063 / 7.616 / 8.495 | 7398 | 0.091 |
+| 滚动 | Android Views | `112/114/112/112/113` | 4.991 / 6.425 / 7.188 / 8.826 | 4049 | 0.045 |
+| 变更 | ViewCompose | `48/48/48/48/48` | 4.247 / 10.907 / 12.698 / 15.155 | 8128 | 0.082 |
+| 变更 | Compose | `41/41/41/41/41` | 5.207 / 15.040 / 18.568 / 26.250 | 8597 | 0.141 |
+| 变更 | Android Views | `48/48/48/48/48` | 4.287 / 6.658 / 7.849 / 9.076 | 5864 | 0.125 |
+
+所有引擎都通过 `0.15` 稳定性门禁。滚动场景中，ViewCompose 的 P50 比 Compose 高 12.3%
+（`+0.585 ms`），P95 高 25.2%（`+1.922 ms`）；其 P50 比 Android Views 高 6.8%
+（`+0.337 ms`），P95 高 32.7%（`+2.350 ms`）。相应 P99 分别高 26.0% 与 21.3%。两组
+滚动对比均归类为 `regressed`：即使对 Android Views 的 P50 增量未过门禁，P95 也同时跨过了
+归一化与绝对值门槛。ViewCompose 滚动 heap 比 Compose 高 3.4%，比 Android Views 高 88.9%。
+
+变更场景中，ViewCompose 的 P50、P95 与 P99 分别比 Compose 低 18.4%（`-0.960 ms`）、
+31.6%（`-5.870 ms`）和 42.3%（`-11.095 ms`），heap 低 5.5%，该对比归类为
+`improved`。相对 Android Views，ViewCompose P50 仅低 0.9%（`-0.040 ms`），可视为持平；
+但 P95 高 61.8%（`+4.849 ms`），P99 高 67.0%（`+6.079 ms`），heap 高 38.6%，该对比归类
+为 `regressed`。因此矩阵整体结论是 `mixed`：强 Snapshot 变更路径优于 Compose，并达到原生
+中位成本，但原生 RecyclerView 仍拥有更好的变更尾部，而且两个对照的滚动都优于 ViewCompose。
+
+动作协议完全相同，但不同引擎可能合并或产生不同数量的测量帧；Compose 变更每轮稳定产生 41 帧，
+另两个引擎则为 48 帧。因此该矩阵比较已验收的逐帧分布，不人为构造跨引擎三帧事务。它也是
+`run-from-apk` 下两份预构建 Snapshot 的 Ready 后稳态证据，不代表启动、Snapshot 构造、单调
+数据流或洁净的未编译 ART。下一步是分析 ViewCompose 滚动 P95/heap 差距与相对 Android Views
+剩余的变更尾部差距，再增加冷构造和单调数据流 Workload。
+
+前述 A/B 证据只覆盖 revision 5 两份已构建 Snapshot 的 steady 交替，直接有利于有界的两代身份
+Cache。它没有测量 `toLazyItemsSnapshot()` 构造、首次求值、从不复用身份的单调数据流或 List
+滚动，因此不能外推到这些成本。应把强 Snapshot 路径作为显式尾延迟取舍接受，同时保留普通
+`List` 路径处理一般数据流；上方三引擎矩阵是独立的跨引擎结论。
 
 #### 2.4.4 导航与设计系统诊断
 
