@@ -356,6 +356,44 @@ Frame CPU duration 越低越好。归一化变化采用
 重组已进入主链路且 `qaQuick` 通过，但这些实现事实不能覆盖已测得的混合滚动结果。设备门禁状态
 继续记录在 [roadmap](../project/roadmap.md)。
 
+#### 2.4.1 复杂布局更新尾延迟排查
+
+2026-08-16 在同一台 Samsung SM-G991B / Android 13 设备上继续排查原生尾部差距，但不替换已
+验收的 revision 3 基线。新鲜 ViewCompose control 基于 DSL 收敛分支，使用 R8 benchmark 构建、
+`CompilationMode.None`、5 次迭代、5 秒非测量稳定窗口、`NONE`/`LIGHT` 起始热状态和
+`unlocked-dvfs-preflight-v1`，Frame CPU P50/P95 为 `6.023/41.187 ms`。单独冷却后运行的 Android
+Views control 为 `7.253/16.222 ms`。两轮都出现 Runtime Image 警告，而且该设备无法锁定 CPU
+频率，因此它们是相邻诊断对照，不是新的纵向基线。
+
+Perfetto 证明慢样本来自实际 update/reset 帧，而不是自动化轮询帧。代表性最差帧在
+`VC.Compose` 消耗 `16.985-17.166 ms`、在 `VC.RenderTree` 消耗 `42.555-55.960 ms`，随后 Android
+View traversal 还需要 `36-38 ms`。这些区间内应用线程始终可运行，没有阻塞 I/O、锁等待或前台
+GC。最差样本中 OEM 调度器把长时间声明式工作放到了 LITTLE CPU，使通常 `4-6 ms` 的 composition
+和 `12-20 ms` 的 render 阶段被成倍放大。原生 control 通过保留的 View 引用执行相同字段更新，
+通常能在这种调度敏感性被放大前完成。
+
+下面的相邻实验都保持 `performance.complex-layout@3`；所有被否决的源码候选都在测试后移除：
+
+| 候选 | ViewCompose P50/P95 | 相对新鲜 control | 结论 |
+| --- | ---: | ---: | --- |
+| 纯文本 `TextDocument` 绑定直接返回原始 `String` | 6.197 / 40.785 ms | P50 升高 2.9%；P95 降低 1.0% | `no material change`；无分配纯文本转换具有确定性且保留富文本 span，因此保留，但它不能解决尾部问题。 |
+| 删除约 90 个冗余 Demo `Surface` 包装 | 6.042 / 40.330 ms | P50 升高 0.3%；P95 降低 2.1% | `no material change`；物理 View 深度不是主因，workload fixture 保持不变。 |
+| 递归证明值相同的重建子树稳定 | 6.254 / 44.171 ms | P50 升高 3.8%；P95 升高 7.2% | `no material change` 且方向不利；递归证明成本超过 skip 收益，已回退。 |
+| 不构造通用 keyed plan 中间对象，流式处理同位置复用 | 6.137 / 41.163 ms | P50 升高 1.9%；P95 降低 0.1% | `no material change`；reconcile/preflight 容器分配不是尾部根因，该路径已回退。 |
+
+完整 ART 编译得到 `6.261/38.589 ms`，P95 相对新鲜 control 也只降低 6.3%；其他 checkpoint、分组
+和精确引用快路要么没有实质收益，要么让 P95 更差。综合证据把当前结果归类为 `mixed`：一行纯
+文本分配优化有效，但绝对尾延迟仍未解决。根边界是顶层 State 读取：一次 revision 会让包含 18
+张卡片的声明同步重建并整树 diff，而原生 control 直接更新保留字段。完整树事务内部的常量级优化
+无法消除这一区别。
+
+下一步应设计显式、渲染器中立的可观察属性事务模型，而不是增加 Text 专用 State 重载或互不协调
+的原生 Listener。该模型必须在 Snapshot 语义下批量读取一个 Session 的失效属性，合并框架环境
+revision，在同一个帧对齐事务中只比较和 patch 已变化字段，失败时整体回滚，并随逻辑节点所有权
+释放观察。由于没有 Compose 编译器，普通 Kotlin capture 仍必须显式进入输入。这是公开架构变更，
+必须拥有独立的 Q3 契约、样例、生命周期/失败测试和带 revision 的三引擎 benchmark，才能替代
+显式选择该能力的属性所对应的完整树重组。
+
 ### 2.5 Debug Tooling 回归门禁
 
 Release Macrobenchmark 无法发现只存在于可调试构建中的开销。因此，任何在应用进程中执行的

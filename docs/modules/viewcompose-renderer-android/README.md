@@ -242,6 +242,10 @@ than a pixel line height captured at an earlier text size. Their natural line he
 tracks the resolved typeface, text size, and font scale across reuse and environment rebinds. An
 explicit `lineHeightSp` remains authoritative.
 
+Plain `TextDocument` values bind their existing `String` directly. Styled documents continue to
+materialize a `SpannableString`, so span application remains isolated to rich-text nodes while
+ordinary Text patches avoid an otherwise redundant platform wrapper allocation.
+
 For lazy collections, the renderer owns one composite native padding value: logical
 `contentPadding`, resolved physical or relative Modifier padding, and selected system-bar/IME
 insets are additive. All logical start/end values resolve against the captured layout direction.

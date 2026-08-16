@@ -421,6 +421,53 @@ remain the optimization strategy. SlotTable Lite and subtree recomposition are o
 `qaQuick` passes, but those implementation facts do not override the measured mixed scrolling
 result. Device-gate status remains recorded in the [roadmap](../project/roadmap.md).
 
+#### 2.4.1 Complex-layout update tail-latency investigation
+
+A 2026-08-16 follow-up on the same Samsung SM-G991B / Android 13 device investigated the native
+tail gap without replacing the accepted revision-3 baseline. The fresh ViewCompose control used
+the DSL-convergence branch, an R8 benchmark build, `CompilationMode.None`, five iterations, a
+5-second unmeasured settle, `NONE`/`LIGHT` thermal starts, and
+`unlocked-dvfs-preflight-v1`. It reported `6.023/41.187 ms` frame-CPU P50/P95. A separately cooled
+Android Views control reported `7.253/16.222 ms`. Both runs emitted the Runtime Image warning, and
+the device cannot lock CPU frequency, so these are adjacent diagnostic controls rather than new
+longitudinal baselines.
+
+Perfetto associated the slow ViewCompose samples with the actual update/reset frames rather than
+the automation polling frames. Representative worst frames spent `16.985-17.166 ms` in
+`VC.Compose`, `42.555-55.960 ms` in `VC.RenderTree`, and another `36-38 ms` in the following Android
+View traversal. The application thread stayed runnable: there was no blocking I/O, lock wait, or
+foreground GC in those spans. The OEM scheduler placed the long declarative work on a LITTLE CPU in
+the worst samples, multiplying ordinary `4-6 ms` composition and `12-20 ms` render phases. The
+native control performs the same field changes through retained View references and therefore
+usually finishes before that scheduling sensitivity is amplified.
+
+The following adjacent experiments preserve `performance.complex-layout@3`; every rejected source
+candidate was removed after its run:
+
+| Candidate | ViewCompose P50/P95 | Change from fresh control | Conclusion |
+| --- | ---: | ---: | --- |
+| Return the original `String` for plain `TextDocument` binding | 6.197 / 40.785 ms | P50 2.9% higher; P95 1.0% lower | `no material change`; retain the allocation-free plain-text conversion because it is deterministic and preserves rich-text spans, but it does not solve the tail. |
+| Remove about 90 redundant Demo `Surface` wrappers | 6.042 / 40.330 ms | P50 0.3% higher; P95 2.1% lower | `no material change`; physical View depth is not the primary cause, and the workload fixture remains unchanged. |
+| Recursively prove value-equal rebuilt subtrees stable | 6.254 / 44.171 ms | P50 3.8% higher; P95 7.2% higher | `no material change` with an unfavorable direction; recursive proof cost exceeded its skip benefit, so it was reverted. |
+| Stream same-position reuse without generic keyed-plan intermediates | 6.137 / 41.163 ms | P50 1.9% higher; P95 0.1% lower | `no material change`; reconcile/preflight container allocation is not the tail root, so the path was reverted. |
+
+Full ART compilation reached `6.261/38.589 ms`, only 6.3% lower at P95 than the fresh control, and
+other checkpoint, grouping, and exact-reference fast paths either had no material benefit or made
+P95 worse. The combined evidence classifies the current result as `mixed`: the one-line plain-text
+allocation fix is valid, while the absolute tail remains unresolved. The root boundary is the
+top-level State read: one revision invalidates a declaration that synchronously rebuilds and diffs
+all 18 cards, whereas the native control directly updates retained fields. Constant-factor changes
+inside the complete-tree transaction cannot erase that algorithmic difference.
+
+The next implementation step is an explicit, renderer-neutral observed-property transaction model,
+not a Text-only State overload or an uncoordinated native listener. Its design must batch one
+session's invalidated property reads under Snapshot semantics, merge framework environment
+revisions, compare and patch only changed fields in one frame-aligned transaction, roll back a
+failed batch, and dispose observations with logical node ownership. Ordinary Kotlin captures must
+remain explicit inputs because no Compose compiler can infer them. This is a public architecture
+change and requires its own Q3 contract, samples, lifecycle/failure tests, and a revisioned
+three-engine benchmark before it can replace complete-tree recomposition for opted-in properties.
+
 ### 2.5 Debug tooling regression gate
 
 Release macrobenchmarks cannot detect costs that exist only in debuggable builds. Any tooling that

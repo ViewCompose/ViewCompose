@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "summary": "Avoid redundant SpannableString allocation when Android Renderer binds an unstyled TextDocument.",
+  "changes": [
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" }
+  ],
+  "ignored": []
+}
