@@ -54,7 +54,11 @@ The runtime applies these rules without callback-reference fallbacks:
 Theme, Android resources, locale, layout direction, density, font scale, and other captured
 ViewCompose locals are included in `environmentRevision`. State reads remain independently
 observable. A non-state value captured by entry content must be represented by
-`contentRevision`; omitting it is an explicit promise that the value is stable for that key.
+`contentRevision`. Single `item`, `stickyHeader`, `Page`, and `Tab` declarations require a non-null
+revision immediately after `key`; optional physical-reuse and layout policy follows it. `null` is
+not a static sentinel, and `StaticContentRevision` is the explicit promise that ordinary captured
+content remains stable for that key. Bulk item selectors remain nullable and default to the item
+value for immutable value models.
 The session-update operation is mandatory: a renderer cannot replace the same-key, same-type
 logical session merely because an implementation omitted a content installer.
 `LazyListItemSession.activate` and `render` report whether the installed candidate actually
@@ -87,9 +91,16 @@ interop View is released instead of cached.
 
 This is a deliberate hard cut. Lazy and pager DSLs replace the former `contentToken` input with
 `contentRevision`. The revision is a caller-visible correctness contract rather than a best-effort
-performance hint. Bulk `items` overloads expose a revision selector, page declarations expose all
-four snapshot fields, tab content gains the same explicit revision input, and pager offscreen
-defaults follow the native ViewPager2 policy.
+performance hint. Single-entry declarations place the required non-null revision after `key` and
+before optional `contentType` or layout policy; callers use `StaticContentRevision`, not `null`, for
+intentional static content. Bulk `items` overloads keep a nullable revision selector, page
+declarations expose all four snapshot fields, tab content gains the same explicit revision input,
+and pager offscreen defaults follow the native ViewPager2 policy.
+
+The parameter reorder is source-breaking and requires recompiling every consumer. Adjacent
+`Any?`/`Any` values may erase to the same JVM `Object` descriptor, so a binary compiled against the
+previous order is not guaranteed to fail linkage and could pass physical `contentType` and logical
+`contentRevision` values into the opposite positions.
 
 Changed APIs are Q3 because incorrect revision or lifecycle usage can retain stale UI, leak native
 resources, or publish effects for the wrong logical entry. Canonical KDoc, compiled samples,

@@ -395,8 +395,8 @@ class AdditionalWidgetCoverageTest {
             ) {
                 Page(
                     key = "p1",
-                    contentType = "page",
                     contentRevision = StaticContentRevision,
+                    contentType = "page",
                 ) { Text("P1") }
                 Page(key = "p2", contentRevision = StaticContentRevision) { Text("P2") }
             }

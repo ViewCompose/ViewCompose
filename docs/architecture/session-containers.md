@@ -47,9 +47,11 @@ Every delayed-session container must satisfy these constraints:
    parent rollback discards them without running child composition or effects.
 10. Callback identity is not a revision. A changed ordinary capture must be State or participate in
     `contentRevision`; callback allocation alone never refreshes content. Single item, sticky-header,
-    page, and tab declarations require that revision. `StaticContentRevision` promises that no such
-    ordinary input changes, while the bulk `{ it }` default is limited to immutable value models
-    whose equality covers every ordinary input read by item content.
+    page, and tab declarations require a non-null revision immediately after `key`; optional
+    physical-reuse and layout arguments follow it. `null` is not a sentinel.
+    `StaticContentRevision` promises that no such ordinary input changes, while the nullable bulk
+    `{ it }` default is limited to immutable value models whose equality covers every ordinary input
+    read by item content.
 11. Every ordinary typed `List` declaration reevaluates order, membership, and its `key`,
     `contentType`, `contentRevision`, and grid-span selectors on each parent composition pass. The
     collector may reuse an already committed logical item only when its key, content revision,

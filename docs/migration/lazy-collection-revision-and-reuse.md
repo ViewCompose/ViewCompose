@@ -34,8 +34,9 @@ immutable version or snapshot. Values backed by ViewCompose `State` remain obser
 need duplication in the revision when item content reads them inside its active Session.
 
 Single `item`, `stickyHeader`, pager `Page`, and `Tab` declarations no longer default their content
-revision from the key. They must state the revision explicitly. Use `StaticContentRevision` only
-when the declaration has no changing ordinary non-State input:
+revision from the key. Their `contentRevision` is required and non-null; `null` is not a static
+sentinel. Use `StaticContentRevision` only when the declaration has no changing ordinary non-State
+input:
 
 ```kotlin
 stickyHeader(
@@ -51,12 +52,44 @@ Pager pages now expose all caller-owned snapshot fields:
 ```kotlin
 Page(
     key = account.id,
-    contentType = "account-page",
     contentRevision = account.version,
+    contentType = "account-page",
 ) {
     AccountPage(account)
 }
 ```
+
+These single-entry declarations place `contentRevision` immediately after `key`, followed by
+optional physical-reuse or layout arguments such as `contentType` and grid `span`. This ordering
+keeps logical identity and semantic content revision together and leaves physical presentation
+policy afterward. Bulk `items` overloads intentionally keep the nullable
+`contentRevision: (T) -> Any? = { it }` selector: a nullable element or selector result can be a
+real immutable model state, while a single declaration must express an intentional non-null
+revision or `StaticContentRevision`.
+
+This is a source-breaking alpha change. Recompilation alone is not a sufficient migration for
+positional source calls. An old three-position call such as
+`item(key, contentType, contentRevision)` or `Page(key, contentType, contentRevision)` can still
+type-check after the signature change because both semantic values accept `Any`; it then treats the
+old `contentType` as the revision and the old revision as the physical content type. Rewrite it as
+`item(key, contentRevision, contentType)` or `Page(key, contentRevision, contentType)`. Prefer named
+semantic arguments in maintained source:
+
+```kotlin
+item(
+    key = message.id,
+    contentRevision = message.version,
+    contentType = "message-row",
+) {
+    MessageRow(message)
+}
+```
+
+Then recompile every consumer rather than mixing binaries built against the earlier single-entry
+parameter order with the new artifact. On the JVM, adjacent `Any?`/`Any` parameters can erase to
+the same `Object` descriptor, so an old call may not fail to link and can instead bind the former
+`contentType` and `contentRevision` values to the opposite semantics. Named arguments protect the
+reviewed source call, but do not make an already compiled old call safe.
 
 Pager pages and tabs now require explicit, unique keys. Position is physical placement, not logical
 identity; the framework no longer guesses that an unkeyed child at the same index owns the previous

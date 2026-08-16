@@ -736,15 +736,15 @@ class HorizontalPagerScope internal constructor() {
      * otherwise the explicit revision must change with every such input that affects the page.
      *
      * @param key unique logical page identity across reorder and native recycling
-     * @param contentType physical-tree compatibility class for reset and rebind
      * @param contentRevision semantic version of every non-State value captured by [content]
+     * @param contentType physical-tree compatibility class for reset and rebind
      * @param content page declaration evaluated when the page session renders
      * @throws IllegalArgumentException when [key] duplicates another page in this scope
      */
     fun Page(
         key: Any,
+        contentRevision: Any,
         contentType: Any? = null,
-        contentRevision: Any?,
         content: UiTreeBuilder.() -> Unit,
     ) {
         require(keys.add(key)) {
@@ -854,7 +854,7 @@ fun UiTreeBuilder.HorizontalPager(
 internal data class HorizontalPagerPage(
     val key: Any,
     val contentType: Any?,
-    val contentRevision: Any?,
+    val contentRevision: Any,
     val content: UiTreeBuilder.() -> Unit,
 )
 
@@ -977,7 +977,7 @@ class TabRowScope internal constructor() {
      */
     fun Tab(
         key: Any,
-        contentRevision: Any?,
+        contentRevision: Any,
         content: UiTreeBuilder.(selected: Boolean) -> Unit,
     ) {
         require(keys.add(key)) {
@@ -1109,7 +1109,7 @@ fun UiTreeBuilder.TabRow(
  */
 internal data class TabRowTabEntry(
     val key: Any,
-    val contentRevision: Any?,
+    val contentRevision: Any,
     val content: UiTreeBuilder.(selected: Boolean) -> Unit,
 )
 

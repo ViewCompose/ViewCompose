@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/session-containers.md
-translation_source_hash: 6572f677c4fe9a39a0384d9d4413baf4651601287995c66aa5a1b4d8d3aec48a
+translation_source_hash: 4518a1c1048d47f6c35a188a830b75932f15314c69df55f3897bdcc836daabf3
 translation_status: current
 ---
 
@@ -49,8 +49,9 @@ translation_status: current
    或 effect
 10. Callback 对象身份不是 Revision。变化的普通捕获值必须成为 State 或进入
     `contentRevision`；仅 Callback 分配绝不刷新内容。单条 Item、Sticky Header、Page 与 Tab
-    Declaration 必须提供该 Revision。`StaticContentRevision` 承诺不存在这类普通输入变化；批量
-    `{ it }` 默认值仅适用于 Equality 覆盖 Item Content 所读取全部普通输入的不可变值模型
+    Declaration 必须在 `key` 后立即提供非空 Revision，再排列可选物理复用与布局参数；`null` 不是
+    哨兵。`StaticContentRevision` 承诺不存在这类普通输入变化；批量可空 `{ it }` 默认值仅适用于
+    Equality 覆盖 Item Content 所读取全部普通输入的不可变值模型
 11. 每个普通 Typed `List` Declaration 都会在父 Composition 的每一轮执行中重新求值顺序、成员，以及
     `key`、`contentType`、`contentRevision` 和网格 Span Selector。只有 Key、Content Revision、
     Environment、Content Type、Kind 与 Span 全部相等时，Collector 才能复用已提交的逻辑 Item。

@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: c3116367a0b57f676981c8479513345b13fa80b27dc636f61f45954b77ec7285
+translation_source_hash: cc4d7429f7c0805eb4803178290bb56a151476dd109212077096e8ee2583c428
 translation_status: current
 ---
 
@@ -62,8 +62,8 @@ LazyColumn(
 ) {
     stickyHeader(
         key = "contacts-header",
-        contentType = "header",
         contentRevision = StaticContentRevision,
+        contentType = "header",
     ) {
         Text("Contacts")
     }
@@ -82,10 +82,11 @@ LazyColumn(
 列表 Scope 支持 `item`、`items` 和 `stickyHeader`。网格 Scope 还支持逐 Item Span；网格 Sticky
 Header 占满整行。`contentRevision` 是正确性契约而不只是性能提示。Item Content 捕获的变化值必须
 是可观察 State，或进入该 Revision；Key 和 Revision 相等时完全跳过 Item Render。
-因此，单条 `item`、`stickyHeader`、Pager `Page` 与 `Tab` Declaration 必须显式提供 Revision。
-`StaticContentRevision` 是普通输入真正静态时使用的具名承诺。批量
-`contentRevision = { it }` 默认值仅适用于 Equality 覆盖 Item Content 所读取全部普通非 State 值的
-不可变值模型。
+因此，单条 `item`、`stickyHeader`、Pager `Page` 与 `Tab` Declaration 必须显式提供非空 Revision。
+其签名顺序是 `key`、`contentRevision`，然后才是 `contentType`、网格 `span` 等可选物理复用或布局
+策略。`null` 不是静态捷径；`StaticContentRevision` 是普通输入真正静态时使用的具名承诺。批量
+`contentRevision: (T) -> Any? = { it }` Selector 仍可空，其默认值仅适用于 Equality 覆盖 Item
+Content 所读取全部普通非 State 值的不可变值模型。
 
 每个普通均质或 Scoped `List` Declaration 都会在父 Composition 的每一轮执行中遍历有序元素，并调用
 `key`、`contentType`、`contentRevision` 和网格 Span Selector。ViewCompose 不会把 List 引用身份、
@@ -208,9 +209,9 @@ Attach 或重排时按 Item Key 恢复。分离的 Pinned Header 副本是不拥
 1. 容器内 Key 非空且唯一。
 2. 一个 Key 在重排期间持续标识同一逻辑 Item。
 3. `contentType` 只能分组布局兼容的 Item 结构。
-4. 单条 Item、Sticky Header、Page 或 Tab 必须提供 `contentRevision`；只有不存在变化的普通非
-   State 输入时才能用 `StaticContentRevision`。批量 `{ it }` 默认值要求不可变值模型的 Equality
-   覆盖每个这类输入。
+4. 单条 Item、Sticky Header、Page 或 Tab 必须在 `key` 后立即提供非空 `contentRevision`，再排列
+   可选 `contentType` 与布局策略。`null` 不是静态哨兵；只有不存在变化的普通非 State 输入时才能用
+   `StaticContentRevision`。批量可空 `{ it }` 默认值要求不可变值模型的 Equality 覆盖每个这类输入。
 5. 每个普通 Typed `List` Declaration 都会在父 Composition 的每一轮执行中重新求值顺序、成员与 Item
    Selector；随后只有 Key、Content Revision、Environment、Content Type、Kind 与 Span 都相等时，
    才能复用已提交的逻辑 Item。

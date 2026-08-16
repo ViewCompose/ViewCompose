@@ -67,8 +67,8 @@ class LazyColumnTest {
             ) {
                 stickyHeader(
                     key = "header",
-                    contentType = "header-type",
                     contentRevision = StaticContentRevision,
+                    contentType = "header-type",
                 ) {
                     Text("Header")
                 }

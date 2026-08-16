@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0012-lazy-collection-logical-and-physical-ownership.md
-translation_source_hash: f3de575f2bd45c9831d28e0bd5b67ef2396c859f3f0602c8aaf1c3eb2108822d
+translation_source_hash: f0cd3a51c576a6b03844c1bc3c0d0a92e9902cf9cab0f100bfbb9048e396ee55
 translation_status: current
 ---
 
@@ -51,7 +51,10 @@ Runtime 不使用 Callback 引用兜底，严格执行：
 
 主题、Android 资源、Locale、布局方向、Density、Font Scale 以及其他已捕获 Local 都进入
 `environmentRevision`。State Read 仍独立可观察。条目内容捕获的非 State 值必须进入
-`contentRevision`；省略它就明确承诺该值对当前 Key 保持稳定。
+`contentRevision`。单条 `item`、`stickyHeader`、`Page` 与 `Tab` Declaration 必须在 `key` 后立即提供
+非空 Revision，再排列可选物理复用与布局策略。`null` 不是静态哨兵；`StaticContentRevision` 才是
+普通捕获内容对当前 Key 保持稳定的显式承诺。批量 Item Selector 仍可空，并对不可变值模型默认使用
+Item 值。
 Session Update 操作是强制契约：Renderer 不能因为实现缺少 Content Installer，就替换 Key 与 Type
 均相同的逻辑 Session。
 `LazyListItemSession.activate` 与 `render` 会报告已安装候选是否真正 Commit。Rollback 绝不推进
@@ -79,8 +82,14 @@ RecyclerView 的不透明全局池不拥有 Mounted Tree。按 `contentType` 分
 ## 公开 API 与兼容性影响
 
 这是有意的硬切。Lazy 与 Pager DSL 用 `contentRevision` 替换 `contentToken`。Revision 是调用方可见
-的正确性契约，而非尽力而为的性能提示。批量 `items` 提供 Revision Selector，Page 声明暴露四个
-快照字段，Tab 内容提供显式 Revision，Pager Offscreen 默认值跟随 ViewPager2 原生策略。
+的正确性契约，而非尽力而为的性能提示。单条 Declaration 把必传非空 Revision 排在 `key` 后、
+可选 `contentType` 或布局策略前；有意的静态内容必须使用 `StaticContentRevision`，不能使用 `null`。
+批量 `items` 保留可空 Revision Selector，Page 声明暴露四个快照字段，Tab 内容提供显式 Revision，
+Pager Offscreen 默认值跟随 ViewPager2 原生策略。
+
+参数重排会破坏源码兼容性，所有使用方都必须重新编译。相邻 `Any?`/`Any` 值可能擦除为相同的 JVM
+`Object` Descriptor，因此针对旧顺序编译的 Binary 不保证链接失败，还可能把物理 `contentType` 与
+逻辑 `contentRevision` 传入相反位置。
 
 这些 API 属于 Q3：错误的 Revision 或生命周期用法会造成陈旧 UI、原生资源泄漏，或为错误逻辑条目
 发布 Effect。同一变更必须包含规范英文 KDoc、可编译 Sample、Module Manual、迁移指南和确定性测试。

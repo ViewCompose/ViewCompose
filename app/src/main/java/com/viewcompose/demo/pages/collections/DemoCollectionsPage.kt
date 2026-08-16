@@ -349,8 +349,8 @@ internal fun UiTreeBuilder.CollectionPage(
                 ) {
                     stickyHeader(
                         key = "lazy-state-header",
-                        contentType = "header",
                         contentRevision = keyedItems.size,
+                        contentType = "header",
                     ) {
                         Surface(
                             variant = SurfaceVariant.Variant,

@@ -220,40 +220,39 @@ fun UiTreeBuilder.searchBarSample(state: TextFieldState) {
 
 fun UiTreeBuilder.lazyListDslSample() {
     LazyColumn {
-        stickyHeader(
-            key = "header",
-            contentRevision = StaticContentRevision,
-        ) { Text("Header") }
-        item(key = "row", contentType = "text", contentRevision = 1) { Text("Row") }
+        stickyHeader("header", StaticContentRevision) { Text("Header") }
+        item("row", 1, contentType = "text") { Text("Row") }
     }
     LazyRow {
-        item(key = "chip", contentType = "text", contentRevision = 1) { Text("Chip") }
+        item("chip", 1, contentType = "text") { Text("Chip") }
     }
 }
 
 fun staticContentRevisionSample() {
     buildVNodeTree {
         LazyColumn {
-            stickyHeader(
-                key = "header",
-                contentRevision = StaticContentRevision,
-            ) { Text("Header") }
-            item(
-                key = "row",
-                contentRevision = StaticContentRevision,
-            ) { Text("Static row") }
+            stickyHeader("header", StaticContentRevision, contentType = "header") {
+                Text("Header")
+            }
+            item("row", StaticContentRevision, contentType = "row") {
+                Text("Static row")
+            }
+        }
+        LazyVerticalGrid {
+            stickyHeader("grid-header", StaticContentRevision, contentType = "grid-header") {
+                Text("Grid header")
+            }
+            item("grid-row", StaticContentRevision, contentType = "grid-row") {
+                Text("Static grid row")
+            }
         }
         HorizontalPager(currentPage = 0, onPageChanged = {}) {
-            Page(
-                key = "page",
-                contentRevision = StaticContentRevision,
-            ) { Text("Static page") }
+            Page("page", StaticContentRevision, contentType = "page") {
+                Text("Static page")
+            }
         }
         TabRow(selectedIndex = 0, onTabSelected = {}) {
-            Tab(
-                key = "tab",
-                contentRevision = StaticContentRevision,
-            ) { Text("Static tab") }
+            Tab("tab", StaticContentRevision) { Text("Static tab") }
         }
     }
 }
@@ -439,12 +438,12 @@ fun lazyItemsSnapshotSample() {
 fun pagerAndTabIdentitySample() {
     val tree = buildVNodeTree {
         HorizontalPager(currentPage = 0, onPageChanged = {}) {
-            Page(key = "account", contentType = "account-page", contentRevision = 4) {
+            Page("account", 4, contentType = "account-page") {
                 Text("Account")
             }
         }
         TabRow(selectedIndex = 0, onTabSelected = {}) {
-            Tab(key = "overview", contentRevision = 2) { selected ->
+            Tab("overview", 2) { selected ->
                 Text(if (selected) "Overview selected" else "Overview")
             }
         }
@@ -911,8 +910,8 @@ fun adaptiveGridSample() {
     val node = buildVNodeTree {
         LazyVerticalGrid(cells = GridCells.Adaptive(minSize = 120.dp)) {
             item(
-                key = "heading",
-                contentRevision = StaticContentRevision,
+                "heading",
+                StaticContentRevision,
                 span = GridItemSpan.FullLine,
             ) {
                 Text("Gallery")

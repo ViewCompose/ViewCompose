@@ -7,11 +7,25 @@ import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class TypedLazyCollectionContractTest {
+    @Test
+    fun `bulk selector may explicitly preserve a null content revision`() {
+        val item = ComposerLite().commitTree {
+            LazyColumn(
+                items = listOf(Row(id = 1, revision = 0)),
+                key = Row::id,
+                contentRevision = { null },
+            ) { row -> Text(row.id.toString()) }
+        }.lazyItems().single()
+
+        assertNull(item.contentRevision)
+    }
+
     @Test
     fun `ordinary list evaluates every selector while reusing canonical items`() {
         val composer = ComposerLite()

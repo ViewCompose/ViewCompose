@@ -1,7 +1,7 @@
 ---
 title: 迁移 Lazy 集合 Revision 与复用
 translation_source: migration/lazy-collection-revision-and-reuse.md
-translation_source_hash: 49c3c7909092bc4aa5969e2ed300b4a262e04889f983b551c93ca1e08774f302
+translation_source_hash: 641eb8cb55baec5246db82f42a4cf0d5a92f2a7b22c859dada3455e2a4738401
 translation_status: current
 ---
 
@@ -35,8 +35,8 @@ LazyColumn(
 Session 中读取的 ViewCompose `State` 已经可观察，无需重复放入 Revision。
 
 单条 `item`、`stickyHeader`、Pager `Page` 与 `Tab` Declaration 不再把 Key 默认用作 Content
-Revision，必须显式声明 Revision。只有 Declaration 没有会变化的普通非 State 输入时，才能使用
-`StaticContentRevision`：
+Revision；其 `contentRevision` 必传且不可空，`null` 不是静态哨兵。只有 Declaration 没有会变化的
+普通非 State 输入时，才能使用 `StaticContentRevision`：
 
 ```kotlin
 stickyHeader(
@@ -52,12 +52,39 @@ Pager Page 现在暴露全部调用方快照字段：
 ```kotlin
 Page(
     key = account.id,
-    contentType = "account-page",
     contentRevision = account.version,
+    contentType = "account-page",
 ) {
     AccountPage(account)
 }
 ```
+
+这些单条 Declaration 把 `contentRevision` 紧跟在 `key` 之后，再排列 `contentType`、网格 `span`
+等可选物理复用或布局参数。这样逻辑标识和语义内容 Revision 保持相邻，物理呈现策略位于其后。
+批量 `items` Overload 则有意保留可空的 `contentRevision: (T) -> Any? = { it }` Selector：可空
+元素或 Selector 结果可以是真实的不可变模型状态，而单条 Declaration 必须传入有意的非空 Revision
+或 `StaticContentRevision`。
+
+这是 Alpha 阶段的源码破坏性变更。对于位置参数源码，仅重新编译并不足以完成迁移。旧的三位置调用
+`item(key, contentType, contentRevision)` 或 `Page(key, contentType, contentRevision)` 在签名变化后仍
+可能通过类型检查，因为两个语义值都接受 `Any`；但它会把旧 `contentType` 当作 Revision，把旧
+Revision 当作物理 Content Type。必须改写为 `item(key, contentRevision, contentType)` 或
+`Page(key, contentRevision, contentType)`。维护中的源码应优先使用语义命名参数：
+
+```kotlin
+item(
+    key = message.id,
+    contentRevision = message.version,
+    contentType = "message-row",
+) {
+    MessageRow(message)
+}
+```
+
+完成源码审计后，所有使用方都必须重新编译，不能把针对旧单条参数顺序编译的 Binary 与新 Artifact
+混用。在 JVM 上，相邻的 `Any?`/`Any` 参数可能都擦除为同一个 `Object` Descriptor，因此旧调用不
+一定在链接时失败，反而可能把原 `contentType` 与 `contentRevision` 绑定到相反语义。命名参数可以
+保护已审查的源码调用，但不能让已经编译的旧调用变得安全。
 
 Pager Page 与 Tab 现在都要求显式且唯一的 Key。位置是物理排布，不是逻辑标识，框架不再猜测同一
 位置的无 Key Child 拥有旧 Child 的 Remember、Saveable State 或 Effect。

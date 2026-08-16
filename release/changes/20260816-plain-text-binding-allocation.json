@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Add snapshot-consistent observed property transactions, LazyItemsSnapshot and StaticContentRevision; require explicit single-item contentRevision; avoid redundant bindings; and harden lazy-item reuse and RecyclerView tail latency.",
+  "summary": "Add observed property transactions and lazy snapshot reuse; make single-entry contentRevision non-null and place it after key (consumers must recompile); reduce redundant bindings and RecyclerView tail latency.",
   "changes": [
     { "artifact": "viewcompose-runtime", "impact": "feature" },
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },

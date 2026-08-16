@@ -30,15 +30,15 @@ class LazyListScope internal constructor(
      * Otherwise [contentRevision] must change with every such input that can affect the emitted UI.
      *
      * @param key unique logical identity that owns remember, saveable state, and effects
-     * @param contentType physical-tree compatibility class; equal values promise reset-safe structure
      * @param contentRevision semantic version of every non-State value captured by [content]
+     * @param contentType physical-tree compatibility class; equal values promise reset-safe structure
      * @param content declaration evaluated when this logical item session renders
      * @throws IllegalArgumentException when [key] duplicates another declaration in this scope
      */
     fun item(
         key: Any,
+        contentRevision: Any,
         contentType: Any? = null,
-        contentRevision: Any?,
         content: UiTreeBuilder.() -> Unit,
     ) {
         collector.add(
@@ -94,15 +94,15 @@ class LazyListScope internal constructor(
      * Otherwise [contentRevision] must change with every such input that can affect the emitted UI.
      *
      * @param key unique logical identity that owns header state and effects
-     * @param contentType physical-tree compatibility class for renderer reuse
      * @param contentRevision semantic version of every non-State value captured by [content]
+     * @param contentType physical-tree compatibility class for renderer reuse
      * @param content declaration evaluated when the header session renders
      * @throws IllegalArgumentException when used by `LazyRow` or when [key] is duplicated
      */
     fun stickyHeader(
         key: Any,
+        contentRevision: Any,
         contentType: Any? = null,
-        contentRevision: Any?,
         content: UiTreeBuilder.() -> Unit,
     ) {
         require(stickyHeadersAllowed) {
@@ -138,16 +138,16 @@ class LazyGridScope internal constructor(
      * Otherwise [contentRevision] must change with every such input that can affect the emitted UI.
      *
      * @param key unique logical identity that owns remember, saveable state, and effects
-     * @param contentType physical-tree compatibility class for renderer reuse
      * @param contentRevision semantic version of every non-State value captured by [content]
+     * @param contentType physical-tree compatibility class for renderer reuse
      * @param span renderer-neutral cell-span policy
      * @param content declaration evaluated when this logical item session renders
      * @throws IllegalArgumentException when [key] is duplicated
      */
     fun item(
         key: Any,
+        contentRevision: Any,
         contentType: Any? = null,
-        contentRevision: Any?,
         span: GridItemSpan = GridItemSpan.Single,
         content: UiTreeBuilder.() -> Unit,
     ) {
@@ -204,15 +204,15 @@ class LazyGridScope internal constructor(
      * Otherwise [contentRevision] must change with every such input that can affect the emitted UI.
      *
      * @param key unique logical identity that owns header state and effects
-     * @param contentType physical-tree compatibility class for renderer reuse
      * @param contentRevision semantic version of every non-State value captured by [content]
+     * @param contentType physical-tree compatibility class for renderer reuse
      * @param content declaration evaluated when the header session renders
      * @throws IllegalArgumentException when [key] duplicates another declaration in this scope
      */
     fun stickyHeader(
         key: Any,
+        contentRevision: Any,
         contentType: Any? = null,
-        contentRevision: Any?,
         content: UiTreeBuilder.() -> Unit,
     ) {
         collector.add(

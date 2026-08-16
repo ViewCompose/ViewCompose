@@ -142,12 +142,15 @@ by a later renderer or child render session.
 - [`rememberSaveable` and `SaveableStateRegistry`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-saveable-state-registry/)
   preserve state through composition disposal and host recreation with transactional restoration.
 - `LazyColumn`, `LazyRow`, `LazyVerticalGrid`, pager pages, and tabs use an explicit Q3 revision
-  contract. A single `item`, `stickyHeader`, `Page`, or `Tab` must provide `contentRevision`; use
-  `StaticContentRevision` only when the declaration has no changing ordinary non-State input.
-  Bulk overloads retain `contentRevision = { it }` only for immutable value models whose equality
+  contract. A single `item`, `stickyHeader`, `Page`, or `Tab` must provide a non-null
+  `contentRevision` immediately after `key`; optional physical-reuse and layout arguments follow.
+  `null` is not a static sentinel. Use `StaticContentRevision` only when the declaration has no
+  changing ordinary non-State input. Bulk overloads intentionally retain the nullable
+  `contentRevision: (T) -> Any? = { it }` selector only for immutable value models whose equality
   covers every ordinary input read by item content. Other item-content inputs must be read as
-  observed State inside the active Session or participate in an explicit revision. Pager pages also
-  declare `contentType`, while `TabRow` uses eager keyed children rather than lazy item sessions.
+  observed State inside the active Session or participate in an explicit revision. Pager pages
+  also declare `contentType`, while `TabRow` uses eager keyed children rather than lazy item
+  sessions.
 - Every ordinary typed `List` declaration, including scoped `items` and the typed
   `ScrollableScope` wrappers, evaluates order, membership, and item selectors on each parent
   composition pass. Equal key, content revision, framework environment, content type, kind, and
@@ -256,8 +259,9 @@ snapshot has no entry for that Local; they are not a fallback for an explicitly 
 - Collection item snapshots, rather than callback object identities, delimit logical child
   submissions. Equal key plus content/environment revisions perform no child composition or native
   patch. A non-State capture that can change must enter `contentRevision`. Single-entry declarations
-  require that argument; `StaticContentRevision` promises no such input changes, while an omitted
-  bulk selector uses the immutable item value as the same promise.
+  require a non-null argument immediately after `key`; `null` is not a static shortcut and
+  `StaticContentRevision` promises no such input changes. An omitted bulk selector remains nullable
+  and uses the immutable item value as the same promise.
 - Eager scroll and pager state objects attach only while their native container is mounted. A
   replacement state detaches the old owner, disposal rejects later commands at the renderer
   boundary, and equal snapshots do not invalidate observers. Horizontal eager offsets and pager

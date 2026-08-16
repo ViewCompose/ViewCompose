@@ -62,8 +62,8 @@ LazyColumn(
 ) {
     stickyHeader(
         key = "contacts-header",
-        contentType = "header",
         contentRevision = StaticContentRevision,
+        contentType = "header",
     ) {
         Text("Contacts")
     }
@@ -83,10 +83,12 @@ The list scope supports `item`, `items`, and `stickyHeader`. The grid scope supp
 structure plus per-item spans; a grid sticky header occupies the full line. `contentRevision` is a
 correctness contract, not only a performance hint. A changing value captured by item content must
 be observed State or appear in this revision; equal key and revisions skip item rendering entirely.
-Single `item`, `stickyHeader`, pager `Page`, and `Tab` declarations therefore require an explicit
-revision. `StaticContentRevision` is the named promise for truly static ordinary inputs. The bulk
-`contentRevision = { it }` default is safe only for immutable value models whose equality covers
-every ordinary non-State value read by item content.
+Single `item`, `stickyHeader`, pager `Page`, and `Tab` declarations therefore require an explicit,
+non-null revision. Their signature order is `key`, `contentRevision`, then optional physical-reuse
+or layout policy such as `contentType` and grid `span`. `null` is not a static shortcut;
+`StaticContentRevision` is the named promise for truly static ordinary inputs. The bulk
+`contentRevision: (T) -> Any? = { it }` selector remains nullable and is safe by default only for
+immutable value models whose equality covers every ordinary non-State value read by item content.
 
 Every ordinary homogeneous or scoped `List` declaration evaluates its ordered elements and invokes its
 `key`, `contentType`, `contentRevision`, and grid-span selectors on every parent composition pass.
@@ -225,9 +227,11 @@ revision change cannot temporarily expose content under a system bar or erase th
 1. Collection keys are non-null and unique within a container.
 2. A key identifies the same logical item across reorders.
 3. `contentType` groups only layout-compatible item structures.
-4. A single item, sticky header, page, or tab provides `contentRevision`; `StaticContentRevision`
-   is valid only with no changing ordinary non-State input. A bulk `{ it }` default requires an
-   immutable value model whose equality covers every such input.
+4. A single item, sticky header, page, or tab provides a non-null `contentRevision` immediately
+   after `key`; optional `contentType` and layout policy follow it. `null` is not a static sentinel,
+   and `StaticContentRevision` is valid only with no changing ordinary non-State input. A bulk
+   nullable `{ it }` default requires an immutable value model whose equality covers every such
+   input.
 5. Every ordinary typed `List` declaration reevaluates order, membership, and item selectors on each parent
    composition pass; equal key, content revision, environment, content type, kind, and span may
    reuse the committed logical item afterward.
