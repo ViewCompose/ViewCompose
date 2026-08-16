@@ -7,6 +7,7 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.modifier.MinHeightModifierElement
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.SliderNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 import org.junit.Assert.assertEquals
@@ -67,7 +68,23 @@ class InputControlTest {
         assertEquals(customTheme.typography.bodyMedium.letterSpacingEm, spec.letterSpacingEm)
         assertEquals(customTheme.typography.bodyMedium.lineHeightSp, spec.lineHeightSp)
         assertEquals(customTheme.typography.bodyMedium.includeFontPadding, spec.includeFontPadding)
-        assertEquals(pressedOverlayColorFor(customTheme.colors.onSurface), spec.rippleColor)
+        assertEquals(
+            UiStateLayerColors(
+                pressedColor = stateLayerColorWithOpacity(
+                    customTheme.colors.primary,
+                    customTheme.interactions.pressedStateLayerOpacity,
+                ),
+                focusedColor = stateLayerColorWithOpacity(
+                    customTheme.colors.primary,
+                    customTheme.interactions.focusedStateLayerOpacity,
+                ),
+                hoveredColor = stateLayerColorWithOpacity(
+                    customTheme.colors.primary,
+                    customTheme.interactions.hoveredStateLayerOpacity,
+                ),
+            ),
+            node.requireStateLayerColors(),
+        )
         assertEquals(
             customTheme.controls.minimumInteractiveHeight,
             (node.modifier.elements.first() as MinHeightModifierElement).minHeight,
@@ -127,8 +144,11 @@ class InputControlTest {
         assertEquals(NodeType.Switch, tree[0].children[1].type)
         assertEquals(false, radioSpec.enabled)
         assertTrue(switchSpec.enabled)
-        assertEquals(InputControlDefaults.pressedColor(), radioSpec.rippleColor)
-        assertEquals(InputControlDefaults.pressedColor(), switchSpec.rippleColor)
+        assertEquals(null, tree[0].children[0].stateLayerColorsOrNull())
+        assertEquals(
+            stateLayerColorsFor(switchSpec.trackColor ?: switchSpec.controlColor),
+            tree[0].children[1].requireStateLayerColors(),
+        )
     }
 
     @Test

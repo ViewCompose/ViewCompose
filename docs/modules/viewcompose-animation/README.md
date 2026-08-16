@@ -197,20 +197,20 @@ observe `currentState` or `isIdle`. One object should be bound to one active hos
 changing its target before the host's first composition does not play an initial enter; first compose
 the hidden state, then change the target if that motion is required.
 
-## AnimatedContent and Crossfade
+## Crossfade
 
-`AnimatedContent` currently implements an alpha cross-fade. During a transition it invokes content
+`Crossfade` implements an alpha-only transition. During a transition it invokes content
 for the last committed state and latest target, stacks both fill-size subtrees, and removes outgoing
 content in a post-composition side effect after it becomes transparent. Descendant state should be
 keyed by the logical state when each content identity needs independent retention.
 
 A new target arriving mid-fade replaces incoming content at the existing progress rather than
-restarting from zero. The last committed state remains outgoing. A previously displayed nullable
-state cannot be retained as outgoing content because `null` is also the internal no-outgoing
-sentinel; use a non-null state wrapper when that distinction matters.
+restarting from zero. The last committed state remains outgoing. Nullable states are retained
+through an explicit displayed-state wrapper and follow the same lifecycle as non-null states.
 
-`Crossfade` is the fixed-specification convenience wrapper. Neither API currently provides content
-keys, transition scopes, size transforms, slide motion, or per-state pair specifications.
+The former `AnimatedContent` name was removed because it promised broader transition semantics than
+the implementation supplied. `Crossfade` does not provide content keys, transition scopes, size
+transforms, slide motion, or per-state pair specifications.
 
 ## animateContentSize and native layout cost
 

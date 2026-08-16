@@ -17,6 +17,7 @@ internal class ResolvedModifiers(
     var backgroundColor: BackgroundColorModifierElement? = null,
     var backgroundDrawableRes: BackgroundDrawableResModifierElement? = null,
     var clickable: ClickableModifierElement? = null,
+    var interactionIndication: InteractionIndicationModifierElement? = null,
     var semantics: SemanticsConfiguration = SemanticsConfiguration.Empty,
     var testTag: TestTagModifierElement? = null,
     var overlayAnchor: OverlayAnchorModifierElement? = null,
@@ -98,6 +99,7 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             is BackgroundColorModifierElement -> result.backgroundColor = element
             is BackgroundDrawableResModifierElement -> result.backgroundDrawableRes = element
             is ClickableModifierElement -> result.clickable = element
+            is InteractionIndicationModifierElement -> result.interactionIndication = element
             is SemanticsModifierElement -> {
                 result.semantics = result.semantics.merge(element.configuration)
             }

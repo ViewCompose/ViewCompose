@@ -1,5 +1,6 @@
 package com.viewcompose.ui.foundation
 
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.unit.UiDp
 
 /**
@@ -11,7 +12,8 @@ import com.viewcompose.ui.unit.UiDp
  * @property selectedLabelColor selected label ARGB color
  * @property unselectedLabelColor unselected label ARGB color
  * @property indicatorColor selection-indicator ARGB color
- * @property rippleColor destination interaction-feedback ARGB color
+ * @property selectedStateLayerColors selected-destination pressed, focused, and hovered colors
+ * @property unselectedStateLayerColors unselected-destination pressed, focused, and hovered colors
  * @property iconSize square destination-icon size in dp
  * @property labelStyle destination-label typography
  * @property badgeColor badge container ARGB color
@@ -26,7 +28,8 @@ data class NavigationBarOverrides(
     val selectedLabelColor: Int? = null,
     val unselectedLabelColor: Int? = null,
     val indicatorColor: Int? = null,
-    val rippleColor: Int? = null,
+    val selectedStateLayerColors: UiStateLayerColors? = null,
+    val unselectedStateLayerColors: UiStateLayerColors? = null,
     val iconSize: UiDp? = null,
     val labelStyle: UiTextStyle? = null,
     val badgeColor: Int? = null,
@@ -55,7 +58,8 @@ internal fun NavigationBarOverrides.merge(nearest: NavigationBarOverrides): Navi
         selectedLabelColor = nearest.selectedLabelColor ?: selectedLabelColor,
         unselectedLabelColor = nearest.unselectedLabelColor ?: unselectedLabelColor,
         indicatorColor = nearest.indicatorColor ?: indicatorColor,
-        rippleColor = nearest.rippleColor ?: rippleColor,
+        selectedStateLayerColors = nearest.selectedStateLayerColors ?: selectedStateLayerColors,
+        unselectedStateLayerColors = nearest.unselectedStateLayerColors ?: unselectedStateLayerColors,
         iconSize = nearest.iconSize ?: iconSize,
         labelStyle = nearest.labelStyle ?: labelStyle,
         badgeColor = nearest.badgeColor ?: badgeColor,

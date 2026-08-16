@@ -10,10 +10,12 @@ import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.clip
 import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.height
+import com.viewcompose.ui.modifier.interactionIndication
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.unit.UiDp
 
 /**
@@ -47,14 +49,13 @@ fun UiTreeBuilder.FloatingActionButton(
         .shape(appearance.shape)
         .elevation(appearance.elevation)
         .clip()
+        .interactionIndication(UiInteractionIndication.StateLayer(appearance.stateLayerColors))
         .clickable(onClick)
         .then(modifier)
     ProvideLocal(LocalContentColor, appearance.contentColor) {
-        StateLayerBox(
+        Box(
             key = key,
             contentAlignment = BoxAlignment.Center,
-            rippleColor = appearance.rippleColor,
-            stateLayerColors = appearance.stateLayerColors,
             modifier = semanticModifier,
         ) {
             content()
@@ -92,16 +93,15 @@ fun UiTreeBuilder.ExtendedFloatingActionButton(
         .shape(appearance.shape)
         .elevation(appearance.elevation)
         .clip()
+        .interactionIndication(UiInteractionIndication.StateLayer(appearance.stateLayerColors))
         .clickable(onClick)
         .padding(horizontal = appearance.horizontalPadding)
         .then(modifier)
     ProvideLocal(LocalContentColor, appearance.contentColor) {
-        StateLayerRow(
+        Row(
             key = key,
             spacing = if (icon != null) appearance.iconSpacing else UiDp.Zero,
             verticalAlignment = VerticalAlignment.Center,
-            rippleColor = appearance.rippleColor,
-            stateLayerColors = appearance.stateLayerColors,
             modifier = semanticModifier,
         ) {
             if (icon != null) {
@@ -121,7 +121,23 @@ fun UiTreeBuilder.ExtendedFloatingActionButton(
 }
 
 /**
- * Composite Chip supporting selected/disabled states, leading icon, and trailing icon action.
+ * Creates a compact themed action with optional selected and icon regions.
+ *
+ * The chip body invokes [onClick]. When supplied, [onTrailingIconClick] adds a distinct trailing
+ * action inside the same visual container. Disabled chips install neither action listener nor
+ * interaction indication.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.actionCompositeSample
+ * @receiver active tree builder receiving the chip composite
+ * @param label single-line label displayed by the chip
+ * @param onClick callback invoked synchronously for an accepted body click
+ * @param variant semantic chip role used to resolve colors and border
+ * @param selected whether selected appearance roles are active
+ * @param leadingIcon optional image displayed before the label
+ * @param onTrailingIconClick optional callback that adds a trailing dismiss-style action
+ * @param enabled whether body and trailing actions accept input
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered caller configuration applied after resolved chip behavior and appearance
  */
 fun UiTreeBuilder.Chip(
     label: String,
@@ -157,7 +173,9 @@ fun UiTreeBuilder.Chip(
         .clip()
         .let { m ->
             if (enabled) {
-                m.clickable(onClick)
+                m.interactionIndication(
+                    UiInteractionIndication.StateLayer(stateLayerColorsFor(cColor)),
+                ).clickable(onClick)
             } else {
                 m.alpha(0.38f)
             }
@@ -165,12 +183,10 @@ fun UiTreeBuilder.Chip(
         .padding(left = leftPadding, right = rightPadding)
         .then(modifier)
     ProvideLocal(LocalContentColor, cColor) {
-        StateLayerRow(
+        Row(
             key = key,
             spacing = ChipDefaults.iconSpacing(),
             verticalAlignment = VerticalAlignment.Center,
-            rippleColor = ChipDefaults.pressedColor(),
-            stateLayerColors = if (enabled) stateLayerColorsFor(cColor) else null,
             modifier = semanticModifier,
         ) {
             if (leadingIcon != null) {
@@ -191,7 +207,11 @@ fun UiTreeBuilder.Chip(
                     source = ImageSource.Resource(android.R.drawable.ic_menu_close_clear_cancel),
                     tint = cColor,
                     size = ChipDefaults.trailingIconSize(),
-                    modifier = Modifier.clickable(onTrailingIconClick),
+                    modifier = if (enabled) {
+                        Modifier.clickable(onTrailingIconClick)
+                    } else {
+                        Modifier
+                    },
                 )
             }
         }

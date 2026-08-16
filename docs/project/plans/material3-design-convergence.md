@@ -336,18 +336,24 @@ Accepted theme-source verification upgrade, 2026-08-07:
 
 Interaction-state baseline, 2026-08-07:
 
+> Historical baseline only. ADR-0014 and the DSL contract convergence hard cut on 2026-08-15
+> replaced the single-color transport, compatibility fallback, and generic Box/Row state-layer
+> experiment described below with one renderer-neutral indication Modifier and explicit
+> interaction opacity tokens.
+
 - the pinned Material Components `1.13.0` selectors use the component content role for the state
   layer. For a primary Button this is `onPrimary`; pressed and focused opacity are `0.10`, hovered
   opacity is `0.08`, and selector order gives pressed precedence over focused and hovered;
-- the current ViewCompose surface contract carries one `rippleColor` integer. Android Renderer
+- the ViewCompose surface contract at this baseline carried one `rippleColor` integer. Android Renderer
   creates a value-only `ColorStateList`, so pressed, focused, and hovered all resolve to the same
   `onSurface`-derived color and opacity. The device baseline records this difference explicitly;
 - extending `UiStateColor.resolve` with a hover flag would not fix component-specific content roles,
   and deriving Material opacity or content roles inside Android Renderer would violate the layer
   boundary. Any retained experiment must carry a generic state-layer color set through the
   component/NodeSpec boundary and preserve the existing one-color API as a compatibility fallback;
-- because this contract affects every clickable surface and custom renderer, production behavior
-  remains unchanged in the baseline commit. Start with Button and IconButton only after tests cover
+- because this contract affected every clickable surface and custom renderer, production behavior
+  remained unchanged in the baseline commit. The later hard cut started with Button and IconButton
+  only after tests covered
   disabled, pressed, focused, hovered, pressed-plus-focused precedence, caller override, patching,
   and Light/Dark output. Expand to composite and selection controls only if that small contract is
   reusable without a Material-specific renderer branch.
@@ -383,6 +389,10 @@ Accepted Button/IconButton state-layer experiment, 2026-08-07:
   abstraction or policy for controls with different native drawing and selection behavior.
 
 Accepted bounded composite state-layer expansion, 2026-08-07:
+
+> Historical implementation record. Current Box/Row contracts are pure layout primitives,
+> direct emitters have no one-color fallback, and NavigationBar/TabRow are covered by ADR-0014's
+> multi-target or eager-child indication rules.
 
 - the existing generic contract is reused by nullable Box and Row NodeSpec fields. Public Box/Row
   DSL signatures remain unchanged, passive containers keep null, and direct emitters retain their

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: ae28e42b3bb80b5a55b5da80667b6b04b4fe3ae981e281b3c4605022d43a5cc0
+translation_source_hash: de784492a42644aa0030ca0fac04de0b4899479ff3eec7b6dfb1a4ee6f7a67be
 translation_status: current
 ---
 
@@ -145,6 +145,10 @@ Thumb Transition；进一步视觉替换必须通过 Phase 12 的行为与无障
 Android 主题没有暴露一套完整的逐状态透明度族，因此标准交互透明度配置会在 Android 主题映射
 期间保留。应用可以替换通用 `UiInteractionTokens` 或组件已解析的 `stateLayerColors`，无需依赖
 Material API。
+
+Bridge 不再通过已移除的 `UiColors.ripple` 或 `UiStateColors.controlHighlight` 槽位重新发布
+Android `colorControlHighlight`。交互反馈由 Material 透明度 Recipe 与各组件语义内容角色共同
+解析；应用若需要不同策略，应显式提供 `UiInteractionTokens`。
 
 静态 `Material3Theme` 重载与六个具名压力切片入口属于增量 Q3 API；相应 Enum 与
 `Material3Reference` 是 Q2 身份/值契约。它们不暴露 Material 控件类型，也不改变通用 UI

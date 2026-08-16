@@ -64,12 +64,6 @@ object SegmentedControlDefaults {
         )
     }
 
-    /** Resolves compatibility pressed feedback, or transparency while disabled. */
-    fun rippleColor(enabled: Boolean = true): Int = when {
-        !enabled -> 0x00000000
-        else -> scoped().rippleColor ?: Theme.stateColors.controlHighlight.resolve(pressed = true)
-    }
-
     /** Resolves interaction colors from the selected or unselected enabled label role. */
     internal fun stateLayerColors(selected: Boolean): UiStateLayerColors {
         val overrides = scoped()
@@ -138,14 +132,9 @@ object SegmentedControlDefaults {
             shape = overrides.shape ?: Theme.shapes.full,
             textStyle = overrides.textStyle ?: semanticTextStyle(size),
             unselectedStateLayerColors = overrides.unselectedStateLayerColors
-                ?: stateLayerColorsFor(overrides.contentColor ?: Theme.colors.onSurface),
+                ?: stateLayerColorsFor(contentColor),
             selectedStateLayerColors = overrides.selectedStateLayerColors
-                ?: stateLayerColorsFor(overrides.selectedContentColor ?: Theme.colors.onSecondaryContainer),
-            rippleColor = if (enabled) {
-                overrides.rippleColor ?: Theme.stateColors.controlHighlight.resolve(pressed = true)
-            } else {
-                0x00000000
-            },
+                ?: stateLayerColorsFor(selectedContentColor),
             minimumHeight = overrides.minimumHeight ?: semanticHeight(size),
             horizontalPadding = overrides.horizontalPadding ?: semanticHorizontalPadding(size),
             verticalPadding = overrides.verticalPadding ?: semanticVerticalPadding(size),
@@ -188,7 +177,6 @@ internal data class ResolvedSegmentedControlAppearance(
     val textStyle: UiTextStyle,
     val unselectedStateLayerColors: UiStateLayerColors,
     val selectedStateLayerColors: UiStateLayerColors,
-    val rippleColor: Int,
     val minimumHeight: UiDp,
     val horizontalPadding: UiDp,
     val verticalPadding: UiDp,

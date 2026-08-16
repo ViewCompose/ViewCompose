@@ -19,7 +19,6 @@ import com.viewcompose.ui.unit.UiDp
  * @property textStyle label typography
  * @property unselectedStateLayerColors unselected pressed, focused, and hovered colors
  * @property selectedStateLayerColors selected pressed, focused, and hovered colors
- * @property rippleColor compatibility pressed-feedback ARGB color
  * @property minimumHeight minimum control height in dp
  * @property horizontalPadding segment padding on each horizontal edge in dp
  * @property verticalPadding segment padding on each vertical edge in dp
@@ -38,7 +37,6 @@ data class SegmentedControlOverrides(
     val textStyle: UiTextStyle? = null,
     val unselectedStateLayerColors: UiStateLayerColors? = null,
     val selectedStateLayerColors: UiStateLayerColors? = null,
-    val rippleColor: Int? = null,
     val minimumHeight: UiDp? = null,
     val horizontalPadding: UiDp? = null,
     val verticalPadding: UiDp? = null,
@@ -72,7 +70,6 @@ internal fun SegmentedControlOverrides.merge(nearest: SegmentedControlOverrides)
         textStyle = nearest.textStyle ?: textStyle,
         unselectedStateLayerColors = nearest.unselectedStateLayerColors ?: unselectedStateLayerColors,
         selectedStateLayerColors = nearest.selectedStateLayerColors ?: selectedStateLayerColors,
-        rippleColor = nearest.rippleColor ?: rippleColor,
         minimumHeight = nearest.minimumHeight ?: minimumHeight,
         horizontalPadding = nearest.horizontalPadding ?: horizontalPadding,
         verticalPadding = nearest.verticalPadding ?: verticalPadding,

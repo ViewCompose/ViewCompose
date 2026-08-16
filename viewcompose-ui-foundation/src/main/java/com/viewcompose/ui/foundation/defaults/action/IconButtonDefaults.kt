@@ -66,9 +66,6 @@ object IconButtonDefaults {
     fun contentPadding(size: ButtonSize = ButtonSize.Medium): UiDp =
         scopedOverrides().contentPadding ?: semanticContentPadding(size)
 
-    /** Returns the current pressed-state control highlight. */
-    fun pressedColor(): Int = Theme.stateColors.controlHighlight.resolve(pressed = true)
-
     /** Resolves transient interaction colors from the effective enabled icon role. */
     fun stateLayerColors(variant: ButtonVariant = ButtonVariant.Text): UiStateLayerColors {
         val overrides = scopedOverrides()

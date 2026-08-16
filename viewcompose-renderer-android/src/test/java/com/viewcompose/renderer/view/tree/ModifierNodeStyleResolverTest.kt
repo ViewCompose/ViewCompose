@@ -13,7 +13,9 @@ import com.viewcompose.graphics.core.Brush
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.backgroundDrawableRes
+import com.viewcompose.ui.modifier.interactionIndication
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.ButtonNodeProps
@@ -85,11 +87,11 @@ class ModifierNodeStyleResolverTest {
             defaultRippleColor = 0xFF00FF00.toInt(),
         )
 
-        assertEquals(colors, style.stateLayerColors)
+        assertEquals(UiInteractionIndication.StateLayer(colors), style.interactionIndication)
     }
 
     @Test
-    fun `box and row styles carry the same renderer-neutral state-layer contract`() {
+    fun `box and row styles receive the same renderer-neutral indication through modifiers`() {
         val colors = UiStateLayerColors(
             pressedColor = 0x1A112233,
             focusedColor = 0x1A223344,
@@ -98,11 +100,8 @@ class ModifierNodeStyleResolverTest {
         val nodes = listOf(
             VNode(
                 type = NodeType.Box,
-                spec = BoxNodeProps(
-                    contentAlignment = BoxAlignment.Center,
-                    rippleColor = 0x22112233,
-                    stateLayerColors = colors,
-                ),
+                spec = BoxNodeProps(contentAlignment = BoxAlignment.Center),
+                modifier = Modifier.interactionIndication(UiInteractionIndication.StateLayer(colors)),
             ),
             VNode(
                 type = NodeType.Row,
@@ -110,9 +109,8 @@ class ModifierNodeStyleResolverTest {
                     spacing = 0.dp,
                     arrangement = MainAxisArrangement.Start,
                     verticalAlignment = VerticalAlignment.Center,
-                    rippleColor = 0x22112233,
-                    stateLayerColors = colors,
                 ),
+                modifier = Modifier.interactionIndication(UiInteractionIndication.StateLayer(colors)),
             ),
         )
 
@@ -122,8 +120,7 @@ class ModifierNodeStyleResolverTest {
                 resolved = node.modifier.resolve(),
                 defaultRippleColor = 0xFF00FF00.toInt(),
             )
-            assertEquals(0x22112233, style.rippleColor)
-            assertEquals(colors, style.stateLayerColors)
+            assertEquals(UiInteractionIndication.StateLayer(colors), style.interactionIndication)
         }
     }
 
@@ -237,7 +234,6 @@ class ModifierNodeStyleResolverTest {
                 borderWidth = 0.dp,
                 borderColor = 0,
                 shape = UiShape.rounded(0.dp),
-                rippleColor = 0x33000000,
                 minHeight = minHeight,
                 paddingHorizontal = 0.dp,
                 paddingVertical = 0.dp,
@@ -247,9 +243,12 @@ class ModifierNodeStyleResolverTest {
                 iconSize = 0.dp,
                 iconSpacing = 0.dp,
                 visualHeight = visualHeight,
-                stateLayerColors = stateLayerColors,
             ),
-            modifier = modifier,
+            modifier = if (stateLayerColors == null) {
+                modifier
+            } else {
+                modifier.interactionIndication(UiInteractionIndication.StateLayer(stateLayerColors))
+            },
             children = emptyList(),
         )
     }

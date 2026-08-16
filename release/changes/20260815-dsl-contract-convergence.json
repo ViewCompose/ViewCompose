@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut interaction feedback and theme state layers to renderer-neutral contracts, remove redundant component aliases, enforce typed TextField profiles, and retain Crossfade as the alpha-only content transition API.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" },
+    { "artifact": "viewcompose-animation", "impact": "breaking" }
+  ],
+  "ignored": [
+    {
+      "artifact": "viewcompose-material3",
+      "reason": "Production source drops pass-through mapping of removed Foundation ripple/highlight slots and retains the existing Material interaction recipe; Material 3 public APIs and semantic appearance are unchanged."
+    },
+    {
+      "artifact": "viewcompose-oneui7",
+      "reason": "Production source only maps the existing One UI recipe into the new complete Foundation indication contract; One UI public APIs and semantic appearance are unchanged."
+    },
+    {
+      "artifact": "viewcompose-preview",
+      "reason": "Preview catalog fixtures only migrate removed Foundation and animation entry points; preview descriptors and public behavior are unchanged."
+    }
+  ]
+}

@@ -88,6 +88,4 @@ object ChipDefaults {
     /** Returns the medium label typography style. */
     fun textStyle(): UiTextStyle = TextDefaults.labelMediumStyle()
 
-    /** Returns the current ripple color. */
-    fun pressedColor(): Int = Theme.colors.ripple
 }

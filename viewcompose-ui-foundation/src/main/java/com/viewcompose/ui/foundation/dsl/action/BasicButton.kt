@@ -6,6 +6,7 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.UiStateLayerColors
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.unit.UiDp
 
@@ -87,16 +88,12 @@ fun UiTreeBuilder.BasicButton(
 ) {
     val spacing = if (leadingIcon != null || trailingIcon != null) style.iconSpacing else UiDp.Zero
     BasicSurface(
-        style = style.surface,
+        style = style.surface.copy(
+            interactionIndication = UiInteractionIndication.StateLayer(style.stateLayerColors),
+        ),
         contentColor = style.contentColor,
         enabled = enabled,
         onClick = onClick,
-        stateLayerColors = style.stateLayerColors,
-        rippleColor = if (enabled && onClick != null) {
-            style.stateLayerColors.pressedColor
-        } else {
-            0x00000000
-        },
         minimumWidth = style.minimumWidth,
         minimumHeight = style.minimumHeight,
         visualHeight = style.visualHeight,

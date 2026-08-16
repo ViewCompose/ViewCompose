@@ -13,7 +13,7 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.remember
 
 /**
- * Cross-fades content for the last displayed state into content for [targetState].
+ * Internal cross-fade engine retained behind the single public [Crossfade] contract.
  *
  * A state change keeps the outgoing subtree mounted while the incoming subtree is rendered above it
  * in a fill-size [Box]. [content] is therefore invoked twice during a transition and once while
@@ -22,37 +22,34 @@ import com.viewcompose.ui.foundation.remember
  *
  * Equality determines whether a transition is needed. If another target arrives mid-transition,
  * incoming content switches to the latest target at the existing progress rather than restarting
- * from zero; the last committed state remains the outgoing content. Nullable `T` is supported by the
- * signature, but a previously displayed `null` is also the internal no-outgoing sentinel and cannot
- * be rendered as outgoing content.
+ * from zero; the last committed state remains the outgoing content. [DisplayedState] keeps the
+ * mounted value distinct from transition absence, so nullable states retain the same lifecycle.
  *
  * This release animates alpha only; it does not provide size transforms, content keys, or per-pair
  * transition scopes. Descendant state must be keyed by [targetState] when separate state per content
  * identity is required.
  *
- * @sample com.viewcompose.animation.samples.animatedContentSample
- *
  * @param T logical state used to produce content
  * @receiver tree builder for the current composition
  * @param targetState state whose content should become fully visible
  * @param modifier modifier applied to the outer stacking container
- * @param transitionSpec factory for the progress animation specification
+ * @param animationSpec progress animation specification
  * @param content content rendered with either the outgoing or incoming state
  */
-fun <T> UiTreeBuilder.AnimatedContent(
+private fun <T> UiTreeBuilder.crossfadeContent(
     targetState: T,
     modifier: Modifier = Modifier,
-    transitionSpec: () -> AnimationSpec = { tween() },
+    animationSpec: AnimationSpec,
     content: BoxScope.(T) -> Unit,
 ) {
     val displayedState = remember {
-        mutableStateOf(targetState)
+        mutableStateOf(DisplayedState(targetState))
     }
-    val hasPendingTransition = targetState != displayedState.value
-    val outgoingState: T? = if (hasPendingTransition) displayedState.value else null
+    val hasPendingTransition = targetState != displayedState.value.value
+    val outgoingState = displayedState.value.takeIf { hasPendingTransition }
     val progress = animateFloatAsState(
         targetValue = if (hasPendingTransition) 1f else 0f,
-        animationSpec = transitionSpec(),
+        animationSpec = animationSpec,
     )
     val incomingAlpha = if (hasPendingTransition) {
         progress.value
@@ -63,7 +60,7 @@ fun <T> UiTreeBuilder.AnimatedContent(
     if (hasPendingTransition && outgoingAlpha <= 0.001f) {
         // Commit after rendering so the outgoing subtree remains mounted through the terminal frame.
         SideEffect {
-            displayedState.value = targetState
+            displayedState.value = DisplayedState(targetState)
         }
     }
     Box(
@@ -75,7 +72,7 @@ fun <T> UiTreeBuilder.AnimatedContent(
                     .fillMaxSize()
                     .alpha(outgoingAlpha),
             ) {
-                content(previous)
+                content(previous.value)
             }
         }
         Box(
@@ -88,13 +85,17 @@ fun <T> UiTreeBuilder.AnimatedContent(
     }
 }
 
+private data class DisplayedState<T>(val value: T)
+
 /**
  * Cross-fades state content using one fixed [animationSpec].
  *
- * This is a convenience wrapper around [AnimatedContent] and shares its layering, equality,
- * retargeting, nullable-state, and content-state contracts.
+ * A state change keeps the outgoing subtree mounted while the incoming subtree is rendered above
+ * it in a fill-size Box. Equality controls transitions, nullable states are supported, and a new
+ * target during a transition replaces the incoming content without discarding the last committed
+ * outgoing state. This API intentionally promises alpha cross-fading only.
  *
- * @sample com.viewcompose.animation.samples.animatedContentSample
+ * @sample com.viewcompose.animation.samples.crossfadeSample
  *
  * @param T logical state used to produce content
  * @receiver tree builder for the current composition
@@ -109,10 +110,10 @@ fun <T> UiTreeBuilder.Crossfade(
     animationSpec: AnimationSpec = tween(),
     content: BoxScope.(T) -> Unit,
 ) {
-    AnimatedContent(
+    crossfadeContent(
         targetState = targetState,
         modifier = modifier,
-        transitionSpec = { animationSpec },
+        animationSpec = animationSpec,
         content = content,
     )
 }

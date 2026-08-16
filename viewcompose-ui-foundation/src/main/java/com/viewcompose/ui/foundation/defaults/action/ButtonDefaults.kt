@@ -109,9 +109,6 @@ object ButtonDefaults {
     fun iconSpacing(size: ButtonSize = ButtonSize.Medium): UiDp =
         scopedOverrides().iconSpacing ?: semanticIconSpacing(size)
 
-    /** Resolves the current pressed-state control highlight. */
-    fun pressedColor(): Int = Theme.stateColors.controlHighlight.resolve(pressed = true)
-
     /** Resolves transient interaction colors from the effective enabled content role. */
     fun stateLayerColors(variant: ButtonVariant = ButtonVariant.Primary): UiStateLayerColors {
         val scoped = scopedOverrides()

@@ -60,6 +60,7 @@ build modes, workloads, warm-up, sampling, and statistical treatment.
 | Navigation 2 or Navigation 3 | [Navigation](compose-navigation.md) | Source navigation model, route identity, owner scope, hidden-session policy, and Back integration |
 | Image loading | [Image loading](image-loading.md) | Source types, loader ownership, request policy, and recycled-View disposal |
 | Lazy collections and pagers | [Lazy collection revisions and reuse](lazy-collection-revision-and-reuse.md) | Semantic revisions, mounted-tree reuse, interop reset/release, and TabRow/Pager hard cuts |
+| Component DSL aliases, interaction feedback, TextField wrappers, or alpha-only content animation | [DSL contract convergence](dsl-contract-convergence.md) | Variant replacement, indication ownership, typed input profiles, and Crossfade naming |
 
 Read more than one page when a boundary crosses concerns. For example, `rememberSaveable` in a
 navigation destination requires both the state/restoration and navigation ownership contracts.

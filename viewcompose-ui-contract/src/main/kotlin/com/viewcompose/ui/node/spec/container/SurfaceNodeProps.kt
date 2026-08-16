@@ -2,7 +2,6 @@ package com.viewcompose.ui.node.spec
 
 import com.viewcompose.graphics.core.Brush
 import com.viewcompose.ui.layout.BoxAlignment
-import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 
@@ -15,11 +14,9 @@ import com.viewcompose.ui.unit.UiDp
  *
  * @property contentAlignment default alignment for children without explicit box parent data
  * @property fill immutable color or gradient brush in the surface's local pixel coordinate space
- * @property shape logical-corner geometry shared by fill, border, ripple mask, clip, and outline
+ * @property shape logical-corner geometry shared by fill, border, interaction mask, clip, and outline
  * @property borderWidth non-negative border thickness in dp
  * @property borderColor packed ARGB border color
- * @property rippleColor compatibility pressed-state color used when [stateLayerColors] is `null`
- * @property stateLayerColors optional resolved enabled-state interaction colors
  * @property minimumWidth non-negative minimum effective width in dp
  * @property minimumHeight non-negative minimum effective height in dp
  * @property visualHeight optional non-negative surface height centered inside the effective bounds;
@@ -33,8 +30,6 @@ data class SurfaceNodeProps(
     val shape: UiShape,
     val borderWidth: UiDp = UiDp.Zero,
     val borderColor: Int = 0x00000000,
-    val rippleColor: Int = 0x00000000,
-    val stateLayerColors: UiStateLayerColors? = null,
     val minimumWidth: UiDp = UiDp.Zero,
     val minimumHeight: UiDp = UiDp.Zero,
     val visualHeight: UiDp? = null,

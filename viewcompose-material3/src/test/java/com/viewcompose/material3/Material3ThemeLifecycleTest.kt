@@ -97,7 +97,10 @@ class Material3ThemeLifecycleTest {
         assertEquals(0xFF777777.toInt(), tokens.stateColors.control.checkedColor)
         assertEquals(0xFFBBBBBB.toInt(), tokens.stateColors.controlActivated.defaultColor)
         assertEquals(0xFFAAAAAA.toInt(), tokens.stateColors.controlActivated.checkedColor)
-        assertEquals(0xFFCCCCCC.toInt(), tokens.stateColors.controlHighlight.pressedColor)
+        assertEquals(
+            Material3ThemeDefaults.light().interactions,
+            tokens.interactions,
+        )
     }
 
     @Test

@@ -150,12 +150,9 @@ class Material3ThemeBridgeTest {
     }
 
     @Test
-    fun `snapshot mapper bridges semantic shapes ripple and scrim`() {
+    fun `snapshot mapper bridges semantic shapes and scrim`() {
         val tokens = Material3ThemeTokenMapper.fromSnapshot(
             snapshot = Material3ThemeSnapshot(
-                colors = Material3ThemeColorSnapshot(
-                    ripple = 77,
-                ),
                 shapes = Material3ThemeShapeSnapshot(
                     extraSmall = UiShape.cut(4.dp),
                     small = UiShape.rounded(12.dp),
@@ -167,7 +164,6 @@ class Material3ThemeBridgeTest {
             ),
         )
 
-        assertEquals(77, tokens.colors.ripple)
         assertEquals(0.58f, tokens.overlays.scrimOpacity, 0.0001f)
         assertEquals(UiShape.cut(4.dp), tokens.shapes.extraSmall)
         assertEquals(UiShape.rounded(12.dp), tokens.shapes.small)

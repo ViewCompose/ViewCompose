@@ -4,6 +4,7 @@ import com.viewcompose.ui.focus.FocusPropertiesReceiver
 import com.viewcompose.ui.focus.FocusRequester
 import com.viewcompose.ui.focus.FocusState
 import com.viewcompose.ui.input.KeyEvent
+import com.viewcompose.ui.node.UiInteractionIndication
 
 /**
  * Appends click handling to the modified node.
@@ -20,6 +21,26 @@ fun Modifier.clickable(onClick: () -> Unit): Modifier {
         ClickableModifierElement(onClick),
     )
 }
+
+/**
+ * Appends resolved visual feedback for interaction accepted by the modified node.
+ *
+ * This modifier does not make a node clickable or enabled. Pair it with the node's semantic input
+ * contract, such as [clickable]. Later indication elements replace earlier ones. The renderer
+ * applies the final indication inside the resolved surface shape and may restore its platform
+ * default when no indication remains.
+ *
+ * High-level components normally resolve this value from their design-system recipe and typed
+ * overrides. Use the modifier directly when assembling a custom interactive surface.
+ *
+ * @sample com.viewcompose.ui.samples.interactionIndicationSample
+ * @receiver modifier chain to extend
+ * @param indication complete renderer-neutral interaction feedback
+ * @return a new modifier chain
+ */
+fun Modifier.interactionIndication(
+    indication: UiInteractionIndication,
+): Modifier = then(InteractionIndicationModifierElement(indication))
 
 /**
  * Appends platform focus participation to the modified node.

@@ -30,6 +30,7 @@ import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.TextFieldAutofillHint
 import com.viewcompose.ui.node.UiStateLayerColors
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.dp
@@ -103,14 +104,15 @@ fun UiTreeBuilder.Material3Surface(
             fill = Brush.SolidColor(containerColor),
             shape = recipes.surfaceShape,
             clipContent = true,
+            interactionIndication = if (onClick == null) null else {
+                UiInteractionIndication.StateLayer(
+                    stateLayers(recipes.colors.onSurface, recipes.interactions),
+                )
+            },
         ),
         contentColor = recipes.colors.onSurface,
         enabled = enabled,
         onClick = onClick,
-        stateLayerColors = if (onClick == null) null else stateLayers(
-            recipes.colors.onSurface,
-            recipes.interactions,
-        ),
         role = if (onClick == null) null else SemanticsRole.Button,
         key = key,
         modifier = modifier,
@@ -157,14 +159,15 @@ fun UiTreeBuilder.Material3Card(
             },
             elevation = if (variant == Material3CardVariant.Elevated) 1.dp else UiDp.Zero,
             clipContent = true,
+            interactionIndication = if (onClick == null) null else {
+                UiInteractionIndication.StateLayer(
+                    stateLayers(recipes.colors.onSurface, recipes.interactions),
+                )
+            },
         ),
         contentColor = recipes.colors.onSurface,
         enabled = enabled,
         onClick = onClick,
-        stateLayerColors = if (onClick == null) null else stateLayers(
-            recipes.colors.onSurface,
-            recipes.interactions,
-        ),
         role = if (onClick == null) null else SemanticsRole.Button,
         key = key,
         modifier = modifier,
@@ -421,7 +424,14 @@ fun UiTreeBuilder.Material3NavigationBar(
             selectedLabelColor = recipes.colors.onSecondaryContainer,
             unselectedLabelColor = recipes.colors.onSurfaceVariant,
             indicatorColor = recipes.colors.secondaryContainer,
-            rippleColor = recipes.colors.onSurface.withAlpha(recipes.interactions.pressedStateLayerOpacity),
+            selectedStateLayerColors = stateLayers(
+                recipes.colors.onSecondaryContainer,
+                recipes.interactions,
+            ),
+            unselectedStateLayerColors = stateLayers(
+                recipes.colors.onSurfaceVariant,
+                recipes.interactions,
+            ),
             iconSize = 24.dp,
             labelStyle = recipes.navigationTextStyle,
             badgeColor = recipes.colors.error,

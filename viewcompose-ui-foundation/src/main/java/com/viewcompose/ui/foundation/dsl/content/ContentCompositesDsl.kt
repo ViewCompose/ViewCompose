@@ -66,7 +66,17 @@ fun UiTreeBuilder.Badge(
 }
 
 /**
- * Box composite with a badge anchored to the top end.
+ * Overlays badge content at the logical top-end corner of primary content.
+ *
+ * Both regions remain eager children of one [Box]. The badge is declared last and therefore draws
+ * above primary content without affecting its measurement.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.contentDslSample
+ * @receiver active tree builder receiving the badged composite
+ * @param badge content emitted into the top-end overlay region
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration applied to the shared overlay container
+ * @param content primary content measured by the shared box
  */
 fun UiTreeBuilder.BadgedBox(
     badge: UiTreeBuilder.() -> Unit,

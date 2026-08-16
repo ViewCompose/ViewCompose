@@ -24,6 +24,7 @@ import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.ButtonSize
 import com.viewcompose.ui.foundation.ButtonVariant
+import com.viewcompose.ui.foundation.CardVariant
 import com.viewcompose.ui.foundation.Card
 import com.viewcompose.ui.foundation.Checkbox
 import com.viewcompose.ui.foundation.Chip
@@ -40,7 +41,6 @@ import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.LinearProgressIndicator
 import com.viewcompose.ui.foundation.ListItem
 import com.viewcompose.ui.foundation.NavigationBar
-import com.viewcompose.ui.foundation.OutlinedCard
 import com.viewcompose.ui.foundation.RadioButton
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.SearchBar
@@ -178,7 +178,12 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotPaletteSection() {
                 DiagnosticFact("OutlineVariant", Theme.colors.outlineVariant.asColorHex()),
                 DiagnosticFact("InverseSurface", Theme.colors.inverseSurface.asColorHex()),
                 DiagnosticFact("InverseOnSurface", Theme.colors.inverseOnSurface.asColorHex()),
-                DiagnosticFact("Ripple", Theme.colors.ripple.asColorHex()),
+                DiagnosticFact(
+                    "State layers",
+                    "pressed=${Theme.interactions.pressedStateLayerOpacity}; " +
+                        "focused=${Theme.interactions.focusedStateLayerOpacity}; " +
+                        "hovered=${Theme.interactions.hoveredStateLayerOpacity}",
+                ),
             ),
         )
         ThemeSwatchRow(
@@ -313,7 +318,8 @@ private fun UiTreeBuilder.DiagnosticsThemeSurfaceSection() {
                 )
             }
         }
-        OutlinedCard(
+        Card(
+            variant = CardVariant.Outlined,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),

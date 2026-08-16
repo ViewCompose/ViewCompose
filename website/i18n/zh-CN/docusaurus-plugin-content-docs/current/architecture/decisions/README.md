@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: e5cbba11b451a733d25de306bf595371335e8a9498fdd59a7bbcda37ec7b1072
+translation_source_hash: d3d5df9364cebafca1b14c05db7bb3345a4d6e5cb56e2148ad11f9896f55e80e
 translation_status: current
 ---
 
@@ -24,6 +24,7 @@ translation_status: current
 - [ADR-0011：预取 Session 激活边界](./0011-prefetched-session-activation-boundary.md)
 - [ADR-0012：Lazy 集合的逻辑与物理所有权](./0012-lazy-collection-logical-and-physical-ownership.md)
 - [ADR-0013：组件外观解析边界](./0013-component-appearance-resolution-boundary.md)
+- [ADR-0014：渲染器中立的交互指示](./0014-renderer-neutral-interaction-indication.md)
 
 ## 规则
 

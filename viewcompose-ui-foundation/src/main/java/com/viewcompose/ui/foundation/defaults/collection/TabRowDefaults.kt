@@ -2,6 +2,7 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.unit.UiDp
 
 /** Resolves TabRow appearance from theme tokens and scoped overrides. */
@@ -20,9 +21,6 @@ object TabRowDefaults {
 
     /** Returns the active-tab indicator corner radius. */
     fun indicatorCornerRadius(): UiDp = scoped().indicatorCornerRadius ?: 2.dp
-
-    /** Returns the tab interaction ripple color. */
-    fun rippleColor(): Int = scoped().rippleColor ?: Theme.colors.ripple
 
     /** Returns the horizontal content padding for each tab. */
     fun itemPaddingHorizontal(): UiDp = scoped().itemPaddingHorizontal ?: 16.dp
@@ -45,7 +43,10 @@ object TabRowDefaults {
             containerColor = overrides.containerColor ?: Theme.colors.surface,
             scrollable = overrides.scrollable ?: false,
             equalWidth = overrides.equalWidth ?: true,
-            rippleColor = overrides.rippleColor ?: Theme.colors.ripple,
+            unselectedStateLayerColors = overrides.unselectedStateLayerColors
+                ?: stateLayerColorsFor(Theme.colors.onSurfaceVariant),
+            selectedStateLayerColors = overrides.selectedStateLayerColors
+                ?: stateLayerColorsFor(Theme.colors.primary),
             itemSpacing = overrides.itemSpacing ?: UiDp.Zero,
             itemPaddingHorizontal = overrides.itemPaddingHorizontal ?: 16.dp,
             itemPaddingVertical = overrides.itemPaddingVertical ?: 12.dp,
@@ -66,7 +67,8 @@ internal data class ResolvedTabRowAppearance(
     val containerColor: Int,
     val scrollable: Boolean,
     val equalWidth: Boolean,
-    val rippleColor: Int,
+    val unselectedStateLayerColors: UiStateLayerColors,
+    val selectedStateLayerColors: UiStateLayerColors,
     val itemSpacing: UiDp,
     val itemPaddingHorizontal: UiDp,
     val itemPaddingVertical: UiDp,

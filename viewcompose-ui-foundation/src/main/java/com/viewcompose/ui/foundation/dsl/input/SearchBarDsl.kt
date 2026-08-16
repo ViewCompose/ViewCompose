@@ -17,9 +17,22 @@ import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * Emits a search bar composite widget.
+ * Creates a single-line search input backed by caller-owned [state].
  *
- * SearchBar uses BasicTextField for the editable region and switches the IME action to Search when onSearch is provided.
+ * A non-null [onSearch] changes the IME action to Search and consumes only that action. The callback
+ * receives the latest text synchronously on the renderer thread; this composite does not submit,
+ * debounce, or clear text by itself.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.searchBarSample
+ * @receiver active tree builder receiving the search composite
+ * @param state caller-owned editable text, selection, composition, and undo state
+ * @param onSearch optional callback invoked when the Search IME action is accepted
+ * @param placeholder text displayed while [state] is empty
+ * @param leadingIcon optional image displayed before the editable region
+ * @param trailingIcon optional custom content displayed after the editable region
+ * @param enabled whether editing and focus input are accepted
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered caller configuration applied after search-bar geometry and appearance
  */
 fun UiTreeBuilder.SearchBar(
     state: TextFieldState,

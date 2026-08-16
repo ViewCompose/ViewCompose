@@ -295,7 +295,6 @@ class NativeListenerBindingTest {
         onCheckedChange = {},
         textColor = 0xFF000000.toInt(),
         textSizeSp = 14.sp,
-        rippleColor = 0x33000000,
     )
 
     private fun sliderSpec(

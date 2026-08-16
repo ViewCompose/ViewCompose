@@ -1,6 +1,6 @@
 package com.viewcompose.preview.catalog.domain
 
-import com.viewcompose.animation.AnimatedContent
+import com.viewcompose.animation.Crossfade
 import com.viewcompose.animation.AnimatedVisibility
 import com.viewcompose.animation.animateFloatAsState
 import com.viewcompose.animation.core.tween
@@ -60,9 +60,9 @@ internal object AnimationPreviewSpecs {
                             Text(text = "Animated surface")
                         }
                     }
-                    AnimatedContent(
+                    Crossfade(
                         targetState = contentState.value,
-                        transitionSpec = { tween(260) },
+                        animationSpec = tween(260),
                         modifier = Modifier.fillMaxWidth(),
                     ) { alt ->
                         Surface(

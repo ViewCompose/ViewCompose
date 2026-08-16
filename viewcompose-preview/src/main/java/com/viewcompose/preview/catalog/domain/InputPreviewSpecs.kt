@@ -12,14 +12,14 @@ import com.viewcompose.ui.foundation.BasicTextFieldStyle
 import com.viewcompose.ui.foundation.Checkbox
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.IconButton
-import com.viewcompose.ui.foundation.PasswordField
 import com.viewcompose.ui.foundation.RadioButton
 import com.viewcompose.ui.foundation.SearchBar
 import com.viewcompose.ui.foundation.Slider
 import com.viewcompose.ui.foundation.Switch
-import com.viewcompose.ui.foundation.TextArea
 import com.viewcompose.ui.foundation.TextField
 import com.viewcompose.ui.foundation.TextFieldDefaults
+import com.viewcompose.ui.foundation.TextFieldInputProfile
+import com.viewcompose.ui.foundation.TextFieldLinePolicy
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.dp
@@ -88,14 +88,16 @@ internal object InputPreviewSpecs {
                         supportingText = "支持 4-20 个字符",
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    PasswordField(
+                    TextField(
                         state = passwordState,
                         label = "密码",
+                        inputProfile = TextFieldInputProfile.Password,
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    TextArea(
+                    TextField(
                         state = textAreaState,
                         label = "备注",
+                        linePolicy = TextFieldLinePolicy.MultiLine(),
                         modifier = Modifier.fillMaxWidth(),
                     )
                     BasicTextField(

@@ -1,6 +1,7 @@
 package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.unit.UiDp
 
 /**
@@ -155,7 +156,7 @@ fun UiTreeBuilder.ProvideTextFieldOverrides(
  * @property disabledCheckedColor disabled checked-indicator ARGB color
  * @property disabledUncheckedColor disabled unchecked-indicator ARGB color
  * @property textStyle label typography
- * @property rippleColor interaction-feedback ARGB color
+ * @property stateLayerColors pressed, focused, and hovered interaction-feedback colors
  * @property minimumHeight minimum effective control height in dp
  * @throws IllegalArgumentException when [minimumHeight] is negative
  */
@@ -167,7 +168,7 @@ data class CheckboxOverrides(
     val disabledCheckedColor: Int? = null,
     val disabledUncheckedColor: Int? = null,
     val textStyle: UiTextStyle? = null,
-    val rippleColor: Int? = null,
+    val stateLayerColors: UiStateLayerColors? = null,
     val minimumHeight: UiDp? = null,
 ) {
     init {
@@ -192,7 +193,7 @@ internal fun CheckboxOverrides.merge(nearest: CheckboxOverrides): CheckboxOverri
         disabledCheckedColor = nearest.disabledCheckedColor ?: disabledCheckedColor,
         disabledUncheckedColor = nearest.disabledUncheckedColor ?: disabledUncheckedColor,
         textStyle = nearest.textStyle ?: textStyle,
-        rippleColor = nearest.rippleColor ?: rippleColor,
+        stateLayerColors = nearest.stateLayerColors ?: stateLayerColors,
         minimumHeight = nearest.minimumHeight ?: minimumHeight,
     )
 }
@@ -232,7 +233,7 @@ fun UiTreeBuilder.ProvideCheckboxOverrides(
  * @property disabledCheckedTrackColor disabled checked track ARGB color
  * @property disabledUncheckedTrackColor disabled unchecked track ARGB color
  * @property textStyle label typography
- * @property rippleColor interaction-feedback ARGB color
+ * @property stateLayerColors pressed, focused, and hovered interaction-feedback colors
  * @property minimumHeight minimum effective control height in dp
  * @throws IllegalArgumentException when [minimumHeight] is negative
  */
@@ -248,7 +249,7 @@ data class SwitchOverrides(
     val disabledCheckedTrackColor: Int? = null,
     val disabledUncheckedTrackColor: Int? = null,
     val textStyle: UiTextStyle? = null,
-    val rippleColor: Int? = null,
+    val stateLayerColors: UiStateLayerColors? = null,
     val minimumHeight: UiDp? = null,
 ) {
     init {
@@ -277,7 +278,7 @@ internal fun SwitchOverrides.merge(nearest: SwitchOverrides): SwitchOverrides {
         disabledCheckedTrackColor = nearest.disabledCheckedTrackColor ?: disabledCheckedTrackColor,
         disabledUncheckedTrackColor = nearest.disabledUncheckedTrackColor ?: disabledUncheckedTrackColor,
         textStyle = nearest.textStyle ?: textStyle,
-        rippleColor = nearest.rippleColor ?: rippleColor,
+        stateLayerColors = nearest.stateLayerColors ?: stateLayerColors,
         minimumHeight = nearest.minimumHeight ?: minimumHeight,
     )
 }
@@ -313,7 +314,7 @@ fun UiTreeBuilder.ProvideSwitchOverrides(
  * @property disabledCheckedColor disabled selected-indicator ARGB color
  * @property disabledUncheckedColor disabled unselected-indicator ARGB color
  * @property textStyle label typography
- * @property rippleColor interaction-feedback ARGB color
+ * @property stateLayerColors pressed, focused, and hovered interaction-feedback colors
  * @property minimumHeight minimum effective control height in dp
  * @throws IllegalArgumentException when [minimumHeight] is negative
  */
@@ -325,7 +326,7 @@ data class RadioButtonOverrides(
     val disabledCheckedColor: Int? = null,
     val disabledUncheckedColor: Int? = null,
     val textStyle: UiTextStyle? = null,
-    val rippleColor: Int? = null,
+    val stateLayerColors: UiStateLayerColors? = null,
     val minimumHeight: UiDp? = null,
 ) {
     init {
@@ -350,7 +351,7 @@ internal fun RadioButtonOverrides.merge(nearest: RadioButtonOverrides): RadioBut
         disabledCheckedColor = nearest.disabledCheckedColor ?: disabledCheckedColor,
         disabledUncheckedColor = nearest.disabledUncheckedColor ?: disabledUncheckedColor,
         textStyle = nearest.textStyle ?: textStyle,
-        rippleColor = nearest.rippleColor ?: rippleColor,
+        stateLayerColors = nearest.stateLayerColors ?: stateLayerColors,
         minimumHeight = nearest.minimumHeight ?: minimumHeight,
     )
 }

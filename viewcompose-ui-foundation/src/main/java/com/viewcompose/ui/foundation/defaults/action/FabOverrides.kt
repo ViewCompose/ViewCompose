@@ -14,7 +14,6 @@ import com.viewcompose.ui.unit.UiDp
  * @property contentColor default descendant content ARGB color
  * @property shape container shape after the selected [FabSize] recipe
  * @property elevation resting elevation in dp
- * @property rippleColor platform ripple ARGB color
  * @property stateLayerColors pressed, focused, and hovered ARGB colors
  * @throws IllegalArgumentException when [elevation] is negative
  */
@@ -23,7 +22,6 @@ data class FloatingActionButtonOverrides(
     val contentColor: Int? = null,
     val shape: UiShape? = null,
     val elevation: UiDp? = null,
-    val rippleColor: Int? = null,
     val stateLayerColors: UiStateLayerColors? = null,
 ) {
     init {
@@ -47,7 +45,6 @@ internal fun FloatingActionButtonOverrides.merge(
         contentColor = nearest.contentColor ?: contentColor,
         shape = nearest.shape ?: shape,
         elevation = nearest.elevation ?: elevation,
-        rippleColor = nearest.rippleColor ?: rippleColor,
         stateLayerColors = nearest.stateLayerColors ?: stateLayerColors,
     )
 }
@@ -90,7 +87,6 @@ fun UiTreeBuilder.ProvideFloatingActionButtonOverrides(
  * @property contentColor label and icon ARGB color
  * @property shape container shape
  * @property elevation resting elevation in dp
- * @property rippleColor platform ripple ARGB color
  * @property stateLayerColors pressed, focused, and hovered ARGB colors
  * @property textStyle label typography
  * @property iconSize square icon size in dp
@@ -104,7 +100,6 @@ data class ExtendedFloatingActionButtonOverrides(
     val contentColor: Int? = null,
     val shape: UiShape? = null,
     val elevation: UiDp? = null,
-    val rippleColor: Int? = null,
     val stateLayerColors: UiStateLayerColors? = null,
     val textStyle: UiTextStyle? = null,
     val iconSize: UiDp? = null,
@@ -137,7 +132,6 @@ internal fun ExtendedFloatingActionButtonOverrides.merge(
         contentColor = nearest.contentColor ?: contentColor,
         shape = nearest.shape ?: shape,
         elevation = nearest.elevation ?: elevation,
-        rippleColor = nearest.rippleColor ?: rippleColor,
         stateLayerColors = nearest.stateLayerColors ?: stateLayerColors,
         textStyle = nearest.textStyle ?: textStyle,
         iconSize = nearest.iconSize ?: iconSize,

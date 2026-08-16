@@ -152,16 +152,13 @@ fun UiTreeBuilder.BasicTextField(
  * @param label optional text displayed above the editable area
  * @param placeholder text displayed while [state] is empty
  * @param supportingText optional guidance or error text displayed below the editable area
- * @param singleLine whether input and layout are constrained to one visual line
+ * @param inputProfile coupled keyboard and autofill semantics for the input purpose
+ * @param linePolicy single-line or validated multi-line layout policy
  * @param readOnly whether selection remains available while user edits are rejected
- * @param maxLines maximum visual line count when [singleLine] is `false`
- * @param minLines minimum visual line count when [singleLine] is `false`
- * @param keyboardOptions keyboard type, capitalization, correction, and IME action policy
  * @param inputTransformation optional synchronous filter for proposed edits
  * @param receiveContent accepted rich-content policy
  * @param onKeyboardAction callback that may consume an IME action on the renderer thread
  * @param onFocusChange callback invoked on the renderer thread when native focus changes
- * @param autofillHints semantic Android autofill categories
  * @param variant visual treatment used to resolve container and border roles
  * @param size interaction-density tier used for typography, padding, and minimum height
  * @param enabled whether editing and focus input are accepted
@@ -176,16 +173,13 @@ fun UiTreeBuilder.TextField(
     label: String = "",
     placeholder: String = hint,
     supportingText: String = "",
-    singleLine: Boolean = true,
+    inputProfile: TextFieldInputProfile = TextFieldInputProfile.Text,
+    linePolicy: TextFieldLinePolicy = TextFieldLinePolicy.SingleLine,
     readOnly: Boolean = false,
-    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
-    minLines: Int = if (singleLine) 1 else 3,
-    keyboardOptions: TextFieldKeyboardOptions = TextFieldKeyboardOptions(),
     inputTransformation: InputTransformation? = null,
     receiveContent: ReceiveContentConfiguration = ReceiveContentConfiguration.Default,
     onKeyboardAction: ((TextFieldImeAction) -> Boolean)? = null,
     onFocusChange: ((Boolean) -> Unit)? = null,
-    autofillHints: Set<TextFieldAutofillHint> = emptySet(),
     variant: TextFieldVariant = TextFieldVariant.Filled,
     size: TextFieldSize = TextFieldSize.Medium,
     enabled: Boolean = true,
@@ -194,6 +188,21 @@ fun UiTreeBuilder.TextField(
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
+    val singleLine: Boolean
+    val minLines: Int
+    val maxLines: Int
+    when (linePolicy) {
+        TextFieldLinePolicy.SingleLine -> {
+            singleLine = true
+            minLines = 1
+            maxLines = 1
+        }
+        is TextFieldLinePolicy.MultiLine -> {
+            singleLine = false
+            minLines = linePolicy.minLines
+            maxLines = linePolicy.maxLines
+        }
+    }
     val appearance = TextFieldDefaults.resolve(
         variant = variant,
         size = size,
@@ -235,12 +244,12 @@ fun UiTreeBuilder.TextField(
             singleLine = singleLine,
             maxLines = maxLines,
             minLines = minLines,
-            keyboardOptions = keyboardOptions,
+            keyboardOptions = inputProfile.keyboardOptions,
             inputTransformation = inputTransformation,
             receiveContent = receiveContent,
             onKeyboardAction = onKeyboardAction,
             onFocusChange = onFocusChange,
-            autofillHints = autofillHints,
+            autofillHints = inputProfile.autofillHints,
             readOnly = readOnly,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -316,287 +325,5 @@ private fun basicTextFieldSpec(
         paddingHorizontal = paddingHorizontal,
         paddingVertical = paddingVertical,
         cursorColor = cursorColor,
-    )
-}
-
-/**
- * Emits a single-line text field configured for password input.
- *
- * Auto-correct is disabled and the Password autofill hint is declared by default. Appearance and
- * editable-state ownership otherwise follow [TextField].
- *
- * @sample com.viewcompose.ui.foundation.samples.textFieldVariantsSample
- * @receiver active tree builder receiving the composite
- * @param state caller-owned editable password state
- * @param hint placeholder text displayed while [state] is empty
- * @param label optional text displayed above the editable area
- * @param supportingText optional guidance or error text displayed below the editable area
- * @param keyboardOptions password-oriented keyboard and IME policy
- * @param inputTransformation optional synchronous filter for proposed edits
- * @param receiveContent accepted rich-content policy
- * @param onKeyboardAction callback that may consume an IME action on the renderer thread
- * @param onFocusChange callback invoked on the renderer thread when native focus changes
- * @param autofillHints semantic Android autofill categories, Password by default
- * @param variant visual treatment used to resolve container and border roles
- * @param size interaction-density tier used for typography, padding, and minimum height
- * @param enabled whether editing and focus input are accepted
- * @param isError whether error appearance roles are selected
- * @param overrides sparse instance appearance applied after scoped [ProvideTextFieldOverrides]
- * @param key optional stable sibling identity used during reconciliation
- * @param modifier ordered configuration applied to the outer composite
- */
-fun UiTreeBuilder.PasswordField(
-    state: TextFieldState,
-    hint: String = "",
-    label: String = "",
-    supportingText: String = "",
-    keyboardOptions: TextFieldKeyboardOptions = TextFieldKeyboardOptions(
-        keyboardType = com.viewcompose.ui.node.TextFieldType.Password,
-        autoCorrectEnabled = false,
-    ),
-    inputTransformation: InputTransformation? = null,
-    receiveContent: ReceiveContentConfiguration = ReceiveContentConfiguration.Default,
-    onKeyboardAction: ((TextFieldImeAction) -> Boolean)? = null,
-    onFocusChange: ((Boolean) -> Unit)? = null,
-    autofillHints: Set<TextFieldAutofillHint> = setOf(TextFieldAutofillHint.Password),
-    variant: TextFieldVariant = TextFieldVariant.Filled,
-    size: TextFieldSize = TextFieldSize.Medium,
-    enabled: Boolean = true,
-    isError: Boolean = false,
-    overrides: TextFieldOverrides = TextFieldOverrides.None,
-    key: Any? = null,
-    modifier: Modifier = Modifier,
-) {
-    TextField(
-        state = state,
-        hint = hint,
-        label = label,
-        supportingText = supportingText,
-        singleLine = true,
-        keyboardOptions = keyboardOptions,
-        inputTransformation = inputTransformation,
-        receiveContent = receiveContent,
-        onKeyboardAction = onKeyboardAction,
-        onFocusChange = onFocusChange,
-        autofillHints = autofillHints,
-        variant = variant,
-        size = size,
-        enabled = enabled,
-        isError = isError,
-        overrides = overrides,
-        key = key,
-        modifier = modifier,
-    )
-}
-
-/**
- * Emits a single-line text field configured for email input.
- *
- * The default keyboard type and autofill hint target email flows. Appearance and editable-state
- * ownership otherwise follow [TextField].
- *
- * @sample com.viewcompose.ui.foundation.samples.textFieldVariantsSample
- * @receiver active tree builder receiving the composite
- * @param state caller-owned editable email state
- * @param hint placeholder text displayed while [state] is empty
- * @param label optional text displayed above the editable area
- * @param supportingText optional guidance text displayed below the editable area
- * @param keyboardOptions email-oriented keyboard and IME policy
- * @param inputTransformation optional synchronous filter for proposed edits
- * @param receiveContent accepted rich-content policy
- * @param onKeyboardAction callback that may consume an IME action on the renderer thread
- * @param onFocusChange callback invoked on the renderer thread when native focus changes
- * @param autofillHints semantic Android autofill categories, EmailAddress by default
- * @param variant visual treatment used to resolve container and border roles
- * @param size interaction-density tier used for typography, padding, and minimum height
- * @param enabled whether editing and focus input are accepted
- * @param overrides sparse instance appearance applied after scoped [ProvideTextFieldOverrides]
- * @param key optional stable sibling identity used during reconciliation
- * @param modifier ordered configuration applied to the outer composite
- */
-fun UiTreeBuilder.EmailField(
-    state: TextFieldState,
-    hint: String = "",
-    label: String = "",
-    supportingText: String = "",
-    keyboardOptions: TextFieldKeyboardOptions = TextFieldKeyboardOptions(
-        keyboardType = com.viewcompose.ui.node.TextFieldType.Email,
-    ),
-    inputTransformation: InputTransformation? = null,
-    receiveContent: ReceiveContentConfiguration = ReceiveContentConfiguration.Default,
-    onKeyboardAction: ((TextFieldImeAction) -> Boolean)? = null,
-    onFocusChange: ((Boolean) -> Unit)? = null,
-    autofillHints: Set<TextFieldAutofillHint> = setOf(TextFieldAutofillHint.EmailAddress),
-    variant: TextFieldVariant = TextFieldVariant.Filled,
-    size: TextFieldSize = TextFieldSize.Medium,
-    enabled: Boolean = true,
-    overrides: TextFieldOverrides = TextFieldOverrides.None,
-    key: Any? = null,
-    modifier: Modifier = Modifier,
-) {
-    TextField(
-        state = state,
-        hint = hint,
-        label = label,
-        supportingText = supportingText,
-        singleLine = true,
-        keyboardOptions = keyboardOptions,
-        inputTransformation = inputTransformation,
-        receiveContent = receiveContent,
-        onKeyboardAction = onKeyboardAction,
-        onFocusChange = onFocusChange,
-        autofillHints = autofillHints,
-        variant = variant,
-        size = size,
-        enabled = enabled,
-        overrides = overrides,
-        key = key,
-        modifier = modifier,
-    )
-}
-
-/**
- * Emits a single-line text field configured for numeric input.
- *
- * Auto-correct is disabled by default. Appearance and editable-state ownership otherwise follow
- * [TextField].
- *
- * @sample com.viewcompose.ui.foundation.samples.textFieldVariantsSample
- * @receiver active tree builder receiving the composite
- * @param state caller-owned editable numeric state
- * @param hint placeholder text displayed while [state] is empty
- * @param label optional text displayed above the editable area
- * @param supportingText optional guidance text displayed below the editable area
- * @param keyboardOptions numeric keyboard and IME policy
- * @param inputTransformation optional synchronous filter for proposed edits
- * @param receiveContent accepted rich-content policy
- * @param onKeyboardAction callback that may consume an IME action on the renderer thread
- * @param onFocusChange callback invoked on the renderer thread when native focus changes
- * @param autofillHints semantic Android autofill categories
- * @param variant visual treatment used to resolve container and border roles
- * @param size interaction-density tier used for typography, padding, and minimum height
- * @param enabled whether editing and focus input are accepted
- * @param overrides sparse instance appearance applied after scoped [ProvideTextFieldOverrides]
- * @param key optional stable sibling identity used during reconciliation
- * @param modifier ordered configuration applied to the outer composite
- */
-fun UiTreeBuilder.NumberField(
-    state: TextFieldState,
-    hint: String = "",
-    label: String = "",
-    supportingText: String = "",
-    keyboardOptions: TextFieldKeyboardOptions = TextFieldKeyboardOptions(
-        keyboardType = com.viewcompose.ui.node.TextFieldType.Number,
-        autoCorrectEnabled = false,
-    ),
-    inputTransformation: InputTransformation? = null,
-    receiveContent: ReceiveContentConfiguration = ReceiveContentConfiguration.Default,
-    onKeyboardAction: ((TextFieldImeAction) -> Boolean)? = null,
-    onFocusChange: ((Boolean) -> Unit)? = null,
-    autofillHints: Set<TextFieldAutofillHint> = emptySet(),
-    variant: TextFieldVariant = TextFieldVariant.Filled,
-    size: TextFieldSize = TextFieldSize.Medium,
-    enabled: Boolean = true,
-    overrides: TextFieldOverrides = TextFieldOverrides.None,
-    key: Any? = null,
-    modifier: Modifier = Modifier,
-) {
-    TextField(
-        state = state,
-        hint = hint,
-        label = label,
-        supportingText = supportingText,
-        singleLine = true,
-        keyboardOptions = keyboardOptions,
-        inputTransformation = inputTransformation,
-        receiveContent = receiveContent,
-        onKeyboardAction = onKeyboardAction,
-        onFocusChange = onFocusChange,
-        autofillHints = autofillHints,
-        variant = variant,
-        size = size,
-        enabled = enabled,
-        overrides = overrides,
-        key = key,
-        modifier = modifier,
-    )
-}
-
-/**
- * Emits a multi-line text input area.
- *
- * TextArea reuses [TextField] visual and state rules, disables single-line layout, and applies the
- * supplied line constraints.
- *
- * @sample com.viewcompose.ui.foundation.samples.textFieldVariantsSample
- * @receiver active tree builder receiving the composite
- * @param state caller-owned editable multi-line state
- * @param hint legacy placeholder fallback used when [placeholder] is empty
- * @param label optional text displayed above the editable area
- * @param placeholder text displayed while [state] is empty
- * @param supportingText optional guidance or error text displayed below the editable area
- * @param variant visual treatment used to resolve container and border roles
- * @param size interaction-density tier used for typography, padding, and minimum height
- * @param enabled whether editing and focus input are accepted
- * @param isError whether error appearance roles are selected
- * @param readOnly whether selection remains available while user edits are rejected
- * @param minLines minimum visual line count
- * @param maxLines maximum visual line count
- * @param keyboardOptions keyboard type, capitalization, correction, and IME action policy
- * @param inputTransformation optional synchronous filter for proposed edits
- * @param receiveContent accepted rich-content policy
- * @param onKeyboardAction callback that may consume an IME action on the renderer thread
- * @param onFocusChange callback invoked on the renderer thread when native focus changes
- * @param autofillHints semantic Android autofill categories
- * @param overrides sparse instance appearance applied after scoped [ProvideTextFieldOverrides]
- * @param key optional stable sibling identity used during reconciliation
- * @param modifier ordered configuration applied to the outer composite
- */
-fun UiTreeBuilder.TextArea(
-    state: TextFieldState,
-    hint: String = "",
-    label: String = "",
-    placeholder: String = hint,
-    supportingText: String = "",
-    variant: TextFieldVariant = TextFieldVariant.Filled,
-    size: TextFieldSize = TextFieldSize.Medium,
-    enabled: Boolean = true,
-    isError: Boolean = false,
-    readOnly: Boolean = false,
-    minLines: Int = 3,
-    maxLines: Int = Int.MAX_VALUE,
-    keyboardOptions: TextFieldKeyboardOptions = TextFieldKeyboardOptions(),
-    inputTransformation: InputTransformation? = null,
-    receiveContent: ReceiveContentConfiguration = ReceiveContentConfiguration.Default,
-    onKeyboardAction: ((TextFieldImeAction) -> Boolean)? = null,
-    onFocusChange: ((Boolean) -> Unit)? = null,
-    autofillHints: Set<TextFieldAutofillHint> = emptySet(),
-    overrides: TextFieldOverrides = TextFieldOverrides.None,
-    key: Any? = null,
-    modifier: Modifier = Modifier,
-) {
-    TextField(
-        state = state,
-        hint = hint,
-        label = label,
-        placeholder = placeholder,
-        supportingText = supportingText,
-        singleLine = false,
-        readOnly = readOnly,
-        maxLines = maxLines,
-        minLines = minLines,
-        keyboardOptions = keyboardOptions,
-        inputTransformation = inputTransformation,
-        receiveContent = receiveContent,
-        onKeyboardAction = onKeyboardAction,
-        onFocusChange = onFocusChange,
-        autofillHints = autofillHints,
-        variant = variant,
-        size = size,
-        enabled = enabled,
-        isError = isError,
-        overrides = overrides,
-        key = key,
-        modifier = modifier,
     )
 }

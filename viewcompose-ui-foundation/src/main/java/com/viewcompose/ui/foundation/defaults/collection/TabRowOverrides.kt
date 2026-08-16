@@ -2,6 +2,7 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.unit.UiDp
 
 /**
@@ -19,7 +20,8 @@ import com.viewcompose.ui.unit.UiDp
  * @property containerColor row container ARGB color
  * @property scrollable whether overflowing items use horizontal scrolling
  * @property equalWidth whether available width is distributed equally between items
- * @property rippleColor item interaction-feedback ARGB color
+ * @property unselectedStateLayerColors unselected-tab pressed, focused, and hovered colors
+ * @property selectedStateLayerColors selected-tab pressed, focused, and hovered colors
  * @property itemSpacing gap between adjacent items in dp
  * @property itemPaddingHorizontal item padding on each horizontal edge in dp
  * @property itemPaddingVertical item padding on each vertical edge in dp
@@ -36,7 +38,8 @@ data class TabRowOverrides(
     val containerColor: Int? = null,
     val scrollable: Boolean? = null,
     val equalWidth: Boolean? = null,
-    val rippleColor: Int? = null,
+    val unselectedStateLayerColors: UiStateLayerColors? = null,
+    val selectedStateLayerColors: UiStateLayerColors? = null,
     val itemSpacing: UiDp? = null,
     val itemPaddingHorizontal: UiDp? = null,
     val itemPaddingVertical: UiDp? = null,
@@ -72,7 +75,8 @@ internal fun TabRowOverrides.merge(nearest: TabRowOverrides): TabRowOverrides {
         containerColor = nearest.containerColor ?: containerColor,
         scrollable = nearest.scrollable ?: scrollable,
         equalWidth = nearest.equalWidth ?: equalWidth,
-        rippleColor = nearest.rippleColor ?: rippleColor,
+        unselectedStateLayerColors = nearest.unselectedStateLayerColors ?: unselectedStateLayerColors,
+        selectedStateLayerColors = nearest.selectedStateLayerColors ?: selectedStateLayerColors,
         itemSpacing = nearest.itemSpacing ?: itemSpacing,
         itemPaddingHorizontal = nearest.itemPaddingHorizontal ?: itemPaddingHorizontal,
         itemPaddingVertical = nearest.itemPaddingVertical ?: itemPaddingVertical,

@@ -1,7 +1,6 @@
 package com.viewcompose.ui.node.spec
 
 import com.viewcompose.ui.node.ImageSource
-import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.UiSp
@@ -22,8 +21,7 @@ import com.viewcompose.ui.unit.UiSp
  * @property backgroundColor button surface color
  * @property borderWidth border width, normally non-negative
  * @property borderColor border color
- * @property shape outline used for background, border, clipping, and ripple
- * @property rippleColor pressed-state ripple color
+ * @property shape outline used for background, border, clipping, and interaction feedback
  * @property minHeight minimum button height
  * @property paddingHorizontal content padding on the start and end edges
  * @property paddingVertical content padding on the top and bottom edges
@@ -32,10 +30,8 @@ import com.viewcompose.ui.unit.UiSp
  * @property iconTint tint applied to resource icons
  * @property iconSize requested icon width and height
  * @property iconSpacing spacing between an icon and the label
- * @property visualHeight requested centered background, border, shape, and ripple height inside
+ * @property visualHeight requested centered background, border, shape, and interaction height inside
  * the effective [minHeight] target; values at or above [minHeight] produce no vertical inset
- * @property stateLayerColors resolved pressed, focused, and hovered colors, or `null` to retain the
- * single-color [rippleColor] compatibility behavior
  */
 data class ButtonNodeProps(
     val text: String?,
@@ -52,7 +48,6 @@ data class ButtonNodeProps(
     val borderWidth: UiDp,
     val borderColor: Int,
     val shape: UiShape,
-    val rippleColor: Int,
     val minHeight: UiDp,
     val paddingHorizontal: UiDp,
     val paddingVertical: UiDp,
@@ -62,5 +57,4 @@ data class ButtonNodeProps(
     val iconSize: UiDp,
     val iconSpacing: UiDp,
     val visualHeight: UiDp = minHeight,
-    val stateLayerColors: UiStateLayerColors? = null,
 ) : NodeSpec

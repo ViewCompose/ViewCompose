@@ -10,6 +10,10 @@ import com.viewcompose.ui.unit.UiDimension
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.UiInteractionIndication
+import com.viewcompose.ui.node.UiStateLayerColors
+import com.viewcompose.ui.node.VNode
+import com.viewcompose.ui.modifier.InteractionIndicationModifierElement
 import com.viewcompose.ui.node.spec.IconButtonNodeProps
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -39,7 +43,7 @@ class IconButtonTest {
         assertEquals(UiDimension.Exact(IconButtonDefaults.size()), size.height)
         assertEquals(IconButtonDefaults.containerColor(ButtonVariant.Text), spec.backgroundColor)
         assertEquals(IconButtonDefaults.shape(), spec.shape)
-        assertEquals(IconButtonDefaults.stateLayerColors(), spec.stateLayerColors)
+        assertEquals(IconButtonDefaults.stateLayerColors(), node.iconButtonStateLayerColors())
         assertEquals(true, spec.enabled)
         assertTrue(node.spec is IconButtonNodeProps)
     }
@@ -62,10 +66,10 @@ class IconButtonTest {
             }
         }
 
-        val spec = tree.single().spec as IconButtonNodeProps
-        assertEquals(0x1A123456, spec.stateLayerColors?.pressedColor)
-        assertEquals(0x1A123456, spec.stateLayerColors?.focusedColor)
-        assertEquals(0x14123456, spec.stateLayerColors?.hoveredColor)
+        val stateLayers = tree.single().iconButtonStateLayerColors()
+        assertEquals(0x1A123456, stateLayers.pressedColor)
+        assertEquals(0x1A123456, stateLayers.focusedColor)
+        assertEquals(0x14123456, stateLayers.hoveredColor)
     }
 
     @Test
@@ -99,4 +103,12 @@ class IconButtonTest {
         @Suppress("UNCHECKED_CAST")
         return field.get(this) as List<Any?>
     }
+}
+
+private fun VNode.iconButtonStateLayerColors(): UiStateLayerColors {
+    val indication = modifier.elements
+        .filterIsInstance<InteractionIndicationModifierElement>()
+        .single()
+        .indication as UiInteractionIndication.StateLayer
+    return indication.colors
 }

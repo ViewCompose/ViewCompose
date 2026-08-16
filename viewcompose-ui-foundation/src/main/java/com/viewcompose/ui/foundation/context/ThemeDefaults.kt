@@ -112,7 +112,6 @@ object UiThemeDefaults {
                 surfaceTint = 0xFFBFD8A6.toInt(),
                 inverseSurface = 0xFF342A22.toInt(),
                 inverseOnSurface = 0xFFF9EFE3.toInt(),
-                ripple = 0x22302A24,
             ),
             typography = UiTypography(
                 titleMedium = UiTextStyle(fontSizeSp = 24.sp),
@@ -121,6 +120,11 @@ object UiThemeDefaults {
             ),
             shapes = UiShapeDefaults.default(),
             controls = UiControlSizeDefaults.default(),
+            interactions = UiInteractionTokens(
+                pressedStateLayerOpacity = 0.13333334f,
+                focusedStateLayerOpacity = 0.13333334f,
+                hoveredStateLayerOpacity = 0.13333334f,
+            ),
             metadata = UiThemeMetadata(
                 origin = UiThemeOrigin.FrameworkDefault,
                 isDark = false,
@@ -161,7 +165,6 @@ object UiThemeDefaults {
                 surfaceTint = 0xFF7EA16D.toInt(),
                 inverseSurface = 0xFFE8DED3.toInt(),
                 inverseOnSurface = 0xFF332D28.toInt(),
-                ripple = 0x22F4EFE8,
             ),
             typography = UiTypography(
                 titleMedium = UiTextStyle(fontSizeSp = 24.sp),
@@ -170,6 +173,11 @@ object UiThemeDefaults {
             ),
             shapes = UiShapeDefaults.default(),
             controls = UiControlSizeDefaults.default(),
+            interactions = UiInteractionTokens(
+                pressedStateLayerOpacity = 0.13333334f,
+                focusedStateLayerOpacity = 0.13333334f,
+                hoveredStateLayerOpacity = 0.13333334f,
+            ),
             metadata = UiThemeMetadata(
                 origin = UiThemeOrigin.FrameworkDefault,
                 isDark = true,

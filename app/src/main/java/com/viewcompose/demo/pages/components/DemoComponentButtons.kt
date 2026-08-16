@@ -12,7 +12,6 @@ import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.IconButtonOverrides
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.Text
-import com.viewcompose.ui.foundation.TextButton
 import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTextStyle
@@ -123,9 +122,10 @@ private fun UiTreeBuilder.ComponentButtonExtras(onClick: () -> Unit) {
             trailingIcon = icon,
             onClick = onClick,
         )
-        TextButton(
+        Button(
             text = stringResource(R.string.demo_component_text_button),
             onClick = onClick,
+            variant = ButtonVariant.Text,
         )
     }
 }

@@ -20,6 +20,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NavigationBarItem
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
 import org.junit.Assert.assertEquals
@@ -51,7 +52,6 @@ class NavigationContainerInvalidationTest {
             containerColor = 0xFFFFFFFF.toInt(),
             scrollable = true,
             equalWidth = true,
-            rippleColor = 0,
             itemSpacing = 0,
             itemPaddingHorizontal = 0,
             itemPaddingVertical = 0,
@@ -105,7 +105,6 @@ class NavigationContainerInvalidationTest {
             containerColor = 0,
             scrollable = true,
             equalWidth = false,
-            rippleColor = 0,
             itemSpacing = 10,
             itemPaddingHorizontal = 0,
             itemPaddingVertical = 0,
@@ -259,7 +258,8 @@ class NavigationContainerInvalidationTest {
             selectedLabelColor = 0xFF000000.toInt(),
             unselectedLabelColor = 0xFF777777.toInt(),
             indicatorColor = 0xFFE0E0E0.toInt(),
-            rippleColor = 0x22000000,
+            selectedStateLayerColors = stateLayerColors(0x22000000),
+            unselectedStateLayerColors = stateLayerColors(0x22000000),
             iconSize = 24,
             labelSizePx = 12f,
             labelFontWeight = null,
@@ -271,6 +271,12 @@ class NavigationContainerInvalidationTest {
             badgeTextColor = 0xFFFFFFFF.toInt(),
         )
     }
+
+    private fun stateLayerColors(color: Int) = UiStateLayerColors(
+        pressedColor = color,
+        focusedColor = color,
+        hoveredColor = color,
+    )
 
     @Suppress("DEPRECATION")
     private fun accessibilityNode(view: View): AccessibilityNodeInfoCompat {

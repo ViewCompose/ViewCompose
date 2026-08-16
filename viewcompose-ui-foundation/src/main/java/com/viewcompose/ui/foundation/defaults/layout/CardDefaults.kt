@@ -63,6 +63,4 @@ object CardDefaults {
         }
     }
 
-    /** Returns the interaction feedback color for a pressed card. */
-    fun pressedColor(): Int = Theme.colors.ripple
 }

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 049e5c85b612e6987eeffbb0fe3a99a9af9ae8309e5a76bde7eb5308d616a8f8
+translation_source_hash: c83b94e10e6b458b8ee2beec0b1b4a3f244e10dbf665259803c819bfc6136dfc
 translation_status: current
 ---
 
@@ -43,9 +43,10 @@ dependencies {
 - Button 可以请求比有效 View 触控目标更短的可见 Surface。引擎会在 View 内居中其背景、边框、
   涟漪和轮廓，同时不改变测量、命中测试或无障碍边界。显式 Background、Border、Corner Radius
   或 Shape Modifier 会关闭组件提供的内缩，保证应用样式优先。
-- Button、IconButton、交互式 Box/Row 组合控件与 SegmentedControl 状态层使用 NodeSpec 中
-  已解析的 `UiStateLayerColors`。引擎在现有 Shape 遮罩和可见 Surface 内缩中应用启用态的
-  按下、聚焦和悬停选择器，不选择语义角色或 Material 透明度值。
+- 通用交互 Surface 通过已解析 Modifier 接收 `UiInteractionIndication.StateLayer`。引擎在
+  现有 Shape 遮罩和可见 Surface 内缩中映射按下、聚焦和悬停值，不选择语义角色或 Material
+  透明度。SegmentedControl 与 NavigationBar 因拥有多个内部目标，通过 NodeSpec 接收完整的
+  已选和未选状态层值。
 - 通用集合语义会映射为 AndroidX 无障碍集合元数据。父节点负责行列数量和选择基数，子节点负责
   逻辑位置和跨度；已有的 `selected` 与 `heading` 语义仍是 item 状态的唯一事实来源。
 - 当前版本构建基线：Kotlin 2.0.21、Android Gradle Plugin 8.13.2。
@@ -172,10 +173,10 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
 - 引擎创建的 Box 与 Surface 容器不执行 XML 属性解析。没有显式 `BoxScope.align` 的子项会在
   LayoutParams 中保留继承内容对齐标记，因此内容对齐 Patch 只更新这些子项，不再在每次布局时
   扫描全部子项；显式对齐的子项保持不变。
-- Button 与 IconButton 状态层变化参与定向样式 Patch，只重建 Surface Drawable。交互式
-  Box/Row 变化会重新执行现有样式绑定；SegmentedControl 只重建选中角色发生变化的分段背景。
-  按下优先于聚焦和悬停，聚焦优先于悬停；多状态路径的非活动态或禁用态保持透明。多状态契约
-  为空时，原有单值 Ripple 选择器保持不变。
+- Indication Modifier 变化只执行 Modifier Binding，并仅重建已保留 View 中受影响的 Surface
+  Drawable。SegmentedControl 与 NavigationBar 只重建已选角色或状态层快照变化的内部背景。
+  按下优先于聚焦和悬停，聚焦优先于悬停；非活动或禁用的高层目标不安装 Indication。Android
+  单值 Ripple 回退只保留在低层 Renderer 私有实现中。
 - Slider 绑定使用渲染器中性的 `AppCompatSeekBar` 子类，因为平台控件可能在 `AT_MOST` 测量
   规格下忽略 `minimumHeight`。它会遵守已声明的最小值，同时让应用或父容器的精确高度保持
   最终权限；Android Renderer 不解释任何 Material 策略或 Token。

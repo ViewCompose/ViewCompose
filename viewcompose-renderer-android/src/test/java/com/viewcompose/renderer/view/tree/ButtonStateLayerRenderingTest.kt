@@ -8,8 +8,10 @@ import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clickable
+import com.viewcompose.ui.modifier.interactionIndication
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.ButtonNodeProps
@@ -61,7 +63,7 @@ class ButtonStateLayerRenderingTest {
     @Test
     fun `absent state layers retain value-only ripple fallback`() {
         val rippleColor = 0x33445566
-        val selector = interactionColorStateList(rippleColor, stateLayerColors = null)
+        val selector = interactionColorStateList(rippleColor, indication = null)
 
         assertFalse(selector.isStateful)
         assertEquals(rippleColor, selector.defaultColor)
@@ -77,14 +79,11 @@ class ButtonStateLayerRenderingTest {
             nodes = listOf(
                 VNode(
                     type = NodeType.Box,
-                    spec = BoxNodeProps(
-                        contentAlignment = BoxAlignment.Center,
-                        rippleColor = colors.pressedColor,
-                        stateLayerColors = colors,
-                    ),
+                    spec = BoxNodeProps(contentAlignment = BoxAlignment.Center),
                     modifier = Modifier
                         .backgroundColor(Color.WHITE)
                         .shape(UiShape.rounded(20.dp))
+                        .interactionIndication(UiInteractionIndication.StateLayer(colors))
                         .clickable {},
                 ),
             ),
@@ -97,7 +96,6 @@ class ButtonStateLayerRenderingTest {
 
     private fun buttonNode(
         stateLayerColors: UiStateLayerColors?,
-        rippleColor: Int = stateLayerColors?.pressedColor ?: 0,
     ): VNode {
         return VNode(
             type = NodeType.Button,
@@ -112,7 +110,6 @@ class ButtonStateLayerRenderingTest {
                 borderWidth = 0.dp,
                 borderColor = 0,
                 shape = UiShape.rounded(20.dp),
-                rippleColor = rippleColor,
                 minHeight = 40.dp,
                 paddingHorizontal = 16.dp,
                 paddingVertical = 8.dp,
@@ -121,8 +118,12 @@ class ButtonStateLayerRenderingTest {
                 iconTint = 0,
                 iconSize = 0.dp,
                 iconSpacing = 0.dp,
-                stateLayerColors = stateLayerColors,
             ),
+            modifier = if (stateLayerColors == null) {
+                Modifier
+            } else {
+                Modifier.interactionIndication(UiInteractionIndication.StateLayer(stateLayerColors))
+            },
         )
     }
 }

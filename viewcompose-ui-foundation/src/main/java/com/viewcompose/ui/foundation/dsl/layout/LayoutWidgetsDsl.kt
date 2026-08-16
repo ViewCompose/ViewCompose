@@ -11,9 +11,10 @@ import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.dropShadows
 import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.innerShadows
+import com.viewcompose.ui.modifier.interactionIndication
 import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.node.NodeType
-import com.viewcompose.ui.node.UiStateLayerColors
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ColumnNodeProps
 import com.viewcompose.ui.node.spec.DividerNodeProps
@@ -30,42 +31,29 @@ import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.state.ScrollState
 
 /**
- * Emits a Box container node.
+ * Overlays children in one layout container without adding interaction behavior.
+ *
+ * Children are measured against the same available bounds and placed in declaration order; later
+ * children draw above earlier children. Use [Modifier.interactionIndication] together with an input
+ * modifier when a custom box needs feedback rather than introducing component policy here.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.layoutDslSample
+ * @receiver active tree builder receiving the layout node
+ * @param key optional stable sibling identity used during reconciliation
+ * @param contentAlignment default placement for children without explicit [BoxScope] parent data
+ * @param modifier ordered layout, drawing, input, and semantics configuration for the container
+ * @param content children emitted synchronously into the box scope
  */
 fun UiTreeBuilder.Box(
     key: Any? = null,
     contentAlignment: BoxAlignment = BoxAlignment.TopStart,
-    rippleColor: Int? = null,
-    modifier: Modifier = Modifier,
-    content: BoxScope.() -> Unit,
-) {
-    StateLayerBox(
-        key = key,
-        contentAlignment = contentAlignment,
-        rippleColor = rippleColor,
-        modifier = modifier,
-        content = content,
-    )
-}
-
-/** Emits a Box whose component has already resolved its renderer-neutral interaction colors. */
-internal fun UiTreeBuilder.StateLayerBox(
-    type: NodeType = NodeType.Box,
-    key: Any? = null,
-    contentAlignment: BoxAlignment = BoxAlignment.TopStart,
-    rippleColor: Int? = null,
-    stateLayerColors: UiStateLayerColors? = null,
     modifier: Modifier = Modifier,
     content: BoxScope.() -> Unit,
 ) {
     emitResolved(
-        type = type,
+        type = NodeType.Box,
         key = key,
-        spec = BoxNodeProps(
-            contentAlignment = contentAlignment,
-            rippleColor = rippleColor,
-            stateLayerColors = stateLayerColors,
-        ),
+        spec = BoxNodeProps(contentAlignment = contentAlignment),
         modifier = modifier,
         children = BoxScope().apply(content).build(),
     )
@@ -91,8 +79,6 @@ internal fun UiTreeBuilder.StateLayerBox(
  * @param contentColor packed ARGB value provided to descendant content defaults
  * @param enabled whether the optional click action and state layers participate in input
  * @param onClick optional click callback; `null` creates a non-interactive surface
- * @param stateLayerColors optional pressed, focused, and hovered colors for an enabled action
- * @param rippleColor fallback pressed color used when [stateLayerColors] is `null`
  * @param minimumWidth non-negative minimum effective width in dp
  * @param minimumHeight non-negative minimum effective height in dp
  * @param visualHeight optional non-negative visual surface height centered inside effective bounds
@@ -108,8 +94,6 @@ fun UiTreeBuilder.BasicSurface(
     contentColor: Int,
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
-    stateLayerColors: UiStateLayerColors? = null,
-    rippleColor: Int = stateLayerColors?.pressedColor ?: 0x00000000,
     minimumWidth: UiDp = UiDp.Zero,
     minimumHeight: UiDp = UiDp.Zero,
     visualHeight: UiDp? = null,
@@ -132,6 +116,13 @@ fun UiTreeBuilder.BasicSurface(
         )
         .then(Modifier.dropShadows(style.stableDropShadows, shape = style.shape))
         .then(Modifier.innerShadows(style.stableInnerShadows, shape = style.shape))
+        .then(
+            if (enabled && onClick != null) {
+                style.interactionIndication?.let(Modifier::interactionIndication) ?: Modifier
+            } else {
+                Modifier
+            },
+        )
         .then(
             if (enabled && onClick != null) Modifier.clickable(onClick) else Modifier,
         )
@@ -157,8 +148,6 @@ fun UiTreeBuilder.BasicSurface(
                 shape = style.shape,
                 borderWidth = style.borderWidth,
                 borderColor = style.borderColor,
-                rippleColor = rippleColor,
-                stateLayerColors = if (enabled && hasAction) stateLayerColors else null,
                 minimumWidth = minimumWidth,
                 minimumHeight = minimumHeight,
                 visualHeight = visualHeight,
@@ -171,7 +160,22 @@ fun UiTreeBuilder.BasicSurface(
 }
 
 /**
- * Emits a Surface container and provides a default content color within its content scope.
+ * Creates a themed surface that provides [contentColor] to descendants.
+ *
+ * A non-null [onClick] turns the surface into one merged interaction target. Disabled surfaces keep
+ * disabled semantics and appearance but install neither a click listener nor transient indication.
+ * Instance modifiers are applied after resolved component appearance.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.layoutDslSample
+ * @receiver active tree builder receiving the surface
+ * @param key optional stable sibling identity used during reconciliation
+ * @param variant semantic appearance tier resolved by the active design system
+ * @param enabled whether the optional action accepts input and renders enabled appearance
+ * @param contentAlignment default placement for children without explicit box parent data
+ * @param contentColor packed ARGB value provided through [LocalContentColor]
+ * @param onClick optional callback invoked synchronously for an accepted click
+ * @param modifier ordered caller configuration applied after resolved surface behavior
+ * @param content child content emitted inside the surface
  */
 fun UiTreeBuilder.Surface(
     key: Any? = null,
@@ -187,12 +191,15 @@ fun UiTreeBuilder.Surface(
         style = BasicSurfaceStyle(
             fill = Brush.SolidColor(SurfaceDefaults.backgroundColor(variant)),
             shape = SurfaceDefaults.shape(),
+            interactionIndication = if (onClick != null) {
+                UiInteractionIndication.StateLayer(stateLayerColorsFor(contentColor))
+            } else {
+                null
+            },
         ),
         contentColor = contentColor,
         enabled = enabled,
         onClick = onClick,
-        stateLayerColors = if (onClick != null) stateLayerColorsFor(contentColor) else null,
-        rippleColor = SurfaceDefaults.pressedColor(),
         key = key,
         contentAlignment = contentAlignment,
         modifier = Modifier
@@ -209,7 +216,12 @@ fun UiTreeBuilder.Surface(
 }
 
 /**
- * Emits an empty spacer node whose size is usually controlled by Modifier.
+ * Reserves empty layout space determined by [modifier].
+ *
+ * @sample com.viewcompose.ui.foundation.samples.layoutDslSample
+ * @receiver active tree builder receiving the empty node
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier size and parent-data configuration that determines the occupied bounds
  */
 fun UiTreeBuilder.Spacer(
     key: Any? = null,
@@ -224,7 +236,14 @@ fun UiTreeBuilder.Spacer(
 }
 
 /**
- * Emits a divider node.
+ * Draws a solid divider with a theme-resolved default thickness.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.layoutDslSample
+ * @receiver active tree builder receiving the divider
+ * @param color packed ARGB divider color
+ * @param thickness non-negative cross-axis thickness in dp
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered layout and drawing configuration for the divider node
  */
 fun UiTreeBuilder.Divider(
     color: Int = DividerDefaults.color(),
@@ -244,34 +263,24 @@ fun UiTreeBuilder.Divider(
 }
 
 /**
- * Emits a horizontal linear layout node.
+ * Places eager children along a horizontal main axis.
+ *
+ * All children remain mounted. Prefer [LazyRow] when the collection is large or unbounded.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.layoutDslSample
+ * @receiver active tree builder receiving the row
+ * @param key optional stable sibling identity used during reconciliation
+ * @param spacing fixed gap in dp between adjacent children
+ * @param arrangement placement policy along the horizontal main axis
+ * @param verticalAlignment default cross-axis placement for children
+ * @param modifier ordered configuration applied to the row container
+ * @param content eager children emitted synchronously into the row scope
  */
 fun UiTreeBuilder.Row(
     key: Any? = null,
     spacing: UiDp = UiDp.Zero,
     arrangement: MainAxisArrangement = MainAxisArrangement.Start,
     verticalAlignment: VerticalAlignment = VerticalAlignment.Top,
-    modifier: Modifier = Modifier,
-    content: RowScope.() -> Unit,
-) {
-    StateLayerRow(
-        key = key,
-        spacing = spacing,
-        arrangement = arrangement,
-        verticalAlignment = verticalAlignment,
-        modifier = modifier,
-        content = content,
-    )
-}
-
-/** Emits a Row whose component has already resolved its renderer-neutral interaction colors. */
-internal fun UiTreeBuilder.StateLayerRow(
-    key: Any? = null,
-    spacing: UiDp = UiDp.Zero,
-    arrangement: MainAxisArrangement = MainAxisArrangement.Start,
-    verticalAlignment: VerticalAlignment = VerticalAlignment.Top,
-    rippleColor: Int? = null,
-    stateLayerColors: UiStateLayerColors? = null,
     modifier: Modifier = Modifier,
     content: RowScope.() -> Unit,
 ) {
@@ -282,8 +291,6 @@ internal fun UiTreeBuilder.StateLayerRow(
             spacing = spacing,
             arrangement = arrangement,
             verticalAlignment = verticalAlignment,
-            rippleColor = rippleColor,
-            stateLayerColors = stateLayerColors,
         ),
         modifier = modifier,
         children = RowScope().apply(content).build(),
@@ -291,7 +298,18 @@ internal fun UiTreeBuilder.StateLayerRow(
 }
 
 /**
- * Emits a vertical linear layout node.
+ * Places eager children along a vertical main axis.
+ *
+ * All children remain mounted. Prefer [LazyColumn] when the collection is large or unbounded.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.layoutDslSample
+ * @receiver active tree builder receiving the column
+ * @param key optional stable sibling identity used during reconciliation
+ * @param spacing fixed gap in dp between adjacent children
+ * @param arrangement placement policy along the vertical main axis
+ * @param horizontalAlignment default cross-axis placement for children
+ * @param modifier ordered configuration applied to the column container
+ * @param content eager children emitted synchronously into the column scope
  */
 fun UiTreeBuilder.Column(
     key: Any? = null,
@@ -405,7 +423,16 @@ fun UiTreeBuilder.ScrollableRow(
 }
 
 /**
- * Emits a row-flow layout node.
+ * Places eager children left-to-right and wraps them into additional rows.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.layoutDslSample
+ * @receiver active tree builder receiving the flow layout
+ * @param key optional stable sibling identity used during reconciliation
+ * @param horizontalSpacing gap in dp between children in one row
+ * @param verticalSpacing gap in dp between wrapped rows
+ * @param maxItemsInEachRow maximum children placed in a row before forced wrapping
+ * @param modifier ordered configuration applied to the flow container
+ * @param content eager children emitted synchronously into the layout scope
  */
 fun UiTreeBuilder.FlowRow(
     key: Any? = null,
@@ -429,7 +456,16 @@ fun UiTreeBuilder.FlowRow(
 }
 
 /**
- * Emits a column-flow layout node.
+ * Places eager children top-to-bottom and wraps them into additional columns.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.layoutDslSample
+ * @receiver active tree builder receiving the flow layout
+ * @param key optional stable sibling identity used during reconciliation
+ * @param horizontalSpacing gap in dp between wrapped columns
+ * @param verticalSpacing gap in dp between children in one column
+ * @param maxItemsInEachColumn maximum children placed in a column before forced wrapping
+ * @param modifier ordered configuration applied to the flow container
+ * @param content eager children emitted synchronously into the layout scope
  */
 fun UiTreeBuilder.FlowColumn(
     key: Any? = null,

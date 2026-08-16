@@ -1,6 +1,7 @@
 package com.viewcompose.ui.node.spec
 
 import com.viewcompose.ui.node.NavigationBarItem
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.UiSp
 
@@ -16,7 +17,8 @@ import com.viewcompose.ui.unit.UiSp
  * @property selectedLabelColor selected item label color
  * @property unselectedLabelColor unselected item label color
  * @property indicatorColor selected item indicator color
- * @property rippleColor pressed-state ripple color
+ * @property unselectedStateLayerColors interaction colors for unselected destinations
+ * @property selectedStateLayerColors interaction colors for the selected destination
  * @property iconSize requested icon width and height
  * @property labelSizeSp label size in scale-independent pixels
  * @property labelFontWeight optional platform label font weight
@@ -38,7 +40,8 @@ data class NavigationBarNodeProps(
     val selectedLabelColor: Int,
     val unselectedLabelColor: Int,
     val indicatorColor: Int,
-    val rippleColor: Int,
+    val unselectedStateLayerColors: UiStateLayerColors,
+    val selectedStateLayerColors: UiStateLayerColors,
     val iconSize: UiDp,
     val labelSizeSp: UiSp,
     val labelFontWeight: Int? = null,

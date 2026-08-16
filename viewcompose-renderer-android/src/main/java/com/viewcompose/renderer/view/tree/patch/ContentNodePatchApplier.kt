@@ -135,8 +135,7 @@ internal object ContentNodePatchApplier {
                 borderWidth = patch.next.borderWidth,
                 borderColor = patch.next.borderColor,
                 shape = patch.next.shape,
-                rippleColor = patch.next.rippleColor,
-                stateLayerColors = patch.next.stateLayerColors,
+                rippleColor = 0,
                 clickable = true,
                 effectiveHeight = patch.next.minHeight,
                 visualHeight = patch.next.visualHeight,
@@ -189,8 +188,6 @@ internal object ContentNodePatchApplier {
             patch.previous.borderWidth != patch.next.borderWidth ||
             patch.previous.borderColor != patch.next.borderColor ||
             patch.previous.shape != patch.next.shape ||
-            patch.previous.rippleColor != patch.next.rippleColor ||
-            patch.previous.stateLayerColors != patch.next.stateLayerColors ||
             patch.previous.visualHeight != patch.next.visualHeight
     }
 

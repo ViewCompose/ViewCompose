@@ -55,12 +55,10 @@ internal data class Material3ThemeColorSnapshot(
     val inverseOnSurface: Int? = null,
     val inversePrimary: Int? = null,
     val scrim: Int? = null,
-    val ripple: Int? = null,
     val primaryText: UiStateColor? = null,
     val secondaryText: UiStateColor? = null,
     val control: UiStateColor? = null,
     val controlActivated: UiStateColor? = null,
-    val controlHighlight: UiStateColor? = null,
 )
 
 /**
@@ -173,7 +171,6 @@ internal object Material3ThemeSnapshotReader {
             android.R.attr.textColorSecondary,
             androidx.appcompat.R.attr.colorControlNormal,
             androidx.appcompat.R.attr.colorControlActivated,
-            androidx.appcompat.R.attr.colorControlHighlight,
         )
         val typedArray = context.obtainStyledAttributes(attrs)
         return try {
@@ -181,7 +178,6 @@ internal object Material3ThemeSnapshotReader {
             val secondaryText = typedArray.getStateColorOrNull(35)
             val control = typedArray.getStateColorOrNull(36)
             val controlActivated = typedArray.getStateColorOrNull(37)
-            val controlHighlight = typedArray.getStateColorOrNull(38)
             val onSurface = typedArray.getColorOrNull(11) ?: primaryText?.defaultColor
             val onSurfaceVariant = typedArray.getColorOrNull(12) ?: secondaryText?.defaultColor
             Material3ThemeColorSnapshot(
@@ -220,12 +216,10 @@ internal object Material3ThemeSnapshotReader {
                 inverseSurface = typedArray.getColorOrNull(31),
                 inverseOnSurface = typedArray.getColorOrNull(32),
                 inversePrimary = typedArray.getColorOrNull(33),
-                ripple = controlHighlight?.pressedColor,
                 primaryText = primaryText,
                 secondaryText = secondaryText,
                 control = control,
                 controlActivated = controlActivated,
-                controlHighlight = controlHighlight,
             )
         } finally {
             typedArray.recycle()

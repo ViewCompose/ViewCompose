@@ -2,6 +2,7 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.graphics.core.Brush
 import com.viewcompose.ui.graphics.UiShadow
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 
@@ -20,6 +21,7 @@ import com.viewcompose.ui.unit.UiDp
  * @property dropShadows exact outer shadows drawn behind the surface in declaration order
  * @property innerShadows exact inner shadows drawn over surface content in declaration order
  * @property clipContent whether descendants are clipped to [shape]
+ * @property interactionIndication optional renderer-neutral feedback resolved by the component
  * @throws IllegalArgumentException if [borderWidth] or [elevation] is negative
  */
 data class BasicSurfaceStyle(
@@ -31,6 +33,7 @@ data class BasicSurfaceStyle(
     val dropShadows: List<UiShadow> = emptyList(),
     val innerShadows: List<UiShadow> = emptyList(),
     val clipContent: Boolean = false,
+    val interactionIndication: UiInteractionIndication? = null,
 ) {
     init {
         require(borderWidth >= UiDp.Zero) { "BasicSurfaceStyle borderWidth must be non-negative." }

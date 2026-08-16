@@ -9,14 +9,28 @@ import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.minHeight
+import com.viewcompose.ui.modifier.interactionIndication
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.VerticalAlignment
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * Composite Card built from Box and Surface-like style tokens.
+ * Creates a themed card whose [variant] selects fill, border, and elevation roles.
+ *
+ * A non-null [onClick] makes the complete card one interaction target. The resolved indication is
+ * installed only while enabled, and caller modifiers are applied after component appearance.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.layoutDslSample
+ * @receiver active tree builder receiving the card composite
+ * @param onClick optional callback invoked synchronously for an accepted card click
+ * @param variant semantic filled, elevated, or outlined appearance
+ * @param enabled whether the optional action accepts input and displays enabled feedback
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered caller configuration applied after card appearance and behavior
+ * @param content children emitted synchronously inside the card box scope
  */
 fun UiTreeBuilder.Card(
     onClick: (() -> Unit)? = null,
@@ -39,21 +53,17 @@ fun UiTreeBuilder.Card(
         .let { m -> if (bw > UiDp.Zero) m.border(bw, bc) else m }
         .let { m ->
             if (enabled && onClick != null) {
-                m.clickable(onClick)
+                m.interactionIndication(
+                    UiInteractionIndication.StateLayer(stateLayerColorsFor(CardDefaults.contentColor())),
+                ).clickable(onClick)
             } else {
                 m
             }
         }
         .then(modifier)
     ProvideLocal(LocalContentColor, CardDefaults.contentColor()) {
-        StateLayerBox(
+        Box(
             key = key,
-            rippleColor = if (enabled && onClick != null) CardDefaults.pressedColor() else null,
-            stateLayerColors = if (enabled && onClick != null) {
-                stateLayerColorsFor(CardDefaults.contentColor())
-            } else {
-                null
-            },
             modifier = semanticModifier,
             content = content,
         )
@@ -61,47 +71,21 @@ fun UiTreeBuilder.Card(
 }
 
 /**
- * Elevated convenience variant of Card.
- */
-fun UiTreeBuilder.ElevatedCard(
-    onClick: (() -> Unit)? = null,
-    enabled: Boolean = true,
-    key: Any? = null,
-    modifier: Modifier = Modifier,
-    content: BoxScope.() -> Unit,
-) {
-    Card(
-        onClick = onClick,
-        variant = CardVariant.Elevated,
-        enabled = enabled,
-        key = key,
-        modifier = modifier,
-        content = content,
-    )
-}
-
-/**
- * Outlined convenience variant of Card.
- */
-fun UiTreeBuilder.OutlinedCard(
-    onClick: (() -> Unit)? = null,
-    enabled: Boolean = true,
-    key: Any? = null,
-    modifier: Modifier = Modifier,
-    content: BoxScope.() -> Unit,
-) {
-    Card(
-        onClick = onClick,
-        variant = CardVariant.Outlined,
-        enabled = enabled,
-        key = key,
-        modifier = modifier,
-        content = content,
-    )
-}
-
-/**
- * Standard list item composite.
+ * Creates one structured list row with optional leading, supporting, and trailing regions.
+ *
+ * A non-null [onClick] makes the entire row clickable. This eager composite does not virtualize
+ * itself; place it in a keyed lazy-item session for large collections.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.layoutDslSample
+ * @receiver active tree builder receiving the list-item composite
+ * @param headlineText primary label displayed in the central text column
+ * @param supportingText optional secondary label below the headline
+ * @param overlineText optional compact label above the headline
+ * @param leadingContent optional content emitted before the text column
+ * @param trailingContent optional content emitted after the text column
+ * @param onClick optional callback invoked synchronously for an accepted row click
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered caller configuration applied after list-item sizing and behavior
  */
 fun UiTreeBuilder.ListItem(
     headlineText: String,
@@ -121,18 +105,18 @@ fun UiTreeBuilder.ListItem(
         .padding(horizontal = hPadding, vertical = vPadding)
         .let { m ->
             if (onClick != null) {
-                m.clickable(onClick)
+                m.interactionIndication(
+                    UiInteractionIndication.StateLayer(stateLayerColorsFor(Theme.colors.onSurface)),
+                ).clickable(onClick)
             } else {
                 m
             }
         }
         .then(modifier)
-    StateLayerRow(
+    Row(
         key = key,
         spacing = ListItemDefaults.leadingTrailingSpacing(),
         verticalAlignment = VerticalAlignment.Center,
-        rippleColor = if (onClick != null) Theme.colors.ripple else null,
-        stateLayerColors = if (onClick != null) stateLayerColorsFor(Theme.colors.onSurface) else null,
         modifier = semanticModifier,
     ) {
         if (leadingContent != null) {
@@ -170,7 +154,22 @@ fun UiTreeBuilder.ListItem(
 }
 
 /**
- * Page scaffold composite that arranges top/content/fab/bottom regions.
+ * Arranges optional app bars, body content, and a floating action region into one page.
+ *
+ * The body fills the space left between bars. The floating action content overlays its bottom-end
+ * corner and does not reduce body constraints. This eager layout does not own navigation or inset
+ * policy; callers apply those concerns through the supplied regions and [modifier].
+ *
+ * @sample com.viewcompose.ui.foundation.samples.layoutDslSample
+ * @receiver active tree builder receiving the scaffold composite
+ * @param topBar optional content occupying the page's top region
+ * @param bottomBar optional content occupying the page's bottom region
+ * @param floatingActionButton optional content overlaid at the body's bottom-end corner
+ * @param containerColor packed ARGB fill for the full scaffold bounds
+ * @param contentColor packed ARGB value provided to all scaffold regions
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered caller configuration applied to the full scaffold container
+ * @param content body content emitted synchronously into the central box scope
  */
 fun UiTreeBuilder.Scaffold(
     topBar: (UiTreeBuilder.() -> Unit)? = null,

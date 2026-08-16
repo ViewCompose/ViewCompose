@@ -68,6 +68,7 @@ import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.node.TextFieldAutofillHint
 import com.viewcompose.ui.node.UiStateLayerColors
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.dp
@@ -269,7 +270,6 @@ object OneUi7ThemeDefaults {
         outlineVariant = 0xFFE0E2E6.toInt(),
         inverseSurface = 0xFF292A2D.toInt(),
         inverseOnSurface = 0xFFF7F7F8.toInt(),
-        ripple = 0x1F17181A,
     )
 
     private fun darkColors(): UiColors = UiColors(
@@ -300,7 +300,6 @@ object OneUi7ThemeDefaults {
         outlineVariant = 0xFF34373B.toInt(),
         inverseSurface = 0xFFE7E8EA.toInt(),
         inverseOnSurface = 0xFF25272A.toInt(),
-        ripple = 0x29F5F6F7,
     )
 }
 
@@ -512,11 +511,13 @@ fun UiTreeBuilder.OneUi7Surface(
             borderWidth = 1.dp,
             borderColor = recipes.colors.outlineVariant,
             clipContent = true,
+            interactionIndication = UiInteractionIndication.StateLayer(
+                stateLayers(recipes.colors.onSurface, recipes.interactions),
+            ),
         ),
         contentColor = recipes.colors.onSurface,
         enabled = enabled,
         onClick = onClick,
-        stateLayerColors = stateLayers(recipes.colors.onSurface, recipes.interactions),
         role = if (onClick == null) null else SemanticsRole.Button,
         key = key,
         modifier = modifier,
@@ -655,11 +656,13 @@ fun UiTreeBuilder.OneUi7Switch(
         style = BasicSurfaceStyle(
             fill = Brush.SolidColor(0x00000000),
             shape = UiShape.rounded(UiDp.Zero),
+            interactionIndication = UiInteractionIndication.StateLayer(
+                stateLayers(recipes.colors.onSurface, recipes.interactions),
+            ),
         ),
         contentColor = if (enabled) recipes.colors.onSurface else recipes.disabledContentColor,
         enabled = enabled,
         onClick = { onCheckedChange(!checked) },
-        stateLayerColors = stateLayers(recipes.colors.onSurface, recipes.interactions),
         minimumHeight = recipes.minimumInteractiveHeight,
         role = SemanticsRole.Switch,
         key = key,
@@ -841,11 +844,13 @@ fun UiTreeBuilder.OneUi7NavigationBar(
                         fill = Brush.SolidColor(0x00000000),
                         shape = recipes.navigationItemShape,
                         clipContent = true,
+                        interactionIndication = UiInteractionIndication.StateLayer(
+                            stateLayers(contentColor, recipes.interactions),
+                        ),
                     ),
                     contentColor = contentColor,
                     enabled = enabled,
                     onClick = { onItemSelected(index) },
-                    stateLayerColors = stateLayers(contentColor, recipes.interactions),
                     minimumHeight = 52.dp,
                     role = SemanticsRole.Tab,
                     key = item.key,

@@ -332,10 +332,18 @@ class ThemeTest {
         assertEquals(customTheme.colors.primary, spec.backgroundColor)
         assertEquals(customTheme.shapes.full, spec.shape)
         assertEquals(0xFFFFFFFF.toInt(), spec.textColor)
-        assertEquals(0x1AFFFFFF, spec.rippleColor)
-        assertEquals(0x1AFFFFFF, spec.stateLayerColors?.pressedColor)
-        assertEquals(0x1AFFFFFF, spec.stateLayerColors?.focusedColor)
-        assertEquals(0x1AFFFFFF, spec.stateLayerColors?.hoveredColor)
+        assertEquals(
+            stateLayerColorWithOpacity(0xFFFFFFFF.toInt(), customTheme.interactions.pressedStateLayerOpacity),
+            tree.single().requireStateLayerColors().pressedColor,
+        )
+        assertEquals(
+            stateLayerColorWithOpacity(0xFFFFFFFF.toInt(), customTheme.interactions.focusedStateLayerOpacity),
+            tree.single().requireStateLayerColors().focusedColor,
+        )
+        assertEquals(
+            stateLayerColorWithOpacity(0xFFFFFFFF.toInt(), customTheme.interactions.hoveredStateLayerOpacity),
+            tree.single().requireStateLayerColors().hoveredColor,
+        )
         assertEquals(customTheme.typography.labelLarge.fontSizeSp, spec.textSizeSp)
         assertEquals(customTheme.controls.button.mediumHeight, ButtonDefaults.height())
         assertEquals(customTheme.controls.button.mediumHeight, spec.minHeight)
@@ -618,7 +626,7 @@ class ThemeTest {
             spec.fill,
         )
         assertEquals(SurfaceDefaults.shape(), spec.shape)
-        assertEquals(SurfaceDefaults.pressedColor(), spec.rippleColor)
+        assertEquals(null, surface.stateLayerColorsOrNull())
         assertEquals(SurfaceDefaults.disabledAlpha(), alpha.alpha)
         assertTrue(surface.spec is SurfaceNodeProps)
     }
@@ -669,7 +677,6 @@ class ThemeTest {
         var errorColor = 0
         var controlColor = 0
         var surfaceShape = UiShape.rounded(0.dp)
-        var pressedColor = 0
 
         buildVNodeTree {
             UiTheme(customTheme) {
@@ -678,7 +685,6 @@ class ThemeTest {
                 errorColor = TextFieldDefaults.hintColor(isError = true)
                 controlColor = InputControlDefaults.checkboxControlColor()
                 surfaceShape = SurfaceDefaults.shape()
-                pressedColor = SurfaceDefaults.pressedColor()
             }
         }
 
@@ -687,7 +693,6 @@ class ThemeTest {
         assertEquals(customTheme.colors.onSurfaceVariant, errorColor)
         assertEquals(customTheme.colors.primary, controlColor)
         assertEquals(customTheme.shapes.medium, surfaceShape)
-        assertEquals(pressedOverlayColorFor(customTheme.colors.onSurface), pressedColor)
     }
 
     @Test

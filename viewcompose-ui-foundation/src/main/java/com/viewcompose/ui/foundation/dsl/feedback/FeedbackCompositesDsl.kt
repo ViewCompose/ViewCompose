@@ -12,11 +12,13 @@ import com.viewcompose.ui.modifier.clip
 import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.height
+import com.viewcompose.ui.modifier.interactionIndication
 import com.viewcompose.ui.modifier.minWidth
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.unit.UiDp
 
 /**
@@ -103,14 +105,16 @@ fun UiTreeBuilder.AlertDialog(
                     modifier = Modifier.align(HorizontalAlignment.End),
                 ) {
                     if (dismissButtonText != null && onDismiss != null) {
-                        TextButton(
+                        Button(
                             text = dismissButtonText,
                             onClick = onDismiss,
+                            variant = ButtonVariant.Text,
                         )
                     }
-                    TextButton(
+                    Button(
                         text = confirmButtonText,
                         onClick = onConfirm,
+                        variant = ButtonVariant.Text,
                     )
                 }
             }
@@ -119,9 +123,22 @@ fun UiTreeBuilder.AlertDialog(
 }
 
 /**
- * Emits a lightweight text tooltip.
+ * Shows lightweight text in a non-focusable popup anchored to a rendered semantics id.
  *
- * Tooltip uses a non-focusable Popup to avoid stealing input focus while still being anchored by anchorId.
+ * The tooltip does not steal input focus. The owner controls [visible] and removes it after
+ * [onDismissRequest]; [anchorId] must resolve in the same host window.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.feedbackDslSample
+ * @receiver active tree builder submitting the popup request
+ * @param text tooltip message displayed in one themed surface
+ * @param visible whether this render keeps the tooltip request active
+ * @param anchorId semantics id of the rendered anchor view
+ * @param alignment preferred placement relative to the anchor
+ * @param overflowPolicy flip and clamp behavior near window edges
+ * @param windowMargin minimum logical distance from the window edge
+ * @param dismissOnClickOutside whether an outside click requests dismissal
+ * @param onDismissRequest optional callback invoked for presenter dismissal requests
+ * @param requestKey stable request identity within the current render session
  */
 fun UiTreeBuilder.PlainTooltip(
     text: String,
@@ -167,9 +184,22 @@ fun UiTreeBuilder.PlainTooltip(
 }
 
 /**
- * Emits an anchored dropdown menu.
+ * Shows themed menu content in a focusable popup anchored to [anchorId].
  *
- * expanded controls whether the Popup request exists; outside clicks always call onDismissRequest to close the menu.
+ * [expanded] controls request presence; outside clicks request dismissal but do not mutate caller
+ * state. The caller must set [expanded] to `false` from [onDismissRequest].
+ *
+ * @sample com.viewcompose.ui.foundation.samples.feedbackDslSample
+ * @receiver active tree builder submitting the popup request
+ * @param expanded whether this render keeps the dropdown request active
+ * @param anchorId semantics id of the rendered anchor view
+ * @param onDismissRequest callback invoked when the popup requests removal
+ * @param alignment preferred placement relative to the anchor
+ * @param overflowPolicy flip and clamp behavior near window edges
+ * @param windowMargin minimum logical distance from the window edge
+ * @param requestKey stable request identity within the current render session
+ * @param modifier ordered caller configuration applied to the menu surface
+ * @param content eager menu content emitted into the popup column
  */
 fun UiTreeBuilder.DropdownMenu(
     expanded: Boolean,
@@ -211,9 +241,19 @@ fun UiTreeBuilder.DropdownMenu(
 }
 
 /**
- * Emits one selectable item inside a dropdown menu.
+ * Creates one full-width action row for a dropdown menu.
  *
- * The disabled state is expressed with alpha and removes clickable so the renderer cannot dispatch disabled item clicks.
+ * Disabled items retain layout and muted appearance but install neither click handling nor
+ * interaction indication.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.feedbackDslSample
+ * @receiver active tree builder receiving the menu item
+ * @param text primary single-line item label
+ * @param onClick callback invoked synchronously for an accepted item click
+ * @param leadingIcon optional image displayed before the label
+ * @param trailingText optional supporting value displayed at the row end
+ * @param enabled whether the item accepts input and uses enabled appearance
+ * @param modifier ordered caller configuration applied after item geometry and behavior
  */
 fun UiTreeBuilder.DropdownMenuItem(
     text: String,
@@ -230,20 +270,20 @@ fun UiTreeBuilder.DropdownMenuItem(
         .padding(horizontal = DropdownMenuDefaults.itemHorizontalPadding())
         .then(
             if (enabled) {
-                Modifier.clickable(onClick)
+                Modifier
+                    .interactionIndication(
+                        UiInteractionIndication.StateLayer(
+                            stateLayerColorsFor(DropdownMenuDefaults.contentColor()),
+                        ),
+                    )
+                    .clickable(onClick)
             } else {
                 Modifier.alpha(DropdownMenuDefaults.disabledAlpha())
             },
         )
         .then(modifier)
-    StateLayerRow(
+    Row(
         verticalAlignment = VerticalAlignment.Center,
-        rippleColor = if (enabled) Theme.colors.ripple else null,
-        stateLayerColors = if (enabled) {
-            stateLayerColorsFor(DropdownMenuDefaults.contentColor())
-        } else {
-            null
-        },
         modifier = itemModifier,
     ) {
         if (leadingIcon != null) {

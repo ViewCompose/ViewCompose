@@ -12,6 +12,7 @@ import com.viewcompose.ui.focus.FocusProperties
 import com.viewcompose.ui.focus.FocusRequester
 import com.viewcompose.ui.focus.FocusState
 import com.viewcompose.ui.input.KeyEvent
+import com.viewcompose.ui.node.UiInteractionIndication
 
 /**
  * Registers a click callback for a node.
@@ -20,6 +21,15 @@ import com.viewcompose.ui.input.KeyEvent
  */
 data class ClickableModifierElement(
     val onClick: () -> Unit,
+) : ModifierElement
+
+/**
+ * Supplies already-resolved visual feedback for an interactive node.
+ *
+ * @property indication renderer-neutral feedback executed within the node's resolved shape
+ */
+data class InteractionIndicationModifierElement(
+    val indication: UiInteractionIndication,
 ) : ModifierElement
 
 /**

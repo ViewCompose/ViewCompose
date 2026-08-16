@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/modifier.md
-translation_source_hash: 3bd43c9f960fcca79c624d57dd10ad81c801916f0bd965a4ac1ee88967edf4e9
+translation_source_hash: 5781489a4381e469f753c602941bf9f97b1fb25938f94afd0259560e5c8fa1cc
 translation_status: current
 ---
 
@@ -196,7 +196,7 @@ Surface(
 1. 尺寸与占位：`size/width/height/minWidth/minHeight/maxWidth/maxHeight/aspectRatio/padding/paddingRelative/margin/marginRelative`
 2. 外观修饰：`backgroundColor/backgroundDrawableRes/border/cornerRadius/alpha/elevation`
 3. 可见性与层级：`visibility/offset/offsetRelative/zIndex`
-4. 通用交互与可访问性：`clickable/focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent/contentDescription`
+4. 通用交互与可访问性：`clickable/interactionIndication/focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent/contentDescription`
 5. 测试定位：`testTag`
 6. 系统栏内边距：`systemBarsInsetsPadding/systemBarsInsetsPaddingRelative`
 7. 软键盘内边距：`imeInsetsPadding/imeInsetsPaddingRelative`
@@ -226,11 +226,17 @@ Surface(
 3. `Button`：`variant/size/enabled/leadingIcon/trailingIcon`
 4. `TextField`：`label/placeholder/supportingText/readOnly/imeAction/isError`
 
+通用反馈不会仅仅因为由原生 View 绘制就变成组件字段。
+`Modifier.interactionIndication(UiInteractionIndication.StateLayer(...))` 按 Modifier 顺序携带
+完整的按下、聚焦和悬停颜色。高层组件先从设计系统 recipe 和类型化 overrides 解析该值，再
+安装它。拥有多个内部目标的原生后端组件可以在 NodeSpec 中保留类型化的已选/未选状态层快照，
+因为单个外层 Modifier 无法识别这些内部目标。
+
 ### 4.4 Theme / Defaults（默认值来源）
 
 默认值链路固定为：
 
-`Theme -> Defaults -> NodeSpec -> Renderer`
+`Theme -> 设计系统 recipe 或 Defaults -> 类型化 overrides -> NodeSpec/Modifier -> Renderer`
 
 约束：
 

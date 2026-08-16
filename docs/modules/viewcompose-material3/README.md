@@ -155,6 +155,11 @@ platform theme does not expose one complete per-state opacity family. Applicatio
 generic `UiInteractionTokens` or a component's resolved `stateLayerColors` without depending on
 Material APIs.
 
+The bridge no longer republishes Android `colorControlHighlight` through the removed
+`UiColors.ripple` or `UiStateColors.controlHighlight` slots. Interaction feedback is resolved from
+the Material opacity recipe plus each component's semantic content role; an application that needs
+a different policy supplies `UiInteractionTokens` explicitly.
+
 The static `Material3Theme` overload and the six named pressure-slice entry points are additive Q3
 APIs. Their enums and `Material3Reference` are Q2 identity/value contracts. They expose no Material
 widget type and do not change generic UI Foundation component signatures.

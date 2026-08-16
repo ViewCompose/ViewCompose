@@ -12,10 +12,15 @@ import com.viewcompose.ui.foundation.BasicSurface
 import com.viewcompose.ui.foundation.BasicSurfaceStyle
 import com.viewcompose.ui.foundation.Badge
 import com.viewcompose.ui.foundation.BadgeOverrides
+import com.viewcompose.ui.foundation.BadgedBox
+import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.BottomAppBar
 import com.viewcompose.ui.foundation.BottomAppBarOverrides
 import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.ButtonVariant
 import com.viewcompose.ui.foundation.ButtonOverrides
+import com.viewcompose.ui.foundation.Card
+import com.viewcompose.ui.foundation.Chip
 import com.viewcompose.ui.foundation.CheckboxOverrides
 import com.viewcompose.ui.foundation.Checkbox
 import com.viewcompose.ui.foundation.CircularProgressIndicator
@@ -23,7 +28,10 @@ import com.viewcompose.ui.foundation.CircularProgressIndicatorOverrides
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.CompositionEffectContext
 import com.viewcompose.ui.foundation.DisposableEffect
-import com.viewcompose.ui.foundation.EmailField
+import com.viewcompose.ui.foundation.Dialog
+import com.viewcompose.ui.foundation.Divider
+import com.viewcompose.ui.foundation.DropdownMenu
+import com.viewcompose.ui.foundation.DropdownMenuItem
 import com.viewcompose.ui.foundation.ExtendedFloatingActionButton
 import com.viewcompose.ui.foundation.ExtendedFloatingActionButtonOverrides
 import com.viewcompose.ui.foundation.FloatingActionButton
@@ -36,12 +44,13 @@ import com.viewcompose.ui.foundation.HorizontalPager
 import com.viewcompose.ui.foundation.InputControlDefaults
 import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.LazyRow
 import com.viewcompose.ui.foundation.LazyVerticalGrid
+import com.viewcompose.ui.foundation.ListItem
 import com.viewcompose.ui.foundation.LinearProgressIndicator
 import com.viewcompose.ui.foundation.LinearProgressIndicatorOverrides
 import com.viewcompose.ui.foundation.NavigationBar
 import com.viewcompose.ui.foundation.NavigationBarOverrides
-import com.viewcompose.ui.foundation.NumberField
 import com.viewcompose.ui.foundation.AlertDialog
 import com.viewcompose.ui.foundation.AlertDialogOverrides
 import com.viewcompose.ui.foundation.ModalBottomSheet
@@ -54,7 +63,8 @@ import com.viewcompose.ui.foundation.PopupBounds
 import com.viewcompose.ui.foundation.PopupOverflowPolicy
 import com.viewcompose.ui.foundation.PopupPositioner
 import com.viewcompose.ui.foundation.PopupSize
-import com.viewcompose.ui.foundation.PasswordField
+import com.viewcompose.ui.foundation.Popup
+import com.viewcompose.ui.foundation.PlainTooltip
 import com.viewcompose.ui.foundation.ProvideImageLoader
 import com.viewcompose.ui.foundation.ProvideButtonOverrides
 import com.viewcompose.ui.foundation.ProvideAlertDialogOverrides
@@ -87,16 +97,26 @@ import com.viewcompose.ui.foundation.SliderOverrides
 import com.viewcompose.ui.foundation.Switch
 import com.viewcompose.ui.foundation.SwitchOverrides
 import com.viewcompose.ui.foundation.ScrollableColumn
+import com.viewcompose.ui.foundation.Scaffold
+import com.viewcompose.ui.foundation.SearchBar
+import com.viewcompose.ui.foundation.Snackbar
+import com.viewcompose.ui.foundation.Spacer
+import com.viewcompose.ui.foundation.Surface
 import com.viewcompose.ui.foundation.Text
-import com.viewcompose.ui.foundation.TextButton
+import com.viewcompose.ui.foundation.RichText
+import com.viewcompose.ui.foundation.Row
+import com.viewcompose.ui.foundation.FlowRow
+import com.viewcompose.ui.foundation.FlowColumn
 import com.viewcompose.ui.foundation.TabRow
 import com.viewcompose.ui.foundation.TabRowOverrides
 import com.viewcompose.ui.foundation.TextField
 import com.viewcompose.ui.foundation.TextFieldOverrides
-import com.viewcompose.ui.foundation.TextArea
+import com.viewcompose.ui.foundation.TextFieldInputProfile
+import com.viewcompose.ui.foundation.TextFieldLinePolicy
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.TopAppBar
 import com.viewcompose.ui.foundation.TopAppBarOverrides
+import com.viewcompose.ui.foundation.Toast
 import com.viewcompose.ui.foundation.UiStateColor
 import com.viewcompose.ui.foundation.UiSwitchSizing
 import com.viewcompose.ui.foundation.UiTheme
@@ -111,6 +131,8 @@ import com.viewcompose.ui.foundation.rememberUpdatedState
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.MinHeightModifierElement
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.NodeType
@@ -121,6 +143,8 @@ import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageLoader
 import com.viewcompose.ui.node.UiImageRequestOptions
 import com.viewcompose.ui.node.UiStateLayerColors
+import com.viewcompose.ui.node.UiInteractionIndication
+import com.viewcompose.ui.modifier.InteractionIndicationModifierElement
 import com.viewcompose.ui.node.spec.ImageNodeSpec
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.BoxNodeProps
@@ -138,6 +162,76 @@ import com.viewcompose.ui.state.ScrollState
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
+
+fun UiTreeBuilder.layoutDslSample() {
+    Scaffold(
+        topBar = { Text("Account") },
+        bottomBar = { Divider() },
+        floatingActionButton = { Button("Add", onClick = {}) },
+    ) {
+        Surface(onClick = {}) {
+            Column {
+                Card {
+                    ListItem(headlineText = "Profile", supportingText = "Signed in")
+                }
+                Row {
+                    Box(contentAlignment = BoxAlignment.Center) { Text("A") }
+                    Spacer(modifier = Modifier.size(width = 8.dp, height = 8.dp))
+                }
+                FlowRow(maxItemsInEachRow = 2) {
+                    Text("One")
+                    Text("Two")
+                }
+                FlowColumn(maxItemsInEachColumn = 2) {
+                    Text("Three")
+                    Text("Four")
+                }
+            }
+        }
+    }
+}
+
+fun UiTreeBuilder.contentDslSample(document: com.viewcompose.text.TextDocument) {
+    BadgedBox(badge = { Badge(count = 3) }) {
+        Column {
+            Text("Inbox")
+            RichText(document)
+        }
+    }
+}
+
+fun UiTreeBuilder.actionCompositeSample() {
+    Chip(label = "Filter", selected = true, onClick = {})
+}
+
+fun UiTreeBuilder.searchBarSample(state: TextFieldState) {
+    SearchBar(state = state, onSearch = { query -> check(query == state.text) })
+}
+
+fun UiTreeBuilder.lazyListDslSample() {
+    LazyColumn {
+        stickyHeader(key = "header") { Text("Header") }
+        item(key = "row", contentType = "text", contentRevision = 1) { Text("Row") }
+    }
+    LazyRow {
+        item(key = "chip", contentType = "text", contentRevision = 1) { Text("Chip") }
+    }
+}
+
+fun UiTreeBuilder.feedbackDslSample() {
+    Snackbar(visible = true, message = "Saved", requestKey = "save")
+    Toast(visible = true, message = "Connected", requestKey = "connection")
+    Dialog(visible = true, requestKey = "confirm", onDismissRequest = {}) {
+        Text("Confirm")
+    }
+    Popup(visible = true, anchorId = "account-anchor", onDismissRequest = {}) {
+        Text("Account")
+    }
+    PlainTooltip(text = "Open account", visible = true, anchorId = "account-anchor")
+    DropdownMenu(expanded = true, anchorId = "account-anchor", onDismissRequest = {}) {
+        DropdownMenuItem(text = "Settings", onClick = {})
+    }
+}
 
 fun emittedContentClosureSample() {
     val status = "Ready"
@@ -260,7 +354,11 @@ fun buttonSample() {
 
     check(spec.minHeight == 48.dp)
     check(spec.visualHeight == 40.dp)
-    check(spec.stateLayerColors?.hoveredColor == 0x14FFFFFF)
+    val indication = node.modifier.elements
+        .filterIsInstance<InteractionIndicationModifierElement>()
+        .single()
+        .indication
+    check((indication as UiInteractionIndication.StateLayer).colors.hoveredColor == 0x14FFFFFF)
 }
 
 fun componentOverridesSample() {
@@ -282,7 +380,7 @@ fun componentOverridesSample() {
 
     val actionNodes = buildVNodeTree {
         Column {
-            TextButton(text = "Learn more", onClick = {})
+            Button(text = "Learn more", onClick = {}, variant = ButtonVariant.Text)
             ProvideIconButtonOverrides(IconButtonOverrides(contentColor = 0xFF0055AA.toInt())) {
                 IconButton(
                     icon = ImageSource.Resource(1),
@@ -470,10 +568,26 @@ fun textFieldVariantsSample() {
                     label = "Name",
                     overrides = TextFieldOverrides(containerColor = 0xFFF4F6F8.toInt()),
                 )
-                PasswordField(state = TextFieldState(), label = "Password")
-                EmailField(state = TextFieldState(), label = "Email")
-                NumberField(state = TextFieldState(), label = "Age")
-                TextArea(state = TextFieldState(), label = "Notes", minLines = 3)
+                TextField(
+                    state = TextFieldState(),
+                    label = "Password",
+                    inputProfile = TextFieldInputProfile.Password,
+                )
+                TextField(
+                    state = TextFieldState(),
+                    label = "Email",
+                    inputProfile = TextFieldInputProfile.Email,
+                )
+                TextField(
+                    state = TextFieldState(),
+                    label = "Age",
+                    inputProfile = TextFieldInputProfile.Number,
+                )
+                TextField(
+                    state = TextFieldState(),
+                    label = "Notes",
+                    linePolicy = TextFieldLinePolicy.MultiLine(),
+                )
             }
         }
     }.single()
@@ -518,14 +632,16 @@ fun basicSurfaceSample() {
                 borderWidth = 1.dp,
                 borderColor = 0xFF8FD8E8.toInt(),
                 clipContent = true,
+                interactionIndication = UiInteractionIndication.StateLayer(
+                    UiStateLayerColors(
+                        pressedColor = 0x33FFFFFF,
+                        focusedColor = 0x2AFFFFFF,
+                        hoveredColor = 0x1FFFFFFF,
+                    ),
+                ),
             ),
             contentColor = 0xFFFFFFFF.toInt(),
             onClick = {},
-            stateLayerColors = UiStateLayerColors(
-                pressedColor = 0x33FFFFFF,
-                focusedColor = 0x2AFFFFFF,
-                hoveredColor = 0x1FFFFFFF,
-            ),
             minimumHeight = 48.dp,
             visualHeight = 40.dp,
         ) {

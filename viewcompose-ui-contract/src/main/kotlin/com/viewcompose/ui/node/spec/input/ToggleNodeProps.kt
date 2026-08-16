@@ -21,7 +21,6 @@ import com.viewcompose.ui.unit.UiSp
  * @property letterSpacingEm optional label letter spacing in em units
  * @property lineHeightSp optional label line height
  * @property includeFontPadding whether platform font top and bottom padding is included
- * @property rippleColor pressed-state ripple color
  */
 data class ToggleNodeProps(
     val text: String?,
@@ -40,5 +39,4 @@ data class ToggleNodeProps(
     val letterSpacingEm: Float? = null,
     val lineHeightSp: UiSp? = null,
     val includeFontPadding: Boolean = false,
-    val rippleColor: Int,
 ) : NodeSpec

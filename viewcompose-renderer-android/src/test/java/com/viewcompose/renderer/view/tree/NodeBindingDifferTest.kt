@@ -16,6 +16,7 @@ import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.interactionIndication
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.LazyListItem
@@ -24,6 +25,7 @@ import com.viewcompose.ui.node.LazyListItemSessionFactory
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageLoader
+import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.SegmentedControlItem
@@ -447,35 +449,29 @@ class NodeBindingDifferTest {
     }
 
     @Test
-    fun `rebinds box when ripple changes`() {
-        val previous = boxNode(
-            contentAlignment = com.viewcompose.ui.layout.BoxAlignment.TopStart,
-            rippleColor = 0x11000000,
-        )
-        val next = boxNode(
-            contentAlignment = com.viewcompose.ui.layout.BoxAlignment.TopStart,
-            rippleColor = 0x22000000,
-        )
+    fun `uses modifier-only binding when box indication changes`() {
+        val previous = boxNode(stateLayerColors = stateLayerColors(0x11000000))
+        val next = boxNode(stateLayerColors = stateLayerColors(0x22000000))
 
         val plan = NodeBindingDiffer.plan(previous, next)
 
-        assertSame(NodeBindingPlan.Rebind, plan)
+        assertSame(NodeBindingPlan.ModifierOnly, plan)
     }
 
     @Test
-    fun `rebinds box and row when state-layer colors change`() {
+    fun `uses modifier-only binding when box and row state-layer colors change`() {
         val previousColors = UiStateLayerColors(1, 2, 3)
         val nextColors = UiStateLayerColors(4, 5, 6)
 
         assertSame(
-            NodeBindingPlan.Rebind,
+            NodeBindingPlan.ModifierOnly,
             NodeBindingDiffer.plan(
                 boxNode(stateLayerColors = previousColors),
                 boxNode(stateLayerColors = nextColors),
             ),
         )
         assertSame(
-            NodeBindingPlan.Rebind,
+            NodeBindingPlan.ModifierOnly,
             NodeBindingDiffer.plan(
                 rowNode(stateLayerColors = previousColors),
                 rowNode(stateLayerColors = nextColors),
@@ -576,7 +572,6 @@ class NodeBindingDifferTest {
                 borderWidth = 0.dp,
                 borderColor = 0,
                 shape = UiShape.rounded(8.dp),
-                rippleColor = 0x33000000,
                 minHeight = 48.dp,
                 paddingHorizontal = 16.dp,
                 paddingVertical = 8.dp,
@@ -646,10 +641,11 @@ class NodeBindingDifferTest {
                 shape = UiShape.cut(3.dp),
                 textColor = 4,
                 selectedTextColor = 5,
-                rippleColor = 6,
                 textSizeSp = 14.sp,
                 paddingHorizontal = 8.dp,
                 paddingVertical = 6.dp,
+                unselectedStateLayerColors = stateLayerColors(6),
+                selectedStateLayerColors = stateLayerColors(6),
             ),
             modifier = Modifier,
         )
@@ -822,7 +818,6 @@ class NodeBindingDifferTest {
                 onCheckedChange = null,
                 textColor = 0xFF000000.toInt(),
                 textSizeSp = 14.sp,
-                rippleColor = 0x33000000,
             ),
             modifier = Modifier,
         )
@@ -901,9 +896,8 @@ class NodeBindingDifferTest {
                 spacing = spacing,
                 arrangement = com.viewcompose.ui.layout.MainAxisArrangement.Start,
                 verticalAlignment = com.viewcompose.ui.layout.VerticalAlignment.Top,
-                stateLayerColors = stateLayerColors,
             ),
-            modifier = Modifier,
+            modifier = stateLayerColors.asIndicationModifier(),
         )
     }
 
@@ -923,17 +917,12 @@ class NodeBindingDifferTest {
 
     private fun boxNode(
         contentAlignment: com.viewcompose.ui.layout.BoxAlignment = com.viewcompose.ui.layout.BoxAlignment.TopStart,
-        rippleColor: Int? = null,
         stateLayerColors: UiStateLayerColors? = null,
     ): VNode {
         return VNode(
             type = NodeType.Box,
-            spec = BoxNodeProps(
-                contentAlignment = contentAlignment,
-                rippleColor = rippleColor,
-                stateLayerColors = stateLayerColors,
-            ),
-            modifier = Modifier,
+            spec = BoxNodeProps(contentAlignment = contentAlignment),
+            modifier = stateLayerColors.asIndicationModifier(),
         )
     }
 
@@ -1012,7 +1001,6 @@ class NodeBindingDifferTest {
                 borderWidth = 0.dp,
                 borderColor = 0,
                 shape = UiShape.rounded(8.dp),
-                rippleColor = 0x33000000,
                 contentPadding = 8.dp,
             ),
             modifier = Modifier,
@@ -1074,7 +1062,8 @@ class NodeBindingDifferTest {
                 selectedLabelColor = 0xFF000000.toInt(),
                 unselectedLabelColor = 0xFF666666.toInt(),
                 indicatorColor = 0x22000000,
-                rippleColor = 0x11000000,
+                selectedStateLayerColors = stateLayerColors(0x11000000),
+                unselectedStateLayerColors = stateLayerColors(0x11000000),
                 iconSize = 24.dp,
                 labelSizeSp = 12.sp,
                 badgeColor = 0xFFFF0000.toInt(),
@@ -1101,7 +1090,6 @@ class NodeBindingDifferTest {
                 containerColor = 0xFFFFFFFF.toInt(),
                 scrollable = true,
                 equalWidth = false,
-                rippleColor = 0x11000000,
                 itemSpacing = 8.dp,
                 itemPaddingHorizontal = 12.dp,
                 itemPaddingVertical = 8.dp,
@@ -1109,6 +1097,18 @@ class NodeBindingDifferTest {
             ),
             modifier = Modifier,
         )
+    }
+
+    private fun stateLayerColors(color: Int) = UiStateLayerColors(
+        pressedColor = color,
+        focusedColor = color,
+        hoveredColor = color,
+    )
+
+    private fun UiStateLayerColors?.asIndicationModifier(): Modifier = if (this == null) {
+        Modifier
+    } else {
+        Modifier.interactionIndication(UiInteractionIndication.StateLayer(this))
     }
 
 }

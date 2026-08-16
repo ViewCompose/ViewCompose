@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: 4100e0d568c0435396e65b60d399fd1f4bb7bffeecd279946fd9b5c3cb6e11ec
+translation_source_hash: f4effc7df2c0b6bcd19dfc936eb6ded86c995fdedf70643c2a106b0edaeaa0fa
 translation_status: current
 ---
 
@@ -60,6 +60,7 @@ Kotlin `2.0.21`，声明位置是
 | Navigation 2 或 Navigation 3 | [导航](compose-navigation.md) | 源导航模型、路由身份、owner 作用域、隐藏 session 策略和 Back 集成 |
 | 图片加载 | [图片加载](image-loading.md) | source 类型、loader 所有权、request 策略和回收 View 释放 |
 | Lazy 集合与 Pager | [Lazy 集合 Revision 与复用](lazy-collection-revision-and-reuse.md) | 语义 Revision、Mounted Tree 复用、互操作 Reset/Release，以及 TabRow/Pager 硬切 |
+| 组件 DSL 别名、交互反馈、TextField Wrapper 或仅 Alpha 的内容动画 | [DSL 契约收敛](dsl-contract-convergence.md) | Variant 替代、Indication 所有权、类型化输入 Profile 与 Crossfade 命名 |
 
 一个边界跨越多个关注点时，需要阅读多份页面。例如，导航目的地中的
 `rememberSaveable` 同时受状态/恢复契约和导航所有权契约约束。

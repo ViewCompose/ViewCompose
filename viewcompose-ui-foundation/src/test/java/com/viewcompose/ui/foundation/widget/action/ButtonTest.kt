@@ -8,6 +8,9 @@ package com.viewcompose.ui.foundation
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiStateLayerColors
+import com.viewcompose.ui.node.UiInteractionIndication
+import com.viewcompose.ui.node.VNode
+import com.viewcompose.ui.modifier.InteractionIndicationModifierElement
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -39,7 +42,7 @@ class ButtonTest {
         assertEquals(ButtonDefaults.textStyle(ButtonSize.Large).fontSizeSp, spec.textSizeSp)
         assertEquals(ButtonDefaults.height(ButtonSize.Large), spec.minHeight)
         assertEquals(ButtonDefaults.visualHeight(ButtonSize.Large), spec.visualHeight)
-        assertEquals(ButtonDefaults.stateLayerColors(), spec.stateLayerColors)
+        assertEquals(ButtonDefaults.stateLayerColors(), node.buttonStateLayerColors())
         assertTrue(node.spec is ButtonNodeProps)
     }
 
@@ -69,15 +72,15 @@ class ButtonTest {
 
         assertEquals(
             UiStateLayerColors(0x1A102030, 0x33102030, 0x4D102030),
-            (tree[0].spec as ButtonNodeProps).stateLayerColors,
+            tree[0].buttonStateLayerColors(),
         )
         assertEquals(
             UiStateLayerColors(0x1A405060, 0x33405060, 0x4D405060),
-            (tree[1].spec as ButtonNodeProps).stateLayerColors,
+            tree[1].buttonStateLayerColors(),
         )
         assertEquals(
             UiStateLayerColors(0x1A708090, 0x33708090, 0x4D708090),
-            (tree[2].spec as ButtonNodeProps).stateLayerColors,
+            tree[2].buttonStateLayerColors(),
         )
     }
 
@@ -91,10 +94,7 @@ class ButtonTest {
             )
         }
 
-        val spec = tree.single().spec as ButtonNodeProps
-
-        assertEquals(0x33445566, spec.rippleColor)
-        assertEquals(colors, spec.stateLayerColors)
+        assertEquals(colors, tree.single().buttonStateLayerColors())
     }
 
     @Test
@@ -214,4 +214,12 @@ class ButtonTest {
 
         assertEquals(theme.colors.primary, restoredColor)
     }
+}
+
+private fun VNode.buttonStateLayerColors(): UiStateLayerColors {
+    val indication = modifier.elements
+        .filterIsInstance<InteractionIndicationModifierElement>()
+        .single()
+        .indication as UiInteractionIndication.StateLayer
+    return indication.colors
 }
