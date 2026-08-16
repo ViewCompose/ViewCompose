@@ -193,7 +193,7 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
         self.assertEqual(2.0, list_scroll.control_value)
         self.assertEqual(100.0, list_scroll.relative_percent)
         self.assertEqual("performance.list", list_scroll.scenario_id)
-        self.assertEqual(4, list_scroll.workload_revision)
+        self.assertEqual(5, list_scroll.workload_revision)
         native_control = next(
             item
             for item in comparisons
@@ -536,7 +536,7 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
 
             self.assertEqual(0, exit_code)
             self.assertIn(
-                "performance.list@4",
+                "performance.list@5",
                 markdown.read_text(encoding="utf-8"),
             )
             summary = json.loads(json_output.read_text(encoding="utf-8"))

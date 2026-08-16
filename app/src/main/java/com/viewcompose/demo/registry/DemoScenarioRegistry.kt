@@ -1217,7 +1217,7 @@ internal object DemoScenarioRegistry {
             reset = R.id.demo_performance_list_reset,
             state = R.id.demo_performance_list_state,
             target = R.id.demo_performance_list_target,
-            benchmarkRevision = 4,
+            benchmarkRevision = 5,
         ),
         performanceScenario(
             id = DemoScenarioIds.PerformanceComplexLayout,
@@ -1244,7 +1244,7 @@ internal object DemoScenarioRegistry {
             reset = R.id.demo_performance_shadow_list_reset,
             state = R.id.demo_performance_shadow_list_state,
             target = R.id.demo_performance_shadow_list_target,
-            benchmarkRevision = 2,
+            benchmarkRevision = 3,
         ),
         performanceScenario(
             id = DemoScenarioIds.PerformanceShadowComplexLayout,

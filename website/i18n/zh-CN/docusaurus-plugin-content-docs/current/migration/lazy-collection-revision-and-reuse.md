@@ -1,7 +1,7 @@
 ---
 title: 迁移 Lazy 集合 Revision 与复用
 translation_source: migration/lazy-collection-revision-and-reuse.md
-translation_source_hash: ae9680d04eea834274c802c4c504cf829d1dcfeb6d9959bc22dd7bbaddcb693b
+translation_source_hash: 49c3c7909092bc4aa5969e2ed300b4a262e04889f983b551c93ca1e08774f302
 translation_status: current
 ---
 
@@ -30,8 +30,22 @@ LazyColumn(
 }
 ```
 
-不可变 Data Class 可以继续用默认条目值作为 Revision；可变模型需要显式不可变 Version 或 Snapshot。
-由 ViewCompose `State` 承载的值已经可观察，无需重复放入 Revision。
+批量 Item Overload 只有在不可变值模型的 Equality 覆盖 Item Content 所读取全部普通非 State 值时，
+才能保留 `{ it }` 默认值。可变模型需要显式不可变 Version 或 Snapshot。Item Content 在 Active
+Session 中读取的 ViewCompose `State` 已经可观察，无需重复放入 Revision。
+
+单条 `item`、`stickyHeader`、Pager `Page` 与 `Tab` Declaration 不再把 Key 默认用作 Content
+Revision，必须显式声明 Revision。只有 Declaration 没有会变化的普通非 State 输入时，才能使用
+`StaticContentRevision`：
+
+```kotlin
+stickyHeader(
+    key = "messages-header",
+    contentRevision = StaticContentRevision,
+) {
+    Text("Messages")
+}
+```
 
 Pager Page 现在暴露全部调用方快照字段：
 
@@ -51,7 +65,7 @@ Pager Page 与 Tab 现在都要求显式且唯一的 Key。位置是物理排布
 框架自动把主题、Android 资源、Locale、方向、Density、Font Scale 与其他 Active Local 捕获进
 `environmentRevision`，应用无需在 `contentRevision` 中重复这些值。
 
-## 删除聚合 Snapshot Token
+## 用显式 Snapshot 值替换聚合 Token
 
 Typed `LazyColumn`、`LazyRow`、`LazyVerticalGrid`、Scoped `items` 及其 `ScrollableScope`
 Wrapper 不再接受调用方持有的聚合 Snapshot Revision。使用过中间版本 API 的调用应删除
@@ -59,7 +73,7 @@ Wrapper 不再接受调用方持有的聚合 Snapshot Revision。使用过中间
 
 ```kotlin
 LazyColumn(
-    items = messagesSnapshot.items,
+    items = messages,
     key = { message -> message.id },
     contentType = { "message-row" },
     contentRevision = { message -> message.version },
@@ -79,6 +93,39 @@ Row 仍会定向刷新。Item Session 内读取的可观察 State 会独立跟�
 Kotlin Capture 的编译器转换，因此 Item Content 读取的每个变化普通非 State 值仍必须进入受影响
 Item 的 `contentRevision`。针对中间版本聚合参数 Method Descriptor 编译的调用方必须为本次 Alpha
 硬切重新编译。
+
+对于顶层或 `ScrollableScope` 的均质容器，已经持有不可变 List Submission 的应用可以选择强类型
+整表 Snapshot 快路：
+
+```kotlin
+val lazyMessages = remember(messages) {
+    messages.toLazyItemsSnapshot()
+}
+
+LazyColumn(
+    items = lazyMessages,
+    key = { message -> message.id },
+    contentType = { "message-row" },
+    contentRevision = { message -> message.version },
+) { message ->
+    MessageRow(message)
+}
+```
+
+`toLazyItemsSnapshot()` 会浅拷贝有序 Item 引用并创建新的不透明 Identity；它不接受或执行 Selector。
+每个消费容器第一次在某个框架 Environment 中声明该 Identity 时执行 Selector，并保留当前和上一个
+成功提交的 Snapshot/Environment Pair。精确 Pair 会以常量时间恢复有序逻辑 Item List，不执行
+Selector 或 Key 扫描。新 Identity 或 Environment 变化会 Cache Miss，并走普通 Keyed
+Canonicalization 路径。
+只有 Item Content 在 Active Session 中执行时读取的 State 会独立观察。Selector 读取的 State 或其他
+变化输入要求替换 Snapshot，因为精确命中会跳过 Selector。Selector 失败或 Key 重复不会发布已求值
+Snapshot，因此用相同 Identity 与 Environment Retry 时会重新执行全部 Selector。
+
+顺序、成员、保留的 Item 数据、Selector Capture 或普通非 State Item Content Capture 变化时，
+必须替换 `LazyItemsSnapshot`。这些 Item Content Capture 还必须进入受影响的 `contentRevision`；
+框架仍没有能够推断它们的编译器转换。每轮 Composition 都新建 Snapshot 仍然正确，但会失去
+Identity 快路。Scoped `LazyColumn { items(...) }` 与 `LazyVerticalGrid { items(...) }` 有意不提供
+`LazyItemsSnapshot` Overload，并继续在每轮 Declaration Pass 执行 Selector。
 
 ## 更新原生互操作复用
 

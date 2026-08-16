@@ -33,6 +33,7 @@ import com.viewcompose.ui.foundation.LazyColumn
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.SegmentedControl
 import com.viewcompose.ui.foundation.SurfaceDefaults
+import com.viewcompose.ui.foundation.StaticContentRevision
 import com.viewcompose.ui.foundation.TabRow
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextField
@@ -471,13 +472,13 @@ private fun UiTreeBuilder.ViewPatchFixture(
                         selectedIndex = patchTabIndexState.value,
                         onTabSelected = { patchTabIndexState.value = it },
                     ) {
-                        Tab(key = "summary") { selected ->
+                        Tab(key = "summary", contentRevision = StaticContentRevision) { selected ->
                             Text(
                                 text = stringResource(R.string.demo_state_patch_tab_summary),
                                 color = if (selected) TextDefaults.primaryColor() else TextDefaults.secondaryColor(),
                             )
                         }
-                        Tab(key = "details") { selected ->
+                        Tab(key = "details", contentRevision = StaticContentRevision) { selected ->
                             Text(
                                 text = stringResource(R.string.demo_state_patch_tab_details),
                                 color = if (selected) TextDefaults.primaryColor() else TextDefaults.secondaryColor(),
@@ -533,13 +534,13 @@ private fun UiTreeBuilder.ViewPatchFixture(
                         selectedIndex = stableTabIndexState.value,
                         onTabSelected = { stableTabIndexState.value = it },
                     ) {
-                        Tab(key = "stable-summary") { selected ->
+                        Tab(key = "stable-summary", contentRevision = StaticContentRevision) { selected ->
                             Text(
                                 text = stringResource(R.string.demo_state_stable_tab_summary),
                                 color = if (selected) TextDefaults.primaryColor() else TextDefaults.secondaryColor(),
                             )
                         }
-                        Tab(key = "stable-details") { selected ->
+                        Tab(key = "stable-details", contentRevision = StaticContentRevision) { selected ->
                             Text(
                                 text = stringResource(R.string.demo_state_stable_tab_details),
                                 color = if (selected) TextDefaults.primaryColor() else TextDefaults.secondaryColor(),

@@ -28,8 +28,8 @@ class TabRowAppearanceTest {
                         onTabSelected = {},
                         overrides = TabRowOverrides(indicatorColor = 201),
                     ) {
-                        Tab(key = "first") { Text("First") }
-                        Tab(key = "second") { Text("Second") }
+                        Tab(key = "first", contentRevision = StaticContentRevision) { Text("First") }
+                        Tab(key = "second", contentRevision = StaticContentRevision) { Text("Second") }
                     }
                 }
             }

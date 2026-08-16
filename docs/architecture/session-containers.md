@@ -46,19 +46,35 @@ Every delayed-session container must satisfy these constraints:
    updates publish only from the parent render frame's commit effects, after composition commit;
    parent rollback discards them without running child composition or effects.
 10. Callback identity is not a revision. A changed ordinary capture must be State or participate in
-    `contentRevision`; callback allocation alone never refreshes content.
-11. Every typed `List` declaration reevaluates order, membership, and its `key`, `contentType`,
-    `contentRevision`, and grid-span selectors on each parent composition pass. The collector may
-    reuse an already committed logical item only when its key, content revision, environment,
-    content type, kind, and span are all equal. It retains the committed ordered list plus at most
-    one previous semantic variant for each current key; when candidate order contains the same item
-    identities at every position, `build` returns that committed list instance. The single
-    declaration/build traversal also precomputes displaced variants and key-membership deltas, and
-    only the successful parent commit's `SideEffect` publishes them. If a delayed side effect finds
-    that the cache generation has advanced, it recomputes membership and previous-variant state
+    `contentRevision`; callback allocation alone never refreshes content. Single item, sticky-header,
+    page, and tab declarations require that revision. `StaticContentRevision` promises that no such
+    ordinary input changes, while the bulk `{ it }` default is limited to immutable value models
+    whose equality covers every ordinary input read by item content.
+11. Every ordinary typed `List` declaration reevaluates order, membership, and its `key`,
+    `contentType`, `contentRevision`, and grid-span selectors on each parent composition pass. The
+    collector may reuse an already committed logical item only when its key, content revision,
+    environment, content type, kind, and span are all equal. It retains the committed ordered list
+    plus at most one previous semantic variant for each current key; when candidate order contains
+    the same item identities at every position, `build` returns that committed list instance.
+    Homogeneous top-level and `ScrollableScope` containers may instead receive a
+    `LazyItemsSnapshot`. Its factory shallow-copies ordered item references and allocates an opaque
+    identity without evaluating selectors. Each collector retains the current and immediately
+    previous successfully committed evaluated snapshot, keyed by exact source identity plus
+    framework environment. An exact hit restores the ordered list and key map in constant time
+    without selectors or a key scan; an environment mismatch reevaluates every selector. Scoped
+    declarations have no snapshot overload. Only State read while item content executes in its
+    active Session remains independently observed. State or another changing input read by a
+    selector requires a replacement `LazyItemsSnapshot`, as do order, membership, retained item
+    data, selector-capture, and ordinary item-content-capture changes.
+
+    The unique miss traversal precomputes displaced variants, reverse variants needed to restore
+    the previous snapshot, and key-membership deltas. Only the successful parent commit's
+    `SideEffect` publishes an evaluated snapshot and its cache state. Selector or duplicate-key
+    failure publishes nothing, so retry reevaluates every selector. If a delayed side effect finds
+    that the cache generation has advanced, it recomputes membership and both variant directions
     against the current committed generation instead of publishing stale precomputation. A parent
-    rollback never publishes candidate item bindings. ViewCompose does not accept an aggregate
-    caller token that can bypass these checks.
+    rollback never publishes candidate item bindings. ViewCompose does not accept a raw aggregate
+    caller token that can bypass ordinary `List` checks.
 12. A detached, never-activated holder may prepare a committed parent submission without running
     remember activation, effects, native commit callbacks, overlays, or committed diagnostics.
     Activation commits a valid candidate without rebuilding it. An already-active detached holder
@@ -156,6 +172,10 @@ Current baseline notes:
 9. Since 2026-08-14, logical sessions and physical mounted trees have separate ownership. TabRow
    uses eager keyed children; resettable trees may cross lazy keys only through the bounded
    renderer-owned cache.
+10. Since 2026-08-16, ordinary `List` declarations retain per-pass selector validation, while the
+    explicit `LazyItemsSnapshot` path provides a bounded two-generation exact-identity fast path for
+    homogeneous list, row, and grid overloads. Environment changes and snapshot replacement return
+    to selector evaluation; scoped declarations remain on the ordinary safe path.
 
 ## 6. New-container workflow
 

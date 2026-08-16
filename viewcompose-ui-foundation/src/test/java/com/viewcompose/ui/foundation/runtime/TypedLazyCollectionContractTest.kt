@@ -33,6 +33,36 @@ class TypedLazyCollectionContractTest {
     }
 
     @Test
+    fun `default batch revision replaces only changed immutable models`() {
+        val composer = ComposerLite()
+        var rows = listOf(
+            ImmutableRow(id = 1, label = "first"),
+            ImmutableRow(id = 2, label = "stable"),
+        )
+
+        fun compose(): List<LazyListItem> {
+            return composer.commitTree {
+                LazyColumn(
+                    items = rows,
+                    key = ImmutableRow::id,
+                ) { row -> Text(row.label) }
+            }.lazyItems()
+        }
+
+        val first = compose()
+        rows = listOf(
+            ImmutableRow(id = 1, label = "changed"),
+            ImmutableRow(id = 2, label = "stable"),
+        )
+        val changed = compose()
+
+        assertNotSame(first[0], changed[0])
+        assertNotSame(first[0].sessionFactory, changed[0].sessionFactory)
+        assertSame(first[1], changed[1])
+        assertSame(first[1].sessionFactory, changed[1].sessionFactory)
+    }
+
+    @Test
     fun `row grid and scrollable wrappers evaluate typed selectors on every pass`() {
         val rows = rows(revision = 0)
         val topLevelComposer = ComposerLite()
@@ -385,6 +415,35 @@ class TypedLazyCollectionContractTest {
         assertSame(first.sessionFactory, second.sessionFactory)
     }
 
+    @Test
+    fun `static revision explicitly reuses item and sticky header bindings`() {
+        val composer = ComposerLite()
+
+        fun compose(): List<LazyListItem> {
+            return composer.commitTree {
+                LazyColumn {
+                    stickyHeader(
+                        key = "header",
+                        contentRevision = StaticContentRevision,
+                    ) { Text("Header") }
+                    item(
+                        key = "row",
+                        contentRevision = StaticContentRevision,
+                    ) { Text("Row") }
+                }
+            }.lazyItems()
+        }
+
+        val first = compose()
+        val second = compose()
+
+        assertSame(first, second)
+        first.indices.forEach { index ->
+            assertSame(first[index], second[index])
+            assertSame(first[index].sessionFactory, second[index].sessionFactory)
+        }
+    }
+
     private fun ComposerLite.commitRows(
         rows: List<Row>,
         calls: SelectorCalls,
@@ -466,6 +525,11 @@ class TypedLazyCollectionContractTest {
     private data class NamedRow(
         val id: String,
         val revision: Int,
+    )
+
+    private data class ImmutableRow(
+        val id: Int,
+        val label: String,
     )
 
     private class SelectorCalls {

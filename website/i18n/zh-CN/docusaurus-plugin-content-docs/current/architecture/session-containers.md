@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/session-containers.md
-translation_source_hash: 1d1cb0cae0e787afd623081a78cb16f883137934e1e37773c7eb3ce6bc2bb7f8
+translation_source_hash: 6572f677c4fe9a39a0384d9d4413baf4651601287995c66aa5a1b4d8d3aec48a
 translation_status: current
 ---
 
@@ -48,16 +48,28 @@ translation_status: current
    commit effect 在 composition commit 之后发布；父帧回滚会直接丢弃更新，不得运行子 composition
    或 effect
 10. Callback 对象身份不是 Revision。变化的普通捕获值必须成为 State 或进入
-    `contentRevision`；仅 Callback 分配绝不刷新内容
-11. 每个 Typed `List` Declaration 都会在父 Composition 的每一轮执行中重新求值顺序、成员，以及
+    `contentRevision`；仅 Callback 分配绝不刷新内容。单条 Item、Sticky Header、Page 与 Tab
+    Declaration 必须提供该 Revision。`StaticContentRevision` 承诺不存在这类普通输入变化；批量
+    `{ it }` 默认值仅适用于 Equality 覆盖 Item Content 所读取全部普通输入的不可变值模型
+11. 每个普通 Typed `List` Declaration 都会在父 Composition 的每一轮执行中重新求值顺序、成员，以及
     `key`、`contentType`、`contentRevision` 和网格 Span Selector。只有 Key、Content Revision、
-    Environment、Content Type、Kind 与 Span 全部相等时，Collector 才能复用已提交的逻辑 Item；
+    Environment、Content Type、Kind 与 Span 全部相等时，Collector 才能复用已提交的逻辑 Item。
     Collector 会保留已提交的有序 List，以及每个当前 Key 至多一个 Previous Semantic Variant；当候选
-    顺序中每个位置的 Item 对象身份都与已提交顺序相同时，`build` 会直接返回已提交的 List 实例。唯一
-    一次 Declaration/Build 遍历还会预计算被替换的 Variant 与 Key Membership Delta，只有父帧成功
-    提交后的 `SideEffect` 才会发布它们。如果延迟执行的 Side Effect 发现 Cache Generation 已推进，
-    则会基于当前已提交 Generation 重算 Membership 与 Previous Variant 状态，而不会发布过期的预计算。
-    父帧 Rollback 不会发布候选 Item Binding。ViewCompose 不接受能够绕过这些校验的调用方聚合 Token
+    顺序中每个位置的 Item 对象身份都与已提交顺序相同时，`build` 会直接返回已提交的 List 实例。
+    顶层与 `ScrollableScope` 的均质容器也可以接收 `LazyItemsSnapshot`。其 Factory 会浅拷贝有序 Item
+    引用并分配不透明 Identity，不执行 Selector。每个 Collector 保留当前和上一个成功提交的已求值
+    Snapshot，以精确 Source Identity 与框架 Environment 为 Key。精确命中会以常量时间恢复有序 List
+    与 Key Map，不执行 Selector 或 Key 扫描；Environment 不匹配时重新执行全部 Selector。Scoped
+    Declaration 没有 Snapshot Overload。只有 Item Content 在 Active Session 中执行时读取的 State
+    会独立观察。Selector 读取的 State 或其他变化输入要求替换 `LazyItemsSnapshot`；顺序、成员、保留
+    的 Item 数据、Selector Capture 或普通 Item Content Capture 变化时也必须替换
+
+    唯一一次 Miss 遍历会预计算被替换的 Variant、恢复上一个 Snapshot 所需的反向 Variant，以及 Key
+    Membership Delta。只有父帧成功提交后的 `SideEffect` 才会发布已求值 Snapshot 与 Cache 状态。
+    Selector 失败或 Key 重复不会发布任何状态，因此 Retry 会重新执行全部 Selector。如果延迟执行的
+    Side Effect 发现 Cache Generation 已推进，则会基于当前已提交 Generation 重算 Membership 与
+    两个方向的 Variant，而不会发布过期预计算。父帧 Rollback 不会发布候选 Item Binding。
+    ViewCompose 不接受能够绕过普通 `List` 校验的裸聚合调用方 Token
 12. Detach 且从未激活的 Holder 可以 Prepare 已由父级提交的 Submission，但不得运行 Remember
     激活、Effect、原生 Commit Callback、Overlay 或已提交帧诊断。Activate 会提交有效候选而不重建。
     已 Active 的 Detach Holder 只暂存最新修订并在 Reattach 时渲染；重复 Key 存在歧义时，绝不能
@@ -140,6 +152,9 @@ translation_status: current
    Revision。相等 Revision 跳过 Child Render，变化 Revision 只定向一个 Item。
 9. 基线更新（2026-08-14）：逻辑 Session 与物理 Mounted Tree 分离所有权。TabRow 使用 Eager
    Keyed Child；只有可 Reset 树能通过有界 Renderer 缓存跨 Lazy Key。
+10. 基线更新（2026-08-16）：普通 `List` Declaration 保留逐轮 Selector 校验；显式
+    `LazyItemsSnapshot` 路径为均质 List、Row 与 Grid Overload 提供有界两代精确 Identity 快路。
+    Environment 变化或 Snapshot 替换会重新执行 Selector；Scoped Declaration 继续使用普通安全路径。
 
 ## 6. 新容器接入流程
 

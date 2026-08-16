@@ -20,7 +20,9 @@ stable frame timing.
 
 The pull request owns one changeset that covers the independent plain-text binder allocation fix,
 the cross-module Q3 transaction capability with its renderer/host integration, and the subsequent
-lazy-item canonical reuse and RecyclerView tail-latency hard cut.
+lazy-item canonical reuse, strongly typed `LazyItemsSnapshot` fast path, and RecyclerView
+tail-latency hard cut. The snapshot path is an explicit copied value with framework-owned identity,
+not the removed caller-owned aggregate revision token.
 
 ## Objective
 

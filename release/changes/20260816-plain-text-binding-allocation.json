@@ -1,12 +1,17 @@
 {
   "schemaVersion": 1,
-  "summary": "Add snapshot-consistent observed property transactions, avoid redundant binding allocation, and harden lazy-item canonical reuse and RecyclerView tail latency.",
+  "summary": "Add snapshot-consistent observed property transactions, LazyItemsSnapshot and StaticContentRevision; require explicit single-item contentRevision; avoid redundant bindings; and harden lazy-item reuse and RecyclerView tail latency.",
   "changes": [
     { "artifact": "viewcompose-runtime", "impact": "feature" },
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
-    { "artifact": "viewcompose-ui-foundation", "impact": "feature" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
     { "artifact": "viewcompose-host-android", "impact": "feature" },
     { "artifact": "viewcompose-renderer-android", "impact": "feature" }
   ],
-  "ignored": []
+  "ignored": [
+    {
+      "artifact": "viewcompose-preview",
+      "reason": "Preview production source only migrates built-in collection catalog fixtures to the required Foundation contentRevision contract; preview descriptors and public behavior are unchanged."
+    }
+  ]
 }

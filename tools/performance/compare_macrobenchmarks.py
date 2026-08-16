@@ -37,7 +37,7 @@ SCENARIOS = (
     ScenarioContract(
         "list_scroll",
         "performance.list",
-        4,
+        5,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeListScroll",
             COMPOSE_ENGINE: "composeListScroll",
@@ -47,7 +47,7 @@ SCENARIOS = (
     ScenarioContract(
         "list_mutation",
         "performance.list",
-        4,
+        5,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeListMutation",
             COMPOSE_ENGINE: "composeListMutation",
@@ -87,7 +87,7 @@ SCENARIOS = (
     ScenarioContract(
         "shadow_list_scroll",
         "performance.shadow-list",
-        2,
+        3,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeShadowListScroll",
             COMPOSE_ENGINE: "composeShadowListScroll",
@@ -96,7 +96,7 @@ SCENARIOS = (
     ScenarioContract(
         "shadow_list_mutation",
         "performance.shadow-list",
-        2,
+        3,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeShadowListMutation",
             COMPOSE_ENGINE: "composeShadowListMutation",

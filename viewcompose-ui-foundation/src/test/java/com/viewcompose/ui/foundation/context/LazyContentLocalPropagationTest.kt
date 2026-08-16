@@ -72,7 +72,10 @@ class LazyContentLocalPropagationTest {
                 buildVNodeTree {
                     ProvideLocal(testLocal, localValue) {
                         TabRow(selectedIndex = 0, onTabSelected = {}) {
-                            Tab(key = "selected") { Text("selected") }
+                            Tab(
+                                key = "selected",
+                                contentRevision = StaticContentRevision,
+                            ) { Text("selected") }
                             Tab(key = "unselected", contentRevision = "stable") {
                                 tabRuns += 1
                                 Text(UiLocals.current(testLocal))
@@ -129,7 +132,7 @@ class LazyContentLocalPropagationTest {
                     selectedIndex = 0,
                     onTabSelected = {},
                 ) {
-                    Tab(key = "tab") {
+                    Tab(key = "tab", contentRevision = StaticContentRevision) {
                         Text(UiLocals.current(testLocal))
                     }
                 }
@@ -165,7 +168,7 @@ class LazyContentLocalPropagationTest {
                     }
                 }
                 TabRow(selectedIndex = 0, onTabSelected = {}) {
-                    Tab(key = "tab") {
+                    Tab(key = "tab", contentRevision = StaticContentRevision) {
                         Text("tab")
                     }
                 }

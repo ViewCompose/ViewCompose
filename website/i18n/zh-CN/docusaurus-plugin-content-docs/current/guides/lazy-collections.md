@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: a4d78686adf70929d13ae61584d6b2cb2731446b1b44039eb930b2daf855136e
+translation_source_hash: c3116367a0b57f676981c8479513345b13fa80b27dc636f61f45954b77ec7285
 translation_status: current
 ---
 
@@ -63,6 +63,7 @@ LazyColumn(
     stickyHeader(
         key = "contacts-header",
         contentType = "header",
+        contentRevision = StaticContentRevision,
     ) {
         Text("Contacts")
     }
@@ -81,8 +82,12 @@ LazyColumn(
 列表 Scope 支持 `item`、`items` 和 `stickyHeader`。网格 Scope 还支持逐 Item Span；网格 Sticky
 Header 占满整行。`contentRevision` 是正确性契约而不只是性能提示。Item Content 捕获的变化值必须
 是可观察 State，或进入该 Revision；Key 和 Revision 相等时完全跳过 Item Render。
+因此，单条 `item`、`stickyHeader`、Pager `Page` 与 `Tab` Declaration 必须显式提供 Revision。
+`StaticContentRevision` 是普通输入真正静态时使用的具名承诺。批量
+`contentRevision = { it }` 默认值仅适用于 Equality 覆盖 Item Content 所读取全部普通非 State 值的
+不可变值模型。
 
-每个均质或 Scoped `List` Declaration 都会在父 Composition 的每一轮执行中遍历有序元素，并调用
+每个普通均质或 Scoped `List` Declaration 都会在父 Composition 的每一轮执行中遍历有序元素，并调用
 `key`、`contentType`、`contentRevision` 和网格 Span Selector。ViewCompose 不会把 List 引用身份、
 List Equality 或调用方提供的聚合 Token 当作整份 Declaration 未变化的证明：Kotlin `List` 可能存在
 可变别名，而且没有编译器转换时，框架无法推断普通 Lambda Capture。
@@ -94,11 +99,53 @@ Binding。因此 List 变化时仍可保留全部未受影响的 Item Session，
 Environment Revision；Item Session 内读取的可观察 State 仍会独立跟踪。框架无法自动推断 Item
 Content 读取的普通非 State 值，它仍必须进入该 Item 的 `contentRevision`。
 
+### 显式整表快照快路
+
+当应用已经持有不可变 List Snapshot，并且需要在稳定的父级重组中避免 Selector 与 Key 扫描时，
+可以在该 State 边界创建 `LazyItemsSnapshot`：
+
+```kotlin
+val contactsSnapshot = remember(contacts) {
+    contacts.toLazyItemsSnapshot()
+}
+
+LazyColumn(
+    items = contactsSnapshot,
+    key = { contact -> contact.id },
+    contentType = { "contact-row" },
+    contentRevision = { contact -> contact.version },
+) { contact ->
+    ContactRow(contact)
+}
+```
+
+`toLazyItemsSnapshot()` 会按迭代顺序浅拷贝 Item 引用，并为结果分配不透明的框架 Identity；它不会
+执行 Selector，也不会深拷贝 Item 模型。每个消费容器第一次在当前框架 Environment 中看到该
+Identity 时才执行 Selector。容器保留当前和上一个成功提交的 Snapshot/Environment Pair。精确命中
+时会以常量时间返回缓存的有序逻辑 Item List，不调用 Selector 或计算 Item Key Hash；因此在两个已
+提交 Snapshot 间来回切换也保持快路。Environment 变化会有意 Cache Miss 并重新执行 Selector，
+从而保证主题、资源、Locale、方向、Density 与其他 Local 正确。
+只有 Item Content 在 Active Session 中执行时读取的 State 会独立观察。Selector 读取的 State 或其他
+变化输入会固化在已求值 Snapshot 中，因此必须替换 Snapshot。如果 Selector 抛出异常或 Key 重复，
+失败的 Declaration 不会发布已求值 Snapshot；Retry 会重新执行全部 Selector。
+
+顺序、成员、保留的 Item 数据、Selector Capture 或 Item Content 捕获的普通非 State 值变化时，
+应用必须替换 `LazyItemsSnapshot`。Item Content Capture 还必须进入受影响 Item 的
+`contentRevision`；没有编译器转换时，框架无法推断这些值。每轮 Composition 都新建 Snapshot 在
+正确性上没有问题，但会失去精确 Identity 快路。内容相等的新 Identity 仍会执行 Selector Pass，
+随后可以规范复用未变化的 Keyed Item。该 Overload 只存在于顶层及 `ScrollableScope` 的均质
+`LazyColumn`、`LazyRow` 与 `LazyVerticalGrid`；Scoped `LazyColumn { items(...) }` 和
+`LazyVerticalGrid { items(...) }` 有意保留安全的逐轮契约，不提供 Snapshot Overload。
+
 网格列使用 Sealed Policy，而不是 Android Span Count：
 
 ```kotlin
 LazyVerticalGrid(cells = GridCells.Adaptive(minSize = 120.dp)) {
-    item(key = "heading", span = GridItemSpan.FullLine) {
+    item(
+        key = "heading",
+        contentRevision = StaticContentRevision,
+        span = GridItemSpan.FullLine,
+    ) {
         Text("Gallery")
     }
     items(items = cards, key = { card -> card.id }) { card ->
@@ -161,23 +208,28 @@ Attach 或重排时按 Item Key 恢复。分离的 Pinned Header 副本是不拥
 1. 容器内 Key 非空且唯一。
 2. 一个 Key 在重排期间持续标识同一逻辑 Item。
 3. `contentType` 只能分组布局兼容的 Item 结构。
-4. `contentRevision` 包含每个不由 State 观察的变化普通捕获值。
-5. 每个 Typed `List` Declaration 都会在父 Composition 的每一轮执行中重新求值顺序、成员与 Item
+4. 单条 Item、Sticky Header、Page 或 Tab 必须提供 `contentRevision`；只有不存在变化的普通非
+   State 输入时才能用 `StaticContentRevision`。批量 `{ it }` 默认值要求不可变值模型的 Equality
+   覆盖每个这类输入。
+5. 每个普通 Typed `List` Declaration 都会在父 Composition 的每一轮执行中重新求值顺序、成员与 Item
    Selector；随后只有 Key、Content Revision、Environment、Content Type、Kind 与 Span 都相等时，
    才能复用已提交的逻辑 Item。
-6. 平台 Callback 发布不可变 Snapshot；Android 类型不得进入 `ui-contract`。
-7. 对同一 RecyclerView Connector 的重新绑定不得重置滚动锚点。
-8. 保存恢复只持久化首个可见 Index 与偏移。
-9. Holder、Pinned Header 或容器释放时必须销毁对应 Item Session。
-10. 集合、Modifier 与 Insets 的 Padding 贡献由 Renderer 合成为唯一原生值，并在定向 Patch 与
+6. 精确的 `LazyItemsSnapshot` Identity/Environment Pair 可以绕过 Selector 与 Key 扫描；结构、
+   保留数据、Selector Capture 或普通 Content Capture 变化时必须替换 Snapshot，Environment 变化
+   始终重新执行 Selector。
+7. 平台 Callback 发布不可变 Snapshot；Android 类型不得进入 `ui-contract`。
+8. 对同一 RecyclerView Connector 的重新绑定不得重置滚动锚点。
+9. 保存恢复只持久化首个可见 Index 与偏移。
+10. Holder、Pinned Header 或容器释放时必须销毁对应 Item Session。
+11. 集合、Modifier 与 Insets 的 Padding 贡献由 Renderer 合成为唯一原生值，并在定向 Patch 与
    完整环境重绑期间保持稳定。
-11. Item Saveable State 按容器与稳定逻辑 Key 划分 Scope；重复 Provider 只在同一逻辑 Item Scope
+12. Item Saveable State 按容器与稳定逻辑 Key 划分 Scope；重复 Provider 只在同一逻辑 Item Scope
    内被拒绝。
-12. Prefetch Prepare 对外静默，不会把子 Submission 标记为 Committed；Activate 与后续 Active
+13. Prefetch Prepare 对外静默，不会把子 Submission 标记为 Committed；Activate 与后续 Active
    Render 保持正常事务式 Effect 顺序。
-13. 逻辑 Key State 绝不进入 RecyclerView Pool 或 Mounted Tree 缓存；Reset 物理树不携带 Remember、
+14. 逻辑 Key State 绝不进入 RecyclerView Pool 或 Mounted Tree 缓存；Reset 物理树不携带 Remember、
     Saveable、Subscription 或 Effect 标识。
-14. Adaptive 列数变化只更新物理布局；不得重建 Keyed 逻辑 Item Session，也不属于应用持有的
+15. Adaptive 列数变化只更新物理布局；不得重建 Keyed 逻辑 Item Session，也不属于应用持有的
     Content Revision。
 
 ## 6. 明确不包含的能力

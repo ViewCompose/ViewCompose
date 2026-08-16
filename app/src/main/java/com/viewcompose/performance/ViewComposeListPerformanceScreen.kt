@@ -41,7 +41,9 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
 ) {
     val revisionState = remember { mutableStateOf(0) }
     val revision = revisionState.value
-    val rows = fixtures.listRows(revision)
+    // A/B seam: switch only this accessor to listRows(revision) to benchmark the plain-List path
+    // against the same prebuilt immutable rows.
+    val rows = fixtures.listSnapshot(revision)
     Column(
         modifier = Modifier
             .fillMaxSize()

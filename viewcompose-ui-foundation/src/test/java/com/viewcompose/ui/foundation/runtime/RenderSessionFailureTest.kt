@@ -903,7 +903,10 @@ class RenderSessionFailureTest {
             ProvideSaveableStateRegistry(registry) {
                 LazyColumn {
                     listOf("first", "second").forEach { itemKey ->
-                        item(key = itemKey) {
+                        item(
+                            key = itemKey,
+                            contentRevision = StaticContentRevision,
+                        ) {
                             rememberTextFieldState(initialText = "$itemKey-auto")
                             val explicitState = rememberSaveable(key = "shared-field") {
                                 mutableStateOf("$itemKey-explicit")
@@ -941,6 +944,56 @@ class RenderSessionFailureTest {
     }
 
     @Test
+    fun `snapshot fast hit keeps item content state independently observable`() {
+        val snapshot = listOf("item").toLazyItemsSnapshot()
+        val itemState = mutableStateOf("first")
+        var selectorCalls = 0
+        var itemDeclarations = 0
+        var latestItems = emptyList<com.viewcompose.ui.node.LazyListItem>()
+        val renderedItemTexts = mutableListOf<String>()
+        engine.renderBlock = { _, nodes ->
+            val node = nodes.singleOrNull()
+            when (node?.spec) {
+                is LazyColumnNodeProps -> {
+                    latestItems = (node.spec as LazyColumnNodeProps).items
+                }
+
+                is com.viewcompose.ui.node.spec.TextNodeProps -> {
+                    renderedItemTexts += node.requireText()
+                }
+            }
+            CoreRenderFrame(mountedNodes = nodes)
+        }
+        session = createSession(failures = mutableListOf()) {
+            LazyColumn(
+                items = snapshot,
+                key = { item ->
+                    selectorCalls += 1
+                    item
+                },
+            ) { item ->
+                itemDeclarations += 1
+                Text("$item:${itemState.value}")
+            }
+        }
+
+        session.render()
+        val firstItems = latestItems
+        session.render()
+        assertSame(firstItems, latestItems)
+        val childSession = latestItems.single().sessionFactory.create(childContainer())
+        childSession.render()
+        val childRuntime = checkNotNull(latestRuntime)
+        itemState.value = "second"
+        childRuntime.drainPending()
+
+        assertEquals(1, selectorCalls)
+        assertEquals(2, itemDeclarations)
+        assertEquals(listOf("item:first", "item:second"), renderedItemTexts)
+        childSession.dispose()
+    }
+
+    @Test
     fun `pager child sessions and eager keyed tabs isolate saveable state`() {
         val registry = createSaveableStateRegistry()
         var rootNodes = emptyList<VNode>()
@@ -953,16 +1006,28 @@ class RenderSessionFailureTest {
         session = createSession(failures = mutableListOf()) {
             ProvideSaveableStateRegistry(registry) {
                 HorizontalPager(currentPage = 0, onPageChanged = {}) {
-                    Page(key = "first") { saveableChildContent("horizontal-0") }
-                    Page(key = "second") { saveableChildContent("horizontal-1") }
+                    Page(key = "first", contentRevision = StaticContentRevision) {
+                        saveableChildContent("horizontal-0")
+                    }
+                    Page(key = "second", contentRevision = StaticContentRevision) {
+                        saveableChildContent("horizontal-1")
+                    }
                 }
                 VerticalPager(currentPage = 0, onPageChanged = {}) {
-                    Page(key = "first") { saveableChildContent("vertical-0") }
-                    Page(key = "second") { saveableChildContent("vertical-1") }
+                    Page(key = "first", contentRevision = StaticContentRevision) {
+                        saveableChildContent("vertical-0")
+                    }
+                    Page(key = "second", contentRevision = StaticContentRevision) {
+                        saveableChildContent("vertical-1")
+                    }
                 }
                 TabRow(selectedIndex = 0, onTabSelected = {}) {
-                    Tab(key = "first") { saveableChildContent("tab-0") }
-                    Tab(key = "second") { saveableChildContent("tab-1") }
+                    Tab(key = "first", contentRevision = StaticContentRevision) {
+                        saveableChildContent("tab-0")
+                    }
+                    Tab(key = "second", contentRevision = StaticContentRevision) {
+                        saveableChildContent("tab-1")
+                    }
                 }
             }
         }

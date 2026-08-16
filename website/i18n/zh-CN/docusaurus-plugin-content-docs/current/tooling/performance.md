@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: ddb561e7193ac3e681fdbe26b8120891c39754baf16fd01b2709bfa833fe05d8
+translation_source_hash: 7990dc07fc2c2ebfd14a88eea864e69fd61638683903df0a6f2e7ffe4991ed4e
 translation_status: current
 ---
 
@@ -493,9 +493,11 @@ host，避免通用捕获回调。renderer lowering 预检候选得到 `4.859/27
 优化。其 Benchmark APK 还包含一项调用方聚合 Revision 试验，可以绕过 Typed List 的全部 Selector
 求值；后续 API 审计已删除该公开 Token：它重复逐 Item Revision 契约，调用方推进错误时会产生
 过期顺序、成员或 Selector 结果，而且 Benchmark 反复切换两份更新/重置 Snapshot 的 Fixture 会
-异常放大其收益。当前 `List` DSL 会在父 Composition 的每一轮执行中求值顺序、成员与 Selector，
+异常放大其收益。普通 `List` DSL 会在父 Composition 的每一轮执行中求值顺序、成员与 Selector，
 再按相等的 Key、`contentRevision`、Environment、Content Type、Kind 与 Span 复用已提交的逻辑
-Item 和 Session Binding。
+Item 和 Session Binding。后续新增的 `LazyItemsSnapshot` 显式快路只会浅冻结有序元素引用，并向
+框架提供一个不透明身份，用于有界的已求值 Snapshot Cache。只有该身份成功提交后才能跳过
+Selector 求值；它不会削弱逐 Item 或 Environment Revision 契约。
 
 Android Adapter 现在以线性复杂度规划同顺序变更和循环位移，为循环位移发送最少 move，只把其他
 结构变更交给 `DiffUtil`。精确的 submission 与 item 实例确认会消除冗余的排队 payload bind；
@@ -529,9 +531,52 @@ Root 控制证据使用 API 28 的 Xiaomi MI 6、R8 优化 benchmark target、
 
 候选 APK 的 P99 仍受冷路径限制：第一次交互主要由并发 ART JIT 主导，而不是 steady list planner。
 一个具名 Material host 边界实验引入了约 45 ms 的冷 JIT 事件并使 P99 回退，因此已完整撤销；
-本结果不包含 Material host 改动。下一验收步骤是取得稳定的同策略对照，再重跑新的
-ViewCompose/Compose/Android Views 矩阵。在此之前，可接受的结论只覆盖候选绝对尾部，不能宣称
-相对赢家，也不能把它视为洁净的 `CompilationMode.None` 结果。
+本结果不包含 Material host 改动。下一验收步骤原本是取得稳定的同策略对照，再重跑新的
+ViewCompose/Compose/Android Views 矩阵。下方 revision 5 A/B 已提供同策略 ViewCompose 对照；
+跨引擎矩阵仍未完成。在该跟进之前，可接受的结论只覆盖候选绝对尾部，不能宣称相对赢家，也不能
+把它视为洁净的 `CompilationMode.None` 结果。
+
+2026-08-16 的 revision 5 A/B 使用同一台 Xiaomi MI 6 / API 28 设备、R8 benchmark target、
+五轮与 48 帧协议、`run-from-apk` 编译身份，以及
+`root-fixed-cpu-1401600-1804800-gpu-515000000-perf-hal-off-v3` 策略。工作负载包含 1,000 行，
+每轮执行八个更新/重置周期。所有分支都会在 Ready 标记之前准备 revision 0 和 1 的不可变行
+List。候选 B0/B1 Fixture 还会在 Ready 之前构造并常驻两份强类型 Snapshot Wrapper；B0 仍提交
+原始 List，因此对于定时 mutation 之外的额外 Wrapper 常驻成本，它是偏保守的普通路径对照。
+被测 steady path 始终只在两份预构建输入之间交替。A1 和 A2 是 `bb542f00` 的两次独立普通
+`List` 参考重复；B0 通过候选实现的普通 `List` Overload 运行；B1 通过同一候选实现的
+`LazyItemsSnapshot` 运行。
+
+| 运行 | 路径 | Frame P50/P90/P95/P99，ms | 三帧总和 P50/P95，ms | 三帧最大值 P50/P95，ms | 最大 heap 中位数，KiB | Run-P50 CV | 验收 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| A1 | `bb542f00`，普通 `List` | 4.437 / 25.468 / 26.364 / 30.505 | 29.910 / 37.459 | 24.383 / 27.705 | 8313 | 0.127 | 接受的参考重复。 |
+| A2 | `bb542f00`，普通 `List` | 4.825 / 25.580 / 26.293 / 28.353 | 30.165 / 36.434 | 24.899 / 27.175 | 8667 | 0.111 | 接受的参考重复。 |
+| B0 | 候选，普通 `List` | 5.022 / 25.750 / 26.428 / 29.727 | 30.963 / 38.229 | 24.955 / 28.198 | 8254 | 0.047 | 接受的普通路径对照。 |
+| B1 | 候选，`LazyItemsSnapshot` | 6.432 / 14.723 / 17.268 / 25.068 | 23.694 / 33.306 | 13.160 / 24.549 | 8419 | 0.096 | 接受的 Snapshot 运行。 |
+| B1 重复 | 候选，`LazyItemsSnapshot` | 6.175 / 15.098 / 19.683 / 23.989 | 22.918 / 32.346 | 13.408 / 22.855 | 8872 | 0.193 | 拒绝：run-P50 CV 超过 0.15；只作方向性证据。 |
+| B1 第三次 | 候选，`LazyItemsSnapshot` | 6.133 / 14.610 / 17.638 / 26.508 | 23.500 / 34.097 | 13.386 / 23.994 | 8533 | 0.131 | 接受的 Snapshot 复现。 |
+
+汇总两次已接受的 A 参考重复后，Frame P50/P95/P99 为 `4.589/26.322/29.134 ms`。B0 分别
+高 9.5%（`+0.434 ms`）、0.4%（`+0.107 ms`）和 2.0%（`+0.593 ms`）。其三帧总和
+P50/P95 高 3.4%/2.7%，三帧最大值 P50/P95 高 1.1%/1.9%，最大 heap 中位数则低 2.8%。
+没有决策指标同时跨过绝对值和归一化门槛，因此普通 `List` 的纵向分类是
+`no material change`：新的 Collector 与 Cache 机制没有在普通路径上形成实质回退证据。
+
+相对 B0，两次已接受的 Snapshot 运行 B1 与 B1-third 让 Frame P50 分别高 28.1%
+（`+1.409 ms`）和 22.1%（`+1.111 ms`），但 Frame P95 分别降低 34.7%
+（`-9.160 ms`）和 33.3%（`-8.790 ms`），P99 分别降低 15.7%（`-4.659 ms`）和
+10.8%（`-3.219 ms`）。两者的三帧事务总和 P50/P95 分别降低 23.5%/12.9% 和
+24.1%/10.8%，事务最大值 P50/P95 分别降低 47.3%/12.9% 和 46.4%/14.9%。排除每轮第一次
+冷事务后，事务最大值 P95 从 `27.237 ms` 降至 `20.517/19.972 ms`，降低 24.7%/26.7%；
+最大 heap 仅高 2.0%/3.4%。B1-repeat 的尾部方向一致，但其 CV 为 `0.193`，不能进入任何
+归一化决策。因此 Snapshot 的主要分类是 `mixed`：Frame 中位数发生实质回退，P95/P99 和三帧
+事务尾部则有实质改善。更窄的尾延迟结论为 `improved`；这不代表所有 Frame Time 都得到改善。
+
+这份证据只覆盖 revision 5 两份已构建 Snapshot 的 steady 交替，直接有利于有界的两代身份
+Cache。它没有测量 `toLazyItemsSnapshot()` 构造、首次求值、从不复用身份的单调数据流、List
+滚动或其他渲染引擎，因此不能外推到这些成本。应把强 Snapshot 路径作为显式尾延迟取舍接受，同时
+保留普通 `List` 路径处理一般数据流。下一步是增加独立的冷构造与单调数据流工作负载，持续监控
+Snapshot P50 回退，并在作出跨引擎结论前重跑 revision 5 的 ViewCompose/Compose/Android Views
+矩阵。
 
 #### 2.4.4 导航与设计系统诊断
 

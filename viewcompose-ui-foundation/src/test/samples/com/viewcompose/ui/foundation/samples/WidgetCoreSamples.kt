@@ -96,6 +96,7 @@ import com.viewcompose.ui.foundation.SegmentedControlOverrides
 import com.viewcompose.ui.foundation.SideEffect
 import com.viewcompose.ui.foundation.Slider
 import com.viewcompose.ui.foundation.SliderOverrides
+import com.viewcompose.ui.foundation.StaticContentRevision
 import com.viewcompose.ui.foundation.Switch
 import com.viewcompose.ui.foundation.SwitchOverrides
 import com.viewcompose.ui.foundation.ScrollableColumn
@@ -132,6 +133,7 @@ import com.viewcompose.ui.foundation.rememberSaveable
 import com.viewcompose.ui.foundation.rememberUpdatedState
 import com.viewcompose.ui.foundation.observedNodeSpec
 import com.viewcompose.ui.foundation.observedValue
+import com.viewcompose.ui.foundation.toLazyItemsSnapshot
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.MinHeightModifierElement
@@ -218,11 +220,41 @@ fun UiTreeBuilder.searchBarSample(state: TextFieldState) {
 
 fun UiTreeBuilder.lazyListDslSample() {
     LazyColumn {
-        stickyHeader(key = "header") { Text("Header") }
+        stickyHeader(
+            key = "header",
+            contentRevision = StaticContentRevision,
+        ) { Text("Header") }
         item(key = "row", contentType = "text", contentRevision = 1) { Text("Row") }
     }
     LazyRow {
         item(key = "chip", contentType = "text", contentRevision = 1) { Text("Chip") }
+    }
+}
+
+fun staticContentRevisionSample() {
+    buildVNodeTree {
+        LazyColumn {
+            stickyHeader(
+                key = "header",
+                contentRevision = StaticContentRevision,
+            ) { Text("Header") }
+            item(
+                key = "row",
+                contentRevision = StaticContentRevision,
+            ) { Text("Static row") }
+        }
+        HorizontalPager(currentPage = 0, onPageChanged = {}) {
+            Page(
+                key = "page",
+                contentRevision = StaticContentRevision,
+            ) { Text("Static page") }
+        }
+        TabRow(selectedIndex = 0, onTabSelected = {}) {
+            Tab(
+                key = "tab",
+                contentRevision = StaticContentRevision,
+            ) { Text("Static tab") }
+        }
     }
 }
 
@@ -378,6 +410,30 @@ fun lazyCollectionRevisionSample() {
 
     check(topLevelVariants.size == 4)
     check((nestedCollections[1].children.single().spec as LazyRowNodeProps).items.single().key == 7L)
+}
+
+fun lazyItemsSnapshotSample() {
+    val source = mutableListOf(RevisionSampleRow(id = 7L, version = 3, label = "Ready"))
+    val snapshot = source.toLazyItemsSnapshot()
+    source += RevisionSampleRow(id = 8L, version = 1, label = "Added later")
+    val status = mutableStateOf("Online")
+
+    val list = buildVNodeTree {
+        LazyColumn(
+            items = snapshot,
+            key = RevisionSampleRow::id,
+            contentType = { "status-row" },
+            contentRevision = RevisionSampleRow::version,
+        ) { row ->
+            // State read by item content remains independently observable after an exact hit.
+            Text("${row.label}: ${status.value}")
+        }
+    }.single()
+    val items = (list.spec as LazyColumnNodeProps).items
+
+    check(items.size == 1)
+    check(items.single().key == 7L)
+    check(items.single().contentRevision == 3)
 }
 
 fun pagerAndTabIdentitySample() {
@@ -543,7 +599,10 @@ fun componentOverridesSample() {
             }
             ProvideTabRowOverrides(TabRowOverrides(indicatorColor = 0xFF0055AA.toInt())) {
                 TabRow(selectedIndex = 0, onTabSelected = {}) {
-                    Tab(key = "summary") { Text("Summary") }
+                    Tab(
+                        key = "summary",
+                        contentRevision = StaticContentRevision,
+                    ) { Text("Summary") }
                 }
             }
             ProvideNavigationBarOverrides(
@@ -851,7 +910,11 @@ fun eagerScrollStateSample() {
 fun adaptiveGridSample() {
     val node = buildVNodeTree {
         LazyVerticalGrid(cells = GridCells.Adaptive(minSize = 120.dp)) {
-            item(key = "heading", span = GridItemSpan.FullLine) {
+            item(
+                key = "heading",
+                contentRevision = StaticContentRevision,
+                span = GridItemSpan.FullLine,
+            ) {
                 Text("Gallery")
             }
             items(items = listOf("one", "two"), key = { it }) { label ->

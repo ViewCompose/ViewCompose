@@ -584,9 +584,13 @@ of adding another renderer preflight. Its benchmark APK also included a trial ca
 aggregate revision that could bypass all typed-list selector evaluation. A subsequent API audit
 removed that public token: it duplicated the per-item revision contract, could produce stale order,
 membership, or selector output when advanced incorrectly, and was disproportionately favored by
-the benchmark's repeated two-snapshot update/reset fixture. The current `List` DSL evaluates order,
-membership, and selectors on every parent composition pass, then reuses committed logical items and
-Session bindings by equal key, `contentRevision`, environment, content type, kind, and span.
+the benchmark's repeated two-snapshot update/reset fixture. The ordinary `List` DSL evaluates
+order, membership, and selectors on every parent composition pass, then reuses committed logical
+items and Session bindings by equal key, `contentRevision`, environment, content type, kind, and
+span. The later `LazyItemsSnapshot` opt-in instead shallow-freezes ordered element references and
+gives the framework an opaque identity for a bounded evaluated-snapshot cache. It can skip selector
+evaluation only after a successful commit of that identity; it does not weaken the per-item or
+environment revision contract.
 
 The Android adapter now plans same-order changes and cyclic rotations in linear time, emits the
 minimum move sequence for a rotation, and reserves `DiffUtil` for other structural changes. Exact
@@ -630,9 +634,61 @@ normalized deltas explain the distribution shift but do not override the failed 
 The candidate APK's P99 remains a cold-path limitation: the first interaction is dominated by
 concurrent ART JIT rather than the steady list planner. A named Material host boundary experiment
 introduced an approximately 45 ms cold JIT event, regressed P99, and was fully reverted; no Material
-host change is part of this result. The next acceptance step is a stable same-policy control followed
-by a fresh ViewCompose/Compose/Android Views matrix. Until then, the accepted claim is the
-candidate's absolute tail, not a relative winner or a clean `CompilationMode.None` result.
+host change is part of this result. The next acceptance step was a stable same-policy control
+followed by a fresh ViewCompose/Compose/Android Views matrix. The revision-5 A/B below supplies the
+same-policy ViewCompose control; the cross-engine matrix remains outstanding. Before that
+follow-up, the only accepted claim was the candidate's absolute tail, not a relative winner or a
+clean `CompilationMode.None` result.
+
+The 2026-08-16 revision-5 A/B used the same Xiaomi MI 6 / API 28 device, R8 benchmark target,
+five-run and 48-frame protocol, `run-from-apk` compilation identity, and
+`root-fixed-cpu-1401600-1804800-gpu-515000000-perf-hal-off-v3` policy. The workload contains 1,000
+rows and performs eight update/reset cycles per iteration. Every arm prepares the immutable row
+lists for revisions 0 and 1 before the Ready marker. The candidate B0/B1 fixture additionally
+constructs and retains both strong snapshot wrappers before Ready; B0 still submits the raw lists,
+so it is a conservative plain-path control for the candidate's extra wrapper residency outside the
+timed mutation. The measured steady path always alternates two prebuilt inputs. A1 and A2 are
+independent plain-`List` reference repetitions from `bb542f00`; B0 exercises the candidate
+implementation through its plain-`List` overload; B1 runs the same candidate through
+`LazyItemsSnapshot`.
+
+| Run | Route | Frame P50/P90/P95/P99, ms | Three-frame sum P50/P95, ms | Three-frame maximum P50/P95, ms | Median peak heap, KiB | Run-P50 CV | Acceptance |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| A1 | `bb542f00`, plain `List` | 4.437 / 25.468 / 26.364 / 30.505 | 29.910 / 37.459 | 24.383 / 27.705 | 8313 | 0.127 | Accepted reference repetition. |
+| A2 | `bb542f00`, plain `List` | 4.825 / 25.580 / 26.293 / 28.353 | 30.165 / 36.434 | 24.899 / 27.175 | 8667 | 0.111 | Accepted reference repetition. |
+| B0 | Candidate, plain `List` | 5.022 / 25.750 / 26.428 / 29.727 | 30.963 / 38.229 | 24.955 / 28.198 | 8254 | 0.047 | Accepted plain-path control. |
+| B1 | Candidate, `LazyItemsSnapshot` | 6.432 / 14.723 / 17.268 / 25.068 | 23.694 / 33.306 | 13.160 / 24.549 | 8419 | 0.096 | Accepted snapshot run. |
+| B1 repeat | Candidate, `LazyItemsSnapshot` | 6.175 / 15.098 / 19.683 / 23.989 | 22.918 / 32.346 | 13.408 / 22.855 | 8872 | 0.193 | Rejected: run-P50 CV exceeds 0.15; direction only. |
+| B1 third | Candidate, `LazyItemsSnapshot` | 6.133 / 14.610 / 17.638 / 26.508 | 23.500 / 34.097 | 13.386 / 23.994 | 8533 | 0.131 | Accepted snapshot replication. |
+
+Pooling the two accepted A reference repetitions gives frame P50/P95/P99 of
+`4.589/26.322/29.134 ms`. B0 is respectively 9.5% (`+0.434 ms`), 0.4%
+(`+0.107 ms`), and 2.0% (`+0.593 ms`) higher. Its three-frame sum P50/P95 is
+3.4%/2.7% higher and its three-frame maximum P50/P95 is 1.1%/1.9% higher, while median peak heap
+is 2.8% lower. No decision metric crosses its combined absolute and normalized gate, so the plain
+`List` longitudinal classification is `no material change`: the new collector and cache machinery
+does not establish a material regression on the ordinary path.
+
+Against B0, accepted snapshot runs B1 and B1-third make frame P50 28.1% (`+1.409 ms`) and 22.1%
+(`+1.111 ms`) higher, but reduce frame P95 by 34.7% (`-9.160 ms`) and 33.3%
+(`-8.790 ms`) and P99 by 15.7% (`-4.659 ms`) and 10.8% (`-3.219 ms`). Their three-frame
+transaction-sum P50/P95 falls by 23.5%/12.9% and 24.1%/10.8%; transaction maximum P50/P95 falls by
+47.3%/12.9% and 46.4%/14.9%. Excluding each iteration's first cold transaction, transaction-maximum
+P95 falls from `27.237 ms` to `20.517/19.972 ms`, a 24.7%/26.7% reduction. Peak heap is only
+2.0%/3.4% higher. B1-repeat points in the same tail direction, but its `0.193` CV rejects it from
+all normalized decisions. The primary snapshot classification is therefore `mixed`: frame median
+regresses materially, while P95/P99 and the three-frame transaction tail are materially improved.
+The narrower tail-latency conclusion is `improved`; this is not a claim of universal frame-time
+improvement.
+
+This evidence covers only a steady alternation between two already-constructed revision-5
+snapshots, which directly favors the bounded two-generation identity cache. It does not measure
+`toLazyItemsSnapshot()` construction, first evaluation, a monotonic stream of never-reused
+identities, list scrolling, or another rendering engine, and therefore cannot be extrapolated to
+those costs. Accept the strong snapshot path as an explicit tail-latency tradeoff while retaining
+the plain `List` path for general feeds. The next actions are to add separate cold-construction and
+monotonic-feed workloads, monitor the snapshot P50 regression, and rerun the revision-5
+ViewCompose/Compose/Android Views matrix before making a cross-engine claim.
 
 #### 2.4.4 Navigation and design-system diagnostics
 
