@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: c83b94e10e6b458b8ee2beec0b1b4a3f244e10dbf665259803c819bfc6136dfc
+translation_source_hash: 3556dfd2eaaf050393a05c419ba20cb76b8376b68c5b73068f75c811769c1dc1
 translation_status: current
 ---
 
@@ -203,6 +203,10 @@ Error 或 Fallback 使用资源，规范化图片请求就会把版本传给 Ada
 文本节点未显式设置 `lineHeightSp` 时，会保留原生 View 的行距参数，而不是复用在旧字号下捕获的
 固定像素行高。因此，自然行高会在 View 复用和环境重绑期间随已解析字体、字号与字体缩放变化；
 显式 `lineHeightSp` 仍具有最终权限。
+
+纯文本 `TextDocument` 会直接绑定其已有的 `String`。富文本文档仍会物化
+`SpannableString`，因此 span 应用继续隔离在富文本节点中，普通 Text patch 则避免一次
+多余的平台包装分配。
 
 对于 Lazy 集合，Renderer 统一持有一份合成后的原生 Padding：逻辑 `contentPadding`、已解析的
 物理或相对 Modifier Padding 与选定的系统栏/IME Insets 按边相加。所有逻辑 start/end 都根据

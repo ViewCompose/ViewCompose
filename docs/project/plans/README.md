@@ -31,6 +31,10 @@ This directory contains multi-step work that is currently active and must surviv
   locale-independent automation targets, fixture-first benchmark hosts, complete English and
   Simplified Chinese resources, and optional human guidance before benchmarking Runtime/View patch
   optimizations against a new stable baseline.
+- [Observed property transactions](./observed-property-transactions.md) — hard-cut explicitly
+  observed node properties onto a session-owned, frame-batched transaction path that reads one
+  Snapshot, patches only affected mounted nodes, rolls back the complete batch on failure, and
+  preserves full composition for structural changes.
 Completed native-widget, component-appearance, tutorial, language-consistency, migration-sample,
 hosted-documentation, and version-retention plans are retained in the
 [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).

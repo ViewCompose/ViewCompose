@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 99786c45303855a2067b481aee947d37db49c39d371e37e1e9d38531d22a641b
+translation_source_hash: 5aeb876045ecd98300ae0d638793f39fb809930a4bc68eed2ba6c832bd1ece7a
 translation_status: current
 ---
 
