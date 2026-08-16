@@ -454,6 +454,16 @@ keyed identity 分析、`DiffUtil`、key/sticky 索引、changed-key 发现、�
 刷新。下一步列表优化应减少这次事务中的重复整表工作，或拆小其编译表面，同时不能重新引入
 不对等动画，也不能削弱 key、revision、Session、reset 和 release 语义。
 
+随后在 2026-08-16 使用相同设备、固定频率、构建、工作负载和 48 帧协议验收了该优化。
+ViewCompose 列表变更达到 `4.392/26.862 ms` P50/P95，run-P50 CV 为 `0.083`，最大 heap
+中位数为 `8507 KiB`。相对上一份 ViewCompose 结果，纵向结论为 `improved`：P50 降低
+3.7%，P95 降低 33.4%，最大 heap 中位数降低 18.5%。实现将 key/sticky/identity 索引合并为
+一次遍历，避免 Adapter 构造不会消费的公开更新序列，只检查已挂载 Holder 的同步刷新，并移除
+Lazy Item 收集器的重复副本和回调对象。复测 trace 中 Adapter JIT 热点已消失。跨引擎结论仍为
+`mixed`：该 P50 分别比 Compose 和 Android Views 低 38.6% 和 22.2%，但 P95 仍分别高
+12.0% 和 180.3%。因此下一目标是更上层的帧事务和原生 traversal，而不是放松逻辑 Session
+正确性。
+
 导航 revision 6 也形成稳定的固定频率诊断数据：
 
 | 导航动作 | P50/P95/P99，ms | Run-P50 CV | 结论 |

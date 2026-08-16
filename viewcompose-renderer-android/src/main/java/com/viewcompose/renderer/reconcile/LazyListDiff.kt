@@ -123,7 +123,36 @@ object LazyListDiff {
         }
 
         val updates = mutableListOf<LazyListUpdate>()
-        val diffResult = DiffUtil.calculateDiff(
+        val diffResult = calculateDiff(previous, next)
+        diffResult.dispatchUpdatesTo(
+            RecordingLazyListUpdateCallback(
+                updates = updates,
+            ),
+        )
+
+        return LazyListDiffResult(
+            updates = updates,
+            // Always use latest item instances to preserve refreshed closures/session updaters.
+            items = next,
+            diffResult = diffResult,
+        )
+    }
+
+    /** Calculates only the AndroidX diff consumed directly by an adapter. */
+    internal fun calculateAdapterDiff(
+        previous: List<LazyListItem>,
+        next: List<LazyListItem>,
+        supportsKeyedDiff: Boolean,
+    ): DiffUtil.DiffResult? {
+        if (!supportsKeyedDiff) return null
+        return calculateDiff(previous, next)
+    }
+
+    private fun calculateDiff(
+        previous: List<LazyListItem>,
+        next: List<LazyListItem>,
+    ): DiffUtil.DiffResult {
+        return DiffUtil.calculateDiff(
             object : DiffUtil.Callback() {
                 override fun getOldListSize(): Int = previous.size
 
@@ -164,18 +193,6 @@ object LazyListDiff {
                     }
                 }
             },
-        )
-        diffResult.dispatchUpdatesTo(
-            RecordingLazyListUpdateCallback(
-                updates = updates,
-            ),
-        )
-
-        return LazyListDiffResult(
-            updates = updates,
-            // Always use latest item instances to preserve refreshed closures/session updaters.
-            items = next,
-            diffResult = diffResult,
         )
     }
 

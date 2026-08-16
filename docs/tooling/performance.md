@@ -537,6 +537,18 @@ for 1,000 items. The next list optimization must reduce this transaction's dupli
 work or split its compilation surface without restoring unequal animation or weakening key,
 revision, Session, reset, and release semantics.
 
+That optimization was accepted later on 2026-08-16 under the same device, clock, build, workload,
+and 48-frame protocol. ViewCompose list mutation reached `4.392/26.862 ms` P50/P95 with run-P50 CV
+`0.083` and median peak heap `8507 KiB`. Against the preceding ViewCompose result this is an
+`improved` longitudinal result: P50 is 3.7% lower, P95 is 33.4% lower, and median peak heap is 18.5%
+lower. The implementation performs one key/sticky/identity index pass, avoids constructing an
+unused public update sequence inside the adapter, limits synchronous refresh checks to attached
+holders, and removes duplicate lazy-item collector copies and callback objects. The adapter JIT
+hotspot disappeared from the follow-up trace. The cross-engine conclusion remains `mixed`: this
+P50 is 38.6% below Compose and 22.2% below Android Views, while P95 remains 12.0% and 180.3% higher
+respectively. The next target is therefore the higher-level frame transaction and native traversal,
+not a relaxation of logical-session correctness.
+
 Navigation revision 6 also produced stable fixed-clock diagnostics:
 
 | Navigation action | P50/P95/P99, ms | Run-P50 CV | Conclusion |

@@ -2,8 +2,10 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
-import com.viewcompose.ui.node.policy.GridItemSpan
+import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.RenderContainerHandle
+import com.viewcompose.ui.node.policy.GridItemSpan
 
 /**
  * Declares keyed lazy-list entries whose logical sessions are independent from recycled Views.
@@ -62,6 +64,7 @@ class LazyListScope internal constructor(
         contentRevision: (T) -> Any? = { it },
         itemContent: UiTreeBuilder.(T) -> Unit,
     ) {
+        collector.prepareForAdditionalItems(items.size)
         items.forEach { item ->
             collector.add(
                 key = key(item),
@@ -159,6 +162,7 @@ class LazyGridScope internal constructor(
         span: (T) -> GridItemSpan = { GridItemSpan.Single },
         itemContent: UiTreeBuilder.(T) -> Unit,
     ) {
+        collector.prepareForAdditionalItems(items.size)
         items.forEach { item ->
             collector.add(
                 key = key(item),
@@ -204,8 +208,16 @@ internal class LazyItemCollector(
     private val localSnapshot: LocalSnapshot,
     private val saveableStateHolder: SaveableStateHolder?,
 ) {
-    private val keys = linkedSetOf<Any>()
-    private val items = mutableListOf<LazyListItem>()
+    private var keys = HashSet<Any>()
+    private val items = ArrayList<LazyListItem>()
+
+    fun prepareForAdditionalItems(count: Int) {
+        if (count <= 0) return
+        items.ensureCapacity(items.size + count)
+        if (keys.isEmpty()) {
+            keys = HashSet(((count / HASH_SET_LOAD_FACTOR) + 1).toInt())
+        }
+    }
 
     fun add(
         key: Any,
@@ -218,39 +230,62 @@ internal class LazyItemCollector(
         require(keys.add(key)) {
             "Lazy collection keys must be unique. Duplicate key: $key"
         }
-        items += LazyListItem(
-            key = key,
-            contentRevision = contentRevision,
-            environmentRevision = localSnapshot,
-            contentType = contentType,
-            kind = kind,
-            span = span.canonical(),
-            sessionFactory = LazyListItemSessionFactory { container ->
-                WidgetLazyListItemSession(
-                    container = container,
-                    localSnapshot = localSnapshot,
-                    saveableStateHolder = saveableStateHolder,
-                    saveableStateKey = key,
-                    content = content,
-                )
-            },
-            sessionUpdater = { session ->
-                (session as WidgetLazyListItemSession).updateContent(
-                    localSnapshot = localSnapshot,
-                    content = content,
-                )
-            },
+        val sessionBinding = WidgetLazyItemSessionBinding(
+            localSnapshot = localSnapshot,
+            saveableStateHolder = saveableStateHolder,
+            saveableStateKey = key,
+            content = content,
+        )
+        items.add(
+            LazyListItem(
+                key = key,
+                contentRevision = contentRevision,
+                environmentRevision = localSnapshot,
+                contentType = contentType,
+                kind = kind,
+                span = span.canonical(),
+                sessionFactory = sessionBinding,
+                sessionUpdater = sessionBinding,
+            ),
         )
     }
 
     fun build(): List<LazyListItem> {
         saveableStateHolder?.let { holder ->
-            val committedKeys = keys.toSet()
             SideEffect {
-                holder.retainKeys(committedKeys)
+                holder.retainKeys(keys)
             }
         }
-        return items.toList()
+        // The collector is frame-local and receives no writes after build, so the read-only view is
+        // already an immutable submission without copying every item and key a second time.
+        return items
+    }
+
+    private companion object {
+        private const val HASH_SET_LOAD_FACTOR = 0.75f
+    }
+}
+
+private class WidgetLazyItemSessionBinding(
+    private val localSnapshot: LocalSnapshot,
+    private val saveableStateHolder: SaveableStateHolder?,
+    private val saveableStateKey: Any,
+    private val content: UiTreeBuilder.() -> Unit,
+) : LazyListItemSessionFactory, (LazyListItemSession) -> Unit {
+    override fun create(container: RenderContainerHandle) =
+        WidgetLazyListItemSession(
+            container = container,
+            localSnapshot = localSnapshot,
+            saveableStateHolder = saveableStateHolder,
+            saveableStateKey = saveableStateKey,
+            content = content,
+        )
+
+    override fun invoke(session: LazyListItemSession) {
+        (session as WidgetLazyListItemSession).updateContent(
+            localSnapshot = localSnapshot,
+            content = content,
+        )
     }
 }
 

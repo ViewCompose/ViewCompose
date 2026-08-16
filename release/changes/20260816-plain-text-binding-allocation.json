@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Add snapshot-consistent renderer-neutral observed property transactions and avoid redundant SpannableString allocation for unstyled Android text binding.",
+  "summary": "Add snapshot-consistent observed property transactions, avoid redundant plain-text binding allocation, and reduce lazy-list submission tail latency.",
   "changes": [
     { "artifact": "viewcompose-runtime", "impact": "feature" },
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },

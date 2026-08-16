@@ -11,7 +11,7 @@ import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.renderer.interop.asRenderContainerHandle
 import com.viewcompose.renderer.reconcile.LazyListDiff
-import com.viewcompose.renderer.reconcile.LazyListIdentityInspector
+import com.viewcompose.renderer.reconcile.LazyListIdentityAnalysis
 import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.reuse.MountedTreeReuseCache
 import com.viewcompose.renderer.view.lazy.reuse.LazyPreparationCostTracker
@@ -27,6 +27,8 @@ internal class LazyListAdapter(
 ) : RecyclerView.Adapter<LazyListViewHolder>() {
     private companion object {
         private const val FOCUS_TAG = "UIFocusFollow"
+        private const val DUPLICATE_KEY_POSITION = -1
+        private const val INITIAL_STICKY_POSITION_CAPACITY = 4
     }
 
     private data class ScrollAnchor(
@@ -35,12 +37,22 @@ internal class LazyListAdapter(
     )
 
     private data class KeyIndex(
-        val counts: Map<Any, Int>,
-        val uniquePositions: Map<Any, Int>,
-    )
+        val positions: Map<Any, Int>,
+        val duplicateKeys: List<Any>,
+        val stickyHeaderPositions: IntArray,
+    ) {
+        val supportsKeyedDiff: Boolean
+            get() = duplicateKeys.isEmpty()
+
+        fun uniquePosition(key: Any): Int? = positions[key]?.takeIf { it >= 0 }
+    }
 
     private var items: List<LazyListItem> = emptyList()
-    private var keyIndex = KeyIndex(emptyMap(), emptyMap())
+    private var keyIndex = KeyIndex(
+        positions = emptyMap(),
+        duplicateKeys = emptyList(),
+        stickyHeaderPositions = intArrayOf(),
+    )
     // The registry centralizes holder lifecycle across attach, detach, recycle, and final disposal.
     private val mountedTreeCache = MountedTreeReuseCache()
     private val preparationCosts = LazyPreparationCostTracker()
@@ -144,7 +156,7 @@ internal class LazyListAdapter(
 
     override fun getItemId(position: Int): Long {
         val key = items[position].key
-        if (keyIndex.uniquePositions[key] == null) return Long.MIN_VALUE + position
+        if (keyIndex.uniquePosition(key) == null) return Long.MIN_VALUE + position
         return stableIds.getOrPut(key) { nextStableId++ }
     }
 
@@ -219,41 +231,42 @@ internal class LazyListAdapter(
         items: List<LazyListItem>,
         submissionRevision: Long? = null,
     ): Boolean {
-        warnAboutIdentityIssues(items)
-        val previousItems = this.items
-        if (previousItems == items) return false
-        val previousKeyCounts = keyIndex.counts
         val revision = submissionRevision ?: (currentSubmissionRevision + 1L)
         if (revision <= currentSubmissionRevision) return false
-        val result = LazyListDiff.calculate(
+        val previousItems = this.items
+        if (previousItems == items) return false
+        val previousKeyIndex = keyIndex
+        val nextKeyIndex = buildKeyIndex(items)
+        warnAboutIdentityIssues(nextKeyIndex)
+        val diffResult = LazyListDiff.calculateAdapterDiff(
             previous = previousItems,
             next = items,
+            supportsKeyedDiff = previousKeyIndex.supportsKeyedDiff &&
+                nextKeyIndex.supportsKeyedDiff,
         )
         // When incremental diff is unavailable, preserve the first visible item anchor to reduce jump after notifyDataSetChanged.
-        val reloadAnchor = if (result.diffResult == null) {
+        val reloadAnchor = if (diffResult == null) {
             captureScrollAnchor()
         } else {
             null
         }
-        this.items = result.items
-        keyIndex = buildKeyIndex(result.items)
-        stickyHeaderPositions = buildStickyHeaderPositions(result.items)
-        stableIds.keys.retainAll(keyIndex.counts.keys)
+        this.items = items
+        keyIndex = nextKeyIndex
+        stickyHeaderPositions = nextKeyIndex.stickyHeaderPositions
+        stableIds.keys.retainAll(keyIndex.positions.keys)
         currentSubmissionRevision = revision
         itemsVersion += 1
-        if (result.diffResult != null) {
-            result.diffResult.dispatchUpdatesTo(this)
+        if (diffResult != null) {
+            diffResult.dispatchUpdatesTo(this)
         } else {
             notifyDataSetChanged()
             restoreScrollAnchor(reloadAnchor)
         }
-        val reloadAll = result.diffResult == null
-        val changedKeys = if (reloadAll) emptySet() else changedKeys(previousItems, result.items)
         refreshAttachedHolders(
-            previousKeyCounts = previousKeyCounts,
-            changedKeys = changedKeys,
+            previousItems = previousItems,
+            previousKeyIndex = previousKeyIndex,
             submissionRevision = revision,
-            forceAll = reloadAll,
+            forceAll = diffResult == null,
         )
         return true
     }
@@ -276,17 +289,21 @@ internal class LazyListAdapter(
     }
 
     private fun refreshAttachedHolders(
-        previousKeyCounts: Map<Any, Int>,
-        changedKeys: Set<Any>,
+        previousItems: List<LazyListItem>,
+        previousKeyIndex: KeyIndex,
         submissionRevision: Long,
         forceAll: Boolean,
     ) {
         holderRegistry.forEachAttached { holder ->
             val boundKey = holder.boundItemKey
-            if (!forceAll && boundKey !in changedKeys) return@forEachAttached
             val position = if (boundKey != null) {
-                if (previousKeyCounts[boundKey] == 1 && keyIndex.counts[boundKey] == 1) {
-                    keyIndex.uniquePositions[boundKey] ?: return@forEachAttached
+                val previousPosition = previousKeyIndex.uniquePosition(boundKey)
+                val nextPosition = keyIndex.uniquePosition(boundKey)
+                if (previousPosition != null && nextPosition != null) {
+                    if (!forceAll && previousItems[previousPosition] == items[nextPosition]) {
+                        return@forEachAttached
+                    }
+                    nextPosition
                 } else if (forceAll) {
                     holder.boundItemPosition
                 } else {
@@ -314,24 +331,13 @@ internal class LazyListAdapter(
         }
     }
 
-    private fun changedKeys(
-        previous: List<LazyListItem>,
-        next: List<LazyListItem>,
-    ): Set<Any> {
-        val previousByKey = previous.associateBy(LazyListItem::key)
-        val nextByKey = next.associateBy(LazyListItem::key)
-        return (previousByKey.keys + nextByKey.keys).filterTo(linkedSetOf()) { key ->
-            previousByKey[key] != nextByKey[key]
-        }
-    }
-
     private fun refreshHolder(
         holder: LazyListViewHolder,
         submissionRevision: Long,
     ) {
         val boundKey = holder.boundItemKey
         val position = if (boundKey != null) {
-            keyIndex.uniquePositions[boundKey] ?: return
+            keyIndex.uniquePosition(boundKey) ?: return
         } else {
             holder.boundItemPosition
         }
@@ -346,9 +352,8 @@ internal class LazyListAdapter(
         )
     }
 
-    private fun warnAboutIdentityIssues(items: List<LazyListItem>) {
-        val warning = LazyListIdentityInspector
-            .analyze(items)
+    private fun warnAboutIdentityIssues(index: KeyIndex) {
+        val warning = LazyListIdentityAnalysis(index.duplicateKeys)
             .warningMessage(listName = "items")
         if (warning == null) {
             lastIdentityWarning = null
@@ -388,32 +393,48 @@ internal class LazyListAdapter(
         }
         listState = null
         items = emptyList()
-        keyIndex = KeyIndex(emptyMap(), emptyMap())
+        keyIndex = KeyIndex(
+            positions = emptyMap(),
+            duplicateKeys = emptyList(),
+            stickyHeaderPositions = intArrayOf(),
+        )
         stickyHeaderPositions = intArrayOf()
         itemsVersion += 1
         failure?.let { throw it }
     }
 
     private fun buildKeyIndex(items: List<LazyListItem>): KeyIndex {
-        val counts = HashMap<Any, Int>(items.size)
-        val uniquePositions = HashMap<Any, Int>(items.size)
+        val positions = HashMap<Any, Int>(items.size)
+        var duplicateKeys: ArrayList<Any>? = null
+        var stickyPositions: IntArray? = null
+        var stickyCount = 0
         items.forEachIndexed { position, item ->
             val key = item.key
-            val nextCount = (counts[key] ?: 0) + 1
-            counts[key] = nextCount
-            if (nextCount == 1) {
-                uniquePositions[key] = position
-            } else {
-                uniquePositions.remove(key)
+            val previousPosition = positions[key]
+            if (previousPosition == null) {
+                positions[key] = position
+            } else if (previousPosition >= 0) {
+                positions[key] = DUPLICATE_KEY_POSITION
+                if (duplicateKeys == null) duplicateKeys = ArrayList()
+                duplicateKeys?.add(key)
+            }
+            if (item.kind == LazyListItemKind.StickyHeader) {
+                var target = stickyPositions
+                if (target == null) {
+                    target = IntArray(minOf(items.size, INITIAL_STICKY_POSITION_CAPACITY))
+                    stickyPositions = target
+                } else if (stickyCount == target.size) {
+                    target = target.copyOf(minOf(items.size, target.size * 2))
+                    stickyPositions = target
+                }
+                target[stickyCount++] = position
             }
         }
-        return KeyIndex(counts, uniquePositions)
-    }
-
-    private fun buildStickyHeaderPositions(items: List<LazyListItem>): IntArray {
-        return items.indices
-            .filter { position -> items[position].kind == LazyListItemKind.StickyHeader }
-            .toIntArray()
+        return KeyIndex(
+            positions = positions,
+            duplicateKeys = duplicateKeys ?: emptyList(),
+            stickyHeaderPositions = stickyPositions?.copyOf(stickyCount) ?: intArrayOf(),
+        )
     }
 
     private fun bindHolder(
