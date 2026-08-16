@@ -143,6 +143,14 @@ is not equivalent to a clock lock unless the device proves stable minimum and ma
 throughout measurement. Use a rootable or otherwise clock-controllable reference device when the
 consumer device cannot satisfy this gate.
 
+Renderer-sensitive fixed-clock diagnostics must control every clock domain that can execute the
+measured frame. A CPU-only lock is insufficient when RenderThread or GPU work remains under DVFS.
+Record the CPU policy minima and maxima, GPU devfreq governor and bounds, and, when exposed, the
+KGSL power-level bounds in the durable `clockPolicy`; verify the current frequencies again after
+target launch. An OEM performance service may be stopped only after proving that it overrides the
+requested bounds. Its prior state, every modified clock bound, charging/input state, and all root
+or policy changes must be captured before the batch and restored after the last result is pulled.
+
 Compare with a same-device historical baseline and apply the regression gate. The baseline input is
 the previously generated revisioned comparison report, not raw Macrobenchmark JSON:
 
@@ -568,6 +576,59 @@ changes shared fixture preparation for all three engines, the earlier Compose an
 numbers are not a valid cross-engine control for this revision; rerun the three-engine matrix before
 making a new relative claim. The next framework target is cold composition/JIT surface, not another
 renderer preflight or weaker item-session semantics.
+
+#### 2.4.3 Lazy snapshot and RecyclerView tail-latency hard cut
+
+The next slice hard-cuts the collection contract instead of adding another renderer preflight.
+Typed lazy APIs now accept an explicit `snapshotRevision`: an equal non-null token under the same
+environment reuses the exact committed item snapshot without rerunning selectors or rebuilding the
+key map. The cache keeps two successfully committed generations and never publishes an aborted or
+duplicate-key build. The token owns collection membership, order, selectors, and ordinary captured
+values; a captured value used by item content must also enter that item's `contentRevision`.
+
+The Android adapter now plans same-order changes and cyclic rotations in linear time, emits the
+minimum move sequence for a rotation, and reserves `DiffUtil` for other structural changes. Exact
+submission-plus-item acknowledgement removes redundant queued payload binds; semantic-only changes
+skip RecyclerView notifications when item animation is disabled, while a failed synchronous
+Session commit receives one targeted retry. Prefetch accounting separates cold activation from
+authoritative detached preparation cost and fails closed after an over-budget sample. These paths
+retain key identity, logical Item Session ownership, native Holder reuse, and reset/release
+boundaries.
+
+The root-controlled evidence uses a Xiaomi MI 6 on API 28, the R8-optimized benchmark target,
+`performance.list@4`, `run-from-apk`, five runs, fixed CPU policies at
+`1401600/1804800 kHz`, a fixed `515000000 Hz` GPU, and the OEM performance HAL stopped. The durable
+policy identity is
+`root-fixed-cpu-1401600-1804800-gpu-515000000-perf-hal-off-v3`.
+
+| Build | Frames by run | P50/P90/P95/P99, ms | Median peak heap, KiB | Run-P50 CV | Acceptance |
+| --- | --- | ---: | ---: | ---: | --- |
+| `2695fbfb` control A | `48/48/48/48/48` | 4.399 / 25.157 / 25.474 / 27.501 | 8365 | 0.192 | Rejected: stability gate failed. |
+| `2695fbfb` control B | `48/48/48/48/48` | 4.508 / 24.947 / 25.351 / 34.353 | 8440 | 0.157 | Rejected: stability gate failed and the durable policy payload was accidentally omitted. The raw JSON was not rewritten. |
+| Final hard cut, APK `020582a9` | `48/48/48/48/48` | 5.505 / 14.433 / 16.534 / 30.841 | 8212 | 0.075 | Accepted as the absolute final-code result. |
+
+The formal longitudinal conclusion is `inconclusive` because neither historical control passes the
+mandatory run-P50 stability gate; control B also fails protocol identity. The final APK nevertheless
+establishes a stable absolute result. Two precursor checks made before the failure-recovery hardening
+reported `14.269/16.329 ms` and `14.185/16.201 ms` P90/P95, independently reproducing the final
+tail. As directional diagnostic evidence only, the final APK versus rejected control A lowers raw
+P90/P95 by 42.6%/35.1%, while raw P50 rises 25.2% and P99 rises 12.1%.
+
+Each mutation action normally contributes three consecutive measured frames. The hard cut moves
+work out of the former dominant frame and into smaller follow-up work, so raw frame P50 is not a
+transaction median. In the same rejected-control diagnostic, the three-frame transaction-sum
+P50/P95 changes from `29.736/36.052 ms` to `22.268/33.817 ms` (-25.1%/-6.2%), and transaction
+maximum-frame P50/P95 changes from `24.466/27.175 ms` to `12.904/25.075 ms` (-47.3%/-7.7%). These
+normalized deltas explain the distribution shift but do not override the failed control gate.
+
+Final-code P99 remains a cold-path limitation: the first interaction is dominated by concurrent ART
+JIT rather than the steady list planner. A named Material host boundary experiment introduced an
+approximately 45 ms cold JIT event, regressed P99, and was fully reverted; no Material host change
+is part of this result. The next acceptance step is a stable same-policy control followed by a fresh
+ViewCompose/Compose/Android Views matrix. Until then, the accepted claim is the candidate's absolute
+tail, not a relative winner or a clean `CompilationMode.None` result.
+
+#### 2.4.4 Navigation and design-system diagnostics
 
 Navigation revision 6 also produced stable fixed-clock diagnostics:
 

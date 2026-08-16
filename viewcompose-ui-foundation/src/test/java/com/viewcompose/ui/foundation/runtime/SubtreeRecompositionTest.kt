@@ -196,6 +196,174 @@ class SubtreeRecompositionTest {
     }
 
     @Test
+    fun `lazy collector reuses committed items by key across structural reorder`() {
+        data class Row(
+            val id: String,
+            val revision: Int,
+        )
+
+        val composer = ComposerLite()
+        var rows = listOf(
+            Row(id = "A", revision = 1),
+            Row(id = "B", revision = 1),
+            Row(id = "C", revision = 1),
+        )
+
+        fun compose(): List<LazyListItem> =
+            ComposerContext.withComposer(composer) {
+                composer.requestRootRecompose()
+                composer.composeRoot {
+                    buildVNodeTree {
+                        LazyColumn(
+                            items = rows,
+                            key = Row::id,
+                            contentType = { "row" },
+                            contentRevision = Row::revision,
+                        ) { row ->
+                            Text(row.id)
+                        }
+                    }.single()
+                }.also {
+                    composer.commitSideEffects()
+                }
+            }.let { node ->
+                (node.spec as LazyColumnNodeProps).items
+            }
+
+        val first = compose().associateBy(LazyListItem::key)
+        rows = listOf(
+            Row(id = "C", revision = 1),
+            Row(id = "A", revision = 2),
+            Row(id = "B", revision = 1),
+        )
+        val second = compose().associateBy(LazyListItem::key)
+        rows = listOf(
+            Row(id = "A", revision = 1),
+            Row(id = "B", revision = 1),
+            Row(id = "C", revision = 1),
+        )
+        val reset = compose().associateBy(LazyListItem::key)
+
+        assertSame(first.getValue("B"), second.getValue("B"))
+        assertSame(first.getValue("C"), second.getValue("C"))
+        assertNotSame(first.getValue("A"), second.getValue("A"))
+        assertSame(first.getValue("A"), reset.getValue("A"))
+        assertSame(first.getValue("B"), reset.getValue("B"))
+        assertSame(first.getValue("C"), reset.getValue("C"))
+    }
+
+    @Test
+    fun `aborted lazy snapshot never advances the committed reuse cache`() {
+        val composer = ComposerLite()
+
+        val first = composer.commitLazySnapshot(
+            listOf(CacheRow(id = "item", revision = 0)),
+        ).single()
+        val aborted = composer.prepareLazySnapshot(
+            listOf(CacheRow(id = "item", revision = 1)),
+        )
+        val abortedItem = aborted.value.lazyItems().single()
+
+        aborted.abort()
+
+        val third = composer.commitLazySnapshot(
+            listOf(CacheRow(id = "item", revision = 2)),
+        ).single()
+        val retried = composer.commitLazySnapshot(
+            listOf(CacheRow(id = "item", revision = 1)),
+        ).single()
+
+        assertNotSame(first, abortedItem)
+        assertNotSame(abortedItem, third)
+        assertNotSame(abortedItem, retried)
+    }
+
+    @Test
+    fun `lazy snapshot cache evicts a variant after two newer commits`() {
+        val composer = ComposerLite()
+
+        val first = composer.commitLazySnapshot(
+            listOf(CacheRow(id = "item", revision = 0)),
+        ).single()
+        val second = composer.commitLazySnapshot(
+            listOf(CacheRow(id = "item", revision = 1)),
+        ).single()
+        val third = composer.commitLazySnapshot(
+            listOf(CacheRow(id = "item", revision = 2)),
+        ).single()
+        val firstRevisionAgain = composer.commitLazySnapshot(
+            listOf(CacheRow(id = "item", revision = 0)),
+        ).single()
+
+        assertNotSame(first, second)
+        assertNotSame(second, third)
+        assertNotSame(first, firstRevisionAgain)
+    }
+
+    @Test
+    fun `monotonic lazy revisions reuse only semantically unchanged keys`() {
+        val composer = ComposerLite()
+
+        val first = composer.commitLazySnapshot(
+            listOf(
+                CacheRow(id = "changing", revision = 0),
+                CacheRow(id = "stable", revision = 0),
+            ),
+        ).associateBy(LazyListItem::key)
+        val second = composer.commitLazySnapshot(
+            listOf(
+                CacheRow(id = "changing", revision = 1),
+                CacheRow(id = "stable", revision = 0),
+            ),
+        ).associateBy(LazyListItem::key)
+        val third = composer.commitLazySnapshot(
+            listOf(
+                CacheRow(id = "changing", revision = 2),
+                CacheRow(id = "stable", revision = 0),
+            ),
+        ).associateBy(LazyListItem::key)
+
+        assertNotSame(first.getValue("changing"), second.getValue("changing"))
+        assertNotSame(second.getValue("changing"), third.getValue("changing"))
+        assertSame(first.getValue("stable"), second.getValue("stable"))
+        assertSame(first.getValue("stable"), third.getValue("stable"))
+    }
+
+    @Test
+    fun `lazy collector invalidates retained items when environment changes`() {
+        val composer = ComposerLite()
+        val local = LocalValue { "default" }
+        var environment = "first"
+
+        fun compose(): LazyListItem =
+            ComposerContext.withComposer(composer) {
+                composer.requestRootRecompose()
+                composer.composeRoot {
+                    buildVNodeTree {
+                        LocalContext.provide(local, environment) {
+                            LazyColumn(
+                                items = listOf("item"),
+                                key = { item -> item },
+                            ) { item ->
+                                Text(item)
+                            }
+                        }
+                    }.single()
+                }.also {
+                    composer.commitSideEffects()
+                }
+            }.let { node ->
+                (node.spec as LazyColumnNodeProps).items.single()
+            }
+
+        val first = compose()
+        environment = "second"
+        val second = compose()
+
+        assertNotSame(first, second)
+    }
+
+    @Test
     fun `new value equal collection snapshot reuses the committed node and item`() {
         val composer = ComposerLite()
         val factory = LazyListItemSessionFactory {
@@ -438,6 +606,37 @@ class SubtreeRecompositionTest {
         assertSame(first.children[2], second.children[2])
     }
 
+    private fun ComposerLite.prepareLazySnapshot(
+        rows: List<CacheRow>,
+    ): ComposerLite.PreparedComposition<VNode> {
+        return ComposerContext.withComposer(this) {
+            requestRootRecompose()
+            prepareRoot {
+                buildVNodeTree {
+                    LazyColumn(
+                        items = rows,
+                        key = CacheRow::id,
+                        contentType = { "row" },
+                        contentRevision = CacheRow::revision,
+                    ) { row ->
+                        Text("${row.id}:${row.revision}")
+                    }
+                }.single()
+            }
+        }
+    }
+
+    private fun ComposerLite.commitLazySnapshot(rows: List<CacheRow>): List<LazyListItem> {
+        val prepared = prepareLazySnapshot(rows)
+        prepared.commit()
+        commitSideEffects()
+        return prepared.value.lazyItems()
+    }
+
+    private fun VNode.lazyItems(): List<LazyListItem> {
+        return (spec as LazyColumnNodeProps).items
+    }
+
     private fun textSpec(text: String): TextNodeProps {
         return TextNodeProps(
             document = TextDocument.plain(text),
@@ -463,4 +662,9 @@ class SubtreeRecompositionTest {
 
         override fun toString(): String = "EqualLoader($label)"
     }
+
+    private data class CacheRow(
+        val id: String,
+        val revision: Int,
+    )
 }

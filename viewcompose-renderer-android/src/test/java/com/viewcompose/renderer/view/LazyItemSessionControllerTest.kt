@@ -9,6 +9,7 @@ import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionFactory
 import com.viewcompose.ui.node.ReusableItemPresentation
+import com.viewcompose.renderer.view.lazy.session.LazyItemBindOutcome
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -16,6 +17,81 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LazyItemSessionControllerTest {
+    @Test
+    fun `bind outcome separates new activation revision render and duplicate submission`() {
+        val controller = createController(mutableListOf())
+
+        assertEquals(
+            LazyItemBindOutcome.ActivatedNewSession,
+            controller.bind(item(key = "A", contentRevision = 1), submissionRevision = 1L),
+        )
+        assertEquals(
+            LazyItemBindOutcome.AlreadyCommitted,
+            controller.bind(item(key = "A", contentRevision = 1), submissionRevision = 1L),
+        )
+        assertEquals(
+            LazyItemBindOutcome.AcceptedUnchanged,
+            controller.bind(item(key = "A", contentRevision = 1), submissionRevision = 2L),
+        )
+        assertEquals(
+            LazyItemBindOutcome.RenderedRevision,
+            controller.bind(item(key = "A", contentRevision = 2), submissionRevision = 3L),
+        )
+    }
+
+    @Test
+    fun `exact committed check includes semantic revisions and exact submission`() {
+        val controller = createController(mutableListOf())
+        val committed = item(key = "A", contentRevision = 1)
+        controller.bind(committed, submissionRevision = 2L)
+
+        assertTrue(controller.hasCommittedExact(committed, submissionRevision = 2L))
+        assertFalse(controller.hasCommittedExact(committed, submissionRevision = 1L))
+        assertFalse(
+            controller.hasCommittedExact(
+                item(key = "A", contentRevision = 1),
+                submissionRevision = 2L,
+            ),
+        )
+        assertFalse(
+            controller.hasCommittedExact(
+                item(key = "A", contentRevision = 2),
+                submissionRevision = 2L,
+            ),
+        )
+        assertFalse(
+            controller.hasCommittedExact(
+                LazyListItem(
+                    key = "A",
+                    contentRevision = 1,
+                    environmentRevision = "dark",
+                    sessionFactory = LazyListItemSessionFactory { error("unused") },
+                    sessionUpdater = {},
+                ),
+                submissionRevision = 2L,
+            ),
+        )
+    }
+
+    @Test
+    fun `bind outcome keeps speculative preparation separate from cheap activation`() {
+        val controller = createLifecycleController(mutableListOf())
+        val candidate = item(key = "A", contentRevision = 1)
+
+        assertEquals(
+            LazyItemBindOutcome.PreparedNewSession,
+            controller.prepare(candidate, submissionRevision = 1L),
+        )
+        assertEquals(
+            LazyItemBindOutcome.ActivatedPrepared,
+            controller.commit(submissionRevision = 1L),
+        )
+        assertEquals(
+            LazyItemBindOutcome.AlreadyCommitted,
+            controller.commit(submissionRevision = 1L),
+        )
+    }
+
     @Test
     fun `different key creates a new logical session while transferring only presentation`() {
         val events = mutableListOf<String>()

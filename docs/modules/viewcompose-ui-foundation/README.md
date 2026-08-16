@@ -143,7 +143,13 @@ by a later renderer or child render session.
   preserve state through composition disposal and host recreation with transactional restoration.
 - `LazyColumn`, `LazyRow`, `LazyVerticalGrid`, and pager page declarations use an explicit Q3
   revision contract. Bulk overloads accept `contentRevision = { model.version }`; ordinary captured
-  values must be observed State or participate in that revision. Pager pages also declare
+  values must be observed State or participate in that revision. Typed lazy collections also accept
+  an optional aggregate `snapshotRevision`. Equal non-null snapshot and framework environment
+  revisions reuse one of two bounded, successfully committed complete item snapshots; `null` keeps
+  full selector evaluation. The aggregate token must cover order, membership, every selector
+  result, and ordinary non-State content captures; those captures must also enter each affected
+  `contentRevision`. Scoped typed declarations require distinct namespaced non-null tokens, and the
+  typed `ScrollableScope` wrappers forward the same contract. Pager pages also declare
   `contentType`. `TabRow` uses eager keyed children in the parent composition rather than lazy item
   sessions.
 - `ScrollableColumn` and `ScrollableRow` accept Q3 `ScrollState` plus `userScrollEnabled` without

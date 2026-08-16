@@ -15,6 +15,7 @@ import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.interactionIndication
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.semantics
+import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
 import com.viewcompose.ui.node.policy.GridCells
@@ -36,7 +37,14 @@ import com.viewcompose.ui.unit.UiDp
  *
  * A stable [key] owns item state and effects. Equal keys and [contentRevision] values skip item
  * rendering; [contentType] permits native presentation reuse across different keys without sharing
- * their logical sessions. Captured mutable values must be observable State or enter the revision.
+ * their logical sessions. A non-null [snapshotRevision] additionally permits exact reuse of the
+ * complete logical item snapshot. Mutable values read by item content must be observable State or
+ * enter both the affected item's content revision and the complete snapshot revision; values used
+ * only by collection selectors need only enter the complete snapshot revision.
+ *
+ * The cache retains two successfully committed complete snapshots. A failed composition never
+ * publishes a candidate. Prefer an immutable, constant-time comparable data version; passing a
+ * collection as the revision can make cache lookup linear.
  *
  * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
  * @param T item model type
@@ -55,7 +63,14 @@ import com.viewcompose.ui.unit.UiDp
  * @param motionPolicy item placement and change animation policy
  * @param focusFollowKeyboard whether keyboard focus may bring a descendant into view
  * @param modifier ordered configuration applied to the lazy-list host
+ * @param snapshotRevision optional complete-submission revision. Equal non-null values skip all
+ * item selectors and reuse the exact logical item list when the environment is also unchanged. It
+ * must change with item order, membership, selector results, or non-State [itemContent] captures.
+ * Changing this value reevaluates selectors but does not replace an item whose [contentRevision]
+ * remains equal, so item-content captures must also participate in [contentRevision]. `null`
+ * preserves full declaration evaluation on every pass
  * @param itemContent content factory invoked only while an item session is active
+ * @throws IllegalArgumentException when [key] selects duplicate values
  */
 fun <T> UiTreeBuilder.LazyColumn(
     items: List<T>,
@@ -72,28 +87,37 @@ fun <T> UiTreeBuilder.LazyColumn(
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
     focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
+    snapshotRevision: Any? = null,
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
-    LazyColumn(
-        contentPadding = LazyContentPadding.all(contentPadding),
-        spacing = spacing,
-        state = state,
-        reverseLayout = reverseLayout,
-        userScrollEnabled = userScrollEnabled,
-        prefetchPolicy = prefetchPolicy,
-        reusePolicy = reusePolicy,
-        motionPolicy = motionPolicy,
-        focusFollowKeyboard = focusFollowKeyboard,
-        modifier = modifier,
-    ) {
-        items(
+    val itemSnapshot = rememberLazyItemCollector(NodeType.LazyColumn).apply {
+        addTypedItems(
             items = items,
             key = key,
             contentType = contentType,
             contentRevision = contentRevision,
+            snapshotRevision = snapshotRevision,
+            kind = LazyListItemKind.Item,
+            span = { GridItemSpan.Single },
             itemContent = itemContent,
         )
-    }
+    }.build()
+    emit(
+        type = NodeType.LazyColumn,
+        spec = LazyColumnNodeProps(
+            contentPadding = LazyContentPadding.all(contentPadding),
+            spacing = spacing,
+            items = itemSnapshot,
+            state = state,
+            reverseLayout = reverseLayout,
+            userScrollEnabled = userScrollEnabled,
+            prefetchPolicy = prefetchPolicy,
+            reusePolicy = reusePolicy,
+            motionPolicy = motionPolicy,
+            focusFollowKeyboard = focusFollowKeyboard,
+        ),
+        modifier = modifier,
+    )
 }
 
 /**
@@ -102,7 +126,7 @@ fun <T> UiTreeBuilder.LazyColumn(
  * Item declarations must provide stable keys and accurate revisions through [LazyListScope]. Sticky
  * headers are supported. Sessions outside the active and reuse windows may be disposed.
  *
- * @sample com.viewcompose.ui.foundation.samples.lazyListDslSample
+ * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
  * @receiver active tree builder receiving the lazy list
  * @param contentPadding independent start, top, end, and bottom viewport padding
  * @param spacing fixed gap in dp between adjacent items
@@ -129,10 +153,7 @@ fun UiTreeBuilder.LazyColumn(
     modifier: Modifier = Modifier,
     content: LazyListScope.() -> Unit,
 ) {
-    val collector = LazyItemCollector(
-        localSnapshot = LocalContext.snapshot(),
-        saveableStateHolder = rememberSaveableStateHolder(),
-    )
+    val collector = rememberLazyItemCollector(NodeType.LazyColumn)
     LazyListScope(
         collector = collector,
         stickyHeadersAllowed = true,
@@ -160,7 +181,12 @@ fun UiTreeBuilder.LazyColumn(
  *
  * A stable [key] owns item state and effects. Equal keys and [contentRevision] values skip item
  * rendering; [contentType] permits native presentation reuse across different keys without sharing
- * their logical sessions.
+ * their logical sessions. Equal non-null [snapshotRevision] values may reuse the complete logical
+ * item snapshot when the captured environment is unchanged.
+ *
+ * The cache retains two successfully committed complete snapshots. A failed composition never
+ * publishes a candidate. Prefer an immutable, constant-time comparable data version; passing a
+ * collection as the revision can make cache lookup linear.
  *
  * @sample com.viewcompose.ui.foundation.samples.lazyListDslSample
  * @param T item model type
@@ -178,7 +204,14 @@ fun UiTreeBuilder.LazyColumn(
  * @param reusePolicy mounted-tree capacity and reuse policy
  * @param motionPolicy item placement and change animation policy
  * @param modifier ordered configuration applied to the lazy-list host
+ * @param snapshotRevision optional complete-submission revision. Equal non-null values skip all
+ * item selectors and reuse the exact logical item list when the environment is also unchanged. It
+ * must change with item order, membership, selector results, or non-State [itemContent] captures.
+ * Changing this value reevaluates selectors but does not replace an item whose [contentRevision]
+ * remains equal, so item-content captures must also participate in [contentRevision]. `null`
+ * preserves full declaration evaluation on every pass
  * @param itemContent content factory invoked only while an item session is active
+ * @throws IllegalArgumentException when [key] selects duplicate values
  */
 fun <T> UiTreeBuilder.LazyRow(
     items: List<T>,
@@ -194,27 +227,36 @@ fun <T> UiTreeBuilder.LazyRow(
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
     modifier: Modifier = Modifier,
+    snapshotRevision: Any? = null,
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
-    LazyRow(
-        contentPadding = LazyContentPadding.all(contentPadding),
-        spacing = spacing,
-        state = state,
-        reverseLayout = reverseLayout,
-        userScrollEnabled = userScrollEnabled,
-        prefetchPolicy = prefetchPolicy,
-        reusePolicy = reusePolicy,
-        motionPolicy = motionPolicy,
-        modifier = modifier,
-    ) {
-        items(
+    val itemSnapshot = rememberLazyItemCollector(NodeType.LazyRow).apply {
+        addTypedItems(
             items = items,
             key = key,
             contentType = contentType,
             contentRevision = contentRevision,
+            snapshotRevision = snapshotRevision,
+            kind = LazyListItemKind.Item,
+            span = { GridItemSpan.Single },
             itemContent = itemContent,
         )
-    }
+    }.build()
+    emit(
+        type = NodeType.LazyRow,
+        spec = LazyRowNodeProps(
+            contentPadding = LazyContentPadding.all(contentPadding),
+            spacing = spacing,
+            items = itemSnapshot,
+            state = state,
+            reverseLayout = reverseLayout,
+            userScrollEnabled = userScrollEnabled,
+            prefetchPolicy = prefetchPolicy,
+            reusePolicy = reusePolicy,
+            motionPolicy = motionPolicy,
+        ),
+        modifier = modifier,
+    )
 }
 
 /**
@@ -248,10 +290,7 @@ fun UiTreeBuilder.LazyRow(
     modifier: Modifier = Modifier,
     content: LazyListScope.() -> Unit,
 ) {
-    val collector = LazyItemCollector(
-        localSnapshot = LocalContext.snapshot(),
-        saveableStateHolder = rememberSaveableStateHolder(),
-    )
+    val collector = rememberLazyItemCollector(NodeType.LazyRow)
     LazyListScope(
         collector = collector,
         stickyHeadersAllowed = false,
@@ -280,7 +319,11 @@ fun UiTreeBuilder.LazyRow(
  * changes do not replace logical item sessions. [span] uses renderer-neutral policies, so
  * [GridItemSpan.FullLine] remains correct when an adaptive grid resizes.
  *
- * @sample com.viewcompose.ui.foundation.samples.adaptiveGridSample
+ * A non-null [snapshotRevision] enables a bounded two-snapshot cache after successful composition.
+ * Failed candidates are discarded. Prefer an immutable, constant-time comparable data version;
+ * passing a collection as the revision can make cache lookup linear.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
  * @param T list element type
  * @receiver active tree builder receiving the grid node
  * @param items ordered data snapshot for this render
@@ -300,6 +343,12 @@ fun UiTreeBuilder.LazyRow(
  * @param motionPolicy native item-mutation animation hints
  * @param focusFollowKeyboard whether keyboard focus may bring an item into view
  * @param modifier ordered configuration applied to the grid root
+ * @param snapshotRevision optional complete-submission revision. Equal non-null values skip every
+ * item selector and reuse the exact logical item list when the environment is also unchanged. It
+ * must change with item order, membership, selector results including [span], or non-State
+ * [itemContent] captures. Changing this value reevaluates selectors but does not replace an item
+ * whose [contentRevision] remains equal, so item-content captures must also participate in
+ * [contentRevision]. `null` evaluates the declaration fully on every pass
  * @param itemContent delayed item content evaluated in its keyed session
  * @throws IllegalArgumentException for duplicate keys or invalid spacing
  */
@@ -321,31 +370,39 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
     focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
+    snapshotRevision: Any? = null,
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
-    LazyVerticalGrid(
-        cells = cells,
-        contentPadding = LazyContentPadding.all(contentPadding),
-        horizontalSpacing = horizontalSpacing,
-        verticalSpacing = verticalSpacing,
-        state = state,
-        reverseLayout = reverseLayout,
-        userScrollEnabled = userScrollEnabled,
-        prefetchPolicy = prefetchPolicy,
-        reusePolicy = reusePolicy,
-        motionPolicy = motionPolicy,
-        focusFollowKeyboard = focusFollowKeyboard,
-        modifier = modifier,
-    ) {
-        items(
+    val itemSnapshot = rememberLazyItemCollector(NodeType.LazyVerticalGrid).apply {
+        addTypedItems(
             items = items,
             key = key,
             contentType = contentType,
             contentRevision = contentRevision,
+            snapshotRevision = snapshotRevision,
+            kind = LazyListItemKind.Item,
             span = span,
             itemContent = itemContent,
         )
-    }
+    }.build()
+    emit(
+        type = NodeType.LazyVerticalGrid,
+        spec = LazyVerticalGridNodeProps(
+            cells = cells,
+            contentPadding = LazyContentPadding.all(contentPadding),
+            horizontalSpacing = horizontalSpacing,
+            verticalSpacing = verticalSpacing,
+            items = itemSnapshot,
+            state = state,
+            reverseLayout = reverseLayout,
+            userScrollEnabled = userScrollEnabled,
+            prefetchPolicy = prefetchPolicy,
+            reusePolicy = reusePolicy,
+            motionPolicy = motionPolicy,
+            focusFollowKeyboard = focusFollowKeyboard,
+        ),
+        modifier = modifier,
+    )
 }
 
 /**
@@ -387,10 +444,7 @@ fun UiTreeBuilder.LazyVerticalGrid(
     modifier: Modifier = Modifier,
     content: LazyGridScope.() -> Unit,
 ) {
-    val collector = LazyItemCollector(
-        localSnapshot = LocalContext.snapshot(),
-        saveableStateHolder = rememberSaveableStateHolder(),
-    )
+    val collector = rememberLazyItemCollector(NodeType.LazyVerticalGrid)
     LazyGridScope(collector).content()
     emit(
         type = NodeType.LazyVerticalGrid,
@@ -409,6 +463,22 @@ fun UiTreeBuilder.LazyVerticalGrid(
             focusFollowKeyboard = focusFollowKeyboard,
         ),
         modifier = modifier,
+    )
+}
+
+private fun rememberLazyItemCollector(hostType: NodeType): LazyItemCollector {
+    val saveableStateHolder = rememberSaveableStateHolder()
+    val reuseCache = if (ComposerContext.currentComposer() == null) {
+        LazyItemSnapshotReuseCache()
+    } else {
+        remember(saveableStateHolder, hostType) {
+            LazyItemSnapshotReuseCache()
+        }
+    }
+    return LazyItemCollector(
+        localSnapshot = LocalContext.snapshot(),
+        saveableStateHolder = saveableStateHolder,
+        reuseCache = reuseCache,
     )
 }
 

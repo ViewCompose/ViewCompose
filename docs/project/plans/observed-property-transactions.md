@@ -18,8 +18,9 @@ stable frame timing.
 
 - `release/changes/20260816-plain-text-binding-allocation.json`
 
-The pull request owns one changeset that covers both the independent plain-text binder allocation
-fix and the cross-module Q3 transaction capability with its renderer/host integration.
+The pull request owns one changeset that covers the independent plain-text binder allocation fix,
+the cross-module Q3 transaction capability with its renderer/host integration, and the subsequent
+lazy-snapshot and RecyclerView tail-latency hard cut.
 
 ## Objective
 

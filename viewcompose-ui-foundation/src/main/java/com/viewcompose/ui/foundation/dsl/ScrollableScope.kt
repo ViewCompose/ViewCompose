@@ -30,11 +30,20 @@ class ScrollableScope internal constructor() {
      * Adds a keyed lazy column from [items].
      *
      * [key] must remain stable for the lifetime of an item so mounted views and item state can be
-     * reused across moves. Duplicate keys are invalid.
+     * reused across moves. Duplicate keys are invalid. A non-null [snapshotRevision] is an
+     * authoritative revision of the complete typed submission. Equal revision and framework
+     * environment values reuse its exact committed logical item list without invoking selectors.
+     * The revision must cover order, membership, selector results, and non-State inputs; any
+     * non-State input read by item content must also participate in [contentRevision]. `null`
+     * preserves full declaration evaluation.
      *
      * @param contentType groups structurally compatible items for view reuse
+     * @param contentRevision semantic version of every non-State value captured by item content
+     * @param snapshotRevision optional complete-submission revision used by the bounded exact-list
+     * cache; candidates are published only after successful composition
      * @param state optional externally owned scroll state
      * @param focusFollowKeyboard whether keyboard focus should request the focused item into view
+     * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
      */
     fun <T> LazyColumn(
         items: List<T>,
@@ -51,6 +60,7 @@ class ScrollableScope internal constructor() {
         motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
         focusFollowKeyboard: Boolean = false,
         modifier: Modifier = Modifier,
+        snapshotRevision: Any? = null,
         itemContent: UiTreeBuilder.(T) -> Unit,
     ) {
         with(delegate) {
@@ -69,6 +79,7 @@ class ScrollableScope internal constructor() {
                 motionPolicy = motionPolicy,
                 focusFollowKeyboard = focusFollowKeyboard,
                 modifier = modifier,
+                snapshotRevision = snapshotRevision,
                 itemContent = itemContent,
             )
         }
@@ -149,10 +160,19 @@ class ScrollableScope internal constructor() {
      * Adds a keyed lazy row from [items].
      *
      * [key] must remain stable for the lifetime of an item so mounted views and item state can be
-     * reused across moves. Duplicate keys are invalid.
+     * reused across moves. Duplicate keys are invalid. A non-null [snapshotRevision] is an
+     * authoritative revision of the complete typed submission. Equal revision and framework
+     * environment values reuse its exact committed logical item list without invoking selectors.
+     * The revision must cover order, membership, selector results, and non-State inputs; any
+     * non-State input read by item content must also participate in [contentRevision]. `null`
+     * preserves full declaration evaluation.
      *
      * @param contentType groups structurally compatible items for view reuse
+     * @param contentRevision semantic version of every non-State value captured by item content
+     * @param snapshotRevision optional complete-submission revision used by the bounded exact-list
+     * cache; candidates are published only after successful composition
      * @param state optional externally owned scroll state
+     * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
      */
     fun <T> LazyRow(
         items: List<T>,
@@ -168,6 +188,7 @@ class ScrollableScope internal constructor() {
         reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
         motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
         modifier: Modifier = Modifier,
+        snapshotRevision: Any? = null,
         itemContent: UiTreeBuilder.(T) -> Unit,
     ) {
         with(delegate) {
@@ -185,6 +206,7 @@ class ScrollableScope internal constructor() {
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
                 modifier = modifier,
+                snapshotRevision = snapshotRevision,
                 itemContent = itemContent,
             )
         }
@@ -264,9 +286,16 @@ class ScrollableScope internal constructor() {
      * @param cells fixed or adaptive horizontal cell policy
      * @param contentType groups structurally compatible items for view reuse
      * @param contentRevision semantic version of every non-State value captured by item content
+     * @param snapshotRevision optional authoritative complete-submission revision. Equal non-null
+     * revision and framework environment values reuse the exact committed logical item list and
+     * skip every selector. It must cover order, membership, selector and span results, and
+     * non-State inputs; item-content inputs must also participate in [contentRevision]. `null`
+     * preserves full declaration evaluation. Candidates are published only after successful
+     * composition and the exact-list cache retains two committed revisions
      * @param state optional externally owned scroll state
      * @param userScrollEnabled whether direct user scrolling is accepted
      * @param focusFollowKeyboard whether keyboard focus should request the focused item into view
+     * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
      */
     fun <T> LazyVerticalGrid(
         items: List<T>,
@@ -286,6 +315,7 @@ class ScrollableScope internal constructor() {
         motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
         focusFollowKeyboard: Boolean = false,
         modifier: Modifier = Modifier,
+        snapshotRevision: Any? = null,
         itemContent: UiTreeBuilder.(T) -> Unit,
     ) {
         with(delegate) {
@@ -307,6 +337,7 @@ class ScrollableScope internal constructor() {
                 motionPolicy = motionPolicy,
                 focusFollowKeyboard = focusFollowKeyboard,
                 modifier = modifier,
+                snapshotRevision = snapshotRevision,
                 itemContent = itemContent,
             )
         }

@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: ae4b29c36cedacccc79f588eb9f839111c571349ff04b61590a54f4f0a8c6619
+translation_source_hash: f2bd0772d9c0b41e640d0d88b96dded4ec47f002e470af83ab2dcef7becaa7c0
 translation_status: current
 ---
 
@@ -80,8 +80,42 @@ LazyColumn(
 
 列表 Scope 支持 `item`、`items` 和 `stickyHeader`。网格 Scope 还支持逐 Item Span；网格 Sticky
 Header 占满整行。`contentRevision` 是正确性契约而不只是性能提示。Item Content 捕获的变化值必须
-是可观察 State，或进入该 Revision；Key 和 Revision 相等时完全跳过 Item Render。均质数据便捷
-重载同样要求稳定 Key，并委托给结构化模型。
+是可观察 State，或进入该 Revision；Key 和 Revision 相等时完全跳过 Item Render。
+
+均质数据 Overload 还可以跳过整份逻辑 Item Snapshot 的构建。传入一个不可变且能以常量时间比较的
+聚合 `snapshotRevision`：
+
+```kotlin
+LazyColumn(
+    items = contactsSnapshot.items,
+    key = { contact -> contact.id },
+    contentType = { "contact-row" },
+    contentRevision = { contact -> contact.version },
+    snapshotRevision = contactsSnapshot.revision,
+) { contact ->
+    ContactRow(contact)
+}
+```
+
+非空 `snapshotRevision` 与框架 Environment Revision 都相等时，会复用已提交的同一个
+`List<LazyListItem>`。因此顶层均质数据 Overload 命中时不会调用 Item Selector、分配 Item
+Binding，也不会遍历 Item Map。ViewCompose 保留两份已提交 Snapshot，使一次更新和重置都能复用；
+失败的 Composition 不会发布候选 Snapshot。
+
+该 Token 是权威的正确性契约。Item 顺序、成员、Key、Content Type、Item Content Revision、
+Grid Span 或 Item Content 捕获的普通非 State 值变化时，它都必须变化。Token 变化会重新执行
+Selector，但逐 Item `contentRevision` 相等时仍会保留原有 Content Closure。因此，Item Content
+读取的普通非 State 值必须同时进入聚合 Token 与所有受影响 Item 的 `contentRevision`。主题、资源、
+Locale、布局方向、密度、字体缩放及其他框架 Local 会自动进入 Environment Revision。默认值 `null`
+会关闭整份 Snapshot 复用，并保留每轮完整执行 Selector 的行为；Item Session 内的可观察 State 仍可
+独立失效。可以用 `List` 作为 Token，但其不可变性和 Equality 成本必须可接受；标量数据 Generation
+才是可预测的快路径。
+
+Scoped `items` 接受同一参数并可复用 Typed Segment，但包含 Header 或多个 Declaration 的 Scope
+仍需合并 Segment 并校验跨 Segment Key。需要整容器 O(1) Snapshot 复用时，应使用均质数据 Overload。
+一个 Scope 内有多个 Typed Declaration 时，应给 Revision 加命名空间，确保相等值始终描述同一份
+Declaration。同一 Scope 重复使用非空值会在候选提交前被拒绝。`ScrollableScope` 内的 Typed
+Collection Wrapper 暴露并转发同一契约。
 
 网格列使用 Sealed Policy，而不是 Android Span Count：
 
@@ -151,19 +185,22 @@ Attach 或重排时按 Item Key 恢复。分离的 Pinned Header 副本是不拥
 2. 一个 Key 在重排期间持续标识同一逻辑 Item。
 3. `contentType` 只能分组布局兼容的 Item 结构。
 4. `contentRevision` 包含每个不由 State 观察的变化普通捕获值。
-5. 平台 Callback 发布不可变 Snapshot；Android 类型不得进入 `ui-contract`。
-6. 对同一 RecyclerView Connector 的重新绑定不得重置滚动锚点。
-7. 保存恢复只持久化首个可见 Index 与偏移。
-8. Holder、Pinned Header 或容器释放时必须销毁对应 Item Session。
-9. 集合、Modifier 与 Insets 的 Padding 贡献由 Renderer 合成为唯一原生值，并在定向 Patch 与
+5. 非空 `snapshotRevision` 为完整 Typed Declaration 建立版本；顺序、成员、Selector 结果或普通
+   非 State Capture 变化时必须更新。Item Content Capture 还必须进入受影响的
+   `contentRevision`；`null` 表示不启用聚合跳过。Scoped Declaration 的非空值必须带不同命名空间。
+6. 平台 Callback 发布不可变 Snapshot；Android 类型不得进入 `ui-contract`。
+7. 对同一 RecyclerView Connector 的重新绑定不得重置滚动锚点。
+8. 保存恢复只持久化首个可见 Index 与偏移。
+9. Holder、Pinned Header 或容器释放时必须销毁对应 Item Session。
+10. 集合、Modifier 与 Insets 的 Padding 贡献由 Renderer 合成为唯一原生值，并在定向 Patch 与
    完整环境重绑期间保持稳定。
-10. Item Saveable State 按容器与稳定逻辑 Key 划分 Scope；重复 Provider 只在同一逻辑 Item Scope
+11. Item Saveable State 按容器与稳定逻辑 Key 划分 Scope；重复 Provider 只在同一逻辑 Item Scope
    内被拒绝。
-11. Prefetch Prepare 对外静默，不会把子 Submission 标记为 Committed；Activate 与后续 Active
+12. Prefetch Prepare 对外静默，不会把子 Submission 标记为 Committed；Activate 与后续 Active
    Render 保持正常事务式 Effect 顺序。
-12. 逻辑 Key State 绝不进入 RecyclerView Pool 或 Mounted Tree 缓存；Reset 物理树不携带 Remember、
+13. 逻辑 Key State 绝不进入 RecyclerView Pool 或 Mounted Tree 缓存；Reset 物理树不携带 Remember、
     Saveable、Subscription 或 Effect 标识。
-13. Adaptive 列数变化只更新物理布局；不得重建 Keyed 逻辑 Item Session，也不属于应用持有的
+14. Adaptive 列数变化只更新物理布局；不得重建 Keyed 逻辑 Item Session，也不属于应用持有的
     Content Revision。
 
 ## 6. 明确不包含的能力

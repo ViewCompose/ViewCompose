@@ -1,7 +1,7 @@
 ---
 title: 迁移 Lazy 集合 Revision 与复用
 translation_source: migration/lazy-collection-revision-and-reuse.md
-translation_source_hash: 291747f0cbfc08867afb76ac84b9c8342a81f147b46ff1524ab9980c461bbfea
+translation_source_hash: 7dee3982347a1e9ceda594fc8510c509c3658fa706ab9ab41321b2e92df24d50
 translation_status: current
 ---
 
@@ -50,6 +50,38 @@ Pager Page 与 Tab 现在都要求显式且唯一的 Key。位置是物理排布
 
 框架自动把主题、Android 资源、Locale、方向、Density、Font Scale 与其他 Active Local 捕获进
 `environmentRevision`，应用无需在 `contentRevision` 中重复这些值。
+
+## 启用完整 Typed Snapshot 复用
+
+Typed `LazyColumn`、`LazyRow`、`LazyVerticalGrid` 与 Scoped `items` 现在接受
+`snapshotRevision`。默认值 `null` 保留原有正确性行为：每次 Declaration Pass 都调用全部 Item
+Selector。只有应用能对整份 Typed Declaration 建立版本时，才应传入非空、不可变的聚合 Revision：
+
+```kotlin
+LazyColumn(
+    items = messagesSnapshot.items,
+    key = { message -> message.id },
+    contentType = { "message-row" },
+    contentRevision = { message -> message.version },
+    snapshotRevision = messagesSnapshot.revision,
+) { message ->
+    MessageRow(message)
+}
+```
+
+聚合 Revision 与框架 Environment Revision 都相等时，框架可以复用已提交的同一个逻辑 Item List。
+Item 顺序、成员、Key、Content Type、Item Revision、Grid Span 或普通非 State Content Capture
+变化时，该 Token 都必须变化。仅修改聚合 Token 会重新执行 Item Selector，但不会替换
+`contentRevision` 仍相等的 Item；Item Content 读取的普通值还必须进入受影响 Item Revision。可观察
+State 仍会独立跟踪。应优先使用能以常量时间比较的标量 Revision，而不是 Collection Token。缓存
+保留两份已提交 Snapshot，不会发布失败的 Composition，Key、Session 与 Saveable 所有权仍由既有
+Item Key 契约维持。
+
+顶层均质数据 Overload 是整容器快路径：命中时不遍历 Item Selector 或 Item Map。Scoped
+Declaration 可以复用一个 Typed Segment，但 Header 与多个 Segment 仍需合并并校验跨 Segment
+重复 Key。一个 Scope 内有多个 Typed Declaration 时，应给 Revision 加命名空间；同一 Scope 的
+重复非空值会在候选提交前失败。Typed `ScrollableScope` Wrapper 暴露并转发同一参数。现有调用应
+在新可选参数附近使用 Named Argument；这次 Alpha 硬切不保留旧 Method Descriptor 的二进制链接。
 
 ## 更新原生互操作复用
 

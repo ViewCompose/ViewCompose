@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "summary": "Add snapshot-consistent observed property transactions, avoid redundant plain-text binding allocation, and reduce lazy-list submission and frame-dispatch tail latency.",
+  "summary": "Add snapshot-consistent observed property transactions, avoid redundant binding allocation, and harden lazy-list snapshot and RecyclerView tail latency.",
   "changes": [
     { "artifact": "viewcompose-runtime", "impact": "feature" },
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
-    { "artifact": "viewcompose-ui-foundation", "impact": "feature" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
     { "artifact": "viewcompose-host-android", "impact": "feature" },
     { "artifact": "viewcompose-renderer-android", "impact": "feature" }
   ],

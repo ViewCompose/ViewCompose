@@ -117,8 +117,12 @@ internal object CollectionViewBinder {
         ContainerViewBinder.applyLazyListPadding(view, spec.contentPadding)
         ContainerViewBinder.applyLazyListSpacing(view, spec.spacing, LinearLayoutManager.VERTICAL)
         submission.publish {
-            adapter.submitItems(spec.items, submission.revision)
-            LazyStickyHeaderDecoration.update(view, adapter)
+            LazyStickyHeaderDecoration.submitItemsAndUpdate(
+                recyclerView = view,
+                adapter = adapter,
+                items = spec.items,
+                submissionRevision = submission.revision,
+            )
         }
         submission.publish {
             adapter.bindState(
@@ -161,8 +165,12 @@ internal object CollectionViewBinder {
         ContainerViewBinder.applyLazyListPadding(view, spec.contentPadding)
         ContainerViewBinder.applyLazyListSpacing(view, spec.spacing, LinearLayoutManager.HORIZONTAL)
         submission.publish {
-            adapter.submitItems(spec.items, submission.revision)
-            LazyStickyHeaderDecoration.update(view, adapter)
+            LazyStickyHeaderDecoration.submitItemsAndUpdate(
+                recyclerView = view,
+                adapter = adapter,
+                items = spec.items,
+                submissionRevision = submission.revision,
+            )
         }
         submission.publish {
             adapter.bindState(

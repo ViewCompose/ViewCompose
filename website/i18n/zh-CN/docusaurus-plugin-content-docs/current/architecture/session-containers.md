@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/session-containers.md
-translation_source_hash: 8afe2bffd42b13b258a6efd78dd291f015e71ff4c156dbd0d5b241e31a38a23f
+translation_source_hash: ed85bf9ee2e3e30a5720854691ab06475faac3125314b066e5f84b84c2154a86
 translation_status: current
 ---
 
@@ -49,20 +49,26 @@ translation_status: current
    或 effect
 10. Callback 对象身份不是 Revision。变化的普通捕获值必须成为 State 或进入
     `contentRevision`；仅 Callback 分配绝不刷新内容
-11. Detach 且从未激活的 Holder 可以 Prepare 已由父级提交的 Submission，但不得运行 Remember
+11. 非空 Typed `snapshotRevision` 是顺序、成员、所有 Item Selector 结果与普通非 State Content
+    Capture 的权威版本。Snapshot Revision 与 Environment Revision 相等时，可以复用两份已提交
+    完整逻辑 Snapshot 之一且不扫描 Item Map；仅修改聚合 Revision 会重新执行 Selector，但不会
+    改变相等的逐 Item `contentRevision` 身份，因此 Item Content Capture 必须同时进入两种 Revision。
+    Scoped Typed Declaration 使用不同命名空间的非空值，Host Node Type 隔离各自缓存；`null` 会执行
+    全部 Selector，父帧 Rollback 也绝不会推进 Snapshot Cache
+12. Detach 且从未激活的 Holder 可以 Prepare 已由父级提交的 Submission，但不得运行 Remember
     激活、Effect、原生 Commit Callback、Overlay 或已提交帧诊断。Activate 会提交有效候选而不重建。
     已 Active 的 Detach Holder 只暂存最新修订并在 Reattach 时渲染；重复 Key 存在歧义时，绝不能
     通过 First Match 查询猜测 Holder 归属
-12. Pager 对唯一 Key 使用无碰撞稳定 ID，并按 `contentType`/Kind 组合划分结构不兼容的原生
+13. Pager 对唯一 Key 使用无碰撞稳定 ID，并按 `contentType`/Kind 组合划分结构不兼容的原生
     View Type。所有公开 Page 都要求唯一且稳定的 Key
-13. 每个独立组合的 Item/Page 都必须接收由父组合 Holder 和稳定逻辑 Key 持有的子
+14. 每个独立组合的 Item/Page 都必须接收由父组合 Holder 和稳定逻辑 Key 持有的子
     `SaveableStateRegistry`。回收会保留该 Registry 的 Saved Map，重排跟随 Key，嵌套容器递归
     应用同一层级
-14. Renderer 并发创建的 Presentation 副本可以恢复逻辑 Owner 当前的 Saveable Snapshot，但不得
+15. Renderer 并发创建的 Presentation 副本可以恢复逻辑 Owner 当前的 Saveable Snapshot，但不得
     为相同逻辑 Key 注册第二个持久化 Owner
-15. Recycle 必须先结束逻辑 Key Session，再 Reset 物理树。兼容 Mounted Tree 只存在于框架所有、
+16. Recycle 必须先结束逻辑 Key Session，再 Reset 物理树。兼容 Mounted Tree 只存在于框架所有、
     有界且可确定淘汰的缓存中；原生 Pool 只保留空 Holder 外壳
-16. `AndroidView` 只有声明 `onReset` 才参与跨 Key 复用；最终淘汰必须恰好调用一次 `onRelease`
+17. `AndroidView` 只有声明 `onReset` 才参与跨 Key 复用；最终淘汰必须恰好调用一次 `onRelease`
 
 ## 4. 必测场景
 
@@ -87,12 +93,13 @@ translation_status: current
 
 基础单测（通用机制）：
 
-1. [`LazyListDiffTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
-2. [`LazyHolderRegistryTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
-3. [`LazyItemSessionControllerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
-4. [`LazyListAdapterTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/lazy/adapter/LazyListAdapterTest.kt)
-5. [`ViewTreeRenderTransactionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt)
-6. [`PagerAdapterTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/container/PagerAdapterTest.kt)
+1. [`TypedLazySnapshotReuseTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/TypedLazySnapshotReuseTest.kt)
+2. [`LazyListDiffTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
+3. [`LazyHolderRegistryTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
+4. [`LazyItemSessionControllerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
+5. [`LazyListAdapterTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/lazy/adapter/LazyListAdapterTest.kt)
+6. [`ViewTreeRenderTransactionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt)
+7. [`PagerAdapterTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/container/PagerAdapterTest.kt)
 
 当前已覆盖专项：
 

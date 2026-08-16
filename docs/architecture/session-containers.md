@@ -47,23 +47,30 @@ Every delayed-session container must satisfy these constraints:
    parent rollback discards them without running child composition or effects.
 10. Callback identity is not a revision. A changed ordinary capture must be State or participate in
     `contentRevision`; callback allocation alone never refreshes content.
-11. A detached, never-activated holder may prepare a committed parent submission without running
+11. A non-null typed `snapshotRevision` is an authoritative version of order, membership, every
+    item selector result, and ordinary non-State content captures. Equal snapshot and environment
+    revisions may reuse one of two committed complete logical snapshots without an item-map scan;
+    changing only this aggregate revision reevaluates selectors but leaves equal per-item
+    `contentRevision` identities intact. Item-content captures therefore enter both revisions.
+    Scoped typed declarations use distinct namespaced non-null values, host node types isolate their
+    caches, `null` evaluates every selector, and parent rollback never advances the snapshot cache.
+12. A detached, never-activated holder may prepare a committed parent submission without running
     remember activation, effects, native commit callbacks, overlays, or committed diagnostics.
     Activation commits a valid candidate without rebuilding it. An already-active detached holder
     stages the latest revision and renders it on reattach; ambiguous duplicate keys never use
     first-match lookup to guess ownership.
-12. Pager stable IDs are collision-free for unique keys, and native view types partition
+13. Pager stable IDs are collision-free for unique keys, and native view types partition
     structurally incompatible `contentType`/kind pairs. Unkeyed cached pages retain position
     ownership; keyed moves resolve only through a unique key in both snapshots.
-13. Every independently composed item/page receives a child `SaveableStateRegistry` owned by a
+14. Every independently composed item/page receives a child `SaveableStateRegistry` owned by a
     parent-composition holder and its stable logical key. Recycling retains that registry's saved
     map, reordering follows the key, and nested containers repeat the hierarchy.
-14. A renderer-created concurrent presentation replica may restore the logical owner's current
+15. A renderer-created concurrent presentation replica may restore the logical owner's current
     saveable snapshot but must not register a second persistence owner for the same logical key.
-15. Recycling ends the logical key session before physical reset. Compatible mounted trees live only
+16. Recycling ends the logical key session before physical reset. Compatible mounted trees live only
     in a framework-owned, bounded cache with deterministic eviction; native pools retain empty
     holder shells.
-16. `AndroidView` participates in cross-key reuse only with `onReset`; final eviction calls
+17. `AndroidView` participates in cross-key reuse only with `onReset`; final eviction calls
     `onRelease` exactly once.
 
 ## 4. Required scenarios
@@ -91,12 +98,13 @@ Every container covers at least these eight cases:
 
 Foundation unit tests:
 
-1. [LazyListDiffTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
-2. [LazyHolderRegistryTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
-3. [LazyItemSessionControllerTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
-4. [LazyListAdapterTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/lazy/adapter/LazyListAdapterTest.kt)
-5. [ViewTreeRenderTransactionTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt)
-6. [PagerAdapterTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/container/PagerAdapterTest.kt)
+1. [TypedLazySnapshotReuseTest.kt](../../viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/TypedLazySnapshotReuseTest.kt)
+2. [LazyListDiffTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
+3. [LazyHolderRegistryTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
+4. [LazyItemSessionControllerTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
+5. [LazyListAdapterTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/lazy/adapter/LazyListAdapterTest.kt)
+6. [ViewTreeRenderTransactionTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt)
+7. [PagerAdapterTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/container/PagerAdapterTest.kt)
 
 Covered special cases:
 

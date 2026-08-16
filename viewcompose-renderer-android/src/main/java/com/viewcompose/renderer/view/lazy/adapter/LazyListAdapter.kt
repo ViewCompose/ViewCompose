@@ -4,6 +4,7 @@ import android.util.Log
 import android.graphics.Rect
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.annotation.DoNotInline
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.ui.node.LazyListItem
@@ -11,12 +12,16 @@ import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.renderer.interop.asRenderContainerHandle
+import com.viewcompose.renderer.reconcile.LazyListAdapterChangedPayload
+import com.viewcompose.renderer.reconcile.LazyListAdapterUpdatePlan
 import com.viewcompose.renderer.reconcile.LazyListDiff
 import com.viewcompose.renderer.reconcile.LazyListIdentityAnalysis
+import com.viewcompose.renderer.reconcile.LazyListRotationDirection
 import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.reuse.MountedTreeReuseCache
 import com.viewcompose.renderer.view.lazy.reuse.LazyPreparationCostTracker
 import com.viewcompose.renderer.view.lazy.session.LazyHolderRegistry
+import com.viewcompose.renderer.view.lazy.session.LazyItemBindOutcome
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionHost
 import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
@@ -26,6 +31,7 @@ import com.viewcompose.ui.state.LazyListState
 /** Owns list diffing, physical holders, logical item sessions, and sticky-header presentations. */
 internal class LazyListAdapter(
     private val orientation: Int = LinearLayoutManager.VERTICAL,
+    private val preparationCosts: LazyPreparationCostTracker = LazyPreparationCostTracker(),
 ) : RecyclerView.Adapter<LazyListViewHolder>() {
     private companion object {
         private const val FOCUS_TAG = "UIFocusFollow"
@@ -57,7 +63,6 @@ internal class LazyListAdapter(
     )
     // The registry centralizes holder lifecycle across attach, detach, recycle, and final disposal.
     private val mountedTreeCache = MountedTreeReuseCache()
-    private val preparationCosts = LazyPreparationCostTracker()
     private val holderRegistry = LazyHolderRegistry<LazyListViewHolder>(::recycleHolder)
     private var lastIdentityWarning: String? = null
     private var attachedRecyclerView: RecyclerView? = null
@@ -127,9 +132,14 @@ internal class LazyListAdapter(
         holderRegistry.onAttached(holder)
         // A staged or already-current holder has installed this exact submission. Rebinding here
         // would only revisit key lookup and the controller's duplicate-revision gate.
-        if (!holder.activate(currentSubmissionRevision)) {
-            refreshHolder(holder, currentSubmissionRevision)
+        if (holder.hasCommitted(currentSubmissionRevision)) return
+        val reuseKey = holder.reuseKey()
+        val startedAt = System.nanoTime()
+        var outcome = holder.activate(currentSubmissionRevision)
+        if (!outcome.satisfiesSubmission) {
+            outcome = refreshHolder(holder, currentSubmissionRevision)
         }
+        recordSessionCost(reuseKey, outcome, startedAt)
     }
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
@@ -236,18 +246,25 @@ internal class LazyListAdapter(
         val revision = submissionRevision ?: (currentSubmissionRevision + 1L)
         if (revision <= currentSubmissionRevision) return false
         val previousItems = this.items
+        // Equal submissions are common for retained grid/policy patches. Canonical item snapshots
+        // make this scan reference-cheap, and it avoids rebuilding indexes plus a second plan scan.
         if (previousItems == items) return false
         val previousKeyIndex = keyIndex
         val nextKeyIndex = buildKeyIndex(items)
-        warnAboutIdentityIssues(nextKeyIndex)
-        val diffResult = LazyListDiff.calculateAdapterDiff(
+        val includeSemanticChanges = attachedRecyclerView?.itemAnimator != null
+        val updatePlan = LazyListDiff.calculateAdapterUpdatePlan(
             previous = previousItems,
             next = items,
             supportsKeyedDiff = previousKeyIndex.supportsKeyedDiff &&
                 nextKeyIndex.supportsKeyedDiff,
+            // With motion disabled, attached sessions commit semantic revisions synchronously and
+            // detached holders reconcile on attach; only physical compatibility still needs RV.
+            includeSemanticChanges = includeSemanticChanges,
         )
+        if (updatePlan === LazyListAdapterUpdatePlan.NoChange) return false
+        warnAboutIdentityIssues(nextKeyIndex)
         // When incremental diff is unavailable, preserve the first visible item anchor to reduce jump after notifyDataSetChanged.
-        val reloadAnchor = if (diffResult == null) {
+        val reloadAnchor = if (updatePlan === LazyListAdapterUpdatePlan.ReloadAll) {
             captureScrollAnchor()
         } else {
             null
@@ -255,22 +272,68 @@ internal class LazyListAdapter(
         this.items = items
         keyIndex = nextKeyIndex
         stickyHeaderPositions = nextKeyIndex.stickyHeaderPositions
-        stableIds.keys.retainAll(keyIndex.positions.keys)
+        if (
+            updatePlan === LazyListAdapterUpdatePlan.ReloadAll ||
+            updatePlan is LazyListAdapterUpdatePlan.StructuralDiff
+        ) {
+            stableIds.keys.retainAll(keyIndex.positions.keys)
+        }
         currentSubmissionRevision = revision
         itemsVersion += 1
-        if (diffResult != null) {
-            diffResult.dispatchUpdatesTo(this)
-        } else {
-            notifyDataSetChanged()
-            restoreScrollAnchor(reloadAnchor)
-        }
+        dispatchUpdatePlan(updatePlan, reloadAnchor)
         refreshAttachedHolders(
             previousItems = previousItems,
             previousKeyIndex = previousKeyIndex,
             submissionRevision = revision,
-            forceAll = diffResult == null,
+            forceAll = updatePlan === LazyListAdapterUpdatePlan.ReloadAll,
+            retrySuppressedSemanticFailures = !includeSemanticChanges &&
+                updatePlan !== LazyListAdapterUpdatePlan.ReloadAll,
         )
         return true
+    }
+
+    @DoNotInline
+    private fun dispatchUpdatePlan(
+        updatePlan: LazyListAdapterUpdatePlan,
+        reloadAnchor: ScrollAnchor?,
+    ) {
+        when (updatePlan) {
+            LazyListAdapterUpdatePlan.NoChange -> error("No-change plan must return before publication")
+            LazyListAdapterUpdatePlan.ReloadAll -> {
+                notifyDataSetChanged()
+                restoreScrollAnchor(reloadAnchor)
+            }
+            is LazyListAdapterUpdatePlan.SameKeyOrderChanges -> {
+                updatePlan.ranges.forEach { range ->
+                    notifyItemRangeChanged(
+                        range.positionStart,
+                        range.itemCount,
+                        LazyListAdapterChangedPayload,
+                    )
+                }
+            }
+            is LazyListAdapterUpdatePlan.CyclicRotation -> {
+                val lastPosition = itemCount - 1
+                when (updatePlan.direction) {
+                    LazyListRotationDirection.Left -> repeat(updatePlan.moveCount) {
+                        notifyItemMoved(0, lastPosition)
+                    }
+                    LazyListRotationDirection.Right -> repeat(updatePlan.moveCount) {
+                        notifyItemMoved(lastPosition, 0)
+                    }
+                }
+                updatePlan.changedRanges.forEach { range ->
+                    notifyItemRangeChanged(
+                        range.positionStart,
+                        range.itemCount,
+                        LazyListAdapterChangedPayload,
+                    )
+                }
+            }
+            is LazyListAdapterUpdatePlan.StructuralDiff -> {
+                updatePlan.result.dispatchUpdatesTo(this)
+            }
+        }
     }
 
     fun bindState(
@@ -295,13 +358,18 @@ internal class LazyListAdapter(
         previousKeyIndex: KeyIndex,
         submissionRevision: Long,
         forceAll: Boolean,
+        retrySuppressedSemanticFailures: Boolean,
     ) {
+        var retryPositions: LinkedHashSet<Int>? = null
+        var bindingFailure: Throwable? = null
         holderRegistry.forEachAttached { holder ->
             val boundKey = holder.boundItemKey
+            var previousItem: LazyListItem? = null
             val position = if (boundKey != null) {
                 val previousPosition = previousKeyIndex.uniquePosition(boundKey)
                 val nextPosition = keyIndex.uniquePosition(boundKey)
                 if (previousPosition != null && nextPosition != null) {
+                    previousItem = previousItems[previousPosition]
                     if (!forceAll && previousItems[previousPosition] == items[nextPosition]) {
                         return@forEachAttached
                     }
@@ -324,29 +392,77 @@ internal class LazyListAdapter(
                 // change notification; rebinding the old holder would violate contentType reuse.
                 return@forEachAttached
             }
-            holder.bind(
-                nextItem,
-                submissionRevision = submissionRevision,
-                position = position,
-                active = true,
-            )
+            val hasSuppressedSemanticChange = retrySuppressedSemanticFailures &&
+                previousItem?.hasSuppressedSemanticOnlyChange(nextItem) == true
+            val outcome = try {
+                holder.bind(
+                    nextItem,
+                    submissionRevision = submissionRevision,
+                    position = position,
+                    active = true,
+                )
+            } catch (error: Throwable) {
+                if (hasSuppressedSemanticChange) {
+                    val positions = retryPositions ?: LinkedHashSet<Int>().also {
+                        retryPositions = it
+                    }
+                    positions += position
+                }
+                val firstFailure = bindingFailure
+                if (firstFailure == null) {
+                    bindingFailure = error
+                } else {
+                    firstFailure.addSuppressed(error)
+                }
+                return@forEachAttached
+            }
+            if (hasSuppressedSemanticChange && !outcome.satisfiesSubmission) {
+                val positions = retryPositions ?: LinkedHashSet<Int>().also {
+                    retryPositions = it
+                }
+                positions += position
+            }
         }
+        retryPositions?.forEach { position ->
+            try {
+                notifyItemChanged(position, LazyListAdapterChangedPayload)
+            } catch (error: Throwable) {
+                val firstFailure = bindingFailure
+                if (firstFailure == null) {
+                    bindingFailure = error
+                } else if (firstFailure !== error) {
+                    firstFailure.addSuppressed(error)
+                }
+            }
+        }
+        bindingFailure?.let { throw it }
+    }
+
+    private fun LazyListItem.hasSuppressedSemanticOnlyChange(next: LazyListItem): Boolean {
+        val semanticChanged = contentRevision != next.contentRevision ||
+            environmentRevision != next.environmentRevision
+        return semanticChanged &&
+            contentType == next.contentType &&
+            kind == next.kind &&
+            span == next.span
     }
 
     private fun refreshHolder(
         holder: LazyListViewHolder,
         submissionRevision: Long,
-    ) {
+    ): LazyItemBindOutcome {
         val boundKey = holder.boundItemKey
         val position = if (boundKey != null) {
-            keyIndex.uniquePosition(boundKey) ?: return
+            keyIndex.uniquePosition(boundKey) ?: return LazyItemBindOutcome.NotCommitted
         } else {
             holder.boundItemPosition
         }
-        if (position !in items.indices) return
+        if (position !in items.indices) return LazyItemBindOutcome.NotCommitted
         val nextItem = items[position]
-        if (holder.boundContentType != nextItem.contentType || holder.boundItemKind != nextItem.kind) return
-        holder.bind(
+        if (holder.boundContentType != nextItem.contentType || holder.boundItemKind != nextItem.kind) {
+            return LazyItemBindOutcome.NotCommitted
+        }
+        return holder.bind(
             nextItem,
             submissionRevision = submissionRevision,
             position = position,
@@ -355,6 +471,10 @@ internal class LazyListAdapter(
     }
 
     private fun warnAboutIdentityIssues(index: KeyIndex) {
+        if (index.duplicateKeys.isEmpty()) {
+            lastIdentityWarning = null
+            return
+        }
         val warning = LazyListIdentityAnalysis(index.duplicateKeys)
             .warningMessage(listName = "items")
         if (warning == null) {
@@ -444,22 +564,58 @@ internal class LazyListAdapter(
         position: Int,
         payload: Any?,
     ) {
+        val item = items[position]
+        if (
+            payload != null &&
+            holder.acknowledgeCommittedBinding(
+                item = item,
+                submissionRevision = currentSubmissionRevision,
+                position = position,
+            )
+        ) {
+            return
+        }
         ensureContainerLayoutParams(holder)
         holderRegistry.onBound(holder)
-        preparePhysicalPresentation(holder, items[position])
-        val item = items[position]
         val reuseKey = MountedTreeReuseCache.ReuseKey(item.kind, item.contentType)
         val active = holderRegistry.isAttached(holder)
-        val startedAt = if (active) System.nanoTime() else 0L
-        holder.bind(
+        val prepare = !active && preparationCosts.shouldPrepare(reuseKey)
+        preparePhysicalPresentation(holder, item)
+        val startedAt = if (active || prepare) System.nanoTime() else 0L
+        val outcome = holder.bind(
             item = item,
             payload = payload,
             submissionRevision = currentSubmissionRevision,
             position = position,
             active = active,
-            prepare = !active && preparationCosts.shouldPrepare(reuseKey),
+            prepare = prepare,
         )
-        if (active) preparationCosts.record(reuseKey, System.nanoTime() - startedAt)
+        recordSessionCost(reuseKey, outcome, startedAt)
+    }
+
+    private fun recordSessionCost(
+        reuseKey: MountedTreeReuseCache.ReuseKey?,
+        outcome: LazyItemBindOutcome,
+        startedAt: Long,
+    ) {
+        if (reuseKey == null) return
+        when (outcome) {
+            LazyItemBindOutcome.ActivatedNewSession -> {
+                // Cold activation is a conservative bootstrap ceiling only: it contains commit and
+                // effect work that is absent from detached preparation.
+                preparationCosts.recordBootstrapUpperBound(
+                    reuseKey,
+                    System.nanoTime() - startedAt,
+                )
+            }
+            LazyItemBindOutcome.PreparedNewSession -> {
+                preparationCosts.recordPreparation(
+                    reuseKey,
+                    System.nanoTime() - startedAt,
+                )
+            }
+            else -> Unit
+        }
     }
 
     private fun preparePhysicalPresentation(
@@ -655,13 +811,13 @@ internal class LazyListViewHolder(
         position: Int,
         active: Boolean,
         prepare: Boolean = true,
-    ) {
+    ): LazyItemBindOutcome {
         hasBinding = true
         boundItemKey = item.key
         boundItemPosition = position
         boundContentType = item.contentType
         boundItemKind = item.kind
-        if (active) {
+        return if (active) {
             controller.bind(
                 item = item,
                 payload = payload,
@@ -679,7 +835,23 @@ internal class LazyListViewHolder(
                 payload = payload,
                 submissionRevision = submissionRevision,
             )
+            LazyItemBindOutcome.Staged
         }
+    }
+
+    fun acknowledgeCommittedBinding(
+        item: LazyListItem,
+        submissionRevision: Long,
+        position: Int,
+    ): Boolean {
+        if (
+            !hasBinding ||
+            !controller.hasCommittedExact(item, submissionRevision)
+        ) {
+            return false
+        }
+        boundItemPosition = position
+        return true
     }
 
     fun recycle() {
@@ -706,8 +878,9 @@ internal class LazyListViewHolder(
         boundItemKind = null
     }
 
-    fun activate(submissionRevision: Long): Boolean {
+    fun activate(submissionRevision: Long): LazyItemBindOutcome =
         controller.commit(submissionRevision)
-        return controller.hasCommitted(submissionRevision)
-    }
+
+    fun hasCommitted(submissionRevision: Long): Boolean =
+        controller.hasCommitted(submissionRevision)
 }

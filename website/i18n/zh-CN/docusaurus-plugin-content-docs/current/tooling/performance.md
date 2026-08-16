@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 73d789052a7d9e0f706208355e348e863b70b685ecda5a56315ae1858f60ca39
+translation_source_hash: baabe6c89ed47060d315c6555e82778edaf06bfe1be8e8b119f36d87873a9929
 translation_status: current
 ---
 
@@ -120,6 +120,13 @@ block 外、所有 control 共享报告中的编译身份且稳定性通过时�
 `run-from-apk` 身份验收，绝不能改写成洁净未编译启动数据。该警告会收窄结论范围，不会从证据中
 消失。`cmd power set-fixed-performance-mode-enabled` 只有在设备证明整个测量期间最低和最高频率
 稳定时才能视为锁频。消费设备无法满足门禁时，必须改用可 root 或其他可控制时钟的参考设备。
+
+对 renderer 敏感的固定频率诊断必须控制所有可能执行被测帧的时钟域。RenderThread 或 GPU
+仍受 DVFS 控制时，只锁 CPU 不足以形成有效对照。应把 CPU policy 的最低/最高频率、GPU
+devfreq governor 和边界，以及设备公开时的 KGSL power-level 边界写入持久化
+`clockPolicy`，并在 target 启动后再次核对当前频率。只有证明 OEM 性能服务会覆盖请求的边界时
+才可以停止它；批次开始前必须记录其原始状态、全部被修改的时钟边界、充电/输入状态和 root 或
+策略变更，并在拉取最后一份结果后完整恢复。
 
 与同设备历史基线比较并执行回归门禁：
 
@@ -479,6 +486,51 @@ host，避免通用捕获回调。renderer lowering 预检候选得到 `4.859/27
 引擎共享的 fixture 准备方式，旧 Compose 与 Android Views 数字不能作为本 revision 的跨引擎
 对照；形成新的相对结论前需重跑三引擎矩阵。下一框架目标是冷 composition/JIT 表面，而不是
 再次增加 renderer 预检或削弱 Item Session 语义。
+
+#### 2.4.3 Lazy 快照与 RecyclerView 尾延迟硬切
+
+下一阶段选择硬切集合契约，不再增加 renderer 预检。Typed Lazy API 现在接受显式
+`snapshotRevision`：相同环境下相等的非空 token 会直接复用已提交的完整条目快照，不再执行
+selector 或重建 key map。缓存只保留最近两代成功提交的结果，中止或重复 key 的构建不会发布。
+该 token 负责集合成员、顺序、selector 和普通捕获值；被条目内容使用的捕获值还必须进入该条目的
+`contentRevision`。
+
+Android Adapter 现在以线性复杂度规划同顺序变更和循环位移，为循环位移发送最少 move，只把其他
+结构变更交给 `DiffUtil`。精确的 submission 与 item 实例确认会消除冗余的排队 payload bind；
+关闭条目动画时，纯语义变更不再通知 RecyclerView，但同步 Session 提交失败会得到一次定点重试。
+预取计费会分离冷激活与权威的 detached prepare 成本，并在一次超预算样本后保守熔断。以上路径都
+保留 key 身份、逻辑 Item Session 所有权、原生 Holder 复用和 reset/release 边界。
+
+Root 控制证据使用 API 28 的 Xiaomi MI 6、R8 优化 benchmark target、
+`performance.list@4`、`run-from-apk` 和五轮协议；CPU policy 固定为
+`1401600/1804800 kHz`，GPU 固定为 `515000000 Hz`，并停止 OEM performance HAL。持久化
+策略标识为 `root-fixed-cpu-1401600-1804800-gpu-515000000-perf-hal-off-v3`。
+
+| 构建 | 每轮帧数 | P50/P90/P95/P99，ms | 最大 heap 中位数，KiB | Run-P50 CV | 验收 |
+| --- | --- | ---: | ---: | ---: | --- |
+| `2695fbfb` 对照 A | `48/48/48/48/48` | 4.399 / 25.157 / 25.474 / 27.501 | 8365 | 0.192 | 拒绝：稳定性门禁失败。 |
+| `2695fbfb` 对照 B | `48/48/48/48/48` | 4.508 / 24.947 / 25.351 / 34.353 | 8440 | 0.157 | 拒绝：稳定性门禁失败，且意外遗漏持久化策略 payload；未改写原始 JSON。 |
+| 最终硬切，APK `020582a9` | `48/48/48/48/48` | 5.505 / 14.433 / 16.534 / 30.841 | 8212 | 0.075 | 作为最终代码绝对结果验收。 |
+
+正式纵向结论为 `inconclusive`：两组历史对照都未通过强制 run-P50 稳定性门禁，对照 B 还缺失
+协议身份。最终 APK 仍建立了稳定绝对结果；异常恢复加固前的两组候选检查分别得到
+`14.269/16.329 ms` 和 `14.185/16.201 ms` P90/P95，独立复现了最终尾部。仅作为方向性诊断，
+最终 APK 相对已拒绝的对照 A 将原始 P90/P95 降低 42.6%/35.1%，但原始 P50 上升 25.2%，
+P99 上升 12.1%。
+
+每次 mutation 动作通常贡献连续三个测量帧。硬切将工作从原先的主导帧移到更小的后续工作，
+因此原始 frame P50 并不是事务中位数。在同一份已拒绝对照的诊断中，三帧事务总和 P50/P95 从
+`29.736/36.052 ms` 变为 `22.268/33.817 ms`（-25.1%/-6.2%），事务最大帧 P50/P95 从
+`24.466/27.175 ms` 变为 `12.904/25.075 ms`（-47.3%/-7.7%）。这些归一化变化解释了分布
+迁移，但不能覆盖失败的对照门禁。
+
+最终代码的 P99 仍受冷路径限制：第一次交互主要由并发 ART JIT 主导，而不是 steady list planner。
+一个具名 Material host 边界实验引入了约 45 ms 的冷 JIT 事件并使 P99 回退，因此已完整撤销；
+本结果不包含 Material host 改动。下一验收步骤是取得稳定的同策略对照，再重跑新的
+ViewCompose/Compose/Android Views 矩阵。在此之前，可接受的结论只覆盖候选绝对尾部，不能宣称
+相对赢家，也不能把它视为洁净的 `CompilationMode.None` 结果。
+
+#### 2.4.4 导航与设计系统诊断
 
 导航 revision 6 也形成稳定的固定频率诊断数据：
 

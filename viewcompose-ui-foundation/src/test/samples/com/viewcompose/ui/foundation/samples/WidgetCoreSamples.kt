@@ -156,6 +156,7 @@ import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
+import com.viewcompose.ui.node.spec.LazyRowNodeProps
 import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
 import com.viewcompose.ui.node.spec.NavigationBarNodeProps
 import com.viewcompose.ui.node.spec.PullToRefreshNodeProps
@@ -290,14 +291,23 @@ private data class RevisionSampleRow(
     val label: String,
 )
 
+private data class RevisionSampleSnapshot(
+    val revision: Long,
+    val rows: List<RevisionSampleRow>,
+)
+
 fun lazyCollectionRevisionSample() {
-    val rows = listOf(RevisionSampleRow(id = 7L, version = 3, label = "Ready"))
+    val snapshot = RevisionSampleSnapshot(
+        revision = 12L,
+        rows = listOf(RevisionSampleRow(id = 7L, version = 3, label = "Ready")),
+    )
     val list = buildVNodeTree {
         LazyColumn(
-            items = rows,
+            items = snapshot.rows,
             key = RevisionSampleRow::id,
             contentType = { "status-row" },
             contentRevision = RevisionSampleRow::version,
+            snapshotRevision = snapshot.revision,
         ) { row ->
             Text(row.label)
         }
@@ -307,6 +317,81 @@ fun lazyCollectionRevisionSample() {
     check(item.key == 7L)
     check(item.contentType == "status-row")
     check(item.contentRevision == 3)
+
+    val topLevelVariants = buildVNodeTree {
+        LazyRow(
+            items = snapshot.rows,
+            key = RevisionSampleRow::id,
+            contentRevision = RevisionSampleRow::version,
+            snapshotRevision = snapshot.revision,
+        ) { row ->
+            Text(row.label)
+        }
+        LazyVerticalGrid(
+            items = snapshot.rows,
+            key = RevisionSampleRow::id,
+            contentRevision = RevisionSampleRow::version,
+            snapshotRevision = snapshot.revision,
+        ) { row ->
+            Text(row.label)
+        }
+        LazyColumn {
+            items(
+                items = snapshot.rows,
+                key = RevisionSampleRow::id,
+                contentRevision = RevisionSampleRow::version,
+                snapshotRevision = "list" to snapshot.revision,
+            ) { row ->
+                Text(row.label)
+            }
+        }
+        LazyVerticalGrid {
+            items(
+                items = snapshot.rows,
+                key = RevisionSampleRow::id,
+                contentRevision = RevisionSampleRow::version,
+                snapshotRevision = "grid" to snapshot.revision,
+            ) { row ->
+                Text(row.label)
+            }
+        }
+    }
+
+    val nestedCollections = buildVNodeTree {
+        PullToRefresh(isRefreshing = false, onRefresh = {}) {
+            LazyColumn(
+                items = snapshot.rows,
+                key = RevisionSampleRow::id,
+                contentRevision = RevisionSampleRow::version,
+                snapshotRevision = snapshot.revision,
+            ) { row ->
+                Text(row.label)
+            }
+        }
+        PullToRefresh(isRefreshing = false, onRefresh = {}) {
+            LazyRow(
+                items = snapshot.rows,
+                key = RevisionSampleRow::id,
+                contentRevision = RevisionSampleRow::version,
+                snapshotRevision = snapshot.revision,
+            ) { row ->
+                Text(row.label)
+            }
+        }
+        PullToRefresh(isRefreshing = false, onRefresh = {}) {
+            LazyVerticalGrid(
+                items = snapshot.rows,
+                key = RevisionSampleRow::id,
+                contentRevision = RevisionSampleRow::version,
+                snapshotRevision = snapshot.revision,
+            ) { row ->
+                Text(row.label)
+            }
+        }
+    }
+
+    check(topLevelVariants.size == 4)
+    check((nestedCollections[1].children.single().spec as LazyRowNodeProps).items.single().key == 7L)
 }
 
 fun pagerAndTabIdentitySample() {

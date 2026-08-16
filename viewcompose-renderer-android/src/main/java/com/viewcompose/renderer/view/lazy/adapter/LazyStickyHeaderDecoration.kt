@@ -7,6 +7,7 @@ import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.R
+import com.viewcompose.ui.node.LazyListItem
 
 /**
  * Draws and dispatches pointer input to a sticky-header holder detached from RecyclerView children.
@@ -209,6 +210,31 @@ internal class LazyStickyHeaderDecoration private constructor(
     }
 
     companion object {
+        fun submitItemsAndUpdate(
+            recyclerView: RecyclerView,
+            adapter: LazyListAdapter,
+            items: List<LazyListItem>,
+            submissionRevision: Long,
+        ) {
+            var failure: Throwable? = null
+            try {
+                adapter.submitItems(items, submissionRevision)
+            } catch (error: Throwable) {
+                failure = error
+            }
+            try {
+                update(recyclerView, adapter)
+            } catch (error: Throwable) {
+                val firstFailure = failure
+                if (firstFailure == null) {
+                    failure = error
+                } else if (firstFailure !== error) {
+                    firstFailure.addSuppressed(error)
+                }
+            }
+            failure?.let { throw it }
+        }
+
         fun update(
             recyclerView: RecyclerView,
             adapter: LazyListAdapter,
