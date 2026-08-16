@@ -577,14 +577,16 @@ numbers are not a valid cross-engine control for this revision; rerun the three-
 making a new relative claim. The next framework target is cold composition/JIT surface, not another
 renderer preflight or weaker item-session semantics.
 
-#### 2.4.3 Lazy snapshot and RecyclerView tail-latency hard cut
+#### 2.4.3 Lazy collection and RecyclerView tail-latency hard cut
 
-The next slice hard-cuts the collection contract instead of adding another renderer preflight.
-Typed lazy APIs now accept an explicit `snapshotRevision`: an equal non-null token under the same
-environment reuses the exact committed item snapshot without rerunning selectors or rebuilding the
-key map. The cache keeps two successfully committed generations and never publishes an aborted or
-duplicate-key build. The token owns collection membership, order, selectors, and ordinary captured
-values; a captured value used by item content must also enter that item's `contentRevision`.
+This measured slice combined keyed logical-item reuse with RecyclerView submission changes instead
+of adding another renderer preflight. Its benchmark APK also included a trial caller-owned
+aggregate revision that could bypass all typed-list selector evaluation. A subsequent API audit
+removed that public token: it duplicated the per-item revision contract, could produce stale order,
+membership, or selector output when advanced incorrectly, and was disproportionately favored by
+the benchmark's repeated two-snapshot update/reset fixture. The current `List` DSL evaluates order,
+membership, and selectors on every parent composition pass, then reuses committed logical items and
+Session bindings by equal key, `contentRevision`, environment, content type, kind, and span.
 
 The Android adapter now plans same-order changes and cyclic rotations in linear time, emits the
 minimum move sequence for a rotation, and reserves `DiffUtil` for other structural changes. Exact
@@ -605,28 +607,32 @@ policy identity is
 | --- | --- | ---: | ---: | ---: | --- |
 | `2695fbfb` control A | `48/48/48/48/48` | 4.399 / 25.157 / 25.474 / 27.501 | 8365 | 0.192 | Rejected: stability gate failed. |
 | `2695fbfb` control B | `48/48/48/48/48` | 4.508 / 24.947 / 25.351 / 34.353 | 8440 | 0.157 | Rejected: stability gate failed and the durable policy payload was accidentally omitted. The raw JSON was not rewritten. |
-| Final hard cut, APK `020582a9` | `48/48/48/48/48` | 5.505 / 14.433 / 16.534 / 30.841 | 8212 | 0.075 | Accepted as the absolute final-code result. |
+| Historical hard-cut candidate, APK `020582a9` | `48/48/48/48/48` | 5.505 / 14.433 / 16.534 / 30.841 | 8212 | 0.075 | Accepted as an absolute result for that APK; it is not the current DSL contract. |
 
 The formal longitudinal conclusion is `inconclusive` because neither historical control passes the
-mandatory run-P50 stability gate; control B also fails protocol identity. The final APK nevertheless
-establishes a stable absolute result. Two precursor checks made before the failure-recovery hardening
-reported `14.269/16.329 ms` and `14.185/16.201 ms` P90/P95, independently reproducing the final
-tail. As directional diagnostic evidence only, the final APK versus rejected control A lowers raw
-P90/P95 by 42.6%/35.1%, while raw P50 rises 25.2% and P99 rises 12.1%.
+mandatory run-P50 stability gate; control B also fails protocol identity. The candidate APK
+nevertheless establishes a stable absolute result. Two precursor checks made before the
+failure-recovery hardening reported `14.269/16.329 ms` and `14.185/16.201 ms` P90/P95,
+independently reproducing the candidate tail. As directional diagnostic evidence only, that APK
+versus rejected control A lowers raw P90/P95 by 42.6%/35.1%, while raw P50 rises 25.2% and P99 rises
+12.1%. Because the candidate combined the removed aggregate skip with the retained item and adapter
+optimizations, these measurements cannot attribute an improvement to the aggregate mechanism. A
+fresh same-policy run of the current selector-evaluating DSL is required before accepting a new
+longitudinal result.
 
-Each mutation action normally contributes three consecutive measured frames. The hard cut moves
+Each mutation action normally contributes three consecutive measured frames. The candidate moves
 work out of the former dominant frame and into smaller follow-up work, so raw frame P50 is not a
 transaction median. In the same rejected-control diagnostic, the three-frame transaction-sum
 P50/P95 changes from `29.736/36.052 ms` to `22.268/33.817 ms` (-25.1%/-6.2%), and transaction
 maximum-frame P50/P95 changes from `24.466/27.175 ms` to `12.904/25.075 ms` (-47.3%/-7.7%). These
 normalized deltas explain the distribution shift but do not override the failed control gate.
 
-Final-code P99 remains a cold-path limitation: the first interaction is dominated by concurrent ART
-JIT rather than the steady list planner. A named Material host boundary experiment introduced an
-approximately 45 ms cold JIT event, regressed P99, and was fully reverted; no Material host change
-is part of this result. The next acceptance step is a stable same-policy control followed by a fresh
-ViewCompose/Compose/Android Views matrix. Until then, the accepted claim is the candidate's absolute
-tail, not a relative winner or a clean `CompilationMode.None` result.
+The candidate APK's P99 remains a cold-path limitation: the first interaction is dominated by
+concurrent ART JIT rather than the steady list planner. A named Material host boundary experiment
+introduced an approximately 45 ms cold JIT event, regressed P99, and was fully reverted; no Material
+host change is part of this result. The next acceptance step is a stable same-policy control followed
+by a fresh ViewCompose/Compose/Android Views matrix. Until then, the accepted claim is the
+candidate's absolute tail, not a relative winner or a clean `CompilationMode.None` result.
 
 #### 2.4.4 Navigation and design-system diagnostics
 

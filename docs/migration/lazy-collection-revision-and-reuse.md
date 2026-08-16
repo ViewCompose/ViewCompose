@@ -52,12 +52,11 @@ The framework automatically captures theme, Android resource, locale, direction,
 scale, and other active local values as `environmentRevision`; applications must not duplicate
 those values in `contentRevision`.
 
-## Opt into complete typed-snapshot reuse
+## Remove aggregate snapshot tokens
 
-Typed `LazyColumn`, `LazyRow`, `LazyVerticalGrid`, and scoped `items` now accept
-`snapshotRevision`. The default `null` preserves the previous correctness behavior: every
-declaration pass invokes all item selectors. Use a non-null immutable aggregate revision only when
-the application can version the complete typed declaration:
+Typed `LazyColumn`, `LazyRow`, `LazyVerticalGrid`, scoped `items`, and their `ScrollableScope`
+wrappers do not accept a caller-owned aggregate snapshot revision. Remove `snapshotRevision` from
+calls that used the interim API:
 
 ```kotlin
 LazyColumn(
@@ -65,28 +64,24 @@ LazyColumn(
     key = { message -> message.id },
     contentType = { "message-row" },
     contentRevision = { message -> message.version },
-    snapshotRevision = messagesSnapshot.revision,
 ) { message ->
     MessageRow(message)
 }
 ```
 
-Equal aggregate and framework environment revisions authorize reuse of the exact committed logical
-item list. The token must change with item order, membership, key, content type, item revision, grid
-span, or any ordinary non-State content capture. Changing only the aggregate token reevaluates item
-selectors but does not replace an item whose `contentRevision` remains equal, so an ordinary value
-read by item content must also enter the affected item revision. Observable State remains
-independently tracked. Prefer a constant-time comparable scalar revision rather than a collection
-token. The cache keeps two committed snapshots, never publishes a failed composition, and retains
-key/session/saveable ownership by the existing item key contract.
+Every declaration pass now evaluates list order and membership and invokes `key`, `contentType`,
+`contentRevision`, and grid-span selectors. The framework does not trust list identity, list
+equality, or an independently maintained version to bypass these checks. This avoids stale order,
+membership, or selector output when a caller forgets to advance a parallel token, and scoped
+declarations no longer need caller-defined token namespaces.
 
-The top-level homogeneous overload is the whole-container fast path: a hit does not traverse item
-selectors or the item map. Scoped declarations can reuse one typed segment, but headers and
-multiple segments still require merge and cross-segment duplicate-key validation. Namespace the
-revision when a scope contains multiple typed declarations; duplicate non-null values in one scope
-fail before the candidate commits. Typed `ScrollableScope` wrappers expose and forward the same
-parameter. Existing callers should use named arguments around the new optional parameter; this
-alpha hard cut does not preserve binary linkage to the old method descriptors.
+Selector evaluation does not discard keyed reuse. After the pass, equal key, content revision,
+framework environment, content type, item kind, and span reuse the previously committed logical
+item and Session binding; changed rows remain targeted. Observable State read by an item Session is
+tracked independently. Because ViewCompose has no compiler transform that can identify arbitrary
+Kotlin captures, every changing ordinary non-State value read by item content must still enter the
+affected item's `contentRevision`. Callers compiled against the interim aggregate-parameter method
+descriptors must recompile for this alpha hard cut.
 
 ## Update native interop reuse
 

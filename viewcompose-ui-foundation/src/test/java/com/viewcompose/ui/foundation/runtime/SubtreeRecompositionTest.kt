@@ -253,23 +253,23 @@ class SubtreeRecompositionTest {
     }
 
     @Test
-    fun `aborted lazy snapshot never advances the committed reuse cache`() {
+    fun `aborted lazy candidate never advances the committed reuse cache`() {
         val composer = ComposerLite()
 
-        val first = composer.commitLazySnapshot(
+        val first = composer.commitLazyItems(
             listOf(CacheRow(id = "item", revision = 0)),
         ).single()
-        val aborted = composer.prepareLazySnapshot(
+        val aborted = composer.prepareLazyItems(
             listOf(CacheRow(id = "item", revision = 1)),
         )
         val abortedItem = aborted.value.lazyItems().single()
 
         aborted.abort()
 
-        val third = composer.commitLazySnapshot(
+        val third = composer.commitLazyItems(
             listOf(CacheRow(id = "item", revision = 2)),
         ).single()
-        val retried = composer.commitLazySnapshot(
+        val retried = composer.commitLazyItems(
             listOf(CacheRow(id = "item", revision = 1)),
         ).single()
 
@@ -279,19 +279,19 @@ class SubtreeRecompositionTest {
     }
 
     @Test
-    fun `lazy snapshot cache evicts a variant after two newer commits`() {
+    fun `lazy canonical cache evicts a variant after two newer commits`() {
         val composer = ComposerLite()
 
-        val first = composer.commitLazySnapshot(
+        val first = composer.commitLazyItems(
             listOf(CacheRow(id = "item", revision = 0)),
         ).single()
-        val second = composer.commitLazySnapshot(
+        val second = composer.commitLazyItems(
             listOf(CacheRow(id = "item", revision = 1)),
         ).single()
-        val third = composer.commitLazySnapshot(
+        val third = composer.commitLazyItems(
             listOf(CacheRow(id = "item", revision = 2)),
         ).single()
-        val firstRevisionAgain = composer.commitLazySnapshot(
+        val firstRevisionAgain = composer.commitLazyItems(
             listOf(CacheRow(id = "item", revision = 0)),
         ).single()
 
@@ -304,19 +304,19 @@ class SubtreeRecompositionTest {
     fun `monotonic lazy revisions reuse only semantically unchanged keys`() {
         val composer = ComposerLite()
 
-        val first = composer.commitLazySnapshot(
+        val first = composer.commitLazyItems(
             listOf(
                 CacheRow(id = "changing", revision = 0),
                 CacheRow(id = "stable", revision = 0),
             ),
         ).associateBy(LazyListItem::key)
-        val second = composer.commitLazySnapshot(
+        val second = composer.commitLazyItems(
             listOf(
                 CacheRow(id = "changing", revision = 1),
                 CacheRow(id = "stable", revision = 0),
             ),
         ).associateBy(LazyListItem::key)
-        val third = composer.commitLazySnapshot(
+        val third = composer.commitLazyItems(
             listOf(
                 CacheRow(id = "changing", revision = 2),
                 CacheRow(id = "stable", revision = 0),
@@ -606,7 +606,7 @@ class SubtreeRecompositionTest {
         assertSame(first.children[2], second.children[2])
     }
 
-    private fun ComposerLite.prepareLazySnapshot(
+    private fun ComposerLite.prepareLazyItems(
         rows: List<CacheRow>,
     ): ComposerLite.PreparedComposition<VNode> {
         return ComposerContext.withComposer(this) {
@@ -626,8 +626,8 @@ class SubtreeRecompositionTest {
         }
     }
 
-    private fun ComposerLite.commitLazySnapshot(rows: List<CacheRow>): List<LazyListItem> {
-        val prepared = prepareLazySnapshot(rows)
+    private fun ComposerLite.commitLazyItems(rows: List<CacheRow>): List<LazyListItem> {
+        val prepared = prepareLazyItems(rows)
         prepared.commit()
         commitSideEffects()
         return prepared.value.lazyItems()

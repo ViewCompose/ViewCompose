@@ -47,13 +47,18 @@ Every delayed-session container must satisfy these constraints:
    parent rollback discards them without running child composition or effects.
 10. Callback identity is not a revision. A changed ordinary capture must be State or participate in
     `contentRevision`; callback allocation alone never refreshes content.
-11. A non-null typed `snapshotRevision` is an authoritative version of order, membership, every
-    item selector result, and ordinary non-State content captures. Equal snapshot and environment
-    revisions may reuse one of two committed complete logical snapshots without an item-map scan;
-    changing only this aggregate revision reevaluates selectors but leaves equal per-item
-    `contentRevision` identities intact. Item-content captures therefore enter both revisions.
-    Scoped typed declarations use distinct namespaced non-null values, host node types isolate their
-    caches, `null` evaluates every selector, and parent rollback never advances the snapshot cache.
+11. Every typed `List` declaration reevaluates order, membership, and its `key`, `contentType`,
+    `contentRevision`, and grid-span selectors on each parent composition pass. The collector may
+    reuse an already committed logical item only when its key, content revision, environment,
+    content type, kind, and span are all equal. It retains the committed ordered list plus at most
+    one previous semantic variant for each current key; when candidate order contains the same item
+    identities at every position, `build` returns that committed list instance. The single
+    declaration/build traversal also precomputes displaced variants and key-membership deltas, and
+    only the successful parent commit's `SideEffect` publishes them. If a delayed side effect finds
+    that the cache generation has advanced, it recomputes membership and previous-variant state
+    against the current committed generation instead of publishing stale precomputation. A parent
+    rollback never publishes candidate item bindings. ViewCompose does not accept an aggregate
+    caller token that can bypass these checks.
 12. A detached, never-activated holder may prepare a committed parent submission without running
     remember activation, effects, native commit callbacks, overlays, or committed diagnostics.
     Activation commits a valid candidate without rebuilding it. An already-active detached holder
@@ -98,7 +103,7 @@ Every container covers at least these eight cases:
 
 Foundation unit tests:
 
-1. [TypedLazySnapshotReuseTest.kt](../../viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/TypedLazySnapshotReuseTest.kt)
+1. [TypedLazyCollectionContractTest.kt](../../viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/TypedLazyCollectionContractTest.kt)
 2. [LazyListDiffTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
 3. [LazyHolderRegistryTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
 4. [LazyItemSessionControllerTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)

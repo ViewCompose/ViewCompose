@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: f2bd0772d9c0b41e640d0d88b96dded4ec47f002e470af83ab2dcef7becaa7c0
+translation_source_hash: a4d78686adf70929d13ae61584d6b2cb2731446b1b44039eb930b2daf855136e
 translation_status: current
 ---
 
@@ -82,40 +82,17 @@ LazyColumn(
 Header 占满整行。`contentRevision` 是正确性契约而不只是性能提示。Item Content 捕获的变化值必须
 是可观察 State，或进入该 Revision；Key 和 Revision 相等时完全跳过 Item Render。
 
-均质数据 Overload 还可以跳过整份逻辑 Item Snapshot 的构建。传入一个不可变且能以常量时间比较的
-聚合 `snapshotRevision`：
+每个均质或 Scoped `List` Declaration 都会在父 Composition 的每一轮执行中遍历有序元素，并调用
+`key`、`contentType`、`contentRevision` 和网格 Span Selector。ViewCompose 不会把 List 引用身份、
+List Equality 或调用方提供的聚合 Token 当作整份 Declaration 未变化的证明：Kotlin `List` 可能存在
+可变别名，而且没有编译器转换时，框架无法推断普通 Lambda Capture。
 
-```kotlin
-LazyColumn(
-    items = contactsSnapshot.items,
-    key = { contact -> contact.id },
-    contentType = { "contact-row" },
-    contentRevision = { contact -> contact.version },
-    snapshotRevision = contactsSnapshot.revision,
-) { contact ->
-    ContactRow(contact)
-}
-```
-
-非空 `snapshotRevision` 与框架 Environment Revision 都相等时，会复用已提交的同一个
-`List<LazyListItem>`。因此顶层均质数据 Overload 命中时不会调用 Item Selector、分配 Item
-Binding，也不会遍历 Item Map。ViewCompose 保留两份已提交 Snapshot，使一次更新和重置都能复用；
-失败的 Composition 不会发布候选 Snapshot。
-
-该 Token 是权威的正确性契约。Item 顺序、成员、Key、Content Type、Item Content Revision、
-Grid Span 或 Item Content 捕获的普通非 State 值变化时，它都必须变化。Token 变化会重新执行
-Selector，但逐 Item `contentRevision` 相等时仍会保留原有 Content Closure。因此，Item Content
-读取的普通非 State 值必须同时进入聚合 Token 与所有受影响 Item 的 `contentRevision`。主题、资源、
-Locale、布局方向、密度、字体缩放及其他框架 Local 会自动进入 Environment Revision。默认值 `null`
-会关闭整份 Snapshot 复用，并保留每轮完整执行 Selector 的行为；Item Session 内的可观察 State 仍可
-独立失效。可以用 `List` 作为 Token，但其不可变性和 Equality 成本必须可接受；标量数据 Generation
-才是可预测的快路径。
-
-Scoped `items` 接受同一参数并可复用 Typed Segment，但包含 Header 或多个 Declaration 的 Scope
-仍需合并 Segment 并校验跨 Segment Key。需要整容器 O(1) Snapshot 复用时，应使用均质数据 Overload。
-一个 Scope 内有多个 Typed Declaration 时，应给 Revision 加命名空间，确保相等值始终描述同一份
-Declaration。同一 Scope 重复使用非空值会在候选提交前被拒绝。`ScrollableScope` 内的 Typed
-Collection Wrapper 暴露并转发同一契约。
+执行 Selector 并不等于每个 Item 都会再次 Render。求值完成后，如果 Key、Content Revision、捕获的
+框架 Environment、Content Type、Kind 与 Span 都相等，框架会复用已提交的逻辑 Item 与 Session
+Binding。因此 List 变化时仍可保留全部未受影响的 Item Session，而 `contentRevision` 变化只会定向
+刷新受影响 Item。主题、资源、Locale、布局方向、密度、字体缩放与其他框架 Local 会自动进入
+Environment Revision；Item Session 内读取的可观察 State 仍会独立跟踪。框架无法自动推断 Item
+Content 读取的普通非 State 值，它仍必须进入该 Item 的 `contentRevision`。
 
 网格列使用 Sealed Policy，而不是 Android Span Count：
 
@@ -185,9 +162,9 @@ Attach 或重排时按 Item Key 恢复。分离的 Pinned Header 副本是不拥
 2. 一个 Key 在重排期间持续标识同一逻辑 Item。
 3. `contentType` 只能分组布局兼容的 Item 结构。
 4. `contentRevision` 包含每个不由 State 观察的变化普通捕获值。
-5. 非空 `snapshotRevision` 为完整 Typed Declaration 建立版本；顺序、成员、Selector 结果或普通
-   非 State Capture 变化时必须更新。Item Content Capture 还必须进入受影响的
-   `contentRevision`；`null` 表示不启用聚合跳过。Scoped Declaration 的非空值必须带不同命名空间。
+5. 每个 Typed `List` Declaration 都会在父 Composition 的每一轮执行中重新求值顺序、成员与 Item
+   Selector；随后只有 Key、Content Revision、Environment、Content Type、Kind 与 Span 都相等时，
+   才能复用已提交的逻辑 Item。
 6. 平台 Callback 发布不可变 Snapshot；Android 类型不得进入 `ui-contract`。
 7. 对同一 RecyclerView Connector 的重新绑定不得重置滚动锚点。
 8. 保存恢复只持久化首个可见 Index 与偏移。

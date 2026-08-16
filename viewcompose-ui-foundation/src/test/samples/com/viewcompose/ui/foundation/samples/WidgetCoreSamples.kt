@@ -291,66 +291,55 @@ private data class RevisionSampleRow(
     val label: String,
 )
 
-private data class RevisionSampleSnapshot(
-    val revision: Long,
-    val rows: List<RevisionSampleRow>,
-)
-
 fun lazyCollectionRevisionSample() {
-    val snapshot = RevisionSampleSnapshot(
-        revision = 12L,
-        rows = listOf(RevisionSampleRow(id = 7L, version = 3, label = "Ready")),
-    )
+    val rows = listOf(RevisionSampleRow(id = 7L, version = 3, label = "Ready"))
+    val compact = true
     val list = buildVNodeTree {
         LazyColumn(
-            items = snapshot.rows,
+            items = rows,
             key = RevisionSampleRow::id,
             contentType = { "status-row" },
-            contentRevision = RevisionSampleRow::version,
-            snapshotRevision = snapshot.revision,
+            // Ordinary captures that affect item content also belong in its semantic revision.
+            contentRevision = { row -> row.version to compact },
         ) { row ->
-            Text(row.label)
+            Text(if (compact) row.label else "Status: ${row.label}")
         }
     }.single()
     val item = (list.spec as LazyColumnNodeProps).items.single()
 
     check(item.key == 7L)
     check(item.contentType == "status-row")
-    check(item.contentRevision == 3)
+    check(item.contentRevision == (3 to true))
 
     val topLevelVariants = buildVNodeTree {
         LazyRow(
-            items = snapshot.rows,
+            items = rows,
             key = RevisionSampleRow::id,
             contentRevision = RevisionSampleRow::version,
-            snapshotRevision = snapshot.revision,
         ) { row ->
             Text(row.label)
         }
         LazyVerticalGrid(
-            items = snapshot.rows,
+            items = rows,
             key = RevisionSampleRow::id,
             contentRevision = RevisionSampleRow::version,
-            snapshotRevision = snapshot.revision,
         ) { row ->
             Text(row.label)
         }
         LazyColumn {
             items(
-                items = snapshot.rows,
+                items = rows,
                 key = RevisionSampleRow::id,
                 contentRevision = RevisionSampleRow::version,
-                snapshotRevision = "list" to snapshot.revision,
             ) { row ->
                 Text(row.label)
             }
         }
         LazyVerticalGrid {
             items(
-                items = snapshot.rows,
+                items = rows,
                 key = RevisionSampleRow::id,
                 contentRevision = RevisionSampleRow::version,
-                snapshotRevision = "grid" to snapshot.revision,
             ) { row ->
                 Text(row.label)
             }
@@ -360,30 +349,27 @@ fun lazyCollectionRevisionSample() {
     val nestedCollections = buildVNodeTree {
         PullToRefresh(isRefreshing = false, onRefresh = {}) {
             LazyColumn(
-                items = snapshot.rows,
+                items = rows,
                 key = RevisionSampleRow::id,
                 contentRevision = RevisionSampleRow::version,
-                snapshotRevision = snapshot.revision,
             ) { row ->
                 Text(row.label)
             }
         }
         PullToRefresh(isRefreshing = false, onRefresh = {}) {
             LazyRow(
-                items = snapshot.rows,
+                items = rows,
                 key = RevisionSampleRow::id,
                 contentRevision = RevisionSampleRow::version,
-                snapshotRevision = snapshot.revision,
             ) { row ->
                 Text(row.label)
             }
         }
         PullToRefresh(isRefreshing = false, onRefresh = {}) {
             LazyVerticalGrid(
-                items = snapshot.rows,
+                items = rows,
                 key = RevisionSampleRow::id,
                 contentRevision = RevisionSampleRow::version,
-                snapshotRevision = snapshot.revision,
             ) { row ->
                 Text(row.label)
             }

@@ -35,16 +35,11 @@ import com.viewcompose.ui.unit.UiDp
 /**
  * Virtualizes vertical list data with explicit logical identity and revision contracts.
  *
- * A stable [key] owns item state and effects. Equal keys and [contentRevision] values skip item
- * rendering; [contentType] permits native presentation reuse across different keys without sharing
- * their logical sessions. A non-null [snapshotRevision] additionally permits exact reuse of the
- * complete logical item snapshot. Mutable values read by item content must be observable State or
- * enter both the affected item's content revision and the complete snapshot revision; values used
- * only by collection selectors need only enter the complete snapshot revision.
- *
- * The cache retains two successfully committed complete snapshots. A failed composition never
- * publishes a candidate. Prefer an immutable, constant-time comparable data version; passing a
- * collection as the revision can make cache lookup linear.
+ * A stable [key] owns item state and effects. Equal key, [contentRevision], captured environment,
+ * [contentType], kind, and span reuse the canonical item and skip its rendering. [contentType] also
+ * permits native presentation reuse across different keys without sharing their logical sessions.
+ * Collection selectors run on every parent declaration pass. Mutable values read by item content
+ * must be observable State or enter the affected item's content revision.
  *
  * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
  * @param T item model type
@@ -63,12 +58,6 @@ import com.viewcompose.ui.unit.UiDp
  * @param motionPolicy item placement and change animation policy
  * @param focusFollowKeyboard whether keyboard focus may bring a descendant into view
  * @param modifier ordered configuration applied to the lazy-list host
- * @param snapshotRevision optional complete-submission revision. Equal non-null values skip all
- * item selectors and reuse the exact logical item list when the environment is also unchanged. It
- * must change with item order, membership, selector results, or non-State [itemContent] captures.
- * Changing this value reevaluates selectors but does not replace an item whose [contentRevision]
- * remains equal, so item-content captures must also participate in [contentRevision]. `null`
- * preserves full declaration evaluation on every pass
  * @param itemContent content factory invoked only while an item session is active
  * @throws IllegalArgumentException when [key] selects duplicate values
  */
@@ -87,7 +76,6 @@ fun <T> UiTreeBuilder.LazyColumn(
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
     focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
-    snapshotRevision: Any? = null,
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
     val itemSnapshot = rememberLazyItemCollector(NodeType.LazyColumn).apply {
@@ -96,7 +84,6 @@ fun <T> UiTreeBuilder.LazyColumn(
             key = key,
             contentType = contentType,
             contentRevision = contentRevision,
-            snapshotRevision = snapshotRevision,
             kind = LazyListItemKind.Item,
             span = { GridItemSpan.Single },
             itemContent = itemContent,
@@ -179,14 +166,10 @@ fun UiTreeBuilder.LazyColumn(
 /**
  * Virtualizes horizontal list data with explicit logical identity and revision contracts.
  *
- * A stable [key] owns item state and effects. Equal keys and [contentRevision] values skip item
- * rendering; [contentType] permits native presentation reuse across different keys without sharing
- * their logical sessions. Equal non-null [snapshotRevision] values may reuse the complete logical
- * item snapshot when the captured environment is unchanged.
- *
- * The cache retains two successfully committed complete snapshots. A failed composition never
- * publishes a candidate. Prefer an immutable, constant-time comparable data version; passing a
- * collection as the revision can make cache lookup linear.
+ * A stable [key] owns item state and effects. Equal key, [contentRevision], captured environment,
+ * [contentType], kind, and span reuse the canonical item and skip its rendering. [contentType] also
+ * permits native presentation reuse across different keys without sharing their logical sessions.
+ * Collection selectors run on every parent declaration pass.
  *
  * @sample com.viewcompose.ui.foundation.samples.lazyListDslSample
  * @param T item model type
@@ -204,12 +187,6 @@ fun UiTreeBuilder.LazyColumn(
  * @param reusePolicy mounted-tree capacity and reuse policy
  * @param motionPolicy item placement and change animation policy
  * @param modifier ordered configuration applied to the lazy-list host
- * @param snapshotRevision optional complete-submission revision. Equal non-null values skip all
- * item selectors and reuse the exact logical item list when the environment is also unchanged. It
- * must change with item order, membership, selector results, or non-State [itemContent] captures.
- * Changing this value reevaluates selectors but does not replace an item whose [contentRevision]
- * remains equal, so item-content captures must also participate in [contentRevision]. `null`
- * preserves full declaration evaluation on every pass
  * @param itemContent content factory invoked only while an item session is active
  * @throws IllegalArgumentException when [key] selects duplicate values
  */
@@ -227,7 +204,6 @@ fun <T> UiTreeBuilder.LazyRow(
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
     modifier: Modifier = Modifier,
-    snapshotRevision: Any? = null,
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
     val itemSnapshot = rememberLazyItemCollector(NodeType.LazyRow).apply {
@@ -236,7 +212,6 @@ fun <T> UiTreeBuilder.LazyRow(
             key = key,
             contentType = contentType,
             contentRevision = contentRevision,
-            snapshotRevision = snapshotRevision,
             kind = LazyListItemKind.Item,
             span = { GridItemSpan.Single },
             itemContent = itemContent,
@@ -317,11 +292,9 @@ fun UiTreeBuilder.LazyRow(
  *
  * [cells] may fix the column count or derive it from a minimum cell width. Physical column-count
  * changes do not replace logical item sessions. [span] uses renderer-neutral policies, so
- * [GridItemSpan.FullLine] remains correct when an adaptive grid resizes.
- *
- * A non-null [snapshotRevision] enables a bounded two-snapshot cache after successful composition.
- * Failed candidates are discarded. Prefer an immutable, constant-time comparable data version;
- * passing a collection as the revision can make cache lookup linear.
+ * [GridItemSpan.FullLine] remains correct when an adaptive grid resizes. Collection selectors run
+ * on every parent declaration pass; equal key, content revision, environment, content type, kind,
+ * and span reuse the canonical logical item and Session binding.
  *
  * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
  * @param T list element type
@@ -343,12 +316,6 @@ fun UiTreeBuilder.LazyRow(
  * @param motionPolicy native item-mutation animation hints
  * @param focusFollowKeyboard whether keyboard focus may bring an item into view
  * @param modifier ordered configuration applied to the grid root
- * @param snapshotRevision optional complete-submission revision. Equal non-null values skip every
- * item selector and reuse the exact logical item list when the environment is also unchanged. It
- * must change with item order, membership, selector results including [span], or non-State
- * [itemContent] captures. Changing this value reevaluates selectors but does not replace an item
- * whose [contentRevision] remains equal, so item-content captures must also participate in
- * [contentRevision]. `null` evaluates the declaration fully on every pass
  * @param itemContent delayed item content evaluated in its keyed session
  * @throws IllegalArgumentException for duplicate keys or invalid spacing
  */
@@ -370,7 +337,6 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
     focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
-    snapshotRevision: Any? = null,
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
     val itemSnapshot = rememberLazyItemCollector(NodeType.LazyVerticalGrid).apply {
@@ -379,7 +345,6 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
             key = key,
             contentType = contentType,
             contentRevision = contentRevision,
-            snapshotRevision = snapshotRevision,
             kind = LazyListItemKind.Item,
             span = span,
             itemContent = itemContent,
@@ -469,10 +434,10 @@ fun UiTreeBuilder.LazyVerticalGrid(
 private fun rememberLazyItemCollector(hostType: NodeType): LazyItemCollector {
     val saveableStateHolder = rememberSaveableStateHolder()
     val reuseCache = if (ComposerContext.currentComposer() == null) {
-        LazyItemSnapshotReuseCache()
+        LazyItemCanonicalReuseCache()
     } else {
         remember(saveableStateHolder, hostType) {
-            LazyItemSnapshotReuseCache()
+            LazyItemCanonicalReuseCache()
         }
     }
     return LazyItemCollector(

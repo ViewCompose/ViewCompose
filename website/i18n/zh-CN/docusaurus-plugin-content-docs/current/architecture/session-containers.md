@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/session-containers.md
-translation_source_hash: ed85bf9ee2e3e30a5720854691ab06475faac3125314b066e5f84b84c2154a86
+translation_source_hash: 1d1cb0cae0e787afd623081a78cb16f883137934e1e37773c7eb3ce6bc2bb7f8
 translation_status: current
 ---
 
@@ -49,12 +49,15 @@ translation_status: current
    或 effect
 10. Callback 对象身份不是 Revision。变化的普通捕获值必须成为 State 或进入
     `contentRevision`；仅 Callback 分配绝不刷新内容
-11. 非空 Typed `snapshotRevision` 是顺序、成员、所有 Item Selector 结果与普通非 State Content
-    Capture 的权威版本。Snapshot Revision 与 Environment Revision 相等时，可以复用两份已提交
-    完整逻辑 Snapshot 之一且不扫描 Item Map；仅修改聚合 Revision 会重新执行 Selector，但不会
-    改变相等的逐 Item `contentRevision` 身份，因此 Item Content Capture 必须同时进入两种 Revision。
-    Scoped Typed Declaration 使用不同命名空间的非空值，Host Node Type 隔离各自缓存；`null` 会执行
-    全部 Selector，父帧 Rollback 也绝不会推进 Snapshot Cache
+11. 每个 Typed `List` Declaration 都会在父 Composition 的每一轮执行中重新求值顺序、成员，以及
+    `key`、`contentType`、`contentRevision` 和网格 Span Selector。只有 Key、Content Revision、
+    Environment、Content Type、Kind 与 Span 全部相等时，Collector 才能复用已提交的逻辑 Item；
+    Collector 会保留已提交的有序 List，以及每个当前 Key 至多一个 Previous Semantic Variant；当候选
+    顺序中每个位置的 Item 对象身份都与已提交顺序相同时，`build` 会直接返回已提交的 List 实例。唯一
+    一次 Declaration/Build 遍历还会预计算被替换的 Variant 与 Key Membership Delta，只有父帧成功
+    提交后的 `SideEffect` 才会发布它们。如果延迟执行的 Side Effect 发现 Cache Generation 已推进，
+    则会基于当前已提交 Generation 重算 Membership 与 Previous Variant 状态，而不会发布过期的预计算。
+    父帧 Rollback 不会发布候选 Item Binding。ViewCompose 不接受能够绕过这些校验的调用方聚合 Token
 12. Detach 且从未激活的 Holder 可以 Prepare 已由父级提交的 Submission，但不得运行 Remember
     激活、Effect、原生 Commit Callback、Overlay 或已提交帧诊断。Activate 会提交有效候选而不重建。
     已 Active 的 Detach Holder 只暂存最新修订并在 Reattach 时渲染；重复 Key 存在歧义时，绝不能
@@ -93,7 +96,7 @@ translation_status: current
 
 基础单测（通用机制）：
 
-1. [`TypedLazySnapshotReuseTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/TypedLazySnapshotReuseTest.kt)
+1. [`TypedLazyCollectionContractTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/TypedLazyCollectionContractTest.kt)
 2. [`LazyListDiffTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
 3. [`LazyHolderRegistryTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
 4. [`LazyItemSessionControllerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)

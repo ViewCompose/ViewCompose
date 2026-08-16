@@ -1,7 +1,7 @@
 ---
 title: 迁移 Lazy 集合 Revision 与复用
 translation_source: migration/lazy-collection-revision-and-reuse.md
-translation_source_hash: 7dee3982347a1e9ceda594fc8510c509c3658fa706ab9ab41321b2e92df24d50
+translation_source_hash: ae9680d04eea834274c802c4c504cf829d1dcfeb6d9959bc22dd7bbaddcb693b
 translation_status: current
 ---
 
@@ -51,11 +51,11 @@ Pager Page 与 Tab 现在都要求显式且唯一的 Key。位置是物理排布
 框架自动把主题、Android 资源、Locale、方向、Density、Font Scale 与其他 Active Local 捕获进
 `environmentRevision`，应用无需在 `contentRevision` 中重复这些值。
 
-## 启用完整 Typed Snapshot 复用
+## 删除聚合 Snapshot Token
 
-Typed `LazyColumn`、`LazyRow`、`LazyVerticalGrid` 与 Scoped `items` 现在接受
-`snapshotRevision`。默认值 `null` 保留原有正确性行为：每次 Declaration Pass 都调用全部 Item
-Selector。只有应用能对整份 Typed Declaration 建立版本时，才应传入非空、不可变的聚合 Revision：
+Typed `LazyColumn`、`LazyRow`、`LazyVerticalGrid`、Scoped `items` 及其 `ScrollableScope`
+Wrapper 不再接受调用方持有的聚合 Snapshot Revision。使用过中间版本 API 的调用应删除
+`snapshotRevision`：
 
 ```kotlin
 LazyColumn(
@@ -63,25 +63,22 @@ LazyColumn(
     key = { message -> message.id },
     contentType = { "message-row" },
     contentRevision = { message -> message.version },
-    snapshotRevision = messagesSnapshot.revision,
 ) { message ->
     MessageRow(message)
 }
 ```
 
-聚合 Revision 与框架 Environment Revision 都相等时，框架可以复用已提交的同一个逻辑 Item List。
-Item 顺序、成员、Key、Content Type、Item Revision、Grid Span 或普通非 State Content Capture
-变化时，该 Token 都必须变化。仅修改聚合 Token 会重新执行 Item Selector，但不会替换
-`contentRevision` 仍相等的 Item；Item Content 读取的普通值还必须进入受影响 Item Revision。可观察
-State 仍会独立跟踪。应优先使用能以常量时间比较的标量 Revision，而不是 Collection Token。缓存
-保留两份已提交 Snapshot，不会发布失败的 Composition，Key、Session 与 Saveable 所有权仍由既有
-Item Key 契约维持。
+现在每次 Declaration Pass 都会求值 List 顺序与成员，并调用 `key`、`contentType`、
+`contentRevision` 和网格 Span Selector。框架不会信任 List 身份、List Equality 或独立维护的
+Version 来绕过这些校验，从而避免调用方忘记推进平行 Token 时产生过期顺序、成员或 Selector
+结果；Scoped Declaration 也不再需要调用方定义 Token 命名空间。
 
-顶层均质数据 Overload 是整容器快路径：命中时不遍历 Item Selector 或 Item Map。Scoped
-Declaration 可以复用一个 Typed Segment，但 Header 与多个 Segment 仍需合并并校验跨 Segment
-重复 Key。一个 Scope 内有多个 Typed Declaration 时，应给 Revision 加命名空间；同一 Scope 的
-重复非空值会在候选提交前失败。Typed `ScrollableScope` Wrapper 暴露并转发同一参数。现有调用应
-在新可选参数附近使用 Named Argument；这次 Alpha 硬切不保留旧 Method Descriptor 的二进制链接。
+执行 Selector 不会放弃 Keyed 复用。求值完成后，Key、Content Revision、框架 Environment、
+Content Type、Item Kind 与 Span 都相等时，会复用已提交的逻辑 Item 与 Session Binding；变化的
+Row 仍会定向刷新。Item Session 内读取的可观察 State 会独立跟踪。ViewCompose 没有能够识别任意
+Kotlin Capture 的编译器转换，因此 Item Content 读取的每个变化普通非 State 值仍必须进入受影响
+Item 的 `contentRevision`。针对中间版本聚合参数 Method Descriptor 编译的调用方必须为本次 Alpha
+硬切重新编译。
 
 ## 更新原生互操作复用
 

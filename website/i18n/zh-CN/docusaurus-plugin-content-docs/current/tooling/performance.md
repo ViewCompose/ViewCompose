@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: baabe6c89ed47060d315c6555e82778edaf06bfe1be8e8b119f36d87873a9929
+translation_source_hash: ddb561e7193ac3e681fdbe26b8120891c39754baf16fd01b2709bfa833fe05d8
 translation_status: current
 ---
 
@@ -487,13 +487,15 @@ host，避免通用捕获回调。renderer lowering 预检候选得到 `4.859/27
 对照；形成新的相对结论前需重跑三引擎矩阵。下一框架目标是冷 composition/JIT 表面，而不是
 再次增加 renderer 预检或削弱 Item Session 语义。
 
-#### 2.4.3 Lazy 快照与 RecyclerView 尾延迟硬切
+#### 2.4.3 Lazy 集合与 RecyclerView 尾延迟硬切
 
-下一阶段选择硬切集合契约，不再增加 renderer 预检。Typed Lazy API 现在接受显式
-`snapshotRevision`：相同环境下相等的非空 token 会直接复用已提交的完整条目快照，不再执行
-selector 或重建 key map。缓存只保留最近两代成功提交的结果，中止或重复 key 的构建不会发布。
-该 token 负责集合成员、顺序、selector 和普通捕获值；被条目内容使用的捕获值还必须进入该条目的
-`contentRevision`。
+该测量阶段没有继续增加 Renderer 预检，而是同时纳入 Keyed 逻辑 Item 复用与 RecyclerView 提交
+优化。其 Benchmark APK 还包含一项调用方聚合 Revision 试验，可以绕过 Typed List 的全部 Selector
+求值；后续 API 审计已删除该公开 Token：它重复逐 Item Revision 契约，调用方推进错误时会产生
+过期顺序、成员或 Selector 结果，而且 Benchmark 反复切换两份更新/重置 Snapshot 的 Fixture 会
+异常放大其收益。当前 `List` DSL 会在父 Composition 的每一轮执行中求值顺序、成员与 Selector，
+再按相等的 Key、`contentRevision`、Environment、Content Type、Kind 与 Span 复用已提交的逻辑
+Item 和 Session Binding。
 
 Android Adapter 现在以线性复杂度规划同顺序变更和循环位移，为循环位移发送最少 move，只把其他
 结构变更交给 `DiffUtil`。精确的 submission 与 item 实例确认会消除冗余的排队 payload bind；
@@ -510,21 +512,22 @@ Root 控制证据使用 API 28 的 Xiaomi MI 6、R8 优化 benchmark target、
 | --- | --- | ---: | ---: | ---: | --- |
 | `2695fbfb` 对照 A | `48/48/48/48/48` | 4.399 / 25.157 / 25.474 / 27.501 | 8365 | 0.192 | 拒绝：稳定性门禁失败。 |
 | `2695fbfb` 对照 B | `48/48/48/48/48` | 4.508 / 24.947 / 25.351 / 34.353 | 8440 | 0.157 | 拒绝：稳定性门禁失败，且意外遗漏持久化策略 payload；未改写原始 JSON。 |
-| 最终硬切，APK `020582a9` | `48/48/48/48/48` | 5.505 / 14.433 / 16.534 / 30.841 | 8212 | 0.075 | 作为最终代码绝对结果验收。 |
+| 历史硬切候选，APK `020582a9` | `48/48/48/48/48` | 5.505 / 14.433 / 16.534 / 30.841 | 8212 | 0.075 | 作为该 APK 的绝对结果验收；它不代表当前 DSL 契约。 |
 
 正式纵向结论为 `inconclusive`：两组历史对照都未通过强制 run-P50 稳定性门禁，对照 B 还缺失
-协议身份。最终 APK 仍建立了稳定绝对结果；异常恢复加固前的两组候选检查分别得到
-`14.269/16.329 ms` 和 `14.185/16.201 ms` P90/P95，独立复现了最终尾部。仅作为方向性诊断，
-最终 APK 相对已拒绝的对照 A 将原始 P90/P95 降低 42.6%/35.1%，但原始 P50 上升 25.2%，
-P99 上升 12.1%。
+协议身份。候选 APK 仍建立了稳定绝对结果；异常恢复加固前的两组候选检查分别得到
+`14.269/16.329 ms` 和 `14.185/16.201 ms` P90/P95，独立复现了候选尾部。仅作为方向性诊断，
+该 APK 相对已拒绝的对照 A 将原始 P90/P95 降低 42.6%/35.1%，但原始 P50 上升 25.2%，P99
+上升 12.1%。由于候选同时包含已删除的聚合跳过与保留的 Item/Adapter 优化，这些测量不能把收益
+归因到聚合机制。接受新的纵向结果前，必须按同一策略重新测量当前会执行 Selector 的 DSL。
 
-每次 mutation 动作通常贡献连续三个测量帧。硬切将工作从原先的主导帧移到更小的后续工作，
+每次 mutation 动作通常贡献连续三个测量帧。候选实现将工作从原先的主导帧移到更小的后续工作，
 因此原始 frame P50 并不是事务中位数。在同一份已拒绝对照的诊断中，三帧事务总和 P50/P95 从
 `29.736/36.052 ms` 变为 `22.268/33.817 ms`（-25.1%/-6.2%），事务最大帧 P50/P95 从
 `24.466/27.175 ms` 变为 `12.904/25.075 ms`（-47.3%/-7.7%）。这些归一化变化解释了分布
 迁移，但不能覆盖失败的对照门禁。
 
-最终代码的 P99 仍受冷路径限制：第一次交互主要由并发 ART JIT 主导，而不是 steady list planner。
+候选 APK 的 P99 仍受冷路径限制：第一次交互主要由并发 ART JIT 主导，而不是 steady list planner。
 一个具名 Material host 边界实验引入了约 45 ms 的冷 JIT 事件并使 P99 回退，因此已完整撤销；
 本结果不包含 Material host 改动。下一验收步骤是取得稳定的同策略对照，再重跑新的
 ViewCompose/Compose/Android Views 矩阵。在此之前，可接受的结论只覆盖候选绝对尾部，不能宣称

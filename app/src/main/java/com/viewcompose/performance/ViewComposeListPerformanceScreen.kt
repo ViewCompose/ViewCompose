@@ -73,7 +73,6 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
                 .fillMaxWidth()
                 .weight(1f)
                 .scenarioTarget(scenario, DemoAutomationRole.Target),
-            snapshotRevision = revision,
         ) { row ->
             PerformanceListRow(
                 row = row,
