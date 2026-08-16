@@ -42,8 +42,6 @@ internal fun UiTreeBuilder.ViewComposeComplexLayoutPerformanceScreen(
     val propertyCards = remember {
         derivedStateOf { fixtures.dashboardCards(propertyRevisionState.value) }
     }
-    val structureRevision = structureRevisionState.value
-    val structureCards = fixtures.dashboardCards(structureRevision)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -67,22 +65,34 @@ internal fun UiTreeBuilder.ViewComposeComplexLayoutPerformanceScreen(
             scenario = scenario,
             copy = fixtures.copy,
         )
-        ScrollableColumn(
-            spacing = 8.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(8.dp)
-                .scenarioTarget(scenario, DemoAutomationRole.Target),
+        val scrollableModifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+            .padding(8.dp)
+            .scenarioTarget(scenario, DemoAutomationRole.Target)
+        RecomposeBoundary(
+            key = "complex-layout-structure",
+            inputs = listOf(
+                structureRevisionState,
+                fixtures,
+                propertyCards,
+                shadowsEnabled,
+            ),
         ) {
-            structureCards.forEachIndexed { index, card ->
-                DashboardCard(
-                    card = card,
-                    cardIndex = index,
-                    propertyCards = propertyCards,
-                    shadowsEnabled = shadowsEnabled,
-                    copy = fixtures.copy,
-                )
+            val structureCards = fixtures.dashboardCards(structureRevisionState.value)
+            ScrollableColumn(
+                spacing = 8.dp,
+                modifier = scrollableModifier,
+            ) {
+                structureCards.forEachIndexed { index, card ->
+                    DashboardCard(
+                        card = card,
+                        cardIndex = index,
+                        propertyCards = propertyCards,
+                        shadowsEnabled = shadowsEnabled,
+                        copy = fixtures.copy,
+                    )
+                }
             }
         }
     }

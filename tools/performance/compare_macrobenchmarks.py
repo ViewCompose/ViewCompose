@@ -37,7 +37,7 @@ SCENARIOS = (
     ScenarioContract(
         "list_scroll",
         "performance.list",
-        3,
+        4,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeListScroll",
             COMPOSE_ENGINE: "composeListScroll",
@@ -47,7 +47,7 @@ SCENARIOS = (
     ScenarioContract(
         "list_mutation",
         "performance.list",
-        3,
+        4,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeListMutation",
             COMPOSE_ENGINE: "composeListMutation",

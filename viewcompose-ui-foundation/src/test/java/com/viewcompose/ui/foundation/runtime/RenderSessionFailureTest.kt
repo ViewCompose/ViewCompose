@@ -146,6 +146,43 @@ class RenderSessionFailureTest {
     }
 
     @Test
+    fun `state shared by observed property and boundary still commits structural frame`() {
+        val revision = mutableStateOf(0)
+        val renderedValues = mutableListOf<List<String>>()
+        val patchSizes = mutableListOf<Int>()
+        var boundaryDeclarations = 0
+        engine.renderBlock = { _, nodes ->
+            renderedValues += nodes.map { node -> node.requireText() }
+            observedFrame(nodes)
+        }
+        engine.patchBlock = { _, patches ->
+            patchSizes += patches.size
+            observedPropertyFrame()
+        }
+        session = createSession(failures = mutableListOf()) {
+            Text(observedValue { "state=${revision.value}" })
+            RecomposeBoundary(key = "structure") {
+                boundaryDeclarations += 1
+                Text("structure=${revision.value}")
+            }
+        }
+
+        session.render()
+        revision.value = 1
+        checkNotNull(latestRuntime).drainPending()
+
+        assertEquals(2, boundaryDeclarations)
+        assertEquals(
+            listOf(
+                listOf("state=0", "structure=0"),
+                listOf("state=1", "structure=1"),
+            ),
+            renderedValues,
+        )
+        assertTrue(patchSizes.isEmpty())
+    }
+
+    @Test
     fun `failed observed property batch keeps previous dependencies and target`() {
         val value = mutableStateOf(0)
         val failures = mutableListOf<RenderFailure>()

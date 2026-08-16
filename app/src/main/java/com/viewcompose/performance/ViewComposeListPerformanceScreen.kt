@@ -24,6 +24,11 @@ import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.node.policy.CollectionMotionPolicy
+
+internal val PerformanceListMotionPolicy = CollectionMotionPolicy(
+    disableItemAnimator = true,
+)
 
 /**
  * ViewCompose 版本的列表性能场景。
@@ -61,6 +66,9 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
             contentType = { "performance-list-row" },
             contentPadding = 8.dp,
             spacing = 6.dp,
+            // Compose does not request animateItem and the Android Views control disables its
+            // ItemAnimator. Keep mutation work equivalent instead of timing RecyclerView motion.
+            motionPolicy = PerformanceListMotionPolicy,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)

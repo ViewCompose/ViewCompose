@@ -1217,7 +1217,7 @@ internal object DemoScenarioRegistry {
             reset = R.id.demo_performance_list_reset,
             state = R.id.demo_performance_list_state,
             target = R.id.demo_performance_list_target,
-            benchmarkRevision = 3,
+            benchmarkRevision = 4,
         ),
         performanceScenario(
             id = DemoScenarioIds.PerformanceComplexLayout,

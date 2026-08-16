@@ -3,14 +3,16 @@
 ## Status
 
 Active. Architecture and public contracts are implemented through Runtime, UI Contract, UI
-Foundation, Host Android, and Android Renderer. Correctness validation is complete; the final
-clock-controllable six-method benchmark acceptance matrix remains open.
+Foundation, Host Android, and Android Renderer. Correctness validation, the root-controlled
+six-method timing matrix, and repository gates are complete. Only API-29-or-newer non-debuggable
+trace attribution remains open.
 
 Last verified: 2026-08-16.
 
-Next action: run `performance.complex-layout@4` property and structural actions for ViewCompose,
-Compose, and Android Views on a clock-controllable device with stable compilation state. Do not
-replace the accepted revision-3 baseline with the current non-rooted-device diagnostic evidence.
+Next action: confirm `VC.ObservedProperty*` phase attribution from a non-debuggable benchmark APK
+on an API-29-or-newer clock-controlled device. Keep the accepted Xiaomi MI 6 timing matrix as the
+revision-4 absolute baseline; trace attribution is a separate limitation, not a reason to discard
+stable frame timing.
 
 ## Maven release changesets
 
@@ -142,7 +144,7 @@ and full ART compilation did not materially close P95.
 - Bump the complex-layout workload revision. Separate property-only update evidence from structural
   add/remove evidence so neither workload hides the other's cost.
 
-### Phase 5: benchmark acceptance — blocked on reference device
+### Phase 5: benchmark acceptance — timing complete; phase attribution pending
 
 - Run ViewCompose, Compose, and Android Views controls with identical data, actions, settle policy,
   thermal gate, compilation mode, and clock-policy declaration.
@@ -155,21 +157,33 @@ and full ART compilation did not materially close P95.
 - Structural action results are reported separately and may remain slower than direct Android
   mutation; they must not regress from the accepted revision-3 context without explanation.
 
-The current Samsung SM-G991B directional evidence is interpreted in
-[`docs/tooling/performance.md`](../../tooling/performance.md). Three final-build ViewCompose
-property runs reported `6.261/25.087`, `5.601/20.436`, and `5.436/20.206 ms` P50/P95, materially
-below the fresh revision-3 whole-tree P95 of `41.187 ms`. Their run-P50 CV values were `0.201`,
-`0.208`, and `0.215`, however, and the device could not clear Runtime Image profiles. These runs
-are therefore `inconclusive` for formal acceptance and do not complete this phase.
+The accepted 2026-08-16 Xiaomi MI 6 / Android 9 fixed-clock matrix is interpreted in
+[`docs/tooling/performance.md`](../../tooling/performance.md). All six ViewCompose, Compose, and
+Android Views property/structural methods passed the `0.15` run-P50 CV ceiling. Property update
+measured `5.709/33.050`, `7.663/46.852`, and `6.137/19.270 ms` P50/P95 respectively. ViewCompose
+therefore improved its P95 by 19.8% from the fresh revision-3 `41.187 ms` diagnostic, improved
+29.5% against same-run Compose, and remained 71.5% slower at P95 than direct Android Views.
+Structural update measured `5.590/46.009`, `7.255/26.844`, and `5.444/15.051 ms`; its tail remains
+an explicit optimization target rather than being hidden by the property result.
 
-### Phase 6: release validation — in progress
+Android 9 cannot expose application custom trace sections from a non-debuggable APK because
+manifest `profileable` support begins at API 29. The timing acceptance is complete, while Perfetto
+confirmation that accepted property frames avoid full-tree reconciliation remains a separately
+tracked API-level limitation. Correctness coverage already proves the structural/property
+coalescing boundary, including one State shared by an observed property and a
+`RecomposeBoundary`.
+
+### Phase 6: release validation — complete
 
 - Pass focused module tests, compiled samples, API checks, documentation and translation gates,
   development-tooling isolation, `qaQuick`, site build, and release assembly.
 - Interpret accepted benchmark evidence in `docs/tooling/performance.md` with absolute values,
   normalized changes, classification, limitations, and next action.
-- Archive this plan only after implementation, migration, tests, performance acceptance, and the
-  single final changeset agree.
+- Focused tests, compiled samples, API/documentation/translation/tooling gates, `qaQuick`, the
+  bilingual site build, benchmark compilation/report tests, and 119 physical-device Demo tests
+  pass. The single final Changeset agrees with the affected artifacts.
+- Archive this plan only after the remaining API-29-or-newer Perfetto phase-attribution evidence is
+  accepted and interpreted.
 
 ## Validation matrix
 

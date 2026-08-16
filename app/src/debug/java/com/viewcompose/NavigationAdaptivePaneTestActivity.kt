@@ -65,7 +65,7 @@ class NavigationAdaptivePaneTestActivity : ComponentActivity() {
                 transitionSpec = NavTransitionSpec.None,
                 panePolicy = NavPanePolicy(
                     minPaneWidthDp = MIN_PANE_WIDTH_DP,
-                    maxPaneCount = 3,
+                    maxPaneCount = MAX_PANE_COUNT,
                     paneSpacingDp = PANE_SPACING_DP,
                 ),
                 systemBackEnabled = true,
@@ -157,11 +157,12 @@ class NavigationAdaptivePaneTestActivity : ComponentActivity() {
         return null
     }
 
-    private companion object {
+    internal companion object {
         const val HOME_ROUTE = "adaptive-home"
         const val DETAILS_ROUTE = "adaptive-details"
         const val CONFIRMATION_ROUTE = "adaptive-confirmation"
         const val MIN_PANE_WIDTH_DP = 220f
+        const val MAX_PANE_COUNT = 3
         const val PANE_SPACING_DP = 8f
         const val STATUS_PREFIX = "ADAPTIVE_PANE|"
 

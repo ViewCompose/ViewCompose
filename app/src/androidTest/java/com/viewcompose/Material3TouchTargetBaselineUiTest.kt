@@ -290,11 +290,16 @@ class Material3TouchTargetBaselineUiTest {
                         DemoTestTags.MATERIAL3_DEFAULT_SLIDER,
                     ).forEach { tag ->
                         val view = activity.requireViewByTestTagVisible(tag)
+                        view.centerInsideOwningRecyclerView()
                         assertEquals(48, (view.height / density).roundToInt())
                         val inputSemanticBounds = Rect().also { bounds ->
                             view.createAccessibilityNodeInfo().getBoundsInScreen(bounds)
                         }
-                        assertEquals(48, (inputSemanticBounds.height() / density).roundToInt())
+                        assertEquals(
+                            "Expected an unclipped semantic touch target for $tag",
+                            48,
+                            (inputSemanticBounds.height() / density).roundToInt(),
+                        )
                     }
 
                     val tags = listOf(

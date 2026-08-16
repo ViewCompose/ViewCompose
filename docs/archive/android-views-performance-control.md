@@ -2,15 +2,19 @@
 
 ## Status
 
-Active. The first slice covers the high-value non-shadow list and complex-layout workloads. Three
-of four actions now have accepted same-context three-engine evidence on the consumer reference
-device; list scroll remains blocked by the device stability gate. Shadow parity remains deferred
-until it has an equivalent platform rendering contract.
+Complete. The first high-value non-shadow slice has accepted same-context three-engine evidence for
+all five list and complex-layout actions on a root-controlled reference device. Report tooling,
+documentation/site gates, `qaQuick`, and 119 physical-device Demo tests pass. Shadow parity remains
+deferred until it has an equivalent platform rendering contract and does not block this slice.
 
-Last verified: 2026-08-15.
+This archived execution record is canonical English-only under the documentation governance
+policy. Durable results, limitations, and follow-up targets live in
+[`docs/tooling/performance.md`](../tooling/performance.md).
 
-Next action: collect the complete twelve-method physical batch on a clock-controllable device so
-list scroll can join the three accepted steady-state actions without mixing device contexts.
+Last verified: 2026-08-16.
+
+Next action: optimize list-mutation and structural-update P95 through separately activated work;
+the native-control coverage itself is complete.
 
 ## Maven release changesets
 
@@ -24,9 +28,9 @@ concrete release-neutral shared input.
 
 Add an idiomatic native control to separate ViewCompose overhead from declarative and direct
 platform cost. The accepted baseline has ViewCompose/Compose data for all workload families. This
-slice adds Android Views to `performance.list@3` and `performance.complex-layout@3`. List mutation,
-complex-layout scroll, and complex-layout update now have accepted steady-state native evidence;
-list scroll remains `inconclusive`. Compose stays the longitudinal environmental control.
+slice adds Android Views to `performance.list@4` and `performance.complex-layout@4`. List scroll,
+list mutation, complex-layout scroll, property update, and structural update now have accepted
+steady-state native evidence. Compose stays the longitudinal environmental control.
 
 ## Scope
 
@@ -79,15 +83,16 @@ interaction, settling, or actions must bump the owning revision everywhere.
 
 - Complete — run focused app, benchmark compilation, report, and documentation tests.
 - Complete — run `qaQuick`, release assembly, site build, device contract test, and diff review.
-- Complete — collect same-context three-engine evidence for list mutation, complex-layout scroll,
-  and complex-layout update on Samsung SM-G991B / Android 13. All nine methods passed the `0.15`
-  run-P50 CV gate, and `docs/tooling/performance.md` records their absolute results, normalized
-  comparisons, classifications, limitations, and next action.
-- Blocked — the list-scroll ViewCompose control produced run-P50 CV `0.182`, including a
-  `2.627 ms` plateau against four `4.296`-`4.648 ms` runs. The result is rejected and the Compose
-  and Android Views methods were deliberately skipped under the fail-fast protocol. Complete the
-  twelve-method baseline on a clock-controllable device; do not rerun this consumer device until it
-  happens to pass.
+- Complete — collect the fifteen-method root-controlled ViewCompose, Compose, and Android Views
+  matrix for list scroll/mutation and complex-layout scroll/property/structure updates on Xiaomi
+  MI 6 / Android 9. Every accepted run-P50 CV is at or below `0.111`.
+- Complete — correct the list workload before acceptance. ViewCompose alone retained RecyclerView
+  item animation, producing about 217 mutation frames versus 41/48 control frames. The fixture now
+  disables that unmatched animation, reports 48 frames, and bumps the workload from revision 3 to
+  `performance.list@4`.
+- Complete — interpret absolute results, normalized ViewCompose/Compose and ViewCompose/Android
+  Views comparisons, memory maxima, limitations, conclusions, and next actions in
+  `docs/tooling/performance.md`.
 
 ### Phase 4: deferred shadow decision
 
@@ -105,7 +110,7 @@ interaction, settling, or actions must bump the owning revision everywhere.
 ./gradlew qaQuick
 ```
 
-Complete device acceptance runs all twelve non-shadow methods under matching system, compilation,
+Complete device acceptance runs all fifteen non-shadow methods under matching system, compilation,
 refresh-rate, thermal, and clock-policy conditions. Action-level collection is fail-fast: when the
 first control fails an environment or stability gate, the remaining engines for that action are
 skipped and the rejection is recorded. Raw output alone does not complete the plan; accepted
@@ -123,3 +128,5 @@ documented. The separate shadow phase does not block the non-shadow control.
 | --- | --- | --- |
 | 2026-08-15 | Samsung SM-G991B / Android 13 fail-fast physical batch | List mutation, complex-layout scroll, and complex-layout update completed all three engines with run-P50 CV ranges `0.013`-`0.091`, `0.008`-`0.082`, and `0.032`-`0.141`. The batch records `unlocked-dvfs-preflight-v1` and `run-from-apk`; the Runtime Image warning limits it to post-ready steady-state interaction evidence. |
 | 2026-08-15 | Rejected list-scroll control | ViewCompose frame CPU P50/P95 was `4.212/8.624 ms`, but run P50 values `4.296/4.362/2.627/4.648/4.554 ms` produced CV `0.182`. Classification is `inconclusive`; Compose and Android Views were not run for this action. |
+| 2026-08-16 | Xiaomi MI 6 / Android 9 root-controlled fifteen-method batch | All methods passed with run-P50 CV `0.013`-`0.111`, fixed performance governors at 1.4016/1.8048 GHz, eight CPUs online, charging suspended, and `run-from-apk`. List scroll and complex scroll regress against native; property update improves against Compose but retains a native P95 gap; list mutation and structural update are mixed because their medians are competitive while their tails regress. |
+| 2026-08-16 | Corrected `performance.list@4` mutation workload | Removing the ViewCompose-only RecyclerView item animation reduces the measured mutation sequence from about 217 frames to 48, matching the native control's action duration. The corrected P95 is `40.332 ms`; the old lower P95 was diluted by animation frames and is not comparable. |

@@ -322,10 +322,14 @@ class RenderSession(
                                                     capturedSourceCandidates = candidates
                                                 },
                                             ) {
-                                                buildVNodeTree(content)
+                                                observedPropertyAttempt.retainTree(
+                                                    buildVNodeTree(content),
+                                                )
                                             }
                                         } else {
-                                            buildVNodeTree(content)
+                                            observedPropertyAttempt.retainTree(
+                                                buildVNodeTree(content),
+                                            )
                                         }
                                     }
                                     tree = checkNotNull(preparedComposition).value
@@ -335,7 +339,6 @@ class RenderSession(
                     }
                 }
             }
-            observedPropertyAttempt.retainTree(tree)
             failurePhase = RenderFailurePhase.ViewTreeRender
             platform.diagnostics.trace("VC.RenderTree") {
                 platform.renderEngine.renderInto(

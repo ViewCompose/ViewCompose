@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Add renderer-neutral observed property transactions and avoid redundant SpannableString allocation for unstyled Android text binding.",
+  "summary": "Add snapshot-consistent renderer-neutral observed property transactions and avoid redundant SpannableString allocation for unstyled Android text binding.",
   "changes": [
     { "artifact": "viewcompose-runtime", "impact": "feature" },
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },

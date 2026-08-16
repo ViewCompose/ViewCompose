@@ -502,23 +502,28 @@ class DemoVisualUiTest {
             waitForUiIdle()
             captureDeviceScreenshot("input-stress-light")
             scenario.onActivity { activity ->
-                val expanded = activity.requireScenarioViewById<android.widget.TextView>(
-                    R.id.demo_input_stress_primary_action,
+                fun assertReadable(view: android.widget.TextView) {
+                    assertViewFullyVisible(view)
+                    assertTextNotEllipsized(view)
+                }
+
+                assertReadable(
+                    activity.requireScenarioViewByIdVisible(
+                        R.id.demo_input_stress_primary_action,
+                    ),
                 )
-                val readonly = activity.requireScenarioViewById<android.widget.TextView>(
-                    R.id.demo_input_stress_secondary_action,
+                assertReadable(
+                    activity.requireScenarioViewByIdVisible(
+                        R.id.demo_input_stress_secondary_action,
+                    ),
                 )
-                val error = activity.requireTextViewByTestTag(DemoTestTags.INPUT_STRESS_ERROR)
-                val protectedField = activity.requireScenarioViewById<View>(
+                assertReadable(
+                    activity.requireTextViewByTestTagVisible(DemoTestTags.INPUT_STRESS_ERROR),
+                )
+                val protectedField = activity.requireScenarioViewByIdVisible<View>(
                     R.id.demo_input_stress_target,
                 )
-                assertViewFullyVisible(expanded)
-                assertViewFullyVisible(readonly)
-                assertViewFullyVisible(error)
                 assertViewFullyVisible(protectedField)
-                assertTextNotEllipsized(expanded)
-                assertTextNotEllipsized(readonly)
-                assertTextNotEllipsized(error)
             }
         }
     }

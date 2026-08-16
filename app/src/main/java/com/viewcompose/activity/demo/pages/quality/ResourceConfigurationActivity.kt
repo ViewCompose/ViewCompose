@@ -98,12 +98,12 @@ internal class DemoResourceConfigurationController(
 ) {
     private val baseline = Configuration(sourceContext.resources.configuration)
     private val baselineDensityDpi = sourceContext.resources.displayMetrics.densityDpi
-    private val mutableContext = MutableContextWrapper(themedContext(baseline))
     private var language = Locale.ENGLISH
     private var dark = false
     private var largeFont = false
     private var highDensity = false
     private var rtl = false
+    private val mutableContext = MutableContextWrapper(themedContext(currentConfiguration()))
 
     val context: Context
         get() = mutableContext

@@ -7,6 +7,7 @@ import com.viewcompose.runtime.observation.PreparedObservationReplacement
 import com.viewcompose.runtime.observation.RuntimeObservation
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.NodeSpec
+import com.viewcompose.ui.tooling.UiNodeTooling
 import java.util.IdentityHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
@@ -165,7 +166,7 @@ internal class ObservedPropertyRegistry(
     internal fun retainTree(
         attempt: ObservedPropertyFullAttempt,
         tree: List<VNode>,
-    ) {
+    ): List<VNode> {
         requireActive(attempt)
         fun visit(nodes: List<VNode>) {
             nodes.forEach { node ->
@@ -180,6 +181,44 @@ internal class ObservedPropertyRegistry(
         check(unknown == null) {
             "Observed property id $unknown is not owned by this RenderSession."
         }
+        attempt.touchedIds.forEach { id ->
+            if (id in attempt.candidatesById) return@forEach
+            val committed = bindingsById[id] ?: return@forEach
+            if (!committed.signal.dirty.get()) return@forEach
+            attempt.replaceCandidate(
+                committed.prepareCandidate(
+                    inputs = committed.inputs,
+                    localSnapshot = committed.localSnapshot,
+                    reader = committed.reader,
+                ),
+            )
+        }
+        if (attempt.candidatesById.isEmpty()) return tree
+
+        fun refresh(nodes: List<VNode>): List<VNode> {
+            var changed = false
+            val refreshed = nodes.map { node ->
+                val nextChildren = refresh(node.children)
+                val nextSpec = node.observedPropertyId
+                    ?.let(attempt.candidatesById::get)
+                    ?.spec
+                    ?: node.spec
+                if (nextSpec == node.spec && nextChildren === node.children) {
+                    node
+                } else {
+                    changed = true
+                    UiNodeTooling.inheritCopy(
+                        target = node.copy(
+                            spec = nextSpec,
+                            children = nextChildren,
+                        ),
+                        source = node,
+                    )
+                }
+            }
+            return if (changed) refreshed else nodes
+        }
+        return refresh(tree)
     }
 
     internal fun commit(attempt: ObservedPropertyFullAttempt) {
@@ -341,9 +380,7 @@ internal class ObservedPropertyFullAttempt internal constructor(
         localSnapshot: LocalSnapshot,
     ): ObservedPropertyResolution = registry.resolve(this, scope, source, localSnapshot)
 
-    fun retainTree(tree: List<VNode>) {
-        registry.retainTree(this, tree)
-    }
+    fun retainTree(tree: List<VNode>): List<VNode> = registry.retainTree(this, tree)
 
     fun commit() {
         registry.commit(this)

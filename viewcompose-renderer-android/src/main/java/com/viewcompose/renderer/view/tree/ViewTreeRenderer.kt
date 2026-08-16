@@ -143,9 +143,10 @@ object ViewTreeRenderer {
     /**
      * Applies an atomic batch to exact mounted targets without tree wrapping or reconciliation.
      *
-     * Every [ViewTreeObservedPropertyPatch.next] node must differ from its committed [previous]
-     * node only by a same-concrete-type `NodeSpec`. Validation and native binding share the normal
-     * renderer rollback transaction, so one failure restores the whole batch.
+     * Every [ViewTreeObservedPropertyPatch.next] node must differ from its committed
+     * [ViewTreeObservedPropertyPatch.previous] node only by a same-concrete-type `NodeSpec`.
+     * Validation and native binding share the normal renderer rollback transaction, so one failure
+     * restores the whole batch.
      *
      * This is a Q3 host-integration API.
      *
@@ -392,6 +393,10 @@ object ViewTreeRenderer {
  * This is a Q3 host-integration model.
  *
  * @sample com.viewcompose.renderer.samples.patchObservedPropertySample
+ * @property id session-scoped observation identity that must be unique within one batch
+ * @property mountedNode exact committed renderer target; the renderer rejects disposed or stale targets
+ * @property previous committed node snapshot used for identity validation and transactional rollback
+ * @property next candidate node snapshot whose only allowed change is a same-concrete-type `NodeSpec`
  */
 data class ViewTreeObservedPropertyPatch(
     val id: Long,
