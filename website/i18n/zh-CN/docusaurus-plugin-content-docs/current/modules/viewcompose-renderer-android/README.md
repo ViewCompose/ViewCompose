@@ -152,6 +152,9 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
 - Lazy Adapter 会为每个已接受提交建立一次唯一 Key 位置索引。已 attach 或重新 attach 的 Holder
   因而无需扫描 item 列表即可解析稳定 Key；已经提交当前 Revision 的 Holder 也会跳过冗余 attach
   工作。
+- Lazy List 与 Pager Holder 会在 Holder 生命周期内缓存 Container Handle，并直接调用专用 Session
+  Host。原生复用仍按 Key 切换逻辑 Session 所有权；该调整只移除 Callback Wrapper 分配，不会合并
+  物理与逻辑身份。
 - Pager 稳定 ID 使用 Renderer 分配值而不是 key hash。Pager View Type 按不兼容的
   `contentType`/kind 组合划分；带 key 的移动只刷新归属唯一且已变化的 Holder，每个公开 Page 声明
   都必须提供唯一稳定 Key。除非调用方显式指定 Limit，否则由 ViewPager2 原生默认策略管理离屏驻留。

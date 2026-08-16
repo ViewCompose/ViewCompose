@@ -15,24 +15,26 @@ internal class AndroidFrameAlignedRenderSessionRuntime(
     private val onRenderNow: () -> Unit,
     private val onDisposeNow: () -> Unit,
     frameClock: RenderFrameClock = AndroidChoreographerFrameClock(),
-) : RenderSessionRuntime {
+) : RenderSessionRuntime, FrameRenderAction {
     private val disposed = AtomicBoolean(false)
     private val renderingActive = AtomicBoolean(true)
     private val renderRequested = AtomicBoolean(false)
     private val frameDispatcher = FrameAlignedRenderDispatcher(
         frameClock = frameClock,
-        onFrameRender = {
-            if (
-                !disposed.get() &&
-                renderingActive.get() &&
-                renderRequested.compareAndSet(true, false)
-            ) {
-                traceSection("VC.FrameRender") {
-                    onRenderNow()
-                }
-            }
-        },
+        onFrameRender = this,
     )
+
+    override fun renderFrame() {
+        if (
+            !disposed.get() &&
+            renderingActive.get() &&
+            renderRequested.compareAndSet(true, false)
+        ) {
+            traceSection("VC.FrameRender") {
+                onRenderNow()
+            }
+        }
+    }
 
     override fun requestRender() {
         if (disposed.get()) return

@@ -464,6 +464,22 @@ Lazy Item 收集器的重复副本和回调对象。复测 trace 中 Adapter JIT
 12.0% 和 180.3%。因此下一目标是更上层的帧事务和原生 traversal，而不是放松逻辑 Session
 正确性。
 
+2026-08-16 的第二阶段诊断通过临时阶段计时拆分了该事务。重复 mutation 帧在
+`VC.Compose` 中约消耗 `2.1--15.5 ms`，`VC.RenderTree` 通常为 `1.0--3.8 ms`；reset
+composition 仅约 `0.5--1.3 ms`。差异来自 fixture 在每次 mutation 中重复构造同一份 1000 行
+revision-1 模型。测试基座现在保留最近一次非零 revision 的不可变快照：每个进程仍保留一次冷
+构造，其余七轮专注测量提交和 reconciliation。帧调度器与 Lazy Holder 热路径也改用专用内部
+host，避免通用捕获回调。renderer lowering 预检候选得到 `4.859/27.755 ms` P50/P95，额外树
+扫描未降低事务尾部，因此已拒绝并回退。
+
+最终固定频率五轮结果为 P50/P95/P99 `4.514/25.677/29.374 ms`，run-P50 CV `0.100`，
+最大 heap 中位数 `8391 KiB`，每轮均为 48 帧。相对紧邻的上一份 ViewCompose 结果，P50 上升
+2.8%（`+0.122 ms`，无实质变化），P95 降低 4.4%（`-1.185 ms`），P99 降低 21.7%，heap
+降低 1.4%。纵向结论为 `improved`：上尾收敛且中位数没有实质回退。由于快照复用改变了三个
+引擎共享的 fixture 准备方式，旧 Compose 与 Android Views 数字不能作为本 revision 的跨引擎
+对照；形成新的相对结论前需重跑三引擎矩阵。下一框架目标是冷 composition/JIT 表面，而不是
+再次增加 renderer 预检或削弱 Item Session 语义。
+
 导航 revision 6 也形成稳定的固定频率诊断数据：
 
 | 导航动作 | P50/P95/P99，ms | Run-P50 CV | 结论 |

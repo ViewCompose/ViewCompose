@@ -7,6 +7,7 @@ import android.widget.FrameLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.renderer.interop.asRenderContainerHandle
@@ -17,6 +18,7 @@ import com.viewcompose.renderer.view.lazy.reuse.MountedTreeReuseCache
 import com.viewcompose.renderer.view.lazy.reuse.LazyPreparationCostTracker
 import com.viewcompose.renderer.view.lazy.session.LazyHolderRegistry
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
+import com.viewcompose.renderer.view.lazy.session.LazyItemSessionHost
 import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 import com.viewcompose.ui.state.LazyListState
@@ -621,7 +623,7 @@ internal class LazyListSpacingDecoration(
 /** Physical holder shell that delegates logical ownership to an isolated item-session controller. */
 internal class LazyListViewHolder(
     private val container: FrameLayout,
-) : RecyclerView.ViewHolder(container) {
+) : RecyclerView.ViewHolder(container), LazyItemSessionHost {
     var hasBinding: Boolean = false
         private set
     var boundItemKey: Any? = null
@@ -635,12 +637,16 @@ internal class LazyListViewHolder(
     val hasPendingPresentation: Boolean
         get() = controller.hasPendingPresentation
 
-    private val controller = LazyItemSessionController(
-        createSession = { item ->
-            item.sessionFactory.create(container.asRenderContainerHandle())
-        },
-        clearContainer = container::removeAllViews,
-    )
+    private val renderContainer = container.asRenderContainerHandle()
+    private val controller = LazyItemSessionController(this)
+
+    override fun createSession(item: LazyListItem): LazyListItemSession {
+        return item.sessionFactory.create(renderContainer)
+    }
+
+    override fun clearContainer() {
+        container.removeAllViews()
+    }
 
     fun bind(
         item: LazyListItem,

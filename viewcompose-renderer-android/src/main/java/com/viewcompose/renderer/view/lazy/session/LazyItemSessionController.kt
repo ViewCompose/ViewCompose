@@ -5,11 +5,29 @@ import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.ReusableItemPresentation
 
+/** Direct holder bridge that keeps hot session lifecycle calls out of generic Kotlin callbacks. */
+internal interface LazyItemSessionHost {
+    fun createSession(item: LazyListItem): LazyListItemSession
+
+    fun clearContainer()
+}
+
 /** Manages the child render-session lifecycle and submission revisions for one retained item. */
 internal class LazyItemSessionController(
-    private val createSession: (LazyListItem) -> LazyListItemSession,
-    private val clearContainer: () -> Unit,
+    private val host: LazyItemSessionHost,
 ) {
+    /** Lambda adapter retained for isolated tests and non-hot internal call sites. */
+    constructor(
+        createSession: (LazyListItem) -> LazyListItemSession,
+        clearContainer: () -> Unit,
+    ) : this(
+        host = object : LazyItemSessionHost {
+            override fun createSession(item: LazyListItem): LazyListItemSession = createSession(item)
+
+            override fun clearContainer() = clearContainer()
+        },
+    )
+
     private data class Candidate(
         val item: LazyListItem,
         val payload: Any?,
@@ -145,7 +163,7 @@ internal class LazyItemSessionController(
             committedRevision = Long.MIN_VALUE
             active = false
             try {
-                clearContainer()
+                host.clearContainer()
             } catch (clearError: Throwable) {
                 if (failure == null) failure = clearError else failure.addSuppressed(clearError)
             }
@@ -226,8 +244,8 @@ internal class LazyItemSessionController(
 
     private fun replaceSession(item: LazyListItem) {
         releaseSessionForReplacement()
-        clearContainer()
-        val newSession = createSession(item)
+        host.clearContainer()
+        val newSession = host.createSession(item)
         try {
             item.sessionUpdater(newSession)
             pendingPresentation?.let { presentation ->
@@ -295,7 +313,7 @@ internal class LazyItemSessionController(
             failure = disposeError
         }
         try {
-            clearContainer()
+            host.clearContainer()
         } catch (clearError: Throwable) {
             if (failure == null) failure = clearError else failure.addSuppressed(clearError)
         }

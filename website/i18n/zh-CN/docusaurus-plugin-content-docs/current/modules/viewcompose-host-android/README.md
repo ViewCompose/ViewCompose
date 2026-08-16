@@ -52,6 +52,9 @@ mounted-tree 所有者。
 Dispose 幂等且为终态：之后由调用方发起的 `render` 或 `setRenderingActive` 会抛出
 `IllegalStateException`。Android Runtime 内已经排队的帧回调会被取消或忽略，无法在释放后渲染。
 
+帧对齐 Runtime 在 UI 线程调度热路径使用专用内部 Callback，不再使用通用捕获函数。跨线程请求
+仍只投递一个有界 `Runnable`；同线程请求和 Choreographer 分发不会为每帧增加 Callback Wrapper。
+
 `AndroidEnvironmentBridge.fromContext(context)` 会把 density、font scale、locale 与 layout
 direction 映射为 `UiEnvironmentValues`。`AndroidOverlayHostDefaults.androidOrNoOp(root)` 执行可选
 中立 Overlay 的 `ServiceLoader` 查找，Android 服务发现不会回流到 UI Foundation。零个 Provider

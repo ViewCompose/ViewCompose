@@ -51,6 +51,10 @@ Disposal is idempotent and terminal: later caller-initiated `render` or `setRend
 throw `IllegalStateException`. A frame callback already queued inside the Android runtime is
 cancelled or ignored and cannot render after disposal.
 
+The frame-aligned runtime uses a dedicated internal callback instead of a generic captured
+function on the UI-thread dispatch path. Cross-thread requests still post one bounded `Runnable`;
+same-thread requests and Choreographer delivery add no callback wrapper per frame.
+
 `AndroidEnvironmentBridge.fromContext(context)` maps density, font scale, locales, and layout
 direction to `UiEnvironmentValues`. `AndroidOverlayHostDefaults.androidOrNoOp(root)` performs an
 optional neutral-overlay `ServiceLoader` lookup without moving Android service discovery into UI

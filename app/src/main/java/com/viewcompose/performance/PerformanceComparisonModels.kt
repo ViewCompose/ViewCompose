@@ -57,8 +57,14 @@ internal class PerformanceFixtures(context: Context) {
             createBasePerformanceDashboardCards(copy)
         }
 
+    private var cachedListRevision: Int = 0
+    private var cachedRevisedListRows: List<PerformanceListRow>? = null
+
     fun listRows(revision: Int): List<PerformanceListRow> {
         if (revision == 0) return basePerformanceListRows
+        if (revision == cachedListRevision) {
+            cachedRevisedListRows?.let { return it }
+        }
         val rotation = (revision * PERFORMANCE_LIST_ROTATION).mod(PERFORMANCE_LIST_ITEM_COUNT)
         val reordered = basePerformanceListRows
             .drop(rotation) + basePerformanceListRows.take(rotation)
@@ -71,6 +77,11 @@ internal class PerformanceFixtures(context: Context) {
             } else {
                 row
             }
+        }.also { revisedRows ->
+            // The benchmark mutates between immutable snapshots. Reuse the last prepared snapshot
+            // so repeated submissions measure reconciliation instead of rebuilding fixture data.
+            cachedListRevision = revision
+            cachedRevisedListRows = revisedRows
         }
     }
 

@@ -172,6 +172,9 @@ Because the current line is alpha, the documentation site intentionally does not
 - The lazy adapter builds one unique-key position index per accepted submission. Attached and
   reattached holders therefore resolve stable keys without scanning the item list, while a holder
   that already committed the current revision skips redundant attach work.
+- Lazy-list and pager holders cache their container handle for the holder lifetime and call a
+  dedicated Session host directly. Native recycling still changes logical Session ownership by key;
+  this removes callback-wrapper allocation without merging physical and logical identity.
 - Pager stable IDs use renderer-assigned values rather than key hashes. Pager view types partition
   incompatible `contentType`/kind pairs, keyed moves refresh only uniquely owned changed holders,
   and every public page declaration requires a unique stable key. ViewPager2's native default owns

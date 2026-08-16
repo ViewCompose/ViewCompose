@@ -549,6 +549,26 @@ P50 is 38.6% below Compose and 22.2% below Android Views, while P95 remains 12.0
 respectively. The next target is therefore the higher-level frame transaction and native traversal,
 not a relaxation of logical-session correctness.
 
+A second-stage diagnostic on 2026-08-16 separated that transaction with temporary phase timing.
+Repeated mutation frames spent about `2.1--15.5 ms` in `VC.Compose`, while `VC.RenderTree` usually
+spent `1.0--3.8 ms`; reset composition was only about `0.5--1.3 ms`. The difference came from the
+fixture rebuilding the same 1,000-row revision-1 model inside every mutation. The harness now keeps
+the most recent immutable non-zero revision snapshot, preserving one cold construction per process
+while making the next seven cycles measure submission and reconciliation. The frame dispatcher and
+lazy holder hot paths also use dedicated internal hosts rather than generic captured callbacks. A
+renderer-lowering preflight candidate was rejected and reverted after it produced `4.859/27.755 ms`
+P50/P95, because its extra tree scan did not reduce the transaction tail.
+
+The accepted five-run fixed-clock result is `4.514/25.677/29.374 ms` P50/P95/P99, run-P50 CV
+`0.100`, median peak heap `8391 KiB`, and 48 frames in every run. Relative to the immediately
+preceding ViewCompose result, P50 is 2.8% higher (`+0.122 ms`, no material change), P95 is 4.4%
+lower (`-1.185 ms`), P99 is 21.7% lower, and heap is 1.4% lower. The longitudinal conclusion is
+`improved`: the upper tail contracted without a material median regression. Because snapshot reuse
+changes shared fixture preparation for all three engines, the earlier Compose and Android Views
+numbers are not a valid cross-engine control for this revision; rerun the three-engine matrix before
+making a new relative claim. The next framework target is cold composition/JIT surface, not another
+renderer preflight or weaker item-session semantics.
+
 Navigation revision 6 also produced stable fixed-clock diagnostics:
 
 | Navigation action | P50/P95/P99, ms | Run-P50 CV | Conclusion |

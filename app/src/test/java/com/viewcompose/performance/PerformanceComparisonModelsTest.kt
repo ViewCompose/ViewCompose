@@ -49,6 +49,9 @@ class PerformanceComparisonModelsTest {
             base.first { it.id == 1 },
             revised.first { it.id == 1 },
         )
+        assertSame(revised, fixtures.listRows(revision = 1))
+        assertSame(base, fixtures.listRows(revision = 0))
+        assertSame(revised, fixtures.listRows(revision = 1))
     }
 
     @Test
