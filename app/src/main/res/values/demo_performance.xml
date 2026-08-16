@@ -10,8 +10,9 @@
     <string name="demo_performance_list_updated_subtitle">Updated revision %1$d · group %2$d</string>
     <string name="demo_performance_revision_badge">R%1$d</string>
     <string name="demo_performance_complex_ready">%1$s Complex Ready</string>
-    <string name="demo_performance_dashboard_revision">Dashboard revision %1$d</string>
-    <string name="demo_performance_update_dashboard">Update dashboard</string>
+    <string name="demo_performance_dashboard_revision">Property revision %1$d · structure revision %2$d</string>
+    <string name="demo_performance_update_dashboard">Properties</string>
+    <string name="demo_performance_update_dashboard_structure">Structure</string>
     <string name="demo_performance_reset_dashboard">Reset dashboard</string>
     <string name="demo_performance_dashboard_section">Dashboard section %1$d</string>
     <string name="demo_performance_nested_layout_group">Nested layout group %1$d</string>

@@ -8,7 +8,9 @@ package com.viewcompose.ui.foundation
 import android.content.Context
 import android.widget.FrameLayout
 import com.viewcompose.runtime.State
+import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.focus.FocusDirection
 import com.viewcompose.ui.focus.FocusManager
 import com.viewcompose.ui.node.PlatformRenderContainerHandle
@@ -24,6 +26,7 @@ import com.viewcompose.ui.tooling.UiSourceCallSite
 import kotlin.coroutines.EmptyCoroutineContext
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -49,9 +52,236 @@ class RenderSessionFailureTest {
             CoreRenderFrame(mountedNodes = previous)
         }
         engine.detachBlock = { _, _ -> null }
+        engine.patchBlock = { _, _ -> CoreObservedPropertyFrame() }
         engine.disposeFailures = emptyList()
         NoOpRenderSessionDiagnostics.sourceTooling = null
         NoOpRenderSessionDiagnostics.errors.clear()
+    }
+
+    @Test
+    fun `observed text patches exact targets without recomposing declaration`() {
+        val value = mutableStateOf(0)
+        var declarations = 0
+        var structuralFrames = 0
+        val patchBatches = mutableListOf<List<CoreObservedPropertyPatch>>()
+        engine.renderBlock = { _, nodes ->
+            structuralFrames += 1
+            observedFrame(nodes)
+        }
+        engine.patchBlock = { _, patches ->
+            patchBatches += patches
+            observedPropertyFrame()
+        }
+        session = createSession(failures = mutableListOf()) {
+            declarations += 1
+            Text(observedValue { value.value.toString() })
+        }
+
+        session.render()
+        value.value = 1
+        checkNotNull(latestRuntime).drainPending()
+
+        assertEquals(1, declarations)
+        assertEquals(1, structuralFrames)
+        assertEquals(1, patchBatches.size)
+        assertEquals("1", patchBatches.single().single().next.requireText())
+        assertSame(
+            patchBatches.single().single().next,
+            patchBatches.single().single().target.node,
+        )
+
+        session.render()
+
+        assertEquals(2, declarations)
+        assertEquals(2, structuralFrames)
+    }
+
+    @Test
+    fun `observed properties coalesce and structural invalidation wins the frame`() {
+        val first = mutableStateOf(0)
+        val second = mutableStateOf(0)
+        val structural = mutableStateOf(false)
+        var declarations = 0
+        var structuralFrames = 0
+        val patchSizes = mutableListOf<Int>()
+        engine.renderBlock = { _, nodes ->
+            structuralFrames += 1
+            observedFrame(nodes)
+        }
+        engine.patchBlock = { _, patches ->
+            patchSizes += patches.size
+            observedPropertyFrame()
+        }
+        session = createSession(failures = mutableListOf()) {
+            declarations += 1
+            if (structural.value) {
+                Text("structure")
+            }
+            Text(observedValue { first.value.toString() }, key = "first")
+            Text(observedValue { second.value.toString() }, key = "second")
+        }
+        session.render()
+        val runtime = checkNotNull(latestRuntime)
+        val requestsBeforeBatch = runtime.requestCount
+
+        Snapshot.withMutableSnapshot {
+            first.value = 1
+            second.value = 2
+        }
+        assertEquals(requestsBeforeBatch + 1, runtime.requestCount)
+        runtime.drainPending()
+
+        assertEquals(listOf(2), patchSizes)
+        assertEquals(1, declarations)
+
+        Snapshot.withMutableSnapshot {
+            first.value = 3
+            structural.value = true
+        }
+        checkNotNull(latestRuntime).drainPending()
+
+        assertEquals(listOf(2), patchSizes)
+        assertEquals(2, declarations)
+        assertEquals(2, structuralFrames)
+    }
+
+    @Test
+    fun `failed observed property batch keeps previous dependencies and target`() {
+        val value = mutableStateOf(0)
+        val failures = mutableListOf<RenderFailure>()
+        var failNextPatch = true
+        val committedValues = mutableListOf<String>()
+        engine.renderBlock = { _, nodes -> observedFrame(nodes) }
+        engine.patchBlock = { _, patches ->
+            if (failNextPatch) {
+                failNextPatch = false
+                error("property patch failed")
+            }
+            committedValues += patches.single().next.requireText()
+            observedPropertyFrame()
+        }
+        session = createSession(failures = failures) {
+            Text(observedValue { value.value.toString() })
+        }
+        session.render()
+
+        value.value = 1
+        checkNotNull(latestRuntime).drainPending()
+
+        assertEquals(RenderFrameStatus.RolledBack, session.lastFrameReport?.status)
+        assertEquals(RenderFailurePhase.ObservedPropertyRender, failures.single().phase)
+
+        value.value = 2
+        checkNotNull(latestRuntime).drainPending()
+
+        assertEquals(listOf("2"), committedValues)
+        assertEquals(RenderFrameStatus.Committed, session.lastFrameReport?.status)
+    }
+
+    @Test
+    fun `equal observed value commits replacement dependencies without native patch`() {
+        val selectSecond = mutableStateOf(false)
+        val first = mutableStateOf("same")
+        val second = mutableStateOf("same")
+        val patchedValues = mutableListOf<String>()
+        engine.renderBlock = { _, nodes -> observedFrame(nodes) }
+        engine.patchBlock = { _, patches ->
+            patchedValues += patches.single().next.requireText()
+            observedPropertyFrame()
+        }
+        session = createSession(failures = mutableListOf()) {
+            Text(observedValue {
+                if (selectSecond.value) second.value else first.value
+            })
+        }
+        session.render()
+
+        selectSecond.value = true
+        checkNotNull(latestRuntime).drainPending()
+
+        assertTrue(patchedValues.isEmpty())
+        first.value = "ignored"
+        assertFalse(checkNotNull(latestRuntime).hasPending())
+        second.value = "next"
+        assertTrue(checkNotNull(latestRuntime).hasPending())
+        checkNotNull(latestRuntime).drainPending()
+        assertEquals(listOf("next"), patchedValues)
+    }
+
+    @Test
+    fun `removing observed node disposes its state dependencies`() {
+        val visible = mutableStateOf(true)
+        val value = mutableStateOf("before")
+        engine.renderBlock = { _, nodes -> observedFrame(nodes) }
+        engine.patchBlock = { _, _ -> observedPropertyFrame() }
+        session = createSession(failures = mutableListOf()) {
+            if (visible.value) {
+                Text(observedValue { value.value })
+            }
+        }
+        session.render()
+
+        visible.value = false
+        checkNotNull(latestRuntime).drainPending()
+        value.value = "after"
+
+        assertFalse(checkNotNull(latestRuntime).hasPending())
+    }
+
+    @Test
+    fun `prepared observed property invalidation rebuilds before activation`() {
+        val value = mutableStateOf("first")
+        val renderedValues = mutableListOf<String>()
+        engine.renderBlock = { _, nodes ->
+            renderedValues += nodes.single().requireText()
+            observedFrame(nodes)
+        }
+        engine.patchBlock = { _, _ -> error("prepared activation must use a structural frame") }
+        session = createSession(failures = mutableListOf()) {
+            Text(observedValue { value.value })
+        }
+
+        session.prepareForActivation()
+        value.value = "second"
+        session.activatePrepared()
+
+        assertEquals(listOf("first", "second"), renderedValues)
+        assertEquals(RenderFrameStatus.Committed, session.lastFrameReport?.status)
+    }
+
+    @Test
+    fun `environment change replaces observed target before later property patch`() {
+        val value = mutableStateOf("first")
+        var environment = UiEnvironmentValues(resourceRevision = 1L)
+        var declarations = 0
+        var structuralFrames = 0
+        val patches = mutableListOf<CoreObservedPropertyPatch>()
+        engine.renderBlock = { _, nodes ->
+            structuralFrames += 1
+            observedFrame(nodes)
+        }
+        engine.patchBlock = { _, batch ->
+            patches += batch.single()
+            observedPropertyFrame()
+        }
+        session = createSession(failures = mutableListOf()) {
+            declarations += 1
+            UiEnvironment(environment) {
+                Text(observedValue { value.value })
+            }
+        }
+
+        session.render()
+        environment = UiEnvironmentValues(resourceRevision = 2L)
+        session.render()
+        value.value = "second"
+        checkNotNull(latestRuntime).drainPending()
+
+        assertEquals(2, declarations)
+        assertEquals(2, structuralFrames)
+        assertEquals(2L, patches.single().previous.environment.resourceRevision)
+        assertEquals(2L, patches.single().next.environment.resourceRevision)
+        assertEquals("second", patches.single().next.requireText())
     }
 
     @After
@@ -807,8 +1037,30 @@ class RenderSessionFailureTest {
         )
     }
 
+    private fun observedFrame(nodes: List<VNode>): CoreRenderFrame {
+        val targets = LinkedHashMap<Long, CoreObservedPropertyTarget>()
+        fun visit(node: VNode) {
+            node.observedPropertyId?.let { id ->
+                targets[id] = CoreObservedPropertyTarget(handle = node, node = node)
+            }
+            node.children.forEach(::visit)
+        }
+        nodes.forEach(::visit)
+        return CoreRenderFrame(
+            mountedNodes = nodes,
+            observedPropertyTargets = targets,
+        )
+    }
+
+    private fun observedPropertyFrame(): CoreObservedPropertyFrame = CoreObservedPropertyFrame()
+
+    private fun VNode.requireText(): String {
+        return (spec as com.viewcompose.ui.node.spec.TextNodeProps).document.text
+    }
+
     private companion object {
         lateinit var engine: FakeRenderEngine
+        var latestRuntime: ImmediateRuntime? = null
 
         @JvmStatic
         @BeforeClass
@@ -821,7 +1073,7 @@ class RenderSessionFailureTest {
                     ImmediateRuntime(
                         onRenderNow = onRenderNow,
                         onDisposeNow = onDisposeNow,
-                    )
+                    ).also { runtime -> latestRuntime = runtime }
                 },
                 focusManagerFactory = { NoOpFocusManager },
                 diagnostics = NoOpRenderSessionDiagnostics,
@@ -834,6 +1086,8 @@ class RenderSessionFailureTest {
             CoreRenderFrame(mountedNodes = previous)
         }
         var disposeFailures: List<CoreRenderCommitFailure> = emptyList()
+        var patchBlock: (List<Any>, List<CoreObservedPropertyPatch>) -> CoreObservedPropertyFrame =
+            { _, _ -> CoreObservedPropertyFrame() }
         var detachBlock: (
             RenderContainerHandle,
             List<Any>,
@@ -847,6 +1101,13 @@ class RenderSessionFailureTest {
         ): CoreRenderFrame {
             return renderBlock(previousMountedNodes, nodes)
         }
+
+        override fun patchObservedProperties(
+            container: RenderContainerHandle,
+            mountedNodes: List<Any>,
+            patches: List<CoreObservedPropertyPatch>,
+            collectDiagnostics: Boolean,
+        ): CoreObservedPropertyFrame = patchBlock(mountedNodes, patches)
 
         override fun disposeMounted(
             container: RenderContainerHandle,
@@ -885,8 +1146,16 @@ class RenderSessionFailureTest {
         private val onDisposeNow: () -> Unit,
     ) : RenderSessionRuntime {
         private var disposed = false
+        private var pending = false
+        var requestCount: Int = 0
+            private set
 
-        override fun requestRender() = Unit
+        override fun requestRender() {
+            if (!disposed) {
+                requestCount += 1
+                pending = true
+            }
+        }
 
         override fun render() {
             if (!disposed) onRenderNow()
@@ -897,5 +1166,13 @@ class RenderSessionFailureTest {
             disposed = true
             onDisposeNow()
         }
+
+        fun drainPending() {
+            if (disposed || !pending) return
+            pending = false
+            onRenderNow()
+        }
+
+        fun hasPending(): Boolean = pending
     }
 }

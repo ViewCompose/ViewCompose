@@ -93,6 +93,10 @@ precedence.
 
 - [`ViewTreeRenderer`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.view.tree/-view-tree-renderer/)
   owns the transactional VNode-to-View render and disposal boundary.
+- Q3 `ViewTreeRenderer.patchObservedProperties` accepts a non-empty batch of unique exact mounted
+  targets. It preflights property-only invariants, reuses the normal binder differ, bypasses tree
+  wrapping and child reconciliation, and rolls every earlier native binding back when one patch
+  fails. `ObservedPropertyRenderResult` intentionally carries no replacement mounted roots.
 - [`ChildReconciler`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.reconcile/-child-reconciler/)
   produces insert, reuse, and removal plans without mutating platform state.
 - [`LazyListDiff`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.reconcile/-lazy-list-diff/)

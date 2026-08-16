@@ -1,8 +1,12 @@
 {
   "schemaVersion": 1,
-  "summary": "Avoid redundant SpannableString allocation when Android Renderer binds an unstyled TextDocument.",
+  "summary": "Add renderer-neutral observed property transactions and avoid redundant SpannableString allocation for unstyled Android text binding.",
   "changes": [
-    { "artifact": "viewcompose-renderer-android", "impact": "fix" }
+    { "artifact": "viewcompose-runtime", "impact": "feature" },
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "feature" },
+    { "artifact": "viewcompose-host-android", "impact": "feature" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" }
   ],
   "ignored": []
 }

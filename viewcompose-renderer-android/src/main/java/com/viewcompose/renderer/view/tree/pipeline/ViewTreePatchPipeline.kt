@@ -20,6 +20,7 @@ import com.viewcompose.renderer.reconcile.ReusePatch
 import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
 import com.viewcompose.renderer.view.container.ChildHostViewGroup
 import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
+import java.util.IdentityHashMap
 
 /**
  * Transactional pipeline that applies reconciliation patches to an Android View tree.
@@ -39,6 +40,143 @@ internal object ViewTreePatchPipeline {
         val mountedNodes: List<MountedNode>,
         val stats: RenderStats,
     )
+
+    /** Applies a prevalidated exact-target property batch without reconciling tree structure. */
+    fun executeObservedPropertyPatches(
+        patches: List<ViewTreeObservedPropertyPatch>,
+        defaultRippleColor: Int,
+        transaction: RenderTransaction,
+        collectStats: Boolean,
+    ): RenderStats {
+        val ids = HashSet<Long>(patches.size)
+        val targets = IdentityHashMap<MountedNode, Unit>(patches.size)
+        val prepared = ArrayList<Pair<ViewTreeObservedPropertyPatch, NodeBindingPlan>>(patches.size)
+        patches.forEach { patch ->
+            check(ids.add(patch.id)) {
+                "Observed-property patch ids must be unique within one batch."
+            }
+            check(targets.put(patch.mountedNode, Unit) == null) {
+                "A mounted node can be targeted only once in one observed-property batch."
+            }
+            check(!patch.mountedNode.disposed) {
+                "Observed property ${patch.id} targets a disposed mounted node."
+            }
+            check(patch.mountedNode.vnode === patch.previous) {
+                "Observed property ${patch.id} no longer targets the committed VNode."
+            }
+            check(patch.previous.type == patch.next.type && patch.previous.key == patch.next.key) {
+                "Observed property ${patch.id} cannot change node type or key."
+            }
+            check(patch.previous.modifier == patch.next.modifier) {
+                "Observed property ${patch.id} cannot change Modifier."
+            }
+            check(patch.previous.environment == patch.next.environment) {
+                "Observed property ${patch.id} cannot change environment."
+            }
+            check(
+                patch.previous.children.size == patch.next.children.size &&
+                    patch.previous.children.indices.all { index ->
+                        patch.previous.children[index] === patch.next.children[index]
+                    },
+            ) {
+                "Observed property ${patch.id} cannot change children."
+            }
+            check(patch.previous.observedPropertyId == patch.next.observedPropertyId) {
+                "Observed property ${patch.id} cannot change transaction identity."
+            }
+            check(
+                UiNodeTooling.metadataOf(patch.previous) ===
+                    UiNodeTooling.metadataOf(patch.next),
+            ) {
+                "Observed property ${patch.id} cannot change tooling identity."
+            }
+            check(patch.previous.spec::class == patch.next.spec::class) {
+                "Observed property ${patch.id} cannot change NodeSpec type."
+            }
+            prepared += patch to NodeBindingDiffer.plan(patch.previous, patch.next)
+        }
+
+        var stats = emptyStats
+        prepared.forEach { (patch, bindingPlan) ->
+            val mountedNode = patch.mountedNode
+            // Even a native no-op advances MountedNode.vnode below. Checkpoint every target so a
+            // later failure restores the renderer snapshot together with visible View state.
+            captureNode(transaction, mountedNode)
+            if (
+                patch.next.type == NodeType.AndroidView &&
+                patch.previous.spec != patch.next.spec
+            ) {
+                patch.next.runAndroidViewOperation(AndroidViewOperation.Reset) {
+                    patch.next.requireSpec<AndroidViewNodeProps>().onReset?.invoke(mountedNode.view)
+                }
+            }
+            when (bindingPlan) {
+                NodeBindingPlan.Rebind -> {
+                    bindView(
+                        view = mountedNode.view,
+                        node = patch.next,
+                        defaultRippleColor = defaultRippleColor,
+                        resolved = patch.next.modifier.resolve(),
+                        bindingMode = NodeBindingMode.Deferred,
+                    )?.let(transaction.commitEffects::add)
+                    scheduleAndroidViewCommit(transaction, mountedNode.view, patch.next)
+                }
+
+                NodeBindingPlan.ModifierOnly -> error(
+                    "Observed property ${patch.id} produced a modifier-only binding plan.",
+                )
+
+                NodeBindingPlan.SkipSelfOnly -> error(
+                    "Observed property ${patch.id} produced a child-only binding plan.",
+                )
+
+                NodeBindingPlan.SkipSubtree -> Unit
+                is NodeBindingPlan.Patch -> {
+                    check(!bindingPlan.modifierChanged) {
+                        "Observed property ${patch.id} produced a modifier patch."
+                    }
+                    NodeViewBinderRegistry.applyPatch(
+                        view = mountedNode.view,
+                        patch = bindingPlan.patch,
+                        mode = NodeBindingMode.Deferred,
+                        nodeKey = patch.next.key,
+                    )?.let(transaction.commitEffects::add)
+                }
+            }
+            mountedNode.vnode = patch.next
+            // Tooling metadata is identity-stable by preflight, so the existing View association
+            // remains valid without a synchronized weak-map write on every property update.
+            if (collectStats) {
+                val result = when (bindingPlan) {
+                    NodeBindingPlan.Rebind -> ReuseBindingResult.Rebound
+                    NodeBindingPlan.SkipSubtree -> ReuseBindingResult.SkippedSubtree
+                    is NodeBindingPlan.Patch -> ReuseBindingResult.Patched
+                    NodeBindingPlan.ModifierOnly,
+                    NodeBindingPlan.SkipSelfOnly,
+                    -> error("Invalid observed-property binding plan was not rejected.")
+                }
+                stats = stats.mergeWith(
+                    emptyStats.withReuse(result = result, nodeType = patch.next.type),
+                )
+                transaction.recordPatch(
+                    RenderPatchRecord(
+                        operation = bindingPlan.toPatchOperation(),
+                        type = patch.next.type,
+                        key = patch.next.key,
+                        parentKey = null,
+                        index = (mountedNode.view.parent as? ViewGroup)
+                            ?.indexOfChild(mountedNode.view)
+                            ?: -1,
+                        detail = (bindingPlan as? NodeBindingPlan.Patch)
+                            ?.patch
+                            ?.let { nodePatch -> nodePatch::class.simpleName },
+                        toolingMetadata = UiNodeTooling.metadataOf(patch.next),
+                    ),
+                )
+            }
+        }
+        return stats
+    }
 
     private data class PatchApplicationResult(
         val mountedNode: MountedNode,
@@ -162,6 +300,14 @@ internal object ViewTreePatchPipeline {
 
         transaction.mountedCheckpoints.values.forEach { checkpoint ->
             bestEffort {
+                if (checkpoint.vnode.type == NodeType.AndroidView) {
+                    checkpoint.vnode.runAndroidViewOperation(AndroidViewOperation.Reset) {
+                        checkpoint.vnode
+                            .requireSpec<AndroidViewNodeProps>()
+                            .onReset
+                            ?.invoke(checkpoint.mountedNode.view)
+                    }
+                }
                 bindView(
                     view = checkpoint.mountedNode.view,
                     node = checkpoint.vnode,

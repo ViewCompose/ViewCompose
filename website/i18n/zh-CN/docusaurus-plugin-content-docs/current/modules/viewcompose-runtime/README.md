@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-runtime/README.md
-translation_source_hash: 7b09658272c4e9188b796effb48be3ef01fcf54a090928494e5e378bbb4f5b0c
+translation_source_hash: f4926a12cc8a005d6ac66df0a3d1f78479b62ac4b8718fed47a7ca80bb673287
 translation_status: current
 ---
 
@@ -56,7 +56,9 @@ Snapshot.withMutableSnapshot {
   提供一致性读取、带冲突报告的原子缓冲写入。
 - [`RuntimeObservation`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.observation/-runtime-observation/)
   是把状态读取转化为显式失效订阅的 Q3 API。一次成功的全局 Apply 最多在 Apply 线程调用每个
-  受影响 Observation 一次，即使多个依赖同时变化；不同 Apply 仍是不同的通知机会。
+  受影响 Observation 一次，即使多个依赖同时变化；不同 Apply 仍是不同的通知机会。Q3
+  `prepareReplacement` 会通过同一个 Observation Identity 读取候选依赖集合；提交时保留共有订阅
+  并原子切换，中止时不会扰动已提交依赖集合。
 - [`snapshotFlow`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime/snapshot-flow.html)
   创建 Cold Flow；它会为每个 Collector 跟踪 Snapshot 读取、合并失效、替换条件依赖，并只发出
   结构不相等的计算结果。
@@ -79,6 +81,9 @@ Snapshot.withMutableSnapshot {
 - `Observation` 拥有收集期间读取的全部状态订阅。一次成功的全局 Apply 最多使其失效一次，
   多个受影响 Observation 按首次观察的稳定顺序交付。不再需要通知时应将其释放，避免状态继续
   持有订阅；已经与释放形成竞态并开始的 Callback 可以执行完成。
+- `PreparedObservationReplacement` 是终态对象：外部候选工作成功或失败后，必须且只能调用一次
+  `commit` 或 `abort`。Prepare 会保留已提交订阅，并临时订阅候选独有依赖，避免读取和发布之间
+  丢失更新或重复 Callback。同一个 Observation 同时只允许一个 Prepared Replacement。
 - 每个 `snapshotFlow` Collector 拥有独立的读取观察。取消或计算失败会将其释放；计算必须无
   副作用，并且运行次数可能多于发出值的次数。
 - `ComposerLite` 与派生状态实例按线程封闭设计。宿主负责串行化组合、prepared

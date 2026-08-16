@@ -57,7 +57,7 @@ SCENARIOS = (
     ScenarioContract(
         "complex_layout_scroll",
         "performance.complex-layout",
-        3,
+        4,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeComplexLayoutScroll",
             COMPOSE_ENGINE: "composeComplexLayoutScroll",
@@ -65,13 +65,23 @@ SCENARIOS = (
         },
     ),
     ScenarioContract(
-        "complex_layout_update",
+        "complex_layout_property_update",
         "performance.complex-layout",
-        3,
+        4,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeComplexLayoutUpdate",
             COMPOSE_ENGINE: "composeComplexLayoutUpdate",
             ANDROID_VIEWS_ENGINE: "androidViewsComplexLayoutUpdate",
+        },
+    ),
+    ScenarioContract(
+        "complex_layout_structure_update",
+        "performance.complex-layout",
+        4,
+        {
+            VIEWCOMPOSE_ENGINE: "viewComposeComplexLayoutStructureUpdate",
+            COMPOSE_ENGINE: "composeComplexLayoutStructureUpdate",
+            ANDROID_VIEWS_ENGINE: "androidViewsComplexLayoutStructureUpdate",
         },
     ),
     ScenarioContract(
@@ -95,16 +105,16 @@ SCENARIOS = (
     ScenarioContract(
         "shadow_complex_layout_scroll",
         "performance.shadow-complex-layout",
-        2,
+        3,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeShadowComplexLayoutScroll",
             COMPOSE_ENGINE: "composeShadowComplexLayoutScroll",
         },
     ),
     ScenarioContract(
-        "shadow_complex_layout_update",
+        "shadow_complex_layout_property_update",
         "performance.shadow-complex-layout",
-        2,
+        3,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeShadowComplexLayoutUpdate",
             COMPOSE_ENGINE: "composeShadowComplexLayoutUpdate",

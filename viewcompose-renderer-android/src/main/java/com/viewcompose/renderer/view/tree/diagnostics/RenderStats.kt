@@ -132,6 +132,24 @@ data class RenderTreeResult(
 )
 
 /**
+ * Committed output of an exact-target property transaction.
+ *
+ * Unlike [RenderTreeResult], this result intentionally carries no mounted roots or reconciliation
+ * plan: property transactions preserve both by contract.
+ *
+ * @property stats aggregate binding work, or zeroes when diagnostics were disabled
+ * @property patches ordered exact-target patch records, empty when diagnostics were disabled
+ * @property commitEffects native work deferred for the owning session commit phase
+ * @property commitFailures isolated post-commit failures
+ */
+data class ObservedPropertyRenderResult(
+    val stats: RenderStats,
+    val patches: List<RenderPatchRecord> = emptyList(),
+    val commitEffects: List<RenderTreeCommitEffect> = emptyList(),
+    val commitFailures: List<RenderTreeCommitFailure> = emptyList(),
+)
+
+/**
  * Platform-independent node in a diagnostic render-tree snapshot.
  *
  * @property type declarative node type

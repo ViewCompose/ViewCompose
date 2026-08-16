@@ -66,6 +66,69 @@ fun UiTreeBuilder.Text(
 }
 
 /**
+ * Displays text whose content is patched directly when its observed dependencies change.
+ *
+ * The initial and later values use the same typography, color, overflow, alignment, key, and
+ * Modifier supplied to this call. Only the text document is observed; changing any other ordinary
+ * argument requires normal composition. All invalidated observed text values in one RenderSession
+ * frame are read from one Snapshot and committed atomically with other observed node properties.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.observedTextValueSample
+ * @receiver active tree builder receiving the observed text node
+ * @param text observed plain-text declaration and its explicit ordinary inputs
+ * @param style resolved static typography for every property transaction
+ * @param color static packed ARGB text color
+ * @param maxLines positive static maximum visual line count
+ * @param overflow static handling when content exceeds [maxLines]
+ * @param textAlign static horizontal paragraph alignment
+ * @param textDecoration static decoration, defaulting to the value in [style]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier structural ordered layout, drawing, input, and semantics configuration
+ */
+fun UiTreeBuilder.Text(
+    text: ObservedValue<String>,
+    style: UiTextStyle = TextDefaults.currentStyle(),
+    color: Int = TextDefaults.primaryColor(),
+    maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Clip,
+    textAlign: TextAlign = TextAlign.Start,
+    textDecoration: TextDecoration = style.textDecoration ?: TextDecoration.None,
+    key: Any? = null,
+    modifier: Modifier = Modifier,
+) {
+    emit(
+        type = NodeType.Text,
+        key = key,
+        spec = observedNodeSpec(
+            inputs = text.inputs + listOf(
+                style,
+                color,
+                maxLines,
+                overflow,
+                textAlign,
+                textDecoration,
+            ),
+        ) {
+            TextNodeProps(
+                document = TextDocument.plain(text.read()),
+                maxLines = maxLines,
+                overflow = overflow,
+                textAlign = textAlign,
+                textColor = color,
+                textSizeSp = style.fontSizeSp,
+                fontWeight = style.fontWeight,
+                fontFamily = uiFontFamily(style.fontFamily),
+                letterSpacingEm = style.letterSpacingEm,
+                lineHeightSp = style.lineHeightSp,
+                includeFontPadding = style.includeFontPadding,
+                textDecoration = textDecoration,
+            )
+        },
+        modifier = modifier,
+    )
+}
+
+/**
  * Displays an immutable rich-text document while preserving span and paragraph ranges.
  *
  * Values in [document] take part in node equality and patching; callers should replace the

@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 5aeb876045ecd98300ae0d638793f39fb809930a4bc68eed2ba6c832bd1ece7a
+translation_source_hash: b823a9f5ba14f353b61d774b40bdd48a1ce7f10ce757877d33aa7a459d2c9867
 translation_status: current
 ---
 
@@ -387,12 +387,28 @@ GC。最差样本中 OEM 调度器把长时间声明式工作放到了 LITTLE CP
 张卡片的声明同步重建并整树 diff，而原生 control 直接更新保留字段。完整树事务内部的常量级优化
 无法消除这一区别。
 
-下一步应设计显式、渲染器中立的可观察属性事务模型，而不是增加 Text 专用 State 重载或互不协调
-的原生 Listener。该模型必须在 Snapshot 语义下批量读取一个 Session 的失效属性，合并框架环境
-revision，在同一个帧对齐事务中只比较和 patch 已变化字段，失败时整体回滚，并随逻辑节点所有权
-释放观察。由于没有 Compose 编译器，普通 Kotlin capture 仍必须显式进入输入。这是公开架构变更，
-必须拥有独立的 Q3 契约、样例、生命周期/失败测试和带 revision 的三引擎 benchmark，才能替代
-显式选择该能力的属性所对应的完整树重组。
+Q3 Observed-property Transaction 架构现已完成这次算法硬切。显式选择该能力的 State Read 由
+`RenderSession` Property Registry 持有，全部 Dirty Reader 使用同一个 Snapshot；Android
+Renderer 接收一次精确 Target Batch，跳过 Root Composition、Tree Wrapping 与 Child
+Reconciliation。候选依赖通过带失效 Guard 的 Prepared Replacement 管理；Renderer 会先校验完整
+Batch，任一 Patch 失败时恢复此前全部原生值。`performance.complex-layout@4` 因此把 Primary
+Property Action 与 Secondary Structural Add/Remove Action 分开，不再让两类成本互相掩盖。
+
+同一设备上的三轮最终构建 Property 结果分别为 `6.261/25.087 ms`、`5.601/20.436 ms` 和
+`5.436/20.206 ms` Frame CPU P50/P95。第一轮 P95 比新鲜 revision 3 整树 Control 低 39.1%；
+其配对的 revision 4 Compose 与 Android Views Control 分别为 `9.066/42.353 ms` 和
+`7.922/16.006 ms`。相对这些 Control，ViewCompose 的 P50/P95 比 Compose 低 30.9%/40.8%；
+相对直接 Android Views，P50 低 21.0%，但 P95 高 56.7%。第一轮最终 Trace 共包含 16 个 Property
+Frame：`VC.FrameRender` 平均/最大 `5.895/13.469 ms`，`VC.ObservedPropertyRead` 为
+`1.572/4.216 ms`，`VC.ObservedPropertyRender` 为 `3.640/8.391 ms`；剩余 Android Traversal
+最大值还包括 `10.334 ms` Measure 与 `17.048 ms` Draw。
+
+尽管方向显著且可重复，这组证据作为正式 Baseline 仍归类为 `inconclusive`。三轮最终运行的
+run-P50 CV 分别是 `0.201`、`0.208` 和 `0.215`，均超过 `0.15` 验收上限。该非 Root 设备还会
+输出 Runtime Image 警告，并因 Macrobenchmark 无法清理应用 Profile 而在连续重跑中变快。因此
+实现与正确性门禁可以落地，但 revision 4 不能替换已验收的纵向 Baseline；下一步应在可控频且
+Compilation State 稳定的设备上重跑三个 Engine 的 Property 与 Structural 六方法矩阵。剩余
+ViewCompose 相对原生的 P95 差距来自 Android 属性失效及 Measure/Draw 尾部，而非整树协调。
 
 ### 2.5 Debug Tooling 回归门禁
 

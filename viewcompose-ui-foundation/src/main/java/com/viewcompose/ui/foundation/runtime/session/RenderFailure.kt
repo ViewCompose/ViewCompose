@@ -4,6 +4,12 @@ package com.viewcompose.ui.foundation
 enum class RenderFailurePhase {
     /** Declarative composition could not prepare a candidate tree. */
     CompositionPrepare,
+    /** One coalesced observed-property batch could not prepare candidate values or targets. */
+    ObservedPropertyPrepare,
+    /** The renderer rejected or rolled back an observed-property native patch batch. */
+    ObservedPropertyRender,
+    /** A rendered observed-property batch could not publish its dependency snapshot. */
+    ObservedPropertyCommit,
     /** The renderer could not reconcile the candidate tree. */
     ViewTreeRender,
     /** The renderer reported a failure while establishing its mounted tree. */

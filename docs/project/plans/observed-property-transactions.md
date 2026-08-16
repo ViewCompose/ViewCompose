@@ -2,22 +2,22 @@
 
 ## Status
 
-Active. Architecture and public-contract design are fixed by
-[ADR-0015](../../architecture/decisions/0015-observed-property-transactions.md). Implementation has
-not yet crossed the public API boundary.
+Active. Architecture and public contracts are implemented through Runtime, UI Contract, UI
+Foundation, Host Android, and Android Renderer. Correctness validation is complete; the final
+clock-controllable six-method benchmark acceptance matrix remains open.
 
 Last verified: 2026-08-16.
 
-Next action: add the Q3 observed-value and observed-node-spec contracts, then implement the
-session-owned candidate registry before changing the renderer SPI.
+Next action: run `performance.complex-layout@4` property and structural actions for ViewCompose,
+Compose, and Android Views on a clock-controllable device with stable compilation state. Do not
+replace the accepted revision-3 baseline with the current non-rooted-device diagnostic evidence.
 
 ## Maven release changesets
 
 - `release/changes/20260816-plain-text-binding-allocation.json`
 
-The final pull request owns one changeset. Its summary and artifact classifications will expand as
-the transaction implementation reaches `viewcompose-ui-contract`, `viewcompose-ui-foundation`,
-`viewcompose-host-android`, and `viewcompose-renderer-android`.
+The pull request owns one changeset that covers both the independent plain-text binder allocation
+fix and the cross-module Q3 transaction capability with its renderer/host integration.
 
 ## Objective
 
@@ -102,12 +102,12 @@ and full ART compilation did not materially close P95.
 
 ## Implementation phases
 
-### Phase 0: decision and contract
+### Phase 0: decision and contract — complete
 
-- In progress — accept ADR-0015, register this plan, assign Q3, and define invariants, failures,
+- Accepted ADR-0015, registered this plan, assigned Q3, and defined invariants, failures,
   environment propagation, lifecycle ownership, and the no-compiler inputs boundary.
 
-### Phase 1: candidate registry
+### Phase 1: candidate registry — complete
 
 - Add a session-confined registry with committed and prepared binding sets, invalidation versions,
   one-Snapshot batch reads, dependency replacement, abort, removal, and disposal.
@@ -116,7 +116,7 @@ and full ART compilation did not materially close P95.
 - Add concurrency, invalidation-during-prepare, equal-value, dependency-switch, abort, removal,
   environment, and disposal tests before connecting a renderer.
 
-### Phase 2: renderer-neutral SPI
+### Phase 2: renderer-neutral SPI — complete
 
 - Add opaque observed target and property-patch frame types to the core render contract.
 - Extend VNode identity metadata without allowing it to affect semantic node content.
@@ -125,7 +125,7 @@ and full ART compilation did not materially close P95.
 - Add fake-engine tests for batching, structural rejection, target loss, rollback, and combined
   structural/property invalidation.
 
-### Phase 3: Android transaction
+### Phase 3: Android transaction — complete
 
 - Index observed identities while committing a full mounted tree.
 - Reuse existing binder differ and rollback binding, but bypass child reconciliation for legal
@@ -133,7 +133,7 @@ and full ART compilation did not materially close P95.
 - Add multi-node failure injection proving all-or-nothing native values, mounted VNodes, retained
   child submissions, diagnostics, and subsequent retry.
 
-### Phase 4: public DSL and migration
+### Phase 4: public DSL and migration — complete
 
 - Add canonical-English Q3 KDoc, compiled samples, module manuals, architecture pages, Compose
   migration guidance, and Simplified Chinese mirrors.
@@ -142,7 +142,7 @@ and full ART compilation did not materially close P95.
 - Bump the complex-layout workload revision. Separate property-only update evidence from structural
   add/remove evidence so neither workload hides the other's cost.
 
-### Phase 5: benchmark acceptance
+### Phase 5: benchmark acceptance — blocked on reference device
 
 - Run ViewCompose, Compose, and Android Views controls with identical data, actions, settle policy,
   thermal gate, compilation mode, and clock-policy declaration.
@@ -155,7 +155,14 @@ and full ART compilation did not materially close P95.
 - Structural action results are reported separately and may remain slower than direct Android
   mutation; they must not regress from the accepted revision-3 context without explanation.
 
-### Phase 6: release validation
+The current Samsung SM-G991B directional evidence is interpreted in
+[`docs/tooling/performance.md`](../../tooling/performance.md). Three final-build ViewCompose
+property runs reported `6.261/25.087`, `5.601/20.436`, and `5.436/20.206 ms` P50/P95, materially
+below the fresh revision-3 whole-tree P95 of `41.187 ms`. Their run-P50 CV values were `0.201`,
+`0.208`, and `0.215`, however, and the device could not clear Runtime Image profiles. These runs
+are therefore `inconclusive` for formal acceptance and do not complete this phase.
+
+### Phase 6: release validation — in progress
 
 - Pass focused module tests, compiled samples, API checks, documentation and translation gates,
   development-tooling isolation, `qaQuick`, site build, and release assembly.

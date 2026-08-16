@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-state-recomposition-and-restoration.md
-translation_source_hash: 4eb1a0892bb9abdf85024bf8fce8a8e33ff56eb7569d403ea48964dda2e1ef4e
+translation_source_hash: 7f0969464c649df782e5cc736ed81673a5644ae830426dd9066ca19cb7851aa3
 translation_status: current
 ---
 
@@ -10,7 +10,7 @@ translation_status: current
 迁移到 ViewCompose 所有的 Android `View` 树的路径。这是一份工程对比，而不是源码兼容承诺：
 API 名称相似，并不表示编译器、失效、Identity 或恢复行为完全相同。
 
-最后验证日期：**2026-08-15**
+最后验证日期：**2026-08-16**
 
 重新验证负责人：**`viewcompose-runtime`、`viewcompose-ui-foundation`、
 `viewcompose-android` 与 AndroidX lifecycle 集成的维护者**
@@ -265,6 +265,25 @@ Change Flag 的情况下协调位置 Group。Widget 与 Renderer 集成通过
 `@Stable`、`@Immutable` 或 Compose 编译器报告移植为 ViewCompose 优化控制。请使用
 ViewCompose 诊断信息验证实际重组与跳过的 Group。普通 Kotlin 函数边界不会自动成为 Restart
 Scope。
+
+### 显式属性事务
+
+ViewCompose Q3 Observed Property 是针对更窄场景的 **Intentionally different** 显式能力。
+`observedValue(inputs) { ... }` 与 `observedNodeSpec(inputs) { ... }` 会把 State Read 从外层
+Composition Scope 中移出。`RenderSession` 从同一个 Snapshot 读取全部 Dirty Property
+Declaration，再要求 Renderer 原子 Patch 对应的精确已提交节点。第一项 Typed Integration 是
+`Text(observedValue { state.value })`；低层 Observed `emit` Overload 接受一份具体类型保持不变的
+完整 `NodeSpec`。
+
+这不是 Compose Compiler Skipping。Node Type、Key、Modifier、Child 与捕获的 Environment 仍然
+属于结构，并通过普通 Composition 更新。每个变化的非 State Kotlin Capture 都必须进入 `inputs`；
+ViewCompose 无法推断变化参数，因此遗漏输入属于不支持用法。违反属性契约时会失败并回滚，不会
+静默退化成整树渲染。高频叶子属性且 Renderer Patch Contract 完整时使用该边界；条件 Child 或
+Node Replacement 仍应放入 `RecomposeBoundary`。
+
+仓库证据包括 `observedTextValueSample`、`observedNodeSpecSample`、Runtime Dependency
+Replacement 测试、RenderSession Batch/Failure 测试、Android Multi-target Rollback 测试，以及
+[Observed-property ADR](../architecture/decisions/0015-observed-property-transactions.md)。
 
 ## Remembered Identity、Key 与重排 {/* #remembered-identity-keys-and-reordering */}
 

@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.TextView
 import com.viewcompose.renderer.decoration.AndroidViewDecorationBackend
 import com.viewcompose.renderer.decoration.AndroidViewDecorationPresence
 import com.viewcompose.renderer.decoration.AndroidViewDecorationRequest
@@ -19,6 +20,12 @@ import com.viewcompose.ui.node.PlatformRenderContainerHandle
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
+import com.viewcompose.ui.node.spec.TextNodeProps
+import com.viewcompose.text.TextDocument
+import com.viewcompose.ui.node.TextAlign
+import com.viewcompose.ui.node.TextOverflow
+import com.viewcompose.ui.unit.sp
+import com.viewcompose.ui.foundation.CoreObservedPropertyPatch
 import com.viewcompose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -250,11 +257,54 @@ class AndroidCoreRenderEngineDecorationHostTest {
         engine.disposeMounted(secondContainer.renderContainerHandle(), adopted)
     }
 
+    @Test
+    fun `android engine patches exact observed property target without replacing roots`() {
+        val container = FrameLayout(RuntimeEnvironment.getApplication())
+        val engine = AndroidCoreRenderEngine()
+        val previousNode = textNode("before").copy(observedPropertyId = 7L)
+        val first = engine.renderInto(
+            container = container.renderContainerHandle(),
+            previousMountedNodes = emptyList(),
+            nodes = listOf(previousNode),
+            collectDiagnostics = false,
+        )
+        val target = requireNotNull(first.observedPropertyTargets[7L])
+        val nextNode = target.node.copy(spec = textSpec("after"))
+
+        engine.patchObservedProperties(
+            container = container.renderContainerHandle(),
+            mountedNodes = first.mountedNodes,
+            patches = listOf(
+                CoreObservedPropertyPatch(7L, target, target.node, nextNode),
+            ),
+            collectDiagnostics = false,
+        )
+
+        assertEquals("after", (container.getChildAt(0) as TextView).text.toString())
+        assertTrue(target.node === previousNode)
+        engine.disposeMounted(container.renderContainerHandle(), first.mountedNodes)
+    }
+
     private fun spacerNode(modifier: Modifier = Modifier): VNode {
         return VNode(
             type = NodeType.Spacer,
             spec = EmptyNodeSpec,
             modifier = modifier,
+        )
+    }
+
+    private fun textNode(text: String): VNode {
+        return VNode(type = NodeType.Text, spec = textSpec(text))
+    }
+
+    private fun textSpec(text: String): TextNodeProps {
+        return TextNodeProps(
+            document = TextDocument.plain(text),
+            maxLines = 1,
+            overflow = TextOverflow.Clip,
+            textAlign = TextAlign.Start,
+            textColor = 0xFF000000.toInt(),
+            textSizeSp = 16.sp,
         )
     }
 

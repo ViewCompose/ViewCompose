@@ -163,6 +163,15 @@ by a later renderer or child render session.
   coordinates composition, renderer reconciliation, native commit effects, overlays, diagnostics,
   failure recovery, and disposal for one opaque `RenderContainerHandle`. Standard applications use
   the public Host Android session returned by `renderInto` rather than constructing this coordinator.
+- Q3 `observedValue`, `ObservedValue`, `observedNodeSpec`, and the observed `UiTreeBuilder.emit`
+  overload declare property readers whose State dependencies do not invalidate the enclosing
+  composition. `Text(ObservedValue<String>)` is the first typed integration. A session reads all
+  dirty declarations from one Snapshot and commits one exact-target renderer transaction; type,
+  key, Modifier, children, and environment remain structural. Every changing ordinary capture must
+  be represented in `inputs` because ViewCompose has no compiler-generated change flags.
+- Q3 `CoreObservedPropertyTarget`, `CoreObservedPropertyPatch`, `CoreObservedPropertyFrame`, and
+  `CoreRenderEngine.patchObservedProperties` form the renderer-neutral host SPI. Engines either
+  validate and roll back a complete batch or reject the capability; no whole-tree fallback exists.
 - `RenderSessionSourceTooling` and `RenderSessionSourceRegistration` form a Q3 optional platform
   diagnostics contract. They capture one bounded source chain only when the platform opts in and
   track the active/disposed lifetime of root, lazy-item, and pager-item render sessions. The

@@ -459,14 +459,33 @@ top-level State read: one revision invalidates a declaration that synchronously 
 all 18 cards, whereas the native control directly updates retained fields. Constant-factor changes
 inside the complete-tree transaction cannot erase that algorithmic difference.
 
-The next implementation step is an explicit, renderer-neutral observed-property transaction model,
-not a Text-only State overload or an uncoordinated native listener. Its design must batch one
-session's invalidated property reads under Snapshot semantics, merge framework environment
-revisions, compare and patch only changed fields in one frame-aligned transaction, roll back a
-failed batch, and dispose observations with logical node ownership. Ordinary Kotlin captures must
-remain explicit inputs because no Compose compiler can infer them. This is a public architecture
-change and requires its own Q3 contract, samples, lifecycle/failure tests, and a revisioned
-three-engine benchmark before it can replace complete-tree recomposition for opted-in properties.
+The Q3 observed-property transaction architecture now implements that algorithmic cut. Opted-in
+State reads are owned by a `RenderSession` property registry, all dirty readers use one Snapshot,
+and Android Renderer receives one exact-target batch that bypasses root composition, tree wrapping,
+and child reconciliation. Candidate dependencies use prepared replacement with invalidation guards;
+the renderer preflights the whole batch and restores all earlier native values if one patch fails.
+`performance.complex-layout@4` therefore separates the primary property action from a secondary
+structural add/remove action instead of letting either cost hide the other.
+
+Three final-build property runs on the same device reported `6.261/25.087 ms`, `5.601/20.436 ms`,
+and `5.436/20.206 ms` frame-CPU P50/P95. The first run's P95 is 39.1% below the fresh revision-3
+whole-tree control; its paired revision-4 Compose and Android Views controls were respectively
+`9.066/42.353 ms` and `7.922/16.006 ms`. Against those controls, ViewCompose was 30.9%/40.8% lower
+than Compose and 21.0% lower at P50 but 56.7% higher at P95 than direct Android Views. Perfetto on
+the first final run measured 16 property frames: `VC.FrameRender` averaged/maxed
+`5.895/13.469 ms`, `VC.ObservedPropertyRead` `1.572/4.216 ms`, and
+`VC.ObservedPropertyRender` `3.640/8.391 ms`; remaining maxima included `10.334 ms` measure and
+`17.048 ms` draw work in Android traversal.
+
+This evidence is `inconclusive` as a formal baseline despite the material and repeatable direction.
+The three final runs had run-P50 CV values of `0.201`, `0.208`, and `0.215`, above the `0.15`
+acceptance ceiling. The non-rooted device also emitted the Runtime Image warning and became faster
+across reruns because Macrobenchmark could not clear application profiles. The implementation and
+correctness gates can land, but revision 4 must not replace an accepted longitudinal baseline until
+all three engines' property and structural actions are rerun on a clock-controllable device with
+stable compilation state. The next action is that six-method acceptance matrix; the residual
+ViewCompose-versus-native P95 gap remains Android property invalidation plus measure/draw tail, not
+complete-tree reconciliation.
 
 ### 2.5 Debug tooling regression gate
 

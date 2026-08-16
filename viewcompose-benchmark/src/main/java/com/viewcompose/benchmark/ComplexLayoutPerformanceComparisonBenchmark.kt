@@ -62,6 +62,30 @@ class ComplexLayoutPerformanceComparisonBenchmark {
         )
     }
 
+    @Test
+    fun viewComposeComplexLayoutStructureUpdate() {
+        measureComplexLayoutUpdate(
+            engine = "viewcompose",
+            action = DemoTargetRole.SecondaryAction,
+        )
+    }
+
+    @Test
+    fun composeComplexLayoutStructureUpdate() {
+        measureComplexLayoutUpdate(
+            engine = "compose",
+            action = DemoTargetRole.SecondaryAction,
+        )
+    }
+
+    @Test
+    fun androidViewsComplexLayoutStructureUpdate() {
+        measureComplexLayoutUpdate(
+            engine = "android_views",
+            action = DemoTargetRole.SecondaryAction,
+        )
+    }
+
     private fun measureComplexLayoutScroll(
         engine: String,
     ) = benchmarkRule.measureRepeated(
@@ -87,6 +111,7 @@ class ComplexLayoutPerformanceComparisonBenchmark {
 
     private fun measureComplexLayoutUpdate(
         engine: String,
+        action: DemoTargetRole = DemoTargetRole.PrimaryAction,
     ) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = performanceComparisonMetrics(),
@@ -105,7 +130,7 @@ class ComplexLayoutPerformanceComparisonBenchmark {
                 PERFORMANCE_COMPLEX_LAYOUT_SCENARIO,
                 DemoTargetRole.State,
             )
-            clickScenarioTarget(PERFORMANCE_COMPLEX_LAYOUT_SCENARIO, DemoTargetRole.PrimaryAction)
+            clickScenarioTarget(PERFORMANCE_COMPLEX_LAYOUT_SCENARIO, action)
             val updated = waitForScenarioTargetTextChange(
                 PERFORMANCE_COMPLEX_LAYOUT_SCENARIO,
                 DemoTargetRole.State,

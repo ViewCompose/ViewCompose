@@ -94,9 +94,9 @@ class DemoScenarioRegistryTest {
             DemoScenarioIds.DesignBundleMaterial3 to 3,
             DemoScenarioIds.DesignBundleContrast to 3,
             DemoScenarioIds.PerformanceList to 3,
-            DemoScenarioIds.PerformanceComplexLayout to 3,
+            DemoScenarioIds.PerformanceComplexLayout to 4,
             DemoScenarioIds.PerformanceShadowList to 2,
-            DemoScenarioIds.PerformanceShadowComplexLayout to 2,
+            DemoScenarioIds.PerformanceShadowComplexLayout to 3,
         )
 
         expected.forEach { (scenarioId, workloadRevision) ->

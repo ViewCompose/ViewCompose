@@ -117,6 +117,12 @@ AndroidView(
 main-thread work. State invalidations coalesce onto the next Choreographer frame, while an explicit
 `RenderSession.render()` remains synchronous until terminal disposal.
 
+The installed `AndroidCoreRenderEngine` also translates UI Foundation's Q3 observed-property SPI
+to exact Android Renderer targets. Property-only frames keep the mounted root list and target map
+stable, validate that every target still belongs to the committed frame, and return only commit
+effects, failures, and optional diagnostics. A foreign or stale target fails instead of triggering
+a whole-tree render.
+
 ## Related documentation
 
 - [Five-layer architecture](../../architecture/decisions/0002-five-layer-runtime-module-architecture.md)

@@ -2,6 +2,8 @@ package com.viewcompose.ui.foundation.samples
 
 import com.viewcompose.graphics.core.Brush
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.runtime.State
+import com.viewcompose.text.TextDocument
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.foundation.BasicButton
@@ -128,6 +130,8 @@ import com.viewcompose.ui.foundation.produceState
 import com.viewcompose.ui.foundation.rememberCoroutineScope
 import com.viewcompose.ui.foundation.rememberSaveable
 import com.viewcompose.ui.foundation.rememberUpdatedState
+import com.viewcompose.ui.foundation.observedNodeSpec
+import com.viewcompose.ui.foundation.observedValue
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.MinHeightModifierElement
@@ -136,6 +140,8 @@ import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.TextAlign
+import com.viewcompose.ui.node.TextOverflow
 import com.viewcompose.ui.node.policy.GridCells
 import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.UiImageDecodeSize
@@ -157,6 +163,7 @@ import com.viewcompose.ui.node.spec.SegmentedControlNodeProps
 import com.viewcompose.ui.node.spec.SliderNodeProps
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
+import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.state.ScrollState
 import com.viewcompose.ui.unit.dp
@@ -248,6 +255,33 @@ fun emittedContentClosureSample() {
     check(node.type == NodeType.Box)
     check(node.key == "status-container")
     check(node.children.single().type == NodeType.Text)
+}
+
+fun UiTreeBuilder.observedTextValueSample(counter: State<Int>) {
+    Text(
+        text = observedValue { "Count: ${counter.value}" },
+        key = "counter",
+    )
+}
+
+fun UiTreeBuilder.observedNodeSpecSample(
+    label: State<String>,
+    prefix: String,
+) {
+    emit(
+        type = NodeType.Text,
+        key = "status",
+        spec = observedNodeSpec(inputs = listOf(prefix)) {
+            TextNodeProps(
+                document = TextDocument.plain("$prefix: ${label.value}"),
+                maxLines = 1,
+                overflow = TextOverflow.Clip,
+                textAlign = TextAlign.Start,
+                textColor = 0xFF000000.toInt(),
+                textSizeSp = 16.sp,
+            )
+        },
+    )
 }
 
 private data class RevisionSampleRow(

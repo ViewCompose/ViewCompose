@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 6eb5cba3a803cf912e860c1d8bdd1e327d1fc3b3c1bbb56e1514d7fa90c07b4b
+translation_source_hash: 8749e44c6e4fa9aed6d0aaf61236a61f06bb7ff2949b3f73be9fc96cae4dbe2f
 translation_status: current
 ---
 
@@ -110,6 +110,11 @@ AndroidView(
 `viewComposeSaveableStateRegistry(owner)` 把框架可保存状态绑定到 Android
 `SavedStateRegistryOwner`。View 创建、协调、显式渲染与释放属于主线程工作。状态失效会合并到
 下一次 Choreographer 帧，而显式 `RenderSession.render()` 在终态释放前保持同步执行。
+
+安装的 `AndroidCoreRenderEngine` 还会把 UI Foundation 的 Q3 Observed-property SPI 转换为精确
+Android Renderer Target。Property-only Frame 会保持 Mounted Root List 与 Target Map 稳定，
+校验每个 Target 仍属于已提交 Frame，并只返回 Commit Effect、Failure 与可选诊断。外来或陈旧
+Target 会直接失败，不会触发整树渲染。
 
 ## 相关文档
 

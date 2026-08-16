@@ -49,6 +49,14 @@ class RenderSession(
     private var sourceRegistration: RenderSessionSourceRegistration? = null
     private val overlayRequestStore = OverlayRequestStore()
     private var requestRender: (() -> Unit)? = null
+    private val observedProperties = ObservedPropertyRegistry {
+        if (!awaitingActivation) {
+            requestRender?.invoke()
+        }
+    }
+    private val observedPropertyTargets = LinkedHashMap<Long, CoreObservedPropertyTarget>()
+    @Volatile
+    private var structuralRenderRequested: Boolean = true
     private val nextFrameId = AtomicLong(0)
     @Volatile
     private var awaitingActivation: Boolean = false
@@ -128,6 +136,7 @@ class RenderSession(
         check(!disposalRequested) {
             "RenderSession is disposed and cannot render again."
         }
+        structuralRenderRequested = true
         runtime.render()
     }
 
@@ -135,6 +144,7 @@ class RenderSession(
     internal fun prepareForActivation() {
         if (disposalRequested || disposed || committedFrameId != null || preparedFrame != null) return
         awaitingActivation = true
+        structuralRenderRequested = false
         preparedFrame = prepareFrame()
         if (preparedFrame == null) {
             awaitingActivation = false
@@ -151,8 +161,12 @@ class RenderSession(
             runtime.render()
             return
         }
-        if (composer.hasPendingInvalidations()) {
+        if (
+            composer.hasPendingInvalidations() ||
+            pending.observedPropertyAttempt.hasInvalidatedCandidates()
+        ) {
             abortPreparedFrame(pending)
+            structuralRenderRequested = true
             runtime.render()
             return
         }
@@ -256,8 +270,17 @@ class RenderSession(
             preparedFrame = null
             awaitingActivation = false
             abortPreparedFrame(pending)
+            structuralRenderRequested = true
         }
-        prepareFrame()?.let(::commitFrame)
+        val requiresStructuralFrame = structuralRenderRequested ||
+            committedFrameId == null ||
+            composer.hasPendingInvalidations()
+        structuralRenderRequested = false
+        if (requiresStructuralFrame) {
+            prepareFrame()?.let(::commitFrame)
+        } else if (observedProperties.hasDirtyBindings()) {
+            renderObservedProperties()
+        }
     }
 
     /** Prepares composition and the native tree without crossing the commit boundary. */
@@ -268,6 +291,7 @@ class RenderSession(
         var failurePhase = RenderFailurePhase.CompositionPrepare
         var preparedComposition:
             ComposerLite.PreparedComposition<List<com.viewcompose.ui.node.VNode>>? = null
+        val observedPropertyAttempt = observedProperties.beginFullAttempt()
         var tree: List<com.viewcompose.ui.node.VNode> = emptyList()
         var capturedSourceCandidates =
             emptyList<List<com.viewcompose.ui.tooling.UiSourceCallSite>>()
@@ -281,34 +305,37 @@ class RenderSession(
                 FocusManagerContext.withFocusManager(focusManager) {
                     LocalContext.provide(LocalOverlayHost.holder, overlayHost) {
                         OverlayRequestContext.withStore(overlayRequestStore) {
-                            ComposerContext.withComposer(
-                                composer = composer,
-                                coroutineContext = compositionCoroutineScope.coroutineContext,
-                            ) {
-                                preparedComposition = composer.prepareRoot(
-                                    collectDiagnostics = collectDiagnostics,
+                            ObservedPropertyContext.withAttempt(observedPropertyAttempt) {
+                                ComposerContext.withComposer(
+                                    composer = composer,
+                                    coroutineContext = compositionCoroutineScope.coroutineContext,
                                 ) {
-                                    if (
-                                        sourceRegistration == null &&
-                                        shouldCaptureSource()
+                                    preparedComposition = composer.prepareRoot(
+                                        collectDiagnostics = collectDiagnostics,
                                     ) {
-                                        UiNodeTooling.withSourceCandidateCapture(
-                                            onSourceCandidatesCaptured = { candidates ->
-                                                capturedSourceCandidates = candidates
-                                            },
+                                        if (
+                                            sourceRegistration == null &&
+                                            shouldCaptureSource()
                                         ) {
+                                            UiNodeTooling.withSourceCandidateCapture(
+                                                onSourceCandidatesCaptured = { candidates ->
+                                                    capturedSourceCandidates = candidates
+                                                },
+                                            ) {
+                                                buildVNodeTree(content)
+                                            }
+                                        } else {
                                             buildVNodeTree(content)
                                         }
-                                    } else {
-                                        buildVNodeTree(content)
                                     }
+                                    tree = checkNotNull(preparedComposition).value
                                 }
-                                tree = checkNotNull(preparedComposition).value
                             }
                         }
                     }
                 }
             }
+            observedPropertyAttempt.retainTree(tree)
             failurePhase = RenderFailurePhase.ViewTreeRender
             platform.diagnostics.trace("VC.RenderTree") {
                 platform.renderEngine.renderInto(
@@ -319,6 +346,7 @@ class RenderSession(
                 )
             }
         } catch (error: Exception) {
+            observedPropertyAttempt.abort()
             try {
                 preparedComposition?.abort()
             } catch (abortError: Throwable) {
@@ -346,6 +374,8 @@ class RenderSession(
         }
 
         mountedNodes = frame.mountedNodes
+        observedPropertyTargets.clear()
+        observedPropertyTargets.putAll(frame.observedPropertyTargets)
         adoptedUncommittedTree = false
         return PreparedRenderFrame(
             frameId = frameId,
@@ -354,6 +384,181 @@ class RenderSession(
             tree = tree,
             sourceCandidates = capturedSourceCandidates,
             frame = frame,
+            observedPropertyAttempt = observedPropertyAttempt,
+        )
+    }
+
+    /** Reads and applies one coalesced exact-target property transaction. */
+    private fun renderObservedProperties() {
+        if (disposalRequested || disposed) return
+        val frameId = nextFrameId.incrementAndGet()
+        val frameFailures = mutableListOf<RenderFailure>()
+        val transaction = try {
+            platform.diagnostics.trace("VC.ObservedPropertyRead") {
+                observedProperties.prepareDirty()
+            }
+        } catch (error: Exception) {
+            reportFailure(
+                frameId = frameId,
+                phase = RenderFailurePhase.ObservedPropertyPrepare,
+                recovery = RenderFailureRecovery.FrameUnchanged,
+                error = error,
+                frameFailures = frameFailures,
+            )
+            lastFrameReport = RenderFrameReport(
+                frameId = frameId,
+                status = RenderFrameStatus.RolledBack,
+                failures = frameFailures.toList(),
+            )
+            return
+        } ?: return
+
+        val changes = transaction.changes
+        if (changes.isEmpty()) {
+            committedFrameId = frameId
+            try {
+                transaction.commit()
+            } catch (error: Exception) {
+                reportFailure(
+                    frameId = frameId,
+                    phase = RenderFailurePhase.ObservedPropertyCommit,
+                    recovery = RenderFailureRecovery.FrameUnchanged,
+                    error = error,
+                    frameFailures = frameFailures,
+                )
+            }
+            invokeDiagnosticsCallback(frameId, frameFailures) {
+                onRenderStats?.invoke(RenderStats())
+            }
+            lastFrameReport = RenderFrameReport(
+                frameId = frameId,
+                status = RenderFrameStatus.Committed,
+                failures = frameFailures.toList(),
+            )
+            return
+        }
+
+        val corePatches = try {
+            changes.map { change ->
+                val target = observedPropertyTargets[change.id]
+                    ?: error("Observed property ${change.id} has no committed renderer target.")
+                check(target.node.observedPropertyId == change.id) {
+                    "Observed property ${change.id} target identity changed."
+                }
+                check(target.node.spec == change.previous) {
+                    "Observed property ${change.id} target no longer has its committed NodeSpec."
+                }
+                val next = UiNodeTooling.inheritCopy(
+                    target = target.node.copy(spec = change.next),
+                    source = target.node,
+                )
+                CoreObservedPropertyPatch(
+                    id = change.id,
+                    target = target,
+                    previous = target.node,
+                    next = next,
+                )
+            }
+        } catch (error: Exception) {
+            transaction.abort()
+            reportFailure(
+                frameId = frameId,
+                phase = RenderFailurePhase.ObservedPropertyPrepare,
+                recovery = RenderFailureRecovery.FrameUnchanged,
+                error = error,
+                frameFailures = frameFailures,
+            )
+            lastFrameReport = RenderFrameReport(
+                frameId = frameId,
+                status = RenderFrameStatus.RolledBack,
+                failures = frameFailures.toList(),
+            )
+            return
+        }
+
+        val collectDiagnostics = debug || onRenderStats != null || onRenderResult != null
+        val frame = try {
+            platform.diagnostics.trace("VC.ObservedPropertyRender") {
+                platform.renderEngine.patchObservedProperties(
+                    container = container,
+                    mountedNodes = mountedNodes,
+                    patches = corePatches,
+                    collectDiagnostics = collectDiagnostics,
+                )
+            }
+        } catch (error: Exception) {
+            transaction.abort()
+            reportFailure(
+                frameId = frameId,
+                phase = RenderFailurePhase.ObservedPropertyRender,
+                recovery = RenderFailureRecovery.PreviousFrameRestored,
+                error = error,
+                frameFailures = frameFailures,
+            )
+            lastFrameReport = RenderFrameReport(
+                frameId = frameId,
+                status = RenderFrameStatus.RolledBack,
+                failures = frameFailures.toList(),
+            )
+            return
+        }
+
+        corePatches.forEach { patch ->
+            patch.target.advance(
+                previous = patch.previous,
+                next = patch.next,
+            )
+        }
+        committedFrameId = frameId
+        try {
+            transaction.commit()
+        } catch (error: Exception) {
+            reportFailure(
+                frameId = frameId,
+                phase = RenderFailurePhase.ObservedPropertyCommit,
+                recovery = RenderFailureRecovery.FrameCommitted,
+                error = error,
+                frameFailures = frameFailures,
+            )
+        }
+        frame.commitFailures.forEach { failure ->
+            reportFailure(
+                frameId = frameId,
+                phase = RenderFailurePhase.ViewTreeCommit,
+                recovery = RenderFailureRecovery.FrameCommitted,
+                error = failure.cause,
+                operation = failure.operation,
+                nodeKey = failure.nodeKey,
+                frameFailures = frameFailures,
+            )
+        }
+        frame.commitEffects.forEach { effect ->
+            try {
+                effect.commit()
+            } catch (error: Exception) {
+                reportFailure(
+                    frameId = frameId,
+                    phase = RenderFailurePhase.NativeViewCommit,
+                    recovery = RenderFailureRecovery.FrameCommitted,
+                    error = error,
+                    operation = effect.operation,
+                    nodeKey = effect.nodeKey,
+                    frameFailures = frameFailures,
+                )
+            }
+        }
+        invokeDiagnosticsCallback(frameId, frameFailures) {
+            onRenderStats?.invoke(frame.renderStats)
+        }
+        frame.renderResult?.let { result ->
+            invokeDiagnosticsCallback(frameId, frameFailures) {
+                onRenderResult?.invoke(result)
+            }
+        }
+        lastFrameReport = RenderFrameReport(
+            frameId = frameId,
+            status = RenderFrameStatus.Committed,
+            failures = frameFailures.toList(),
         )
     }
 
@@ -378,6 +583,17 @@ class RenderSession(
             )
         }
         committedFrameId = frameId
+        try {
+            prepared.observedPropertyAttempt.commit()
+        } catch (error: Exception) {
+            reportFailure(
+                frameId = frameId,
+                phase = RenderFailurePhase.ObservedPropertyCommit,
+                recovery = RenderFailureRecovery.FrameCommitted,
+                error = error,
+                frameFailures = frameFailures,
+            )
+        }
         if (sourceRegistration == null && prepared.sourceCandidates.isNotEmpty()) {
             runSourceToolingOperation("register source session") {
                 sourceRegistration = sourceTooling?.register(
@@ -467,6 +683,7 @@ class RenderSession(
 
     /** Aborts a speculative composition while retaining its native tree as the next diff input. */
     private fun abortPreparedFrame(prepared: PreparedRenderFrame) {
+        prepared.observedPropertyAttempt.abort()
         try {
             prepared.composition.abort()
         } catch (error: Exception) {
@@ -497,6 +714,9 @@ class RenderSession(
         // Logical ownership ends before any native reset can call application code.
         disposeOperation {
             composer.dispose()
+        }
+        disposeOperation {
+            observedProperties.dispose()
         }
         val releaseOwner = logicalOwnerRelease
         logicalOwnerRelease = null
@@ -556,6 +776,7 @@ class RenderSession(
             )
         }
         mountedNodes = emptyList()
+        observedPropertyTargets.clear()
         adoptedUncommittedTree = false
     }
 
@@ -722,6 +943,7 @@ class RenderSession(
         val tree: List<com.viewcompose.ui.node.VNode>,
         val sourceCandidates: List<List<com.viewcompose.ui.tooling.UiSourceCallSite>>,
         val frame: CoreRenderFrame,
+        val observedPropertyAttempt: ObservedPropertyFullAttempt,
     )
 }
 

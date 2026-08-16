@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/state-snapshots.md
-translation_source_hash: 26cd355684381303aa9821055a508716b4a2c6ef837c611b06107f94ddf65431
+translation_source_hash: 15a51eebdc5fe3eb6d00da371bfb6b3a3a7ed13a6ca65119356d5af5bb2a2a45
 translation_status: current
 ---
 
@@ -33,7 +33,11 @@ translation_status: current
    - `enter { ... }`
    - `apply()`
    - `dispose()`
-5. Renderer 连接型状态
+5. `RuntimeObservation`
+   - `observeReads(onInvalidated) { ... }`：创建一个可独立释放的依赖 Owner；
+   - `prepareReplacement(previous) { ... }`：读取候选依赖，并返回显式 `commit`/`abort`
+     替换事务。
+6. Renderer 连接型状态
    - `LazyListState`：虚拟化 Item 位置与布局信息；
    - `ScrollState`：Eager Container 的逻辑偏移、范围、Viewport、运动与命令；
    - `PagerState`：当前页、已停稳页、目标页、偏移、页数、运动、能力与命令。
@@ -63,6 +67,10 @@ translation_status: current
     声明在重建后仍是权威来源。
 12. Eager 横向偏移与 Pager 索引在 RTL 中使用逻辑顺序。原生物理位置属于 Renderer 细节，不能
     泄漏到可移植 Snapshot。
+13. Observation 依赖替换会保留与已提交依赖集合共有的订阅。候选独有依赖会临时订阅同一个
+    `Observation`；即使一次 Apply 同时修改旧依赖与候选依赖，也能保留最多一次的 Callback
+    Identity。`commit` 在没有失效空窗的情况下切换权威集合，`abort` 则只释放候选新增项。同一
+    时间只能 Prepare 一个替换，且每个替换都必须执行一个终止操作。
 
 ## 4. 并发与冲突约束
 
@@ -81,6 +89,8 @@ translation_status: current
    的写入放进 `Snapshot.withMutableSnapshot`，并用失效 Callback 读取完整元组进行测试。
 6. State Connector 变更必须覆盖替换、释放、相等 Snapshot、Pending Command 与逻辑 RTL 测试。
    State 对象不得持有 Android View 或执行平台配置。
+7. 框架事务重新计算长期存在的 Observed Reader 时，必须使用 Prepared Dependency Replacement。
+   每个成功帧都释放并重建全部订阅，既会引入竞态风险，也会在热路径产生重复工作。
 
 ## 6. 关联文档
 

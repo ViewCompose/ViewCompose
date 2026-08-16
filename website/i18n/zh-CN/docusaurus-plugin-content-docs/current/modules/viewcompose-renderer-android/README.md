@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 3556dfd2eaaf050393a05c419ba20cb76b8376b68c5b73068f75c811769c1dc1
+translation_source_hash: 6aa96aa25b9351803609df1dd1acbd3c5a265429a232b07168c5ea40de5e9fc3
 translation_status: current
 ---
 
@@ -85,6 +85,10 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
 
 - [`ViewTreeRenderer`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.view.tree/-view-tree-renderer/)
   管理 VNode 到 View 的事务渲染与释放边界。
+- Q3 `ViewTreeRenderer.patchObservedProperties` 接受非空、Target 唯一的精确 Mounted Batch。
+  它先校验 Property-only Invariant，复用普通 Binder Differ，但跳过 Tree Wrapping 与 Child
+  Reconciliation；任一 Patch 失败时回滚此前全部原生绑定。`ObservedPropertyRenderResult`
+  刻意不携带替换后的 Mounted Root。
 - [`ChildReconciler`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.reconcile/-child-reconciler/)
   在不修改平台状态的前提下生成插入、复用和移除计划。
 - [`LazyListDiff`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.reconcile/-lazy-list-diff/)

@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.renderer.reconcile.ChildReconciler
+import com.viewcompose.renderer.reconcile.ReconcileResult
 import com.viewcompose.renderer.reconcile.ReconcileNode
 
 /**
@@ -137,6 +138,58 @@ object ViewTreeRenderer {
         )
         onReconcile?.invoke(committedResult)
         return committedResult
+    }
+
+    /**
+     * Applies an atomic batch to exact mounted targets without tree wrapping or reconciliation.
+     *
+     * Every [ViewTreeObservedPropertyPatch.next] node must differ from its committed [previous]
+     * node only by a same-concrete-type `NodeSpec`. Validation and native binding share the normal
+     * renderer rollback transaction, so one failure restores the whole batch.
+     *
+     * This is a Q3 host-integration API.
+     *
+     * @sample com.viewcompose.renderer.samples.patchObservedPropertySample
+     * @param patches non-empty declaration-ordered batch with unique mounted targets and ids
+     * @param collectDiagnostics whether to collect patch records and aggregate binding statistics
+     * @return property-only commit work and diagnostics; mounted roots remain unchanged
+     * @throws IllegalArgumentException when [patches] is empty
+     * @throws IllegalStateException when a patch violates exact-target or property-only invariants
+     * @throws Throwable when native binding fails after the complete batch has been checkpointed;
+     * every earlier mutation is restored before the failure is propagated
+     */
+    fun patchObservedProperties(
+        patches: List<ViewTreeObservedPropertyPatch>,
+        collectDiagnostics: Boolean = true,
+    ): ObservedPropertyRenderResult {
+        require(patches.isNotEmpty()) { "Observed-property patch batches cannot be empty." }
+        val transaction = ViewTreePatchPipeline.beginTransaction()
+        val stats = try {
+            ViewTreePatchPipeline.executeObservedPropertyPatches(
+                patches = patches,
+                defaultRippleColor = DEFAULT_RIPPLE_COLOR,
+                transaction = transaction,
+                collectStats = collectDiagnostics,
+            )
+        } catch (error: Throwable) {
+            ViewTreePatchPipeline.rollbackTransaction(
+                transaction = transaction,
+                cause = error,
+                defaultRippleColor = DEFAULT_RIPPLE_COLOR,
+            )
+            throw error
+        }
+        val commitEffects = transaction.commitEffects.toList()
+        val commitFailures = ViewTreePatchPipeline.commitTransaction(
+            transaction = transaction,
+            warningTag = WARNING_TAG,
+        )
+        return ObservedPropertyRenderResult(
+            stats = stats,
+            patches = if (collectDiagnostics) transaction.patchRecords.toList() else emptyList(),
+            commitEffects = commitEffects,
+            commitFailures = commitFailures,
+        )
     }
 
     private fun renderIntoTransaction(
@@ -332,3 +385,17 @@ object ViewTreeRenderer {
     }
 
 }
+
+/**
+ * One exact mounted-node property replacement consumed by [ViewTreeRenderer].
+ *
+ * This is a Q3 host-integration model.
+ *
+ * @sample com.viewcompose.renderer.samples.patchObservedPropertySample
+ */
+data class ViewTreeObservedPropertyPatch(
+    val id: Long,
+    val mountedNode: MountedNode,
+    val previous: VNode,
+    val next: VNode,
+)

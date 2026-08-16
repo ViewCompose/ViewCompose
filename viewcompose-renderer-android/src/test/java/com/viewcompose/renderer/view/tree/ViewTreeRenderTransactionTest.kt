@@ -1030,6 +1030,162 @@ class ViewTreeRenderTransactionTest {
         assertTrue(mounted.mountedNodes.single().disposed)
     }
 
+    @Test
+    fun `observed property patch updates exact text target without reconciliation`() {
+        val container = FrameLayout(context)
+        val previousNode = environmentTextNode(
+            density = 1f,
+            fontScale = 1f,
+            text = "before",
+        ).copy(observedPropertyId = 1L)
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(previousNode),
+        )
+        val mounted = initial.mountedNodes.single()
+        val textView = mounted.view as TextView
+        val nextNode = previousNode.copy(
+            spec = (previousNode.spec as TextNodeProps).copy(
+                document = TextDocument.plain("after"),
+            ),
+        )
+
+        val result = ViewTreeRenderer.patchObservedProperties(
+            patches = listOf(
+                ViewTreeObservedPropertyPatch(
+                    id = 1L,
+                    mountedNode = mounted,
+                    previous = previousNode,
+                    next = nextNode,
+                ),
+            ),
+        )
+
+        assertSame(textView, mounted.view)
+        assertEquals("after", textView.text.toString())
+        assertSame(nextNode, mounted.vnode)
+        assertEquals(1, result.stats.patchedNodes)
+        assertEquals(0, result.stats.inserts)
+        assertEquals(0, result.stats.removals)
+    }
+
+    @Test
+    fun `observed property batch failure restores every earlier native target`() {
+        val container = FrameLayout(context)
+        val lifecycle = mutableListOf<String>()
+        val previousNodes = listOf(
+            androidNode(
+                key = "first",
+                value = "old-first",
+                onReset = { lifecycle += "reset-old-first" },
+            ).copy(observedPropertyId = 1L),
+            androidNode(
+                key = "second",
+                value = "old-second",
+                onReset = { lifecycle += "reset-old-second" },
+            ).copy(observedPropertyId = 2L),
+        )
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = previousNodes,
+        )
+        val firstMounted = initial.mountedNodes[0]
+        val secondMounted = initial.mountedNodes[1]
+        val firstNext = androidNode(
+            key = "first",
+            value = "new-first",
+            onReset = { lifecycle += "reset-new-first" },
+            onCommit = { lifecycle += "commit-new-first" },
+        )
+            .copy(observedPropertyId = 1L)
+        val secondNext = androidNode(
+            key = "second",
+            value = "new-second",
+            failUpdate = true,
+            onReset = { lifecycle += "reset-new-second" },
+            onCommit = { lifecycle += "commit-new-second" },
+        )
+            .copy(observedPropertyId = 2L)
+
+        val error = runCatching {
+            ViewTreeRenderer.patchObservedProperties(
+                patches = listOf(
+                    ViewTreeObservedPropertyPatch(1L, firstMounted, previousNodes[0], firstNext),
+                    ViewTreeObservedPropertyPatch(2L, secondMounted, previousNodes[1], secondNext),
+                ),
+            )
+        }.exceptionOrNull()
+
+        assertAndroidViewUpdateFailure(error)
+        assertEquals("old-first", firstMounted.view.tag)
+        assertEquals("old-second", secondMounted.view.tag)
+        assertSame(previousNodes[0], firstMounted.vnode)
+        assertSame(previousNodes[1], secondMounted.vnode)
+        assertEquals(
+            listOf(
+                "reset-new-first",
+                "reset-new-second",
+                "reset-old-first",
+                "reset-old-second",
+            ),
+            lifecycle,
+        )
+    }
+
+    @Test
+    fun `observed property batch failure restores earlier native no-op snapshot`() {
+        val container = FrameLayout(context)
+        val previousText = environmentTextNode(
+            density = 1f,
+            fontScale = 1f,
+            text = "stable",
+        ).copy(observedPropertyId = 1L)
+        val previousFailing = androidNode(
+            key = "failing",
+            value = "old",
+        ).copy(observedPropertyId = 2L)
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(previousText, previousFailing),
+        )
+        val textMounted = initial.mountedNodes[0]
+        val failingMounted = initial.mountedNodes[1]
+        val equalTextCandidate = previousText.copy()
+        val failingCandidate = androidNode(
+            key = "failing",
+            value = "new",
+            failUpdate = true,
+        ).copy(observedPropertyId = 2L)
+
+        val error = runCatching {
+            ViewTreeRenderer.patchObservedProperties(
+                patches = listOf(
+                    ViewTreeObservedPropertyPatch(
+                        1L,
+                        textMounted,
+                        previousText,
+                        equalTextCandidate,
+                    ),
+                    ViewTreeObservedPropertyPatch(
+                        2L,
+                        failingMounted,
+                        previousFailing,
+                        failingCandidate,
+                    ),
+                ),
+            )
+        }.exceptionOrNull()
+
+        assertAndroidViewUpdateFailure(error)
+        assertSame(previousText, textMounted.vnode)
+        assertSame(previousFailing, failingMounted.vnode)
+        assertEquals("stable", (textMounted.view as TextView).text.toString())
+        assertEquals("old", failingMounted.view.tag)
+    }
+
     private fun androidNode(
         key: Any,
         value: String,

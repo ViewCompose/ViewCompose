@@ -28,7 +28,11 @@ Goals:
    - `enter { ... }`
    - `apply()`
    - `dispose()`
-5. Renderer-connected state
+5. `RuntimeObservation`
+   - `observeReads(onInvalidated) { ... }`: creates one independently disposable dependency owner;
+   - `prepareReplacement(previous) { ... }`: reads candidate dependencies and returns an explicit
+     `commit`/`abort` replacement transaction.
+6. Renderer-connected state
    - `LazyListState`: virtualized item position and layout information;
    - `ScrollState`: eager-container logical offset, range, viewport, motion, and commands;
    - `PagerState`: current, settled, target, offset, count, motion, capability, and commands.
@@ -65,6 +69,12 @@ Goals:
     controlled pager declaration remains authoritative across recreation.
 12. Eager horizontal offsets and pager indexes are logical in RTL. Native physical positions are a
     renderer detail and must not leak into the portable snapshot.
+13. Observation dependency replacement retains subscriptions shared with the committed dependency
+    set. Candidate-only dependencies temporarily subscribe the same `Observation`, preserving
+    at-most-once identity even when one Apply changes old and candidate dependencies together;
+    `commit` switches the authoritative set without an invalidation gap, while `abort` releases only
+    candidate additions. Exactly one replacement may be prepared at a time, and every replacement
+    requires one terminal operation.
 
 ## 4. Concurrency and conflict constraints
 
@@ -90,6 +100,9 @@ Goals:
    a test that reads the complete tuple from an invalidation callback.
 6. A state connector change requires replacement, disposal, equal-snapshot, pending-command, and
    logical-RTL tests. State objects never own Android Views or perform platform configuration.
+7. A framework transaction that re-evaluates long-lived observed readers must use prepared
+   dependency replacement. Disposing and recreating every subscription on each successful frame is
+   both a race risk and recurring hot-path work.
 
 ## 6. Related documents
 

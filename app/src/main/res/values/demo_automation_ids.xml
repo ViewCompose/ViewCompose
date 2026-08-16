@@ -484,6 +484,7 @@
     <item name="demo_performance_complex_layout_root" type="id" />
     <item name="demo_performance_complex_layout_ready" type="id" />
     <item name="demo_performance_complex_layout_primary_action" type="id" />
+    <item name="demo_performance_complex_layout_secondary_action" type="id" />
     <item name="demo_performance_complex_layout_reset" type="id" />
     <item name="demo_performance_complex_layout_state" type="id" />
     <item name="demo_performance_complex_layout_target" type="id" />
@@ -496,6 +497,7 @@
     <item name="demo_performance_shadow_complex_layout_root" type="id" />
     <item name="demo_performance_shadow_complex_layout_ready" type="id" />
     <item name="demo_performance_shadow_complex_layout_primary_action" type="id" />
+    <item name="demo_performance_shadow_complex_layout_secondary_action" type="id" />
     <item name="demo_performance_shadow_complex_layout_reset" type="id" />
     <item name="demo_performance_shadow_complex_layout_state" type="id" />
     <item name="demo_performance_shadow_complex_layout_target" type="id" />

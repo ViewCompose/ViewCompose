@@ -25,9 +25,11 @@ internal fun createAndroidViewsPerformanceHeader(
     readyText: String,
     stateText: String,
     primaryActionText: String,
+    secondaryActionText: String? = null,
     resetText: String,
     scenario: DemoScenarioSpec,
     onPrimaryAction: () -> Unit,
+    onSecondaryAction: (() -> Unit)? = null,
     onReset: () -> Unit,
 ): AndroidViewsPerformanceHeader {
     val header = LinearLayout(context).apply {
@@ -89,6 +91,21 @@ internal fun createAndroidViewsPerformanceHeader(
             ViewGroup.LayoutParams.WRAP_CONTENT,
         ),
     )
+    if (secondaryActionText != null && onSecondaryAction != null) {
+        val secondaryAction = context.performanceActionView(
+            text = secondaryActionText,
+            onClick = onSecondaryAction,
+        ).apply {
+            performanceScenarioTarget(scenario, DemoAutomationRole.SecondaryAction)
+        }
+        actions.addView(
+            secondaryAction,
+            LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            ).withStartMargin(context.performanceDp(8)),
+        )
+    }
     val reset = context.performanceActionView(
         text = resetText,
         onClick = onReset,

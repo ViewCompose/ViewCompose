@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: adb5e3d264fdc9a4e36b5bffb9ccbeccea325dc5203c5a61fe6279747a6c82b0
+translation_source_hash: 671b82e1f829ae6c111bf506215f01cc1a566f61c789902b5a75b4c39413aa36
 translation_status: current
 ---
 
@@ -143,6 +143,15 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-render-session/)
   为一个不透明 `RenderContainerHandle` 协调组合、渲染器协调、原生提交 Effect、浮层、诊断、
   失败恢复与释放。标准应用使用 `renderInto` 返回的 Host Android Session，不直接构造该协调器。
+- Q3 `observedValue`、`ObservedValue`、`observedNodeSpec` 和 Observed
+  `UiTreeBuilder.emit` Overload 用来声明属性 Reader，其 State 依赖不会让外层 Composition 失效。
+  `Text(ObservedValue<String>)` 是第一项 Typed Integration。Session 从同一 Snapshot 读取全部
+  Dirty Declaration，再提交一次精确 Target Renderer Transaction；Type、Key、Modifier、Child
+  与 Environment 仍属于结构。ViewCompose 没有编译器生成的变更标记，因此每个变化的普通捕获值
+  都必须显式进入 `inputs`。
+- Q3 `CoreObservedPropertyTarget`、`CoreObservedPropertyPatch`、`CoreObservedPropertyFrame` 与
+  `CoreRenderEngine.patchObservedProperties` 组成 Renderer-neutral Host SPI。Engine 必须校验并
+  回滚完整 Batch，或者拒绝该能力；不存在整树静默回退。
 - `RenderSessionSourceTooling` 与 `RenderSessionSourceRegistration` 组成 Q3 可选平台诊断契约。
   只有平台主动启用时才捕获一条有限源码调用链，并跟踪 Root、Lazy Item 与 Pager Item Render
   Session 的活动/释放生命周期。编译样例 `renderSessionSourceToolingSample` 展示其 Adapter 生命周期。

@@ -19,6 +19,158 @@ import java.util.concurrent.atomic.AtomicReference
 
 class RuntimeObservationTest {
     @Test
+    fun `replacement retains stable subscriptions without observer churn`() {
+        val state = TrackingObservableState()
+        var invalidations = 0
+        val (_, observation) = RuntimeObservation.observeReads(
+            onInvalidated = { invalidations += 1 },
+        ) {
+            state.read()
+        }
+
+        val (_, replacement) = RuntimeObservation.prepareReplacement(observation) {
+            state.read()
+        }
+        replacement.commit()
+        state.invalidate()
+
+        assertEquals(1, state.additions)
+        assertEquals(0, state.removals)
+        assertEquals(1, invalidations)
+        observation.dispose()
+        assertEquals(1, state.removals)
+    }
+
+    @Test
+    fun `aborted replacement releases only candidate dependencies`() {
+        val committed = TrackingObservableState()
+        val candidate = TrackingObservableState()
+        var invalidations = 0
+        val (_, observation) = RuntimeObservation.observeReads(
+            onInvalidated = { invalidations += 1 },
+        ) {
+            committed.read()
+        }
+
+        val (_, replacement) = RuntimeObservation.prepareReplacement(observation) {
+            candidate.read()
+        }
+        candidate.invalidate()
+        replacement.abort()
+        committed.invalidate()
+        candidate.invalidate()
+
+        assertEquals(2, invalidations)
+        assertEquals(1, committed.additions)
+        assertEquals(0, committed.removals)
+        assertEquals(1, candidate.additions)
+        assertEquals(1, candidate.removals)
+        observation.dispose()
+    }
+
+    @Test
+    fun `committed replacement switches dependencies after guarded read`() {
+        val previous = TrackingObservableState()
+        val next = TrackingObservableState()
+        var invalidations = 0
+        val (_, observation) = RuntimeObservation.observeReads(
+            onInvalidated = { invalidations += 1 },
+        ) {
+            previous.read()
+        }
+
+        val (_, replacement) = RuntimeObservation.prepareReplacement(observation) {
+            next.read()
+        }
+        replacement.commit()
+        previous.invalidate()
+        next.invalidate()
+
+        assertEquals(1, invalidations)
+        assertEquals(1, previous.removals)
+        assertEquals(1, next.additions)
+        assertEquals(0, next.removals)
+        observation.dispose()
+    }
+
+    @Test
+    fun `one apply during replacement invalidates the observation only once`() {
+        val committed = mutableStateOf(0)
+        val candidate = mutableStateOf(0)
+        var invalidations = 0
+        val (_, observation) = RuntimeObservation.observeReads(
+            onInvalidated = { invalidations += 1 },
+        ) {
+            committed.value
+        }
+
+        val (_, replacement) = RuntimeObservation.prepareReplacement(observation) {
+            candidate.value
+        }
+        Snapshot.withMutableSnapshot {
+            committed.value = 1
+            candidate.value = 1
+        }
+        assertEquals(1, invalidations)
+
+        replacement.commit()
+        committed.value = 2
+        candidate.value = 2
+        assertEquals(2, invalidations)
+        observation.dispose()
+    }
+
+    @Test
+    fun `failed replacement read restores the committed dependency owner`() {
+        val committed = TrackingObservableState()
+        val candidate = TrackingObservableState()
+        val (_, observation) = RuntimeObservation.observeReads(onInvalidated = {}) {
+            committed.read()
+        }
+
+        runCatching {
+            RuntimeObservation.prepareReplacement(observation) {
+                candidate.read()
+                error("candidate failure")
+            }
+        }
+        val (_, retry) = RuntimeObservation.prepareReplacement(observation) {
+            committed.read()
+        }
+        retry.abort()
+
+        assertEquals(1, candidate.additions)
+        assertEquals(1, candidate.removals)
+        assertEquals(0, committed.removals)
+        observation.dispose()
+    }
+
+    @Test
+    fun `one observation cannot prepare overlapping replacements`() {
+        val state = mutableStateOf(0)
+        val (_, observation) = RuntimeObservation.observeReads(onInvalidated = {}) {
+            state.value
+        }
+        val (_, first) = RuntimeObservation.prepareReplacement(observation) {
+            state.value
+        }
+
+        val failure = runCatching {
+            RuntimeObservation.prepareReplacement(observation) {
+                state.value
+            }
+        }.exceptionOrNull()
+        assertTrue(failure is IllegalStateException)
+
+        first.abort()
+        val (_, retry) = RuntimeObservation.prepareReplacement(observation) {
+            state.value
+        }
+        retry.abort()
+        observation.dispose()
+    }
+
+    @Test
     fun `nested observeReads restores outer context`() {
         val state = mutableStateOf(0)
         var outerInvalidations = 0
@@ -213,6 +365,33 @@ class RuntimeObservationTest {
         } finally {
             persistent.forEach(Observation::dispose)
             executor.shutdownNow()
+        }
+    }
+
+    private class TrackingObservableState : ObservableState {
+        private val observers = LinkedHashSet<Observation>()
+        var additions: Int = 0
+            private set
+        var removals: Int = 0
+            private set
+
+        fun read(): Int {
+            RuntimeObservation.recordRead(this)
+            return 0
+        }
+
+        fun invalidate() {
+            observers.toList().forEach(Observation::invalidate)
+        }
+
+        override fun addObserver(observer: Observation) {
+            additions += 1
+            observers += observer
+        }
+
+        override fun removeObserver(observer: Observation) {
+            removals += 1
+            observers -= observer
         }
     }
 }

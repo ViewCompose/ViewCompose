@@ -19,6 +19,9 @@ import com.viewcompose.ui.tooling.UiNodeToolingMetadata
  * @property modifier ordered behavior and parent-data chain
  * @property children declarative child nodes in placement order
  * @property environment captured density, locale, and layout direction for this subtree
+ * @property observedPropertyId opaque session identity for a directly observed [spec], or `null`
+ * when the node participates only in ordinary tree rendering; callers constructing VNodes directly
+ * leave this value `null`
  */
 data class VNode(
     val type: NodeType,
@@ -27,6 +30,7 @@ data class VNode(
     val modifier: Modifier = Modifier,
     val children: List<VNode> = emptyList(),
     val environment: UiEnvironmentValues = UiEnvironmentValues.Default,
+    val observedPropertyId: Long? = null,
 ) {
     /**
      * Tooling-only identity and source information.
