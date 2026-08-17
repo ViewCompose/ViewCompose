@@ -2,18 +2,19 @@
 
 ## Status
 
-Active. Runtime attribution and the implementation boundary are accepted; implementation has not
-started.
+Active. Runtime attribution and the implementation boundary are accepted. Phase 1's shared
+strategy/payload hard cut and focused contract tests are complete; adapter metadata convergence is
+next.
 
 Last verified: 2026-08-17.
 
-Next action: hard-cut typed and snapshot declarations onto one declaration-shared item-session
-binding, then prove that the change removes per-item binding/closure residency without moving
-allocation into RecyclerView bind or fling work.
+Next action: converge adapter position and stable-ID ownership into one compact submission index,
+then prove stable reorder, duplicate-key fallback, attached-holder refresh, and bounded view-type
+behavior before changing shape resources.
 
 ## Maven release changesets
 
-- None.
+- `release/changes/20260817-lazy-collection-memory-efficiency.json`
 
 ## Objective
 
@@ -91,7 +92,7 @@ replacement accepted benchmark baseline.
 
 ## Implementation phases
 
-### Phase 0: decision, baseline, and gates — in progress
+### Phase 0: decision, baseline, and gates — complete
 
 - Register this plan and the exact logical, physical, memory, and no-render-regression boundaries.
 - Add structural allocation tests or counters that distinguish committed entry objects,
@@ -99,7 +100,7 @@ replacement accepted benchmark baseline.
 - Re-run the unchanged control before interpreting a candidate when device, benchmark binary, or
   clock policy differs from the accepted baseline.
 
-### Phase 1: declaration-shared typed content — pending
+### Phase 1: declaration-shared typed content — complete
 
 - Replace per-element `WidgetLazyItemSessionBinding` and item-capturing content closures in typed
   and strong-snapshot declarations with one declaration-owned strategy plus element payload.

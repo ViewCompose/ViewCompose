@@ -151,9 +151,10 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
   行与 Tab Item 保持 `Content`；该角色不影响 Key、差分、测量、可见性或回调。
 - Lazy Item 的 `contentRevision` 与框架捕获的 `environmentRevision` 是标识和 Type 之外仅有的内容
   失效输入。Key 与 Revision 相等时完全跳过 Item Composition 与原生 Patch，即使父层创建了新的
-  Callback 对象。Revision 变化会安装最新 Closure，并只 Render 该 Item；调用方必须使用可观察
-  State，或把每个变化普通捕获值放入 `contentRevision`。即使 Key 与 Revision 不变，只要
-  `contentType` 改变，也会终止旧 Child Session 并完整重建原生呈现。
+  Strategy 或 Payload。Revision 变化会让 Item 的共享 Strategy 安装最新 Payload，并只 Render 该
+  Item；调用方必须使用可观察 State，或把每个变化普通捕获值放入 `contentRevision`。即使 Key 与
+  Revision 不变，只要 `contentType` 改变，也会终止旧 Child Session 并完整重建原生呈现。Holder
+  Create 与 Update 会直接调用 Strategy，Bind 路径不会分配 Item 专属 Callback Adapter。
 - Detach 且从未 Activate 的 Lazy Holder 可以在 RecyclerView Prefetch 中 Prepare 子 Composition
   与原生 View 树，但不会提交 Remember Lifecycle、Effect、原生 Commit 工作、Overlay 或诊断。
   首次 Attach 会直接 Activate 有效 Prepared Frame；如果被观察 State 已变化，则改为渲染当前
@@ -164,8 +165,8 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
   快照实例和完全相同的 Submission Revision 时才能跳过 Session 路由；仅 Revision 相等并不足够。
   这条确认规则可以防止队列中的 RecyclerView 通知把较早的逻辑提交误判为当前提交。
 - Lazy List 与 Pager Holder 会在 Holder 生命周期内缓存 Container Handle，并直接调用专用 Session
-  Host。原生复用仍按 Key 切换逻辑 Session 所有权；该调整只移除 Callback Wrapper 分配，不会合并
-  物理与逻辑身份。
+  Host 与 Declaration 共享的 Item Strategy。原生复用仍按 Key 切换逻辑 Session 所有权；该调整只
+  移除 Callback Wrapper 分配，不会合并物理与逻辑身份。
 - Pager 稳定 ID 使用 Renderer 分配值而不是 key hash。Pager View Type 按不兼容的
   `contentType`/kind 组合划分；带 key 的移动只刷新归属唯一且已变化的 Holder，每个公开 Page 声明
   都必须提供唯一稳定 Key。除非调用方显式指定 Limit，否则由 ViewPager2 原生默认策略管理离屏驻留。

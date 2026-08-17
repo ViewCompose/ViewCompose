@@ -7,9 +7,9 @@ import com.viewcompose.ui.node.policy.GridItemSpan
  *
  * [contentRevision] is the caller-owned semantic content version. [environmentRevision] is the
  * framework-owned environment version captured by delayed-content DSLs. Equality deliberately
- * excludes [sessionFactory] and [sessionUpdater]: callback allocation is never an invalidation
- * signal. Equal key and revisions skip the child render completely; changing either revision
- * installs the latest captured content and renders that logical session once. Changing
+ * excludes [sessionStrategy] and [sessionPayload]: declaration strategy and payload identity are
+ * never invalidation signals. Equal key and revisions skip the child render completely; changing
+ * either revision installs the latest payload and renders that logical session once. Changing
  * [contentType], including under the same key and revisions, terminates the old logical session
  * and requires a full presentation rebuild.
  *
@@ -26,8 +26,8 @@ import com.viewcompose.ui.node.policy.GridItemSpan
  * @property contentType optional renderer reuse classification
  * @property kind normal item or sticky-header behavior
  * @property span renderer-neutral grid span policy
- * @property sessionFactory factory invoked when a renderer needs a child render session
- * @property sessionUpdater callback that installs latest captured content into a retained session
+ * @property sessionStrategy declaration-owned strategy that creates and updates child sessions
+ * @property sessionPayload opaque declaration payload interpreted only by [sessionStrategy]
  */
 class LazyListItem(
     val key: Any,
@@ -36,9 +36,32 @@ class LazyListItem(
     val contentType: Any? = null,
     val kind: LazyListItemKind = LazyListItemKind.Item,
     val span: GridItemSpan = GridItemSpan.Single,
-    val sessionFactory: LazyListItemSessionFactory,
-    val sessionUpdater: (LazyListItemSession) -> Unit,
+    val sessionStrategy: LazyListItemSessionStrategy,
+    val sessionPayload: Any? = null,
 ) {
+    /**
+     * Creates a child session and installs this item's current payload.
+     *
+     * Renderers call this only when the logical key or physical compatibility class needs a new
+     * session. A strategy shared by a typed declaration must not retain [LazyListItem] after this
+     * call; the returned session owns only the installed key and payload state.
+     *
+     * @param container opaque platform container owned by the renderer
+     * @return a new session whose lifecycle is transferred to the renderer
+     */
+    fun createSession(container: RenderContainerHandle): LazyListItemSession {
+        return sessionStrategy.create(container, this)
+    }
+
+    /**
+     * Installs this item's current payload into [session] before a revision render.
+     *
+     * @param session retained session created by the compatible [sessionStrategy]
+     */
+    fun updateSession(session: LazyListItemSession) {
+        sessionStrategy.update(session, this)
+    }
+
     /**
      * Compares semantic item identity, content version, reuse type, kind, and span.
      *
@@ -78,15 +101,67 @@ enum class LazyListItemKind {
     StickyHeader,
 }
 
-/** Creates a renderer-owned child session for one mounted lazy item. */
-fun interface LazyListItemSessionFactory {
+/**
+ * Creates and updates renderer-owned child sessions for a lazy declaration.
+ *
+ * One strategy may be shared by every entry produced by a typed declaration. Implementations read
+ * the current key and opaque [LazyListItem.sessionPayload] synchronously and must not retain the
+ * item snapshot itself. [create] installs the initial payload; [update] installs a later payload
+ * before the renderer calls [LazyListItemSession.render]. Both operations are UI-thread confined
+ * by the enclosing item-session lifecycle.
+ */
+interface LazyListItemSessionStrategy {
     /**
-     * Creates a session targeting [container].
+     * Creates a session targeting [container] with [item]'s current payload installed.
      *
      * @param container opaque platform container owned by the renderer
+     * @param item current logical item snapshot, valid only for this synchronous call
      * @return a new session whose lifecycle is transferred to the renderer
      */
-    fun create(container: RenderContainerHandle): LazyListItemSession
+    fun create(
+        container: RenderContainerHandle,
+        item: LazyListItem,
+    ): LazyListItemSession
+
+    /**
+     * Installs [item]'s current payload into a compatible retained [session].
+     *
+     * @param session retained session created by this strategy
+     * @param item current logical item snapshot, valid only for this synchronous call
+     */
+    fun update(
+        session: LazyListItemSession,
+        item: LazyListItem,
+    )
+}
+
+/**
+ * Creates a strategy from callbacks that do not need to inspect the item payload.
+ *
+ * This convenience is intended for low-level static sessions. Typed collection implementations
+ * that need [LazyListItem.sessionPayload] should implement [LazyListItemSessionStrategy] directly
+ * and share one instance across the declaration.
+ *
+ * @sample com.viewcompose.ui.samples.lazyListItemSessionUpdateSample
+ * @param create creates a new session for the supplied renderer container
+ * @param update installs current declaration content into a retained session
+ * @return one strategy object that may be shared by compatible item snapshots
+ */
+fun lazyListItemSessionStrategy(
+    create: (RenderContainerHandle) -> LazyListItemSession,
+    update: (LazyListItemSession) -> Unit,
+): LazyListItemSessionStrategy {
+    return object : LazyListItemSessionStrategy {
+        override fun create(
+            container: RenderContainerHandle,
+            item: LazyListItem,
+        ): LazyListItemSession = create(container)
+
+        override fun update(
+            session: LazyListItemSession,
+            item: LazyListItem,
+        ) = update(session)
+    }
 }
 
 /**

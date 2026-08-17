@@ -230,6 +230,10 @@ Local Binding 是否存在与值是否可空相互独立。只有当前 Snapshot
   `contentRevision`。单条 Declaration 必须在 `key` 后立即提供非空参数；`null` 不是静态捷径，
   `StaticContentRevision` 承诺不存在这类输入变化。省略的批量 Selector 仍可空，并用不可变 Item
   值表达同一承诺。
+- 一个 Typed 或强 Snapshot Declaration 只创建一个 Item Session Strategy，并把每个源 Model 直接
+  保存为 Item 的不透明 Payload；框架不会为每一行分配 Factory/Updater Binding 或捕获 Item 的
+  Content Closure。只有创建 Active 或 Prepared Session 的 Holder 才会安装选中 Payload，后续
+  Revision Update 直接替换 Payload，不在 Bind 时分配 Wrapper。
 - Eager Scroll 与 Pager State 只在原生容器挂载期间连接。替换 State 会断开旧 Owner，释放后
   Renderer 边界会拒绝后续命令，相等 Snapshot 不会使 Observer 失效。Eager 横向偏移和 Pager
   索引在 RTL 中仍使用逻辑顺序。

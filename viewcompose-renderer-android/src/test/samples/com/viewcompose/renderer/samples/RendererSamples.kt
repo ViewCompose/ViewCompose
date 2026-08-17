@@ -18,7 +18,7 @@ import com.viewcompose.renderer.view.tree.ViewTreeObservedPropertyPatch
 import com.viewcompose.renderer.view.tree.MountedNode
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
-import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
@@ -128,12 +128,14 @@ private fun vnode(key: Any): VNode = VNode(
 private fun lazyItem(key: Any): LazyListItem = LazyListItem(
     key = key,
     contentRevision = key,
-    sessionFactory = LazyListItemSessionFactory {
-        object : LazyListItemSession {
-            override fun render() = true
+    sessionStrategy = lazyListItemSessionStrategy(
+        create = {
+            object : LazyListItemSession {
+                override fun render() = true
 
-            override fun dispose() = Unit
-        }
-    },
-    sessionUpdater = {},
+                override fun dispose() = Unit
+            }
+        },
+        update = {},
+    ),
 )

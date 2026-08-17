@@ -100,6 +100,12 @@ Binding。因此 List 变化时仍可保留全部未受影响的 Item Session，
 Environment Revision；Item Session 内读取的可观察 State 仍会独立跟踪。框架无法自动推断 Item
 Content 读取的普通非 State 值，它仍必须进入该 Item 的 `contentRevision`。
 
+批量 Typed 与强 Snapshot Declaration 使用一个 Declaration 共享的 Item Session Strategy。每个已
+提交 Item 直接把源 Model 保存为不透明 Payload，不再各自分配 Factory、Updater 和捕获 Model 的
+Content Closure。RecyclerView Holder Bind 会把选中 Item 直接交给该 Strategy，因此减少 Retained
+Set 不会把 Callback 构造转移到滚动路径。这项存储优化不改变 Key、Revision、State 或 Effect
+所有权。
+
 ### 显式整表快照快路
 
 当应用已经持有不可变 List Snapshot，并且需要在稳定的父级重组中避免 Selector 与 Key 扫描时，

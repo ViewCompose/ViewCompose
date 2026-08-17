@@ -281,7 +281,7 @@ internal class LazyItemSessionController(
             }
 
             revisionsChanged -> {
-                item.sessionUpdater(currentSession)
+                item.updateSession(currentSession)
                 val committed = currentSession.render()
                 if (committed) {
                     currentContentRevision = item.contentRevision
@@ -308,7 +308,7 @@ internal class LazyItemSessionController(
         host.clearContainer()
         val newSession = host.createSession(item)
         try {
-            item.sessionUpdater(newSession)
+            item.updateSession(newSession)
             pendingPresentation?.let { presentation ->
                 pendingPresentation = null
                 val adopted = try {

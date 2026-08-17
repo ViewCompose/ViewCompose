@@ -21,7 +21,7 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
-import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageLoader
@@ -773,14 +773,16 @@ class NodeBindingDifferTest {
         return LazyListItem(
             key = key,
             contentRevision = key,
-            sessionFactory = LazyListItemSessionFactory {
-                object : LazyListItemSession {
-                    override fun render() = true
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = {
+                    object : LazyListItemSession {
+                        override fun render() = true
 
-                    override fun dispose() = Unit
-                }
-            },
-            sessionUpdater = {},
+                        override fun dispose() = Unit
+                    }
+                },
+                update = {},
+            ),
         )
     }
 
@@ -791,17 +793,19 @@ class NodeBindingDifferTest {
         return LazyListItem(
             key = key,
             contentRevision = key,
-            sessionFactory = LazyListItemSessionFactory {
-                sessionNonce.hashCode()
-                object : LazyListItemSession {
-                    override fun render() = true
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = {
+                    sessionNonce.hashCode()
+                    object : LazyListItemSession {
+                        override fun render() = true
 
-                    override fun dispose() = Unit
-                }
-            },
-            sessionUpdater = {
-                sessionNonce.hashCode()
-            },
+                        override fun dispose() = Unit
+                    }
+                },
+                update = {
+                    sessionNonce.hashCode()
+                },
+            ),
         )
     }
 

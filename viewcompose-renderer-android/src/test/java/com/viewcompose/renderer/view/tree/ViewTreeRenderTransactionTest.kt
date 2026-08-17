@@ -45,7 +45,7 @@ import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
-import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.policy.LazyContentPadding
@@ -1346,13 +1346,13 @@ class ViewTreeRenderTransactionTest {
                     LazyListItem(
                         key = "item",
                         contentRevision = label,
-                        sessionFactory = LazyListItemSessionFactory {
-                            TransactionRecordingSession(events)
-                        },
-                        sessionUpdater = { session ->
-                            (session as TransactionRecordingSession).label = label
-                            events += "update:$label"
-                        },
+                        sessionStrategy = lazyListItemSessionStrategy(
+                            create = { TransactionRecordingSession(events) },
+                            update = { session ->
+                                (session as TransactionRecordingSession).label = label
+                                events += "update:$label"
+                            },
+                        ),
                     ),
                 ),
             ),

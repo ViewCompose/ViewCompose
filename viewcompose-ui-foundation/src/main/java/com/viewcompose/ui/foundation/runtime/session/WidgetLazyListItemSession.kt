@@ -12,17 +12,34 @@ internal class WidgetLazyListItemSession(
     localSnapshot: LocalSnapshot,
     saveableStateHolder: SaveableStateHolder?,
     saveableStateKey: Any,
-    content: UiTreeBuilder.() -> Unit,
+    content: WidgetLazyItemContent,
+    contentPayload: Any?,
 ) : LazyListItemSession {
+    constructor(
+        container: RenderContainerHandle,
+        localSnapshot: LocalSnapshot,
+        saveableStateHolder: SaveableStateHolder?,
+        saveableStateKey: Any,
+        content: UiTreeBuilder.() -> Unit,
+    ) : this(
+        container = container,
+        localSnapshot = localSnapshot,
+        saveableStateHolder = saveableStateHolder,
+        saveableStateKey = saveableStateKey,
+        content = DirectWidgetLazyItemContent,
+        contentPayload = content,
+    )
+
     private val saveableStateLease = saveableStateHolder?.acquire(saveableStateKey)
     private var capturedLocals = localSnapshot.withChildSaveableStateRegistry()
     private var renderContent = content
+    private var renderContentPayload = contentPayload
     private var diagnosticsListener = resolveDiagnosticsListener(localSnapshot)
     private val session = RenderSession(
         container = container,
         content = {
             LocalContext.withSnapshot(capturedLocals) {
-                renderContent()
+                renderContent.render(this, renderContentPayload)
             }
         },
         onRenderResult = { result ->
@@ -63,13 +80,26 @@ internal class WidgetLazyListItemSession(
 
     fun updateContent(
         localSnapshot: LocalSnapshot,
-        content: UiTreeBuilder.() -> Unit,
+        content: WidgetLazyItemContent,
+        contentPayload: Any?,
     ) {
         capturedLocals = localSnapshot.withChildSaveableStateRegistry()
         renderContent = content
+        renderContentPayload = contentPayload
         // Keep the previously resolved listener if this snapshot does not carry it.
         // This avoids accidentally dropping diagnostics callbacks during partial recomposition paths.
         diagnosticsListener = resolveDiagnosticsListener(localSnapshot) ?: diagnosticsListener
+    }
+
+    fun updateContent(
+        localSnapshot: LocalSnapshot,
+        content: UiTreeBuilder.() -> Unit,
+    ) {
+        updateContent(
+            localSnapshot = localSnapshot,
+            content = DirectWidgetLazyItemContent,
+            contentPayload = content,
+        )
     }
 
     private fun resolveDiagnosticsListener(
@@ -83,4 +113,22 @@ internal class WidgetLazyListItemSession(
         return withSaveableStateRegistry(saveableStateLease?.registry)
     }
 
+}
+
+/** Allocation-stable bridge from one declaration strategy to an active item session. */
+internal fun interface WidgetLazyItemContent {
+    fun render(
+        builder: UiTreeBuilder,
+        payload: Any?,
+    )
+}
+
+internal data object DirectWidgetLazyItemContent : WidgetLazyItemContent {
+    @Suppress("UNCHECKED_CAST")
+    override fun render(
+        builder: UiTreeBuilder,
+        payload: Any?,
+    ) {
+        (payload as UiTreeBuilder.() -> Unit).invoke(builder)
+    }
 }

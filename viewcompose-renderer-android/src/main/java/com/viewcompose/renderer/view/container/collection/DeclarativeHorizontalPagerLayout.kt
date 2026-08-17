@@ -408,7 +408,7 @@ internal class HorizontalPagerViewHolder(
     private val controller = LazyItemSessionController(this)
 
     override fun createSession(item: LazyListItem): LazyListItemSession {
-        return item.sessionFactory.create(renderContainer)
+        return item.createSession(renderContainer)
     }
 
     override fun clearContainer() {

@@ -39,10 +39,11 @@ class TypedLazyCollectionContractTest {
         assertEquals(ROW_COUNT * 2, calls.contentType)
         assertEquals(ROW_COUNT * 2, calls.contentRevision)
         assertSame(first, second)
+        val declarationStrategy = first.first().sessionStrategy
         first.indices.forEach { index ->
             assertSame(first[index], second[index])
-            assertSame(first[index].sessionFactory, second[index].sessionFactory)
-            assertSame(first[index].sessionUpdater, second[index].sessionUpdater)
+            assertSame(declarationStrategy, first[index].sessionStrategy)
+            assertSame(rows[index], first[index].sessionPayload)
         }
     }
 
@@ -71,9 +72,9 @@ class TypedLazyCollectionContractTest {
         val changed = compose()
 
         assertNotSame(first[0], changed[0])
-        assertNotSame(first[0].sessionFactory, changed[0].sessionFactory)
+        assertNotSame(first[0].sessionStrategy, changed[0].sessionStrategy)
         assertSame(first[1], changed[1])
-        assertSame(first[1].sessionFactory, changed[1].sessionFactory)
+        assertSame(first[1].sessionStrategy, changed[1].sessionStrategy)
     }
 
     @Test
@@ -181,7 +182,7 @@ class TypedLazyCollectionContractTest {
         assertEquals(listOf(1, 2, 3, 4), second.map(LazyListItem::key))
         first.indices.forEach { index ->
             assertSame(first[index], second[index])
-            assertSame(first[index].sessionFactory, second[index].sessionFactory)
+            assertSame(first[index].sessionStrategy, second[index].sessionStrategy)
         }
     }
 
@@ -209,7 +210,7 @@ class TypedLazyCollectionContractTest {
         assertEquals("compact", first.contentType)
         assertEquals("expanded", changed.contentType)
         assertNotSame(first, changed)
-        assertNotSame(first.sessionFactory, changed.sessionFactory)
+        assertNotSame(first.sessionStrategy, changed.sessionStrategy)
     }
 
     @Test
@@ -242,11 +243,11 @@ class TypedLazyCollectionContractTest {
         val stable = compose()
 
         assertNotSame(first[0], changed[0])
-        assertNotSame(first[0].sessionFactory, changed[0].sessionFactory)
+        assertNotSame(first[0].sessionStrategy, changed[0].sessionStrategy)
         assertSame(first[1], changed[1])
-        assertSame(first[1].sessionFactory, changed[1].sessionFactory)
+        assertSame(first[1].sessionStrategy, changed[1].sessionStrategy)
         assertSame(changed[0], stable[0])
-        assertSame(changed[0].sessionFactory, stable[0].sessionFactory)
+        assertSame(changed[0].sessionStrategy, stable[0].sessionStrategy)
     }
 
     @Test
@@ -282,11 +283,11 @@ class TypedLazyCollectionContractTest {
         assertSame(first.getValue("C"), changed.getValue("C"))
         assertNotSame(first.getValue("A"), changed.getValue("A"))
         assertNotSame(
-            first.getValue("A").sessionFactory,
-            changed.getValue("A").sessionFactory,
+            first.getValue("A").sessionStrategy,
+            changed.getValue("A").sessionStrategy,
         )
         assertSame(first.getValue("A"), reset.getValue("A"))
-        assertSame(first.getValue("A").sessionFactory, reset.getValue("A").sessionFactory)
+        assertSame(first.getValue("A").sessionStrategy, reset.getValue("A").sessionStrategy)
     }
 
     @Test
@@ -319,9 +320,9 @@ class TypedLazyCollectionContractTest {
         assertSame(original.single(), expanded.first())
         assertSame(original.single(), restored.single())
         assertSame(original.single(), expandedAgain.first())
-        assertSame(original.single().sessionFactory, expandedAgain.first().sessionFactory)
+        assertSame(original.single().sessionStrategy, expandedAgain.first().sessionStrategy)
         assertNotSame(expanded[1], expandedAgain[1])
-        assertNotSame(expanded[1].sessionFactory, expandedAgain[1].sessionFactory)
+        assertNotSame(expanded[1].sessionStrategy, expandedAgain[1].sessionStrategy)
         assertEquals(listOf(1, 2), expandedAgain.map(LazyListItem::key))
     }
 
@@ -348,9 +349,9 @@ class TypedLazyCollectionContractTest {
         val stable = compose("second")
 
         assertNotSame(first, changed)
-        assertNotSame(first.sessionFactory, changed.sessionFactory)
+        assertNotSame(first.sessionStrategy, changed.sessionStrategy)
         assertSame(changed, stable)
-        assertSame(changed.sessionFactory, stable.sessionFactory)
+        assertSame(changed.sessionStrategy, stable.sessionStrategy)
     }
 
     @Test
@@ -373,7 +374,7 @@ class TypedLazyCollectionContractTest {
 
         first.indices.forEach { index ->
             assertSame(first[index], recovered[index])
-            assertSame(first[index].sessionFactory, recovered[index].sessionFactory)
+            assertSame(first[index].sessionStrategy, recovered[index].sessionStrategy)
         }
     }
 
@@ -403,7 +404,7 @@ class TypedLazyCollectionContractTest {
         assertNotSame(first, aborted)
         assertNotSame(aborted, later)
         assertNotSame(aborted, retried)
-        assertNotSame(aborted.sessionFactory, retried.sessionFactory)
+        assertNotSame(aborted.sessionStrategy, retried.sessionStrategy)
     }
 
     @Test
@@ -426,7 +427,7 @@ class TypedLazyCollectionContractTest {
 
         assertEquals(0, first.contentRevision)
         assertSame(first, second)
-        assertSame(first.sessionFactory, second.sessionFactory)
+        assertSame(first.sessionStrategy, second.sessionStrategy)
     }
 
     @Test
@@ -454,7 +455,7 @@ class TypedLazyCollectionContractTest {
         assertSame(first, second)
         first.indices.forEach { index ->
             assertSame(first[index], second[index])
-            assertSame(first[index].sessionFactory, second[index].sessionFactory)
+            assertSame(first[index].sessionStrategy, second[index].sessionStrategy)
         }
     }
 

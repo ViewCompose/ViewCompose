@@ -171,11 +171,12 @@ Because the current line is alpha, the documentation site intentionally does not
   measurement, visibility, or callbacks.
 - A lazy item's `contentRevision` and framework-captured `environmentRevision` are the only content
   invalidation inputs after identity and type. Equal key and revisions skip item composition and
-  native patching completely, even when the parent created a new callback object. A changed
-  revision installs the latest closure and renders only that item; callers must use observed State
-  or include every changing ordinary capture in `contentRevision`. A changed `contentType`, even
-  under the same key and revisions, terminates the old child session and performs a full native
-  presentation rebuild.
+  native patching completely, even when the parent supplied a different strategy or payload. A
+  changed revision asks the item's shared strategy to install the latest payload and renders only
+  that item; callers must use observed State or include every changing ordinary capture in
+  `contentRevision`. A changed `contentType`, even under the same key and revisions, terminates the
+  old child Session and performs a full native presentation rebuild. Holder creation and update
+  call the strategy directly and allocate no item-specific callback adapter on the bind path.
 - A detached lazy holder that has never activated may prepare its child composition and native
   View tree under RecyclerView prefetch, but it does not commit remember lifecycle, effects,
   native commit work, overlays, or diagnostics. First attachment activates a valid prepared frame
@@ -189,8 +190,9 @@ Because the current line is alpha, the documentation site intentionally does not
   the exact submission revision; revision equality alone is not sufficient. This acknowledgement
   rule prevents queued RecyclerView notifications from treating an older logical commit as current.
 - Lazy-list and pager holders cache their container handle for the holder lifetime and call a
-  dedicated Session host directly. Native recycling still changes logical Session ownership by key;
-  this removes callback-wrapper allocation without merging physical and logical identity.
+  dedicated Session host plus the declaration-shared item strategy directly. Native recycling
+  still changes logical Session ownership by key; this removes callback-wrapper allocation without
+  merging physical and logical identity.
 - Pager stable IDs use renderer-assigned values rather than key hashes. Pager view types partition
   incompatible `contentType`/kind pairs, keyed moves refresh only uniquely owned changed holders,
   and every public page declaration requires a unique stable key. ViewPager2's native default owns

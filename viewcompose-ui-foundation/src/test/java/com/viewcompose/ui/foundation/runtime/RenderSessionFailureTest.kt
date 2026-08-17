@@ -921,7 +921,7 @@ class RenderSessionFailureTest {
         session.render()
         val items = (rootNodes.single().spec as LazyColumnNodeProps).items
         val childSessions = items.map { item ->
-            item.sessionFactory.create(
+            item.createSession(
                 object : PlatformRenderContainerHandle {
                     override val container: Any = FrameLayout(context)
                 },
@@ -981,7 +981,7 @@ class RenderSessionFailureTest {
         val firstItems = latestItems
         session.render()
         assertSame(firstItems, latestItems)
-        val childSession = latestItems.single().sessionFactory.create(childContainer())
+        val childSession = latestItems.single().createSession(childContainer())
         childSession.render()
         val childRuntime = checkNotNull(latestRuntime)
         itemState.value = "second"
@@ -1038,7 +1038,7 @@ class RenderSessionFailureTest {
             addAll((rootNodes[1].spec as VerticalPagerNodeProps).pages)
         }
         val childSessions = childItems.map { item ->
-            item.sessionFactory.create(childContainer())
+            item.createSession(childContainer())
         }
         childSessions.forEach { it.render() }
 

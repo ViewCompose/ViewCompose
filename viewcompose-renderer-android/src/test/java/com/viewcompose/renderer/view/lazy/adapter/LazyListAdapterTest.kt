@@ -10,7 +10,7 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
-import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.renderer.reconcile.LazyListChangePayload
 import com.viewcompose.renderer.reconcile.LazyListAdapterChangedPayload
 import com.viewcompose.renderer.reconcile.LazyListPresentationChangedPayload
@@ -913,13 +913,16 @@ class LazyListAdapterTest {
             contentType = contentType,
             kind = kind,
             span = span,
-            sessionFactory = LazyListItemSessionFactory {
-                object : LazyListItemSession {
-                    override fun render() = true
-                    override fun dispose() = Unit
-                }
-            },
-            sessionUpdater = {},
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = {
+                    object : LazyListItemSession {
+                        override fun render() = true
+
+                        override fun dispose() = Unit
+                    }
+                },
+                update = {},
+            ),
         )
     }
 
@@ -938,13 +941,13 @@ class LazyListAdapterTest {
             environmentRevision = environmentRevision,
             contentType = contentType,
             span = span,
-            sessionFactory = LazyListItemSessionFactory {
-                RecordingSession(events)
-            },
-            sessionUpdater = { session ->
-                (session as RecordingSession).label = label
-                events += "update:$label"
-            },
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = { RecordingSession(events) },
+                update = { session ->
+                    (session as RecordingSession).label = label
+                    events += "update:$label"
+                },
+            ),
         )
     }
 
@@ -957,13 +960,13 @@ class LazyListAdapterTest {
         return LazyListItem(
             key = "stable",
             contentRevision = contentRevision,
-            sessionFactory = LazyListItemSessionFactory {
-                RetryingSession(events, failNextRender)
-            },
-            sessionUpdater = { session ->
-                (session as RetryingSession).label = label
-                events += "update:$label"
-            },
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = { RetryingSession(events, failNextRender) },
+                update = { session ->
+                    (session as RetryingSession).label = label
+                    events += "update:$label"
+                },
+            ),
         )
     }
 
@@ -977,13 +980,13 @@ class LazyListAdapterTest {
         return LazyListItem(
             key = key,
             contentRevision = contentRevision,
-            sessionFactory = LazyListItemSessionFactory {
-                ThrowingOnceSession(events, throwNextRender)
-            },
-            sessionUpdater = { session ->
-                (session as ThrowingOnceSession).label = label
-                events += "update:$label"
-            },
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = { ThrowingOnceSession(events, throwNextRender) },
+                update = { session ->
+                    (session as ThrowingOnceSession).label = label
+                    events += "update:$label"
+                },
+            ),
         )
     }
 
@@ -995,31 +998,33 @@ class LazyListAdapterTest {
             key = key,
             contentRevision = key,
             contentType = "identity-row",
-            sessionFactory = LazyListItemSessionFactory { handle ->
-                val container = handle.nativeContainer as ViewGroup
-                sessionCreations[key] = sessionCreations.getOrDefault(key, 0) + 1
-                object : LazyListItemSession {
-                    override fun render(): Boolean {
-                        if (container.childCount == 0) {
-                            container.addView(
-                                TextView(container.context).apply {
-                                    text = key
-                                    layoutParams = ViewGroup.LayoutParams(
-                                        ViewGroup.LayoutParams.MATCH_PARENT,
-                                        40,
-                                    )
-                                },
-                            )
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = { handle ->
+                    val container = handle.nativeContainer as ViewGroup
+                    sessionCreations[key] = sessionCreations.getOrDefault(key, 0) + 1
+                    object : LazyListItemSession {
+                        override fun render(): Boolean {
+                            if (container.childCount == 0) {
+                                container.addView(
+                                    TextView(container.context).apply {
+                                        text = key
+                                        layoutParams = ViewGroup.LayoutParams(
+                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                            40,
+                                        )
+                                    },
+                                )
+                            }
+                            return true
                         }
-                        return true
-                    }
 
-                    override fun dispose() {
-                        container.removeAllViews()
+                        override fun dispose() {
+                            container.removeAllViews()
+                        }
                     }
-                }
-            },
-            sessionUpdater = {},
+                },
+                update = {},
+            ),
         )
     }
 
@@ -1030,8 +1035,10 @@ class LazyListAdapterTest {
         return LazyListItem(
             key = "stable",
             contentRevision = "stable",
-            sessionFactory = LazyListItemSessionFactory { RecordingSession(events) },
-            sessionUpdater = sessionUpdater,
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = { RecordingSession(events) },
+                update = sessionUpdater,
+            ),
         )
     }
 

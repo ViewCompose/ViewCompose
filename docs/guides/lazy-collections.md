@@ -106,6 +106,12 @@ environment revision. Observable State read inside an item Session remains indep
 An ordinary non-State value read by item content cannot be inferred automatically and must still
 participate in that item's `contentRevision`.
 
+Bulk typed and strong-snapshot declarations use one declaration-shared item-session strategy. Each
+committed item stores its source model as an opaque payload rather than allocating its own factory,
+updater, and model-capturing content closure. RecyclerView Holder binding passes the selected item
+directly to that strategy, so the reduced retained set does not move callback construction onto the
+scrolling path. This storage optimization does not change key, revision, State, or effect ownership.
+
 ### Explicit whole-snapshot fast path
 
 When an application already owns an immutable list snapshot and needs to avoid the selector and key

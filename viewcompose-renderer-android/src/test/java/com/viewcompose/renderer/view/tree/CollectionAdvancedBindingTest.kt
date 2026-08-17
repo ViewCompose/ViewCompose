@@ -11,7 +11,7 @@ import com.viewcompose.renderer.view.lazy.focus.LazyLinearLayoutManager
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
-import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
 import com.viewcompose.ui.node.policy.GridCells
@@ -179,13 +179,16 @@ class CollectionAdvancedBindingTest {
             key = key,
             contentRevision = key,
             span = span,
-            sessionFactory = LazyListItemSessionFactory {
-                object : LazyListItemSession {
-                    override fun render() = true
-                    override fun dispose() = Unit
-                }
-            },
-            sessionUpdater = {},
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = {
+                    object : LazyListItemSession {
+                        override fun render() = true
+
+                        override fun dispose() = Unit
+                    }
+                },
+                update = {},
+            ),
         )
     }
 

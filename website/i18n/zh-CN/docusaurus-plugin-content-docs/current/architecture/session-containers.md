@@ -47,8 +47,8 @@ translation_status: current
 9. 一次父级集合提交对应一个单调递增的子 Session 修订。保留子项的更新只能由父渲染帧的
    commit effect 在 composition commit 之后发布；父帧回滚会直接丢弃更新，不得运行子 composition
    或 effect
-10. Callback 对象身份不是 Revision。变化的普通捕获值必须成为 State 或进入
-    `contentRevision`；仅 Callback 分配绝不刷新内容。单条 Item、Sticky Header、Page 与 Tab
+10. Strategy 或 Payload 对象身份不是 Revision。变化的普通捕获值必须成为 State 或进入
+    `contentRevision`；仅对象分配绝不刷新内容。单条 Item、Sticky Header、Page 与 Tab
     Declaration 必须在 `key` 后立即提供非空 Revision，再排列可选物理复用与布局参数；`null` 不是
     哨兵。`StaticContentRevision` 承诺不存在这类普通输入变化；批量可空 `{ it }` 默认值仅适用于
     Equality 覆盖 Item Content 所读取全部普通输入的不可变值模型
@@ -60,7 +60,10 @@ translation_status: current
     顶层与 `ScrollableScope` 的均质容器也可以接收 `LazyItemsSnapshot`。其 Factory 会浅拷贝有序 Item
     引用并分配不透明 Identity，不执行 Selector。每个 Collector 保留当前和上一个成功提交的已求值
     Snapshot，以精确 Source Identity 与框架 Environment 为 Key。精确命中会以常量时间恢复有序 List
-    与 Key Map，不执行 Selector 或 Key 扫描；Environment 不匹配时重新执行全部 Selector。Scoped
+    与 Key Map，不执行 Selector、Key 扫描或逐 Item Callback Wrapper 分配。一个 Typed Declaration
+    共享一个 `LazyListItemSessionStrategy`，并把每个源 Model 保存为选中 Item 的不透明 Payload；
+    Holder Create/Update 会同步消费该 Payload，不保留 Item Snapshot，也不分配 Bind-time Content
+    Closure。Environment 不匹配时重新执行全部 Selector。Scoped
     Declaration 没有 Snapshot Overload。只有 Item Content 在 Active Session 中执行时读取的 State
     会独立观察。Selector 读取的 State 或其他变化输入要求替换 `LazyItemsSnapshot`；顺序、成员、保留
     的 Item 数据、Selector Capture 或普通 Item Content Capture 变化时也必须替换

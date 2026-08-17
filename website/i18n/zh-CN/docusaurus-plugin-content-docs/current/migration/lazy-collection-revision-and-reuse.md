@@ -193,8 +193,16 @@ AndroidView(
 `false`，这样 Renderer 不会推进 Item Revision，并可重试同一 Submission。原生帧一旦 Commit，
 后续 Side Effect 或诊断失败不会改变返回值。
 
-`LazyListItem.sessionUpdater` 现在是必填项，必须把最新 Content Closure 或等价不可变输入安装到现有
-Session。Key 与 Type 相同时，Revision 变化绝不允许用替换逻辑 Session 作为实现兜底。
+`LazyListItem` 现在持有一个 `sessionStrategy` 与一个不透明 `sessionPayload`；原来的
+`sessionFactory` 和 `sessionUpdater` 构造字段已移除。Strategy 会在 `create` 与 `update` 中同步接收
+当前 Item，读取 Payload，但不得保留 Item Snapshot。`create` 安装初始 Payload，`update` 把变化的
+Payload 安装到现有 Session。Key 与 Type 相同时，Revision 变化绝不允许用替换逻辑 Session 作为
+实现兜底。
+
+Typed 与强 Snapshot Declaration 会让全部 Item 共享同一个 Strategy，因此已提交存储不再为每一行
+保留 Factory/Updater Wrapper 和捕获 Item 的 Content Closure。不需要读取 Payload 的底层静态实现
+可以使用 `lazyListItemSessionStrategy(create, update)`；需要 Payload 的实现应直接实现
+`LazyListItemSessionStrategy`。
 
 Adopt 返回 `false`，或在所有权转移前抛出异常时，呈现会立即 Release。第一次跨 Owner Rebind
 失败时不能调用旧逻辑 Owner 的 Update，也不能恢复其可见帧；被 Adopt 的树必须释放。

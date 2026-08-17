@@ -16,7 +16,7 @@ import com.viewcompose.renderer.R
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
-import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.ui.node.nativeContainer
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -69,30 +69,32 @@ class LazyStickyHeaderDecorationTest {
             key = key,
             contentRevision = key,
             kind = kind,
-            sessionFactory = LazyListItemSessionFactory { handle ->
-                val container = handle.nativeContainer as ViewGroup
-                object : LazyListItemSession {
-                    override fun render(): Boolean {
-                        if (container.childCount == 0) {
-                            container.addView(
-                                TextView(container.context).apply {
-                                    text = key.toString()
-                                    layoutParams = ViewGroup.LayoutParams(
-                                        ViewGroup.LayoutParams.MATCH_PARENT,
-                                        40,
-                                    )
-                                },
-                            )
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = { handle ->
+                    val container = handle.nativeContainer as ViewGroup
+                    object : LazyListItemSession {
+                        override fun render(): Boolean {
+                            if (container.childCount == 0) {
+                                container.addView(
+                                    TextView(container.context).apply {
+                                        text = key.toString()
+                                        layoutParams = ViewGroup.LayoutParams(
+                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                            40,
+                                        )
+                                    },
+                                )
+                            }
+                            return true
                         }
-                        return true
-                    }
 
-                    override fun dispose() {
-                        container.removeAllViews()
+                        override fun dispose() {
+                            container.removeAllViews()
+                        }
                     }
-                }
-            },
-            sessionUpdater = {},
+                },
+                update = {},
+            ),
         )
     }
 

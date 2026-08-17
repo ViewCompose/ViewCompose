@@ -4,7 +4,7 @@ import android.widget.FrameLayout
 import androidx.viewpager2.widget.ViewPager2
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
-import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.ui.state.PagerState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -271,11 +271,13 @@ class PagerAdapterTest {
         return LazyListItem(
             key = key,
             contentRevision = contentRevision,
-            sessionFactory = LazyListItemSessionFactory { RecordingSession(events) },
-            sessionUpdater = sessionUpdater ?: { session ->
-                (session as RecordingSession).label = label
-                events += "update:$label"
-            },
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = { RecordingSession(events) },
+                update = sessionUpdater ?: { session ->
+                    (session as RecordingSession).label = label
+                    events += "update:$label"
+                },
+            ),
         )
     }
 
@@ -287,14 +289,16 @@ class PagerAdapterTest {
             key = key,
             contentRevision = "stable",
             contentType = contentType,
-            sessionFactory = LazyListItemSessionFactory {
-                object : LazyListItemSession {
-                    override fun render() = true
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = {
+                    object : LazyListItemSession {
+                        override fun render() = true
 
-                    override fun dispose() = Unit
-                }
-            },
-            sessionUpdater = {},
+                        override fun dispose() = Unit
+                    }
+                },
+                update = {},
+            ),
         )
     }
 
