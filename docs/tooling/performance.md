@@ -793,6 +793,45 @@ snapshots under `run-from-apk`, not startup, snapshot-construction, monotonic-fe
 uncompiled-ART evidence. The next actions are to profile the ViewCompose scroll P95/heap gap and the
 remaining Android Views mutation-tail gap, then add cold-construction and monotonic-feed workloads.
 
+The first memory-efficiency follow-up compared exact control `ea33297b` with candidate `06a411e7`
+on Samsung SM-G991B / Android 13. Each arm used the same benchmark APK mode, five
+`run-from-apk` iterations, unchanged fixtures and actions, no thermal throttling, and the
+`unlocked-dvfs-preflight-v1` policy. This device was not root-controlled, so these results are
+same-device diagnostics rather than a replacement for the Xiaomi fixed-clock baseline:
+
+| Scenario | Arm | Frames by run | P50/P90/P95/P99, ms | Median peak heap/RSS anon, KiB | Run-P50 CV |
+| --- | --- | --- | ---: | ---: | ---: |
+| `performance.list@5` scroll | Control | `195/193/197/194/188` | 4.356 / 6.362 / 6.996 / 8.155 | 10518 / 55900 | 0.032 |
+| `performance.list@5` scroll | Candidate | `198/197/195/192/195` | 4.370 / 6.619 / 6.963 / 9.144 | 10638 / 56436 | 0.032 |
+| `performance.shadow-list@3` scroll | Control | `192/192/182/196/190` | 4.673 / 8.622 / 9.210 / 14.019 | 11079 / 60504 | 0.038 |
+| `performance.shadow-list@3` scroll | Candidate | `191/179/193/190/179` | 4.548 / 8.359 / 8.865 / 13.246 | 11040 / 61176 | 0.038 |
+
+For the ordinary list, candidate P50/P90/P95/P99 changed by `+0.3%/+4.0%/-0.5%/+12.1%` and peak
+heap/RSS by `+1.1%/+1.0%`. P99's `+0.989 ms` direction remains a fixed-clock follow-up, but no
+timing metric crosses the combined gate; the timing conclusion is `no material change`. The process
+memory direction is `inconclusive`: run-level heap values were noisy and four of five paired
+candidate runs were lower even though their median ordering reversed. For the shadow list, those
+timing percentiles changed by `-2.7%/-3.0%/-3.7%/-5.5%`, heap by `-0.4%`, and RSS by `+1.1%`.
+That favorable timing direction also stays below the materiality gate, so the conclusion is
+`no material change` rather than a claimed improvement. Both methods emitted the Runtime Image
+cleanup warning; it does not invalidate these post-Ready interactions but excludes startup or ART
+state conclusions.
+
+Post-GC attribution resolves what the peak process metric cannot. A debug build of each exact arm
+was cold-launched into the same ordinary-list route, driven through 12 full upward and 12 full
+downward fast flings, allowed to settle, and dumped with `am dumpheap`. Indexed instances and arrays
+fell from 387,380 objects and 18,276,640 shallow bytes to 381,104 objects and 18,147,122 shallow
+bytes: `-6,276` objects and `-129,518` bytes. The candidate removed all 1,000
+`WidgetLazyItemSessionBinding` objects (`-24,000` bytes), all 1,000 item-capturing collector lambdas
+(`-16,000` bytes), 1,000 `HashMap.Node` objects (`-24,000` bytes), and 608
+`LinkedHashMap.Entry` objects (`-19,456` bytes). Lazy drawing state removed 136 `Paint`, 184 `Path`,
+184 `RectF`, and 320 native-allocation cleaner-wrapper objects. The 124
+`UiEnvironmentValues` instances and their 3,968 shallow bytes were unchanged, rejecting additional
+small-value pooling as non-material. This is an `improved` structural live-set result that matches
+the implemented allocation cuts; it does not quantify native resource bytes or replace a formal
+fixed-clock peak-memory run. The next action is one root-controlled ordinary-list control/candidate
+pair, with P99 and peak heap as the remaining acceptance decisions.
+
 The preceding A/B evidence covers only a steady alternation between two already-constructed
 revision-5 snapshots, which directly favors the bounded two-generation identity cache. It does not
 measure `toLazyItemsSnapshot()` construction, first evaluation, a monotonic stream of never-reused

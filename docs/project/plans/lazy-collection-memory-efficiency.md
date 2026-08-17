@@ -4,13 +4,15 @@
 
 Active. Runtime attribution and the implementation boundary are accepted. Phase 1's shared
 strategy/payload hard cut, Phase 2's compact adapter metadata, and Phase 3's lazy drawing resources
-are complete; device acceptance and post-change attribution are next.
+are complete. Post-GC attribution accepted those changes and rejected optional Phase 4 as
+non-material. Repository validation and unlocked-device diagnostics are complete; formal
+fixed-clock device acceptance remains.
 
 Last verified: 2026-08-17.
 
-Next action: run the accepted list and shadow-list device scenarios, compare memory and frame tails
-against an unchanged control, and use post-GC attribution to decide whether optional small-object
-convergence is material or should be omitted.
+Next action: repeat the ordinary-list control/candidate pair on the root-controlled reference
+device with the accepted fixed-clock policy. Use that run to decide whether the plan's peak-memory
+and P99 acceptance gates are satisfied and the plan can move to the archive.
 
 ## Maven release changesets
 
@@ -144,7 +146,7 @@ continuous, and cut-corner pixels without allocating temporary arc rectangles. R
 cover native round rectangles, generic paths, gradients, RTL, density, border insets, bounds,
 outline insets, clipping, alpha, and color-filter propagation.
 
-### Phase 4: optional small object convergence — pending
+### Phase 4: optional small object convergence — omitted
 
 - Reuse one aggregate `UiEnvironmentValues` per captured Local snapshot or build frame when identity
   and environment invalidation semantics remain unchanged.
@@ -153,7 +155,13 @@ outline insets, clipping, alpha, and color-filter propagation.
 - Omit this phase when the saving is below the measurement noise floor; do not add pooling or
   mutable global caches for small immutable values.
 
-### Phase 5: benchmark acceptance and documentation — pending
+The post-GC control/candidate heap pair retained exactly 124 `UiEnvironmentValues` instances with
+`3,968` bytes of aggregate shallow size in each arm. That is neither a growth source nor a material
+share of the live set. Canonicalizing it or other small immutable values would add identity,
+invalidation, and cache ownership complexity without addressing the measured gap, so this phase is
+intentionally omitted.
+
+### Phase 5: benchmark acceptance and documentation — in progress
 
 - Run focused module tests, compiled API samples, API checks, documentation gates, `qaQuick`, and
   the relevant physical-device scenarios.
@@ -166,6 +174,30 @@ outline insets, clipping, alpha, and color-filter propagation.
 - Interpret accepted evidence in `docs/tooling/performance.md`, update all affected module and guide
   contracts with matching Simplified Chinese mirrors, and archive this plan only after all gates
   pass.
+
+The same-device Samsung SM-G991B / Android 13 diagnostic used exact control `ea33297b` and candidate
+`06a411e7`, five `run-from-apk` iterations per arm, identical actions, and the unlocked-DVFS
+preflight policy. Ordinary-list frame P50/P95 changed by `+0.3%/-0.5%`; shadow-list P50/P95 changed
+by `-2.7%/-3.7%`. Both run-P50 CV pairs were below `0.04`, and neither timing pair establishes a
+material regression. Ordinary-list P99 moved `+12.1%` (`+0.989 ms`), below the combined gate but
+retained as a fixed-clock follow-up. Whole-process peak heap/RSS moved within approximately one
+percent in conflicting directions and is inconclusive on this unlocked device.
+
+An identical debug control/candidate full-fling protocol followed by `am dumpheap` produced the
+attribution needed to interpret that noisy process metric. The candidate retained 6,276 fewer
+indexed instances and arrays and `129,518` fewer shallow bytes. It removed all 1,000
+`WidgetLazyItemSessionBinding` objects, all 1,000 item-capturing collector lambdas, 1,000
+`HashMap.Node` objects, and 608 `LinkedHashMap.Entry` objects. It also retained 136 fewer `Paint`
+objects, 184 fewer `Path` objects, 184 fewer `RectF` objects, and 320 fewer native-allocation cleaner
+wrappers. These exact class deltas match Phases 1--3 rather than a smaller RecyclerView cache or
+deferred bind work. The result accepts the structural memory reduction but does not replace the
+fixed-clock peak-memory gate.
+
+Repository acceptance passed `:viewcompose-ui-contract:test`,
+`:viewcompose-ui-foundation:testDebugUnitTest`,
+`:viewcompose-renderer-android:testDebugUnitTest`, `verifyDocumentationStructure`,
+`verifyDevelopmentToolingIsolation`, `verifyViewComposeReleaseIntent`, and the complete
+`qaQuick` gate on 2026-08-17.
 
 ## Acceptance gates
 

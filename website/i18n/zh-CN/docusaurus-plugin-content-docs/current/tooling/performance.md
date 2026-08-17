@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: fdd594701a9a39a421715aec9aedfc2bbc2dafa836a1cefd9e3035436972f98b
+translation_source_hash: a567a1777adca69291e29b322eb5aa2c24957237ef563b54472fcc72e9e3c5b1
 translation_status: current
 ---
 
@@ -674,6 +674,39 @@ UiAutomation 要求屏幕可交互，失败的熄屏预检未产生样本。
 `run-from-apk` 下两份预构建 Snapshot 的 Ready 后稳态证据，不代表启动、Snapshot 构造、单调
 数据流或洁净的未编译 ART。下一步是分析 ViewCompose 滚动 P95/heap 差距与相对 Android Views
 剩余的变更尾部差距，再增加冷构造和单调数据流 Workload。
+
+第一轮内存效率跟进在 Samsung SM-G991B / Android 13 上比较了精确对照 `ea33297b` 与候选
+`06a411e7`。每组使用相同的 Benchmark APK 模式、五轮 `run-from-apk`、不变的 Fixture 与动作、
+无温控限频，并记录 `unlocked-dvfs-preflight-v1` 策略。该设备没有 Root 固定频率，因此以下结果
+只作为同设备诊断，不能替代 Xiaomi 固定频率基线：
+
+| 场景 | 分组 | 每轮帧数 | P50/P90/P95/P99，ms | 最大 heap/RSS anon 中位数，KiB | Run-P50 CV |
+| --- | --- | --- | ---: | ---: | ---: |
+| `performance.list@5` 滚动 | 对照 | `195/193/197/194/188` | 4.356 / 6.362 / 6.996 / 8.155 | 10518 / 55900 | 0.032 |
+| `performance.list@5` 滚动 | 候选 | `198/197/195/192/195` | 4.370 / 6.619 / 6.963 / 9.144 | 10638 / 56436 | 0.032 |
+| `performance.shadow-list@3` 滚动 | 对照 | `192/192/182/196/190` | 4.673 / 8.622 / 9.210 / 14.019 | 11079 / 60504 | 0.038 |
+| `performance.shadow-list@3` 滚动 | 候选 | `191/179/193/190/179` | 4.548 / 8.359 / 8.865 / 13.246 | 11040 / 61176 | 0.038 |
+
+普通列表候选的 P50/P90/P95/P99 变化为 `+0.3%/+4.0%/-0.5%/+12.1%`，最大 heap/RSS 变化为
+`+1.1%/+1.0%`。P99 的 `+0.989 ms` 方向仍需固定频率复查，但没有 Timing 指标跨过组合门禁，
+因此 Timing 结论为 `no material change`。进程内存方向为 `inconclusive`：逐轮 heap 波动较大，
+五组配对中有四组候选值更低，但中位数排序反转。阴影列表的对应 Timing 百分位变化为
+`-2.7%/-3.0%/-3.7%/-5.5%`，heap 为 `-0.4%`，RSS 为 `+1.1%`。这一有利 Timing 方向也未跨过
+实质性门禁，因此结论仍是 `no material change`，不能宣称已显著改善。两个方法都出现 Runtime
+Image 清理警告；它不影响 Ready 后交互，但排除了启动或 ART 状态结论。
+
+post-GC 归因解释了进程峰值指标无法回答的问题。两个精确分支的 Debug Build 都从冷启动进入同一
+普通列表路径，执行 12 次完整快速上划与 12 次完整快速下划，稳定后通过 `am dumpheap` 导出。
+被索引的实例与数组从 387,380 个对象、18,276,640 字节浅堆降至 381,104 个对象、18,147,122
+字节浅堆，即减少 6,276 个对象和 129,518 字节。候选完全移除了 1,000 个
+`WidgetLazyItemSessionBinding`（`-24,000` 字节）、1,000 个捕获 Item 的 Collector Lambda
+（`-16,000` 字节）、1,000 个 `HashMap.Node`（`-24,000` 字节）和 608 个
+`LinkedHashMap.Entry`（`-19,456` 字节）。延迟创建绘制状态还减少了 136 个 `Paint`、184 个
+`Path`、184 个 `RectF` 和 320 个原生分配 Cleaner Wrapper。两组都保留 124 个
+`UiEnvironmentValues`、共 3,968 字节浅堆，因此继续池化小 Value 不具备实质收益。这个结构化
+Live Set 结果归类为 `improved`，并与已实施的分配削减严格对应；它不量化原生资源字节，也不能
+替代正式的固定频率峰值内存运行。下一步是在 Root 固定频率下再跑一组普通列表对照/候选，P99 与
+最大 heap 是剩余的验收决策。
 
 前述 A/B 证据只覆盖 revision 5 两份已构建 Snapshot 的 steady 交替，直接有利于有界的两代身份
 Cache。它没有测量 `toLazyItemsSnapshot()` 构造、首次求值、从不复用身份的单调数据流或 List
