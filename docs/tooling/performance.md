@@ -610,6 +610,19 @@ removed aggregate skip with retained item/adapter changes. Its longitudinal clas
 also regressed the cold tail and was reverted. The revision-5 A/B below supplied the valid
 same-policy ViewCompose control, and the 2026-08-17 matrix closes the cross-engine follow-up.
 
+<div className="benchmark-evidence">
+
+On 2026-08-17, exact `2695fbfb` was rebuilt under the same Xiaomi device, five-run `run-from-apk`,
+and v3 fixed-clock policy as `9ac164af`. Revision-4 scroll P50/P90/P95/P99 was
+`5.356/8.914/9.603/11.523 ms` (heap `7833 KiB`, CV `0.016`); mutation was
+`4.244/15.852/22.681/24.947 ms` (`8593 KiB`, `0.079`). Revision 5 changes those percentiles by
+`-0.5%/+0.6%/-0.7%/-7.1%` and `+0.1%/-31.2%/-44.0%/-39.3%`, with heap 2.3%/5.4% lower. Both runs
+pass protocol and stability gates and do not reproduce a regression. Classification remains
+`inconclusive` because the workload changed from `performance.list@4` to `@5`; next benchmark the
+exact diagnostics-tab switch followed by an immediate fling if the symptom persists.
+
+</div>
+
 The 2026-08-16 revision-5 A/B used the same Xiaomi MI 6 / API 28 device, R8 benchmark target,
 five-run and 48-frame protocol, `run-from-apk` compilation identity, and
 `root-fixed-cpu-1401600-1804800-gpu-515000000-perf-hal-off-v3` policy. The workload contains 1,000

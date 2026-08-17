@@ -144,6 +144,7 @@ const config: Config = {
         highlightSearchTermsOnTargetPage: true,
         explicitSearchResultPath: true,
         searchResultLimits: 8,
+        ignoreCssSelectors: ['.benchmark-evidence'],
       },
     ],
   ],

@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 88e57fec3c55decc473f650bd8c33c6b51e46b54992c5feebcfef48f11d50e10
+translation_source_hash: 28a8ae03741f7311919d809a851908e38e1ff515eeffc40c8e9b3db0d09fd435
 translation_status: current
 ---
 
@@ -511,6 +511,18 @@ Android Adapter 现在以线性复杂度规划同顺序变更和循环位移，�
 但它同时包含后来删除的聚合跳过与保留的 Item/Adapter 改动，所以纵向结论仍为 `inconclusive`，
 只作为 APK `020582a9` 的绝对结果。Material Host JIT 实验也使冷尾部回退并已撤销。下方
 revision 5 A/B 提供有效的同策略 ViewCompose 对照，2026-08-17 的矩阵则完成跨引擎跟进。
+
+<div className="benchmark-evidence">
+
+2026-08-17 在与 `9ac164af` 相同的 Xiaomi 设备、五轮 `run-from-apk` 和 v3 固定时钟策略下重建
+`2695fbfb`。Revision 4 滚动 P50/P90/P95/P99 为 `5.356/8.914/9.603/11.523 ms`（heap
+`7833 KiB`、CV `0.016`），mutation 为 `4.244/15.852/22.681/24.947 ms`（`8593 KiB`、
+`0.079`）。Revision 5 的对应变化为 `-0.5%/+0.6%/-0.7%/-7.1%` 和
+`+0.1%/-31.2%/-44.0%/-39.3%`，heap 低 2.3%/5.4%。两项均通过协议与稳定性门禁，未复现回退；
+但 Workload 已从 `performance.list@4` 变为 `@5`，正式结论仍为 `inconclusive`。若体感持续，下一步
+应测量诊断 Tab 切换后立即 Fling 的精确路径。
+
+</div>
 
 2026-08-16 的 revision 5 A/B 使用同一台 Xiaomi MI 6 / API 28 设备、R8 benchmark target、
 五轮与 48 帧协议、`run-from-apk` 编译身份，以及
