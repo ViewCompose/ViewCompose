@@ -3,14 +3,14 @@
 ## Status
 
 Active. Runtime attribution and the implementation boundary are accepted. Phase 1's shared
-strategy/payload hard cut and focused contract tests are complete; adapter metadata convergence is
-next.
+strategy/payload hard cut and Phase 2's compact adapter metadata are complete; lazy shape resource
+convergence is next.
 
 Last verified: 2026-08-17.
 
-Next action: converge adapter position and stable-ID ownership into one compact submission index,
-then prove stable reorder, duplicate-key fallback, attached-holder refresh, and bounded view-type
-behavior before changing shape resources.
+Next action: make common uniform-rounded fills path-free, allocate border resources only when a
+border exists, and replace the outline-only full drawable without changing shape pixels or
+clipping behavior.
 
 ## Maven release changesets
 
@@ -112,7 +112,7 @@ replacement accepted benchmark baseline.
   snapshots, duplicate keys, failure retry, key replacement, saveable-state retention, effects,
   AndroidView reset/release, and no bind-time content-wrapper allocation.
 
-### Phase 2: compact adapter metadata — pending
+### Phase 2: compact adapter metadata — complete
 
 - Replace overlapping position and stable-ID maps with one submission-owned metadata structure or
   demonstrate with retained-size evidence why a map must remain separate.
@@ -121,6 +121,13 @@ replacement accepted benchmark baseline.
 - Bound or prune view-type metadata without reassigning a type still referenced by RecyclerView.
 - Preserve all diff, rotation, payload acknowledgement, sticky-header, focus-anchor, attached-holder
   refresh, and duplicate-key behavior.
+
+The accepted implementation stores keys, positions, and stable IDs in one collision-safe open
+addressed submission table. A separate compact registry preserves RecyclerView view-type identity
+without `Pair` keys, map nodes, or boxed IDs, and rejects more than 1,024 distinct kind/type
+compatibility classes in one mounted container. Focused renderer tests cover reorder, hash
+collisions, disappearance and reappearance, duplicate-key fallback, attached-holder refresh, and
+the finite view-type boundary.
 
 ### Phase 3: lazy shape resources — pending
 

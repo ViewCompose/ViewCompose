@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: cc4d7429f7c0805eb4803178290bb56a151476dd109212077096e8ee2583c428
+translation_source_hash: b8f1eaaf6cf82a406b49abdba386961b2e9ddfb7731f64f3b16012de6102d016
 translation_status: current
 ---
 
@@ -185,6 +185,12 @@ LazyVerticalGrid(cells = GridCells.Adaptive(minSize = 120.dp)) {
 | mounted-tree 缓存大小 | 框架所有、有界、确定性 Release 的 Reset Tree 缓存 |
 | 布局状态 | scroll、layout 和 adapter observer 推送给 `LazyListState` |
 
+Android Adapter 使用一个可处理 Hash 冲突的紧凑 Key 表表示一次已接受提交，并由该表同时持有
+唯一 Position 与 Stable ID；不会为同一快照再保留第二份带装箱值的 Key Map。RecyclerView
+View Type 在 Mounted Container 的整个生命周期内保持稳定，包括某个 Type 暂时消失的情况。
+一个容器最多接受 1,024 种不同的 `kind`/`contentType` 兼容类别；超过上限会立即失败，而不是
+保留无界 Type 历史。模型值与 Revision 不属于 `contentType`。
+
 Detach 且从未展示的 Holder 只有在 Renderer 已确认该 Content Type 的同步成本在预算内时，才会
 借助 RecyclerView Prefetch 组合并构建 Android View 树。未知或昂贵 Type 只 Staging，不做原生
 准备。这只是 Prepared Candidate，不是已提交子帧。Remember 激活、`SideEffect`、`DisposableEffect`、
@@ -214,7 +220,8 @@ Attach 或重排时按 Item Key 恢复。分离的 Pinned Header 副本是不拥
 
 1. 容器内 Key 非空且唯一。
 2. 一个 Key 在重排期间持续标识同一逻辑 Item。
-3. `contentType` 只能分组布局兼容的 Item 结构。
+3. `contentType` 只能分组布局兼容的 Item 结构，并且必须来自有限分类；一个已挂载 Android 容器
+   最多支持 1,024 种不同的 `kind`/`contentType` 组合。
 4. 单条 Item、Sticky Header、Page 或 Tab 必须在 `key` 后立即提供非空 `contentRevision`，再排列
    可选 `contentType` 与布局策略。`null` 不是静态哨兵；只有不存在变化的普通非 State 输入时才能用
    `StaticContentRevision`。批量可空 `{ it }` 默认值要求不可变值模型的 Equality 覆盖每个这类输入。

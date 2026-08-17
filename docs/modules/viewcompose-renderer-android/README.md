@@ -189,6 +189,11 @@ Because the current line is alpha, the documentation site intentionally does not
   may skip Session routing only when the holder has committed the exact item-snapshot instance at
   the exact submission revision; revision equality alone is not sufficient. This acknowledgement
   rule prevents queued RecyclerView notifications from treating an older logical commit as current.
+- The same collision-safe submission table owns primitive positions and renderer-assigned stable
+  IDs, avoiding overlapping boxed key maps. A compact registry preserves view-type identity for the
+  mounted adapter lifetime without `Pair` keys or boxed IDs. Because `contentType` is a finite
+  physical-compatibility taxonomy, one mounted container accepts at most 1,024 distinct
+  kind/type combinations and rejects a larger history before it can grow without bound.
 - Lazy-list and pager holders cache their container handle for the holder lifetime and call a
   dedicated Session host plus the declaration-shared item strategy directly. Native recycling
   still changes logical Session ownership by key; this removes callback-wrapper allocation without

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 14ba010cff0a821e37f4c4f1cdfb04a599e724d6abba961f9bf0e6c26b4029b9
+translation_source_hash: 8e2e0de0aa59b6fd040e3d878fbf541283bf42e3f75dedb326a89d3830103fde
 translation_status: current
 ---
 
@@ -164,6 +164,10 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
   因而无需扫描 Item 列表即可解析稳定 Key。Payload Bind 只有在 Holder 已提交完全相同的 Item
   快照实例和完全相同的 Submission Revision 时才能跳过 Session 路由；仅 Revision 相等并不足够。
   这条确认规则可以防止队列中的 RecyclerView 通知把较早的逻辑提交误判为当前提交。
+- 同一份可处理 Hash 冲突的提交表还持有 Primitive Position 与 Renderer 分配的 Stable ID，避免
+  重叠且带装箱值的 Key Map。紧凑 Registry 在 Mounted Adapter 生命周期内保持 View Type 身份，
+  且不创建 `Pair` Key 或装箱 ID。由于 `contentType` 是有限的物理兼容分类，一个已挂载容器最多
+  接受 1,024 种不同的 kind/type 组合；更大的历史会在无界增长前被拒绝。
 - Lazy List 与 Pager Holder 会在 Holder 生命周期内缓存 Container Handle，并直接调用专用 Session
   Host 与 Declaration 共享的 Item Strategy。原生复用仍按 Key 切换逻辑 Session 所有权；该调整只
   移除 Callback Wrapper 分配，不会合并物理与逻辑身份。

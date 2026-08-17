@@ -24,6 +24,7 @@ import android.widget.TextView
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -108,6 +109,31 @@ class LazyListAdapterTest {
         assertNotEquals(adapter.getItemViewType(0), adapter.getItemViewType(3))
         assertEquals(3, adapter.findStickyHeaderPosition(3))
         assertEquals(3, adapter.findStickyHeaderPosition(adapter.itemCount - 1))
+    }
+
+    @Test
+    fun `view types survive disappearance and reject an unbounded compatibility taxonomy`() {
+        val adapter = LazyListAdapter()
+        adapter.submitItems(listOf(item(key = "first", contentType = "row")))
+        val rowType = adapter.getItemViewType(0)
+
+        adapter.submitItems(listOf(item(key = "replacement", contentType = "card")))
+        val cardType = adapter.getItemViewType(0)
+        adapter.submitItems(listOf(item(key = "returned", contentType = "row")))
+
+        assertNotEquals(rowType, cardType)
+        assertEquals(rowType, adapter.getItemViewType(0))
+
+        val excessiveTypes = LazyListAdapter()
+        excessiveTypes.submitItems(
+            List(1_025) { index -> item(key = index, contentType = "type-$index") },
+        )
+        repeat(1_024) { position -> excessiveTypes.getItemViewType(position) }
+
+        val failure = assertThrows(IllegalArgumentException::class.java) {
+            excessiveTypes.getItemViewType(1_024)
+        }
+        assertTrue(failure.message.orEmpty().contains("at most 1024"))
     }
 
     @Test
