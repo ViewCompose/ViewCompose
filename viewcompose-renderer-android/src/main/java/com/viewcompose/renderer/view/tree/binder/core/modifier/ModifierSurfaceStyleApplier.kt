@@ -2,7 +2,6 @@ package com.viewcompose.renderer.view.tree
 
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.Outline
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
 import android.graphics.drawable.LayerDrawable
@@ -15,6 +14,7 @@ import com.viewcompose.renderer.R
 import com.viewcompose.ui.modifier.CornerRadiusModifierElement
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.view.shape.UiShapeDrawable
+import com.viewcompose.renderer.view.shape.UiShapeOutlineProvider
 import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.shape.UiShape
@@ -281,20 +281,13 @@ internal object ModifierSurfaceStyleApplier {
             return
         }
         if (shape != null) {
-            val outlineDrawable = UiShapeDrawable(shape, view.layoutDirection, density)
-            view.outlineProvider = object : ViewOutlineProvider() {
-                override fun getOutline(view: View, outline: Outline) {
-                    val top = surfaceInsets.top.coerceIn(0, view.height)
-                    val bottom = (view.height - surfaceInsets.bottom).coerceIn(top, view.height)
-                    outlineDrawable.setBounds(
-                        0,
-                        top,
-                        view.width,
-                        bottom,
-                    )
-                    outlineDrawable.getOutline(outline)
-                }
-            }
+            view.outlineProvider = UiShapeOutlineProvider(
+                shape = shape,
+                layoutDirection = view.layoutDirection,
+                density = density,
+                topInset = surfaceInsets.top,
+                bottomInset = surfaceInsets.bottom,
+            )
         } else {
             view.outlineProvider = ViewOutlineProvider.BACKGROUND
         }

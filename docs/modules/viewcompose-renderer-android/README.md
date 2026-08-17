@@ -32,10 +32,13 @@ dependencies {
   ConstraintLayout, and SwipeRefreshLayout. Material Components is not a dependency.
 - Generic surfaces, rounded/cut/continuous shapes, and progress indicators use engine-owned Android drawing
   implementations driven by resolved node values.
-- `SurfaceNodeProps` uses one cached `UiShapeDrawable` geometry for solid or gradient fill, border,
-  ripple mask, outline, and optional clipping. Continuous corners use a convex cubic path; stable
-  drawing performs no per-frame Path, shader, drawable, or collection allocation.
+- `SurfaceNodeProps` uses cached `UiShapeDrawable` geometry for solid or gradient fill, an optional
+  border, and ripple masks. A paint-free bounds-cached provider reports the View outline and
+  optional clipping geometry instead of retaining a second drawable. Continuous corners use a
+  convex cubic path; stable drawing performs no per-frame Path, shader, drawable, or collection
+  allocation.
 - Uniform rounded rectangles use Android's native round-rectangle draw and outline operations.
+  They retain no `Path`, and surfaces without a visible border retain no stroke paint or path.
   Non-uniform rounded, continuous, and cut corners retain the cached generic path, so this common
   scrolling fast path does not narrow shape, gradient, border, ripple-mask, or clipping behavior.
 - Engine-owned rounded shapes use circular arcs. Shape borders are centered on a path inset by half

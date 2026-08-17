@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 8e2e0de0aa59b6fd040e3d878fbf541283bf42e3f75dedb326a89d3830103fde
+translation_source_hash: e1d179b841401ad1ee4f5c85b593556358f085f63c3f01d9c8b67f0b4cf5e736
 translation_status: current
 ---
 
@@ -32,12 +32,13 @@ dependencies {
 - Android 运行时依赖：AndroidX Core、AppCompat、RecyclerView、ViewPager2、
   ConstraintLayout 与 SwipeRefreshLayout；不依赖 Material Components。
 - 通用 Surface、圆角/切角/连续圆角和进度指示器使用引擎自有 Android 绘制实现，并只消费节点解析值。
-- `SurfaceNodeProps` 使用同一份缓存的 `UiShapeDrawable` 几何来完成纯色或渐变 Fill、Border、
-  Ripple Mask、Outline 与可选裁剪。连续圆角使用凸三次曲线路径；稳定绘制不会逐帧分配 Path、
-  Shader、Drawable 或集合。
-- 四角半径一致的 Rounded Rectangle 使用 Android 原生圆角矩形绘制和 Outline 操作。非对称圆角、
-  Continuous Corner 与 Cut Corner 仍使用缓存的通用 Path，因此这个常见滚动快路径不会收窄 Shape、
-  Gradient、Border、Ripple Mask 或裁剪行为。
+- `SurfaceNodeProps` 使用缓存的 `UiShapeDrawable` 几何完成纯色或渐变 Fill、可选 Border 与 Ripple
+  Mask。View Outline 与可选裁剪几何由一个无 Paint 且缓存 Bounds 的 Provider 提供，不再保留第二个
+  完整 Drawable。连续圆角使用凸三次曲线路径；稳定绘制不会逐帧分配 Path、Shader、Drawable 或集合。
+- 四角半径一致的 Rounded Rectangle 使用 Android 原生圆角矩形绘制和 Outline 操作，不保留
+  `Path`；没有可见 Border 的 Surface 也不保留 Stroke Paint 或 Path。非对称圆角、Continuous
+  Corner 与 Cut Corner 仍使用缓存的通用 Path，因此这个常见滚动快路径不会收窄 Shape、Gradient、
+  Border、Ripple Mask 或裁剪行为。
 - 引擎自有圆角使用圆弧绘制。Shape 边框会沿向内偏移半个线宽的路径居中绘制，保证轮廓完整落在
   逻辑 Drawable 边界内，包括组件在较大触控目标中居中较短可见 Surface 的情况。
 - Button 可以请求比有效 View 触控目标更短的可见 Surface。引擎会在 View 内居中其背景、边框、

@@ -3,14 +3,14 @@
 ## Status
 
 Active. Runtime attribution and the implementation boundary are accepted. Phase 1's shared
-strategy/payload hard cut and Phase 2's compact adapter metadata are complete; lazy shape resource
-convergence is next.
+strategy/payload hard cut, Phase 2's compact adapter metadata, and Phase 3's lazy drawing resources
+are complete; device acceptance and post-change attribution are next.
 
 Last verified: 2026-08-17.
 
-Next action: make common uniform-rounded fills path-free, allocate border resources only when a
-border exists, and replace the outline-only full drawable without changing shape pixels or
-clipping behavior.
+Next action: run the accepted list and shadow-list device scenarios, compare memory and frame tails
+against an unchanged control, and use post-GC attribution to decide whether optional small-object
+convergence is material or should be omitted.
 
 ## Maven release changesets
 
@@ -129,13 +129,20 @@ compatibility classes in one mounted container. Focused renderer tests cover reo
 collisions, disappearance and reappearance, duplicate-key fallback, attached-holder refresh, and
 the finite view-type boundary.
 
-### Phase 3: lazy shape resources — pending
+### Phase 3: lazy shape resources — complete
 
 - Make uniform rounded fills path-free and borders lazy.
 - Replace the outline-only `UiShapeDrawable` with a lightweight, bounds-aware outline source or
   safely reuse the installed shape drawable.
 - Add exact drawing, outline, alpha, color-filter, bounds, density, direction, border, gradient,
   ripple, and clipping regression coverage before measuring.
+
+The accepted implementation retains no `Path` for a uniform rounded shape, creates and releases
+stroke paint/path state with the visible border, and uses a paint-free bounds-cached outline
+provider instead of a second full drawable. Shared primitive path construction preserves rounded,
+continuous, and cut-corner pixels without allocating temporary arc rectangles. Renderer tests
+cover native round rectangles, generic paths, gradients, RTL, density, border insets, bounds,
+outline insets, clipping, alpha, and color-filter propagation.
 
 ### Phase 4: optional small object convergence — pending
 

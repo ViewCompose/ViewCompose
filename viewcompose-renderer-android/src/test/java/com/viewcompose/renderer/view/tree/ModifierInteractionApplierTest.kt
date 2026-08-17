@@ -17,6 +17,7 @@ import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
 import com.viewcompose.renderer.decoration.RecordingDecorationBackend
 import com.viewcompose.renderer.modifier.resolve
 import com.viewcompose.renderer.view.shape.UiShapeDrawable
+import com.viewcompose.renderer.view.shape.UiShapeOutlineProvider
 import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.Modifier
@@ -141,6 +142,7 @@ class ModifierInteractionApplierTest {
         val firstBackground = view.background as UiShapeDrawable
         assertEquals(0xFF112233.toInt(), firstBackground.currentFillColor)
         assertTrue(view.clipToOutline)
+        assertTrue(view.outlineProvider is UiShapeOutlineProvider)
 
         ViewModifierApplier.applyModifier(view, secondNode, defaultRippleColor = 0)
         val secondBackground = view.background as UiShapeDrawable
