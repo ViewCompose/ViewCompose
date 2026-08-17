@@ -53,7 +53,9 @@ Snapshot.withMutableSnapshot {
 - [`RuntimeObservation`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.observation/-runtime-observation/)
   is the Q3 explicit invalidation subscription for state reads. One successful global apply calls
   each affected observation at most once on the applying thread, even when several dependencies
-  changed; separate applies remain separate opportunities.
+  changed; separate applies remain separate opportunities. Q3 `prepareReplacement` reads a
+  candidate dependency set through the same Observation identity, then atomically commits it while
+  retaining shared subscriptions or aborts it without disturbing the committed dependency set.
 - [`snapshotFlow`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime/snapshot-flow.html)
   creates a cold Flow that tracks snapshot reads per collector, conflates invalidations, replaces
   conditional dependencies, and emits structurally distinct calculated values.
@@ -80,6 +82,10 @@ alpha, the documentation site intentionally does not expose a stable `latest` al
   apply invalidates it at most once, with stable first-observed delivery order across affected
   observations. Dispose it to prevent the observed states from retaining that subscription; a
   callback already racing with disposal may finish.
+- A `PreparedObservationReplacement` is terminal: call exactly one of `commit` or `abort` after
+  external candidate work succeeds or fails. Preparation preserves committed subscriptions and
+  temporarily subscribes candidate-only dependencies so no update can disappear or duplicate the
+  callback between reading and publication. One Observation permits only one prepared replacement.
 - Each `snapshotFlow` collector owns an independent read observation. Cancellation and calculation
   failure release it; the calculation is side-effect-free and may run more often than it emits.
 - `ComposerLite` and derived-state instances are intended for thread-confined use. Hosts serialize

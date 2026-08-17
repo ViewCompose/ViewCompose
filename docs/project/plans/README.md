@@ -4,10 +4,6 @@ This directory contains multi-step work that is currently active and must surviv
 
 ## Active plans
 
-- [Android Views performance control](./android-views-performance-control.md) — add native controls
-  and three-engine reports for non-shadow workloads while preserving the historical Compose gate;
-  three steady-state actions are accepted and the complete list-scroll batch awaits a
-  clock-controllable device.
 - [Cross-session theme propagation](./cross-session-theme-propagation.md) — make one observable
   application theme choice converge across independent Activity roots, add a secondary-Activity
   switch-and-return Demo, and refresh retained NavHost destinations with the latest Local snapshot
@@ -31,6 +27,10 @@ This directory contains multi-step work that is currently active and must surviv
   locale-independent automation targets, fixture-first benchmark hosts, complete English and
   Simplified Chinese resources, and optional human guidance before benchmarking Runtime/View patch
   optimizations against a new stable baseline.
+- [Observed property transactions](./observed-property-transactions.md) — hard-cut explicitly
+  observed node properties onto a session-owned, frame-batched transaction path that reads one
+  Snapshot, patches only affected mounted nodes, rolls back the complete batch on failure, and
+  preserves full composition for structural changes.
 Completed native-widget, component-appearance, tutorial, language-consistency, migration-sample,
 hosted-documentation, and version-retention plans are retained in the
 [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).

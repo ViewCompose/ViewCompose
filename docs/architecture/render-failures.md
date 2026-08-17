@@ -30,6 +30,12 @@ completed frame report.
 - `CompositionPrepare` and `ViewTreeRender` failures abort the candidate composition and report
   `PreviousFrameRestored`. The renderer restores the previous VNode bindings, mounted children,
   layout parameters, View order, and releases newly inserted nodes on a best-effort basis.
+- `ObservedPropertyPrepare` reports `FrameUnchanged`: candidate values and dependency guards are
+  abandoned before any native mutation. `ObservedPropertyRender` reports
+  `PreviousFrameRestored`: the renderer preflights the complete exact-target batch and rebinds every
+  earlier target to its committed VNode when one patch fails. `ObservedPropertyCommit` reports
+  `FrameCommitted` because native values are already authoritative; dependency commit failures are
+  observable and do not silently trigger a whole-tree fallback.
 - commit, side-effect, overlay, diagnostics, and native commit failures report `FrameCommitted`.
   These happen after the new View tree has become authoritative and are isolated so that one
   callback does not prevent the remaining callbacks from running. A throwing remembered activation

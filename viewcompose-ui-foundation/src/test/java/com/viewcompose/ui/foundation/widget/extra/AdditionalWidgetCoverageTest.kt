@@ -32,6 +32,7 @@ import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -346,7 +347,10 @@ class AdditionalWidgetCoverageTest {
 
         val spannedGridTree = buildVNodeTree {
             LazyVerticalGrid(cells = com.viewcompose.ui.node.policy.GridCells.Fixed(3)) {
-                stickyHeader(key = "header") { Text("Header") }
+                stickyHeader(
+                    key = "header",
+                    contentRevision = StaticContentRevision,
+                ) { Text("Header") }
                 items(
                     items = listOf(1, 2),
                     key = { item -> item },
@@ -389,15 +393,19 @@ class AdditionalWidgetCoverageTest {
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
             ) {
-                Page(key = "p1", contentType = "page") { Text("P1") }
-                Page(key = "p2") { Text("P2") }
+                Page(
+                    key = "p1",
+                    contentRevision = StaticContentRevision,
+                    contentType = "page",
+                ) { Text("P1") }
+                Page(key = "p2", contentRevision = StaticContentRevision) { Text("P2") }
             }
         }
         val horizontalSpec = horizontalPagerTree.single().spec as HorizontalPagerNodeProps
         assertEquals(reusePolicy, horizontalSpec.reusePolicy)
         assertEquals(motionPolicy, horizontalSpec.motionPolicy)
         assertEquals("page", horizontalSpec.pages.first().contentType)
-        assertEquals("p1", horizontalSpec.pages.first().contentRevision)
+        assertSame(StaticContentRevision, horizontalSpec.pages.first().contentRevision)
 
         val verticalPagerTree = buildVNodeTree {
             VerticalPager(
@@ -407,8 +415,8 @@ class AdditionalWidgetCoverageTest {
                 motionPolicy = motionPolicy,
                 focusFollowKeyboard = true,
             ) {
-                Page(key = "p1") { Text("P1") }
-                Page(key = "p2") { Text("P2") }
+                Page(key = "p1", contentRevision = StaticContentRevision) { Text("P1") }
+                Page(key = "p2", contentRevision = StaticContentRevision) { Text("P2") }
             }
         }
         val verticalSpec = verticalPagerTree.single().spec as VerticalPagerNodeProps

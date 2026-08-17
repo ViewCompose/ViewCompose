@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: adb5e3d264fdc9a4e36b5bffb9ccbeccea325dc5203c5a61fe6279747a6c82b0
+translation_source_hash: 7ec1cdf37a660641d9ee6221d6afcc95dc4b5822a5f30e782a0a9dc9fbd077c2
 translation_status: current
 ---
 
@@ -125,10 +125,26 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   Provider；它不会捕获或恢复 Provider Stack，普通应用代码应使用标准 Effect API。
 - [`rememberSaveable` 与 `SaveableStateRegistry`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-saveable-state-registry/)
   通过事务式恢复让状态跨组合释放和宿主重建继续存活。
-- `LazyColumn`、`LazyRow`、`LazyVerticalGrid` 与 Pager Page 声明使用显式 Q3 Revision 契约。批量
-  Overload 接受 `contentRevision = { model.version }`；普通捕获值必须是可观察 State 或进入该
-  Revision。Pager Page 也声明 `contentType`。`TabRow` 使用父组合中的 Eager Keyed Child，而非
-  Lazy Item Session。
+- `LazyColumn`、`LazyRow`、`LazyVerticalGrid`、Pager Page 与 Tab 使用显式 Q3 Revision 契约。单条
+  `item`、`stickyHeader`、`Page` 或 `Tab` 必须在 `key` 后立即提供非空 `contentRevision`，再排列
+  可选物理复用和布局参数。`null` 不是静态哨兵；只有 Declaration 不含任何会变化的普通非 State
+  输入时，才能使用 `StaticContentRevision`。批量 Overload 有意保留可空
+  `contentRevision: (T) -> Any? = { it }` Selector，但仅适用于 Equality 覆盖 Item Content 所读取
+  全部普通输入的不可变值模型。其他 Item Content 输入必须在 Active Session 内作为可观察 State
+  读取，或进入显式 Revision。Pager Page 还声明 `contentType`，`TabRow` 则使用 Eager Keyed Child，
+  而非 Lazy Item Session。
+- 每个普通 Typed `List` Declaration（包括 Scoped `items` 与 Typed `ScrollableScope` Wrapper）都会
+  在父 Composition 的每一轮执行中求值顺序、成员与 Item Selector；随后只有 Key、Content
+  Revision、框架 Environment、Content Type、Kind 与 Span 都相等时，才能复用已提交的逻辑 Item
+  与 Session Binding。顶层及 `ScrollableScope` 的均质容器还接受由 `toLazyItemsSnapshot()` 创建的
+  `LazyItemsSnapshot`：Factory 会浅拷贝有序 Item 引用并分配不透明 Identity。每个消费容器保留当前
+  和上一个成功提交的 Snapshot/Environment Pair；精确命中时会以常量时间返回完整有序逻辑 Item
+  List，不执行 Selector 或 Key 扫描。新 Identity 或变化的 Environment 会 Cache Miss 并重新执行
+  Selector。顺序、成员、Item 数据、Selector Capture 或普通 Item Content Capture 变化时必须替换
+  Snapshot；Scoped Builder 不接受该快路类型。只有 Item Content 在 Active Session 中执行时读取的
+  State 会独立观察；Selector 读取的 State 或其他变化输入要求替换 Snapshot。Selector 失败或 Key
+  重复不会发布已求值 Snapshot，Retry 会重新执行全部 Selector。调用方不能用聚合 Token 绕过普通
+  `List` 校验。
 - `ScrollableColumn` 与 `ScrollableRow` 接受 Q3 `ScrollState` 和 `userScrollEnabled`，不需要
   卸载 Eager Child。`HorizontalPager` 与 `VerticalPager` 接受 Q3 `PagerState`；只有不同页面停稳后
   才触发变化回调。编译样例 `eagerScrollStateSample` 展示调用方持有的 Eager 滚动状态。
@@ -143,6 +159,15 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-render-session/)
   为一个不透明 `RenderContainerHandle` 协调组合、渲染器协调、原生提交 Effect、浮层、诊断、
   失败恢复与释放。标准应用使用 `renderInto` 返回的 Host Android Session，不直接构造该协调器。
+- Q3 `observedValue`、`ObservedValue`、`observedNodeSpec` 和 Observed
+  `UiTreeBuilder.emit` Overload 用来声明属性 Reader，其 State 依赖不会让外层 Composition 失效。
+  `Text(ObservedValue<String>)` 是第一项 Typed Integration。Session 从同一 Snapshot 读取全部
+  Dirty Declaration，再提交一次精确 Target Renderer Transaction；Type、Key、Modifier、Child
+  与 Environment 仍属于结构。ViewCompose 没有编译器生成的变更标记，因此每个变化的普通捕获值
+  都必须显式进入 `inputs`。
+- Q3 `CoreObservedPropertyTarget`、`CoreObservedPropertyPatch`、`CoreObservedPropertyFrame` 与
+  `CoreRenderEngine.patchObservedProperties` 组成 Renderer-neutral Host SPI。Engine 必须校验并
+  回滚完整 Batch，或者拒绝该能力；不存在整树静默回退。
 - `RenderSessionSourceTooling` 与 `RenderSessionSourceRegistration` 组成 Q3 可选平台诊断契约。
   只有平台主动启用时才捕获一条有限源码调用链，并跟踪 Root、Lazy Item 与 Pager Item Render
   Session 的活动/释放生命周期。编译样例 `renderSessionSourceToolingSample` 展示其 Adapter 生命周期。
@@ -202,7 +227,9 @@ Local Binding 是否存在与值是否可空相互独立。只有当前 Snapshot
   这项规则优先保证捕获值与子 Session 回调正确，不采用不安全的值相等子树跳过。
 - 集合 Item Snapshot 而非 Callback 对象身份划分逻辑子提交。Key 与 Content/Environment Revision
   相等时不执行 Child Composition 或原生 Patch。变化的非 State 捕获值必须进入
-  `contentRevision`；省略它就承诺该值对当前 Key 保持稳定。
+  `contentRevision`。单条 Declaration 必须在 `key` 后立即提供非空参数；`null` 不是静态捷径，
+  `StaticContentRevision` 承诺不存在这类输入变化。省略的批量 Selector 仍可空，并用不可变 Item
+  值表达同一承诺。
 - Eager Scroll 与 Pager State 只在原生容器挂载期间连接。替换 State 会断开旧 Owner，释放后
   Renderer 边界会拒绝后续命令，相等 Snapshot 不会使 Observer 失效。Eager 横向偏移和 Pager
   索引在 RTL 中仍使用逻辑顺序。

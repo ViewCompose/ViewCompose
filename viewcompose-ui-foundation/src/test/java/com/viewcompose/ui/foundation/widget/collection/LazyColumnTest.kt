@@ -67,6 +67,7 @@ class LazyColumnTest {
             ) {
                 stickyHeader(
                     key = "header",
+                    contentRevision = StaticContentRevision,
                     contentType = "header-type",
                 ) {
                     Text("Header")
@@ -101,8 +102,8 @@ class LazyColumnTest {
         val error = runCatching {
             buildVNodeTree {
                 LazyColumn {
-                    item(key = "duplicate") { Text("A") }
-                    item(key = "duplicate") { Text("B") }
+                    item(key = "duplicate", contentRevision = StaticContentRevision) { Text("A") }
+                    item(key = "duplicate", contentRevision = StaticContentRevision) { Text("B") }
                 }
             }
         }.exceptionOrNull()

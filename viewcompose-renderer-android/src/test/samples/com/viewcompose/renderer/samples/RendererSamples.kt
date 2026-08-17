@@ -14,6 +14,8 @@ import com.viewcompose.renderer.reconcile.LazyListUpdate
 import com.viewcompose.renderer.reconcile.ReconcileNode
 import com.viewcompose.renderer.reconcile.ReusePatch
 import com.viewcompose.renderer.view.tree.ViewTreeRenderer
+import com.viewcompose.renderer.view.tree.ViewTreeObservedPropertyPatch
+import com.viewcompose.renderer.view.tree.MountedNode
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionFactory
@@ -97,6 +99,24 @@ fun renderIntoViewGroupSample(
     mounted = updated.mountedNodes
 
     ViewTreeRenderer.disposeMounted(container, mounted)
+}
+
+fun patchObservedPropertySample(
+    mountedNode: MountedNode,
+    nextNode: VNode,
+) {
+    val previousNode = mountedNode.vnode
+    val result = ViewTreeRenderer.patchObservedProperties(
+        patches = listOf(
+            ViewTreeObservedPropertyPatch(
+                id = checkNotNull(previousNode.observedPropertyId),
+                mountedNode = mountedNode,
+                previous = previousNode,
+                next = nextNode,
+            ),
+        ),
+    )
+    result.commitEffects.forEach { effect -> effect.commit() }
 }
 
 private fun vnode(key: Any): VNode = VNode(

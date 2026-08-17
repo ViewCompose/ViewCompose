@@ -98,6 +98,7 @@ const config: Config = {
             from: [
               '/project/plans/image-loading-pipeline-generalization',
               '/project/plans/maven-dependency-contract-convergence',
+              '/project/plans/android-views-performance-control',
             ],
             to: '/project/plans',
           },
@@ -143,6 +144,7 @@ const config: Config = {
         highlightSearchTermsOnTargetPage: true,
         explicitSearchResultPath: true,
         searchResultLimits: 8,
+        ignoreCssSelectors: ['.benchmark-evidence'],
       },
     ],
   ],

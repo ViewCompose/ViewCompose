@@ -24,6 +24,11 @@ import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.node.policy.CollectionMotionPolicy
+
+internal val PerformanceListMotionPolicy = CollectionMotionPolicy(
+    disableItemAnimator = true,
+)
 
 /**
  * ViewCompose 版本的列表性能场景。
@@ -36,7 +41,9 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
 ) {
     val revisionState = remember { mutableStateOf(0) }
     val revision = revisionState.value
-    val rows = fixtures.listRows(revision)
+    // A/B seam: switch only this accessor to listRows(revision) to benchmark the plain-List path
+    // against the same prebuilt immutable rows.
+    val rows = fixtures.listSnapshot(revision)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,6 +68,9 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
             contentType = { "performance-list-row" },
             contentPadding = 8.dp,
             spacing = 6.dp,
+            // Compose does not request animateItem and the Android Views control disables its
+            // ItemAnimator. Keep mutation work equivalent instead of timing RecyclerView motion.
+            motionPolicy = PerformanceListMotionPolicy,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)

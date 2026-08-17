@@ -20,6 +20,7 @@ architecture pages describe how the system works now.
 - [ADR-0012: Lazy collection logical and physical ownership](./0012-lazy-collection-logical-and-physical-ownership.md)
 - [ADR-0013: Component appearance resolution boundary](./0013-component-appearance-resolution-boundary.md)
 - [ADR-0014: Renderer-neutral interaction indication](./0014-renderer-neutral-interaction-indication.md)
+- [ADR-0015: Observed property transactions](./0015-observed-property-transactions.md)
 
 ## Rules
 

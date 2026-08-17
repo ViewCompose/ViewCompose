@@ -12,6 +12,8 @@ internal class PerformanceCopy(
     val mutateList: String = resources.getString(R.string.demo_performance_mutate_list)
     val resetList: String = resources.getString(R.string.demo_performance_reset_list)
     val updateDashboard: String = resources.getString(R.string.demo_performance_update_dashboard)
+    val updateDashboardStructure: String =
+        resources.getString(R.string.demo_performance_update_dashboard_structure)
     val resetDashboard: String = resources.getString(R.string.demo_performance_reset_dashboard)
     val active: String = resources.getString(R.string.demo_performance_status_active)
     val stable: String = resources.getString(R.string.demo_performance_status_stable)
@@ -49,8 +51,12 @@ internal class PerformanceCopy(
     fun complexReady(engineName: String): String =
         resources.getString(R.string.demo_performance_complex_ready, engineName)
 
-    fun dashboardRevision(revision: Int): String =
-        resources.getString(R.string.demo_performance_dashboard_revision, revision)
+    fun dashboardRevision(propertyRevision: Int, structureRevision: Int): String =
+        resources.getString(
+            R.string.demo_performance_dashboard_revision,
+            propertyRevision,
+            structureRevision,
+        )
 
     fun dashboardSection(index: Int): String =
         resources.getString(R.string.demo_performance_dashboard_section, index)

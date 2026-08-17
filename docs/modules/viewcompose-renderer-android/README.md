@@ -93,6 +93,10 @@ precedence.
 
 - [`ViewTreeRenderer`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.view.tree/-view-tree-renderer/)
   owns the transactional VNode-to-View render and disposal boundary.
+- Q3 `ViewTreeRenderer.patchObservedProperties` accepts a non-empty batch of unique exact mounted
+  targets. It preflights property-only invariants, reuses the normal binder differ, bypasses tree
+  wrapping and child reconciliation, and rolls every earlier native binding back when one patch
+  fails. `ObservedPropertyRenderResult` intentionally carries no replacement mounted roots.
 - [`ChildReconciler`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.reconcile/-child-reconciler/)
   produces insert, reuse, and removal plans without mutating platform state.
 - [`LazyListDiff`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.reconcile/-lazy-list-diff/)
@@ -148,6 +152,15 @@ Because the current line is alpha, the documentation site intentionally does not
   stateful content is therefore a semantic replacement, not a move.
 - Lazy-list precision additionally requires every item to have a unique non-null key. Missing or
   duplicate keys produce `ReloadAll` to protect RecyclerView holder state.
+- The lazy adapter classifies each accepted snapshot before notifying RecyclerView. Equal key order
+  batches adjacent native changes without running `DiffUtil`; a same-size cyclic permutation emits
+  the smaller left/right sequence of moves; other structural changes retain AndroidX diffing.
+  Logical item Sessions still consume changed revisions synchronously. When item animations are
+  disabled, a semantic-only update therefore avoids a redundant RecyclerView bind; if that direct
+  Session commit returns false or throws, exactly that attached position receives one payload
+  retry. A thrown failure propagates only after the other attached holders are attempted and sticky
+  metadata catches up with the published snapshot. Notification planning never changes key
+  ownership, content-type compatibility, or failure recovery.
 - Horizontal and vertical pager holders preserve the `Page` source-session role across reuse.
   RecyclerView rows and tab items remain `Content`; this role does not affect keys, diffing,
   measurement, visibility, or callbacks.
@@ -166,8 +179,13 @@ Because the current line is alpha, the documentation site intentionally does not
   use the conservative reload path; the renderer never resolves an ambiguous holder through
   first-match key lookup.
 - The lazy adapter builds one unique-key position index per accepted submission. Attached and
-  reattached holders therefore resolve stable keys without scanning the item list, while a holder
-  that already committed the current revision skips redundant attach work.
+  reattached holders therefore resolve stable keys without scanning the item list. A payload bind
+  may skip Session routing only when the holder has committed the exact item-snapshot instance at
+  the exact submission revision; revision equality alone is not sufficient. This acknowledgement
+  rule prevents queued RecyclerView notifications from treating an older logical commit as current.
+- Lazy-list and pager holders cache their container handle for the holder lifetime and call a
+  dedicated Session host directly. Native recycling still changes logical Session ownership by key;
+  this removes callback-wrapper allocation without merging physical and logical identity.
 - Pager stable IDs use renderer-assigned values rather than key hashes. Pager view types partition
   incompatible `contentType`/kind pairs, keyed moves refresh only uniquely owned changed holders,
   and every public page declaration requires a unique stable key. ViewPager2's native default owns
@@ -242,6 +260,10 @@ than a pixel line height captured at an earlier text size. Their natural line he
 tracks the resolved typeface, text size, and font scale across reuse and environment rebinds. An
 explicit `lineHeightSp` remains authoritative.
 
+Plain `TextDocument` values bind their existing `String` directly. Styled documents continue to
+materialize a `SpannableString`, so span application remains isolated to rich-text nodes while
+ordinary Text patches avoid an otherwise redundant platform wrapper allocation.
+
 For lazy collections, the renderer owns one composite native padding value: logical
 `contentPadding`, resolved physical or relative Modifier padding, and selected system-bar/IME
 insets are additive. All logical start/end values resolve against the captured layout direction.
@@ -254,9 +276,14 @@ new snapshot; it never renders one frame with the prior side selected.
   sessions.
 - `collectDiagnostics = false` omits structure, patch, warning, and detailed binding snapshots; use
   it on performance-sensitive paths that do not consume diagnostics.
-- Lazy prefetch work is deadline-controlled by RecyclerView. Unknown or previously over-budget
-  content types are staged without synchronous native preparation; observed cheap types may prepare
-  speculatively. This can shift bounded work ahead of attach but cannot guarantee preparation.
+- Lazy prefetch work is deadline-controlled by RecyclerView. Cold activation supplies only a
+  conservative bootstrap ceiling because it also includes commit and effect work; the first
+  detached preparation replaces that estimate with an authoritative preparation cost. Estimates
+  retain expensive observations and decay through later cheaper samples only while preparation
+  remains eligible. One over-budget authoritative sample disables further speculative preparation
+  for that content type until the adapter is disposed, so it returns to staging instead of
+  extending a fling tail. This can shift bounded work ahead of attach but cannot guarantee
+  preparation.
 - `LayoutPassTracker` is process-local and opt-in. It adds monotonic clock reads and synchronized
   aggregation to instrumented passes, so use it for bounded diagnostics rather than continuous
   production telemetry.

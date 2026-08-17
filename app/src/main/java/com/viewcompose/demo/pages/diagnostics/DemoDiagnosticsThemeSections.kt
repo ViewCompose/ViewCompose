@@ -50,6 +50,7 @@ import com.viewcompose.ui.foundation.Slider
 import com.viewcompose.ui.foundation.Surface
 import com.viewcompose.ui.foundation.SurfaceDefaults
 import com.viewcompose.ui.foundation.SurfaceVariant
+import com.viewcompose.ui.foundation.StaticContentRevision
 import com.viewcompose.ui.foundation.Switch
 import com.viewcompose.ui.foundation.TabRow
 import com.viewcompose.ui.foundation.Text
@@ -623,13 +624,13 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
             onTabSelected = { tabIndexState.value = it },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Tab(key = "overview") { _ ->
+            Tab(key = "overview", contentRevision = StaticContentRevision) { _ ->
                 Text(
                     text = stringResource(R.string.demo_diagnostics_theme_overview),
                     modifier = Modifier.padding(12.dp),
                 )
             }
-            Tab(key = "theme") { _ ->
+            Tab(key = "theme", contentRevision = StaticContentRevision) { _ ->
                 Text(
                     text = stringResource(R.string.demo_diagnostics_theme_theme),
                     modifier = Modifier.padding(12.dp),

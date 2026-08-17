@@ -39,8 +39,10 @@ internal fun ComposeComplexLayoutPerformanceScreen(
     scenario: DemoScenarioSpec,
     fixtures: PerformanceFixtures,
 ) {
-    var revision by remember { mutableIntStateOf(0) }
-    val cards = fixtures.dashboardCards(revision)
+    var propertyRevision by remember { mutableIntStateOf(0) }
+    var structureRevision by remember { mutableIntStateOf(0) }
+    val propertyCards = fixtures.dashboardCards(propertyRevision)
+    val structureCards = fixtures.dashboardCards(structureRevision)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -53,12 +55,17 @@ internal fun ComposeComplexLayoutPerformanceScreen(
     ) {
         ComposeComplexLayoutPerformanceHeader(
             engineName = fixtures.copy.engineName(PerformanceEngine.Compose, shadowsEnabled),
-            revision = revision,
-            onUpdate = {
-                revision += 1
+            propertyRevision = propertyRevision,
+            structureRevision = structureRevision,
+            onPropertyUpdate = {
+                propertyRevision += 1
+            },
+            onStructureUpdate = {
+                structureRevision += 1
             },
             onReset = {
-                revision = 0
+                propertyRevision = 0
+                structureRevision = 0
             },
             scenario = scenario,
             copy = fixtures.copy,
@@ -72,9 +79,10 @@ internal fun ComposeComplexLayoutPerformanceScreen(
                 .padding(8.dp)
                 .performanceScenarioTarget(scenario, DemoAutomationRole.Target),
         ) {
-            cards.forEach { card ->
+            structureCards.forEachIndexed { index, card ->
                 ComposeDashboardCard(
-                    card = card,
+                    structureCard = card,
+                    propertyCard = propertyCards[index],
                     shadowsEnabled = shadowsEnabled,
                     copy = fixtures.copy,
                 )
@@ -86,8 +94,10 @@ internal fun ComposeComplexLayoutPerformanceScreen(
 @Composable
 private fun ComposeComplexLayoutPerformanceHeader(
     engineName: String,
-    revision: Int,
-    onUpdate: () -> Unit,
+    propertyRevision: Int,
+    structureRevision: Int,
+    onPropertyUpdate: () -> Unit,
+    onStructureUpdate: () -> Unit,
     onReset: () -> Unit,
     scenario: DemoScenarioSpec,
     copy: PerformanceCopy,
@@ -107,7 +117,7 @@ private fun ComposeComplexLayoutPerformanceHeader(
             modifier = Modifier.performanceScenarioTarget(scenario, DemoAutomationRole.Ready),
         )
         PerformanceText(
-            text = copy.dashboardRevision(revision),
+            text = copy.dashboardRevision(propertyRevision, structureRevision),
             sizeSp = 14,
             color = PERFORMANCE_SECONDARY_TEXT_COLOR,
             modifier = Modifier.performanceScenarioTarget(scenario, DemoAutomationRole.State),
@@ -118,10 +128,18 @@ private fun ComposeComplexLayoutPerformanceHeader(
         ) {
             ComposeComplexLayoutAction(
                 text = copy.updateDashboard,
-                onClick = onUpdate,
+                onClick = onPropertyUpdate,
                 modifier = Modifier.performanceScenarioTarget(
                     scenario,
                     DemoAutomationRole.PrimaryAction,
+                ),
+            )
+            ComposeComplexLayoutAction(
+                text = copy.updateDashboardStructure,
+                onClick = onStructureUpdate,
+                modifier = Modifier.performanceScenarioTarget(
+                    scenario,
+                    DemoAutomationRole.SecondaryAction,
                 ),
             )
             ComposeComplexLayoutAction(
@@ -167,7 +185,8 @@ private fun ComposeComplexLayoutAction(
  */
 @Composable
 private fun ComposeDashboardCard(
-    card: PerformanceDashboardCard,
+    structureCard: PerformanceDashboardCard,
+    propertyCard: PerformanceDashboardCard,
     shadowsEnabled: Boolean,
     copy: PerformanceCopy,
 ) {
@@ -192,10 +211,10 @@ private fun ComposeDashboardCard(
             )
             .padding(12.dp),
     ) {
-        ComposeDashboardCardHeader(card)
-        ComposeDashboardMetricRow(card.metrics)
-        ComposeDashboardTagRow(card.tags)
-        if (card.detailsVisible) {
+        ComposeDashboardCardHeader(structureCard, propertyCard)
+        ComposeDashboardMetricRow(propertyCard.metrics)
+        ComposeDashboardTagRow(structureCard.tags)
+        if (structureCard.detailsVisible) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -211,11 +230,11 @@ private fun ComposeDashboardCard(
                     text = copy.detail,
                     sizeSp = 12,
                     weight = FontWeight.Medium,
-                    color = card.accentColor,
+                    color = structureCard.accentColor,
                 )
                 Box(modifier = Modifier.weight(1f)) {
                     PerformanceText(
-                        text = copy.detailContent(card.id + 1),
+                        text = copy.detailContent(structureCard.id + 1),
                         sizeSp = 12,
                         color = PERFORMANCE_SECONDARY_TEXT_COLOR,
                     )
@@ -226,7 +245,10 @@ private fun ComposeDashboardCard(
 }
 
 @Composable
-private fun ComposeDashboardCardHeader(card: PerformanceDashboardCard) {
+private fun ComposeDashboardCardHeader(
+    structureCard: PerformanceDashboardCard,
+    propertyCard: PerformanceDashboardCard,
+) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -237,7 +259,7 @@ private fun ComposeDashboardCardHeader(card: PerformanceDashboardCard) {
                 .width(10.dp)
                 .height(48.dp)
                 .background(
-                    color = Color(card.accentColor),
+                    color = Color(structureCard.accentColor),
                     shape = RoundedCornerShape(5.dp),
                 ),
         )
@@ -246,13 +268,13 @@ private fun ComposeDashboardCardHeader(card: PerformanceDashboardCard) {
             modifier = Modifier.weight(1f),
         ) {
             PerformanceText(
-                text = card.title,
+                text = structureCard.title,
                 sizeSp = 16,
                 weight = FontWeight.SemiBold,
                 color = PERFORMANCE_PRIMARY_TEXT_COLOR,
             )
             PerformanceText(
-                text = card.subtitle,
+                text = propertyCard.subtitle,
                 sizeSp = 12,
                 color = PERFORMANCE_SECONDARY_TEXT_COLOR,
             )
@@ -270,10 +292,10 @@ private fun ComposeDashboardCardHeader(card: PerformanceDashboardCard) {
                 ),
         ) {
             PerformanceText(
-                text = card.status,
+                text = propertyCard.status,
                 sizeSp = 12,
                 weight = FontWeight.Medium,
-                color = card.accentColor,
+                color = structureCard.accentColor,
             )
         }
     }

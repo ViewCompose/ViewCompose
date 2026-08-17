@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/session-containers.md
-translation_source_hash: 8afe2bffd42b13b258a6efd78dd291f015e71ff4c156dbd0d5b241e31a38a23f
+translation_source_hash: 4518a1c1048d47f6c35a188a830b75932f15314c69df55f3897bdcc836daabf3
 translation_status: current
 ---
 
@@ -48,21 +48,43 @@ translation_status: current
    commit effect 在 composition commit 之后发布；父帧回滚会直接丢弃更新，不得运行子 composition
    或 effect
 10. Callback 对象身份不是 Revision。变化的普通捕获值必须成为 State 或进入
-    `contentRevision`；仅 Callback 分配绝不刷新内容
-11. Detach 且从未激活的 Holder 可以 Prepare 已由父级提交的 Submission，但不得运行 Remember
+    `contentRevision`；仅 Callback 分配绝不刷新内容。单条 Item、Sticky Header、Page 与 Tab
+    Declaration 必须在 `key` 后立即提供非空 Revision，再排列可选物理复用与布局参数；`null` 不是
+    哨兵。`StaticContentRevision` 承诺不存在这类普通输入变化；批量可空 `{ it }` 默认值仅适用于
+    Equality 覆盖 Item Content 所读取全部普通输入的不可变值模型
+11. 每个普通 Typed `List` Declaration 都会在父 Composition 的每一轮执行中重新求值顺序、成员，以及
+    `key`、`contentType`、`contentRevision` 和网格 Span Selector。只有 Key、Content Revision、
+    Environment、Content Type、Kind 与 Span 全部相等时，Collector 才能复用已提交的逻辑 Item。
+    Collector 会保留已提交的有序 List，以及每个当前 Key 至多一个 Previous Semantic Variant；当候选
+    顺序中每个位置的 Item 对象身份都与已提交顺序相同时，`build` 会直接返回已提交的 List 实例。
+    顶层与 `ScrollableScope` 的均质容器也可以接收 `LazyItemsSnapshot`。其 Factory 会浅拷贝有序 Item
+    引用并分配不透明 Identity，不执行 Selector。每个 Collector 保留当前和上一个成功提交的已求值
+    Snapshot，以精确 Source Identity 与框架 Environment 为 Key。精确命中会以常量时间恢复有序 List
+    与 Key Map，不执行 Selector 或 Key 扫描；Environment 不匹配时重新执行全部 Selector。Scoped
+    Declaration 没有 Snapshot Overload。只有 Item Content 在 Active Session 中执行时读取的 State
+    会独立观察。Selector 读取的 State 或其他变化输入要求替换 `LazyItemsSnapshot`；顺序、成员、保留
+    的 Item 数据、Selector Capture 或普通 Item Content Capture 变化时也必须替换
+
+    唯一一次 Miss 遍历会预计算被替换的 Variant、恢复上一个 Snapshot 所需的反向 Variant，以及 Key
+    Membership Delta。只有父帧成功提交后的 `SideEffect` 才会发布已求值 Snapshot 与 Cache 状态。
+    Selector 失败或 Key 重复不会发布任何状态，因此 Retry 会重新执行全部 Selector。如果延迟执行的
+    Side Effect 发现 Cache Generation 已推进，则会基于当前已提交 Generation 重算 Membership 与
+    两个方向的 Variant，而不会发布过期预计算。父帧 Rollback 不会发布候选 Item Binding。
+    ViewCompose 不接受能够绕过普通 `List` 校验的裸聚合调用方 Token
+12. Detach 且从未激活的 Holder 可以 Prepare 已由父级提交的 Submission，但不得运行 Remember
     激活、Effect、原生 Commit Callback、Overlay 或已提交帧诊断。Activate 会提交有效候选而不重建。
     已 Active 的 Detach Holder 只暂存最新修订并在 Reattach 时渲染；重复 Key 存在歧义时，绝不能
     通过 First Match 查询猜测 Holder 归属
-12. Pager 对唯一 Key 使用无碰撞稳定 ID，并按 `contentType`/Kind 组合划分结构不兼容的原生
+13. Pager 对唯一 Key 使用无碰撞稳定 ID，并按 `contentType`/Kind 组合划分结构不兼容的原生
     View Type。所有公开 Page 都要求唯一且稳定的 Key
-13. 每个独立组合的 Item/Page 都必须接收由父组合 Holder 和稳定逻辑 Key 持有的子
+14. 每个独立组合的 Item/Page 都必须接收由父组合 Holder 和稳定逻辑 Key 持有的子
     `SaveableStateRegistry`。回收会保留该 Registry 的 Saved Map，重排跟随 Key，嵌套容器递归
     应用同一层级
-14. Renderer 并发创建的 Presentation 副本可以恢复逻辑 Owner 当前的 Saveable Snapshot，但不得
+15. Renderer 并发创建的 Presentation 副本可以恢复逻辑 Owner 当前的 Saveable Snapshot，但不得
     为相同逻辑 Key 注册第二个持久化 Owner
-15. Recycle 必须先结束逻辑 Key Session，再 Reset 物理树。兼容 Mounted Tree 只存在于框架所有、
+16. Recycle 必须先结束逻辑 Key Session，再 Reset 物理树。兼容 Mounted Tree 只存在于框架所有、
     有界且可确定淘汰的缓存中；原生 Pool 只保留空 Holder 外壳
-16. `AndroidView` 只有声明 `onReset` 才参与跨 Key 复用；最终淘汰必须恰好调用一次 `onRelease`
+17. `AndroidView` 只有声明 `onReset` 才参与跨 Key 复用；最终淘汰必须恰好调用一次 `onRelease`
 
 ## 4. 必测场景
 
@@ -87,12 +109,13 @@ translation_status: current
 
 基础单测（通用机制）：
 
-1. [`LazyListDiffTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
-2. [`LazyHolderRegistryTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
-3. [`LazyItemSessionControllerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
-4. [`LazyListAdapterTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/lazy/adapter/LazyListAdapterTest.kt)
-5. [`ViewTreeRenderTransactionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt)
-6. [`PagerAdapterTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/container/PagerAdapterTest.kt)
+1. [`TypedLazyCollectionContractTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/TypedLazyCollectionContractTest.kt)
+2. [`LazyListDiffTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
+3. [`LazyHolderRegistryTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
+4. [`LazyItemSessionControllerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
+5. [`LazyListAdapterTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/lazy/adapter/LazyListAdapterTest.kt)
+6. [`ViewTreeRenderTransactionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt)
+7. [`PagerAdapterTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/container/PagerAdapterTest.kt)
 
 当前已覆盖专项：
 
@@ -130,6 +153,9 @@ translation_status: current
    Revision。相等 Revision 跳过 Child Render，变化 Revision 只定向一个 Item。
 9. 基线更新（2026-08-14）：逻辑 Session 与物理 Mounted Tree 分离所有权。TabRow 使用 Eager
    Keyed Child；只有可 Reset 树能通过有界 Renderer 缓存跨 Lazy Key。
+10. 基线更新（2026-08-16）：普通 `List` Declaration 保留逐轮 Selector 校验；显式
+    `LazyItemsSnapshot` 路径为均质 List、Row 与 Grid Overload 提供有界两代精确 Identity 快路。
+    Environment 变化或 Snapshot 替换会重新执行 Selector；Scoped Declaration 继续使用普通安全路径。
 
 ## 6. 新容器接入流程
 

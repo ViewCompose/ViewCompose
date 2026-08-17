@@ -5,7 +5,7 @@ defines a migration path from a Compose-owned UI to a ViewCompose-owned Android 
 an engineering comparison, not a source-compatibility promise: similarly named APIs do not imply
 identical compiler, invalidation, identity, or restoration behavior.
 
-Last verified: **2026-08-15**
+Last verified: **2026-08-16**
 
 Re-verification owner: **maintainers of `viewcompose-runtime`, `viewcompose-ui-foundation`,
 `viewcompose-android`, and the AndroidX lifecycle integrations**
@@ -292,6 +292,26 @@ Migration consequence: move frequently changing reads into the smallest ViewComp
 node group that should update. Do not port `@Stable`, `@Immutable`, or Compose compiler reports as
 ViewCompose optimization controls. Verify actual recomposed and skipped groups with ViewCompose
 diagnostics. Plain Kotlin function boundaries do not automatically become restart scopes.
+
+### Explicit property transactions
+
+ViewCompose Q3 observed properties are an **Intentionally different** opt-in for a narrower case.
+`observedValue(inputs) { ... }` and `observedNodeSpec(inputs) { ... }` move their State reads out of
+the enclosing composition scope. A `RenderSession` reads all dirty property declarations from one
+Snapshot and asks the renderer to patch their exact committed nodes atomically. The first typed
+integration is `Text(observedValue { state.value })`; the low-level observed `emit` overload accepts
+a complete same-concrete-type `NodeSpec`.
+
+This is not Compose compiler skipping. Node type, key, Modifier, children, and captured environment
+remain structural and use ordinary composition. Every changing non-State Kotlin capture must appear
+in `inputs`; omitting it is unsupported because ViewCompose cannot infer changed arguments. A
+property-contract violation fails and rolls back instead of silently falling back to a whole-tree
+render. Use this boundary for high-frequency leaf properties with a complete renderer patch
+contract, and keep conditional children or node replacement in `RecomposeBoundary`.
+
+Repository evidence includes `observedTextValueSample`, `observedNodeSpecSample`, runtime dependency
+replacement tests, RenderSession batching/failure tests, Android multi-target rollback tests, and
+[the observed-property ADR](../architecture/decisions/0015-observed-property-transactions.md).
 
 ## Remembered identity, keys, and reordering
 

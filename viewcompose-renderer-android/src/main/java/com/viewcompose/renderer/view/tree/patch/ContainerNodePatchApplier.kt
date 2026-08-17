@@ -220,8 +220,12 @@ internal object ContainerNodePatchApplier {
                 view.adapter = it
             }
             submission.publish {
-                adapter.submitItems(next.items, submission.revision)
-                LazyStickyHeaderDecoration.update(view, adapter)
+                LazyStickyHeaderDecoration.submitItemsAndUpdate(
+                    recyclerView = view,
+                    adapter = adapter,
+                    items = next.items,
+                    submissionRevision = submission.revision,
+                )
             }
         }
         val adapter = view.adapter as? LazyListAdapter ?: LazyListAdapter().also {
@@ -288,8 +292,12 @@ internal object ContainerNodePatchApplier {
                     view.adapter = it
                 }
             submission.publish {
-                adapter.submitItems(next.items, submission.revision)
-                LazyStickyHeaderDecoration.update(view, adapter)
+                LazyStickyHeaderDecoration.submitItemsAndUpdate(
+                    recyclerView = view,
+                    adapter = adapter,
+                    items = next.items,
+                    submissionRevision = submission.revision,
+                )
             }
         }
         val adapter = view.adapter as? LazyListAdapter

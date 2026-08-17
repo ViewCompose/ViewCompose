@@ -2,6 +2,8 @@ package com.viewcompose.ui.foundation.samples
 
 import com.viewcompose.graphics.core.Brush
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.runtime.State
+import com.viewcompose.text.TextDocument
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.foundation.BasicButton
@@ -94,6 +96,7 @@ import com.viewcompose.ui.foundation.SegmentedControlOverrides
 import com.viewcompose.ui.foundation.SideEffect
 import com.viewcompose.ui.foundation.Slider
 import com.viewcompose.ui.foundation.SliderOverrides
+import com.viewcompose.ui.foundation.StaticContentRevision
 import com.viewcompose.ui.foundation.Switch
 import com.viewcompose.ui.foundation.SwitchOverrides
 import com.viewcompose.ui.foundation.ScrollableColumn
@@ -128,6 +131,9 @@ import com.viewcompose.ui.foundation.produceState
 import com.viewcompose.ui.foundation.rememberCoroutineScope
 import com.viewcompose.ui.foundation.rememberSaveable
 import com.viewcompose.ui.foundation.rememberUpdatedState
+import com.viewcompose.ui.foundation.observedNodeSpec
+import com.viewcompose.ui.foundation.observedValue
+import com.viewcompose.ui.foundation.toLazyItemsSnapshot
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.MinHeightModifierElement
@@ -136,6 +142,8 @@ import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.TextAlign
+import com.viewcompose.ui.node.TextOverflow
 import com.viewcompose.ui.node.policy.GridCells
 import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.UiImageDecodeSize
@@ -150,6 +158,7 @@ import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
+import com.viewcompose.ui.node.spec.LazyRowNodeProps
 import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
 import com.viewcompose.ui.node.spec.NavigationBarNodeProps
 import com.viewcompose.ui.node.spec.PullToRefreshNodeProps
@@ -157,6 +166,7 @@ import com.viewcompose.ui.node.spec.SegmentedControlNodeProps
 import com.viewcompose.ui.node.spec.SliderNodeProps
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
+import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.state.ScrollState
 import com.viewcompose.ui.unit.dp
@@ -210,11 +220,40 @@ fun UiTreeBuilder.searchBarSample(state: TextFieldState) {
 
 fun UiTreeBuilder.lazyListDslSample() {
     LazyColumn {
-        stickyHeader(key = "header") { Text("Header") }
-        item(key = "row", contentType = "text", contentRevision = 1) { Text("Row") }
+        stickyHeader("header", StaticContentRevision) { Text("Header") }
+        item("row", 1, contentType = "text") { Text("Row") }
     }
     LazyRow {
-        item(key = "chip", contentType = "text", contentRevision = 1) { Text("Chip") }
+        item("chip", 1, contentType = "text") { Text("Chip") }
+    }
+}
+
+fun staticContentRevisionSample() {
+    buildVNodeTree {
+        LazyColumn {
+            stickyHeader("header", StaticContentRevision, contentType = "header") {
+                Text("Header")
+            }
+            item("row", StaticContentRevision, contentType = "row") {
+                Text("Static row")
+            }
+        }
+        LazyVerticalGrid {
+            stickyHeader("grid-header", StaticContentRevision, contentType = "grid-header") {
+                Text("Grid header")
+            }
+            item("grid-row", StaticContentRevision, contentType = "grid-row") {
+                Text("Static grid row")
+            }
+        }
+        HorizontalPager(currentPage = 0, onPageChanged = {}) {
+            Page("page", StaticContentRevision, contentType = "page") {
+                Text("Static page")
+            }
+        }
+        TabRow(selectedIndex = 0, onTabSelected = {}) {
+            Tab("tab", StaticContentRevision) { Text("Static tab") }
+        }
     }
 }
 
@@ -250,6 +289,33 @@ fun emittedContentClosureSample() {
     check(node.children.single().type == NodeType.Text)
 }
 
+fun UiTreeBuilder.observedTextValueSample(counter: State<Int>) {
+    Text(
+        text = observedValue { "Count: ${counter.value}" },
+        key = "counter",
+    )
+}
+
+fun UiTreeBuilder.observedNodeSpecSample(
+    label: State<String>,
+    prefix: String,
+) {
+    emit(
+        type = NodeType.Text,
+        key = "status",
+        spec = observedNodeSpec(inputs = listOf(prefix)) {
+            TextNodeProps(
+                document = TextDocument.plain("$prefix: ${label.value}"),
+                maxLines = 1,
+                overflow = TextOverflow.Clip,
+                textAlign = TextAlign.Start,
+                textColor = 0xFF000000.toInt(),
+                textSizeSp = 16.sp,
+            )
+        },
+    )
+}
+
 private data class RevisionSampleRow(
     val id: Long,
     val version: Int,
@@ -258,32 +324,126 @@ private data class RevisionSampleRow(
 
 fun lazyCollectionRevisionSample() {
     val rows = listOf(RevisionSampleRow(id = 7L, version = 3, label = "Ready"))
+    val compact = true
     val list = buildVNodeTree {
         LazyColumn(
             items = rows,
             key = RevisionSampleRow::id,
             contentType = { "status-row" },
-            contentRevision = RevisionSampleRow::version,
+            // Ordinary captures that affect item content also belong in its semantic revision.
+            contentRevision = { row -> row.version to compact },
         ) { row ->
-            Text(row.label)
+            Text(if (compact) row.label else "Status: ${row.label}")
         }
     }.single()
     val item = (list.spec as LazyColumnNodeProps).items.single()
 
     check(item.key == 7L)
     check(item.contentType == "status-row")
-    check(item.contentRevision == 3)
+    check(item.contentRevision == (3 to true))
+
+    val topLevelVariants = buildVNodeTree {
+        LazyRow(
+            items = rows,
+            key = RevisionSampleRow::id,
+            contentRevision = RevisionSampleRow::version,
+        ) { row ->
+            Text(row.label)
+        }
+        LazyVerticalGrid(
+            items = rows,
+            key = RevisionSampleRow::id,
+            contentRevision = RevisionSampleRow::version,
+        ) { row ->
+            Text(row.label)
+        }
+        LazyColumn {
+            items(
+                items = rows,
+                key = RevisionSampleRow::id,
+                contentRevision = RevisionSampleRow::version,
+            ) { row ->
+                Text(row.label)
+            }
+        }
+        LazyVerticalGrid {
+            items(
+                items = rows,
+                key = RevisionSampleRow::id,
+                contentRevision = RevisionSampleRow::version,
+            ) { row ->
+                Text(row.label)
+            }
+        }
+    }
+
+    val nestedCollections = buildVNodeTree {
+        PullToRefresh(isRefreshing = false, onRefresh = {}) {
+            LazyColumn(
+                items = rows,
+                key = RevisionSampleRow::id,
+                contentRevision = RevisionSampleRow::version,
+            ) { row ->
+                Text(row.label)
+            }
+        }
+        PullToRefresh(isRefreshing = false, onRefresh = {}) {
+            LazyRow(
+                items = rows,
+                key = RevisionSampleRow::id,
+                contentRevision = RevisionSampleRow::version,
+            ) { row ->
+                Text(row.label)
+            }
+        }
+        PullToRefresh(isRefreshing = false, onRefresh = {}) {
+            LazyVerticalGrid(
+                items = rows,
+                key = RevisionSampleRow::id,
+                contentRevision = RevisionSampleRow::version,
+            ) { row ->
+                Text(row.label)
+            }
+        }
+    }
+
+    check(topLevelVariants.size == 4)
+    check((nestedCollections[1].children.single().spec as LazyRowNodeProps).items.single().key == 7L)
+}
+
+fun lazyItemsSnapshotSample() {
+    val source = mutableListOf(RevisionSampleRow(id = 7L, version = 3, label = "Ready"))
+    val snapshot = source.toLazyItemsSnapshot()
+    source += RevisionSampleRow(id = 8L, version = 1, label = "Added later")
+    val status = mutableStateOf("Online")
+
+    val list = buildVNodeTree {
+        LazyColumn(
+            items = snapshot,
+            key = RevisionSampleRow::id,
+            contentType = { "status-row" },
+            contentRevision = RevisionSampleRow::version,
+        ) { row ->
+            // State read by item content remains independently observable after an exact hit.
+            Text("${row.label}: ${status.value}")
+        }
+    }.single()
+    val items = (list.spec as LazyColumnNodeProps).items
+
+    check(items.size == 1)
+    check(items.single().key == 7L)
+    check(items.single().contentRevision == 3)
 }
 
 fun pagerAndTabIdentitySample() {
     val tree = buildVNodeTree {
         HorizontalPager(currentPage = 0, onPageChanged = {}) {
-            Page(key = "account", contentType = "account-page", contentRevision = 4) {
+            Page("account", 4, contentType = "account-page") {
                 Text("Account")
             }
         }
         TabRow(selectedIndex = 0, onTabSelected = {}) {
-            Tab(key = "overview", contentRevision = 2) { selected ->
+            Tab("overview", 2) { selected ->
                 Text(if (selected) "Overview selected" else "Overview")
             }
         }
@@ -438,7 +598,10 @@ fun componentOverridesSample() {
             }
             ProvideTabRowOverrides(TabRowOverrides(indicatorColor = 0xFF0055AA.toInt())) {
                 TabRow(selectedIndex = 0, onTabSelected = {}) {
-                    Tab(key = "summary") { Text("Summary") }
+                    Tab(
+                        key = "summary",
+                        contentRevision = StaticContentRevision,
+                    ) { Text("Summary") }
                 }
             }
             ProvideNavigationBarOverrides(
@@ -746,7 +909,11 @@ fun eagerScrollStateSample() {
 fun adaptiveGridSample() {
     val node = buildVNodeTree {
         LazyVerticalGrid(cells = GridCells.Adaptive(minSize = 120.dp)) {
-            item(key = "heading", span = GridItemSpan.FullLine) {
+            item(
+                "heading",
+                StaticContentRevision,
+                span = GridItemSpan.FullLine,
+            ) {
                 Text("Gallery")
             }
             items(items = listOf("one", "two"), key = { it }) { label ->

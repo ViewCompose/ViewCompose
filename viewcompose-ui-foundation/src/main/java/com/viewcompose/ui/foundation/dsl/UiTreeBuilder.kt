@@ -146,6 +146,91 @@ open class UiTreeBuilder {
     }
 
     /**
+     * Emits one VNode whose complete NodeSpec can update through a direct property transaction.
+     *
+     * State reads made by [spec] are isolated from the enclosing composition scope. The active
+     * RenderSession batches invalidated readers in one Snapshot and asks its renderer to patch only
+     * their exact mounted targets. The reader may replace values within the same concrete NodeSpec
+     * type but cannot change [type], [key], [modifier], [content], or the captured environment.
+     * Structural changes use ordinary [emit] or [RecomposeBoundary].
+     *
+     * A newly supplied reader is retained while [ObservedNodeSpec.inputs] and the captured
+     * environment compare equal. Every changing ordinary Kotlin capture must therefore be present
+     * in those inputs. Outside an active RenderSession, the spec resolves once and does not observe
+     * later changes.
+     *
+     * @sample com.viewcompose.ui.foundation.samples.observedNodeSpecSample
+     * @receiver active tree builder receiving the node
+     * @param type renderer node type paired with the concrete spec produced by [spec]
+     * @param key optional stable sibling identity used during composition and reconciliation
+     * @param spec observed, side-effect-free complete property reader
+     * @param modifier structural ordered behavior and parent-data chain
+     * @param content optional structural child tree; State reads here use ordinary composition
+     */
+    fun emit(
+        type: NodeType,
+        key: Any? = null,
+        spec: ObservedNodeSpec<out NodeSpec>,
+        modifier: Modifier = Modifier,
+        content: (UiTreeBuilder.() -> Unit)? = null,
+    ) {
+        val composer = ComposerContext.currentComposer()
+        if (composer == null) {
+            val snapshot = LocalContext.snapshot()
+            val resolution = ObservedPropertyContext.resolve(
+                scope = null,
+                source = spec,
+                localSnapshot = snapshot,
+            )
+            val nestedChildren = if (content == null) emptyList() else UiTreeBuilder().apply(content).build()
+            emitResolved(
+                type = type,
+                key = key,
+                spec = resolution.spec,
+                modifier = modifier,
+                children = nestedChildren,
+                observedPropertyId = resolution.id,
+            )
+            return
+        }
+        val parentSnapshot = LocalContext.snapshot()
+        val node = composer.runGroup(
+            signature = emitGroupSignature(type = type, key = key, hasContent = content != null),
+            inputs = ObservedEmitInputs(
+                inputs = spec.inputs,
+                modifier = modifier,
+                localSnapshot = parentSnapshot,
+                content = content,
+            ),
+            reuseResult = ::canReuseVNode,
+        ) { scope ->
+            var nextNode: VNode? = null
+            LocalContext.withSnapshot(parentSnapshot) {
+                val resolution = ObservedPropertyContext.resolve(
+                    scope = scope,
+                    source = spec,
+                    localSnapshot = parentSnapshot,
+                )
+                val nestedChildren = if (content == null) emptyList() else UiTreeBuilder().apply(content).build()
+                nextNode = UiNodeTooling.attach(
+                    VNode(
+                        type = type,
+                        key = key,
+                        spec = resolution.spec,
+                        modifier = modifier,
+                        children = nestedChildren,
+                        environment = Environment.values,
+                        observedPropertyId = resolution.id,
+                    ),
+                )
+                scope.updateLocalSnapshot(LocalContext.snapshot())
+            }
+            checkNotNull(nextNode)
+        }
+        children += node
+    }
+
+    /**
      * Appends resolved VNode data directly, allowing internal DSLs or tests to bypass composer groups.
      */
     internal fun emitResolved(
@@ -154,6 +239,7 @@ open class UiTreeBuilder {
         spec: NodeSpec,
         modifier: Modifier = Modifier,
         children: List<VNode> = emptyList(),
+        observedPropertyId: Long? = null,
     ) {
         this.children += UiNodeTooling.attach(
             VNode(
@@ -163,6 +249,7 @@ open class UiTreeBuilder {
                 modifier = modifier,
                 children = children,
                 environment = Environment.values,
+                observedPropertyId = observedPropertyId,
             ),
         )
     }
@@ -236,6 +323,30 @@ open class UiTreeBuilder {
         }
     }
 
+    private class ObservedEmitInputs(
+        private val inputs: List<Any?>,
+        private val modifier: Modifier,
+        private val localSnapshot: LocalSnapshot,
+        private val content: (UiTreeBuilder.() -> Unit)?,
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is ObservedEmitInputs) return false
+            return inputs == other.inputs &&
+                modifier == other.modifier &&
+                localSnapshot == other.localSnapshot &&
+                content === other.content
+        }
+
+        override fun hashCode(): Int {
+            var result = inputs.hashCode()
+            result = 31 * result + modifier.hashCode()
+            result = 31 * result + localSnapshot.hashCode()
+            result = 31 * result + (content?.let(System::identityHashCode) ?: 0)
+            return result
+        }
+    }
+
     private companion object {
         val unkeyedContentSignatures =
             java.util.concurrent.ConcurrentHashMap<NodeType, EmitGroupSignature>()
@@ -261,6 +372,7 @@ private fun canReuseVNode(
 ): Boolean {
     return previous.type == next.type &&
         previous.key == next.key &&
+        previous.observedPropertyId == next.observedPropertyId &&
         previous.spec == next.spec &&
         hasSameReferenceIdentity(previous.spec, next.spec) &&
         previous.modifier == next.modifier &&

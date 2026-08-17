@@ -1039,14 +1039,12 @@ internal fun assertViewBackgroundColor(view: View, expectedColor: Int) {
  * Recursively resolves the actual fill color from common Android drawable wrappers.
  */
 private fun resolveDrawableColor(drawable: Drawable?): Int? {
+    if (drawable != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        Api29DrawableColor.resolve(drawable)?.let { color -> return color }
+    }
     return when (drawable) {
         null -> null
         is ColorDrawable -> drawable.color
-        is ColorStateListDrawable -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            drawable.colorStateList.defaultColor
-        } else {
-            null
-        }
         is RippleDrawable -> {
             resolveDrawableColor(drawable.getDrawable(0))
                 ?: resolveDrawableColor(drawable.findDrawableByLayerId(android.R.id.mask))
@@ -1064,6 +1062,13 @@ private fun resolveDrawableColor(drawable: Drawable?): Int? {
         is MaterialShapeDrawable -> drawable.fillColor?.defaultColor
         is GradientDrawable -> drawable.color?.defaultColor
         else -> resolveDrawableCenterColor(drawable)
+    }
+}
+
+private object Api29DrawableColor {
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.Q)
+    fun resolve(drawable: Drawable): Int? {
+        return (drawable as? ColorStateListDrawable)?.colorStateList?.defaultColor
     }
 }
 

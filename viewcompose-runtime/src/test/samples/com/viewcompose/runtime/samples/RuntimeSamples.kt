@@ -84,6 +84,23 @@ fun runtimeObservationSample() {
     observation.dispose()
 }
 
+fun observationReplacementSample() {
+    val selected = mutableStateOf(true)
+    val first = mutableStateOf("first")
+    val second = mutableStateOf("second")
+    val (_, observation) = RuntimeObservation.observeReads(onInvalidated = {}) {
+        if (selected.value) first.value else second.value
+    }
+
+    selected.value = false
+    val (candidate, replacement) = RuntimeObservation.prepareReplacement(observation) {
+        if (selected.value) first.value else second.value
+    }
+    check(candidate == "second")
+    replacement.commit()
+    observation.dispose()
+}
+
 /** Observes a derived snapshot query without exposing its mutable inputs. */
 fun snapshotFlowSample(): Flow<String> {
     val firstName = mutableStateOf("Ada")

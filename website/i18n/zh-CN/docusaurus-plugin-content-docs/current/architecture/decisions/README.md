@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: d3d5df9364cebafca1b14c05db7bb3345a4d6e5cb56e2148ad11f9896f55e80e
+translation_source_hash: 236d2e4c974e05d41fd5a83782ffb03f27d4efacb21451bea400142f79b74362
 translation_status: current
 ---
 
@@ -25,6 +25,7 @@ translation_status: current
 - [ADR-0012：Lazy 集合的逻辑与物理所有权](./0012-lazy-collection-logical-and-physical-ownership.md)
 - [ADR-0013：组件外观解析边界](./0013-component-appearance-resolution-boundary.md)
 - [ADR-0014：渲染器中立的交互指示](./0014-renderer-neutral-interaction-indication.md)
+- [ADR-0015：可观察属性事务](./0015-observed-property-transactions.md)
 
 ## 规则
 

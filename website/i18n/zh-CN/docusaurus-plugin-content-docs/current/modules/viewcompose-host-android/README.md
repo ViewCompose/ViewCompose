@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 6eb5cba3a803cf912e860c1d8bdd1e327d1fc3b3c1bbb56e1514d7fa90c07b4b
+translation_source_hash: 31aac1e69840833dba751ce742d5b9759a68c94b31a92e98109971c4991f3c1c
 translation_status: current
 ---
 
@@ -51,6 +51,9 @@ Local。自定义宿主必须自行管理这些 Provider，并在放弃容器前
 mounted-tree 所有者。
 Dispose 幂等且为终态：之后由调用方发起的 `render` 或 `setRenderingActive` 会抛出
 `IllegalStateException`。Android Runtime 内已经排队的帧回调会被取消或忽略，无法在释放后渲染。
+
+帧对齐 Runtime 在 UI 线程调度热路径使用专用内部回调，不再经过通用捕获函数。跨线程请求仍只
+投递一个有界 `Runnable`；同线程请求与 Choreographer 分发不会逐帧创建回调包装。
 
 `AndroidEnvironmentBridge.fromContext(context)` 会把 density、font scale、locale 与 layout
 direction 映射为 `UiEnvironmentValues`。`AndroidOverlayHostDefaults.androidOrNoOp(root)` 执行可选
@@ -110,6 +113,11 @@ AndroidView(
 `viewComposeSaveableStateRegistry(owner)` 把框架可保存状态绑定到 Android
 `SavedStateRegistryOwner`。View 创建、协调、显式渲染与释放属于主线程工作。状态失效会合并到
 下一次 Choreographer 帧，而显式 `RenderSession.render()` 在终态释放前保持同步执行。
+
+安装的 `AndroidCoreRenderEngine` 还会把 UI Foundation 的 Q3 Observed-property SPI 转换为精确
+Android Renderer Target。Property-only Frame 会保持 Mounted Root List 与 Target Map 稳定，
+校验每个 Target 仍属于已提交 Frame，并只返回 Commit Effect、Failure 与可选诊断。外来或陈旧
+Target 会直接失败，不会触发整树渲染。
 
 ## 相关文档
 

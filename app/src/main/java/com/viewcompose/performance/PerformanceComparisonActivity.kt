@@ -33,6 +33,12 @@ class PerformanceComparisonActivity : AppCompatActivity() {
         ShadowDecorationLayer.setRenderPolicy(shadowPolicy)
         ShadowDecorationLayer.resetBackendDiagnostics()
         val fixtures = PerformanceFixtures(this)
+        if (
+            performanceScenario == PerformanceScenario.List ||
+            performanceScenario == PerformanceScenario.ShadowList
+        ) {
+            fixtures.prepareListScenario()
+        }
         when (engine) {
             PerformanceEngine.ViewCompose -> {
                 setMaterial3UiContent(debug = false) {

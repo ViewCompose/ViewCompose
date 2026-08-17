@@ -143,6 +143,14 @@ is not equivalent to a clock lock unless the device proves stable minimum and ma
 throughout measurement. Use a rootable or otherwise clock-controllable reference device when the
 consumer device cannot satisfy this gate.
 
+Renderer-sensitive fixed-clock diagnostics must control every clock domain that can execute the
+measured frame. A CPU-only lock is insufficient when RenderThread or GPU work remains under DVFS.
+Record the CPU policy minima and maxima, GPU devfreq governor and bounds, and, when exposed, the
+KGSL power-level bounds in the durable `clockPolicy`; verify the current frequencies again after
+target launch. An OEM performance service may be stopped only after proving that it overrides the
+requested bounds. Its prior state, every modified clock bound, charging/input state, and all root
+or policy changes must be captured before the batch and restored after the last result is pulled.
+
 Compare with a same-device historical baseline and apply the regression gate. The baseline input is
 the previously generated revisioned comparison report, not raw Macrobenchmark JSON:
 
@@ -231,8 +239,9 @@ evidence:
 
 The ViewCompose list-scroll control was rejected before its other engines ran. Its P50/P95 was
 `4.212/8.624 ms`, but run P50 values `4.296/4.362/2.627/4.648/4.554 ms` produced CV `0.182`.
-List scroll therefore remains `inconclusive`; the full twelve-method baseline requires a
-clock-controllable device. The accepted same-run memory maxima are also mixed: versus Android
+List scroll was therefore `inconclusive` in that 2026-08-15 batch; Section 2.4.2 supersedes this
+device limitation with the corrected revision-4 root-controlled matrix. The accepted same-run
+memory maxima were also mixed: versus Android
 Views, ViewCompose heap/RSS was `12.2%/2.8%` higher for list mutation, `19.9%/3.5%` higher for
 complex scroll, and `15.3%/7.9%` lower for complex update. Those process-level maxima do not support
 a universal memory winner.
@@ -300,7 +309,79 @@ AndroidX `cpuLocked` snapshots while accepting the batch through its explicit ho
 policy. High update P95 values remain part of the baseline: both engines rebuild many shadowed
 cards and a conditional subtree, so P50 alone is not an adequate interpretation.
 
-Navigation revision 6 and design-bundle revision 3 do not yet have accepted physical baselines.
+<div className="benchmark-evidence">
+
+The 2026-08-17 Pixel 5 / Android 14 run compares only equivalent ViewCompose and Compose methods at
+`performance.shadow-list@3`; Android Views is excluded because its shadow implementation differs.
+It used commit `0cf6515f305a7d230018f72599b1b52b2a0acf26`, target APK SHA-256
+`fad1d21cbbf25ba40da5e507a4de997e35f4b3f23dda81bd0e17cfd726c34ea7`, run-from-APK,
+`Auto` (`ExactBitmap`), five iterations, a 5-second setup, four up/down scroll cycles, and eight
+mutation cycles. Fixed-performance CPU policies were 1.8048/2.208/2.4 GHz, active GPU was 625 MHz,
+and thermal status stayed `NONE`. AndroidX Benchmark 1.5.0-beta01 supplied only the runner to avoid
+the 1.4.1 Perfetto shutdown timeout on this device; measured application code was unchanged.
+
+| Workload/run | ViewCompose P50/P95 | Compose P50/P95 | ViewCompose/Compose run-P50 CV | ViewCompose delta | Classification |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `performance.shadow-list@3` scroll | 2.968 / 5.979 ms | 3.590 / 6.499 ms | 0.013 / 0.052 | 17.3% / 8.0% lower | `improved` |
+| `performance.shadow-list@3` mutation, first run | 2.406 / 6.707 ms | 4.529 / 10.249 ms | 0.203 / 0.061 | 46.9% / 34.6% lower | `inconclusive` |
+| `performance.shadow-list@3` mutation, full retry | 3.319 / 6.947 ms | 4.529 / 10.249 ms | 0.211 / 0.061 | 26.7% / 32.2% lower | `inconclusive` |
+
+Scroll P50 crosses the 10% and 0.3 ms gates; P95 has the same favorable direction. Its heap/RSS
+medians are 14,481/68,332 KiB versus Compose at 12,973/65,112 KiB (+11.6%/+4.9%), below the memory
+gates, so scroll is `improved` with a non-material memory cost. Both complete ViewCompose mutation
+attempts fail the `0.15` stability gate and form two iteration-P50 bands; mutation is therefore
+`inconclusive`, and the retry does not replace the first run. Diagnose session/cache startup state
+before accepting mutation. Device and workload revisions differ, so this is not a longitudinal
+comparison with the Samsung revision-2 baseline.
+
+The same Pixel 5, application binary, runner, and clock policy then covered all three
+`performance.complex-layout@4` actions with ViewCompose, Compose, and Android Views, plus both
+equivalent ViewCompose/Compose actions at `performance.shadow-complex-layout@3`. The primary matrix
+produced 65 traces; complete three-engine retries of the two unstable ordinary update actions added
+30 traces. Every correctness, action/reset, and restoration assertion passed. Battery temperature
+stayed between 29.8 and 32.3 degrees Celsius and Android thermal status stayed `NONE`.
+
+| Workload/run | ViewCompose P50/P95 | Compose P50/P95 | Android Views P50/P95 | Run-P50 CV (VC/C/Views) | Frame CPU conclusion |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `performance.complex-layout@4` scroll | 3.737 / 4.139 ms | 3.844 / 8.222 ms | 3.123 / 4.075 ms | 0.009 / 0.052 / 0.008 | `improved` vs Compose; `regressed` vs Views |
+| property update, first run | 4.388 / 10.646 ms | 7.099 / 22.834 ms | 3.126 / 15.741 ms | 0.157 / 0.066 / 0.914 | `inconclusive` |
+| property update, full retry | 3.666 / 10.486 ms | 7.204 / 22.434 ms | 3.904 / 8.200 ms | 0.171 / 0.020 / 0.159 | `inconclusive` |
+| structure update, first run | 3.651 / 6.409 ms | 6.198 / 12.763 ms | 3.001 / 7.802 ms | 0.055 / 0.175 / 0.189 | `inconclusive` |
+| structure update, full retry | 3.821 / 6.750 ms | 6.470 / 12.441 ms | 3.597 / 8.006 ms | 0.131 / 0.059 / 0.227 | `improved` vs Compose; Views `inconclusive` |
+| `performance.shadow-complex-layout@3` scroll | 4.104 / 4.586 ms | 4.096 / 9.299 ms | n/a | 0.011 / 0.057 / n/a | `improved` |
+| shadow property update | 3.869 / 11.523 ms | 7.559 / 22.915 ms | n/a | 0.147 / 0.020 / n/a | `improved` |
+
+The accepted ordinary-scroll frame result is directionally split: relative to Compose, P50 is a
+non-material 2.8% lower while P95 is 49.7% lower; relative to Android Views, P50 is materially 19.7%
+higher while P95 is only 1.6% higher. ViewCompose heap/RSS medians are 18,770/85,580 KiB, versus
+Compose at 18,373/74,964 KiB and Views at 10,281/73,864 KiB. The RSS cost crosses the gate against
+both engines, and both memory metrics cross it against Views, so the complete scroll classification
+is `mixed`.
+
+The structure-update retry establishes a stable ViewCompose/Compose pair: ViewCompose P50/P95 are
+40.9%/45.7% lower, while heap/RSS medians are 33,984/107,536 KiB versus 27,874.5/83,624 KiB
+(+21.9%/+28.6%). Its complete ViewCompose/Compose classification is therefore `mixed`, not a general
+win. Android Views remained unstable at CV `0.227`, so that pair is `inconclusive`. Property update
+remained unstable across both complete attempts (ViewCompose CV `0.157` then `0.171`; Views `0.914`
+then `0.159`), and neither attempt is interpreted despite favorable-looking individual numbers.
+
+Both shadow-complex frame comparisons are stable and `improved`: scroll has a neutral +0.2% P50 and
+a 50.7% lower P95, while property update is 48.8%/49.7% lower at P50/P95. Memory reverses part of
+that result. Scroll heap is +2.1% but RSS is +21.9%; property-update heap is 17.5% lower but RSS is
+16.8% higher. Because each RSS delta crosses the 10% and 4,096 KiB gate, both complete shadow
+classifications are `mixed`.
+
+These are accepted per-frame distributions, not synthetic transaction-latency measurements:
+Compose update methods emit 46 measured frames while ViewCompose and Android Views emit roughly
+240--260. Android Views remains excluded from shadow ranking because its shadow implementation is
+not equivalent. The next work is to instrument update action/reset scheduling and initial
+session/cache state before accepting the unstable ordinary actions, reduce ViewCompose complex-tree
+RSS, and close the ordinary-scroll P50 gap to Views. The Pixel 5 workload revisions are not a
+longitudinal comparison with the Samsung baselines.
+
+</div>
+
+At that point, navigation revision 6 and design-bundle revision 3 had no accepted physical baselines.
 On the same Samsung device, four navigation transitions supplied 202-223 frames per run, but OEM
 frequency ceilings alternated between full and capped values even when Android thermal status ended
 at `NONE`. Unlocked and fixed-performance trials produced run-P50 CV values from `0.308` to `0.372`.
@@ -390,24 +471,25 @@ against the same-run Compose control:
 | `performance.shadow-complex-layout@2` scroll | 4.5% higher | 0.3% higher | `no material change` | Both absolute changes remain inside the noise floors; the direction is slightly slower but does not support a regression claim. |
 | `performance.shadow-complex-layout@2` update | 39.7% lower | 11.4% lower | `improved` | Relative update cost improves, but the absolute 41.506 ms P95 remains a tail-latency risk. |
 
-The current conclusion is therefore scoped, not universal:
+The 2026-08-15 accepted-batch conclusion was therefore scoped, not universal:
 
 1. mutation and whole-tree update workloads are consistently faster than the Compose control in
    this accepted batch;
-2. scrolling is not consistently faster, although no accepted scrolling row crosses the automated
-   regression gate: shadow-list P95 is the first directional optimization target, followed by
-   non-Lazy complex-layout P50; ordinary-list P95 also remains a monitored directional gap;
+2. scrolling is not universally faster. The Samsung revision-2 shadow-list P95 remains a
+   historical directional target, while the Pixel 5 revision-3 shadow-list pair is favorable but
+   cannot close that target across a different device and workload revision; non-Lazy
+   complex-layout P50 and ordinary-list P95 also remain monitored gaps;
 3. the two complex update workloads remain absolute tail-latency targets even though their
    relative comparison is favorable;
 4. diagnostics and collection fixtures have accepted ViewCompose-only stability baselines, not a
    Compose ranking;
-5. navigation revision 6 and design-bundle revision 3 remain `inconclusive` until a
-   clock-controllable device can produce valid evidence;
+5. navigation revision 6 and design-bundle revision 3 now have stable root-controlled absolute
+   baselines in Section 2.4.2; the design systems remain directionally `inconclusive` without a
+   matching prior baseline, and Android 9 cannot provide non-debuggable custom trace attribution;
 6. the accepted same-run memory directions are mixed, so no universal memory winner is claimed;
-7. the accepted Android Views batch proves three steady-state actions, not the complete scenario:
+7. that partial Android Views batch proves three steady-state actions, not the complete scenario:
    list mutation has a native tail regression, complex scroll has a native median regression, and
    complex update has a better median but a much worse tail; list scroll remains `inconclusive`.
-
 Against the same-run Android Views control, the accepted partial batch is:
 
 | Workload | P50 delta | P95 delta | Classification | Interpretation |
@@ -420,6 +502,323 @@ Correct reuse, group-level invalidation plus skipped work, and stable container 
 remain the optimization strategy. SlotTable Lite and subtree recomposition are on the main path and
 `qaQuick` passes, but those implementation facts do not override the measured mixed scrolling
 result. Device-gate status remains recorded in the [roadmap](../project/roadmap.md).
+
+#### 2.4.1 Complex-layout update tail-latency investigation
+
+A 2026-08-16 follow-up on the same Samsung SM-G991B / Android 13 device investigated the native
+tail gap without replacing the accepted revision-3 baseline. The fresh ViewCompose control used
+the DSL-convergence branch, an R8 benchmark build, `CompilationMode.None`, five iterations, a
+5-second unmeasured settle, `NONE`/`LIGHT` thermal starts, and
+`unlocked-dvfs-preflight-v1`. It reported `6.023/41.187 ms` frame-CPU P50/P95. A separately cooled
+Android Views control reported `7.253/16.222 ms`. Both runs emitted the Runtime Image warning, and
+the device cannot lock CPU frequency, so these are adjacent diagnostic controls rather than new
+longitudinal baselines.
+
+Perfetto associated the slow ViewCompose samples with the actual update/reset frames rather than
+the automation polling frames. Representative worst frames spent `16.985-17.166 ms` in
+`VC.Compose`, `42.555-55.960 ms` in `VC.RenderTree`, and another `36-38 ms` in the following Android
+View traversal. The application thread stayed runnable: there was no blocking I/O, lock wait, or
+foreground GC in those spans. The OEM scheduler placed the long declarative work on a LITTLE CPU in
+the worst samples, multiplying ordinary `4-6 ms` composition and `12-20 ms` render phases. The
+native control performs the same field changes through retained View references and therefore
+usually finishes before that scheduling sensitivity is amplified.
+
+The following adjacent experiments preserve `performance.complex-layout@3`; every rejected source
+candidate was removed after its run:
+
+| Candidate | ViewCompose P50/P95 | Change from fresh control | Conclusion |
+| --- | ---: | ---: | --- |
+| Return the original `String` for plain `TextDocument` binding | 6.197 / 40.785 ms | P50 2.9% higher; P95 1.0% lower | `no material change`; retain the allocation-free plain-text conversion because it is deterministic and preserves rich-text spans, but it does not solve the tail. |
+| Remove about 90 redundant Demo `Surface` wrappers | 6.042 / 40.330 ms | P50 0.3% higher; P95 2.1% lower | `no material change`; physical View depth is not the primary cause, and the workload fixture remains unchanged. |
+| Recursively prove value-equal rebuilt subtrees stable | 6.254 / 44.171 ms | P50 3.8% higher; P95 7.2% higher | `no material change` with an unfavorable direction; recursive proof cost exceeded its skip benefit, so it was reverted. |
+| Stream same-position reuse without generic keyed-plan intermediates | 6.137 / 41.163 ms | P50 1.9% higher; P95 0.1% lower | `no material change`; reconcile/preflight container allocation is not the tail root, so the path was reverted. |
+
+Full ART compilation reached `6.261/38.589 ms`, only 6.3% lower at P95 than the fresh control, and
+other checkpoint, grouping, and exact-reference fast paths either had no material benefit or made
+P95 worse. The combined evidence classifies the current result as `mixed`: the one-line plain-text
+allocation fix is valid, while the absolute tail remains unresolved. The root boundary is the
+top-level State read: one revision invalidates a declaration that synchronously rebuilds and diffs
+all 18 cards, whereas the native control directly updates retained fields. Constant-factor changes
+inside the complete-tree transaction cannot erase that algorithmic difference.
+
+The Q3 observed-property transaction architecture now implements that algorithmic cut. Opted-in
+State reads are owned by a `RenderSession` property registry, all dirty readers use one Snapshot,
+and Android Renderer receives one exact-target batch that bypasses root composition, tree wrapping,
+and child reconciliation. Candidate dependencies use prepared replacement with invalidation guards;
+the renderer preflights the whole batch and restores all earlier native values if one patch fails.
+`performance.complex-layout@4` therefore separates the primary property action from a secondary
+structural add/remove action instead of letting either cost hide the other.
+
+Three final-build property runs on the same device reported `6.261/25.087 ms`, `5.601/20.436 ms`,
+and `5.436/20.206 ms` frame-CPU P50/P95. The first run's P95 is 39.1% below the fresh revision-3
+whole-tree control; its paired revision-4 Compose and Android Views controls were respectively
+`9.066/42.353 ms` and `7.922/16.006 ms`. Against those controls, ViewCompose was 30.9%/40.8% lower
+than Compose and 21.0% lower at P50 but 56.7% higher at P95 than direct Android Views. Perfetto on
+the first final run measured 16 property frames: `VC.FrameRender` averaged/maxed
+`5.895/13.469 ms`, `VC.ObservedPropertyRead` `1.572/4.216 ms`, and
+`VC.ObservedPropertyRender` `3.640/8.391 ms`; remaining maxima included `10.334 ms` measure and
+`17.048 ms` draw work in Android traversal.
+
+This Samsung evidence is `inconclusive` as a formal baseline despite the material and repeatable
+direction.
+The three final runs had run-P50 CV values of `0.201`, `0.208`, and `0.215`, above the `0.15`
+acceptance ceiling. The non-rooted device also emitted the Runtime Image warning and became faster
+across reruns because Macrobenchmark could not clear application profiles. Section 2.4.2 supplies
+the later root-controlled six-method acceptance matrix. The residual ViewCompose-versus-native P95
+gap remains Android property invalidation plus measure/draw tail, not complete-tree reconciliation.
+
+#### 2.4.2 Root-controlled revision-4 acceptance and remaining tails
+
+The 2026-08-16 acceptance batch used a rooted Xiaomi MI 6 / Android 9 device, an R8 benchmark
+target, `CompilationMode.None`, five iterations, all eight CPUs online, charging suspended, and
+fixed `performance` governors at 1.4016 GHz for policy 0 and 1.8048 GHz for policy 4. Every current
+core method reports `run-from-apk`, `cpuLocked=true`, and
+`root-fixed-1401600-1804800-v1`. Battery temperature remained between 30 and 39 degrees Celsius and
+AndroidX reported no thermal-throttle wait. Every accepted run-P50 CV is at or below `0.111`; one
+Compose scroll run at `0.159` was retained as rejected evidence and replaced by the accepted
+`0.060` rerun.
+
+The first list batch exposed a workload defect: ViewCompose retained RecyclerView item animation
+while Compose did not request `animateItem` and the Android Views control explicitly disabled its
+animator. That produced about 217 measured ViewCompose mutation frames versus 41/48 control frames
+and diluted the real tail. The fixture now disables the unmatched animator and bumps the workload
+to `performance.list@4`; the corrected ViewCompose mutation records 48 frames. Revision-3 list
+results remain historical evidence and must not be compared directly with revision 4.
+
+| Workload | ViewCompose P50/P95, ms | Compose P50/P95, ms | Android Views P50/P95, ms | Run-P50 CV, VC/C/Android | Versus Compose | Versus Android Views |
+| --- | ---: | ---: | ---: | ---: | --- | --- |
+| `performance.list@4` scroll | 5.294 / 10.825 | 5.651 / 9.790 | 4.110 / 8.679 | 0.070 / 0.076 / 0.019 | `mixed`: P50 is 6.3% lower while P95 is 10.6% higher; neither direction crosses both gates. | `regressed`: P50/P95 are 28.8%/24.7% higher. |
+| `performance.list@4` mutation | 4.558 / 40.332 | 7.147 / 23.978 | 5.648 / 9.583 | 0.099 / 0.096 / 0.051 | `mixed`: P50 is 36.2% lower but P95 is 68.2% higher. | `mixed`: P50 is 19.3% lower but P95 is 320.9% higher. |
+| `performance.complex-layout@4` scroll | 5.798 / 13.935 | 6.023 / 11.192 | 4.636 / 10.422 | 0.065 / 0.060 / 0.013 | `regressed`: P50 is neutral while P95 is 24.5% higher. | `regressed`: P50/P95 are 25.1%/33.7% higher. |
+| `performance.complex-layout@4` property update | 5.709 / 33.050 | 7.663 / 46.852 | 6.137 / 19.270 | 0.067 / 0.076 / 0.059 | `improved`: P50/P95 are 25.5%/29.5% lower. | `regressed`: P50 is neutral while P95 is 71.5% higher. |
+| `performance.complex-layout@4` structure update | 5.590 / 46.009 | 7.255 / 26.844 | 5.444 / 15.051 | 0.028 / 0.111 / 0.082 | `mixed`: P50 is 22.9% lower but P95 is 71.4% higher. | `regressed`: P50 is neutral while P95 is 205.7% higher. |
+
+Median peak heap in the same rows was respectively
+`8541/7531/4904`, `10443/9374/6007`, `7052/9421/7014`, `11757/14102/7670`, and
+`12925/13642/9048 KiB` for ViewCompose/Compose/Android Views. The batch therefore does not support
+a universal memory winner.
+
+The property transaction reduces P95 by 19.8% from the fresh revision-3 ViewCompose diagnostic
+control (`41.187` to `33.050 ms`) and clearly beats the same-run Compose control. It does not erase
+Android View traversal and property invalidation cost, and the native P95 gap remains material.
+Correctness tests also cover a State read shared by an observed property and a structural
+`RecomposeBoundary`: the full structural frame now refreshes the dirty observed value inside the
+same Snapshot instead of committing a mixed old/new frame. Android 9 cannot expose application
+trace sections from a non-debuggable APK because manifest `profileable` support begins on API 29;
+therefore the six-method timing matrix is accepted, but the plan's final `VC.ObservedProperty*`
+Perfetto attribution remains pending on an API-29-or-newer reference device.
+
+The corrected list mutation trace localizes its remaining tail to the frame-aligned framework
+transaction rather than Android traversal. Representative worst frames spent 27.7--41.3 ms in
+Choreographer's `animation` phase and at most 9.5 ms in traversal; ART also JIT-compiled the large
+`LazyListAdapter.submitItems` path. That path synchronously performs keyed identity analysis,
+`DiffUtil`, key/sticky indexes, changed-key discovery, notification, and attached-holder refresh
+for 1,000 items. The next list optimization must reduce this transaction's duplicated whole-list
+work or split its compilation surface without restoring unequal animation or weakening key,
+revision, Session, reset, and release semantics.
+
+That optimization was accepted later on 2026-08-16 under the same device, clock, build, workload,
+and 48-frame protocol. ViewCompose list mutation reached `4.392/26.862 ms` P50/P95 with run-P50 CV
+`0.083` and median peak heap `8507 KiB`. Against the preceding ViewCompose result this is an
+`improved` longitudinal result: P50 is 3.7% lower, P95 is 33.4% lower, and median peak heap is 18.5%
+lower. The implementation performs one key/sticky/identity index pass, avoids constructing an
+unused public update sequence inside the adapter, limits synchronous refresh checks to attached
+holders, and removes duplicate lazy-item collector copies and callback objects. The adapter JIT
+hotspot disappeared from the follow-up trace. The cross-engine conclusion remains `mixed`: this
+P50 is 38.6% below Compose and 22.2% below Android Views, while P95 remains 12.0% and 180.3% higher
+respectively. The next target is therefore the higher-level frame transaction and native traversal,
+not a relaxation of logical-session correctness.
+
+A second-stage diagnostic on 2026-08-16 separated that transaction with temporary phase timing.
+Repeated mutation frames spent about `2.1--15.5 ms` in `VC.Compose`, while `VC.RenderTree` usually
+spent `1.0--3.8 ms`; reset composition was only about `0.5--1.3 ms`. The difference came from the
+fixture rebuilding the same 1,000-row revision-1 model inside every mutation. The harness now keeps
+the most recent immutable non-zero revision snapshot, preserving one cold construction per process
+while making the next seven cycles measure submission and reconciliation. The frame dispatcher and
+lazy holder hot paths also use dedicated internal hosts rather than generic captured callbacks. A
+renderer-lowering preflight candidate was rejected and reverted after it produced `4.859/27.755 ms`
+P50/P95, because its extra tree scan did not reduce the transaction tail.
+
+The accepted five-run fixed-clock result is `4.514/25.677/29.374 ms` P50/P95/P99, run-P50 CV
+`0.100`, median peak heap `8391 KiB`, and 48 frames in every run. Relative to the immediately
+preceding ViewCompose result, P50 is 2.8% higher (`+0.122 ms`, no material change), P95 is 4.4%
+lower (`-1.185 ms`), P99 is 21.7% lower, and heap is 1.4% lower. The longitudinal conclusion is
+`improved`: the upper tail contracted without a material median regression. Because snapshot reuse
+changes shared fixture preparation for all three engines, the earlier Compose and Android Views
+numbers are not a valid cross-engine control for this revision; rerun the three-engine matrix before
+making a new relative claim. The next framework target is cold composition/JIT surface, not another
+renderer preflight or weaker item-session semantics.
+
+#### 2.4.3 Lazy collection and RecyclerView tail-latency hard cut
+
+This measured slice combined keyed logical-item reuse with RecyclerView submission changes instead
+of adding another renderer preflight. Its benchmark APK also included a trial caller-owned
+aggregate revision that could bypass all typed-list selector evaluation. A subsequent API audit
+removed that public token: it duplicated the per-item revision contract, could produce stale order,
+membership, or selector output when advanced incorrectly, and was disproportionately favored by
+the benchmark's repeated two-snapshot update/reset fixture. The ordinary `List` DSL evaluates
+order, membership, and selectors on every parent composition pass, then reuses committed logical
+items and Session bindings by equal key, `contentRevision`, environment, content type, kind, and
+span. The later `LazyItemsSnapshot` opt-in instead shallow-freezes ordered element references and
+gives the framework an opaque identity for a bounded evaluated-snapshot cache. It can skip selector
+evaluation only after a successful commit of that identity; it does not weaken the per-item or
+environment revision contract.
+
+The Android adapter now plans same-order changes and cyclic rotations in linear time, emits the
+minimum move sequence for a rotation, and reserves `DiffUtil` for other structural changes. Exact
+submission-plus-item acknowledgement removes redundant queued payload binds; semantic-only changes
+skip RecyclerView notifications when item animation is disabled, while a failed synchronous
+Session commit receives one targeted retry. Prefetch accounting separates cold activation from
+authoritative detached preparation cost and fails closed after an over-budget sample. These paths
+retain key identity, logical Item Session ownership, native Holder reuse, and reset/release
+boundaries.
+
+Historical revision-4 diagnostics first established the Xiaomi MI 6 / API 28 root-controlled
+protocol later reused below. Both `2695fbfb` controls were rejected (`0.192/0.157` run-P50 CV), and
+the second also omitted the policy payload. The hard-cut candidate was stable at
+`5.505/16.534/30.841 ms` P50/P95/P99, `8212 KiB` peak heap, and `0.075` CV, but combined the later
+removed aggregate skip with retained item/adapter changes. Its longitudinal classification remains
+`inconclusive`; it is only an absolute result for APK `020582a9`. A Material-host JIT experiment
+also regressed the cold tail and was reverted. The revision-5 A/B below supplied the valid
+same-policy ViewCompose control, and the 2026-08-17 matrix closes the cross-engine follow-up.
+
+<div className="benchmark-evidence">
+
+On 2026-08-17, exact `2695fbfb` was rebuilt under the same Xiaomi device, five-run `run-from-apk`,
+and v3 fixed-clock policy as `9ac164af`. Revision-4 scroll P50/P90/P95/P99 was
+`5.356/8.914/9.603/11.523 ms` (heap `7833 KiB`, CV `0.016`); mutation was
+`4.244/15.852/22.681/24.947 ms` (`8593 KiB`, `0.079`). Revision 5 changes those percentiles by
+`-0.5%/+0.6%/-0.7%/-7.1%` and `+0.1%/-31.2%/-44.0%/-39.3%`, with heap 2.3%/5.4% lower. Both runs
+pass protocol and stability gates and do not reproduce a regression. Classification remains
+`inconclusive` because the workload changed from `performance.list@4` to `@5`; next benchmark the
+exact diagnostics-tab switch followed by an immediate fling if the symptom persists.
+
+</div>
+
+The 2026-08-16 revision-5 A/B used the same Xiaomi MI 6 / API 28 device, R8 benchmark target,
+five-run and 48-frame protocol, `run-from-apk` compilation identity, and
+`root-fixed-cpu-1401600-1804800-gpu-515000000-perf-hal-off-v3` policy. The workload contains 1,000
+rows and performs eight update/reset cycles per iteration. Every arm prepares the immutable row
+lists for revisions 0 and 1 before the Ready marker. The candidate B0/B1 fixture additionally
+constructs and retains both strong snapshot wrappers before Ready; B0 still submits the raw lists,
+so it is a conservative plain-path control for the candidate's extra wrapper residency outside the
+timed mutation. The measured steady path always alternates two prebuilt inputs. A1 and A2 are
+independent plain-`List` reference repetitions from `bb542f00`; B0 exercises the candidate
+implementation through its plain-`List` overload; B1 runs the same candidate through
+`LazyItemsSnapshot`.
+
+| Run | Route | Frame P50/P90/P95/P99, ms | Three-frame sum P50/P95, ms | Three-frame maximum P50/P95, ms | Median peak heap, KiB | Run-P50 CV | Acceptance |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| A1 | `bb542f00`, plain `List` | 4.437 / 25.468 / 26.364 / 30.505 | 29.910 / 37.459 | 24.383 / 27.705 | 8313 | 0.127 | Accepted reference repetition. |
+| A2 | `bb542f00`, plain `List` | 4.825 / 25.580 / 26.293 / 28.353 | 30.165 / 36.434 | 24.899 / 27.175 | 8667 | 0.111 | Accepted reference repetition. |
+| B0 | Candidate, plain `List` | 5.022 / 25.750 / 26.428 / 29.727 | 30.963 / 38.229 | 24.955 / 28.198 | 8254 | 0.047 | Accepted plain-path control. |
+| B1 | Candidate, `LazyItemsSnapshot` | 6.432 / 14.723 / 17.268 / 25.068 | 23.694 / 33.306 | 13.160 / 24.549 | 8419 | 0.096 | Accepted snapshot run. |
+| B1 repeat | Candidate, `LazyItemsSnapshot` | 6.175 / 15.098 / 19.683 / 23.989 | 22.918 / 32.346 | 13.408 / 22.855 | 8872 | 0.193 | Rejected: run-P50 CV exceeds 0.15; direction only. |
+| B1 third | Candidate, `LazyItemsSnapshot` | 6.133 / 14.610 / 17.638 / 26.508 | 23.500 / 34.097 | 13.386 / 23.994 | 8533 | 0.131 | Accepted snapshot replication. |
+
+Pooling the two accepted A reference repetitions gives frame P50/P95/P99 of
+`4.589/26.322/29.134 ms`. B0 is respectively 9.5% (`+0.434 ms`), 0.4%
+(`+0.107 ms`), and 2.0% (`+0.593 ms`) higher. Its three-frame sum P50/P95 is
+3.4%/2.7% higher and its three-frame maximum P50/P95 is 1.1%/1.9% higher, while median peak heap
+is 2.8% lower. No decision metric crosses its combined absolute and normalized gate, so the plain
+`List` longitudinal classification is `no material change`: the new collector and cache machinery
+does not establish a material regression on the ordinary path.
+
+Against B0, accepted snapshot runs B1 and B1-third make frame P50 28.1% (`+1.409 ms`) and 22.1%
+(`+1.111 ms`) higher, but reduce frame P95 by 34.7% (`-9.160 ms`) and 33.3%
+(`-8.790 ms`) and P99 by 15.7% (`-4.659 ms`) and 10.8% (`-3.219 ms`). Their three-frame
+transaction-sum P50/P95 falls by 23.5%/12.9% and 24.1%/10.8%; transaction maximum P50/P95 falls by
+47.3%/12.9% and 46.4%/14.9%. Excluding each iteration's first cold transaction, transaction-maximum
+P95 falls from `27.237 ms` to `20.517/19.972 ms`, a 24.7%/26.7% reduction. Peak heap is only
+2.0%/3.4% higher. B1-repeat points in the same tail direction, but its `0.193` CV rejects it from
+all normalized decisions. The primary snapshot classification is therefore `mixed`: frame median
+regresses materially, while P95/P99 and the three-frame transaction tail are materially improved.
+The narrower tail-latency conclusion is `improved`; this is not a claim of universal frame-time
+improvement.
+
+The accepted 2026-08-17 three-engine matrix ran commit `3e0cc43a` and
+`performance.list@5` on the same Xiaomi MI 6 / API 28 device. The target APK SHA-256 was
+`88eeacc3e4add75551088a9fdab7c0514414be747909223a22ec266b858ca55d`. AndroidX Benchmark 1.4.1
+uses the AOSP-only `su root` command form, which Magisk 30.6 does not execute on this device. The
+test APK was therefore adapted only at that command-transport boundary: original SHA-256
+`d36f6a138c949fddd334c2c1b55f65b6ba02b2d296a2a45efa79439c53701c9c`, adapted SHA-256
+`cc9cce7c00de8c6f530c713257f91ecc2012473b644384cec971c3f2ef73d562`, with an equal-length
+command alias forwarding to `magisk su -c`. The target APK, benchmark workload, metric capture,
+and result JSON were not rewritten. The alias, installed benchmark packages, and temporary APKs
+were removed after collection.
+
+All six methods used five runs, `run-from-apk`, the exact v3 policy, locked CPU/GPU, stopped
+performance HAL, zero thermal-throttle sleep, and per-method screen-off cooling at 34--37 degrees
+Celsius. MIUI resets CPU policy on screen-off, so it was reapplied after wake; UiAutomation required
+an interactive screen, and the failed off-screen preflight produced no sample.
+
+| Action | Engine | Frames by run | P50/P90/P95/P99, ms | Median peak heap, KiB | Run-P50 CV |
+| --- | --- | --- | ---: | ---: | ---: |
+| Scroll | ViewCompose | `160/163/166/162/163` | 5.328 / 8.964 / 9.538 / 10.702 | 7650 | 0.107 |
+| Scroll | Compose | `163/163/163/162/162` | 4.743 / 7.063 / 7.616 / 8.495 | 7398 | 0.091 |
+| Scroll | Android Views | `112/114/112/112/113` | 4.991 / 6.425 / 7.188 / 8.826 | 4049 | 0.045 |
+| Mutation | ViewCompose | `48/48/48/48/48` | 4.247 / 10.907 / 12.698 / 15.155 | 8128 | 0.082 |
+| Mutation | Compose | `41/41/41/41/41` | 5.207 / 15.040 / 18.568 / 26.250 | 8597 | 0.141 |
+| Mutation | Android Views | `48/48/48/48/48` | 4.287 / 6.658 / 7.849 / 9.076 | 5864 | 0.125 |
+
+Every engine passes the `0.15` stability gate. For scroll, ViewCompose is 12.3% (`+0.585 ms`)
+higher at P50 and 25.2% (`+1.922 ms`) higher at P95 than Compose; it is 6.8%
+(`+0.337 ms`) higher at P50 and 32.7% (`+2.350 ms`) higher at P95 than Android Views. P99 is
+26.0% and 21.3% higher respectively. Both scroll comparisons are `regressed`: the P95 increase
+crosses the combined normalized and absolute gate even where the Android Views P50 increase does
+not. ViewCompose scroll heap is 3.4% higher than Compose and 88.9% higher than Android Views.
+
+For mutation, ViewCompose is 18.4% (`-0.960 ms`) lower at P50, 31.6% (`-5.870 ms`) lower at P95,
+and 42.3% (`-11.095 ms`) lower at P99 than Compose, with 5.5% lower heap. That comparison is
+`improved`. Against Android Views, ViewCompose P50 is effectively equal at 0.9% (`-0.040 ms`)
+lower, but P95 is 61.8% (`+4.849 ms`) higher, P99 is 67.0% (`+6.079 ms`) higher, and heap is
+38.6% higher. That comparison is `regressed`. The matrix-level conclusion is therefore `mixed`:
+the strong-snapshot mutation path beats Compose and reaches native median cost, but native
+RecyclerView still owns the mutation tail and both controls beat ViewCompose scrolling.
+
+The action protocol is identical, but engines may coalesce or emit different numbers of measured
+frames; Compose mutation consistently emitted 41 while the other two emitted 48. This matrix
+therefore compares the accepted per-frame distributions and does not manufacture three-frame
+cross-engine transactions. It is also post-Ready steady-state evidence for two preconstructed
+snapshots under `run-from-apk`, not startup, snapshot-construction, monotonic-feed, or clean
+uncompiled-ART evidence. The next actions are to profile the ViewCompose scroll P95/heap gap and the
+remaining Android Views mutation-tail gap, then add cold-construction and monotonic-feed workloads.
+
+The preceding A/B evidence covers only a steady alternation between two already-constructed
+revision-5 snapshots, which directly favors the bounded two-generation identity cache. It does not
+measure `toLazyItemsSnapshot()` construction, first evaluation, a monotonic stream of never-reused
+identities, or list scrolling, and therefore cannot be extrapolated to those costs. Accept the
+strong snapshot path as an explicit tail-latency tradeoff while retaining the plain `List` path for
+general feeds; the three-engine matrix above is the separate cross-engine conclusion.
+
+#### 2.4.4 Navigation and design-system diagnostics
+
+Navigation revision 6 also produced stable fixed-clock diagnostics:
+
+| Navigation action | P50/P95/P99, ms | Run-P50 CV | Conclusion |
+| --- | ---: | ---: | --- |
+| Push, no precompilation | 5.552 / 12.598 / 41.929 | 0.039 | Accepted absolute baseline. |
+| Push, requested profile-guided compilation | 5.601 / 11.173 / 42.148 | 0.070 | `no material change`; P95 improves 11.3%, below the combined 15% gate, while P99 is unchanged. |
+| System Back, no precompilation | 5.558 / 15.618 / 40.089 | 0.039 | Accepted absolute baseline. |
+| System Back, requested profile-guided compilation | 5.409 / 13.864 / 41.685 | 0.064 | `no material change`; P95 improves 11.2%, below the combined gate, while P99 remains about 42 ms. |
+
+Android 9 reports both requested compilation variants as `run-from-apk`, so the profile-guided rows
+are diagnostics rather than proof of a distinct ART compilation state. They nevertheless reject
+ordinary warm-up as a sufficient explanation for the approximately 42 ms navigation P99. Custom
+navigation `TraceSectionMetric` values are intentionally omitted below API 29 instead of reporting
+misleading zeros.
+
+The design-system revision-3 matrix establishes the first root-controlled absolute baseline; it
+does not rank unlike visual systems, so directional comparison remains `inconclusive` until a
+matching prior or future baseline exists:
+
+| Scenario | Cut Contrast | Rounded Reference | Cupertino Pressure | Run-P50 CV range | Conclusion |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Initial display, median ms | 531.254 | 558.753 | 561.880 | 0.039--0.088 | Stable absolute baseline; directional result `inconclusive`. |
+| Patch P50/P95/P99, ms | 7.934 / 23.008 / 25.716 | 7.959 / 23.855 / 26.222 | 7.842 / 15.907 / 24.841 | 0.056--0.079 | Stable absolute baseline; directional result `inconclusive`. |
+| Scroll P50/P95/P99, ms | 3.798 / 7.582 / 9.000 | 3.731 / 8.071 / 9.124 | 3.730 / 7.572 / 8.905 | 0.009--0.034 | Stable and within one 60-Hz frame at P99; directional result `inconclusive`. |
+| Active animation P50/P95/P99, ms | 7.661 / 17.285 / 20.884 | 7.617 / 15.146 / 21.664 | 8.045 / 15.736 / 18.455 | 0.077--0.110 | Stable absolute baseline; the individual P95/P99 tails remain monitored. |
+| Cut Contrast overlay lifecycle P50/P95/P99, ms | 4.535 / 27.499 / 39.833 | — | — | 0.055 | Stable baseline; the overlay P95/P99 is the next design-bundle tail target. |
 
 ### 2.5 Debug tooling regression gate
 
@@ -512,10 +911,10 @@ reasons are readable; node highlighting, cross-session correlation, and per-node
 ### Phase 4: Containers and layout
 
 Status: list and complex-layout Compose controls, Android Views source controls, memory metrics,
-engine-neutral reports, and normalized ViewCompose/Compose gates are established. Three
-same-context Android Views actions are accepted; list scroll remains `inconclusive` until a
-clock-controllable device can complete the twelve-method batch. Continue reducing layout cost in
-hot containers and complex pages while keeping the three-engine workload contract aligned.
+engine-neutral reports, and normalized ViewCompose/Compose gates are established. The corrected
+revision-4 root-controlled fifteen-method matrix accepts all five actions across all three engines.
+Continue reducing list-mutation, structural-update, and container-layout tails while keeping the
+three-engine workload contract aligned.
 
 ### Phase 5: Release optimization
 
@@ -545,4 +944,4 @@ See [Development workflow](../project/workflow.md).
 3. [Unified roadmap](../project/roadmap.md)
 4. [Documentation entrance](../README.md)
 5. [State snapshots](../architecture/state-snapshots.md)
-6. [Android Views performance control plan](../project/plans/android-views-performance-control.md)
+6. [Archived Android Views performance control plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/android-views-performance-control.md)

@@ -51,6 +51,10 @@ Disposal is idempotent and terminal: later caller-initiated `render` or `setRend
 throw `IllegalStateException`. A frame callback already queued inside the Android runtime is
 cancelled or ignored and cannot render after disposal.
 
+The frame-aligned runtime uses a dedicated internal callback instead of a generic captured
+function on the UI-thread dispatch path. Cross-thread requests still post one bounded `Runnable`;
+same-thread requests and Choreographer delivery add no callback wrapper per frame.
+
 `AndroidEnvironmentBridge.fromContext(context)` maps density, font scale, locales, and layout
 direction to `UiEnvironmentValues`. `AndroidOverlayHostDefaults.androidOrNoOp(root)` performs an
 optional neutral-overlay `ServiceLoader` lookup without moving Android service discovery into UI
@@ -116,6 +120,12 @@ AndroidView(
 `SavedStateRegistryOwner`. View creation, reconciliation, explicit rendering, and disposal are
 main-thread work. State invalidations coalesce onto the next Choreographer frame, while an explicit
 `RenderSession.render()` remains synchronous until terminal disposal.
+
+The installed `AndroidCoreRenderEngine` also translates UI Foundation's Q3 observed-property SPI
+to exact Android Renderer targets. Property-only frames keep the mounted root list and target map
+stable, validate that every target still belongs to the committed frame, and return only commit
+effects, failures, and optional diagnostics. A foreign or stale target fails instead of triggering
+a whole-tree render.
 
 ## Related documentation
 

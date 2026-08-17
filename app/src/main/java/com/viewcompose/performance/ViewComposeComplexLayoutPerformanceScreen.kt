@@ -4,6 +4,8 @@ import com.viewcompose.demo.automation.demoAutomationTarget
 import com.viewcompose.demo.contract.DemoAutomationRole
 import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.runtime.derivedStateOf
+import com.viewcompose.runtime.State
 import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
@@ -24,6 +26,7 @@ import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.foundation.observedValue
 
 /**
  * ViewCompose 版本的复杂布局性能场景。
@@ -34,9 +37,11 @@ internal fun UiTreeBuilder.ViewComposeComplexLayoutPerformanceScreen(
     scenario: DemoScenarioSpec,
     fixtures: PerformanceFixtures,
 ) {
-    val revisionState = remember { mutableStateOf(0) }
-    val revision = revisionState.value
-    val cards = fixtures.dashboardCards(revision)
+    val propertyRevisionState = remember { mutableStateOf(0) }
+    val structureRevisionState = remember { mutableStateOf(0) }
+    val propertyCards = remember {
+        derivedStateOf { fixtures.dashboardCards(propertyRevisionState.value) }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -45,30 +50,49 @@ internal fun UiTreeBuilder.ViewComposeComplexLayoutPerformanceScreen(
     ) {
         ComplexLayoutPerformanceHeader(
             engineName = fixtures.copy.engineName(PerformanceEngine.ViewCompose, shadowsEnabled),
-            revision = revision,
-            onUpdate = {
-                revisionState.value = revisionState.value + 1
+            propertyRevisionState = propertyRevisionState,
+            structureRevisionState = structureRevisionState,
+            onPropertyUpdate = {
+                propertyRevisionState.value = propertyRevisionState.value + 1
+            },
+            onStructureUpdate = {
+                structureRevisionState.value = structureRevisionState.value + 1
             },
             onReset = {
-                revisionState.value = 0
+                propertyRevisionState.value = 0
+                structureRevisionState.value = 0
             },
             scenario = scenario,
             copy = fixtures.copy,
         )
-        ScrollableColumn(
-            spacing = 8.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(8.dp)
-                .scenarioTarget(scenario, DemoAutomationRole.Target),
+        val scrollableModifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+            .padding(8.dp)
+            .scenarioTarget(scenario, DemoAutomationRole.Target)
+        RecomposeBoundary(
+            key = "complex-layout-structure",
+            inputs = listOf(
+                structureRevisionState,
+                fixtures,
+                propertyCards,
+                shadowsEnabled,
+            ),
         ) {
-            cards.forEach { card ->
-                DashboardCard(
-                    card = card,
-                    shadowsEnabled = shadowsEnabled,
-                    copy = fixtures.copy,
-                )
+            val structureCards = fixtures.dashboardCards(structureRevisionState.value)
+            ScrollableColumn(
+                spacing = 8.dp,
+                modifier = scrollableModifier,
+            ) {
+                structureCards.forEachIndexed { index, card ->
+                    DashboardCard(
+                        card = card,
+                        cardIndex = index,
+                        propertyCards = propertyCards,
+                        shadowsEnabled = shadowsEnabled,
+                        copy = fixtures.copy,
+                    )
+                }
             }
         }
     }
@@ -76,8 +100,10 @@ internal fun UiTreeBuilder.ViewComposeComplexLayoutPerformanceScreen(
 
 private fun UiTreeBuilder.ComplexLayoutPerformanceHeader(
     engineName: String,
-    revision: Int,
-    onUpdate: () -> Unit,
+    propertyRevisionState: State<Int>,
+    structureRevisionState: State<Int>,
+    onPropertyUpdate: () -> Unit,
+    onStructureUpdate: () -> Unit,
     onReset: () -> Unit,
     scenario: DemoScenarioSpec,
     copy: PerformanceCopy,
@@ -96,7 +122,12 @@ private fun UiTreeBuilder.ComplexLayoutPerformanceHeader(
             modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Ready),
         )
         Text(
-            text = copy.dashboardRevision(revision),
+            text = observedValue {
+                copy.dashboardRevision(
+                    propertyRevisionState.value,
+                    structureRevisionState.value,
+                )
+            },
             color = PERFORMANCE_SECONDARY_TEXT_COLOR,
             modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
         )
@@ -106,10 +137,18 @@ private fun UiTreeBuilder.ComplexLayoutPerformanceHeader(
         ) {
             ComplexLayoutAction(
                 text = copy.updateDashboard,
-                onClick = onUpdate,
+                onClick = onPropertyUpdate,
                 modifier = Modifier.scenarioTarget(
                     scenario,
                     DemoAutomationRole.PrimaryAction,
+                ),
+            )
+            ComplexLayoutAction(
+                text = copy.updateDashboardStructure,
+                onClick = onStructureUpdate,
+                modifier = Modifier.scenarioTarget(
+                    scenario,
+                    DemoAutomationRole.SecondaryAction,
                 ),
             )
             ComplexLayoutAction(
@@ -155,6 +194,8 @@ private fun Modifier.scenarioTarget(
  */
 private fun UiTreeBuilder.DashboardCard(
     card: PerformanceDashboardCard,
+    cardIndex: Int,
+    propertyCards: State<List<PerformanceDashboardCard>>,
     shadowsEnabled: Boolean,
     copy: PerformanceCopy,
 ) {
@@ -176,8 +217,8 @@ private fun UiTreeBuilder.DashboardCard(
             spacing = 10.dp,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            DashboardCardHeader(card)
-            DashboardMetricRow(card.metrics)
+            DashboardCardHeader(card, cardIndex, propertyCards)
+            DashboardMetricRow(card.metrics, cardIndex, propertyCards)
             DashboardTagRow(card.tags)
             if (card.detailsVisible) {
                 Row(
@@ -221,7 +262,11 @@ private val PerformanceDashboardShadows = listOf(
     ),
 )
 
-private fun UiTreeBuilder.DashboardCardHeader(card: PerformanceDashboardCard) {
+private fun UiTreeBuilder.DashboardCardHeader(
+    card: PerformanceDashboardCard,
+    cardIndex: Int,
+    propertyCards: State<List<PerformanceDashboardCard>>,
+) {
     Row(
         spacing = 10.dp,
         verticalAlignment = VerticalAlignment.Center,
@@ -246,7 +291,7 @@ private fun UiTreeBuilder.DashboardCardHeader(card: PerformanceDashboardCard) {
                 maxLines = 1,
             )
             Text(
-                text = card.subtitle,
+                text = observedValue { propertyCards.value[cardIndex].subtitle },
                 style = TextDefaults.bodySmallStyle(),
                 color = PERFORMANCE_SECONDARY_TEXT_COLOR,
                 maxLines = 1,
@@ -263,7 +308,7 @@ private fun UiTreeBuilder.DashboardCardHeader(card: PerformanceDashboardCard) {
                 ),
         ) {
             Text(
-                text = card.status,
+                text = observedValue { propertyCards.value[cardIndex].status },
                 style = TextDefaults.labelMediumStyle(),
                 color = card.accentColor,
                 maxLines = 1,
@@ -274,12 +319,14 @@ private fun UiTreeBuilder.DashboardCardHeader(card: PerformanceDashboardCard) {
 
 private fun UiTreeBuilder.DashboardMetricRow(
     metrics: List<PerformanceDashboardMetric>,
+    cardIndex: Int,
+    propertyCards: State<List<PerformanceDashboardCard>>,
 ) {
     Row(
         spacing = 6.dp,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        metrics.forEach { metric ->
+        metrics.forEachIndexed { metricIndex, metric ->
             Column(
                 spacing = 2.dp,
                 modifier = Modifier
@@ -295,7 +342,9 @@ private fun UiTreeBuilder.DashboardMetricRow(
                     maxLines = 1,
                 )
                 Text(
-                    text = metric.value,
+                    text = observedValue {
+                        propertyCards.value[cardIndex].metrics[metricIndex].value
+                    },
                     style = TextDefaults.titleSmallStyle(),
                     color = PERFORMANCE_PRIMARY_TEXT_COLOR,
                     maxLines = 1,

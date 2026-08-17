@@ -8,6 +8,7 @@ package com.viewcompose.performance
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -17,6 +18,11 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class PerformanceComparisonModelsTest {
+    @Test
+    fun `list controls disable unmatched native item animation`() {
+        assertTrue(PerformanceListMotionPolicy.disableItemAnimator)
+    }
+
     private val fixtures = PerformanceFixtures(RuntimeEnvironment.getApplication())
 
     @Test
@@ -43,6 +49,9 @@ class PerformanceComparisonModelsTest {
             base.first { it.id == 1 },
             revised.first { it.id == 1 },
         )
+        assertSame(revised, fixtures.listRows(revision = 1))
+        assertSame(base, fixtures.listRows(revision = 0))
+        assertSame(revised, fixtures.listRows(revision = 1))
     }
 
     @Test

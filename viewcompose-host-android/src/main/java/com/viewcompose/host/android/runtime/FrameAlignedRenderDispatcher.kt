@@ -12,55 +12,47 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 internal class FrameAlignedRenderDispatcher(
     private val frameClock: RenderFrameClock,
-    private val onFrameRender: () -> Unit,
-    private val isMainThread: () -> Boolean = { Looper.myLooper() == Looper.getMainLooper() },
-    private val postToMain: (Runnable) -> Unit = { runnable ->
-        Handler(Looper.getMainLooper()).post(runnable)
-    },
-) {
+    private val onFrameRender: FrameRenderAction,
+    private val isMainThread: (() -> Boolean)? = null,
+    private val postToMain: ((Runnable) -> Unit)? = null,
+) : RenderFrameCallback {
     private val disposed = AtomicBoolean(false)
     private val frameRequested = AtomicBoolean(false)
 
-    private val frameCallback = RenderFrameCallback {
+    override fun doFrame(frameTimeNanos: Long) {
         if (disposed.get()) {
             frameRequested.set(false)
-            return@RenderFrameCallback
+            return
         }
         // Clear first so reentrant invalidation can schedule the following frame.
         frameRequested.set(false)
-        onFrameRender()
+        onFrameRender.renderFrame()
     }
 
     private val requestOnMain = Runnable {
-        if (disposed.get()) {
-            frameRequested.set(false)
-            return@Runnable
-        }
-        frameClock.postFrameCallback(frameCallback)
+        postFrameOnMain()
     }
 
     private val cancelOnMain = Runnable {
-        if (frameRequested.compareAndSet(true, false)) {
-            frameClock.removeFrameCallback(frameCallback)
-        }
+        cancelFrameOnMain()
     }
 
     fun requestFrame() {
         if (disposed.get()) return
         if (!frameRequested.compareAndSet(false, true)) return
-        if (isMainThread()) {
-            requestOnMain.run()
+        if (isOnMainThread()) {
+            postFrameOnMain()
         } else {
-            postToMain(requestOnMain)
+            postOnMain(requestOnMain)
         }
     }
 
     fun cancelPending() {
         if (!frameRequested.get()) return
-        if (isMainThread()) {
-            cancelOnMain.run()
+        if (isOnMainThread()) {
+            cancelFrameOnMain()
         } else {
-            postToMain(cancelOnMain)
+            postOnMain(cancelOnMain)
         }
     }
 
@@ -68,4 +60,36 @@ internal class FrameAlignedRenderDispatcher(
         if (!disposed.compareAndSet(false, true)) return
         cancelPending()
     }
+
+    private fun postFrameOnMain() {
+        if (disposed.get()) {
+            frameRequested.set(false)
+            return
+        }
+        frameClock.postFrameCallback(this)
+    }
+
+    private fun cancelFrameOnMain() {
+        if (frameRequested.compareAndSet(true, false)) {
+            frameClock.removeFrameCallback(this)
+        }
+    }
+
+    private fun isOnMainThread(): Boolean {
+        return isMainThread?.invoke() ?: (Looper.myLooper() == Looper.getMainLooper())
+    }
+
+    private fun postOnMain(action: Runnable) {
+        val customPost = postToMain
+        if (customPost != null) {
+            customPost(action)
+        } else {
+            Handler(Looper.getMainLooper()).post(action)
+        }
+    }
+}
+
+/** Dedicated frame action avoids R8 merging the hot callback with unrelated Kotlin lambdas. */
+internal fun interface FrameRenderAction {
+    fun renderFrame()
 }

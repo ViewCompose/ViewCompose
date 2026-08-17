@@ -60,6 +60,7 @@ internal object AndroidTextDocumentAdapter {
         view: TextView,
         document: TextDocument,
     ): CharSequence {
+        if (document.isPlainText) return document.text
         return SpannableString(document.text).also { spannable ->
             applyDocumentSpans(
                 context = view.context,

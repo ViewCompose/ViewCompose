@@ -28,21 +28,68 @@ LazyColumn(
 }
 ```
 
-Immutable data classes may keep the default item value as their revision. Mutable models need an
-explicit immutable version or snapshot. Values backed by ViewCompose `State` remain observable and
-do not need duplication in the revision.
+Bulk item overloads may keep their `{ it }` default only for immutable value models whose equality
+covers every ordinary non-State value read by item content. Mutable models need an explicit
+immutable version or snapshot. Values backed by ViewCompose `State` remain observable and do not
+need duplication in the revision when item content reads them inside its active Session.
+
+Single `item`, `stickyHeader`, pager `Page`, and `Tab` declarations no longer default their content
+revision from the key. Their `contentRevision` is required and non-null; `null` is not a static
+sentinel. Use `StaticContentRevision` only when the declaration has no changing ordinary non-State
+input:
+
+```kotlin
+stickyHeader(
+    key = "messages-header",
+    contentRevision = StaticContentRevision,
+) {
+    Text("Messages")
+}
+```
 
 Pager pages now expose all caller-owned snapshot fields:
 
 ```kotlin
 Page(
     key = account.id,
-    contentType = "account-page",
     contentRevision = account.version,
+    contentType = "account-page",
 ) {
     AccountPage(account)
 }
 ```
+
+These single-entry declarations place `contentRevision` immediately after `key`, followed by
+optional physical-reuse or layout arguments such as `contentType` and grid `span`. This ordering
+keeps logical identity and semantic content revision together and leaves physical presentation
+policy afterward. Bulk `items` overloads intentionally keep the nullable
+`contentRevision: (T) -> Any? = { it }` selector: a nullable element or selector result can be a
+real immutable model state, while a single declaration must express an intentional non-null
+revision or `StaticContentRevision`.
+
+This is a source-breaking alpha change. Recompilation alone is not a sufficient migration for
+positional source calls. An old three-position call such as
+`item(key, contentType, contentRevision)` or `Page(key, contentType, contentRevision)` can still
+type-check after the signature change because both semantic values accept `Any`; it then treats the
+old `contentType` as the revision and the old revision as the physical content type. Rewrite it as
+`item(key, contentRevision, contentType)` or `Page(key, contentRevision, contentType)`. Prefer named
+semantic arguments in maintained source:
+
+```kotlin
+item(
+    key = message.id,
+    contentRevision = message.version,
+    contentType = "message-row",
+) {
+    MessageRow(message)
+}
+```
+
+Then recompile every consumer rather than mixing binaries built against the earlier single-entry
+parameter order with the new artifact. On the JVM, adjacent `Any?`/`Any` parameters can erase to
+the same `Object` descriptor, so an old call may not fail to link and can instead bind the former
+`contentType` and `contentRevision` values to the opposite semantics. Named arguments protect the
+reviewed source call, but do not make an already compiled old call safe.
 
 Pager pages and tabs now require explicit, unique keys. Position is physical placement, not logical
 identity; the framework no longer guesses that an unkeyed child at the same index owns the previous
@@ -51,6 +98,73 @@ child's remember, saveable state, or effects.
 The framework automatically captures theme, Android resource, locale, direction, density, font
 scale, and other active local values as `environmentRevision`; applications must not duplicate
 those values in `contentRevision`.
+
+## Replace aggregate tokens with explicit snapshot values
+
+Typed `LazyColumn`, `LazyRow`, `LazyVerticalGrid`, scoped `items`, and their `ScrollableScope`
+wrappers do not accept a caller-owned aggregate snapshot revision. Remove `snapshotRevision` from
+calls that used the interim API:
+
+```kotlin
+LazyColumn(
+    items = messages,
+    key = { message -> message.id },
+    contentType = { "message-row" },
+    contentRevision = { message -> message.version },
+) { message ->
+    MessageRow(message)
+}
+```
+
+Every declaration pass now evaluates list order and membership and invokes `key`, `contentType`,
+`contentRevision`, and grid-span selectors. The framework does not trust list identity, list
+equality, or an independently maintained version to bypass these checks. This avoids stale order,
+membership, or selector output when a caller forgets to advance a parallel token, and scoped
+declarations no longer need caller-defined token namespaces.
+
+Selector evaluation does not discard keyed reuse. After the pass, equal key, content revision,
+framework environment, content type, item kind, and span reuse the previously committed logical
+item and Session binding; changed rows remain targeted. Observable State read by an item Session is
+tracked independently. Because ViewCompose has no compiler transform that can identify arbitrary
+Kotlin captures, every changing ordinary non-State value read by item content must still enter the
+affected item's `contentRevision`. Callers compiled against the interim aggregate-parameter method
+descriptors must recompile for this alpha hard cut.
+
+For a homogeneous top-level or `ScrollableScope` container, an application that already owns an
+immutable list submission may opt into the strongly typed whole-snapshot path:
+
+```kotlin
+val lazyMessages = remember(messages) {
+    messages.toLazyItemsSnapshot()
+}
+
+LazyColumn(
+    items = lazyMessages,
+    key = { message -> message.id },
+    contentType = { "message-row" },
+    contentRevision = { message -> message.version },
+) { message ->
+    MessageRow(message)
+}
+```
+
+`toLazyItemsSnapshot()` shallow-copies ordered item references and creates a new opaque identity; it
+does not accept or evaluate selectors. Each consuming container evaluates selectors on the first
+declaration of that identity in a framework environment and retains its current and immediately
+previous successfully committed snapshot/environment pair. An exact pair restores the ordered
+logical-item list in constant time without selectors or a key scan. A new identity or environment
+change is a miss and follows the ordinary keyed canonicalization path.
+Only State read while item content executes in its active Session remains independently observed.
+State or another changing input read by a selector requires a replacement snapshot because an exact
+hit skips selectors. Selector or duplicate-key failure publishes no evaluated snapshot, so retrying
+the same identity and environment reevaluates every selector.
+
+Replace the `LazyItemsSnapshot` whenever order, membership, retained item data, selector captures,
+or ordinary non-State item-content captures change. Those item-content captures must also enter the
+affected `contentRevision`; the framework still has no compiler transform that can infer them.
+Creating the snapshot on every composition remains correct but forfeits the identity fast path.
+Scoped `LazyColumn { items(...) }` and `LazyVerticalGrid { items(...) }` deliberately have no
+`LazyItemsSnapshot` overload and continue evaluating selectors on every declaration pass.
 
 ## Update native interop reuse
 

@@ -68,7 +68,7 @@ class AndroidViewsPerformanceScreenTest {
     }
 
     @Test
-    fun `complex control retains cards and adds or removes conditional details`() {
+    fun `complex control separates property binding from structural binding`() {
         val scenario = DemoScenarioRegistry.require("performance.complex-layout")
         val fixtures = PerformanceFixtures(context)
         val root = createAndroidViewsComplexLayoutPerformanceScreen(
@@ -81,6 +81,9 @@ class AndroidViewsPerformanceScreenTest {
         )
         val action = root.findViewById<TextView>(
             scenario.automation.require(DemoAutomationRole.PrimaryAction).androidViewId,
+        )
+        val structureAction = root.findViewById<TextView>(
+            scenario.automation.require(DemoAutomationRole.SecondaryAction).androidViewId,
         )
         val reset = root.findViewById<TextView>(
             scenario.automation.require(DemoAutomationRole.Reset).androidViewId,
@@ -100,6 +103,12 @@ class AndroidViewsPerformanceScreenTest {
         action.performClick()
 
         assertNotEquals(initialState, state.text.toString())
+        assertEquals(5, cards.count { card -> card.childCount == 4 })
+
+        val propertyState = state.text.toString()
+        structureAction.performClick()
+
+        assertNotEquals(propertyState, state.text.toString())
         assertEquals(4, cards.count { card -> card.childCount == 4 })
 
         reset.performClick()

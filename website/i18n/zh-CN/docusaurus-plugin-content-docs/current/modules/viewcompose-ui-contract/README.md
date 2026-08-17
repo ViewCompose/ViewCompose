@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 8aa57528a415fb49e603cb5f6ec157d99590523020dbbe50265314504102a1c3
+translation_source_hash: 212042fb1cce0f3005623513007a123d2ea16eaa6eb842c76d2a66bf1815c48e
 translation_status: current
 ---
 
@@ -50,7 +50,9 @@ val gap = VNode(
 ## 主要 API
 
 - [`VNode` 与 `NodeType`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node/-v-node/)
-  定义不可变树内容与渲染器分派。
+  定义不可变树内容与渲染器分派。Q3 `VNode.observedPropertyId` 是仅供完整帧发布精确 Renderer
+  Target 使用的不透明 Session 身份；直接构造 VNode 时保持 `null`，它不会替代语义 Key，也不
+  参与普通内容语义。
 - [`NodeSpec`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node.spec/-node-spec/)
   及其具体属性快照定义渲染器支持的输入。
 - `TextNodeProps` 只携带一份权威 `TextDocument`；`ButtonNodeProps` 与 `ToggleNodeProps`
@@ -269,3 +271,8 @@ Renderer 必须重新构建。支持无障碍的 Renderer 应同时映射父集�
 公开 `Text`、`RichText`、`Button`、`Checkbox`、`RadioButton` 与 `Switch` DSL 的签名和渲染
 行为保持不变。对于直接 NodeSpec 构造方和自定义 Renderer，这属于源码与二进制不兼容的 Q2
 快照契约变更；它们必须重新构建，并把所有 Android `CharSequence` 转换放到最终原生绑定边界。
+
+新增 Q3 `VNode.observedPropertyId` 会扩展公开 Data Class 的构造器与 Component 形状。源码默认值
+让直接构造仍保持简洁，但预编译构造点、解构调用点与自定义 Renderer 必须随本次 Alpha 版本
+重新构建。支持 Observed Transaction 的自定义 Renderer 要为每个非空 Identity 发布唯一精确
+Target；不支持该能力的 Renderer 在其他路径可以忽略这项可空元数据。

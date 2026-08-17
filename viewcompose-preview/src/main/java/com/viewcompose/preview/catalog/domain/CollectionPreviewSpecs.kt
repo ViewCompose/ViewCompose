@@ -14,6 +14,7 @@ import com.viewcompose.ui.foundation.LazyColumn
 import com.viewcompose.ui.foundation.LazyVerticalGrid
 import com.viewcompose.ui.foundation.Surface
 import com.viewcompose.ui.foundation.SurfaceVariant
+import com.viewcompose.ui.foundation.StaticContentRevision
 import com.viewcompose.ui.foundation.TabRow
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.VerticalPager
@@ -96,8 +97,12 @@ internal object CollectionPreviewSpecs {
                             .fillMaxWidth()
                             .height(90.dp),
                     ) {
-                        Page(key = "page-1") { Text(text = "Horizontal Page 1") }
-                        Page(key = "page-2") { Text(text = "Horizontal Page 2") }
+                        Page(key = "page-1", contentRevision = StaticContentRevision) {
+                            Text(text = "Horizontal Page 1")
+                        }
+                        Page(key = "page-2", contentRevision = StaticContentRevision) {
+                            Text(text = "Horizontal Page 2")
+                        }
                     }
                     VerticalPager(
                         currentPage = verticalPageState.value,
@@ -106,18 +111,22 @@ internal object CollectionPreviewSpecs {
                             .fillMaxWidth()
                             .height(90.dp),
                     ) {
-                        Page(key = "v-page-1") { Text(text = "Vertical Page 1") }
-                        Page(key = "v-page-2") { Text(text = "Vertical Page 2") }
+                        Page(key = "v-page-1", contentRevision = StaticContentRevision) {
+                            Text(text = "Vertical Page 1")
+                        }
+                        Page(key = "v-page-2", contentRevision = StaticContentRevision) {
+                            Text(text = "Vertical Page 2")
+                        }
                     }
                     TabRow(
                         selectedIndex = tabIndexState.value,
                         onTabSelected = { tabIndexState.value = it },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Tab(key = "tab-1") { selected ->
+                        Tab(key = "tab-1", contentRevision = StaticContentRevision) { selected ->
                             Text(text = if (selected) "Tab A*" else "Tab A")
                         }
-                        Tab(key = "tab-2") { selected ->
+                        Tab(key = "tab-2", contentRevision = StaticContentRevision) { selected ->
                             Text(text = if (selected) "Tab B*" else "Tab B")
                         }
                     }

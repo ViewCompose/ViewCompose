@@ -88,9 +88,10 @@ Chinese headroom. If either locale reaches 6 MiB, the next action is to review s
 or index representation before another increase; code and command content remains indexed because
 API and build-command search has direct reader value.
 
-Compatibility redirects preserve `/docs`, `/getting-started`, `/compose-migration`, and
-`/migrate-from-compose`, including their locale-prefixed forms. Add a redirect only for an
-intentional historical or campaign route; canonical document paths remain the source of truth.
+Compatibility redirects preserve `/docs`, `/getting-started`, `/compose-migration`,
+`/migrate-from-compose`, and previously published active-plan routes after those plans move to the
+archive, including their locale-prefixed forms. Add a redirect only for an intentional historical
+or campaign route; canonical document paths remain the source of truth.
 
 The versioned thresholds live in `website/site-budgets.json`. Immutable Dokka output is canonical
 at `/api/**`; after Docusaurus finishes its locale builds, the supported build entry point removes
@@ -98,7 +99,7 @@ locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to t
 tree, so those copies add storage but no localized content or supported route.
 
 The budget model separates expected release-history growth from regressions. Non-API output is
-limited to 42 MiB. Before the Demo verification-harness plan was added, a clean `main` build already
+limited to 43 MiB. Before the Demo verification-harness plan was added, a clean `main` build already
 measured 39.999791 MiB. Publishing that searchable English plan, its `zh-CN` fallback route, and
 both locale search entries measured 40.427350 MiB, so the reviewed ceiling moved from 40 MiB to
 41 MiB instead of removing reader-value planning evidence. The native-widget contract convergence
@@ -110,11 +111,22 @@ reader-facing contracts and no other site ceiling failed. The reviewed ceiling t
 42 MiB, leaving approximately 1 MiB of measured headroom; the final build including this evidence
 passed at 41.1 MiB against that 42.0 MiB ceiling. Reaching 42 MiB requires a representation or
 content-partitioning review before another increase. The Android Views performance-control plan,
-its generated route, and the reviewed bilingual physical-result tables remain inside that same
-42 MiB ceiling; they provide the durable interpretation needed to distinguish accepted, rejected,
-and device-blocked benchmark evidence. Immutable artifact/version trees and working-tree `current`
-Dokka for unpublished artifacts share the API-tree
-budget: they may average at most 4.5 MiB and no individual tree may exceed 24 MiB. Only manifests
+its generated route, and the reviewed bilingual physical-result tables remained inside that 42 MiB
+ceiling; they provide the durable interpretation needed to distinguish accepted, rejected, and
+device-blocked benchmark evidence. The observed-property transaction branch then added searchable
+ADR-0015, an active implementation plan, benchmark interpretation, and bilingual public-contract
+updates. Paired builds on the same dependency set measured 43,622,588 non-API bytes for `main` and
+44,251,626 bytes for the candidate: an increase of 629,038 bytes, or 1.44%. English search grew from
+5,592,645 to 5,732,917 bytes and Chinese search from 6,015,718 to 6,165,632 bytes, while canonical
+documents increased from 107 to 109 and audited site pages from 356 to 360. The conclusion is
+**regressed** in absolute size but without anomalous index amplification; the new architecture and
+measured acceptance evidence are durable reader-facing contracts. After the required representation
+and content-partitioning review found no redundant API copies or generated-route expansion, the
+reviewed non-API ceiling therefore moves to 43 MiB, leaving 837,142 measured bytes of headroom. If
+that ceiling fails again, or either search index reaches 6 MiB, search partitioning or index
+representation must be changed before another increase. Immutable artifact/version trees and
+working-tree `current` Dokka for unpublished artifacts share the API-tree budget: they may average
+at most 4.5 MiB and no individual tree may exceed 24 MiB. Only manifests
 and redirect aliases use the separate 1 MiB routing allowance. The other ceilings remain 120
 seconds for the Docusaurus build, 8 MiB total and 768 KiB largest-file for JavaScript, 128 KiB for
 CSS, and 6 MiB for each locale's search index. The gate also rejects any locale-prefixed API copy.
@@ -226,6 +238,17 @@ identity token.
   verification separately from the documentation build.
 
 ## Last verified
+
+2026-08-16: paired complete Docusaurus builds on the same checkout dependency set compared current
+`main` with the observed-property transaction branch. Non-API output measured 43,622,588 and
+44,251,626 bytes respectively, a 629,038-byte or 1.44% increase. English search measured 5,592,645
+and 5,732,917 bytes; Chinese search measured 6,015,718 and 6,165,632 bytes. Canonical documents rose
+from 107 to 109 and audited site pages from 356 to 360. The conclusion is **regressed** in absolute
+size but accepted after the required representation review found no anomalous duplication and
+confirmed that ADR-0015, the active plan, public contracts, and benchmark interpretation are
+reader-facing evidence. The non-API ceiling moved to 43 MiB, leaving 837,142 measured bytes; the
+next failure of that ceiling or either 6 MiB search-index ceiling requires partitioning or index
+representation work rather than another threshold-only change.
 
 2026-08-15: paired Docusaurus locale builds on the same macOS checkout and dependency set compared
 `main` at `ca3d7985` with PR #99 before its budget evidence was added. Non-API output measured

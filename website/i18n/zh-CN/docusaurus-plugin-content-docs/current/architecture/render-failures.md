@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/render-failures.md
-translation_source_hash: 0711ac4906d2884132c77061d98076a06788e7333a1c734eaa3e0d233a61d440
+translation_source_hash: f8ed98e5b4eb28064dcb8c20a3e0a935a1a17930a9d570792c9ef418f3cf4e5d
 translation_status: current
 ---
 
@@ -35,6 +35,11 @@ val session = renderInto(
 - `CompositionPrepare` 和 `ViewTreeRender` 失败会中止候选组合并报告
   `PreviousFrameRestored`。渲染器尽力恢复此前 VNode 绑定、已挂载子节点、布局参数和 View
   顺序，并释放本轮新插入节点。
+- `ObservedPropertyPrepare` 报告 `FrameUnchanged`：任何原生修改发生前都会放弃候选值和依赖
+  Guard。`ObservedPropertyRender` 报告 `PreviousFrameRestored`：Renderer 会先校验完整的精确
+  Target Batch，任一 Patch 失败时把此前所有 Target 重新绑定到已提交 VNode。
+  `ObservedPropertyCommit` 报告 `FrameCommitted`，因为原生属性此时已经成为权威结果；依赖提交
+  失败保持可观测，不会静默退化成整树渲染。
 - commit、副作用、overlay、诊断和原生 commit 失败报告 `FrameCommitted`。这些失败发生在
   新 View 树已经成为权威结果之后；各回调相互隔离，一个失败不会阻止其余回调执行。Remembered
   激活抛错后保持 Pending，并由后续成功的 Composition Commit 重试；成功的兄弟不会重复激活，

@@ -22,6 +22,35 @@ interface CoreRenderEngine {
     ): CoreRenderFrame
 
     /**
+     * Applies one exact-target batch whose VNodes differ only by [VNode.spec].
+     *
+     * Implementations must validate every target before mutation and restore the complete previous
+     * batch when any patch fails. Engines that do not implement direct observed-property patching
+     * reject the operation instead of silently falling back to full-tree rendering.
+     *
+     * This is a Q3 host-integration API.
+     *
+     * @sample com.viewcompose.ui.foundation.samples.observedPropertyEngineSample
+     * @param container unchanged render container that owns [mountedNodes]
+     * @param mountedNodes exact roots returned by the preceding successful full frame
+     * @param patches non-empty, declaration-ordered, unique exact-target property replacements
+     * @param collectDiagnostics whether to collect patch statistics and diagnostic records
+     * @return property-only commit work and diagnostics; mounted roots and targets remain unchanged
+     * @throws IllegalStateException when this engine does not support observed transactions or a
+     * target no longer belongs to the committed frame
+     * @throws Throwable when validation or native mutation fails; the engine must restore every
+     * earlier mutation before propagating the failure
+     */
+    fun patchObservedProperties(
+        container: RenderContainerHandle,
+        mountedNodes: List<Any>,
+        patches: List<CoreObservedPropertyPatch>,
+        collectDiagnostics: Boolean,
+    ): CoreObservedPropertyFrame {
+        error("${this::class.qualifiedName} does not support observed-property transactions.")
+    }
+
+    /**
      * Disposes renderer nodes that are already mounted.
      */
     fun disposeMounted(
@@ -60,6 +89,7 @@ interface CoreReusableRenderTree
  * encountered while establishing [mountedNodes]; that native tree cannot be rolled back by core.
  *
  * @property mountedNodes opaque renderer nodes that become the previous tree for the next frame
+ * @property observedPropertyTargets all exact targets after a full frame
  * @property renderStats aggregate binding statistics
  * @property renderResult optional detailed diagnostics when collection was requested
  * @property commitEffects native mutations deferred until composition commit
@@ -67,10 +97,74 @@ interface CoreReusableRenderTree
  */
 data class CoreRenderFrame(
     val mountedNodes: List<Any>,
+    val observedPropertyTargets: Map<Long, CoreObservedPropertyTarget> = emptyMap(),
     val renderStats: RenderStats = RenderStats(),
     val renderResult: RenderTreeResult? = null,
     val commitEffects: List<CoreRenderCommitEffect> = emptyList(),
     val commitFailures: List<CoreRenderCommitFailure> = emptyList(),
+)
+
+/**
+ * Lightweight renderer result for one property-only transaction.
+ *
+ * Mounted roots and target handles cannot change in this transaction. The owning RenderSession
+ * advances the existing [CoreObservedPropertyTarget] snapshots only after this result succeeds,
+ * avoiding a replacement root list and target map on every property frame.
+ *
+ * @property renderStats aggregate binding statistics
+ * @property renderResult optional detailed diagnostics when collection was requested
+ * @property commitEffects native mutations deferred until session commit
+ * @property commitFailures native failures captured after the property batch became visible
+ */
+data class CoreObservedPropertyFrame(
+    val renderStats: RenderStats = RenderStats(),
+    val renderResult: RenderTreeResult? = null,
+    val commitEffects: List<CoreRenderCommitEffect> = emptyList(),
+    val commitFailures: List<CoreRenderCommitFailure> = emptyList(),
+)
+
+/**
+ * Renderer-owned exact target recorded for one committed observed property.
+ *
+ * This is a Q3 host-integration model.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.observedPropertyEngineSample
+ * @property handle opaque renderer-owned target; UI Foundation never casts or replaces it
+ * @property node last committed VNode snapshot associated with [handle]
+ */
+class CoreObservedPropertyTarget(
+    val handle: Any,
+    node: VNode,
+) {
+    /** Last committed VNode snapshot associated with [handle]. */
+    var node: VNode = node
+        internal set
+
+    internal fun advance(
+        previous: VNode,
+        next: VNode,
+    ) {
+        check(node === previous) { "Observed-property target no longer owns its previous VNode." }
+        node = next
+    }
+}
+
+/**
+ * One renderer-neutral property-only VNode replacement in an atomic batch.
+ *
+ * This is a Q3 host-integration model.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.observedPropertyEngineSample
+ */
+data class CoreObservedPropertyPatch(
+    /** Session-owned observed-property identity, unique within [CoreRenderFrame]. */
+    val id: Long,
+    /** Exact renderer target published by the preceding committed full frame. */
+    val target: CoreObservedPropertyTarget,
+    /** VNode snapshot currently owned by [target]. */
+    val previous: VNode,
+    /** Candidate VNode that differs from [previous] only by its concrete NodeSpec value. */
+    val next: VNode,
 )
 
 /**

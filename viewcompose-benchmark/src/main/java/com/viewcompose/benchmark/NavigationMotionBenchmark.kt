@@ -1,5 +1,6 @@
 package com.viewcompose.benchmark
 
+import android.os.Build
 import androidx.benchmark.macro.BaselineProfileMode
 import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.ExperimentalMetricApi
@@ -138,29 +139,41 @@ class NavigationMotionBenchmark {
                 ?: FORMAL_INTERACTION_ITERATIONS
         }
 
-        fun navigationMetrics(): List<Metric> = listOf(
-            FrameTimingMetric(),
-            TraceSectionMetric(
-                sectionName = "VC.Nav.PrepareDestination",
-                mode = TraceSectionMetric.Mode.Sum,
-                label = "navPrepare",
-            ),
-            TraceSectionMetric(
-                sectionName = "VC.FrameRender",
-                mode = TraceSectionMetric.Mode.Count,
-                label = "frameRenderCount",
-            ),
-            TraceSectionMetric(
-                sectionName = "VC.RenderTree",
-                mode = TraceSectionMetric.Mode.Max,
-                label = "renderTreeMax",
-            ),
-            TraceSectionMetric(
-                sectionName = "VC.Nav.MotionFrame",
-                mode = TraceSectionMetric.Mode.Max,
-                label = "navMotionFrameMax",
-            ),
-        )
+        fun navigationMetrics(): List<Metric> = buildList {
+            add(FrameTimingMetric())
+            // A non-debuggable benchmark APK exposes app trace sections through <profileable>,
+            // which the platform only supports from Android 10. Reporting zero-valued sections on
+            // older releases is misleading; frame timing remains valid there.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return@buildList
+            add(
+                TraceSectionMetric(
+                    sectionName = "VC.Nav.PrepareDestination",
+                    mode = TraceSectionMetric.Mode.Sum,
+                    label = "navPrepare",
+                ),
+            )
+            add(
+                TraceSectionMetric(
+                    sectionName = "VC.FrameRender",
+                    mode = TraceSectionMetric.Mode.Count,
+                    label = "frameRenderCount",
+                ),
+            )
+            add(
+                TraceSectionMetric(
+                    sectionName = "VC.RenderTree",
+                    mode = TraceSectionMetric.Mode.Max,
+                    label = "renderTreeMax",
+                ),
+            )
+            add(
+                TraceSectionMetric(
+                    sectionName = "VC.Nav.MotionFrame",
+                    mode = TraceSectionMetric.Mode.Max,
+                    label = "navMotionFrameMax",
+                ),
+            )
+        }
 
         fun profileGuidedCompilation(): CompilationMode {
             return CompilationMode.Partial(

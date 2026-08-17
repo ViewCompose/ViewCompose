@@ -10,8 +10,9 @@
     <string name="demo_performance_list_updated_subtitle">已更新至版本 %1$d · 分组 %2$d</string>
     <string name="demo_performance_revision_badge">R%1$d</string>
     <string name="demo_performance_complex_ready">%1$s 复杂布局已就绪</string>
-    <string name="demo_performance_dashboard_revision">面板版本 %1$d</string>
-    <string name="demo_performance_update_dashboard">更新面板</string>
+    <string name="demo_performance_dashboard_revision">属性版本 %1$d · 结构版本 %2$d</string>
+    <string name="demo_performance_update_dashboard">属性</string>
+    <string name="demo_performance_update_dashboard_structure">结构</string>
     <string name="demo_performance_reset_dashboard">重置面板</string>
     <string name="demo_performance_dashboard_section">面板区块 %1$d</string>
     <string name="demo_performance_nested_layout_group">嵌套布局分组 %1$d</string>

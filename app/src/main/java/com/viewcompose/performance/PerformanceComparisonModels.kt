@@ -1,6 +1,9 @@
 package com.viewcompose.performance
 
 import android.content.Context
+import com.viewcompose.ui.foundation.LazyItemsSnapshot
+import com.viewcompose.ui.foundation.toLazyItemsSnapshot
+import java.util.Collections
 
 /**
  * 列表性能场景的固定行数，保持每次 benchmark 的工作量一致。
@@ -37,6 +40,11 @@ internal data class PerformanceListRow(
     val accentColor: Int,
 )
 
+private class PreparedPerformanceListRevision(
+    val rows: List<PerformanceListRow>,
+    val snapshot: LazyItemsSnapshot<PerformanceListRow>,
+)
+
 internal class PerformanceFixtures(context: Context) {
     val copy = PerformanceCopy(context)
 
@@ -49,16 +57,57 @@ internal class PerformanceFixtures(context: Context) {
                 badge = "${index % 100}",
                 accentColor = performanceAccentColor(index),
             )
-        }
+        }.asImmutableFixtureList()
     }
+
+    private val basePerformanceListRevision: PreparedPerformanceListRevision by
+        lazy(LazyThreadSafetyMode.NONE) {
+            preparePerformanceListRevision(basePerformanceListRows)
+        }
+
+    private val firstPerformanceListMutation: PreparedPerformanceListRevision by
+        lazy(LazyThreadSafetyMode.NONE) {
+            preparePerformanceListRevision(createPerformanceListRows(revision = 1))
+        }
 
     private val basePerformanceDashboardCards: List<PerformanceDashboardCard> by
         lazy(LazyThreadSafetyMode.NONE) {
             createBasePerformanceDashboardCards(copy)
         }
 
-    fun listRows(revision: Int): List<PerformanceListRow> {
-        if (revision == 0) return basePerformanceListRows
+    private var cachedAdditionalListRevision: Int = 0
+    private var cachedAdditionalListRows: PreparedPerformanceListRevision? = null
+
+    /**
+     * Prepares both snapshots exercised by the alternating list benchmark before its Ready marker.
+     * Every rendering engine pays the same fixture preparation cost outside the measured mutation.
+     */
+    fun prepareListScenario() {
+        check(basePerformanceListRevision.rows.size == PERFORMANCE_LIST_ITEM_COUNT)
+        check(firstPerformanceListMutation.rows.size == PERFORMANCE_LIST_ITEM_COUNT)
+    }
+
+    fun listRows(revision: Int): List<PerformanceListRow> =
+        listRevision(revision).rows
+
+    fun listSnapshot(revision: Int): LazyItemsSnapshot<PerformanceListRow> =
+        listRevision(revision).snapshot
+
+    private fun listRevision(revision: Int): PreparedPerformanceListRevision {
+        when (revision) {
+            0 -> return basePerformanceListRevision
+            1 -> return firstPerformanceListMutation
+        }
+        if (revision == cachedAdditionalListRevision) {
+            cachedAdditionalListRows?.let { return it }
+        }
+        return preparePerformanceListRevision(createPerformanceListRows(revision)).also {
+            cachedAdditionalListRevision = revision
+            cachedAdditionalListRows = it
+        }
+    }
+
+    private fun createPerformanceListRows(revision: Int): List<PerformanceListRow> {
         val rotation = (revision * PERFORMANCE_LIST_ROTATION).mod(PERFORMANCE_LIST_ITEM_COUNT)
         val reordered = basePerformanceListRows
             .drop(rotation) + basePerformanceListRows.take(rotation)
@@ -71,7 +120,7 @@ internal class PerformanceFixtures(context: Context) {
             } else {
                 row
             }
-        }
+        }.asImmutableFixtureList()
     }
 
     fun dashboardCards(revision: Int): List<PerformanceDashboardCard> =
@@ -81,6 +130,16 @@ internal class PerformanceFixtures(context: Context) {
             revision = revision,
         )
 }
+
+private fun preparePerformanceListRevision(
+    rows: List<PerformanceListRow>,
+): PreparedPerformanceListRevision = PreparedPerformanceListRevision(
+    rows = rows,
+    snapshot = rows.toLazyItemsSnapshot(),
+)
+
+private fun <T> List<T>.asImmutableFixtureList(): List<T> =
+    Collections.unmodifiableList(this)
 
 /**
  * 根据 revision 返回确定性的列表数据。

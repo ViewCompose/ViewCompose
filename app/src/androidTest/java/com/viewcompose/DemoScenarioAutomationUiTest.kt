@@ -168,6 +168,21 @@ class DemoScenarioAutomationUiTest {
                     initial,
                     waitForTargetText(scenarioId, initial),
                 )
+                if (scenarioId.contains("complex-layout")) {
+                    requireTarget(scenarioId, "secondary_action").click()
+                    val structureUpdated = waitForTargetTextChange(scenarioId, initial)
+                    assertNotEquals(
+                        "$scenarioId/$engine structure action must publish state",
+                        initial,
+                        structureUpdated,
+                    )
+                    requireTarget(scenarioId, "reset").click()
+                    assertEquals(
+                        "$scenarioId/$engine reset must restore initial state after structure update",
+                        initial,
+                        waitForTargetText(scenarioId, initial),
+                    )
+                }
             }
         }
     }
@@ -613,18 +628,24 @@ class DemoScenarioAutomationUiTest {
 
         val dump = device.executeShellCommand("dumpsys activity activities")
         val lines = dump.lineSequence().toList()
-        val taskStart = lines.indexOfFirst { line -> line.trimStart().startsWith("* Task{") }
-        assertTrue("Expected a foreground task in activity dump", taskStart >= 0)
-        val nextTaskOffset = lines.drop(taskStart + 1).indexOfFirst { line ->
-            line.trimStart().startsWith("* Task{")
+        val taskStarts = lines.indices.filter { index ->
+            val line = lines[index].trimStart()
+            line.startsWith("* Task{") || line.startsWith("* TaskRecord{")
         }
-        val taskEnd = if (nextTaskOffset >= 0) taskStart + 1 + nextTaskOffset else lines.size
-        val foregroundTask = lines.subList(taskStart, taskEnd).joinToString("\n")
-        val history = foregroundTask.lineSequence()
+        val foregroundTask = taskStarts.indices
+            .map { index ->
+                val taskStart = taskStarts[index]
+                val taskEnd = taskStarts.getOrNull(index + 1) ?: lines.size
+                lines.subList(taskStart, taskEnd).joinToString("\n")
+            }
+            .firstOrNull { task ->
+                task.contains(TARGET_PACKAGE) && task.contains("com.viewcompose.StateActivity")
+            }
+        assertNotNull("Expected the visible scenario task in activity dump", foregroundTask)
+        val history = requireNotNull(foregroundTask).lineSequence()
             .filter { line -> line.contains("* Hist") }
             .toList()
 
-        assertTrue(foregroundTask.contains(TARGET_PACKAGE))
         assertTrue(history.any { line -> line.contains("com.viewcompose.StateActivity") })
         assertFalse(history.any { line -> line.contains("com.viewcompose.MainActivity") })
     }

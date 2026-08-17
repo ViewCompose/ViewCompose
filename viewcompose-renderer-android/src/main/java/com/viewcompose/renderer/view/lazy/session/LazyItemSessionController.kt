@@ -5,11 +5,43 @@ import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.ReusableItemPresentation
 
+/** Direct holder bridge that keeps hot session lifecycle calls out of generic Kotlin callbacks. */
+internal interface LazyItemSessionHost {
+    fun createSession(item: LazyListItem): LazyListItemSession
+
+    fun clearContainer()
+}
+
+/** Allocation-free result of routing one adapter submission through an item session. */
+internal enum class LazyItemBindOutcome(
+    val satisfiesSubmission: Boolean,
+) {
+    AlreadyCommitted(satisfiesSubmission = true),
+    AcceptedUnchanged(satisfiesSubmission = true),
+    ActivatedPrepared(satisfiesSubmission = true),
+    ActivatedNewSession(satisfiesSubmission = true),
+    RenderedRevision(satisfiesSubmission = true),
+    PreparedNewSession(satisfiesSubmission = false),
+    Staged(satisfiesSubmission = false),
+    NotCommitted(satisfiesSubmission = false),
+}
+
 /** Manages the child render-session lifecycle and submission revisions for one retained item. */
 internal class LazyItemSessionController(
-    private val createSession: (LazyListItem) -> LazyListItemSession,
-    private val clearContainer: () -> Unit,
+    private val host: LazyItemSessionHost,
 ) {
+    /** Lambda adapter retained for isolated tests and non-hot internal call sites. */
+    constructor(
+        createSession: (LazyListItem) -> LazyListItemSession,
+        clearContainer: () -> Unit,
+    ) : this(
+        host = object : LazyItemSessionHost {
+            override fun createSession(item: LazyListItem): LazyListItemSession = createSession(item)
+
+            override fun clearContainer() = clearContainer()
+        },
+    )
+
     private data class Candidate(
         val item: LazyListItem,
         val payload: Any?,
@@ -22,6 +54,7 @@ internal class LazyItemSessionController(
     private var currentContentRevision: Any? = null
     private var currentEnvironmentRevision: Any? = null
     private var committedRevision = Long.MIN_VALUE
+    private var committedItem: LazyListItem? = null
     private var nextImplicitRevision = 0L
     private var candidate: Candidate? = null
     private var session: LazyListItemSession? = null
@@ -35,18 +68,23 @@ internal class LazyItemSessionController(
         item: LazyListItem,
         payload: Any? = null,
         submissionRevision: Long = nextImplicitSubmissionRevision(),
-    ) {
-        if (submissionRevision <= committedRevision) return
+    ): LazyItemBindOutcome {
+        if (submissionRevision <= committedRevision) {
+            return LazyItemBindOutcome.AlreadyCommitted
+        }
         val canActivatePrepared = !active &&
             preparedRevision == submissionRevision &&
             currentKey == item.key &&
             currentContentType == item.contentType &&
             currentItemKind == item.kind &&
             hasSameRevisions(item)
-        val contentCommitted = try {
+        val outcome = try {
             if (canActivatePrepared) {
-                checkNotNull(session).activate().also { committed ->
-                    if (!committed) markInstalledRevisionUncommitted()
+                if (checkNotNull(session).activate()) {
+                    LazyItemBindOutcome.ActivatedPrepared
+                } else {
+                    markInstalledRevisionUncommitted()
+                    LazyItemBindOutcome.NotCommitted
                 }
             } else {
                 if (!active && session != null) {
@@ -60,18 +98,35 @@ internal class LazyItemSessionController(
         }
         active = true
         preparedRevision = Long.MIN_VALUE
-        if (!contentCommitted) return
+        if (!outcome.satisfiesSubmission) return outcome
         committedRevision = submissionRevision
+        committedItem = item
         candidate = null
+        return outcome
     }
 
     fun prepare(
         item: LazyListItem,
         payload: Any? = null,
         submissionRevision: Long,
-    ) {
-        if (!stageCandidate(item, payload, submissionRevision)) return
-        if (active || preparedRevision == submissionRevision) return
+    ): LazyItemBindOutcome {
+        if (!stageCandidate(item, payload, submissionRevision)) {
+            return if (submissionRevision <= committedRevision) {
+                LazyItemBindOutcome.AlreadyCommitted
+            } else {
+                LazyItemBindOutcome.Staged
+            }
+        }
+        return prepareCandidate(item, submissionRevision)
+    }
+
+    private fun prepareCandidate(
+        item: LazyListItem,
+        submissionRevision: Long,
+    ): LazyItemBindOutcome {
+        if (active || preparedRevision == submissionRevision) {
+            return LazyItemBindOutcome.Staged
+        }
 
         try {
             releaseSessionForReplacement()
@@ -83,6 +138,7 @@ internal class LazyItemSessionController(
             throw error
         }
         preparedRevision = submissionRevision
+        return LazyItemBindOutcome.PreparedNewSession
     }
 
     fun stage(
@@ -93,10 +149,16 @@ internal class LazyItemSessionController(
         stageCandidate(item, payload, submissionRevision)
     }
 
-    fun commit(submissionRevision: Long) {
-        val pending = candidate ?: return
-        if (pending.submissionRevision != submissionRevision) return
-        bind(
+    fun commit(submissionRevision: Long): LazyItemBindOutcome {
+        val pending = candidate ?: return if (hasCommitted(submissionRevision)) {
+            LazyItemBindOutcome.AlreadyCommitted
+        } else {
+            LazyItemBindOutcome.NotCommitted
+        }
+        if (pending.submissionRevision != submissionRevision) {
+            return LazyItemBindOutcome.NotCommitted
+        }
+        return bind(
             item = pending.item,
             payload = pending.payload,
             submissionRevision = pending.submissionRevision,
@@ -104,6 +166,14 @@ internal class LazyItemSessionController(
     }
 
     fun hasCommitted(submissionRevision: Long): Boolean = submissionRevision <= committedRevision
+
+    fun hasCommittedExact(
+        item: LazyListItem,
+        submissionRevision: Long,
+    ): Boolean {
+        return committedRevision == submissionRevision &&
+            committedItem === item
+    }
 
     fun discard(submissionRevision: Long) {
         if (candidate?.submissionRevision == submissionRevision) {
@@ -120,6 +190,7 @@ internal class LazyItemSessionController(
         } finally {
             candidate = null
             committedRevision = Long.MIN_VALUE
+            committedItem = null
             active = false
         }
     }
@@ -143,9 +214,10 @@ internal class LazyItemSessionController(
             preparedRevision = Long.MIN_VALUE
             candidate = null
             committedRevision = Long.MIN_VALUE
+            committedItem = null
             active = false
             try {
-                clearContainer()
+                host.clearContainer()
             } catch (clearError: Throwable) {
                 if (failure == null) failure = clearError else failure.addSuppressed(clearError)
             }
@@ -192,7 +264,7 @@ internal class LazyItemSessionController(
 
     private fun applyActive(
         item: LazyListItem,
-    ): Boolean {
+    ): LazyItemBindOutcome {
         val currentSession = session
         val presentationTypeChanged = currentSession != null &&
             (currentContentType != item.contentType || currentItemKind != item.kind)
@@ -200,8 +272,11 @@ internal class LazyItemSessionController(
         return when {
             currentSession == null || currentKey != item.key || presentationTypeChanged -> {
                 replaceSession(item)
-                checkNotNull(session).activate().also { committed ->
-                    if (!committed) markInstalledRevisionUncommitted()
+                if (checkNotNull(session).activate()) {
+                    LazyItemBindOutcome.ActivatedNewSession
+                } else {
+                    markInstalledRevisionUncommitted()
+                    LazyItemBindOutcome.NotCommitted
                 }
             }
 
@@ -212,22 +287,26 @@ internal class LazyItemSessionController(
                     currentContentRevision = item.contentRevision
                     currentEnvironmentRevision = item.environmentRevision
                 }
-                return committed
+                if (committed) {
+                    LazyItemBindOutcome.RenderedRevision
+                } else {
+                    LazyItemBindOutcome.NotCommitted
+                }
             }
 
             else -> {
                 // A newer parent submission is not itself an item invalidation. Preserve the
                 // installed closure and perform no child composition or native patch. The newer
                 // parent submission is nevertheless satisfied by the already committed item.
-                true
+                LazyItemBindOutcome.AcceptedUnchanged
             }
         }
     }
 
     private fun replaceSession(item: LazyListItem) {
         releaseSessionForReplacement()
-        clearContainer()
-        val newSession = createSession(item)
+        host.clearContainer()
+        val newSession = host.createSession(item)
         try {
             item.sessionUpdater(newSession)
             pendingPresentation?.let { presentation ->
@@ -288,6 +367,8 @@ internal class LazyItemSessionController(
         currentContentRevision = null
         currentEnvironmentRevision = null
         preparedRevision = Long.MIN_VALUE
+        committedRevision = Long.MIN_VALUE
+        committedItem = null
         var failure: Throwable? = null
         try {
             ownedSession?.dispose()
@@ -295,7 +376,7 @@ internal class LazyItemSessionController(
             failure = disposeError
         }
         try {
-            clearContainer()
+            host.clearContainer()
         } catch (clearError: Throwable) {
             if (failure == null) failure = clearError else failure.addSuppressed(clearError)
         }
@@ -311,12 +392,15 @@ internal class LazyItemSessionController(
         currentContentRevision = null
         currentEnvironmentRevision = null
         preparedRevision = Long.MIN_VALUE
+        committedRevision = Long.MIN_VALUE
+        committedItem = null
         ownedSession?.dispose()
     }
 
     private fun abandonSessionAfterBindingFailure(primary: Throwable) {
         active = false
         committedRevision = Long.MIN_VALUE
+        committedItem = null
         preparedRevision = Long.MIN_VALUE
         try {
             disposeSession()

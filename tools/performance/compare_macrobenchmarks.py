@@ -37,7 +37,7 @@ SCENARIOS = (
     ScenarioContract(
         "list_scroll",
         "performance.list",
-        3,
+        5,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeListScroll",
             COMPOSE_ENGINE: "composeListScroll",
@@ -47,7 +47,7 @@ SCENARIOS = (
     ScenarioContract(
         "list_mutation",
         "performance.list",
-        3,
+        5,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeListMutation",
             COMPOSE_ENGINE: "composeListMutation",
@@ -57,7 +57,7 @@ SCENARIOS = (
     ScenarioContract(
         "complex_layout_scroll",
         "performance.complex-layout",
-        3,
+        4,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeComplexLayoutScroll",
             COMPOSE_ENGINE: "composeComplexLayoutScroll",
@@ -65,9 +65,9 @@ SCENARIOS = (
         },
     ),
     ScenarioContract(
-        "complex_layout_update",
+        "complex_layout_property_update",
         "performance.complex-layout",
-        3,
+        4,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeComplexLayoutUpdate",
             COMPOSE_ENGINE: "composeComplexLayoutUpdate",
@@ -75,9 +75,19 @@ SCENARIOS = (
         },
     ),
     ScenarioContract(
+        "complex_layout_structure_update",
+        "performance.complex-layout",
+        4,
+        {
+            VIEWCOMPOSE_ENGINE: "viewComposeComplexLayoutStructureUpdate",
+            COMPOSE_ENGINE: "composeComplexLayoutStructureUpdate",
+            ANDROID_VIEWS_ENGINE: "androidViewsComplexLayoutStructureUpdate",
+        },
+    ),
+    ScenarioContract(
         "shadow_list_scroll",
         "performance.shadow-list",
-        2,
+        3,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeShadowListScroll",
             COMPOSE_ENGINE: "composeShadowListScroll",
@@ -86,7 +96,7 @@ SCENARIOS = (
     ScenarioContract(
         "shadow_list_mutation",
         "performance.shadow-list",
-        2,
+        3,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeShadowListMutation",
             COMPOSE_ENGINE: "composeShadowListMutation",
@@ -95,16 +105,16 @@ SCENARIOS = (
     ScenarioContract(
         "shadow_complex_layout_scroll",
         "performance.shadow-complex-layout",
-        2,
+        3,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeShadowComplexLayoutScroll",
             COMPOSE_ENGINE: "composeShadowComplexLayoutScroll",
         },
     ),
     ScenarioContract(
-        "shadow_complex_layout_update",
+        "shadow_complex_layout_property_update",
         "performance.shadow-complex-layout",
-        2,
+        3,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeShadowComplexLayoutUpdate",
             COMPOSE_ENGINE: "composeShadowComplexLayoutUpdate",

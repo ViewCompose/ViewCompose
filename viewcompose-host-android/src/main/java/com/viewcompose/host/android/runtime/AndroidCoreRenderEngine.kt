@@ -6,6 +6,7 @@ import com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime
 import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 import com.viewcompose.renderer.view.tree.MountedNode
 import com.viewcompose.renderer.view.tree.ViewTreeRenderer
+import com.viewcompose.renderer.view.tree.ViewTreeObservedPropertyPatch
 import com.viewcompose.ui.modifier.DropShadowModifierElement
 import com.viewcompose.ui.modifier.InnerShadowModifierElement
 import com.viewcompose.ui.modifier.ZIndexModifierElement
@@ -17,6 +18,9 @@ import com.viewcompose.ui.foundation.CoreRenderEngine
 import com.viewcompose.ui.foundation.CoreRenderCommitEffect
 import com.viewcompose.ui.foundation.CoreRenderCommitFailure
 import com.viewcompose.ui.foundation.CoreRenderFrame
+import com.viewcompose.ui.foundation.CoreObservedPropertyPatch
+import com.viewcompose.ui.foundation.CoreObservedPropertyFrame
+import com.viewcompose.ui.foundation.CoreObservedPropertyTarget
 import com.viewcompose.ui.foundation.CoreReusableRenderTree
 import com.viewcompose.ui.foundation.NodeTypeBindingStats
 import com.viewcompose.ui.foundation.RenderStats
@@ -72,6 +76,7 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
         )
         return CoreRenderFrame(
             mountedNodes = result.mountedNodes,
+            observedPropertyTargets = observedPropertyTargets(result.mountedNodes),
             renderStats = result.stats.toCoreStats(),
             renderResult = if (collectDiagnostics) result.toCoreResult() else null,
             commitEffects = result.commitEffects.map { effect ->
@@ -82,6 +87,55 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
                 )
             },
             commitFailures = hostResolution.transitionFailures + result.commitFailures.map { failure ->
+                CoreRenderCommitFailure(
+                    operation = failure.operation?.toCoreOperation(),
+                    nodeKey = failure.nodeKey,
+                    cause = failure.cause,
+                )
+            },
+        )
+    }
+
+    /** Patches exact Android mounted nodes in one renderer transaction without tree reconciliation. */
+    override fun patchObservedProperties(
+        container: RenderContainerHandle,
+        mountedNodes: List<Any>,
+        patches: List<CoreObservedPropertyPatch>,
+        collectDiagnostics: Boolean,
+    ): CoreObservedPropertyFrame {
+        container.requireAndroidViewGroup()
+        val androidMountedNodes = mountedNodes.filterIsInstance<MountedNode>()
+        check(androidMountedNodes.size == mountedNodes.size) {
+            "Observed-property transactions require Android MountedNode roots from this engine."
+        }
+        val rendererPatches = patches.map { patch ->
+            val mountedNode = patch.target.handle as? MountedNode
+                ?: error("Observed property ${patch.id} has a foreign renderer target.")
+            check(mountedNode.vnode === patch.target.node && patch.target.node === patch.previous) {
+                "Observed property ${patch.id} target is not the committed renderer snapshot."
+            }
+            ViewTreeObservedPropertyPatch(
+                id = patch.id,
+                mountedNode = mountedNode,
+                previous = patch.previous,
+                next = patch.next,
+            )
+        }
+        val result = ViewTreeRenderer.patchObservedProperties(
+            patches = rendererPatches,
+            collectDiagnostics = collectDiagnostics,
+        )
+        return CoreObservedPropertyFrame(
+            renderStats = result.stats.toCoreStats(),
+            renderResult = if (collectDiagnostics) result.toCoreResult() else null,
+            commitEffects = result.commitEffects.map { effect ->
+                CoreRenderCommitEffect(
+                    operation = effect.operation.toCoreOperation(),
+                    nodeKey = effect.nodeKey,
+                    commit = effect.commit,
+                )
+            },
+            commitFailures = result.commitFailures.map { failure ->
                 CoreRenderCommitFailure(
                     operation = failure.operation?.toCoreOperation(),
                     nodeKey = failure.nodeKey,
@@ -204,6 +258,22 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
                 cause = failure.cause,
             )
         }
+    }
+
+    private fun observedPropertyTargets(
+        roots: List<MountedNode>,
+    ): Map<Long, CoreObservedPropertyTarget> {
+        val targets = LinkedHashMap<Long, CoreObservedPropertyTarget>()
+        fun visit(node: MountedNode) {
+            node.vnode.observedPropertyId?.let { id ->
+                check(targets.put(id, CoreObservedPropertyTarget(node, node.vnode)) == null) {
+                    "Duplicate observed property id $id in one mounted tree."
+                }
+            }
+            node.children.forEach(::visit)
+        }
+        roots.forEach(::visit)
+        return targets
     }
 
     private fun resolveRenderHost(
@@ -338,6 +408,13 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
             ),
             warnings = warnings,
             tree = tree.map { node -> node.toCoreNode() },
+            patches = patches.map { patch -> patch.toCorePatch() },
+        )
+    }
+
+    private fun com.viewcompose.renderer.view.tree.ObservedPropertyRenderResult.toCoreResult(): RenderTreeResult {
+        return RenderTreeResult(
+            stats = stats.toCoreStats(),
             patches = patches.map { patch -> patch.toCorePatch() },
         )
     }

@@ -103,8 +103,12 @@ internal class DeclarativeLazyVerticalGridLayout(
             contentPadding.left == 0 && contentPadding.top == 0 &&
                 contentPadding.right == 0 && contentPadding.bottom == 0
         submission.publish {
-            gridAdapter.submitItems(items, submission.revision)
-            LazyStickyHeaderDecoration.update(this, gridAdapter)
+            LazyStickyHeaderDecoration.submitItemsAndUpdate(
+                recyclerView = this,
+                adapter = gridAdapter,
+                items = items,
+                submissionRevision = submission.revision,
+            )
         }
         submission.publish {
             if (listState !== state) {

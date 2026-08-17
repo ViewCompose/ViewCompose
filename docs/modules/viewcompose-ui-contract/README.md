@@ -48,7 +48,9 @@ created for the node.
 ## Principal APIs
 
 - [`VNode` and `NodeType`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node/-v-node/)
-  define immutable tree content and renderer dispatch.
+  define immutable tree content and renderer dispatch. Q3 `VNode.observedPropertyId` is an opaque
+  session identity used only to publish exact renderer targets after a full frame; direct VNode
+  constructors leave it `null`, and it does not replace semantic keys or affect ordinary content.
 - [`NodeSpec`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node.spec/-node-spec/)
   and its concrete property snapshots define the supported renderer inputs.
 - `TextNodeProps` carries one authoritative `TextDocument`; `ButtonNodeProps` and
@@ -308,3 +310,9 @@ The public `Text`, `RichText`, `Button`, `Checkbox`, `RadioButton`, and `Switch`
 rendered behavior are unchanged. This is a source- and binary-breaking Q2 snapshot-contract change
 for direct NodeSpec constructors and custom renderers, which must rebuild and perform any Android
 `CharSequence` conversion at their final native binding boundary.
+
+Adding Q3 `VNode.observedPropertyId` extends the public data-class constructor and component shape.
+Its source default keeps direct construction concise, but precompiled constructors, destructuring
+call sites, and custom renderers must rebuild for this alpha release. Custom renderers that support
+observed transactions publish one unique exact target for every non-null identity; renderers that
+do not support the capability may otherwise ignore the nullable metadata.

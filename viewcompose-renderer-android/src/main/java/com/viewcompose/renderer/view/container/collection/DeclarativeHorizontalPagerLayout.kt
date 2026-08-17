@@ -7,11 +7,13 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
+import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.renderer.interop.asRenderContainerHandle
 import com.viewcompose.ui.tooling.UiSourceSessionRole
 import com.viewcompose.renderer.reconcile.LazyListDiff
 import com.viewcompose.renderer.view.lazy.session.LazyHolderRegistry
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
+import com.viewcompose.renderer.view.lazy.session.LazyItemSessionHost
 import com.viewcompose.ui.state.PagerState
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.lazy.reuse.MountedTreeReuseCache
@@ -389,7 +391,7 @@ internal enum class PagerSubmissionResult {
  */
 internal class HorizontalPagerViewHolder(
     private val container: FrameLayout,
-) : RecyclerView.ViewHolder(container) {
+) : RecyclerView.ViewHolder(container), LazyItemSessionHost {
     var hasBinding: Boolean = false
         private set
     var boundPageKey: Any? = null
@@ -402,14 +404,16 @@ internal class HorizontalPagerViewHolder(
         private set
     val hasPendingPresentation: Boolean
         get() = controller.hasPendingPresentation
-    private val controller = LazyItemSessionController(
-        createSession = { item ->
-            item.sessionFactory.create(
-                container.asRenderContainerHandle(UiSourceSessionRole.Page),
-            )
-        },
-        clearContainer = container::removeAllViews,
-    )
+    private val renderContainer = container.asRenderContainerHandle(UiSourceSessionRole.Page)
+    private val controller = LazyItemSessionController(this)
+
+    override fun createSession(item: LazyListItem): LazyListItemSession {
+        return item.sessionFactory.create(renderContainer)
+    }
+
+    override fun clearContainer() {
+        container.removeAllViews()
+    }
 
     fun bind(
         item: LazyListItem,

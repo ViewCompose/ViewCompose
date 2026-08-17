@@ -28,18 +28,46 @@ internal fun createAndroidViewsComplexLayoutPerformanceScreen(
             copy = fixtures.copy,
         )
     }
-    var revision = 0
+    var propertyRevision = 0
+    var structureRevision = 0
     lateinit var header: AndroidViewsPerformanceHeader
-    fun submitRevision(nextRevision: Int) {
+    fun updateStateText() {
+        header.stateView.text = fixtures.copy.dashboardRevision(
+            propertyRevision,
+            structureRevision,
+        )
+    }
+    fun submitPropertyRevision(nextRevision: Int) {
         val cards = fixtures.dashboardCards(nextRevision)
         check(cards.size == cardViews.size) {
             "Android Views complex-layout control requires a stable card count."
         }
         cardViews.forEachIndexed { index, cardView ->
-            cardView.bind(cards[index])
+            cardView.bindProperties(cards[index])
         }
-        revision = nextRevision
-        header.stateView.text = fixtures.copy.dashboardRevision(revision)
+        propertyRevision = nextRevision
+        updateStateText()
+    }
+    fun submitStructureRevision(nextRevision: Int) {
+        val cards = fixtures.dashboardCards(nextRevision)
+        check(cards.size == cardViews.size) {
+            "Android Views complex-layout control requires a stable card count."
+        }
+        cardViews.forEachIndexed { index, cardView ->
+            cardView.bindStructure(cards[index])
+        }
+        structureRevision = nextRevision
+        updateStateText()
+    }
+    fun resetRevisions() {
+        val cards = fixtures.dashboardCards(0)
+        cardViews.forEachIndexed { index, cardView ->
+            cardView.bindProperties(cards[index])
+            cardView.bindStructure(cards[index])
+        }
+        propertyRevision = 0
+        structureRevision = 0
+        updateStateText()
     }
     header = createAndroidViewsPerformanceHeader(
         context = context,
@@ -49,12 +77,14 @@ internal fun createAndroidViewsComplexLayoutPerformanceScreen(
                 shadowsEnabled = false,
             ),
         ),
-        stateText = fixtures.copy.dashboardRevision(revision),
+        stateText = fixtures.copy.dashboardRevision(propertyRevision, structureRevision),
         primaryActionText = fixtures.copy.updateDashboard,
+        secondaryActionText = fixtures.copy.updateDashboardStructure,
         resetText = fixtures.copy.resetDashboard,
         scenario = scenario,
-        onPrimaryAction = { submitRevision(revision + 1) },
-        onReset = { submitRevision(0) },
+        onPrimaryAction = { submitPropertyRevision(propertyRevision + 1) },
+        onSecondaryAction = { submitStructureRevision(structureRevision + 1) },
+        onReset = ::resetRevisions,
     )
     root.addView(
         header.view,
@@ -159,10 +189,11 @@ internal class AndroidViewsDashboardCardView(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             ).withTopMargin(context.performanceDp(10)),
         )
-        bind(initialCard)
+        bindProperties(initialCard)
+        bindStructure(initialCard)
     }
 
-    fun bind(card: PerformanceDashboardCard) {
+    fun bindProperties(card: PerformanceDashboardCard) {
         titleView.text = card.title
         subtitleView.text = card.subtitle
         statusView.text = card.status
@@ -173,6 +204,9 @@ internal class AndroidViewsDashboardCardView(
         card.metrics.forEachIndexed { index, metric ->
             metricValueViews[index].text = metric.value
         }
+    }
+
+    fun bindStructure(card: PerformanceDashboardCard) {
         if (card.detailsVisible) {
             val details = detailView ?: createDetailRow(context, card).also { created ->
                 detailView = created
