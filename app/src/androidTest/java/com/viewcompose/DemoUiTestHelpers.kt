@@ -1,6 +1,7 @@
 package com.viewcompose
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -19,6 +20,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewParent
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
 import androidx.annotation.IdRes
@@ -646,15 +648,24 @@ internal fun Activity.focusInputByTestTag(tag: String) {
     val host = requireViewByTestTagVisible(tag)
     val input = findFirstEditText(host)
     assertNotNull("Expected EditText descendant for testTag: $tag", input)
-    input!!.requestFocus()
+    assertTrue("Expected EditText to accept focus for testTag: $tag", input!!.requestFocus())
+    input.post {
+        val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        inputMethodManager.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT)
+    }
 }
 
 /** Focuses the first EditText under a strict scenario-owned native resource target. */
 internal fun Activity.focusInputByScenarioViewId(@IdRes id: Int) {
-    val host = requireScenarioViewById<View>(id)
-    val input = findFirstEditText(host)
+    val host = findViewById<View>(id)
+    assertNotNull("Expected scenario resource target: $id", host)
+    val input = findFirstEditText(host!!)
     assertNotNull("Expected EditText descendant for scenario resource ID: $id", input)
-    input!!.requestFocus()
+    assertTrue("Expected EditText to accept focus for scenario resource ID: $id", input!!.requestFocus())
+    input.post {
+        val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        inputMethodManager.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT)
+    }
 }
 
 /**

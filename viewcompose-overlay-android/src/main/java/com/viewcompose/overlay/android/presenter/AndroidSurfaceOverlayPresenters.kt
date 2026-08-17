@@ -17,7 +17,6 @@ import androidx.core.view.doOnLayout
 import com.viewcompose.overlay.android.asOverlayRenderContainerHandle
 import com.viewcompose.ui.overlay.OVERLAY_ANCHOR_TAG_KEY
 import com.viewcompose.ui.unit.UiDp
-import com.viewcompose.ui.unit.dp
 import com.viewcompose.host.android.environment.AndroidEnvironmentBridge
 import com.viewcompose.ui.foundation.DialogOverlayContent
 import com.viewcompose.ui.foundation.DialogOverlayHandle
@@ -189,7 +188,6 @@ private class AndroidPopupOverlayHandle(
     spec: PopupOverlaySpec,
     content: PopupOverlayContent,
 ) : PopupOverlayHandle {
-    private val density = AndroidEnvironmentBridge.fromContext(rootView.context).density
     private val popupContainer = FrameLayout(rootView.context).apply {
         background = ColorDrawable(Color.TRANSPARENT)
         layoutParams = ViewGroup.LayoutParams(
@@ -204,7 +202,9 @@ private class AndroidPopupOverlayHandle(
         spec.focusable,
     ).apply {
         setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        elevation = density.toPx(12.dp)
+        // Popup content owns its shape and elevation. A second platform elevation produces a
+        // rectangular shadow around the exact PopupWindow bounds and clips the content shadow.
+        elevation = 0f
     }
     private val surfaceSession: OverlaySurfaceSession = createOverlaySurfaceSession(
         container = popupContainer.asOverlayRenderContainerHandle(),

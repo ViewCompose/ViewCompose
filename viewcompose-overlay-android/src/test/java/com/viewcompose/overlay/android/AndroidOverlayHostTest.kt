@@ -198,6 +198,7 @@ class AndroidOverlayHostTest {
         }
 
         assertTrue(popupWindow.isShowing)
+        assertEquals(0f, popupWindow.elevation, 0f)
 
         handle.dismiss()
 

@@ -210,6 +210,15 @@ Because the current line is alpha, the documentation site intentionally does not
 - Gesture dispatch retains an undecided pointer stream until drag recognition. If the stream ends
   without gesture consumption, the retained target receives one normal click; a recognized drag
   consumes the stream and suppresses that click.
+- Renderer-owned eager and lazy scroll containers reserve an axis-matching pointer stream only
+  while they can consume movement in that direction. They release cross-axis movement and hand
+  movement to an ancestor at the matching logical edge. A vertical child at its top yields the
+  initial downward pull to an enabled, idle `PullToRefresh` ancestor so the refresh host can own
+  the threshold gesture.
+- `FlowColumn` measures every child against the same available cross-axis width; completed columns
+  never reduce the width offered to later columns. `FlowRow` applies the symmetric rule to child
+  height. Natural flow content may still exceed a constrained cross axis, but it is not compressed
+  merely because earlier rows or columns consumed space.
 - Button surface-inset changes participate in targeted style patching. They must not recreate the
   native View or change its effective measured target.
 - Basic Surface uses the same effective/visual-bound model. A changed surface snapshot performs a

@@ -49,6 +49,10 @@ Host 不发现设计系统，也不会替换成 Material 控件。`integrationAt
 报告 Transport、Presenter、Conformance 与 Fallback；自定义 Presenter 在所属设计 Adapter
 发布更具体证据之前标记为未验证。
 
+`PopupWindow` 是传输与定位边界，不是视觉 Surface。它的平台 Elevation 固定为零，因此
+`DropdownMenu` 等 Popup 内容只由自身声明 Shape 与 Elevation。没有声明 Elevation 的通用
+`Popup` 内容也不会隐式获得矩形 Window 阴影。
+
 每个已附着 Render Root 创建一个 Host。提交和清理必须在主线程执行。清理 Session 只关闭该
 Session 的 Surface，移除监听，并在释放平台 Window 前销毁嵌套渲染 Session。
 

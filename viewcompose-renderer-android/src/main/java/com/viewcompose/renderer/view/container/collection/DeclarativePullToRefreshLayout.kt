@@ -3,6 +3,10 @@ package com.viewcompose.renderer.view.container
 import android.content.Context
 import android.graphics.Canvas
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ScrollView
+import androidx.core.widget.NestedScrollView
+import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 
@@ -52,5 +56,32 @@ internal class DeclarativePullToRefreshLayout(
     override fun onViewRemoved(child: View) {
         decorationDrawing?.onViewRemoved(child)
         super.onViewRemoved(child)
+    }
+
+    override fun canChildScrollUp(): Boolean {
+        // SwipeRefreshLayout inserts its progress indicator alongside the declarative content, so
+        // the first platform child is not guaranteed to be the rendered scrollable hierarchy.
+        val scrollable = (0 until childCount).firstNotNullOfOrNull { index ->
+            getChildAt(index).findVerticalScrollableDescendant()
+        }
+        return scrollable?.canScrollVertically(-1) ?: super.canChildScrollUp()
+    }
+
+    private fun View.findVerticalScrollableDescendant(): View? {
+        if (
+            this is RecyclerView ||
+            this is NestedScrollView ||
+            this is ScrollView ||
+            canScrollVertically(-1) ||
+            canScrollVertically(1)
+        ) {
+            return this
+        }
+        if (this is ViewGroup) {
+            for (index in 0 until childCount) {
+                getChildAt(index).findVerticalScrollableDescendant()?.let { return it }
+            }
+        }
+        return null
     }
 }

@@ -47,6 +47,11 @@ or modal-sheet presenters complete or retain their request using the documented 
 type; custom presenters are marked unverified until their owning design adapter publishes a more
 specific attribution snapshot.
 
+`PopupWindow` is a transport and positioning boundary, not a visual surface. Its platform elevation
+remains zero so popup content such as `DropdownMenu` owns the declared shape and elevation exactly
+once. Generic `Popup` content that declares no elevation therefore receives no implicit rectangular
+window shadow.
+
 Create one host per attached render root. Commit and clear calls are main-thread work. Clearing a
 session dismisses only that session's surfaces, removes listeners, and disposes nested render
 sessions before their platform windows are released.

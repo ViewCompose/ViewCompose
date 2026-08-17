@@ -93,6 +93,11 @@ Overflow policies:
 `PopupPositioner` is the platform-neutral positioning contract. Custom hosts can use the same
 calculation with their own anchor bounds, visible viewport, and popup measurement.
 
+The Android `PopupWindow` transport does not add platform elevation. The rendered popup content is
+the single visual shadow owner: `DropdownMenu` keeps its theme elevation, tooltip or custom content
+uses its own declaration, and zero-elevation generic content stays shadowless. This prevents a
+second rectangular window shadow from competing with a rounded content outline.
+
 ## Snackbar and Toast queue
 
 Snackbar and Toast declarations share a single FIFO lane. A request is identified by

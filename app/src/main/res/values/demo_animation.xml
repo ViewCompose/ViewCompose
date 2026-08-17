@@ -42,7 +42,7 @@
 
     <string name="demo_animation_specs_title">Animation specs and generic values</string>
     <string name="demo_animation_specs_summary">Exercise typed and generic state animation, easing, repeat modes, and animateContentSize.</string>
-    <string name="demo_animation_specs_state">spec=%1$s · target=%2$b · linear=%3$b · reverse=%4$b · vector=%5$b · expanded=%6$b</string>
+    <string name="demo_animation_specs_state">spec=%1$s · target=%2$b · linear=%3$b · reverse=%4$b · vector=%5$b</string>
     <string name="demo_animation_specs_kind">Spec: %1$s</string>
     <string name="demo_animation_specs_kind_tween">Tween</string>
     <string name="demo_animation_specs_kind_spring">Spring</string>
@@ -68,6 +68,8 @@
     <string name="demo_animation_specs_size_content_a">Expanded content A</string>
     <string name="demo_animation_specs_size_content_b">Expanded content B</string>
     <string name="demo_animation_specs_size_content_c">Expanded content C</string>
+    <string name="demo_animation_content_size_state_collapsed">State: collapsed</string>
+    <string name="demo_animation_content_size_state_expanded">State: expanded</string>
 
     <string name="demo_animation_transition_title">Transition and visibility state</string>
     <string name="demo_animation_transition_summary">Exercise updateTransition, MutableTransitionState, and row/column visibility axes.</string>

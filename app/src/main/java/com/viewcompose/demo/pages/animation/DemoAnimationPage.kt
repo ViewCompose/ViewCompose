@@ -60,6 +60,7 @@ import com.viewcompose.ui.foundation.Surface
 import com.viewcompose.ui.foundation.SurfaceVariant
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
@@ -87,6 +88,11 @@ internal fun UiTreeBuilder.PreviewAnimationSpecs() {
     AnimationPage(AnimationFixture.Specs)
 }
 
+@ViewComposePreview(name = "Animation · Content size", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewAnimationContentSize() {
+    AnimationPage(AnimationFixture.ContentSize)
+}
+
 @ViewComposePreview(name = "Animation · Transition", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewAnimationTransition() {
     AnimationPage(AnimationFixture.Transition)
@@ -105,6 +111,7 @@ internal enum class AnimationFixture(
     Content(DemoScenarioIds.AnimationContent, "transition"),
     ListMotion(DemoScenarioIds.AnimationListMotion, "list"),
     Specs(DemoScenarioIds.AnimationSpecs, "specs"),
+    ContentSize(DemoScenarioIds.AnimationContentSize, "content_size"),
     Transition(DemoScenarioIds.AnimationTransition, "transition_matrix"),
     Infinite(DemoScenarioIds.AnimationInfinite, "infinite_animatable"),
     ;
@@ -120,6 +127,10 @@ internal fun UiTreeBuilder.AnimationPage(
     fixture: AnimationFixture,
     scenario: DemoScenarioSpec? = null,
 ) {
+    if (fixture == AnimationFixture.ContentSize) {
+        AnimationContentSizePage(scenario)
+        return
+    }
     val visibleState = if (fixture == AnimationFixture.Core) remember { mutableStateOf(true) } else null
     val taskCompletedState = if (fixture == AnimationFixture.Core) remember { mutableStateOf(false) } else null
     val pulseState = if (fixture == AnimationFixture.Core) remember { mutableStateOf(false) } else null
@@ -140,7 +151,6 @@ internal fun UiTreeBuilder.AnimationPage(
     val easingLinearState = if (fixture == AnimationFixture.Specs) remember { mutableStateOf(false) } else null
     val repeatModeReverseState = if (fixture == AnimationFixture.Specs) remember { mutableStateOf(false) } else null
     val vectorTargetState = if (fixture == AnimationFixture.Specs) remember { mutableStateOf(false) } else null
-    val sizeExpandedState = if (fixture == AnimationFixture.Specs) remember { mutableStateOf(false) } else null
     val transitionState = if (fixture == AnimationFixture.Transition) remember { mutableStateOf(false) } else null
     val mutableVisibilityState = if (fixture == AnimationFixture.Transition) {
         remember { MutableTransitionState(false) }
@@ -615,7 +625,6 @@ internal fun UiTreeBuilder.AnimationPage(
                 val easingLinearState = checkNotNull(easingLinearState)
                 val repeatModeReverseState = checkNotNull(repeatModeReverseState)
                 val vectorTargetState = checkNotNull(vectorTargetState)
-                val sizeExpandedState = checkNotNull(sizeExpandedState)
                 ScenarioSection(
                 kind = ScenarioKind.Core,
                 title = stringResource(R.string.demo_animation_specs_title),
@@ -691,7 +700,6 @@ internal fun UiTreeBuilder.AnimationPage(
                         easingLinearState.value,
                         repeatModeReverseState.value,
                         vectorTargetState.value,
-                        sizeExpandedState.value,
                     ),
                     modifier = Modifier.animationScenarioTarget(scenario, DemoAutomationRole.State),
                 )
@@ -779,7 +787,6 @@ internal fun UiTreeBuilder.AnimationPage(
                             easingLinearState.value = false
                             repeatModeReverseState.value = false
                             vectorTargetState.value = false
-                            sizeExpandedState.value = false
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -854,42 +861,6 @@ internal fun UiTreeBuilder.AnimationPage(
                                 .weight(1f)
                                 .testTag(DemoTestTags.ANIMATION_SPEC_VECTOR_VALUE),
                         )
-                    }
-                    Button(
-                        text = stringResource(
-                            if (sizeExpandedState.value) {
-                                R.string.demo_animation_specs_size_collapse
-                            } else {
-                                R.string.demo_animation_specs_size_expand
-                            },
-                        ),
-                        variant = ButtonVariant.Outlined,
-                        onClick = { sizeExpandedState.value = !sizeExpandedState.value },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag(DemoTestTags.ANIMATION_SPEC_SIZE_TOGGLE),
-                    )
-                    Surface(
-                        variant = SurfaceVariant.Variant,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .animateContentSize(animationSpec = spring())
-                            .padding(10.dp),
-                    ) {
-                        Column(
-                            spacing = 6.dp,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(text = stringResource(R.string.demo_animation_specs_size_title))
-                            if (sizeExpandedState.value) {
-                                Text(
-                                    text = stringResource(R.string.demo_animation_specs_size_content_a),
-                                    modifier = Modifier.testTag(DemoTestTags.ANIMATION_SPEC_SIZE_PROBE),
-                                )
-                                Text(text = stringResource(R.string.demo_animation_specs_size_content_b))
-                                Text(text = stringResource(R.string.demo_animation_specs_size_content_c))
-                            }
-                        }
                     }
                 }
                 }
@@ -1327,6 +1298,90 @@ internal fun UiTreeBuilder.AnimationPage(
             }
 
             else -> error("Unsupported animation section: $section")
+        }
+    }
+}
+
+private fun UiTreeBuilder.AnimationContentSizePage(scenario: DemoScenarioSpec?) {
+    val expandedState = remember { mutableStateOf(false) }
+    Column(
+        spacing = 12.dp,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(12.dp),
+    ) {
+        Text(
+            text = stringResource(
+                scenario?.titleRes ?: R.string.demo_scenario_animation_content_size_title,
+            ),
+            style = Theme.typography.titleLarge,
+        )
+        Text(
+            text = stringResource(
+                scenario?.summaryRes ?: R.string.demo_scenario_animation_content_size_summary,
+            ),
+            color = TextDefaults.secondaryColor(),
+        )
+        Text(
+            text = stringResource(
+                if (expandedState.value) {
+                    R.string.demo_animation_content_size_state_expanded
+                } else {
+                    R.string.demo_animation_content_size_state_collapsed
+                },
+            ),
+            modifier = Modifier.animationScenarioTarget(scenario, DemoAutomationRole.State),
+        )
+        Row(spacing = 8.dp, modifier = Modifier.fillMaxWidth()) {
+            Button(
+                text = stringResource(R.string.demo_animation_specs_size_expand),
+                enabled = !expandedState.value,
+                onClick = { expandedState.value = true },
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(DemoTestTags.ANIMATION_SPEC_SIZE_TOGGLE)
+                    .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+            )
+            Button(
+                text = stringResource(R.string.demo_animation_specs_size_collapse),
+                enabled = expandedState.value,
+                variant = ButtonVariant.Outlined,
+                onClick = { expandedState.value = false },
+                modifier = Modifier
+                    .weight(1f)
+                    .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
+            )
+        }
+        Button(
+            text = stringResource(R.string.demo_animation_reset),
+            variant = ButtonVariant.Outlined,
+            onClick = { expandedState.value = false },
+            modifier = Modifier
+                .fillMaxWidth()
+                .animationScenarioTarget(scenario, DemoAutomationRole.Reset),
+        )
+        Surface(
+            variant = SurfaceVariant.Variant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .animateContentSize(animationSpec = spring())
+                .padding(10.dp)
+                .animationScenarioTarget(scenario, DemoAutomationRole.Target),
+        ) {
+            Column(
+                spacing = 6.dp,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = stringResource(R.string.demo_animation_specs_size_title))
+                if (expandedState.value) {
+                    Text(
+                        text = stringResource(R.string.demo_animation_specs_size_content_a),
+                        modifier = Modifier.testTag(DemoTestTags.ANIMATION_SPEC_SIZE_PROBE),
+                    )
+                    Text(text = stringResource(R.string.demo_animation_specs_size_content_b))
+                    Text(text = stringResource(R.string.demo_animation_specs_size_content_c))
+                }
+            }
         }
     }
 }

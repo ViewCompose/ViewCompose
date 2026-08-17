@@ -113,7 +113,9 @@ internal class DeclarativeFlowRowLayout @JvmOverloads constructor(
             val child = getChildAt(i)
             if (child.visibility == GONE) continue
 
-            measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, totalHeight)
+            // Completed rows affect this container's total height, not the constraints of later
+            // rows. Keep the cross-axis measurement independent for every wrapped line.
+            measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0)
 
             val params = child.layoutParams as MarginLayoutParams
             val childWidth = child.measuredWidth + params.leftMargin + params.rightMargin

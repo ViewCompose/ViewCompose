@@ -181,6 +181,12 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
   相对值会整体替换先声明值。正 `offsetRelative.horizontal` 朝逻辑 end 平移且不改变测量。
 - Gesture 分发会保留尚未判定的 Pointer Stream，直到识别出 Drag。若 Stream 结束时没有被 Gesture
   消费，保留目标会收到一次普通 Click；已识别的 Drag 会消费 Stream 并抑制该 Click。
+- Renderer 所有的 eager 与 lazy 滚动容器只会在自身能够消费相应方向位移时保留轴向一致的
+  Pointer Stream。容器会释放交叉轴位移，并在对应逻辑边缘把位移交给祖先。垂直 child 位于顶部
+  且祖先是启用、空闲的 `PullToRefresh` 时，会把初始向下拖动交给刷新 Host 完成阈值手势。
+- `FlowColumn` 使用相同的可用交叉轴宽度测量每个 child，已经完成的列不会缩减后续列的可用宽度；
+  `FlowRow` 对 child 高度执行对称规则。自然 Flow 内容仍可超出受限交叉轴，但不会仅因前面行列
+  已占用空间而被压缩。
 - Button Surface 内缩变化会参与定向样式 Patch，不得因此重建原生 View 或改变其有效测量目标。
 - Basic Surface 使用相同的有效/可见边界模型。Surface 快照变化会对保留的
   `DeclarativeBoxLayout` 执行中立重绑定；调用方 Background、Border 或 Shape Modifier 会移除

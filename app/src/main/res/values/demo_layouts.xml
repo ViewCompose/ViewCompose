@@ -50,7 +50,7 @@
     <string name="demo_layouts_reset_tags">Reset tags</string>
     <string name="demo_layouts_tag">Tag %1$d</string>
     <string name="demo_layouts_flow_column_summary">FlowColumn vertical flow (maxItemsInEachColumn = 3)</string>
-    <string name="demo_layouts_vertical_item">Vertical item %1$d</string>
+    <string name="demo_layouts_vertical_item">Item %1$d</string>
     <string name="demo_layouts_scroll_title">Scrollable containers</string>
     <string name="demo_layouts_scroll_summary">ScrollableColumn and ScrollableRow provide linear scrolling containers.</string>
     <string name="demo_layouts_scroll_column_label">ScrollableColumn (long content scrolls)</string>

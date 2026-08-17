@@ -56,6 +56,34 @@
     <item name="demo_input_search_state" type="id" />
     <item name="demo_input_search_target" type="id" />
 
+    <item name="demo_input_focus_follow_lazy_column_root" type="id" />
+    <item name="demo_input_focus_follow_lazy_column_ready" type="id" />
+    <item name="demo_input_focus_follow_lazy_column_primary_action" type="id" />
+    <item name="demo_input_focus_follow_lazy_column_reset" type="id" />
+    <item name="demo_input_focus_follow_lazy_column_state" type="id" />
+    <item name="demo_input_focus_follow_lazy_column_target" type="id" />
+
+    <item name="demo_input_focus_follow_scrollable_column_root" type="id" />
+    <item name="demo_input_focus_follow_scrollable_column_ready" type="id" />
+    <item name="demo_input_focus_follow_scrollable_column_primary_action" type="id" />
+    <item name="demo_input_focus_follow_scrollable_column_reset" type="id" />
+    <item name="demo_input_focus_follow_scrollable_column_state" type="id" />
+    <item name="demo_input_focus_follow_scrollable_column_target" type="id" />
+
+    <item name="demo_input_focus_follow_vertical_pager_root" type="id" />
+    <item name="demo_input_focus_follow_vertical_pager_ready" type="id" />
+    <item name="demo_input_focus_follow_vertical_pager_primary_action" type="id" />
+    <item name="demo_input_focus_follow_vertical_pager_reset" type="id" />
+    <item name="demo_input_focus_follow_vertical_pager_state" type="id" />
+    <item name="demo_input_focus_follow_vertical_pager_target" type="id" />
+
+    <item name="demo_input_focus_follow_pull_refresh_root" type="id" />
+    <item name="demo_input_focus_follow_pull_refresh_ready" type="id" />
+    <item name="demo_input_focus_follow_pull_refresh_primary_action" type="id" />
+    <item name="demo_input_focus_follow_pull_refresh_reset" type="id" />
+    <item name="demo_input_focus_follow_pull_refresh_state" type="id" />
+    <item name="demo_input_focus_follow_pull_refresh_target" type="id" />
+
     <item name="demo_input_derived_summary_root" type="id" />
     <item name="demo_input_derived_summary_ready" type="id" />
     <item name="demo_input_derived_summary_primary_action" type="id" />
@@ -144,6 +172,14 @@
     <item name="demo_animation_specs_state" type="id" />
     <item name="demo_animation_specs_target" type="id" />
 
+    <item name="demo_animation_content_size_root" type="id" />
+    <item name="demo_animation_content_size_ready" type="id" />
+    <item name="demo_animation_content_size_primary_action" type="id" />
+    <item name="demo_animation_content_size_secondary_action" type="id" />
+    <item name="demo_animation_content_size_reset" type="id" />
+    <item name="demo_animation_content_size_state" type="id" />
+    <item name="demo_animation_content_size_target" type="id" />
+
     <item name="demo_animation_transition_root" type="id" />
     <item name="demo_animation_transition_ready" type="id" />
     <item name="demo_animation_transition_primary_action" type="id" />
@@ -200,7 +236,11 @@
 
     <item name="demo_collection_lazy_list_root" type="id" />
     <item name="demo_collection_lazy_list_ready" type="id" />
+    <item name="demo_collection_lazy_list_primary_action" type="id" />
+    <item name="demo_collection_lazy_list_secondary_action" type="id" />
     <item name="demo_collection_lazy_list_reset" type="id" />
+    <item name="demo_collection_lazy_list_state" type="id" />
+    <item name="demo_collection_lazy_list_target" type="id" />
 
     <item name="demo_collection_stress_root" type="id" />
     <item name="demo_collection_stress_ready" type="id" />
@@ -219,10 +259,19 @@
     <item name="demo_collection_grid_root" type="id" />
     <item name="demo_collection_grid_ready" type="id" />
     <item name="demo_collection_grid_reset" type="id" />
+    <item name="demo_collection_grid_target" type="id" />
 
     <item name="demo_collection_pull_refresh_root" type="id" />
     <item name="demo_collection_pull_refresh_ready" type="id" />
+    <item name="demo_collection_pull_refresh_primary_action" type="id" />
+    <item name="demo_collection_pull_refresh_secondary_action" type="id" />
     <item name="demo_collection_pull_refresh_reset" type="id" />
+    <item name="demo_collection_pull_refresh_state" type="id" />
+    <item name="demo_collection_pull_refresh_target" type="id" />
+
+    <item name="demo_collection_nested_lazy_list_root" type="id" />
+    <item name="demo_collection_nested_lazy_list_ready" type="id" />
+    <item name="demo_collection_nested_lazy_list_target" type="id" />
 
     <item name="demo_layout_linear_root" type="id" />
     <item name="demo_layout_linear_ready" type="id" />

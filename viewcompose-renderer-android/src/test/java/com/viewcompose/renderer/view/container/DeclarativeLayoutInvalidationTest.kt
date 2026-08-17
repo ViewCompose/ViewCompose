@@ -270,6 +270,50 @@ class DeclarativeLayoutInvalidationTest {
     }
 
     @Test
+    fun `flow column keeps later intrinsic widths when natural columns overflow`() {
+        val context = RuntimeEnvironment.getApplication()
+        val view = DeclarativeFlowColumnLayout(context).apply {
+            horizontalSpacing = 10
+            maxItemsInEachColumn = 1
+        }
+        repeat(3) {
+            view.addView(DesiredSizeView(context, desiredWidth = 60, desiredHeight = 20))
+        }
+
+        view.measure(
+            View.MeasureSpec.makeMeasureSpec(150, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(40, View.MeasureSpec.EXACTLY),
+        )
+        view.layout(0, 0, 150, 40)
+
+        assertEquals(listOf(60, 60, 60), (0 until 3).map { view.getChildAt(it).measuredWidth })
+        assertEquals(listOf(0, 70, 140), (0 until 3).map { view.getChildAt(it).left })
+        assertEquals(200, view.getChildAt(2).right)
+    }
+
+    @Test
+    fun `flow row keeps later intrinsic heights when natural rows overflow`() {
+        val context = RuntimeEnvironment.getApplication()
+        val view = DeclarativeFlowRowLayout(context).apply {
+            verticalSpacing = 10
+            maxItemsInEachRow = 1
+        }
+        repeat(3) {
+            view.addView(DesiredSizeView(context, desiredWidth = 20, desiredHeight = 60))
+        }
+
+        view.measure(
+            View.MeasureSpec.makeMeasureSpec(40, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(150, View.MeasureSpec.EXACTLY),
+        )
+        view.layout(0, 0, 40, 150)
+
+        assertEquals(listOf(60, 60, 60), (0 until 3).map { view.getChildAt(it).measuredHeight })
+        assertEquals(listOf(0, 70, 140), (0 until 3).map { view.getChildAt(it).top })
+        assertEquals(200, view.getChildAt(2).bottom)
+    }
+
+    @Test
     @Config(qualifiers = "ldrtl")
     fun `flow row places logical first child at the right edge in rtl`() {
         val context = RuntimeEnvironment.getApplication()
@@ -333,6 +377,19 @@ class DeclarativeLayoutInvalidationTest {
         view.measure(measureSpec, measureSpec)
         view.layout(0, 0, 200, 200)
         assertFalse(view.isLayoutRequested)
+    }
+
+    private class DesiredSizeView(
+        context: android.content.Context,
+        private val desiredWidth: Int,
+        private val desiredHeight: Int,
+    ) : View(context) {
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            setMeasuredDimension(
+                resolveSize(desiredWidth, widthMeasureSpec),
+                resolveSize(desiredHeight, heightMeasureSpec),
+            )
+        }
     }
 
 }

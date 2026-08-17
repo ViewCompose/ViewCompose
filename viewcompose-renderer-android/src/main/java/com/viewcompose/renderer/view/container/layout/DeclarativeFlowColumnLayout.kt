@@ -113,7 +113,9 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
             val child = getChildAt(i)
             if (child.visibility == GONE) continue
 
-            measureChildWithMargins(child, widthMeasureSpec, totalWidth, heightMeasureSpec, 0)
+            // Completed columns affect this container's total width, not the constraints of later
+            // columns. Passing totalWidth as widthUsed progressively compresses wrap-content children.
+            measureChildWithMargins(child, widthMeasureSpec, 0, heightMeasureSpec, 0)
 
             val params = child.layoutParams as MarginLayoutParams
             val childWidth = child.measuredWidth + params.leftMargin + params.rightMargin

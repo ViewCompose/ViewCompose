@@ -8,6 +8,8 @@ import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.NestedScrollView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
@@ -493,6 +495,22 @@ class DemoVisualUiTest {
     }
 
     @Test
+    fun inputFields_multilineBioAndSupportingTextRemainFullyVisible() {
+        launchDemoScenarioActivity(
+            InputActivity::class.java,
+            "input.fields",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                assertViewFullyVisible(
+                    activity.requireViewByTestTagVisible(DemoTestTags.INPUT_BIO_FIELD),
+                )
+            }
+        }
+    }
+
+    @Test
     fun inputStress_controlsRemainVisibleAndReadable() {
         launchDemoScenarioActivity(
             InputActivity::class.java,
@@ -523,67 +541,70 @@ class DemoVisualUiTest {
                 val protectedField = activity.requireScenarioViewByIdVisible<View>(
                     R.id.demo_input_stress_target,
                 )
+                assertViewFullyVisible(
+                    activity.requireViewByTestTagVisible(DemoTestTags.INPUT_STRESS_NOTES_FIELD),
+                )
                 assertViewFullyVisible(protectedField)
             }
         }
     }
 
     @Test
-    fun inputSearch_focusSearchBar_scrollsOnlyEnoughToRevealInput() {
+    fun inputFocusFollowScrollableColumn_scrollsOnlyEnoughToRevealInput() {
         launchDemoScenarioActivity(
             InputActivity::class.java,
-            "input.search",
+            "input.focus-follow-scrollable-column",
             themeMode = DemoThemeMode.Light,
         ).use { scenario ->
             waitForUiIdle()
             assertFocusActionRevealsInput(
                 scenario = scenario,
-                resourceId = R.id.demo_input_search_target,
+                resourceId = R.id.demo_input_focus_follow_scrollable_column_target,
             )
         }
     }
 
     @Test
-    fun inputSearch_focusScrollableColumnSearch_scrollsOnlyEnoughToRevealInput() {
+    fun inputFocusFollowVerticalPager_scrollsOnlyEnoughToRevealInput() {
         launchDemoScenarioActivity(
             InputActivity::class.java,
-            "input.search",
+            "input.focus-follow-vertical-pager",
             themeMode = DemoThemeMode.Light,
         ).use { scenario ->
             waitForUiIdle()
             assertFocusActionRevealsInput(
                 scenario = scenario,
-                tag = DemoTestTags.INPUT_FOCUS_SCROLLABLE_SEARCH,
+                resourceId = R.id.demo_input_focus_follow_vertical_pager_target,
             )
         }
     }
 
     @Test
-    fun inputSearch_focusVerticalPagerSearch_scrollsOnlyEnoughToRevealInput() {
+    fun inputFocusFollowPullRefresh_scrollsOnlyEnoughToRevealInput() {
         launchDemoScenarioActivity(
             InputActivity::class.java,
-            "input.search",
+            "input.focus-follow-pull-refresh",
             themeMode = DemoThemeMode.Light,
         ).use { scenario ->
             waitForUiIdle()
             assertFocusActionRevealsInput(
                 scenario = scenario,
-                tag = DemoTestTags.INPUT_FOCUS_VERTICAL_PAGER_SEARCH,
+                resourceId = R.id.demo_input_focus_follow_pull_refresh_target,
             )
         }
     }
 
     @Test
-    fun inputSearch_focusPullRefreshSearch_scrollsOnlyEnoughToRevealInput() {
+    fun inputFocusFollowLazyColumn_scrollsOnlyEnoughToRevealInput() {
         launchDemoScenarioActivity(
             InputActivity::class.java,
-            "input.search",
+            "input.focus-follow-lazy-column",
             themeMode = DemoThemeMode.Light,
         ).use { scenario ->
             waitForUiIdle()
             assertFocusActionRevealsInput(
                 scenario = scenario,
-                tag = DemoTestTags.INPUT_FOCUS_PULL_REFRESH_SEARCH,
+                resourceId = R.id.demo_input_focus_follow_lazy_column_target,
             )
         }
     }
@@ -928,6 +949,8 @@ class DemoVisualUiTest {
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
+                val grid = activity.requireScenarioViewById<View>(R.id.demo_collection_grid_target)
+                assertTrue("Expected the rounded grid host to clip its children", grid.clipToOutline)
                 val firstItem = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_GRID_FIRST_ITEM)
                 assertViewFullyVisible(firstItem)
                 twoColumnLabel = firstItem.text.toString()
@@ -940,6 +963,53 @@ class DemoVisualUiTest {
                 assertViewFullyVisible(firstItem)
                 assertNotEquals(twoColumnLabel, firstItem.text.toString())
             }
+        }
+    }
+
+    @Test
+    fun collectionsPullRefresh_downwardGestureStartsAndCompletesRefresh() {
+        launchDemoScenarioActivity(
+            CollectionsActivity::class.java,
+            "collection.pull-refresh",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
+            waitForUiIdle()
+            var centerX = 0
+            var startY = 0
+            var endY = 0
+            scenario.onActivity { activity ->
+                val refreshLayout = activity.requireScenarioViewById<View>(
+                    R.id.demo_collection_pull_refresh_target,
+                )
+                val location = IntArray(2)
+                refreshLayout.getLocationOnScreen(location)
+                centerX = location[0] + refreshLayout.width / 2
+                startY = location[1] + refreshLayout.height / 4
+                endY = location[1] + refreshLayout.height * 3 / 4
+            }
+            androidx.test.uiautomator.UiDevice.getInstance(
+                androidx.test.platform.app.InstrumentationRegistry.getInstrumentation(),
+            ).swipe(centerX, startY, centerX, endY, 24)
+            val refreshing = waitUntilActivityCondition(scenario, timeoutMs = 3_000L) { activity ->
+                val refreshLayout = activity.requireScenarioViewById<View>(
+                    R.id.demo_collection_pull_refresh_target,
+                )
+                val state = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_collection_pull_refresh_state,
+                )
+                refreshLayout.readBooleanProperty("isRefreshing") &&
+                    state.text.toString().contains("1")
+            }
+            assertTrue("Expected a real downward gesture to start exactly one refresh", refreshing)
+            scenario.onActivity { activity ->
+                activity.clickScenarioViewById(R.id.demo_collection_pull_refresh_secondary_action)
+            }
+            val completed = waitUntilActivityCondition(scenario) { activity ->
+                !activity.requireScenarioViewById<View>(
+                    R.id.demo_collection_pull_refresh_target,
+                ).readBooleanProperty("isRefreshing")
+            }
+            assertTrue("Expected Complete refresh to stop the indicator", completed)
         }
     }
 
@@ -1300,18 +1370,44 @@ class DemoVisualUiTest {
                 activity.clickScenarioViewByIdVisible(R.id.demo_animation_specs_secondary_action)
                 activity.clickScenarioViewByIdVisible(R.id.demo_animation_specs_primary_action)
                 activity.clickByTestTag(DemoTestTags.ANIMATION_SPEC_VECTOR_TOGGLE)
-                activity.clickByTestTag(DemoTestTags.ANIMATION_SPEC_SIZE_TOGGLE)
             }
             waitForUiIdle()
             val typedAndGenericUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val floatAfter = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_SPEC_FLOAT_VALUE).text.toString()
                 val vectorAfter = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_SPEC_VECTOR_VALUE).text.toString()
-                val sizeProbe = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_SPEC_SIZE_PROBE)
                 floatAfter != floatBefore &&
-                    vectorAfter != vectorBefore &&
-                    isViewVisible(sizeProbe)
+                    vectorAfter != vectorBefore
             }
             assertTrue("Expected specs panel to update typed and generic animation values", typedAndGenericUpdated)
+        }
+    }
+
+    @Test
+    fun animationContentSize_expansionProbeRemainsVisibleOnNonScrollingStage() {
+        launchDemoScenarioActivity(
+            AnimationActivity::class.java,
+            "animation.content-size",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                activity.clickScenarioViewByIdVisible(
+                    R.id.demo_animation_content_size_primary_action,
+                )
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                assertViewFullyVisible(
+                    activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.ANIMATION_SPEC_SIZE_PROBE,
+                    ),
+                )
+                assertViewFullyVisible(
+                    activity.requireScenarioViewByIdVisible<View>(
+                        R.id.demo_animation_content_size_target,
+                    ),
+                )
+            }
         }
     }
 
@@ -1842,7 +1938,11 @@ class DemoVisualUiTest {
     ) = assertFocusActionRevealsInput(
         scenario = scenario,
         targetDescription = "resourceId=$resourceId",
-        resolveHost = { requireScenarioViewById(resourceId) },
+        resolveHost = {
+            checkNotNull(findViewById(resourceId)) {
+                "Expected scenario resource target: $resourceId"
+            }
+        },
         requestFocus = { focusInputByScenarioViewId(resourceId) },
     )
 
@@ -1852,22 +1952,33 @@ class DemoVisualUiTest {
         resolveHost: InputActivity.() -> View,
         requestFocus: InputActivity.() -> Unit,
     ) {
-        var beforeAnchor: RecyclerViewportAnchor? = null
         var beforeVisibleHeight = 0
         scenario.onActivity { activity ->
             val inputHost = activity.resolveHost()
-            beforeAnchor = activity.readFirstRecyclerAnchor()
             beforeVisibleHeight = Rect().also(inputHost::getGlobalVisibleRect).height()
             activity.requestFocus()
         }
-        waitForUiIdle()
+        val revealedAboveKeyboard = waitUntilActivityCondition(scenario, timeoutMs = 3_000L) { activity ->
+            val focusedHost = activity.resolveHost()
+            val root = activity.window.decorView
+            val rootInsets = ViewCompat.getRootWindowInsets(root) ?: return@waitUntilActivityCondition false
+            if (!rootInsets.isVisible(WindowInsetsCompat.Type.ime())) {
+                return@waitUntilActivityCondition false
+            }
+            val rootLocation = IntArray(2)
+            root.getLocationOnScreen(rootLocation)
+            val imeTop = rootLocation[1] + root.height -
+                rootInsets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            val visibleBounds = Rect()
+            focusedHost.getGlobalVisibleRect(visibleBounds) &&
+                visibleBounds.height() == focusedHost.height &&
+                visibleBounds.bottom <= imeTop
+        }
+        assertTrue(
+            "Expected complete focused host above the visible IME: $targetDescription",
+            revealedAboveKeyboard,
+        )
         scenario.onActivity { activity ->
-            val afterAnchor = activity.readFirstRecyclerAnchor()
-            assertNotNull(beforeAnchor)
-            assertNotNull(afterAnchor)
-            val before = beforeAnchor!!
-            val after = afterAnchor!!
-            assertEquals(before.position, after.position)
             val focusedHost = activity.resolveHost()
             val focusedInput = focusedHost.findFocus()
             assertNotNull("Expected input to retain focus: $targetDescription", focusedInput)
@@ -1907,6 +2018,10 @@ class DemoVisualUiTest {
     private fun isViewVisible(view: View): Boolean {
         val rect = Rect()
         return view.getGlobalVisibleRect(rect) && !rect.isEmpty
+    }
+
+    private fun View.readBooleanProperty(getterName: String): Boolean {
+        return javaClass.getMethod(getterName).invoke(this) as Boolean
     }
 
     private fun <T : Activity> waitUntilActivityCondition(

@@ -91,6 +91,10 @@ alignment 覆盖上方/下方、逻辑 start/end 侧和 anchor 中心；逻辑 s
 `PopupPositioner` 是平台无关定位契约。自定义宿主可使用自己的 anchor bounds、可见 viewport
 和 popup 测量结果复用相同计算。
 
+Android `PopupWindow` Transport 不额外设置平台 Elevation。渲染出的 Popup 内容是唯一视觉
+阴影 Owner：`DropdownMenu` 保留主题 Elevation，Tooltip 或自定义内容使用自身声明，零 Elevation
+的通用内容则保持无阴影。这可以避免第二层矩形 Window 阴影与圆角内容轮廓相互竞争。
+
 ## Snackbar 与 Toast 队列
 
 Snackbar 与 Toast 声明共用一条 FIFO 通道。请求由 `(render session, requestKey)` 标识；声明
