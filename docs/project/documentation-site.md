@@ -68,6 +68,12 @@ service, credentials, analytics, or network request after deployment. Search UI 
 reviewed in the standard `zh-CN` message catalog, while the index is generated from the locale's
 rendered documents during every production build.
 
+Search keeps page summaries, headings, public contracts, and command guidance indexed. Exhaustive
+defect-evidence tables and dated measurement ledgers remain rendered and directly linkable, but use
+`search-partition-detail` so repeated historical detail does not dominate the local index. Every
+excluded block must retain an adjacent searchable heading and summary; API contracts, command
+references, and reader-facing guides must not use this partition.
+
 The per-locale search-index budget is 6 MiB. It was first raised from 4 MiB after the searchable
 [multi-design-system architecture standard](../architecture/design-systems.md), ADR-0005, and its
 evidence-heavy [active execution plan](./plans/multi-design-system-high-fidelity.md) measured about
@@ -239,6 +245,26 @@ identity token.
 
 ## Last verified
 
+<div className="search-partition-detail">
+
+2026-08-17: paired Docusaurus locale builds on the same checkout dependency set compared `main`
+with the manual-review repair branch before and after the required search partition. `main`
+measured 44,793,209 non-API bytes, 5,847,241 English-search bytes, and 6,291,004 Chinese-search
+bytes. Before partitioning, the candidate measured 45,212,251, 5,955,601, and 6,402,818 bytes: an
+increase of 419,042 non-API bytes (0.94%), 108,360 English-search bytes (1.85%), and 111,814
+Chinese-search bytes (1.78%), failing both the 43 MiB non-API and 6 MiB Chinese-search ceilings.
+The added 11-row manual-review defect table accounted for approximately 98 KiB of the Chinese
+index growth, while `main` itself had only 452 bytes of Chinese-search headroom. The approved
+representation change keeps plan summaries and headings searchable while excluding exhaustive
+defect tables and dated evidence ledgers from full-text indexing. The remediated candidate measured
+44,941,342 non-API bytes, 5,829,508 English-search bytes, and 6,273,894 Chinese-search bytes. Against
+`main`, non-API output remains 148,133 bytes (0.33%) higher, while English and Chinese search are
+17,733 (0.30%) and 17,110 (0.27%) bytes smaller. The conclusion is **improved** index representation
+with no threshold increase. The baseline worktree did not reconstruct API history, but its rendered
+non-API and locale-search trees were complete; those are the only compared metrics. The next action
+is to keep exhaustive evidence behind an adjacent searchable summary and revisit index segmentation
+before either locale again reaches 6 MiB.
+
 2026-08-16: paired complete Docusaurus builds on the same checkout dependency set compared current
 `main` with the observed-property transaction branch. Non-API output measured 43,622,588 and
 44,251,626 bytes respectively, a 629,038-byte or 1.44% increase. English search measured 5,592,645
@@ -274,3 +300,5 @@ language placement, 80 current Chinese mirrors, local search, compatibility redi
 site-owned accessibility pages. Measured output was 316.3 MiB; non-API output was 32.9 MiB, the 78
 API trees averaged 3.6 MiB, routing overhead was below the displayed 0.1 MiB precision, the largest
 JavaScript asset was 650 KiB, and the full site build took 24.2 seconds.
+
+</div>
