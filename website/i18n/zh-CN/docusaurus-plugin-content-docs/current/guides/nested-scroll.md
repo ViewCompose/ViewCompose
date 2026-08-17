@@ -1,6 +1,6 @@
 ---
 translation_source: guides/nested-scroll.md
-translation_source_hash: 870b2e1a6993df7a4a4c4f09cabeb4b89fb0196bf91115f63cfb02970257c2b2
+translation_source_hash: 24bc6a2fc809bccac8a2a506879b99414d722711a5991bac2bf4fc64c84f3242
 translation_status: current
 ---
 

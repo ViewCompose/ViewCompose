@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
-  "summary": "Add observed property transactions and lazy snapshot reuse; make contentRevision non-null (consumers must recompile); reduce redundant bindings; fix flow and nested-scroll ownership; remove popup-window elevation.",
+  "summary": "Add observed property transactions and lazy snapshot reuse; make single-entry contentRevision non-null and place it after key (consumers must recompile); reduce redundant bindings and RecyclerView tail latency.",
   "changes": [
     { "artifact": "viewcompose-runtime", "impact": "feature" },
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
     { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
     { "artifact": "viewcompose-host-android", "impact": "feature" },
-    { "artifact": "viewcompose-renderer-android", "impact": "feature" },
-    { "artifact": "viewcompose-overlay-android", "impact": "fix" }
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" }
   ],
   "ignored": [
     {

@@ -1,6 +1,6 @@
 ---
 translation_source: guides/overlays.md
-translation_source_hash: e957e593f70750127f0610ff293825d7cc8159d7fb504da175d56675e1e41330
+translation_source_hash: af592a8bdbaaeb50be72ab05d85581d23658b437502c4381e0a6ef44907a394b
 translation_status: current
 ---
 

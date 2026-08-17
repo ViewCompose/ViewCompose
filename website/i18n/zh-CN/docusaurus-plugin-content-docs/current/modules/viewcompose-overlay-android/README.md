@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-android/README.md
-translation_source_hash: b776c9a447afa907c58256505a20459a34cc902ab8680642a0e35c1389e8918b
+translation_source_hash: e9dc0398b19a277f70a90a9c766c223456e6b866306b3af331410c95354021d0
 translation_status: current
 ---
 
