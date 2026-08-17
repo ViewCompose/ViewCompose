@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 28a8ae03741f7311919d809a851908e38e1ff515eeffc40c8e9b3db0d09fd435
+translation_source_hash: 576ce5ee186c113976941f67eb524c3b71473fb1a2ffc10a7377f2eff3b3becb
 translation_status: current
 ---
 
@@ -263,6 +263,32 @@ Perfetto 显示 `RV Scroll`、display-list recording 与 RenderThread draw 成�
 同时依据主机预检并显式记录的时钟策略验收该批次。更新场景的高 P95 仍属于基线的一部分：
 两个引擎都会重建多张带阴影卡片和条件子树，不能只用 P50 解释结果。
 
+<div className="benchmark-evidence">
+
+2026-08-17 的 Pixel 5 / Android 14 运行只比较 `performance.shadow-list@3` 中等价的
+ViewCompose 与 Compose 方法；Android Views 的阴影实现不同，因而不参与。目标提交为
+`0cf6515f305a7d230018f72599b1b52b2a0acf26`，被测 APK SHA-256 为
+`fad1d21cbbf25ba40da5e507a4de997e35f4b3f23dda81bd0e17cfd726c34ea7`；协议采用 run-from-APK、
+`Auto`（`ExactBitmap`）、5 次 iteration、5 秒 setup、4 轮上下滚动和 8 个变更闭环。固定性能
+模式下 CPU policy 为 1.8048/2.208/2.4 GHz，GPU 活跃频率为 625 MHz，温控保持 `NONE`。
+AndroidX Benchmark 1.5.0-beta01 仅替换 runner，以规避此设备上 1.4.1 的 Perfetto 关闭超时；
+被测应用代码未改变。
+
+| 工作负载/运行 | ViewCompose P50/P95 | Compose P50/P95 | ViewCompose/Compose run-P50 CV | ViewCompose 变化 | 分类 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `performance.shadow-list@3` 滚动 | 2.968 / 5.979 ms | 3.590 / 6.499 ms | 0.013 / 0.052 | 降低 17.3% / 8.0% | `improved` |
+| `performance.shadow-list@3` 变更，首次运行 | 2.406 / 6.707 ms | 4.529 / 10.249 ms | 0.203 / 0.061 | 降低 46.9% / 34.6% | `inconclusive` |
+| `performance.shadow-list@3` 变更，完整复跑 | 3.319 / 6.947 ms | 4.529 / 10.249 ms | 0.211 / 0.061 | 降低 26.7% / 32.2% | `inconclusive` |
+
+滚动 P50 跨过 10% 与 0.3 ms 门禁，P95 方向同样有利。其 heap/RSS 中位数为
+14,481/68,332 KiB，Compose 为 12,973/65,112 KiB（+11.6%/+4.9%），未跨过内存门禁，因此
+滚动结论为 `improved`，伴随非实质内存成本。两次完整 ViewCompose 变更运行都未通过 `0.15`
+稳定性门禁，并形成两组 iteration-P50 平台；变更结论为 `inconclusive`，复跑也不替换首次结果。
+下一步先排查 Session/cache 启动状态。由于设备与工作负载 revision 不同，本轮不与 Samsung
+revision-2 基线作纵向比较。
+
+</div>
+
 当时导航 revision 6 和设计系统 bundle revision 3 尚无已验收的物理基线。在同一台三星设备上，
 每个 run 的 4 次导航转场已经提供 202--223 帧，但 Android 温控最终为 `NONE` 时，OEM 频率
 上限仍在满速和受限值之间切换。unlocked 与 fixed-performance 试验的 run-P50 CV 为
@@ -341,8 +367,9 @@ Frame CPU duration 越低越好。归一化变化采用
 因此，2026-08-15 已验收批次的结论有明确边界，不能概括为“整体比 Compose 更快”：
 
 1. 在这批已验收数据中，变更与整树更新工作负载持续快于 Compose control；
-2. 滚动并非持续占优，但已验收滚动行都没有触发自动回归门禁：阴影列表 P95 是首要方向性优化
-   目标，其次是非 Lazy 复杂布局 P50；普通列表 P95 也仍是需要监测的方向性缺口；
+2. 滚动并非普遍占优。Samsung revision-2 阴影列表 P95 仍是历史方向性目标；Pixel 5
+   revision-3 阴影列表对照方向有利，但不能跨设备、跨工作负载 revision 关闭该目标；非 Lazy
+   复杂布局 P50 与普通列表 P95 也仍是需要监测的缺口；
 3. 两个复杂布局更新场景即使相对结果有利，仍是绝对尾延迟优化目标；
 4. 诊断与集合 fixture 只有已验收的 ViewCompose 稳定性基线，不构成 Compose 排名；
 5. 导航 revision 6 和设计系统 bundle revision 3 已在第 2.4.2 节形成稳定的 root 固定频率绝对
@@ -352,7 +379,6 @@ Frame CPU duration 越低越好。归一化变化采用
 7. 该局部 Android Views 批次只证明 3 个 steady-state action，不代表完整场景：列表变更存在原生
    尾部回退，复杂布局滚动存在原生中位数回退，复杂布局更新则中位数更好但尾部明显更差；列表
    滚动保持 `inconclusive`。
-
 相对同轮 Android Views control，已验收的局部批次结论为：
 
 | 工作负载 | P50 变化 | P95 变化 | 分类 | 解释 |

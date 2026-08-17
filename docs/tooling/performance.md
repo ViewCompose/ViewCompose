@@ -309,6 +309,33 @@ AndroidX `cpuLocked` snapshots while accepting the batch through its explicit ho
 policy. High update P95 values remain part of the baseline: both engines rebuild many shadowed
 cards and a conditional subtree, so P50 alone is not an adequate interpretation.
 
+<div className="benchmark-evidence">
+
+The 2026-08-17 Pixel 5 / Android 14 run compares only equivalent ViewCompose and Compose methods at
+`performance.shadow-list@3`; Android Views is excluded because its shadow implementation differs.
+It used commit `0cf6515f305a7d230018f72599b1b52b2a0acf26`, target APK SHA-256
+`fad1d21cbbf25ba40da5e507a4de997e35f4b3f23dda81bd0e17cfd726c34ea7`, run-from-APK,
+`Auto` (`ExactBitmap`), five iterations, a 5-second setup, four up/down scroll cycles, and eight
+mutation cycles. Fixed-performance CPU policies were 1.8048/2.208/2.4 GHz, active GPU was 625 MHz,
+and thermal status stayed `NONE`. AndroidX Benchmark 1.5.0-beta01 supplied only the runner to avoid
+the 1.4.1 Perfetto shutdown timeout on this device; measured application code was unchanged.
+
+| Workload/run | ViewCompose P50/P95 | Compose P50/P95 | ViewCompose/Compose run-P50 CV | ViewCompose delta | Classification |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `performance.shadow-list@3` scroll | 2.968 / 5.979 ms | 3.590 / 6.499 ms | 0.013 / 0.052 | 17.3% / 8.0% lower | `improved` |
+| `performance.shadow-list@3` mutation, first run | 2.406 / 6.707 ms | 4.529 / 10.249 ms | 0.203 / 0.061 | 46.9% / 34.6% lower | `inconclusive` |
+| `performance.shadow-list@3` mutation, full retry | 3.319 / 6.947 ms | 4.529 / 10.249 ms | 0.211 / 0.061 | 26.7% / 32.2% lower | `inconclusive` |
+
+Scroll P50 crosses the 10% and 0.3 ms gates; P95 has the same favorable direction. Its heap/RSS
+medians are 14,481/68,332 KiB versus Compose at 12,973/65,112 KiB (+11.6%/+4.9%), below the memory
+gates, so scroll is `improved` with a non-material memory cost. Both complete ViewCompose mutation
+attempts fail the `0.15` stability gate and form two iteration-P50 bands; mutation is therefore
+`inconclusive`, and the retry does not replace the first run. Diagnose session/cache startup state
+before accepting mutation. Device and workload revisions differ, so this is not a longitudinal
+comparison with the Samsung revision-2 baseline.
+
+</div>
+
 At that point, navigation revision 6 and design-bundle revision 3 had no accepted physical baselines.
 On the same Samsung device, four navigation transitions supplied 202-223 frames per run, but OEM
 frequency ceilings alternated between full and capped values even when Android thermal status ended
@@ -403,9 +430,10 @@ The 2026-08-15 accepted-batch conclusion was therefore scoped, not universal:
 
 1. mutation and whole-tree update workloads are consistently faster than the Compose control in
    this accepted batch;
-2. scrolling is not consistently faster, although no accepted scrolling row crosses the automated
-   regression gate: shadow-list P95 is the first directional optimization target, followed by
-   non-Lazy complex-layout P50; ordinary-list P95 also remains a monitored directional gap;
+2. scrolling is not universally faster. The Samsung revision-2 shadow-list P95 remains a
+   historical directional target, while the Pixel 5 revision-3 shadow-list pair is favorable but
+   cannot close that target across a different device and workload revision; non-Lazy
+   complex-layout P50 and ordinary-list P95 also remain monitored gaps;
 3. the two complex update workloads remain absolute tail-latency targets even though their
    relative comparison is favorable;
 4. diagnostics and collection fixtures have accepted ViewCompose-only stability baselines, not a
@@ -417,7 +445,6 @@ The 2026-08-15 accepted-batch conclusion was therefore scoped, not universal:
 7. that partial Android Views batch proves three steady-state actions, not the complete scenario:
    list mutation has a native tail regression, complex scroll has a native median regression, and
    complex update has a better median but a much worse tail; list scroll remains `inconclusive`.
-
 Against the same-run Android Views control, the accepted partial batch is:
 
 | Workload | P50 delta | P95 delta | Classification | Interpretation |
