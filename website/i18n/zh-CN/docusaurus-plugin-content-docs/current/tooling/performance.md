@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 576ce5ee186c113976941f67eb524c3b71473fb1a2ffc10a7377f2eff3b3becb
+translation_source_hash: b6835bb65c803fe4fd47156325a6390071090b2ee6016ca18f4153d74c37c66a
 translation_status: current
 ---
 
@@ -286,6 +286,47 @@ AndroidX Benchmark 1.5.0-beta01 仅替换 runner，以规避此设备上 1.4.1 �
 稳定性门禁，并形成两组 iteration-P50 平台；变更结论为 `inconclusive`，复跑也不替换首次结果。
 下一步先排查 Session/cache 启动状态。由于设备与工作负载 revision 不同，本轮不与 Samsung
 revision-2 基线作纵向比较。
+
+随后在同一台 Pixel 5 上，以相同被测应用、runner 和时钟策略完整运行了
+`performance.complex-layout@4` 的 ViewCompose、Compose、Android Views 三方全部动作，并运行
+`performance.shadow-complex-layout@3` 中 ViewCompose/Compose 两个等价动作。首轮矩阵生成 65
+份 trace；对两个不稳定的普通更新动作分别进行三方完整复跑，又生成 30 份 trace。所有正确性、
+action/reset 和恢复断言均通过。电池温度保持在 29.8--32.3 摄氏度，Android 温控状态始终为
+`NONE`。
+
+| 工作负载/运行 | ViewCompose P50/P95 | Compose P50/P95 | Android Views P50/P95 | Run-P50 CV（VC/C/Views） | Frame CPU 结论 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `performance.complex-layout@4` 滚动 | 3.737 / 4.139 ms | 3.844 / 8.222 ms | 3.123 / 4.075 ms | 0.009 / 0.052 / 0.008 | 相对 Compose 为 `improved`；相对 Views 为 `regressed` |
+| 属性更新，首次运行 | 4.388 / 10.646 ms | 7.099 / 22.834 ms | 3.126 / 15.741 ms | 0.157 / 0.066 / 0.914 | `inconclusive` |
+| 属性更新，完整复跑 | 3.666 / 10.486 ms | 7.204 / 22.434 ms | 3.904 / 8.200 ms | 0.171 / 0.020 / 0.159 | `inconclusive` |
+| 结构更新，首次运行 | 3.651 / 6.409 ms | 6.198 / 12.763 ms | 3.001 / 7.802 ms | 0.055 / 0.175 / 0.189 | `inconclusive` |
+| 结构更新，完整复跑 | 3.821 / 6.750 ms | 6.470 / 12.441 ms | 3.597 / 8.006 ms | 0.131 / 0.059 / 0.227 | 相对 Compose 为 `improved`；Views 为 `inconclusive` |
+| `performance.shadow-complex-layout@3` 滚动 | 4.104 / 4.586 ms | 4.096 / 9.299 ms | 不适用 | 0.011 / 0.057 / 不适用 | `improved` |
+| 阴影属性更新 | 3.869 / 11.523 ms | 7.559 / 22.915 ms | 不适用 | 0.147 / 0.020 / 不适用 | `improved` |
+
+普通滚动的已验收 frame 结果方向分裂：相对 Compose，P50 降低 2.8%，未达实质门槛，P95
+降低 49.7%；相对 Android Views，P50 实质升高 19.7%，P95 仅升高 1.6%。ViewCompose 的
+heap/RSS 中位数为 18,770/85,580 KiB，Compose 为 18,373/74,964 KiB，Views 为
+10,281/73,864 KiB。RSS 成本相对两方都跨过门禁，相对 Views 时两项内存指标均跨过门禁，
+所以完整滚动分类为 `mixed`。
+
+结构更新复跑建立了稳定的 ViewCompose/Compose 对照：ViewCompose P50/P95 分别降低
+40.9%/45.7%，但 heap/RSS 中位数为 33,984/107,536 KiB，Compose 为
+27,874.5/83,624 KiB（+21.9%/+28.6%）。因此完整的 ViewCompose/Compose 分类是 `mixed`，
+而不是普遍胜出。Android Views 的 CV 仍为 `0.227`，该对照为 `inconclusive`。属性更新两次
+完整运行都不稳定（ViewCompose CV 先后为 `0.157`、`0.171`，Views 为 `0.914`、`0.159`），
+即使单个数字看起来有利，也不能解释为性能结论。
+
+两个阴影复杂布局 frame 对照都稳定且为 `improved`：滚动 P50 中性的升高 0.2%，P95 降低
+50.7%；属性更新 P50/P95 降低 48.8%/49.7%。内存抵消了部分收益：滚动 heap 增加 2.1%、
+RSS 增加 21.9%；属性更新 heap 降低 17.5%、RSS 增加 16.8%。两项 RSS 变化都跨过 10% 与
+4,096 KiB 门禁，因此两个场景的完整分类都是 `mixed`。
+
+这些结果是已验收的逐帧分布，不是合成的事务耗时：Compose 更新方法产生 46 个测量帧，
+ViewCompose 与 Android Views 约为 240--260 个。Android Views 的阴影实现不等价，仍不参与
+阴影排名。下一步是在接受不稳定普通更新动作之前，对 action/reset 调度和初始 Session/cache
+状态增加观测；同时降低 ViewCompose 复杂树 RSS，并缩小普通滚动相对 Views 的 P50 差距。
+Pixel 5 工作负载 revision 不能与 Samsung 基线作纵向比较。
 
 </div>
 

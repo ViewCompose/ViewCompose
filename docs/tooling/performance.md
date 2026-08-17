@@ -334,6 +334,51 @@ attempts fail the `0.15` stability gate and form two iteration-P50 bands; mutati
 before accepting mutation. Device and workload revisions differ, so this is not a longitudinal
 comparison with the Samsung revision-2 baseline.
 
+The same Pixel 5, application binary, runner, and clock policy then covered all three
+`performance.complex-layout@4` actions with ViewCompose, Compose, and Android Views, plus both
+equivalent ViewCompose/Compose actions at `performance.shadow-complex-layout@3`. The primary matrix
+produced 65 traces; complete three-engine retries of the two unstable ordinary update actions added
+30 traces. Every correctness, action/reset, and restoration assertion passed. Battery temperature
+stayed between 29.8 and 32.3 degrees Celsius and Android thermal status stayed `NONE`.
+
+| Workload/run | ViewCompose P50/P95 | Compose P50/P95 | Android Views P50/P95 | Run-P50 CV (VC/C/Views) | Frame CPU conclusion |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `performance.complex-layout@4` scroll | 3.737 / 4.139 ms | 3.844 / 8.222 ms | 3.123 / 4.075 ms | 0.009 / 0.052 / 0.008 | `improved` vs Compose; `regressed` vs Views |
+| property update, first run | 4.388 / 10.646 ms | 7.099 / 22.834 ms | 3.126 / 15.741 ms | 0.157 / 0.066 / 0.914 | `inconclusive` |
+| property update, full retry | 3.666 / 10.486 ms | 7.204 / 22.434 ms | 3.904 / 8.200 ms | 0.171 / 0.020 / 0.159 | `inconclusive` |
+| structure update, first run | 3.651 / 6.409 ms | 6.198 / 12.763 ms | 3.001 / 7.802 ms | 0.055 / 0.175 / 0.189 | `inconclusive` |
+| structure update, full retry | 3.821 / 6.750 ms | 6.470 / 12.441 ms | 3.597 / 8.006 ms | 0.131 / 0.059 / 0.227 | `improved` vs Compose; Views `inconclusive` |
+| `performance.shadow-complex-layout@3` scroll | 4.104 / 4.586 ms | 4.096 / 9.299 ms | n/a | 0.011 / 0.057 / n/a | `improved` |
+| shadow property update | 3.869 / 11.523 ms | 7.559 / 22.915 ms | n/a | 0.147 / 0.020 / n/a | `improved` |
+
+The accepted ordinary-scroll frame result is directionally split: relative to Compose, P50 is a
+non-material 2.8% lower while P95 is 49.7% lower; relative to Android Views, P50 is materially 19.7%
+higher while P95 is only 1.6% higher. ViewCompose heap/RSS medians are 18,770/85,580 KiB, versus
+Compose at 18,373/74,964 KiB and Views at 10,281/73,864 KiB. The RSS cost crosses the gate against
+both engines, and both memory metrics cross it against Views, so the complete scroll classification
+is `mixed`.
+
+The structure-update retry establishes a stable ViewCompose/Compose pair: ViewCompose P50/P95 are
+40.9%/45.7% lower, while heap/RSS medians are 33,984/107,536 KiB versus 27,874.5/83,624 KiB
+(+21.9%/+28.6%). Its complete ViewCompose/Compose classification is therefore `mixed`, not a general
+win. Android Views remained unstable at CV `0.227`, so that pair is `inconclusive`. Property update
+remained unstable across both complete attempts (ViewCompose CV `0.157` then `0.171`; Views `0.914`
+then `0.159`), and neither attempt is interpreted despite favorable-looking individual numbers.
+
+Both shadow-complex frame comparisons are stable and `improved`: scroll has a neutral +0.2% P50 and
+a 50.7% lower P95, while property update is 48.8%/49.7% lower at P50/P95. Memory reverses part of
+that result. Scroll heap is +2.1% but RSS is +21.9%; property-update heap is 17.5% lower but RSS is
+16.8% higher. Because each RSS delta crosses the 10% and 4,096 KiB gate, both complete shadow
+classifications are `mixed`.
+
+These are accepted per-frame distributions, not synthetic transaction-latency measurements:
+Compose update methods emit 46 measured frames while ViewCompose and Android Views emit roughly
+240--260. Android Views remains excluded from shadow ranking because its shadow implementation is
+not equivalent. The next work is to instrument update action/reset scheduling and initial
+session/cache state before accepting the unstable ordinary actions, reduce ViewCompose complex-tree
+RSS, and close the ordinary-scroll P50 gap to Views. The Pixel 5 workload revisions are not a
+longitudinal comparison with the Samsung baselines.
+
 </div>
 
 At that point, navigation revision 6 and design-bundle revision 3 had no accepted physical baselines.
