@@ -14,7 +14,10 @@ dependencies {
 }
 ```
 
-- Stability: **Alpha**. The DSL and native mapping are available; advanced helper parity may evolve.
+- Stability: **Alpha**. The DSL and native mapping are available, but the 2026-08-18 audit found
+  unresolved helper lifecycle, exact-geometry, rollback, and performance-evidence gaps. The active
+  [ConstraintLayout hardening plan](../../project/plans/constraintlayout-native-engine-hardening.md)
+  may hard-cut unsuitable Alpha APIs and renderer behavior rather than preserve a compatibility path.
 - Platform: Android 7.0 (API 24) and newer.
 - Optional: `viewcompose-ui-foundation` does not depend on this artifact.
 - UI Contract and UI Foundation are exposed transitively because their modifier, unit, and builder
@@ -80,12 +83,19 @@ Layer require at least one reference. Barrier and chain emptiness is currently f
 
 The native container coalesces rebuild requests and applies the latest merged specification before
 measure/layout when necessary. Child and helper string IDs are mapped to stable Android View IDs.
-Virtual helper Views are synchronized to the latest helper set rather than exposed as DSL children.
+Flow, Group, Layer, and Placeholder Views are renderer-created rather than exposed as DSL children;
+Guideline and Barrier creation currently relies on native `ConstraintSet.applyTo` behavior.
 
 Missing referenced IDs, duplicate inline IDs, overrides, and circular graphs are logged once. A
 missing link is skipped; remaining constraints still apply. Native `ConstraintSet.applyTo` failures
 are caught and logged so the render session survives, but the resulting layout may retain partial or
 previous native state. Treat warnings as authoring errors and test complex graphs on-device.
+
+The accepted Alpha audit reproduced `ConstraintSet: id unknown` warnings, a Layer transform failure,
+and incorrect Barrier Demo geometry. It also identified that Guideline and Barrier are outside the
+renderer-owned helper-pruning map. Helper-heavy graphs are therefore not considered release-closed
+until the active hardening plan provides one helper owner, atomic rejection/rollback, exact geometry
+coverage, and warning-free device evidence.
 
 ## Performance guidance
 
@@ -93,6 +103,10 @@ previous native state. Treat warnings as authoring errors and test complex graph
 - Keep reference IDs and helper declaration order stable to avoid native helper churn.
 - Prefer simpler containers when constraints do not add value; ConstraintLayout incurs a solver pass.
 - Avoid rebuilding large helper graphs from rapidly changing state.
+
+There is no accepted ConstraintLayout-specific direct-native benchmark yet. Do not describe the
+adapter as the fastest ViewCompose layout path until the hardening plan records reproducible
+10/50/100-node control and candidate results in the performance documentation.
 
 ## Related documentation
 
@@ -106,6 +120,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes string references, inline-over-external merging, complete anchor
-and dimension mapping, virtual helpers, coalesced native rebuilds, and warning-based recovery for
-invalid graphs. It does not provide a platform-neutral constraint solver.
+The `0.1.0-alpha01` line establishes string references, inline-over-external merging, the documented
+logical-anchor and dimension baseline, virtual helpers, coalesced native rebuilds, and warning-based
+recovery for invalid graphs. It does not provide a platform-neutral constraint solver, and the
+active hardening plan owns the identified correctness, API, parity, and performance gaps.

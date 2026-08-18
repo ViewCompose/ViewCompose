@@ -447,7 +447,11 @@ morph path independently if it does not improve fidelity or performance.
   runners. Their last-writer cancellation and stale-frame rejection already satisfy the required
   retargeting contract, so a parallel component loop was rejected.
 - The existing bounded, duration-based `SpringSpec` remains the fallback spring model. No measured
-  fidelity or performance evidence justified adding a physical solver in this phase.
+  fidelity or performance evidence justified adding a physical solver in this phase. This
+  completed design-system decision is not reopened: framework-wide physical spring, velocity,
+  decay, bounds, and result contracts have moved to the active
+  [Animation Compose-capability expansion plan](./animation-compose-capability-expansion.md), and
+  design-system components will consume that accepted engine when it becomes available.
 - `interpolateUiShape` interpolates matching corner families with matching absolute/relative size
   representations. Any mismatch returns an attributable discrete endpoint fallback; arbitrary Path
   Morph remains explicitly unsupported.

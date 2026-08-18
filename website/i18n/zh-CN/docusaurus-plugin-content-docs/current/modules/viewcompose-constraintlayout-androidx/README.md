@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-constraintlayout-androidx/README.md
-translation_source_hash: 952512563448f0fd4a80a8fd3f273df1a5d2b099de1fd7cc2545f8345e730887
+translation_source_hash: 0e4542e011ab611dfdf49b7a92b374b9f0a4c514d99177f41d639cb0abd76780
 translation_status: current
 ---
 
@@ -20,7 +20,10 @@ dependencies {
 }
 ```
 
-- 稳定性：**Alpha**。DSL 与 Native Mapping 已可用，高级 Helper 对齐仍可能演进。
+- 稳定性：**Alpha**。DSL 与 Native Mapping 已可用，但 2026-08-18 审计确认仍存在 Helper 生命周期、
+  精确几何、回滚与性能证据缺口。有效的
+  [ConstraintLayout 强化计划](https://docs.viewcompose.com/project/plans/constraintlayout-native-engine-hardening)
+  可以硬切不合适的 Alpha API 与 Renderer 行为，不保留兼容执行路径。
 - 平台：Android 7.0（API 24）及以上。
 - 可选：`viewcompose-ui-foundation` 不依赖该产物。
 - UI Contract 与 UI Foundation 会被传递暴露，因为它们的 Modifier、单位和 Builder 类型出现在
@@ -80,12 +83,17 @@ Thread-local Scope。Flow、Group、Layer 至少需要一个 Reference；Barrier
 ## Native 重建与失败
 
 Native Container 会合并 Rebuild Request，并在需要时于 Measure/Layout 前应用最新 Merge Spec。Child 与
-Helper String ID 会映射为稳定 Android View ID。Virtual Helper View 跟随最新 Helper Set 同步，不作为
-DSL Child 暴露。
+Helper String ID 会映射为稳定 Android View ID。Flow、Group、Layer 与 Placeholder View 由 Renderer
+创建，不作为 DSL Child 暴露；Guideline 与 Barrier 的创建目前依赖原生 `ConstraintSet.applyTo` 行为。
 
 缺失 Reference、重复 Inline ID、覆盖与环形 Graph 会各记录一次日志。缺失 Link 会被跳过，其余 Constraint
 继续应用。Native `ConstraintSet.applyTo` 失败会被捕获并记录，使 Render Session 存活，但 Layout 可能保留
 部分或旧 Native State。应把这些 Warning 当作编写错误，并在真机测试复杂 Graph。
+
+已接受的 Alpha 审计复现了 `ConstraintSet: id unknown` Warning、Layer Transform 失败和错误的 Barrier
+Demo 几何，同时确认 Guideline 与 Barrier 不在 Renderer 自有的 Helper 清理 Map 中。在有效强化计划以
+单一 Helper Owner、原子拒绝/回滚、精确几何覆盖和零 Warning 真机证据闭环之前，不把 Helper 密集 Graph
+视为已完成发布验收。
 
 ## 性能建议
 
@@ -93,6 +101,10 @@ DSL Child 暴露。
 - 保持 Reference ID 与 Helper 声明顺序稳定，避免 Native Helper 抖动。
 - 不需要约束求解时使用更简单 Container；ConstraintLayout 会引入 Solver Pass。
 - 避免由高频 State 重建大型 Helper Graph。
+
+当前还没有已接受的 ConstraintLayout 专项 Direct-native Benchmark。在强化计划把可复现的
+10/50/100 Node Control 与 Candidate 结果写入 Performance 文档前，不应宣称该 Adapter 是 ViewCompose
+中性能最快的 Layout Path。
 
 ## 相关文档
 
@@ -106,5 +118,6 @@ DSL Child 暴露。
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立 String Reference、Inline-over-external Merge、完整 Anchor/Dimension Mapping、
-Virtual Helper、合并 Native Rebuild，以及错误 Graph 的 Warning 恢复。它不提供平台无关 Constraint Solver。
+`0.1.0-alpha01` 建立 String Reference、Inline-over-external Merge、已记录的逻辑 Anchor 与 Dimension
+基线、Virtual Helper、合并 Native Rebuild，以及错误 Graph 的 Warning 恢复。它不提供平台无关 Constraint
+Solver；有效强化计划负责已经确认的正确性、API、能力对齐与性能缺口。
