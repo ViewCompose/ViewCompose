@@ -46,10 +46,13 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
     `viewcompose-animation-core + viewcompose-animation + viewcompose-gesture-core +
     viewcompose-gesture`, including Compose-like APIs, a policy core, renderer event mapping,
     Lazy/Pager motion policy, and Android interop.
-14. `viewcompose-constraintlayout-androidx` and renderer `DeclarativeConstraintLayout` support
-    anchors, dimensions, bias, baseline extensions, circle, guideline, barrier, weighted chains,
-    Flow/Group/Layer/Placeholder, decoupled `ConstraintSet`, and match-constraint
-    min/max/percent/constrained behavior.
+14. `viewcompose-constraintlayout-androidx` and renderer `DeclarativeConstraintLayout` have a landed
+    Alpha DSL baseline for anchors, dimensions, bias, baseline extensions, circle, guideline,
+    barrier, weighted chains, Flow/Group/Layer/Placeholder, decoupled `ConstraintSet`, and
+    match-constraint min/max/percent/constrained behavior. The 2026-08-18 audit found unresolved
+    helper lifecycle, geometry, rollback, test-depth, and performance-proof gaps; the active
+    [ConstraintLayout hardening plan](./plans/constraintlayout-native-engine-hardening.md) owns their
+    hard-cut correction without reopening MotionLayout scope.
 15. Graphics uses `viewcompose-graphics-core + viewcompose-graphics + renderer draw pipeline +
     host-android interop`, with Demo, Preview/Paparazzi, and v2 P0 fixes for four-corner RoundRect,
     Drawable DrawPaint, and ImageFilter Chain.
@@ -132,9 +135,9 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 | A: Overlay stability | Completed | C:✅ U:✅ D:✅ UI:✅ | Unified overlay reconciliation covers Dialog, Popup, ModalBottomSheet, and feedback flows |
 | B: Collections and containers | Completed | C:✅ U:✅ D:✅ UI:✅ | Lazy/Pager baseline, structured items, complete list state, sticky headers, content types/spans, prefetch, and restoration are implemented |
 | C: Input and forms | In Progress | C:✅ U:✅ D:✅ UI:⚠ | TextFieldState, selection/composition, IME batch, undo, transformations, keyboard actions, autofill, and restoration are implemented; real-device IME/accessibility matrix remains |
-| D: Diagnostics and performance | In Progress | C:✅ U:✅ D:✅ UI:✅ | Diagnostics visualization and R8 release benchmark are implemented; baseline-profile benefit remains to be measured |
+| D: Diagnostics and performance | In Progress | C:✅ U:✅ D:✅ UI:✅ | Diagnostics visualization and R8 release benchmark are implemented; remaining observability is owned by the active [diagnostics plan](./plans/diagnostics-correlation-inspection-observability.md), while baseline-profile benefit remains to be measured |
 | E: Preview and screenshots | In Progress | C:✅ U:✅ D:✅ UI:✅ | Compose Preview/Paparazzi and Studio Preview plugin 1.0 cover source linkage, all previews, cache, incremental refresh, zoom/pan, and diagnostics; Dark/Tablet matrix remains |
-| F: Animation and gestures | Completed | C:✅ U:✅ D:✅ UI:✅ | Core/DSL layering, shared Transition clock, Compose-aligned AnimatedVisibility, layout animateContentSize, Animatable, typed InfiniteTransition, Android interop, Demo, Preview, and regression tests are complete |
+| F: Animation and gestures | Completed | C:✅ U:✅ D:✅ UI:✅ | The first-round Core/DSL, Transition, visibility/size, Animatable, interop, Demo, Preview, and regression scope is complete; seven later animation expansions are owned by the active [Animation capability plan](./plans/animation-compose-capability-expansion.md) without reopening this baseline |
 | G: Graphics 2D | In Progress | C:✅ U:✅ D:✅ UI:⚠ | Core/DSL layers, Canvas/draw modifiers/cache, renderer pipeline, Android interop, and v2 P0 fixes are implemented; stable current-device UI evidence remains |
 | H: Advanced shadows | Completed | C:✅ U:✅ D:✅ UI:✅ | Outer/inner layers, shape/spread/offset, Lazy cache, backend diagnostics, and paired Compose benchmark are complete; Samsung SM-G991B targeted regression passed and Auto remains ExactBitmap |
 
@@ -154,18 +157,18 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 | Foundations / Input / Layout / State | v1 core plus declarative focus, directional navigation, focus groups, and hardware KeyEvent dispatch | Real-device keyboard/focus edge cases and complex compositions |
 | Accessibility / Semantics | Structured semantics and native Android mapping for state, role, heading, live region, errors, progress, and more | TalkBack, Switch Access, and font-scale device matrix |
 | Text Editing | TextDocument, TextFieldState, EditingBuffer, InputTransformation, and Android editor bridge support rich text, selection/composition/undo/save, attachments, and Receive Content | Chinese/Japanese IMEs, TalkBack, hardware keyboard, drag/drop, and third-party content providers |
-| Runtime Effects / Transactions | Composition transaction, structured coroutines, renderer recovery, failure reports, and onCommit boundary | Production diagnostic aggregation and exception sampling |
+| Runtime Effects / Transactions | Composition transaction, structured coroutines, renderer recovery, failure reports, and onCommit boundary | Production failure aggregation and exception sampling have moved to the active [diagnostics plan](./plans/diagnostics-correlation-inspection-observability.md) |
 | Runtime Recomposition Performance | VNode subtree cache, mutation journals, invalidation merging, explicit boundaries, and O(1) identity skip | Maintain leaf-update scale benchmarks and bound whole-tree fixed cost |
 | Lifecycle / ViewModel | Split modules, serial lifecycle collection, transactional SavedState claim, destroyed-host and corrupt-entry handling | Multi-window and background process-recovery matrix |
-| Collections | LazyColumn/Row/Grid plus Pager, complete list state, sticky headers, content types/spans, and prefetch | Optional Paging 3 integration outside the core contract |
+| Collections | LazyColumn/Row/Grid plus Pager, complete list state, sticky headers, content types/spans, and prefetch | Paging 3 execution has moved to the active [Paging 3 integration plan](./plans/paging3-integration.md); it remains an optional AndroidX integration outside the core contract |
 | Overlay | Precise Popup anchoring/following/RTL/flip/clamp and unified feedback queues | Multi-window, IME, and freeform-window device matrix |
 | Theming | Semantic tokens, dynamic-color policy, complete shape bridge, configuration lifecycle, and authoritative Theme diagnostics | Multi-window, vendor-theme, and dynamic-color matrix |
 | Interop | AndroidView replay-safe update/reset/nativeView, commit-time onCommit, and one-time release | Complex native and third-party Views with theme coordination |
-| Diagnostics | Aggregate render/layout, tree, per-node patches, Locals, and recomposition reasons | Node highlighting, cross-session correlation, and per-node timing |
+| Diagnostics | Aggregate render/layout, tree, per-node patches, Locals, and recomposition reasons | Node highlighting, cross-session correlation, and per-node timing have moved to the active [diagnostics plan](./plans/diagnostics-correlation-inspection-observability.md) |
 | UI Testing | Core instrumentation plus P1 focus/keyboard, nested-scroll, and rollback cases | Multi-API, TV, ChromeOS, overlay host, and theme assertions |
 | Developer Preview | Compose Preview, Paparazzi, and Studio plugin with static render, source linkage, diagnostics, bounded cache, and incremental refresh | More domains and Dark/Tablet snapshots |
-| ConstraintLayout | Dedicated module and renderer for anchors, helpers, ConstraintSet, advanced dimensions, weights, circles, baseline, and virtual helpers | MotionLayout interop while preserving host-android boundary |
-| Animation | Core/DSL layers, shared Transition timeline, last-mutation-wins Animatable, AnimatedVisibility, and animateContentSize | Release performance profile and complex examples |
+| ConstraintLayout | Alpha DSL baseline for anchors, helpers, ConstraintSet, advanced dimensions, weights, circles, baseline, and virtual helpers; the current renderer still has accepted helper-lifecycle, geometry, rollback, coverage, and benchmark gaps | Hard-cut the dimension/failure contracts, replace reconciliation with one transactional graph and helper owner, complete high-value AndroidX parity, and close exact device/performance evidence through the active [ConstraintLayout hardening plan](./plans/constraintlayout-native-engine-hardening.md); typed MotionScene/MotionLayout remains out of scope |
+| Animation | Core/DSL layers, shared Transition timeline, last-mutation-wins Animatable, AnimatedVisibility, Crossfade, animateContentSize, and raw Android interop | Physical motion/results, full content and visibility transforms, seeking, bounds, shared motion, and timeline tooling have moved to the active [Animation capability plan](./plans/animation-compose-capability-expansion.md) |
 | Gesture | Policy core, DSL, dispatcher, nested scroll, structured cancellation, and tap/drag/anchored/transform support | Third-party native scrollers and real-device multi-touch |
 | Graphics | 2D drawing and optional shadow decoration with DrawScene, ordered outer/inner layers, bounded cache, and backend diagnostics | Dark/Tablet snapshots and budgeted dynamic RenderEffect research |
 | Performance | R8 Macrobenchmark, DiffUtil/payload/SlotTable/subtree skip, paired Compose list/complex-layout controls, memory metrics, reports, and normalized gates | Accumulate same-device paired baselines and quantify baseline profile |
@@ -236,9 +239,11 @@ process restoration without cursor jumps or text loss.
 
 ### Milestone D: Diagnostics and performance
 
-Deliver enhanced render/patch/layout visualization, maintained benchmark baselines, and release
-optimization such as baseline profiles. Completion requires quantitative evidence and a panel that
-locates high-frequency problems.
+The remaining observability work has moved to the active
+[diagnostics correlation, inspection, and production observability plan](./plans/diagnostics-correlation-inspection-observability.md).
+It owns enhanced render/patch/layout inspection and the panel that locates high-frequency problems.
+This milestone retains maintained benchmark baselines and release optimization such as baseline
+profiles. Completion requires quantitative evidence from both work streams.
 
 ### Milestone E: Preview and screenshots
 
@@ -256,6 +261,12 @@ plus the six-tab Animation API index, instrumentation, PreviewCatalog, and Papar
 
 Completion requires opt-in behavior, stable consumed-gesture fallback, `qaQuick`/`qaPreview`, and
 `qaFull` when a device is available.
+
+That first-round milestone remains completed. Physical spring/decay/results, full animated content,
+rich visibility transforms, seekable transitions, bounds animation, navigation-aware shared motion,
+and request-driven timeline tooling are a separate active expansion tracked by the
+[Animation Compose-capability expansion plan](./plans/animation-compose-capability-expansion.md).
+MotionLayout expansion is not scheduled and is not a completion condition of either scope.
 
 ### Milestone G: Graphics 2D
 

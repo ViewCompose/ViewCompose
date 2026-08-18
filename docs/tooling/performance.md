@@ -962,7 +962,9 @@ continues in Phases 3 and 4.
 ### Phase 3: Diagnostics
 
 Status: core visualization complete. Render tree, patches, CompositionLocal, and recomposition
-reasons are readable; node highlighting, cross-session correlation, and per-node time remain.
+reasons are readable. Node highlighting, cross-session correlation, per-node timing, and their
+inactive-path performance proof have moved to the active
+[diagnostics plan](../project/plans/diagnostics-correlation-inspection-observability.md).
 
 ### Phase 4: Containers and layout
 

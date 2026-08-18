@@ -270,7 +270,11 @@ revision change cannot temporarily expose content under a system bar or erase th
 
 ## 6. Deliberate non-goals
 
-Paging 3 adapters, remote loading/retry policy, custom fling physics, and compiler-driven sub-item
-composition are separate integration concerns. Paging libraries can drive an immutable list and
-use `isAtEnd`, `lastVisibleItemIndex`, and `layoutInfo.totalItemsCount` without coupling Android
-paging types into the core contract.
+Paging 3 adapters and remote loading/retry remain outside the core collection contract. Their API
+and delivery work has moved to the active
+[Paging 3 integration plan](../project/plans/paging3-integration.md), which adapts official AndroidX
+Paging without moving Paging types or loading policy into UI Foundation. Until that optional
+integration ships, paging libraries can drive an immutable list and use `isAtEnd`,
+`lastVisibleItemIndex`, and `layoutInfo.totalItemsCount` without coupling Android paging types into
+the core contract. Custom fling physics and compiler-driven sub-item composition remain separate
+integration concerns.

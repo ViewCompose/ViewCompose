@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: 1286364937f516d2d8fc004f29bb1ac0333ebe4462326ae40a13511da11a6d30
+translation_source_hash: ebd262d2cb0d42cfb79bb78d84fc68c4001b3db7aedc872987f461806a67d5c2
 translation_status: current
 ---
 
@@ -45,7 +45,13 @@ translation_status: current
 11. overlay 默认装配已改为 `AndroidOverlayHostFactoryProvider + ServiceLoader`，无实现时稳定回退 no-op（移除反射路径）
 12. 开发预览模块已落地：`viewcompose-preview` 提供 Compose Preview bridge + `PreviewCatalog` + Paparazzi 快照回归（`qaPreview`）
 13. 动画与手势模块已落地：`viewcompose-animation-core` + `viewcompose-animation` + `viewcompose-gesture-core` + `viewcompose-gesture`（Compose-like API + 手势策略内核 + renderer 事件适配 + lazy/pager motion 策略 + Android interop）
-14. 约束布局能力已落地：`viewcompose-constraintlayout-androidx` + renderer `DeclarativeConstraintLayout`，支持 anchors/dimension/bias/baseline/baselineToTop/baselineToBottom/circle/guideline/barrier/chain(+weights)/Flow/Group/Layer/Placeholder/decoupled `ConstraintSet`，并补齐 match-constraint `min/max/percent/constrained`
+14. `viewcompose-constraintlayout-androidx` 与 renderer `DeclarativeConstraintLayout` 已形成 Alpha DSL
+   基线，覆盖 anchor、dimension、bias、baseline extension、circle、guideline、barrier、带 weight 的
+   chain、Flow、Group、Layer、Placeholder、解耦 `ConstraintSet` 和 match-constraint
+   `min/max/percent/constrained`。2026-08-18 审计确认仍存在 Helper 生命周期、几何正确性、回滚、测试深度
+   和性能证据缺口；这些硬切修正由有效的
+   [ConstraintLayout 强化计划](https://docs.viewcompose.com/project/plans/constraintlayout-native-engine-hardening)
+   负责，不会重新引入 MotionLayout 范围。
 15. graphics 能力已落地：`viewcompose-graphics-core` + `viewcompose-graphics` + renderer draw pipeline + `host-android` interop；`Graphics` demo 与 preview/Paparazzi 覆盖已接入，并完成 v2 P0 语义收口（RoundRect 四角半径 / Drawable DrawPaint / ImageFilter Chain）
 16. 组合事务已落地：`ComposerLite.prepareRoot/commit/abort` 覆盖 slot、观察订阅、RememberObserver 与 Effect，失败组合保留旧依赖并可继续失效重组。
 17. 结构化协程已落地：`RenderSession` 统一持有组合父 Job，提供 `LaunchedEffect/rememberCoroutineScope`，`produceState` 已硬切 suspend + `awaitDispose`，Flow 与动画已移除独立根 Job。
@@ -84,9 +90,9 @@ translation_status: current
 | A：Overlay 稳定性收口 | Completed | C:✅ U:✅ D:✅ UI:✅ | Overlay host 已统一 reconcile 模板，Dialog/Popup/ModalBottomSheet/反馈流均已回归 |
 | B：Collections 与容器扩展 | Completed | C:✅ U:✅ D:✅ UI:✅ | Lazy/Pager 基线、结构化条目、完整 list state、sticky headers、contentType/span、预取与保存恢复均已落地 |
 | C：Input 与表单态增强 | In Progress | C:✅ U:✅ D:✅ UI:⚠ | `TextFieldState` 硬切、selection/composition、IME batch、撤销历史、输入变换、键盘动作、autofill 与保存恢复已落地；仍需真实设备 IME/无障碍矩阵 |
-| D：Diagnostics + Performance 联动 | In Progress | C:✅ U:✅ D:✅ UI:✅ | 诊断可视化与 R8 release 基准已落地，下一步量化 baseline profile 收益 |
+| D：Diagnostics + Performance 联动 | In Progress | C:✅ U:✅ D:✅ UI:✅ | 诊断可视化与 R8 release 基准已经落地；剩余可观测性工作由有效的[诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)负责，baseline profile 收益仍待量化 |
 | E：开发预览与截图回归 | In Progress | C:✅ U:✅ D:✅ UI:✅ | Compose Preview/Paparazzi 与独立 Android Studio 预览插件 1.0 已落地，覆盖源码联动、全部预览、缓存、增量刷新、缩放平移和诊断；下一步扩展 Dark/Tablet 快照矩阵 |
-| F：动画与手势首轮覆盖 | Completed | C:✅ U:✅ D:✅ UI:✅ | 已完成 `viewcompose-animation-core` + `viewcompose-animation` 分层、`Transition` 共享时钟重构、`AnimatedVisibility` Compose 语义对齐、`animateContentSize` 布局级动画落地、`Animatable` 易用性重构、`InfiniteTransition` typed API、Android interop（MotionLayout/TransitionManager/ObjectAnimator/ViewPropertyAnimator/DynamicAnimation）与 demo+preview+回归测试收口 |
+| F：动画与手势首轮覆盖 | Completed | C:✅ U:✅ D:✅ UI:✅ | 首轮 Core/DSL、Transition、显隐/尺寸、Animatable、interop、Demo、Preview 与回归范围已经完成；后续七项动画增强由有效的[动画能力计划](https://docs.viewcompose.com/project/plans/animation-compose-capability-expansion)负责，不会重新打开该基线 |
 | G：Graphics 2D 主链能力 | In Progress | C:✅ U:✅ D:✅ UI:⚠ | 已完成 `viewcompose-graphics-core` + `viewcompose-graphics` 分层、Canvas/draw modifiers/drawWithCache、renderer 渲染管线与 `AndroidGraphicsInterop`，并完成 v2 P0 语义收口（RoundRect/Drawable/ImageFilter Chain）；在当前设备矩阵重新取得稳定 UI 证据前不标记 Completed |
 | H：高级阴影装饰层 | Completed | C:✅ U:✅ D:✅ UI:✅ | 多层外阴影、内阴影、shape/spread/offset、Lazy 缓存、后端诊断与 Compose 成对基准已闭环；Samsung SM-G991B 定向设备回归通过，Auto 保持 ExactBitmap |
 
@@ -104,18 +110,18 @@ translation_status: current
 | Foundations / Input / Layout / State | 已形成 v1 主能力；声明式焦点、方向导航、焦点组和硬件 KeyEvent 分发已落地 | 聚焦真实设备键盘/焦点边界态与复杂组合场景 |
 | Accessibility / Semantics | 结构化 semantics 契约与 Android 原生 Accessibility 映射已落地，支持状态、role、heading、live region、错误和进度等核心语义 | 扩展真实设备 TalkBack、Switch Access 与字体放大回归矩阵 |
 | Text Editing | `TextDocument + TextFieldState + EditingBuffer + InputTransformation + AppCompatEditText/InputConnection bridge` 已落地，支持富文本、段落、行内附件、selection/composition/undo/save 与统一 Receive Content | 真实设备覆盖主流中文/日文 IME、TalkBack、硬件键盘、拖放和第三方内容提供方 |
-| Runtime Effects / Transactions | 组合 prepare/commit/abort、结构化协程、renderer 恢复、`RenderFailure/RenderFrameReport` 与 `AndroidView.onCommit` 副作用边界已落地 | 扩展线上诊断聚合与异常采样策略 |
+| Runtime Effects / Transactions | 组合 prepare/commit/abort、结构化协程、renderer 恢复、`RenderFailure/RenderFrameReport` 与 `AndroidView.onCommit` 副作用边界已落地 | 线上失败聚合与异常采样已拆分到有效的[诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability) |
 | Runtime Recomposition Performance | VNode 子树缓存、mutation journal、失效合并、显式边界和 renderer O(1) identity skip 已落地 | 维护叶子更新规模基准，避免固定成本随整树节点数增长 |
 | Lifecycle / ViewModel Integration | 模块拆分与 API 硬切、串行 lifecycle collection、事务化 SavedState claim、destroyed host 与损坏 Bundle 隔离均已完成 | 扩展多窗口/后台进程回收真实设备矩阵 |
-| Collections | `LazyColumn/LazyRow/LazyVerticalGrid` + Pager；完整 list state、sticky headers、contentType/span 与预取已落地 | Paging 3 适配保持可选集成，不进入核心契约 |
+| Collections | `LazyColumn/LazyRow/LazyVerticalGrid` + Pager；完整 list state、sticky headers、contentType/span 与预取已落地 | Paging 3 的执行工作已拆分到有效的 [Paging 3 集成计划](https://docs.viewcompose.com/project/plans/paging3-integration)；它仍是位于核心契约之外的可选 AndroidX 集成 |
 | Overlay | Popup 精确锚点、滚动跟随、RTL、翻转/夹取，以及 Snackbar/Toast 统一队列与结构化结束原因已落地 | 扩展多窗口、IME 与自由窗真实设备矩阵 |
 | Theming | 已完成 token 收口、Android 动态色策略、完整 shape 桥接与配置变化 token 生命周期，并提供 `Diagnostics -> 主题诊断` 权威人工验证入口 | 扩展多窗口、厂商主题和动态色设备矩阵 |
 | Interop | `AndroidView` 支持 replay-safe update/reset/nativeView、提交期 onCommit 与一次性 release | 强化复杂原生 View、第三方控件与主题协同 |
-| Diagnostics | render/layout 聚合、render tree、逐节点 patch、CompositionLocal 与重组原因均已结构化输出并接入 demo 检查器 | 节点边界高亮、跨 session 关联与逐节点耗时 |
+| Diagnostics | render/layout 聚合、render tree、逐节点 patch、CompositionLocal 与重组原因均已结构化输出并接入 demo 检查器 | 节点边界高亮、跨 session 关联与逐节点耗时已拆分到有效的[诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability) |
 | UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |
 | Developer Preview | Compose Preview、Paparazzi 与独立 Studio 插件链路已建立；插件支持静态渲染、源码双向联动、布局/View/组合诊断、全部预览、有界缓存和增量刷新 | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |
-| ConstraintLayout | 已新增 `viewcompose-constraintlayout-androidx` 与 renderer 映射，核心能力覆盖 anchors/helpers/constraintSet + advanced dimensions/weights/circle/baseline extensions + Virtual Helpers（Flow/Group/Layer/Placeholder） | 下一步推进 MotionLayout interop 专题（保持 host-android 边界） |
-| Animation | `viewcompose-animation-core` + `viewcompose-animation` 已完成内核/DSL 分层；`Transition` 为共享时间线语义，`Animatable` 支持最后一次 mutation 生效的 cancel/retarget/stop；`AnimatedVisibility` 与 `animateContentSize` 已落地 | 发布态性能画像与更多复杂场景样例 |
+| ConstraintLayout | Anchor、Helper、ConstraintSet、高级 Dimension、Weight、Circle、Baseline 与 Virtual Helper 的 Alpha DSL 基线已经落地；当前 Renderer 仍有已确认的 Helper 生命周期、几何、回滚、覆盖与基准缺口 | 通过有效的 [ConstraintLayout 强化计划](https://docs.viewcompose.com/project/plans/constraintlayout-native-engine-hardening)硬切 Dimension/失败契约，以单一事务图和 Helper Owner 替换现有重建路径，补齐高价值 AndroidX 能力并闭环精确设备与性能证据；类型安全的 MotionScene/MotionLayout 继续保持范围外 |
+| Animation | 已具备动画 Core/DSL 分层、Transition 共享 timeline、Animatable last-mutation-wins、AnimatedVisibility、Crossfade、animateContentSize 与原始 Android interop | 物理运动与结果、完整内容/显隐变换、seek、bounds、共享运动和时间线工具已经拆分到有效的[动画能力计划](https://docs.viewcompose.com/project/plans/animation-compose-capability-expansion) |
 | Gesture | `viewcompose-gesture-core` + `viewcompose-gesture` + renderer dispatcher 已支持 tap/drag/anchoredDraggable/transform、统一 nested scroll 和结构化并发取消；双指接管与系统 CANCEL 不会触发旧拖动 settle | 扩展原生三方滚动控件与真实设备多指回归 |
 | Graphics | 2D draw 主链与独立 `viewcompose-shadow-android` 装饰层已落地，支持 Canvas、draw modifiers、不可变 `DrawScene`、有序多层外/内阴影、静态栅格缓存和后端诊断 | 扩展 dark/tablet 快照；在明确预算下研究动态 RenderEffect/转场阴影 |
 | Performance | 已有 R8 release Macrobenchmark 基线，且 `DiffUtil + payload + SlotTable Lite + subtree skip` 主路径已落地；列表/复杂布局已建立同 target Compose 对照、内存指标、自动报告和归一化回归门禁 | 在真实设备持续积累配对基线并量化 baseline profile 收益 |
@@ -212,14 +218,14 @@ translation_status: current
 
 交付：
 
-1. render/patch/layout 指标可视化增强
-2. viewcompose-benchmark 路线固定化并持续更新基线
-3. 发布态优化项（baseline profile 等）推进
+1. 剩余可观测性工作已拆分到有效的[诊断关联、检查与生产可观测性计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)，由其负责 render/patch/layout 检查增强与高频问题定位面板
+2. 本里程碑继续负责固定 viewcompose-benchmark 路线并持续更新基线
+3. 继续推进发布态优化项，例如 baseline profile
 
 完成标准：
 
-1. 性能回归具备可量化证据
-2. 诊断面板能直观定位高频问题
+1. 两条工作流的性能回归均具备可量化证据
+2. 诊断计划交付的面板能直观定位高频问题
 
 ### Milestone E：开发预览与截图回归
 
@@ -250,6 +256,11 @@ translation_status: current
 1. 新能力默认 opt-in，不破坏现有组件/容器行为
 2. 手势消费回落策略稳定（`gesture consumed -> no clickable fallback`）
 3. `qaQuick` 与 `qaPreview` 通过，设备可用时 `qaFull` 通过
+
+上述首轮里程碑保持 Completed。物理 spring/decay/results、完整 AnimatedContent、丰富显隐
+变换、可 seek Transition、bounds 动画、导航感知的共享运动与请求驱动时间线工具，改由
+[动画 Compose 能力扩展计划](https://docs.viewcompose.com/project/plans/animation-compose-capability-expansion)
+单独跟踪。MotionLayout 扩展暂不安排，也不是任一范围的完成条件。
 
 ### Milestone G：Graphics 2D 主链能力
 

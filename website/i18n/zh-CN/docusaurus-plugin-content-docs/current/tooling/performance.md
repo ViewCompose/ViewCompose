@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: d4097e037ce7300030811f2368ead434d2af26a070fdff5491d01c5e46b2e311
+translation_source_hash: 6641fd06f2f41059bd31054c9be70f4935b652b6020a22510f773727daefd949
 translation_status: current
 ---
 
@@ -822,8 +822,9 @@ Commit、Workload、刷新率、电源模式与温度状态必须保持一致，
 
 ### Phase 3：诊断增强
 
-状态：核心可视化已完成
-目标：render tree、patch、CompositionLocal 与重组原因已可直接读取；后续补节点高亮、跨 session 关联与逐节点耗时
+状态：核心可视化已完成。render tree、patch、CompositionLocal 与重组原因已可直接读取。
+节点高亮、跨 session 关联、逐节点耗时及其非激活路径性能证明已经拆分到有效的
+[诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)。
 
 ### Phase 4：容器与布局收口
 

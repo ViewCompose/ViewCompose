@@ -50,4 +50,6 @@ sensitive application value deliberately through a custom formatter, or omit the
 5. existing aggregate render/layout metrics.
 
 It does not yet provide real View-boundary highlighting, cross-RenderSession correlation, or
-per-node timing.
+per-node timing. Delivery of those capabilities, together with bounded production failure
+aggregation, has moved to the active
+[diagnostics correlation, inspection, and production observability plan](../project/plans/diagnostics-correlation-inspection-observability.md).

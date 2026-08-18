@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: 191ba5b82248828573d31e7e9432fc93715d3d385ea705f8d8ce8b383bcba327
+translation_source_hash: 9b6b8093454ff6a32f016755646c727345ebec1eb37ec48ebb4ada6ae6702e81
 translation_status: current
 ---
 
@@ -46,4 +46,6 @@ scope 诊断上限为 500 条，签名会截断，避免诊断本身随页面规
 4. CompositionLocal 浏览器
 5. 原有 render/layout 聚合指标
 
-当前仍不包含真实 View 边界高亮、跨 RenderSession 关联图和逐节点耗时。
+当前仍不包含真实 View 边界高亮、跨 RenderSession 关联图和逐节点耗时。这些能力以及有界的
+生产失败聚合已经拆分到有效的
+[诊断关联、检查与生产可观测性计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)。

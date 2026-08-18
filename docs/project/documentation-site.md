@@ -74,6 +74,12 @@ defect-evidence tables and dated measurement ledgers remain rendered and directl
 excluded block must retain an adjacent searchable heading and summary; API contracts, command
 references, and reader-facing guides must not use this partition.
 
+Exceptionally large temporary execution plans may use route-level search segmentation only when
+the active-plan index retains a searchable purpose and scope summary, every durable public contract
+and command remains in its searchable owning documentation, and the plan page remains rendered and
+directly linkable. Each excluded route must be named explicitly in the site configuration and
+supported by paired size evidence in this page.
+
 The per-locale search-index budget is 6.25 MiB. It was first raised from 4 MiB after the searchable
 [multi-design-system architecture standard](../architecture/design-systems.md), ADR-0005, and its
 evidence-heavy [active execution plan](./plans/multi-design-system-high-fidelity.md) measured about
@@ -110,7 +116,7 @@ locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to t
 tree, so those copies add storage but no localized content or supported route.
 
 The budget model separates expected release-history growth from regressions. Non-API output is
-limited to 43.5 MiB. Before the Demo verification-harness plan was added, a clean `main` build already
+limited to 45.5 MiB. Before the Demo verification-harness plan was added, a clean `main` build already
 measured 39.999791 MiB. Publishing that searchable English plan, its `zh-CN` fallback route, and
 both locale search entries measured 40.427350 MiB, so the reviewed ceiling moved from 40 MiB to
 41 MiB instead of removing reader-value planning evidence. The native-widget contract convergence
@@ -149,6 +155,12 @@ non-API ceiling to 43.5 MiB. The remaining growth is the directly linkable activ
 reviewed public contracts. Before this ceiling or the 6.25 MiB locale-search ceiling moves again,
 the site must structurally segment internal plan detail or its search indexes; exact paired
 evidence and limitations are retained below.
+
+The capability-planning branch performed that required structural review. Five large temporary
+execution plans remain rendered and directly linkable, while their routes no longer duplicate
+internal planning detail into either locale search index; the active-plan index keeps their purpose
+and scope discoverable. After that representation change, the reviewed non-API ceiling moves to
+45.5 MiB, while the 6.25 MiB per-locale search ceiling remains unchanged.
 
 The accessibility audit covers the site-owned English and localized pages and checks document
 language, title and main landmarks, heading order, accessible names, image alternatives, table
@@ -257,6 +269,24 @@ identity token.
 ## Last verified
 
 <div className="search-partition-detail">
+
+2026-08-18: paired Docusaurus locale builds on the same checkout dependency set compared `main` at
+`a9d1a092` with PR #105 at `28abaea7`. `main` measured 45,313,029 non-API bytes and
+5,865,709/6,314,030 English/Chinese search bytes. Before route-level search segmentation, the
+candidate measured 48,070,239 and 6,575,126/7,037,032 bytes, failing all three ceilings. Excluding
+the five temporary execution-plan routes from full-text indexing, while retaining their rendered
+pages and searchable plan-index summaries, reduced the candidate to 46,680,423 and
+5,887,279/6,335,029 bytes. The representation change removed 1,389,816 non-API bytes (2.89%),
+687,847 English-search bytes (10.46%), and 702,003 Chinese-search bytes (9.98%). Relative to
+`main`, the accepted candidate remains 1,367,394 non-API bytes (3.02%) larger, while English and
+Chinese search grow only 21,570 (0.37%) and 20,999 bytes (0.33%). The conclusion is **mixed**:
+search representation improved materially, while five directly linkable planning records still
+increase rendered output. The reviewed non-API ceiling moves to 45.5 MiB with 1,029,785 measured
+bytes of headroom; the 6.25 MiB locale-search ceiling does not move and the Chinese index retains
+218,571 bytes of headroom. The paired builds did not reconstruct API history, but both locale
+render trees and search indexes were complete and non-API accounting excludes API bytes. The next
+action before another ceiling change is to consolidate or archive completed plans and keep durable
+contracts in searchable owning documentation.
 
 2026-08-18: paired Docusaurus locale builds on the same checkout dependency set compared current
 `main` with the lazy-collection memory-efficiency candidate. `main` measured 45,041,594 non-API

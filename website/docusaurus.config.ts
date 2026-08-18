@@ -144,6 +144,9 @@ const config: Config = {
         highlightSearchTermsOnTargetPage: true,
         explicitSearchResultPath: true,
         searchResultLimits: 8,
+        ignoreFiles: [
+          /^project\/plans\/(?:animation-compose-capability-expansion|constraintlayout-native-engine-hardening|diagnostics-correlation-inspection-observability|paging3-integration|third-party-android-view-integrations)$/,
+        ],
         ignoreCssSelectors: ['.benchmark-evidence', '.search-partition-detail'],
       },
     ],
