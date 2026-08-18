@@ -13,7 +13,7 @@ export function canonicalSourceHash(content) {
   return createHash('sha256').update(normalized, 'utf8').digest('hex');
 }
 
-function parseFrontMatter(content, relativePath) {
+export function parseTranslationFrontMatter(content, relativePath) {
   const match = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/u.exec(content);
   if (!match) {
     throw new Error(`${relativePath} -> translation front matter is missing`);
@@ -108,7 +108,7 @@ export async function verifyTranslationTree({
     const content = await readFile(absoluteTranslationPath, 'utf8');
     let frontMatter;
     try {
-      frontMatter = parseFrontMatter(content, translationPath);
+      frontMatter = parseTranslationFrontMatter(content, translationPath);
     } catch (error) {
       violations.push(error.message);
       continue;

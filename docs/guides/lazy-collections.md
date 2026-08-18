@@ -106,6 +106,12 @@ environment revision. Observable State read inside an item Session remains indep
 An ordinary non-State value read by item content cannot be inferred automatically and must still
 participate in that item's `contentRevision`.
 
+Bulk typed and strong-snapshot declarations use one declaration-shared item-session strategy. Each
+committed item stores its source model as an opaque payload rather than allocating its own factory,
+updater, and model-capturing content closure. RecyclerView Holder binding passes the selected item
+directly to that strategy, so the reduced retained set does not move callback construction onto the
+scrolling path. This storage optimization does not change key, revision, State, or effect ownership.
+
 ### Explicit whole-snapshot fast path
 
 When an application already owns an immutable list snapshot and needs to avoid the selector and key
@@ -191,6 +197,13 @@ remembered state, or effects.
 | mounted-tree cache size | bounded framework-owned reset-tree cache with deterministic release |
 | layout state | scroll, layout, and adapter observers feeding `LazyListState` |
 
+The Android adapter represents one accepted submission with a collision-safe compact key table
+that owns both unique positions and stable IDs. It does not retain a second boxed key map for the
+same snapshot. RecyclerView view types remain stable for the mounted container lifetime, including
+when one type temporarily disappears. A container accepts at most 1,024 distinct
+`kind`/`contentType` compatibility classes; exceeding this limit fails immediately instead of
+retaining an unbounded type history. Model values and revisions do not belong in `contentType`.
+
 A detached holder that has never been presented can use RecyclerView prefetch to compose and build
 its Android View tree only after the renderer has observed that content type within its synchronous
 cost budget. Unknown or expensive types are staged without native preparation. A prepared tree is
@@ -226,7 +239,9 @@ revision change cannot temporarily expose content under a system bar or erase th
 
 1. Collection keys are non-null and unique within a container.
 2. A key identifies the same logical item across reorders.
-3. `contentType` groups only layout-compatible item structures.
+3. `contentType` groups only layout-compatible item structures and must come from a finite
+   taxonomy; one mounted Android container supports at most 1,024 distinct `kind`/`contentType`
+   combinations.
 4. A single item, sticky header, page, or tab provides a non-null `contentRevision` immediately
    after `key`; optional `contentType` and layout policy follow it. `null` is not a static sentinel,
    and `StaticContentRevision` is valid only with no changing ordinary non-State input. A bulk

@@ -32,10 +32,13 @@ dependencies {
   ConstraintLayout, and SwipeRefreshLayout. Material Components is not a dependency.
 - Generic surfaces, rounded/cut/continuous shapes, and progress indicators use engine-owned Android drawing
   implementations driven by resolved node values.
-- `SurfaceNodeProps` uses one cached `UiShapeDrawable` geometry for solid or gradient fill, border,
-  ripple mask, outline, and optional clipping. Continuous corners use a convex cubic path; stable
-  drawing performs no per-frame Path, shader, drawable, or collection allocation.
+- `SurfaceNodeProps` uses cached `UiShapeDrawable` geometry for solid or gradient fill, an optional
+  border, and ripple masks. A paint-free bounds-cached provider reports the View outline and
+  optional clipping geometry instead of retaining a second drawable. Continuous corners use a
+  convex cubic path; stable drawing performs no per-frame Path, shader, drawable, or collection
+  allocation.
 - Uniform rounded rectangles use Android's native round-rectangle draw and outline operations.
+  They retain no `Path`, and surfaces without a visible border retain no stroke paint or path.
   Non-uniform rounded, continuous, and cut corners retain the cached generic path, so this common
   scrolling fast path does not narrow shape, gradient, border, ripple-mask, or clipping behavior.
 - Engine-owned rounded shapes use circular arcs. Shape borders are centered on a path inset by half
@@ -171,11 +174,12 @@ Because the current line is alpha, the documentation site intentionally does not
   measurement, visibility, or callbacks.
 - A lazy item's `contentRevision` and framework-captured `environmentRevision` are the only content
   invalidation inputs after identity and type. Equal key and revisions skip item composition and
-  native patching completely, even when the parent created a new callback object. A changed
-  revision installs the latest closure and renders only that item; callers must use observed State
-  or include every changing ordinary capture in `contentRevision`. A changed `contentType`, even
-  under the same key and revisions, terminates the old child session and performs a full native
-  presentation rebuild.
+  native patching completely, even when the parent supplied a different strategy or payload. A
+  changed revision asks the item's shared strategy to install the latest payload and renders only
+  that item; callers must use observed State or include every changing ordinary capture in
+  `contentRevision`. A changed `contentType`, even under the same key and revisions, terminates the
+  old child Session and performs a full native presentation rebuild. Holder creation and update
+  call the strategy directly and allocate no item-specific callback adapter on the bind path.
 - A detached lazy holder that has never activated may prepare its child composition and native
   View tree under RecyclerView prefetch, but it does not commit remember lifecycle, effects,
   native commit work, overlays, or diagnostics. First attachment activates a valid prepared frame
@@ -188,9 +192,15 @@ Because the current line is alpha, the documentation site intentionally does not
   may skip Session routing only when the holder has committed the exact item-snapshot instance at
   the exact submission revision; revision equality alone is not sufficient. This acknowledgement
   rule prevents queued RecyclerView notifications from treating an older logical commit as current.
+- The same collision-safe submission table owns primitive positions and renderer-assigned stable
+  IDs, avoiding overlapping boxed key maps. A compact registry preserves view-type identity for the
+  mounted adapter lifetime without `Pair` keys or boxed IDs. Because `contentType` is a finite
+  physical-compatibility taxonomy, one mounted container accepts at most 1,024 distinct
+  kind/type combinations and rejects a larger history before it can grow without bound.
 - Lazy-list and pager holders cache their container handle for the holder lifetime and call a
-  dedicated Session host directly. Native recycling still changes logical Session ownership by key;
-  this removes callback-wrapper allocation without merging physical and logical identity.
+  dedicated Session host plus the declaration-shared item strategy directly. Native recycling
+  still changes logical Session ownership by key; this removes callback-wrapper allocation without
+  merging physical and logical identity.
 - Pager stable IDs use renderer-assigned values rather than key hashes. Pager view types partition
   incompatible `contentType`/kind pairs, keyed moves refresh only uniquely owned changed holders,
   and every public page declaration requires a unique stable key. ViewPager2's native default owns

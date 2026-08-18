@@ -95,14 +95,25 @@ For every canonical public documentation change:
 3. update and review the Chinese mirror in the same pull request for every public page;
 4. verify that narrative uses the directory language while literals remain exact;
 5. state localization impact in the pull request template;
-6. run the language classifier, translation verifier, and both-locale build.
+6. run the canonical repository documentation gate and the both-locale build.
 
 Urgent correctness and security fixes still update English first within the change. Do not merge a
 public page while its Chinese mirror is missing, stale, or knowingly inaccurate.
 
 ## Commands
 
-From `website/`:
+After the Chinese meaning has been reviewed, update only the explicitly reviewed mirrors from
+`website/` with paths relative to `docs/`:
+
+```bash
+npm run mark:translations-reviewed -- architecture/overview.md guides/theming.md
+```
+
+The command validates the source mapping and `current` status before recording the canonical
+fingerprint. It is an explicit review acknowledgment, not an automatic step and not a substitute
+for updating the Chinese meaning.
+
+Use these lower-level website commands when diagnosing the documentation site:
 
 ```bash
 npm run write-translations
@@ -120,11 +131,15 @@ literals remain excluded. `verify:translations` validates source mapping, requir
 fingerprints, status, and stale-warning markers. `build` produces both `en` and `zh-CN` sites and
 keeps strict broken-link checking enabled.
 
-Repository-level documentation placement and links remain covered by:
+The canonical repository gate is:
 
 ```bash
 ./gradlew verifyDocumentationStructure
 ```
+
+It runs the documentation script tests, language classifier, translation coverage and fingerprint
+verifier, placement checks, and link checks. `qaQuick` depends on this task, so the same freshness
+contract is enforced locally and in the main CI before the website build.
 
 ## Review checklist
 

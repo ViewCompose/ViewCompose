@@ -175,11 +175,13 @@ first-party image loaders; its zero default preserves deterministic non-Android/
 - `GridCells.Adaptive` recomputes physical columns from current inner width, spacing, density, and
   configuration while keeping keyed logical sessions intact. `GridItemSpan.FullLine` resolves
   against that current count; `Fixed(1)` is canonicalized to `Single` by Foundation.
-- A renderer retaining a `LazyListItem` session must ignore a newer callback object when key and
-both revisions are equal. When either revision changes, it installs the latest updater and renders
-that logical session until the content reports a successful commit. A different key always creates
-a different logical session; compatible physical presentation may move only after old state and
-effects are disposed.
+- A renderer retaining a `LazyListItem` Session must ignore a newer strategy or payload when key
+  and both revisions are equal. When either revision changes, it calls the retained declaration
+  strategy with the latest item payload and renders that logical Session until the content reports
+  a successful commit. A different key always creates a different logical Session; compatible
+  physical presentation may move only after old State and effects are disposed. Typed declarations
+  may share one `LazyListItemSessionStrategy` across all item snapshots; strategies consume the
+  current item synchronously and cannot retain it.
 - State and connector commands are thread-confined to the owning renderer thread. Android
   integrations use the main thread, and callbacks run synchronously unless a concrete contract says
   otherwise.

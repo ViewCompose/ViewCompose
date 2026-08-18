@@ -29,28 +29,34 @@ internal class UiShapeDrawable(
     private val layoutDirection: Int,
     private val density: UiDensity,
 ) : Drawable() {
-    private val fillPath = Path()
-    private val strokePath = Path()
-    private val fillFrame = RectF()
-    private val strokeFrame = RectF()
+    private var fillPath: Path? = null
+    private var strokePath: Path? = null
     private var fillRoundRectRadius: Float? = null
     private var strokeRoundRectRadius: Float? = null
+    private var strokeInset = 0f
+    private var strokeColor = Color.TRANSPARENT
+    private var geometryDirty = true
+    private var drawableAlpha = 255
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
         color = Color.TRANSPARENT
     }
-    private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
+    private var strokePaint: Paint? = null
     private var currentFill: Brush = Brush.SolidColor(Color.TRANSPARENT)
     internal var currentShape: UiShape = shape ?: UiShape.rounded(UiDp.Zero)
         private set
     internal val currentFillColor: Int
         get() = (currentFill as? Brush.SolidColor)?.color ?: Color.TRANSPARENT
+    internal val hasFillPathResource: Boolean
+        get() = fillPath != null
+    internal val hasStrokeResources: Boolean
+        get() = strokePaint != null || strokePath != null
 
     fun setShape(shape: UiShape?) {
         val next = shape ?: UiShape.rounded(UiDp.Zero)
         if (currentShape == next) return
         currentShape = next
-        rebuildPaths()
+        geometryDirty = true
         invalidateSelf()
     }
 
@@ -66,204 +72,163 @@ internal class UiShapeDrawable(
     }
 
     fun setStroke(width: Float, color: Int) {
-        if (strokePaint.strokeWidth == width && strokePaint.color == color) return
-        strokePaint.strokeWidth = width
-        strokePaint.color = color
-        rebuildPaths()
+        val existing = strokePaint
+        val visible = width > 0f && width.isFinite() && Color.alpha(color) > 0
+        if (!visible) {
+            if (existing == null) return
+            strokePaint = null
+            strokePath = null
+            strokeRoundRectRadius = null
+            strokeInset = 0f
+            geometryDirty = true
+            invalidateSelf()
+            return
+        }
+        if (existing?.strokeWidth == width && strokeColor == color) return
+        val paint = existing ?: Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            colorFilter = fillPaint.colorFilter
+        }
+        paint.strokeWidth = width
+        paint.color = color
+        strokeColor = color
+        applyStrokeAlpha(paint)
+        strokePaint = paint
+        geometryDirty = true
         invalidateSelf()
     }
 
     override fun onBoundsChange(bounds: android.graphics.Rect) {
-        rebuildPaths()
+        geometryDirty = true
         rebuildFillPaint()
     }
 
     override fun draw(canvas: Canvas) {
-        if (fillPath.isEmpty) rebuildPaths()
+        ensureGeometry()
+        if (bounds.isEmpty) return
         val fillRadius = fillRoundRectRadius
         if (fillRadius != null) {
-            canvas.drawRoundRect(fillFrame, fillRadius, fillRadius, fillPaint)
+            canvas.drawRoundRect(
+                bounds.left.toFloat(),
+                bounds.top.toFloat(),
+                bounds.right.toFloat(),
+                bounds.bottom.toFloat(),
+                fillRadius,
+                fillRadius,
+                fillPaint,
+            )
         } else {
-            canvas.drawPath(fillPath, fillPaint)
+            fillPath?.let { canvas.drawPath(it, fillPaint) }
         }
-        if (strokePaint.strokeWidth > 0f && Color.alpha(strokePaint.color) > 0) {
+        strokePaint?.let { paint ->
             val strokeRadius = strokeRoundRectRadius
             if (strokeRadius != null) {
-                canvas.drawRoundRect(strokeFrame, strokeRadius, strokeRadius, strokePaint)
+                canvas.drawRoundRect(
+                    bounds.left + strokeInset,
+                    bounds.top + strokeInset,
+                    bounds.right - strokeInset,
+                    bounds.bottom - strokeInset,
+                    strokeRadius,
+                    strokeRadius,
+                    paint,
+                )
             } else {
-                canvas.drawPath(strokePath, strokePaint)
+                strokePath?.let { canvas.drawPath(it, paint) }
             }
         }
     }
 
     override fun getOutline(outline: Outline) {
-        if (fillPath.isEmpty) rebuildPaths()
+        ensureGeometry()
         val fillRadius = fillRoundRectRadius
         if (fillRadius != null) {
             outline.setRoundRect(bounds, fillRadius)
-        } else if (!fillPath.isEmpty) {
-            outline.setConvexPath(fillPath)
+        } else {
+            fillPath?.takeUnless(Path::isEmpty)?.let(outline::setConvexPath)
         }
     }
 
     override fun setAlpha(alpha: Int) {
-        fillPaint.alpha = alpha
-        strokePaint.alpha = alpha
+        val next = alpha.coerceIn(0, 255)
+        if (drawableAlpha == next) return
+        drawableAlpha = next
+        applyFillAlpha()
+        strokePaint?.let(::applyStrokeAlpha)
         invalidateSelf()
     }
-
-    override fun getAlpha(): Int = fillPaint.alpha
+    override fun getAlpha(): Int = drawableAlpha
 
     override fun setColorFilter(colorFilter: ColorFilter?) {
         fillPaint.colorFilter = colorFilter
-        strokePaint.colorFilter = colorFilter
+        strokePaint?.colorFilter = colorFilter
         invalidateSelf()
     }
 
     @Deprecated("Deprecated in Android")
     override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
 
-    private fun rebuildPaths() {
-        fillPath.reset()
-        strokePath.reset()
+    private fun ensureGeometry() {
+        if (!geometryDirty) return
+        geometryDirty = false
         fillRoundRectRadius = null
         strokeRoundRectRadius = null
-        fillFrame.setEmpty()
-        strokeFrame.setEmpty()
-        if (bounds.isEmpty) return
-        fillFrame.set(bounds)
-        val fillCorners = currentShape.resolveCorners(layoutDirection, density, fillFrame)
+        strokeInset = 0f
+        if (bounds.isEmpty) {
+            fillPath = null
+            strokePath = null
+            return
+        }
+        val fillCorners = currentShape.resolveCorners(
+            layoutDirection = layoutDirection,
+            density = density,
+            width = bounds.width().toFloat(),
+            height = bounds.height().toFloat(),
+        )
         fillRoundRectRadius = fillCorners.uniformRoundedRadiusOrNull()
-        rebuildPath(fillPath, fillFrame, fillCorners)
+        fillPath = if (fillRoundRectRadius == null) {
+            (fillPath ?: Path()).also { path ->
+                rebuildShapePath(
+                    target = path,
+                    left = bounds.left.toFloat(),
+                    top = bounds.top.toFloat(),
+                    right = bounds.right.toFloat(),
+                    bottom = bounds.bottom.toFloat(),
+                    corners = fillCorners,
+                )
+            }
+        } else {
+            null
+        }
 
-        if (strokePaint.strokeWidth <= 0f) return
-        val maximumInset = min(fillFrame.width(), fillFrame.height()) / 2f
-        val strokeInset = (strokePaint.strokeWidth / 2f).coerceAtMost(maximumInset)
-        strokeFrame.set(fillFrame)
-        strokeFrame.inset(strokeInset, strokeInset)
-        if (strokeFrame.isEmpty) return
-        val maximumStrokeCorner = min(strokeFrame.width(), strokeFrame.height()) / 2f
+        val paint = strokePaint ?: run {
+            strokePath = null
+            return
+        }
+        val maximumInset = min(bounds.width(), bounds.height()) / 2f
+        strokeInset = (paint.strokeWidth / 2f).coerceAtMost(maximumInset)
+        val strokeWidth = bounds.width() - strokeInset * 2f
+        val strokeHeight = bounds.height() - strokeInset * 2f
+        if (strokeWidth <= 0f || strokeHeight <= 0f) {
+            strokePath = null
+            return
+        }
+        val maximumStrokeCorner = min(strokeWidth, strokeHeight) / 2f
         val strokeCorners = fillCorners.inset(strokeInset, maximumStrokeCorner)
         strokeRoundRectRadius = strokeCorners.uniformRoundedRadiusOrNull()
-        rebuildPath(
-            target = strokePath,
-            frame = strokeFrame,
-            corners = strokeCorners,
-        )
-    }
-
-    private fun rebuildPath(
-        target: Path,
-        frame: RectF,
-        corners: ResolvedCorners,
-    ) {
-        target.moveTo(frame.left + corners.topLeft.size, frame.top)
-        appendTopRight(target, frame, corners.topRight)
-        appendBottomRight(target, frame, corners.bottomRight)
-        appendBottomLeft(target, frame, corners.bottomLeft)
-        appendTopLeft(target, frame, corners.topLeft)
-        target.close()
-    }
-
-    private fun appendTopRight(target: Path, frame: RectF, corner: ResolvedCorner) {
-        target.lineTo(frame.right - corner.size, frame.top)
-        when (corner.family) {
-            UiCornerFamily.Rounded -> target.appendArc(
-                frame = RectF(
-                    frame.right - corner.size * 2f,
-                    frame.top,
-                    frame.right,
-                    frame.top + corner.size * 2f,
-                ),
-                startAngle = -90f,
-            )
-            UiCornerFamily.Continuous -> target.cubicTo(
-                frame.right - corner.size + corner.size * ContinuousControl,
-                frame.top,
-                frame.right,
-                frame.top + corner.size * (1f - ContinuousControl),
-                frame.right,
-                frame.top + corner.size,
-            )
-            UiCornerFamily.Cut -> target.lineTo(frame.right, frame.top + corner.size)
+        strokePath = if (strokeRoundRectRadius == null) {
+            (strokePath ?: Path()).also { path ->
+                rebuildShapePath(
+                    target = path,
+                    left = bounds.left + strokeInset,
+                    top = bounds.top + strokeInset,
+                    right = bounds.right - strokeInset,
+                    bottom = bounds.bottom - strokeInset,
+                    corners = strokeCorners,
+                )
+            }
+        } else {
+            null
         }
-    }
-
-    private fun appendBottomRight(target: Path, frame: RectF, corner: ResolvedCorner) {
-        target.lineTo(frame.right, frame.bottom - corner.size)
-        when (corner.family) {
-            UiCornerFamily.Rounded -> target.appendArc(
-                frame = RectF(
-                    frame.right - corner.size * 2f,
-                    frame.bottom - corner.size * 2f,
-                    frame.right,
-                    frame.bottom,
-                ),
-                startAngle = 0f,
-            )
-            UiCornerFamily.Continuous -> target.cubicTo(
-                frame.right,
-                frame.bottom - corner.size + corner.size * ContinuousControl,
-                frame.right - corner.size * (1f - ContinuousControl),
-                frame.bottom,
-                frame.right - corner.size,
-                frame.bottom,
-            )
-            UiCornerFamily.Cut -> target.lineTo(frame.right - corner.size, frame.bottom)
-        }
-    }
-
-    private fun appendBottomLeft(target: Path, frame: RectF, corner: ResolvedCorner) {
-        target.lineTo(frame.left + corner.size, frame.bottom)
-        when (corner.family) {
-            UiCornerFamily.Rounded -> target.appendArc(
-                frame = RectF(
-                    frame.left,
-                    frame.bottom - corner.size * 2f,
-                    frame.left + corner.size * 2f,
-                    frame.bottom,
-                ),
-                startAngle = 90f,
-            )
-            UiCornerFamily.Continuous -> target.cubicTo(
-                frame.left + corner.size - corner.size * ContinuousControl,
-                frame.bottom,
-                frame.left,
-                frame.bottom - corner.size * (1f - ContinuousControl),
-                frame.left,
-                frame.bottom - corner.size,
-            )
-            UiCornerFamily.Cut -> target.lineTo(frame.left, frame.bottom - corner.size)
-        }
-    }
-
-    private fun appendTopLeft(target: Path, frame: RectF, corner: ResolvedCorner) {
-        target.lineTo(frame.left, frame.top + corner.size)
-        when (corner.family) {
-            UiCornerFamily.Rounded -> target.appendArc(
-                frame = RectF(
-                    frame.left,
-                    frame.top,
-                    frame.left + corner.size * 2f,
-                    frame.top + corner.size * 2f,
-                ),
-                startAngle = 180f,
-            )
-            UiCornerFamily.Continuous -> target.cubicTo(
-                frame.left,
-                frame.top + corner.size - corner.size * ContinuousControl,
-                frame.left + corner.size * (1f - ContinuousControl),
-                frame.top,
-                frame.left + corner.size,
-                frame.top,
-            )
-            UiCornerFamily.Cut -> target.lineTo(frame.left + corner.size, frame.top)
-        }
-    }
-
-    private fun Path.appendArc(frame: RectF, startAngle: Float) {
-        if (frame.width() <= 0f || frame.height() <= 0f) return
-        arcTo(frame, startAngle, 90f, false)
     }
 
     private fun rebuildFillPaint() {
@@ -320,6 +285,18 @@ internal class UiShapeDrawable(
                 }
             }
         }
+        applyFillAlpha()
+    }
+
+    private fun applyFillAlpha() {
+        fillPaint.alpha = when (val fill = currentFill) {
+            is Brush.SolidColor -> combineAlpha(Color.alpha(fill.color), drawableAlpha)
+            else -> drawableAlpha
+        }
+    }
+
+    private fun applyStrokeAlpha(paint: Paint) {
+        paint.alpha = combineAlpha(Color.alpha(strokeColor), drawableAlpha)
     }
 
     private inline fun List<com.viewcompose.graphics.core.ColorStop>.toShaderOrNull(
@@ -334,10 +311,10 @@ internal class UiShapeDrawable(
         }
         return create(colors, positions)
     }
+}
 
-    private companion object {
-        const val ContinuousControl = 0.78f
-    }
+private fun combineAlpha(colorAlpha: Int, drawableAlpha: Int): Int {
+    return (colorAlpha * drawableAlpha + 127) / 255
 }
 
 internal data class ResolvedCorner(val family: UiCornerFamily, val size: Float)
@@ -349,7 +326,7 @@ internal data class ResolvedCorners(
     val bottomLeft: ResolvedCorner,
 )
 
-private fun ResolvedCorners.uniformRoundedRadiusOrNull(): Float? {
+internal fun ResolvedCorners.uniformRoundedRadiusOrNull(): Float? {
     val radius = topLeft.size
     return radius.takeIf {
         topLeft.family == UiCornerFamily.Rounded &&
@@ -360,6 +337,146 @@ private fun ResolvedCorners.uniformRoundedRadiusOrNull(): Float? {
             bottomRight.size == radius &&
             bottomLeft.size == radius
     }
+}
+
+internal fun rebuildShapePath(
+    target: Path,
+    left: Float,
+    top: Float,
+    right: Float,
+    bottom: Float,
+    corners: ResolvedCorners,
+) {
+    target.reset()
+    target.moveTo(left + corners.topLeft.size, top)
+    appendTopRight(target, right, top, corners.topRight)
+    appendBottomRight(target, right, bottom, corners.bottomRight)
+    appendBottomLeft(target, left, bottom, corners.bottomLeft)
+    appendTopLeft(target, left, top, corners.topLeft)
+    target.close()
+}
+
+private fun appendTopRight(
+    target: Path,
+    right: Float,
+    top: Float,
+    corner: ResolvedCorner,
+) {
+    val size = corner.size
+    target.lineTo(right - size, top)
+    when (corner.family) {
+        UiCornerFamily.Rounded -> target.appendQuarterArc(
+            left = right - size * 2f,
+            top = top,
+            right = right,
+            bottom = top + size * 2f,
+            startAngle = -90f,
+        )
+        UiCornerFamily.Continuous -> target.cubicTo(
+            right - size + size * CONTINUOUS_CONTROL,
+            top,
+            right,
+            top + size * (1f - CONTINUOUS_CONTROL),
+            right,
+            top + size,
+        )
+        UiCornerFamily.Cut -> target.lineTo(right, top + size)
+    }
+}
+
+private fun appendBottomRight(
+    target: Path,
+    right: Float,
+    bottom: Float,
+    corner: ResolvedCorner,
+) {
+    val size = corner.size
+    target.lineTo(right, bottom - size)
+    when (corner.family) {
+        UiCornerFamily.Rounded -> target.appendQuarterArc(
+            left = right - size * 2f,
+            top = bottom - size * 2f,
+            right = right,
+            bottom = bottom,
+            startAngle = 0f,
+        )
+        UiCornerFamily.Continuous -> target.cubicTo(
+            right,
+            bottom - size + size * CONTINUOUS_CONTROL,
+            right - size * (1f - CONTINUOUS_CONTROL),
+            bottom,
+            right - size,
+            bottom,
+        )
+        UiCornerFamily.Cut -> target.lineTo(right - size, bottom)
+    }
+}
+
+private fun appendBottomLeft(
+    target: Path,
+    left: Float,
+    bottom: Float,
+    corner: ResolvedCorner,
+) {
+    val size = corner.size
+    target.lineTo(left + size, bottom)
+    when (corner.family) {
+        UiCornerFamily.Rounded -> target.appendQuarterArc(
+            left = left,
+            top = bottom - size * 2f,
+            right = left + size * 2f,
+            bottom = bottom,
+            startAngle = 90f,
+        )
+        UiCornerFamily.Continuous -> target.cubicTo(
+            left + size - size * CONTINUOUS_CONTROL,
+            bottom,
+            left,
+            bottom - size * (1f - CONTINUOUS_CONTROL),
+            left,
+            bottom - size,
+        )
+        UiCornerFamily.Cut -> target.lineTo(left, bottom - size)
+    }
+}
+
+private fun appendTopLeft(
+    target: Path,
+    left: Float,
+    top: Float,
+    corner: ResolvedCorner,
+) {
+    val size = corner.size
+    target.lineTo(left, top + size)
+    when (corner.family) {
+        UiCornerFamily.Rounded -> target.appendQuarterArc(
+            left = left,
+            top = top,
+            right = left + size * 2f,
+            bottom = top + size * 2f,
+            startAngle = 180f,
+        )
+        UiCornerFamily.Continuous -> target.cubicTo(
+            left,
+            top + size - size * CONTINUOUS_CONTROL,
+            left + size * (1f - CONTINUOUS_CONTROL),
+            top,
+            left + size,
+            top,
+        )
+        UiCornerFamily.Cut -> target.lineTo(left + size, top)
+    }
+}
+
+private fun Path.appendQuarterArc(
+    left: Float,
+    top: Float,
+    right: Float,
+    bottom: Float,
+    startAngle: Float,
+) {
+    if (right <= left || bottom <= top) return
+    arcTo(left, top, right, bottom, startAngle, 90f, false)
 }
 
 private fun ResolvedCorners.inset(amount: Float, maximum: Float): ResolvedCorners {
@@ -378,15 +495,27 @@ internal fun UiShape.resolveCorners(
     layoutDirection: Int,
     density: UiDensity,
     bounds: RectF,
+): ResolvedCorners = resolveCorners(
+    layoutDirection = layoutDirection,
+    density = density,
+    width = bounds.width(),
+    height = bounds.height(),
+)
+
+internal fun UiShape.resolveCorners(
+    layoutDirection: Int,
+    density: UiDensity,
+    width: Float,
+    height: Float,
 ): ResolvedCorners {
     val rtl = layoutDirection == View.LAYOUT_DIRECTION_RTL
     val physical = ResolvedCorners(
-        topLeft = (if (rtl) topEnd else topStart).resolve(density, bounds),
-        topRight = (if (rtl) topStart else topEnd).resolve(density, bounds),
-        bottomRight = (if (rtl) bottomStart else bottomEnd).resolve(density, bounds),
-        bottomLeft = (if (rtl) bottomEnd else bottomStart).resolve(density, bounds),
+        topLeft = (if (rtl) topEnd else topStart).resolve(density, width, height),
+        topRight = (if (rtl) topStart else topEnd).resolve(density, width, height),
+        bottomRight = (if (rtl) bottomStart else bottomEnd).resolve(density, width, height),
+        bottomLeft = (if (rtl) bottomEnd else bottomStart).resolve(density, width, height),
     )
-    val maxCorner = min(bounds.width(), bounds.height()) / 2f
+    val maxCorner = min(width, height) / 2f
     return physical.copy(
         topLeft = physical.topLeft.coerce(maxCorner),
         topRight = physical.topRight.coerce(maxCorner),
@@ -395,12 +524,18 @@ internal fun UiShape.resolveCorners(
     )
 }
 
-private fun UiCorner.resolve(density: UiDensity, bounds: RectF): ResolvedCorner {
+private fun UiCorner.resolve(
+    density: UiDensity,
+    width: Float,
+    height: Float,
+): ResolvedCorner {
     val size = when (val value = size) {
         is UiCornerSize.Absolute -> density.toPx(value.size)
-        is UiCornerSize.Relative -> min(bounds.width(), bounds.height()) * value.fraction
+        is UiCornerSize.Relative -> min(width, height) * value.fraction
     }
     return ResolvedCorner(family, size.coerceAtLeast(0f))
 }
 
 private fun ResolvedCorner.coerce(maximum: Float): ResolvedCorner = copy(size = size.coerceAtMost(maximum))
+
+private const val CONTINUOUS_CONTROL = 0.78f

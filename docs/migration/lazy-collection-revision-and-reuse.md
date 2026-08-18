@@ -214,9 +214,18 @@ after a rollback so the renderer does not advance the item revision and may retr
 submission. Once a native frame committed, later side-effect or diagnostics failures do not change
 the return value.
 
-`LazyListItem.sessionUpdater` is now required. It must install the newest content closure or
-equivalent immutable input into the existing session. A revision change never permits replacing a
-same-key, same-type logical session as an implementation fallback.
+`LazyListItem` now owns one `sessionStrategy` plus one opaque `sessionPayload`; the former
+`sessionFactory` and `sessionUpdater` constructor fields are removed. The strategy receives the
+current item synchronously in both `create` and `update`, reads its payload, and must not retain the
+item snapshot. `create` installs the initial payload and `update` installs a changed payload into
+the existing Session. A revision change never permits replacing a same-key, same-type logical
+Session as an implementation fallback.
+
+Typed and strong-snapshot declarations share one strategy across every item in that declaration,
+so committed storage no longer contains one factory/updater wrapper and one item-capturing content
+closure per row. Low-level static implementations whose callbacks do not need the payload may use
+`lazyListItemSessionStrategy(create, update)`; payload-aware implementations directly implement
+`LazyListItemSessionStrategy`.
 
 An adoption that returns `false`, or throws before ownership transfers, releases the presentation
 immediately. A failed first cross-owner rebind must not invoke the old logical owner's update

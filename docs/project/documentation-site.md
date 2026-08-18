@@ -74,7 +74,7 @@ defect-evidence tables and dated measurement ledgers remain rendered and directl
 excluded block must retain an adjacent searchable heading and summary; API contracts, command
 references, and reader-facing guides must not use this partition.
 
-The per-locale search-index budget is 6 MiB. It was first raised from 4 MiB after the searchable
+The per-locale search-index budget is 6.25 MiB. It was first raised from 4 MiB after the searchable
 [multi-design-system architecture standard](../architecture/design-systems.md), ADR-0005, and its
 evidence-heavy [active execution plan](./plans/multi-design-system-high-fidelity.md) measured about
 4.1 MiB for English and 4.4 MiB for Chinese. After the complete One UI and overlay architecture
@@ -94,6 +94,11 @@ Chinese headroom. If either locale reaches 6 MiB, the next action is to review s
 or index representation before another increase; code and command content remains indexed because
 API and build-command search has direct reader value.
 
+The lazy-collection memory-efficiency candidate reached that trigger. Its required plan and
+benchmark partitions materially reduced both indexes before the reviewed ceiling moved to
+6.25 MiB. Reaching this ceiling requires structural index segmentation rather than another
+content-only partition or threshold increase; exact paired evidence is retained below.
+
 Compatibility redirects preserve `/docs`, `/getting-started`, `/compose-migration`,
 `/migrate-from-compose`, and previously published active-plan routes after those plans move to the
 archive, including their locale-prefixed forms. Add a redirect only for an intentional historical
@@ -105,7 +110,7 @@ locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to t
 tree, so those copies add storage but no localized content or supported route.
 
 The budget model separates expected release-history growth from regressions. Non-API output is
-limited to 43 MiB. Before the Demo verification-harness plan was added, a clean `main` build already
+limited to 43.5 MiB. Before the Demo verification-harness plan was added, a clean `main` build already
 measured 39.999791 MiB. Publishing that searchable English plan, its `zh-CN` fallback route, and
 both locale search entries measured 40.427350 MiB, so the reviewed ceiling moved from 40 MiB to
 41 MiB instead of removing reader-value planning evidence. The native-widget contract convergence
@@ -135,9 +140,15 @@ working-tree `current` Dokka for unpublished artifacts share the API-tree budget
 at most 4.5 MiB and no individual tree may exceed 24 MiB. Only manifests
 and redirect aliases use the separate 1 MiB routing allowance. The other ceilings remain 120
 seconds for the Docusaurus build, 8 MiB total and 768 KiB largest-file for JavaScript, 128 KiB for
-CSS, and 6 MiB for each locale's search index. The gate also rejects any locale-prefixed API copy.
+CSS, and 6.25 MiB for each locale's search index. The gate also rejects any locale-prefixed API copy.
 Raise a threshold only with a measured explanation of the reader or release value that requires the
 additional cost.
+
+The memory-efficiency branch then completed the mandatory representation review before moving the
+non-API ceiling to 43.5 MiB. The remaining growth is the directly linkable active-plan route and
+reviewed public contracts. Before this ceiling or the 6.25 MiB locale-search ceiling moves again,
+the site must structurally segment internal plan detail or its search indexes; exact paired
+evidence and limitations are retained below.
 
 The accessibility audit covers the site-owned English and localized pages and checks document
 language, title and main landmarks, heading order, accessible names, image alternatives, table
@@ -246,6 +257,21 @@ identity token.
 ## Last verified
 
 <div className="search-partition-detail">
+
+2026-08-18: paired Docusaurus locale builds on the same checkout dependency set compared current
+`main` with the lazy-collection memory-efficiency candidate. `main` measured 45,041,594 non-API
+bytes and 5,837,406/6,282,537 English/Chinese search bytes. Before partitioning the candidate's
+internal phase record and detailed benchmark ledger, it measured 45,443,163 and
+5,938,077/6,389,023 bytes. Keeping concise searchable conclusions while excluding exhaustive
+execution detail reduced the candidate to 45,298,674 and 5,863,273/6,311,901 bytes. The accepted
+candidate remains 257,080 non-API bytes (0.57%), 25,867 English-search bytes (0.44%), and 29,364
+Chinese-search bytes (0.47%) above `main`, while the representation change removed 144,489,
+74,804, and 77,122 bytes respectively. The conclusion is **mixed**: representation improved
+materially, while the directly linkable active plan and bilingual reader contracts still increase
+absolute output. The reviewed ceilings move to 43.5 MiB non-API and 6.25 MiB per locale. The
+baseline did not reconstruct API history, but both locale render trees and search indexes were
+complete and non-API accounting excludes API bytes. The next action is structural plan/index
+segmentation before either ceiling changes again.
 
 2026-08-17: paired Docusaurus locale builds on the same checkout dependency set compared `main`
 with the manual-review repair branch before and after the required search partition. `main`

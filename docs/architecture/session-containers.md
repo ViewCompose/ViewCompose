@@ -45,8 +45,8 @@ Every delayed-session container must satisfy these constraints:
 9. A parent collection submission is one monotonic child-session revision. Its retained-child
    updates publish only from the parent render frame's commit effects, after composition commit;
    parent rollback discards them without running child composition or effects.
-10. Callback identity is not a revision. A changed ordinary capture must be State or participate in
-    `contentRevision`; callback allocation alone never refreshes content. Single item, sticky-header,
+10. Strategy or payload identity is not a revision. A changed ordinary capture must be State or
+    participate in `contentRevision`; allocation alone never refreshes content. Single item, sticky-header,
     page, and tab declarations require a non-null revision immediately after `key`; optional
     physical-reuse and layout arguments follow it. `null` is not a sentinel.
     `StaticContentRevision` promises that no such ordinary input changes, while the nullable bulk
@@ -63,7 +63,10 @@ Every delayed-session container must satisfy these constraints:
     identity without evaluating selectors. Each collector retains the current and immediately
     previous successfully committed evaluated snapshot, keyed by exact source identity plus
     framework environment. An exact hit restores the ordered list and key map in constant time
-    without selectors or a key scan; an environment mismatch reevaluates every selector. Scoped
+    without selectors, a key scan, or per-item callback wrappers. One typed declaration shares a
+    `LazyListItemSessionStrategy` and stores each source model as the selected item's opaque payload;
+    Holder create/update consumes that payload synchronously without retaining the item snapshot or
+    allocating a bind-time content closure. An environment mismatch reevaluates every selector. Scoped
     declarations have no snapshot overload. Only State read while item content executes in its
     active Session remains independently observed. State or another changing input read by a
     selector requires a replacement `LazyItemsSnapshot`, as do order, membership, retained item

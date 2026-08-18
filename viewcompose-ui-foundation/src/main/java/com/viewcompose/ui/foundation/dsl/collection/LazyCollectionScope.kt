@@ -3,7 +3,7 @@ package com.viewcompose.ui.foundation
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
-import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.LazyListItemSessionStrategy
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.policy.GridItemSpan
 
@@ -263,13 +263,19 @@ internal class LazyItemCollector(
         span: GridItemSpan,
         content: UiTreeBuilder.() -> Unit,
     ) {
+        val strategy = WidgetLazyItemSessionStrategy(
+            localSnapshot = localSnapshot,
+            saveableStateHolder = saveableStateHolder,
+            content = DirectWidgetLazyItemContent,
+        )
         addCanonical(
             key = key,
             contentType = contentType,
             contentRevision = contentRevision,
             kind = kind,
             span = span,
-            contentFactory = { content },
+            sessionStrategy = strategy,
+            sessionPayload = content,
         )
     }
 
@@ -283,6 +289,11 @@ internal class LazyItemCollector(
         itemContent: UiTreeBuilder.(T) -> Unit,
     ) {
         prepareForAdditionalItems(items.size)
+        val strategy = WidgetLazyItemSessionStrategy(
+            localSnapshot = localSnapshot,
+            saveableStateHolder = saveableStateHolder,
+            content = TypedWidgetLazyItemContent(itemContent),
+        )
         items.forEach { item ->
             addCanonical(
                 key = key(item),
@@ -290,7 +301,8 @@ internal class LazyItemCollector(
                 contentRevision = contentRevision(item),
                 kind = kind,
                 span = span(item),
-                contentFactory = { { itemContent(item) } },
+                sessionStrategy = strategy,
+                sessionPayload = item,
             )
         }
     }
@@ -317,6 +329,11 @@ internal class LazyItemCollector(
             return
         }
         prepareForAdditionalItems(snapshot.items.size)
+        val strategy = WidgetLazyItemSessionStrategy(
+            localSnapshot = localSnapshot,
+            saveableStateHolder = saveableStateHolder,
+            content = TypedWidgetLazyItemContent(itemContent),
+        )
         snapshot.items.forEach { item ->
             addCanonical(
                 key = key(item),
@@ -324,18 +341,20 @@ internal class LazyItemCollector(
                 contentRevision = contentRevision(item),
                 kind = kind,
                 span = span(item),
-                contentFactory = { { itemContent(item) } },
+                sessionStrategy = strategy,
+                sessionPayload = item,
             )
         }
     }
 
-    private inline fun addCanonical(
+    private fun addCanonical(
         key: Any,
         contentType: Any?,
         contentRevision: Any?,
         kind: LazyListItemKind,
         span: GridItemSpan,
-        contentFactory: () -> UiTreeBuilder.() -> Unit,
+        sessionStrategy: LazyListItemSessionStrategy,
+        sessionPayload: Any?,
     ) {
         val canonicalSpan = span.canonical()
         val committedItem = reuseCache.committedItem(key)
@@ -347,24 +366,16 @@ internal class LazyItemCollector(
             contentType = contentType,
             kind = kind,
             span = canonicalSpan,
-        ) ?: run {
-            val sessionBinding = WidgetLazyItemSessionBinding(
-                localSnapshot = localSnapshot,
-                saveableStateHolder = saveableStateHolder,
-                saveableStateKey = key,
-                content = contentFactory(),
-            )
-            LazyListItem(
+        ) ?: LazyListItem(
                 key = key,
                 contentRevision = contentRevision,
                 environmentRevision = localSnapshot,
                 contentType = contentType,
                 kind = kind,
                 span = canonicalSpan,
-                sessionFactory = sessionBinding,
-                sessionUpdater = sessionBinding,
+                sessionStrategy = sessionStrategy,
+                sessionPayload = sessionPayload,
             )
-        }
         val itemsByKey = mutableItemsByKey()
         require(itemsByKey.putIfAbsent(key, lazyItem) == null) {
             "Lazy collection keys must be unique. Duplicate key: $key"
@@ -753,26 +764,45 @@ internal class EvaluatedLazyItemsSnapshot(
     }
 }
 
-private class WidgetLazyItemSessionBinding(
+private class WidgetLazyItemSessionStrategy(
     private val localSnapshot: LocalSnapshot,
     private val saveableStateHolder: SaveableStateHolder?,
-    private val saveableStateKey: Any,
-    private val content: UiTreeBuilder.() -> Unit,
-) : LazyListItemSessionFactory, (LazyListItemSession) -> Unit {
-    override fun create(container: RenderContainerHandle) =
+    private val content: WidgetLazyItemContent,
+) : LazyListItemSessionStrategy {
+    override fun create(
+        container: RenderContainerHandle,
+        item: LazyListItem,
+    ) =
         WidgetLazyListItemSession(
             container = container,
             localSnapshot = localSnapshot,
             saveableStateHolder = saveableStateHolder,
-            saveableStateKey = saveableStateKey,
+            saveableStateKey = item.key,
             content = content,
+            contentPayload = item.sessionPayload,
         )
 
-    override fun invoke(session: LazyListItemSession) {
+    override fun update(
+        session: LazyListItemSession,
+        item: LazyListItem,
+    ) {
         (session as WidgetLazyListItemSession).updateContent(
             localSnapshot = localSnapshot,
             content = content,
+            contentPayload = item.sessionPayload,
         )
+    }
+}
+
+private class TypedWidgetLazyItemContent<T>(
+    private val content: UiTreeBuilder.(T) -> Unit,
+) : WidgetLazyItemContent {
+    @Suppress("UNCHECKED_CAST")
+    override fun render(
+        builder: UiTreeBuilder,
+        payload: Any?,
+    ) {
+        content.invoke(builder, payload as T)
     }
 }
 

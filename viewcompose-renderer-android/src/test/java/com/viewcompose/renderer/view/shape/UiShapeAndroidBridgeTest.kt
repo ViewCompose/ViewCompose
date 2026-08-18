@@ -8,9 +8,12 @@ package com.viewcompose.renderer.view.shape
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.ColorFilter
 import android.graphics.Outline
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.graphics.Rect
 import android.graphics.RectF
 import android.view.View
@@ -24,10 +27,13 @@ import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.dp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
@@ -105,6 +111,76 @@ class UiShapeDrawableTest {
         assertEquals(12f, canvas.roundRects.single().radius, 0.001f)
         assertEquals(12f, outline.radius, 0.001f)
         assertEquals(Rect(0, 0, 80, 40), Rect().also { assertTrue(outline.getRect(it)) })
+        assertFalse(drawable.hasFillPathResource)
+        assertFalse(drawable.hasStrokeResources)
+    }
+
+    @Test
+    fun `shape drawing resources follow actual geometry and border needs`() {
+        val drawable = UiShapeDrawable(
+            shape = UiShape.rounded(12.dp),
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+            density = UiDensity.Default,
+        ).apply {
+            setBounds(0, 0, 80, 40)
+            setFillColor(Color.WHITE)
+        }
+
+        drawable.draw(RecordingCanvas())
+        assertFalse(drawable.hasFillPathResource)
+        assertFalse(drawable.hasStrokeResources)
+
+        drawable.setShape(shape)
+        drawable.draw(RecordingCanvas())
+        assertTrue(drawable.hasFillPathResource)
+        assertFalse(drawable.hasStrokeResources)
+
+        drawable.setStroke(width = 4f, color = Color.BLACK)
+        drawable.draw(RecordingCanvas())
+        assertTrue(drawable.hasStrokeResources)
+
+        drawable.setStroke(width = 0f, color = Color.BLACK)
+        drawable.draw(RecordingCanvas())
+        assertFalse(drawable.hasStrokeResources)
+    }
+
+    @Test
+    fun `outline provider retains no drawable resources for a uniform shape`() {
+        val view = View(RuntimeEnvironment.getApplication()).apply {
+            layout(0, 0, 80, 48)
+        }
+        val provider = UiShapeOutlineProvider(
+            shape = UiShape.rounded(12.dp),
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+            density = UiDensity.Default,
+            topInset = 4,
+            bottomInset = 4,
+        )
+        val outline = Outline()
+
+        provider.getOutline(view, outline)
+
+        assertFalse(provider.hasPathResource)
+        assertEquals(12f, outline.radius, 0.001f)
+        assertEquals(Rect(0, 4, 80, 44), Rect().also { assertTrue(outline.getRect(it)) })
+    }
+
+    @Test
+    fun `outline provider allocates a path only for non uniform geometry`() {
+        val view = View(RuntimeEnvironment.getApplication()).apply {
+            layout(0, 0, 80, 48)
+        }
+        val provider = UiShapeOutlineProvider(
+            shape = shape,
+            layoutDirection = View.LAYOUT_DIRECTION_RTL,
+            density = UiDensity.Default,
+            topInset = 4,
+            bottomInset = 4,
+        )
+
+        provider.getOutline(view, Outline())
+
+        assertTrue(provider.hasPathResource)
     }
 
     @Test
@@ -180,6 +256,28 @@ class UiShapeDrawableTest {
     }
 
     @Test
+    fun `late stroke inherits drawable alpha and color filter`() {
+        val colorFilter = PorterDuffColorFilter(Color.RED, PorterDuff.Mode.SRC_IN)
+        val drawable = UiShapeDrawable(
+            shape = UiShape.rounded(12.dp),
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+            density = UiDensity.Default,
+        ).apply {
+            setBounds(0, 0, 80, 40)
+            setFillColor(Color.WHITE)
+            alpha = 96
+            setColorFilter(colorFilter)
+            setStroke(width = 4f, color = Color.BLACK)
+        }
+        val canvas = RecordingCanvas()
+
+        drawable.draw(canvas)
+
+        assertEquals(listOf(96, 96), canvas.roundRects.map(RoundRectDraw::alpha))
+        canvas.roundRects.forEach { draw -> assertSame(colorFilter, draw.colorFilter) }
+    }
+
+    @Test
     fun `stroke remains fully inside drawable bounds`() {
         val bitmap = drawShape(
             shape = UiShape.roundedRelative(0.5f),
@@ -190,13 +288,9 @@ class UiShapeDrawableTest {
             drawable.setStroke(width = 1f, color = Color.BLACK)
         }
 
-        listOf(
-            bitmap.getPixel(40, 0),
-            bitmap.getPixel(79, 20),
-            bitmap.getPixel(40, 39),
-            bitmap.getPixel(0, 20),
-        ).forEach { pixel ->
-            assertTrue(Color.alpha(pixel) >= 240)
+        listOf(40 to 0, 79 to 20, 40 to 39, 0 to 20).forEach { (x, y) ->
+            val alpha = Color.alpha(bitmap.getPixel(x, y))
+            assertTrue("Expected opaque inset stroke at ($x, $y), alpha=$alpha", alpha >= 240)
         }
     }
 
@@ -292,7 +386,32 @@ class UiShapeDrawableTest {
 
         override fun drawRoundRect(rect: RectF, rx: Float, ry: Float, paint: Paint) {
             assertEquals(rx, ry, 0.001f)
-            roundRects += RoundRectDraw(RectF(rect), rx, paint.style)
+            roundRects += RoundRectDraw(
+                frame = RectF(rect),
+                radius = rx,
+                style = paint.style,
+                alpha = paint.alpha,
+                colorFilter = paint.colorFilter,
+            )
+        }
+
+        override fun drawRoundRect(
+            left: Float,
+            top: Float,
+            right: Float,
+            bottom: Float,
+            rx: Float,
+            ry: Float,
+            paint: Paint,
+        ) {
+            assertEquals(rx, ry, 0.001f)
+            roundRects += RoundRectDraw(
+                frame = RectF(left, top, right, bottom),
+                radius = rx,
+                style = paint.style,
+                alpha = paint.alpha,
+                colorFilter = paint.colorFilter,
+            )
         }
 
         override fun drawPath(path: Path, paint: Paint) {
@@ -304,5 +423,7 @@ class UiShapeDrawableTest {
         val frame: RectF,
         val radius: Float,
         val style: Paint.Style,
+        val alpha: Int,
+        val colorFilter: ColorFilter?,
     )
 }

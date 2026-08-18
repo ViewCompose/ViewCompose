@@ -63,7 +63,7 @@ class LazyItemsSnapshotContractTest {
         assertSame(first, second)
         first.indices.forEach { index ->
             assertSame(first[index], second[index])
-            assertSame(first[index].sessionFactory, second[index].sessionFactory)
+            assertSame(first[index].sessionStrategy, second[index].sessionStrategy)
         }
     }
 
@@ -84,7 +84,7 @@ class LazyItemsSnapshotContractTest {
         assertSame(first, second)
         first.indices.forEach { index ->
             assertSame(first[index], second[index])
-            assertSame(first[index].sessionFactory, second[index].sessionFactory)
+            assertSame(first[index].sessionStrategy, second[index].sessionStrategy)
         }
     }
 
@@ -106,8 +106,8 @@ class LazyItemsSnapshotContractTest {
         assertSame(first, firstReset)
         assertSame(second, secondReset)
         assertNotSame(first, second)
-        assertSame(first.first().sessionFactory, firstReset.first().sessionFactory)
-        assertSame(second.first().sessionFactory, secondReset.first().sessionFactory)
+        assertSame(first.first().sessionStrategy, firstReset.first().sessionStrategy)
+        assertSame(second.first().sessionStrategy, secondReset.first().sessionStrategy)
     }
 
     @Test
@@ -140,9 +140,9 @@ class LazyItemsSnapshotContractTest {
         assertEquals(ROW_COUNT * 2, calls.contentType)
         assertEquals(ROW_COUNT * 2, calls.contentRevision)
         assertNotSame(first, changed)
-        assertNotSame(first.first().sessionFactory, changed.first().sessionFactory)
+        assertNotSame(first.first().sessionStrategy, changed.first().sessionStrategy)
         assertSame(changed, stable)
-        assertSame(changed.first().sessionFactory, stable.first().sessionFactory)
+        assertSame(changed.first().sessionStrategy, stable.first().sessionStrategy)
     }
 
     @Test
@@ -177,7 +177,7 @@ class LazyItemsSnapshotContractTest {
         assertNotSame(first, second)
         assertSame(first, firstReset)
         assertSame(first.first(), firstReset.first())
-        assertSame(first.first().sessionFactory, firstReset.first().sessionFactory)
+        assertSame(first.first().sessionStrategy, firstReset.first().sessionStrategy)
     }
 
     @Test
@@ -212,7 +212,7 @@ class LazyItemsSnapshotContractTest {
         assertSame(firstSnapshot, returnedSnapshot)
         assertSame(returnedSnapshot, cachedSnapshot)
         assertSame(firstSnapshot.first(), returnedSnapshot.first())
-        assertSame(firstSnapshot.first().sessionFactory, returnedSnapshot.first().sessionFactory)
+        assertSame(firstSnapshot.first().sessionStrategy, returnedSnapshot.first().sessionStrategy)
     }
 
     @Test
@@ -329,7 +329,7 @@ class LazyItemsSnapshotContractTest {
         assertEquals(callsAfterCommit, calls.total())
         assertNotSame(aborted, committed)
         assertNotSame(aborted.first(), committed.first())
-        assertNotSame(aborted.first().sessionFactory, committed.first().sessionFactory)
+        assertNotSame(aborted.first().sessionStrategy, committed.first().sessionStrategy)
         assertSame(committed, cached)
     }
 
@@ -354,7 +354,7 @@ class LazyItemsSnapshotContractTest {
         assertEquals(callsAfterReset, calls.total())
         assertNotSame(first, rebuiltFirst)
         assertNotSame(first.first(), rebuiltFirst.first())
-        assertNotSame(first.first().sessionFactory, rebuiltFirst.first().sessionFactory)
+        assertNotSame(first.first().sessionStrategy, rebuiltFirst.first().sessionStrategy)
         assertSame(rebuiltFirst, cachedFirst)
     }
 
@@ -384,8 +384,8 @@ class LazyItemsSnapshotContractTest {
         assertSame(first, settledFirst)
         assertSame(second, restoredSecond)
         assertNotSame(first.first(), second.first())
-        assertSame(first.first().sessionFactory, settledFirst.first().sessionFactory)
-        assertSame(second.first().sessionFactory, restoredSecond.first().sessionFactory)
+        assertSame(first.first().sessionStrategy, settledFirst.first().sessionStrategy)
+        assertSame(second.first().sessionStrategy, restoredSecond.first().sessionStrategy)
     }
 
     @Test
@@ -414,7 +414,7 @@ class LazyItemsSnapshotContractTest {
         assertSame(compact.single(), compactReplacement.single())
         assertSame(expanded.first(), expandedReplacement.first())
         assertNotSame(expanded[1], expandedReplacement[1])
-        assertNotSame(expanded[1].sessionFactory, expandedReplacement[1].sessionFactory)
+        assertNotSame(expanded[1].sessionStrategy, expandedReplacement[1].sessionStrategy)
         assertEquals(listOf(1, 2), expandedReplacement.map(LazyListItem::key))
     }
 

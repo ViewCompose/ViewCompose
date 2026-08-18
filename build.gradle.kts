@@ -1767,11 +1767,24 @@ tasks.register("verifyTutorialSamples") {
     }
 }
 
+val verifyDocumentationScripts by tasks.registering(Exec::class) {
+    group = "verification"
+    description = "Runs the documentation tooling regression suite."
+    workingDir(rootDir.resolve("website"))
+    commandLine("npm", "run", "test:scripts")
+    inputs.files(
+        fileTree(rootDir.resolve("website/scripts")) {
+            include("**/*.mjs")
+        },
+        rootDir.resolve("website/package.json"),
+    )
+}
+
 val verifyDocumentLanguages by tasks.registering(Exec::class) {
     group = "verification"
     description = "Verifies canonical-English and Simplified-Chinese documentation language."
     workingDir(rootDir.resolve("website"))
-    commandLine("npm", "run", "verify:languages")
+    commandLine("node", "scripts/verify-document-languages.mjs")
     inputs.files(
         fileTree(rootDir.resolve("docs")) {
             include("**/*.md", "**/*.mdx")
@@ -1786,11 +1799,31 @@ val verifyDocumentLanguages by tasks.registering(Exec::class) {
     )
 }
 
+val verifyDocumentationTranslations by tasks.registering(Exec::class) {
+    group = "verification"
+    description = "Verifies Chinese documentation coverage, status, and reviewed source fingerprints."
+    workingDir(rootDir.resolve("website"))
+    commandLine("npm", "run", "verify:translations")
+    inputs.files(
+        fileTree(rootDir.resolve("docs")) {
+            include("**/*.md", "**/*.mdx")
+            exclude("archive/**")
+        },
+        fileTree(rootDir.resolve("website/i18n/zh-CN/docusaurus-plugin-content-docs/current")) {
+            include("**/*.md", "**/*.mdx")
+        },
+        rootDir.resolve("website/scripts/verify-translations.mjs"),
+        rootDir.resolve("website/i18n/translation-policy.json"),
+    )
+}
+
 tasks.register("verifyDocumentationStructure") {
     group = "verification"
     description =
-        "Verifies documentation placement, link-graph coverage, module catalog, and relative links."
+        "Verifies documentation tooling, localization, placement, link coverage, and module catalog."
+    dependsOn(verifyDocumentationScripts)
     dependsOn(verifyDocumentLanguages)
+    dependsOn(verifyDocumentationTranslations)
 
     val allowedRootMarkdown =
         setOf(

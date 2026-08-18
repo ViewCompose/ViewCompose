@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 212042fb1cce0f3005623513007a123d2ea16eaa6eb842c76d2a66bf1815c48e
+translation_source_hash: 33d7bd2854e3503c6b3d1754773c4760a63ab7362080713656e3cf05bfa3eadc
 translation_status: current
 ---
 
@@ -157,9 +157,11 @@ val gap = VNode(
 - `GridCells.Adaptive` 根据当前内部宽度、间距、密度与配置重新计算物理列数，同时保留 Keyed
   逻辑 Session。`GridItemSpan.FullLine` 按当前列数解析；Foundation 会把 `Fixed(1)` 规范化为
   `Single`。
-- Renderer 保留 `LazyListItem` Session 时，若 Key 和两个 Revision 相等，必须忽略新的 Callback
-  对象。任一 Revision 改变时，安装最新 Updater 并恰好 Render 一次。Key 不同则始终创建不同逻辑
-  Session；兼容物理呈现只能在旧 State 与 Effect Dispose 后转移。
+- Renderer 保留 `LazyListItem` Session 时，若 Key 和两个 Revision 相等，必须忽略新的 Strategy 或
+  Payload。任一 Revision 改变时，用最新 Item Payload 调用保留的 Declaration Strategy，并持续
+  Render 该逻辑 Session，直到内容报告成功 Commit。Key 不同则始终创建不同逻辑 Session；兼容物理
+  呈现只能在旧 State 与 Effect Dispose 后转移。Typed Declaration 可以让全部 Item Snapshot 共享
+  一个 `LazyListItemSessionStrategy`；Strategy 只能同步消费当前 Item，不得保留它。
 - 状态与 Connector 命令按所属渲染器线程封闭。Android 集成使用主线程；除非具体契约另有
   说明，回调都会同步执行。
 - 不存在任何工具捕获 Scope 时，每次 VNode 发射只执行一次 Atomic 非活动检查，不读取工具

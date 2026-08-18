@@ -7,7 +7,8 @@ package com.viewcompose.renderer.view
 
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
-import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.RenderContainerHandle
+import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.ui.node.ReusableItemPresentation
 import com.viewcompose.renderer.view.lazy.session.LazyItemBindOutcome
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
@@ -65,8 +66,10 @@ class LazyItemSessionControllerTest {
                     key = "A",
                     contentRevision = 1,
                     environmentRevision = "dark",
-                    sessionFactory = LazyListItemSessionFactory { error("unused") },
-                    sessionUpdater = {},
+                    sessionStrategy = lazyListItemSessionStrategy(
+                        create = { error("unused") },
+                        update = {},
+                    ),
                 ),
                 submissionRevision = 2L,
             ),
@@ -711,12 +714,12 @@ class LazyItemSessionControllerTest {
         val first = item(
             key = "A",
             contentRevision = 1,
-            sessionFactory = LazyListItemSessionFactory { error("first") },
+            sessionFactory = { error("first") },
         )
         val second = item(
             key = "A",
             contentRevision = 1,
-            sessionFactory = LazyListItemSessionFactory { error("second") },
+            sessionFactory = { error("second") },
         )
 
         controller.bind(first)
@@ -894,7 +897,7 @@ class LazyItemSessionControllerTest {
         contentType: Any? = null,
         kind: com.viewcompose.ui.node.LazyListItemKind =
             com.viewcompose.ui.node.LazyListItemKind.Item,
-        sessionFactory: LazyListItemSessionFactory = LazyListItemSessionFactory { _ ->
+        sessionFactory: (RenderContainerHandle) -> LazyListItemSession = { _ ->
             error("sessionFactory should not be used in controller tests")
         },
         sessionUpdater: (LazyListItemSession) -> Unit = {},
@@ -904,8 +907,10 @@ class LazyItemSessionControllerTest {
             contentRevision = contentRevision,
             contentType = contentType,
             kind = kind,
-            sessionFactory = sessionFactory,
-            sessionUpdater = sessionUpdater,
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = sessionFactory,
+                update = sessionUpdater,
+            ),
         )
     }
 

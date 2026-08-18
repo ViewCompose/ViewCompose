@@ -1,6 +1,6 @@
 ---
 translation_source: project/localization.md
-translation_source_hash: 1fad2fc2bd66c925a4e1bb87838ae69ddfe43bd23b237f99c268e09957238132
+translation_source_hash: f8e7f5c3d95e9966a6795c8dd4a76623df00ff29953dc4b4b67beb11618ecb0f
 translation_status: current
 ---
 
@@ -90,14 +90,23 @@ translation_status: current
 3. 每个公共页面都在同一 PR 中更新并审阅中文镜像；
 4. 验证叙述使用目录语言，字面量保持精确；
 5. 在 PR 模板中说明本地化影响；
-6. 运行语言分类、翻译校验和双语站点构建。
+6. 运行仓库统一文档门禁和双语站点构建。
 
 紧急正确性和安全修复仍在变更内部先修改英文。公共页面缺失中文镜像、镜像过期或已知不准确时
 不得合并。
 
 ## 命令
 
-在 `website/` 下执行：
+中文语义完成审阅后，在 `website/` 下使用相对于 `docs/` 的路径，只更新明确完成审阅的镜像：
+
+```bash
+npm run mark:translations-reviewed -- architecture/overview.md guides/theming.md
+```
+
+该命令会先校验源映射和 `current` 状态，再记录权威源指纹。它是显式的审阅确认，不是自动步骤，
+也不能代替中文语义更新。
+
+排查文档站点问题时，可使用以下底层命令：
 
 ```bash
 npm run write-translations
@@ -114,11 +123,14 @@ URL 和显式标记的字面量仍会被排除。
 `verify:translations` 校验源映射、必需覆盖率、指纹、状态和过期提示。
 `build` 同时生成 `en` 与 `zh-CN` 站点，并继续严格检查损坏链接。
 
-仓库级文档位置和链接仍由以下命令检查：
+仓库统一门禁为：
 
 ```bash
 ./gradlew verifyDocumentationStructure
 ```
+
+该任务统一运行文档脚本测试、语言分类、翻译覆盖与指纹校验、文档位置和链接检查。`qaQuick` 依赖
+此任务，因此本地与主 CI 会在网站构建前执行同一套新鲜度契约。
 
 ## 审查清单
 

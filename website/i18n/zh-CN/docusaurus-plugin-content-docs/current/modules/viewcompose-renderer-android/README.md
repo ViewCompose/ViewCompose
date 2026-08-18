@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 14ba010cff0a821e37f4c4f1cdfb04a599e724d6abba961f9bf0e6c26b4029b9
+translation_source_hash: e1d179b841401ad1ee4f5c85b593556358f085f63c3f01d9c8b67f0b4cf5e736
 translation_status: current
 ---
 
@@ -32,12 +32,13 @@ dependencies {
 - Android 运行时依赖：AndroidX Core、AppCompat、RecyclerView、ViewPager2、
   ConstraintLayout 与 SwipeRefreshLayout；不依赖 Material Components。
 - 通用 Surface、圆角/切角/连续圆角和进度指示器使用引擎自有 Android 绘制实现，并只消费节点解析值。
-- `SurfaceNodeProps` 使用同一份缓存的 `UiShapeDrawable` 几何来完成纯色或渐变 Fill、Border、
-  Ripple Mask、Outline 与可选裁剪。连续圆角使用凸三次曲线路径；稳定绘制不会逐帧分配 Path、
-  Shader、Drawable 或集合。
-- 四角半径一致的 Rounded Rectangle 使用 Android 原生圆角矩形绘制和 Outline 操作。非对称圆角、
-  Continuous Corner 与 Cut Corner 仍使用缓存的通用 Path，因此这个常见滚动快路径不会收窄 Shape、
-  Gradient、Border、Ripple Mask 或裁剪行为。
+- `SurfaceNodeProps` 使用缓存的 `UiShapeDrawable` 几何完成纯色或渐变 Fill、可选 Border 与 Ripple
+  Mask。View Outline 与可选裁剪几何由一个无 Paint 且缓存 Bounds 的 Provider 提供，不再保留第二个
+  完整 Drawable。连续圆角使用凸三次曲线路径；稳定绘制不会逐帧分配 Path、Shader、Drawable 或集合。
+- 四角半径一致的 Rounded Rectangle 使用 Android 原生圆角矩形绘制和 Outline 操作，不保留
+  `Path`；没有可见 Border 的 Surface 也不保留 Stroke Paint 或 Path。非对称圆角、Continuous
+  Corner 与 Cut Corner 仍使用缓存的通用 Path，因此这个常见滚动快路径不会收窄 Shape、Gradient、
+  Border、Ripple Mask 或裁剪行为。
 - 引擎自有圆角使用圆弧绘制。Shape 边框会沿向内偏移半个线宽的路径居中绘制，保证轮廓完整落在
   逻辑 Drawable 边界内，包括组件在较大触控目标中居中较短可见 Surface 的情况。
 - Button 可以请求比有效 View 触控目标更短的可见 Surface。引擎会在 View 内居中其背景、边框、
@@ -151,9 +152,10 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
   行与 Tab Item 保持 `Content`；该角色不影响 Key、差分、测量、可见性或回调。
 - Lazy Item 的 `contentRevision` 与框架捕获的 `environmentRevision` 是标识和 Type 之外仅有的内容
   失效输入。Key 与 Revision 相等时完全跳过 Item Composition 与原生 Patch，即使父层创建了新的
-  Callback 对象。Revision 变化会安装最新 Closure，并只 Render 该 Item；调用方必须使用可观察
-  State，或把每个变化普通捕获值放入 `contentRevision`。即使 Key 与 Revision 不变，只要
-  `contentType` 改变，也会终止旧 Child Session 并完整重建原生呈现。
+  Strategy 或 Payload。Revision 变化会让 Item 的共享 Strategy 安装最新 Payload，并只 Render 该
+  Item；调用方必须使用可观察 State，或把每个变化普通捕获值放入 `contentRevision`。即使 Key 与
+  Revision 不变，只要 `contentType` 改变，也会终止旧 Child Session 并完整重建原生呈现。Holder
+  Create 与 Update 会直接调用 Strategy，Bind 路径不会分配 Item 专属 Callback Adapter。
 - Detach 且从未 Activate 的 Lazy Holder 可以在 RecyclerView Prefetch 中 Prepare 子 Composition
   与原生 View 树，但不会提交 Remember Lifecycle、Effect、原生 Commit 工作、Overlay 或诊断。
   首次 Attach 会直接 Activate 有效 Prepared Frame；如果被观察 State 已变化，则改为渲染当前
@@ -163,9 +165,13 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
   因而无需扫描 Item 列表即可解析稳定 Key。Payload Bind 只有在 Holder 已提交完全相同的 Item
   快照实例和完全相同的 Submission Revision 时才能跳过 Session 路由；仅 Revision 相等并不足够。
   这条确认规则可以防止队列中的 RecyclerView 通知把较早的逻辑提交误判为当前提交。
+- 同一份可处理 Hash 冲突的提交表还持有 Primitive Position 与 Renderer 分配的 Stable ID，避免
+  重叠且带装箱值的 Key Map。紧凑 Registry 在 Mounted Adapter 生命周期内保持 View Type 身份，
+  且不创建 `Pair` Key 或装箱 ID。由于 `contentType` 是有限的物理兼容分类，一个已挂载容器最多
+  接受 1,024 种不同的 kind/type 组合；更大的历史会在无界增长前被拒绝。
 - Lazy List 与 Pager Holder 会在 Holder 生命周期内缓存 Container Handle，并直接调用专用 Session
-  Host。原生复用仍按 Key 切换逻辑 Session 所有权；该调整只移除 Callback Wrapper 分配，不会合并
-  物理与逻辑身份。
+  Host 与 Declaration 共享的 Item Strategy。原生复用仍按 Key 切换逻辑 Session 所有权；该调整只
+  移除 Callback Wrapper 分配，不会合并物理与逻辑身份。
 - Pager 稳定 ID 使用 Renderer 分配值而不是 key hash。Pager View Type 按不兼容的
   `contentType`/kind 组合划分；带 key 的移动只刷新归属唯一且已变化的 Holder，每个公开 Page 声明
   都必须提供唯一稳定 Key。除非调用方显式指定 Limit，否则由 ViewPager2 原生默认策略管理离屏驻留。

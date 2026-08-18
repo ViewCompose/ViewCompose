@@ -6,7 +6,9 @@ import com.viewcompose.ui.modifier.SemanticsCollectionItemInfo
 import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
 import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.node.LazyListItem
-import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.LazyListItemSession
+import com.viewcompose.ui.node.LazyListItemSessionStrategy
+import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiInteractionIndication
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
@@ -801,6 +803,7 @@ fun UiTreeBuilder.HorizontalPager(
     val saveableStateKeys = resolveDelayedChildSaveableStateKeys(
         builtPages.map(HorizontalPagerPage::key),
     )
+    val sessionStrategy = PagerLazyItemSessionStrategy(localSnapshot, saveableStateHolder)
     val resolvedPages = builtPages.mapIndexed { index, page ->
         val saveableStateKey = saveableStateKeys[index]
         LazyListItem(
@@ -808,21 +811,8 @@ fun UiTreeBuilder.HorizontalPager(
             contentType = page.contentType,
             contentRevision = page.contentRevision,
             environmentRevision = localSnapshot,
-            sessionFactory = LazyListItemSessionFactory { container ->
-                WidgetLazyListItemSession(
-                    container = container,
-                    localSnapshot = localSnapshot,
-                    saveableStateHolder = saveableStateHolder,
-                    saveableStateKey = saveableStateKey,
-                    content = page.content,
-                )
-            },
-            sessionUpdater = { session ->
-                (session as WidgetLazyListItemSession).updateContent(
-                    localSnapshot = localSnapshot,
-                    content = page.content,
-                )
-            },
+            sessionStrategy = sessionStrategy,
+            sessionPayload = PagerLazyItemPayload(saveableStateKey, page.content),
         )
     }
     saveableStateHolder?.let { holder ->
@@ -857,6 +847,51 @@ internal data class HorizontalPagerPage(
     val contentRevision: Any,
     val content: UiTreeBuilder.() -> Unit,
 )
+
+private data class PagerLazyItemPayload(
+    val saveableStateKey: Any,
+    val content: UiTreeBuilder.() -> Unit,
+)
+
+private class PagerLazyItemSessionStrategy(
+    private val localSnapshot: LocalSnapshot,
+    private val saveableStateHolder: SaveableStateHolder?,
+) : LazyListItemSessionStrategy {
+    override fun create(
+        container: RenderContainerHandle,
+        item: LazyListItem,
+    ): LazyListItemSession {
+        val payload = item.sessionPayload as PagerLazyItemPayload
+        return WidgetLazyListItemSession(
+            container = container,
+            localSnapshot = localSnapshot,
+            saveableStateHolder = saveableStateHolder,
+            saveableStateKey = payload.saveableStateKey,
+            content = PagerWidgetLazyItemContent,
+            contentPayload = payload,
+        )
+    }
+
+    override fun update(
+        session: LazyListItemSession,
+        item: LazyListItem,
+    ) {
+        (session as WidgetLazyListItemSession).updateContent(
+            localSnapshot = localSnapshot,
+            content = PagerWidgetLazyItemContent,
+            contentPayload = item.sessionPayload,
+        )
+    }
+}
+
+private data object PagerWidgetLazyItemContent : WidgetLazyItemContent {
+    override fun render(
+        builder: UiTreeBuilder,
+        payload: Any?,
+    ) {
+        (payload as PagerLazyItemPayload).content.invoke(builder)
+    }
+}
 
 // VerticalPager.
 
@@ -900,6 +935,7 @@ fun UiTreeBuilder.VerticalPager(
     val saveableStateKeys = resolveDelayedChildSaveableStateKeys(
         builtPages.map(HorizontalPagerPage::key),
     )
+    val sessionStrategy = PagerLazyItemSessionStrategy(localSnapshot, saveableStateHolder)
     val resolvedPages = builtPages.mapIndexed { index, page ->
         val saveableStateKey = saveableStateKeys[index]
         LazyListItem(
@@ -907,21 +943,8 @@ fun UiTreeBuilder.VerticalPager(
             contentType = page.contentType,
             contentRevision = page.contentRevision,
             environmentRevision = localSnapshot,
-            sessionFactory = LazyListItemSessionFactory { container ->
-                WidgetLazyListItemSession(
-                    container = container,
-                    localSnapshot = localSnapshot,
-                    saveableStateHolder = saveableStateHolder,
-                    saveableStateKey = saveableStateKey,
-                    content = page.content,
-                )
-            },
-            sessionUpdater = { session ->
-                (session as WidgetLazyListItemSession).updateContent(
-                    localSnapshot = localSnapshot,
-                    content = page.content,
-                )
-            },
+            sessionStrategy = sessionStrategy,
+            sessionPayload = PagerLazyItemPayload(saveableStateKey, page.content),
         )
     }
     saveableStateHolder?.let { holder ->

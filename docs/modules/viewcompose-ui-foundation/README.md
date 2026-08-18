@@ -262,6 +262,11 @@ snapshot has no entry for that Local; they are not a fallback for an explicitly 
   require a non-null argument immediately after `key`; `null` is not a static shortcut and
   `StaticContentRevision` promises no such input changes. An omitted bulk selector remains nullable
   and uses the immutable item value as the same promise.
+- One typed or strong-snapshot declaration creates one item-session strategy and stores each source
+  model directly as the item's opaque payload. It does not allocate a factory/updater binding or an
+  item-capturing content closure for every row. Only a holder that creates an active or prepared
+  Session installs the selected payload, and later revision updates replace it without allocating a
+  bind-time wrapper.
 - Eager scroll and pager state objects attach only while their native container is mounted. A
   replacement state detaches the old owner, disposal rejects later commands at the renderer
   boundary, and equal snapshots do not invalidate observers. Horizontal eager offsets and pager

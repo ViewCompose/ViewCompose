@@ -16,7 +16,9 @@ import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
+import com.viewcompose.ui.node.LazyListItemSessionStrategy
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageCachePolicy
 import com.viewcompose.ui.node.UiImageDecodeSize
@@ -75,37 +77,48 @@ fun lazyListItemSessionUpdateSample() {
 
         override fun dispose() = Unit
     }
+    val strategy = object : LazyListItemSessionStrategy {
+        override fun create(
+            container: RenderContainerHandle,
+            item: LazyListItem,
+        ): LazyListItemSession = session
+
+        override fun update(
+            retained: LazyListItemSession,
+            item: LazyListItem,
+        ) {
+            check(retained === session)
+            session.installedLabel = item.sessionPayload as String
+        }
+    }
     val initial = LazyListItem(
         key = "account",
         contentRevision = "row-v1",
-        sessionFactory = { session },
-        sessionUpdater = { retained ->
-            check(retained === session)
-            session.installedLabel = "Initial"
-        },
+        sessionStrategy = strategy,
+        sessionPayload = "Initial",
     )
     val equalSnapshot = LazyListItem(
         key = "account",
         contentRevision = "row-v1",
-        sessionFactory = { session },
-        sessionUpdater = { session.installedLabel = "Ignored until the revision changes" },
+        sessionStrategy = strategy,
+        sessionPayload = "Ignored until the revision changes",
     )
     val changedSnapshot = LazyListItem(
         key = "account",
         contentRevision = "row-v2",
-        sessionFactory = { session },
-        sessionUpdater = { session.installedLabel = "Updated" },
+        sessionStrategy = strategy,
+        sessionPayload = "Updated",
     )
 
     check(initial == equalSnapshot)
     check(initial != changedSnapshot)
-    initial.sessionUpdater(session)
+    initial.updateSession(session)
     session.prepare()
     check(session.renderCount == 0)
     session.activate()
     // A collection controller completely skips equalSnapshot. A changed revision installs the
-    // latest callback and renders only this retained logical session.
-    changedSnapshot.sessionUpdater(session)
+    // latest payload through the shared strategy and renders only this retained logical session.
+    changedSnapshot.updateSession(session)
     session.render()
     check(session.installedLabel == "Updated")
     check(session.renderCount == 1)

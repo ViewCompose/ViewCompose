@@ -37,6 +37,7 @@ internal class LazyListAdapter(
         private const val FOCUS_TAG = "UIFocusFollow"
         private const val DUPLICATE_KEY_POSITION = -1
         private const val INITIAL_STICKY_POSITION_CAPACITY = 4
+        private const val MAX_DISTINCT_VIEW_TYPES = 1_024
     }
 
     private data class ScrollAnchor(
@@ -44,30 +45,77 @@ internal class LazyListAdapter(
         val offset: Int,
     )
 
-    private data class KeyIndex(
-        val positions: Map<Any, Int>,
+    private class KeyIndex(
+        private val keys: Array<Any?>,
+        private val positions: IntArray,
+        private val stableIds: LongArray,
         val duplicateKeys: List<Any>,
         val stickyHeaderPositions: IntArray,
     ) {
         val supportsKeyedDiff: Boolean
             get() = duplicateKeys.isEmpty()
 
-        fun uniquePosition(key: Any): Int? = positions[key]?.takeIf { it >= 0 }
+        fun uniquePosition(key: Any): Int? {
+            val slot = findSlot(key)
+            if (slot < 0) return null
+            return positions[slot].takeIf { it >= 0 }
+        }
+
+        fun stableId(key: Any): Long? {
+            val slot = findSlot(key)
+            if (slot < 0 || positions[slot] < 0) return null
+            return stableIds[slot]
+        }
+
+        fun retainedStableId(key: Any): Long? {
+            val slot = findSlot(key)
+            return if (slot >= 0) stableIds[slot] else null
+        }
+
+        private fun findSlot(key: Any): Int {
+            if (keys.isEmpty()) return -1
+            val mask = keys.lastIndex
+            var slot = mixedHash(key) and mask
+            while (true) {
+                val candidate = keys[slot] ?: return -1
+                if (candidate == key) return slot
+                slot = (slot + 1) and mask
+            }
+        }
+
+        companion object {
+            val Empty = KeyIndex(
+                keys = emptyArray(),
+                positions = intArrayOf(),
+                stableIds = longArrayOf(),
+                duplicateKeys = emptyList(),
+                stickyHeaderPositions = intArrayOf(),
+            )
+
+            fun tableCapacity(itemCount: Int): Int {
+                if (itemCount == 0) return 0
+                require(itemCount <= (1 shl 29)) {
+                    "Lazy collection item count is too large: $itemCount"
+                }
+                val required = itemCount + (itemCount ushr 1) + 1
+                return Integer.highestOneBit(required - 1).shl(1).coerceAtLeast(2)
+            }
+
+            fun mixedHash(key: Any): Int {
+                val hash = key.hashCode()
+                return hash xor (hash ushr 16)
+            }
+        }
     }
 
     private var items: List<LazyListItem> = emptyList()
-    private var keyIndex = KeyIndex(
-        positions = emptyMap(),
-        duplicateKeys = emptyList(),
-        stickyHeaderPositions = intArrayOf(),
-    )
+    private var keyIndex = KeyIndex.Empty
     // The registry centralizes holder lifecycle across attach, detach, recycle, and final disposal.
     private val mountedTreeCache = MountedTreeReuseCache()
     private val holderRegistry = LazyHolderRegistry<LazyListViewHolder>(::recycleHolder)
     private var lastIdentityWarning: String? = null
     private var attachedRecyclerView: RecyclerView? = null
-    private val stableIds = linkedMapOf<Any, Long>()
-    private val viewTypes = linkedMapOf<Any, Int>()
+    private val viewTypes = ViewTypeRegistry(MAX_DISTINCT_VIEW_TYPES)
     private var nextStableId = 0L
     private var nextViewType = 1
     private var itemsVersion = 0L
@@ -162,14 +210,12 @@ internal class LazyListAdapter(
 
     override fun getItemViewType(position: Int): Int {
         val item = items[position]
-        val typeKey = item.kind to item.contentType
-        return viewTypes.getOrPut(typeKey) { nextViewType++ }
+        return viewTypes.getOrPut(item.kind, item.contentType) { nextViewType++ }
     }
 
     override fun getItemId(position: Int): Long {
         val key = items[position].key
-        if (keyIndex.uniquePosition(key) == null) return Long.MIN_VALUE + position
-        return stableIds.getOrPut(key) { nextStableId++ }
+        return keyIndex.stableId(key) ?: (Long.MIN_VALUE + position)
     }
 
     fun itemKeyAt(position: Int): Any? = items.getOrNull(position)?.key
@@ -272,12 +318,6 @@ internal class LazyListAdapter(
         this.items = items
         keyIndex = nextKeyIndex
         stickyHeaderPositions = nextKeyIndex.stickyHeaderPositions
-        if (
-            updatePlan === LazyListAdapterUpdatePlan.ReloadAll ||
-            updatePlan is LazyListAdapterUpdatePlan.StructuralDiff
-        ) {
-            stableIds.keys.retainAll(keyIndex.positions.keys)
-        }
         currentSubmissionRevision = revision
         itemsVersion += 1
         dispatchUpdatePlan(updatePlan, reloadAnchor)
@@ -515,28 +555,34 @@ internal class LazyListAdapter(
         }
         listState = null
         items = emptyList()
-        keyIndex = KeyIndex(
-            positions = emptyMap(),
-            duplicateKeys = emptyList(),
-            stickyHeaderPositions = intArrayOf(),
-        )
+        keyIndex = KeyIndex.Empty
         stickyHeaderPositions = intArrayOf()
         itemsVersion += 1
         failure?.let { throw it }
     }
 
     private fun buildKeyIndex(items: List<LazyListItem>): KeyIndex {
-        val positions = HashMap<Any, Int>(items.size)
+        val capacity = KeyIndex.tableCapacity(items.size)
+        val keys = arrayOfNulls<Any>(capacity)
+        val positions = IntArray(capacity)
+        val stableIds = LongArray(capacity)
+        val mask = capacity - 1
         var duplicateKeys: ArrayList<Any>? = null
         var stickyPositions: IntArray? = null
         var stickyCount = 0
         items.forEachIndexed { position, item ->
             val key = item.key
-            val previousPosition = positions[key]
+            var slot = KeyIndex.mixedHash(key) and mask
+            while (keys[slot] != null && keys[slot] != key) {
+                slot = (slot + 1) and mask
+            }
+            val previousPosition = if (keys[slot] == null) null else positions[slot]
             if (previousPosition == null) {
-                positions[key] = position
+                keys[slot] = key
+                positions[slot] = position
+                stableIds[slot] = keyIndex.retainedStableId(key) ?: nextStableId++
             } else if (previousPosition >= 0) {
-                positions[key] = DUPLICATE_KEY_POSITION
+                positions[slot] = DUPLICATE_KEY_POSITION
                 if (duplicateKeys == null) duplicateKeys = ArrayList()
                 duplicateKeys?.add(key)
             }
@@ -553,7 +599,9 @@ internal class LazyListAdapter(
             }
         }
         return KeyIndex(
+            keys = keys,
             positions = positions,
+            stableIds = stableIds,
             duplicateKeys = duplicateKeys ?: emptyList(),
             stickyHeaderPositions = stickyPositions?.copyOf(stickyCount) ?: intArrayOf(),
         )
@@ -732,6 +780,89 @@ internal class LazyListAdapter(
     }
 }
 
+/** Stable view-type registry without Pair keys, map nodes, or boxed IDs on RecyclerView lookups. */
+private class ViewTypeRegistry(
+    private val maximumSize: Int,
+) {
+    private var occupied = BooleanArray(INITIAL_CAPACITY)
+    private var kinds = arrayOfNulls<LazyListItemKind>(INITIAL_CAPACITY)
+    private var contentTypes = arrayOfNulls<Any>(INITIAL_CAPACITY)
+    private var values = IntArray(INITIAL_CAPACITY)
+    private var size = 0
+
+    inline fun getOrPut(
+        kind: LazyListItemKind,
+        contentType: Any?,
+        create: () -> Int,
+    ): Int {
+        var slot = findSlot(kind, contentType)
+        if (occupied[slot]) return values[slot]
+        require(size < maximumSize) {
+            "Lazy collection contentType must use at most $maximumSize distinct " +
+                "kind/type combinations per mounted container."
+        }
+        if ((size + 1) * LOAD_FACTOR_DENOMINATOR > occupied.size * LOAD_FACTOR_NUMERATOR) {
+            grow()
+            slot = findSlot(kind, contentType)
+        }
+        val value = create()
+        occupied[slot] = true
+        kinds[slot] = kind
+        contentTypes[slot] = contentType
+        values[slot] = value
+        size += 1
+        return value
+    }
+
+    private fun findSlot(
+        kind: LazyListItemKind,
+        contentType: Any?,
+    ): Int {
+        val mask = occupied.lastIndex
+        var slot = mixedHash(kind, contentType) and mask
+        while (occupied[slot]) {
+            if (kinds[slot] == kind && contentTypes[slot] == contentType) return slot
+            slot = (slot + 1) and mask
+        }
+        return slot
+    }
+
+    private fun grow() {
+        val previousOccupied = occupied
+        val previousKinds = kinds
+        val previousContentTypes = contentTypes
+        val previousValues = values
+        val nextCapacity = previousOccupied.size shl 1
+        occupied = BooleanArray(nextCapacity)
+        kinds = arrayOfNulls(nextCapacity)
+        contentTypes = arrayOfNulls(nextCapacity)
+        values = IntArray(nextCapacity)
+        previousOccupied.indices.forEach { index ->
+            if (!previousOccupied[index]) return@forEach
+            val kind = checkNotNull(previousKinds[index])
+            val slot = findSlot(kind, previousContentTypes[index])
+            occupied[slot] = true
+            kinds[slot] = kind
+            contentTypes[slot] = previousContentTypes[index]
+            values[slot] = previousValues[index]
+        }
+    }
+
+    private fun mixedHash(
+        kind: LazyListItemKind,
+        contentType: Any?,
+    ): Int {
+        val hash = 31 * kind.hashCode() + (contentType?.hashCode() ?: 0)
+        return hash xor (hash ushr 16)
+    }
+
+    private companion object {
+        private const val INITIAL_CAPACITY = 4
+        private const val LOAD_FACTOR_NUMERATOR = 3
+        private const val LOAD_FACTOR_DENOMINATOR = 4
+    }
+}
+
 /** Adds main-axis spacing before non-first items without changing list-edge padding. */
 internal class LazyListSpacingDecoration(
     private var spacing: Int,
@@ -797,7 +928,7 @@ internal class LazyListViewHolder(
     private val controller = LazyItemSessionController(this)
 
     override fun createSession(item: LazyListItem): LazyListItemSession {
-        return item.sessionFactory.create(renderContainer)
+        return item.createSession(renderContainer)
     }
 
     override fun clearContainer() {

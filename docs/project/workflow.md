@@ -76,7 +76,8 @@ Demo UI tests. If one cannot be delivered, state what is missing and why in the 
 2. Preview snapshot gate: `./gradlew qaPreview`
 3. Full gate: `./gradlew qaFull`
 
-`qaQuick` compiles core modules and runs unit tests. `qaPreview` runs
+`qaQuick` compiles core modules, runs unit tests, and enforces the canonical documentation gate,
+including language placement and reviewed translation fingerprints. `qaPreview` runs
 `:viewcompose-preview:verifyPaparazziDebug` and is a separate required CI check. A visual change may
 update committed baselines only after the generated images and differences have been reviewed;
 never record an unexplained mismatch merely to make the gate pass.

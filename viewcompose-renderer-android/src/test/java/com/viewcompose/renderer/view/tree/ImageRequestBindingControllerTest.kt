@@ -6,7 +6,7 @@ import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
-import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.ui.node.PlatformUiImageTarget
 import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageLoader
@@ -162,8 +162,10 @@ class ImageRequestBindingControllerTest {
         val item = LazyListItem(
             key = "item",
             contentRevision = "content",
-            sessionFactory = LazyListItemSessionFactory { error("unused") },
-            sessionUpdater = {},
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = { error("unused") },
+                update = {},
+            ),
         )
         val controller = LazyItemSessionController(
             createSession = {

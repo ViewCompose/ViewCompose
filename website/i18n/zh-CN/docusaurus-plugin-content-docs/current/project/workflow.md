@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: d323ad2d9dc8787491c2ee98cf26a786a03c547698c43df19af655378b5ee4e1
+translation_source_hash: 86e80beaae8e3a3a3245cfe8de5c6e09e6b2d0be1626fb4b3402bca9c42cc491
 translation_status: current
 ---
 
@@ -110,7 +110,8 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 2. 预览快照门禁：`./gradlew qaPreview`
 3. 全量门禁：`./gradlew qaFull`
 
-`qaQuick` 负责编译核心模块并运行单元测试。`qaPreview` 运行
+`qaQuick` 负责编译核心模块、运行单元测试，并执行包含语言放置与已审阅翻译指纹在内的统一文档
+门禁。`qaPreview` 运行
 `:viewcompose-preview:verifyPaparazziDebug`，并作为独立的必需 CI 检查。只有审阅生成图片与差异后，
 视觉变更才能更新已提交基准；禁止仅为通过门禁而录制原因不明的差异。
 

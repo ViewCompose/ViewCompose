@@ -7,7 +7,7 @@ package com.viewcompose.renderer.reconcile
 
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
-import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -44,14 +44,16 @@ class LazyListIdentityInspectorTest {
         return LazyListItem(
             key = key,
             contentRevision = key,
-            sessionFactory = LazyListItemSessionFactory {
-                object : LazyListItemSession {
-                    override fun render() = true
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = {
+                    object : LazyListItemSession {
+                        override fun render() = true
 
-                    override fun dispose() = Unit
-                }
-            },
-            sessionUpdater = {},
+                        override fun dispose() = Unit
+                    }
+                },
+                update = {},
+            ),
         )
     }
 }

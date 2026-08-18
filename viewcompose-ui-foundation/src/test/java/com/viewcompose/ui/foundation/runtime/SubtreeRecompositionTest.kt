@@ -16,7 +16,8 @@ import com.viewcompose.ui.node.TextOverflow
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
-import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.LazyListItemSessionStrategy
+import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageLoader
 import com.viewcompose.ui.node.UiImageRequest
@@ -366,19 +367,25 @@ class SubtreeRecompositionTest {
     @Test
     fun `new value equal collection snapshot reuses the committed node and item`() {
         val composer = ComposerLite()
-        val factory = LazyListItemSessionFactory {
-            object : LazyListItemSession {
+        val strategy = object : LazyListItemSessionStrategy {
+            override fun create(
+                container: RenderContainerHandle,
+                item: LazyListItem,
+            ) = object : LazyListItemSession {
                 override fun render() = true
 
                 override fun dispose() = Unit
             }
+
+            override fun update(
+                session: LazyListItemSession,
+                item: LazyListItem,
+            ) = Unit
         }
-        val updater: (LazyListItemSession) -> Unit = {}
         var item = LazyListItem(
             key = "item",
             contentRevision = "stable",
-            sessionFactory = factory,
-            sessionUpdater = updater,
+            sessionStrategy = strategy,
         )
 
         fun compose(): VNode =
@@ -402,8 +409,7 @@ class SubtreeRecompositionTest {
         item = LazyListItem(
             key = "item",
             contentRevision = "stable",
-            sessionFactory = factory,
-            sessionUpdater = updater,
+            sessionStrategy = strategy,
         )
         val second = compose()
 

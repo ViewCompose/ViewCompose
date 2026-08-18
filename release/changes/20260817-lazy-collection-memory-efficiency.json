@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut lazy item sessions onto declaration-shared strategies and compact payloads, converge Android list metadata, and remove eager common-shape drawing resources without shifting work into scrolling.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "fix" },
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" }
+  ],
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "This change only unifies repository documentation and translation verification gates; it does not alter any published artifact output or publication metadata."
+    }
+  ]
+}
