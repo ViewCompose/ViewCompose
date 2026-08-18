@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 55d586e321aea6274ce32ca602e3a99261a8205762a733f594aaf63a4bcd697e
+translation_source_hash: 14ba010cff0a821e37f4c4f1cdfb04a599e724d6abba961f9bf0e6c26b4029b9
 translation_status: current
 ---
 
@@ -46,7 +46,10 @@ dependencies {
 - 通用交互 Surface 通过已解析 Modifier 接收 `UiInteractionIndication.StateLayer`。引擎在
   现有 Shape 遮罩和可见 Surface 内缩中映射按下、聚焦和悬停值，不选择语义角色或 Material
   透明度。SegmentedControl 与 NavigationBar 因拥有多个内部目标，通过 NodeSpec 接收完整的
-  已选和未选状态层值。
+  已选和未选状态层值。NavigationBar 会在完整 Item 目标的前景绘制各 Item 状态层，因此选中
+  Indicator、Icon、Badge 和 Label 都不会遮住按下、聚焦或悬停反馈。当点击同步改变选择状态或
+  主题颜色时，NavigationBar 与通用交互 Surface 都会原地更新已保留 Ripple 的颜色 Selector，
+  而不是替换 Drawable，因此正在执行的释放动画仍然可见；这也覆盖基于 BasicSurface 的纯文案导航。
 - 通用集合语义会映射为 AndroidX 无障碍集合元数据。父节点负责行列数量和选择基数，子节点负责
   逻辑位置和跨度；已有的 `selected` 与 `heading` 语义仍是 item 状态的唯一事实来源。
 - 当前版本构建基线：Kotlin 2.0.21、Android Gradle Plugin 8.13.2。
@@ -194,8 +197,10 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
 - 引擎创建的 Box 与 Surface 容器不执行 XML 属性解析。没有显式 `BoxScope.align` 的子项会在
   LayoutParams 中保留继承内容对齐标记，因此内容对齐 Patch 只更新这些子项，不再在每次布局时
   扫描全部子项；显式对齐的子项保持不变。
-- Indication Modifier 变化只执行 Modifier Binding，并仅重建已保留 View 中受影响的 Surface
-  Drawable。SegmentedControl 与 NavigationBar 只重建已选角色或状态层快照变化的内部背景。
+- Indication Modifier 变化只执行 Modifier Binding。Surface 结构变化只重建已保留 View 中
+  受影响的 Drawable；仅颜色变化的 Indication Patch 会原地更新已保留 `RippleDrawable` 的
+  Selector，因此同步的选中状态 Patch 不会中断快速点击的释放动画。SegmentedControl 只重建
+  受影响的内部背景；NavigationBar 会保留各 Item 的前景 Ripple，并更新其已选或未选状态层颜色。
   按下优先于聚焦和悬停，聚焦优先于悬停；非活动或禁用的高层目标不安装 Indication。Android
   单值 Ripple 回退只保留在低层 Renderer 私有实现中。
 - Slider 绑定使用渲染器中性的 `AppCompatSeekBar` 子类，因为平台控件可能在 `AT_MOST` 测量

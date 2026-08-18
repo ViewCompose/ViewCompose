@@ -3,6 +3,7 @@ package com.viewcompose
 import com.viewcompose.animation.core.MotionRole
 import com.viewcompose.animation.core.SnapSpec
 import com.viewcompose.ui.shape.UiCornerFamily
+import com.viewcompose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertSame
@@ -54,6 +55,24 @@ class DemoDesignSystemBundleTest {
             },
         )
         assertEquals("tinted translucent surface", bundle.conformance.last().fallback)
+    }
+
+    @Test
+    fun `segmented item geometry follows the two dp container inset`() {
+        DemoDesignSystemKind.entries.forEach { kind ->
+            val bundle = DemoDesignSystemBundles.resolve(
+                kind = kind,
+                dark = false,
+                reducedMotionEnabled = false,
+            )
+            val recipe = bundle.recipes.segmented
+
+            assertEquals(
+                "Expected concentric segmented geometry for ${kind.id}",
+                recipe.containerShape.inset(2.dp),
+                recipe.itemShape,
+            )
+        }
     }
 
     @Test

@@ -72,6 +72,52 @@ class DemoSectionsLayoutTest {
         }
     }
 
+    @Test
+    fun `theme swatches divide the available phone width instead of intrinsic label width`() {
+        val context = RuntimeEnvironment.getApplication()
+        val host = FrameLayout(context)
+        val labels = listOf("Primary", "PrimaryContainer", "OnPrimaryContainer")
+        val session = renderInto(host) {
+            UiEnvironment(values = AndroidEnvironmentBridge.fromContext(context)) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    ThemeSwatchRow(
+                        label = "Primary roles",
+                        swatches = labels.mapIndexed { index, label ->
+                            ThemeSwatch(
+                                label = label,
+                                color = 0xFF000000.toInt() + index,
+                            )
+                        },
+                    )
+                }
+            }
+        }
+
+        try {
+            host.measure(
+                View.MeasureSpec.makeMeasureSpec(PHONE_WIDTH_PX, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            )
+            host.layout(0, 0, host.measuredWidth, host.measuredHeight)
+
+            val swatchColumns = labels.map { label ->
+                host.requireTextView(label).parent as LinearLayout
+            }
+            val swatchRow = swatchColumns.first().parent as LinearLayout
+
+            assertEquals(PHONE_WIDTH_PX, swatchRow.measuredWidth)
+            swatchColumns.forEach { column ->
+                assertSame(swatchRow, column.parent)
+                assertTrue(
+                    "Expected a usable swatch width, actual=${column.measuredWidth}",
+                    column.measuredWidth >= MIN_SWATCH_WIDTH_PX,
+                )
+            }
+        } finally {
+            session.dispose()
+        }
+    }
+
     private fun View.requireTextView(text: String): TextView {
         if (this is TextView && this.text.toString() == text) {
             return this
@@ -90,5 +136,6 @@ class DemoSectionsLayoutTest {
     private companion object {
         const val PHONE_WIDTH_PX = 360
         const val MIN_VALUE_WIDTH_PX = 160
+        const val MIN_SWATCH_WIDTH_PX = 96
     }
 }

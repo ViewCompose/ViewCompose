@@ -251,7 +251,7 @@ internal class DeclarativeNavigationBarLayout(
             isClickable = true
             isFocusable = true
             tag = index
-            background = createItemRipple(stateLayerColors)
+            foreground = createItemRipple(stateLayerColors)
             setOnClickListener {
                 if (isEnabled) {
                     onItemSelected?.invoke(tag as Int)
@@ -457,7 +457,15 @@ internal class DeclarativeNavigationBarLayout(
         }
         if (refs.stateLayerColors != stateLayerColors) {
             refs.stateLayerColors = stateLayerColors
-            refs.root.background = createItemRipple(stateLayerColors)
+            val ripple = refs.root.foreground as? RippleDrawable
+            if (ripple == null) {
+                refs.root.foreground = createItemRipple(stateLayerColors)
+            } else {
+                // Selection may recompose synchronously from the click callback. Keep the active
+                // drawable so its release animation survives while its semantic color changes.
+                ripple.setColor(stateLayerColors.toColorStateList())
+                refs.root.invalidate()
+            }
         }
 
         ModifierSemanticsApplier.apply(

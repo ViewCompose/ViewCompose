@@ -98,6 +98,12 @@ the single visual shadow owner: `DropdownMenu` keeps its theme elevation, toolti
 uses its own declaration, and zero-elevation generic content stays shadowless. This prevents a
 second rectangular window shadow from competing with a rounded content outline.
 
+The Android transport measures native elevation separately from semantic popup size. It expands the
+transparent platform window enough to contain that shadow, positions the semantic content rectangle
+against the anchor, and treats the transparent expansion as outside content for dismissal. This
+keeps rounded shadows complete without changing alignment or giving zero-elevation content an
+implicit surface.
+
 ## Snackbar and Toast queue
 
 Snackbar and Toast declarations share a single FIFO lane. A request is identified by

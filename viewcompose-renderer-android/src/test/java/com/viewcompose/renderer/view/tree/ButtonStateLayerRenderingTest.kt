@@ -21,7 +21,6 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -36,7 +35,7 @@ class ButtonStateLayerRenderingTest {
     private val context = RuntimeEnvironment.getApplication()
 
     @Test
-    fun `state layer changes patch the retained button and selector`() {
+    fun `state layer changes preserve the retained button ripple and patch its selector`() {
         val container = FrameLayout(context)
         val initialColors = UiStateLayerColors(0x1A112233, 0x1A223344, 0x14334455)
         val initial = ViewTreeRenderer.renderInto(
@@ -55,7 +54,7 @@ class ButtonStateLayerRenderingTest {
         )
 
         assertSame(button, patched.mountedNodes.single().view)
-        assertNotSame(initialBackground, button.background)
+        assertSame(initialBackground, button.background)
         assertEquals(1, patched.stats.patchedNodes)
         assertEquals(0, patched.stats.reboundNodes)
     }

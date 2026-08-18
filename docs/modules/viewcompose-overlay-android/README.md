@@ -52,6 +52,12 @@ remains zero so popup content such as `DropdownMenu` owns the declared shape and
 once. Generic `Popup` content that declares no elevation therefore receives no implicit rectangular
 window shadow.
 
+When popup content contains native elevated descendants, the transport reserves transparent visual
+outsets from the highest effective elevation and disables ancestor clipping inside that window.
+Anchor alignment, overflow calculation, and offsets continue to use the semantic content rectangle;
+the larger platform window exists only to contain the content-owned shadow. A press in the
+transparent outset is treated as an outside press when outside dismissal is enabled.
+
 Create one host per attached render root. Commit and clear calls are main-thread work. Clearing a
 session dismisses only that session's surfaces, removes listeners, and disposes nested render
 sessions before their platform windows are released.

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-android/README.md
-translation_source_hash: e9dc0398b19a277f70a90a9c766c223456e6b866306b3af331410c95354021d0
+translation_source_hash: 2152c104619c26364cbe1c3d6c75e5f39243a1e637febf8699ef647fb5fbab9b
 translation_status: current
 ---
 
@@ -52,6 +52,11 @@ Host 不发现设计系统，也不会替换成 Material 控件。`integrationAt
 `PopupWindow` 是传输与定位边界，不是视觉 Surface。它的平台 Elevation 固定为零，因此
 `DropdownMenu` 等 Popup 内容只由自身声明 Shape 与 Elevation。没有声明 Elevation 的通用
 `Popup` 内容也不会隐式获得矩形 Window 阴影。
+
+当 Popup 内容包含使用原生 Elevation 的后代时，传输层会按照最高有效 Elevation 预留透明视觉
+外扩区，并关闭 Window 内祖先容器的裁剪。锚点对齐、溢出计算和 Offset 仍以语义内容矩形为准；
+扩大的平台 Window 只负责容纳内容自有的阴影。启用点击外部关闭时，透明外扩区中的按下仍按内容
+外部操作处理。
 
 每个已附着 Render Root 创建一个 Host。提交和清理必须在主线程执行。清理 Session 只关闭该
 Session 的 Surface，移除监听，并在释放平台 Window 前销毁嵌套渲染 Session。

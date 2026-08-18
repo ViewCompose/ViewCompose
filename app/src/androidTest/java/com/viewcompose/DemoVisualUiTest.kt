@@ -4,7 +4,9 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Rect
 import android.graphics.drawable.LayerDrawable
+import android.graphics.drawable.RippleDrawable
 import android.os.SystemClock
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -474,6 +476,7 @@ class DemoVisualUiTest {
             }
             waitForUiIdle()
             assertDeviceResourceIdVisible(R.id.demo_overlay_menu_target)
+            captureDeviceScreenshot("overlay-menu-shadow-light")
             clickDeviceResourceId(R.id.demo_overlay_menu_target)
             scenario.onActivity { activity ->
                 val state = activity.requireScenarioViewById<TextView>(
@@ -1028,15 +1031,65 @@ class DemoVisualUiTest {
                 assertViewFullyVisible(summary)
                 assertTrue(summary.text.toString().contains("0"))
             }
+            var downTime = 0L
+            var touchX = 0f
+            var touchY = 0f
+            lateinit var retainedRipple: RippleDrawable
             scenario.onActivity { activity ->
                 val navigationBar = activity.requireScenarioViewById<android.view.ViewGroup>(
                     R.id.demo_component_navigation_bar_primary_action,
                 )
-                assertTrue(navigationBar.getChildAt(1).performClick())
+                val item = navigationBar.getChildAt(1) as ViewGroup
+                val iconContainer = item.getChildAt(0) as ViewGroup
+                val icon = iconContainer.getChildAt(1)
+                touchX = iconContainer.left + icon.left + icon.width / 2f
+                touchY = iconContainer.top + icon.top + icon.height / 2f
+                retainedRipple = item.foreground as RippleDrawable
+                downTime = SystemClock.uptimeMillis()
+                val down = MotionEvent.obtain(
+                    downTime,
+                    downTime,
+                    MotionEvent.ACTION_DOWN,
+                    touchX,
+                    touchY,
+                    0,
+                )
+                try {
+                    assertTrue(item.dispatchTouchEvent(down))
+                } finally {
+                    down.recycle()
+                }
             }
+            SystemClock.sleep(16L)
+            scenario.onActivity { activity ->
+                val navigationBar = activity.requireScenarioViewById<android.view.ViewGroup>(
+                    R.id.demo_component_navigation_bar_primary_action,
+                )
+                val item = navigationBar.getChildAt(1) as ViewGroup
+                val up = MotionEvent.obtain(
+                    downTime,
+                    SystemClock.uptimeMillis(),
+                    MotionEvent.ACTION_UP,
+                    touchX,
+                    touchY,
+                    0,
+                )
+                try {
+                    assertTrue(item.dispatchTouchEvent(up))
+                } finally {
+                    up.recycle()
+                }
+            }
+            SystemClock.sleep(48L)
+            captureDeviceScreenshot("navigation-navbar-icon-quick-release-light")
             waitForUiIdle()
             captureDeviceScreenshot("navigation-navbar-selection-light")
             scenario.onActivity { activity ->
+                val navigationBar = activity.requireScenarioViewById<android.view.ViewGroup>(
+                    R.id.demo_component_navigation_bar_primary_action,
+                )
+                val selectedItem = navigationBar.getChildAt(1) as ViewGroup
+                assertSame(retainedRipple, selectedItem.foreground)
                 val summary = activity.requireScenarioViewById<android.widget.TextView>(
                     R.id.demo_component_navigation_bar_state,
                 )
