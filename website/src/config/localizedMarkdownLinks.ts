@@ -15,6 +15,15 @@ type BrokenMarkdownLink = {
 };
 
 const MARKDOWN_EXTENSION = /\.mdx?$/i;
+const IGNORED_NUMBER_PREFIX = /^\d+[-_.]\d+/;
+const NUMBER_PREFIX = /^\d+\s*[-_.]+\s*([^-_.\s].*)$/;
+
+function stripNumberPrefix(segment: string): string {
+  if (IGNORED_NUMBER_PREFIX.test(segment)) {
+    return segment;
+  }
+  return NUMBER_PREFIX.exec(segment)?.[1] ?? segment;
+}
 
 function canonicalSourcePath(siteDir: string, sourceFilePath: string): string | undefined {
   if (isAbsolute(sourceFilePath)) {
@@ -45,7 +54,10 @@ function canonicalRoute(
     route = declaredSlug.startsWith('/') ? declaredSlug : `/${declaredSlug}`;
   } else {
     const relativeSource = relative(docsDir, sourcePath).split(sep).join('/');
-    const routeSegments = relativeSource.replace(MARKDOWN_EXTENSION, '').split('/');
+    const routeSegments = relativeSource
+      .replace(MARKDOWN_EXTENSION, '')
+      .split('/')
+      .map(stripNumberPrefix);
     const lastSegment = routeSegments.at(-1)?.toLowerCase();
     if (lastSegment === 'readme' || lastSegment === 'index') {
       routeSegments.pop();
