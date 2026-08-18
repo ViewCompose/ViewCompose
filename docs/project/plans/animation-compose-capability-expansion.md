@@ -509,18 +509,21 @@ This plan is complete only when:
 
 ## Ordered execution checklist
 
-- [ ] Phase 0: freeze comparison baseline, public contracts, ownership, compatibility, budgets, and
-  validation fixtures.
-- [ ] Phase 1: implement physical spring, velocity continuity, decay, bounds, and results.
-- [ ] Phase 2: implement keyed `AnimatedContent`, content transforms, and size transforms.
-- [ ] Phase 3: implement slide/scale visibility primitives and descendant enter/exit choreography.
-- [ ] Phase 4: implement public generic/segment-aware channels and seekable transition state.
-- [ ] Phase 5: implement transactional layout-coordinate and bounds animation.
-- [ ] Phase 6: implement bounded shared-element/shared-bounds coordination and navigation
-  integration.
-- [ ] Phase 7: implement isolated request-driven timeline inspection and approved Preview control.
-- [ ] Closeout: update durable documentation, migration matrix, Demo/Preview/Studio evidence,
-  release records, and archive this plan.
+1. **Pending — Phase 0:** freeze comparison baseline, public contracts, ownership, compatibility,
+   budgets, and validation fixtures.
+2. **Pending — Phase 1:** implement physical spring, velocity continuity, decay, bounds, and results.
+3. **Pending — Phase 2:** implement keyed `AnimatedContent`, content transforms, and size transforms.
+4. **Pending — Phase 3:** implement slide/scale visibility primitives and descendant enter/exit
+   choreography.
+5. **Pending — Phase 4:** implement public generic/segment-aware channels and seekable transition
+   state.
+6. **Pending — Phase 5:** implement transactional layout-coordinate and bounds animation.
+7. **Pending — Phase 6:** implement bounded shared-element/shared-bounds coordination and navigation
+   integration.
+8. **Pending — Phase 7:** implement isolated request-driven timeline inspection and approved
+   Preview control.
+9. **Pending — Closeout:** update durable documentation, migration matrix, Demo/Preview/Studio
+   evidence, release records, and archive this plan.
 
 ## Risks and stop conditions
 
