@@ -43,6 +43,13 @@ Native views that already implement Android nested scrolling join the same chain
 Arbitrary `AndroidView` children that do not implement Android nested scrolling cannot emit native
 scroll phases; they can use a `NestedScrollDispatcher` explicitly.
 
+Same-axis nested framework containers arbitrate the pointer stream by direction and edge. A child
+keeps an axis-matching drag while it can scroll in that direction, releases at the corresponding
+logical edge, and does not capture a cross-axis drag. At the top of a vertical child inside an
+enabled, idle `PullToRefresh`, an initial downward drag belongs to the refresh host; upward movement
+and downward movement away from the top remain child scrolling. Cancellation ends any temporary
+interception reservation.
+
 ## 4. Example
 
 ```kotlin

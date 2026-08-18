@@ -30,6 +30,9 @@ import com.viewcompose.ui.state.LazyListState
 internal class DeclarativeLazyVerticalGridLayout(
     context: Context,
 ) : RecyclerView(context) {
+    private val parentInterceptArbitrator = ParentInterceptGestureArbitrator(this) {
+        ParentInterceptGestureArbitrator.Axis.Vertical
+    }
     private val gridAdapter = LazyListAdapter(RecyclerView.VERTICAL)
     private var listState: LazyListState? = null
     private var cells: LazyGridCellsPx = LazyGridCellsPx.Fixed(1)
@@ -97,6 +100,7 @@ internal class DeclarativeLazyVerticalGridLayout(
         setItemViewCacheSize(prefetchPolicy.itemViewCacheSize)
         gridAdapter.configureMountedTreeCache(mountedTreeCacheSize)
         this.userScrollEnabled = userScrollEnabled
+        if (!userScrollEnabled) parentInterceptArbitrator.release()
         updateSpacingDecoration(horizontalSpacing, verticalSpacing, resolvedSpanCount)
         ModifierInsetsApplier.applyLazyContentPadding(this, contentPadding)
         clipToPadding =
@@ -159,6 +163,11 @@ internal class DeclarativeLazyVerticalGridLayout(
 
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
         return userScrollEnabled && super.onInterceptTouchEvent(event)
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        parentInterceptArbitrator.onDispatchTouchEvent(event, userScrollEnabled)
+        return super.dispatchTouchEvent(event)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {

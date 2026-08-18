@@ -250,12 +250,12 @@ a universal memory winner.
 
 1. `diagnosticsThemeLongFlingToBottomAndBackRevision2` executes eight fixed forceful flings in each
    direction and proves the real bottom and top anchors after their respective gesture sequences.
-2. `collectionsScrollRevision2` captures the nested LazyColumn bounds during setup, then executes
+2. `collectionsScrollRevision3` captures the direct scenario LazyColumn bounds during setup, then executes
    eight fixed swipes in each direction without performing Accessibility queries inside the measured
    block. Each swipe has a 500 ms physical settle window because benchmark setup disables
    UiAutomator's implicit idle timeout; omitting that window overlaps inertial scrolls and causes
    non-workload `Buffer Stuffing` in FrameTimeline.
-3. `collectionsStressMutationRevision2` executes eight complete rotate/insert/reset cycles and
+3. `collectionsStressMutationRevision3` executes eight complete rotate/insert/reset cycles and
    asserts that every reset restores the original logical order.
 4. All three wait through the same 5-second unmeasured launch-settling window. Formal raw results
    record `scenario`, `workloadRevision`, and `clockPolicy` through AndroidX benchmark payload.
@@ -267,8 +267,17 @@ per-method `NONE`/`LIGHT` starts, `CompilationMode.Partial`, and clock policy
 | Workload | Frame CPU P50/P95 | Run-P50 CV |
 | --- | ---: | ---: |
 | `diagnostics.theme@2` fixed long-fling round trip | 3.067 / 7.336 ms | 0.008 |
-| `collection.stress@2` nested-list scroll round trip | 3.357 / 6.288 ms | 0.018 |
-| `collection.stress@2` eight-cycle mutation | 4.358 / 10.507 ms | 0.018 |
+| `collection.stress@2` nested-list scroll round trip (retired fixture) | 3.357 / 6.288 ms | 0.018 |
+| `collection.stress@2` eight-cycle mutation (retired fixture) | 4.358 / 10.507 ms | 0.018 |
+
+The 2026-08-17 manual-review repair removes the nested outer/inner list hierarchy from
+`collection.stress` and advances the scenario to revision 3. The revision 2 numbers remain useful
+only as historical evidence for the retired fixture and are not a baseline for revision 3. No
+revision 3 benchmark batch has been accepted yet, so the performance conclusion is
+`inconclusive`: the semantic workload is preserved, but geometry and gesture ownership changed.
+The next action is to recapture scroll and eight-cycle mutation batches on the same SM-G991B
+protocol, compare absolute P50/P95 and normalized deltas against an explicitly matched control,
+and accept them only if the existing stability and clock-policy gates pass.
 
 The collection-scroll preflight is also the reference for gesture-driver contamination. Repeated
 target lookup inside measurement first added Accessibility traversal. After that was removed,

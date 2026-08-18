@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "summary": "Fix flow cross-axis measurement, nested vertical gesture ownership, and Android popup shadow ownership.",
+  "changes": [
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" },
+    { "artifact": "viewcompose-overlay-android", "impact": "fix" }
+  ]
+}

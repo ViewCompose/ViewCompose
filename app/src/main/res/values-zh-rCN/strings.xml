@@ -52,8 +52,16 @@
     <string name="demo_scenario_input_selection_summary">验证 Checkbox、Switch、Radio、Slider 与局部颜色覆盖。</string>
     <string name="demo_scenario_input_stress_title">输入压力测试</string>
     <string name="demo_scenario_input_stress_summary">验证长标签、多行增长、只读状态与持久错误态。</string>
-    <string name="demo_scenario_input_search_title">搜索与焦点跟随</string>
-    <string name="demo_scenario_input_search_summary">验证搜索输入、清除与提交、嵌套滚动、Pager 和刷新容器焦点行为。</string>
+    <string name="demo_scenario_input_search_title">搜索控件</string>
+    <string name="demo_scenario_input_search_summary">在不混入无关嵌套容器的情况下验证搜索输入、清除与提交及禁用状态。</string>
+    <string name="demo_scenario_input_focus_follow_lazy_column_title">焦点跟随 · LazyColumn</string>
+    <string name="demo_scenario_input_focus_follow_lazy_column_summary">由单个 LazyColumn 持有滚动，并在键盘打开时将下方搜索框带入可视区域。</string>
+    <string name="demo_scenario_input_focus_follow_scrollable_column_title">焦点跟随 · ScrollableColumn</string>
+    <string name="demo_scenario_input_focus_follow_scrollable_column_summary">使用单个即时滚动容器验证键盘焦点跟随，不再嵌套外层滚动。</string>
+    <string name="demo_scenario_input_focus_follow_vertical_pager_title">焦点跟随 · VerticalPager</string>
+    <string name="demo_scenario_input_focus_follow_vertical_pager_summary">在隔离 Pager 中验证键盘打开后底部搜索框仍保持可见。</string>
+    <string name="demo_scenario_input_focus_follow_pull_refresh_title">焦点跟随 · PullToRefresh</string>
+    <string name="demo_scenario_input_focus_follow_pull_refresh_summary">在隔离刷新容器中同时验证下拉手势归属和键盘焦点跟随。</string>
     <string name="demo_scenario_input_derived_summary_title">输入派生摘要</string>
     <string name="demo_scenario_input_derived_summary_summary">基于个人资料输入状态验证可确定的 derivedStateOf 投影。</string>
     <string name="demo_scenario_gesture_tap_title">点击与指针输入</string>
@@ -77,7 +85,9 @@
     <string name="demo_scenario_animation_list_motion_title">列表动画</string>
     <string name="demo_scenario_animation_list_motion_summary">验证稳定惰性条目身份上的插入与移动策略。</string>
     <string name="demo_scenario_animation_specs_title">动画规格</string>
-    <string name="demo_scenario_animation_specs_summary">验证缓动、重复与尺寸规格下的类型化及泛型动画值。</string>
+    <string name="demo_scenario_animation_specs_summary">验证缓动与重复规格下的类型化及泛型动画值。</string>
+    <string name="demo_scenario_animation_content_size_title">内容尺寸动画</string>
+    <string name="demo_scenario_animation_content_size_summary">使用无滚动且始终可见的舞台验证 animateContentSize 展开与收起。</string>
     <string name="demo_scenario_animation_transition_title">过渡通道</string>
     <string name="demo_scenario_animation_transition_summary">验证协同过渡通道与按轴显隐。</string>
     <string name="demo_scenario_animation_infinite_title">无限动画与 Animatable</string>
@@ -108,6 +118,8 @@
     <string name="demo_scenario_collection_grid_summary">基于 GridLayoutManager 并支持确定性列数切换的集合。</string>
     <string name="demo_scenario_collection_pull_refresh_title">下拉刷新</string>
     <string name="demo_scenario_collection_pull_refresh_summary">验证刷新手势、进度状态与确定性重置。</string>
+    <string name="demo_scenario_collection_nested_lazy_list_title">嵌套懒列表交接</string>
+    <string name="demo_scenario_collection_nested_lazy_list_summary">使用隔离的双层列表验证同轴边界交接与嵌套预取。</string>
     <string name="demo_scenario_layout_linear_title">线性布局</string>
     <string name="demo_scenario_layout_linear_summary">验证 Row、Column 测量及可确定重放的变更负载。</string>
     <string name="demo_scenario_layout_stack_title">叠加布局</string>
@@ -175,6 +187,14 @@
     <string name="demo_environment_theme_system">跟随系统</string>
     <string name="demo_environment_theme_light">浅色</string>
     <string name="demo_environment_theme_dark">深色</string>
+    <string name="demo_environment_language">应用语言</string>
+    <string name="demo_environment_language_system">跟随系统</string>
+    <string name="demo_environment_language_english">English</string>
+    <string name="demo_environment_language_chinese">简体中文</string>
+    <string name="demo_environment_language_option_system">系统</string>
+    <string name="demo_environment_language_option_english">English</string>
+    <string name="demo_environment_language_option_chinese">中文</string>
+    <string name="demo_environment_language_note">此设置会持久化应用语言；下方资源场景中的语言切换仍是用于验证配置传播的隔离覆盖。</string>
     <string name="demo_environment_runtime">当前运行环境</string>
     <string name="demo_environment_locale">区域设置</string>
     <string name="demo_environment_direction">布局方向</string>
@@ -183,7 +203,7 @@
     <string name="demo_environment_animator_scale">动画缩放</string>
     <string name="demo_environment_resource_scenario">打开资源配置场景</string>
     <string name="demo_environment_cross_activity">打开跨 Activity 主题验证</string>
-    <string name="demo_environment_scope_note">主题是应用级控制；语言、方向、字号与密度继续隔离在资源场景内，避免 benchmark 设置泄漏到其他场景。</string>
+    <string name="demo_environment_scope_note">主题和应用语言是应用级控制；方向、字号、密度及场景内语言覆盖继续隔离在资源场景中，避免 benchmark 设置泄漏到其他场景。</string>
 
     <string name="demo_build_info_title">构建信息</string>
     <string name="demo_build_package">包名</string>

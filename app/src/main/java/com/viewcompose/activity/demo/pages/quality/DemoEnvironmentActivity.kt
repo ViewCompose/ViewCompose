@@ -2,6 +2,8 @@ package com.viewcompose
 
 import android.provider.Settings
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import com.viewcompose.demo.registry.DemoScenarioIds
 import com.viewcompose.demo.registry.DemoScenarioRegistry
 import com.viewcompose.host.android.resources.stringResource
@@ -45,7 +47,7 @@ private fun UiTreeBuilder.DemoEnvironmentPage(root: ViewGroup) {
         )
     }.getOrDefault(1f)
     LazyColumn(
-        items = listOf("theme", "runtime", "routes"),
+        items = listOf("theme", "language", "runtime", "routes"),
         key = { item -> item },
         modifier = Modifier
             .fillMaxSize()
@@ -106,6 +108,58 @@ private fun UiTreeBuilder.DemoEnvironmentPage(root: ViewGroup) {
                     ),
                 ),
             )
+
+            "language" -> {
+                val applicationLocales = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+                val selectedLanguage = when {
+                    applicationLocales.startsWith("zh", ignoreCase = true) -> 2
+                    applicationLocales.startsWith("en", ignoreCase = true) -> 1
+                    else -> 0
+                }
+                Column(
+                    spacing = 8.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                ) {
+                    Text(text = stringResource(R.string.demo_environment_language))
+                    Text(
+                        text = stringResource(
+                            when (selectedLanguage) {
+                                1 -> R.string.demo_environment_language_english
+                                2 -> R.string.demo_environment_language_chinese
+                                else -> R.string.demo_environment_language_system
+                            },
+                        ),
+                        color = TextDefaults.secondaryColor(),
+                        modifier = Modifier.testTag(DemoTestTags.SETTINGS_LANGUAGE_STATUS),
+                    )
+                    SegmentedControl(
+                        items = demoSegmentedItems(
+                            "system" to stringResource(R.string.demo_environment_language_option_system),
+                            "english" to stringResource(R.string.demo_environment_language_option_english),
+                            "chinese" to stringResource(R.string.demo_environment_language_option_chinese),
+                        ),
+                        selectedIndex = selectedLanguage,
+                        onSelectionChange = { index ->
+                            val locales = when (index) {
+                                1 -> LocaleListCompat.forLanguageTags("en")
+                                2 -> LocaleListCompat.forLanguageTags("zh-CN")
+                                else -> LocaleListCompat.getEmptyLocaleList()
+                            }
+                            AppCompatDelegate.setApplicationLocales(locales)
+                        },
+                        size = SegmentedControlSize.Medium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag(DemoTestTags.SETTINGS_LANGUAGE_CONTROL),
+                    )
+                    Text(
+                        text = stringResource(R.string.demo_environment_language_note),
+                        color = TextDefaults.secondaryColor(),
+                    )
+                }
+            }
 
             else -> Column(
                 spacing = 8.dp,

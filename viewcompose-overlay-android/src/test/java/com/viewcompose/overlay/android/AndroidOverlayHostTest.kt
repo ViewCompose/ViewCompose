@@ -25,6 +25,7 @@ import com.viewcompose.ui.foundation.ToastDuration
 import com.viewcompose.ui.foundation.ToastOverlaySpec
 import com.viewcompose.ui.foundation.TransientFeedbackDismissReason
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.overlayAnchor
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.unit.dp
@@ -196,12 +197,91 @@ class AndroidOverlayHostTest {
             isAccessible = true
             get(handle) as PopupWindow
         }
+        val popupContainer = handle.javaClass.getDeclaredField("popupContainer").run {
+            isAccessible = true
+            get(handle) as FrameLayout
+        }
 
         assertTrue(popupWindow.isShowing)
+        assertEquals(0f, popupWindow.elevation, 0f)
+        assertEquals(0, popupContainer.paddingLeft)
+        assertEquals(popupContainer.measuredWidth, popupWindow.width)
 
         handle.dismiss()
 
         assertFalse(popupWindow.isShowing)
+        session.dispose()
+        activityController.destroy()
+    }
+
+    @Test
+    fun `elevated popup reserves a transparent visual outset around semantic content`() {
+        val activityController = Robolectric.buildActivity(Activity::class.java).setup()
+        val root = FrameLayout(activityController.get())
+        val requests = mutableListOf<OverlayRequest>()
+        activityController.get().setContentView(root)
+        val session = renderInto(
+            container = root,
+            overlayHost = object : OverlayHost {
+                override fun commit(
+                    sessionId: OverlaySessionId,
+                    desired: List<OverlayRequest>,
+                ) {
+                    requests.clear()
+                    requests.addAll(desired)
+                }
+
+                override fun clear(sessionId: OverlaySessionId) {
+                    requests.clear()
+                }
+            },
+        ) {
+            Box(modifier = Modifier.size(40.dp, 40.dp).overlayAnchor("elevated-anchor")) { }
+            Popup(visible = true, anchorId = "elevated-anchor", requestKey = "elevated") {
+                Box(
+                    modifier = Modifier
+                        .size(96.dp, 64.dp)
+                        .elevation(3.dp),
+                ) { }
+            }
+        }
+        measureAndLayout(root, width = 400, height = 400)
+        val request = requests.single { it.type == OverlayType.Popup }
+        val handle = AndroidPopupOverlayPresenter(root).show(
+            entryId = OverlayEntryId(OverlaySessionId("popup"), "elevated"),
+            spec = request.payload as PopupOverlaySpec,
+            content = request.contentToken as PopupOverlayContent,
+        )
+        val popupWindow = handle.javaClass.getDeclaredField("popupWindow").run {
+            isAccessible = true
+            get(handle) as PopupWindow
+        }
+        val popupContainer = handle.javaClass.getDeclaredField("popupContainer").run {
+            isAccessible = true
+            get(handle) as FrameLayout
+        }
+        val popupContentContainer = handle.javaClass.getDeclaredField("popupContentContainer").run {
+            isAccessible = true
+            get(handle) as FrameLayout
+        }
+
+        assertTrue(popupWindow.isShowing)
+        assertTrue("Expected native shadow space", popupContainer.paddingLeft > 0)
+        assertEquals(popupContainer.paddingLeft, popupContainer.paddingTop)
+        assertEquals(popupContainer.paddingLeft, popupContainer.paddingRight)
+        assertEquals(popupContainer.paddingLeft, popupContainer.paddingBottom)
+        assertFalse(popupContainer.clipChildren)
+        assertFalse(popupContentContainer.clipChildren)
+        assertEquals(
+            popupContentContainer.measuredWidth + popupContainer.paddingLeft + popupContainer.paddingRight,
+            popupWindow.width,
+        )
+        assertEquals(
+            popupContentContainer.measuredHeight + popupContainer.paddingTop + popupContainer.paddingBottom,
+            popupWindow.height,
+        )
+
+        handle.dismiss()
         session.dispose()
         activityController.destroy()
     }

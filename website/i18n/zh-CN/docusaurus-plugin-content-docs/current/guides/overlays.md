@@ -1,6 +1,6 @@
 ---
 translation_source: guides/overlays.md
-translation_source_hash: e957e593f70750127f0610ff293825d7cc8159d7fb504da175d56675e1e41330
+translation_source_hash: 305b73d3bbc728dce6a761935879805f85c43a85df2e73417861189e05937276
 translation_status: current
 ---
 
@@ -90,6 +90,14 @@ alignment 覆盖上方/下方、逻辑 start/end 侧和 anchor 中心；逻辑 s
 
 `PopupPositioner` 是平台无关定位契约。自定义宿主可使用自己的 anchor bounds、可见 viewport
 和 popup 测量结果复用相同计算。
+
+Android `PopupWindow` Transport 不额外设置平台 Elevation。渲染出的 Popup 内容是唯一视觉
+阴影 Owner：`DropdownMenu` 保留主题 Elevation，Tooltip 或自定义内容使用自身声明，零 Elevation
+的通用内容则保持无阴影。这可以避免第二层矩形 Window 阴影与圆角内容轮廓相互竞争。
+
+Android Transport 会把原生 Elevation 与语义 Popup 尺寸分开测量：透明平台 Window 扩大到足以
+容纳阴影，语义内容矩形仍相对锚点定位，并且透明扩展区域在关闭判断中仍属于内容外部。这样既能
+完整保留圆角阴影，也不会改变对齐方式或为零 Elevation 内容隐式添加 Surface。
 
 ## Snackbar 与 Toast 队列
 

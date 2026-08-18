@@ -42,7 +42,7 @@
 
     <string name="demo_animation_specs_title">动画规格与泛型值</string>
     <string name="demo_animation_specs_summary">验证类型化与泛型状态动画、缓动、重复模式及 animateContentSize。</string>
-    <string name="demo_animation_specs_state">规格=%1$s · 目标=%2$b · 线性=%3$b · 反向=%4$b · 向量=%5$b · 展开=%6$b</string>
+    <string name="demo_animation_specs_state">规格=%1$s · 目标=%2$b · 线性=%3$b · 反向=%4$b · 向量=%5$b</string>
     <string name="demo_animation_specs_kind">规格：%1$s</string>
     <string name="demo_animation_specs_kind_tween">补间</string>
     <string name="demo_animation_specs_kind_spring">弹簧</string>
@@ -68,6 +68,8 @@
     <string name="demo_animation_specs_size_content_a">展开内容 A</string>
     <string name="demo_animation_specs_size_content_b">展开内容 B</string>
     <string name="demo_animation_specs_size_content_c">展开内容 C</string>
+    <string name="demo_animation_content_size_state_collapsed">状态：已收起</string>
+    <string name="demo_animation_content_size_state_expanded">状态：已展开</string>
 
     <string name="demo_animation_transition_title">Transition 与显隐状态</string>
     <string name="demo_animation_transition_summary">验证 updateTransition、MutableTransitionState 及横向和纵向显隐。</string>

@@ -50,7 +50,7 @@
     <string name="demo_layouts_reset_tags">重置标签</string>
     <string name="demo_layouts_tag">标签 %1$d</string>
     <string name="demo_layouts_flow_column_summary">FlowColumn 竖向流（maxItemsInEachColumn = 3）</string>
-    <string name="demo_layouts_vertical_item">竖向项 %1$d</string>
+    <string name="demo_layouts_vertical_item">项目 %1$d</string>
     <string name="demo_layouts_scroll_title">滚动容器</string>
     <string name="demo_layouts_scroll_summary">ScrollableColumn 和 ScrollableRow 提供线性滚动容器。</string>
     <string name="demo_layouts_scroll_column_label">ScrollableColumn（超长内容可滚动）</string>

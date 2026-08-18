@@ -61,7 +61,11 @@
         <item quantity="other">Refreshed %1$d times</item>
     </plurals>
     <string name="demo_collections_refreshing">Refreshing…</string>
+    <string name="demo_collections_complete_refresh">Complete refresh</string>
     <string name="demo_collections_simulate_refresh">Simulate refresh</string>
     <string name="demo_collections_reset_refresh">Reset refresh</string>
     <string name="demo_collections_pull_refresh_hint">Pull down on the region above, or use the simulate refresh action.</string>
+    <string name="demo_collections_nested_lazy_instruction">Scroll the inner list to an edge, then continue the same gesture to verify ownership transfers to the outer list.</string>
+    <string name="demo_collections_nested_outer_item">Outer list item %1$d</string>
+    <string name="demo_collections_nested_inner_item">Inner list item %1$d</string>
 </resources>

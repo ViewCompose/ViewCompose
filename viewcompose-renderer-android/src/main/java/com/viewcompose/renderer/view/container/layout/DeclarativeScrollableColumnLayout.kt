@@ -2,12 +2,10 @@ package com.viewcompose.renderer.view.container
 
 import android.content.Context
 import android.view.MotionEvent
-import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.core.widget.NestedScrollView
 import com.viewcompose.ui.state.ScrollState
-import kotlin.math.abs
 
 /**
  * NestedScrollView host used by ScrollableColumn.
@@ -21,10 +19,9 @@ internal class DeclarativeScrollableColumnLayout(
     override val childHost: ViewGroup
         get() = innerLayout
     private var userScrollEnabled = true
-    private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
-    private var touchDownY = 0f
-    private var lastTouchY = 0f
-    private var verticalGestureResolved = false
+    private val parentInterceptArbitrator = ParentInterceptGestureArbitrator(this) {
+        ParentInterceptGestureArbitrator.Axis.Vertical
+    }
     private val scrollStateController by lazy(LazyThreadSafetyMode.NONE) {
         EagerScrollStateController(
             host = this,
@@ -50,7 +47,7 @@ internal class DeclarativeScrollableColumnLayout(
     fun bindScrollState(state: ScrollState?, userScrollEnabled: Boolean) {
         scrollStateController.bind(state, userScrollEnabled) { enabled ->
             this.userScrollEnabled = enabled
-            if (!enabled) parent?.requestDisallowInterceptTouchEvent(false)
+            if (!enabled) parentInterceptArbitrator.release()
         }
     }
 
@@ -63,39 +60,16 @@ internal class DeclarativeScrollableColumnLayout(
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        parentInterceptArbitrator.onDispatchTouchEvent(event, userScrollEnabled)
         if (userScrollEnabled) {
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
-                    touchDownY = event.y
-                    lastTouchY = event.y
-                    verticalGestureResolved = false
-                    // RecyclerView is not a nested-scrolling parent. Reserve the stream until the
-                    // gesture direction is known, then hand it back at the matching scroll edge.
-                    parent?.requestDisallowInterceptTouchEvent(
-                        canScrollVertically(-1) || canScrollVertically(1),
-                    )
                     scrollStateController.onTouchStarted()
-                }
-
-                MotionEvent.ACTION_MOVE -> {
-                    if (!verticalGestureResolved && abs(touchDownY - event.y) > touchSlop) {
-                        verticalGestureResolved = true
-                    }
-                    if (verticalGestureResolved) {
-                        val scrollDelta = lastTouchY - event.y
-                        if (scrollDelta != 0f) {
-                            val direction = if (scrollDelta > 0f) 1 else -1
-                            parent?.requestDisallowInterceptTouchEvent(canScrollVertically(direction))
-                        }
-                    }
-                    lastTouchY = event.y
                 }
 
                 MotionEvent.ACTION_UP,
                 MotionEvent.ACTION_CANCEL,
                 -> {
-                    parent?.requestDisallowInterceptTouchEvent(false)
-                    verticalGestureResolved = false
                     scrollStateController.onTouchEnded()
                 }
             }

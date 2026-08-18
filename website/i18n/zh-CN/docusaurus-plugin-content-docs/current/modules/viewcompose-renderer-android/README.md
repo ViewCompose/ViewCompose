@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 60bd2bbda713ea5331b93ff414dd1dc9947a2e17ad0829d601f7e7eb5fed83b8
+translation_source_hash: 14ba010cff0a821e37f4c4f1cdfb04a599e724d6abba961f9bf0e6c26b4029b9
 translation_status: current
 ---
 
@@ -46,7 +46,10 @@ dependencies {
 - 通用交互 Surface 通过已解析 Modifier 接收 `UiInteractionIndication.StateLayer`。引擎在
   现有 Shape 遮罩和可见 Surface 内缩中映射按下、聚焦和悬停值，不选择语义角色或 Material
   透明度。SegmentedControl 与 NavigationBar 因拥有多个内部目标，通过 NodeSpec 接收完整的
-  已选和未选状态层值。
+  已选和未选状态层值。NavigationBar 会在完整 Item 目标的前景绘制各 Item 状态层，因此选中
+  Indicator、Icon、Badge 和 Label 都不会遮住按下、聚焦或悬停反馈。当点击同步改变选择状态或
+  主题颜色时，NavigationBar 与通用交互 Surface 都会原地更新已保留 Ripple 的颜色 Selector，
+  而不是替换 Drawable，因此正在执行的释放动画仍然可见；这也覆盖基于 BasicSurface 的纯文案导航。
 - 通用集合语义会映射为 AndroidX 无障碍集合元数据。父节点负责行列数量和选择基数，子节点负责
   逻辑位置和跨度；已有的 `selected` 与 `heading` 语义仍是 item 状态的唯一事实来源。
 - 当前版本构建基线：Kotlin 2.0.21、Android Gradle Plugin 8.13.2。
@@ -181,6 +184,12 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
   相对值会整体替换先声明值。正 `offsetRelative.horizontal` 朝逻辑 end 平移且不改变测量。
 - Gesture 分发会保留尚未判定的 Pointer Stream，直到识别出 Drag。若 Stream 结束时没有被 Gesture
   消费，保留目标会收到一次普通 Click；已识别的 Drag 会消费 Stream 并抑制该 Click。
+- Renderer 所有的 eager 与 lazy 滚动容器只会在自身能够消费相应方向位移时保留轴向一致的
+  Pointer Stream。容器会释放交叉轴位移，并在对应逻辑边缘把位移交给祖先。垂直 child 位于顶部
+  且祖先是启用、空闲的 `PullToRefresh` 时，会把初始向下拖动交给刷新 Host 完成阈值手势。
+- `FlowColumn` 使用相同的可用交叉轴宽度测量每个 child，已经完成的列不会缩减后续列的可用宽度；
+  `FlowRow` 对 child 高度执行对称规则。自然 Flow 内容仍可超出受限交叉轴，但不会仅因前面行列
+  已占用空间而被压缩。
 - Button Surface 内缩变化会参与定向样式 Patch，不得因此重建原生 View 或改变其有效测量目标。
 - Basic Surface 使用相同的有效/可见边界模型。Surface 快照变化会对保留的
   `DeclarativeBoxLayout` 执行中立重绑定；调用方 Background、Border 或 Shape Modifier 会移除
@@ -188,8 +197,10 @@ Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
 - 引擎创建的 Box 与 Surface 容器不执行 XML 属性解析。没有显式 `BoxScope.align` 的子项会在
   LayoutParams 中保留继承内容对齐标记，因此内容对齐 Patch 只更新这些子项，不再在每次布局时
   扫描全部子项；显式对齐的子项保持不变。
-- Indication Modifier 变化只执行 Modifier Binding，并仅重建已保留 View 中受影响的 Surface
-  Drawable。SegmentedControl 与 NavigationBar 只重建已选角色或状态层快照变化的内部背景。
+- Indication Modifier 变化只执行 Modifier Binding。Surface 结构变化只重建已保留 View 中
+  受影响的 Drawable；仅颜色变化的 Indication Patch 会原地更新已保留 `RippleDrawable` 的
+  Selector，因此同步的选中状态 Patch 不会中断快速点击的释放动画。SegmentedControl 只重建
+  受影响的内部背景；NavigationBar 会保留各 Item 的前景 Ripple，并更新其已选或未选状态层颜色。
   按下优先于聚焦和悬停，聚焦优先于悬停；非活动或禁用的高层目标不安装 Indication。Android
   单值 Ripple 回退只保留在低层 Renderer 私有实现中。
 - Slider 绑定使用渲染器中性的 `AppCompatSeekBar` 子类，因为平台控件可能在 `AT_MOST` 测量

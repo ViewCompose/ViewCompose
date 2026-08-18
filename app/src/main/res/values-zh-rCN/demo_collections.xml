@@ -61,7 +61,11 @@
         <item quantity="other">已刷新 %1$d 次</item>
     </plurals>
     <string name="demo_collections_refreshing">正在刷新…</string>
+    <string name="demo_collections_complete_refresh">完成刷新</string>
     <string name="demo_collections_simulate_refresh">模拟刷新</string>
     <string name="demo_collections_reset_refresh">重置刷新</string>
     <string name="demo_collections_pull_refresh_hint">向下拉动上方区域触发刷新，或点击模拟刷新按钮。</string>
+    <string name="demo_collections_nested_lazy_instruction">将内层列表滑到边界后继续同一手势，验证滚动归属是否交给外层列表。</string>
+    <string name="demo_collections_nested_outer_item">外层列表项 %1$d</string>
+    <string name="demo_collections_nested_inner_item">内层列表项 %1$d</string>
 </resources>

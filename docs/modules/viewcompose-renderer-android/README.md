@@ -49,7 +49,12 @@ dependencies {
   modifiers. The engine maps its pressed, focused, and hovered values into the existing shape mask
   and visual-surface inset without selecting semantic roles or Material opacity values.
   SegmentedControl and NavigationBar receive complete selected and unselected state-layer values
-  in their NodeSpecs because they own multiple internal targets.
+  in their NodeSpecs because they own multiple internal targets. NavigationBar draws each item state
+  layer in the foreground across the complete item target, so its selection indicator, icon, badge,
+  and label cannot hide pressed, focused, or hovered feedback. When a click synchronously changes
+  selection or theme colors, both NavigationBar and general interactive surfaces update the
+  retained ripple's color selector in place instead of replacing its drawable, so the active
+  release animation remains visible. This also covers BasicSurface-based text navigation.
 - Generic collection semantics map to AndroidX accessibility collection metadata. Parent nodes own
   row/column counts and selection cardinality; child nodes own logical positions and spans while
   existing `selected` and `heading` semantics remain the single source of item state.
@@ -210,6 +215,15 @@ Because the current line is alpha, the documentation site intentionally does not
 - Gesture dispatch retains an undecided pointer stream until drag recognition. If the stream ends
   without gesture consumption, the retained target receives one normal click; a recognized drag
   consumes the stream and suppresses that click.
+- Renderer-owned eager and lazy scroll containers reserve an axis-matching pointer stream only
+  while they can consume movement in that direction. They release cross-axis movement and hand
+  movement to an ancestor at the matching logical edge. A vertical child at its top yields the
+  initial downward pull to an enabled, idle `PullToRefresh` ancestor so the refresh host can own
+  the threshold gesture.
+- `FlowColumn` measures every child against the same available cross-axis width; completed columns
+  never reduce the width offered to later columns. `FlowRow` applies the symmetric rule to child
+  height. Natural flow content may still exceed a constrained cross axis, but it is not compressed
+  merely because earlier rows or columns consumed space.
 - Button surface-inset changes participate in targeted style patching. They must not recreate the
   native View or change its effective measured target.
 - Basic Surface uses the same effective/visual-bound model. A changed surface snapshot performs a
@@ -219,11 +233,14 @@ Because the current line is alpha, the documentation site intentionally does not
   explicit `BoxScope.align` retain inherited content alignment in their layout parameters, so a
   content-alignment patch updates only those children instead of rescanning every child during
   every layout pass; explicitly aligned children remain unchanged.
-- An indication modifier change uses modifier-only binding and rebuilds only the retained View's
-  affected surface drawable. SegmentedControl and NavigationBar rebuild only internal backgrounds
-  whose selected role or state-layer snapshot changed. Pressed takes precedence over focused and
-  hovered, focused takes precedence over hovered, and inactive or disabled high-level targets have
-  no indication. Android's value-only ripple fallback remains private to low-level renderer code.
+- An indication modifier change uses modifier-only binding. Structural surface changes rebuild only
+  the retained View's affected drawable, while a color-only indication patch updates the retained
+  `RippleDrawable` selector in place so a synchronous selected-state patch cannot cancel a quick
+  tap's release animation. SegmentedControl rebuilds only affected internal backgrounds;
+  NavigationBar retains each item foreground ripple while updating its selected or unselected
+  state-layer colors. Pressed takes precedence over focused and hovered, focused takes precedence
+  over hovered, and inactive or disabled high-level targets have no indication. Android's
+  value-only ripple fallback remains private to low-level renderer code.
 - Slider binding uses a renderer-neutral `AppCompatSeekBar` subclass because the platform widget
   can ignore `minimumHeight` under an `AT_MOST` measure spec. It honors the declared minimum while
   leaving an exact application or parent height authoritative; no Material policy or token is

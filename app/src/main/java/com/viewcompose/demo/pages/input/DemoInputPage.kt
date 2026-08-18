@@ -6,6 +6,7 @@ import com.viewcompose.demo.contract.DemoScenarioId
 import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.demo.registry.DemoScenarioIds
 import com.viewcompose.host.android.resources.stringResource
+import com.viewcompose.ui.focus.FocusRequester
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.shape
@@ -13,13 +14,14 @@ import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
-import com.viewcompose.ui.modifier.height
+import com.viewcompose.ui.modifier.focusRequester
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.TextFieldImeAction
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
+import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.runtime.derivedStateOf
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.Button
@@ -31,6 +33,7 @@ import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.LocalFocusManager
 import com.viewcompose.ui.foundation.ProvideCheckboxOverrides
 import com.viewcompose.ui.foundation.ProvideRadioButtonOverrides
 import com.viewcompose.ui.foundation.ProvideSliderOverrides
@@ -83,6 +86,26 @@ internal fun UiTreeBuilder.PreviewInputSearch() {
     InputPage(InputFixture.Search)
 }
 
+@ViewComposePreview(name = "Input · Focus follow · Lazy column", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewInputFocusFollowLazyColumn() {
+    InputPage(InputFixture.FocusFollowLazyColumn)
+}
+
+@ViewComposePreview(name = "Input · Focus follow · Scrollable column", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewInputFocusFollowScrollableColumn() {
+    InputPage(InputFixture.FocusFollowScrollableColumn)
+}
+
+@ViewComposePreview(name = "Input · Focus follow · Vertical pager", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewInputFocusFollowVerticalPager() {
+    InputPage(InputFixture.FocusFollowVerticalPager)
+}
+
+@ViewComposePreview(name = "Input · Focus follow · Pull refresh", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewInputFocusFollowPullRefresh() {
+    InputPage(InputFixture.FocusFollowPullRefresh)
+}
+
 @ViewComposePreview(name = "Input · Summary", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewInputSummary() {
     InputPage(InputFixture.DerivedSummary)
@@ -95,6 +118,10 @@ internal enum class InputFixture(
     Selection(DemoScenarioIds.InputSelection),
     Stress(DemoScenarioIds.InputStress),
     Search(DemoScenarioIds.InputSearch),
+    FocusFollowLazyColumn(DemoScenarioIds.InputFocusFollowLazyColumn),
+    FocusFollowScrollableColumn(DemoScenarioIds.InputFocusFollowScrollableColumn),
+    FocusFollowVerticalPager(DemoScenarioIds.InputFocusFollowVerticalPager),
+    FocusFollowPullRefresh(DemoScenarioIds.InputFocusFollowPullRefresh),
     DerivedSummary(DemoScenarioIds.InputDerivedSummary),
     ;
 
@@ -109,6 +136,29 @@ internal fun UiTreeBuilder.InputPage(
     fixture: InputFixture,
     scenario: DemoScenarioSpec? = null,
 ) {
+    when (fixture) {
+        InputFixture.FocusFollowLazyColumn -> {
+            InputFocusFollowLazyColumnPage(scenario)
+            return
+        }
+
+        InputFixture.FocusFollowScrollableColumn -> {
+            InputFocusFollowScrollableColumnPage(scenario)
+            return
+        }
+
+        InputFixture.FocusFollowVerticalPager -> {
+            InputFocusFollowVerticalPagerPage(scenario)
+            return
+        }
+
+        InputFixture.FocusFollowPullRefresh -> {
+            InputFocusFollowPullRefreshPage(scenario)
+            return
+        }
+
+        else -> Unit
+    }
     val fieldsActive = fixture == InputFixture.Fields
     val selectionActive = fixture == InputFixture.Selection
     val stressActive = fixture == InputFixture.Stress
@@ -177,20 +227,6 @@ internal fun UiTreeBuilder.InputPage(
     val searchHistoryState = if (searchActive) rememberTextFieldState() else null
     val disabledSearchState = if (searchActive) rememberTextFieldState() else null
     val searchResultState = if (searchActive) remember { mutableStateOf("") } else null
-    val scrollableSearchQueryState = if (searchActive) rememberTextFieldState() else null
-    val verticalPagerSearchQueryState = if (searchActive) rememberTextFieldState() else null
-    val pullRefreshSearchQueryState = if (searchActive) rememberTextFieldState() else null
-    val focusFollowVerticalPagerPageState = if (searchActive) {
-        remember { mutableStateOf(0) }
-    } else {
-        null
-    }
-    val pullRefreshFocusRefreshingState = if (searchActive) {
-        remember { mutableStateOf(false) }
-    } else {
-        null
-    }
-
     val summaryAlternateState = if (summaryActive) remember { mutableStateOf(false) } else null
     val summaryState = if (summaryActive) {
         val activeSummaryAlternateState = requireNotNull(summaryAlternateState)
@@ -213,6 +249,11 @@ internal fun UiTreeBuilder.InputPage(
         InputFixture.Selection -> listOf("controls")
         InputFixture.Stress -> listOf("stress")
         InputFixture.Search -> listOf("search")
+        InputFixture.FocusFollowLazyColumn,
+        InputFixture.FocusFollowScrollableColumn,
+        InputFixture.FocusFollowVerticalPager,
+        InputFixture.FocusFollowPullRefresh,
+        -> error("Focus-follow fixtures are rendered by dedicated roots")
         InputFixture.DerivedSummary -> listOf("summary")
     }
 
@@ -408,7 +449,7 @@ internal fun UiTreeBuilder.InputPage(
                     size = TextFieldSize.Large,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(120.dp)
+                        .testTag(DemoTestTags.INPUT_BIO_FIELD)
                         .margin(bottom = 12.dp),
                 )
                 Button(
@@ -725,7 +766,7 @@ internal fun UiTreeBuilder.InputPage(
                     size = TextFieldSize.Large,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(132.dp)
+                        .testTag(DemoTestTags.INPUT_STRESS_NOTES_FIELD)
                         .margin(bottom = 12.dp),
                 )
                 TextField(
@@ -755,11 +796,6 @@ internal fun UiTreeBuilder.InputPage(
                 val searchHistoryState = requireNotNull(searchHistoryState)
                 val disabledSearchState = requireNotNull(disabledSearchState)
                 val searchResultState = requireNotNull(searchResultState)
-                val scrollableSearchQueryState = requireNotNull(scrollableSearchQueryState)
-                val verticalPagerSearchQueryState = requireNotNull(verticalPagerSearchQueryState)
-                val pullRefreshSearchQueryState = requireNotNull(pullRefreshSearchQueryState)
-                val focusFollowVerticalPagerPageState = requireNotNull(focusFollowVerticalPagerPageState)
-                val pullRefreshFocusRefreshingState = requireNotNull(pullRefreshFocusRefreshingState)
                 val searchResultFormat = stringResource(R.string.demo_input_search_result)
                 Text(
                     text = if (searchQueryState.text.isBlank()) {
@@ -790,11 +826,6 @@ internal fun UiTreeBuilder.InputPage(
                             searchHistoryState.clearText()
                             disabledSearchState.clearText()
                             searchResultState.value = ""
-                            scrollableSearchQueryState.clearText()
-                            verticalPagerSearchQueryState.clearText()
-                            pullRefreshSearchQueryState.clearText()
-                            focusFollowVerticalPagerPageState.value = 0
-                            pullRefreshFocusRefreshingState.value = false
                         },
                     )
                 }
@@ -857,156 +888,6 @@ internal fun UiTreeBuilder.InputPage(
                     enabled = false,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Text(
-                    text = stringResource(R.string.demo_input_search_scrollable_title),
-                    style = UiTextStyle(fontSizeSp = 14.sp),
-                    modifier = Modifier.margin(top = 12.dp, bottom = 8.dp),
-                )
-                ScrollableColumn(
-                    spacing = 8.dp,
-                    focusFollowKeyboard = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(188.dp)
-                        .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .shape(SurfaceDefaults.shape())
-                        .padding(12.dp)
-                        .margin(bottom = 12.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.demo_input_search_scrollable_note),
-                        style = UiTextStyle(fontSizeSp = 13.sp),
-                        color = TextDefaults.secondaryColor(),
-                    )
-                    SearchBar(
-                        state = scrollableSearchQueryState,
-                        placeholder = stringResource(
-                            R.string.demo_input_search_scrollable_placeholder,
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag(DemoTestTags.INPUT_FOCUS_SCROLLABLE_SEARCH),
-                    )
-                    (1..4).forEach { index ->
-                        Text(
-                            text = stringResource(R.string.demo_input_search_placeholder_row, index),
-                            style = UiTextStyle(fontSizeSp = 13.sp),
-                            color = TextDefaults.secondaryColor(),
-                        )
-                    }
-                }
-                Text(
-                    text = stringResource(R.string.demo_input_search_pager_title),
-                    style = UiTextStyle(fontSizeSp = 14.sp),
-                    modifier = Modifier.margin(bottom = 8.dp),
-                )
-                VerticalPager(
-                    currentPage = focusFollowVerticalPagerPageState.value,
-                    onPageChanged = { focusFollowVerticalPagerPageState.value = it },
-                    focusFollowKeyboard = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(188.dp)
-                        .margin(bottom = 12.dp),
-                ) {
-                    Page(key = "focus-follow-vertical-pager-search", contentRevision = "focus-follow-vertical-pager-search") {
-                        Column(
-                            spacing = 8.dp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                                .shape(SurfaceDefaults.shape())
-                                .padding(12.dp),
-                        ) {
-                            Text(
-                                text = stringResource(R.string.demo_input_search_pager_first_note),
-                                style = UiTextStyle(fontSizeSp = 13.sp),
-                                color = TextDefaults.secondaryColor(),
-                            )
-                            SearchBar(
-                                state = verticalPagerSearchQueryState,
-                                placeholder = stringResource(
-                                    R.string.demo_input_search_pager_placeholder,
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .testTag(DemoTestTags.INPUT_FOCUS_VERTICAL_PAGER_SEARCH),
-                            )
-                        }
-                    }
-                    Page(key = "focus-follow-vertical-pager-note", contentRevision = "focus-follow-vertical-pager-note") {
-                        Column(
-                            spacing = 8.dp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                                .shape(SurfaceDefaults.shape())
-                                .padding(12.dp),
-                        ) {
-                            Text(text = stringResource(R.string.demo_input_search_pager_second_title))
-                            Text(
-                                text = stringResource(R.string.demo_input_search_pager_second_note),
-                                style = UiTextStyle(fontSizeSp = 13.sp),
-                                color = TextDefaults.secondaryColor(),
-                            )
-                        }
-                    }
-                }
-                Text(
-                    text = stringResource(R.string.demo_input_search_refresh_title),
-                    style = UiTextStyle(fontSizeSp = 14.sp),
-                    modifier = Modifier.margin(bottom = 8.dp),
-                )
-                PullToRefresh(
-                    isRefreshing = pullRefreshFocusRefreshingState.value,
-                    onRefresh = { pullRefreshFocusRefreshingState.value = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(188.dp)
-                        .margin(bottom = 8.dp),
-                ) {
-                    ScrollableColumn(
-                        spacing = 8.dp,
-                        focusFollowKeyboard = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                    ) {
-                        SearchBar(
-                            state = pullRefreshSearchQueryState,
-                            placeholder = stringResource(
-                                R.string.demo_input_search_refresh_placeholder,
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag(DemoTestTags.INPUT_FOCUS_PULL_REFRESH_SEARCH),
-                        )
-                        Button(
-                            text = stringResource(
-                                if (pullRefreshFocusRefreshingState.value) {
-                                    R.string.demo_input_search_stop_refresh
-                                } else {
-                                    R.string.demo_input_search_simulate_refresh
-                                },
-                            ),
-                            variant = ButtonVariant.Outlined,
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = {
-                                pullRefreshFocusRefreshingState.value = !pullRefreshFocusRefreshingState.value
-                            },
-                        )
-                        Text(
-                            text = stringResource(R.string.demo_input_search_refresh_note),
-                            style = UiTextStyle(fontSizeSp = 13.sp),
-                            color = TextDefaults.secondaryColor(),
-                        )
-                    }
-                }
-                Text(
-                    text = stringResource(R.string.demo_input_search_outer_anchor_note),
-                    style = UiTextStyle(fontSizeSp = 13.sp),
-                    color = TextDefaults.secondaryColor(),
-                )
             }
 
             "summary" -> ScenarioSection(
@@ -1051,6 +932,296 @@ internal fun UiTreeBuilder.InputPage(
             else -> error("Unsupported input section: $section")
         }
     }
+}
+
+private fun UiTreeBuilder.InputFocusFollowLazyColumnPage(scenario: DemoScenarioSpec?) {
+    val queryState = rememberTextFieldState()
+    val focusRequester = remember { FocusRequester() }
+    val focusRequestCount = remember { mutableStateOf(0) }
+    val focusManager = LocalFocusManager.current
+    LazyColumn(
+        spacing = 8.dp,
+        contentPadding = LazyContentPadding.all(12.dp),
+        focusFollowKeyboard = true,
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        item(key = "header", contentRevision = "header") {
+            FocusFollowHeader(
+                scenario = scenario,
+                fallbackTitle = R.string.demo_scenario_input_focus_follow_lazy_column_title,
+                fallbackSummary = R.string.demo_scenario_input_focus_follow_lazy_column_summary,
+            )
+            FocusFollowControls(
+                scenario = scenario,
+                focusRequestCount = focusRequestCount.value,
+                onFocus = {
+                    if (focusRequester.requestFocus()) focusRequestCount.value += 1
+                },
+                onReset = {
+                    focusManager.clearFocus(force = true)
+                    queryState.clearText()
+                    focusRequestCount.value = 0
+                },
+            )
+        }
+        items((1..3).toList(), key = { "before-$it" }) { index ->
+            FocusFollowPlaceholder(index)
+        }
+        item(key = "search", contentRevision = "search") {
+            SearchBar(
+                state = queryState,
+                placeholder = stringResource(R.string.demo_input_search_products_placeholder),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .testTag(DemoTestTags.INPUT_FOCUS_LAZY_COLUMN_SEARCH)
+                    .inputScenarioTarget(scenario, DemoAutomationRole.Target),
+            )
+        }
+        items((4..11).toList(), key = { "after-$it" }) { index ->
+            FocusFollowPlaceholder(index)
+        }
+    }
+}
+
+private fun UiTreeBuilder.InputFocusFollowScrollableColumnPage(scenario: DemoScenarioSpec?) {
+    val queryState = rememberTextFieldState()
+    val focusRequester = remember { FocusRequester() }
+    val focusRequestCount = remember { mutableStateOf(0) }
+    val focusManager = LocalFocusManager.current
+    ScrollableColumn(
+        spacing = 8.dp,
+        focusFollowKeyboard = true,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(12.dp),
+    ) {
+        FocusFollowHeader(
+            scenario = scenario,
+            fallbackTitle = R.string.demo_scenario_input_focus_follow_scrollable_column_title,
+            fallbackSummary = R.string.demo_scenario_input_focus_follow_scrollable_column_summary,
+        )
+        FocusFollowControls(
+            scenario = scenario,
+            focusRequestCount = focusRequestCount.value,
+            onFocus = {
+                if (focusRequester.requestFocus()) focusRequestCount.value += 1
+            },
+            onReset = {
+                focusManager.clearFocus(force = true)
+                queryState.clearText()
+                focusRequestCount.value = 0
+            },
+        )
+        (1..5).forEach { index -> FocusFollowPlaceholder(index) }
+        SearchBar(
+            state = queryState,
+            placeholder = stringResource(R.string.demo_input_search_scrollable_placeholder),
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester)
+                .testTag(DemoTestTags.INPUT_FOCUS_SCROLLABLE_SEARCH)
+                .inputScenarioTarget(scenario, DemoAutomationRole.Target),
+        )
+        (8..19).forEach { index -> FocusFollowPlaceholder(index) }
+    }
+}
+
+private fun UiTreeBuilder.InputFocusFollowVerticalPagerPage(scenario: DemoScenarioSpec?) {
+    val queryState = rememberTextFieldState()
+    val pageState = remember { mutableStateOf(0) }
+    val focusRequester = remember { FocusRequester() }
+    val focusRequestCount = remember { mutableStateOf(0) }
+    val focusManager = LocalFocusManager.current
+    VerticalPager(
+        currentPage = pageState.value,
+        onPageChanged = { pageState.value = it },
+        focusFollowKeyboard = true,
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        Page(key = "search", contentRevision = "search") {
+            Column(
+                spacing = 8.dp,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+            ) {
+                FocusFollowHeader(
+                    scenario = scenario,
+                    fallbackTitle = R.string.demo_scenario_input_focus_follow_vertical_pager_title,
+                    fallbackSummary = R.string.demo_scenario_input_focus_follow_vertical_pager_summary,
+                )
+                FocusFollowControls(
+                    scenario = scenario,
+                    focusRequestCount = focusRequestCount.value,
+                    onFocus = {
+                        if (focusRequester.requestFocus()) focusRequestCount.value += 1
+                    },
+                    onReset = {
+                        focusManager.clearFocus(force = true)
+                        queryState.clearText()
+                        focusRequestCount.value = 0
+                        pageState.value = 0
+                    },
+                )
+                Text(
+                    text = stringResource(R.string.demo_input_search_pager_first_note),
+                    style = UiTextStyle(fontSizeSp = 13.sp),
+                    color = TextDefaults.secondaryColor(),
+                    modifier = Modifier.weight(1f),
+                )
+                SearchBar(
+                    state = queryState,
+                    placeholder = stringResource(R.string.demo_input_search_pager_placeholder),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester)
+                        .testTag(DemoTestTags.INPUT_FOCUS_VERTICAL_PAGER_SEARCH)
+                        .inputScenarioTarget(scenario, DemoAutomationRole.Target),
+                )
+            }
+        }
+        Page(key = "instructions", contentRevision = "instructions") {
+            Column(
+                spacing = 8.dp,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+            ) {
+                Text(text = stringResource(R.string.demo_input_search_pager_second_title))
+                Text(
+                    text = stringResource(R.string.demo_input_search_pager_second_note),
+                    style = UiTextStyle(fontSizeSp = 13.sp),
+                    color = TextDefaults.secondaryColor(),
+                )
+            }
+        }
+    }
+}
+
+private fun UiTreeBuilder.InputFocusFollowPullRefreshPage(scenario: DemoScenarioSpec?) {
+    val queryState = rememberTextFieldState()
+    val refreshingState = remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+    val focusRequestCount = remember { mutableStateOf(0) }
+    val focusManager = LocalFocusManager.current
+    PullToRefresh(
+        isRefreshing = refreshingState.value,
+        onRefresh = { refreshingState.value = true },
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        ScrollableColumn(
+            spacing = 8.dp,
+            focusFollowKeyboard = true,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+        ) {
+            FocusFollowHeader(
+                scenario = scenario,
+                fallbackTitle = R.string.demo_scenario_input_focus_follow_pull_refresh_title,
+                fallbackSummary = R.string.demo_scenario_input_focus_follow_pull_refresh_summary,
+            )
+            FocusFollowControls(
+                scenario = scenario,
+                focusRequestCount = focusRequestCount.value,
+                onFocus = {
+                    if (focusRequester.requestFocus()) focusRequestCount.value += 1
+                },
+                onReset = {
+                    focusManager.clearFocus(force = true)
+                    queryState.clearText()
+                    refreshingState.value = false
+                    focusRequestCount.value = 0
+                },
+            )
+            Button(
+                text = stringResource(
+                    if (refreshingState.value) {
+                        R.string.demo_input_search_stop_refresh
+                    } else {
+                        R.string.demo_input_search_simulate_refresh
+                    },
+                ),
+                variant = ButtonVariant.Outlined,
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { refreshingState.value = !refreshingState.value },
+            )
+            (1..7).forEach { index -> FocusFollowPlaceholder(index) }
+            SearchBar(
+                state = queryState,
+                placeholder = stringResource(R.string.demo_input_search_refresh_placeholder),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .testTag(DemoTestTags.INPUT_FOCUS_PULL_REFRESH_SEARCH)
+                    .inputScenarioTarget(scenario, DemoAutomationRole.Target),
+            )
+            (8..19).forEach { index -> FocusFollowPlaceholder(index) }
+        }
+    }
+}
+
+private fun UiTreeBuilder.FocusFollowHeader(
+    scenario: DemoScenarioSpec?,
+    fallbackTitle: Int,
+    fallbackSummary: Int,
+) {
+    Column(
+        spacing = 6.dp,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            text = stringResource(scenario?.titleRes ?: fallbackTitle),
+            style = Theme.typography.titleLarge,
+        )
+        Text(
+            text = stringResource(scenario?.summaryRes ?: fallbackSummary),
+            style = UiTextStyle(fontSizeSp = 13.sp),
+            color = TextDefaults.secondaryColor(),
+        )
+    }
+}
+
+private fun UiTreeBuilder.FocusFollowControls(
+    scenario: DemoScenarioSpec?,
+    focusRequestCount: Int,
+    onFocus: () -> Unit,
+    onReset: () -> Unit,
+) {
+    Text(
+        text = stringResource(R.string.demo_input_focus_follow_state, focusRequestCount),
+        color = TextDefaults.secondaryColor(),
+        modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.State),
+    )
+    Row(spacing = 8.dp, modifier = Modifier.fillMaxWidth()) {
+        Button(
+            text = stringResource(R.string.demo_input_focus_follow_action),
+            onClick = onFocus,
+            modifier = Modifier
+                .weight(1f)
+                .inputScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+        )
+        Button(
+            text = stringResource(R.string.demo_input_focus_follow_reset),
+            variant = ButtonVariant.Outlined,
+            onClick = onReset,
+            modifier = Modifier
+                .weight(1f)
+                .inputScenarioTarget(scenario, DemoAutomationRole.Reset),
+        )
+    }
+}
+
+private fun UiTreeBuilder.FocusFollowPlaceholder(index: Int) {
+    Text(
+        text = stringResource(R.string.demo_input_search_placeholder_row, index),
+        style = UiTextStyle(fontSizeSp = 13.sp),
+        color = TextDefaults.secondaryColor(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+    )
 }
 
 private fun Modifier.inputScenarioTarget(

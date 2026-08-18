@@ -51,8 +51,16 @@
     <string name="demo_scenario_input_selection_summary">Checkbox, switch, radio, slider, and local color overrides.</string>
     <string name="demo_scenario_input_stress_title">Input stress</string>
     <string name="demo_scenario_input_stress_summary">Long labels, multiline growth, read-only state, and persistent errors.</string>
-    <string name="demo_scenario_input_search_title">Search and focus follow</string>
-    <string name="demo_scenario_input_search_summary">Search input, clear/submit, nested scroll, pager, and refresh focus behavior.</string>
+    <string name="demo_scenario_input_search_title">Search controls</string>
+    <string name="demo_scenario_input_search_summary">Search input, clear and submit behavior, and the disabled state without unrelated nested containers.</string>
+    <string name="demo_scenario_input_focus_follow_lazy_column_title">Focus follow · LazyColumn</string>
+    <string name="demo_scenario_input_focus_follow_lazy_column_summary">A single LazyColumn owns scrolling while keyboard focus brings a lower search field into view.</string>
+    <string name="demo_scenario_input_focus_follow_scrollable_column_title">Focus follow · ScrollableColumn</string>
+    <string name="demo_scenario_input_focus_follow_scrollable_column_summary">A single eager scroll container verifies keyboard focus handoff without an outer scroller.</string>
+    <string name="demo_scenario_input_focus_follow_vertical_pager_title">Focus follow · VerticalPager</string>
+    <string name="demo_scenario_input_focus_follow_vertical_pager_summary">An isolated pager keeps its bottom search field visible while the keyboard opens.</string>
+    <string name="demo_scenario_input_focus_follow_pull_refresh_title">Focus follow · PullToRefresh</string>
+    <string name="demo_scenario_input_focus_follow_pull_refresh_summary">An isolated refresh container verifies both pull ownership and keyboard focus following.</string>
     <string name="demo_scenario_input_derived_summary_title">Derived input summary</string>
     <string name="demo_scenario_input_derived_summary_summary">A deterministic derivedStateOf projection over profile input state.</string>
     <string name="demo_scenario_gesture_tap_title">Tap and pointer input</string>
@@ -76,7 +84,9 @@
     <string name="demo_scenario_animation_list_motion_title">List motion</string>
     <string name="demo_scenario_animation_list_motion_summary">Verify insert and move policies over stable lazy-item identities.</string>
     <string name="demo_scenario_animation_specs_title">Animation specifications</string>
-    <string name="demo_scenario_animation_specs_summary">Verify typed and generic values across easing, repeat, and size specifications.</string>
+    <string name="demo_scenario_animation_specs_summary">Verify typed and generic values across easing and repeat specifications.</string>
+    <string name="demo_scenario_animation_content_size_title">Animated content size</string>
+    <string name="demo_scenario_animation_content_size_summary">A non-scrolling, always-visible stage for verifying animateContentSize expansion and collapse.</string>
     <string name="demo_scenario_animation_transition_title">Transition channels</string>
     <string name="demo_scenario_animation_transition_summary">Verify coordinated transition channels and axis-aware visibility.</string>
     <string name="demo_scenario_animation_infinite_title">Infinite and animatable</string>
@@ -107,6 +117,8 @@
     <string name="demo_scenario_collection_grid_summary">GridLayoutManager-backed collection with deterministic span changes.</string>
     <string name="demo_scenario_collection_pull_refresh_title">Pull to refresh</string>
     <string name="demo_scenario_collection_pull_refresh_summary">Refresh gesture, progress state, and deterministic reset.</string>
+    <string name="demo_scenario_collection_nested_lazy_list_title">Nested lazy-list handoff</string>
+    <string name="demo_scenario_collection_nested_lazy_list_summary">An isolated two-level list for verifying same-axis edge handoff and nested prefetch.</string>
     <string name="demo_scenario_layout_linear_title">Linear layout</string>
     <string name="demo_scenario_layout_linear_summary">Row and Column measurement plus a deterministic mutation workload.</string>
     <string name="demo_scenario_layout_stack_title">Stack layout</string>
@@ -174,6 +186,14 @@
     <string name="demo_environment_theme_system">System</string>
     <string name="demo_environment_theme_light">Light</string>
     <string name="demo_environment_theme_dark">Dark</string>
+    <string name="demo_environment_language">Application language</string>
+    <string name="demo_environment_language_system">System default</string>
+    <string name="demo_environment_language_english">English</string>
+    <string name="demo_environment_language_chinese">Simplified Chinese</string>
+    <string name="demo_environment_language_option_system">System</string>
+    <string name="demo_environment_language_option_english">English</string>
+    <string name="demo_environment_language_option_chinese">中文</string>
+    <string name="demo_environment_language_note">This changes the persisted application locale. The resource scenario below remains an isolated override for testing configuration propagation.</string>
     <string name="demo_environment_runtime">Current runtime environment</string>
     <string name="demo_environment_locale">Locale</string>
     <string name="demo_environment_direction">Layout direction</string>
@@ -182,7 +202,7 @@
     <string name="demo_environment_animator_scale">Animator scale</string>
     <string name="demo_environment_resource_scenario">Open resource configuration scenario</string>
     <string name="demo_environment_cross_activity">Open cross-Activity theme check</string>
-    <string name="demo_environment_scope_note">Theme is an app-wide control. Locale, direction, font scale, and density remain isolated in the resource scenario so benchmark setup cannot leak into unrelated scenarios.</string>
+    <string name="demo_environment_scope_note">Theme and application language are app-wide controls. Direction, font scale, density, and scenario-local locale overrides remain isolated in the resource scenario so benchmark setup cannot leak into unrelated scenarios.</string>
 
     <string name="demo_build_info_title">Build information</string>
     <string name="demo_build_package">Package</string>

@@ -10,6 +10,9 @@ import com.viewcompose.ui.unit.dp
  */
 
 import android.content.pm.ApplicationInfo
+import android.graphics.drawable.RippleDrawable
+import android.os.SystemClock
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -199,6 +202,41 @@ class NavigationContainerInvalidationTest {
     }
 
     @Test
+    fun `navigation state layer stays visible for icon and label touch targets`() {
+        val view = DeclarativeNavigationBarLayout(RuntimeEnvironment.getApplication())
+        bindNavigation(
+            view = view,
+            items = navigationItems(),
+            selectedIndex = 0,
+            selectedStateLayerColor = 0x22112233,
+            unselectedStateLayerColor = 0x22445566,
+        )
+        settleLayout(view)
+
+        val selectedRoot = view.getChildAt(0) as LinearLayout
+        val selectedIcon = ((selectedRoot.getChildAt(0) as FrameLayout).getChildAt(1))
+        val unselectedRoot = view.getChildAt(1) as LinearLayout
+        val unselectedLabel = unselectedRoot.getChildAt(1)
+
+        val selectedRipple = selectedRoot.foreground as RippleDrawable
+        val unselectedRipple = unselectedRoot.foreground as RippleDrawable
+        assertEquals(null, selectedRoot.background)
+        dispatchPressWithForegroundAssertion(selectedRoot, selectedIcon)
+        dispatchPressWithForegroundAssertion(unselectedRoot, unselectedLabel)
+
+        bindNavigation(
+            view = view,
+            items = navigationItems(),
+            selectedIndex = 1,
+            selectedStateLayerColor = 0x22112233,
+            unselectedStateLayerColor = 0x22445566,
+        )
+
+        assertSame(selectedRipple, selectedRoot.foreground)
+        assertSame(unselectedRipple, unselectedRoot.foreground)
+    }
+
+    @Test
     @Suppress("DEPRECATION")
     fun `navigation items expose tab position selection and enabled semantics`() {
         val view = DeclarativeNavigationBarLayout(RuntimeEnvironment.getApplication())
@@ -226,6 +264,56 @@ class NavigationContainerInvalidationTest {
         assertFalse(view.isLayoutRequested)
     }
 
+    private fun dispatchPressWithForegroundAssertion(root: ViewGroup, target: View) {
+        val targetCenter = target.centerRelativeTo(root)
+        val downTime = SystemClock.uptimeMillis()
+        val down = MotionEvent.obtain(
+            downTime,
+            downTime,
+            MotionEvent.ACTION_DOWN,
+            targetCenter.first,
+            targetCenter.second,
+            0,
+        )
+        val cancel = MotionEvent.obtain(
+            downTime,
+            downTime + 16L,
+            MotionEvent.ACTION_CANCEL,
+            targetCenter.first,
+            targetCenter.second,
+            0,
+        )
+        try {
+            assertTrue(root.dispatchTouchEvent(down))
+            root.refreshDrawableState()
+            assertTrue(root.isPressed)
+            assertTrue(
+                requireNotNull(root.foreground).state.contains(android.R.attr.state_pressed),
+            )
+            assertTrue(root.dispatchTouchEvent(cancel))
+            root.isPressed = false
+        } finally {
+            down.recycle()
+            cancel.recycle()
+        }
+    }
+
+    private fun View.centerRelativeTo(ancestor: ViewGroup): Pair<Float, Float> {
+        var relativeLeft = left
+        var relativeTop = top
+        var current = parent as? View
+        while (current != null && current !== ancestor) {
+            relativeLeft += current.left
+            relativeTop += current.top
+            current = current.parent as? View
+        }
+        check(current === ancestor) { "Target is not a descendant of the navigation item." }
+        return Pair(
+            relativeLeft + width / 2f,
+            relativeTop + height / 2f,
+        )
+    }
+
     private fun navigationItems(): List<NavigationBarItem> {
         return listOf(
             NavigationBarItem(
@@ -247,6 +335,8 @@ class NavigationContainerInvalidationTest {
         items: List<NavigationBarItem>,
         selectedIndex: Int,
         onItemSelected: ((Int) -> Unit)? = null,
+        selectedStateLayerColor: Int = 0x22000000,
+        unselectedStateLayerColor: Int = 0x22000000,
     ) {
         view.bind(
             items = items,
@@ -258,8 +348,8 @@ class NavigationContainerInvalidationTest {
             selectedLabelColor = 0xFF000000.toInt(),
             unselectedLabelColor = 0xFF777777.toInt(),
             indicatorColor = 0xFFE0E0E0.toInt(),
-            selectedStateLayerColors = stateLayerColors(0x22000000),
-            unselectedStateLayerColors = stateLayerColors(0x22000000),
+            selectedStateLayerColors = stateLayerColors(selectedStateLayerColor),
+            unselectedStateLayerColors = stateLayerColors(unselectedStateLayerColor),
             iconSize = 24,
             labelSizePx = 12f,
             labelFontWeight = null,

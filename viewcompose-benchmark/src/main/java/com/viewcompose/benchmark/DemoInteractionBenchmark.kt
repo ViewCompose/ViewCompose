@@ -187,7 +187,7 @@ class DemoInteractionBenchmark {
     }
 
     @Test
-    fun collectionsScrollRevision2() {
+    fun collectionsScrollRevision3() {
         var scrollBounds = Rect()
         benchmarkRule.measureRepeated(
             packageName = TARGET_PACKAGE,
@@ -211,7 +211,7 @@ class DemoInteractionBenchmark {
     }
 
     @Test
-    fun collectionsStressMutationRevision2() = benchmarkRule.measureRepeated(
+    fun collectionsStressMutationRevision3() = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),
         compilationMode = CompilationMode.Partial(),

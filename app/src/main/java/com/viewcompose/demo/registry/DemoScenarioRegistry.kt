@@ -47,6 +47,10 @@ internal object DemoScenarioIds {
     val InputSelection = DemoScenarioId("input.selection")
     val InputStress = DemoScenarioId("input.stress")
     val InputSearch = DemoScenarioId("input.search")
+    val InputFocusFollowLazyColumn = DemoScenarioId("input.focus-follow-lazy-column")
+    val InputFocusFollowScrollableColumn = DemoScenarioId("input.focus-follow-scrollable-column")
+    val InputFocusFollowVerticalPager = DemoScenarioId("input.focus-follow-vertical-pager")
+    val InputFocusFollowPullRefresh = DemoScenarioId("input.focus-follow-pull-refresh")
     val InputDerivedSummary = DemoScenarioId("input.derived-summary")
     val GestureTap = DemoScenarioId("gesture.tap")
     val GestureDragSwipe = DemoScenarioId("gesture.drag-swipe")
@@ -59,6 +63,7 @@ internal object DemoScenarioIds {
     val AnimationContent = DemoScenarioId("animation.content")
     val AnimationListMotion = DemoScenarioId("animation.list-motion")
     val AnimationSpecs = DemoScenarioId("animation.specs")
+    val AnimationContentSize = DemoScenarioId("animation.content-size")
     val AnimationTransition = DemoScenarioId("animation.transition")
     val AnimationInfinite = DemoScenarioId("animation.infinite")
     val ModifierVisual = DemoScenarioId("modifier.visual")
@@ -74,6 +79,7 @@ internal object DemoScenarioIds {
     val CollectionLazyRow = DemoScenarioId("collection.lazy-row")
     val CollectionGrid = DemoScenarioId("collection.grid")
     val CollectionPullRefresh = DemoScenarioId("collection.pull-refresh")
+    val CollectionNestedLazyList = DemoScenarioId("collection.nested-lazy-list")
     val LayoutLinear = DemoScenarioId("layout.linear")
     val LayoutStack = DemoScenarioId("layout.stack")
     val LayoutEdges = DemoScenarioId("layout.edges")
@@ -142,7 +148,7 @@ internal object DemoScenarioRegistry {
             titleRes = R.string.demo_scenario_runtime_key_identity_title,
             summaryRes = R.string.demo_scenario_runtime_key_identity_summary,
             host = DemoHostPolicy.SharedFixture,
-            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            verificationKinds = setOf(DemoVerificationKind.Manual),
             route = DemoScenarioRoute(StateActivity::class.java),
             mutable = true,
             ids = TargetIds(
@@ -246,6 +252,50 @@ internal object DemoScenarioRegistry {
                 state = R.id.demo_input_search_state,
                 target = R.id.demo_input_search_target,
             ),
+        ),
+        inputFocusFollowScenario(
+            id = DemoScenarioIds.InputFocusFollowLazyColumn,
+            titleRes = R.string.demo_scenario_input_focus_follow_lazy_column_title,
+            summaryRes = R.string.demo_scenario_input_focus_follow_lazy_column_summary,
+            root = R.id.demo_input_focus_follow_lazy_column_root,
+            ready = R.id.demo_input_focus_follow_lazy_column_ready,
+            primaryAction = R.id.demo_input_focus_follow_lazy_column_primary_action,
+            reset = R.id.demo_input_focus_follow_lazy_column_reset,
+            state = R.id.demo_input_focus_follow_lazy_column_state,
+            target = R.id.demo_input_focus_follow_lazy_column_target,
+        ),
+        inputFocusFollowScenario(
+            id = DemoScenarioIds.InputFocusFollowScrollableColumn,
+            titleRes = R.string.demo_scenario_input_focus_follow_scrollable_column_title,
+            summaryRes = R.string.demo_scenario_input_focus_follow_scrollable_column_summary,
+            root = R.id.demo_input_focus_follow_scrollable_column_root,
+            ready = R.id.demo_input_focus_follow_scrollable_column_ready,
+            primaryAction = R.id.demo_input_focus_follow_scrollable_column_primary_action,
+            reset = R.id.demo_input_focus_follow_scrollable_column_reset,
+            state = R.id.demo_input_focus_follow_scrollable_column_state,
+            target = R.id.demo_input_focus_follow_scrollable_column_target,
+        ),
+        inputFocusFollowScenario(
+            id = DemoScenarioIds.InputFocusFollowVerticalPager,
+            titleRes = R.string.demo_scenario_input_focus_follow_vertical_pager_title,
+            summaryRes = R.string.demo_scenario_input_focus_follow_vertical_pager_summary,
+            root = R.id.demo_input_focus_follow_vertical_pager_root,
+            ready = R.id.demo_input_focus_follow_vertical_pager_ready,
+            primaryAction = R.id.demo_input_focus_follow_vertical_pager_primary_action,
+            reset = R.id.demo_input_focus_follow_vertical_pager_reset,
+            state = R.id.demo_input_focus_follow_vertical_pager_state,
+            target = R.id.demo_input_focus_follow_vertical_pager_target,
+        ),
+        inputFocusFollowScenario(
+            id = DemoScenarioIds.InputFocusFollowPullRefresh,
+            titleRes = R.string.demo_scenario_input_focus_follow_pull_refresh_title,
+            summaryRes = R.string.demo_scenario_input_focus_follow_pull_refresh_summary,
+            root = R.id.demo_input_focus_follow_pull_refresh_root,
+            ready = R.id.demo_input_focus_follow_pull_refresh_ready,
+            primaryAction = R.id.demo_input_focus_follow_pull_refresh_primary_action,
+            reset = R.id.demo_input_focus_follow_pull_refresh_reset,
+            state = R.id.demo_input_focus_follow_pull_refresh_state,
+            target = R.id.demo_input_focus_follow_pull_refresh_target,
         ),
         scenario(
             id = DemoScenarioIds.InputDerivedSummary,
@@ -443,6 +493,18 @@ internal object DemoScenarioRegistry {
             target = R.id.demo_animation_specs_target,
         ),
         animationScenario(
+            id = DemoScenarioIds.AnimationContentSize,
+            titleRes = R.string.demo_scenario_animation_content_size_title,
+            summaryRes = R.string.demo_scenario_animation_content_size_summary,
+            root = R.id.demo_animation_content_size_root,
+            ready = R.id.demo_animation_content_size_ready,
+            primaryAction = R.id.demo_animation_content_size_primary_action,
+            secondaryAction = R.id.demo_animation_content_size_secondary_action,
+            reset = R.id.demo_animation_content_size_reset,
+            state = R.id.demo_animation_content_size_state,
+            target = R.id.demo_animation_content_size_target,
+        ),
+        animationScenario(
             id = DemoScenarioIds.AnimationTransition,
             titleRes = R.string.demo_scenario_animation_transition_title,
             summaryRes = R.string.demo_scenario_animation_transition_summary,
@@ -598,7 +660,11 @@ internal object DemoScenarioRegistry {
             ids = TargetIds(
                 root = R.id.demo_collection_lazy_list_root,
                 ready = R.id.demo_collection_lazy_list_ready,
+                primaryAction = R.id.demo_collection_lazy_list_primary_action,
+                secondaryAction = R.id.demo_collection_lazy_list_secondary_action,
                 reset = R.id.demo_collection_lazy_list_reset,
+                state = R.id.demo_collection_lazy_list_state,
+                target = R.id.demo_collection_lazy_list_target,
             ),
         ),
         scenario(
@@ -619,7 +685,7 @@ internal object DemoScenarioRegistry {
                 state = R.id.demo_collection_stress_state,
                 target = R.id.demo_collection_stress_target,
             ),
-            benchmarkRevision = 2,
+            benchmarkRevision = 3,
             benchmarkActions = listOf(
                 DemoAutomationRole.PrimaryAction,
                 DemoAutomationRole.SecondaryAction,
@@ -667,6 +733,7 @@ internal object DemoScenarioRegistry {
                 root = R.id.demo_collection_grid_root,
                 ready = R.id.demo_collection_grid_ready,
                 reset = R.id.demo_collection_grid_reset,
+                target = R.id.demo_collection_grid_target,
             ),
         ),
         scenario(
@@ -675,13 +742,32 @@ internal object DemoScenarioRegistry {
             titleRes = R.string.demo_scenario_collection_pull_refresh_title,
             summaryRes = R.string.demo_scenario_collection_pull_refresh_summary,
             host = DemoHostPolicy.SharedFixture,
-            verificationKinds = setOf(DemoVerificationKind.Manual),
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
             route = DemoScenarioRoute(CollectionsActivity::class.java),
             mutable = true,
             ids = TargetIds(
                 root = R.id.demo_collection_pull_refresh_root,
                 ready = R.id.demo_collection_pull_refresh_ready,
+                primaryAction = R.id.demo_collection_pull_refresh_primary_action,
+                secondaryAction = R.id.demo_collection_pull_refresh_secondary_action,
                 reset = R.id.demo_collection_pull_refresh_reset,
+                state = R.id.demo_collection_pull_refresh_state,
+                target = R.id.demo_collection_pull_refresh_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.CollectionNestedLazyList,
+            category = DemoScenarioCategory.Collections,
+            titleRes = R.string.demo_scenario_collection_nested_lazy_list_title,
+            summaryRes = R.string.demo_scenario_collection_nested_lazy_list_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(CollectionsActivity::class.java),
+            mutable = false,
+            ids = TargetIds(
+                root = R.id.demo_collection_nested_lazy_list_root,
+                ready = R.id.demo_collection_nested_lazy_list_ready,
+                target = R.id.demo_collection_nested_lazy_list_target,
             ),
         ),
         scenario(
@@ -1395,6 +1481,35 @@ internal object DemoScenarioRegistry {
             ready = ready,
             primaryAction = primaryAction,
             secondaryAction = secondaryAction,
+            reset = reset,
+            state = state,
+            target = target,
+        ),
+    )
+
+    private fun inputFocusFollowScenario(
+        id: DemoScenarioId,
+        titleRes: Int,
+        summaryRes: Int,
+        root: Int,
+        ready: Int,
+        primaryAction: Int,
+        reset: Int,
+        state: Int,
+        target: Int,
+    ): DemoScenarioSpec = scenario(
+        id = id,
+        category = DemoScenarioCategory.Input,
+        titleRes = titleRes,
+        summaryRes = summaryRes,
+        host = DemoHostPolicy.SharedFixture,
+        verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+        route = DemoScenarioRoute(InputActivity::class.java),
+        mutable = true,
+        ids = TargetIds(
+            root = root,
+            ready = ready,
+            primaryAction = primaryAction,
             reset = reset,
             state = state,
             target = target,

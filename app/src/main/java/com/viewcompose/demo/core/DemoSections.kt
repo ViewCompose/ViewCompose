@@ -70,7 +70,9 @@ internal fun UiTreeBuilder.ThemeSwatchRow(
 ) {
     Column(
         spacing = 8.dp,
-        modifier = Modifier.margin(bottom = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .margin(bottom = 8.dp),
     ) {
         Text(
             text = label,

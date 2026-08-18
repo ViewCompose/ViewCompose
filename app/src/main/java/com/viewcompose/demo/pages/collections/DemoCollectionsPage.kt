@@ -14,6 +14,7 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.cornerRadius
+import com.viewcompose.ui.modifier.clip
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.height
@@ -88,6 +89,11 @@ internal fun UiTreeBuilder.PreviewCollectionsPullRefresh() {
     CollectionPage(CollectionFixture.PullRefresh)
 }
 
+@ViewComposePreview(name = "Collections · Nested lazy list", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewCollectionsNestedLazyList() {
+    CollectionPage(CollectionFixture.NestedLazyList)
+}
+
 internal enum class CollectionFixture(
     val scenarioId: DemoScenarioId,
 ) {
@@ -98,6 +104,7 @@ internal enum class CollectionFixture(
     LazyRow(DemoScenarioIds.CollectionLazyRow),
     Grid(DemoScenarioIds.CollectionGrid),
     PullRefresh(DemoScenarioIds.CollectionPullRefresh),
+    NestedLazyList(DemoScenarioIds.CollectionNestedLazyList),
     ;
 
     companion object {
@@ -111,6 +118,29 @@ internal fun UiTreeBuilder.CollectionPage(
     fixture: CollectionFixture,
     scenario: DemoScenarioSpec? = null,
 ) {
+    when (fixture) {
+        CollectionFixture.LazyList -> {
+            CollectionLazyListPage(scenario)
+            return
+        }
+
+        CollectionFixture.Stress -> {
+            CollectionStressPage(scenario)
+            return
+        }
+
+        CollectionFixture.PullRefresh -> {
+            CollectionPullRefreshPage(scenario)
+            return
+        }
+
+        CollectionFixture.NestedLazyList -> {
+            CollectionNestedLazyListPage(scenario)
+            return
+        }
+
+        else -> Unit
+    }
     val benchmarkRotateState = remember { mutableStateOf(false) }
     val reversedState = remember { mutableStateOf(false) }
     val alternateLabelsState = remember { mutableStateOf(false) }
@@ -155,6 +185,7 @@ internal fun UiTreeBuilder.CollectionPage(
         CollectionFixture.LazyRow -> listOf("lazy_row")
         CollectionFixture.Grid -> listOf("grid")
         CollectionFixture.PullRefresh -> listOf("pull_refresh")
+        CollectionFixture.NestedLazyList -> error("Nested lazy fixture uses a dedicated root")
     }
 
     LazyColumn(
@@ -670,7 +701,9 @@ internal fun UiTreeBuilder.CollectionPage(
                         .fillMaxWidth()
                         .height(400.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .shape(SurfaceDefaults.shape()),
+                        .shape(SurfaceDefaults.shape())
+                        .clip()
+                        .scenarioTarget(scenario, DemoAutomationRole.Target),
                 ) { item ->
                     Card(
                         variant = CardVariant.Filled,
@@ -787,6 +820,434 @@ internal fun UiTreeBuilder.CollectionPage(
             }
 
             else -> error("Unknown collection section: $section")
+        }
+    }
+}
+
+private fun UiTreeBuilder.CollectionLazyListPage(scenario: DemoScenarioSpec?) {
+    val reversedState = remember { mutableStateOf(false) }
+    val alternateLabelsState = remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val keyedItems = (if (reversedState.value) listOf("C", "B", "A") else listOf("A", "B", "C"))
+        .map { id ->
+            DemoListItem(
+                id = id,
+                title = if (alternateLabelsState.value) {
+                    stringResource(R.string.demo_collections_lazy_item_alternate, id)
+                } else {
+                    stringResource(R.string.demo_collections_lazy_item, id)
+                },
+            )
+        }
+    LazyColumn(
+        state = listState,
+        spacing = 8.dp,
+        contentPadding = LazyContentPadding.symmetric(horizontal = 8.dp, vertical = 8.dp),
+        prefetchPolicy = LazyLayoutPrefetchPolicy(
+            nestedInitialPrefetchItemCount = 4,
+            itemViewCacheSize = 4,
+        ),
+        modifier = Modifier
+            .fillMaxSize()
+            .scenarioTarget(scenario, DemoAutomationRole.Target),
+    ) {
+        item(
+            key = "controls",
+            contentRevision = listOf(reversedState.value, alternateLabelsState.value),
+            contentType = "controls",
+        ) {
+            ScenarioSection(
+                kind = ScenarioKind.Core,
+                title = stringResource(R.string.demo_collections_lazy_list_title),
+                subtitle = stringResource(R.string.demo_collections_lazy_list_summary),
+            ) {
+                Text(
+                    text = stringResource(
+                        R.string.demo_collections_order,
+                        if (reversedState.value) "C-B-A" else "A-B-C",
+                    ),
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
+                )
+                Row(spacing = 8.dp, modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        text = stringResource(
+                            R.string.demo_collections_show_order,
+                            if (reversedState.value) "A-B-C" else "C-B-A",
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+                        onClick = { reversedState.value = !reversedState.value },
+                    )
+                    Button(
+                        text = stringResource(
+                            if (alternateLabelsState.value) {
+                                R.string.demo_collections_primary_labels
+                            } else {
+                                R.string.demo_collections_alternate_labels
+                            },
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(DemoTestTags.COLLECTIONS_LABEL_TOGGLE)
+                            .scenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
+                        onClick = { alternateLabelsState.value = !alternateLabelsState.value },
+                    )
+                }
+                Button(
+                    text = stringResource(R.string.demo_collections_reset_list),
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = {
+                        reversedState.value = false
+                        alternateLabelsState.value = false
+                    },
+                )
+                Text(
+                    text = stringResource(
+                        R.string.demo_collections_layout_info,
+                        listState.layoutInfo.visibleItemsInfo.map { it.index }.toString(),
+                        listState.canScrollForward,
+                        listState.isScrollInProgress,
+                    ),
+                    style = UiTextStyle(fontSizeSp = 12.sp),
+                    color = TextDefaults.secondaryColor(),
+                )
+            }
+        }
+        stickyHeader(
+            key = "header",
+            contentRevision = keyedItems.size,
+            contentType = "header",
+        ) {
+            Surface(
+                variant = SurfaceVariant.Variant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+            ) {
+                Text(
+                    text = pluralStringResource(
+                        R.plurals.demo_collections_sticky_header,
+                        keyedItems.size,
+                        keyedItems.size,
+                    ),
+                )
+            }
+        }
+        items(
+            items = keyedItems,
+            key = { item -> item.id },
+            contentType = { "stateful-row" },
+        ) { item ->
+            val itemCountState = remember { mutableStateOf(0) }
+            Column(
+                key = item.id,
+                spacing = 6.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .backgroundColor(SurfaceDefaults.backgroundColor())
+                    .padding(12.dp),
+            ) {
+                Text(
+                    text = item.title,
+                    modifier = if (item.id == "A") {
+                        Modifier.testTag(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                    } else {
+                        Modifier
+                    },
+                )
+                Button(
+                    text = stringResource(
+                        R.string.demo_collections_item_click_count,
+                        item.id,
+                        itemCountState.value,
+                    ),
+                    onClick = { itemCountState.value += 1 },
+                )
+            }
+        }
+    }
+}
+
+private fun UiTreeBuilder.CollectionStressPage(scenario: DemoScenarioSpec?) {
+    val rotateState = remember { mutableStateOf(false) }
+    val edgeItemState = remember { mutableStateOf(false) }
+    val stressItems = buildList {
+        if (edgeItemState.value) {
+            add(DemoListItem("X", stringResource(R.string.demo_collections_inserted_item)))
+        }
+        val ids = if (rotateState.value) listOf("C", "D", "A", "B") else listOf("A", "B", "C", "D")
+        ids.forEach { id ->
+            add(
+                DemoListItem(
+                    id = id,
+                    title = stringResource(R.string.demo_collections_stress_item, id),
+                ),
+            )
+        }
+    }
+    LazyColumn(
+        spacing = 8.dp,
+        contentPadding = LazyContentPadding.all(8.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .backgroundColor(SurfaceDefaults.variantBackgroundColor())
+            .scenarioTarget(scenario, DemoAutomationRole.Target),
+    ) {
+        item(
+            key = "controls",
+            contentRevision = listOf(rotateState.value, edgeItemState.value),
+            contentType = "controls",
+        ) {
+            ScenarioSection(
+                kind = ScenarioKind.Stress,
+                title = stringResource(R.string.demo_collections_stress_title),
+                subtitle = stringResource(R.string.demo_collections_stress_summary),
+            ) {
+                Row(spacing = 8.dp, modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        text = stringResource(
+                            if (rotateState.value) {
+                                R.string.demo_collections_linear_order
+                            } else {
+                                R.string.demo_collections_rotated_order
+                            },
+                        ),
+                        size = ButtonSize.Compact,
+                        modifier = Modifier.scenarioTarget(
+                            scenario,
+                            DemoAutomationRole.PrimaryAction,
+                        ),
+                        onClick = { rotateState.value = !rotateState.value },
+                    )
+                    Button(
+                        text = stringResource(
+                            if (edgeItemState.value) {
+                                R.string.demo_collections_remove_x
+                            } else {
+                                R.string.demo_collections_insert_x
+                            },
+                        ),
+                        size = ButtonSize.Compact,
+                        modifier = Modifier.scenarioTarget(
+                            scenario,
+                            DemoAutomationRole.SecondaryAction,
+                        ),
+                        onClick = { edgeItemState.value = !edgeItemState.value },
+                    )
+                }
+                Text(
+                    text = stringResource(
+                        R.string.demo_collections_active_ids,
+                        stressItems.joinToString(" -> ") { item -> item.id },
+                    ),
+                    color = TextDefaults.secondaryColor(),
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
+                )
+                Button(
+                    text = stringResource(R.string.demo_collections_reset_stress),
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = {
+                        rotateState.value = false
+                        edgeItemState.value = false
+                    },
+                )
+            }
+        }
+        items(
+            items = stressItems,
+            key = { item -> item.id },
+            contentType = { "stress-row" },
+        ) { item ->
+            val itemCountState = remember { mutableStateOf(0) }
+            Surface(variant = SurfaceVariant.Default, modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    key = item.id,
+                    spacing = 6.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                ) {
+                    Text(text = item.title)
+                    Text(
+                        text = stringResource(R.string.demo_collections_stable_key, item.id),
+                        color = TextDefaults.secondaryColor(),
+                    )
+                    Button(
+                        text = stringResource(
+                            R.string.demo_collections_item_click_count,
+                            item.id,
+                            itemCountState.value,
+                        ),
+                        size = ButtonSize.Compact,
+                        onClick = { itemCountState.value += 1 },
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun UiTreeBuilder.CollectionPullRefreshPage(scenario: DemoScenarioSpec?) {
+    val refreshingState = remember { mutableStateOf(false) }
+    val refreshCountState = remember { mutableStateOf(0) }
+    PullToRefresh(
+        isRefreshing = refreshingState.value,
+        onRefresh = {
+            refreshingState.value = true
+            refreshCountState.value += 1
+        },
+        modifier = Modifier
+            .fillMaxSize()
+            .scenarioTarget(scenario, DemoAutomationRole.Target),
+    ) {
+        ScrollableColumn(
+            spacing = 8.dp,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+        ) {
+            ScenarioSection(
+                kind = ScenarioKind.Core,
+                title = stringResource(R.string.demo_collections_pull_refresh_title),
+                subtitle = stringResource(R.string.demo_collections_pull_refresh_summary),
+            ) {
+                Text(
+                    text = pluralStringResource(
+                        R.plurals.demo_collections_refresh_count,
+                        refreshCountState.value,
+                        refreshCountState.value,
+                    ),
+                    color = TextDefaults.secondaryColor(),
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
+                )
+                Button(
+                    text = stringResource(R.string.demo_collections_simulate_refresh),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+                    onClick = {
+                        refreshingState.value = true
+                        refreshCountState.value += 1
+                    },
+                )
+                Button(
+                    text = stringResource(R.string.demo_collections_complete_refresh),
+                    enabled = refreshingState.value,
+                    variant = ButtonVariant.Tonal,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .scenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
+                    onClick = { refreshingState.value = false },
+                )
+                Button(
+                    text = stringResource(R.string.demo_collections_reset_refresh),
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = {
+                        refreshingState.value = false
+                        refreshCountState.value = 0
+                    },
+                )
+                Text(
+                    text = stringResource(R.string.demo_collections_pull_refresh_hint),
+                    color = TextDefaults.secondaryColor(),
+                )
+            }
+            (1..12).forEach { index ->
+                Surface(
+                    variant = SurfaceVariant.Default,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                ) {
+                    Text(
+                        text = pluralStringResource(
+                            R.plurals.demo_collections_refresh_item,
+                            refreshCountState.value,
+                            index,
+                            refreshCountState.value,
+                        ),
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun UiTreeBuilder.CollectionNestedLazyListPage(scenario: DemoScenarioSpec?) {
+    LazyColumn(
+        spacing = 8.dp,
+        contentPadding = LazyContentPadding.all(8.dp),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        item(key = "header", contentRevision = "header") {
+            ScenarioSection(
+                kind = ScenarioKind.Stress,
+                title = stringResource(
+                    scenario?.titleRes ?: R.string.demo_scenario_collection_nested_lazy_list_title,
+                ),
+                subtitle = stringResource(
+                    scenario?.summaryRes ?: R.string.demo_scenario_collection_nested_lazy_list_summary,
+                ),
+            ) {
+                Text(
+                    text = stringResource(R.string.demo_collections_nested_lazy_instruction),
+                    color = TextDefaults.secondaryColor(),
+                )
+            }
+        }
+        items((1..3).toList(), key = { "outer-before-$it" }) { index ->
+            Text(
+                text = stringResource(R.string.demo_collections_nested_outer_item, index),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+            )
+        }
+        item(key = "inner-list", contentRevision = "inner-list") {
+            LazyColumn(
+                items = (1..12).toList(),
+                key = { index -> "inner-$index" },
+                spacing = 6.dp,
+                contentPadding = 8.dp,
+                prefetchPolicy = LazyLayoutPrefetchPolicy(
+                    nestedInitialPrefetchItemCount = 4,
+                    itemViewCacheSize = 4,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(260.dp)
+                    .backgroundColor(SurfaceDefaults.variantBackgroundColor())
+                    .shape(SurfaceDefaults.shape())
+                    .clip()
+                    .scenarioTarget(scenario, DemoAutomationRole.Target),
+            ) { index ->
+                Surface(
+                    variant = SurfaceVariant.Default,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                ) {
+                    Text(text = stringResource(R.string.demo_collections_nested_inner_item, index))
+                }
+            }
+        }
+        items((4..8).toList(), key = { "outer-after-$it" }) { index ->
+            Text(
+                text = stringResource(R.string.demo_collections_nested_outer_item, index),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+            )
         }
     }
 }

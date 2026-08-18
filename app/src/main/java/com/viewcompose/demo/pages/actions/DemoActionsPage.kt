@@ -265,7 +265,7 @@ private fun UiTreeBuilder.ActionsFabFixture(
                     modifier = Modifier.actionsScenarioTarget(
                         scenario,
                         DemoAutomationRole.PrimaryAction,
-                    ),
+                    ).margin(horizontal = 12.dp),
                 ) {
                     Icon(
                         source = ImageSource.Resource(R.drawable.demo_media_icon),
@@ -289,7 +289,7 @@ private fun UiTreeBuilder.ActionsFabVariants(
         spacing = 12.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .margin(top = 16.dp, bottom = 24.dp)
+            .margin(left = 12.dp, top = 16.dp, right = 12.dp, bottom = 24.dp)
             .actionsScenarioTarget(scenario, DemoAutomationRole.Target),
     ) {
         FixtureTitle(R.string.demo_actions_fab_variants)

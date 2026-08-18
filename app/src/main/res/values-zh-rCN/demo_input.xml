@@ -111,4 +111,7 @@
     <string name="demo_input_summary_state_default">派生状态：默认</string>
     <string name="demo_input_summary_toggle">切换派生输入</string>
     <string name="demo_input_summary_reset">重置派生输入</string>
+    <string name="demo_input_focus_follow_state">焦点请求：%1$d</string>
+    <string name="demo_input_focus_follow_action">聚焦搜索框</string>
+    <string name="demo_input_focus_follow_reset">重置焦点场景</string>
 </resources>

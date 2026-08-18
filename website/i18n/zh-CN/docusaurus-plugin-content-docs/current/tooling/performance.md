@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: b6835bb65c803fe4fd47156325a6390071090b2ee6016ca18f4153d74c37c66a
+translation_source_hash: fdd594701a9a39a421715aec9aedfc2bbc2dafa836a1cefd9e3035436972f98b
 translation_status: current
 ---
 
@@ -213,11 +213,11 @@ Android Views，ViewCompose 在列表变更中的 heap/RSS 高 `12.2%/2.8%`，�
 
 1. `diagnosticsThemeLongFlingToBottomAndBackRevision2` 在每个方向执行 8 次固定大力度 fling，并在
    对应手势序列后分别验证真实底部和顶部锚点。
-2. `collectionsScrollRevision2` 在 setup 阶段捕获嵌套 LazyColumn 边界，然后在 measured block 内
+2. `collectionsScrollRevision3` 在 setup 阶段捕获直接场景 LazyColumn 边界，然后在 measured block 内
    每个方向执行 8 次固定 swipe，期间不执行 Accessibility 查询。每次 swipe 使用 500 ms 物理
    稳定窗口，因为 benchmark setup 会关闭 UiAutomator 隐式 idle timeout；省略该窗口会让惯性
    滚动重叠，并在 FrameTimeline 中产生与工作负载无关的 `Buffer Stuffing`。
-3. `collectionsStressMutationRevision2` 执行 8 个完整 rotate/insert/reset 闭环，并断言每次 reset
+3. `collectionsStressMutationRevision3` 执行 8 个完整 rotate/insert/reset 闭环，并断言每次 reset
    都恢复原始逻辑顺序。
 4. 三个方法都使用相同的 measured block 外 5 秒启动稳定窗口。正式原始结果通过 AndroidX
    benchmark payload 记录 `scenario`、`workloadRevision` 和 `clockPolicy`。
@@ -228,8 +228,15 @@ Android Views，ViewCompose 在列表变更中的 heap/RSS 高 `12.2%/2.8%`，�
 | 工作负载 | Frame CPU P50/P95 | Run-P50 CV |
 | --- | ---: | ---: |
 | `diagnostics.theme@2` 固定长 fling 往返 | 3.067 / 7.336 ms | 0.008 |
-| `collection.stress@2` 嵌套列表滚动往返 | 3.357 / 6.288 ms | 0.018 |
-| `collection.stress@2` 8 轮变更 | 4.358 / 10.507 ms | 0.018 |
+| `collection.stress@2` 嵌套列表滚动往返（已退役 fixture） | 3.357 / 6.288 ms | 0.018 |
+| `collection.stress@2` 8 轮变更（已退役 fixture） | 4.358 / 10.507 ms | 0.018 |
+
+2026-08-17 的人工审查修复移除了 `collection.stress` 的外层/内层列表嵌套，并把场景推进到
+revision 3。Revision 2 数值仅保留为已退役 fixture 的历史证据，不能作为 revision 3 基线。
+目前尚未验收 revision 3 benchmark 批次，因此性能结论为 `inconclusive`：语义工作负载得以
+保留，但几何与手势 Ownership 已改变。下一步是在相同 SM-G991B 协议上重新采集滚动与 8 轮
+变更批次，针对明确匹配的 control 比较绝对 P50/P95 与归一化差异，并且仅在现有稳定性和时钟
+策略 Gate 通过后验收结果。
 
 集合滚动预检也是手势驱动污染的参考案例。最初在 measured block 中重复定位 target 会增加
 Accessibility 遍历；移除后，连续无间隔 swipe 仍产生约 3.6、7.2 与 14.7 ms 的 run-P50 平台。

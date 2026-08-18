@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
 import android.view.View.MeasureSpec
 import android.view.ViewGroup
@@ -17,7 +18,6 @@ import androidx.core.view.doOnLayout
 import com.viewcompose.overlay.android.asOverlayRenderContainerHandle
 import com.viewcompose.ui.overlay.OVERLAY_ANCHOR_TAG_KEY
 import com.viewcompose.ui.unit.UiDp
-import com.viewcompose.ui.unit.dp
 import com.viewcompose.host.android.environment.AndroidEnvironmentBridge
 import com.viewcompose.ui.foundation.DialogOverlayContent
 import com.viewcompose.ui.foundation.DialogOverlayHandle
@@ -36,6 +36,7 @@ import com.viewcompose.ui.foundation.PopupSize
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.foundation.OverlaySurfaceSession
 import com.viewcompose.ui.foundation.createOverlaySurfaceSession
+import kotlin.math.ceil
 
 /**
  * Creates Android [Dialog] handles for declarative dialog requests.
@@ -189,13 +190,24 @@ private class AndroidPopupOverlayHandle(
     spec: PopupOverlaySpec,
     content: PopupOverlayContent,
 ) : PopupOverlayHandle {
-    private val density = AndroidEnvironmentBridge.fromContext(rootView.context).density
-    private val popupContainer = FrameLayout(rootView.context).apply {
+    private val popupContentContainer = FrameLayout(rootView.context).apply {
         background = ColorDrawable(Color.TRANSPARENT)
+        clipChildren = false
+        clipToPadding = false
         layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
         )
+    }
+    private val popupContainer = FrameLayout(rootView.context).apply {
+        background = ColorDrawable(Color.TRANSPARENT)
+        clipChildren = false
+        clipToPadding = false
+        layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+        )
+        addView(popupContentContainer)
     }
     private val popupWindow = PopupWindow(
         popupContainer,
@@ -204,10 +216,12 @@ private class AndroidPopupOverlayHandle(
         spec.focusable,
     ).apply {
         setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        elevation = density.toPx(12.dp)
+        // Popup content owns its shape and elevation. A second platform elevation produces a
+        // rectangular shadow around the exact PopupWindow bounds and clips the content shadow.
+        elevation = 0f
     }
     private val surfaceSession: OverlaySurfaceSession = createOverlaySurfaceSession(
-        container = popupContainer.asOverlayRenderContainerHandle(),
+        container = popupContentContainer.asOverlayRenderContainerHandle(),
         content = content.surface,
     )
     private var currentSpec = spec
@@ -238,6 +252,20 @@ private class AndroidPopupOverlayHandle(
     }
 
     init {
+        popupWindow.setTouchInterceptor { _, event ->
+            if (
+                event.actionMasked == MotionEvent.ACTION_DOWN &&
+                currentSpec.dismissOnClickOutside &&
+                popupContainer.isOutsideContentBounds(event.x, event.y)
+            ) {
+                // Transparent shadow outsets remain outside the semantic popup content.
+                // Dismissing through PopupWindow preserves the single user-dismiss callback path.
+                popupWindow.dismiss()
+                true
+            } else {
+                false
+            }
+        }
         popupWindow.setOnDismissListener {
             if (!ignoreNextDismiss && !disposed) {
                 userDismissed = true
@@ -294,14 +322,42 @@ private class AndroidPopupOverlayHandle(
                 rootLocation[1] + rootView.height,
             )
         }
+        val shadowOutset = popupContentContainer.requiredNativeShadowOutsetPx()
+        if (
+            popupContainer.paddingLeft != shadowOutset ||
+            popupContainer.paddingTop != shadowOutset ||
+            popupContainer.paddingRight != shadowOutset ||
+            popupContainer.paddingBottom != shadowOutset
+        ) {
+            popupContainer.setPadding(
+                shadowOutset,
+                shadowOutset,
+                shadowOutset,
+                shadowOutset,
+            )
+        }
         popupContainer.measure(
             visibleFrame.width().atMostMeasureSpec(),
             visibleFrame.height().atMostMeasureSpec(),
         )
-        val popupWidth = popupContainer.measuredWidth
-        val popupHeight = popupContainer.measuredHeight
+        val windowWidth = popupContainer.measuredWidth
+        val windowHeight = popupContainer.measuredHeight
+        val contentWidth = (
+            windowWidth - popupContainer.paddingLeft - popupContainer.paddingRight
+        ).coerceAtLeast(0)
+        val contentHeight = (
+            windowHeight - popupContainer.paddingTop - popupContainer.paddingBottom
+        ).coerceAtLeast(0)
         val anchorLocation = IntArray(2)
         anchor.getLocationOnScreen(anchorLocation)
+        val contentViewportLeft = (visibleFrame.left + popupContainer.paddingLeft)
+            .coerceAtMost(visibleFrame.right)
+        val contentViewportTop = (visibleFrame.top + popupContainer.paddingTop)
+            .coerceAtMost(visibleFrame.bottom)
+        val contentViewportRight = (visibleFrame.right - popupContainer.paddingRight)
+            .coerceAtLeast(contentViewportLeft)
+        val contentViewportBottom = (visibleFrame.bottom - popupContainer.paddingBottom)
+            .coerceAtLeast(contentViewportTop)
         val position = PopupPositioner.calculate(
             anchorBounds = PopupBounds(
                 left = anchorLocation[0],
@@ -310,14 +366,14 @@ private class AndroidPopupOverlayHandle(
                 bottom = anchorLocation[1] + anchor.height,
             ),
             popupSize = PopupSize(
-                width = popupWidth,
-                height = popupHeight,
+                width = contentWidth,
+                height = contentHeight,
             ),
             viewportBounds = PopupBounds(
-                left = visibleFrame.left,
-                top = visibleFrame.top,
-                right = visibleFrame.right,
-                bottom = visibleFrame.bottom,
+                left = contentViewportLeft,
+                top = contentViewportTop,
+                right = contentViewportRight,
+                bottom = contentViewportBottom,
             ),
             alignment = currentSpec.alignment,
             layoutDirection = if (anchor.layoutDirection == View.LAYOUT_DIRECTION_RTL) {
@@ -330,33 +386,35 @@ private class AndroidPopupOverlayHandle(
             offsetX = currentSpec.offsetX,
             offsetY = currentSpec.offsetY,
         )
+        val windowX = position.x - popupContainer.paddingLeft
+        val windowY = position.y - popupContainer.paddingTop
         if (!popupWindow.isShowing) {
-            popupWindow.width = popupWidth
-            popupWindow.height = popupHeight
+            popupWindow.width = windowWidth
+            popupWindow.height = windowHeight
             popupWindow.showAtLocation(
                 rootView,
                 Gravity.NO_GRAVITY,
-                position.x,
-                position.y,
+                windowX,
+                windowY,
             )
         } else if (
-            lastX != position.x ||
-            lastY != position.y ||
-            lastWidth != popupWidth ||
-            lastHeight != popupHeight
+            lastX != windowX ||
+            lastY != windowY ||
+            lastWidth != windowWidth ||
+            lastHeight != windowHeight
         ) {
             // Avoid an unnecessary PopupWindow relayout when measured geometry is unchanged.
             popupWindow.update(
-                position.x,
-                position.y,
-                popupWidth,
-                popupHeight,
+                windowX,
+                windowY,
+                windowWidth,
+                windowHeight,
             )
         }
-        lastX = position.x
-        lastY = position.y
-        lastWidth = popupWidth
-        lastHeight = popupHeight
+        lastX = windowX
+        lastY = windowY
+        lastWidth = windowWidth
+        lastHeight = windowHeight
     }
 
     override fun dismiss() {
@@ -413,6 +471,30 @@ private class AndroidPopupOverlayHandle(
     }
 }
 
+private fun View.requiredNativeShadowOutsetPx(): Int {
+    fun View.maximumNativeElevationPx(): Float {
+        if (visibility != View.VISIBLE) {
+            return 0f
+        }
+        var maximum = (elevation + translationZ).coerceAtLeast(0f)
+        if (this is ViewGroup) {
+            for (index in 0 until childCount) {
+                maximum = maxOf(maximum, getChildAt(index).maximumNativeElevationPx())
+            }
+        }
+        return maximum
+    }
+
+    return ceil(maximumNativeElevationPx() * POPUP_NATIVE_SHADOW_OUTSET_MULTIPLIER).toInt()
+}
+
+private fun ViewGroup.isOutsideContentBounds(x: Float, y: Float): Boolean {
+    return x < paddingLeft ||
+        x >= width - paddingRight ||
+        y < paddingTop ||
+        y >= height - paddingBottom
+}
+
 /** Finds the first matching overlay anchor using depth-first child order. */
 private fun View.findAnchorTarget(anchorId: String): View? {
     if (getTag(OVERLAY_ANCHOR_TAG_KEY) == anchorId) {
@@ -445,3 +527,7 @@ private fun Int.atMostMeasureSpec(): Int {
         MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
     }
 }
+
+// Android's ambient and spot shadows vary by API and light configuration. Twice the effective Z
+// conservatively contains both components without making the window itself a second shadow owner.
+private const val POPUP_NATIVE_SHADOW_OUTSET_MULTIPLIER = 2f

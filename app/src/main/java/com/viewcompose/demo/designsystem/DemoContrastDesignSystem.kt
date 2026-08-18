@@ -454,6 +454,7 @@ internal object DemoDesignSystemBundles {
             else -> UiShape.rounded(20.dp)
         }
         val indicatorShape = if (cut) UiShape.cut(5.dp) else UiShape.roundedRelative(0.5f)
+        val segmentedContainerShape = if (cupertino) UiShape.continuous(10.dp) else navShape
         val onSurfaceLayers = stateLayers(colors.onSurface)
         return DemoComponentRecipes(
             action = DemoActionRecipe(
@@ -562,8 +563,8 @@ internal object DemoDesignSystemBundles {
                 selectedContainerColor = if (cupertino) colors.surface else colors.primaryContainer,
                 selectedContentColor = if (cupertino) colors.onSurface else colors.onPrimaryContainer,
                 unselectedContentColor = colors.onSurfaceVariant,
-                containerShape = if (cupertino) UiShape.continuous(10.dp) else navShape,
-                itemShape = if (cupertino) UiShape.continuous(8.dp) else indicatorShape,
+                containerShape = segmentedContainerShape,
+                itemShape = segmentedContainerShape.inset(2.dp),
                 height = 44.dp,
                 borderColor = colors.outline,
                 stateLayers = onSurfaceLayers,

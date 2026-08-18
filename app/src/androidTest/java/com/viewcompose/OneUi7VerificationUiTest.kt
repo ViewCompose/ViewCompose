@@ -1,10 +1,13 @@
 package com.viewcompose
 
+import android.graphics.drawable.RippleDrawable
 import android.os.Build
 import android.os.SystemClock
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.TextView
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -17,6 +20,7 @@ import com.viewcompose.demo.contract.DemoAutomationRole
 import com.viewcompose.oneui7.OneUi7Reference
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -455,6 +459,69 @@ class OneUi7VerificationUiTest {
         }
     }
 
+    @Test
+    fun navigation_quickTextTapRetainsRippleThroughSelectionPatch() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        launchDemoActivity<OneUi7VerificationActivity>(
+            OneUi7VerificationActivity.newIntent(context = context),
+        ).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                activity.scrollFixtureToPosition(NAVIGATION_POSITION)
+            }
+            waitForUiIdle()
+
+            lateinit var tappedItem: View
+            lateinit var retainedRipple: RippleDrawable
+            scenario.onActivity { activity ->
+                val navigation = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_NAVIGATION)
+                tappedItem = navigation.descendantViews().first { view ->
+                    val info = AccessibilityNodeInfoCompat.wrap(view.createAccessibilityNodeInfo())
+                    info.collectionItemInfo?.columnIndex == 1
+                }
+                val label = tappedItem.descendantViews().filterIsInstance<TextView>().first()
+                val center = label.centerRelativeTo(tappedItem as ViewGroup)
+                retainedRipple = tappedItem.background as RippleDrawable
+                val downTime = SystemClock.uptimeMillis()
+                val down = MotionEvent.obtain(
+                    downTime,
+                    downTime,
+                    MotionEvent.ACTION_DOWN,
+                    center.first,
+                    center.second,
+                    0,
+                )
+                val up = MotionEvent.obtain(
+                    downTime,
+                    downTime + 16L,
+                    MotionEvent.ACTION_UP,
+                    center.first,
+                    center.second,
+                    0,
+                )
+                try {
+                    assertTrue(tappedItem.dispatchTouchEvent(down))
+                    assertTrue(tappedItem.dispatchTouchEvent(up))
+                } finally {
+                    down.recycle()
+                    up.recycle()
+                }
+            }
+
+            SystemClock.sleep(48L)
+            captureDeviceScreenshot("oneui-navigation-text-quick-release")
+            waitForUiIdle()
+            scenario.onActivity {
+                assertTrue(tappedItem.isAttachedToWindow)
+                assertSame(retainedRipple, tappedItem.background)
+                val itemNode = AccessibilityNodeInfoCompat.wrap(
+                    tappedItem.createAccessibilityNodeInfo(),
+                )
+                assertTrue(itemNode.isSelected)
+            }
+        }
+    }
+
     private fun FixtureCase.metadata(productionMetadata: String): String = buildString {
         appendLine("suite=one-ui-7-five-component-alpha")
         appendLine("reference=One UI 7")
@@ -512,6 +579,22 @@ class OneUi7VerificationUiTest {
             }
         }
         collect(this@descendantViews)
+    }
+
+    private fun View.centerRelativeTo(ancestor: ViewGroup): Pair<Float, Float> {
+        var relativeLeft = left
+        var relativeTop = top
+        var current = parent as? View
+        while (current != null && current !== ancestor) {
+            relativeLeft += current.left
+            relativeTop += current.top
+            current = current.parent as? View
+        }
+        check(current === ancestor) { "Target is not a descendant of the navigation item." }
+        return Pair(
+            relativeLeft + width / 2f,
+            relativeTop + height / 2f,
+        )
     }
 
     private fun OneUi7VerificationActivity.scenarioTag(

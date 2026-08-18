@@ -176,12 +176,28 @@ internal object ViewModifierApplier {
                 resolved = resolved,
             )
         }
-        if (previous == null || surfaceChanged(previous, next)) {
-            ModifierSurfaceStyleApplier.applySurfaceStyle(
-                view = view,
-                resolved = resolved,
-                nodeStyle = nodeStyle,
-            )
+        when {
+            previous == null || surfaceStructureChanged(previous, next) -> {
+                ModifierSurfaceStyleApplier.applySurfaceStyle(
+                    view = view,
+                    resolved = resolved,
+                    nodeStyle = nodeStyle,
+                )
+            }
+            surfaceInteractionChanged(previous, next) -> {
+                val updated = ModifierSurfaceStyleApplier.updateInteractionColors(
+                    view = view,
+                    defaultRippleColor = nodeStyle.defaultRippleColor,
+                    interactionIndication = nodeStyle.interactionIndication,
+                )
+                if (!updated) {
+                    ModifierSurfaceStyleApplier.applySurfaceStyle(
+                        view = view,
+                        resolved = resolved,
+                        nodeStyle = nodeStyle,
+                    )
+                }
+            }
         }
         if (previous == null || commonHostPropertiesChanged(previous, next)) {
             ModifierInteractionApplier.applyCommonHostProperties(
@@ -249,7 +265,7 @@ internal object ViewModifierApplier {
         next: AppliedModifierState,
     ): Boolean = previous.resolved.drawElements != next.resolved.drawElements
 
-    private fun surfaceChanged(
+    private fun surfaceStructureChanged(
         previous: AppliedModifierState,
         next: AppliedModifierState,
     ): Boolean {
@@ -262,13 +278,19 @@ internal object ViewModifierApplier {
             previousStyle.borderColor != nextStyle.borderColor ||
             previousStyle.cornerRadius != nextStyle.cornerRadius ||
             previousStyle.shape != nextStyle.shape ||
-            previousStyle.defaultRippleColor != nextStyle.defaultRippleColor ||
-            previousStyle.interactionIndication != nextStyle.interactionIndication ||
             previousStyle.clickable != nextStyle.clickable ||
             previousStyle.surfaceInsets != nextStyle.surfaceInsets ||
             previousStyle.clipContent != nextStyle.clipContent ||
             previous.resolved.clip != next.resolved.clip ||
             previous.resolved.graphicsLayer?.clip != next.resolved.graphicsLayer?.clip
+    }
+
+    private fun surfaceInteractionChanged(
+        previous: AppliedModifierState,
+        next: AppliedModifierState,
+    ): Boolean {
+        return previous.nodeStyle.defaultRippleColor != next.nodeStyle.defaultRippleColor ||
+            previous.nodeStyle.interactionIndication != next.nodeStyle.interactionIndication
     }
 
     private fun commonHostPropertiesChanged(

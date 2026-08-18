@@ -1,6 +1,6 @@
 ---
 translation_source: guides/nested-scroll.md
-translation_source_hash: 870b2e1a6993df7a4a4c4f09cabeb4b89fb0196bf91115f63cfb02970257c2b2
+translation_source_hash: 24bc6a2fc809bccac8a2a506879b99414d722711a5991bac2bf4fc64c84f3242
 translation_status: current
 ---
 
@@ -44,6 +44,11 @@ translation_status: current
 
 已实现 Android nested scrolling 的原生 View 会自动加入同一链路。其他 `AndroidView` child
 不能发出原生滚动阶段，可显式使用 `NestedScrollDispatcher`。
+
+同轴嵌套框架容器会按方向与边缘仲裁 Pointer Stream。Child 能沿手势方向继续滚动时保留该
+Drag，到达对应逻辑边缘后释放，并且不会捕获交叉轴 Drag。垂直 Child 位于顶部且处于启用、
+空闲的 `PullToRefresh` 内时，初始向下拖动归刷新 Host；向上位移以及离开顶部后的向下位移仍由
+Child 滚动。取消手势会结束所有临时拦截保留。
 
 ## 4. 示例
 

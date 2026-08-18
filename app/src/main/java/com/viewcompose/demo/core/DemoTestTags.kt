@@ -8,6 +8,8 @@ internal object DemoTestTags {
     const val HOME_NAVIGATION_BAR = "home_navigation_bar"
     const val SETTINGS_THEME_STATUS = "settings_theme_status"
     const val SETTINGS_THEME_CONTROL = "settings_theme_control"
+    const val SETTINGS_LANGUAGE_STATUS = "settings_language_status"
+    const val SETTINGS_LANGUAGE_CONTROL = "settings_language_control"
     const val SETTINGS_THEME_XML_ENTRY = "settings_theme_xml_entry"
     const val SETTINGS_MATERIAL3_DEFAULT_ENTRY = "settings_material3_default_entry"
     const val SETTINGS_THEME_CUSTOM_ENTRY = "settings_theme_custom_entry"
@@ -159,9 +161,12 @@ internal object DemoTestTags {
     const val COLLECTIONS_GRID_THREE_COLS = "collections_grid_three_cols"
     const val COLLECTIONS_GRID_FIRST_ITEM = "collections_grid_first_item"
     const val INPUT_FOCUS_SCROLLABLE_SEARCH = "input_focus_scrollable_search"
+    const val INPUT_FOCUS_LAZY_COLUMN_SEARCH = "input_focus_lazy_column_search"
     const val INPUT_FOCUS_VERTICAL_PAGER_SEARCH = "input_focus_vertical_pager_search"
     const val INPUT_FOCUS_PULL_REFRESH_SEARCH = "input_focus_pull_refresh_search"
     const val INPUT_STRESS_ERROR = "input_stress_error"
+    const val INPUT_BIO_FIELD = "input_bio_field"
+    const val INPUT_STRESS_NOTES_FIELD = "input_stress_notes_field"
 
 
     const val ANIMATION_VISIBILITY_TOGGLE = "animation_visibility_toggle"

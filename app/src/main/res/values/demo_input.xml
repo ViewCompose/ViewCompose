@@ -111,4 +111,7 @@
     <string name="demo_input_summary_state_default">Derived state: default</string>
     <string name="demo_input_summary_toggle">Toggle derived input</string>
     <string name="demo_input_summary_reset">Reset derived input</string>
+    <string name="demo_input_focus_follow_state">Focus requests: %1$d</string>
+    <string name="demo_input_focus_follow_action">Focus search</string>
+    <string name="demo_input_focus_follow_reset">Reset focus fixture</string>
 </resources>

@@ -172,6 +172,20 @@ internal object ModifierSurfaceStyleApplier {
         )
     }
 
+    /** Updates a retained ripple selector without interrupting an in-flight press animation. */
+    fun updateInteractionColors(
+        view: View,
+        defaultRippleColor: Int,
+        interactionIndication: UiInteractionIndication?,
+    ): Boolean {
+        val ripple = view.background.findRippleDrawable()
+            ?: view.foreground.findRippleDrawable()
+            ?: return false
+        ripple.setColor(interactionColorStateList(defaultRippleColor, interactionIndication))
+        view.invalidate()
+        return true
+    }
+
     private fun restoreOriginalBackground(view: View) {
         view.background = cloneDrawable(
             view.getTag(R.id.viewcompose_original_background) as? Drawable,
@@ -298,6 +312,14 @@ internal object ModifierSurfaceStyleApplier {
             0,
             insets.bottom,
         )
+    }
+
+    private fun Drawable?.findRippleDrawable(): RippleDrawable? = when (this) {
+        is RippleDrawable -> this
+        is InsetDrawable -> drawable.findRippleDrawable()
+        is LayerDrawable -> (0 until numberOfLayers)
+            .firstNotNullOfOrNull { index -> getDrawable(index).findRippleDrawable() }
+        else -> null
     }
 
     private fun CornerRadiusModifierElement.toUiShape(): UiShape {
