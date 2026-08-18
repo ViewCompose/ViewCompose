@@ -4,6 +4,7 @@ import {tmpdir} from 'node:os';
 import {dirname, resolve} from 'node:path';
 import test from 'node:test';
 import {fileURLToPath} from 'node:url';
+import {markTranslationsReviewed} from '../mark-translations-reviewed.mjs';
 import {
   canonicalSourceHash,
   verifyTranslationTree,
@@ -109,5 +110,33 @@ test('keeps every public migration page in the required tier', async () => {
   assert.deepEqual(
     policy.required.filter((path) => path.startsWith('migration/')),
     migrationPages,
+  );
+});
+
+test('marks an explicitly reviewed current translation with the canonical fingerprint', async () => {
+  const fixture = await createFixture({source: '# Original canonical\n'});
+  const revisedSource = '# Revised canonical\n';
+  await writeFile(resolve(fixture.repositoryRoot, 'docs/guide.md'), revisedSource);
+
+  const [result] = await markTranslationsReviewed({
+    ...fixture,
+    sourcePaths: ['guide.md'],
+  });
+
+  assert.equal(result.changed, true);
+  assert.equal(result.fingerprint, canonicalSourceHash(revisedSource));
+  await assert.doesNotReject(verifyTranslationTree(fixture));
+});
+
+test('refuses to mark an explicitly stale translation as reviewed', async () => {
+  const fixture = await createFixture({
+    translationStatus: 'stale',
+    recordedSource: '# Older canonical\n',
+    required: [],
+  });
+
+  await assert.rejects(
+    markTranslationsReviewed({...fixture, sourcePaths: ['guide.md']}),
+    /only a current translation can be marked reviewed/u,
   );
 });

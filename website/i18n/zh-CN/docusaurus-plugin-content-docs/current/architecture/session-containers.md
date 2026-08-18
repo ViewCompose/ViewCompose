@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/session-containers.md
-translation_source_hash: 4518a1c1048d47f6c35a188a830b75932f15314c69df55f3897bdcc836daabf3
+translation_source_hash: c773ff6d76431fc27f2c32b566923b10c9170985746e53fc8e478cea55058169
 translation_status: current
 ---
 

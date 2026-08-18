@@ -70,12 +70,8 @@ jobs:
         working-directory: website
         run: npm ci
 
-      - name: Verify documentation sources
+      - name: Verify documentation sources and translations
         run: ./gradlew verifyDocumentationStructure --stacktrace
-
-      - name: Verify documentation translations
-        working-directory: website
-        run: npm run test:scripts && npm run verify:translations
 
       - name: Generate and verify complete versioned API reference
         run: ./gradlew verifyCompleteViewComposeApiDocs --stacktrace

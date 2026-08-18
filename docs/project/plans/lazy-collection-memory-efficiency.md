@@ -18,6 +18,15 @@ and P99 acceptance gates are satisfied and the plan can move to the archive.
 
 - `release/changes/20260817-lazy-collection-memory-efficiency.json`
 
+The searchable summary is that typed lazy declarations now share one strategy, adapter key and
+view-type metadata are compact and bounded, common shape resources are lazy, post-GC attribution
+improved, and fixed-clock P99/peak-heap acceptance remains. Public behavior stays searchable in
+the owning architecture, guide, migration, module, and performance documents; the phase-by-phase
+execution record below remains directly linkable without duplicating that detail in full-text
+indexes.
+
+<div className="search-partition-detail">
+
 ## Objective
 
 Reduce retained memory and object count for large lazy collections without regressing initial
@@ -41,6 +50,12 @@ boxed values, and eager shape drawing resources. This attribution is diagnostic 
 replacement accepted benchmark baseline.
 
 ## Architectural contract
+
+The searchable contract is that typed declarations share one strategy, logical keys retain State
+and effect identity independently of RecyclerView holders, adapter metadata remains bounded, and
+common shape rendering avoids unused native resources without shifting work into bind or fling.
+
+<div className="search-partition-detail">
 
 ### Logical declaration snapshot
 
@@ -92,7 +107,15 @@ replacement accepted benchmark baseline.
 4. Do not optimize `UiLazyListConnector` allocations as part of this baseline: the accepted list
    fixture passes no `LazyListState`, so that connector is not active in the measured workload.
 
+</div>
+
 ## Implementation phases
+
+Phases 1--3 completed declaration sharing, compact adapter metadata, and lazy shape resources.
+Post-GC attribution rejected Phase 4 small-object pooling as non-material; Phase 5 retains only the
+fixed-clock acceptance follow-up.
+
+<div className="search-partition-detail">
 
 ### Phase 0: decision, baseline, and gates — complete
 
@@ -199,7 +222,15 @@ Repository acceptance passed `:viewcompose-ui-contract:test`,
 `verifyDevelopmentToolingIsolation`, `verifyViewComposeReleaseIntent`, and the complete
 `qaQuick` gate on 2026-08-17.
 
+</div>
+
 ## Acceptance gates
+
+Acceptance requires isolated logical identity, bounded allocation and adapter metadata, equivalent
+drawing, an attributed memory improvement, no material frame-time regression, stable repeated
+runs, and complete repository gates.
+
+<div className="search-partition-detail">
 
 | Area | Required evidence |
 | --- | --- |
@@ -218,6 +249,8 @@ that plausibly comes from shifted bind-time work blocks that phase even when it 
 materiality threshold. Memory wins are accepted only when heap/live-object attribution and frame
 evidence agree.
 
+</div>
+
 ## Completion criteria
 
 The plan completes when typed and snapshot declarations no longer retain per-element binding and
@@ -226,3 +259,5 @@ surfaces avoid unnecessary native drawing objects, logical Session and physical 
 contracts remain fully tested, ordinary-list memory improves beyond measurement noise, and no
 accepted scroll, mutation, preparation, or shadow-list timing metric regresses because work moved
 onto the hot path.
+
+</div>

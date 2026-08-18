@@ -31,7 +31,7 @@ Localization impact:
 - [ ] Required Chinese mirror updated and reviewed; canonical fingerprint is current
 - [ ] Page is deliberately English-only under the language policy
 - [ ] No user-visible language content changed
-- [ ] `npm run verify:languages` and `npm run verify:translations` pass
+- [ ] `./gradlew verifyDocumentationStructure` passes, including language and reviewed-fingerprint gates
 
 ## Compatibility and migration
 

@@ -1,7 +1,7 @@
 ---
 title: 迁移 Lazy 集合 Revision 与复用
 translation_source: migration/lazy-collection-revision-and-reuse.md
-translation_source_hash: 641eb8cb55baec5246db82f42a4cf0d5a92f2a7b22c859dada3455e2a4738401
+translation_source_hash: f32b8dfed88492b3bf4b5c1157111b5c84f5c67abbc8c2e29dfe22dd050f2a61
 translation_status: current
 ---
 

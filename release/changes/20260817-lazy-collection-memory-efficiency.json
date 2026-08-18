@@ -5,5 +5,11 @@
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
     { "artifact": "viewcompose-ui-foundation", "impact": "fix" },
     { "artifact": "viewcompose-renderer-android", "impact": "fix" }
+  ],
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "This change only unifies repository documentation and translation verification gates; it does not alter any published artifact output or publication metadata."
+    }
   ]
 }

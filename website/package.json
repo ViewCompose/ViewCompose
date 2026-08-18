@@ -16,6 +16,7 @@
     "test:scripts": "node --test scripts/__tests__/*.test.mjs",
     "verify:languages": "npm run test:languages && node scripts/verify-document-languages.mjs",
     "verify:translations": "node scripts/verify-translations.mjs",
+    "mark:translations-reviewed": "node scripts/mark-translations-reviewed.mjs",
     "verify:accessibility": "node scripts/verify-accessibility.mjs",
     "verify:budgets": "node scripts/verify-site-budgets.mjs",
     "verify:shell": "node scripts/verify-site-shell.mjs",

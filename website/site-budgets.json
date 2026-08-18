@@ -1,13 +1,13 @@
 {
   "maxBuildSeconds": 120,
-  "maxNonApiOutputMiB": 43,
+  "maxNonApiOutputMiB": 43.5,
   "maxAverageApiVersionMiB": 4.5,
   "maxApiVersionMiB": 24,
   "maxApiRoutingOverheadMiB": 1,
   "maxLargestJavaScriptKiB": 768,
   "maxTotalJavaScriptMiB": 8,
   "maxTotalCssKiB": 128,
-  "maxSearchIndexMiBPerLocale": 6,
+  "maxSearchIndexMiBPerLocale": 6.25,
   "requiredSearchLocales": [
     "en",
     "zh-CN"

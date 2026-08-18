@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: b1d69ccf2d9a7891bf6fba3e5871f428f42cb71faf8aa0930ea431040949dc77
+translation_source_hash: 766c64acb5999306e33870090cd25a456acf5aa96c32a5e2df90e71a7b5235f9
 translation_status: current
 ---
 
@@ -175,7 +175,9 @@ URL 和真实 UI literal 原样保留；叙述中的外语 literal 用行内代�
 ### 权威源优先工作流
 
 每次公共文档变更：先更新并验证英文；同 PR 更新审阅中文；精确保留技术字面量；中文语义已同步
-后才记录英文指纹；最后运行语言分类、翻译新鲜度和双 locale 构建。不得等英文“完成后”批量补翻译。
+后才记录英文指纹；最后运行统一的 `./gradlew verifyDocumentationStructure` 门禁及双 locale 构建。
+该 Gradle 门禁统一负责文档脚本测试、语言分类与翻译新鲜度，禁止在其他 CI 中维护第二套指纹校验
+入口。不得等英文“完成后”批量补翻译。
 
 ### 覆盖层级
 

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 7ec1cdf37a660641d9ee6221d6afcc95dc4b5822a5f30e782a0a9dc9fbd077c2
+translation_source_hash: 9a5c88754d06b268b73c27bc10c7cc4720eaf036a048e462015b7072183a9d8a
 translation_status: current
 ---
 

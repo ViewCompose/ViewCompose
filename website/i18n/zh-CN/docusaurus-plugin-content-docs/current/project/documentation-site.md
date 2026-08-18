@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 9bb03578f64b980d7e144ecc94edc5c74b73b9290b29c7d79b455035b77a105c
+translation_source_hash: ac24518f377794d2b09ba88ed869f3a5e55e990d435c8c43417d3425cdfbe71f
 translation_status: current
 ---
 
@@ -67,7 +67,7 @@ React、navbar、footer 或 sidebar 新增消息 key 时运行 `npm run write-tr
 每个排除块都必须保留相邻且可搜索的标题与摘要；API 契约、命令参考和面向读者的指南不得使用
 该分区。
 
-单 Locale 搜索索引预算为 6 MiB。加入可搜索的[多设计系统架构标准](../architecture/design-systems.md)、
+单 Locale 搜索索引预算为 6.25 MiB。加入可搜索的[多设计系统架构标准](../architecture/design-systems.md)、
 ADR-0005 及包含大量证据的
 [有效执行计划](https://docs.viewcompose.com/project/plans/multi-design-system-high-fidelity)后，实测英文
 索引约 4.1 MiB、中文约 4.4 MiB，因此预算首次从 4 MiB 上调。完整 One UI 与 Overlay 架构记录
@@ -83,6 +83,10 @@ ADR-0005 及包含大量证据的
 达到 6 MiB 时，下一步必须先审查搜索分区或索引表示，再考虑继续上调；代码与命令内容仍参与
 索引，因为 API 与构建命令搜索具有直接读者价值。
 
+Lazy Collection 内存效率候选版本触发了该规则。在经审阅的上限调整为 6.25 MiB 前，必需的计划
+与 Benchmark 分区已实质降低两个索引。再次达到该上限时，必须实施结构化索引分段，不能继续只做
+内容分区或提高阈值；精确配对证据保留在下方。
+
 兼容重定向保留 `/docs`、`/getting-started`、`/compose-migration`、
 `/migrate-from-compose`，以及有效计划归档前已经公开的路径，包括 locale 前缀形式。只为明确
 的历史或推广路由增加重定向，权威文档路径仍是唯一真相源。
@@ -92,7 +96,7 @@ Docusaurus 完成各 locale 构建后，受支持的构建入口会删除 `/zh-C
 静态副本。中文页面直接链接权威 API 树，因此这些副本只增加存储，并不提供本地化内容或受支持
 路由。
 
-预算模型把预期的发布历史增长与真正的回归分开：非 API 产物上限为 43 MiB。加入 Demo
+预算模型把预期的发布历史增长与真正的回归分开：非 API 产物上限为 43.5 MiB。加入 Demo
 验证基座计划前，`main` 的干净构建已经达到 39.999791 MiB；发布这份可搜索的英文计划、对应的
 `zh-CN` 回退路由以及两个 locale 的搜索条目后，实测为 40.427350 MiB。因此，经审查的上限从
 40 MiB 调整为 41 MiB，而不是删除对读者有价值的规划证据。原生控件契约收敛随后扩展了必需的
@@ -114,8 +118,12 @@ Android Views 性能对照计划、生成路由和经过审查的双语真机结
 的工作树 `current` Dokka 共用 API 树预算，平均上限为 4.5 MiB，
 任一单独树不得超过 24 MiB。只有 manifest 与
 重定向别名使用独立的 1 MiB 路由配额。其他上限保持不变：Docusaurus 构建 120 秒、JavaScript
-总计 8 MiB/单文件 768 KiB、CSS 128 KiB、各 locale 搜索索引 6 MiB。门禁也会拒绝任何带
+总计 8 MiB/单文件 768 KiB、CSS 128 KiB、各 locale 搜索索引 6.25 MiB。门禁也会拒绝任何带
 locale 前缀的 API 副本。提高阈值必须附有读者或发布价值的测量说明。
+
+内存效率分支在把非 API 上限调整为 43.5 MiB 前完成了强制表示审查。剩余增长来自可直接链接的
+有效计划路由与已审阅公共契约。该上限或单 Locale 6.25 MiB 搜索上限再次变更前，站点必须对内部
+计划明细或搜索索引实施结构化分段；精确配对证据与限制保留在下方。
 
 无障碍检查覆盖站点自有英文与本地化页面，检查文档语言、title/main landmark、标题顺序、
 accessible name、图片替代文本、表头、iframe title 和重复 ID；重定向 stub 与 Dokka 生成页
@@ -197,6 +205,17 @@ identity token。
 ## 最近验证
 
 <div className="search-partition-detail">
+
+2026-08-18：在同一 checkout 依赖集合上，对当前 `main` 与 Lazy Collection 内存效率候选版本
+执行成对 Docusaurus 双 Locale 构建。`main` 的非 API、英文搜索和中文搜索分别为 45,041,594、
+5,837,406 和 6,282,537 字节。对候选内部阶段记录和详细 Benchmark 台账分区前，对应值为
+45,443,163、5,938,077 和 6,389,023 字节；保留精简可搜索结论并排除穷举执行明细后，候选降至
+45,298,674、5,863,273 和 6,311,901 字节。最终候选仍比 `main` 分别增加 257,080 字节
+（0.57%）、25,867 字节（0.44%）和 29,364 字节（0.47%），但表示优化分别减少 144,489、
+74,804 和 77,122 字节。结论为**混合**：表示方式得到实质改善，但可直接链接的有效计划与双语
+读者契约仍增加绝对产物体积。因此，经审阅的上限调整为非 API 43.5 MiB、单 Locale 6.25 MiB。
+配对基线没有重建 API 历史，但两种 Locale 的渲染树和搜索索引均完整，且非 API 统计明确排除
+API 字节。下一步是在任一上限再次变化前实施结构化计划/索引分段。
 
 2026-08-17：在同一 checkout 依赖集合上，对 `main` 与人工审查修复分支执行成对 Docusaurus
 双 locale 构建，并比较搜索分区前后结果。`main` 的非 API、英文搜索和中文搜索分别为

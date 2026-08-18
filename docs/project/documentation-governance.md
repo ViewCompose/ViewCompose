@@ -318,7 +318,8 @@ Every public documentation change follows this order:
 2. update and review the Chinese mirror in the same pull request;
 3. preserve code, identifiers, commands, URLs, and real UI literals exactly;
 4. record the reviewed canonical fingerprint only after the Chinese meaning is current;
-5. run the language classifier, translation freshness verifier, and both-locale site build gates.
+5. run `./gradlew verifyDocumentationStructure`, which owns the documentation script tests,
+   language classifier, and translation freshness verifier, followed by the both-locale site build.
 
 Translation work must not be deferred until English documentation is "finished". Documentation and
 modules evolve independently, so translation is a continuous page-level workflow.

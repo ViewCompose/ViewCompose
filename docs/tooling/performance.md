@@ -799,6 +799,8 @@ on Samsung SM-G991B / Android 13. Each arm used the same benchmark APK mode, fiv
 `unlocked-dvfs-preflight-v1` policy. This device was not root-controlled, so these results are
 same-device diagnostics rather than a replacement for the Xiaomi fixed-clock baseline:
 
+<div className="search-partition-detail">
+
 | Scenario | Arm | Frames by run | P50/P90/P95/P99, ms | Median peak heap/RSS anon, KiB | Run-P50 CV |
 | --- | --- | --- | ---: | ---: | ---: |
 | `performance.list@5` scroll | Control | `195/193/197/194/188` | 4.356 / 6.362 / 6.996 / 8.155 | 10518 / 55900 | 0.032 |
@@ -831,6 +833,12 @@ small-value pooling as non-material. This is an `improved` structural live-set r
 the implemented allocation cuts; it does not quantify native resource bytes or replace a formal
 fixed-clock peak-memory run. The next action is one root-controlled ordinary-list control/candidate
 pair, with P99 and peak heap as the remaining acceptance decisions.
+
+</div>
+
+The searchable conclusion is `no material change` for ordinary-list and shadow-list frame timing,
+`inconclusive` for noisy process peak memory, and `improved` for the attributed post-GC live set.
+The remaining decision is a root-controlled ordinary-list pair covering P99 and peak heap.
 
 The preceding A/B evidence covers only a steady alternation between two already-constructed
 revision-5 snapshots, which directly favors the bounded two-generation identity cache. It does not

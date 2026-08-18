@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: a567a1777adca69291e29b322eb5aa2c24957237ef563b54472fcc72e9e3c5b1
+translation_source_hash: d4097e037ce7300030811f2368ead434d2af26a070fdff5491d01c5e46b2e311
 translation_status: current
 ---
 
@@ -680,6 +680,8 @@ UiAutomation 要求屏幕可交互，失败的熄屏预检未产生样本。
 无温控限频，并记录 `unlocked-dvfs-preflight-v1` 策略。该设备没有 Root 固定频率，因此以下结果
 只作为同设备诊断，不能替代 Xiaomi 固定频率基线：
 
+<div className="search-partition-detail">
+
 | 场景 | 分组 | 每轮帧数 | P50/P90/P95/P99，ms | 最大 heap/RSS anon 中位数，KiB | Run-P50 CV |
 | --- | --- | --- | ---: | ---: | ---: |
 | `performance.list@5` 滚动 | 对照 | `195/193/197/194/188` | 4.356 / 6.362 / 6.996 / 8.155 | 10518 / 55900 | 0.032 |
@@ -707,6 +709,12 @@ post-GC 归因解释了进程峰值指标无法回答的问题。两个精确分
 Live Set 结果归类为 `improved`，并与已实施的分配削减严格对应；它不量化原生资源字节，也不能
 替代正式的固定频率峰值内存运行。下一步是在 Root 固定频率下再跑一组普通列表对照/候选，P99 与
 最大 heap 是剩余的验收决策。
+
+</div>
+
+可搜索结论为：普通列表和阴影列表帧耗时属于 `no material change`，噪声较大的进程峰值内存属于
+`inconclusive`，完成归因的 post-GC Live Set 属于 `improved`。剩余决策是在 Root 固定频率下
+复测普通列表 P99 与最大 heap。
 
 前述 A/B 证据只覆盖 revision 5 两份已构建 Snapshot 的 steady 交替，直接有利于有界的两代身份
 Cache。它没有测量 `toLazyItemsSnapshot()` 构造、首次求值、从不复用身份的单调数据流或 List
