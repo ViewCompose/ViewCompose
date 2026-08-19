@@ -16,8 +16,10 @@ data class ConstraintLayoutNodeProps(
 /**
  * Names child constraints and helper declarations for one constraint-layout render.
  *
- * Constraint keys and helper IDs share the renderer's ID namespace. Unknown references are passed
- * to the renderer and may be reported as layout diagnostics.
+ * Constraint keys and helper IDs share the renderer's ID namespace. This transport remains
+ * Android-free and does not validate relationships that require mounted content. A compatible
+ * renderer validates the complete merged graph before native mutation and rejects the whole
+ * candidate when an ID, reference, anchor plane, ownership rule, or range is invalid.
  *
  * @property constraints constraints keyed by the semantic child reference used by the DSL
  * @property helpers helper declarations scoped to this set
@@ -51,52 +53,32 @@ data class ConstraintHelpersSpec(
 /**
  * Defines anchors, dimensions, bias, and optional circular positioning for one child.
  *
- * A `null` anchor leaves that edge unconstrained. Percent dimensions, bias, and ratio strings are
- * interpreted by the platform renderer using native ConstraintLayout conventions.
+ * A `null` anchor leaves that edge unconstrained. The renderer validates the complete graph before
+ * mutating native Views; an invalid transport value rejects the candidate graph as one unit.
  *
  * @property start logical start-edge link
  * @property end logical end-edge link
  * @property top top-edge link
  * @property bottom bottom-edge link
- * @property baseline baseline-to-baseline target
- * @property baselineToTop baseline-to-target-top link
- * @property baselineToBottom baseline-to-target-bottom link
+ * @property baseline baseline-to-baseline, baseline-to-top, or baseline-to-bottom link
  * @property width primary horizontal dimension behavior
  * @property height primary vertical dimension behavior
- * @property widthMin optional minimum width
- * @property widthMax optional maximum width
- * @property widthPercent optional fraction of the parent width
- * @property heightMin optional minimum height
- * @property heightMax optional maximum height
- * @property heightPercent optional fraction of the parent height
- * @property constrainedWidth whether wrap-content width remains constrained by both anchors
- * @property constrainedHeight whether wrap-content height remains constrained by both anchors
  * @property horizontalBias optional placement bias between horizontal anchors
  * @property verticalBias optional placement bias between vertical anchors
- * @property dimensionRatio optional native width-to-height ratio expression
- * @property circle optional circular positioning that takes precedence over edge anchors
+ * @property ratio optional typed width-to-height ratio
+ * @property circle optional circular positioning, mutually exclusive with edge and baseline links
  */
 data class ConstraintItemSpec(
     val start: ConstraintAnchorLink? = null,
     val end: ConstraintAnchorLink? = null,
     val top: ConstraintAnchorLink? = null,
     val bottom: ConstraintAnchorLink? = null,
-    val baseline: ConstraintAnchorTarget? = null,
-    val baselineToTop: ConstraintAnchorLink? = null,
-    val baselineToBottom: ConstraintAnchorLink? = null,
+    val baseline: ConstraintAnchorLink? = null,
     val width: ConstraintDimension = ConstraintDimension.WrapContent,
     val height: ConstraintDimension = ConstraintDimension.WrapContent,
-    val widthMin: UiDp? = null,
-    val widthMax: UiDp? = null,
-    val widthPercent: Float? = null,
-    val heightMin: UiDp? = null,
-    val heightMax: UiDp? = null,
-    val heightPercent: Float? = null,
-    val constrainedWidth: Boolean = false,
-    val constrainedHeight: Boolean = false,
     val horizontalBias: Float? = null,
     val verticalBias: Float? = null,
-    val dimensionRatio: String? = null,
+    val ratio: ConstraintRatio? = null,
     val circle: ConstraintCircleSpec? = null,
 )
 
@@ -168,25 +150,131 @@ data class ConstraintCircleSpec(
     val angle: Float,
 )
 
-/** Primary dimension behavior for a constrained child. */
+/**
+ * Selects one mutually exclusive dimension contract for a constrained child.
+ *
+ * Consumers should handle this sealed hierarchy exhaustively. All logical sizes must be finite and
+ * non-negative. Match constraints own their mode and bounds together so contradictory percent,
+ * min/max, and constrained-wrap states cannot be represented.
+ *
+ * @sample com.viewcompose.ui.samples.constraintDimensionsSample
+ */
 sealed interface ConstraintDimension {
     /** Measures the child's desired content size. */
     data object WrapContent : ConstraintDimension
 
-    /** Uses the space established by opposing constraints. */
-    data object FillToConstraints : ConstraintDimension
+    /** Measures desired content while allowing opposing constraints to reduce the result. */
+    data object ConstrainedWrapContent : ConstraintDimension
 
-    /** Matches the constraint-layout parent's corresponding dimension. */
-    data object MatchParent : ConstraintDimension
+    /**
+     * Uses the space established by opposing constraints under one explicit [mode].
+     *
+     * [min] and [max] apply after the selected match-constraint mode. Both are optional; when both
+     * are present, [min] must not exceed [max].
+     *
+     * @property mode spread, wrap, or parent-percent resolution
+     * @property min optional finite non-negative lower bound
+     * @property max optional finite non-negative upper bound
+     * @throws IllegalArgumentException if a bound is non-finite, negative, or ordered incorrectly
+     */
+    data class MatchConstraints(
+        val mode: ConstraintMatchMode = ConstraintMatchMode.Spread,
+        val min: UiDp? = null,
+        val max: UiDp? = null,
+    ) : ConstraintDimension {
+        init {
+            min?.requireConstraintDimension("ConstraintDimension.MatchConstraints.min")
+            max?.requireConstraintDimension("ConstraintDimension.MatchConstraints.max")
+            require(min == null || max == null || min <= max) {
+                "ConstraintDimension.MatchConstraints.min must not exceed max."
+            }
+        }
+    }
 
     /**
      * Fixed logical dimension.
      *
      * @property value requested width or height
+     * @throws IllegalArgumentException if [value] is non-finite or negative
      */
     data class Fixed(
         val value: UiDp,
-    ) : ConstraintDimension
+    ) : ConstraintDimension {
+        init {
+            value.requireConstraintDimension("ConstraintDimension.Fixed.value")
+        }
+    }
+}
+
+/**
+ * Selects how a [ConstraintDimension.MatchConstraints] value uses its available axis.
+ *
+ * @sample com.viewcompose.ui.samples.constraintDimensionsSample
+ */
+sealed interface ConstraintMatchMode {
+    /** Expands between opposing anchors subject to optional min/max bounds. */
+    data object Spread : ConstraintMatchMode
+
+    /** Uses desired content as the match-constraint target subject to anchors and optional bounds. */
+    data object Wrap : ConstraintMatchMode
+
+    /**
+     * Uses a fraction of the ConstraintLayout parent's corresponding dimension.
+     *
+     * @property fraction finite inclusive fraction from `0f` through `1f`
+     * @throws IllegalArgumentException if [fraction] is non-finite or outside `0f..1f`
+     */
+    data class Percent(
+        val fraction: Float,
+    ) : ConstraintMatchMode {
+        init {
+            require(fraction.isFinite() && fraction in 0f..1f) {
+                "ConstraintMatchMode.Percent.fraction must be finite and within 0f..1f."
+            }
+        }
+    }
+}
+
+/** Selects which axis AndroidX constrains when resolving a [ConstraintRatio]. */
+enum class ConstraintRatioSide {
+    /** Derives width from the resolved height. */
+    Width,
+
+    /** Derives height from the resolved width. */
+    Height,
+}
+
+/**
+ * Defines a positive width-to-height ratio without exposing AndroidX's raw string grammar.
+ *
+ * At least one item dimension must use [ConstraintDimension.MatchConstraints]. The renderer
+ * validates that relationship with the complete item before native mutation.
+ *
+ * @sample com.viewcompose.ui.samples.constraintDimensionsSample
+ * @property width positive finite width term
+ * @property height positive finite height term
+ * @property constrainedSide optional axis AndroidX derives from the other resolved axis
+ * @throws IllegalArgumentException if either ratio term is non-finite or not greater than zero
+ */
+data class ConstraintRatio(
+    val width: Float,
+    val height: Float,
+    val constrainedSide: ConstraintRatioSide? = null,
+) {
+    init {
+        require(width.isFinite() && width > 0f) {
+            "ConstraintRatio.width must be finite and greater than zero."
+        }
+        require(height.isFinite() && height > 0f) {
+            "ConstraintRatio.height must be finite and greater than zero."
+        }
+    }
+}
+
+private fun UiDp.requireConstraintDimension(field: String) {
+    require(value.isFinite() && value >= 0f) {
+        "$field must be finite and non-negative."
+    }
 }
 
 /**

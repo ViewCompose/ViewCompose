@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: 989fe9f2251005122dad983ca5e1dad72579e38fbcab88be025647ad8eb76525
+translation_source_hash: 0a1ec01575aad64f18de5ac379a29b3fd53352a9681bbf17749325e9ad5ee499
 translation_status: current
 ---
 
@@ -102,7 +102,10 @@ translation_status: current
 5. Lifecycle 与 ViewModel 协作 API 位于独立 AndroidX 集成模块，自动宿主注入由聚合包负责
 6. 动画与手势已形成“内核 + DSL + Android interop 扩展”分层模型（animation-core + animation、gesture-core + gesture、host interop）
 7. graphics 已形成“内核 + DSL + renderer + host interop”分层模型（graphics-core + graphics + renderer draw pipeline + host-android AndroidGraphicsInterop）
-8. ConstraintLayout 已按“widget DSL 模块 + renderer 平台映射”分层落地，支持 anchors/dimension/bias/baseline/baselineToTop/baselineToBottom/circle/guideline/barrier/chain(+weights)/Flow/Group/Layer/Placeholder/decoupled constraintSet，以及 match-constraint 进阶参数（min/max/percent/constrained）
+8. ConstraintLayout 已分离 Q3 编写、渲染器中立传输与 AndroidX 映射。其不可变图预检拥有
+   ID、引用、锚点平面、类型化尺寸/比例及 Chain/Helper 合法性；一个 Android 注册表拥有
+   Guideline、Barrier、Flow、Group、Layer 与 Placeholder View，原生发布遵循
+   [ADR-0016](./decisions/0016-constraintlayout-graph-and-helper-ownership.md) 的回滚边界。
 9. Theme token 已进入“消费闭环”阶段：新增 token 必须进入 defaults/composite 默认值，或明确登记为 reserved semantic palette
 10. 文本输入已硬切到 `TextFieldState` 单一状态主权：纯 Kotlin 编辑内核负责值、选区、组合区与历史；renderer 的 `ViewComposeEditText` 只负责 Android `Editable/InputConnection` 适配
 11. 系统导航保持纯 Kotlin 事务内核与 Android 页面 Session、系统返回分发分离

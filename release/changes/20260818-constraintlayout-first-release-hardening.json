@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut ConstraintLayout to a dedicated axis-typed DSL, typed dimensions and ratios, compile complete graphs before atomic native reconciliation, and unify ownership for every retained AndroidX helper.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "feature" },
+    { "artifact": "viewcompose-constraintlayout-androidx", "impact": "breaking" },
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" }
+  ],
+  "ignored": [
+    {
+      "artifact": "viewcompose-preview",
+      "reason": "The preview catalog only migrates its ConstraintLayout fixture to the hard-cut typed dimension API; preview descriptors and public behavior are unchanged."
+    }
+  ],
+  "shared": [
+    {
+      "path": "gradle/libs.versions.toml",
+      "reason": "The AndroidX ConstraintLayout 2.2.2 pin and Kotlin-matched compiler fixture dependency are publication and test inputs for the classified ConstraintLayout and renderer artifacts."
+    }
+  ]
+}

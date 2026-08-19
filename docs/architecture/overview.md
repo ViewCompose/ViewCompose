@@ -119,7 +119,11 @@ The project is a maintainable View-based declarative UI v1:
 5. Lifecycle and ViewModel collaboration APIs live in dedicated AndroidX integrations while the aggregate owns their automatic host injection.
 6. Animation and gesture use kernel, DSL, and Android interop layers.
 7. Graphics uses core, DSL, renderer pipeline, and host interop layers.
-8. ConstraintLayout separates its widget DSL from renderer platform mapping and covers anchors, dimensions, bias, baseline links, circles, guidelines, barriers, chains and weights, Flow, Group, Layer, Placeholder, decoupled constraint sets, and advanced match-constraint parameters.
+8. ConstraintLayout separates Q3 authoring from renderer-neutral transport and AndroidX mapping.
+   Its immutable graph preflight owns IDs, references, anchor planes, typed dimensions/ratios, and
+   chain/helper validity; one Android registry owns Guideline, Barrier, Flow, Group, Layer, and
+   Placeholder Views, while native publication follows the rollback boundary in
+   [ADR-0016](./decisions/0016-constraintlayout-graph-and-helper-ownership.md).
 9. Theme tokens are in a consumption-closure phase: every new token must be consumed by defaults/composite defaults or explicitly registered as a reserved semantic palette entry.
 10. Text input has one source of truth, `TextFieldState`. The pure-Kotlin editor owns value, selection, composition, and history; renderer's `ViewComposeEditText` only adapts Android `Editable` and `InputConnection`.
 11. System navigation keeps its pure-Kotlin transaction kernel separate from Android page sessions and back dispatch.

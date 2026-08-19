@@ -119,6 +119,8 @@ internal object DemoTestTags {
     const val LAYOUTS_CONSTRAINT_BASIC_BADGE = "layouts_constraint_basic_badge"
     const val LAYOUTS_CONSTRAINT_HELPERS_TOGGLE = "layouts_constraint_helpers_toggle"
     const val LAYOUTS_CONSTRAINT_HELPERS_CONTAINER = "layouts_constraint_helpers_container"
+    const val LAYOUTS_CONSTRAINT_HELPERS_HEADLINE = "layouts_constraint_helpers_headline"
+    const val LAYOUTS_CONSTRAINT_HELPERS_SUMMARY = "layouts_constraint_helpers_summary"
     const val LAYOUTS_CONSTRAINT_HELPERS_MARKER = "layouts_constraint_helpers_marker"
     const val LAYOUTS_CONSTRAINT_CHAIN_CONTAINER = "layouts_constraint_chain_container"
     const val LAYOUTS_CONSTRAINT_CHAIN_START = "layouts_constraint_chain_start"

@@ -62,7 +62,7 @@
     <string name="demo_layouts_constraint_basic_summary">组合验证锚点、尺寸与偏移在渲染器中的稳定摆放。</string>
     <string name="demo_layouts_constraint_reset">重置 Constraint 场景</string>
     <string name="demo_layouts_constraint_card">约束基础卡片</string>
-    <string name="demo_layouts_constraint_content_note">FillToConstraints 拉伸内容；bias 控制徽标位置。</string>
+    <string name="demo_layouts_constraint_content_note">MatchConstraints 拉伸内容；bias 控制徽标位置。</string>
     <string name="demo_layouts_bias">Bias</string>
     <string name="demo_layouts_helpers_title">Guideline 与 Barrier</string>
     <string name="demo_layouts_helpers_summary">Guideline 划分区域，Barrier 跟随最长文本边界。</string>
@@ -70,7 +70,8 @@
     <string name="demo_layouts_use_long_copy">使用长文案</string>
     <string name="demo_layouts_helper_area">Helper 区</string>
     <string name="demo_layouts_helper_long_copy">这是一段更长的说明文案，用于验证 Barrier 会跟随最长文本边界。</string>
-    <string name="demo_layouts_helper_short_copy">简短说明文案。</string>
+    <string name="demo_layouts_helper_short_copy">短文案。</string>
+    <string name="demo_layouts_guideline_partition">Guideline · 文本最大宽度 55\u0025</string>
     <string name="demo_layouts_barrier_marker">Barrier 标记</string>
     <string name="demo_layouts_chain_title">Chain 编排</string>
     <string name="demo_layouts_chain_summary">水平 Chain 统一分配空间，并在 Patch 后保持稳定。</string>
@@ -97,15 +98,15 @@
     <string name="demo_layouts_bottom_to_top">bottomToTop</string>
     <string name="demo_layouts_anchor_status">已覆盖：bottomToTop / baselineToBaseline / baselineToTop / baselineToBottom / centerHorizontallyTo / centerVerticallyTo / circular。</string>
     <string name="demo_layouts_dimension_title">高级尺寸</string>
-    <string name="demo_layouts_dimension_summary">覆盖 min/max/percent、受约束宽高和 dimensionRatio。</string>
+    <string name="demo_layouts_dimension_summary">覆盖类型化的匹配约束百分比与边界、受约束换行和比例。</string>
     <string name="demo_layouts_dimension_compact">切回紧凑尺寸</string>
     <string name="demo_layouts_dimension_expanded">切到扩展尺寸</string>
-    <string name="demo_layouts_width_dimension">widthPercent + widthMin/Max + constrainedWidth</string>
-    <string name="demo_layouts_height_dimension">heightPercent\nmin/max</string>
+    <string name="demo_layouts_width_dimension">MatchConstraints.Percent + min/max</string>
+    <string name="demo_layouts_height_dimension">百分比模式\n带 min/max</string>
     <string name="demo_layouts_ratio_16_9">ratio 16:9</string>
     <string name="demo_layouts_ratio_1_1">ratio 1:1</string>
-    <string name="demo_layouts_dimension_status_expanded">扩展模式：widthPercent=0.82，heightPercent=0.62，ratio=16:9</string>
-    <string name="demo_layouts_dimension_status_compact">紧凑模式：widthPercent=0.56，heightPercent=0.38，ratio=1:1</string>
+    <string name="demo_layouts_dimension_status_expanded">扩展模式：宽度=82\u0025，高度=62\u0025，类型化比例=16:9</string>
+    <string name="demo_layouts_dimension_status_compact">紧凑模式：宽度=56\u0025，高度=38\u0025，类型化比例=1:1</string>
     <string name="demo_layouts_helpers_full_title">完整 Guideline 与 Barrier</string>
     <string name="demo_layouts_helpers_full_summary">覆盖 End/Top/Bottom Guideline 与 Start/Top/Bottom Barrier，包括 margin 和 allowsGoneWidgets。</string>
     <string name="demo_layouts_switch_fraction">切到 fraction 模式</string>

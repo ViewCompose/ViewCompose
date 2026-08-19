@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: ebd262d2cb0d42cfb79bb78d84fc68c4001b3db7aedc872987f461806a67d5c2
+translation_source_hash: e05661d795e7922c2e9e2895f2be251bd17bcfcf42266d4d4beec6918d6b0de0
 translation_status: current
 ---
 
@@ -48,10 +48,14 @@ translation_status: current
 14. `viewcompose-constraintlayout-androidx` 与 renderer `DeclarativeConstraintLayout` 已形成 Alpha DSL
    基线，覆盖 anchor、dimension、bias、baseline extension、circle、guideline、barrier、带 weight 的
    chain、Flow、Group、Layer、Placeholder、解耦 `ConstraintSet` 和 match-constraint
-   `min/max/percent/constrained`。2026-08-18 审计确认仍存在 Helper 生命周期、几何正确性、回滚、测试深度
-   和性能证据缺口；这些硬切修正由有效的
-   [ConstraintLayout 强化计划](https://docs.viewcompose.com/project/plans/constraintlayout-native-engine-hardening)
-   负责，不会重新引入 MotionLayout 范围。
+   `min/max/percent/constrained`。首发源码还加入专用 Marker Scope、按轴类型化的 Anchor Target、
+   Content 完成后冻结的 Helper Snapshot，以及基于 Reference 的可复用条目。2026-08-18 审计确认仍存在 Helper 生命周期、几何正确性、回滚、测试深度
+   和性能证据缺口。有效的
+   [首发强化计划](https://docs.viewcompose.com/project/plans/constraintlayout-native-engine-hardening)
+   负责 API、正确性、事务和发版安全硬切；分类快速路径、更广泛的能力对齐、完整视觉矩阵、结构型 DSL Scope 一致性审计和性能领先证据，
+   明确推迟到
+   [发版后扩展计划](https://docs.viewcompose.com/project/plans/constraintlayout-parity-performance-expansion)。
+   后者在首版发布并完成 Tag 前保持无 Changeset 状态；两个计划都不会重新引入 MotionLayout 范围。
 15. graphics 能力已落地：`viewcompose-graphics-core` + `viewcompose-graphics` + renderer draw pipeline + `host-android` interop；`Graphics` demo 与 preview/Paparazzi 覆盖已接入，并完成 v2 P0 语义收口（RoundRect 四角半径 / Drawable DrawPaint / ImageFilter Chain）
 16. 组合事务已落地：`ComposerLite.prepareRoot/commit/abort` 覆盖 slot、观察订阅、RememberObserver 与 Effect，失败组合保留旧依赖并可继续失效重组。
 17. 结构化协程已落地：`RenderSession` 统一持有组合父 Job，提供 `LaunchedEffect/rememberCoroutineScope`，`produceState` 已硬切 suspend + `awaitDispose`，Flow 与动画已移除独立根 Job。
@@ -120,7 +124,7 @@ translation_status: current
 | Diagnostics | render/layout 聚合、render tree、逐节点 patch、CompositionLocal 与重组原因均已结构化输出并接入 demo 检查器 | 节点边界高亮、跨 session 关联与逐节点耗时已拆分到有效的[诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability) |
 | UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |
 | Developer Preview | Compose Preview、Paparazzi 与独立 Studio 插件链路已建立；插件支持静态渲染、源码双向联动、布局/View/组合诊断、全部预览、有界缓存和增量刷新 | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |
-| ConstraintLayout | Anchor、Helper、ConstraintSet、高级 Dimension、Weight、Circle、Baseline 与 Virtual Helper 的 Alpha DSL 基线已经落地；当前 Renderer 仍有已确认的 Helper 生命周期、几何、回滚、覆盖与基准缺口 | 通过有效的 [ConstraintLayout 强化计划](https://docs.viewcompose.com/project/plans/constraintlayout-native-engine-hardening)硬切 Dimension/失败契约，以单一事务图和 Helper Owner 替换现有重建路径，补齐高价值 AndroidX 能力并闭环精确设备与性能证据；类型安全的 MotionScene/MotionLayout 继续保持范围外 |
+| ConstraintLayout | Anchor、Helper、ConstraintSet、高级 Dimension、Weight、Circle、Baseline 与 Virtual Helper 的 Alpha DSL 基线已经落地；首发源码增加专用 Scope、按轴类型化 Target、不可变 Helper Snapshot 和基于 Reference 的可复用条目，完整真机与基准验收仍未结束 | 先完成阻塞发版的[首发强化计划](https://docs.viewcompose.com/project/plans/constraintlayout-native-engine-hardening)，闭环保留能力的正确性、真机与性能安全 Gate 并进入发版窗口。发布和 Tag 完成后，再启动[能力与性能扩展计划](https://docs.viewcompose.com/project/plans/constraintlayout-parity-performance-expansion)，实现分类快速路径、Grid/CircularFlow、更广泛的能力对齐、结构型 DSL Scope 审计、已接受的增量易用性 API、完整视觉矩阵和 Direct-native 性能证明；类型安全的 MotionScene/MotionLayout 继续保持范围外 |
 | Animation | 已具备动画 Core/DSL 分层、Transition 共享 timeline、Animatable last-mutation-wins、AnimatedVisibility、Crossfade、animateContentSize 与原始 Android interop | 物理运动与结果、完整内容/显隐变换、seek、bounds、共享运动和时间线工具已经拆分到有效的[动画能力计划](https://docs.viewcompose.com/project/plans/animation-compose-capability-expansion) |
 | Gesture | `viewcompose-gesture-core` + `viewcompose-gesture` + renderer dispatcher 已支持 tap/drag/anchoredDraggable/transform、统一 nested scroll 和结构化并发取消；双指接管与系统 CANCEL 不会触发旧拖动 settle | 扩展原生三方滚动控件与真实设备多指回归 |
 | Graphics | 2D draw 主链与独立 `viewcompose-shadow-android` 装饰层已落地，支持 Canvas、draw modifiers、不可变 `DrawScene`、有序多层外/内阴影、静态栅格缓存和后端诊断 | 扩展 dark/tablet 快照；在明确预算下研究动态 RenderEffect/转场阴影 |

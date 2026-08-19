@@ -29,51 +29,159 @@ import com.viewcompose.ui.node.spec.ConstraintItemSpec
 import com.viewcompose.ui.node.spec.ConstraintLayerSpec
 import com.viewcompose.ui.node.spec.ConstraintLayoutNodeProps
 import com.viewcompose.ui.node.spec.ConstraintPlaceholderSpec
+import com.viewcompose.ui.node.spec.ConstraintRatio
 import com.viewcompose.ui.node.spec.ConstraintSetSpec
 import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.foundation.UiDslMarker
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
-/** Source-level alias for the UI-tree builder available inside [ConstraintLayout] content. */
-typealias ConstraintLayoutScope = UiTreeBuilder
+/**
+ * Identifies any child or virtual helper declared in one ConstraintLayout specification.
+ *
+ * This identity plane is accepted by helper membership APIs. Anchor APIs use the narrower
+ * horizontal, vertical, or baseline target planes, so invalid cross-axis links fail at compile
+ * time instead of reaching graph preflight.
+ *
+ * @property id non-blank layout-local identity
+ */
+sealed interface ConstraintLayoutReference {
+    val id: String
+}
 
 /**
- * Identifies a child or virtual helper inside one ConstraintLayout specification.
+ * Target that exposes logical start/end anchors.
  *
- * IDs are matched as strings by the renderer and should be unique within the owning layout. The
- * constructor does not validate emptiness or uniqueness.
- *
- * @property id stable local identifier shared by layoutId, constraints, and helpers
+ * @property id child/helper identity, or `null` for the owning ConstraintLayout parent
  */
-data class ConstraintReference(
-    override val id: String,
-) : ConstraintReferenceTarget
-
-/** Exposes the optional string identity accepted by constraint-anchor links. */
-sealed interface ConstraintReferenceTarget {
-    /** Child/helper ID, or `null` for the ConstraintLayout parent. */
+sealed interface ConstraintHorizontalAnchorTarget {
     val id: String?
 }
 
+/**
+ * Target that exposes physical top/bottom anchors.
+ *
+ * @property id child/helper identity, or `null` for the owning ConstraintLayout parent
+ */
+sealed interface ConstraintVerticalAnchorTarget {
+    val id: String?
+}
+
+/**
+ * Target that exposes a native text baseline.
+ *
+ * @property id non-blank child identity
+ */
+sealed interface ConstraintBaselineAnchorTarget {
+    val id: String
+}
+
+/**
+ * Identifies a constraint-capable child, Flow, or Placeholder.
+ *
+ * IDs are matched as strings by the renderer and must be unique within the owning layout. The
+ * constructor rejects blank IDs; complete child/helper namespace uniqueness is validated before
+ * native mutation. This full reference exposes horizontal, vertical, and baseline anchors.
+ *
+ * @property id stable local identifier shared by layoutId, constraints, and helpers
+ * @throws IllegalArgumentException if [id] is blank
+ */
+data class ConstraintReference(
+    override val id: String,
+) : ConstraintLayoutReference,
+    ConstraintHorizontalAnchorTarget,
+    ConstraintVerticalAnchorTarget,
+    ConstraintBaselineAnchorTarget {
+    init {
+        require(id.isNotBlank()) { "ConstraintReference.id must not be blank." }
+    }
+}
+
+/** Reference returned by logical start/end Guidelines and Barriers. */
+sealed interface ConstraintHorizontalAnchorReference :
+    ConstraintLayoutReference,
+    ConstraintHorizontalAnchorTarget
+
+/** Reference returned by physical top/bottom Guidelines and Barriers. */
+sealed interface ConstraintVerticalAnchorReference :
+    ConstraintLayoutReference,
+    ConstraintVerticalAnchorTarget
+
+/** Identity-only reference returned by non-anchor Group and Layer helpers. */
+sealed interface ConstraintHelperReference : ConstraintLayoutReference
+
+private data class HorizontalAnchorReference(
+    override val id: String,
+) : ConstraintHorizontalAnchorReference {
+    init {
+        require(id.isNotBlank()) { "Constraint helper ID must not be blank." }
+    }
+}
+
+private data class VerticalAnchorReference(
+    override val id: String,
+) : ConstraintVerticalAnchorReference {
+    init {
+        require(id.isNotBlank()) { "Constraint helper ID must not be blank." }
+    }
+}
+
+private data class HelperReference(
+    override val id: String,
+) : ConstraintHelperReference {
+    init {
+        require(id.isNotBlank()) { "Constraint helper ID must not be blank." }
+    }
+}
+
 /** Canonical anchor target for the owning ConstraintLayout rather than a child ID. */
-data object ConstraintParentReference : ConstraintReferenceTarget {
+data object ConstraintParentReference :
+    ConstraintHorizontalAnchorTarget,
+    ConstraintVerticalAnchorTarget {
     /** Always `null`, which the renderer interprets as the parent. */
     override val id: String? = null
 }
 
 /** Returns the canonical reference to the current ConstraintLayout parent. */
-val parent: ConstraintReferenceTarget
+val parent: ConstraintParentReference
     get() = ConstraintParentReference
 
 /** Collects helper specs created by one ConstraintLayout DSL evaluation. */
 private class MutableConstraintHelpersCollector {
     private var nextAutoId = 0
-    val guidelines = mutableListOf<ConstraintGuidelineSpec>()
-    val barriers = mutableListOf<ConstraintBarrierSpec>()
+    private val helperKinds = mutableMapOf<String, String>()
+    val guidelines = uniqueHelperList("Guideline", ConstraintGuidelineSpec::id)
+    val barriers = uniqueHelperList("Barrier", ConstraintBarrierSpec::id)
     val chains = mutableListOf<ConstraintChainSpec>()
-    val flows = mutableListOf<ConstraintFlowSpec>()
-    val groups = mutableListOf<ConstraintGroupSpec>()
-    val layers = mutableListOf<ConstraintLayerSpec>()
-    val placeholders = mutableListOf<ConstraintPlaceholderSpec>()
+    val flows = uniqueHelperList("Flow", ConstraintFlowSpec::id)
+    val groups = uniqueHelperList("Group", ConstraintGroupSpec::id)
+    val layers = uniqueHelperList("Layer", ConstraintLayerSpec::id)
+    val placeholders = uniqueHelperList("Placeholder", ConstraintPlaceholderSpec::id)
+
+    private fun <T> uniqueHelperList(
+        kind: String,
+        id: (T) -> String,
+    ): MutableList<T> = object : AbstractMutableList<T>() {
+        private val values = mutableListOf<T>()
+
+        override val size: Int
+            get() = values.size
+
+        override fun get(index: Int): T = values[index]
+
+        override fun add(index: Int, element: T) {
+            val helperId = id(element)
+            require(helperId.isNotBlank()) { "$kind helper ID must not be blank." }
+            val previousKind = helperKinds.putIfAbsent(helperId, kind)
+            require(previousKind == null) {
+                "Helper ID '$helperId' is already declared as $previousKind."
+            }
+            values.add(index, element)
+        }
+
+        override fun removeAt(index: Int): T = error("Constraint helper declarations are append-only.")
+
+        override fun set(index: Int, element: T): T = error("Constraint helper declarations are append-only.")
+    }
 
     fun allocId(prefix: String): String {
         val id = "$prefix-${nextAutoId}"
@@ -83,54 +191,90 @@ private class MutableConstraintHelpersCollector {
 
     fun toSpec(): ConstraintHelpersSpec {
         return ConstraintHelpersSpec(
-            guidelines = guidelines,
-            barriers = barriers,
-            chains = chains,
-            flows = flows,
-            groups = groups,
-            layers = layers,
-            placeholders = placeholders,
+            guidelines = guidelines.toList(),
+            barriers = barriers.toList(),
+            chains = chains.toList(),
+            flows = flows.toList(),
+            groups = groups.toList(),
+            layers = layers.toList(),
+            placeholders = placeholders.toList(),
         )
     }
 }
 
-private class ConstraintLayoutDslContext(
-    val helpers: MutableConstraintHelpersCollector,
-)
+/**
+ * Dedicated receiver for one [ConstraintLayout] content block.
+ *
+ * The scope remains a full [UiTreeBuilder], so every ordinary ViewCompose widget is available.
+ * Constraint references and virtual helpers are owned directly by this receiver, preventing their
+ * use through an unrelated builder and preventing an outer layout's helpers from leaking into a
+ * nested layout DSL. The scope is created and consumed synchronously by [ConstraintLayout].
+ * Retaining it is unsupported; reference/helper calls after content completes fail immediately.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintLayoutSample
+ */
+@UiDslMarker
+class ConstraintLayoutScope internal constructor() : UiTreeBuilder() {
+    private val helpers = MutableConstraintHelpersCollector()
+    private var active = true
 
-/** Tracks nested ConstraintLayout DSL evaluations independently on each thread. */
-private object ConstraintLayoutDslContextStack {
-    private val threadLocal: ThreadLocal<ArrayDeque<ConstraintLayoutDslContext>> = ThreadLocal.withInitial {
-        ArrayDeque<ConstraintLayoutDslContext>()
-    }
-
-    private fun deque(): ArrayDeque<ConstraintLayoutDslContext> {
-        return requireNotNull(threadLocal.get()) {
-            "ConstraintLayout DSL context stack is unexpectedly unavailable."
+    internal fun ensureActive() {
+        check(active) {
+            "ConstraintLayoutScope is no longer active; declare references and helpers during ConstraintLayout content."
         }
     }
 
-    fun push(context: ConstraintLayoutDslContext) {
-        deque().addLast(context)
+    internal fun allocHelperId(prefix: String): String {
+        ensureActive()
+        return helpers.allocId(prefix)
     }
 
-    fun pop() {
-        val currentDeque = deque()
-        if (currentDeque.isNotEmpty()) {
-            currentDeque.removeLast()
-        }
+    internal fun addGuideline(spec: ConstraintGuidelineSpec) {
+        ensureActive()
+        helpers.guidelines += spec
     }
 
-    fun current(): ConstraintLayoutDslContext? = deque().lastOrNull()
+    internal fun addBarrier(spec: ConstraintBarrierSpec) {
+        ensureActive()
+        helpers.barriers += spec
+    }
+
+    internal fun addChain(spec: ConstraintChainSpec) {
+        ensureActive()
+        helpers.chains += spec
+    }
+
+    internal fun addFlow(spec: ConstraintFlowSpec) {
+        ensureActive()
+        helpers.flows += spec
+    }
+
+    internal fun addGroup(spec: ConstraintGroupSpec) {
+        ensureActive()
+        helpers.groups += spec
+    }
+
+    internal fun addLayer(spec: ConstraintLayerSpec) {
+        ensureActive()
+        helpers.layers += spec
+    }
+
+    internal fun addPlaceholder(spec: ConstraintPlaceholderSpec) {
+        ensureActive()
+        helpers.placeholders += spec
+    }
+
+    internal fun buildHelpers(): ConstraintHelpersSpec {
+        ensureActive()
+        active = false
+        return helpers.toSpec()
+    }
 }
 
-private fun requireConstraintContext(): ConstraintLayoutDslContext {
-    return requireNotNull(ConstraintLayoutDslContextStack.current()) {
-        "ConstraintLayout helper APIs can only be called inside ConstraintLayout { ... }."
-    }
-}
-
-private fun ConstraintReferenceTarget.toAnchorTarget(anchor: ConstraintAnchor): ConstraintAnchorTarget {
+private fun anchorTarget(
+    id: String?,
+    anchor: ConstraintAnchor,
+): ConstraintAnchorTarget {
     return ConstraintAnchorTarget(
         id = id,
         anchor = anchor,
@@ -140,43 +284,29 @@ private fun ConstraintReferenceTarget.toAnchorTarget(anchor: ConstraintAnchor): 
 /**
  * Builds the complete constraint specification for one child ID.
  *
- * Repeated calls targeting the same source anchor replace the previous link. Values are encoded
- * without DSL-level range validation and are interpreted by the Android ConstraintLayout renderer.
+ * Repeated calls targeting the same source anchor replace the previous link. Local ranges and
+ * mutually exclusive circle/edge states fail when the block completes; the renderer validates the
+ * resulting complete graph again before native mutation.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintLayoutSample
  */
+@UiDslMarker
 class ConstraintConstrainScope internal constructor() {
     private var start: ConstraintAnchorLink? = null
     private var end: ConstraintAnchorLink? = null
     private var top: ConstraintAnchorLink? = null
     private var bottom: ConstraintAnchorLink? = null
-    private var baseline: ConstraintAnchorTarget? = null
-    private var baselineToTop: ConstraintAnchorLink? = null
-    private var baselineToBottom: ConstraintAnchorLink? = null
-    /** Width mode, defaulting to native wrap content. */
+    private var baseline: ConstraintAnchorLink? = null
+    /** Width mode read when the constraint block completes; defaults to native wrap content. */
     var width: ConstraintDimension = ConstraintDimension.WrapContent
-    /** Height mode, defaulting to native wrap content. */
+    /** Height mode read when the constraint block completes; defaults to native wrap content. */
     var height: ConstraintDimension = ConstraintDimension.WrapContent
-    /** Optional minimum width in dp; `null` leaves the native minimum unset. */
-    var widthMin: UiDp? = null
-    /** Optional maximum width in dp; `null` leaves the native maximum unset. */
-    var widthMax: UiDp? = null
-    /** Optional match-constraint width fraction clamped to `0f..1f` by the renderer. */
-    var widthPercent: Float? = null
-    /** Optional minimum height in dp; `null` leaves the native minimum unset. */
-    var heightMin: UiDp? = null
-    /** Optional maximum height in dp; `null` leaves the native maximum unset. */
-    var heightMax: UiDp? = null
-    /** Optional match-constraint height fraction clamped to `0f..1f` by the renderer. */
-    var heightPercent: Float? = null
-    /** Whether wrap-content width may shrink to satisfy constraints. */
-    var constrainedWidth: Boolean = false
-    /** Whether wrap-content height may shrink to satisfy constraints. */
-    var constrainedHeight: Boolean = false
-    /** Optional horizontal position bias between two connected horizontal anchors. */
+    /** Optional finite horizontal bias in `0f..1f`, validated when the block completes. */
     var horizontalBias: Float? = null
-    /** Optional vertical position bias between two connected vertical anchors. */
+    /** Optional finite vertical bias in `0f..1f`, validated when the block completes. */
     var verticalBias: Float? = null
-    /** Optional native ConstraintLayout dimension-ratio expression, such as `16:9` or `W,16:9`. */
-    var dimensionRatio: String? = null
+    /** Optional positive typed ratio requiring at least one match-constraint dimension. */
+    var ratio: ConstraintRatio? = null
     private var circle: ConstraintCircleSpec? = null
 
     /**
@@ -186,12 +316,12 @@ class ConstraintConstrainScope internal constructor() {
      * @param goneMargin spacing used when the target is gone, or `null` for the native default
      */
     fun startToStart(
-        target: ConstraintReferenceTarget = parent,
+        target: ConstraintHorizontalAnchorTarget = parent,
         margin: UiDp = UiDp.Zero,
         goneMargin: UiDp? = null,
     ) {
         start = ConstraintAnchorLink(
-            target = target.toAnchorTarget(ConstraintAnchor.Start),
+            target = anchorTarget(target.id, ConstraintAnchor.Start),
             margin = margin,
             goneMargin = goneMargin,
         )
@@ -204,12 +334,12 @@ class ConstraintConstrainScope internal constructor() {
      * @param goneMargin spacing used when the target is gone, or `null` for the native default
      */
     fun startToEnd(
-        target: ConstraintReferenceTarget,
+        target: ConstraintHorizontalAnchorTarget,
         margin: UiDp = UiDp.Zero,
         goneMargin: UiDp? = null,
     ) {
         start = ConstraintAnchorLink(
-            target = target.toAnchorTarget(ConstraintAnchor.End),
+            target = anchorTarget(target.id, ConstraintAnchor.End),
             margin = margin,
             goneMargin = goneMargin,
         )
@@ -222,12 +352,12 @@ class ConstraintConstrainScope internal constructor() {
      * @param goneMargin spacing used when the target is gone, or `null` for the native default
      */
     fun endToStart(
-        target: ConstraintReferenceTarget,
+        target: ConstraintHorizontalAnchorTarget,
         margin: UiDp = UiDp.Zero,
         goneMargin: UiDp? = null,
     ) {
         end = ConstraintAnchorLink(
-            target = target.toAnchorTarget(ConstraintAnchor.Start),
+            target = anchorTarget(target.id, ConstraintAnchor.Start),
             margin = margin,
             goneMargin = goneMargin,
         )
@@ -240,12 +370,12 @@ class ConstraintConstrainScope internal constructor() {
      * @param goneMargin spacing used when the target is gone, or `null` for the native default
      */
     fun endToEnd(
-        target: ConstraintReferenceTarget = parent,
+        target: ConstraintHorizontalAnchorTarget = parent,
         margin: UiDp = UiDp.Zero,
         goneMargin: UiDp? = null,
     ) {
         end = ConstraintAnchorLink(
-            target = target.toAnchorTarget(ConstraintAnchor.End),
+            target = anchorTarget(target.id, ConstraintAnchor.End),
             margin = margin,
             goneMargin = goneMargin,
         )
@@ -258,12 +388,12 @@ class ConstraintConstrainScope internal constructor() {
      * @param goneMargin spacing used when the target is gone, or `null` for the native default
      */
     fun topToTop(
-        target: ConstraintReferenceTarget = parent,
+        target: ConstraintVerticalAnchorTarget = parent,
         margin: UiDp = UiDp.Zero,
         goneMargin: UiDp? = null,
     ) {
         top = ConstraintAnchorLink(
-            target = target.toAnchorTarget(ConstraintAnchor.Top),
+            target = anchorTarget(target.id, ConstraintAnchor.Top),
             margin = margin,
             goneMargin = goneMargin,
         )
@@ -276,12 +406,12 @@ class ConstraintConstrainScope internal constructor() {
      * @param goneMargin spacing used when the target is gone, or `null` for the native default
      */
     fun topToBottom(
-        target: ConstraintReferenceTarget,
+        target: ConstraintVerticalAnchorTarget,
         margin: UiDp = UiDp.Zero,
         goneMargin: UiDp? = null,
     ) {
         top = ConstraintAnchorLink(
-            target = target.toAnchorTarget(ConstraintAnchor.Bottom),
+            target = anchorTarget(target.id, ConstraintAnchor.Bottom),
             margin = margin,
             goneMargin = goneMargin,
         )
@@ -294,12 +424,12 @@ class ConstraintConstrainScope internal constructor() {
      * @param goneMargin spacing used when the target is gone, or `null` for the native default
      */
     fun bottomToTop(
-        target: ConstraintReferenceTarget,
+        target: ConstraintVerticalAnchorTarget,
         margin: UiDp = UiDp.Zero,
         goneMargin: UiDp? = null,
     ) {
         bottom = ConstraintAnchorLink(
-            target = target.toAnchorTarget(ConstraintAnchor.Top),
+            target = anchorTarget(target.id, ConstraintAnchor.Top),
             margin = margin,
             goneMargin = goneMargin,
         )
@@ -312,12 +442,12 @@ class ConstraintConstrainScope internal constructor() {
      * @param goneMargin spacing used when the target is gone, or `null` for the native default
      */
     fun bottomToBottom(
-        target: ConstraintReferenceTarget = parent,
+        target: ConstraintVerticalAnchorTarget = parent,
         margin: UiDp = UiDp.Zero,
         goneMargin: UiDp? = null,
     ) {
         bottom = ConstraintAnchorLink(
-            target = target.toAnchorTarget(ConstraintAnchor.Bottom),
+            target = anchorTarget(target.id, ConstraintAnchor.Bottom),
             margin = margin,
             goneMargin = goneMargin,
         )
@@ -326,11 +456,21 @@ class ConstraintConstrainScope internal constructor() {
     /**
      * Connects this child's text baseline to [target]'s baseline.
      * @param target child whose native baseline is the destination
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
      */
-    fun baselineToBaseline(target: ConstraintReference) {
-        baseline = ConstraintAnchorTarget.ref(
-            id = target.id,
-            anchor = ConstraintAnchor.Baseline,
+    fun baselineToBaseline(
+        target: ConstraintBaselineAnchorTarget,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
+    ) {
+        baseline = ConstraintAnchorLink(
+            target = ConstraintAnchorTarget.ref(
+                id = target.id,
+                anchor = ConstraintAnchor.Baseline,
+            ),
+            margin = margin,
+            goneMargin = goneMargin,
         )
     }
 
@@ -341,12 +481,12 @@ class ConstraintConstrainScope internal constructor() {
      * @param goneMargin spacing used when the target is gone, or `null` for the native default
      */
     fun baselineToTop(
-        target: ConstraintReferenceTarget,
+        target: ConstraintVerticalAnchorTarget,
         margin: UiDp = UiDp.Zero,
         goneMargin: UiDp? = null,
     ) {
-        baselineToTop = ConstraintAnchorLink(
-            target = target.toAnchorTarget(ConstraintAnchor.Top),
+        baseline = ConstraintAnchorLink(
+            target = anchorTarget(target.id, ConstraintAnchor.Top),
             margin = margin,
             goneMargin = goneMargin,
         )
@@ -359,12 +499,12 @@ class ConstraintConstrainScope internal constructor() {
      * @param goneMargin spacing used when the target is gone, or `null` for the native default
      */
     fun baselineToBottom(
-        target: ConstraintReferenceTarget,
+        target: ConstraintVerticalAnchorTarget,
         margin: UiDp = UiDp.Zero,
         goneMargin: UiDp? = null,
     ) {
-        baselineToBottom = ConstraintAnchorLink(
-            target = target.toAnchorTarget(ConstraintAnchor.Bottom),
+        baseline = ConstraintAnchorLink(
+            target = anchorTarget(target.id, ConstraintAnchor.Bottom),
             margin = margin,
             goneMargin = goneMargin,
         )
@@ -393,7 +533,7 @@ class ConstraintConstrainScope internal constructor() {
      * Replaces start/end links so this child is horizontally centered on [target].
      * @param target parent, child, or helper to center against
      */
-    fun centerHorizontallyTo(target: ConstraintReferenceTarget = parent) {
+    fun centerHorizontallyTo(target: ConstraintHorizontalAnchorTarget = parent) {
         startToStart(target)
         endToEnd(target)
     }
@@ -402,35 +542,60 @@ class ConstraintConstrainScope internal constructor() {
      * Replaces top/bottom links so this child is vertically centered on [target].
      * @param target parent, child, or helper to center against
      */
-    fun centerVerticallyTo(target: ConstraintReferenceTarget = parent) {
+    fun centerVerticallyTo(target: ConstraintVerticalAnchorTarget = parent) {
         topToTop(target)
         bottomToBottom(target)
     }
 
     internal fun build(): ConstraintItemSpec {
+        validateBias(horizontalBias, "horizontalBias")
+        validateBias(verticalBias, "verticalBias")
+        listOfNotNull(start, end, top, bottom, baseline).forEach { link ->
+            require(link.margin.value.isFinite() && link.margin.value >= 0f) {
+                "Constraint margin must be finite and non-negative."
+            }
+            val goneMargin = link.goneMargin
+            require(goneMargin == null || goneMargin.value.isFinite() && goneMargin.value >= 0f) {
+                "Constraint goneMargin must be finite and non-negative."
+            }
+        }
+        require(baseline == null || top == null && bottom == null) {
+            "A baseline link is mutually exclusive with top and bottom positioning."
+        }
+        val hasEdgeOrBaselineLink = listOf(start, end, top, bottom, baseline).any { it != null }
+        require(circle == null || !hasEdgeOrBaselineLink) {
+            "Circular positioning is mutually exclusive with edge and baseline links."
+        }
+        circle?.let { circleSpec ->
+            require(circleSpec.radius.value.isFinite() && circleSpec.radius.value >= 0f) {
+                "Circular radius must be finite and non-negative."
+            }
+            require(circleSpec.angle.isFinite() && circleSpec.angle >= 0f && circleSpec.angle < 360f) {
+                "Circular angle must be finite and within 0f..<360f."
+            }
+        }
+        require(ratio == null || width is ConstraintDimension.MatchConstraints || height is ConstraintDimension.MatchConstraints) {
+            "Constraint ratio requires width or height to use ConstraintDimension.MatchConstraints."
+        }
         return ConstraintItemSpec(
             start = start,
             end = end,
             top = top,
             bottom = bottom,
             baseline = baseline,
-            baselineToTop = baselineToTop,
-            baselineToBottom = baselineToBottom,
             width = width,
             height = height,
-            widthMin = widthMin,
-            widthMax = widthMax,
-            widthPercent = widthPercent,
-            heightMin = heightMin,
-            heightMax = heightMax,
-            heightPercent = heightPercent,
-            constrainedWidth = constrainedWidth,
-            constrainedHeight = constrainedHeight,
             horizontalBias = horizontalBias,
             verticalBias = verticalBias,
-            dimensionRatio = dimensionRatio,
+            ratio = ratio,
             circle = circle,
         )
+    }
+}
+
+private fun validateBias(value: Float?, field: String) {
+    require(value == null || value.isFinite() && value in 0f..1f) {
+        "Constraint $field must be finite and within 0f..1f."
     }
 }
 
@@ -444,12 +609,28 @@ private fun validateChainWeights(
     weights: List<Float>?,
     expectedSize: Int,
 ) {
+    require(expectedSize >= 2) {
+        "Constraint chain requires at least two referenced ids."
+    }
     if (weights == null) {
         return
     }
     require(weights.size == expectedSize) {
         "Constraint chain weights size must match referenced ids size. expected=$expectedSize actual=${weights.size}"
     }
+    require(weights.all { weight -> weight.isFinite() && weight > 0f }) {
+        "Constraint chain weights must be finite and greater than zero."
+    }
+}
+
+private fun validateChainReferences(
+    refs: Array<out ConstraintReference>,
+    bias: Float?,
+) {
+    require(refs.map { ref -> ref.id }.toSet().size == refs.size) {
+        "Constraint chain referenced ids must be unique."
+    }
+    validateBias(bias, "chain bias")
 }
 
 /**
@@ -462,6 +643,8 @@ private fun validateChainWeights(
  * @param ref reference shared with anchors and helpers
  * @param content constraint builder evaluated immediately
  * @return a new modifier chain
+ * @throws IllegalArgumentException if the completed constraint has an invalid range or mutually
+ * exclusive positioning modes
  */
 fun Modifier.constrainAs(
     ref: ConstraintReference,
@@ -484,11 +667,14 @@ fun Modifier.constrainAs(
  * @param id layout-local child identity
  * @param content constraint builder evaluated immediately
  * @return a new modifier chain
+ * @throws IllegalArgumentException if [id] is blank or the completed constraint has an invalid
+ * range or mutually exclusive positioning modes
  */
 fun Modifier.constrain(
     id: String,
     content: ConstraintConstrainScope.() -> Unit,
 ): Modifier {
+    require(id.isNotBlank()) { "Constraint ID must not be blank." }
     return this
         .layoutId(id)
         .then(
@@ -502,15 +688,19 @@ fun Modifier.constrain(
 /**
  * Emits a node backed by AndroidX ConstraintLayout and collects inline virtual helpers.
  *
- * Helper calls are valid only while [content] is evaluated. A supplied [constraintSet] provides
- * reusable constraints; inline child modifiers and helpers are encoded alongside it for renderer
- * reconciliation. Nested ConstraintLayouts use independent thread-local collector frames.
+ * A supplied [constraintSet] provides reusable constraints; inline child modifiers and helpers are
+ * encoded alongside it for renderer reconciliation. [content] executes on one dedicated
+ * [ConstraintLayoutScope], then its helper declarations are frozen into the emitted NodeSpec.
+ * Nested ConstraintLayouts therefore have statically isolated receivers and independent helper
+ * ownership without thread-local state.
  *
  * @sample com.viewcompose.constraintlayout.samples.constraintLayoutSample
  * @param key optional sibling identity used during reconciliation
  * @param constraintSet reusable external constraints, or `null` for inline-only constraints
  * @param modifier layout, drawing, input, and semantics behavior for the native container
  * @param content children and inline helper declarations
+ * @throws IllegalArgumentException if [content] declares an invalid local constraint/helper value
+ * or duplicate helper ID
  */
 fun UiTreeBuilder.ConstraintLayout(
     key: Any? = null,
@@ -518,24 +708,20 @@ fun UiTreeBuilder.ConstraintLayout(
     modifier: Modifier = Modifier,
     content: ConstraintLayoutScope.() -> Unit,
 ) {
-    val context = ConstraintLayoutDslContext(
-        helpers = MutableConstraintHelpersCollector(),
-    )
-    ConstraintLayoutDslContextStack.push(context)
-    try {
-        emit(
-            type = NodeType.ConstraintLayout,
-            key = key,
-            spec = ConstraintLayoutNodeProps(
+    emitScoped(
+        type = NodeType.ConstraintLayout,
+        key = key,
+        inputs = listOf(constraintSet),
+        modifier = modifier,
+        scopeFactory = ::ConstraintLayoutScope,
+        spec = {
+            ConstraintLayoutNodeProps(
                 constraintSet = constraintSet,
-                helpers = context.helpers.toSpec(),
-            ),
-            modifier = modifier,
-            content = content,
-        )
-    } finally {
-        ConstraintLayoutDslContextStack.pop()
-    }
+                helpers = buildHelpers(),
+            )
+        },
+        content = content,
+    )
 }
 
 /**
@@ -543,8 +729,11 @@ fun UiTreeBuilder.ConstraintLayout(
  * @receiver active ConstraintLayout content scope
  * @param id layout-local child/helper ID; uniqueness is the caller's responsibility
  * @return a reference retaining [id]
+ * @throws IllegalArgumentException if [id] is blank
+ * @throws IllegalStateException if the receiver was retained after its content completed
  */
 fun ConstraintLayoutScope.createRef(id: String): ConstraintReference {
+    ensureActive()
     return ConstraintReference(id = id)
 }
 
@@ -553,13 +742,10 @@ fun ConstraintLayoutScope.createRef(id: String): ConstraintReference {
  * @receiver active ConstraintLayout content scope
  * @param ids layout-local IDs whose uniqueness is the caller's responsibility
  * @return newly allocated ordered reference array
+ * @throws IllegalArgumentException if any ID is blank
  */
 fun ConstraintLayoutScope.createRefs(vararg ids: String): Array<ConstraintReference> {
     return ids.map { id -> createRef(id) }.toTypedArray()
-}
-
-private fun ConstraintLayoutScope.allocHelperId(prefix: String): String {
-    return requireConstraintContext().helpers.allocId(prefix)
 }
 
 /**
@@ -568,40 +754,40 @@ private fun ConstraintLayoutScope.allocHelperId(prefix: String): String {
  * @param offset distance from logical start in dp
  * @param id helper identity, auto-generated by declaration order when omitted
  * @return reference to the virtual guideline
- * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this layout
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
  */
 fun ConstraintLayoutScope.createGuidelineFromStart(
     offset: UiDp,
     id: String = allocHelperId("guideline-start"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
+): ConstraintHorizontalAnchorReference {
+    addGuideline(ConstraintGuidelineSpec(
         id = id,
         direction = ConstraintGuidelineDirection.FromStart,
         position = ConstraintGuidelinePosition.Offset(offset),
-    )
-    return ConstraintReference(id)
+    ))
+    return HorizontalAnchorReference(id)
 }
 
 /**
  * Creates a logical-start guideline at parent-width [fraction].
  * @receiver active ConstraintLayout content scope
- * @param fraction native ConstraintLayout fraction, normally from `0f` to `1f`
+ * @param fraction finite parent-width fraction in `0f..1f`, validated with the complete graph
  * @param id helper identity, auto-generated by declaration order when omitted
  * @return reference to the virtual guideline
- * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this layout
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
  */
 fun ConstraintLayoutScope.createGuidelineFromStart(
     fraction: Float,
     id: String = allocHelperId("guideline-start"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
+): ConstraintHorizontalAnchorReference {
+    addGuideline(ConstraintGuidelineSpec(
         id = id,
         direction = ConstraintGuidelineDirection.FromStart,
         position = ConstraintGuidelinePosition.Fraction(fraction),
-    )
-    return ConstraintReference(id)
+    ))
+    return HorizontalAnchorReference(id)
 }
 
 /**
@@ -610,40 +796,40 @@ fun ConstraintLayoutScope.createGuidelineFromStart(
  * @param offset distance from logical end in dp
  * @param id helper identity, auto-generated by declaration order when omitted
  * @return reference to the virtual guideline
- * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this layout
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
  */
 fun ConstraintLayoutScope.createGuidelineFromEnd(
     offset: UiDp,
     id: String = allocHelperId("guideline-end"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
+): ConstraintHorizontalAnchorReference {
+    addGuideline(ConstraintGuidelineSpec(
         id = id,
         direction = ConstraintGuidelineDirection.FromEnd,
         position = ConstraintGuidelinePosition.Offset(offset),
-    )
-    return ConstraintReference(id)
+    ))
+    return HorizontalAnchorReference(id)
 }
 
 /**
  * Creates a logical-end guideline at parent-width [fraction].
  * @receiver active ConstraintLayout content scope
- * @param fraction native ConstraintLayout fraction, normally from `0f` to `1f`
+ * @param fraction finite parent-width fraction in `0f..1f`, validated with the complete graph
  * @param id helper identity, auto-generated by declaration order when omitted
  * @return reference to the virtual guideline
- * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this layout
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
  */
 fun ConstraintLayoutScope.createGuidelineFromEnd(
     fraction: Float,
     id: String = allocHelperId("guideline-end"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
+): ConstraintHorizontalAnchorReference {
+    addGuideline(ConstraintGuidelineSpec(
         id = id,
         direction = ConstraintGuidelineDirection.FromEnd,
         position = ConstraintGuidelinePosition.Fraction(fraction),
-    )
-    return ConstraintReference(id)
+    ))
+    return HorizontalAnchorReference(id)
 }
 
 /**
@@ -652,40 +838,40 @@ fun ConstraintLayoutScope.createGuidelineFromEnd(
  * @param offset distance from top in dp
  * @param id helper identity, auto-generated by declaration order when omitted
  * @return reference to the virtual guideline
- * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this layout
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
  */
 fun ConstraintLayoutScope.createGuidelineFromTop(
     offset: UiDp,
     id: String = allocHelperId("guideline-top"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
+): ConstraintVerticalAnchorReference {
+    addGuideline(ConstraintGuidelineSpec(
         id = id,
         direction = ConstraintGuidelineDirection.FromTop,
         position = ConstraintGuidelinePosition.Offset(offset),
-    )
-    return ConstraintReference(id)
+    ))
+    return VerticalAnchorReference(id)
 }
 
 /**
  * Creates a top guideline at parent-height [fraction].
  * @receiver active ConstraintLayout content scope
- * @param fraction native ConstraintLayout fraction, normally from `0f` to `1f`
+ * @param fraction finite parent-height fraction in `0f..1f`, validated with the complete graph
  * @param id helper identity, auto-generated by declaration order when omitted
  * @return reference to the virtual guideline
- * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this layout
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
  */
 fun ConstraintLayoutScope.createGuidelineFromTop(
     fraction: Float,
     id: String = allocHelperId("guideline-top"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
+): ConstraintVerticalAnchorReference {
+    addGuideline(ConstraintGuidelineSpec(
         id = id,
         direction = ConstraintGuidelineDirection.FromTop,
         position = ConstraintGuidelinePosition.Fraction(fraction),
-    )
-    return ConstraintReference(id)
+    ))
+    return VerticalAnchorReference(id)
 }
 
 /**
@@ -694,134 +880,148 @@ fun ConstraintLayoutScope.createGuidelineFromTop(
  * @param offset distance from bottom in dp
  * @param id helper identity, auto-generated by declaration order when omitted
  * @return reference to the virtual guideline
- * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this layout
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
  */
 fun ConstraintLayoutScope.createGuidelineFromBottom(
     offset: UiDp,
     id: String = allocHelperId("guideline-bottom"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
+): ConstraintVerticalAnchorReference {
+    addGuideline(ConstraintGuidelineSpec(
         id = id,
         direction = ConstraintGuidelineDirection.FromBottom,
         position = ConstraintGuidelinePosition.Offset(offset),
-    )
-    return ConstraintReference(id)
+    ))
+    return VerticalAnchorReference(id)
 }
 
 /**
  * Creates a bottom guideline at parent-height [fraction].
  * @receiver active ConstraintLayout content scope
- * @param fraction native ConstraintLayout fraction, normally from `0f` to `1f`
+ * @param fraction finite parent-height fraction in `0f..1f`, validated with the complete graph
  * @param id helper identity, auto-generated by declaration order when omitted
  * @return reference to the virtual guideline
- * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this layout
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
  */
 fun ConstraintLayoutScope.createGuidelineFromBottom(
     fraction: Float,
     id: String = allocHelperId("guideline-bottom"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
+): ConstraintVerticalAnchorReference {
+    addGuideline(ConstraintGuidelineSpec(
         id = id,
         direction = ConstraintGuidelineDirection.FromBottom,
         position = ConstraintGuidelinePosition.Fraction(fraction),
-    )
-    return ConstraintReference(id)
+    ))
+    return VerticalAnchorReference(id)
 }
 
 /** Registers one inline barrier helper in the active layout context. */
 private fun ConstraintLayoutScope.registerBarrier(
     id: String,
     direction: ConstraintBarrierDirection,
-    refs: Array<out ConstraintReference>,
+    refs: Array<out ConstraintLayoutReference>,
     margin: UiDp,
     allowsGoneWidgets: Boolean,
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.barriers += ConstraintBarrierSpec(
+) {
+    require(refs.isNotEmpty()) {
+        "Barrier helper requires at least one referenced id."
+    }
+    addBarrier(ConstraintBarrierSpec(
         id = id,
         direction = direction,
         referencedIds = refs.map { ref -> ref.id },
         margin = margin,
         allowsGoneWidgets = allowsGoneWidgets,
-    )
-    return ConstraintReference(id)
+    ))
 }
 
 /**
  * Creates a logical-start barrier over [refs].
- * @param refs referenced children/helpers; an empty set is forwarded to the native helper
+ * @param refs referenced children/helpers; must not be empty
  * @param id helper identity, auto-generated by declaration order when omitted
  * @param margin additional dp offset from the computed extreme
  * @param allowsGoneWidgets whether gone referenced children participate
  * @return reference to the virtual barrier
+ * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any helper
+ * kind in the same inline declaration source
  */
 fun ConstraintLayoutScope.createStartBarrier(
-    vararg refs: ConstraintReference,
+    vararg refs: ConstraintLayoutReference,
     id: String = allocHelperId("barrier-start"),
     margin: UiDp = UiDp.Zero,
     allowsGoneWidgets: Boolean = true,
-): ConstraintReference {
-    return registerBarrier(id, ConstraintBarrierDirection.Start, refs, margin, allowsGoneWidgets)
+): ConstraintHorizontalAnchorReference {
+    registerBarrier(id, ConstraintBarrierDirection.Start, refs, margin, allowsGoneWidgets)
+    return HorizontalAnchorReference(id)
 }
 
 /**
  * Creates a logical-end barrier over [refs].
- * @param refs referenced children/helpers; an empty set is forwarded to the native helper
+ * @param refs referenced children/helpers; must not be empty
  * @param id helper identity, auto-generated by declaration order when omitted
  * @param margin additional dp offset from the computed extreme
  * @param allowsGoneWidgets whether gone referenced children participate
  * @return reference to the virtual barrier
+ * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any helper
+ * kind in the same inline declaration source
  */
 fun ConstraintLayoutScope.createEndBarrier(
-    vararg refs: ConstraintReference,
+    vararg refs: ConstraintLayoutReference,
     id: String = allocHelperId("barrier-end"),
     margin: UiDp = UiDp.Zero,
     allowsGoneWidgets: Boolean = true,
-): ConstraintReference {
-    return registerBarrier(id, ConstraintBarrierDirection.End, refs, margin, allowsGoneWidgets)
+): ConstraintHorizontalAnchorReference {
+    registerBarrier(id, ConstraintBarrierDirection.End, refs, margin, allowsGoneWidgets)
+    return HorizontalAnchorReference(id)
 }
 
 /**
  * Creates a top barrier over [refs].
- * @param refs referenced children/helpers; an empty set is forwarded to the native helper
+ * @param refs referenced children/helpers; must not be empty
  * @param id helper identity, auto-generated by declaration order when omitted
  * @param margin additional dp offset from the computed extreme
  * @param allowsGoneWidgets whether gone referenced children participate
  * @return reference to the virtual barrier
+ * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any helper
+ * kind in the same inline declaration source
  */
 fun ConstraintLayoutScope.createTopBarrier(
-    vararg refs: ConstraintReference,
+    vararg refs: ConstraintLayoutReference,
     id: String = allocHelperId("barrier-top"),
     margin: UiDp = UiDp.Zero,
     allowsGoneWidgets: Boolean = true,
-): ConstraintReference {
-    return registerBarrier(id, ConstraintBarrierDirection.Top, refs, margin, allowsGoneWidgets)
+): ConstraintVerticalAnchorReference {
+    registerBarrier(id, ConstraintBarrierDirection.Top, refs, margin, allowsGoneWidgets)
+    return VerticalAnchorReference(id)
 }
 
 /**
  * Creates a bottom barrier over [refs].
- * @param refs referenced children/helpers; an empty set is forwarded to the native helper
+ * @param refs referenced children/helpers; must not be empty
  * @param id helper identity, auto-generated by declaration order when omitted
  * @param margin additional dp offset from the computed extreme
  * @param allowsGoneWidgets whether gone referenced children participate
  * @return reference to the virtual barrier
+ * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any helper
+ * kind in the same inline declaration source
  */
 fun ConstraintLayoutScope.createBottomBarrier(
-    vararg refs: ConstraintReference,
+    vararg refs: ConstraintLayoutReference,
     id: String = allocHelperId("barrier-bottom"),
     margin: UiDp = UiDp.Zero,
     allowsGoneWidgets: Boolean = true,
-): ConstraintReference {
-    return registerBarrier(id, ConstraintBarrierDirection.Bottom, refs, margin, allowsGoneWidgets)
+): ConstraintVerticalAnchorReference {
+    registerBarrier(id, ConstraintBarrierDirection.Bottom, refs, margin, allowsGoneWidgets)
+    return VerticalAnchorReference(id)
 }
 
 /**
  * Creates a virtual Flow that arranges referenced children in rows or columns.
  *
  * Style, bias, alignment, wrapping, gaps, and padding map to AndroidX Flow. Numeric values are
- * forwarded without DSL-level coercion; `maxElementsWrap = -1` keeps the native unlimited default.
+ * forwarded without DSL-level coercion and are validated during complete-graph preflight;
+ * `maxElementsWrap = -1` keeps the native unlimited default.
  *
  * @sample com.viewcompose.constraintlayout.samples.constraintHelpersSample
  * @param refs ordered referenced children; must not be empty
@@ -851,10 +1051,11 @@ fun ConstraintLayoutScope.createBottomBarrier(
  * @param paddingTop top dp padding
  * @param paddingBottom bottom dp padding
  * @return reference to the virtual Flow
- * @throws IllegalArgumentException if [refs] is empty
+ * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any helper
+ * kind in the same inline declaration source
  */
 fun ConstraintLayoutScope.createFlow(
-    vararg refs: ConstraintReference,
+    vararg refs: ConstraintLayoutReference,
     id: String = allocHelperId("flow"),
     orientation: ConstraintFlowOrientation = ConstraintFlowOrientation.Horizontal,
     wrapMode: ConstraintFlowWrapMode = ConstraintFlowWrapMode.None,
@@ -884,8 +1085,7 @@ fun ConstraintLayoutScope.createFlow(
     require(refs.isNotEmpty()) {
         "Flow helper requires at least one referenced id."
     }
-    val context = requireConstraintContext()
-    context.helpers.flows += ConstraintFlowSpec(
+    addFlow(ConstraintFlowSpec(
         id = id,
         referencedIds = refs.map { ref -> ref.id },
         orientation = orientation,
@@ -912,7 +1112,7 @@ fun ConstraintLayoutScope.createFlow(
         paddingEnd = paddingEnd,
         paddingTop = paddingTop,
         paddingBottom = paddingBottom,
-    )
+    ))
     return ConstraintReference(id)
 }
 
@@ -923,25 +1123,25 @@ fun ConstraintLayoutScope.createFlow(
  * @param visibility visibility propagated by the native Group
  * @param elevation elevation in dp propagated by the native Group
  * @return reference to the virtual Group
- * @throws IllegalArgumentException if [refs] is empty
+ * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any helper
+ * kind in the same inline declaration source
  */
 fun ConstraintLayoutScope.createGroup(
-    vararg refs: ConstraintReference,
+    vararg refs: ConstraintLayoutReference,
     id: String = allocHelperId("group"),
     visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible,
     elevation: UiDp = UiDp.Zero,
-): ConstraintReference {
+): ConstraintHelperReference {
     require(refs.isNotEmpty()) {
         "Group helper requires at least one referenced id."
     }
-    val context = requireConstraintContext()
-    context.helpers.groups += ConstraintGroupSpec(
+    addGroup(ConstraintGroupSpec(
         id = id,
         referencedIds = refs.map { ref -> ref.id },
         visibility = visibility,
         elevation = elevation,
-    )
-    return ConstraintReference(id)
+    ))
+    return HelperReference(id)
 }
 
 /**
@@ -958,10 +1158,11 @@ fun ConstraintLayoutScope.createGroup(
  * @param pivotX optional absolute pivot x in dp, or `null` for native computed center
  * @param pivotY optional absolute pivot y in dp, or `null` for native computed center
  * @return reference to the virtual Layer
- * @throws IllegalArgumentException if [refs] is empty
+ * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any helper
+ * kind in the same inline declaration source
  */
 fun ConstraintLayoutScope.createLayer(
-    vararg refs: ConstraintReference,
+    vararg refs: ConstraintLayoutReference,
     id: String = allocHelperId("layer"),
     visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible,
     elevation: UiDp = UiDp.Zero,
@@ -972,12 +1173,11 @@ fun ConstraintLayoutScope.createLayer(
     translationY: UiDp = UiDp.Zero,
     pivotX: UiDp? = null,
     pivotY: UiDp? = null,
-): ConstraintReference {
+): ConstraintHelperReference {
     require(refs.isNotEmpty()) {
         "Layer helper requires at least one referenced id."
     }
-    val context = requireConstraintContext()
-    context.helpers.layers += ConstraintLayerSpec(
+    addLayer(ConstraintLayerSpec(
         id = id,
         referencedIds = refs.map { ref -> ref.id },
         visibility = visibility,
@@ -989,8 +1189,8 @@ fun ConstraintLayoutScope.createLayer(
         translationY = translationY,
         pivotX = pivotX,
         pivotY = pivotY,
-    )
-    return ConstraintReference(id)
+    ))
+    return HelperReference(id)
 }
 
 /**
@@ -999,18 +1199,19 @@ fun ConstraintLayoutScope.createLayer(
  * @param id helper identity, auto-generated by declaration order when omitted
  * @param emptyVisibility visibility used while no content is assigned
  * @return reference to the virtual Placeholder
+ * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in the same
+ * inline declaration source
  */
 fun ConstraintLayoutScope.createPlaceholder(
     content: ConstraintReference? = null,
     id: String = allocHelperId("placeholder"),
     emptyVisibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Invisible,
 ): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.placeholders += ConstraintPlaceholderSpec(
+    addPlaceholder(ConstraintPlaceholderSpec(
         id = id,
         contentId = content?.id,
         emptyVisibility = emptyVisibility,
-    )
+    ))
     return ConstraintReference(id)
 }
 
@@ -1022,23 +1223,23 @@ private fun ConstraintLayoutScope.registerChain(
     bias: Float?,
 ) {
     validateChainWeights(weights, refs.size)
-    val context = requireConstraintContext()
-    context.helpers.chains += ConstraintChainSpec(
+    validateChainReferences(refs, bias)
+    addChain(ConstraintChainSpec(
         orientation = orientation,
         referencedIds = refs.map { ref -> ref.id },
         weights = weights,
         style = style,
         bias = bias,
-    )
+    ))
 }
 
 /**
  * Adds an ordered horizontal chain.
- * @param refs ordered chain members; empty chains are forwarded to the renderer
+ * @param refs ordered chain members; at least two unique references are required
  * @param weights optional member weights whose size must equal [refs]
  * @param style chain distribution policy
  * @param bias optional packed-chain bias
- * @throws IllegalArgumentException if [weights] size differs from [refs] size
+ * @throws IllegalArgumentException if references, weights, or bias are invalid
  */
 fun ConstraintLayoutScope.createHorizontalChain(
     vararg refs: ConstraintReference,
@@ -1057,11 +1258,11 @@ fun ConstraintLayoutScope.createHorizontalChain(
 
 /**
  * Adds an ordered vertical chain.
- * @param refs ordered chain members; empty chains are forwarded to the renderer
+ * @param refs ordered chain members; at least two unique references are required
  * @param weights optional member weights whose size must equal [refs]
  * @param style chain distribution policy
  * @param bias optional packed-chain bias
- * @throws IllegalArgumentException if [weights] size differs from [refs] size
+ * @throws IllegalArgumentException if references, weights, or bias are invalid
  */
 fun ConstraintLayoutScope.createVerticalChain(
     vararg refs: ConstraintReference,
@@ -1081,9 +1282,10 @@ fun ConstraintLayoutScope.createVerticalChain(
 /**
  * Builds an immutable reusable [ConstraintSetSpec] without emitting UI nodes.
  *
- * Reusing IDs replaces earlier constraint entries; helpers remain declaration ordered. Builder
- * instances are created by [constraintSet], evaluated synchronously, and not retained afterward.
+ * Constraint and helper IDs must be unique within their declaration source. Builder instances are
+ * created by [constraintSet], evaluated synchronously, and not retained afterward.
  */
+@UiDslMarker
 class ConstraintSetBuilder internal constructor() {
     private val constraints = linkedMapOf<String, ConstraintItemSpec>()
     private val helpers = MutableConstraintHelpersCollector()
@@ -1092,6 +1294,7 @@ class ConstraintSetBuilder internal constructor() {
      * Creates a reference for a child/helper ID.
      * @param id set-local identity whose uniqueness is the caller's responsibility
      * @return a reference retaining [id]
+     * @throws IllegalArgumentException if [id] is blank
      */
     fun createRef(id: String): ConstraintReference {
         return ConstraintReference(id = id)
@@ -1101,21 +1304,25 @@ class ConstraintSetBuilder internal constructor() {
      * Creates references in the same order as [ids].
      * @param ids set-local identities
      * @return newly allocated ordered reference array
+     * @throws IllegalArgumentException if any ID is blank
      */
     fun createRefs(vararg ids: String): Array<ConstraintReference> {
         return ids.map { id -> createRef(id) }.toTypedArray()
     }
 
     /**
-     * Adds or replaces the complete constraint entry for [id].
-     * @param id child identity used by a ConstraintLayout node
+     * Adds the complete constraint entry for [ref].
+     * @param ref child, Flow, or Placeholder reference used by a ConstraintLayout node
      * @param content constraint builder evaluated immediately
+     * @throws IllegalArgumentException if [ref] is already constrained, or [content]
+     * completes with an invalid range or mutually exclusive positioning modes
      */
     fun constrain(
-        id: String,
+        ref: ConstraintReference,
         content: ConstraintConstrainScope.() -> Unit,
     ) {
-        constraints[id] = buildConstraintSpec(content)
+        require(ref.id !in constraints) { "Constraint ID '${ref.id}' is already declared in this builder." }
+        constraints[ref.id] = buildConstraintSpec(content)
     }
 
     /**
@@ -1123,35 +1330,37 @@ class ConstraintSetBuilder internal constructor() {
      * @param offset distance from logical start
      * @param id helper identity, auto-generated when omitted
      * @return reference to the virtual guideline
+     * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this set
      */
     fun createGuidelineFromStart(
         offset: UiDp,
         id: String = helpers.allocId("guideline-start"),
-    ): ConstraintReference {
+    ): ConstraintHorizontalAnchorReference {
         helpers.guidelines += ConstraintGuidelineSpec(
             id = id,
             direction = ConstraintGuidelineDirection.FromStart,
             position = ConstraintGuidelinePosition.Offset(offset),
         )
-        return ConstraintReference(id)
+        return HorizontalAnchorReference(id)
     }
 
     /**
      * Creates a logical-start guideline at parent-width [fraction].
-     * @param fraction native ConstraintLayout fraction, normally `0f..1f`
+     * @param fraction finite parent-width fraction in `0f..1f`, validated with the complete graph
      * @param id helper identity, auto-generated when omitted
      * @return reference to the virtual guideline
+     * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this set
      */
     fun createGuidelineFromStart(
         fraction: Float,
         id: String = helpers.allocId("guideline-start"),
-    ): ConstraintReference {
+    ): ConstraintHorizontalAnchorReference {
         helpers.guidelines += ConstraintGuidelineSpec(
             id = id,
             direction = ConstraintGuidelineDirection.FromStart,
             position = ConstraintGuidelinePosition.Fraction(fraction),
         )
-        return ConstraintReference(id)
+        return HorizontalAnchorReference(id)
     }
 
     /**
@@ -1159,35 +1368,37 @@ class ConstraintSetBuilder internal constructor() {
      * @param offset distance from logical end
      * @param id helper identity, auto-generated when omitted
      * @return reference to the virtual guideline
+     * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this set
      */
     fun createGuidelineFromEnd(
         offset: UiDp,
         id: String = helpers.allocId("guideline-end"),
-    ): ConstraintReference {
+    ): ConstraintHorizontalAnchorReference {
         helpers.guidelines += ConstraintGuidelineSpec(
             id = id,
             direction = ConstraintGuidelineDirection.FromEnd,
             position = ConstraintGuidelinePosition.Offset(offset),
         )
-        return ConstraintReference(id)
+        return HorizontalAnchorReference(id)
     }
 
     /**
      * Creates a logical-end guideline at parent-width [fraction].
-     * @param fraction native ConstraintLayout fraction, normally `0f..1f`
+     * @param fraction finite parent-width fraction in `0f..1f`, validated with the complete graph
      * @param id helper identity, auto-generated when omitted
      * @return reference to the virtual guideline
+     * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this set
      */
     fun createGuidelineFromEnd(
         fraction: Float,
         id: String = helpers.allocId("guideline-end"),
-    ): ConstraintReference {
+    ): ConstraintHorizontalAnchorReference {
         helpers.guidelines += ConstraintGuidelineSpec(
             id = id,
             direction = ConstraintGuidelineDirection.FromEnd,
             position = ConstraintGuidelinePosition.Fraction(fraction),
         )
-        return ConstraintReference(id)
+        return HorizontalAnchorReference(id)
     }
 
     /**
@@ -1195,35 +1406,37 @@ class ConstraintSetBuilder internal constructor() {
      * @param offset distance from the top edge
      * @param id helper identity, auto-generated when omitted
      * @return reference to the virtual guideline
+     * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this set
      */
     fun createGuidelineFromTop(
         offset: UiDp,
         id: String = helpers.allocId("guideline-top"),
-    ): ConstraintReference {
+    ): ConstraintVerticalAnchorReference {
         helpers.guidelines += ConstraintGuidelineSpec(
             id = id,
             direction = ConstraintGuidelineDirection.FromTop,
             position = ConstraintGuidelinePosition.Offset(offset),
         )
-        return ConstraintReference(id)
+        return VerticalAnchorReference(id)
     }
 
     /**
      * Creates a top guideline at parent-height [fraction].
-     * @param fraction native ConstraintLayout fraction, normally `0f..1f`
+     * @param fraction finite parent-height fraction in `0f..1f`, validated with the complete graph
      * @param id helper identity, auto-generated when omitted
      * @return reference to the virtual guideline
+     * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this set
      */
     fun createGuidelineFromTop(
         fraction: Float,
         id: String = helpers.allocId("guideline-top"),
-    ): ConstraintReference {
+    ): ConstraintVerticalAnchorReference {
         helpers.guidelines += ConstraintGuidelineSpec(
             id = id,
             direction = ConstraintGuidelineDirection.FromTop,
             position = ConstraintGuidelinePosition.Fraction(fraction),
         )
-        return ConstraintReference(id)
+        return VerticalAnchorReference(id)
     }
 
     /**
@@ -1231,35 +1444,37 @@ class ConstraintSetBuilder internal constructor() {
      * @param offset distance from the bottom edge
      * @param id helper identity, auto-generated when omitted
      * @return reference to the virtual guideline
+     * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this set
      */
     fun createGuidelineFromBottom(
         offset: UiDp,
         id: String = helpers.allocId("guideline-bottom"),
-    ): ConstraintReference {
+    ): ConstraintVerticalAnchorReference {
         helpers.guidelines += ConstraintGuidelineSpec(
             id = id,
             direction = ConstraintGuidelineDirection.FromBottom,
             position = ConstraintGuidelinePosition.Offset(offset),
         )
-        return ConstraintReference(id)
+        return VerticalAnchorReference(id)
     }
 
     /**
      * Creates a bottom guideline at parent-height [fraction].
-     * @param fraction native ConstraintLayout fraction, normally `0f..1f`
+     * @param fraction finite parent-height fraction in `0f..1f`, validated with the complete graph
      * @param id helper identity, auto-generated when omitted
      * @return reference to the virtual guideline
+     * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this set
      */
     fun createGuidelineFromBottom(
         fraction: Float,
         id: String = helpers.allocId("guideline-bottom"),
-    ): ConstraintReference {
+    ): ConstraintVerticalAnchorReference {
         helpers.guidelines += ConstraintGuidelineSpec(
             id = id,
             direction = ConstraintGuidelineDirection.FromBottom,
             position = ConstraintGuidelinePosition.Fraction(fraction),
         )
-        return ConstraintReference(id)
+        return VerticalAnchorReference(id)
     }
 
     /**
@@ -1269,13 +1484,18 @@ class ConstraintSetBuilder internal constructor() {
      * @param margin dp offset from the computed extreme
      * @param allowsGoneWidgets whether gone references participate
      * @return reference to the virtual barrier
+     * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any
+     * helper kind in this set
      */
     fun createStartBarrier(
-        vararg refs: ConstraintReference,
+        vararg refs: ConstraintLayoutReference,
         id: String = helpers.allocId("barrier-start"),
         margin: UiDp = UiDp.Zero,
         allowsGoneWidgets: Boolean = true,
-    ): ConstraintReference {
+    ): ConstraintHorizontalAnchorReference {
+        require(refs.isNotEmpty()) {
+            "Barrier helper requires at least one referenced id."
+        }
         helpers.barriers += ConstraintBarrierSpec(
             id = id,
             direction = ConstraintBarrierDirection.Start,
@@ -1283,7 +1503,7 @@ class ConstraintSetBuilder internal constructor() {
             margin = margin,
             allowsGoneWidgets = allowsGoneWidgets,
         )
-        return ConstraintReference(id)
+        return HorizontalAnchorReference(id)
     }
 
     /**
@@ -1293,13 +1513,18 @@ class ConstraintSetBuilder internal constructor() {
      * @param margin dp offset from the computed extreme
      * @param allowsGoneWidgets whether gone references participate
      * @return reference to the virtual barrier
+     * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any
+     * helper kind in this set
      */
     fun createEndBarrier(
-        vararg refs: ConstraintReference,
+        vararg refs: ConstraintLayoutReference,
         id: String = helpers.allocId("barrier-end"),
         margin: UiDp = UiDp.Zero,
         allowsGoneWidgets: Boolean = true,
-    ): ConstraintReference {
+    ): ConstraintHorizontalAnchorReference {
+        require(refs.isNotEmpty()) {
+            "Barrier helper requires at least one referenced id."
+        }
         helpers.barriers += ConstraintBarrierSpec(
             id = id,
             direction = ConstraintBarrierDirection.End,
@@ -1307,7 +1532,7 @@ class ConstraintSetBuilder internal constructor() {
             margin = margin,
             allowsGoneWidgets = allowsGoneWidgets,
         )
-        return ConstraintReference(id)
+        return HorizontalAnchorReference(id)
     }
 
     /**
@@ -1317,13 +1542,18 @@ class ConstraintSetBuilder internal constructor() {
      * @param margin dp offset from the computed extreme
      * @param allowsGoneWidgets whether gone references participate
      * @return reference to the virtual barrier
+     * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any
+     * helper kind in this set
      */
     fun createTopBarrier(
-        vararg refs: ConstraintReference,
+        vararg refs: ConstraintLayoutReference,
         id: String = helpers.allocId("barrier-top"),
         margin: UiDp = UiDp.Zero,
         allowsGoneWidgets: Boolean = true,
-    ): ConstraintReference {
+    ): ConstraintVerticalAnchorReference {
+        require(refs.isNotEmpty()) {
+            "Barrier helper requires at least one referenced id."
+        }
         helpers.barriers += ConstraintBarrierSpec(
             id = id,
             direction = ConstraintBarrierDirection.Top,
@@ -1331,7 +1561,7 @@ class ConstraintSetBuilder internal constructor() {
             margin = margin,
             allowsGoneWidgets = allowsGoneWidgets,
         )
-        return ConstraintReference(id)
+        return VerticalAnchorReference(id)
     }
 
     /**
@@ -1341,13 +1571,18 @@ class ConstraintSetBuilder internal constructor() {
      * @param margin dp offset from the computed extreme
      * @param allowsGoneWidgets whether gone references participate
      * @return reference to the virtual barrier
+     * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any
+     * helper kind in this set
      */
     fun createBottomBarrier(
-        vararg refs: ConstraintReference,
+        vararg refs: ConstraintLayoutReference,
         id: String = helpers.allocId("barrier-bottom"),
         margin: UiDp = UiDp.Zero,
         allowsGoneWidgets: Boolean = true,
-    ): ConstraintReference {
+    ): ConstraintVerticalAnchorReference {
+        require(refs.isNotEmpty()) {
+            "Barrier helper requires at least one referenced id."
+        }
         helpers.barriers += ConstraintBarrierSpec(
             id = id,
             direction = ConstraintBarrierDirection.Bottom,
@@ -1355,7 +1590,7 @@ class ConstraintSetBuilder internal constructor() {
             margin = margin,
             allowsGoneWidgets = allowsGoneWidgets,
         )
-        return ConstraintReference(id)
+        return VerticalAnchorReference(id)
     }
 
     /**
@@ -1388,10 +1623,11 @@ class ConstraintSetBuilder internal constructor() {
      * @param paddingTop top dp padding
      * @param paddingBottom bottom dp padding
      * @return reference to the virtual Flow
-     * @throws IllegalArgumentException if [refs] is empty
+     * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any
+     * helper kind in this set
      */
     fun createFlow(
-        vararg refs: ConstraintReference,
+        vararg refs: ConstraintLayoutReference,
         id: String = helpers.allocId("flow"),
         orientation: ConstraintFlowOrientation = ConstraintFlowOrientation.Horizontal,
         wrapMode: ConstraintFlowWrapMode = ConstraintFlowWrapMode.None,
@@ -1459,14 +1695,15 @@ class ConstraintSetBuilder internal constructor() {
      * @param visibility propagated native visibility
      * @param elevation propagated elevation in dp
      * @return reference to the virtual Group
-     * @throws IllegalArgumentException if [refs] is empty
+     * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any
+     * helper kind in this set
      */
     fun createGroup(
-        vararg refs: ConstraintReference,
+        vararg refs: ConstraintLayoutReference,
         id: String = helpers.allocId("group"),
         visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible,
         elevation: UiDp = UiDp.Zero,
-    ): ConstraintReference {
+    ): ConstraintHelperReference {
         require(refs.isNotEmpty()) {
             "Group helper requires at least one referenced id."
         }
@@ -1476,7 +1713,7 @@ class ConstraintSetBuilder internal constructor() {
             visibility = visibility,
             elevation = elevation,
         )
-        return ConstraintReference(id)
+        return HelperReference(id)
     }
 
     /**
@@ -1493,10 +1730,11 @@ class ConstraintSetBuilder internal constructor() {
      * @param pivotX absolute pivot x in dp, or `null` for native computed center
      * @param pivotY absolute pivot y in dp, or `null` for native computed center
      * @return reference to the virtual Layer
-     * @throws IllegalArgumentException if [refs] is empty
+     * @throws IllegalArgumentException if [refs] is empty, or [id] is blank or duplicates any
+     * helper kind in this set
      */
     fun createLayer(
-        vararg refs: ConstraintReference,
+        vararg refs: ConstraintLayoutReference,
         id: String = helpers.allocId("layer"),
         visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible,
         elevation: UiDp = UiDp.Zero,
@@ -1507,7 +1745,7 @@ class ConstraintSetBuilder internal constructor() {
         translationY: UiDp = UiDp.Zero,
         pivotX: UiDp? = null,
         pivotY: UiDp? = null,
-    ): ConstraintReference {
+    ): ConstraintHelperReference {
         require(refs.isNotEmpty()) {
             "Layer helper requires at least one referenced id."
         }
@@ -1524,7 +1762,7 @@ class ConstraintSetBuilder internal constructor() {
             pivotX = pivotX,
             pivotY = pivotY,
         )
-        return ConstraintReference(id)
+        return HelperReference(id)
     }
 
     /**
@@ -1533,6 +1771,7 @@ class ConstraintSetBuilder internal constructor() {
      * @param id helper identity, auto-generated when omitted
      * @param emptyVisibility visibility used while content is absent
      * @return reference to the virtual Placeholder
+     * @throws IllegalArgumentException if [id] is blank or duplicates any helper kind in this set
      */
     fun createPlaceholder(
         content: ConstraintReference? = null,
@@ -1553,7 +1792,7 @@ class ConstraintSetBuilder internal constructor() {
      * @param weights optional weights whose size must equal [refs]
      * @param style chain distribution policy
      * @param bias optional packed-chain bias
-     * @throws IllegalArgumentException if [weights] size differs from [refs] size
+     * @throws IllegalArgumentException if references, weights, or bias are invalid
      */
     fun createHorizontalChain(
         vararg refs: ConstraintReference,
@@ -1562,6 +1801,7 @@ class ConstraintSetBuilder internal constructor() {
         bias: Float? = null,
     ) {
         validateChainWeights(weights, refs.size)
+        validateChainReferences(refs, bias)
         helpers.chains += ConstraintChainSpec(
             orientation = ConstraintChainOrientation.Horizontal,
             referencedIds = refs.map { ref -> ref.id },
@@ -1577,7 +1817,7 @@ class ConstraintSetBuilder internal constructor() {
      * @param weights optional weights whose size must equal [refs]
      * @param style chain distribution policy
      * @param bias optional packed-chain bias
-     * @throws IllegalArgumentException if [weights] size differs from [refs] size
+     * @throws IllegalArgumentException if references, weights, or bias are invalid
      */
     fun createVerticalChain(
         vararg refs: ConstraintReference,
@@ -1586,6 +1826,7 @@ class ConstraintSetBuilder internal constructor() {
         bias: Float? = null,
     ) {
         validateChainWeights(weights, refs.size)
+        validateChainReferences(refs, bias)
         helpers.chains += ConstraintChainSpec(
             orientation = ConstraintChainOrientation.Vertical,
             referencedIds = refs.map { ref -> ref.id },
@@ -1612,6 +1853,8 @@ class ConstraintSetBuilder internal constructor() {
  * @sample com.viewcompose.constraintlayout.samples.constraintSetSample
  * @param content reusable constraint and helper declarations
  * @return immutable constraint-set specification
+ * @throws IllegalArgumentException if [content] declares a blank/duplicate identity or invalid
+ * local constraint/chain combination
  */
 fun constraintSet(content: ConstraintSetBuilder.() -> Unit): ConstraintSetSpec {
     return ConstraintSetBuilder()

@@ -18,6 +18,7 @@
     "architecture/decisions/0013-component-appearance-resolution-boundary.md",
     "architecture/decisions/0014-renderer-neutral-interaction-indication.md",
     "architecture/decisions/0015-observed-property-transactions.md",
+    "architecture/decisions/0016-constraintlayout-graph-and-helper-ownership.md",
     "architecture/decisions/README.md",
     "architecture/design-systems.md",
     "architecture/effects.md",

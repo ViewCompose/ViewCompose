@@ -286,8 +286,8 @@ internal object ViewLayoutParamsFactory {
         // ConstraintLayout expresses match-constraints as 0 in Android LayoutParams.
         return when (this) {
             ConstraintDimension.WrapContent -> ViewGroup.LayoutParams.WRAP_CONTENT
-            ConstraintDimension.FillToConstraints -> 0
-            ConstraintDimension.MatchParent -> ViewGroup.LayoutParams.MATCH_PARENT
+            ConstraintDimension.ConstrainedWrapContent -> ViewGroup.LayoutParams.WRAP_CONTENT
+            is ConstraintDimension.MatchConstraints -> 0
             is ConstraintDimension.Fixed -> node.environment.roundToPx(value)
         }
     }

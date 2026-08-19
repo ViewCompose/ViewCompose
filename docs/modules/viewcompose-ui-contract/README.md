@@ -76,6 +76,11 @@ created for the node.
   `NodeType.LayoutConstraintHost`. Custom renderers must constrain the complete modified node in
   one measurement boundary, honor an incoming exact parent constraint, apply declared maxima
   otherwise, and preserve the requested ratio whenever the resulting interval is feasible.
+- Q3 ConstraintLayout transport uses one mutually exclusive `ConstraintDimension` value per axis,
+  `ConstraintMatchMode` for spread/wrap/percent behavior, a positive typed `ConstraintRatio`, and
+  one baseline link. It has no Android dependency, `match_parent`, independent dimension flags, or
+  raw ratio grammar. Cross-node identity, reference, ownership, and range failures reject the
+  complete candidate at the platform renderer boundary rather than weakening individual links.
 - `NavigationBarItem` and `SegmentedControlItem` require explicit unique logical keys. Their
   NodeSpecs require an in-range selected index for non-empty collections and `-1` for an empty
   collection; navigation badges are nullable non-negative values.

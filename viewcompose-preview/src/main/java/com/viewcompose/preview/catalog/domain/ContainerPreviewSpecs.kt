@@ -128,15 +128,15 @@ internal object ContainerPreviewSpecs {
             content = {
                 val compactSet = constraintSet {
                     val (titleRef, markerRef) = createRefs("title", "marker")
-                    constrain("title") {
+                    constrain(titleRef) {
                         startToStart(parent)
                         topToTop(parent)
                     }
-                    constrain("marker") {
+                    constrain(markerRef) {
                         startToStart(titleRef)
                         topToBottom(titleRef, margin = 10.dp)
                         endToEnd(parent)
-                        width = ConstraintDimension.FillToConstraints
+                        width = ConstraintDimension.MatchConstraints()
                     }
                 }
                 Column(

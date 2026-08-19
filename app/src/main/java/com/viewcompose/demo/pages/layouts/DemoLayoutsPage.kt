@@ -32,6 +32,8 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.spec.ConstraintChainStyle
 import com.viewcompose.ui.node.spec.ConstraintDimension
 import com.viewcompose.ui.node.spec.ConstraintHelperVisibility
+import com.viewcompose.ui.node.spec.ConstraintMatchMode
+import com.viewcompose.ui.node.spec.ConstraintRatio
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.constraintlayout.*
 import com.viewcompose.ui.foundation.Box
@@ -47,6 +49,7 @@ import com.viewcompose.ui.foundation.LazyColumn
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.ScrollableColumn
 import com.viewcompose.ui.foundation.ScrollableRow
+import com.viewcompose.ui.foundation.Spacer
 import com.viewcompose.ui.foundation.Surface
 import com.viewcompose.ui.foundation.SurfaceDefaults
 import com.viewcompose.ui.foundation.SurfaceVariant
@@ -597,8 +600,8 @@ internal fun UiTreeBuilder.LayoutPage(
                             endToEnd(parent)
                             topToBottom(titleRef, margin = 12.dp)
                             bottomToBottom(parent)
-                            width = ConstraintDimension.FillToConstraints
-                            height = ConstraintDimension.FillToConstraints
+                            width = ConstraintDimension.MatchConstraints()
+                            height = ConstraintDimension.MatchConstraints()
                         }.padding(12.dp),
                     ) {
                         Text(
@@ -653,46 +656,97 @@ internal fun UiTreeBuilder.LayoutPage(
                         .padding(12.dp)
                         .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_CONTAINER),
                 ) {
-                    val leftPartition = createGuidelineFromStart(0.62f)
-                    val (headlineRef, summaryRef, markerRef) = createRefs("headline", "summary", "marker")
-                    val endBarrier = createEndBarrier(headlineRef, summaryRef, margin = 6.dp)
-                    Text(
-                        text = stringResource(R.string.demo_layouts_helper_area),
-                        style = UiTextStyle(fontSizeSp = 14.sp),
-                        modifier = Modifier.constrainAs(headlineRef) {
-                            startToStart(parent)
-                            topToTop(parent)
-                            endToStart(leftPartition, margin = 8.dp)
-                            width = ConstraintDimension.FillToConstraints
-                        },
+                    val leftPartition = createGuidelineFromStart(0.55f)
+                    val (
+                        headlineRef,
+                        summaryRef,
+                        markerRef,
+                        guidelineIndicatorRef,
+                        guidelineLabelRef,
+                    ) = createRefs(
+                        "headline",
+                        "summary",
+                        "marker",
+                        "guideline-indicator",
+                        "guideline-label",
                     )
-                    Text(
-                        text = if (constraintHelperLongState.value) {
-                            stringResource(R.string.demo_layouts_helper_long_copy)
-                        } else {
-                            stringResource(R.string.demo_layouts_helper_short_copy)
-                        },
-                        style = UiTextStyle(fontSizeSp = 12.sp),
-                        color = TextDefaults.secondaryColor(),
-                        modifier = Modifier.constrainAs(summaryRef) {
-                            startToStart(parent)
-                            topToBottom(headlineRef, margin = 8.dp)
-                            endToStart(leftPartition, margin = 8.dp)
-                            width = ConstraintDimension.FillToConstraints
-                        },
+                    val endBarrier = createEndBarrier(headlineRef, summaryRef, margin = 4.dp)
+                    Spacer(
+                        modifier = Modifier
+                            .constrainAs(guidelineIndicatorRef) {
+                                startToStart(leftPartition)
+                                topToTop(parent)
+                                bottomToBottom(parent)
+                                width = ConstraintDimension.Fixed(2.dp)
+                                height = ConstraintDimension.MatchConstraints()
+                            }
+                            .backgroundColor(Theme.colors.primary),
                     )
+                    Surface(
+                        variant = SurfaceVariant.Default,
+                        modifier = Modifier
+                            .constrainAs(headlineRef) {
+                                startToStart(parent)
+                                topToTop(parent)
+                                endToStart(leftPartition, margin = 8.dp)
+                                width = ConstraintDimension.ConstrainedWrapContent
+                                horizontalBias = 0f
+                            }
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_HEADLINE),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.demo_layouts_helper_area),
+                            style = UiTextStyle(fontSizeSp = 14.sp),
+                        )
+                    }
+                    Surface(
+                        variant = SurfaceVariant.Default,
+                        modifier = Modifier
+                            .constrainAs(summaryRef) {
+                                startToStart(parent)
+                                topToBottom(headlineRef, margin = 8.dp)
+                                endToStart(leftPartition, margin = 8.dp)
+                                width = ConstraintDimension.ConstrainedWrapContent
+                                horizontalBias = 0f
+                            }
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_SUMMARY),
+                    ) {
+                        Text(
+                            text = if (constraintHelperLongState.value) {
+                                stringResource(R.string.demo_layouts_helper_long_copy)
+                            } else {
+                                stringResource(R.string.demo_layouts_helper_short_copy)
+                            },
+                            style = UiTextStyle(fontSizeSp = 12.sp),
+                            color = TextDefaults.secondaryColor(),
+                        )
+                    }
                     Surface(
                         variant = SurfaceVariant.Default,
                         modifier = Modifier
                             .constrainAs(markerRef) {
                                 startToEnd(endBarrier, margin = 8.dp)
+                                endToEnd(parent)
                                 topToTop(parent)
+                                width = ConstraintDimension.ConstrainedWrapContent
+                                horizontalBias = 0f
                             }
                             .padding(horizontal = 10.dp, vertical = 6.dp)
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_MARKER),
                     ) {
                         Text(text = stringResource(R.string.demo_layouts_barrier_marker))
                     }
+                    Text(
+                        text = stringResource(R.string.demo_layouts_guideline_partition),
+                        style = UiTextStyle(fontSizeSp = 11.sp),
+                        color = TextDefaults.secondaryColor(),
+                        modifier = Modifier.constrainAs(guidelineLabelRef) {
+                            startToStart(leftPartition, margin = 4.dp)
+                            bottomToBottom(parent)
+                        },
+                    )
                 }
             }
 
@@ -774,30 +828,30 @@ internal fun UiTreeBuilder.LayoutPage(
                 )
                 val compactSet = constraintSet {
                     val (titleRef, markerRef) = createRefs("title", "marker")
-                    constrain("title") {
+                    constrain(titleRef) {
                         startToStart(parent)
                         topToTop(parent)
                     }
-                    constrain("marker") {
+                    constrain(markerRef) {
                         startToStart(titleRef)
                         topToBottom(titleRef, margin = 12.dp)
                         endToEnd(parent)
-                        width = ConstraintDimension.FillToConstraints
+                        width = ConstraintDimension.MatchConstraints()
                     }
                 }
                 val expandedSet = constraintSet {
                     val (titleRef, markerRef) = createRefs("title", "marker")
-                    constrain("title") {
+                    constrain(titleRef) {
                         startToStart(parent)
                         topToTop(parent)
                         bottomToBottom(parent)
                     }
-                    constrain("marker") {
+                    constrain(markerRef) {
                         startToEnd(titleRef, margin = 12.dp)
                         endToEnd(parent)
                         topToTop(parent)
                         bottomToBottom(parent)
-                        width = ConstraintDimension.FillToConstraints
+                        width = ConstraintDimension.MatchConstraints()
                     }
                 }
                 ConstraintLayout(
@@ -1016,12 +1070,14 @@ internal fun UiTreeBuilder.LayoutPage(
                                 startToStart(parent)
                                 endToEnd(parent)
                                 topToTop(parent)
-                                width = ConstraintDimension.FillToConstraints
+                                width = ConstraintDimension.MatchConstraints(
+                                    mode = ConstraintMatchMode.Percent(
+                                        if (constraintDimensionAdvancedState.value) 0.82f else 0.56f,
+                                    ),
+                                    min = 120.dp,
+                                    max = 280.dp,
+                                )
                                 height = ConstraintDimension.Fixed(38.dp)
-                                widthPercent = if (constraintDimensionAdvancedState.value) 0.82f else 0.56f
-                                widthMin = 120.dp
-                                widthMax = 280.dp
-                                constrainedWidth = true
                             }
                             .padding(horizontal = 10.dp, vertical = 6.dp),
                     ) {
@@ -1035,11 +1091,13 @@ internal fun UiTreeBuilder.LayoutPage(
                                 topToBottom(widthRef, margin = 10.dp)
                                 bottomToBottom(parent)
                                 width = ConstraintDimension.Fixed(104.dp)
-                                height = ConstraintDimension.FillToConstraints
-                                heightPercent = if (constraintDimensionAdvancedState.value) 0.62f else 0.38f
-                                heightMin = 64.dp
-                                heightMax = 146.dp
-                                constrainedHeight = true
+                                height = ConstraintDimension.MatchConstraints(
+                                    mode = ConstraintMatchMode.Percent(
+                                        if (constraintDimensionAdvancedState.value) 0.62f else 0.38f,
+                                    ),
+                                    min = 64.dp,
+                                    max = 146.dp,
+                                )
                             }
                             .padding(horizontal = 8.dp, vertical = 6.dp),
                     ) {
@@ -1053,9 +1111,13 @@ internal fun UiTreeBuilder.LayoutPage(
                                 endToEnd(parent)
                                 topToBottom(widthRef, margin = 10.dp)
                                 bottomToBottom(parent)
-                                width = ConstraintDimension.FillToConstraints
-                                height = ConstraintDimension.FillToConstraints
-                                dimensionRatio = if (constraintDimensionAdvancedState.value) "16:9" else "1:1"
+                                width = ConstraintDimension.MatchConstraints()
+                                height = ConstraintDimension.MatchConstraints()
+                                ratio = if (constraintDimensionAdvancedState.value) {
+                                    ConstraintRatio(width = 16f, height = 9f)
+                                } else {
+                                    ConstraintRatio(width = 1f, height = 1f)
+                                }
                             }
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO),
                     ) {
@@ -1279,10 +1341,9 @@ internal fun UiTreeBuilder.LayoutPage(
                         variant = SurfaceVariant.Default,
                         modifier = Modifier
                             .constrainAs(topRef) {
-                                topToTop(parent)
                                 startToStart(parent)
                                 endToEnd(parent)
-                                width = ConstraintDimension.FillToConstraints
+                                width = ConstraintDimension.MatchConstraints()
                                 height = ConstraintDimension.Fixed(42.dp)
                             }
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_TOP),
@@ -1297,7 +1358,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             .constrainAs(middleRef) {
                                 startToStart(parent)
                                 endToEnd(parent)
-                                width = ConstraintDimension.FillToConstraints
+                                width = ConstraintDimension.MatchConstraints()
                                 height = ConstraintDimension.Fixed(42.dp)
                             }
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_MIDDLE),
@@ -1310,10 +1371,9 @@ internal fun UiTreeBuilder.LayoutPage(
                         variant = SurfaceVariant.Default,
                         modifier = Modifier
                             .constrainAs(bottomRef) {
-                                bottomToBottom(parent)
                                 startToStart(parent)
                                 endToEnd(parent)
-                                width = ConstraintDimension.FillToConstraints
+                                width = ConstraintDimension.MatchConstraints()
                                 height = ConstraintDimension.Fixed(42.dp)
                             }
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_BOTTOM),
@@ -1360,25 +1420,25 @@ internal fun UiTreeBuilder.LayoutPage(
                         id = "set-h-end-barrier",
                         margin = 6.dp,
                     )
-                    constrain("set-h-a") {
+                    constrain(aRef) {
                         topToTop(parent)
                         bottomToBottom(parent)
                         width = ConstraintDimension.Fixed(64.dp)
                         height = ConstraintDimension.Fixed(36.dp)
                     }
-                    constrain("set-h-b") {
+                    constrain(bRef) {
                         topToTop(parent)
                         bottomToBottom(parent)
                         width = ConstraintDimension.Fixed(64.dp)
                         height = ConstraintDimension.Fixed(36.dp)
                     }
-                    constrain("set-h-c") {
+                    constrain(cRef) {
                         topToTop(parent)
                         bottomToBottom(parent)
                         width = ConstraintDimension.Fixed(64.dp)
                         height = ConstraintDimension.Fixed(36.dp)
                     }
-                    constrain("set-marker") {
+                    constrain(markerRef) {
                         startToEnd(endBarrier, margin = 8.dp)
                         topToTop(parent)
                         width = ConstraintDimension.Fixed(92.dp)
@@ -1401,25 +1461,25 @@ internal fun UiTreeBuilder.LayoutPage(
                         id = "set-v-top-barrier",
                         margin = 6.dp,
                     )
-                    constrain("set-h-a") {
+                    constrain(aRef) {
                         startToStart(parent)
                         endToEnd(parent)
                         width = ConstraintDimension.Fixed(92.dp)
                         height = ConstraintDimension.Fixed(34.dp)
                     }
-                    constrain("set-h-b") {
+                    constrain(bRef) {
                         startToStart(parent)
                         endToEnd(parent)
                         width = ConstraintDimension.Fixed(92.dp)
                         height = ConstraintDimension.Fixed(34.dp)
                     }
-                    constrain("set-h-c") {
+                    constrain(cRef) {
                         startToStart(parent)
                         endToEnd(parent)
                         width = ConstraintDimension.Fixed(92.dp)
                         height = ConstraintDimension.Fixed(34.dp)
                     }
-                    constrain("set-marker") {
+                    constrain(markerRef) {
                         topToBottom(topBarrier, margin = 8.dp)
                         startToStart(parent)
                         endToEnd(parent)
@@ -1524,11 +1584,11 @@ internal fun UiTreeBuilder.LayoutPage(
 
                     val flowSet = constraintSet {
                         val flowRef = createRef("flow-helper")
-                        constrain("flow-helper") {
+                        constrain(flowRef) {
                             topToTop(parent)
                             startToStart(parent)
                             endToEnd(parent)
-                            width = ConstraintDimension.FillToConstraints
+                            width = ConstraintDimension.MatchConstraints()
                         }
                     }
                     ConstraintLayout(
@@ -1553,11 +1613,12 @@ internal fun UiTreeBuilder.LayoutPage(
                     }
 
                     val groupSet = constraintSet {
-                        constrain("group-a") {
+                        val (groupARef, groupBRef) = createRefs("group-a", "group-b")
+                        constrain(groupARef) {
                             topToTop(parent)
                             startToStart(parent)
                         }
-                        constrain("group-b") {
+                        constrain(groupBRef) {
                             topToTop(parent)
                             endToEnd(parent)
                         }
@@ -1602,11 +1663,12 @@ internal fun UiTreeBuilder.LayoutPage(
                     }
 
                     val layerSet = constraintSet {
-                        constrain("layer-a") {
+                        val (layerARef, layerBRef) = createRefs("layer-a", "layer-b")
+                        constrain(layerARef) {
                             topToTop(parent)
                             startToStart(parent)
                         }
-                        constrain("layer-b") {
+                        constrain(layerBRef) {
                             topToTop(parent)
                             endToEnd(parent)
                         }
@@ -1644,23 +1706,28 @@ internal fun UiTreeBuilder.LayoutPage(
                     }
 
                     val placeholderSet = constraintSet {
-                        val hostRef = createRef("placeholder-helper")
-                        constrain("placeholder-a") {
+                        val (placeholderARef, placeholderBRef, hostRef, noteRef) = createRefs(
+                            "placeholder-a",
+                            "placeholder-b",
+                            "placeholder-helper",
+                            "placeholder-note",
+                        )
+                        constrain(placeholderARef) {
                             topToTop(parent)
                             startToStart(parent)
                         }
-                        constrain("placeholder-b") {
+                        constrain(placeholderBRef) {
                             topToTop(parent)
                             endToEnd(parent)
                         }
-                        constrain("placeholder-helper") {
-                            topToBottom(createRef("placeholder-a"), margin = 6.dp)
+                        constrain(hostRef) {
+                            topToBottom(placeholderARef, margin = 6.dp)
                             startToStart(parent)
                             endToEnd(parent)
-                            width = ConstraintDimension.FillToConstraints
+                            width = ConstraintDimension.MatchConstraints()
                             height = ConstraintDimension.Fixed(38.dp)
                         }
-                        constrain("placeholder-note") {
+                        constrain(noteRef) {
                             topToBottom(hostRef, margin = 4.dp)
                             startToStart(parent)
                         }

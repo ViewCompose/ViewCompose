@@ -5,14 +5,18 @@ import android.graphics.Canvas
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
-import androidx.core.view.doOnLayout
+import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import androidx.constraintlayout.helper.widget.Flow
 import androidx.constraintlayout.helper.widget.Layer
+import androidx.constraintlayout.widget.Barrier
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.constraintlayout.widget.Guideline
 import androidx.constraintlayout.widget.Group
 import androidx.constraintlayout.widget.Placeholder
 import com.viewcompose.renderer.R
+import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.view.requireUiEnvironment
 import com.viewcompose.renderer.view.roundToPx
 import com.viewcompose.renderer.view.toPx
@@ -23,7 +27,6 @@ import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.node.spec.ConstraintAnchor
 import com.viewcompose.ui.node.spec.ConstraintAnchorLink
-import com.viewcompose.ui.node.spec.ConstraintAnchorTarget
 import com.viewcompose.ui.node.spec.ConstraintBarrierDirection
 import com.viewcompose.ui.node.spec.ConstraintBarrierSpec
 import com.viewcompose.ui.node.spec.ConstraintChainOrientation
@@ -43,13 +46,13 @@ import com.viewcompose.ui.node.spec.ConstraintHelperVisibility
 import com.viewcompose.ui.node.spec.ConstraintHelpersSpec
 import com.viewcompose.ui.node.spec.ConstraintItemSpec
 import com.viewcompose.ui.node.spec.ConstraintLayerSpec
+import com.viewcompose.ui.node.spec.ConstraintMatchMode
 import com.viewcompose.ui.node.spec.ConstraintPlaceholderSpec
+import com.viewcompose.ui.node.spec.ConstraintRatio
+import com.viewcompose.ui.node.spec.ConstraintRatioSide
 import com.viewcompose.ui.node.spec.ConstraintSetSpec
 
-/**
- * Android ConstraintLayout container for the ConstraintLayout DSL.
- * Android ConstraintLayout container for the ConstraintLayout DSL.
- */
+/** Android ConstraintLayout container for the ConstraintLayout DSL. */
 internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -58,6 +61,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
 
     companion object {
         private const val WARNING_TAG = "UIConstraintLayout"
+        private const val MAX_DIAGNOSTIC_KEYS = 64
     }
 
     var inlineHelpersSpec: ConstraintHelpersSpec = ConstraintHelpersSpec()
@@ -77,9 +81,16 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     private val referenceIdToViewId = mutableMapOf<String, Int>()
     private val helperIdToViewId = mutableMapOf<String, Int>()
     private val helperViews = mutableMapOf<String, View>()
-    private val emittedWarnings = mutableSetOf<String>()
+    private val emittedDiagnostics = LinkedHashSet<ConstraintDiagnosticKey>()
     private var pendingConstraintRebuild = false
     private var mutatingHelperViews = false
+    private var acceptedGraph: ResolvedConstraintGraph? = null
+    private var acceptedEnvironment: UiEnvironmentValues? = null
+    private var acceptedHelperRuntimeBase: Map<View, HelperRuntimeSnapshot> = emptyMap()
+    private var acceptedRevision: Long = 0L
+    private var attemptedRevision: Long = 0L
+    private var lastRejection: ConstraintGraphRejection? = null
+    private var pendingLayerTransformListener: ViewTreeObserver.OnPreDrawListener? = null
     private val rebuildRunnable = Runnable {
         if (!pendingConstraintRebuild) {
             return@Runnable
@@ -91,6 +102,65 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     private data class ChainResolvedItem(
         val viewId: Int,
         val weight: Float?,
+    )
+
+    private data class ConstraintDiagnosticKey(
+        val revision: Long,
+        val reason: ConstraintGraphRejectionReason,
+        val identity: String?,
+    )
+
+    private data class ViewCommitSnapshot(
+        val view: View,
+        val childIndex: Int,
+        val id: Int,
+        val layoutParams: ViewGroup.LayoutParams?,
+        val visibility: Int,
+        val alpha: Float,
+        val elevation: Float,
+        val rotation: Float,
+        val rotationX: Float,
+        val rotationY: Float,
+        val scaleX: Float,
+        val scaleY: Float,
+        val translationX: Float,
+        val translationY: Float,
+        val translationZ: Float,
+        val pivotX: Float,
+        val pivotY: Float,
+        val importantForAccessibility: Int,
+        val contentDescription: CharSequence?,
+    )
+
+    /** Runtime properties owned by Group, Layer, or Placeholder while a graph is accepted. */
+    private data class HelperRuntimeSnapshot(
+        val view: View,
+        val modifierSignature: RuntimeModifierSignature,
+        val visibility: Int,
+        val elevation: Float,
+        val rotation: Float,
+        val rotationX: Float,
+        val rotationY: Float,
+        val scaleX: Float,
+        val scaleY: Float,
+        val translationX: Float,
+        val translationY: Float,
+        val translationZ: Float,
+        val pivotX: Float,
+        val pivotY: Float,
+    )
+
+    /** Modifier subset whose change causes the binder to rewrite every helper-owned View field. */
+    private data class RuntimeModifierSignature(
+        val alpha: Any?,
+        val visibility: Any?,
+        val offset: Any?,
+        val relativeOffset: Any?,
+        val zIndex: Any?,
+        val elevation: Any?,
+        val graphicsLayer: Any?,
+        val layoutId: Any?,
+        val constraint: Any?,
     )
 
     init {
@@ -142,6 +212,11 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     }
 
     override fun onViewAdded(child: View) {
+        if (!mutatingHelperViews && child.id == View.NO_ID) {
+            // ConstraintLayout indexes child IDs inside super.onViewAdded. Assigning after that hook
+            // leaves Barrier and other helper lookups unable to resolve an otherwise valid child.
+            child.id = View.generateViewId()
+        }
         super.onViewAdded(child)
         DecorationChildDrawingOrder.onViewAdded(this, child)
         decorationDrawing.onViewAdded(child)
@@ -157,6 +232,25 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         if (!mutatingHelperViews) {
             requestConstraintRebuild()
         }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (pendingConstraintRebuild) {
+            // Detach removes the posted callback while preserving the pending bit. Re-post it on
+            // the new attachment so an update requested during the previous lifecycle is not lost.
+            pendingConstraintRebuild = false
+            requestConstraintRebuild()
+        }
+        val graph = acceptedGraph ?: return
+        val environment = acceptedEnvironment ?: return
+        scheduleLayerTransforms(graph.helpers.layers, environment, acceptedRevision)
+    }
+
+    override fun onDetachedFromWindow() {
+        cancelPendingLayerTransforms()
+        removeCallbacks(rebuildRunnable)
+        super.onDetachedFromWindow()
     }
 
     fun requestConstraintRebuild() {
@@ -181,329 +275,523 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     }
 
     private fun applyConstraintsInternal() {
-        val inlineConstraints = collectInlineConstraints()
-        val mergedConstraints = mergeConstraints(
-            decoupled = decoupledConstraintSetSpec?.constraints.orEmpty(),
-            inline = inlineConstraints,
+        attemptedRevision += 1L
+        val candidateRevision = attemptedRevision
+        val compilation = ConstraintGraphCompiler.compile(
+            contentBindings = collectContentBindings(),
+            decoupled = decoupledConstraintSetSpec,
+            inlineHelpers = inlineHelpersSpec,
         )
-        if (hasCircularDependency(mergedConstraints)) {
-            warnOnce(
-                "Constraint graph contains circular references. Layout falls back to ConstraintLayout runtime resolution.",
-            )
+        val graph = when (compilation) {
+            is ConstraintGraphCompilation.Accepted -> compilation.graph
+            is ConstraintGraphCompilation.Rejected -> {
+                emitRejection(candidateRevision, compilation.rejection)
+                return
+            }
         }
-        val mergedHelpers = mergeHelpers(
-            decoupled = decoupledConstraintSetSpec?.helpers,
-            inline = inlineHelpersSpec,
-        )
-        syncReferenceViewIds()
-        val constraintSet = ConstraintSet()
-        constraintSet.clone(this)
-        clearChildConstraints(constraintSet)
-        val helperReferenceIds = applyHelpers(
-            constraintSet = constraintSet,
-            helpers = mergedHelpers,
-        )
-        applyChains(
-            constraintSet = constraintSet,
-            chains = mergedHelpers.chains,
-            helperReferenceIds = helperReferenceIds,
-        )
-        applyItemConstraints(
-            constraintSet = constraintSet,
-            constraints = mergedConstraints,
-            helperReferenceIds = helperReferenceIds,
-        )
+        val environment = requireUiEnvironment()
+        if (
+            graph == acceptedGraph &&
+            environment == acceptedEnvironment &&
+            graph.contentById.all { (id, binding) ->
+                referenceIdToViewId[id] == binding.requireView().id
+            }
+        ) {
+            return
+        }
+
+        refreshAcceptedHelperRuntimeBaseFromBinder()
+        val committedSnapshots = captureCommitSnapshots()
+        val previousGraph = acceptedGraph
+        val previousEnvironment = acceptedEnvironment
+        val previousHelperRuntimeBase = acceptedHelperRuntimeBase
+        val previousHelperViews = helperViews.toMap()
+        val previousHelperIds = helperIdToViewId.toMap()
+        val contentViewIds = resolveContentViewIds(graph)
+        var rollbackSnapshots = committedSnapshots
         try {
-            constraintSet.applyTo(this)
-            reapplyGroupRuntimeProperties(
-                groups = mergedHelpers.groups,
-                helperReferenceIds = helperReferenceIds,
+            releaseAcceptedHelperEffects()
+            rollbackSnapshots = captureCommitSnapshots()
+            val helperPlan = stageHelperViews(graph)
+            // Stale helpers must not participate in ConstraintSet.applyTo. In particular, a
+            // removed Layer has no references and AndroidX cannot apply default transforms to it.
+            pruneInactiveHelperViews(helperPlan.activeKeys)
+            val resolvedReferenceIds = contentViewIds + helperPlan.referenceIds
+            applyContentViewIds(graph, contentViewIds)
+            stageLayerReferences(graph.helpers.layers, resolvedReferenceIds)
+            val constraintSet = ConstraintSet()
+            seedHelperConstraints(constraintSet, graph)
+            applyChains(
+                constraintSet = constraintSet,
+                chains = graph.helpers.chains,
+                referenceIds = resolvedReferenceIds,
             )
+            applyItemConstraints(
+                constraintSet = constraintSet,
+                graph = graph,
+                referenceIds = resolvedReferenceIds,
+                environment = environment,
+            )
+            constraintSet.applyTo(this)
+            restoreRuntimeProperties(rollbackSnapshots)
+            val helperRuntimeBase = captureHelperRuntimeBase(graph)
+            configureHelpers(
+                graph = graph,
+                referenceIds = resolvedReferenceIds,
+                environment = environment,
+                revision = candidateRevision,
+            )
+            referenceIdToViewId.clear()
+            referenceIdToViewId.putAll(contentViewIds)
+            helperIdToViewId.keys.retainAll(helperPlan.activeKeys)
+            acceptedGraph = graph
+            acceptedEnvironment = environment
+            acceptedHelperRuntimeBase = helperRuntimeBase
+            acceptedRevision = candidateRevision
+            lastRejection = null
+            emittedDiagnostics.removeAll { key -> key.revision < acceptedRevision }
+            requestLayout()
         } catch (error: Throwable) {
-            warnOnce("ConstraintSet apply failed: ${error.message}")
+            cancelPendingLayerTransforms()
+            restoreHelperRegistry(previousHelperViews, previousHelperIds, committedSnapshots)
+            restoreCommitSnapshots(
+                snapshots = rollbackSnapshots,
+                helpersRestoredSeparately = previousHelperViews.values.toSet(),
+            )
+            acceptedGraph = previousGraph
+            acceptedEnvironment = previousEnvironment
+            acceptedHelperRuntimeBase = previousHelperRuntimeBase
+            restoreAcceptedHelperConfiguration()
+            val failureOrigin = error.stackTrace.firstOrNull()?.let { frame ->
+                " at ${frame.className}.${frame.methodName}:${frame.lineNumber}"
+            }.orEmpty()
+            emitRejection(
+                candidateRevision,
+                ConstraintGraphRejection(
+                    reason = ConstraintGraphRejectionReason.NativeCommit,
+                    identity = null,
+                    detail = "Constraint graph native commit failed: " +
+                        "${error.message ?: error::class.java.simpleName}$failureOrigin",
+                ),
+            )
         }
     }
 
-    private fun collectInlineConstraints(): Map<String, ConstraintItemSpec> {
-        val constraints = linkedMapOf<String, ConstraintItemSpec>()
+    private fun collectContentBindings(): List<ConstraintContentBinding> {
+        val bindings = ArrayList<ConstraintContentBinding>(childCount)
         for (index in 0 until childCount) {
             val child = getChildAt(index)
-            val referenceId = child.getTag(R.id.viewcompose_constraint_layout_id) as? String
-            val inlineSpec = child.getTag(R.id.viewcompose_constraint_item_spec) as? ConstraintItemSpec
-            if (referenceId == null || inlineSpec == null) {
+            if (helperViews.containsValue(child)) {
                 continue
             }
-            val previous = constraints.put(referenceId, inlineSpec)
-            if (previous != null && previous != inlineSpec) {
-                warnOnce("Duplicate inline constraint id '$referenceId'. Last child wins.")
-            }
+            val referenceId = child.getTag(R.id.viewcompose_constraint_layout_id) as? String
+            val inlineSpec = child.getTag(R.id.viewcompose_constraint_item_spec) as? ConstraintItemSpec
+            bindings += ConstraintContentBinding(
+                referenceId = referenceId,
+                inlineSpec = inlineSpec,
+                nativeIdentity = child,
+            )
         }
-        return constraints
+        return bindings
     }
 
-    private fun mergeConstraints(
-        decoupled: Map<String, ConstraintItemSpec>,
-        inline: Map<String, ConstraintItemSpec>,
-    ): Map<String, ConstraintItemSpec> {
-        val merged = linkedMapOf<String, ConstraintItemSpec>()
-        merged.putAll(decoupled)
-        inline.forEach { (id, spec) ->
-            if (merged.containsKey(id) && decoupled.containsKey(id)) {
-                warnOnce("Inline constraint overrides decoupled ConstraintSet item '$id'.")
+    private fun resolveContentViewIds(graph: ResolvedConstraintGraph): Map<String, Int> {
+        return graph.contentById.keys.associateWithTo(linkedMapOf()) { id ->
+            val binding = requireNotNull(graph.contentById[id])
+            val view = binding.requireView()
+            val acceptedBinding = acceptedGraph?.contentById?.get(id)
+            if (acceptedBinding?.nativeIdentity === view) {
+                referenceIdToViewId[id] ?: view.id
+            } else {
+                view.id.takeUnless { value -> value == View.NO_ID } ?: View.generateViewId()
             }
-            merged[id] = spec
         }
-        return merged
     }
 
-    private fun mergeHelpers(
-        decoupled: ConstraintHelpersSpec?,
-        inline: ConstraintHelpersSpec,
-    ): ConstraintHelpersSpec {
-        val guidelineMap = linkedMapOf<String, ConstraintGuidelineSpec>()
-        decoupled?.guidelines.orEmpty().forEach { spec ->
-            guidelineMap[spec.id] = spec
-        }
-        inline.guidelines.forEach { spec ->
-            if (guidelineMap.containsKey(spec.id)) {
-                warnOnce("Inline guideline '${spec.id}' overrides decoupled helper with same id.")
+    private fun applyContentViewIds(
+        graph: ResolvedConstraintGraph,
+        contentViewIds: Map<String, Int>,
+    ) {
+        graph.contentById.forEach { (id, binding) ->
+            val targetId = requireNotNull(contentViewIds[id])
+            val view = binding.requireView()
+            if (view.id != targetId) {
+                view.id = targetId
             }
-            guidelineMap[spec.id] = spec
         }
+    }
 
-        val barrierMap = linkedMapOf<String, ConstraintBarrierSpec>()
-        decoupled?.barriers.orEmpty().forEach { spec ->
-            barrierMap[spec.id] = spec
+    private fun ConstraintContentBinding.requireView(): View {
+        return nativeIdentity as? View
+            ?: error("Constraint content identity is not an Android View.")
+    }
+
+    private fun captureCommitSnapshots(): List<ViewCommitSnapshot> {
+        return (0 until childCount).map { index -> getChildAt(index) }.map { view ->
+            ViewCommitSnapshot(
+                view = view,
+                childIndex = indexOfChild(view),
+                id = view.id,
+                layoutParams = view.layoutParams?.copyForConstraintRollback(),
+                visibility = view.visibility,
+                alpha = view.alpha,
+                elevation = view.elevation,
+                rotation = view.rotation,
+                rotationX = view.rotationX,
+                rotationY = view.rotationY,
+                scaleX = view.scaleX,
+                scaleY = view.scaleY,
+                translationX = view.translationX,
+                translationY = view.translationY,
+                translationZ = view.translationZ,
+                pivotX = view.pivotX,
+                pivotY = view.pivotY,
+                importantForAccessibility = view.importantForAccessibility,
+                contentDescription = view.contentDescription,
+            )
         }
-        inline.barriers.forEach { spec ->
-            if (barrierMap.containsKey(spec.id)) {
-                warnOnce("Inline barrier '${spec.id}' overrides decoupled helper with same id.")
+    }
+
+    private fun ViewGroup.LayoutParams.copyForConstraintRollback(): ViewGroup.LayoutParams {
+        return when (this) {
+            is LayoutParams -> LayoutParams(this)
+            is ViewGroup.MarginLayoutParams -> ViewGroup.MarginLayoutParams(this)
+            else -> ViewGroup.LayoutParams(this)
+        }
+    }
+
+    private fun restoreRuntimeProperties(snapshots: List<ViewCommitSnapshot>) {
+        snapshots.forEach { snapshot ->
+            // A stale helper can be pruned before native apply. Restoring its View properties after
+            // removal may re-enter helper-specific setters with no references (Layer in particular).
+            if (snapshot.view.parent === this) {
+                snapshot.restoreRuntimeProperties()
             }
-            barrierMap[spec.id] = spec
         }
+    }
 
-        val flowMap = linkedMapOf<String, ConstraintFlowSpec>()
-        decoupled?.flows.orEmpty().forEach { spec ->
-            flowMap[spec.id] = spec
-        }
-        inline.flows.forEach { spec ->
-            if (flowMap.containsKey(spec.id)) {
-                warnOnce("Inline flow '${spec.id}' overrides decoupled helper with same id.")
+    private fun restoreCommitSnapshots(
+        snapshots: List<ViewCommitSnapshot>,
+        helpersRestoredSeparately: Set<View>,
+    ) {
+        snapshots.forEach { snapshot ->
+            snapshot.view.id = snapshot.id
+            snapshot.layoutParams?.let { params -> snapshot.view.layoutParams = params }
+            if (snapshot.view !in helpersRestoredSeparately) {
+                snapshot.restoreRuntimeProperties()
             }
-            flowMap[spec.id] = spec
         }
+        requestLayout()
+    }
 
-        val groupMap = linkedMapOf<String, ConstraintGroupSpec>()
-        decoupled?.groups.orEmpty().forEach { spec ->
-            groupMap[spec.id] = spec
-        }
-        inline.groups.forEach { spec ->
-            if (groupMap.containsKey(spec.id)) {
-                warnOnce("Inline group '${spec.id}' overrides decoupled helper with same id.")
-            }
-            groupMap[spec.id] = spec
-        }
+    private fun ViewCommitSnapshot.restoreRuntimeProperties() {
+        view.visibility = visibility
+        view.alpha = alpha
+        view.elevation = elevation
+        view.rotation = rotation
+        view.rotationX = rotationX
+        view.rotationY = rotationY
+        view.scaleX = scaleX
+        view.scaleY = scaleY
+        view.translationX = translationX
+        view.translationY = translationY
+        view.translationZ = translationZ
+        view.pivotX = pivotX
+        view.pivotY = pivotY
+        view.importantForAccessibility = importantForAccessibility
+        view.contentDescription = contentDescription
+    }
 
-        val layerMap = linkedMapOf<String, ConstraintLayerSpec>()
-        decoupled?.layers.orEmpty().forEach { spec ->
-            layerMap[spec.id] = spec
-        }
-        inline.layers.forEach { spec ->
-            if (layerMap.containsKey(spec.id)) {
-                warnOnce("Inline layer '${spec.id}' overrides decoupled helper with same id.")
-            }
-            layerMap[spec.id] = spec
-        }
+    private fun captureHelperRuntimeBase(
+        graph: ResolvedConstraintGraph,
+    ): Map<View, HelperRuntimeSnapshot> {
+        val referencedContentIds = linkedSetOf<String>()
+        graph.helpers.groups.forEach { spec -> referencedContentIds += spec.referencedIds }
+        graph.helpers.layers.forEach { spec -> referencedContentIds += spec.referencedIds }
+        graph.helpers.placeholders.mapNotNullTo(referencedContentIds) { spec -> spec.contentId }
+        return referencedContentIds.mapNotNull { id ->
+            val view = graph.contentById[id]?.requireView() ?: return@mapNotNull null
+            view to view.captureHelperRuntimeSnapshot()
+        }.toMap()
+    }
 
-        val placeholderMap = linkedMapOf<String, ConstraintPlaceholderSpec>()
-        decoupled?.placeholders.orEmpty().forEach { spec ->
-            placeholderMap[spec.id] = spec
+    /** Removes accepted helper overlays before the next graph snapshots its source-of-truth state. */
+    private fun releaseAcceptedHelperEffects() {
+        cancelPendingLayerTransforms()
+        acceptedGraph?.helpers?.placeholders?.forEach { spec ->
+            requireHelperView<Placeholder>(NativeConstraintHelperKind.Placeholder, spec.id)
+                .setContentId(ConstraintLayout.LayoutParams.UNSET)
         }
-        inline.placeholders.forEach { spec ->
-            if (placeholderMap.containsKey(spec.id)) {
-                warnOnce("Inline placeholder '${spec.id}' overrides decoupled helper with same id.")
-            }
-            placeholderMap[spec.id] = spec
+        acceptedGraph?.helpers?.groups?.forEach { spec ->
+            requireHelperView<Group>(NativeConstraintHelperKind.Group, spec.id)
+                .setReferencedIds(intArrayOf())
         }
+        acceptedGraph?.helpers?.layers?.forEach { spec ->
+            requireHelperView<Layer>(NativeConstraintHelperKind.Layer, spec.id)
+                .setReferencedIds(intArrayOf())
+        }
+        acceptedHelperRuntimeBase.values.forEach { snapshot -> snapshot.restore() }
+    }
 
-        return ConstraintHelpersSpec(
-            guidelines = guidelineMap.values.toList(),
-            barriers = barrierMap.values.toList(),
-            chains = decoupled?.chains.orEmpty() + inline.chains,
-            flows = flowMap.values.toList(),
-            groups = groupMap.values.toList(),
-            layers = layerMap.values.toList(),
-            placeholders = placeholderMap.values.toList(),
+    private fun View.captureHelperRuntimeSnapshot(): HelperRuntimeSnapshot {
+        return HelperRuntimeSnapshot(
+            view = this,
+            modifierSignature = runtimeModifierSignature(),
+            visibility = visibility,
+            elevation = elevation,
+            rotation = rotation,
+            rotationX = rotationX,
+            rotationY = rotationY,
+            scaleX = scaleX,
+            scaleY = scaleY,
+            translationX = translationX,
+            translationY = translationY,
+            translationZ = translationZ,
+            pivotX = pivotX,
+            pivotY = pivotY,
         )
     }
 
-    private fun syncReferenceViewIds() {
-        val activeReferenceIds = mutableSetOf<String>()
-        for (index in 0 until childCount) {
-            val child = getChildAt(index)
-            val referenceId = child.getTag(R.id.viewcompose_constraint_layout_id) as? String ?: continue
-            activeReferenceIds += referenceId
-            val resolvedViewId = referenceIdToViewId.getOrPut(referenceId) { View.generateViewId() }
-            if (child.id != resolvedViewId) {
-                child.id = resolvedViewId
-            }
-        }
-        referenceIdToViewId.keys.retainAll(activeReferenceIds)
-    }
-
-    private fun clearChildConstraints(constraintSet: ConstraintSet) {
-        for (index in 0 until childCount) {
-            val child = getChildAt(index)
-            if (child.id != View.NO_ID) {
-                constraintSet.clear(child.id)
+    /** Keeps a newly rebound declarative child state when replacing an older helper overlay. */
+    private fun refreshAcceptedHelperRuntimeBaseFromBinder() {
+        acceptedHelperRuntimeBase = acceptedHelperRuntimeBase.mapValues { (_, snapshot) ->
+            if (snapshot.modifierSignature != snapshot.view.runtimeModifierSignature()) {
+                snapshot.view.captureHelperRuntimeSnapshot()
+            } else {
+                snapshot
             }
         }
     }
 
-    private fun applyHelpers(
-        constraintSet: ConstraintSet,
-        helpers: ConstraintHelpersSpec,
-    ): Map<String, Int> {
-        val activeHelperKeys = mutableSetOf<String>()
-        val helperReferenceIds = mutableMapOf<String, Int>()
-
-        helpers.guidelines.forEach { guideline ->
-            registerHelperReference(
-                prefix = "guideline",
-                helperId = guideline.id,
-                activeHelperKeys = activeHelperKeys,
-                helperReferenceIds = helperReferenceIds,
-            )
-        }
-        helpers.barriers.forEach { barrier ->
-            registerHelperReference(
-                prefix = "barrier",
-                helperId = barrier.id,
-                activeHelperKeys = activeHelperKeys,
-                helperReferenceIds = helperReferenceIds,
-            )
-        }
-        helpers.flows.forEach { flow ->
-            registerHelperReference(
-                prefix = "flow",
-                helperId = flow.id,
-                activeHelperKeys = activeHelperKeys,
-                helperReferenceIds = helperReferenceIds,
-            )
-        }
-        helpers.groups.forEach { group ->
-            registerHelperReference(
-                prefix = "group",
-                helperId = group.id,
-                activeHelperKeys = activeHelperKeys,
-                helperReferenceIds = helperReferenceIds,
-            )
-        }
-        helpers.layers.forEach { layer ->
-            registerHelperReference(
-                prefix = "layer",
-                helperId = layer.id,
-                activeHelperKeys = activeHelperKeys,
-                helperReferenceIds = helperReferenceIds,
-            )
-        }
-        helpers.placeholders.forEach { placeholder ->
-            registerHelperReference(
-                prefix = "placeholder",
-                helperId = placeholder.id,
-                activeHelperKeys = activeHelperKeys,
-                helperReferenceIds = helperReferenceIds,
-            )
-        }
-
-        helpers.guidelines.forEach { guideline ->
-            val key = helperKey("guideline", guideline.id)
-            val helperId = requireNotNull(helperIdToViewId[key])
-            applyGuideline(constraintSet, helperId, guideline)
-        }
-
-        helpers.barriers.forEach { barrier ->
-            val key = helperKey("barrier", barrier.id)
-            val helperId = requireNotNull(helperIdToViewId[key])
-            val references = resolveReferencedIds(
-                referenceIds = barrier.referencedIds,
-                helperReferenceIds = helperReferenceIds,
-                warningPrefix = "Barrier '${barrier.id}'",
-            )
-            if (references.isEmpty()) {
-                warnOnce("Barrier '${barrier.id}' has no valid referenced ids and will be ignored.")
-                return@forEach
-            }
-            constraintSet.createBarrier(
-                helperId,
-                barrier.direction.toConstraintSetDirection(),
-                requireUiEnvironment().roundToPx(barrier.margin),
-                *references,
-            )
-            constraintSet.getConstraint(helperId)?.layout?.mBarrierAllowsGoneWidgets = barrier.allowsGoneWidgets
-        }
-
-        helpers.flows.forEach { flow ->
-            val key = helperKey("flow", flow.id)
-            val helperId = requireNotNull(helperIdToViewId[key])
-            applyFlowHelper(
-                key = key,
-                helperId = helperId,
-                spec = flow,
-                helperReferenceIds = helperReferenceIds,
-            )
-        }
-
-        helpers.groups.forEach { group ->
-            val key = helperKey("group", group.id)
-            val helperId = requireNotNull(helperIdToViewId[key])
-            applyGroupHelper(
-                constraintSet = constraintSet,
-                key = key,
-                helperId = helperId,
-                spec = group,
-                helperReferenceIds = helperReferenceIds,
-            )
-        }
-
-        helpers.layers.forEach { layer ->
-            val key = helperKey("layer", layer.id)
-            val helperId = requireNotNull(helperIdToViewId[key])
-            applyLayerHelper(
-                key = key,
-                helperId = helperId,
-                spec = layer,
-                helperReferenceIds = helperReferenceIds,
-            )
-        }
-
-        helpers.placeholders.forEach { placeholder ->
-            val key = helperKey("placeholder", placeholder.id)
-            val helperId = requireNotNull(helperIdToViewId[key])
-            applyPlaceholderHelper(
-                key = key,
-                helperId = helperId,
-                spec = placeholder,
-                helperReferenceIds = helperReferenceIds,
-            )
-        }
-
-        pruneInactiveHelperViews(activeHelperKeys)
-        helperIdToViewId.keys.retainAll(activeHelperKeys)
-        return helperReferenceIds
+    private fun View.runtimeModifierSignature(): RuntimeModifierSignature {
+        val resolved = getTag(R.id.viewcompose_resolved_modifiers) as? ResolvedModifiers
+        return RuntimeModifierSignature(
+            alpha = resolved?.alpha,
+            visibility = resolved?.visibility,
+            offset = resolved?.offset,
+            relativeOffset = resolved?.relativeOffset,
+            zIndex = resolved?.zIndex,
+            elevation = resolved?.elevation,
+            graphicsLayer = resolved?.graphicsLayer,
+            layoutId = resolved?.layoutId,
+            constraint = resolved?.constraint,
+        )
     }
 
-    private fun registerHelperReference(
-        prefix: String,
-        helperId: String,
-        activeHelperKeys: MutableSet<String>,
-        helperReferenceIds: MutableMap<String, Int>,
+    private fun HelperRuntimeSnapshot.restore() {
+        view.visibility = visibility
+        view.elevation = elevation
+        view.rotation = rotation
+        view.rotationX = rotationX
+        view.rotationY = rotationY
+        view.scaleX = scaleX
+        view.scaleY = scaleY
+        view.translationX = translationX
+        view.translationY = translationY
+        view.translationZ = translationZ
+        view.pivotX = pivotX
+        view.pivotY = pivotY
+    }
+
+    private fun restoreHelperRegistry(
+        previousViews: Map<String, View>,
+        previousIds: Map<String, Int>,
+        snapshots: List<ViewCommitSnapshot>,
     ) {
-        val key = helperKey(prefix, helperId)
-        val resolvedId = helperIdToViewId.getOrPut(key) { View.generateViewId() }
-        activeHelperKeys += key
-        helperReferenceIds[helperId] = resolvedId
+        mutatingHelperViews = true
+        try {
+            helperViews.filterValues { view -> view !in previousViews.values }.forEach { (_, view) ->
+                if (view.parent === this) {
+                    releaseHelperView(view)
+                    removeView(view)
+                }
+            }
+            val previousIndices = snapshots.associate { snapshot -> snapshot.view to snapshot.childIndex }
+            previousViews.values.sortedBy { view -> previousIndices[view] ?: Int.MAX_VALUE }.forEach { view ->
+                if (view.parent !== this) {
+                    addView(view, (previousIndices[view] ?: childCount).coerceAtMost(childCount))
+                }
+            }
+            helperViews.clear()
+            helperViews.putAll(previousViews)
+            helperIdToViewId.clear()
+            helperIdToViewId.putAll(previousIds)
+        } finally {
+            mutatingHelperViews = false
+        }
     }
+
+    private fun restoreAcceptedHelperConfiguration() {
+        val graph = acceptedGraph ?: return
+        val helperReferences = graph.helperKinds.mapValues { (id, kind) ->
+            requireNotNull(helperIdToViewId[helperKey(kind.prefix(), id)])
+        }
+        val references = referenceIdToViewId + helperReferences
+        try {
+            configureHelpers(
+                graph = graph,
+                referenceIds = references,
+                environment = requireNotNull(acceptedEnvironment),
+                revision = acceptedRevision,
+            )
+        } catch (restoreError: Throwable) {
+            Log.e(WARNING_TAG, "Accepted helper graph restore failed.", restoreError)
+        }
+    }
+
+    private fun emitRejection(
+        revision: Long,
+        rejection: ConstraintGraphRejection,
+    ) {
+        lastRejection = rejection
+        val key = ConstraintDiagnosticKey(
+            revision = revision,
+            reason = rejection.reason,
+            identity = rejection.identity,
+        )
+        if (!emittedDiagnostics.add(key)) return
+        while (emittedDiagnostics.size > MAX_DIAGNOSTIC_KEYS) {
+            emittedDiagnostics.remove(emittedDiagnostics.first())
+        }
+        Log.w(
+            WARNING_TAG,
+            "Rejected constraint graph revision=$revision reason=${rejection.reason} " +
+                "identity=${rejection.identity ?: "container"}: ${rejection.detail}",
+        )
+    }
+
+    internal val acceptedRevisionForTest: Long
+        get() = acceptedRevision
+
+    internal val managedHelperCountForTest: Int
+        get() = helperViews.size
+
+    internal val diagnosticCountForTest: Int
+        get() = emittedDiagnostics.size
+
+    internal val hasPendingLayerTransformForTest: Boolean
+        get() = pendingLayerTransformListener != null
+
+    internal val lastRejectionForTest: ConstraintGraphRejection?
+        get() = lastRejection
+
+    private data class HelperCommitPlan(
+        val referenceIds: Map<String, Int>,
+        val activeKeys: Set<String>,
+    )
+
+    private fun stageHelperViews(graph: ResolvedConstraintGraph): HelperCommitPlan {
+        val referenceIds = linkedMapOf<String, Int>()
+        val activeKeys = linkedSetOf<String>()
+        graph.helperKinds.forEach { (id, kind) ->
+            val prefix = kind.prefix()
+            val key = helperKey(prefix, id)
+            val viewId = helperIdToViewId.getOrPut(key) { View.generateViewId() }
+            when (kind) {
+                NativeConstraintHelperKind.Guideline -> ensureHelperView(
+                    key,
+                    viewId,
+                    Guideline::class.java,
+                ) { Guideline(context) }
+
+                NativeConstraintHelperKind.Barrier -> ensureHelperView(
+                    key,
+                    viewId,
+                    Barrier::class.java,
+                ) { Barrier(context) }
+
+                NativeConstraintHelperKind.Flow -> ensureHelperView(
+                    key,
+                    viewId,
+                    Flow::class.java,
+                ) { Flow(context) }
+
+                NativeConstraintHelperKind.Group -> ensureHelperView(
+                    key,
+                    viewId,
+                    Group::class.java,
+                ) { Group(context) }
+
+                NativeConstraintHelperKind.Layer -> ensureHelperView(
+                    key,
+                    viewId,
+                    SafeLayer::class.java,
+                ) { SafeLayer(context) }
+
+                NativeConstraintHelperKind.Placeholder -> ensureHelperView(
+                    key,
+                    viewId,
+                    Placeholder::class.java,
+                ) { Placeholder(context) }
+            }
+            activeKeys += key
+            referenceIds[id] = viewId
+        }
+        return HelperCommitPlan(
+            referenceIds = referenceIds.toMap(),
+            activeKeys = activeKeys,
+        )
+    }
+
+    private fun configureHelpers(
+        graph: ResolvedConstraintGraph,
+        referenceIds: Map<String, Int>,
+        environment: UiEnvironmentValues,
+        revision: Long,
+    ) {
+        graph.helpers.guidelines.forEach { spec -> applyGuidelineHelper(spec, environment) }
+        graph.helpers.barriers.forEach { spec -> applyBarrierHelper(spec, referenceIds, environment) }
+        graph.helpers.flows.forEach { spec -> applyFlowHelper(spec, referenceIds, environment) }
+        graph.helpers.groups.forEach { spec -> applyGroupHelper(spec, referenceIds, environment) }
+        graph.helpers.layers.forEach { spec ->
+            applyLayerHelper(spec, referenceIds, environment)
+        }
+        graph.helpers.placeholders.forEach { spec -> applyPlaceholderHelper(spec, referenceIds) }
+        scheduleLayerTransforms(graph.helpers.layers, environment, revision)
+    }
+
+    /**
+     * AndroidX applies default transform fields while applying a ConstraintSet. A newly attached
+     * Layer must already have references at that point or its internal center calculation indexes
+     * an empty array. Runtime properties remain configured after native apply and snapshot restore.
+     */
+    private fun stageLayerReferences(
+        layers: List<ConstraintLayerSpec>,
+        referenceIds: Map<String, Int>,
+    ) {
+        layers.forEach { spec ->
+            val layer = requireHelperView<Layer>(NativeConstraintHelperKind.Layer, spec.id)
+            val resolvedIds = resolveReferencedIds(spec.referencedIds, referenceIds)
+            check(resolvedIds.isNotEmpty()) {
+                "Layer '${spec.id}' reached native staging without references."
+            }
+            layer.setReferencedIds(resolvedIds)
+        }
+    }
+
+    private fun seedHelperConstraints(
+        constraintSet: ConstraintSet,
+        graph: ResolvedConstraintGraph,
+    ) {
+        graph.helperKinds.forEach { (id, kind) ->
+            val helperId = requireNotNull(helperIdToViewId[helperKey(kind.prefix(), id)])
+            val dimension = when (kind) {
+                NativeConstraintHelperKind.Flow,
+                NativeConstraintHelperKind.Placeholder,
+                -> LayoutParams.WRAP_CONTENT
+
+                NativeConstraintHelperKind.Guideline,
+                NativeConstraintHelperKind.Barrier,
+                NativeConstraintHelperKind.Group,
+                NativeConstraintHelperKind.Layer,
+                -> 0
+            }
+            constraintSet.constrainWidth(helperId, dimension)
+            constraintSet.constrainHeight(helperId, dimension)
+        }
+    }
+
+    private fun NativeConstraintHelperKind.prefix(): String = name.lowercase()
 
     private fun helperKey(
         prefix: String,
@@ -512,38 +800,25 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
 
     private fun resolveReferencedIds(
         referenceIds: List<String>,
-        helperReferenceIds: Map<String, Int>,
-        warningPrefix: String,
+        resolvedReferenceIds: Map<String, Int>,
     ): IntArray {
-        return referenceIds.mapNotNull { referenceId ->
-            resolveReferenceId(
-                referenceId = referenceId,
-                helperReferenceIds = helperReferenceIds,
-                warningPrefix = warningPrefix,
-            )
+        return referenceIds.map { referenceId ->
+            requireNotNull(resolvedReferenceIds[referenceId]) {
+                "Validated reference '$referenceId' disappeared before native commit."
+            }
         }.toIntArray()
     }
 
     private fun applyFlowHelper(
-        key: String,
-        helperId: Int,
         spec: ConstraintFlowSpec,
-        helperReferenceIds: Map<String, Int>,
+        referenceIds: Map<String, Int>,
+        environment: UiEnvironmentValues,
     ) {
-        val environment = requireUiEnvironment()
-        val flowView = ensureHelperView(
-            key = key,
-            viewId = helperId,
-            viewClass = Flow::class.java,
-        ) { Flow(context) }
+        val flowView = requireHelperView<Flow>(NativeConstraintHelperKind.Flow, spec.id)
         val referencedIds = resolveReferencedIds(
             referenceIds = spec.referencedIds,
-            helperReferenceIds = helperReferenceIds,
-            warningPrefix = "Flow '${spec.id}'",
+            resolvedReferenceIds = referenceIds,
         )
-        if (referencedIds.isEmpty()) {
-            warnOnce("Flow '${spec.id}' has no valid referenced ids.")
-        }
         flowView.setReferencedIds(referencedIds)
         flowView.setOrientation(spec.orientation.toFlowOrientation())
         flowView.setWrapMode(spec.wrapMode.toFlowWrapMode())
@@ -587,99 +862,77 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     }
 
     private fun applyGroupHelper(
-        constraintSet: ConstraintSet,
-        key: String,
-        helperId: Int,
         spec: ConstraintGroupSpec,
-        helperReferenceIds: Map<String, Int>,
+        referenceIds: Map<String, Int>,
+        environment: UiEnvironmentValues,
     ) {
-        val groupView = ensureHelperView(
-            key = key,
-            viewId = helperId,
-            viewClass = Group::class.java,
-        ) { Group(context) }
+        val groupView = requireHelperView<Group>(NativeConstraintHelperKind.Group, spec.id)
         val referencedIds = resolveReferencedIds(
             referenceIds = spec.referencedIds,
-            helperReferenceIds = helperReferenceIds,
-            warningPrefix = "Group '${spec.id}'",
+            resolvedReferenceIds = referenceIds,
         )
-        if (referencedIds.isEmpty()) {
-            warnOnce("Group '${spec.id}' has no valid referenced ids.")
-        }
         groupView.setReferencedIds(referencedIds)
         val visibility = spec.visibility.toViewVisibility()
-        val elevation = requireUiEnvironment().toPx(spec.elevation)
+        val elevation = environment.toPx(spec.elevation)
         groupView.visibility = visibility
         groupView.elevation = elevation
-        // ConstraintSet.applyTo() runs after helper configuration. Persist these runtime properties
-        // in the set as well so its cloned previous values cannot overwrite the new Group state.
-        constraintSet.setVisibility(helperId, visibility)
-        constraintSet.setElevation(helperId, elevation)
-    }
-
-    private fun reapplyGroupRuntimeProperties(
-        groups: List<ConstraintGroupSpec>,
-        helperReferenceIds: Map<String, Int>,
-    ) {
-        // applyTo() restores each referenced child's cloned visibility after Group first propagates
-        // its state. Reapply groups in declaration order so the last group keeps native precedence.
-        groups.forEach { spec ->
-            val groupView = helperViews[helperKey("group", spec.id)] as? Group ?: return@forEach
-            val referencedIds = resolveReferencedIds(
-                referenceIds = spec.referencedIds,
-                helperReferenceIds = helperReferenceIds,
-                warningPrefix = "Group '${spec.id}'",
-            )
-            val visibility = spec.visibility.toViewVisibility()
-            groupView.setReferencedIds(referencedIds)
-            groupView.visibility = visibility
-            groupView.elevation = requireUiEnvironment().toPx(spec.elevation)
-            // Group may defer its child lookup while ConstraintLayout finalizes the helper graph.
-            // Apply visibility directly as well so this committed frame never exposes cloned state.
-            referencedIds.forEach { referencedId ->
-                findViewById<View>(referencedId)?.visibility = visibility
-            }
+        // Apply in declaration order so the last overlapping group owns the committed value.
+        referencedIds.forEach { referencedId ->
+            findViewById<View>(referencedId)?.visibility = visibility
         }
     }
 
     private fun applyLayerHelper(
-        key: String,
-        helperId: Int,
         spec: ConstraintLayerSpec,
-        helperReferenceIds: Map<String, Int>,
+        referenceIds: Map<String, Int>,
+        environment: UiEnvironmentValues,
     ) {
-        val layerView = ensureHelperView(
-            key = key,
-            viewId = helperId,
-            viewClass = SafeLayer::class.java,
-        ) { SafeLayer(context) }
+        val layerView = requireHelperView<Layer>(NativeConstraintHelperKind.Layer, spec.id)
         val referencedIds = resolveReferencedIds(
             referenceIds = spec.referencedIds,
-            helperReferenceIds = helperReferenceIds,
-            warningPrefix = "Layer '${spec.id}'",
+            resolvedReferenceIds = referenceIds,
         )
-        if (referencedIds.isEmpty()) {
-            warnOnce("Layer '${spec.id}' has no valid referenced ids.")
+        check(referencedIds.isNotEmpty()) {
+            "Layer '${spec.id}' reached native commit without references."
         }
-        layerView.setReferencedIds(referencedIds)
-        layerView.visibility = spec.visibility.toViewVisibility()
-        layerView.elevation = requireUiEnvironment().toPx(spec.elevation)
-        if (referencedIds.isEmpty()) {
-            return
+        applyLayerNativeStep(spec, "reference install") {
+            layerView.setReferencedIds(referencedIds)
         }
-        layerView.doOnLayout { view ->
-            applyLayerTransformsSafely(
-                layerView = view as Layer,
-                spec = spec,
-            )
+        check(layerView.referencedIds.contentEquals(referencedIds)) {
+            "Layer '${spec.id}' did not retain its validated native references."
+        }
+        applyLayerNativeStep(spec, "visibility install") {
+            layerView.visibility = spec.visibility.toViewVisibility()
+        }
+        applyLayerNativeStep(spec, "elevation install") {
+            layerView.elevation = environment.toPx(spec.elevation)
+        }
+        // Layer setters silently return until AndroidX has recorded their owning container. A
+        // helper can be created before attachment or between native layout phases, so establish
+        // that public lifecycle state explicitly. Transform setters are deferred until pre-draw:
+        // AndroidX calculates the default pivot from laid-out children and can fail before then.
+        applyLayerNativeStep(spec, "container initialization") {
+            layerView.updatePreDraw(this)
+        }
+    }
+
+    private inline fun applyLayerNativeStep(
+        spec: ConstraintLayerSpec,
+        operation: String,
+        block: () -> Unit,
+    ) {
+        try {
+            block()
+        } catch (error: RuntimeException) {
+            throw IllegalStateException("Layer '${spec.id}' $operation failed.", error)
         }
     }
 
     private fun applyLayerTransformsSafely(
         layerView: Layer,
         spec: ConstraintLayerSpec,
+        environment: UiEnvironmentValues,
     ) {
-        val environment = requireUiEnvironment()
         try {
             layerView.rotation = spec.rotation
             layerView.scaleX = spec.scaleX
@@ -689,30 +942,35 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             layerView.pivotX = spec.pivotX?.let(environment::toPx) ?: Float.NaN
             layerView.pivotY = spec.pivotY?.let(environment::toPx) ?: Float.NaN
         } catch (error: RuntimeException) {
-            warnOnce("Layer '${spec.id}' transform apply failed after layout: ${error.message}")
+            throw IllegalStateException("Layer '${spec.id}' transform apply failed.", error)
         }
     }
 
     private fun applyPlaceholderHelper(
-        key: String,
-        helperId: Int,
         spec: ConstraintPlaceholderSpec,
-        helperReferenceIds: Map<String, Int>,
+        referenceIds: Map<String, Int>,
     ) {
-        val placeholderView = ensureHelperView(
-            key = key,
-            viewId = helperId,
-            viewClass = Placeholder::class.java,
-        ) { Placeholder(context) }
+        val placeholderView = requireHelperView<Placeholder>(
+            NativeConstraintHelperKind.Placeholder,
+            spec.id,
+        )
         placeholderView.emptyVisibility = spec.emptyVisibility.toViewVisibility()
         val contentViewId = spec.contentId?.let { contentId ->
-            resolveReferenceId(
-                referenceId = contentId,
-                helperReferenceIds = helperReferenceIds,
-                warningPrefix = "Placeholder '${spec.id}' content",
-            )
+            requireNotNull(referenceIds[contentId]) {
+                "Validated placeholder content '$contentId' disappeared before native commit."
+            }
         } ?: ConstraintLayout.LayoutParams.UNSET
-        placeholderView.setContentId(contentViewId ?: ConstraintLayout.LayoutParams.UNSET)
+        placeholderView.setContentId(contentViewId)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : View> requireHelperView(
+        kind: NativeConstraintHelperKind,
+        id: String,
+    ): T {
+        return requireNotNull(helperViews[helperKey(kind.prefix(), id)] as? T) {
+            "Validated $kind helper '$id' disappeared before native commit."
+        }
     }
 
     private fun <T : View> ensureHelperView(
@@ -740,10 +998,14 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         val created = factory()
         created.id = viewId
         if (created.layoutParams == null) {
-            created.layoutParams = LayoutParams(
-                LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT,
-            )
+            val helperSize = when (created) {
+                is Flow,
+                is Placeholder,
+                -> LayoutParams.WRAP_CONTENT
+
+                else -> 0
+            }
+            created.layoutParams = LayoutParams(helperSize, helperSize)
         }
         mutatingHelperViews = true
         try {
@@ -764,6 +1026,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         try {
             staleKeys.forEach { key ->
                 helperViews.remove(key)?.let { helperView ->
+                    releaseHelperView(helperView)
                     removeView(helperView)
                 }
             }
@@ -772,11 +1035,18 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         }
     }
 
-    private fun applyGuideline(
-        constraintSet: ConstraintSet,
-        helperId: Int,
+    private fun releaseHelperView(view: View) {
+        when (view) {
+            is Placeholder -> view.setContentId(ConstraintLayout.LayoutParams.UNSET)
+            is androidx.constraintlayout.widget.ConstraintHelper -> view.setReferencedIds(intArrayOf())
+        }
+    }
+
+    private fun applyGuidelineHelper(
         spec: ConstraintGuidelineSpec,
+        environment: UiEnvironmentValues,
     ) {
+        val guideline = requireHelperView<Guideline>(NativeConstraintHelperKind.Guideline, spec.id)
         val orientation = when (spec.direction) {
             ConstraintGuidelineDirection.FromStart,
             ConstraintGuidelineDirection.FromEnd,
@@ -786,23 +1056,19 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             ConstraintGuidelineDirection.FromBottom,
             -> ConstraintSet.HORIZONTAL_GUIDELINE
         }
-        constraintSet.create(helperId, orientation)
+        val params = LayoutParams(0, 0).apply {
+            this.orientation = orientation
+        }
         when (val position = spec.position) {
             is ConstraintGuidelinePosition.Offset -> {
                 when (spec.direction) {
                     ConstraintGuidelineDirection.FromStart,
                     ConstraintGuidelineDirection.FromTop,
-                    -> constraintSet.setGuidelineBegin(
-                        helperId,
-                        requireUiEnvironment().roundToPx(position.value),
-                    )
+                    -> params.guideBegin = environment.roundToPx(position.value)
 
                     ConstraintGuidelineDirection.FromEnd,
                     ConstraintGuidelineDirection.FromBottom,
-                    -> constraintSet.setGuidelineEnd(
-                        helperId,
-                        requireUiEnvironment().roundToPx(position.value),
-                    )
+                    -> params.guideEnd = environment.roundToPx(position.value)
                 }
             }
 
@@ -816,38 +1082,106 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                     ConstraintGuidelineDirection.FromBottom,
                     -> 1f - position.value
                 }
-                constraintSet.setGuidelinePercent(helperId, percent.coerceIn(0f, 1f))
+                params.guidePercent = percent
             }
         }
+        params.validate()
+        guideline.layoutParams = params
+    }
+
+    private fun applyBarrierHelper(
+        spec: ConstraintBarrierSpec,
+        referenceIds: Map<String, Int>,
+        environment: UiEnvironmentValues,
+    ) {
+        val barrier = requireHelperView<Barrier>(NativeConstraintHelperKind.Barrier, spec.id)
+        barrier.setType(spec.direction.toBarrierDirection())
+        barrier.setMargin(environment.roundToPx(spec.margin))
+        barrier.setAllowsGoneWidget(spec.allowsGoneWidgets)
+        barrier.setReferencedIds(
+            resolveReferencedIds(
+                referenceIds = spec.referencedIds,
+                resolvedReferenceIds = referenceIds,
+            ),
+        )
+    }
+
+    private fun scheduleLayerTransforms(
+        layers: List<ConstraintLayerSpec>,
+        environment: UiEnvironmentValues,
+        revision: Long,
+    ) {
+        cancelPendingLayerTransforms()
+        if (layers.isEmpty()) return
+        lateinit var listener: ViewTreeObserver.OnPreDrawListener
+        listener = ViewTreeObserver.OnPreDrawListener {
+            if (viewTreeObserver.isAlive) {
+                viewTreeObserver.removeOnPreDrawListener(listener)
+            }
+            if (pendingLayerTransformListener === listener) {
+                pendingLayerTransformListener = null
+            }
+            if (acceptedRevision == revision) {
+                try {
+                    layers.forEach { spec ->
+                        val layer = requireHelperView<Layer>(NativeConstraintHelperKind.Layer, spec.id)
+                        applyLayerTransformsSafely(layer, spec, environment)
+                    }
+                } catch (error: Throwable) {
+                    emitPostCommitLayerFailure(revision, error)
+                }
+            }
+            true
+        }
+        pendingLayerTransformListener = listener
+        viewTreeObserver.addOnPreDrawListener(listener)
+    }
+
+    /** A committed graph cannot be rolled back safely from its post-layout transform boundary. */
+    private fun emitPostCommitLayerFailure(
+        revision: Long,
+        error: Throwable,
+    ) {
+        val key = ConstraintDiagnosticKey(
+            revision = revision,
+            reason = ConstraintGraphRejectionReason.NativeCommit,
+            identity = "layer-post-layout",
+        )
+        if (!emittedDiagnostics.add(key)) return
+        while (emittedDiagnostics.size > MAX_DIAGNOSTIC_KEYS) {
+            emittedDiagnostics.remove(emittedDiagnostics.first())
+        }
+        Log.e(
+            WARNING_TAG,
+            "Committed Layer post-layout transform failed at revision=$revision; " +
+                "the accepted graph remains active and children retain their last valid state.",
+            error,
+        )
+    }
+
+    private fun cancelPendingLayerTransforms() {
+        val listener = pendingLayerTransformListener ?: return
+        if (viewTreeObserver.isAlive) {
+            viewTreeObserver.removeOnPreDrawListener(listener)
+        }
+        pendingLayerTransformListener = null
     }
 
     private fun applyChains(
         constraintSet: ConstraintSet,
         chains: List<ConstraintChainSpec>,
-        helperReferenceIds: Map<String, Int>,
+        referenceIds: Map<String, Int>,
     ) {
-        chains.forEachIndexed { index, chain ->
+        chains.forEach { chain ->
             val chainWeights = chain.weights
-            if (chainWeights != null && chainWeights.size != chain.referencedIds.size) {
-                warnOnce(
-                    "Chain[$index] weights size (${chainWeights.size}) does not match referenced ids size " +
-                        "(${chain.referencedIds.size}). Extra values are ignored.",
-                )
-            }
-            val resolvedItems = chain.referencedIds.mapIndexedNotNull { refIndex, referenceId ->
-                val resolvedId = resolveReferenceId(
-                    referenceId = referenceId,
-                    helperReferenceIds = helperReferenceIds,
-                    warningPrefix = "Chain[$index]",
-                ) ?: return@mapIndexedNotNull null
+            val resolvedItems = chain.referencedIds.mapIndexed { refIndex, referenceId ->
+                val resolvedId = requireNotNull(referenceIds[referenceId]) {
+                    "Validated chain reference '$referenceId' disappeared before native commit."
+                }
                 ChainResolvedItem(
                     viewId = resolvedId,
                     weight = chainWeights?.getOrNull(refIndex),
                 )
-            }
-            if (resolvedItems.size < 2) {
-                warnOnce("Chain[$index] requires at least two valid references.")
-                return@forEachIndexed
             }
             when (chain.orientation) {
                 ConstraintChainOrientation.Horizontal -> {
@@ -943,228 +1277,164 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
 
     private fun applyItemConstraints(
         constraintSet: ConstraintSet,
-        constraints: Map<String, ConstraintItemSpec>,
-        helperReferenceIds: Map<String, Int>,
+        graph: ResolvedConstraintGraph,
+        referenceIds: Map<String, Int>,
+        environment: UiEnvironmentValues,
     ) {
-        val environment = requireUiEnvironment()
-        constraints.forEach { (referenceId, item) ->
-            val viewId = referenceIdToViewId[referenceId] ?: helperReferenceIds[referenceId]
-            if (viewId == null) {
-                warnOnce("Constraint item '$referenceId' has no matching child/helper layoutId.")
-                return@forEach
+        graph.constrainableIds.forEach { referenceId ->
+            val item = graph.constraints[referenceId] ?: ConstraintItemSpec()
+            val viewId = requireNotNull(referenceIds[referenceId]) {
+                "Validated layout node '$referenceId' disappeared before native commit."
             }
-            constraintSet.constrainWidth(viewId, item.width.toLayoutParam(environment))
-            constraintSet.constrainHeight(viewId, item.height.toLayoutParam(environment))
-            item.widthMin?.let { minWidth ->
-                constraintSet.constrainMinWidth(viewId, environment.roundToPx(minWidth))
-            }
-            item.widthMax?.let { maxWidth ->
-                constraintSet.constrainMaxWidth(viewId, environment.roundToPx(maxWidth))
-            }
-            item.widthPercent?.let { percent ->
-                constraintSet.constrainPercentWidth(viewId, percent.coerceIn(0f, 1f))
-            }
-            item.heightMin?.let { minHeight ->
-                constraintSet.constrainMinHeight(viewId, environment.roundToPx(minHeight))
-            }
-            item.heightMax?.let { maxHeight ->
-                constraintSet.constrainMaxHeight(viewId, environment.roundToPx(maxHeight))
-            }
-            item.heightPercent?.let { percent ->
-                constraintSet.constrainPercentHeight(viewId, percent.coerceIn(0f, 1f))
-            }
-            constraintSet.constrainedWidth(viewId, item.constrainedWidth)
-            constraintSet.constrainedHeight(viewId, item.constrainedHeight)
+            applyDimension(
+                constraintSet = constraintSet,
+                viewId = viewId,
+                dimension = item.width,
+                horizontal = true,
+                environment = environment,
+            )
+            applyDimension(
+                constraintSet = constraintSet,
+                viewId = viewId,
+                dimension = item.height,
+                horizontal = false,
+                environment = environment,
+            )
             item.start?.applyTo(
                 constraintSet = constraintSet,
                 sourceViewId = viewId,
                 sourceAnchor = ConstraintAnchor.Start,
-                helperReferenceIds = helperReferenceIds,
-                referenceId = referenceId,
+                referenceIds = referenceIds,
+                environment = environment,
             )
             item.end?.applyTo(
                 constraintSet = constraintSet,
                 sourceViewId = viewId,
                 sourceAnchor = ConstraintAnchor.End,
-                helperReferenceIds = helperReferenceIds,
-                referenceId = referenceId,
+                referenceIds = referenceIds,
+                environment = environment,
             )
             item.top?.applyTo(
                 constraintSet = constraintSet,
                 sourceViewId = viewId,
                 sourceAnchor = ConstraintAnchor.Top,
-                helperReferenceIds = helperReferenceIds,
-                referenceId = referenceId,
+                referenceIds = referenceIds,
+                environment = environment,
             )
             item.bottom?.applyTo(
                 constraintSet = constraintSet,
                 sourceViewId = viewId,
                 sourceAnchor = ConstraintAnchor.Bottom,
-                helperReferenceIds = helperReferenceIds,
-                referenceId = referenceId,
+                referenceIds = referenceIds,
+                environment = environment,
             )
-            applyBaselineConstraints(
+            item.baseline?.applyTo(
                 constraintSet = constraintSet,
                 sourceViewId = viewId,
-                referenceId = referenceId,
-                item = item,
-                helperReferenceIds = helperReferenceIds,
+                sourceAnchor = ConstraintAnchor.Baseline,
+                referenceIds = referenceIds,
+                environment = environment,
             )
             item.circle?.let { circle ->
-                val targetId = referenceIdToViewId[circle.targetId] ?: helperReferenceIds[circle.targetId]
-                if (targetId == null) {
-                    warnOnce("Constraint item '$referenceId' circle target '${circle.targetId}' was not found.")
-                } else {
-                    constraintSet.constrainCircle(
-                        viewId,
-                        targetId,
-                        environment.roundToPx(circle.radius),
-                        circle.angle,
-                    )
-                }
+                constraintSet.constrainCircle(
+                    viewId,
+                    requireNotNull(referenceIds[circle.targetId]),
+                    environment.roundToPx(circle.radius),
+                    circle.angle,
+                )
             }
             item.horizontalBias?.let { bias -> constraintSet.setHorizontalBias(viewId, bias) }
             item.verticalBias?.let { bias -> constraintSet.setVerticalBias(viewId, bias) }
-            item.dimensionRatio?.let { ratio -> constraintSet.setDimensionRatio(viewId, ratio) }
+            item.ratio?.let { ratio -> constraintSet.setDimensionRatio(viewId, ratio.toNativeRatio()) }
         }
     }
 
-    private fun applyBaselineConstraints(
+    private fun applyDimension(
         constraintSet: ConstraintSet,
-        sourceViewId: Int,
-        referenceId: String,
-        item: ConstraintItemSpec,
-        helperReferenceIds: Map<String, Int>,
+        viewId: Int,
+        dimension: ConstraintDimension,
+        horizontal: Boolean,
+        environment: UiEnvironmentValues,
     ) {
-        val baselineLinks = listOfNotNull(
-            item.baseline?.let { target ->
-                ConstraintAnchorLink(
-                    target = target,
-                )
-            },
-            item.baselineToTop,
-            item.baselineToBottom,
-        )
-        if (baselineLinks.size > 1) {
-            warnOnce(
-                "Constraint item '$referenceId' declares multiple baseline links. " +
-                    "Only the first declaration is applied.",
+        val size = when (dimension) {
+            ConstraintDimension.WrapContent,
+            ConstraintDimension.ConstrainedWrapContent,
+            -> LayoutParams.WRAP_CONTENT
+
+            is ConstraintDimension.Fixed -> environment.roundToPx(dimension.value)
+            is ConstraintDimension.MatchConstraints -> ConstraintSet.MATCH_CONSTRAINT
+        }
+        if (horizontal) {
+            constraintSet.constrainWidth(viewId, size)
+            constraintSet.constrainedWidth(
+                viewId,
+                dimension == ConstraintDimension.ConstrainedWrapContent,
+            )
+        } else {
+            constraintSet.constrainHeight(viewId, size)
+            constraintSet.constrainedHeight(
+                viewId,
+                dimension == ConstraintDimension.ConstrainedWrapContent,
             )
         }
-        val selected = baselineLinks.firstOrNull() ?: return
-        selected.applyTo(
-            constraintSet = constraintSet,
-            sourceViewId = sourceViewId,
-            sourceAnchor = ConstraintAnchor.Baseline,
-            helperReferenceIds = helperReferenceIds,
-            referenceId = referenceId,
-        )
+        if (dimension !is ConstraintDimension.MatchConstraints) return
+
+        val defaultMode = when (dimension.mode) {
+            ConstraintMatchMode.Spread -> ConstraintSet.MATCH_CONSTRAINT_SPREAD
+            ConstraintMatchMode.Wrap -> ConstraintSet.MATCH_CONSTRAINT_WRAP
+            is ConstraintMatchMode.Percent -> ConstraintSet.MATCH_CONSTRAINT_PERCENT
+        }
+        if (horizontal) {
+            constraintSet.constrainDefaultWidth(viewId, defaultMode)
+            dimension.min?.let { constraintSet.constrainMinWidth(viewId, environment.roundToPx(it)) }
+            dimension.max?.let { constraintSet.constrainMaxWidth(viewId, environment.roundToPx(it)) }
+            (dimension.mode as? ConstraintMatchMode.Percent)?.let { mode ->
+                constraintSet.constrainPercentWidth(viewId, mode.fraction)
+            }
+        } else {
+            constraintSet.constrainDefaultHeight(viewId, defaultMode)
+            dimension.min?.let { constraintSet.constrainMinHeight(viewId, environment.roundToPx(it)) }
+            dimension.max?.let { constraintSet.constrainMaxHeight(viewId, environment.roundToPx(it)) }
+            (dimension.mode as? ConstraintMatchMode.Percent)?.let { mode ->
+                constraintSet.constrainPercentHeight(viewId, mode.fraction)
+            }
+        }
     }
 
     private fun ConstraintAnchorLink.applyTo(
         constraintSet: ConstraintSet,
         sourceViewId: Int,
         sourceAnchor: ConstraintAnchor,
-        helperReferenceIds: Map<String, Int>,
-        referenceId: String,
+        referenceIds: Map<String, Int>,
+        environment: UiEnvironmentValues,
     ) {
-        val targetId = resolveTargetId(
-            target = target,
-            helperReferenceIds = helperReferenceIds,
-        )
-        if (targetId == null) {
-            warnOnce("Constraint item '$referenceId' target '${target.id}' was not found.")
-            return
-        }
+        val targetId = target.id?.let { id -> requireNotNull(referenceIds[id]) }
+            ?: ConstraintSet.PARENT_ID
         val sourceSide = sourceAnchor.toConstraintSetSide()
         val targetSide = target.anchor.toConstraintSetSide()
-        if (
-            sourceAnchor == ConstraintAnchor.Baseline &&
-            target.anchor !in setOf(
-                ConstraintAnchor.Baseline,
-                ConstraintAnchor.Top,
-                ConstraintAnchor.Bottom,
-            )
-        ) {
-            warnOnce("Constraint item '$referenceId' baseline can only connect to baseline/top/bottom.")
-            return
-        }
-        if (sourceAnchor != ConstraintAnchor.Baseline && target.anchor == ConstraintAnchor.Baseline) {
-            warnOnce("Constraint item '$referenceId' non-baseline anchors cannot connect to baseline.")
-            return
-        }
         constraintSet.connect(
             sourceViewId,
             sourceSide,
             targetId,
             targetSide,
-            requireUiEnvironment().roundToPx(margin),
+            environment.roundToPx(margin),
         )
         goneMargin?.let { marginValue ->
             constraintSet.setGoneMargin(
                 sourceViewId,
                 sourceSide,
-                requireUiEnvironment().roundToPx(marginValue),
+                environment.roundToPx(marginValue),
             )
         }
     }
 
-    private fun resolveTargetId(
-        target: ConstraintAnchorTarget,
-        helperReferenceIds: Map<String, Int>,
-    ): Int? {
-        val targetRef = target.id ?: return ConstraintSet.PARENT_ID
-        return referenceIdToViewId[targetRef] ?: helperReferenceIds[targetRef]
-    }
-
-    private fun resolveReferenceId(
-        referenceId: String,
-        helperReferenceIds: Map<String, Int>,
-        warningPrefix: String,
-    ): Int? {
-        val target = referenceIdToViewId[referenceId] ?: helperReferenceIds[referenceId]
-        if (target == null) {
-            warnOnce("$warningPrefix references missing id '$referenceId'.")
+    private fun ConstraintRatio.toNativeRatio(): String {
+        val prefix = when (constrainedSide) {
+            null -> ""
+            ConstraintRatioSide.Width -> "W,"
+            ConstraintRatioSide.Height -> "H,"
         }
-        return target
-    }
-
-    private fun hasCircularDependency(constraints: Map<String, ConstraintItemSpec>): Boolean {
-        val graph = mutableMapOf<String, MutableSet<String>>()
-        constraints.forEach { (sourceId, spec) ->
-            val dependencies = mutableSetOf<String>()
-            listOfNotNull(
-                spec.start?.target?.id,
-                spec.end?.target?.id,
-                spec.top?.target?.id,
-                spec.bottom?.target?.id,
-                spec.baseline?.id,
-                spec.baselineToTop?.target?.id,
-                spec.baselineToBottom?.target?.id,
-                spec.circle?.targetId,
-            ).forEach { targetId ->
-                if (constraints.containsKey(targetId)) {
-                    dependencies += targetId
-                }
-            }
-            graph[sourceId] = dependencies
-        }
-        val visitState = mutableMapOf<String, Int>() // 0=unvisited, 1=visiting, 2=visited
-        fun dfs(node: String): Boolean {
-            when (visitState[node]) {
-                1 -> return true
-                2 -> return false
-            }
-            visitState[node] = 1
-            for (next in graph[node].orEmpty()) {
-                if (dfs(next)) {
-                    return true
-                }
-            }
-            visitState[node] = 2
-            return false
-        }
-        return graph.keys.any { node -> dfs(node) }
+        return "$prefix$width:$height"
     }
 
     private fun ConstraintAnchor.toConstraintSetSide(): Int {
@@ -1177,21 +1447,12 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         }
     }
 
-    private fun ConstraintDimension.toLayoutParam(environment: UiEnvironmentValues): Int {
+    private fun ConstraintBarrierDirection.toBarrierDirection(): Int {
         return when (this) {
-            ConstraintDimension.WrapContent -> LayoutParams.WRAP_CONTENT
-            ConstraintDimension.FillToConstraints -> 0
-            ConstraintDimension.MatchParent -> LayoutParams.MATCH_PARENT
-            is ConstraintDimension.Fixed -> environment.roundToPx(value)
-        }
-    }
-
-    private fun ConstraintBarrierDirection.toConstraintSetDirection(): Int {
-        return when (this) {
-            ConstraintBarrierDirection.Start -> ConstraintSet.START
-            ConstraintBarrierDirection.End -> ConstraintSet.END
-            ConstraintBarrierDirection.Top -> ConstraintSet.TOP
-            ConstraintBarrierDirection.Bottom -> ConstraintSet.BOTTOM
+            ConstraintBarrierDirection.Start -> Barrier.START
+            ConstraintBarrierDirection.End -> Barrier.END
+            ConstraintBarrierDirection.Top -> Barrier.TOP
+            ConstraintBarrierDirection.Bottom -> Barrier.BOTTOM
         }
     }
 
@@ -1243,11 +1504,6 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         }
     }
 
-    private fun warnOnce(message: String) {
-        if (emittedWarnings.add(message)) {
-            Log.w(WARNING_TAG, message)
-        }
-    }
 }
 
 private class SafeLayer(
