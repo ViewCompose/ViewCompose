@@ -1,16 +1,16 @@
 ---
 translation_source: modules/viewcompose-constraintlayout-androidx/README.md
-translation_source_hash: 0e4542e011ab611dfdf49b7a92b374b9f0a4c514d99177f41d639cb0abd76780
+translation_source_hash: ba378d1c27b70806b5c2f56b80bb5e1ca0dfac1ae1d3e4594f4998504cedbbd1
 translation_status: current
 ---
 
 # AndroidX ConstraintLayout 集成模块
 
-`viewcompose-constraintlayout-androidx` 为 ViewCompose 提供声明式 ConstraintLayout Node、Child
-Constraint Modifier、可复用 Constraint Set 和 AndroidX Virtual Helper。
+`viewcompose-constraintlayout-androidx` 为 ViewCompose 提供声明式 ConstraintLayout 节点、
+子项约束 Modifier、可复用 Constraint Set 和 AndroidX Virtual Helper。
 
-公开 API 根包为 `com.viewcompose.constraintlayout`。Maven 后缀用于表达 AndroidX 后端，不保留
-已退役的 `com.viewcompose.widget.constraintlayout` 分类。
+公开 API 根包为 `com.viewcompose.constraintlayout`。Maven 后缀用于表达 AndroidX 后端，
+不保留已退役的 `com.viewcompose.widget.constraintlayout` 分类。
 
 ## 产物与稳定性
 
@@ -20,20 +20,23 @@ dependencies {
 }
 ```
 
-- 稳定性：**Alpha**。DSL 与 Native Mapping 已可用，但 2026-08-18 审计确认仍存在 Helper 生命周期、
-  精确几何、回滚与性能证据缺口。有效的
-  [ConstraintLayout 强化计划](https://docs.viewcompose.com/project/plans/constraintlayout-native-engine-hardening)
-  可以硬切不合适的 Alpha API 与 Renderer 行为，不保留兼容执行路径。
+- 稳定性：**Alpha**。当前源码已经包含首发 API 与 Renderer 硬切，但完整的 Robolectric、
+  真机、Demo、AndroidX `2.2.2` 与性能安全证据仍由有效的
+  [首发加固计划](../../project/plans/constraintlayout-native-engine-hardening.md)阻塞发版。
+  更广泛的能力对齐与优化由独立的
+  [发版后扩展计划](../../project/plans/constraintlayout-parity-performance-expansion.md)负责；
+  在首版发布并完成 Tag 前，该计划保持无 Changeset 状态。
 - 平台：Android 7.0（API 24）及以上。
 - 可选：`viewcompose-ui-foundation` 不依赖该产物。
-- UI Contract 与 UI Foundation 会被传递暴露，因为它们的 Modifier、单位和 Builder 类型出现在
-  公开 DSL 中；Runtime 保持为实现依赖。
-- 原生引擎：AndroidX ConstraintLayout 及 Guideline、Barrier、Flow、Group、Layer、Placeholder。
+- UI Contract 与 UI Foundation 会被传递暴露，因为它们的 Modifier、单位和 Builder 类型
+  出现在公开 DSL 中；Runtime 保持为实现依赖。
+- 原生引擎：AndroidX ConstraintLayout `2.2.2` 及其 Guideline、Barrier、Flow、Group、
+  Layer 与 Placeholder Helper。
 
 ## 内联约束
 
-在 `ConstraintLayout` 内创建 Reference，用 `Modifier.constrainAs` 绑定 Child，并在 Constraint Scope
-连接 Source Anchor：
+在 `ConstraintLayout` 内创建 Reference，用 `Modifier.constrainAs` 绑定子项，并在约束
+Scope 中连接 Source Anchor：
 
 ```kotlin
 ConstraintLayout {
@@ -49,75 +52,175 @@ ConstraintLayout {
 }
 ```
 
-Reference 是一个 Layout 内的 String Identity。DSL 不验证空值与重复 ID。同一 Source Anchor 被重复
-设置时，后者替换前者。`start`/`end` 跟随 Layout Direction；Top、Bottom、Baseline 是物理/原生 Anchor。
+Reference 是一个 Layout 内的非空 String Identity。重复 Child ID、Helper ID 或
+Child/Helper 冲突会拒绝完整候选。同一 Source Anchor 被重复设置时，后者替换前者。
+`start`/`end` 跟随 Layout Direction；Top、Bottom、Baseline 是物理/原生 Anchor。
+Baseline Link 与 Top/Bottom 定位互斥；Circle 与所有 Edge/Baseline Link 互斥。
+
+`ConstraintLayoutScope` 现在是专用的 `@UiDslMarker` Receiver，不再是 `UiTreeBuilder` 的
+Type Alias。它仍然提供所有普通 Widget，但 Helper 声明直接归当前 Layout 所有；进入嵌套的
+Layout Scope 后，外层 ConstraintLayout Receiver 会被隐藏。Scope 会在 Content 完成后冻结
+Helper Spec，公开行为不再依赖 Thread-local Collector 或发射后仍可变的 Helper Payload。
+
+Anchor Target 按能力拆分。逻辑 Start/End API 只接受
+`ConstraintHorizontalAnchorTarget`；Top/Bottom API 只接受
+`ConstraintVerticalAnchorTarget`；Baseline-to-baseline 只接受
+`ConstraintBaselineAnchorTarget`。普通 Child Reference 同时实现三个平面；Start/End
+Guideline 或 Barrier 只实现水平平面，Top/Bottom Guideline 或 Barrier 只实现垂直平面；Group
+与 Layer 返回仅表示 Identity 的 Helper Reference。因此跨轴 Link 会在 Kotlin 编译阶段失败，
+而不是推迟到整图预检。
 
 ## 尺寸与定位
 
-Width/Height 支持 Wrap Content、Fill-to-constraints、Match Parent 和固定 dp。Minimum/Maximum dp、
-Percent Dimension、Constrained Wrap Content、Bias、Dimension Ratio、Baseline-to-edge 与 Circular
-Positioning 映射到 AndroidX ConstraintSet。
+Width 与 Height 使用一套互斥的代数类型：
 
-Renderer 会把 Percent Dimension 与 Guideline Fraction 限制到 `0f..1f`。其他数值与 Ratio String
-不在 DSL 层验证，直接交给 AndroidX。Circular Angle 使用 Android ConstraintLayout 的顺时针角度语义。
+```kotlin
+width = ConstraintDimension.MatchConstraints(
+    mode = ConstraintMatchMode.Percent(0.6f),
+    min = 120.dp,
+    max = 360.dp,
+)
+height = ConstraintDimension.Fixed(180.dp)
+ratio = ConstraintRatio(width = 16f, height = 9f, constrainedSide = ConstraintRatioSide.Width)
+```
+
+可用尺寸包括 `WrapContent`、`ConstrainedWrapContent`、`Fixed` 和
+`MatchConstraints(Spread|Wrap|Percent, min, max)`。边界和百分比会立即校验；契约不再包含
+`MatchParent`、独立 min/max/percent/constrained 字段或原始 Ratio String。类型化 Ratio
+要求宽高项为有限正数，且至少一个轴使用 Match Constraint。Bias 与 Guideline Percentage
+使用 `0f..1f`；Circular Angle 使用有限的 `0f..<360f` Android 顺时针约定。
 
 ## 可复用 Constraint Set
 
 `constraintSet { ... }` 构建不发射 UI 的不可变 `ConstraintSetSpec`，再传给
-`ConstraintLayout(constraintSet = set)`。随后合并 Inline Constraint/Helper，同 ID 时 Inline 优先。
-同一 Builder 中重复 Constraint ID 会替换旧值；Helper 在 Renderer 按 ID 合并前保持声明顺序。
+`ConstraintLayout(constraintSet = set)`。Inline Constraint 与 Helper 随后合并；同一
+Constraint ID 或同类型 Helper ID 冲突时 Inline 优先。同一来源内的重复 Constraint/Helper
+会立即失败；跨 Helper 类型的 ID 冲突会在整图预检时拒绝。
+
+可复用条目使用同一个类型化 Reference 声明约束与 Link：
+
+```kotlin
+val set = constraintSet {
+    val (title, body) = createRefs("title", "body")
+    constrain(title) {
+        startToStart(parent)
+        topToTop(parent)
+    }
+    constrain(body) {
+        startToStart(title)
+        topToBottom(title, margin = 8.dp)
+    }
+}
+```
+
+已移除的 `constrain(id: String)` Builder Overload 不会再与单独创建的 Reference 发生漂移。
+`Modifier.constrain(id, ...)` 继续作为 Inline Child 的显式 XML 迁移捷径；
+`Modifier.constrainAs(ref, ...)` 是基于 Reference 的写法。
 
 ## Virtual Helper 虚拟辅助对象
 
-- Guideline 使用固定 dp Offset 或受限 Parent Fraction。
+- Guideline 使用有限非负 dp Offset 或 `0f..1f` Parent Fraction。
 - Barrier 使用 Margin 与 Gone-widget Policy 跟踪逻辑/物理极值。
-- Chain 保持 Reference 顺序，并验证 Weight 数量一致。
+- Chain 至少需要两个唯一成员，拥有成员在 Chain 轴上的 Anchor，并校验有限正 Weight 与 Bias。
 - Flow 映射 Orientation、Wrap、Style、Bias、Alignment、Gap、Padding 与最大换行数。
 - Group 传播 Visibility 与 Elevation。
 - Layer 传播 Visibility、Elevation、Rotation、Scale、Translation 与可选 Pivot。
 - Placeholder 承载一个引用 Child，并定义空状态 Visibility。
 
-Inline Helper 必须在 `ConstraintLayout { ... }` 求值期间调用，否则立即失败。Reusable Builder 版本不依赖
-Thread-local Scope。Flow、Group、Layer 至少需要一个 Reference；Barrier 与 Chain 的空集合目前继续下传。
+Inline Helper 函数只存在于 `ConstraintLayoutScope`，无关 Builder 无法调用它们。Reusable
+版本使用 `ConstraintSetBuilder`。Barrier、Flow、Group 与 Layer 必须包含 Layout-local
+Reference。Flow 与 Placeholder 是可约束图节点，因此可复用 Set 可以约束其 Helper
+Reference；Guideline、Barrier、Group 与 Layer 不能作为普通 Constraint Item Source。
 
-## Native 重建与失败
+## 原生协调与失败
 
-Native Container 会合并 Rebuild Request，并在需要时于 Measure/Layout 前应用最新 Merge Spec。Child 与
-Helper String ID 会映射为稳定 Android View ID。Flow、Group、Layer 与 Placeholder View 由 Renderer
-创建，不作为 DSL Child 暴露；Guideline 与 Barrier 的创建目前依赖原生 `ConstraintSet.applyTo` 行为。
+Native Container 会合并 Rebuild Request，并在修改前预检完整合并图。Child 与 Helper String
+ID 映射为稳定 Android View ID。一个注册表负责创建、复用、换型和删除 Guideline、Barrier、
+Flow、Group、Layer 与 Placeholder View；AndroidX 不再通过 `applyTo` 副作用创建无主 Helper。
 
-缺失 Reference、重复 Inline ID、覆盖与环形 Graph 会各记录一次日志。缺失 Link 会被跳过，其余 Constraint
-继续应用。Native `ConstraintSet.applyTo` 失败会被捕获并记录，使 Render Session 存活，但 Layout 可能保留
-部分或旧 Native State。应把这些 Warning 当作编写错误，并在真机测试复杂 Graph。
+已接受候选从干净的原生 Set 构建。Renderer 在应用前快照受影响的 ID、LayoutParams、Helper
+成员关系、无障碍、Visibility 与 Transform。缺失引用、重复/冲突 ID、无效 Anchor Plane、
+相互竞争的 Chain/Item 所有权、Helper 环和无效尺寸/范围都会拒绝完整候选。原生失败会恢复
+此前的 Helper 注册表与 View 状态。诊断按图 Revision、Identity 和 Reason 结构化并保持有界；
+无效 Link 不会被单独丢弃。
 
-已接受的 Alpha 审计复现了 `ConstraintSet: id unknown` Warning、Layer Transform 失败和错误的 Barrier
-Demo 几何，同时确认 Guideline 与 Barrier 不在 Renderer 自有的 Helper 清理 Map 中。在有效强化计划以
-单一 Helper Owner、原子拒绝/回滚、精确几何覆盖和零 Warning 真机证据闭环之前，不把 Helper 密集 Graph
-视为已完成发布验收。
+该事务遵循 [ADR-0016](../../architecture/decisions/0016-constraintlayout-graph-and-helper-ownership.md)。
+2026-08-18 使用缓存 ConstraintLayout `2.2.1` 的 API 35 Robolectric 聚焦运行通过了 16/16 条
+Renderer 测试。在相同 Harness 下，Trailing Barrier Control 在 ID Index 和 Direction 修复前是
+预期 `125 px`、实际 `0 px`，修复后精确为 `125 px`，坐标误差从 `125 px` 降到 0；结论为
+**improved**。1,000 次 Helper 换型的每次迭代都保持恰好一个受管 Helper 和两个总 Child。
+该运行还覆盖六种 Helper 换型、Layer Transform/删除/Detach/Reattach、Placeholder 释放、无效
+候选状态保留、注入原生提交失败后的回滚与有效重试，以及每种 Helper 声明换序时稳定的原生
+Identity。这属于聚焦正确性证据，不是发版验收：它使用手工 Classpath 与 `2.2.1`，生成 ID 在
+压力场景会产生 Robolectric 专属的资源名查询诊断。后续 Gradle 8.13 运行实际解析
+ConstraintLayout `2.2.2` 与 Core `1.1.2`，通过 75/75 条 UI Contract、11/11 条 DSL 和
+451/451 条 Renderer 测试，其中包含 12 条 Graph 与 16 条 ConstraintLayout 聚焦用例；
+`verifyDocumentationStructure` 也通过。正式 JVM 兼容性结论仍为 **improved**。它仍未覆盖完整
+真机 Helper 矩阵、视觉、内存或性能，因此发布闭环还需要无 Warning Demo/真机证据及无实质
+回退 Control。分类更新快速路径、Grid、CircularFlow 和更广泛的能力对齐继续留在发版后计划。
+
+2026-08-19 的 DSL Safety 后续运行通过 17/17 条 ConstraintLayout 模块测试：12 条行为测试和
+5 条 Kotlin 2.0.21 Compiler Fixture。合法的类型化 Axis/Reference Sample 可以编译；把垂直
+Helper 用作水平 Target、把水平 Helper 用作垂直 Target、在嵌套 Column 内泄漏调用外层
+ConstraintLayout Helper，以及向 ConstraintSet 传入 String 条目，都会按契约编译失败。此前
+通用 Target/Type Alias Surface 会接受这四种无效写法，因此编译安全结论为 **improved**。
+同一次运行还证明嵌套 Helper Snapshot 相互独立，且保留到 Content 之外的 Scope 会拒绝延迟
+声明。`verifyDslApiContracts`、UI Foundation Scoped-container Sample、Demo 编译与 Preview
+编译也已通过。这只属于源码契约证据，不能替代仍未完成的真机与性能 Gate。
+
+2026-08-19 在 Samsung SM-G991B / Android 13 上进行的聚焦真机复验，在浅色主题、LTR、字体
+缩放 1.0 下接受了修订后的 Guideline/Barrier Fixture。Barrier Marker 中心从短文案的
+`596 px` 移到长文案的 `782 px`，绝对位移 `186 px`（占 1080 px 屏宽的 17.2%）；可见的
+55% Guideline 保持固定，完整 Marker 始终位于容器内。精确几何 Instrumentation 通过 1/1，
+无 Warning 的 Demo APK 构建通过，过滤日志未出现 App Fatal、ConstraintSet、Renderer Layout
+或 Helper Layer 失败。聚焦视觉/几何结论为 **improved**。这仍只是单一默认配置 Fixture，
+因此覆盖全部 Helper 的深色主题、RTL、大字体、内存和性能 Gate 仍是发版阻塞项。
+
+## Alpha 源码迁移
+
+| 已移除的 Alpha 源码 | 替代方式 |
+| --- | --- |
+| `ConstraintDimension.FillToConstraints` | `ConstraintDimension.MatchConstraints()` |
+| `ConstraintDimension.MatchParent` | 相对 Anchor 加 `MatchConstraints()` |
+| `widthMin` / `widthMax` | `width = MatchConstraints(min = ..., max = ...)` |
+| `heightMin` / `heightMax` | `height = MatchConstraints(min = ..., max = ...)` |
+| `widthPercent` / `heightPercent` | `MatchConstraints(mode = ConstraintMatchMode.Percent(...))` |
+| `constrainedWidth` / `constrainedHeight` | `ConstraintDimension.ConstrainedWrapContent` |
+| `dimensionRatio = "W,16:9"` | `ratio = ConstraintRatio(16f, 9f, ConstraintRatioSide.Width)` |
+| 同时声明 Circle 与 Edge | 把 Circle 和 Edge 定位拆到不同的 Constraint-set 状态 |
+| 同一 Builder 中重复 Constraint/Helper ID | 每个 ID 只声明一次；仅用 Inline-over-set 优先级表达有意的状态覆盖 |
+| 把 `ConstraintLayoutScope` 当作 `UiTreeBuilder` Alias | 使用 `ConstraintLayout { ... }` 提供的专用 Receiver；不要保留或自行构造它 |
+| 所有 Helper 共用一个通用 Anchor Target 类型 | Start/End 只连接水平 Target，Top/Bottom 只连接垂直 Target，Baseline 只连接具备 Baseline 的 Child |
+| `constraintSet { constrain(ref.id) { ... } }` | `constraintSet { constrain(ref) { ... } }` |
+
+变更后的公开 Surface 属于 Q3：传输不变量、默认值、失败时机、DSL Scope、合并优先级、
+Native Mapping 与替代 Sample 都是契约字段。不提供 Deprecated Compatibility Alias 或原始
+AndroidX Escape Hatch。
 
 ## 性能建议
 
 - Graph 稳定而 Child Content 变化时复用 Constraint Set。
-- 保持 Reference ID 与 Helper 声明顺序稳定，避免 Native Helper 抖动。
+- 保持 Reference ID 与 Helper 类型稳定，以复用生成的 View ID 与实例。
 - 不需要约束求解时使用更简单 Container；ConstraintLayout 会引入 Solver Pass。
 - 避免由高频 State 重建大型 Helper Graph。
 
-当前还没有已接受的 ConstraintLayout 专项 Direct-native Benchmark。在强化计划把可复现的
-10/50/100 Node Control 与 Candidate 结果写入 Performance 文档前，不应宣称该 Adapter 是 ViewCompose
-中性能最快的 Layout Path。
+当前还没有已接受的 ConstraintLayout 专项 Direct-native Benchmark。首发计划必须证明没有
+实质回退，但不会据此建立性能领先结论。在发版后扩展计划把可复现的 10/50/100 Node
+Direct-native、已发布基线与 Candidate 结果写入 Performance 文档前，不应宣称该 Adapter 是
+ViewCompose 中性能最快的 Layout Path。
 
 ## 相关文档
 
-- [UI Foundation 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-foundation)
-- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer-android)
-- [UI Contract 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract)
-- [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
+- [UI Foundation 模块](../viewcompose-ui-foundation/README.md)
+- [Renderer 模块](../viewcompose-renderer-android/README.md)
+- [UI Contract 模块](../viewcompose-ui-contract/README.md)
+- [源码文档与 API 注释规范](../../project/api-documentation-quality.md)
 
 完整生成参考位于
 [`viewcompose-constraintlayout-androidx` API 树](https://docs.viewcompose.com/api/viewcompose-constraintlayout-androidx/current/)。
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立 String Reference、Inline-over-external Merge、已记录的逻辑 Anchor 与 Dimension
-基线、Virtual Helper、合并 Native Rebuild，以及错误 Graph 的 Warning 恢复。它不提供平台无关 Constraint
-Solver；有效强化计划负责已经确认的正确性、API、能力对齐与性能缺口。
+首发硬切之前的源码快照使用基于 Warning 的局部恢复与分裂的 Helper 所有权。当前源码有意
+打破这些行为，不提供第二套 Constraint Solver 或 Compatibility Engine。首发计划仍负责验收
+与发布闭环；发版后扩展计划独立负责优化、更广泛的能力对齐和性能领先证据。

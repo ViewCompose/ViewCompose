@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: e1d179b841401ad1ee4f5c85b593556358f085f63c3f01d9c8b67f0b4cf5e736
+translation_source_hash: dd1140367f64c890dfccc19299119855c6162fc6156c2f8efd19fa2c888f094f
 translation_status: current
 ---
 
@@ -81,9 +81,22 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 重新抛出错误。Android View 生命周期回调和延迟释放在结构提交后执行；由于新的可见树此时
 不能安全回滚，其失败会被隔离在 `RenderTreeResult.commitFailures` 中。
 
-ConstraintLayout 虚拟 `Group` 的可见性会在 `ConstraintSet.applyTo` 之后重新应用。该顺序可
-避免现有 helper 在帧间变化时，被 ConstraintSet 克隆的子项可见性恢复成陈旧原生状态；多个
-Group 仍保持 AndroidX 按声明顺序决定优先级的规则。
+ConstraintLayout 协调会先编译完整不可变候选，并在接触原生 View 前拒绝无效 ID、Reference、
+Anchor Plane、Helper 依赖、所有权冲突、尺寸与范围。一个注册表拥有 Guideline、Barrier、Flow、
+Group、Layer 与 Placeholder 的稳定 ID、实例、类型变化、引用和删除。已接受候选从干净的原生
+Set 应用；原生提交失败会恢复此前的 Helper 注册表、LayoutParams、运行时属性、环境与已接受图。
+Group/Layer/Placeholder 效果是叠加在可恢复 Child 运行时属性之上的 Overlay，不会成为下一候选的
+事实来源。完整契约记录在
+[ADR-0016](../../architecture/decisions/0016-constraintlayout-graph-and-helper-ownership.md)。
+2026-08-18 的 API 35 离线聚焦运行通过了 16/16 条 ConstraintLayout Renderer 回归，覆盖原先为
+`0 px`、修复后精确为 `125 px` 的 Barrier 几何、拒绝候选时的状态保留与后续有效重试、Group
+Overlay 恢复、注入原生提交失败后的回滚与有效重试、Layer 与 Placeholder 释放、Layer
+Detach/Reattach 回调所有权、Density 变化、1,000 次 Helper 换型期间恒定的所有权，以及同一 ID
+在六种 Helper 间的换型；每种 Helper 的两个声明反转顺序后也会保留相同原生实例。结论为
+**improved**。缓存 ConstraintLayout `2.2.1` 与手工 Robolectric Classpath 仅保留为最初缺陷复现
+证据；后续 Gradle 8.13 运行实际解析 ConstraintLayout `2.2.2` 与 Core `1.1.2`，并通过全部
+451 条 Renderer 测试，其中包含 12 条 Graph 与 16 条 ConstraintLayout 聚焦用例。因此
+`2.2.2` JVM 兼容性限制已解除；真机、内存与性能 Gate 仍由所属加固计划继续跟踪。
 
 ## 主要 API
 

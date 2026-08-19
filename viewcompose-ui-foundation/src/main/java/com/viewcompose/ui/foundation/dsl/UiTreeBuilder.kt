@@ -146,6 +146,88 @@ open class UiTreeBuilder {
     }
 
     /**
+     * Emits one VNode whose children are collected by a dedicated [UiTreeBuilder] subtype.
+     *
+     * This is the low-level Q3 construction boundary for independently published container DSLs
+     * that need a type-safe receiver in addition to ordinary widget emission. [scopeFactory] must
+     * return a fresh, empty builder. [content] and [spec] run synchronously in the same composition
+     * group; [spec] runs after [content], so it may freeze container metadata collected by the
+     * scope without thread-local state or mutable post-emission payloads.
+     *
+     * During an active composition, [type], [key], [inputs], [modifier], the current Local
+     * snapshot, and the reference identity of [content] participate in group reuse. Every ordinary
+     * Kotlin value read by [spec] that is not derived from [content] must be present in [inputs].
+     * Snapshot state read by either block is observed by the group. The resulting child list and
+     * [NodeSpec] are immutable inputs to the emitted VNode.
+     *
+     * @sample com.viewcompose.ui.foundation.samples.scopedContainerEmissionSample
+     *
+     * @receiver active tree builder receiving the container node
+     * @param type renderer node type paired with the result of [spec]
+     * @param key optional stable sibling identity used during composition and reconciliation
+     * @param inputs ordinary Kotlin values captured only by [spec]
+     * @param modifier ordered layout, drawing, input, and semantics configuration
+     * @param scopeFactory factory returning one fresh, empty dedicated child builder
+     * @param spec complete immutable renderer properties built after [content]
+     * @param content child tree and container metadata declarations evaluated on the dedicated scope
+     */
+    fun <S : UiTreeBuilder> emitScoped(
+        type: NodeType,
+        key: Any? = null,
+        inputs: List<Any?> = emptyList(),
+        modifier: Modifier = Modifier,
+        scopeFactory: () -> S,
+        spec: S.() -> NodeSpec,
+        content: S.() -> Unit,
+    ) {
+        val composer = ComposerContext.currentComposer()
+        if (composer == null) {
+            val scopedBuilder = scopeFactory().apply(content)
+            emitResolved(
+                type = type,
+                key = key,
+                spec = scopedBuilder.spec(),
+                modifier = modifier,
+                children = scopedBuilder.build(),
+            )
+            return
+        }
+        val parentSnapshot = LocalContext.snapshot()
+        val node = composer.runGroup(
+            signature = emitGroupSignature(
+                type = type,
+                key = key,
+                hasContent = true,
+            ),
+            inputs = ScopedEmitInputs(
+                explicit = inputs,
+                modifier = modifier,
+                localSnapshot = parentSnapshot,
+                content = content,
+            ),
+            reuseResult = ::canReuseVNode,
+        ) { scope ->
+            var nextNode: VNode? = null
+            LocalContext.withSnapshot(parentSnapshot) {
+                val scopedBuilder = scopeFactory().apply(content)
+                nextNode = UiNodeTooling.attach(
+                    VNode(
+                        type = type,
+                        key = key,
+                        spec = scopedBuilder.spec(),
+                        modifier = modifier,
+                        children = scopedBuilder.build(),
+                        environment = Environment.values,
+                    ),
+                )
+                scope.updateLocalSnapshot(LocalContext.snapshot())
+            }
+            checkNotNull(nextNode)
+        }
+        children += node
+    }
+
+    /**
      * Emits one VNode whose complete NodeSpec can update through a direct property transaction.
      *
      * State reads made by [spec] are isolated from the enclosing composition scope. The active
@@ -343,6 +425,31 @@ open class UiTreeBuilder {
             result = 31 * result + modifier.hashCode()
             result = 31 * result + localSnapshot.hashCode()
             result = 31 * result + (content?.let(System::identityHashCode) ?: 0)
+            return result
+        }
+    }
+
+    /** Preserves explicit spec inputs and child-content identity during scoped-container reuse. */
+    private class ScopedEmitInputs(
+        private val explicit: List<Any?>,
+        private val modifier: Modifier,
+        private val localSnapshot: LocalSnapshot,
+        private val content: Any,
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is ScopedEmitInputs) return false
+            return explicit == other.explicit &&
+                modifier == other.modifier &&
+                localSnapshot == other.localSnapshot &&
+                content === other.content
+        }
+
+        override fun hashCode(): Int {
+            var result = explicit.hashCode()
+            result = 31 * result + modifier.hashCode()
+            result = 31 * result + localSnapshot.hashCode()
+            result = 31 * result + System.identityHashCode(content)
             return result
         }
     }

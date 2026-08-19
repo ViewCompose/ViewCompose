@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-layout-modifier-and-environment.md
-translation_source_hash: db2f76d8deb96eae090eec9f8b21115a584e30ad5ff11ae1444a64b09761743e
+translation_source_hash: fac6a7b4f608735303d857f4af13f251243692c2004e63a4ce72ea3c96781462
 translation_status: current
 ---
 
@@ -222,7 +222,20 @@ ViewCompose 提供以下受支持作用域操作：
 
 可选 ConstraintLayout 模块以父数据形式提供 layout ID 和 constraint item spec。Android
 renderer 通过 AndroidX ConstraintLayout 消费这些值。固定尺寸从子项捕获的环境转换；
-fill-to-constraints 使用 Android ConstraintLayout 的零尺寸约定。
+`MatchConstraints` 使用 Android ConstraintLayout 的零尺寸约定。
+
+两个库都使用专用且带 Marker 的 Content Scope，但 ViewCompose 有意保留 XML 用户熟悉的
+`startToStart`、`topToBottom` 等函数，而不是照搬 Compose Anchor Object。ViewCompose 会区分
+水平、垂直与 Baseline Target 能力：把 Top/Bottom Guideline 用作 Start/End Target，或把
+Start/End Guideline 用作 Top/Bottom Target，都会在 Kotlin 编译阶段失败。嵌套结构型 DSL 会
+隐藏外层 ConstraintLayout Receiver；Helper Metadata 在 Content 完成后冻结，不再通过环境式
+Thread-local State 收集。
+
+Reusable Set 同样维持类型化声明 Identity。先创建 Reference，再把它传给 `constrain(ref)`，
+并用同一个 Reference 建立 Link；已移除的 `constrain(ref.id)` 形式不会再漂移到无关 String。
+`Modifier.constrain(id, ...)` 继续作为显式 Inline XML 迁移捷径。Dimension 应迁移到互斥的
+`WrapContent`、`ConstrainedWrapContent`、`Fixed` 与 `MatchConstraints` 代数，而不是独立
+min/max/percent 字段或 `MatchParent`。
 
 契约元素定义在固定 revision 的
 [`ModifierElementsLayout.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierElementsLayout.kt)
@@ -231,7 +244,10 @@ fill-to-constraints 使用 Android ConstraintLayout 的零尺寸约定。
 第 91–98 行和第 247–255 行。
 
 这是可行迁移路径，不是 Compose ConstraintLayout 对等性的证明。应根据 ViewCompose 模块契约
-重新检查 ConstraintSet 合并、baseline 连接、逻辑 start/end 锚点、循环依赖和 dimension 默认值。
+重新检查 ConstraintSet 合并、baseline 连接、逻辑 start/end 锚点、循环依赖、Helper 能力和
+dimension 默认值。Compose 风格 `linkTo` 与匿名 Reference 不是当前兼容性要求；发版后
+ConstraintLayout 计划只会把它们当作增量易用性方案评估，并要求保留类型化 Target Plane 与
+XML-friendly 函数族。
 
 ## Modifier 顺序、折叠与相等性 {/* #modifier-ordering-folding-and-equality */}
 

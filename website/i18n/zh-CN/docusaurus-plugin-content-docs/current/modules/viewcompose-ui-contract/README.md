@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 33d7bd2854e3503c6b3d1754773c4760a63ab7362080713656e3cf05bfa3eadc
+translation_source_hash: c5c15b82eaaeb4b785a76cbfd93fda2255fb216f548f2d47a21dda7dd10d283e
 translation_status: current
 ---
 
@@ -76,6 +76,11 @@ val gap = VNode(
 - `maxWidth`、`maxHeight` 与 `aspectRatio` 是通过 `NodeType.LayoutConstraintHost` 实现的可移植
   测量 Modifier。自定义 Renderer 必须用一个测量边界约束完整节点，遵守父级传入的精确约束，
   其余情况下应用声明的最大值，并在可行区间内保持请求的宽高比。
+- Q3 ConstraintLayout 传输契约为每个轴使用一个互斥的 `ConstraintDimension` 值，以
+  `ConstraintMatchMode` 表达 spread/wrap/percent 行为，并使用正数类型化 `ConstraintRatio`
+  与单一 Baseline Link。它不依赖 Android，不包含 `match_parent`、独立尺寸标志或原始 Ratio
+  语法。跨节点的 Identity、Reference、Ownership 与 Range 错误会在平台 Renderer 边界拒绝
+  完整候选，而不是弱化单条 Link。
 - `NavigationBarItem` 与 `SegmentedControlItem` 必须提供显式且唯一的逻辑 Key。非空集合的
   NodeSpec 要求选中索引位于范围内，空集合使用 `-1`；Navigation Badge 是可空的非负值。
 - `LazyListItem` 是 Q3、Renderer 中立的 Snapshot/Session 契约。逻辑相等由 Key、`contentType`、

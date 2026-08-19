@@ -27,5 +27,6 @@ dependencies {
     implementation(project(":viewcompose-runtime"))
     api(project(":viewcompose-ui-contract"))
     api(project(":viewcompose-ui-foundation"))
+    testImplementation(libs.kotlin.compiler.embeddable)
     testImplementation(libs.junit)
 }

@@ -231,8 +231,23 @@ match the Box's final size without making that child determine the Box size. Vie
 
 The optional ConstraintLayout module supplies layout IDs and constraint item specifications as
 parent data. The Android renderer consumes those values through AndroidX ConstraintLayout. Fixed
-dimensions are converted from the child's captured environment; fill-to-constraints becomes the
+dimensions are converted from the child's captured environment; `MatchConstraints` becomes the
 Android ConstraintLayout zero-dimension convention.
+
+Both libraries use a dedicated marked content scope, but ViewCompose deliberately keeps the
+XML-familiar `startToStart`, `topToBottom`, and related functions instead of copying Compose anchor
+objects. ViewCompose separates horizontal, vertical, and baseline target capabilities: using a
+top/bottom Guideline as a start/end target, or a start/end Guideline as a top/bottom target, fails
+Kotlin compilation. Nested structural DSLs hide the outer ConstraintLayout receiver, and helper
+metadata is frozen after content completes rather than collected through ambient thread-local
+state.
+
+Reusable sets also keep declaration identity typed. Create a reference, pass it to
+`constrain(ref)`, and use that same reference for links; the removed `constrain(ref.id)` form cannot
+drift back to an unrelated string. `Modifier.constrain(id, ...)` remains an explicit inline
+XML-migration shortcut. Dimension migration targets the mutually exclusive `WrapContent`,
+`ConstrainedWrapContent`, `Fixed`, and `MatchConstraints` algebra rather than independent
+min/max/percent fields or `MatchParent`.
 
 The contract elements are defined in
 [`ModifierElementsLayout.kt`](../../viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierElementsLayout.kt),
@@ -241,8 +256,11 @@ lines 117–150. Parent-aware conversion is implemented in
 lines 91–98 and 247–255.
 
 This is a practical migration path, not proof of Compose ConstraintLayout parity. Recheck
-ConstraintSet merging, baseline connections, logical start/end anchors, circular dependencies, and
-dimension defaults against the ViewCompose module contract.
+ConstraintSet merging, baseline connections, logical start/end anchors, circular dependencies,
+helper capabilities, and dimension defaults against the ViewCompose module contract. Compose-style
+`linkTo` and anonymous references are not current compatibility requirements; the post-release
+ConstraintLayout plan will evaluate them only as additive ergonomics that preserve typed target
+planes and the XML-friendly family.
 
 ## Modifier ordering, folding, and equality
 

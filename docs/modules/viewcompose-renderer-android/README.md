@@ -92,10 +92,26 @@ View lifecycle callbacks and deferred disposal run after structural commit; thei
 isolated in `RenderTreeResult.commitFailures` because the new visible tree can no longer be rolled
 back safely.
 
-ConstraintLayout virtual `Group` visibility is re-applied after `ConstraintSet.applyTo`. This
-ordering prevents the set's cloned child visibility from restoring stale native state when an
-existing helper changes between frames; multiple groups retain AndroidX declaration-order
-precedence.
+ConstraintLayout reconciliation first compiles a complete immutable candidate and rejects invalid
+IDs, references, anchor planes, helper dependencies, ownership conflicts, dimensions, and ranges
+before touching native Views. One registry owns stable IDs, instances, type changes, references,
+and removal for Guideline, Barrier, Flow, Group, Layer, and Placeholder. Accepted candidates apply
+from a clean native set; failed native commits restore the previous helper registry, LayoutParams,
+runtime properties, environment, and accepted graph. Group/Layer/Placeholder effects are retained
+as overlays over restorable child runtime properties instead of becoming the next graph's source of
+truth. The complete contract is recorded in
+[ADR-0016](../../architecture/decisions/0016-constraintlayout-graph-and-helper-ownership.md).
+The focused 2026-08-18 offline API 35 run passed 16/16 ConstraintLayout renderer regressions,
+including exact `125 px` Barrier geometry after a prior `0 px` result, rejected-candidate state
+retention, injected mid-commit rollback plus valid retry, Group overlay restoration, Layer and
+Placeholder release, Layer detach/reattach callback ownership, density changes, constant ownership
+through 1,000 helper retypes, and one-ID retyping across all six helper kinds. The result is
+**improved**; reordering two declarations of every retained helper kind also preserved the same
+native instances. The cached ConstraintLayout `2.2.1` and manual Robolectric evidence is retained
+only for the original defect reproduction. The follow-up Gradle 8.13 run resolved
+ConstraintLayout `2.2.2` plus core `1.1.2` and passed all 451 Renderer tests, including the 12 graph
+and 16 focused ConstraintLayout cases. The `2.2.2` JVM compatibility limitation is therefore
+retired; device, memory, and performance gates remain pending in the owning hardening plan.
 
 ## Principal APIs
 

@@ -11,18 +11,21 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.ConstraintChainOrientation
 import com.viewcompose.ui.node.spec.ConstraintChainStyle
+import com.viewcompose.ui.node.spec.ConstraintDimension
 import com.viewcompose.ui.node.spec.ConstraintFlowOrientation
 import com.viewcompose.ui.node.spec.ConstraintFlowWrapMode
 import com.viewcompose.ui.node.spec.ConstraintGuidelineDirection
 import com.viewcompose.ui.node.spec.ConstraintGuidelinePosition
 import com.viewcompose.ui.node.spec.ConstraintHelperVisibility
 import com.viewcompose.ui.node.spec.ConstraintLayoutNodeProps
+import com.viewcompose.ui.node.spec.ConstraintMatchMode
+import com.viewcompose.ui.node.spec.ConstraintRatio
 import com.viewcompose.ui.node.spec.ConstraintSetSpec
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.Text
-import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.buildVNodeTree
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -43,14 +46,12 @@ class ConstraintLayoutDslTest {
                     text = "Title",
                     modifier = Modifier.constrainAs(title) {
                         topToTop(topGuide)
-                        startToStart(parent)
                     },
                 )
                 Text(
                     text = "Subtitle",
                     modifier = Modifier.constrain("subtitle") {
                         topToBottom(title, margin = 8.dp)
-                        startToStart(parent)
                     },
                 )
             }
@@ -98,19 +99,17 @@ class ConstraintLayoutDslTest {
         val set: ConstraintSetSpec = constraintSet {
             val hero = createRef("hero")
             val details = createRef("details")
-            val topGuide = createGuidelineFromTop(0.3f, id = "guide")
+            createGuidelineFromTop(0.3f, id = "guide")
             createVerticalChain(
                 hero,
                 details,
                 weights = listOf(1f, 2f),
                 style = ConstraintChainStyle.SpreadInside,
             )
-            constrain("hero") {
-                topToTop(topGuide)
+            constrain(hero) {
                 startToStart(parent)
             }
-            constrain("details") {
-                topToBottom(hero, margin = 12.dp)
+            constrain(details) {
                 startToStart(parent)
             }
         }
@@ -183,7 +182,7 @@ class ConstraintLayoutDslTest {
             createGroup(a, b, id = "group-set")
             createLayer(a, b, id = "layer-set", scaleX = 1.2f, scaleY = 0.8f)
             createPlaceholder(content = b, id = "placeholder-set")
-            constrain("a") {
+            constrain(a) {
                 startToStart(parent)
                 topToTop(parent)
             }
@@ -196,39 +195,106 @@ class ConstraintLayoutDslTest {
     }
 
     @Test
-    fun `constrain scope emits advanced dimensions baseline and circle fields`() {
+    fun `constrain scope emits typed advanced dimensions and ratio`() {
         val spec = Modifier.constrain("hero") {
             startToStart(parent, margin = 8.dp)
             endToEnd(parent, margin = 8.dp)
             topToTop(parent)
-            width = com.viewcompose.ui.node.spec.ConstraintDimension.FillToConstraints
-            height = com.viewcompose.ui.node.spec.ConstraintDimension.FillToConstraints
-            widthMin = 120.dp
-            widthMax = 360.dp
-            widthPercent = 0.6f
-            heightMin = 80.dp
-            heightMax = 400.dp
-            heightPercent = 0.5f
-            constrainedWidth = true
-            constrainedHeight = true
-            baselineToTop(parent, margin = 6.dp)
-            val target = ConstraintReference("avatar")
-            circular(target = target, radius = 72.dp, angle = 45f)
+            width = ConstraintDimension.MatchConstraints(
+                mode = ConstraintMatchMode.Percent(0.6f),
+                min = 120.dp,
+                max = 360.dp,
+            )
+            height = ConstraintDimension.MatchConstraints(
+                mode = ConstraintMatchMode.Percent(0.5f),
+                min = 80.dp,
+                max = 400.dp,
+            )
+            ratio = ConstraintRatio(width = 16f, height = 9f)
         }.elements.filterIsInstance<ConstraintModifierElement>().single().constraint
 
-        assertEquals(120.dp, spec.widthMin)
-        assertEquals(360.dp, spec.widthMax)
-        assertEquals(0.6f, spec.widthPercent)
-        assertEquals(80.dp, spec.heightMin)
-        assertEquals(400.dp, spec.heightMax)
-        assertEquals(0.5f, spec.heightPercent)
-        assertEquals(true, spec.constrainedWidth)
-        assertEquals(true, spec.constrainedHeight)
+        val width = spec.width as ConstraintDimension.MatchConstraints
+        val height = spec.height as ConstraintDimension.MatchConstraints
+        assertEquals(120.dp, width.min)
+        assertEquals(360.dp, width.max)
+        assertEquals(ConstraintMatchMode.Percent(0.6f), width.mode)
+        assertEquals(80.dp, height.min)
+        assertEquals(400.dp, height.max)
+        assertEquals(ConstraintMatchMode.Percent(0.5f), height.mode)
+        assertEquals(ConstraintRatio(width = 16f, height = 9f), spec.ratio)
+    }
+
+    @Test
+    fun `baseline declarations use one mutually exclusive link`() {
+        val peer = ConstraintReference("peer")
+        val spec = Modifier.constrain("label") {
+            startToStart(parent)
+            baselineToBaseline(peer)
+            baselineToTop(peer, margin = 6.dp)
+        }.elements.filterIsInstance<ConstraintModifierElement>().single().constraint
+
         assertEquals(
             com.viewcompose.ui.node.spec.ConstraintAnchor.Top,
-            spec.baselineToTop?.target?.anchor,
+            spec.baseline?.target?.anchor,
         )
-        assertEquals("avatar", spec.circle?.targetId)
+        assertEquals(6.dp, spec.baseline?.margin)
+    }
+
+    @Test
+    fun `competing local positioning contracts fail fast`() {
+        val peer = ConstraintReference("peer")
+
+        assertThrows(IllegalArgumentException::class.java) {
+            Modifier.constrain("label") {
+                topToTop(parent)
+                baselineToBaseline(peer)
+            }
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            Modifier.constrain("orbit") {
+                startToStart(parent)
+                circular(peer, radius = 20.dp, angle = 45f)
+            }
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            Modifier.constrain("ratio") {
+                ratio = ConstraintRatio(16f, 9f)
+            }
+        }
+    }
+
+    @Test
+    fun `references chains and dimensions reject invalid local values`() {
+        assertThrows(IllegalArgumentException::class.java) { ConstraintReference(" ") }
+        assertThrows(IllegalArgumentException::class.java) { ConstraintMatchMode.Percent(1.01f) }
+        assertThrows(IllegalArgumentException::class.java) {
+            ConstraintDimension.MatchConstraints(min = 20.dp, max = 10.dp)
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            constraintSet {
+                val only = createRef("only")
+                createHorizontalChain(only)
+            }
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            constraintSet {
+                val repeated = createRef("repeated")
+                createHorizontalChain(repeated, repeated)
+            }
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            constraintSet {
+                val duplicate = createRef("duplicate")
+                constrain(duplicate) { topToTop(parent) }
+                constrain(duplicate) { bottomToBottom(parent) }
+            }
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            constraintSet {
+                createGuidelineFromTop(0.2f, id = "duplicate-helper")
+                createGuidelineFromTop(0.8f, id = "duplicate-helper")
+            }
+        }
     }
 
     @Test
@@ -245,13 +311,39 @@ class ConstraintLayoutDslTest {
     }
 
     @Test
-    fun `helper apis fail fast outside constraint layout scope`() {
-        val builder = UiTreeBuilder()
-        try {
-            builder.createGuidelineFromTop(10.dp)
-            throw AssertionError("Expected an IllegalArgumentException for out-of-scope helper API")
-        } catch (expected: IllegalArgumentException) {
-            assertTrue(expected.message?.contains("ConstraintLayout helper APIs") == true)
+    fun `nested constraint scopes freeze independent helper specifications`() {
+        val tree = buildVNodeTree {
+            ConstraintLayout {
+                createGuidelineFromTop(10.dp, id = "outer-guide")
+                ConstraintLayout {
+                    createGuidelineFromTop(20.dp, id = "inner-guide")
+                }
+            }
+        }
+
+        val outer = tree.single()
+        val inner = outer.children.single()
+        val outerSpec = outer.spec as ConstraintLayoutNodeProps
+        val innerSpec = inner.spec as ConstraintLayoutNodeProps
+        assertEquals(listOf("outer-guide"), outerSpec.helpers.guidelines.map { it.id })
+        assertEquals(listOf("inner-guide"), innerSpec.helpers.guidelines.map { it.id })
+    }
+
+    @Test
+    fun `retained constraint scope rejects late reference and helper declarations`() {
+        lateinit var retainedScope: ConstraintLayoutScope
+        buildVNodeTree {
+            ConstraintLayout {
+                retainedScope = this
+                createRef("during-content")
+            }
+        }
+
+        assertThrows(IllegalStateException::class.java) {
+            retainedScope.createRef("after-content")
+        }
+        assertThrows(IllegalStateException::class.java) {
+            retainedScope.createGuidelineFromTop(10.dp, id = "after-content-guide")
         }
     }
 }

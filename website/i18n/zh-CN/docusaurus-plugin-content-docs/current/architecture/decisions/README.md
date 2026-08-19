@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: 236d2e4c974e05d41fd5a83782ffb03f27d4efacb21451bea400142f79b74362
+translation_source_hash: bf570a3d10d58244d66eeefa41eba41cd29c9b2abbceb6d448a6ae5ae84bf574
 translation_status: current
 ---
 
@@ -26,6 +26,7 @@ translation_status: current
 - [ADR-0013：组件外观解析边界](./0013-component-appearance-resolution-boundary.md)
 - [ADR-0014：渲染器中立的交互指示](./0014-renderer-neutral-interaction-indication.md)
 - [ADR-0015：可观察属性事务](./0015-observed-property-transactions.md)
+- [ADR-0016：ConstraintLayout 图与 Helper 所有权](./0016-constraintlayout-graph-and-helper-ownership.md)
 
 ## 规则
 

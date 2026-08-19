@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 9a5c88754d06b268b73c27bc10c7cc4720eaf036a048e462015b7072183a9d8a
+translation_source_hash: 99075a4c79ad72370cb7c71f320045995205731b99e015eadf593173d17b0739
 translation_status: current
 ---
 
@@ -59,6 +59,11 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - [`UiTreeBuilder`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-ui-tree-builder/)
   及其组件函数构建声明式节点树，不会创建 Android View。其 Q3 底层 `emit` 边界把子内容闭包
   身份作为重组输入；编译样例 `emittedContentClosureSample` 展示直接构建自定义节点的方式。
+  Q3 `emitScoped` 是面向模块化 Container 的对应边界：它执行一个全新且专用的
+  `UiTreeBuilder` 子类型，在 Scoped Content 完成后冻结 NodeSpec，并在同一个 Composition
+  Group 中发射已收集的 Child。外部 Container 模块借此提供类型安全 DSL Receiver，而不需要
+  Thread-local Collector 或发射后仍可变的 Payload；编译样例
+  `scopedContainerEmissionSample` 定义 Factory、Input、State Observation 与生命周期契约。
 - [`Theme` 与 `UiTheme`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-theme/)
   暴露不可变的颜色、排版、形状、尺寸、交互与浮层 Token，但不选择具体设计系统。排版支持
   完整的 Display、Headline、Title、Body 与 Label 分级；形状支持 Extra Small、Small、Medium、

@@ -659,28 +659,63 @@ class DemoVisualUiTest {
                     badgeCenterX > basicContainerCenterX,
                 )
             }
+            var shortMarkerLeft = 0
+            var shortSummaryRight = 0
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val helpersContainer = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_CONTAINER)
+                val helpersHeadline = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_HEADLINE)
+                val helpersSummary = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_SUMMARY)
                 val helpersMarker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_MARKER)
                 assertViewFullyVisible(helpersContainer)
+                assertViewFullyVisible(helpersHeadline)
+                assertViewFullyVisible(helpersSummary)
                 assertViewFullyVisible(helpersMarker)
                 val containerLeft = viewLeftOnScreen(helpersContainer)
                 val containerTop = viewTopOnScreen(helpersContainer)
                 val containerRight = containerLeft + helpersContainer.width
                 val markerLeft = viewLeftOnScreen(helpersMarker)
+                val markerRight = markerLeft + helpersMarker.width
                 val markerTop = viewTopOnScreen(helpersMarker)
+                val headlineRight = viewLeftOnScreen(helpersHeadline) + helpersHeadline.width
+                shortSummaryRight = viewLeftOnScreen(helpersSummary) + helpersSummary.width
+                shortMarkerLeft = markerLeft
                 assertTrue(
-                    "Expected helper marker to stay inside helper container horizontal bounds. " +
-                        "markerLeft=$markerLeft, containerLeft=$containerLeft, containerRight=$containerRight",
-                    markerLeft in containerLeft..containerRight,
+                    "Expected helper marker to follow the longest short-copy view without overlap. " +
+                        "markerLeft=$markerLeft, headlineRight=$headlineRight, summaryRight=$shortSummaryRight",
+                    markerLeft > maxOf(headlineRight, shortSummaryRight),
+                )
+                assertTrue(
+                    "Expected the complete helper marker to stay inside its container. " +
+                        "marker=[$markerLeft,$markerRight], container=[$containerLeft,$containerRight]",
+                    markerLeft >= containerLeft && markerRight <= containerRight,
                 )
                 assertTrue(
                     "Expected helper marker to stay near helper container top edge. " +
                         "markerTop=$markerTop, containerTop=$containerTop",
                     markerTop <= containerTop + helpersContainer.height / 3,
                 )
+                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_TOGGLE)
             }
+            val barrierFollowedLongCopy = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
+                val container = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_CONTAINER)
+                val headline = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_HEADLINE)
+                val summary = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_SUMMARY)
+                val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_MARKER)
+                val markerLeft = viewLeftOnScreen(marker)
+                val markerRight = markerLeft + marker.width
+                val headlineRight = viewLeftOnScreen(headline) + headline.width
+                val summaryRight = viewLeftOnScreen(summary) + summary.width
+                val containerRight = viewLeftOnScreen(container) + container.width
+                markerLeft > shortMarkerLeft + (8 * activity.resources.displayMetrics.density).toInt() &&
+                    summaryRight > shortSummaryRight &&
+                    markerLeft > maxOf(headlineRight, summaryRight) &&
+                    markerRight <= containerRight
+            }
+            assertTrue(
+                "Expected the end Barrier to move right with long copy while keeping the marker bounded.",
+                barrierFollowedLongCopy,
+            )
             waitForUiIdle()
             val chainStable = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val chainContainer = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_CONTAINER)

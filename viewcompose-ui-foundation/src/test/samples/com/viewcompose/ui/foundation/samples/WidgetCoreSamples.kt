@@ -125,6 +125,7 @@ import com.viewcompose.ui.foundation.UiSwitchSizing
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiThemeDefaults
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiDslMarker
 import com.viewcompose.ui.foundation.buildVNodeTree
 import com.viewcompose.ui.foundation.createSaveableStateRegistry
 import com.viewcompose.ui.foundation.produceState
@@ -286,6 +287,37 @@ fun emittedContentClosureSample() {
 
     check(node.type == NodeType.Box)
     check(node.key == "status-container")
+    check(node.children.single().type == NodeType.Text)
+}
+
+@UiDslMarker
+private class SampleContainerScope : UiTreeBuilder() {
+    var contentAlignment: BoxAlignment = BoxAlignment.TopStart
+        private set
+
+    fun alignContent(alignment: BoxAlignment) {
+        contentAlignment = alignment
+    }
+}
+
+private fun UiTreeBuilder.SampleScopedContainer(content: SampleContainerScope.() -> Unit) {
+    emitScoped(
+        type = NodeType.Box,
+        scopeFactory = ::SampleContainerScope,
+        spec = { BoxNodeProps(contentAlignment = contentAlignment) },
+        content = content,
+    )
+}
+
+fun scopedContainerEmissionSample() {
+    val node = buildVNodeTree {
+        SampleScopedContainer {
+            alignContent(BoxAlignment.Center)
+            Text("Centered")
+        }
+    }.single()
+
+    check((node.spec as BoxNodeProps).contentAlignment == BoxAlignment.Center)
     check(node.children.single().type == NodeType.Text)
 }
 

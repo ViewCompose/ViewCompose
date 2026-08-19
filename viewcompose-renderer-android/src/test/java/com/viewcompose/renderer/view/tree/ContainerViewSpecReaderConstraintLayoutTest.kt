@@ -28,6 +28,7 @@ import com.viewcompose.ui.node.spec.ConstraintHelpersSpec
 import com.viewcompose.ui.node.spec.ConstraintItemSpec
 import com.viewcompose.ui.node.spec.ConstraintLayerSpec
 import com.viewcompose.ui.node.spec.ConstraintLayoutNodeProps
+import com.viewcompose.ui.node.spec.ConstraintMatchMode
 import com.viewcompose.ui.node.spec.ConstraintPlaceholderSpec
 import com.viewcompose.ui.node.spec.ConstraintSetSpec
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
@@ -41,10 +42,10 @@ class ContainerViewSpecReaderConstraintLayoutTest {
         val constraintSet = ConstraintSetSpec(
             constraints = mapOf(
                 "title" to ConstraintItemSpec(
-                    width = ConstraintDimension.FillToConstraints,
-                    widthMin = 120.dp,
-                    widthPercent = 0.4f,
-                    constrainedWidth = true,
+                    width = ConstraintDimension.MatchConstraints(
+                        mode = ConstraintMatchMode.Percent(0.4f),
+                        min = 120.dp,
+                    ),
                     start = ConstraintAnchorLink(
                         target = ConstraintAnchorTarget.parent(ConstraintAnchor.Start),
                         margin = 16.dp,

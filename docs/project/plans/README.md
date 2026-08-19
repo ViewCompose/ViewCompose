@@ -27,11 +27,18 @@ This directory contains multi-step work that is currently active and must surviv
   locale-independent automation targets, fixture-first benchmark hosts, complete English and
   Simplified Chinese resources, and optional human guidance before benchmarking Runtime/View patch
   optimizations against a new stable baseline.
-- [ConstraintLayout native engine hardening and parity](./constraintlayout-native-engine-hardening.md) —
-  hard-cut the Alpha dimension and failure contracts, replace clone-clear-partial-apply with an
-  immutable transactional graph, unify every native helper under one lifecycle owner, add
-  high-value AndroidX parity, and require exact geometry, warning-free device, stress, screenshot,
-  and direct-native performance evidence.
+- [ConstraintLayout first-release hardening](./constraintlayout-native-engine-hardening.md) —
+  release-blocking work that hard-cuts the Alpha dimension and failure contracts, replaces
+  clone-clear-partial-apply with an immutable transactional graph, unifies every retained native
+  helper under one lifecycle owner, installs a dedicated axis-typed DSL Scope with compiler-negative
+  safety coverage, closes observed geometry/warning defects, and hands a frozen source tree to the
+  release window after focused safety evidence passes.
+- [ConstraintLayout parity and performance expansion](./constraintlayout-parity-performance-expansion.md) —
+  deliberately deferred post-release work for classified reconciliation fast paths, Grid,
+  CircularFlow, broader AndroidX parity, the complete visual/configuration matrix, and
+  direct-native performance-leadership evidence, plus an evidence-based structural DSL Scope audit
+  that preserves already-correct module-specific syntax; it remains `- None.` until the first
+  release is published and tagged.
 - [Animation Compose-capability expansion](./animation-compose-capability-expansion.md) — extend
   the completed animation baseline with physical spring/decay/results, full animated content,
   slide/scale visibility, seekable transitions, bounds animation, navigation-aware shared motion,

@@ -32,6 +32,10 @@ import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
+import com.viewcompose.ui.node.spec.ConstraintDimension
+import com.viewcompose.ui.node.spec.ConstraintMatchMode
+import com.viewcompose.ui.node.spec.ConstraintRatio
+import com.viewcompose.ui.node.spec.ConstraintRatioSide
 import com.viewcompose.ui.tooling.UiNodeTooling
 import com.viewcompose.ui.tooling.UiSourceCallSite
 import com.viewcompose.ui.tooling.UiSourceSessionContainerHandle
@@ -40,6 +44,25 @@ import com.viewcompose.ui.node.PlatformRenderContainerHandle
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.dp
 import java.io.File
+
+/** Builds mutually exclusive ConstraintLayout dimensions and a typed ratio. */
+fun constraintDimensionsSample() {
+    val width = ConstraintDimension.MatchConstraints(
+        mode = ConstraintMatchMode.Percent(0.6f),
+        min = 120.dp,
+        max = 360.dp,
+    )
+    val height = ConstraintDimension.MatchConstraints()
+    val ratio = ConstraintRatio(
+        width = 16f,
+        height = 9f,
+        constrainedSide = ConstraintRatioSide.Width,
+    )
+
+    check(width.min == 120.dp)
+    check(height.mode == ConstraintMatchMode.Spread)
+    check(ratio.width == 16f)
+}
 
 fun relativeLayoutModifierSample() {
     val modifier = Modifier

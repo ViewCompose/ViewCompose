@@ -57,7 +57,13 @@ by a later renderer or child render session.
 - [`UiTreeBuilder`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-ui-tree-builder/)
   and its component functions build declarative node trees without creating Android Views. Its Q3
   low-level `emit` boundary treats child-content closure identity as a recomposition input; the
-  compiled `emittedContentClosureSample` demonstrates direct custom-node construction.
+  compiled `emittedContentClosureSample` demonstrates direct custom-node construction. Q3
+  `emitScoped` is the modular-container counterpart: it evaluates one fresh dedicated
+  `UiTreeBuilder` subtype, freezes the NodeSpec after scoped content completes, and emits the
+  collected children in the same composition group. External container modules use it to provide
+  type-safe DSL receivers without thread-local collectors or mutable post-emission payloads; the
+  compiled `scopedContainerEmissionSample` defines the factory, input, state-observation, and
+  lifetime contract.
 - [`Theme` and `UiTheme`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-theme/)
   expose immutable color, typography, shape, sizing, interaction, and overlay tokens without
   choosing a design system. Typography supports all display, headline, title, body, and label
