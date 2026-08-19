@@ -426,8 +426,9 @@ Automated report and regression rules:
    policy, and compilation mode. Legacy results without a clock policy fall back to strict AndroidX
    CPU-lock snapshot matching.
 4. The longitudinal gate remains report-v1 compatible and fails only when both the raw ViewCompose
-   threshold and normalized ViewCompose/Compose ratio threshold are exceeded. Android Views is an
-   absolute and pairwise observation until an explicit future policy changes the control.
+   threshold and the same-run control-normalized ratio threshold are exceeded. Compose remains the
+   preferred control; a scenario without Compose uses Android Views. If either subject or control
+   is unstable in the current or baseline report, that row is `INCONCLUSIVE`, not PASS or FAIL.
 5. Defaults live in `tools/performance/benchmark_policy.json`; changes below the absolute noise floor
    do not fail.
 6. The report computes coefficient of variation across iteration P50 values for positive
@@ -875,6 +876,63 @@ matching prior or future baseline exists:
 | Scroll P50/P95/P99, ms | 3.798 / 7.582 / 9.000 | 3.731 / 8.071 / 9.124 | 3.730 / 7.572 / 8.905 | 0.009--0.034 | Stable and within one 60-Hz frame at P99; directional result `inconclusive`. |
 | Active animation P50/P95/P99, ms | 7.661 / 17.285 / 20.884 | 7.617 / 15.146 / 21.664 | 8.045 / 15.736 / 18.455 | 0.077--0.110 | Stable absolute baseline; the individual P95/P99 tails remain monitored. |
 | Cut Contrast overlay lifecycle P50/P95/P99, ms | 4.535 / 27.499 / 39.833 | — | — | 0.055 | Stable baseline; the overlay P95/P99 is the next design-bundle tail target. |
+
+#### 2.4.5 ConstraintLayout first-release safety
+
+The 2026-08-19 first-release matrix used the rooted Xiaomi MI 6 / Android 9 device, the R8 and
+resource-shrunk benchmark target, five iterations per method, and the actual `run-from-apk`
+compilation identity reported by AndroidX Benchmark. CPU policies 0/4 were fixed at
+1.4016/1.8048 GHz, the Adreno GPU at 515 MHz, all CPUs were online, charging was suspended, vendor
+performance services were stopped, and each method started at or below 37 degrees Celsius. The
+pre-hard-cut ViewCompose APK SHA-256 was
+`2b32ca7539be121615fb3e7b61953101be7b9a2e4ac55215690d88a480b25161`; the final candidate was
+`a7d681b90941a8d318108d709b3a7b77147b614180a8d2124840416d07148fac`. A temporary root-shell
+compatibility wrapper adapted AndroidX's AOSP `su root` form to Magisk only while instrumentation
+ran; the target, workload, metrics, and result JSON were unchanged, and the original Magisk entry
+was restored after each completed method batch.
+
+Each cell below is frame CPU P50/P95 in milliseconds. Delta is candidate versus the pre-hard-cut
+ViewCompose baseline. CV is baseline/candidate iteration-P50 coefficient of variation. One adjacent
+repeat replaced a run only when the original exceeded 0.15; scalar-100 was also repeated after its
+cross-APK median changed direction. The replaced raw runs remain retained as evidence. A scenario
+is directional only when baseline, candidate, and direct-native controls are stable.
+
+| Action | Baseline ViewCompose | Candidate ViewCompose | Direct Android Views | Candidate delta | CV | Conclusion |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| `stable-10` | `5.270/11.178` | `4.778/12.009` | `3.643/5.279` | `-9.3%/+7.4%` | `0.094/0.131` | `no material change` |
+| `stable-50` | `6.705/20.751` | `5.105/19.603` | `3.774/5.788` | `-23.9%/-5.5%` | `0.074/0.130` | `improved` median with no tail regression |
+| `stable-100` | `7.632/25.856` | `5.642/25.353` | `3.873/7.141` | `-26.1%/-1.9%` | `0.089/0.146` | `improved` median with no tail regression |
+| `scalar-10` | `5.495/14.622` | `5.093/13.574` | `4.190/6.327` | `-7.3%/-7.2%` | `0.143/0.185` | `inconclusive` |
+| `scalar-50` | `5.675/23.466` | `5.796/23.724` | `4.400/6.871` | `+2.1%/+1.1%` | `0.128/0.091` | `no material change` |
+| `scalar-100` | `6.411/32.187` | `6.051/35.986` | `5.009/8.973` | `-5.6%/+11.8%` | `0.141/0.202` | `inconclusive` |
+| `helper-10` | `5.158/10.878` | `5.033/11.617` | `4.014/6.327` | `-2.4%/+6.8%` | `0.077/0.074` | `no material change` |
+| `helper-50` | `5.221/12.193` | `5.280/11.730` | `3.968/6.657` | `+1.1%/-3.8%` | `0.105/0.123` | `no material change` |
+| `helper-100` | `5.868/11.977` | `6.169/13.773` | `4.598/8.284` | `+5.1%/+15.0%` | `0.129/0.068` | `no material change`; exact change remains below the 15% gate |
+| `topology-10` | `5.130/15.123` | `5.251/14.080` | `4.099/6.471` | `+2.4%/-6.9%` | `0.095/0.217` | `inconclusive` |
+| `topology-50` | `6.304/23.003` | `6.162/23.609` | `4.780/6.850` | `-2.3%/+2.6%` | `0.147/0.148` | `no material change` |
+| `topology-100` | `6.296/30.919` | `9.222/32.056` | `4.923/10.525` | `+46.5%/+3.7%` | `0.231/0.043` | `inconclusive`; baseline unstable |
+
+The original candidate exposed a stable topology-50 P50 regression of 12.3% (`+0.772 ms`). The
+renderer then removed an O(n-squared) child-index lookup from rollback snapshot capture and avoided
+an identical second snapshot when no accepted Group, Layer, or Placeholder content overlay had
+been released. With that causally scoped fix, topology-50 changed from `7.076/22.001 ms` to
+`6.162/23.609 ms`; versus the pre-hard-cut baseline it is 2.3% lower at P50 and 2.6% higher at P95,
+so the accepted result is `no material change`. The corrected report gate prefers Compose but uses
+Android Views for these two-engine scenarios and marks unstable rows `INCONCLUSIVE`; `--enforce`
+passes with zero stable timing or memory regressions.
+
+Candidate median peak heap changed from -14.4% to +5.3% across the twelve actions; no row crossed
+the combined 15% and 2048 KiB memory gate. The matrix-level first-release conclusion is
+`no material change` for performance safety: eight actions are stable on both ViewCompose arms,
+four are `inconclusive`, and no stable action regresses. This is not performance leadership.
+Direct Android Views remains materially faster, especially at P95, and owns the post-release
+optimization target.
+
+Limitations are one API 28 device, `run-from-apk` JIT/code-placement sensitivity, four unresolved
+CV rows, peak rather than post-GC retained memory, and no P99 for this workload. The next action is
+the source-frozen first-release window. After Central publication and tagging, the ConstraintLayout
+expansion plan may investigate classified scalar/topology fast paths with a stable multi-device
+protocol; the first-release train does not claim those wins.
 
 ### 2.5 Debug tooling regression gate
 

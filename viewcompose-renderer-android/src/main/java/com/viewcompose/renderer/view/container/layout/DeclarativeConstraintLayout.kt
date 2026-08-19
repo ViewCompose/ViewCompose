@@ -310,8 +310,12 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         val contentViewIds = resolveContentViewIds(graph)
         var rollbackSnapshots = committedSnapshots
         try {
-            releaseAcceptedHelperEffects()
-            rollbackSnapshots = captureCommitSnapshots()
+            val releasedContentOverlay = releaseAcceptedHelperEffects()
+            rollbackSnapshots = if (releasedContentOverlay) {
+                captureCommitSnapshots()
+            } else {
+                committedSnapshots
+            }
             val helperPlan = stageHelperViews(graph)
             // Stale helpers must not participate in ConstraintSet.applyTo. In particular, a
             // removed Layer has no references and AndroidX cannot apply default transforms to it.
@@ -427,10 +431,11 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     }
 
     private fun captureCommitSnapshots(): List<ViewCommitSnapshot> {
-        return (0 until childCount).map { index -> getChildAt(index) }.map { view ->
+        return List(childCount) { childIndex ->
+            val view = getChildAt(childIndex)
             ViewCommitSnapshot(
                 view = view,
-                childIndex = indexOfChild(view),
+                childIndex = childIndex,
                 id = view.id,
                 layoutParams = view.layoutParams?.copyForConstraintRollback(),
                 visibility = view.visibility,
@@ -516,7 +521,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     }
 
     /** Removes accepted helper overlays before the next graph snapshots its source-of-truth state. */
-    private fun releaseAcceptedHelperEffects() {
+    private fun releaseAcceptedHelperEffects(): Boolean {
         cancelPendingLayerTransforms()
         acceptedGraph?.helpers?.placeholders?.forEach { spec ->
             requireHelperView<Placeholder>(NativeConstraintHelperKind.Placeholder, spec.id)
@@ -531,6 +536,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                 .setReferencedIds(intArrayOf())
         }
         acceptedHelperRuntimeBase.values.forEach { snapshot -> snapshot.restore() }
+        return acceptedHelperRuntimeBase.isNotEmpty()
     }
 
     private fun View.captureHelperRuntimeSnapshot(): HelperRuntimeSnapshot {
@@ -687,7 +693,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             val prefix = kind.prefix()
             val key = helperKey(prefix, id)
             val viewId = helperIdToViewId.getOrPut(key) { View.generateViewId() }
-            when (kind) {
+            val helper = when (kind) {
                 NativeConstraintHelperKind.Guideline -> ensureHelperView(
                     key,
                     viewId,
@@ -723,6 +729,11 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                     viewId,
                     Placeholder::class.java,
                 ) { Placeholder(context) }
+            }
+            // Retained programmatic helpers can keep their previously resolved direction on older
+            // Android releases, which prevents AndroidX from resolving logical constraints in RTL.
+            if (helper.layoutDirection != layoutDirection) {
+                helper.layoutDirection = layoutDirection
             }
             activeKeys += key
             referenceIds[id] = viewId

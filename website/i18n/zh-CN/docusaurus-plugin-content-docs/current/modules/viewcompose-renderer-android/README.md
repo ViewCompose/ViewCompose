@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: dd1140367f64c890dfccc19299119855c6162fc6156c2f8efd19fa2c888f094f
+translation_source_hash: 846ed989b236ab3315f2d94872289bc627766cbdb5e5eaa1ca33042357b86ad3
 translation_status: current
 ---
 
@@ -96,7 +96,18 @@ Detach/Reattach 回调所有权、Density 变化、1,000 次 Helper 换型期间
 **improved**。缓存 ConstraintLayout `2.2.1` 与手工 Robolectric Classpath 仅保留为最初缺陷复现
 证据；后续 Gradle 8.13 运行实际解析 ConstraintLayout `2.2.2` 与 Core `1.1.2`，并通过全部
 451 条 Renderer 测试，其中包含 12 条 Graph 与 16 条 ConstraintLayout 聚焦用例。因此
-`2.2.2` JVM 兼容性限制已解除；真机、内存与性能 Gate 仍由所属加固计划继续跟踪。
+`2.2.2` JVM 兼容性限制已解除。随后在已 Root 的 Xiaomi MI 6 / Android 9 上完成的矩阵通过
+3/3 条测试，覆盖浅色/LTR/字体缩放 1.0、深色/RTL/字体缩放 1.3、全部六种保留 Helper、
+200 次 Helper 状态切换，以及 9 张人工复核截图，期间没有非预期 Renderer/Helper Warning。
+该轮验收还发现并关闭一处 Android 9 环境切换缺陷：Retained Programmatic Helper 现在会在
+Graph Apply 前把 `layoutDirection` 与 Container 同步，使 AndroidX 在 LTR 切换 RTL 后正确解析
+逻辑 Guideline Begin/End。Transition 回归与精确镜像真机几何将 Renderer 结论归类为
+**improved**。最终 Root 10/50/100 Node 矩阵随后通过了修正后的 Android-Views 归一化纵向门禁，
+稳定行没有 Timing 或 Peak Heap 回退。门禁过程中，Renderer 从回滚快照捕获中移除了 O(n²)
+Child Index 查询，并在没有 Group/Layer/Placeholder Content Overlay 被释放时跳过重复快照；
+topology-50 P50 从失败的 `7.076 ms` 变为 `6.162 ms`，Baseline 为 `6.304 ms`。性能安全结论为
+**no material change**；4 个不稳定动作保持 `inconclusive`，Direct Android Views 仍具有明显
+P95 优势。更广泛的跨 OEM/API 与性能领先工作属于发版后限制，而不是已观察到的首发正确性缺陷。
 
 ## 主要 API
 

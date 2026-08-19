@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0016-constraintlayout-graph-and-helper-ownership.md
-translation_source_hash: f4dbdf777114fe7d3c10b9ffaeee4b84ef4f1953fbf7007bb39fd482a12d9b4f
+translation_source_hash: 1b2cfe3cc75783f1c6c859c2e76de8430248a776222aff266fedcdebf2597661
 translation_status: current
 ---
 
@@ -55,11 +55,16 @@ ID、LayoutParams、Helper 成员关系、可见性、无障碍与变换属性�
 Helper 注册表、View 状态、环境与已接受图，然后按尝试 revision、identity 和 reason
 发出有界结构化拒绝。
 
+每个保留的 Programmatic Helper 也会在 Graph Apply 前从其 Container 解析环境所有权。尤其是，
+它的原生 `layoutDirection` 必须与 Container 一致，AndroidX 才能在较老 Android 版本发生原地
+LTR/RTL 切换后正确解析逻辑 Guideline 与 Barrier 语义。
+
 Layer 布局后工作只有一个带 generation 校验的 pre-draw 所有者，并在替换或 detach 时
 取消。禁止第二套旧协调引擎、兼容开关、局部链接恢复分支或无界字符串警告缓存。
 
-AndroidX 运行时基线升级到稳定版 ConstraintLayout `2.2.2`。兼容性与设备证据仍是发布
-门禁；如果门禁暴露问题，不得静默退回 `2.2.1`。
+AndroidX 运行时基线升级到稳定版 ConstraintLayout `2.2.2`。已接受的 JVM 与 Root Android 9
+真机证据覆盖保留 Helper 的精确几何、生命周期、高风险配置变化和 LTR/RTL Transition 不变量。
+如果后续兼容性门禁暴露问题，不得静默退回 `2.2.1`。
 
 ## 结果
 
@@ -108,8 +113,7 @@ AndroidX 运行时基线升级到稳定版 ConstraintLayout `2.2.2`。兼容性�
 
 ## 验证与发布
 
-实现与验收遵循当前有效的
-[ConstraintLayout 首发加固计划](https://docs.viewcompose.com/project/plans/constraintlayout-native-engine-hardening)。
+实现与验收证据已由完成并归档的 ConstraintLayout 首发加固计划记录。
 发布要求包括纯图与 DSL 测试、Robolectric 精确几何与回滚、1,000 次 Helper 切换压力、
 聚焦真机与无警告 Demo 证据、已解释的性能安全对照、Q3 编译示例、API/文档门禁、中文
 镜像以及不可变 Changeset。

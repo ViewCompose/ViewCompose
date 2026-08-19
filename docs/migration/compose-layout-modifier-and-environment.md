@@ -242,6 +242,10 @@ Kotlin compilation. Nested structural DSLs hide the outer ConstraintLayout recei
 metadata is frozen after content completes rather than collected through ambient thread-local
 state.
 
+Logical start/end semantics remain environment-driven after mounting. The Android renderer keeps
+retained helper `layoutDirection` synchronized with the ConstraintLayout container, so an in-place
+LTR/RTL change mirrors logical Guidelines and Barriers without replacing their stable identity.
+
 Reusable sets also keep declaration identity typed. Create a reference, pass it to
 `constrain(ref)`, and use that same reference for links; the removed `constrain(ref.id)` form cannot
 drift back to an unrelated string. `Modifier.constrain(id, ...)` remains an explicit inline

@@ -1,10 +1,14 @@
 package com.viewcompose.performance
 
 import android.content.Context
+import android.view.View
+import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import androidx.constraintlayout.widget.Barrier
+import androidx.constraintlayout.widget.ConstraintLayout
 import com.viewcompose.demo.contract.DemoAutomationRole
 import com.viewcompose.demo.registry.DemoScenarioRegistry
 import org.junit.Assert.assertEquals
@@ -116,4 +120,49 @@ class AndroidViewsPerformanceScreenTest {
         assertEquals(initialState, state.text.toString())
         assertEquals(5, cards.count { card -> card.childCount == 4 })
     }
+
+    @Test
+    fun `constraint layout control preserves node and helper identity across mutations`() {
+        val scenario = DemoScenarioRegistry.require("performance.complex-layout")
+        val profile = ConstraintLayoutPerformanceProfile(
+            nodeCount = 50,
+            workload = ConstraintLayoutPerformanceWorkload.Helper,
+        )
+        val root = createAndroidViewsConstraintLayoutPerformanceScreen(
+            context = context,
+            scenario = scenario,
+            profile = profile,
+            copy = PerformanceCopy(context),
+        )
+        val state = root.findViewById<TextView>(
+            scenario.automation.require(DemoAutomationRole.State).androidViewId,
+        )
+        val action = root.findViewById<TextView>(
+            scenario.automation.require(DemoAutomationRole.PrimaryAction).androidViewId,
+        )
+        val reset = root.findViewById<TextView>(
+            scenario.automation.require(DemoAutomationRole.Reset).androidViewId,
+        )
+        val target = root.findViewById<ConstraintLayout>(
+            scenario.automation.require(DemoAutomationRole.Target).androidViewId,
+        )
+        val initialIds = (0 until target.childCount).map { target.getChildAt(it).id }
+
+        assertEquals(50, target.childCount - target.childrenOfType<Barrier>().size)
+        assertEquals(5, target.childrenOfType<Barrier>().size)
+
+        action.performClick()
+
+        assertEquals("Revision 1", state.text.toString())
+        assertEquals(initialIds, (0 until target.childCount).map { target.getChildAt(it).id })
+        assertTrue(target.childrenOfType<Barrier>().all { !it.allowsGoneWidget })
+
+        reset.performClick()
+
+        assertEquals("Revision 0", state.text.toString())
+        assertTrue(target.childrenOfType<Barrier>().all { it.allowsGoneWidget })
+    }
+
+    private inline fun <reified T : View> ViewGroup.childrenOfType(): List<T> =
+        (0 until childCount).mapNotNull { index -> getChildAt(index) as? T }
 }

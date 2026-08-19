@@ -120,6 +120,22 @@ SCENARIOS = (
             COMPOSE_ENGINE: "composeShadowComplexLayoutUpdate",
         },
     ),
+) + tuple(
+    ScenarioContract(
+        f"constraint_layout_{workload}_{node_count}",
+        "performance.complex-layout",
+        4,
+        {
+            VIEWCOMPOSE_ENGINE: (
+                f"viewComposeConstraintLayout{workload.title()}{node_count}"
+            ),
+            ANDROID_VIEWS_ENGINE: (
+                f"androidViewsConstraintLayout{workload.title()}{node_count}"
+            ),
+        },
+    )
+    for workload in ("stable", "scalar", "helper", "topology")
+    for node_count in (10, 50, 100)
 )
 
 SCENARIO_CONTRACTS = {
@@ -187,6 +203,7 @@ class Regression:
     scenario: str
     scenario_id: str
     workload_revision: int
+    control_engine: str
     metric: str
     statistic: str
     current: float
@@ -194,6 +211,7 @@ class Regression:
     raw_regression_percent: float
     normalized_regression_percent: float
     delta: float
+    interpretable: bool
     failed: bool
 
 
@@ -699,6 +717,20 @@ def revisioned_baseline_comparisons(result: dict[str, Any]) -> list[Comparison]:
     return comparisons
 
 
+def revisioned_baseline_stability(result: dict[str, Any]) -> list[Stability]:
+    """Load optional report-v2 stability rows; legacy reports remain gate-compatible."""
+
+    entries = result.get("stability")
+    if entries is None:
+        return []
+    if not isinstance(entries, list):
+        raise ValueError("Baseline report contains an invalid stability section.")
+    try:
+        return [Stability(**entry) for entry in entries if isinstance(entry, dict)]
+    except (TypeError, ValueError) as error:
+        raise ValueError("Baseline report contains an invalid stability entry.") from error
+
+
 def require_matching_context(
     current: dict[str, Any],
     baseline: dict[str, Any],
@@ -739,29 +771,49 @@ def build_regressions(
     current: list[Comparison],
     baseline: list[Comparison],
     policy: dict[str, Any],
+    current_stability: Iterable[Stability] = (),
+    baseline_stability: Iterable[Stability] = (),
 ) -> list[Regression]:
     """Build regression-gate results from the policy.
 
-    A failure requires both raw values and Compose-normalized ratios to cross thresholds,
-    reducing false positives from common device slowdown.
+    A failure requires both raw values and control-normalized ratios to cross thresholds,
+    reducing false positives from common device slowdown. Compose remains the preferred control
+    for compatibility with report v1; scenarios without Compose use their Android Views control.
     """
 
     current_index = comparison_index(current)
     baseline_index = comparison_index(baseline)
+    current_stability_index = {
+        (item.scenario, item.engine, item.metric): item
+        for item in current_stability
+    }
+    baseline_stability_index = {
+        (item.scenario, item.engine, item.metric): item
+        for item in baseline_stability
+    }
     thresholds = policy.get("regressionThresholds", {})
     regressions: list[Regression] = []
     for key, threshold in thresholds.items():
         metric, statistic = key.rsplit(".", 1)
         for contract in SCENARIOS:
-            index_key = (
-                contract.name,
-                VIEWCOMPOSE_ENGINE,
-                COMPOSE_ENGINE,
-                metric,
-                statistic,
-            )
-            current_value = current_index.get(index_key)
-            baseline_value = baseline_index.get(index_key)
+            current_value = None
+            baseline_value = None
+            control_engine = None
+            for candidate_control in (COMPOSE_ENGINE, ANDROID_VIEWS_ENGINE):
+                index_key = (
+                    contract.name,
+                    VIEWCOMPOSE_ENGINE,
+                    candidate_control,
+                    metric,
+                    statistic,
+                )
+                candidate_current = current_index.get(index_key)
+                candidate_baseline = baseline_index.get(index_key)
+                if candidate_current is not None and candidate_baseline is not None:
+                    current_value = candidate_current
+                    baseline_value = candidate_baseline
+                    control_engine = candidate_control
+                    break
             if current_value is None or baseline_value is None:
                 continue
             if (
@@ -791,8 +843,32 @@ def build_regressions(
             delta = current_value.subject_value - baseline_value.subject_value
             maximum_percent = float(threshold["maxRegressionPercent"])
             minimum_delta = float(threshold["minimumDelta"])
+            interpretable = True
+            if metric in STABILITY_METRICS:
+                required_stability = (
+                    current_stability_index.get(
+                        (contract.name, VIEWCOMPOSE_ENGINE, metric),
+                    ),
+                    current_stability_index.get(
+                        (contract.name, control_engine, metric),
+                    ),
+                    baseline_stability_index.get(
+                        (contract.name, VIEWCOMPOSE_ENGINE, metric),
+                    ),
+                    baseline_stability_index.get(
+                        (contract.name, control_engine, metric),
+                    ),
+                )
+                # Legacy reports omit stability. If either report supplies it, every required
+                # subject/control row must be present and stable before a direction is interpreted.
+                if current_stability_index or baseline_stability_index:
+                    interpretable = all(
+                        item is not None and item.stable
+                        for item in required_stability
+                    )
             failed = (
-                raw_percent > maximum_percent
+                interpretable
+                and raw_percent > maximum_percent
                 and normalized_percent > maximum_percent
                 and delta > minimum_delta
             )
@@ -801,6 +877,7 @@ def build_regressions(
                     scenario=contract.name,
                     scenario_id=current_value.scenario_id,
                     workload_revision=current_value.workload_revision,
+                    control_engine=control_engine,
                     metric=metric,
                     statistic=statistic,
                     current=current_value.subject_value,
@@ -808,6 +885,7 @@ def build_regressions(
                     raw_regression_percent=raw_percent,
                     normalized_regression_percent=normalized_percent,
                     delta=delta,
+                    interpretable=interpretable,
                     failed=failed,
                 ),
             )
@@ -920,26 +998,29 @@ def render_markdown(
                 "",
                 "## Regression gate",
                 "",
-                "| Workload | Action | Metric | Stat | Raw | Normalized | Delta | Status |",
-                "| --- | --- | --- | ---: | ---: | ---: | ---: | --- |",
+                "| Workload | Action | Control | Metric | Stat | Raw | Normalized | Delta | Status |",
+                "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |",
             ],
         )
         for regression in regressions:
             lines.append(
                 f"| {regression.scenario_id}@{regression.workload_revision} | "
-                f"{regression.scenario} | {regression.metric} | "
+                f"{regression.scenario} | "
+                f"{ENGINE_DISPLAY_NAMES.get(regression.control_engine, regression.control_engine)} | "
+                f"{regression.metric} | "
                 f"{regression.statistic} | "
                 f"{regression.raw_regression_percent:+.1f}% | "
                 f"{regression.normalized_regression_percent:+.1f}% | "
                 f"{regression.delta:+.3f} | "
-                f"{'FAIL' if regression.failed else 'PASS'} |",
+                f"{'INCONCLUSIVE' if not regression.interpretable else 'FAIL' if regression.failed else 'PASS'} |",
             )
     lines.extend(
         [
             "",
             "Relative values name their subject and control explicitly and describe same-run "
             "observations; they are not cross-device scores. The longitudinal regression gate "
-            "continues to use ViewCompose versus Compose.",
+            "prefers the same-run Compose control and uses Android Views when a scenario does not "
+            "provide Compose.",
             "",
         ],
     )
@@ -978,10 +1059,13 @@ def main(argv: list[str] | None = None) -> int:
         if not args.allow_context_mismatch:
             require_matching_context(current_result, baseline_result)
         baseline_comparisons = revisioned_baseline_comparisons(baseline_result)
+        baseline_stability = revisioned_baseline_stability(baseline_result)
         regressions = build_regressions(
             current=comparisons,
             baseline=baseline_comparisons,
             policy=policy,
+            current_stability=stability,
+            baseline_stability=baseline_stability,
         )
     context = context_identity(current_result)
     markdown = render_markdown(

@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 6641fd06f2f41059bd31054c9be70f4935b652b6020a22510f773727daefd949
+translation_source_hash: 3d3a9dfb77a4199e457b3fd2b8943a8a07f1019be8401bc390354166368ee870
 translation_status: current
 ---
 
@@ -366,9 +366,9 @@ ART profile，fixed-performance 和增强处理模式也无法形成真正锁频
    在内存中的确定性合并结果。
 3. 历史回归只允许同设备型号、系统 fingerprint、显式时钟策略和 compilation mode；没有时钟
    策略的旧结果回退为严格比较 AndroidX CPU-lock 快照。
-4. 纵向门禁保持 report-v1 兼容，只有“ViewCompose 原始指标超过阈值”和
-   “ViewCompose/Compose 归一化比值超过阈值”同时成立才失败。在未来显式调整控制组策略前，
-   Android Views 只作为绝对值与成对观察。
+4. 纵向门禁保持 report-v1 兼容，只有 ViewCompose 原始指标和同轮 Control 归一化比值都超过阈值
+   才失败。Compose 仍是优先 Control；没有 Compose 的场景使用 Android Views。如果 Current 或
+   Baseline 的 Subject/Control 任一方不稳定，该行显示 `INCONCLUSIVE`，而不是 PASS 或 FAIL。
 5. 默认阈值维护在 `tools/performance/benchmark_policy.json`，小于绝对噪声下限的变化不会失败。
 6. 报告只对严格为正、具备比例尺度的 frame CPU duration 计算各 iteration P50 的变异系数；
    超过 `0.15` 标记为不稳定，数据应重跑而不是直接形成结论。`frameOverrunMs` 是围绕零点的
@@ -746,6 +746,55 @@ Android 9 将两种请求的编译变体都记录为 `run-from-apk`，所以 pro
 | 滚动 P50/P95/P99，ms | 3.798 / 7.582 / 9.000 | 3.731 / 8.071 / 9.124 | 3.730 / 7.572 / 8.905 | 0.009--0.034 | P99 稳定处于一个 60-Hz 帧内；方向结论 `inconclusive`。 |
 | 活跃动画 P50/P95/P99，ms | 7.661 / 17.285 / 20.884 | 7.617 / 15.146 / 21.664 | 8.045 / 15.736 / 18.455 | 0.077--0.110 | 稳定绝对基线；各自 P95/P99 尾部继续监控。 |
 | Cut Contrast 浮层生命周期 P50/P95/P99，ms | 4.535 / 27.499 / 39.833 | — | — | 0.055 | 稳定基线；浮层 P95/P99 是下一个 design-bundle 尾部目标。 |
+
+#### 2.4.5 ConstraintLayout 首发性能安全
+
+2026-08-19 的首发矩阵使用已 Root 的 Xiaomi MI 6 / Android 9、R8 与资源压缩 benchmark target、
+每方法 5 次迭代，以及 AndroidX Benchmark 实际报告的 `run-from-apk` 编译身份。CPU Policy 0/4
+固定为 1.4016/1.8048 GHz，Adreno GPU 固定为 515 MHz，全部 CPU Online，暂停充电并停止厂商
+性能服务；每个方法都在不高于 37 摄氏度时开始。硬切前 ViewCompose APK SHA-256 为
+`2b32ca7539be121615fb3e7b61953101be7b9a2e4ac55215690d88a480b25161`，最终 Candidate 为
+`a7d681b90941a8d318108d709b3a7b77147b614180a8d2124840416d07148fac`。Instrumentation 运行期间
+仅用临时 Root Shell 兼容 Wrapper 把 AndroidX 的 AOSP `su root` 形式适配到 Magisk；Target、
+Workload、Metric 与结果 JSON 没有改写，每个完整方法批次结束后都恢复原 Magisk 入口。
+
+下表每格都是 Frame CPU P50/P95（毫秒）。Delta 为 Candidate 相对硬切前 ViewCompose Baseline
+的变化；CV 为 Baseline/Candidate 的迭代 P50 变异系数。只有原始运行超过 0.15 时才用一次相邻
+复测替换；scalar-100 因跨 APK 中位数改变方向也复测一次。被替换的原始运行仍保留为证据。
+只有 Baseline、Candidate 与 Direct-native Control 都稳定时，场景才形成方向性结论。
+
+| 动作 | Baseline ViewCompose | Candidate ViewCompose | Direct Android Views | Candidate 变化 | CV | 结论 |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| `stable-10` | `5.270/11.178` | `4.778/12.009` | `3.643/5.279` | `-9.3%/+7.4%` | `0.094/0.131` | `no material change` |
+| `stable-50` | `6.705/20.751` | `5.105/19.603` | `3.774/5.788` | `-23.9%/-5.5%` | `0.074/0.130` | 中位数 `improved`，尾部无回退 |
+| `stable-100` | `7.632/25.856` | `5.642/25.353` | `3.873/7.141` | `-26.1%/-1.9%` | `0.089/0.146` | 中位数 `improved`，尾部无回退 |
+| `scalar-10` | `5.495/14.622` | `5.093/13.574` | `4.190/6.327` | `-7.3%/-7.2%` | `0.143/0.185` | `inconclusive` |
+| `scalar-50` | `5.675/23.466` | `5.796/23.724` | `4.400/6.871` | `+2.1%/+1.1%` | `0.128/0.091` | `no material change` |
+| `scalar-100` | `6.411/32.187` | `6.051/35.986` | `5.009/8.973` | `-5.6%/+11.8%` | `0.141/0.202` | `inconclusive` |
+| `helper-10` | `5.158/10.878` | `5.033/11.617` | `4.014/6.327` | `-2.4%/+6.8%` | `0.077/0.074` | `no material change` |
+| `helper-50` | `5.221/12.193` | `5.280/11.730` | `3.968/6.657` | `+1.1%/-3.8%` | `0.105/0.123` | `no material change` |
+| `helper-100` | `5.868/11.977` | `6.169/13.773` | `4.598/8.284` | `+5.1%/+15.0%` | `0.129/0.068` | `no material change`；精确变化仍低于 15% 门禁 |
+| `topology-10` | `5.130/15.123` | `5.251/14.080` | `4.099/6.471` | `+2.4%/-6.9%` | `0.095/0.217` | `inconclusive` |
+| `topology-50` | `6.304/23.003` | `6.162/23.609` | `4.780/6.850` | `-2.3%/+2.6%` | `0.147/0.148` | `no material change` |
+| `topology-100` | `6.296/30.919` | `9.222/32.056` | `4.923/10.525` | `+46.5%/+3.7%` | `0.231/0.043` | `inconclusive`；Baseline 不稳定 |
+
+最初 Candidate 暴露了稳定的 topology-50 P50 回退：12.3%（`+0.772 ms`）。Renderer 随后从
+回滚快照捕获中移除 O(n²) 的 Child Index 查询，并在没有已接受 Group、Layer 或 Placeholder
+内容覆盖被释放时跳过完全相同的第二份快照。这个因果范围明确的修复把 topology-50 从
+`7.076/22.001 ms` 改为 `6.162/23.609 ms`；相对硬切前 Baseline，P50 低 2.3%、P95 高 2.6%，
+所以接受结论为 `no material change`。修正后的报告门禁优先使用 Compose，但在这批双引擎场景
+使用 Android Views，并把不稳定行标为 `INCONCLUSIVE`；`--enforce` 以 0 个稳定 Timing 或 Memory
+回归通过。
+
+12 个动作的 Candidate Median Peak Heap 变化范围为 -14.4% 到 +5.3%，没有任何一行同时跨过
+15% 与 2048 KiB 的 Memory 门禁。矩阵级首发性能安全结论为 `no material change`：8 个动作的
+两侧 ViewCompose 稳定，4 个为 `inconclusive`，稳定动作均无回退。这不是性能领先声明。
+Direct Android Views 仍明显更快，尤其是 P95；该差距属于发版后优化目标。
+
+局限包括仅一台 API 28 设备、`run-from-apk` JIT/代码布局敏感性、4 个未解决的 CV 行、只有 Peak
+而非 Post-GC Retained Memory，以及该 Workload 没有 P99。下一步是源码冻结的首发窗口。Central
+发布并完成 Tag 后，ConstraintLayout 扩展计划可以用稳定的多设备协议研究分类 Scalar/Topology
+快速路径；首发列车不宣称这些收益。
 
 ### 2.5 Debug Tooling 回归门禁
 

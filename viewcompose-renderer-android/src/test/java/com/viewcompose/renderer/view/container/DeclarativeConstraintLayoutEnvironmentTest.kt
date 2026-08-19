@@ -2,6 +2,7 @@ package com.viewcompose.renderer.view.container
 
 import android.app.Activity
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +16,7 @@ import androidx.constraintlayout.widget.Placeholder
 import com.viewcompose.renderer.R
 import com.viewcompose.renderer.modifier.resolve
 import com.viewcompose.ui.environment.UiEnvironmentValues
+import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.Visibility
 import com.viewcompose.ui.modifier.visibility
@@ -53,6 +55,108 @@ import org.robolectric.shadows.ShadowLog
 @Config(sdk = [35], manifest = Config.NONE)
 class DeclarativeConstraintLayoutEnvironmentTest {
     @Test
+    fun `native guideline rtl resolution preserves logical positions`() {
+        val context = RuntimeEnvironment.getApplication()
+        context.applicationInfo.flags =
+            context.applicationInfo.flags or ApplicationInfo.FLAG_SUPPORTS_RTL
+        val layout = DeclarativeConstraintLayout(context).apply {
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+            installEnvironment(density = 2f, layoutDirection = UiLayoutDirection.Rtl)
+        }
+
+        fun assertGuideline(
+            direction: ConstraintGuidelineDirection,
+            position: ConstraintGuidelinePosition,
+            expectedGuideBegin: Int = -1,
+            expectedGuideEnd: Int = -1,
+            expectedGuidePercent: Float = -1f,
+            expectedLeft: Int,
+        ) {
+            layout.inlineHelpersSpec = ConstraintHelpersSpec(
+                guidelines = listOf(
+                    ConstraintGuidelineSpec(
+                        id = "logical-guideline",
+                        direction = direction,
+                        position = position,
+                    ),
+                ),
+            )
+            layout.applyConstraintsNow()
+            layout.measureAndLayout()
+
+            val guideline = layout.getChildAt(0)
+            val params = guideline.layoutParams as ConstraintLayout.LayoutParams
+            assertEquals(expectedGuideBegin, params.guideBegin)
+            assertEquals(expectedGuideEnd, params.guideEnd)
+            assertEquals(expectedGuidePercent, params.guidePercent, 0f)
+            assertTrue(params.guidelineUseRtl)
+            assertEquals(expectedLeft, guideline.left)
+        }
+
+        assertGuideline(
+            direction = ConstraintGuidelineDirection.FromStart,
+            position = ConstraintGuidelinePosition.Offset(12.dp),
+            expectedGuideBegin = 24,
+            expectedLeft = 276,
+        )
+        assertGuideline(
+            direction = ConstraintGuidelineDirection.FromEnd,
+            position = ConstraintGuidelinePosition.Offset(16.dp),
+            expectedGuideEnd = 32,
+            expectedLeft = 32,
+        )
+        assertGuideline(
+            direction = ConstraintGuidelineDirection.FromStart,
+            position = ConstraintGuidelinePosition.Fraction(0.2f),
+            expectedGuidePercent = 0.2f,
+            expectedLeft = 240,
+        )
+        assertGuideline(
+            direction = ConstraintGuidelineDirection.FromEnd,
+            position = ConstraintGuidelinePosition.Fraction(0.3f),
+            expectedGuidePercent = 0.7f,
+            expectedLeft = 90,
+        )
+    }
+
+    @Test
+    fun `retained guideline follows runtime layout direction changes`() {
+        val context = RuntimeEnvironment.getApplication()
+        context.applicationInfo.flags =
+            context.applicationInfo.flags or ApplicationInfo.FLAG_SUPPORTS_RTL
+        val layout = DeclarativeConstraintLayout(context).apply {
+            layoutDirection = View.LAYOUT_DIRECTION_LTR
+            installEnvironment(density = 2f, layoutDirection = UiLayoutDirection.Ltr)
+            inlineHelpersSpec = ConstraintHelpersSpec(
+                guidelines = listOf(
+                    ConstraintGuidelineSpec(
+                        id = "logical-guideline",
+                        direction = ConstraintGuidelineDirection.FromEnd,
+                        position = ConstraintGuidelinePosition.Offset(16.dp),
+                    ),
+                ),
+            )
+        }
+
+        layout.applyConstraintsNow()
+        layout.measureAndLayout()
+        val guideline = layout.getChildAt(0)
+        assertEquals(View.LAYOUT_DIRECTION_LTR, guideline.layoutDirection)
+        assertEquals(268, guideline.left)
+
+        layout.layoutDirection = View.LAYOUT_DIRECTION_RTL
+        // Android 9 can leave a retained programmatic helper resolved to its former direction.
+        guideline.layoutDirection = View.LAYOUT_DIRECTION_LTR
+        layout.installEnvironment(density = 2f, layoutDirection = UiLayoutDirection.Rtl)
+        layout.requestConstraintRebuild()
+        layout.applyConstraintsNow()
+        layout.measureAndLayout()
+
+        assertEquals(View.LAYOUT_DIRECTION_RTL, guideline.layoutDirection)
+        assertEquals(32, guideline.left)
+    }
+
+    @Test
     fun `native layer accepts programmatic references before its first layout`() {
         val context = RuntimeEnvironment.getApplication()
         val layout = ConstraintLayout(context)
@@ -66,6 +170,44 @@ class DeclarativeConstraintLayoutEnvironmentTest {
         layer.rotation = 30f
 
         assertEquals(30f, child.rotation, 0f)
+    }
+
+    @Test
+    fun `constraint-only commits preserve modifier-owned runtime properties`() {
+        val context = RuntimeEnvironment.getApplication()
+        val layout = DeclarativeConstraintLayout(context).apply { installEnvironment(density = 1f) }
+        val child = layout.addContent("child").apply {
+            visibility = View.INVISIBLE
+            alpha = 0.4f
+            elevation = 7f
+            rotation = 12f
+            rotationX = 3f
+            rotationY = 4f
+            scaleX = 0.8f
+            scaleY = 0.9f
+            translationX = 5f
+            translationY = 6f
+            translationZ = 2f
+        }
+        layout.decoupledConstraintSetSpec = ConstraintSetSpec(
+            constraints = mapOf("child" to fixedItem(width = 40, startMargin = 12)),
+        )
+
+        layout.applyConstraintsNow()
+        layout.measureAndLayout()
+
+        assertResolvedLayoutParams(child, width = 40, height = 20, startMargin = 12)
+        assertEquals(View.INVISIBLE, child.visibility)
+        assertEquals(0.4f, child.alpha, 0f)
+        assertEquals(7f, child.elevation, 0f)
+        assertEquals(12f, child.rotation, 0f)
+        assertEquals(3f, child.rotationX, 0f)
+        assertEquals(4f, child.rotationY, 0f)
+        assertEquals(0.8f, child.scaleX, 0f)
+        assertEquals(0.9f, child.scaleY, 0f)
+        assertEquals(5f, child.translationX, 0f)
+        assertEquals(6f, child.translationY, 0f)
+        assertEquals(2f, child.translationZ, 0f)
     }
 
     @Test
@@ -757,7 +899,10 @@ class DeclarativeConstraintLayoutEnvironmentTest {
         activityController.close()
     }
 
-    private fun DeclarativeConstraintLayout.installEnvironment(density: Float) {
+    private fun DeclarativeConstraintLayout.installEnvironment(
+        density: Float,
+        layoutDirection: UiLayoutDirection = UiLayoutDirection.Ltr,
+    ) {
         setTag(
             R.id.viewcompose_environment_values,
             UiEnvironmentValues.Default.copy(
@@ -765,6 +910,7 @@ class DeclarativeConstraintLayoutEnvironmentTest {
                     density = density,
                     fontScale = 1f,
                 ),
+                layoutDirection = layoutDirection,
             ),
         )
     }

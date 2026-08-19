@@ -22,6 +22,10 @@ internal class PerformanceCopy(
     val success: String = resources.getString(R.string.demo_performance_metric_success)
     val latency: String = resources.getString(R.string.demo_performance_metric_latency)
     val detail: String = resources.getString(R.string.demo_performance_detail)
+    val constraintUpdate: String =
+        resources.getString(R.string.demo_performance_constraint_update)
+    val constraintReset: String =
+        resources.getString(R.string.demo_performance_constraint_reset)
 
     fun engineName(engine: PerformanceEngine, shadowsEnabled: Boolean): String =
         if (shadowsEnabled) {
@@ -81,4 +85,15 @@ internal class PerformanceCopy(
 
     fun detailContent(index: Int): String =
         resources.getString(R.string.demo_performance_detail_content, index)
+
+    fun constraintReady(engineName: String, nodeCount: Int, workload: String): String =
+        resources.getString(
+            R.string.demo_performance_constraint_ready,
+            engineName,
+            nodeCount,
+            workload,
+        )
+
+    fun constraintRevision(revision: Int): String =
+        resources.getString(R.string.demo_performance_constraint_revision, revision)
 }

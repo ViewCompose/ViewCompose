@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-constraintlayout-androidx/README.md
-translation_source_hash: ba378d1c27b70806b5c2f56b80bb5e1ca0dfac1ae1d3e4594f4998504cedbbd1
+translation_source_hash: 0a197764213a6f60d6931d1738fca4ff1732e6609bf195be423320954e0c13dc
 translation_status: current
 ---
 
@@ -20,9 +20,9 @@ dependencies {
 }
 ```
 
-- 稳定性：**Alpha**。当前源码已经包含首发 API 与 Renderer 硬切，但完整的 Robolectric、
-  真机、Demo、AndroidX `2.2.2` 与性能安全证据仍由有效的
-  [首发加固计划](https://docs.viewcompose.com/project/plans/constraintlayout-native-engine-hardening)阻塞发版。
+- 稳定性：**Alpha**。当前源码已经包含首发 API 与 Renderer 硬切；Robolectric、真机、
+  Demo、AndroidX `2.2.2`、性能安全、文档与仓库发版门禁均已通过，首发加固计划已经完成
+  并归档。
   更广泛的能力对齐与优化由独立的
   [发版后扩展计划](https://docs.viewcompose.com/project/plans/constraintlayout-parity-performance-expansion)负责；
   在首版发布并完成 Tag 前，该计划保持无 Changeset 状态。
@@ -155,9 +155,9 @@ Identity。这属于聚焦正确性证据，不是发版验收：它使用手工
 压力场景会产生 Robolectric 专属的资源名查询诊断。后续 Gradle 8.13 运行实际解析
 ConstraintLayout `2.2.2` 与 Core `1.1.2`，通过 75/75 条 UI Contract、11/11 条 DSL 和
 451/451 条 Renderer 测试，其中包含 12 条 Graph 与 16 条 ConstraintLayout 聚焦用例；
-`verifyDocumentationStructure` 也通过。正式 JVM 兼容性结论仍为 **improved**。它仍未覆盖完整
-真机 Helper 矩阵、视觉、内存或性能，因此发布闭环还需要无 Warning Demo/真机证据及无实质
-回退 Control。分类更新快速路径、Grid、CircularFlow 和更广泛的能力对齐继续留在发版后计划。
+`verifyDocumentationStructure` 也通过。正式 JVM 兼容性结论仍为 **improved**。后续真机和性能
+矩阵已闭合首发验收范围；分类更新快速路径、Grid、CircularFlow 和更广泛的能力对齐继续留在
+发版后计划。
 
 2026-08-19 的 DSL Safety 后续运行通过 17/17 条 ConstraintLayout 模块测试：12 条行为测试和
 5 条 Kotlin 2.0.21 Compiler Fixture。合法的类型化 Axis/Reference Sample 可以编译；把垂直
@@ -166,15 +166,46 @@ ConstraintLayout Helper，以及向 ConstraintSet 传入 String 条目，都会�
 通用 Target/Type Alias Surface 会接受这四种无效写法，因此编译安全结论为 **improved**。
 同一次运行还证明嵌套 Helper Snapshot 相互独立，且保留到 Content 之外的 Scope 会拒绝延迟
 声明。`verifyDslApiContracts`、UI Foundation Scoped-container Sample、Demo 编译与 Preview
-编译也已通过。这只属于源码契约证据，不能替代仍未完成的真机与性能 Gate。
+编译也已通过；下方真机与性能验收为这份源码契约证据提供补充。
 
 2026-08-19 在 Samsung SM-G991B / Android 13 上进行的聚焦真机复验，在浅色主题、LTR、字体
 缩放 1.0 下接受了修订后的 Guideline/Barrier Fixture。Barrier Marker 中心从短文案的
 `596 px` 移到长文案的 `782 px`，绝对位移 `186 px`（占 1080 px 屏宽的 17.2%）；可见的
 55% Guideline 保持固定，完整 Marker 始终位于容器内。精确几何 Instrumentation 通过 1/1，
 无 Warning 的 Demo APK 构建通过，过滤日志未出现 App Fatal、ConstraintSet、Renderer Layout
-或 Helper Layer 失败。聚焦视觉/几何结论为 **improved**。这仍只是单一默认配置 Fixture，
-因此覆盖全部 Helper 的深色主题、RTL、大字体、内存和性能 Gate 仍是发版阻塞项。
+或 Helper Layer 失败。聚焦视觉/几何结论为 **improved**；其后继续完成了下方完整矩阵。
+
+随后，2026-08-19 的完整真机验收在已 Root 的 Xiaomi MI 6 / Android 9 上通过 3/3 条
+Instrumentation Test。它在浅色/LTR/字体缩放 1.0 与深色/RTL/字体缩放 1.3 两组配置中覆盖
+完整保留 Helper Surface，断言 Guideline、Barrier、Flow、Group、Layer 与 Placeholder 的精确
+原生效果，并完成 100 次 Retained-helper 加 100 次 Virtual-helper 状态切换，Child/Helper 数量
+始终恒定。人工复核了 9 张截图；聚焦 Guideline/Barrier、全部 Barrier Direction、单列 Flow、
+隐藏 Group、Layer Transform 与 Placeholder Transfer 在两组配置中都保持可读且未越出容器。
+过滤日志未出现非预期 ConstraintSet、Helper Layer、Renderer Layout 或 Fatal 条目。
+
+2026-08-20 在完成最终 Demo 本地化和 Benchmark Harness 编辑后，归档候选重新构建并覆盖安装到
+同一台 Xiaomi 真机。应用 APK
+`0bd034432282130b9c7c99f0fe9d0120699d113ff3e288936a3b9562f3e09673` 与测试 APK
+`2c555fafe3dbdbd96c0bbbd43401179d115483ca601ee01c3c813739b4bc26d3` 用 `195.759 s` 再次
+通过同一组 3/3 首发真机测试。这确认最终构建仍保持已接受的精确几何、Virtual Helper、
+有界 Registry 和无警告行为，结论为 **no material change**。本次没有新增 OEM/API 点，也不
+替代此前 9 张截图的人工复核，因此仍保留相同的单设备局限。
+
+RTL 验收在修复前暴露了一处 Android 9 生命周期缺陷：Container 从 LTR 切换到 RTL 后，保留的
+Programmatic Helper 可能继续持有此前解析的 LTR Direction，导致 AndroidX 无法镜像逻辑
+Guideline Begin/End。Renderer 现在会在应用 Graph 前把每个 Retained Helper 的
+`layoutDirection` 与 Container 同步。没有该同步时 Transition 回归会失败，加入同步后得到精确
+镜像几何；真机正确性结论为 **improved**。该证据覆盖一台 API 28 真机与两组高风险配置，不能
+代表全部受支持 OEM/API 组合。
+
+最终 Root 首发性能矩阵在 10/50/100 Node 下对比了硬切前 ViewCompose APK、Candidate 与 Direct
+Android Views 的 Stable-content、Scalar、Helper 和 Topology 动作。8 个动作的两侧 ViewCompose
+稳定；4 个在一次相邻复测后仍为 `inconclusive`。稳定的 Frame P50/P95 与 Median Peak Heap 均无
+回退，修正后的 Android-Views 归一化 `--enforce` 门禁通过。Renderer 还从回滚快照捕获中移除了
+O(n²) Child Index 查询，并在没有 Content Overlay 被释放时跳过完全相同的第二份快照；此前失败
+的稳定 topology-50 P50 从 `7.076 ms` 降到 `6.162 ms`，Baseline 为 `6.304 ms`。首发性能安全
+结论为 **no material change**。完整绝对值、归一化变化、CV、局限与协议见
+[性能工具](../../tooling/performance.md#245-constraintlayout-首发性能安全)。
 
 ## Alpha 源码迁移
 
@@ -204,10 +235,10 @@ AndroidX Escape Hatch。
 - 不需要约束求解时使用更简单 Container；ConstraintLayout 会引入 Solver Pass。
 - 避免由高频 State 重建大型 Helper Graph。
 
-当前还没有已接受的 ConstraintLayout 专项 Direct-native Benchmark。首发计划必须证明没有
-实质回退，但不会据此建立性能领先结论。在发版后扩展计划把可复现的 10/50/100 Node
-Direct-native、已发布基线与 Candidate 结果写入 Performance 文档前，不应宣称该 Adapter 是
-ViewCompose 中性能最快的 Layout Path。
+已接受的 10/50/100 Node 首发矩阵证明：相对硬切前 ViewCompose 源码，所有稳定行均为
+**no material change**；它不构成性能领先结论。Direct Android Views 仍明显更快，尤其是 P95。
+不得把该 Adapter 描述为 ViewCompose 中最快的 Layout Path。发版后扩展计划负责分类 Scalar/
+Topology 快速路径、多设备复验以及未来任何性能领先声明。
 
 ## 相关文档
 

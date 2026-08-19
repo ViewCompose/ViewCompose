@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-layout-modifier-and-environment.md
-translation_source_hash: fac6a7b4f608735303d857f4af13f251243692c2004e63a4ce72ea3c96781462
+translation_source_hash: 7b96e9db0dd02896229caa5cc07caf999e970d9b02b64f147e9a74966c15be26
 translation_status: current
 ---
 
@@ -230,6 +230,10 @@ renderer 通过 AndroidX ConstraintLayout 消费这些值。固定尺寸从子�
 Start/End Guideline 用作 Top/Bottom Target，都会在 Kotlin 编译阶段失败。嵌套结构型 DSL 会
 隐藏外层 ConstraintLayout Receiver；Helper Metadata 在 Content 完成后冻结，不再通过环境式
 Thread-local State 收集。
+
+逻辑 Start/End 语义在挂载后仍由环境驱动。Android Renderer 会保持 Retained Helper 的
+`layoutDirection` 与 ConstraintLayout Container 同步，因此原地 LTR/RTL 切换会镜像逻辑
+Guideline 与 Barrier，同时不替换其稳定 Identity。
 
 Reusable Set 同样维持类型化声明 Identity。先创建 Reference，再把它传给 `constrain(ref)`，
 并用同一个 Reference 建立 Link；已移除的 `constrain(ref.id)` 形式不会再漂移到无关 String。

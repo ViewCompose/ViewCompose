@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Keep retained AndroidX ConstraintLayout helpers synchronized with runtime layout-direction changes on older Android releases and remove redundant rollback-snapshot work.",
+  "changes": [
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" }
+  ],
+  "ignored": [],
+  "shared": []
+}

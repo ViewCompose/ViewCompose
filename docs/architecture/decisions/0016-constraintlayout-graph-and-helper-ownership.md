@@ -55,13 +55,19 @@ helper configuration, stale-helper removal, and runtime-property restoration suc
 restores the previous helper registry, View state, environment, and accepted graph, then emits a
 bounded structured rejection keyed by attempted revision, identity, and reason.
 
+Every retained programmatic helper also resolves environment ownership from its container before
+graph apply. In particular, its native `layoutDirection` must match the container so AndroidX can
+resolve logical Guideline and Barrier semantics correctly after an in-place LTR/RTL transition on
+older Android releases.
+
 Layer post-layout work has one generation-checked pre-draw owner and is cancelled on replacement or
 detach. A second legacy reconciliation engine, compatibility flag, partial-link recovery branch, or
 unbounded string warning cache is prohibited.
 
-The AndroidX runtime baseline moves to stable ConstraintLayout `2.2.2`. Compatibility and device
-evidence remain release gates; the dependency may not silently fall back to `2.2.1` if those gates
-expose a defect.
+The AndroidX runtime baseline moves to stable ConstraintLayout `2.2.2`. The accepted JVM and rooted
+Android 9 device evidence covers exact retained-helper geometry, lifecycle, high-risk configuration
+changes, and the LTR/RTL transition invariant. The dependency may not silently fall back to `2.2.1`
+if later compatibility gates expose a defect.
 
 ## Consequences
 
@@ -117,8 +123,8 @@ revision controls and separate APKs provide comparison without shipping dual own
 
 ## Validation and rollout
 
-Implementation and acceptance follow the active
-[ConstraintLayout first-release hardening plan](../../project/plans/constraintlayout-native-engine-hardening.md).
+Implementation and acceptance evidence is recorded in the completed
+[ConstraintLayout first-release hardening plan](../../archive/constraintlayout-native-engine-hardening.md).
 Release requires pure graph and DSL tests, Robolectric exact geometry and rollback, 1,000-switch
 helper stress, focused physical-device and warning-free Demo evidence, interpreted performance-safety
 controls, Q3 compiled samples, API/documentation gates, Chinese mirrors, and immutable Changesets.

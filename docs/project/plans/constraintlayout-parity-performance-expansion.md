@@ -4,8 +4,9 @@
 
 Active as a deliberately deferred post-release plan. Planning and baseline preservation are
 complete; production implementation has not started and must not start until the
-[ConstraintLayout first-release hardening plan](./constraintlayout-native-engine-hardening.md) is
-complete, archived, and its release window has ended with a published Central release and tag.
+[ConstraintLayout first-release hardening plan](../../archive/constraintlayout-native-engine-hardening.md)
+is complete and archived. Production implementation must still wait until its release window has
+ended with a published Central release and tag.
 
 This plan is not a first-release blocker while its Maven release changeset list remains `- None.`.
 Once production implementation begins and immutable Changesets are added, it becomes the sole
@@ -15,7 +16,7 @@ This plan is canonical English-only under the documentation-governance policy. D
 performance, compatibility, and operational conclusions must move into the owning active documents,
 with required Simplified Chinese mirrors, before the plan is archived.
 
-Last verified: 2026-08-18.
+Last verified: 2026-08-20.
 
 Activation trigger: the first-release hardening plan is archived, the corresponding Maven Central
 release and Git tag are complete, and the release owner explicitly reopens ConstraintLayout
@@ -310,6 +311,22 @@ Initial budgets, frozen or tightened in Phase 0:
 
 Raw benchmark output never closes a phase. Every accepted result records comparison context,
 absolute values, normalized change, one conclusion classification, limitations, and next action.
+
+### First-release optimization evidence carried forward
+
+The first-release safety work tested several speculative reductions in ConstraintSet preparation,
+LayoutParams assignment, parent-data preflight, and snapshot work. None produced a repeatable
+whole-matrix win: favorable medians were accompanied by neutral or worse P95/P99 directions, so
+every candidate was reverted. Phase 1 must therefore start from attributed structural counters and
+traces rather than restoring any rejected patch by inspection.
+
+The Android 9 controls also showed that `CompilationMode.None` reports `verify` while remaining
+sensitive to JIT/code placement, package reinstall behavior, and run order. Phase 0 must preserve
+the immutable first-release raw results, verify that target/candidate/direct-native APKs are
+package- and build-mode-matched, record the actual compilation result, and require per-method CV
+acceptance plus adjacent reruns for unstable methods before directional claims. A root clock lock
+does not make an unstable frame sample conclusive, and a direct-native matrix cannot substitute for
+the longitudinal released-ViewCompose comparison.
 
 ## Release relationship
 
