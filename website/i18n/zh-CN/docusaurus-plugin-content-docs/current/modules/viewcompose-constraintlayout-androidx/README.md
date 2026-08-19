@@ -22,9 +22,9 @@ dependencies {
 
 - 稳定性：**Alpha**。当前源码已经包含首发 API 与 Renderer 硬切，但完整的 Robolectric、
   真机、Demo、AndroidX `2.2.2` 与性能安全证据仍由有效的
-  [首发加固计划](../../project/plans/constraintlayout-native-engine-hardening.md)阻塞发版。
+  [首发加固计划](https://docs.viewcompose.com/project/plans/constraintlayout-native-engine-hardening)阻塞发版。
   更广泛的能力对齐与优化由独立的
-  [发版后扩展计划](../../project/plans/constraintlayout-parity-performance-expansion.md)负责；
+  [发版后扩展计划](https://docs.viewcompose.com/project/plans/constraintlayout-parity-performance-expansion)负责；
   在首版发布并完成 Tag 前，该计划保持无 Changeset 状态。
 - 平台：Android 7.0（API 24）及以上。
 - 可选：`viewcompose-ui-foundation` 不依赖该产物。

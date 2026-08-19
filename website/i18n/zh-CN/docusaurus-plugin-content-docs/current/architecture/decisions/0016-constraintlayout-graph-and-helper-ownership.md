@@ -109,7 +109,7 @@ AndroidX 运行时基线升级到稳定版 ConstraintLayout `2.2.2`。兼容性�
 ## 验证与发布
 
 实现与验收遵循当前有效的
-[ConstraintLayout 首发加固计划](../../project/plans/constraintlayout-native-engine-hardening.md)。
+[ConstraintLayout 首发加固计划](https://docs.viewcompose.com/project/plans/constraintlayout-native-engine-hardening)。
 发布要求包括纯图与 DSL 测试、Robolectric 精确几何与回滚、1,000 次 Helper 切换压力、
 聚焦真机与无警告 Demo 证据、已解释的性能安全对照、Q3 编译示例、API/文档门禁、中文
 镜像以及不可变 Changeset。
