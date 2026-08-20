@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 3d3a9dfb77a4199e457b3fd2b8943a8a07f1019be8401bc390354166368ee870
+translation_source_hash: dd26b4f783b00c0ec05d26bad06ebb0694665afc987164ecd2c05400496772b0
 translation_status: current
 ---
 
@@ -491,6 +491,10 @@ run-P50 CV 分别是 `0.201`、`0.208` 和 `0.215`，均超过 `0.15` 验收上�
 输出 Runtime Image 警告，并因 Macrobenchmark 无法清理应用 Profile 而在连续重跑中变快。
 第 2.4.2 节给出了随后完成的 root 固定频率六方法验收矩阵。剩余 ViewCompose 相对原生的 P95
 差距来自 Android 属性失效及 Measure/Draw 尾部，而非整树协调。
+这组 Timing 分布不能作为正式基线，但其 API 33 R8 Trace 可以作为阶段归因证据：属性帧进入了
+`VC.ObservedPropertyRead` 与 `VC.ObservedPropertyRender`，没有重新进入根级 `VC.Compose`
+与完整树 `VC.RenderTree` 路径。未锁定 DVFS 会改变阶段时长，却不会改变是否进入这些 Section。
+因此这份功能性 Trace 与下方固定频率 Timing 矩阵配对使用，而不是取代后者。
 
 #### 2.4.2 Root 固定频率的 revision 4 验收与剩余尾延迟
 
@@ -525,8 +529,9 @@ mutation 约产生 217 个测量帧，对照只有 41/48 帧，并稀释了真�
 observed property 和结构 `RecomposeBoundary` 读取的情况：完整结构帧现在会在同一个
 Snapshot 内刷新脏 observed value，不会提交新旧状态混合帧。Android 9 的非 debuggable
 APK 无法公开应用 trace section，因为 manifest `profileable` 从 API 29 才受支持；因此六方法
-耗时矩阵已接受，但计划要求的最终 `VC.ObservedProperty*` Perfetto 归因仍需 API 29 或更高版本
-参考设备。
+耗时矩阵由这台 Root 固定频率设备验收，而上方 API 33 R8 Trace 独立闭环
+`VC.ObservedProperty*` 阶段归因。两份证据都不外推：Xiaomi 负责稳定 Timing，Samsung 负责阶段
+是否存在。
 
 修正后的列表 mutation trace 将剩余尾部定位在帧对齐框架事务，而不是 Android traversal。
 代表性最慢帧在 Choreographer `animation` 阶段消耗 27.7--41.3 ms，traversal 最大 9.5 ms；
@@ -710,11 +715,33 @@ Live Set 结果归类为 `improved`，并与已实施的分配削减严格对应
 替代正式的固定频率峰值内存运行。下一步是在 Root 固定频率下再跑一组普通列表对照/候选，P99 与
 最大 heap 是剩余的验收决策。
 
+固定频率闭环于 2026-08-20 在同一台已 Root 的 Xiaomi MI 6 / Android 9 参考设备上执行。精确
+对照 `ea33297b` 与候选 `06a411e7` 都重新构建为 R8 Benchmark Target；Target APK 的 SHA-256
+分别为 `ecd201dd3f3843b9abac7cb42011ad2a398612b7a31053a30e2036114a61aa99` 与
+`f2fc39ab7add472d3627382672e5eaa7a81ce2cef77ebb704b3e064eb2ae67d5`。两组共用同一个
+Benchmark APK（`0580ce4e8a6b6f93a369fccff2acf23fcc7e0d8519cf869a421e10f2816070fd`）、
+`performance.list@5`、五轮 `run-from-apk`、CPU Policy 1.4016/1.8048 GHz 固定频率、Adreno
+515 MHz 固定频率、暂停充电、停止厂商性能服务和 35--36 摄氏度起始温度。每组结束后都恢复了
+临时 Magisk 兼容 Wrapper 与全部设备控制项。
+
+| 分组 | 每轮帧数 | P50/P90/P95/P99，ms | 最大 heap 中位数，KiB | Run-P50 CV |
+| --- | --- | ---: | ---: | ---: |
+| 对照 | `162/162/164/162/161` | 5.218 / 8.517 / 9.248 / 11.004 | 7709 | 0.089 |
+| 候选 | `162/161/161/164/163` | 5.342 / 8.506 / 9.304 / 10.523 | 7591 | 0.068 |
+
+候选 P50/P90/P95/P99 分别变化 `+2.37%/-0.13%/+0.60%/-4.37%`；没有 Frame 指标跨过组合
+门禁，全部稳定性值都通过 `0.15`，解锁环境中不利的 P99 方向也消失。因此 Timing 结论为
+`no material change`。最大 heap 中位数下降 `118 KiB`（`1.53%`）。峰值样本本身仍不足以宣称
+普遍的进程内存胜出，但固定频率方向和量级与独立归因的 `129,518` 字节、6,276 个对象 Live Set
+减少一致。因此限定范围的内存结论为 `improved`：保留分配削减，而且没有把工作移入滚动热路径。
+限制也明确保留：这组对照不测 RSS、原生资源字节、启动、单调 Feed 或跨引擎排名；这些属于未来
+Workload 问题，不再阻塞已完成的分配计划。
+
 </div>
 
 可搜索结论为：普通列表和阴影列表帧耗时属于 `no material change`，噪声较大的进程峰值内存属于
-`inconclusive`，完成归因的 post-GC Live Set 属于 `improved`。剩余决策是在 Root 固定频率下
-复测普通列表 P99 与最大 heap。
+`inconclusive`，而固定频率最大 heap 方向所佐证的已归因分配结果属于 `improved`。该分配计划的
+P99 与内存验收决策已经完成。
 
 前述 A/B 证据只覆盖 revision 5 两份已构建 Snapshot 的 steady 交替，直接有利于有界的两代身份
 Cache。它没有测量 `toLazyItemsSnapshot()` 构造、首次求值、从不复用身份的单调数据流或 List

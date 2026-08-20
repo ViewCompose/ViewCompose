@@ -2,13 +2,14 @@
 
 ## Status
 
-Active. Phase 0 inventory and workload freeze, Phase 1 contract and automation spine, Phase 2 host
-and catalog hard cut, Phase 3 localization and content hard cut, and Phase 4 scenario migration are
-complete. Phase 5 benchmark rebaseline is device-blocked; release, renderer diagnostics, list revision
-3, complex-layout revision 3, and diagnostics-theme revision 2 replacement baselines are accepted.
-The manual-review repair advances collection-stress to revision 3, so its revision 2 baseline is
-retired and revision 3 remains unaccepted. Shadow-list and shadow-complex-layout revision 2
-replacement baselines are accepted.
+Archived on 2026-08-20 after its release-bearing scope completed. Phase 0 inventory and workload
+freeze, Phase 1 contract and automation spine, Phase 2 host/catalog hard cut, Phase 3 localization,
+Phase 4 scenario migration, the renderer/overlay repair batches, and the required replacement
+baselines are complete. Navigation revision 6 and design-bundle revision 3 now have accepted
+root-controlled absolute baselines in `docs/tooling/performance.md`. Collection-stress revision 3,
+the wider visual/configuration matrix, popup golden coverage, and final dead-infrastructure cleanup
+are explicitly transferred to the active post-release closeout plan rather than being represented
+as complete here.
 
 The maintainer authorized the initial human-review repair batch on 2026-08-17. Its eleven confirmed
 items are implemented, and focused automated checks and reference-device verification pass. A
@@ -22,11 +23,11 @@ Automated validation owns the primary information architecture. Human verificati
 supported secondary workflow, but explanatory copy must not displace the fixture, become a
 selector contract, or enter a measured benchmark hierarchy.
 
-Last verified: 2026-08-18.
+Last verified: 2026-08-20.
 
-Next action: run the Phase 5 navigation-motion revision 6 and design-bundle revision 3 matrices on
-a rootable or otherwise clock-controllable reference device. The current Samsung consumer device
-cannot produce valid run stability for these workloads.
+Next action: follow
+[`docs/project/plans/demo-post-release-verification-closeout.md`](../project/plans/demo-post-release-verification-closeout.md)
+after the coordinated release window.
 
 Performance work from the
 [archived Runtime data propagation and Android View patch optimization record](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/runtime-data-propagation-and-view-patch-optimization.md)
@@ -34,11 +35,15 @@ is gated by the replacement baselines for the scenarios that can exercise that o
 by unrelated navigation or design-system matrices. The accepted release state-patch, renderer,
 list, and complex-layout baselines satisfy that scoped gate for the two retained Runtime/Patch
 experiments. Navigation revision 6 and design-bundle revision 3 remain blocked on a
-clock-controllable device without delaying unrelated framework work.
+clock-controllable device without delaying unrelated framework work. Those two matrices were later
+accepted on the rooted Xiaomi reference device and are interpreted in the current performance
+specification.
 
 ## Maven release changesets
 
 - `release/changes/20260817-demo-manual-review-fixes.json`
+
+## Release intent rationale
 
 The plan began inside the Demo application, its test APK, and the internal Macrobenchmark module.
 Manual review subsequently established production fixes in `viewcompose-renderer-android` and
@@ -46,6 +51,16 @@ Manual review subsequently established production fixes in `viewcompose-renderer
 public or protected API signature changed, so no new Q-level assignment or compiled API sample is
 required. The owning module behavior documentation and focused regression tests change with the
 implementation.
+
+## Supersession and scope transfer
+
+The immutable Changeset and every published renderer/overlay repair remain owned by this archived
+record. The active
+[`Demo post-release verification closeout plan`](../project/plans/demo-post-release-verification-closeout.md) owns
+only collection-stress revision 3, the wider bilingual/theme/RTL/font/density matrix, popup pixel
+golden coverage, and remaining dead harness cleanup. That plan begins with `- None.` because none of
+the transferred work currently changes a published artifact; it must reassess release intent if
+future fixes cross that boundary.
 
 ## Objective
 

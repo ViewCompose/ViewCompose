@@ -382,5 +382,5 @@ diagnostics` remains the broad token explorer. The theme, override, and typograp
 4. Keep theme regression aligned with overlay, input, and container scenarios in the
    [roadmap](../project/roadmap.md).
 
-The ordered evidence and rollback policy for the remaining structural work is recorded in the
-[Material 3 design convergence plan](../project/plans/material3-design-convergence.md).
+The ordered evidence and rollback policy for the completed convergence work is retained in the
+[archived Material 3 design convergence plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/material3-design-convergence.md).

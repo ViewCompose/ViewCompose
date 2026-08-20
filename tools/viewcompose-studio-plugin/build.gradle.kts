@@ -195,10 +195,12 @@ intellijPlatform {
             code.</p>
         """.trimIndent()
         changeNotes = """
-            <p>Marketplace compatibility correction.</p>
+            <p>Device-to-source navigation for running ViewCompose screens.</p>
             <ul>
-              <li>Declare the Android Studio platform dependency explicitly.</li>
-              <li>Verify the lower, latest stable, and latest prerelease Android Studio 261 builds.</li>
+              <li>Locate the ViewCompose DSL currently visible on a connected debuggable device.</li>
+              <li>Choose explicitly between multiple devices or equally visible page sessions.</li>
+              <li>Prefer authored content over shared scaffold callers and request snapshots only
+              when the action is invoked.</li>
             </ul>
         """.trimIndent()
         ideaVersion {

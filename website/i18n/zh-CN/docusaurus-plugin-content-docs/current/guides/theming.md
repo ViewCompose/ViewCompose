@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: 3f1483bc9ea594ba07a0912fc454481a74451e85b50ba088757ad0f870ab3079
+translation_source_hash: e8a480c5ce4319bea2a883fbea81fc3b507be4476ba174b10c6b064c539440f0
 translation_status: current
 ---
 
@@ -351,8 +351,8 @@ Theme/Override/Typography 页面保留为教学示例，不承担最终人工回
    控件的精确几何仍必须按测试优先处理；完整 Token Bridge 本身不会自动提供这些结构行为。
 4. 与 `ROADMAP` 中 Overlay、Input、容器场景联动完善主题回归。
 
-后续结构改造的顺序、证据与回退规则记录在英文的
-[Material 3 设计收敛计划](https://docs.viewcompose.com/project/plans/material3-design-convergence)。
+已完成收敛工作的顺序、证据与回退规则保留在英文的
+[Material 3 设计收敛归档计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/material3-design-convergence.md)。
 
 路线图见：
 

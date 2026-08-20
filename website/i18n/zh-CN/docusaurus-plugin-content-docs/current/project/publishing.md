@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: 617cc55351852e73d38c6ceb5757f8f8b2549c3e34d9d05dd4cb5245d13d33a4
+translation_source_hash: fa566a9435b94e20dc4940642487344852bf0eaff277c8407da84918c990fc88
 translation_status: current
 ---
 
@@ -161,6 +161,10 @@ release commit，而不是可变的当前发布元数据，是统一的变更比
 4. 从 Gradle `api`、`implementation`、`compileOnly`、`runtimeOnly` project dependency 推导当前依赖图；
 5. 向所有已发布反向依赖传递 `dependency` 发布；
 6. 生成确定性的 `build/release-plan.json` 和 `build/release-plan.md`，区分直接变化与依赖传播。
+
+历史 Changeset 可以引用 `release.retiredModules` 中列出的坐标。规划器在计算首次发布基线时会把
+这些标识符视为有效的不可变历史，但绝不会为退役坐标创建基线、版本建议或依赖传播发布。同一
+标识符不能同时既是退役坐标又是有效发布制品。
 
 规划只推荐版本，不静默决定版本。稳定版本中，`fix` 和 `dependency` 增加 patch，`feature` 增加
 minor，`breaking` 在 `1.0` 后增加 major、在 `0.x` 增加 minor。预发布版本无论影响等级都增加
@@ -427,7 +431,8 @@ cd tools/viewcompose-studio-plugin
 ./gradlew prepareSignedMarketplaceRelease
 ```
 
-首个版本必须在 Marketplace 人工上传接受初审；批准后后续版本可运行 `./gradlew publishPlugin`。
+Marketplace listing 已获批准。release owner 审阅准备好的 ZIP、签名、兼容性报告和 change notes
+后，后续版本可运行 `./gradlew publishPlugin`。
 `-PviewComposeMarketplaceChannels=default,eap` 选择 channel，默认 `default`。
 
 ## 首次公开发布清单
@@ -444,4 +449,5 @@ cd tools/viewcompose-studio-plugin
 8. Central 显示 `Published` 后，为每个已发布制品创建、推送并远端验证一个 signed
    `maven/<artifact-id>/<version>` tag。
 9. 运行 `prepareMarketplaceRelease`，在目标 Android Studio 安装 ZIP 并做 Preview smoke test。
-10. 首个插件版本人工上传；批准后再启用 token 自动化。
+10. 对已批准的插件 listing，审阅签名 ZIP 和兼容性报告后使用 Marketplace token 发布后续版本；
+    新 listing 仍需人工初审。

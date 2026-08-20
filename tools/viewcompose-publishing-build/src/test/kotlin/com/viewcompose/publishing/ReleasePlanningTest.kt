@@ -8,6 +8,67 @@ import org.junit.Test
 
 class ReleasePlanningTest {
     @Test
+    fun `first release planning accepts retired artifacts in historical changesets`() {
+        val directory = Files.createTempDirectory("retired-release-history").toFile()
+        val rootRevision = "1111111111111111111111111111111111111111"
+        val sourceRevision = "2222222222222222222222222222222222222222"
+        val headRevision = "3333333333333333333333333333333333333333"
+        val activeArtifact = "viewcompose-new"
+        val retiredArtifact = "viewcompose-old"
+        val changeSetPath = "release/changes/historical-retired-artifact.json"
+        directory.resolve(changeSetPath).apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                {
+                  "schemaVersion": 1,
+                  "summary": "Classify active and subsequently retired artifact history.",
+                  "changes": [
+                    {"artifact":"$activeArtifact","impact":"feature"},
+                    {"artifact":"$retiredArtifact","impact":"fix"}
+                  ]
+                }
+                """.trimIndent(),
+            )
+        }
+        val git = GitRepository(
+            root = directory,
+            executor = CommandExecutor { arguments ->
+                when (arguments) {
+                    listOf("status", "--porcelain", "--untracked-files=all") ->
+                        CommandResult(0, "")
+                    listOf("rev-parse", "--verify", "HEAD^{commit}") ->
+                        CommandResult(0, headRevision)
+                    listOf("rev-parse", "--verify", "$sourceRevision^{commit}") ->
+                        CommandResult(0, sourceRevision)
+                    listOf("rev-list", "--max-parents=0", "HEAD") ->
+                        CommandResult(0, rootRevision)
+                    listOf("tag", "--list", "maven/$activeArtifact/*") ->
+                        CommandResult(0, "")
+                    listOf("diff", "--name-only", "-z", "$rootRevision..$headRevision", "--") ->
+                        CommandResult(0, "$changeSetPath\u0000")
+                    else -> error("Unexpected Git command: ${arguments.joinToString(" ")}")
+                }
+            },
+        )
+
+        val plan = ViewComposeReleasePlanner(
+            root = directory,
+            git = git,
+            artifacts = setOf(activeArtifact),
+            declaredVersions = mapOf(activeArtifact to MavenVersion.parse("0.1.0-alpha01")),
+            declaredSourceRevisions = mapOf(activeArtifact to sourceRevision),
+            unpublishedArtifacts = setOf(activeArtifact),
+            retiredArtifacts = setOf(retiredArtifact),
+            dependencies = mapOf(activeArtifact to emptySet()),
+        ).plan()
+
+        assertEquals(listOf(activeArtifact), plan.releases.map(PlannedArtifactRelease::artifact))
+        assertEquals(listOf("historical-retired-artifact.json"), plan.releases.single().changeSets)
+        assertEquals("0.1.0-alpha01", plan.releases.single().recommendedVersion.toString())
+    }
+
+    @Test
     fun `explicit unpublished marker permits only a genuine first release`() {
         val rootRevision = "1111111111111111111111111111111111111111"
         val sourceRevision = "2222222222222222222222222222222222222222"

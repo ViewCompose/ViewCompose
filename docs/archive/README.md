@@ -26,6 +26,13 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `demo-benchmark-verification-harness-rearchitecture.md` | Demo 的场景化路由、稳定 Selector、基准宿主、双语内容、人工评审修复以及发布相关 Renderer/Overlay 修复均已闭环；collection-stress revision 3、扩大配置矩阵、Popup Golden 与遗留清理由独立的发版后计划继续承接 |
+| `observed-property-transactions.md` | Session 级属性事务、完整批次回滚、Renderer 精确 Target、固定频率三引擎 Timing 和 API 33 非 Debuggable 阶段归因均已闭环，Xiaomi 与 Samsung 证据各自保持明确适用边界 |
+| `lazy-collection-memory-efficiency.md` | Lazy 声明共享策略、紧凑 Adapter 元数据和延迟绘制资源已完成；固定频率 P99 未回退，最大 heap 方向与减少 129,518 字节、6,276 个对象的独立归因一致，完整门禁闭环 |
+| `cross-session-theme-propagation.md` | 跨 Activity 根与保留 NavHost 目的地的主题刷新已闭环，自动化、人工验证、完整 `qaFull` 和发布 Changeset 均已完成，进入本轮 Maven 发布计划 |
+| `multi-design-system-high-fidelity.md` | 多设计系统 Token/Recipe/Backend 边界、中立 Host 与 Overlay、Material 3/One UI 7 压力切片、跨版本模拟器及 Pixel/Samsung 真机验收全部闭环，进入本轮 Maven 发布计划 |
+| `material3-design-convergence.md` | Material 3 Phase 0–2 的 Token、Theme Bridge、默认值、触控目标和状态层已验收；TextField 与 Switch/Slider 结构级候选已明确移交路线图，保留范围进入本轮 Maven 发布计划 |
+| `five-layer-module-architecture-hard-cut.md` | Kernel、UI Foundation、Android Engine、Design System 与 Integration 五层坐标和职责硬切、Maven/样例/文档/消费门禁均已闭环，进入本轮 Maven 发布计划 |
 | `constraintlayout-native-engine-hardening.md` | ConstraintLayout 首发硬切与加固已完成：事务图、完整 Helper 所有权、类型安全 DSL、AndroidX `2.2.2`、真机矩阵、固定频率性能安全对照、双语文档和仓库发版门禁均已闭环；后续能力对齐与性能领先工作由有效的发版后计划承接 |
 | `android-views-performance-control.md` | 非阴影列表与复杂布局已建立 ViewCompose、Compose、Android Views 三引擎对照；修正后的 revision-4 固定频率 15 方法矩阵、报告工具、双语性能结论、`qaQuick` 与 119 项真机回归均已闭环，阴影原生对照需先定义等价渲染契约后再单独立项 |
 | `dsl-contract-convergence.md` | 布局与主题交互反馈已硬切到渲染器中立 Indication，冗余组件别名、输入 Wrapper 与误导性 AnimatedContent 入口已移除，保留 DSL 的 Q3 文档、结构门禁、全库 `qaQuick` 和针对性真机反馈测试均已闭环 |

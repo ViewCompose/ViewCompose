@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0015-observed-property-transactions.md
-translation_source_hash: 04389fb13b248f089b531edebbcf136978b8422e3f1143dda670a669e574510d
+translation_source_hash: 2530352d9a1c167387d4da2ddc96f983efb3b6328575ffe85c2ba127d593fc93
 translation_status: current
 ---
 
@@ -108,8 +108,8 @@ Renderer 也会分叉，原生回调还可能在回滚和 Effect 顺序之外修
 
 ## 验证与发布
 
-实现遵循进行中的
-[可观察属性事务计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/observed-property-transactions.md)。
+实现证据保留在
+[可观察属性事务归档计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/observed-property-transactions.md)。
 硬切要求 Q3 KDoc 与编译样例、Fake Engine 和 Android 失败注入、Local 与资源变化测试、生命周期与
 dispose 测试、API 和模块文档、中文镜像、单一 release changeset、已验收的三引擎 benchmark
 证据，以及仓库全部质量门禁。

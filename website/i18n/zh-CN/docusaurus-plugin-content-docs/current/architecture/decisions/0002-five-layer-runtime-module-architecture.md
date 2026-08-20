@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0002-five-layer-runtime-module-architecture.md
-translation_source_hash: 4d68e7338ff4495c7b0fca5ec5a83d72e591ffb3b0c96eab48c1c480db12a917
+translation_source_hash: 0201bbc759416a91bb257ec31a589c87ad06c8fffafd4c4ed3c059a3ff35b3b1
 translation_status: current
 ---
 
@@ -112,5 +112,5 @@ Engine、AndroidX Integration 和 Material-backed Integration 必须在名称中
 
 改造必须通过 `verifyDesignSystemIsolation` 验证五层依赖门禁、Kernel 纯度、UI Foundation/Android Engine 的 Material 隔离、底层无
 Material 宿主消费、分别仅依赖 `viewcompose-android` 与 `viewcompose-material3-android` 的中立和 Material 消费、POM 暴露契约、当前中英文文档、
-`qaQuick`、`qaRelease` 与本地 Maven smoke。执行证据记录在
-[五层硬切计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/five-layer-module-architecture-hard-cut.md) 中。
+`qaQuick`、`qaRelease` 与本地 Maven smoke。执行证据与已完成阶段门禁保留在
+[五层硬切归档计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/five-layer-module-architecture-hard-cut.md) 中。

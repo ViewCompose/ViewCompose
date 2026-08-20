@@ -169,5 +169,5 @@ alpha contracts.
 9. Pass focused tests, `qaQuick`, `qaRelease`, documentation/localization verification, and local
    Maven publication smoke tests before completing the hard cut.
 
-The execution ledger and phase gates live in the active
-[five-layer hard-cut plan](../../project/plans/five-layer-module-architecture-hard-cut.md).
+The execution ledger and completed phase gates are retained in the
+[archived five-layer hard-cut plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/five-layer-module-architecture-hard-cut.md).

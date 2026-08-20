@@ -260,6 +260,7 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             declaredVersions.set(metadata.moduleVersions)
             declaredSourceRevisions.set(metadata.moduleSourceRevisions)
             unpublishedArtifacts.set(metadata.unpublishedModules)
+            retiredArtifacts.set(metadata.retiredModules)
             this.artifactDependencies.set(artifactDependencies)
             jsonOutput.set(releasePlanJson)
             markdownOutput.set(releasePlanMarkdown)
