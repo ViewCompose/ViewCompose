@@ -82,7 +82,7 @@ supported by paired size evidence in this page.
 
 The per-locale search-index budget is 6.25 MiB. It was first raised from 4 MiB after the searchable
 [multi-design-system architecture standard](../architecture/design-systems.md), ADR-0005, and its
-evidence-heavy [active execution plan](./plans/multi-design-system-high-fidelity.md) measured about
+evidence-heavy [archived execution record](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/multi-design-system-high-fidelity.md) measured about
 4.1 MiB for English and 4.4 MiB for Chinese. After the complete One UI and overlay architecture
 record plus nine additional Chinese mirrors were indexed, the complete build measured 4.4 MiB for
 English and 4.7 MiB for Chinese, so the reviewed ceiling moved to 5 MiB. Adding the host-owned

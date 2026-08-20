@@ -2,21 +2,21 @@
 
 ## Status
 
-Active. Architecture and public contracts are implemented through Runtime, UI Contract, UI
-Foundation, Host Android, and Android Renderer. Correctness validation, the root-controlled
-six-method timing matrix, and repository gates are complete. Only API-29-or-newer non-debuggable
-trace attribution remains open.
+Completed and archived on 2026-08-20. Architecture and public contracts are implemented through
+Runtime, UI Contract, UI Foundation, Host Android, and Android Renderer. Correctness validation,
+the root-controlled six-method timing matrix, API-33 non-debuggable phase attribution, and
+repository gates are complete.
 
-Last verified: 2026-08-16.
+Last verified: 2026-08-20.
 
-Next action: confirm `VC.ObservedProperty*` phase attribution from a non-debuggable benchmark APK
-on an API-29-or-newer clock-controlled device. Keep the accepted Xiaomi MI 6 timing matrix as the
-revision-4 absolute baseline; trace attribution is a separate limitation, not a reason to discard
-stable frame timing.
+Next action: none for this plan. The Xiaomi MI 6 fixed-clock matrix remains the timing baseline;
+the API-33 R8 trace independently owns phase-presence evidence.
 
 ## Maven release changesets
 
 - `release/changes/20260816-plain-text-binding-allocation.json`
+
+## Release intent rationale
 
 The pull request owns one changeset that covers the independent plain-text binder allocation fix,
 the cross-module Q3 transaction capability with its renderer/host integration, and the subsequent
@@ -147,7 +147,7 @@ and full ART compilation did not materially close P95.
 - Bump the complex-layout workload revision. Separate property-only update evidence from structural
   add/remove evidence so neither workload hides the other's cost.
 
-### Phase 5: benchmark acceptance — timing complete; phase attribution pending
+### Phase 5: benchmark acceptance — complete
 
 - Run ViewCompose, Compose, and Android Views controls with identical data, actions, settle policy,
   thermal gate, compilation mode, and clock-policy declaration.
@@ -170,11 +170,15 @@ Structural update measured `5.590/46.009`, `7.255/26.844`, and `5.444/15.051 ms`
 an explicit optimization target rather than being hidden by the property result.
 
 Android 9 cannot expose application custom trace sections from a non-debuggable APK because
-manifest `profileable` support begins at API 29. The timing acceptance is complete, while Perfetto
-confirmation that accepted property frames avoid full-tree reconciliation remains a separately
-tracked API-level limitation. Correctness coverage already proves the structural/property
-coalescing boundary, including one State shared by an observed property and a
-`RecomposeBoundary`.
+manifest `profileable` support begins at API 29. Timing acceptance therefore remains owned by the
+root-controlled Xiaomi matrix. The already recorded Samsung SM-G991B / Android 13 R8 Perfetto
+capture supplies the separate functional attribution: 16 property frames entered
+`VC.ObservedPropertyRead` and `VC.ObservedPropertyRender` without returning to root composition or
+complete-tree reconciliation. Its unlocked timing distribution remains formally inconclusive, but
+DVFS does not change whether a trace section was entered. Pairing stable Xiaomi timing with Samsung
+phase presence closes the requirement without extrapolating either device beyond its evidence.
+Correctness coverage also proves the structural/property coalescing boundary, including one State
+shared by an observed property and a `RecomposeBoundary`.
 
 ### Phase 6: release validation — complete
 
@@ -185,8 +189,9 @@ coalescing boundary, including one State shared by an observed property and a
 - Focused tests, compiled samples, API/documentation/translation/tooling gates, `qaQuick`, the
   bilingual site build, benchmark compilation/report tests, and 119 physical-device Demo tests
   pass. The single final Changeset agrees with the affected artifacts.
-- Archive this plan only after the remaining API-29-or-newer Perfetto phase-attribution evidence is
-  accepted and interpreted.
+- The API-33 R8 Perfetto phase-attribution evidence is accepted and interpreted in
+  `docs/tooling/performance.md`; the plan is archived with the timing and attribution limitations
+  kept explicit.
 
 ## Validation matrix
 

@@ -2,8 +2,8 @@
 
 ## Status
 
-Active pending linked Maven changeset publication and release-time archival. Phases 0 through 17
-are implemented on
+Completed and archived for the coordinated Maven release on 2026-08-20. Phases 0 through 17 are
+implemented on
 `codex/multi-design-system-foundation`. Phases 13 through 16 converge Android overlay ownership and
 root-level integration without introducing one Activity/Fragment extension family per design
 system. Phase 8 closes
@@ -35,21 +35,24 @@ target architecture and the staged evidence required before public APIs or produ
 behavior are retained. Durable accepted contracts must move into the architecture guide, theme
 guide, and owning module manuals before this plan is archived.
 
-Last verified: 2026-08-10.
+Last verified: 2026-08-20.
 
-Next action: include the linked immutable changeset in the intended Maven release, complete the
-final release checks, and archive this plan immediately before Maven upload. The completed physical
-gates do not bypass the neutral-host or backend boundaries.
+Release disposition: include the linked immutable Changeset in the coordinated Maven release and
+complete the final release checks. The completed physical gates do not bypass the neutral-host or
+backend boundaries.
 
 ## Maven release changesets
 
-- [`20260809-multi-design-system-high-fidelity.json`](../../../release/changes/20260809-multi-design-system-high-fidelity.json)
-  is the single PR-owned release intent. It covers the Phase 2 neutral Surface and Button
-  foundations, Phase 3 semantic motion and compatible shape interpolation, and the Phase 6 public
-  One UI 7 five-component alpha artifact. It also records the deliberate
-  `viewcompose-overlay-android` coordinate reactivation, neutral transport extraction, explicit
-  root selection, Material adapter narrowing, and affected aggregate/runtime hard cuts.
-  Reverse-dependency propagation remains release-planner owned.
+- `release/changes/20260809-multi-design-system-high-fidelity.json`
+
+## Release intent rationale
+
+The Changeset is the single PR-owned release intent. It covers the Phase 2 neutral Surface and
+Button foundations, Phase 3 semantic motion and compatible shape interpolation, and the Phase 6
+public One UI 7 five-component alpha artifact. It also records the deliberate
+`viewcompose-overlay-android` coordinate reactivation, neutral transport extraction, explicit root
+selection, Material adapter narrowing, and affected aggregate/runtime hard cuts.
+Reverse-dependency propagation remains release-planner owned.
 
 ## Objective
 

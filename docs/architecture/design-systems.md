@@ -5,8 +5,8 @@
 This document is the normative architecture and onboarding standard for every design system hosted
 by ViewCompose. It applies to Material 3, One UI, product-owned themes, and future design systems.
 New work must follow these boundaries immediately. Known implementation gaps are listed in
-Section 15 and tracked by the active
-[multi-design-system execution plan](../project/plans/multi-design-system-high-fidelity.md).
+Section 15; completed implementation evidence is retained in the
+[archived multi-design-system execution plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/multi-design-system-high-fidelity.md).
 
 ViewCompose is a design-system-neutral declarative runtime over the Android View engine. It is not
 a Material facade, a skinning engine that can restyle any arbitrary component tree, or a second
@@ -442,8 +442,10 @@ The architecture-first convergence is implemented for the current pressure scope
 One intentional gap remains: a second context-changing non-Material system has not demonstrated
 the need for a public host-adapter SPI. Explicit assembly remains safer than a speculative plugin
 surface. Release-device performance, Samsung visual acceptance, and Maven publication remain
-release gates in the [active execution plan](../project/plans/multi-design-system-high-fidelity.md),
-not exceptions below the design-system boundary.
+historical gates closed in the
+[archived execution plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/multi-design-system-high-fidelity.md),
+not exceptions below the design-system boundary. New gaps return to the roadmap or a new active
+plan rather than reopening that record.
 
 ## 16. Related documents
 
@@ -452,4 +454,4 @@ not exceptions below the design-system boundary.
 - [ADR-0005: Design-system host and component backend boundary](./decisions/0005-design-system-host-and-component-backend-boundary.md)
 - [Theming guide](../guides/theming.md)
 - [NodeSpec model](./node-spec.md)
-- [Multi-design-system execution plan](../project/plans/multi-design-system-high-fidelity.md)
+- [Archived multi-design-system execution plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/multi-design-system-high-fidelity.md)

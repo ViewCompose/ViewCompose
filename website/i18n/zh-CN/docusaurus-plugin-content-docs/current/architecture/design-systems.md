@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/design-systems.md
-translation_source_hash: 72ce3af0d54c552074c19823d7223013d958a2a1cf448bd9311b7ace0a88a8f8
+translation_source_hash: 12f1d9a407eee4d08a24a8135af250650ccfbf983b8ea38ea2f0f05322fb9e54
 translation_status: current
 ---
 
@@ -10,8 +10,8 @@ translation_status: current
 
 本文档是 ViewCompose 承载所有设计系统时必须遵守的规范性架构与接入标准，适用于 Material 3、
 One UI、产品自有主题以及未来新增的设计系统。所有新增工作必须立即遵守这些边界。当前已知实现
-缺口列在第 15 节，并由有效的[多设计系统执行计划](https://docs.viewcompose.com/project/plans/multi-design-system-high-fidelity)
-跟踪。
+缺口列在第 15 节；已完成的实现证据保留在
+[多设计系统执行归档计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/multi-design-system-high-fidelity.md)。
 
 ViewCompose 是构建在 Android View 引擎之上的设计系统无关声明式运行时。它不是 Material 的
 外观封装，不是可以任意重绘任何组件树的换肤引擎，也不是第二套只基于 Canvas 的控件工具包。
@@ -395,8 +395,10 @@ Diagnostics 是架构证据，不是可有可无的 Demo 装饰。如果审查�
 
 仍保留一个有意缺口：尚无第二个会改变 Context 的非 Material 系统证明公开 Host Adapter SPI
 确有必要，因此显式组装比推测性 Plugin Surface 更安全。发布设备性能、Samsung 视觉验收与 Maven
-发布仍是[有效执行计划](https://docs.viewcompose.com/project/plans/multi-design-system-high-fidelity)
-中的发布门禁，不构成在设计系统边界下新增例外的理由。
+发布是
+[归档执行计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/multi-design-system-high-fidelity.md)
+中已经闭环的历史门禁，不构成在设计系统边界下新增例外的理由。新增缺口应回到路线图或新的有效
+计划，而不是重新打开这份记录。
 
 ## 16. 关联文档
 
@@ -405,4 +407,4 @@ Diagnostics 是架构证据，不是可有可无的 Demo 装饰。如果审查�
 - [ADR-0005：设计系统 Host 与组件 Backend 边界](./decisions/0005-design-system-host-and-component-backend-boundary.md)
 - [主题指南](../guides/theming.md)
 - [NodeSpec 模型](./node-spec.md)
-- [多设计系统执行计划](https://docs.viewcompose.com/project/plans/multi-design-system-high-fidelity)
+- [多设计系统执行归档计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/multi-design-system-high-fidelity.md)

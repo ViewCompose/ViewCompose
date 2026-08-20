@@ -2,21 +2,21 @@
 
 ## Status
 
-Active. Runtime attribution and the implementation boundary are accepted. Phase 1's shared
-strategy/payload hard cut, Phase 2's compact adapter metadata, and Phase 3's lazy drawing resources
-are complete. Post-GC attribution accepted those changes and rejected optional Phase 4 as
-non-material. Repository validation and unlocked-device diagnostics are complete; formal
-fixed-clock device acceptance remains.
+Completed and archived on 2026-08-20. Phase 1's shared strategy/payload hard cut, Phase 2's compact
+adapter metadata, Phase 3's lazy drawing resources, post-GC attribution, repository validation,
+and the final fixed-clock P99/peak-heap decision are accepted. Optional Phase 4 remains rejected as
+non-material.
 
-Last verified: 2026-08-17.
+Last verified: 2026-08-20.
 
-Next action: repeat the ordinary-list control/candidate pair on the root-controlled reference
-device with the accepted fixed-clock policy. Use that run to decide whether the plan's peak-memory
-and P99 acceptance gates are satisfied and the plan can move to the archive.
+Next action: none for this plan. Cross-engine scroll gaps, RSS/native-resource accounting, startup,
+and monotonic-feed workloads remain separate future performance questions.
 
 ## Maven release changesets
 
 - `release/changes/20260817-lazy-collection-memory-efficiency.json`
+
+## Release intent rationale
 
 The searchable summary is that typed lazy declarations now share one strategy, adapter key and
 view-type metadata are compact and bounded, common shape resources are lazy, post-GC attribution
@@ -184,7 +184,7 @@ share of the live set. Canonicalizing it or other small immutable values would a
 invalidation, and cache ownership complexity without addressing the measured gap, so this phase is
 intentionally omitted.
 
-### Phase 5: benchmark acceptance and documentation — in progress
+### Phase 5: benchmark acceptance and documentation — complete
 
 - Run focused module tests, compiled API samples, API checks, documentation gates, `qaQuick`, and
   the relevant physical-device scenarios.
@@ -221,6 +221,20 @@ Repository acceptance passed `:viewcompose-ui-contract:test`,
 `:viewcompose-renderer-android:testDebugUnitTest`, `verifyDocumentationStructure`,
 `verifyDevelopmentToolingIsolation`, `verifyViewComposeReleaseIntent`, and the complete
 `qaQuick` gate on 2026-08-17.
+
+The final 2026-08-20 fixed-clock pair rebuilt exact control `ea33297b` and candidate `06a411e7`
+for the rooted Xiaomi MI 6 / Android 9 reference device. Both arms used the same benchmark APK,
+`performance.list@5`, five `run-from-apk` iterations, CPU policies fixed at 1.4016/1.8048 GHz,
+Adreno fixed at 515 MHz, stopped vendor performance services, suspended charging, and 35--36
+degrees Celsius starts. Control/candidate frame P50/P95/P99 were respectively
+`5.218/9.248/11.004 ms` and `5.342/9.304/10.523 ms`, with run-P50 CV `0.089/0.068` and stable
+161--164 frame counts. Candidate changes of `+2.37%/+0.60%/-4.37%` are `no material change`, and
+the adverse unlocked P99 direction did not reproduce. Median peak heap changed from `7709` to
+`7591 KiB`, a `118 KiB` (`1.53%`) reduction. Peak samples alone remain noisy, but their direction
+and magnitude corroborate the independently attributed `129,518`-byte and 6,276-object live-set
+reduction. The scoped memory conclusion is `improved`, without claiming a universal process-memory
+winner. The complete interpretation, APK hashes, limitations, and next action are recorded in
+[`docs/tooling/performance.md`](../../tooling/performance.md).
 
 </div>
 
@@ -259,5 +273,10 @@ surfaces avoid unnecessary native drawing objects, logical Session and physical 
 contracts remain fully tested, ordinary-list memory improves beyond measurement noise, and no
 accepted scroll, mutation, preparation, or shadow-list timing metric regresses because work moved
 onto the hot path.
+
+These criteria are met: structural tests and heap attribution prove the intended allocation cuts,
+the fixed-clock peak-heap direction independently agrees, every accepted timing metric remains
+inside the no-regression gate, and the previously adverse unlocked P99 direction reverses under the
+root-controlled protocol.
 
 </div>

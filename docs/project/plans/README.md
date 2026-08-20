@@ -4,29 +4,10 @@ This directory contains multi-step work that is currently active and must surviv
 
 ## Active plans
 
-- [Cross-session theme propagation](./cross-session-theme-propagation.md) — make one observable
-  application theme choice converge across independent Activity roots, add a secondary-Activity
-  switch-and-return Demo, and refresh retained NavHost destinations with the latest Local snapshot
-  before they become visible without recreating their owners or sessions.
-- [Multi-design-system and high-fidelity theme](./multi-design-system-high-fidelity.md) — establish
-  immutable foundation-token and typed component-recipe layers, validate them with a deliberately
-  non-Material internal design system, then stage shared primitives, motion, capability fallbacks,
-  root switching, and a first public high-fidelity non-Material design-system slice without adding
-  design-system policy to Android Renderer.
-- [Material 3 design convergence](./material3-design-convergence.md) — release the completed token,
-  theme-bridge, component-default, touch-target, and state-layer scope; TextField and Switch/Slider
-  structural fidelity remain roadmap candidates that require separate future plans after their
-  activation triggers are met.
-- [Five-layer module architecture hard cut](./five-layer-module-architecture-hard-cut.md) —
-  replace the broad foundation/optional split with enforceable Kernel, UI Foundation, Android
-  Engine, Design System, and Integration layers; rename misleading artifacts, isolate Material 3,
-  converge exclusive package ownership and opaque platform handles, and restore the complete Maven,
-  sample, tooling, and documentation gates after the hard cut.
-- [Demo benchmark and verification harness rearchitecture](./demo-benchmark-verification-harness-rearchitecture.md) —
-  replace the module-oriented, text-coupled Demo with directly launchable revisioned scenarios,
-  locale-independent automation targets, fixture-first benchmark hosts, complete English and
-  Simplified Chinese resources, and optional human guidance before benchmarking Runtime/View patch
-  optimizations against a new stable baseline.
+- [Demo post-release verification closeout](./demo-post-release-verification-closeout.md) — finish
+  the intentionally deferred collection-stress revision-3 fixed-clock baseline, broad bilingual and
+  configuration visual matrix, popup pixel golden, and zero-caller hard deletion of obsolete Demo
+  harness infrastructure after the coordinated framework and Preview-plugin release.
 - [ConstraintLayout parity and performance expansion](./constraintlayout-parity-performance-expansion.md) —
   deliberately deferred post-release work for classified reconciliation fast paths, Grid,
   CircularFlow, broader AndroidX parity, the complete visual/configuration matrix, and
@@ -38,17 +19,10 @@ This directory contains multi-step work that is currently active and must surviv
   slide/scale visibility, seekable transitions, bounds animation, navigation-aware shared motion,
   and request-driven timeline tooling; typed MotionLayout expansion remains explicitly out of
   scope until a future concrete requirement receives its own plan.
-- [Observed property transactions](./observed-property-transactions.md) — hard-cut explicitly
-  observed node properties onto a session-owned, frame-batched transaction path that reads one
-  Snapshot, patches only affected mounted nodes, rolls back the complete batch on failure, and
-  preserves full composition for structural changes.
 - [Diagnostics correlation, inspection, and production observability](./diagnostics-correlation-inspection-observability.md) —
   correlate frames and failures across render sessions, add bounded privacy-safe production failure
   aggregation, highlight real View boundaries only on explicit debug requests, and capture finite
   per-node timing without charging inactive render paths.
-- [Lazy collection memory efficiency](./lazy-collection-memory-efficiency.md) — remove per-element
-  lazy-session callback wrappers, converge duplicate adapter key metadata, and make common shape
-  drawing resources lazy while rejecting any memory win that shifts work into bind or fling paths.
 - [Paging 3 integration](./paging3-integration.md) — integrate official AndroidX Paging through an
   optional custom-presenter bridge, preserving ViewCompose lazy identity and renderer ownership
   without moving paging types or loading policy into the core contract.
@@ -56,8 +30,9 @@ This directory contains multi-step work that is currently active and must surviv
   transaction-aware Android View adapter foundation and independently removable integrations for
   AndroidX Media3, legacy ExoPlayer 2, Google Maps, and CameraX with explicit theme, lifecycle,
   saved-state, construction, ownership, Preview, and device-validation contracts.
-Completed native-widget, component-appearance, tutorial, language-consistency, migration-sample,
-hosted-documentation, and version-retention plans are retained in the
+Completed architecture, design-system, theme-propagation, native-widget, component-appearance,
+tutorial, language-consistency, migration-sample, hosted-documentation, and version-retention plans
+are retained in the
 [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).
 
 Before adding a plan, read [Documentation governance](../documentation-governance.md). A plan must

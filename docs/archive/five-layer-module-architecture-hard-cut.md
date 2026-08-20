@@ -2,7 +2,8 @@
 
 ## Status
 
-Completed; awaiting release-time archival. The post-implementation ownership audit is closed:
+Completed and archived for the coordinated Maven release on 2026-08-20. The post-implementation
+ownership audit is closed:
 published artifacts now have exclusive canonical package roots, UI Foundation coordinates Android
 execution only through opaque platform handles, and Host Android owns the concrete Android
 environment, focus, diagnostics, and overlay-provider discovery boundaries. Compatibility facades
@@ -10,17 +11,18 @@ for superseded Maven coordinates or package roots remain explicitly out of scope
 publication metadata, samples, tooling, active English documentation, reviewed Chinese mirrors,
 and every required gate agree again.
 
-Last verified: 2026-08-06.
+Last verified: 2026-08-20.
 
-Next action: review and commit the completed hard cut, then select its artifacts for a Maven
-release. The normal release workflow will freeze the source revision, archive this plan
-immediately before publication, and then permit the selected artifacts to enter Maven Central
-staging.
+Release disposition: retain the selected artifacts in the coordinated Maven plan and complete the
+normal source-freeze, metadata, staging, and publication sequence.
 
 ## Maven release changesets
 
-- `release/changes/20260806-five-layer-module-hard-cut.json` records the breaking coordinate and
-  API changes plus affected existing artifacts.
+- `release/changes/20260806-five-layer-module-hard-cut.json`
+
+## Release intent rationale
+
+The Changeset records the breaking coordinate and API changes plus affected existing artifacts.
 
 ## Objective
 

@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 5806a0c42d20f0fa542cfd28b92d74079e108ae76ebe870b61d270c13c12a53c
+translation_source_hash: d0de7e0f17d27557a9ac993edc27272f3453ff04576e08794ba7f755113e3308
 translation_status: current
 ---
 
@@ -73,7 +73,7 @@ React、navbar、footer 或 sidebar 新增消息 key 时运行 `npm run write-tr
 
 单 Locale 搜索索引预算为 6.25 MiB。加入可搜索的[多设计系统架构标准](../architecture/design-systems.md)、
 ADR-0005 及包含大量证据的
-[有效执行计划](https://docs.viewcompose.com/project/plans/multi-design-system-high-fidelity)后，实测英文
+[归档执行记录](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/multi-design-system-high-fidelity.md)后，实测英文
 索引约 4.1 MiB、中文约 4.4 MiB，因此预算首次从 4 MiB 上调。完整 One UI 与 Overlay 架构记录
 以及新增的九份中文镜像进入索引后，完整构建实测英文约 4.4 MiB、中文约 4.7 MiB，因此经审查的
 上限调整为 5 MiB。加入 Host 所有的 Android 资源环境与事务式 Effect 生命周期契约后，实测

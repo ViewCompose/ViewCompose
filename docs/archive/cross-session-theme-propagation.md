@@ -2,7 +2,7 @@
 
 ## Status
 
-Completed; awaiting linked Maven changeset publication and release-time archival. Pull request
+Completed and archived for the coordinated Maven release on 2026-08-20. Pull request
 [#88](https://github.com/ViewCompose/ViewCompose/pull/88) merged the Demo and navigation
 implementation into `main` at `7b1f5f5a`. Scoped automated and manual validation passed, and the
 formerly unrelated 15-failure Demo device baseline was subsequently repaired in
@@ -12,13 +12,12 @@ green.
 This plan owns the bounded correction for application theme changes that cross Activity root
 sessions and retained `NavHost` destination sessions. It remains canonical English-only under the
 documentation-governance policy. Durable contracts are recorded in the active theming, navigation,
-architecture, and module documents. This file remains active only because the linked Maven
-changeset has not yet been published.
+architecture, and module documents. The linked Changeset entered the coordinated release plan
+before this record moved to the archive.
 
-Last verified: 2026-08-14.
+Last verified: 2026-08-20.
 
-Next action: include the linked immutable changeset in the intended Maven release and archive this
-plan immediately before Maven Central upload.
+Release disposition: include the linked immutable Changeset in the coordinated Maven release.
 
 ## Maven release changesets
 

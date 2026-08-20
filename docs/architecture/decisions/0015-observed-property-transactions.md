@@ -119,8 +119,8 @@ incorrect inputs list. Contract violations are observable failures with a clear 
 
 ## Validation and rollout
 
-Implementation follows the active
-[observed property transactions plan](../../project/plans/observed-property-transactions.md). The
+Implementation evidence is retained in the archived
+[observed property transactions plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/observed-property-transactions.md). The
 hard cut requires Q3 KDoc and compiled samples, fake-engine and Android failure injection, Local and
 resource-change tests, lifecycle/disposal tests, API and module documentation, Chinese mirrors, one
 release changeset, accepted three-engine benchmark evidence, and all repository quality gates.

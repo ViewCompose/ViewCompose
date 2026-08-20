@@ -576,6 +576,11 @@ acceptance ceiling. The non-rooted device also emitted the Runtime Image warning
 across reruns because Macrobenchmark could not clear application profiles. Section 2.4.2 supplies
 the later root-controlled six-method acceptance matrix. The residual ViewCompose-versus-native P95
 gap remains Android property invalidation plus measure/draw tail, not complete-tree reconciliation.
+The timing distribution is not accepted, but its API-33 R8 trace is accepted as phase-attribution
+evidence: property frames entered `VC.ObservedPropertyRead` and `VC.ObservedPropertyRender`
+without returning to the root `VC.Compose` and complete-tree `VC.RenderTree` path. Unlocked DVFS
+changes phase duration, not whether those sections were entered. This functional trace evidence is
+therefore paired with, rather than substituted for, the fixed-clock timing matrix below.
 
 #### 2.4.2 Root-controlled revision-4 acceptance and remaining tails
 
@@ -615,8 +620,10 @@ Correctness tests also cover a State read shared by an observed property and a s
 `RecomposeBoundary`: the full structural frame now refreshes the dirty observed value inside the
 same Snapshot instead of committing a mixed old/new frame. Android 9 cannot expose application
 trace sections from a non-debuggable APK because manifest `profileable` support begins on API 29;
-therefore the six-method timing matrix is accepted, but the plan's final `VC.ObservedProperty*`
-Perfetto attribution remains pending on an API-29-or-newer reference device.
+therefore the six-method timing matrix is accepted from this root-controlled device, while the
+API-33 R8 trace above independently closes the `VC.ObservedProperty*` phase-attribution
+requirement. Neither result is used outside the dimension it can support: Xiaomi owns stable
+timing, and Samsung owns phase presence.
 
 The corrected list mutation trace localizes its remaining tail to the frame-aligned framework
 transaction rather than Android traversal. Representative worst frames spent 27.7--41.3 ms in
@@ -835,11 +842,39 @@ the implemented allocation cuts; it does not quantify native resource bytes or r
 fixed-clock peak-memory run. The next action is one root-controlled ordinary-list control/candidate
 pair, with P99 and peak heap as the remaining acceptance decisions.
 
+The fixed-clock closure ran on 2026-08-20 on the same rooted Xiaomi MI 6 / Android 9 reference
+device. Exact control `ea33297b` and candidate `06a411e7` were rebuilt as R8 benchmark targets;
+their target APK SHA-256 values were respectively
+`ecd201dd3f3843b9abac7cb42011ad2a398612b7a31053a30e2036114a61aa99` and
+`f2fc39ab7add472d3627382672e5eaa7a81ce2cef77ebb704b3e064eb2ae67d5`. Both used the same
+benchmark APK (`0580ce4e8a6b6f93a369fccff2acf23fcc7e0d8519cf869a421e10f2816070fd`),
+`performance.list@5`, five `run-from-apk` iterations, CPU policies fixed at 1.4016/1.8048 GHz,
+Adreno fixed at 515 MHz, suspended charging, stopped vendor performance services, and 35--36
+degrees Celsius starts. The temporary Magisk compatibility wrapper and every device control were
+restored after each arm.
+
+| Arm | Frames by run | P50/P90/P95/P99, ms | Median peak heap, KiB | Run-P50 CV |
+| --- | --- | ---: | ---: | ---: |
+| Control | `162/162/164/162/161` | 5.218 / 8.517 / 9.248 / 11.004 | 7709 | 0.089 |
+| Candidate | `162/161/161/164/163` | 5.342 / 8.506 / 9.304 / 10.523 | 7591 | 0.068 |
+
+Candidate P50/P90/P95/P99 changed by `+2.37%/-0.13%/+0.60%/-4.37%`; no frame metric crosses
+the combined gate, every stability value passes `0.15`, and the previously adverse unlocked P99
+direction disappears. Timing is therefore `no material change`. Median peak heap falls by
+`118 KiB` (`1.53%`). The peak samples remain too variable to claim a general process-memory win by
+themselves, but this fixed-clock direction and magnitude agree with the independently attributed
+`129,518`-byte and 6,276-object live-set reduction. The scoped memory conclusion is therefore
+`improved`: the implemented allocation cuts are retained without moving work into scrolling.
+Limitations are explicit: this pair does not measure RSS, native-resource bytes, startup,
+monotonic feeds, or cross-engine ranking. Those are future workload questions rather than blockers
+for the completed allocation plan.
+
 </div>
 
 The searchable conclusion is `no material change` for ordinary-list and shadow-list frame timing,
-`inconclusive` for noisy process peak memory, and `improved` for the attributed post-GC live set.
-The remaining decision is a root-controlled ordinary-list pair covering P99 and peak heap.
+`inconclusive` for peak process memory in isolation, and `improved` for the attributed allocation
+result corroborated by the fixed-clock peak-heap direction. The allocation plan's P99 and memory
+acceptance decisions are complete.
 
 The preceding A/B evidence covers only a steady alternation between two already-constructed
 revision-5 snapshots, which directly favors the bounded two-generation identity cache. It does not

@@ -2,8 +2,8 @@
 
 ## Status
 
-Completed for the retained Phase 0 through Phase 2 release scope; awaiting linked Maven changeset
-publication and release-time archival. Phase 2 accepted independently revertible effective-target
+Completed for the retained Phase 0 through Phase 2 release scope and archived for the coordinated
+Maven release on 2026-08-20. Phase 2 accepted independently revertible effective-target
 changes for Button and the native Checkbox, RadioButton, Switch, and Slider controls plus a bounded
 action/composite state-layer slice through a small renderer-neutral contract. Chip touch-target
 expansion remains an untriggered conditional candidate and does not block this plan. The Settings
@@ -15,10 +15,10 @@ governance policy. Durable retained contracts are recorded in the theme guide an
 manuals. The former Phase 3 and Phase 4 structural experiments are deferred enhancement candidates,
 not current release work; their activation triggers are recorded in the unified roadmap.
 
-Last verified: 2026-08-14.
+Last verified: 2026-08-20.
 
-Next action: release the retained Phase 1 and Phase 2 changesets, then archive this plan immediately
-before Maven Central upload. Do not create production work for a deferred candidate until its
+Release disposition: release the retained Phase 1 and Phase 2 Changesets. Do not create production
+work for a deferred candidate until its
 roadmap trigger is met and a separate narrow active plan owns its baseline, implementation,
 rollback, documentation, and release intent.
 

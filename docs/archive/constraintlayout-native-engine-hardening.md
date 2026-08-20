@@ -245,7 +245,7 @@ container.
 | [Unified roadmap](../project/roadmap.md) | Current capability state and the two-stage next-focus statement | Must name both plans and keep first-release work separate from post-release expansion |
 | [ConstraintLayout module manual](../modules/viewcompose-constraintlayout-androidx/README.md) | Current public API, behavior, limitations, migration, and performance guidance | Must receive durable conclusions from each accepted phase rather than leaving them only in a plan |
 | [Animation Compose-capability expansion](../project/plans/animation-compose-capability-expansion.md) | Bounds animation and shared-motion decisions | Unchanged; neither ConstraintLayout plan introduces MotionScene or a competing animation engine |
-| [Demo benchmark and verification harness rearchitecture](../project/plans/demo-benchmark-verification-harness-rearchitecture.md) | Reusable scenario, screenshot, fixture, and benchmark infrastructure | Unchanged; this plan owns only the ConstraintLayout fixtures, assertions, and interpreted evidence added through that harness |
+| [Demo benchmark and verification harness rearchitecture](./demo-benchmark-verification-harness-rearchitecture.md) | Reusable scenario, screenshot, fixture, and benchmark infrastructure | Unchanged; this plan owns only the ConstraintLayout fixtures, assertions, and interpreted evidence added through that harness |
 | Android Renderer transaction and failure documentation | Framework-wide renderer commit, rollback, and failure-report concepts | Remains authoritative; this plan integrates with those contracts instead of creating a private incompatible failure model |
 
 The split is a real release boundary, not an acceptance loophole. Any defect that can produce wrong
