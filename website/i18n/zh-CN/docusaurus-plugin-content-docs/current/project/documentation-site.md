@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: d0de7e0f17d27557a9ac993edc27272f3453ff04576e08794ba7f755113e3308
+translation_source_hash: 4f892881334405479a0251c7e5f054f8dd74879dbb3cb632a8e91f5e9cc6a201
 translation_status: current
 ---
 
@@ -24,6 +24,10 @@ translation_status: current
    重建每个 revision，运行当前维护的 Dokka 工具，把每个制品/版本树复制到忽略目录
    `website/generated/api/`，并验证完整 manifest、不可变路由、别名和固定源码链接。列在
    `release.unpublishedModules` 中的产物只从工作树生成可变 `current` API，不伪造不可变版本路由。
+   重建前，生成器会先在本地验证每个完整 source SHA。若采用 squash 合并的发布 PR 已删除临时
+   分支，导致冻结提交不在 checkout 中，生成器只会从 `origin` 以深度一补取该精确 SHA，并再次
+   验证所得对象确为 commit；它不会改用可移动分支、标签或较新的 revision，无法取得 SHA 时构建
+   直接失败。
    若冻结 revision 早于依赖契约注册表，临时文档工作区只为配置当前 Dokka 工具生成空契约行；
    编译仍以该 revision 的 Gradle 构建为准，这些临时契约不会参与发布。
 5. 站点生成器读取发布元数据、不可变注册表和 `docs/modules/README.md`，从同一冻结 Git
@@ -158,6 +162,8 @@ alpha、beta、RC、snapshot、preview、development 和 EAP 不得成为 `lates
 
 由于记录提交会改变元数据提交，发布分两步：先在一个提交冻结模块源码、注释、编译样例和手册；
 再用仅含元数据的发布提交追加历史记录并更新版本/revision。冻结提交必须推送且在 Git 历史可达。
+临时源码分支删除后，文档生成器可以恢复该精确完整 SHA，但发布元数据不得把它替换成 squash
+提交或其他方便取得的 revision。
 
 `release.retiredModules` 让被替代坐标继续保留在不可变文档历史中，但不会重新进入活动模块目录；
 API 首页会把它们列入独立的 Retired 历史分组。`release.unpublishedModules` 只允许包含尚未首发的
@@ -169,7 +175,8 @@ API 首页会把它们列入独立的 Retired 历史分组。`release.unpublishe
 所有 API 和模块手册路由。当前模块均为预发布版本，因此不生成 `latest`。
 
 生成 HTML、目录和手册快照都不提交。干净 checkout 从注册表记录的不可变 revision 重建完整
-历史，因此文档工作流 checkout 完整 Git 历史，不使用 shallow clone。
+历史。文档工作流会 checkout 远端公开的完整 Git 历史，只对其中缺失且已登记的 SHA 以深度一
+单独补取，不依赖永久保留临时发布分支。
 
 每次模块发布：
 

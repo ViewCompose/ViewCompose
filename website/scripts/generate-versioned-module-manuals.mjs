@@ -52,10 +52,31 @@ function routeForMarkdown(sourcePath, target) {
   if (['readme', 'index'].includes(routeSegments.at(-1)?.toLowerCase())) routeSegments.pop();
   const route = `/${routeSegments.join('/')}`;
   const slashTerminatedRoute = route === '/' ? route : `${route}/`;
-  return `${slashTerminatedRoute}${fragment ?? ''}`;
+  const targetRoute = `${slashTerminatedRoute}${fragment ?? ''}`;
+  return fragment ? `https://docs.viewcompose.com${targetRoute}` : targetRoute;
 }
 
-export function rewriteSnapshotLinks(content, {artifact, order, entries, sourcePath}) {
+function repositoryFileUrl(sourcePath, target, sourceRevision) {
+  const [path, suffix] = target.split(/(?=[?#])/u, 2);
+  const resolved = posix.normalize(posix.join(posix.dirname(sourcePath), path));
+  if (
+    posix.isAbsolute(resolved) ||
+    resolved === '..' ||
+    resolved.startsWith('../') ||
+    resolved.startsWith('docs/')
+  ) {
+    return undefined;
+  }
+  return (
+    `https://github.com/ViewCompose/ViewCompose/blob/${sourceRevision}/${resolved}` +
+    (suffix ?? '')
+  );
+}
+
+export function rewriteSnapshotLinks(
+  content,
+  {artifact, order, entries, sourcePath, sourceRevision},
+) {
   const versionAtRelease = (targetArtifact) =>
     entries
       .filter((entry) => entry.artifact === targetArtifact && entry.order <= order)
@@ -73,7 +94,10 @@ export function rewriteSnapshotLinks(content, {artifact, order, entries, sourceP
     const target = rawTarget.trim().replace(/^<|>$/gu, '');
     if (!target.startsWith('.')) return link;
     const route = routeForMarkdown(sourcePath, target);
-    if (!route) return link;
+    if (!route) {
+      const repositoryUrl = repositoryFileUrl(sourcePath, target, sourceRevision);
+      return repositoryUrl ? `](${repositoryUrl})` : link;
+    }
     const moduleRoute = /^\/modules\/(viewcompose-[a-z0-9-]+)\/(#.*)?$/u.exec(route);
     if (!moduleRoute) return `](${route})`;
     const version = versionAtRelease(moduleRoute[1]);
@@ -95,6 +119,7 @@ export function versionedManualDocument(entry, source, entries) {
     order: entry.order,
     entries,
     sourcePath,
+    sourceRevision: entry.sourceRevision,
   });
   const title = /^#\s+(.+)$/mu.exec(body)?.[1] ?? entry.artifact;
   const revisionUrl =

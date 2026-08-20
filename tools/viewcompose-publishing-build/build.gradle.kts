@@ -3,6 +3,10 @@ plugins {
     `java-gradle-plugin`
 }
 
+kotlin {
+    jvmToolchain(17)
+}
+
 group = "com.viewcompose.build"
 
 dependencies {

@@ -95,13 +95,33 @@ An artifact must be registered before its first Central publication, but its fin
 created only after Central reports `Published`. Record that temporary state in
 `release.unpublishedModules` inside `gradle/viewcompose-publishing.properties`. Only artifacts in
 that explicit set may lack a Maven release tag. For them, the planner scans Changesets from
-repository inception, requires a direct release declaration, and recommends the already-registered
-initial version and source revision without advancing or duplicating documentation history.
+repository inception, requires a direct release declaration, keeps the already-registered initial
+version, and pins the source revision to the clean planning commit without duplicating
+documentation history.
 
-After the first signed tag is pushed, remove the artifact from `release.unpublishedModules` in the
-next repository change. Planning fails if an unmarked artifact has no tag, if a marked artifact
-already has a tag, or if checked-in version metadata has advanced beyond the latest tag. These
+After the first signed tag is pushed, append the exact published artifact/version/source-revision
+triple to `gradle/viewcompose-documentation-releases.properties` and remove the artifact from
+`release.unpublishedModules` in the next repository change. Planning fails if an unmarked artifact
+has no tag, if a marked artifact already has a tag, if the current triple has no immutable
+documentation record, or if checked-in version metadata has advanced beyond the latest tag. These
 failures distinguish a genuine first release from missing fetched tags and stale release state.
+
+### 2026-08-20 coordinated-release provenance correction
+
+The twelve artifacts first published in the 2026-08-20 coordinated release were built from frozen
+source commit `143b09acf3bfcda81add008b4dcf09d06a09e2dc`. Their signed tags correctly target release
+commit `b8315d326342797b0dee5e2a343ec84d2beaa764`, but their annotations inherited registration-time
+source revisions instead of the frozen source revision. Every affected module changed after its
+recorded registration revision; three AndroidX-renamed modules did not yet exist under their
+published artifact names at the recorded revision.
+
+Published tags are immutable and are not moved or replaced. The publishing metadata and the
+not-yet-merged immutable documentation records use `143b09acf3bfcda81add008b4dcf09d06a09e2dc` as
+the canonical source provenance for those first releases. Release preparation now refreshes a
+first release's source revision to the clean planning commit while preserving its registered
+initial version, preventing the registration baseline from being mistaken for released source
+again. The original signed annotations remain historical evidence of this corrected workflow
+defect rather than canonical API-source provenance.
 
 ## Per-pull-request release intent
 
@@ -171,7 +191,7 @@ reads its single strict `sourceRevision` token for source and API-documentation 
 target's immutable release commit—not mutable current publishing metadata—is the comparison and
 Changeset-consumption boundary because it is the exact repository state used for publication. A
 Changeset or publication input merged after source freeze but included in that release is therefore
-not replayed as a new release. Explicit first releases use the registered source revision and
+not replayed as a new release. Explicit first releases use the clean planning revision and the
 repository-history rule above. The planner then:
 
 1. loads Changesets and publication-relevant direct paths introduced between the release-tag target
@@ -202,17 +222,23 @@ After the source commit is reviewed and frozen, apply only the confirmed plan:
   -PviewComposeReleaseVersions=viewcompose-runtime=0.1.0-alpha02,viewcompose-ui-contract=0.1.0-alpha02
 ```
 
-The confirmed artifact set must exactly match the plan and every version must advance. The task
-updates only those modules in `gradle/viewcompose-publishing.properties`, pins their
-`sourceRevision` to the clean planning commit, and appends immutable entries to
-`gradle/viewcompose-documentation-releases.properties`. Review and commit that diff as the
-metadata-only release commit. Publication selection must match `build/release-plan.json`; after
-Central reports `Published`, create the signed per-artifact tags described above.
+The confirmed artifact set must exactly match the plan. Previously published versions must
+advance; a first release must keep its registered initial version. The task pins every selected
+module's `sourceRevision` to the clean planning commit, updates versions only for previously
+published artifacts, and appends immutable documentation entries only for those advancing
+versions. A first release receives its immutable entry after its signed tag is pushed, as described
+above. Review and commit the prepared diff as the metadata-only release commit. Publication
+selection must match `build/release-plan.json`; after Central reports `Published`, create the signed
+per-artifact tags described above.
 
-Versioned module manuals rewrite source-relative Markdown targets to their public documentation
-routes, including Docusaurus number-prefix removal such as `0009-development-tooling-isolation.md`
-to `development-tooling-isolation/`. The production site build remains the authoritative
-broken-link gate for every generated release snapshot.
+Versioned module manuals rewrite source-relative Markdown targets inside `docs/` to their public
+documentation routes, including Docusaurus number-prefix removal such as
+`0009-development-tooling-isolation.md` to `development-tooling-isolation/`. Relative repository
+file targets outside `docs/`, such as compiled sample sources, become GitHub `blob` links pinned to
+the same immutable source revision. Cross-page links with fragments use the canonical English site
+because the same canonical-English historical snapshot is also served under the `zh-CN` route and
+must not resolve an English heading fragment against a translated heading. The production site
+build remains the authoritative broken-link gate for every generated release snapshot.
 
 The backfill Changeset dated 2026-08-04 classifies publication-relevant changes made after the
 first Central boundary and before this workflow existed. It is a one-time migration record, not a
@@ -457,9 +483,21 @@ checks, create a manual Central Portal deployment with:
   -PviewComposePublishModules=viewcompose-runtime,viewcompose-navigation-core
 ```
 
-The task deliberately has no all-module default, rejects `-SNAPSHOT` versions, and uploads as a
-user-managed deployment. Inspect Central validation results before clicking Publish in the Portal.
-Public release is therefore kept separate from the Gradle upload command.
+The task deliberately has no all-module default and rejects `-SNAPSHOT` versions. It clears one
+root-owned staging repository, publishes every selected module into that repository, creates
+`build/central-release/viewcompose-central-bundle.zip`, and uploads the bundle through the official
+Portal Publisher API with `publishingType=USER_MANAGED`. It prints the returned deployment ID,
+polls until the deployment reaches `VALIDATED` or `FAILED`, and writes the ID, state, bundle name,
+and SHA-256 to `build/central-release/viewcompose-central-deployment.json`. A failed validation or
+timeout fails the Gradle build; when an ID was already assigned, the record remains available for
+Portal diagnosis.
+
+Reaching `VALIDATED` does not publish immutable artifacts. Review the recorded deployment and its
+staging consumption before clicking Publish in the Portal. If a run fails after printing an ID,
+inspect or drop that deployment before retrying; a retry creates another deployment. Coordinated
+production releases must use the root task above. Module-specific Vanniktech Central tasks remain
+guarded low-level diagnostics and can create separate deployments, so they are not the coordinated
+release path.
 
 ## Android Studio plugin
 

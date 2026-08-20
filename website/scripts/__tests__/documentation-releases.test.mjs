@@ -125,20 +125,25 @@ test('rewrites historical manuals to immutable API and public document routes', 
     '[API](https://docs.viewcompose.com/api/viewcompose-runtime/current/) ' +
       '[Architecture](../../architecture/overview.md) ' +
       '[ADR](../../architecture/decisions/0009-development-tooling-isolation.md#activation) ' +
-      '[Widget](../viewcompose-widget-core/README.md)',
+      '[Widget](../viewcompose-widget-core/README.md) ' +
+      '[Sample](../../../viewcompose-runtime/src/test/samples/RuntimeSamples.kt#example)',
     {
       artifact: 'viewcompose-runtime',
       order: 0,
       entries,
       sourcePath: 'docs/modules/viewcompose-runtime/README.md',
+      sourceRevision: revision,
     },
   );
   assert.equal(
     rewritten,
     '[API](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha01/) ' +
       '[Architecture](/architecture/overview/) ' +
-      '[ADR](/architecture/decisions/development-tooling-isolation/#activation) ' +
-      '[Widget](/modules/viewcompose-widget-core/0.1.0-alpha01/)',
+      '[ADR](https://docs.viewcompose.com/architecture/decisions/' +
+      'development-tooling-isolation/#activation) ' +
+      '[Widget](/modules/viewcompose-widget-core/0.1.0-alpha01/) ' +
+      `[Sample](https://github.com/ViewCompose/ViewCompose/blob/${revision}/` +
+      'viewcompose-runtime/src/test/samples/RuntimeSamples.kt#example)',
   );
 
   const document = versionedManualDocument(entries[0], '# Runtime\n\nBody.\n', entries);

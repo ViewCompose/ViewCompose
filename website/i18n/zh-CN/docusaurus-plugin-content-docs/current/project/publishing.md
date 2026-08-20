@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: 3a86778db87190edec4c6db7e2a9b92e3dcd18f0d65d3b5692ffd5f0d7348321
+translation_source_hash: 222f324c5012acf09d2ba6f3290df15b0ca4741651ce0349457b222ba2670900
 translation_status: current
 ---
 
@@ -88,12 +88,27 @@ tag，且注释必须声明该记录由历史重建。禁止把补建 tag 默认
 制品必须在首次 Central 发布前登记，但最终 release tag 只能在 Central 显示 `Published` 后创建。
 该临时状态记录在 `gradle/viewcompose-publishing.properties` 的 `release.unpublishedModules` 中；只有
 这个显式集合内的制品可以暂时没有 Maven release tag。对于这些制品，规划器会从仓库起点扫描
-Changeset，要求直接发布声明，并推荐已经登记的初始版本与 source revision，不会提前升级版本或重复
-追加文档历史。
+Changeset，要求直接发布声明，保留已经登记的初始版本，并把 source revision 固定为干净的规划提交，
+不会重复追加文档历史。
 
-首个 signed tag 推送后，应在下一次仓库改动中把制品移出 `release.unpublishedModules`。以下状态都会
-使规划失败：未标记制品缺少 tag、已标记制品已经存在 tag，或入库版本元数据领先于最新 tag。这样可
-区分真正的首次发布、未拉取 tag 和过期发布状态。
+首个 signed tag 推送后，应在下一次仓库改动中把实际发布的制品、版本、source revision 三元组追加到
+`gradle/viewcompose-documentation-releases.properties`，并把制品移出
+`release.unpublishedModules`。以下状态都会使规划失败：未标记制品缺少 tag、已标记制品已经存在
+tag、当前三元组缺少不可变文档记录，或入库版本元数据领先于最新 tag。这样可区分真正的首次发布、
+未拉取 tag 和过期发布状态。
+
+### 2026-08-20 协同发布来源修正
+
+2026-08-20 协同发布中首次发布的 12 个制品，均从冻结源码提交
+`143b09acf3bfcda81add008b4dcf09d06a09e2dc` 构建。它们的签名 tag 正确指向 release commit
+`b8315d326342797b0dee5e2a343ec84d2beaa764`，但 tag 注释错误继承了制品登记时的 source revision，
+而不是冻结源码 revision。所有受影响模块在所记录的登记 revision 之后都继续发生过变化；其中三个
+采用 AndroidX 新名称的模块，在记录的 revision 上甚至还没有以发布制品名存在。
+
+已发布 tag 不可变，因此不会移动或替换。发布元数据和尚未合并的不可变文档记录改用
+`143b09acf3bfcda81add008b4dcf09d06a09e2dc` 作为这些首次发布的权威源码来源。发布准备流程现在会在
+保留已登记初始版本的同时，把首次发布的 source revision 更新为干净的规划提交，避免再次把登记基线
+误当成发布源码。原有签名注释继续作为该流程缺陷已被修正的历史证据，不再作为权威 API 源码来源。
 
 ## 每个 PR 的发布意图
 
@@ -152,7 +167,7 @@ git fetch origin main --tags
 签名，并读取唯一且严格的 `sourceRevision` token，用于源码和 API 文档来源追溯。tag 指向的不可变
 release commit，而不是可变的当前发布元数据，是统一的变更比较与 Changeset 消费边界，因为它就是
 发布时使用的精确仓库状态。因此，源码冻结后合入、但已包含在该次发布中的 Changeset 或发布输入，
-不会被重复计算为下一次发布。显式首次发布使用已登记的 source revision 和上文的仓库历史规则。
+不会被重复计算为下一次发布。显式首次发布使用干净的规划 revision 和上文的仓库历史规则。
 规划器随后：
 
 1. 读取 release tag 目标到 `HEAD` 之间新增的 Changeset 与影响发布的直接路径；
@@ -178,15 +193,19 @@ minor，`breaking` 在 `1.0` 后增加 major、在 `0.x` 增加 minor。预发�
   -PviewComposeReleaseVersions=viewcompose-runtime=0.1.0-alpha02,viewcompose-ui-contract=0.1.0-alpha02
 ```
 
-确认的制品集合必须与计划完全一致，且所有版本必须前进。任务只更新选定模块在
-`gradle/viewcompose-publishing.properties` 中的版本，把 `sourceRevision` 固定为干净的规划提交，
-并向 `gradle/viewcompose-documentation-releases.properties` 追加不可变记录。审阅该 diff 后，以仅
-元数据 release commit 提交。发布选择必须与 `build/release-plan.json` 一致；Central 显示
-`Published` 后，再按前文规则创建每制品签名 tag。
+确认的制品集合必须与计划完全一致。已发布制品的版本必须前进；首次发布必须保留已登记的初始版本。
+任务把所有选中模块的 `sourceRevision` 固定为干净的规划提交，只更新已发布制品的版本，并只为这些
+版本前进的制品向 `gradle/viewcompose-documentation-releases.properties` 追加不可变文档记录。首次发布
+按前文规则，在签名 tag 推送后再追加不可变记录。审阅准备好的 diff 后，以仅元数据 release commit
+提交。发布选择必须与 `build/release-plan.json` 一致；Central 显示 `Published` 后，再按前文规则
+创建每制品签名 tag。
 
-版本化模块手册会把源码中的相对 Markdown 目标改写为公开文档路由，包括移除 Docusaurus 数字
-前缀，例如把 `0009-development-tooling-isolation.md` 改写为
-`development-tooling-isolation/`。生产站点构建仍是所有已生成发布快照的权威断链门禁。
+版本化模块手册会把 `docs/` 内的相对 Markdown 目标改写为公开文档路由，包括移除 Docusaurus 数字
+前缀，例如把 `0009-development-tooling-isolation.md` 改写为 `development-tooling-isolation/`。
+`docs/` 外的相对仓库文件目标（例如编译样例源码）会改写成固定到同一不可变 source revision 的
+GitHub `blob` 链接。带 fragment 的跨页面链接使用权威英文站点，因为同一份权威英文历史快照也会在
+`zh-CN` 路径提供，不能把英文标题 fragment 解析到翻译后的标题上。生产站点构建仍是所有已生成
+发布快照的权威断链门禁。
 
 2026-08-04 的 backfill Changeset 一次性记录了首个 Central 边界之后、此流程建立之前影响发布的
 改动。它只是迁移记录，不能作为以后在合并后补写发布意图的先例。
@@ -388,8 +407,18 @@ CI 使用 `ORG_GRADLE_PROJECT_mavenCentralUsername` 与
   -PviewComposePublishModules=viewcompose-runtime,viewcompose-navigation-core
 ```
 
-该任务没有全模块默认值，拒绝 `-SNAPSHOT`，上传为 user-managed deployment。点击 Portal 的
-Publish 前检查 Central validation；公开发布与 Gradle upload 刻意分离。
+该任务没有全模块默认值，并拒绝 `-SNAPSHOT`。它会清空一个由根工程持有的 staging repository，
+把全部选定模块发布到同一 repository，生成
+`build/central-release/viewcompose-central-bundle.zip`，再通过官方 Portal Publisher API 以
+`publishingType=USER_MANAGED` 上传。任务会输出 Central 返回的 deployment ID，轮询到
+`VALIDATED` 或 `FAILED`，并把 ID、状态、bundle 名称和 SHA-256 写入
+`build/central-release/viewcompose-central-deployment.json`。验证失败或超时会使 Gradle 构建失败；
+如果 Central 已经分配 ID，该记录仍会保留，供 Portal 排查。
+
+到达 `VALIDATED` 不会公开不可变制品。点击 Portal 的 Publish 前，必须审阅记录的 deployment 并从
+staging 验证消费。如果任务输出 ID 后失败，应先检查或 drop 该 deployment，再决定是否重试；重试会
+创建另一个 deployment。协同生产发版必须使用上述根任务。模块级 Vanniktech Central 任务仅保留为
+受门禁保护的底层诊断能力，且可能分别创建 deployment，不属于协同发版路径。
 
 ## Android Studio 插件
 

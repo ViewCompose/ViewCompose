@@ -451,7 +451,7 @@ internal class ViewComposeReleasePlanner(
                 } else {
                     baseline.currentVersion.recommend(impact)
                 },
-                sourceRevision = baseline.registeredSourceRevision ?: head,
+                sourceRevision = head,
                 impact = impact,
                 reason = when {
                     baseline.firstRelease -> "first release changeset"
@@ -572,13 +572,15 @@ internal object ReleaseMetadataPreparer {
             }
         }
         var publishing = publishingFile.readText()
-        confirmedVersions.toSortedMap().filterKeys { artifact ->
-            !planned.getValue(artifact).firstRelease
-        }.forEach { (artifact, version) ->
+        confirmedVersions.toSortedMap().forEach { (artifact, version) ->
+            val release = planned.getValue(artifact)
+            if (!release.firstRelease) {
+                publishing = publishing.replaceRequiredProperty(
+                    "module.$artifact.version",
+                    version.toString(),
+                )
+            }
             publishing = publishing.replaceRequiredProperty(
-                "module.$artifact.version",
-                version.toString(),
-            ).replaceRequiredProperty(
                 "module.$artifact.sourceRevision",
                 sourceRevision,
             )

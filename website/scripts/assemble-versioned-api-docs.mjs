@@ -64,15 +64,52 @@ function run(command, args, options = {}) {
 
 function capture(command, args, options = {}) {
   return new Promise((accept, reject) => {
-    const child = spawn(command, args, {stdio: ['ignore', 'pipe', 'inherit'], ...options});
+    const child = spawn(command, args, {stdio: ['ignore', 'pipe', 'pipe'], ...options});
     const chunks = [];
+    const errors = [];
     child.stdout.on('data', (chunk) => chunks.push(chunk));
+    child.stderr.on('data', (chunk) => errors.push(chunk));
     child.on('error', reject);
     child.on('exit', (code, signal) => {
       if (code === 0) accept(Buffer.concat(chunks).toString('utf8'));
-      else reject(new Error(`${command} exited with ${code ?? signal}`));
+      else {
+        const detail = Buffer.concat(errors).toString('utf8').trim();
+        reject(new Error(`${command} exited with ${code ?? signal}${detail ? `: ${detail}` : ''}`));
+      }
     });
   });
+}
+
+export async function ensureRevisionAvailable(
+  revision,
+  {root = repositoryRoot, captureCommand = capture} = {},
+) {
+  if (!/^[a-f0-9]{40}$/u.test(revision)) {
+    throw new Error(`Frozen source revision must be a full lowercase Git SHA: ${revision}`);
+  }
+  const verify = () =>
+    captureCommand('git', ['cat-file', '-e', `${revision}^{commit}`], {cwd: root});
+  try {
+    await verify();
+    return false;
+  } catch {
+    // A source revision may belong to a squashed release PR whose temporary branch was deleted.
+    // Fetch the immutable full SHA instead of resolving through a movable branch or tag.
+  }
+  try {
+    await captureCommand(
+      'git',
+      ['fetch', '--no-tags', '--depth=1', 'origin', revision],
+      {cwd: root},
+    );
+    await verify();
+    return true;
+  } catch (error) {
+    throw new Error(
+      `Unable to resolve frozen source revision ${revision} locally or fetch it from origin`,
+      {cause: error},
+    );
+  }
 }
 
 function extractRevision(revision, destination) {
@@ -190,7 +227,7 @@ export function projectDependencyContractsForPublishingMetadata(
 }
 
 async function generateRevision(revision, entries, releases) {
-  await capture('git', ['cat-file', '-e', `${revision}^{commit}`], {cwd: repositoryRoot});
+  await ensureRevisionAvailable(revision);
   const workspace = await mkdtemp(resolve(tmpdir(), 'viewcompose-versioned-api-'));
   try {
     await extractRevision(revision, workspace);
