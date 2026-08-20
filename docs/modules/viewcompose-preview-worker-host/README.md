@@ -9,7 +9,7 @@ responses atomically.
 
 ```kotlin
 dependencies {
-    runtimeOnly("com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha02")
+    runtimeOnly("com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha03")
 }
 ```
 

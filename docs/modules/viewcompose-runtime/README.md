@@ -12,7 +12,7 @@ their hosts.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha03")
 }
 ```
 

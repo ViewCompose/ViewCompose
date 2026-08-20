@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-runner/README.md
-translation_source_hash: dd9c013cfe19e19b263c62c13b682194342d3449f8cd3b571657fada840c92f0
+translation_source_hash: 7d0b9856968a9364a23ed567c2ec7e97ffe6fe3c51ce2d19b8e0e5dc3ce9b198
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-preview-runner:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04")
 }
 ```
 

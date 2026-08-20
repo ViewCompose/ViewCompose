@@ -8,7 +8,7 @@ the renderer or widget modules depend on a networking or image-loading implement
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha04")
 }
 ```
 

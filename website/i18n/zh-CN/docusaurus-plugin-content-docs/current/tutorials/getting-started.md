@@ -2,7 +2,7 @@
 title: 构建第一个应用
 sidebar_position: 1
 translation_source: tutorials/getting-started.md
-translation_source_hash: 5b9353a975af119e2f2635e9dc0dc42339b3152ffba258410a971a14c3b6f311
+translation_source_hash: 916ebb6cbea13c52c9e75a8d9e996930aae3eb12b3295b7aa65ded3b78c37023
 translation_status: current
 ---
 
@@ -37,18 +37,18 @@ debug 的产物：
 
 ```kotlin title="build.gradle.kts（可选 Preview）"
 plugins {
-    id("com.viewcompose.preview") version "0.1.0-alpha02"
+    id("com.viewcompose.preview") version "0.1.0-alpha03"
 }
 
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha03")
     add(
         "viewComposePreviewWorkerHost",
-        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha02",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha03",
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha03",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04",
     )
 }
 ```
@@ -89,10 +89,10 @@ Central 后，它才成为公开安装路径：
 | `viewcompose-material3` | `0.1.0-alpha01` | 传递引入的 Design System 依赖 |
 | `viewcompose-lifecycle-androidx` | `0.1.0-alpha01` | 传递引入的 AndroidX 集成 |
 | `viewcompose-viewmodel-androidx` | `0.1.0-alpha01` | 传递引入的 AndroidX 集成 |
-| `viewcompose-preview-gradle-plugin` | `0.1.0-alpha02` | 可选的显式插件 |
-| `viewcompose-preview-core` | `0.1.0-alpha02` | 可选的 debug 依赖 |
-| `viewcompose-preview-worker-host` | `0.1.0-alpha02` | 可选的 Preview 配置 |
-| `viewcompose-preview-runner` | `0.1.0-alpha03` | 可选的 Preview 配置 |
+| `viewcompose-preview-gradle-plugin` | `0.1.0-alpha03` | 可选的显式插件 |
+| `viewcompose-preview-core` | `0.1.0-alpha03` | 可选的 debug 依赖 |
+| `viewcompose-preview-worker-host` | `0.1.0-alpha03` | 可选的 Preview 配置 |
+| `viewcompose-preview-runner` | `0.1.0-alpha04` | 可选的 Preview 配置 |
 
 ViewCompose 产物独立演进。混用比本教程更新的版本前，请检查
 [已发布模块目录](../modules/README.md)，再混用此验证集合之外的版本。

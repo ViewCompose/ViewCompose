@@ -31,14 +31,14 @@ android {
 dependencies {
     implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
 
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha03")
     add(
         "viewComposePreviewWorkerHost",
-        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha02",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha03",
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha03",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04",
     )
 
     implementation("androidx.activity:activity:1.12.4")

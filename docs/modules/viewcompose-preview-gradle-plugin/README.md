@@ -9,11 +9,11 @@ artifacts.
 
 ```kotlin
 plugins {
-    id("com.viewcompose.preview") version "0.1.0-alpha02"
+    id("com.viewcompose.preview") version "0.1.0-alpha03"
 }
 
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha03")
 }
 ```
 

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-runtime/README.md
-translation_source_hash: f4926a12cc8a005d6ac66df0a3d1f78479b62ac4b8718fed47a7ca80bb673287
+translation_source_hash: 6c36dc1d7241e0fb4c6711d086c79c7df00241b72c9e4696507ce0d7f3060cc4
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha03")
 }
 ```
 

@@ -16,7 +16,7 @@ runtime, widget, renderer, and host modules.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04")
 }
 ```
 

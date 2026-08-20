@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: fa566a9435b94e20dc4940642487344852bf0eaff277c8407da84918c990fc88
+translation_source_hash: 3a86778db87190edec4c6db7e2a9b92e3dcd18f0d65d3b5692ffd5f0d7348321
 translation_status: current
 ---
 
@@ -184,6 +184,10 @@ minor，`breaking` 在 `1.0` 后增加 major、在 `0.x` 增加 minor。预发�
 元数据 release commit 提交。发布选择必须与 `build/release-plan.json` 一致；Central 显示
 `Published` 后，再按前文规则创建每制品签名 tag。
 
+版本化模块手册会把源码中的相对 Markdown 目标改写为公开文档路由，包括移除 Docusaurus 数字
+前缀，例如把 `0009-development-tooling-isolation.md` 改写为
+`development-tooling-isolation/`。生产站点构建仍是所有已生成发布快照的权威断链门禁。
+
 2026-08-04 的 backfill Changeset 一次性记录了首个 Central 边界之后、此流程建立之前影响发布的
 改动。它只是迁移记录，不能作为以后在合并后补写发布意图的先例。
 
@@ -240,9 +244,9 @@ Feature 产物会暴露编译其公开 API 所需的全部 ViewCompose 模块，
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha04")
 }
 ```
 
@@ -250,9 +254,9 @@ core 制品也可由 Kotlin/JVM 模块独立使用：
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha02")
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha04")
     implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha02")
 }
 ```

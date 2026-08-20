@@ -9,7 +9,7 @@ transition-segment coordination. It contains no Android UI or composition depend
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha04")
 }
 ```
 

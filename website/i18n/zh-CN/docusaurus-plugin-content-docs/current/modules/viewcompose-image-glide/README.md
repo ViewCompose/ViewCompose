@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-glide/README.md
-translation_source_hash: ed9438fe4d206a4d0a1512ae7dcd25f954b3d1ea02e3d3d8e5d7edb1b425b095
+translation_source_hash: ccee0759e6ef1180ac4105b6ce68412fdb4cc4fa544199d665e0cb7512589c45
 translation_status: current
 ---
 
@@ -13,7 +13,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha02")
 }
 ```
 

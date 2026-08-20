@@ -209,6 +209,11 @@ updates only those modules in `gradle/viewcompose-publishing.properties`, pins t
 metadata-only release commit. Publication selection must match `build/release-plan.json`; after
 Central reports `Published`, create the signed per-artifact tags described above.
 
+Versioned module manuals rewrite source-relative Markdown targets to their public documentation
+routes, including Docusaurus number-prefix removal such as `0009-development-tooling-isolation.md`
+to `development-tooling-isolation/`. The production site build remains the authoritative
+broken-link gate for every generated release snapshot.
+
 The backfill Changeset dated 2026-08-04 classifies publication-relevant changes made after the
 first Central boundary and before this workflow existed. It is a one-time migration record, not a
 precedent for reconstructing release intent after merge.
@@ -274,9 +279,9 @@ including their platform-neutral core artifact:
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha04")
 }
 ```
 
@@ -284,9 +289,9 @@ Core artifacts are also independently consumable from Kotlin/JVM modules:
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha02")
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha04")
     implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha02")
 }
 ```

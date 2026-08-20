@@ -7,6 +7,13 @@ import {loadDocumentationReleases} from './documentation-releases.mjs';
 const websiteRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repositoryRoot = resolve(websiteRoot, '..');
 const outputRoot = resolve(websiteRoot, 'src/generated/moduleManualPages');
+const ignoredNumberPrefix = /^\d+[-_.]\d+/u;
+const numberPrefix = /^\d+\s*[-_.]+\s*([^-_.\s].*)$/u;
+
+function stripNumberPrefix(segment) {
+  if (ignoredNumberPrefix.test(segment)) return segment;
+  return numberPrefix.exec(segment)?.[1] ?? segment;
+}
 
 function gitFile(revision, path) {
   return new Promise((accept, reject) => {
@@ -37,7 +44,11 @@ function routeForMarkdown(sourcePath, target) {
   if (!path.endsWith('.md') && !path.endsWith('.mdx')) return undefined;
   const resolved = posix.normalize(posix.join(posix.dirname(sourcePath), path));
   if (!resolved.startsWith('docs/')) return undefined;
-  const routeSegments = resolved.slice('docs/'.length).replace(/\.mdx?$/u, '').split('/');
+  const routeSegments = resolved
+    .slice('docs/'.length)
+    .replace(/\.mdx?$/u, '')
+    .split('/')
+    .map(stripNumberPrefix);
   if (['readme', 'index'].includes(routeSegments.at(-1)?.toLowerCase())) routeSegments.pop();
   const route = `/${routeSegments.join('/')}`;
   const slashTerminatedRoute = route === '/' ? route : `${route}/`;

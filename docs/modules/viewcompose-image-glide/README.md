@@ -8,7 +8,7 @@ the renderer or widget modules depend on Glide.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha02")
 }
 ```
 

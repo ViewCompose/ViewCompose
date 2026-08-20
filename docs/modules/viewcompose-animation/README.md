@@ -9,7 +9,7 @@ channels, visibility/content transitions, and measured-size animation.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
 }
 ```
 

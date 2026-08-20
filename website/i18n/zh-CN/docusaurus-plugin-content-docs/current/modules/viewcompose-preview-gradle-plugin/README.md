@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-gradle-plugin/README.md
-translation_source_hash: d323815474c695434d764a0eceb129582ab2e6e1e19af840ef2cd3982faa2368
+translation_source_hash: 34569645f6cfba7fbe2bd8f855e067b098f3ce4b143fae71dd01b01cb619cd32
 translation_status: current
 ---
 
@@ -14,11 +14,11 @@ Protocol。它发现编译后的 Preview Entry，导出确定性 Build Input，�
 
 ```kotlin
 plugins {
-    id("com.viewcompose.preview") version "0.1.0-alpha02"
+    id("com.viewcompose.preview") version "0.1.0-alpha03"
 }
 
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha03")
 }
 ```
 

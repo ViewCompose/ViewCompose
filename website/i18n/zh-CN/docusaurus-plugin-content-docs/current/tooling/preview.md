@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/preview.md
-translation_source_hash: 187f9aa8f5e82705ee198251c0b97a50f57ab1a76c681431d91f174c1a37e0d0
+translation_source_hash: 19a5be079dd4b69e11325a54bd7ca1d6739d364195f98f6e946ad9a55f19f1a7
 translation_status: current
 ---
 
@@ -30,18 +30,18 @@ Gradle 插件与 Android Studio 插件需要分别安装。添加 Maven 依赖�
 
 ```kotlin title="build.gradle.kts"
 plugins {
-    id("com.viewcompose.preview") version "0.1.0-alpha02"
+    id("com.viewcompose.preview") version "0.1.0-alpha03"
 }
 
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha03")
     add(
         "viewComposePreviewWorkerHost",
-        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha02",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha03",
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha03",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04",
     )
 }
 ```
@@ -56,7 +56,7 @@ dependencies {
 `ViewCompose Preview`。如果 IDE 提示，请重启 Android Studio。只有完成这项 IDE 安装，才能获得
 `ViewCompose Preview` 工具窗口、Gutter 渲染动作、Gallery、源码导航、增量刷新与诊断能力。
 
-当前 Marketplace 版本线为 `1.0.1`，面向 Android Studio `261.*` Build Family 发布。IDE 插件与
+当前 Marketplace 版本线为 `1.1.0`，面向 Android Studio `261.*` Build Family 发布。IDE 插件与
 Maven 产物、Gradle 插件独立版本化。
 
 ### 3. 声明预览入口
@@ -111,7 +111,7 @@ Provider API 由仅用于 debug 的 `viewcompose-preview` 产物提供：
 
 ```kotlin
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha03")
+    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha04")
 }
 ```
 
@@ -143,7 +143,7 @@ android {
 }
 
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha03")
+    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha04")
 }
 ```
 

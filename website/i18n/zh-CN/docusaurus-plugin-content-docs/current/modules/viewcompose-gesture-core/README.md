@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-gesture-core/README.md
-translation_source_hash: c5f6c107aad422144a166d7168629300e44a31b732d7c27255db7e57edcb6469
+translation_source_hash: ccdcce183b68ac5c17f566577077a8f1c0c0326060b2f77b4e625affef01190a
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha04")
 }
 ```
 
