@@ -66,6 +66,7 @@ class ReleasePlanningTest {
         assertEquals(listOf(activeArtifact), plan.releases.map(PlannedArtifactRelease::artifact))
         assertEquals(listOf("historical-retired-artifact.json"), plan.releases.single().changeSets)
         assertEquals("0.1.0-alpha01", plan.releases.single().recommendedVersion.toString())
+        assertEquals(headRevision, plan.releases.single().sourceRevision)
     }
 
     @Test
@@ -285,21 +286,22 @@ class ReleasePlanningTest {
     }
 
     @Test
-    fun `metadata preparation keeps registered first release version and history`() {
+    fun `metadata preparation freezes first release source and keeps version and history`() {
         val directory = Files.createTempDirectory("first-release-metadata").toFile()
-        val sourceRevision = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        val registeredSourceRevision = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        val frozenSourceRevision = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         val plan = directory.resolve("plan.json").apply {
             writeText(
                 """
                 {
                   "schemaVersion": 1,
-                  "sourceRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "sourceRevision": "$frozenSourceRevision",
                   "releases": [{
                     "artifact": "viewcompose-image-glide",
                     "firstRelease": true,
                     "currentVersion": "0.1.0-alpha01",
                     "recommendedVersion": "0.1.0-alpha01",
-                    "sourceRevision": "$sourceRevision"
+                    "sourceRevision": "$frozenSourceRevision"
                   }]
                 }
                 """.trimIndent(),
@@ -309,7 +311,7 @@ class ReleasePlanningTest {
             writeText(
                 """
                 module.viewcompose-image-glide.version=0.1.0-alpha01
-                module.viewcompose-image-glide.sourceRevision=$sourceRevision
+                module.viewcompose-image-glide.sourceRevision=$registeredSourceRevision
                 """.trimIndent() + "\n",
             )
         }
@@ -320,12 +322,11 @@ class ReleasePlanningTest {
                 release.count=1
 
                 release.0.version=0.1.0-alpha01
-                release.0.sourceRevision=$sourceRevision
+                release.0.sourceRevision=$registeredSourceRevision
                 release.0.modules=viewcompose-image-glide
                 """.trimIndent() + "\n",
             )
         }
-        val originalPublishing = publishing.readText()
         val originalHistory = history.readText()
 
         ReleaseMetadataPreparer.prepare(
@@ -335,7 +336,8 @@ class ReleasePlanningTest {
             mapOf("viewcompose-image-glide" to MavenVersion.parse("0.1.0-alpha01")),
         )
 
-        assertEquals(originalPublishing, publishing.readText())
+        assertTrue(publishing.readText().contains("version=0.1.0-alpha01"))
+        assertTrue(publishing.readText().contains("sourceRevision=$frozenSourceRevision"))
         assertEquals(originalHistory, history.readText())
     }
 }
