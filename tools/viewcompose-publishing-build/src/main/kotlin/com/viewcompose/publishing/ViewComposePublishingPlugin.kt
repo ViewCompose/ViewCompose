@@ -291,6 +291,16 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
         val selectedModules = project.providers.gradleProperty("viewComposePublishModules")
             .map { value -> value.split(',').map(String::trim).filter(String::isNotEmpty) }
             .orElse(emptyList())
+        val centralStagingDirectory = project.layout.buildDirectory.dir(
+            "publishing/viewComposeCentral",
+        )
+        publishedProjects.forEach { publishedProject ->
+            publishedProject.extensions.getByType(PublishingExtension::class.java)
+                .repositories.maven(Action {
+                    name = "viewComposeCentralStaging"
+                    url = centralStagingDirectory.get().asFile.toURI()
+                })
+        }
         val verifySelection = project.tasks.register<VerifyPublishingSelectionTask>(
             "verifySelectedViewComposeModules",
         ) {
@@ -336,21 +346,98 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                 },
             )
         }
-        val publishCentral = project.tasks.register("publishSelectedViewComposeToMavenCentral") {
+        val cleanCentralStaging = project.tasks.register<Delete>(
+            "cleanSelectedViewComposeCentralStaging",
+        ) {
+            group = "publishing"
+            description = "Deletes the generated selected-module Central staging repository."
+            delete(centralStagingDirectory)
+        }
+        val centralStagingTasks = selectedModules.get().map { module ->
+            project.project(":$module").tasks.named(
+                "publishAllPublicationsToViewComposeCentralStagingRepository",
+            ).also { task ->
+                task.configure {
+                    mustRunAfter(cleanCentralStaging)
+                }
+            }
+        }
+        val stageCentral = project.tasks.register("stageSelectedViewComposeForMavenCentral") {
             group = "publishing"
             description =
-                "Uploads selected stable artifacts to a manual Central Portal deployment."
+                "Stages selected stable artifacts in one clean Central bundle repository."
             dependsOn(
                 verifyConfiguration,
                 verifySelection,
                 verifyCentralSelection,
                 verifyArchivedReleasePlans,
+                cleanCentralStaging,
             )
-            dependsOn(
-                selectedModules.get().map { module ->
-                    ":$module:publishAllPublicationsToMavenCentralRepository"
+            dependsOn(centralStagingTasks)
+        }
+        val centralBundle = project.tasks.register<CreateViewComposeCentralBundleTask>(
+            "bundleSelectedViewComposeForMavenCentral",
+        ) {
+            group = "publishing"
+            description = "Creates one audited Central Portal bundle for the selected artifacts."
+            dependsOn(stageCentral)
+            repositoryDirectory.set(centralStagingDirectory)
+            selectedVersions.set(
+                selectedModules.get().associateWith { module ->
+                    checkNotNull(metadata.moduleVersions[module])
                 },
             )
+            mavenGroup.set(metadata.groupId)
+            bundleFile.set(
+                project.layout.buildDirectory.file(
+                    "central-release/viewcompose-central-bundle.zip",
+                ),
+            )
+        }
+        val uploadCentral = project.tasks.register<UploadViewComposeCentralBundleTask>(
+            "uploadSelectedViewComposeToMavenCentral",
+        ) {
+            group = "publishing"
+            description =
+                "Uploads one user-managed Central deployment and waits for validation."
+            dependsOn(centralBundle)
+            bundleFile.set(centralBundle.flatMap(CreateViewComposeCentralBundleTask::bundleFile))
+            deploymentName.set(
+                "com.viewcompose-${selectedModules.get().size}-artifacts",
+            )
+            username.set(
+                project.providers.gradleProperty("mavenCentralUsername").orElse(""),
+            )
+            password.set(
+                project.providers.gradleProperty("mavenCentralPassword").orElse(""),
+            )
+            connectTimeoutSeconds.set(
+                project.providers.gradleProperty("SONATYPE_CONNECT_TIMEOUT_SECONDS")
+                    .map(String::toInt)
+                    .orElse(60),
+            )
+            validationTimeoutSeconds.set(
+                project.providers.gradleProperty("SONATYPE_CLOSE_TIMEOUT_SECONDS")
+                    .map(String::toInt)
+                    .orElse(15 * 60),
+            )
+            pollIntervalSeconds.set(
+                project.providers.gradleProperty("SONATYPE_POLL_INTERVAL_SECONDS")
+                    .map(String::toInt)
+                    .orElse(5),
+            )
+            deploymentRecordFile.set(
+                project.layout.buildDirectory.file(
+                    "central-release/viewcompose-central-deployment.json",
+                ),
+            )
+            outputs.upToDateWhen { false }
+        }
+        val publishCentral = project.tasks.register("publishSelectedViewComposeToMavenCentral") {
+            group = "publishing"
+            description =
+                "Uploads selected stable artifacts as one validated user-managed Central deployment."
+            dependsOn(uploadCentral)
         }
         publishedProjects.forEach { publishedProject ->
             publishedProject.tasks.matching { task ->

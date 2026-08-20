@@ -98,9 +98,11 @@ that explicit set may lack a Maven release tag. For them, the planner scans Chan
 repository inception, requires a direct release declaration, and recommends the already-registered
 initial version and source revision without advancing or duplicating documentation history.
 
-After the first signed tag is pushed, remove the artifact from `release.unpublishedModules` in the
-next repository change. Planning fails if an unmarked artifact has no tag, if a marked artifact
-already has a tag, or if checked-in version metadata has advanced beyond the latest tag. These
+After the first signed tag is pushed, append the exact published artifact/version/source-revision
+triple to `gradle/viewcompose-documentation-releases.properties` and remove the artifact from
+`release.unpublishedModules` in the next repository change. Planning fails if an unmarked artifact
+has no tag, if a marked artifact already has a tag, if the current triple has no immutable
+documentation record, or if checked-in version metadata has advanced beyond the latest tag. These
 failures distinguish a genuine first release from missing fetched tags and stale release state.
 
 ## Per-pull-request release intent
@@ -457,9 +459,21 @@ checks, create a manual Central Portal deployment with:
   -PviewComposePublishModules=viewcompose-runtime,viewcompose-navigation-core
 ```
 
-The task deliberately has no all-module default, rejects `-SNAPSHOT` versions, and uploads as a
-user-managed deployment. Inspect Central validation results before clicking Publish in the Portal.
-Public release is therefore kept separate from the Gradle upload command.
+The task deliberately has no all-module default and rejects `-SNAPSHOT` versions. It clears one
+root-owned staging repository, publishes every selected module into that repository, creates
+`build/central-release/viewcompose-central-bundle.zip`, and uploads the bundle through the official
+Portal Publisher API with `publishingType=USER_MANAGED`. It prints the returned deployment ID,
+polls until the deployment reaches `VALIDATED` or `FAILED`, and writes the ID, state, bundle name,
+and SHA-256 to `build/central-release/viewcompose-central-deployment.json`. A failed validation or
+timeout fails the Gradle build; when an ID was already assigned, the record remains available for
+Portal diagnosis.
+
+Reaching `VALIDATED` does not publish immutable artifacts. Review the recorded deployment and its
+staging consumption before clicking Publish in the Portal. If a run fails after printing an ID,
+inspect or drop that deployment before retrying; a retry creates another deployment. Coordinated
+production releases must use the root task above. Module-specific Vanniktech Central tasks remain
+guarded low-level diagnostics and can create separate deployments, so they are not the coordinated
+release path.
 
 ## Android Studio plugin
 

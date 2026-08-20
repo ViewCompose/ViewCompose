@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: 3a86778db87190edec4c6db7e2a9b92e3dcd18f0d65d3b5692ffd5f0d7348321
+translation_source_hash: bf295d525a70b7ec92782737ea03d77091bf6a199da400f2320529446eb99b58
 translation_status: current
 ---
 
@@ -91,9 +91,11 @@ tag，且注释必须声明该记录由历史重建。禁止把补建 tag 默认
 Changeset，要求直接发布声明，并推荐已经登记的初始版本与 source revision，不会提前升级版本或重复
 追加文档历史。
 
-首个 signed tag 推送后，应在下一次仓库改动中把制品移出 `release.unpublishedModules`。以下状态都会
-使规划失败：未标记制品缺少 tag、已标记制品已经存在 tag，或入库版本元数据领先于最新 tag。这样可
-区分真正的首次发布、未拉取 tag 和过期发布状态。
+首个 signed tag 推送后，应在下一次仓库改动中把实际发布的制品、版本、source revision 三元组追加到
+`gradle/viewcompose-documentation-releases.properties`，并把制品移出
+`release.unpublishedModules`。以下状态都会使规划失败：未标记制品缺少 tag、已标记制品已经存在
+tag、当前三元组缺少不可变文档记录，或入库版本元数据领先于最新 tag。这样可区分真正的首次发布、
+未拉取 tag 和过期发布状态。
 
 ## 每个 PR 的发布意图
 
@@ -388,8 +390,18 @@ CI 使用 `ORG_GRADLE_PROJECT_mavenCentralUsername` 与
   -PviewComposePublishModules=viewcompose-runtime,viewcompose-navigation-core
 ```
 
-该任务没有全模块默认值，拒绝 `-SNAPSHOT`，上传为 user-managed deployment。点击 Portal 的
-Publish 前检查 Central validation；公开发布与 Gradle upload 刻意分离。
+该任务没有全模块默认值，并拒绝 `-SNAPSHOT`。它会清空一个由根工程持有的 staging repository，
+把全部选定模块发布到同一 repository，生成
+`build/central-release/viewcompose-central-bundle.zip`，再通过官方 Portal Publisher API 以
+`publishingType=USER_MANAGED` 上传。任务会输出 Central 返回的 deployment ID，轮询到
+`VALIDATED` 或 `FAILED`，并把 ID、状态、bundle 名称和 SHA-256 写入
+`build/central-release/viewcompose-central-deployment.json`。验证失败或超时会使 Gradle 构建失败；
+如果 Central 已经分配 ID，该记录仍会保留，供 Portal 排查。
+
+到达 `VALIDATED` 不会公开不可变制品。点击 Portal 的 Publish 前，必须审阅记录的 deployment 并从
+staging 验证消费。如果任务输出 ID 后失败，应先检查或 drop 该 deployment，再决定是否重试；重试会
+创建另一个 deployment。协同生产发版必须使用上述根任务。模块级 Vanniktech Central 任务仅保留为
+受门禁保护的底层诊断能力，且可能分别创建 deployment，不属于协同发版路径。
 
 ## Android Studio 插件
 
