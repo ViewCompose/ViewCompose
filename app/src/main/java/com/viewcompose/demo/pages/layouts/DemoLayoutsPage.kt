@@ -31,6 +31,7 @@ import com.viewcompose.ui.modifier.Visibility
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.spec.ConstraintChainStyle
 import com.viewcompose.ui.node.spec.ConstraintDimension
+import com.viewcompose.ui.node.spec.ConstraintFlowWrapMode
 import com.viewcompose.ui.node.spec.ConstraintHelperVisibility
 import com.viewcompose.ui.node.spec.ConstraintMatchMode
 import com.viewcompose.ui.node.spec.ConstraintRatio
@@ -742,10 +743,14 @@ internal fun UiTreeBuilder.LayoutPage(
                         text = stringResource(R.string.demo_layouts_guideline_partition),
                         style = UiTextStyle(fontSizeSp = 11.sp),
                         color = TextDefaults.secondaryColor(),
-                        modifier = Modifier.constrainAs(guidelineLabelRef) {
-                            startToStart(leftPartition, margin = 4.dp)
-                            bottomToBottom(parent)
-                        },
+                        modifier = Modifier
+                            .constrainAs(guidelineLabelRef) {
+                                startToStart(leftPartition, margin = 4.dp)
+                                endToEnd(parent)
+                                bottomToBottom(parent)
+                                width = ConstraintDimension.MatchConstraints()
+                            }
+                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_GUIDELINE_LABEL),
                     )
                 }
             }
@@ -1111,7 +1116,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 endToEnd(parent)
                                 topToBottom(widthRef, margin = 10.dp)
                                 bottomToBottom(parent)
-                                width = ConstraintDimension.MatchConstraints()
+                                width = ConstraintDimension.Fixed(80.dp)
                                 height = ConstraintDimension.MatchConstraints()
                                 ratio = if (constraintDimensionAdvancedState.value) {
                                     ConstraintRatio(width = 16f, height = 9f)
@@ -1227,10 +1232,14 @@ internal fun UiTreeBuilder.LayoutPage(
                                 endToStart(guideEnd, margin = 6.dp)
                                 width = ConstraintDimension.Fixed(110.dp)
                                 height = ConstraintDimension.Fixed(30.dp)
-                            },
+                            }
+                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_TOP),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = stringResource(R.string.demo_layouts_top_probe))
+                            Text(
+                                text = stringResource(R.string.demo_layouts_top_probe),
+                                style = UiTextStyle(fontSizeSp = 11.sp),
+                            )
                         }
                     }
                     Surface(
@@ -1241,10 +1250,14 @@ internal fun UiTreeBuilder.LayoutPage(
                                 endToStart(guideEnd, margin = 6.dp)
                                 width = ConstraintDimension.Fixed(126.dp)
                                 height = ConstraintDimension.Fixed(30.dp)
-                            },
+                            }
+                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_MIDDLE),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = stringResource(R.string.demo_layouts_middle_probe))
+                            Text(
+                                text = stringResource(R.string.demo_layouts_middle_probe),
+                                style = UiTextStyle(fontSizeSp = 11.sp),
+                            )
                         }
                     }
                     Surface(
@@ -1255,27 +1268,34 @@ internal fun UiTreeBuilder.LayoutPage(
                                 endToStart(guideEnd, margin = 6.dp)
                                 width = ConstraintDimension.Fixed(98.dp)
                                 height = ConstraintDimension.Fixed(30.dp)
-                            },
+                            }
+                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_BOTTOM),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = stringResource(R.string.demo_layouts_bottom_probe))
+                            Text(
+                                text = stringResource(R.string.demo_layouts_bottom_probe),
+                                style = UiTextStyle(fontSizeSp = 11.sp),
+                            )
                         }
                     }
-                    Surface(
-                        variant = SurfaceVariant.Default,
+                    Box(
+                        contentAlignment = BoxAlignment.Center,
                         modifier = Modifier
                             .constrainAs(markerRef) {
                                 endToStart(startBarrier, margin = 8.dp)
                                 topToBottom(topBarrier, margin = 8.dp)
                                 bottomToTop(bottomBarrier, margin = 8.dp)
-                                width = ConstraintDimension.Fixed(112.dp)
+                                width = ConstraintDimension.Fixed(80.dp)
                                 height = ConstraintDimension.Fixed(34.dp)
                             }
+                            .backgroundColor(SurfaceDefaults.variantBackgroundColor())
+                            .shape(SurfaceDefaults.shape())
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER),
                     ) {
-                        Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Text(text = stringResource(R.string.demo_layouts_barrier_marker))
-                        }
+                        Text(
+                            text = stringResource(R.string.demo_layouts_barrier_start_side),
+                            style = UiTextStyle(fontSizeSp = 11.sp),
+                        )
                     }
                 }
                 Text(
@@ -1593,7 +1613,9 @@ internal fun UiTreeBuilder.LayoutPage(
                     }
                     ConstraintLayout(
                         constraintSet = flowSet,
-                        modifier = Modifier.fillMaxWidth().height(78.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(if (constraintVirtualAlternateState.value) 220.dp else 96.dp),
                     ) {
                         val (flowA, flowB, flowC, flowD) = createRefs("flow-a", "flow-b", "flow-c", "flow-d")
                         createFlow(
@@ -1602,14 +1624,39 @@ internal fun UiTreeBuilder.LayoutPage(
                             flowC,
                             flowD,
                             id = "flow-helper",
+                            wrapMode = ConstraintFlowWrapMode.Chain,
                             horizontalGap = if (constraintVirtualAlternateState.value) 14.dp else 8.dp,
                             verticalGap = if (constraintVirtualAlternateState.value) 14.dp else 8.dp,
                             maxElementsWrap = if (constraintVirtualAlternateState.value) 1 else 2,
                         )
-                        Surface(variant = SurfaceVariant.Default, modifier = Modifier.layoutId("flow-a").padding(horizontal = 10.dp, vertical = 6.dp)) { Text(stringResource(R.string.demo_layouts_flow_node, 1)) }
-                        Surface(variant = SurfaceVariant.Variant, modifier = Modifier.layoutId("flow-b").padding(horizontal = 10.dp, vertical = 6.dp)) { Text(stringResource(R.string.demo_layouts_flow_node, 2)) }
-                        Surface(variant = SurfaceVariant.Default, modifier = Modifier.layoutId("flow-c").padding(horizontal = 10.dp, vertical = 6.dp)) { Text(stringResource(R.string.demo_layouts_flow_node, 3)) }
-                        Surface(variant = SurfaceVariant.Variant, modifier = Modifier.layoutId("flow-d").padding(horizontal = 10.dp, vertical = 6.dp)) { Text(stringResource(R.string.demo_layouts_flow_node, 4)) }
+                        Surface(
+                            variant = SurfaceVariant.Default,
+                            modifier = Modifier
+                                .layoutId("flow-a")
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_A),
+                        ) { Text(stringResource(R.string.demo_layouts_flow_node, 1)) }
+                        Surface(
+                            variant = SurfaceVariant.Variant,
+                            modifier = Modifier
+                                .layoutId("flow-b")
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_B),
+                        ) { Text(stringResource(R.string.demo_layouts_flow_node, 2)) }
+                        Surface(
+                            variant = SurfaceVariant.Default,
+                            modifier = Modifier
+                                .layoutId("flow-c")
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_C),
+                        ) { Text(stringResource(R.string.demo_layouts_flow_node, 3)) }
+                        Surface(
+                            variant = SurfaceVariant.Variant,
+                            modifier = Modifier
+                                .layoutId("flow-d")
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_D),
+                        ) { Text(stringResource(R.string.demo_layouts_flow_node, 4)) }
                     }
 
                     val groupSet = constraintSet {
@@ -1642,13 +1689,6 @@ internal fun UiTreeBuilder.LayoutPage(
                             variant = SurfaceVariant.Variant,
                             modifier = Modifier
                                 .layoutId("group-a")
-                                .visibility(
-                                    if (constraintVirtualAlternateState.value) {
-                                        Visibility.Gone
-                                    } else {
-                                        Visibility.Visible
-                                    },
-                                )
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
                                 .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER),
                         ) {
@@ -1656,7 +1696,10 @@ internal fun UiTreeBuilder.LayoutPage(
                         }
                         Surface(
                             variant = SurfaceVariant.Default,
-                            modifier = Modifier.layoutId("group-b").padding(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier
+                                .layoutId("group-b")
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER_B),
                         ) {
                             Text(text = stringResource(R.string.demo_layouts_group_b))
                         }
@@ -1665,28 +1708,28 @@ internal fun UiTreeBuilder.LayoutPage(
                     val layerSet = constraintSet {
                         val (layerARef, layerBRef) = createRefs("layer-a", "layer-b")
                         constrain(layerARef) {
-                            topToTop(parent)
-                            startToStart(parent)
+                            topToTop(parent, margin = 36.dp)
+                            startToStart(parent, margin = 40.dp)
                         }
                         constrain(layerBRef) {
-                            topToTop(parent)
-                            endToEnd(parent)
+                            topToTop(parent, margin = 36.dp)
+                            endToEnd(parent, margin = 40.dp)
                         }
                     }
                     ConstraintLayout(
                         constraintSet = layerSet,
-                        modifier = Modifier.fillMaxWidth().height(62.dp),
+                        modifier = Modifier.fillMaxWidth().height(112.dp),
                     ) {
                         val (layerA, layerB) = createRefs("layer-a", "layer-b")
                         createLayer(
                             layerA,
                             layerB,
                             id = "layer-helper",
-                            rotation = if (constraintVirtualAlternateState.value) 30f else 0f,
-                            scaleX = if (constraintVirtualAlternateState.value) 1.16f else 1f,
-                            scaleY = if (constraintVirtualAlternateState.value) 1.16f else 1f,
-                            translationX = if (constraintVirtualAlternateState.value) 24.dp else 0.dp,
-                            translationY = if (constraintVirtualAlternateState.value) (-10).dp else 0.dp,
+                            rotation = if (constraintVirtualAlternateState.value) 18f else 0f,
+                            scaleX = if (constraintVirtualAlternateState.value) 1.1f else 1f,
+                            scaleY = if (constraintVirtualAlternateState.value) 1.1f else 1f,
+                            translationX = if (constraintVirtualAlternateState.value) 6.dp else 0.dp,
+                            translationY = 0.dp,
                         )
                         Surface(
                             variant = SurfaceVariant.Default,
@@ -1699,7 +1742,10 @@ internal fun UiTreeBuilder.LayoutPage(
                         }
                         Surface(
                             variant = SurfaceVariant.Variant,
-                            modifier = Modifier.layoutId("layer-b").padding(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier
+                                .layoutId("layer-b")
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_B),
                         ) {
                             Text(text = stringResource(R.string.demo_layouts_layer_b))
                         }
@@ -1721,11 +1767,11 @@ internal fun UiTreeBuilder.LayoutPage(
                             endToEnd(parent)
                         }
                         constrain(hostRef) {
-                            topToBottom(placeholderARef, margin = 6.dp)
+                            topToTop(parent, margin = 52.dp)
                             startToStart(parent)
                             endToEnd(parent)
                             width = ConstraintDimension.MatchConstraints()
-                            height = ConstraintDimension.Fixed(38.dp)
+                            height = ConstraintDimension.Fixed(46.dp)
                         }
                         constrain(noteRef) {
                             topToBottom(hostRef, margin = 4.dp)
@@ -1734,7 +1780,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     }
                     ConstraintLayout(
                         constraintSet = placeholderSet,
-                        modifier = Modifier.fillMaxWidth().height(88.dp),
+                        modifier = Modifier.fillMaxWidth().height(140.dp),
                     ) {
                         val placeholderA = createRef("placeholder-a")
                         val placeholderB = createRef("placeholder-b")
@@ -1744,19 +1790,28 @@ internal fun UiTreeBuilder.LayoutPage(
                         )
                         Surface(
                             variant = SurfaceVariant.Default,
-                            modifier = Modifier.layoutId("placeholder-a").padding(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier
+                                .layoutId("placeholder-a")
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_A),
                         ) {
                             Text(text = stringResource(R.string.demo_layouts_placeholder_a))
                         }
                         Surface(
                             variant = SurfaceVariant.Variant,
-                            modifier = Modifier.layoutId("placeholder-b").padding(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier
+                                .layoutId("placeholder-b")
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_B),
                         ) {
                             Text(text = stringResource(R.string.demo_layouts_placeholder_b))
                         }
                         Surface(
                             variant = SurfaceVariant.Default,
-                            modifier = Modifier.layoutId("placeholder-note").padding(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier
+                                .layoutId("placeholder-note")
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_NOTE),
                         ) {
                             Text(
                                 text = stringResource(

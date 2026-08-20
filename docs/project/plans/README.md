@@ -27,12 +27,6 @@ This directory contains multi-step work that is currently active and must surviv
   locale-independent automation targets, fixture-first benchmark hosts, complete English and
   Simplified Chinese resources, and optional human guidance before benchmarking Runtime/View patch
   optimizations against a new stable baseline.
-- [ConstraintLayout first-release hardening](./constraintlayout-native-engine-hardening.md) —
-  release-blocking work that hard-cuts the Alpha dimension and failure contracts, replaces
-  clone-clear-partial-apply with an immutable transactional graph, unifies every retained native
-  helper under one lifecycle owner, installs a dedicated axis-typed DSL Scope with compiler-negative
-  safety coverage, closes observed geometry/warning defects, and hands a frozen source tree to the
-  release window after focused safety evidence passes.
 - [ConstraintLayout parity and performance expansion](./constraintlayout-parity-performance-expansion.md) —
   deliberately deferred post-release work for classified reconciliation fast paths, Grid,
   CircularFlow, broader AndroidX parity, the complete visual/configuration matrix, and

@@ -22,6 +22,13 @@ class PerformanceComparisonActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val engine = PerformanceEngine.fromIntent(intent)
         val performanceScenario = PerformanceScenario.fromIntent(intent)
+        val constraintLayoutProfile = ConstraintLayoutPerformanceProfile.fromIntent(intent)
+        check(
+            constraintLayoutProfile == null ||
+                performanceScenario == PerformanceScenario.ComplexLayout,
+        ) {
+            "ConstraintLayout performance profile requires the complex-layout scenario."
+        }
         val demoScenario = DemoScenarioRegistry.require(performanceScenario.demoScenarioId)
         check(DemoScenarioRegistry.fromIntent(intent) == demoScenario) {
             "${PerformanceComparisonActivity::class.simpleName} requires " +
@@ -51,11 +58,19 @@ class PerformanceComparisonActivity : AppCompatActivity() {
                             )
                         }
                         PerformanceScenario.ComplexLayout -> {
-                            ViewComposeComplexLayoutPerformanceScreen(
-                                shadowsEnabled = false,
-                                scenario = demoScenario,
-                                fixtures = fixtures,
-                            )
+                            if (constraintLayoutProfile == null) {
+                                ViewComposeComplexLayoutPerformanceScreen(
+                                    shadowsEnabled = false,
+                                    scenario = demoScenario,
+                                    fixtures = fixtures,
+                                )
+                            } else {
+                                ViewComposeConstraintLayoutPerformanceScreen(
+                                    scenario = demoScenario,
+                                    profile = constraintLayoutProfile,
+                                    copy = fixtures.copy,
+                                )
+                            }
                         }
                         PerformanceScenario.ShadowList -> {
                             ViewComposeListPerformanceScreen(
@@ -76,6 +91,9 @@ class PerformanceComparisonActivity : AppCompatActivity() {
             }
 
             PerformanceEngine.Compose -> {
+                check(constraintLayoutProfile == null) {
+                    "Compose is not a control engine for the ConstraintLayout protocol."
+                }
                 setContentView(
                     ComposeView(this).apply {
                         setViewCompositionStrategy(
@@ -125,11 +143,20 @@ class PerformanceComparisonActivity : AppCompatActivity() {
                         fixtures = fixtures,
                     )
                     PerformanceScenario.ComplexLayout ->
-                        createAndroidViewsComplexLayoutPerformanceScreen(
-                            context = this,
-                            scenario = demoScenario,
-                            fixtures = fixtures,
-                        )
+                        if (constraintLayoutProfile == null) {
+                            createAndroidViewsComplexLayoutPerformanceScreen(
+                                context = this,
+                                scenario = demoScenario,
+                                fixtures = fixtures,
+                            )
+                        } else {
+                            createAndroidViewsConstraintLayoutPerformanceScreen(
+                                context = this,
+                                scenario = demoScenario,
+                                profile = constraintLayoutProfile,
+                                copy = fixtures.copy,
+                            )
+                        }
                     PerformanceScenario.ShadowList,
                     PerformanceScenario.ShadowComplexLayout,
                     -> error(

@@ -20,6 +20,56 @@ const val EXTRA_PERFORMANCE_SCENARIO: String = "performance_scenario"
  */
 const val EXTRA_SHADOW_RENDER_POLICY: String = "shadow_render_policy"
 
+/** Node count used by the dedicated ConstraintLayout comparison protocol. */
+const val EXTRA_CONSTRAINT_LAYOUT_NODE_COUNT: String = "constraint_layout_node_count"
+
+/** Workload used by the dedicated ConstraintLayout comparison protocol. */
+const val EXTRA_CONSTRAINT_LAYOUT_WORKLOAD: String = "constraint_layout_workload"
+
+/** Supported mutation classes for the dedicated ConstraintLayout comparison protocol. */
+internal enum class ConstraintLayoutPerformanceWorkload(val wireValue: String) {
+    Stable("stable"),
+    Scalar("scalar"),
+    Helper("helper"),
+    Topology("topology"),
+    ;
+
+    companion object {
+        fun fromWireValue(value: String): ConstraintLayoutPerformanceWorkload =
+            entries.firstOrNull { it.wireValue == value }
+                ?: error("Unknown ConstraintLayout workload: $value")
+    }
+}
+
+/** One validated scale/workload pair for the dedicated ConstraintLayout comparison protocol. */
+internal data class ConstraintLayoutPerformanceProfile(
+    val nodeCount: Int,
+    val workload: ConstraintLayoutPerformanceWorkload,
+) {
+    companion object {
+        val SupportedNodeCounts: Set<Int> = setOf(10, 50, 100)
+
+        fun fromIntent(intent: Intent): ConstraintLayoutPerformanceProfile? {
+            val hasNodeCount = intent.hasExtra(EXTRA_CONSTRAINT_LAYOUT_NODE_COUNT)
+            val hasWorkload = intent.hasExtra(EXTRA_CONSTRAINT_LAYOUT_WORKLOAD)
+            if (!hasNodeCount && !hasWorkload) return null
+            check(hasNodeCount && hasWorkload) {
+                "ConstraintLayout performance profile requires both node count and workload."
+            }
+            val nodeCount = intent.getIntExtra(EXTRA_CONSTRAINT_LAYOUT_NODE_COUNT, -1)
+            check(nodeCount in SupportedNodeCounts) {
+                "Unsupported ConstraintLayout node count: $nodeCount"
+            }
+            return ConstraintLayoutPerformanceProfile(
+                nodeCount = nodeCount,
+                workload = ConstraintLayoutPerformanceWorkload.fromWireValue(
+                    checkNotNull(intent.getStringExtra(EXTRA_CONSTRAINT_LAYOUT_WORKLOAD)),
+                ),
+            )
+        }
+    }
+}
+
 /**
  * 性能对比页支持的渲染引擎。
  * Rendering engines supported by the performance comparison screen.

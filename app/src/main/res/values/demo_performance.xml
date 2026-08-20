@@ -29,4 +29,8 @@
     <string name="demo_performance_node">Node %1$d</string>
     <string name="demo_performance_detail">Detail</string>
     <string name="demo_performance_detail_content">Additional nested content for section %1$d</string>
+    <string name="demo_performance_constraint_ready">ConstraintLayout · %1$s · %2$d · %3$s</string>
+    <string name="demo_performance_constraint_revision">Revision %1$d</string>
+    <string name="demo_performance_constraint_update">Update</string>
+    <string name="demo_performance_constraint_reset">Reset</string>
 </resources>

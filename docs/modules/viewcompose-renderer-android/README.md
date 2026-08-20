@@ -111,7 +111,21 @@ native instances. The cached ConstraintLayout `2.2.1` and manual Robolectric evi
 only for the original defect reproduction. The follow-up Gradle 8.13 run resolved
 ConstraintLayout `2.2.2` plus core `1.1.2` and passed all 451 Renderer tests, including the 12 graph
 and 16 focused ConstraintLayout cases. The `2.2.2` JVM compatibility limitation is therefore
-retired; device, memory, and performance gates remain pending in the owning hardening plan.
+retired. The subsequent rooted Xiaomi MI 6 / Android 9 matrix passed 3/3 tests across
+light/LTR/font-scale 1.0 and dark/RTL/font-scale 1.3, all six retained helper kinds, 200 helper-state
+alternations, and nine manually reviewed screenshots without unexpected renderer/helper warnings.
+That pass also found and closed an Android 9 environment-transition defect: retained programmatic
+helpers now synchronize `layoutDirection` with the container before graph apply, so AndroidX
+resolves logical Guideline begin/end correctly after an LTR-to-RTL change. The transition
+regression and exact mirrored device geometry classify the renderer result as **improved**. The
+final rooted 10/50/100-node matrix then passed the corrected Android-Views-normalized longitudinal
+gate with no stable timing or peak-heap regression. During that gate the renderer removed an
+O(n-squared) child-index lookup from rollback snapshot capture and avoids a duplicate snapshot when
+no Group/Layer/Placeholder content overlay was released; topology-50 P50 moved from a failing
+`7.076 ms` to `6.162 ms` against the `6.304 ms` baseline. The performance-safety conclusion is
+**no material change**; four unstable actions remain `inconclusive`, and direct Android Views still
+owns a material P95 advantage. Broader cross-OEM/API and performance-leadership work remains a
+post-release limitation rather than an observed first-release correctness defect.
 
 ## Principal APIs
 

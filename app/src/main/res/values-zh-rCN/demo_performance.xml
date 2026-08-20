@@ -29,4 +29,8 @@
     <string name="demo_performance_node">节点 %1$d</string>
     <string name="demo_performance_detail">详情</string>
     <string name="demo_performance_detail_content">区块 %1$d 的附加嵌套内容</string>
+    <string name="demo_performance_constraint_ready">ConstraintLayout · %1$s · %2$d · %3$s</string>
+    <string name="demo_performance_constraint_revision">版本 %1$d</string>
+    <string name="demo_performance_constraint_update">更新</string>
+    <string name="demo_performance_constraint_reset">重置</string>
 </resources>

@@ -14,10 +14,10 @@ dependencies {
 }
 ```
 
-- Stability: **Alpha**. The current source contains the first-release API and renderer hard cut,
-  but its complete Robolectric, physical-device, Demo, AndroidX `2.2.2`, and performance-safety
-  evidence is still release-blocking under the active
-  [first-release hardening plan](../../project/plans/constraintlayout-native-engine-hardening.md).
+- Stability: **Alpha**. The current source contains the first-release API and renderer hard cut;
+  its Robolectric, physical-device, Demo, AndroidX `2.2.2`, performance-safety, documentation, and
+  repository release gates are accepted under the completed first-release hardening plan,
+  archived as `docs/archive/constraintlayout-native-engine-hardening.md`.
   Broader parity and optimization are owned by a separate
   [post-release expansion plan](../../project/plans/constraintlayout-parity-performance-expansion.md)
   that remains Changeset-free until the first release is published and tagged.
@@ -160,10 +160,9 @@ acceptance: it used a manual classpath and `2.2.1`, emitted Robolectric-only res
 diagnostics for generated IDs. A follow-up Gradle 8.13 run resolved ConstraintLayout `2.2.2` plus
 core `1.1.2` and passed 75/75 UI Contract tests, 11/11 DSL tests, and 451/451 Renderer tests,
 including the 12 graph and 16 focused ConstraintLayout cases; `verifyDocumentationStructure` also
-passed. The formal JVM compatibility conclusion remains **improved**. It still does not cover the
-exhaustive device/helper matrix, visuals, memory, or performance. Release closure therefore still
-requires warning-free Demo/device evidence and the no-material-regression controls. Classified
-update fast paths, Grid, CircularFlow, and broader parity remain post-release work.
+passed. The formal JVM compatibility conclusion remains **improved**. The later device and
+performance matrices below close the first-release acceptance scope; classified update fast paths,
+Grid, CircularFlow, and broader parity remain post-release work.
 
 The 2026-08-19 DSL safety follow-up passed 17/17 ConstraintLayout module tests: 12 behavior tests
 and five Kotlin 2.0.21 compiler fixtures. The positive typed-axis/reference sample compiled; a
@@ -173,8 +172,8 @@ entry all failed compilation as required. The prior generic target/type-alias su
 those four invalid forms, so the compile-safety conclusion is **improved**. The same run proved
 nested helper snapshots remain independent and a retained scope rejects late declarations.
 `verifyDslApiContracts`, the UI Foundation scoped-container sample, Demo compilation, and Preview
-compilation also passed. This is source-contract evidence only; it does not replace the remaining
-device or performance gates.
+compilation also passed. This source-contract evidence is complemented by the device and performance
+acceptance below.
 
 The focused 2026-08-19 physical-device rerun on a Samsung SM-G991B / Android 13 accepted the
 revised Guideline/Barrier fixture in light theme, LTR, and font scale 1.0. The Barrier marker
@@ -183,8 +182,46 @@ delta (17.2% of the 1080 px screen width), while the visible 55% Guideline staye
 complete marker remained inside its container. The exact geometry instrumentation passed 1/1,
 the warning-free Demo APK assembled successfully, and filtered logs contained no app-fatal,
 ConstraintSet, renderer-layout, or helper-layer failure. The focused visual/geometry conclusion
-is **improved**. This is one default-configuration fixture, so the all-helper dark-theme, RTL,
-enlarged-font, memory, and performance gates remain release-blocking.
+is **improved**. This focused default-configuration fixture was followed by the complete matrix
+below.
+
+The complete 2026-08-19 device acceptance then passed 3/3 instrumentation tests on a rooted
+Xiaomi MI 6 / Android 9. It exercised the complete retained helper surface in light/LTR/font-scale
+1.0 and dark/RTL/font-scale 1.3 configurations, asserted exact native Guideline, Barrier, Flow,
+Group, Layer, and Placeholder effects, and completed 100 retained-helper plus 100 virtual-helper
+state alternations with constant child/helper counts. Nine screenshots were reviewed manually;
+the focused Guideline/Barrier fixture, all Barrier directions, single-column Flow, hidden Group,
+Layer transform, and Placeholder transfer remained contained and legible in both configurations.
+Filtered logs contained no unexpected ConstraintSet, helper-layer, renderer-layout, or fatal entry.
+
+On 2026-08-20, the archival candidate was rebuilt after the final Demo localization and benchmark
+harness edits, then installed over the prior fixture on the same Xiaomi device. Application APK
+`0bd034432282130b9c7c99f0fe9d0120699d113ff3e288936a3b9562f3e09673` and test APK
+`2c555fafe3dbdbd96c0bbbd43401179d115483ca601ee01c3c813739b4bc26d3` passed the same 3/3
+release-device tests in `195.759 s`. This reproduces the accepted exact-geometry, virtual-helper,
+bounded-registry, and warning-free behavior after the final build; the conclusion is **no material
+change**. It does not add another OEM/API point or replace the earlier nine-screenshot manual
+review, so the same single-device limitation remains.
+
+The RTL pass exposed one Android 9 lifecycle defect before acceptance: a retained programmatic
+helper could keep its previously resolved LTR direction after the container changed to RTL, which
+prevented AndroidX from mirroring logical Guideline begin/end. The renderer now synchronizes each
+retained helper's `layoutDirection` with its container before applying the graph. A transition
+regression fails without that synchronization and passes with exact mirrored geometry afterward;
+the device correctness conclusion is **improved**. This evidence covers one physical API 28 device
+and two high-risk configurations, not every supported OEM/API combination.
+
+The final rooted first-release performance matrix compared the pre-hard-cut ViewCompose APK, the
+candidate, and direct Android Views across stable-content, scalar, helper, and topology actions at
+10/50/100 nodes. Eight actions were stable on both ViewCompose arms; four remained
+`inconclusive` after one adjacent repeat. No stable frame P50/P95 or median peak-heap row regressed,
+and the corrected Android-Views-normalized `--enforce` gate passed. The renderer also removed an
+O(n-squared) child-index lookup from rollback snapshot capture and skipped an identical second
+snapshot when no content overlay had been released; this changed the previously failing stable
+topology-50 P50 from `7.076 ms` to `6.162 ms`, versus the `6.304 ms` baseline. The first-release
+performance-safety conclusion is **no material change**. Full absolute results, normalized deltas,
+CVs, limitations, and protocol are recorded in
+[performance tooling](../../tooling/performance.md#245-constraintlayout-first-release-safety).
 
 ## Alpha source migration
 
@@ -214,11 +251,11 @@ deprecated compatibility alias or raw AndroidX escape hatch.
 - Prefer simpler containers when constraints do not add value; ConstraintLayout incurs a solver pass.
 - Avoid rebuilding large helper graphs from rapidly changing state.
 
-There is no accepted ConstraintLayout-specific direct-native benchmark yet. The first-release plan
-must prove no material regression, but it does not establish performance leadership. Do not
-describe the adapter as the fastest ViewCompose layout path until the post-release expansion plan
-records reproducible 10/50/100-node direct-native, published-baseline, and candidate results in the
-performance documentation.
+The accepted 10/50/100-node first-release matrix establishes **no material change** against the
+pre-hard-cut ViewCompose source for every stable row; it does not establish performance leadership.
+Direct Android Views remains materially faster, especially at P95. Do not describe this adapter as
+the fastest ViewCompose layout path. The post-release expansion plan owns classified scalar and
+topology fast paths, multi-device replication, and any future leadership claim.
 
 ## Related documentation
 

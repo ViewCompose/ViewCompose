@@ -73,6 +73,7 @@
     <string name="demo_layouts_helper_short_copy">Short copy.</string>
     <string name="demo_layouts_guideline_partition">Guideline · 55\u0025 max text width</string>
     <string name="demo_layouts_barrier_marker">Barrier marker</string>
+    <string name="demo_layouts_barrier_start_side">Start</string>
     <string name="demo_layouts_chain_title">Chain arrangement</string>
     <string name="demo_layouts_chain_summary">A horizontal chain distributes space and remains stable after patches.</string>
     <string name="demo_layouts_node_a">A</string>

@@ -73,6 +73,7 @@
     <string name="demo_layouts_helper_short_copy">短文案。</string>
     <string name="demo_layouts_guideline_partition">Guideline · 文本最大宽度 55\u0025</string>
     <string name="demo_layouts_barrier_marker">Barrier 标记</string>
+    <string name="demo_layouts_barrier_start_side">起点</string>
     <string name="demo_layouts_chain_title">Chain 编排</string>
     <string name="demo_layouts_chain_summary">水平 Chain 统一分配空间，并在 Patch 后保持稳定。</string>
     <string name="demo_layouts_node_a">A</string>

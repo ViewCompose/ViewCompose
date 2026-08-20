@@ -67,4 +67,42 @@ class PerformanceComparisonContractTest {
             PerformanceScenario.fromIntent(intent)
         }
     }
+
+    @Test
+    fun `constraint layout profile accepts every supported scale and workload`() {
+        ConstraintLayoutPerformanceProfile.SupportedNodeCounts.forEach { nodeCount ->
+            ConstraintLayoutPerformanceWorkload.entries.forEach { workload ->
+                val parsed = ConstraintLayoutPerformanceProfile.fromIntent(
+                    Intent()
+                        .putExtra(EXTRA_CONSTRAINT_LAYOUT_NODE_COUNT, nodeCount)
+                        .putExtra(EXTRA_CONSTRAINT_LAYOUT_WORKLOAD, workload.wireValue),
+                )
+                assertEquals(nodeCount, parsed?.nodeCount)
+                assertEquals(workload, parsed?.workload)
+            }
+        }
+    }
+
+    @Test
+    fun `constraint layout profile rejects partial or unsupported input`() {
+        assertThrows(IllegalStateException::class.java) {
+            ConstraintLayoutPerformanceProfile.fromIntent(
+                Intent().putExtra(EXTRA_CONSTRAINT_LAYOUT_NODE_COUNT, 10),
+            )
+        }
+        assertThrows(IllegalStateException::class.java) {
+            ConstraintLayoutPerformanceProfile.fromIntent(
+                Intent()
+                    .putExtra(EXTRA_CONSTRAINT_LAYOUT_NODE_COUNT, 25)
+                    .putExtra(EXTRA_CONSTRAINT_LAYOUT_WORKLOAD, "stable"),
+            )
+        }
+        assertThrows(IllegalStateException::class.java) {
+            ConstraintLayoutPerformanceProfile.fromIntent(
+                Intent()
+                    .putExtra(EXTRA_CONSTRAINT_LAYOUT_NODE_COUNT, 10)
+                    .putExtra(EXTRA_CONSTRAINT_LAYOUT_WORKLOAD, "unknown"),
+            )
+        }
+    }
 }

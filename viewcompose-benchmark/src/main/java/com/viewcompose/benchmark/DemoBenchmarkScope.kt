@@ -266,12 +266,23 @@ internal fun MacrobenchmarkScope.startPerformanceScenarioAndWait(
     scenarioId: String,
     engine: String,
     shadowRenderPolicy: String? = null,
+    constraintLayoutNodeCount: Int? = null,
+    constraintLayoutWorkload: String? = null,
 ) {
+    check((constraintLayoutNodeCount == null) == (constraintLayoutWorkload == null)) {
+        "ConstraintLayout benchmark setup requires both node count and workload."
+    }
     startDemoScenarioAndWait(scenarioId) {
         putExtra("performance_engine", engine)
         removeExtra("shadow_render_policy")
+        removeExtra("constraint_layout_node_count")
+        removeExtra("constraint_layout_workload")
         shadowRenderPolicy?.let { policy ->
             putExtra("shadow_render_policy", policy)
+        }
+        constraintLayoutNodeCount?.let { nodeCount ->
+            putExtra("constraint_layout_node_count", nodeCount)
+            putExtra("constraint_layout_workload", checkNotNull(constraintLayoutWorkload))
         }
     }
     waitForScenarioTarget(scenarioId, DemoTargetRole.Target)

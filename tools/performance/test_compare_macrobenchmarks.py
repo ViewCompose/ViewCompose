@@ -172,11 +172,7 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
         )
         self.assertEqual(
             sum(
-                (
-                    2
-                    if comparison.ANDROID_VIEWS_ENGINE in contract.methods
-                    else 1
-                ) * 6
+                (len(contract.methods) - 1) * 6
                 for contract in comparison.SCENARIOS
             ),
             len(comparisons),
@@ -206,6 +202,15 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
         self.assertTrue(
             any(item.scenario == "shadow_list_scroll" for item in comparisons),
         )
+        constraint_control = next(
+            item
+            for item in comparisons
+            if item.scenario == "constraint_layout_topology_100"
+            and item.metric == "frameDurationCpuMs"
+            and item.statistic == "P50"
+        )
+        self.assertEqual(comparison.ANDROID_VIEWS_ENGINE, constraint_control.control_engine)
+        self.assertEqual(4, constraint_control.workload_revision)
 
     def test_builds_partial_shadow_report_when_pairs_are_complete(self) -> None:
         partial = result()
@@ -410,6 +415,7 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
                 result(
                     viewcompose_multiplier=1.25,
                     compose_multiplier=1.25,
+                    android_views_multiplier=1.25,
                 ),
             ),
         )
@@ -421,6 +427,64 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
         )
 
         self.assertFalse(any(item.failed for item in regressions))
+
+    def test_uses_android_views_for_scenarios_without_compose(self) -> None:
+        baseline = comparison.build_comparisons(
+            comparison.benchmark_entries(result()),
+        )
+        current = comparison.build_comparisons(
+            comparison.benchmark_entries(
+                result(viewcompose_multiplier=1.25),
+            ),
+        )
+
+        regressions = comparison.build_regressions(
+            current=current,
+            baseline=baseline,
+            policy=self.policy,
+        )
+        constraint_regressions = [
+            item
+            for item in regressions
+            if item.scenario.startswith("constraint_layout_")
+        ]
+
+        self.assertTrue(constraint_regressions)
+        self.assertTrue(all(item.failed for item in constraint_regressions))
+        self.assertEqual(
+            {comparison.ANDROID_VIEWS_ENGINE},
+            {item.control_engine for item in constraint_regressions},
+        )
+
+    def test_unstable_control_pair_is_inconclusive_not_failed(self) -> None:
+        baseline_entries = comparison.benchmark_entries(result())
+        current_entries = comparison.benchmark_entries(
+            result(viewcompose_multiplier=1.25),
+        )
+        baseline_stability = comparison.build_stability(baseline_entries, 0.15)
+        current_stability = [
+            replace(item, stable=False)
+            if item.scenario == "constraint_layout_topology_100"
+            and item.engine == comparison.VIEWCOMPOSE_ENGINE
+            else item
+            for item in comparison.build_stability(current_entries, 0.15)
+        ]
+
+        regressions = comparison.build_regressions(
+            current=comparison.build_comparisons(current_entries),
+            baseline=comparison.build_comparisons(baseline_entries),
+            policy=self.policy,
+            current_stability=current_stability,
+            baseline_stability=baseline_stability,
+        )
+        topology = next(
+            item
+            for item in regressions
+            if item.scenario == "constraint_layout_topology_100"
+        )
+
+        self.assertFalse(topology.interpretable)
+        self.assertFalse(topology.failed)
 
     def test_rejects_cross_revision_regression_comparison(self) -> None:
         baseline = comparison.build_comparisons(

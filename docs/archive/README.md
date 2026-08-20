@@ -26,6 +26,7 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `constraintlayout-native-engine-hardening.md` | ConstraintLayout 首发硬切与加固已完成：事务图、完整 Helper 所有权、类型安全 DSL、AndroidX `2.2.2`、真机矩阵、固定频率性能安全对照、双语文档和仓库发版门禁均已闭环；后续能力对齐与性能领先工作由有效的发版后计划承接 |
 | `android-views-performance-control.md` | 非阴影列表与复杂布局已建立 ViewCompose、Compose、Android Views 三引擎对照；修正后的 revision-4 固定频率 15 方法矩阵、报告工具、双语性能结论、`qaQuick` 与 119 项真机回归均已闭环，阴影原生对照需先定义等价渲染契约后再单独立项 |
 | `dsl-contract-convergence.md` | 布局与主题交互反馈已硬切到渲染器中立 Indication，冗余组件别名、输入 Wrapper 与误导性 AnimatedContent 入口已移除，保留 DSL 的 Q3 文档、结构门禁、全库 `qaQuick` 和针对性真机反馈测试均已闭环 |
 | `native-widget-contract-convergence.md` | 36 个第一方 Android View Backend 已完成契约审计；状态、输入、身份、无障碍、RTL、Pager、Adaptive Grid 与可移植测量契约已硬切，真实嵌套滚动手势缺陷同步闭环，编译样例、迁移文档、发布登记以及 122 项真机测试全部通过 |

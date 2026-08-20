@@ -2,18 +2,21 @@
 
 ## Status
 
-Active and release-blocking. Production hardening started on 2026-08-18. The hard-cut transport and
-DSL source, immutable graph compiler, complete helper registry, clean-set native commit/rollback,
+Completed and archived on 2026-08-20. Production hardening started on 2026-08-18. The hard-cut
+transport and DSL source, immutable graph compiler, complete helper registry, clean-set native commit/rollback,
 bounded diagnostics, dedicated DSL Scope, axis-typed references, reference-based ConstraintSet,
 Q3 samples, ADR, migration table, and first Changeset are now present. Pure DSL/graph tests, an
 offline Android 36 + cached ConstraintLayout `2.2.1` source compilation, and a focused API 35
 Robolectric run pass. The Gradle-managed ConstraintLayout scope and documentation gate now also
-pass against AndroidX ConstraintLayout `2.2.2`, but no delivery phase is accepted yet: the complete
-all-helper device matrix and interpreted performance controls remain release-blocking.
+pass against AndroidX ConstraintLayout `2.2.2`. The complete all-helper physical-device and
+configuration matrix is accepted, including the Android 9 retained-helper RTL transition
+regression. The final fixed-clock performance controls are accepted with zero stable regressions.
+Repository-wide release, DSL API, documentation, development-tooling-isolation, and Changeset
+intent gates passed before archival; the source is ready to enter the release window.
 
 Topology/scalar optimization, high-value AndroidX parity, the complete configuration/screenshot
 matrix, and performance-leadership evidence have been split into the active
-[ConstraintLayout parity and performance expansion plan](./constraintlayout-parity-performance-expansion.md).
+[ConstraintLayout parity and performance expansion plan](../project/plans/constraintlayout-parity-performance-expansion.md).
 That follow-up owns no Changeset and must not begin production implementation until this plan is
 archived and the ensuing release window has completed.
 
@@ -26,11 +29,10 @@ This plan is canonical English-only under the documentation-governance policy. D
 behavior, compatibility, migration, benchmark, and operational conclusions must move into the
 owning active documents, with required Simplified Chinese mirrors, before the plan is archived.
 
-Last verified: 2026-08-19.
+Last verified: 2026-08-20.
 
-Next action: complete the remaining physical-device all-helper warning/geometry matrix, including
-dark theme, RTL, and enlarged-font checks. Only after that evidence is accepted may the
-performance-safety controls and Phase 3 release closeout begin.
+Next action: freeze this source in a reviewed commit, then generate and review the deterministic
+release plan from a clean, fetched checkout before Central upload and tagging.
 
 ## Maven release changesets
 
@@ -38,20 +40,24 @@ performance-safety controls and Phase 3 release closeout begin.
   Contract and ConstraintLayout hard cuts, Android Renderer correctness work, Preview-only source
   migration, the UI Foundation scoped-container construction boundary, and AndroidX dependency
   pin. It remains part of the first-release train.
+- `release/changes/20260819-constraintlayout-retained-helper-rtl.json` classifies the follow-up
+  Android Renderer fix that synchronizes retained native helper direction across runtime LTR/RTL
+  transitions on older Android releases and removes redundant rollback-snapshot work found by the
+  release performance gate.
 
 ## Execution ledger
 
 | Area | Current result | Acceptance state |
 | --- | --- | --- |
-| Q3 API and migration | Dedicated `ConstraintLayoutScope`; immutable post-content helper snapshot; horizontal/vertical/baseline target planes; reference-based `ConstraintSetBuilder.constrain`; typed dimensions and ratio; strict IDs; migration table and compiled samples | Implemented; positive sample compilation plus four compiler-negative contracts pass; broader release gates pending |
+| Q3 API and migration | Dedicated `ConstraintLayoutScope`; immutable post-content helper snapshot; horizontal/vertical/baseline target planes; reference-based `ConstraintSetBuilder.constrain`; typed dimensions and ratio; strict IDs; migration table and compiled samples | Accepted; positive sample compilation plus four compiler-negative contracts pass |
 | Architecture | ADR-0016 accepted; module and renderer ownership docs plus Chinese mirrors updated | Implemented; `verifyDocumentationStructure` passed |
-| Graph validation | Complete namespace/reference/anchor/range/circle/chain/helper preflight with structured rejection | Gradle-managed JUnit: 12/12 passed; broader matrix pending |
-| Native ownership | One registry owns all six retained helper View kinds; child IDs enter AndroidX's index before `onViewAdded`; Barrier uses `Barrier.*` direction constants | Gradle-managed Robolectric: 16/16 passed against ConstraintLayout `2.2.2`, including exact Barrier geometry, 1,000 retypes, one-ID retyping across all six helper kinds, and all-kind declaration reorder identity; device matrix pending |
+| Graph validation | Complete namespace/reference/anchor/range/circle/chain/helper preflight with structured rejection | Accepted; Gradle-managed JUnit 12/12 passed |
+| Native ownership | One registry owns all six retained helper View kinds; child IDs enter AndroidX's index before `onViewAdded`; Barrier uses `Barrier.*` direction constants; retained helper direction follows the container across environment changes | Gradle-managed Robolectric plus rooted Xiaomi MI 6 / Android 9 device matrix accepted, including exact LTR/RTL geometry, 1,000 JVM retypes, 200 device alternations, one-ID retyping across all six helper kinds, and all-kind declaration reorder identity |
 | Native transaction | Clean ConstraintSet application, state snapshots, rollback, accepted revision, bounded diagnostics | Invalid-candidate retention, injected mid-commit failure rollback, and valid retry passed |
 | Helper overlays | Group/Layer/Placeholder child runtime state is restored before replacement and retained for rollback | Group removal/rebind, attached Layer transform/removal, Placeholder release, and Layer detach/reattach regressions passed |
 | Dependency | Version catalog pinned to stable AndroidX ConstraintLayout `2.2.2` | Gradle runtime resolution confirmed `constraintlayout:2.2.2` and `constraintlayout-core:1.1.2`; focused compatibility run passed |
-| Demo | Hard-cut API migration and terminology update; obvious chain-axis conflicts removed; the focused Guideline/Barrier fixture now exposes wrap-content source bounds, a visible 55% Guideline, and an End Barrier that follows the longest source | Focused light/LTR/default-font build, screenshot review, and 1/1 device geometry test accepted on SM-G991B; complete all-helper/configuration review pending |
-| Performance safety | No new result | Required unchanged/direct-native controls pending |
+| Demo | Hard-cut API migration and terminology update; obvious chain-axis conflicts removed; the focused Guideline/Barrier fixture now exposes wrap-content source bounds, a visible 55% Guideline, and an End Barrier that follows the longest source | Focused Samsung check plus Xiaomi light/LTR/font-scale 1.0 and dark/RTL/font-scale 1.3 all-helper review accepted; 3/3 tests and nine screenshots passed without overlap or unexpected warnings |
+| Performance safety | Root-fixed pre-hard-cut/candidate/direct-native matrix at 10/50/100 nodes; corrected engine-neutral longitudinal gate; O(n-squared) rollback snapshot lookup removed | Accepted; 8/12 actions stable on both ViewCompose arms, four inconclusive, zero stable timing or peak-heap regressions, `--enforce` passed |
 
 The initial offline compilation against cached `2.2.1` remains only the defect-reproduction and
 source-level sanity baseline. The accepted JVM evidence below comes from the repository's Gradle
@@ -133,9 +139,77 @@ Behavior tests also proved that nested ConstraintLayout scopes freeze independen
 snapshots and that a retained scope rejects late reference/helper declarations rather than silently
 mutating an already emitted payload. `verifyDslApiContracts`, UI Foundation sample compilation,
 Demo compilation, and Preview compilation passed in the same acceptance step. The limitation is
-that compiler fixtures establish Kotlin source rejection, not IDE completion quality, Java source
-ergonomics, device geometry, or runtime performance. The next action remains the all-helper device
-matrix followed by the performance-safety controls.
+that compiler fixtures establish Kotlin source rejection, not IDE completion quality or Java
+source ergonomics. The later device and performance matrices close the runtime acceptance scope.
+
+### Complete physical-device interpretation — 2026-08-19
+
+The release instrumentation passed 3/3 tests in 193.142 seconds on a rooted Xiaomi MI 6 running
+Android 9 / API 28. The configuration test covered light theme, LTR, and font scale 1.0 plus dark
+theme, RTL, and font scale 1.3. The native-helper test asserted exact Guideline and Barrier
+coordinates and containment. The virtual-helper test asserted Flow order, Group visibility, Layer
+rotation/scale/translation, and Placeholder content transfer. A lifecycle stress path completed
+100 retained-helper and 100 virtual-helper alternations while child/helper counts remained bounded.
+Filtered output contained no unexpected ConstraintSet, helper-layer, renderer-layout, or fatal
+entry.
+
+Nine screenshots were pulled and reviewed manually: light/dark focused Guideline/Barrier,
+light/dark all-Barrier directions, light/dark Flow, light/dark Group/Layer/Placeholder, and the
+virtual-helper effects fixture. The original focused label could exceed its logical partition under
+RTL plus enlarged fonts; constraining it between the Guideline and parent end changed the result to
+a contained two-line label in both directions. All Barrier markers remained in their expected
+partition, Flow stayed a legible single column, Group hiding and Layer transforms were visible, and
+Placeholder content transfer remained unambiguous.
+
+The first RTL run also exposed a renderer defect rather than a test-only discrepancy. A retained
+programmatic AndroidX helper created under LTR kept `layoutDirection=LTR` after the container moved
+to RTL on Android 9, so AndroidX did not mirror logical Guideline begin/end. The renderer now
+synchronizes retained helper direction before graph apply. The transition regression fails against
+the old behavior and passes with exact mirrored geometry after the fix. The old overflowing RTL
+probe and stale helper direction changed to contained geometry with matching RTL direction, so the
+device result is **improved**.
+
+This closes the required all-helper and high-risk configuration matrix on one physical API 28
+device. It does not represent every supported OEM/API pair, and the Gradle connected-device task
+cannot install through MIUI's USB-install restriction; the same built APKs were installed with the
+authorized root package manager and executed directly through AndroidJUnitRunner.
+
+### Complete performance-safety interpretation — 2026-08-19
+
+The rooted Xiaomi MI 6 / API 28 matrix compared the pre-hard-cut ViewCompose APK, the final
+candidate, and direct Android Views for stable-content, scalar, helper, and topology actions at
+10, 50, and 100 nodes. Every method used five iterations under fixed CPU 1.4016/1.8048 GHz and GPU
+515 MHz clocks, suspended charging, stopped vendor performance services, per-method cooling to at
+most 37 degrees Celsius, R8/resource shrink, and the actual `run-from-apk` identity. The baseline
+and final candidate SHA-256 values were respectively
+`2b32ca7539be121615fb3e7b61953101be7b9a2e4ac55215690d88a480b25161` and
+`a7d681b90941a8d318108d709b3a7b77147b614180a8d2124840416d07148fac`.
+
+The first corrected Android-Views-controlled report exposed a stable topology-50 P50 regression:
+`6.304 ms` baseline to `7.076 ms` candidate, or 12.3% (`+0.772 ms`). Impact analysis found that
+rollback snapshot capture recorded each already-indexed child through another `indexOfChild`
+search, making the order capture O(n-squared), and captured an identical second full snapshot when
+no Group/Layer/Placeholder content overlay had been released. Removing those two redundant paths
+without changing transaction coverage produced `6.162/23.609 ms` for topology-50 versus the
+baseline `6.304/23.003 ms`: P50 2.3% lower and P95 2.6% higher, both within the gate. This is
+**no material change** and closes the observed regression.
+
+One adjacent repeat replaced only original rows over the 0.15 CV limit; raw rejected rows remain
+retained. Eight of twelve actions are stable on both ViewCompose arms, while scalar-10,
+scalar-100, topology-10, and topology-100 remain **inconclusive**. Across stable rows no P50, P95,
+or median peak-heap result crosses the combined repository gate. Peak heap changes range from
+-14.4% to +5.3%, below the 15% and 2048 KiB conjunctive threshold. The fixed report tool now
+prefers Compose but selects Android Views for scenarios without Compose, and marks an unstable
+subject/control row `INCONCLUSIVE`; 22 tool tests pass and `--enforce` reports PASS with zero stable
+regressions.
+
+The matrix-level first-release classification is **no material change**, not performance
+leadership. Direct Android Views remains materially faster, particularly at P95. Limitations are
+one API 28 device, `run-from-apk` JIT/code-placement sensitivity, four unresolved CV actions, peak
+rather than post-GC retained memory, and no P99. Durable absolute results, normalized deltas,
+limitations, and next action are in `docs/tooling/performance.md`; classified fast paths and
+multi-device replication remain in the post-release expansion plan. The next action is the
+repository-wide release gate and archival handoff.
 
 ## Objective
 
@@ -167,11 +241,11 @@ container.
 | Owner | Responsibility after the split | Release effect |
 | --- | --- | --- |
 | This plan | Existing-helper correctness, warning-free geometry, API hard cut, graph validation, atomic commit/rollback, focused device evidence, performance-safety checks, documentation, Changesets, and archive handoff | Blocks the first release once it owns a production Changeset; completion opens the release window |
-| [ConstraintLayout parity and performance expansion](./constraintlayout-parity-performance-expansion.md) | No-op/content/scalar/environment/topology optimization, broader AndroidX parity, Grid, CircularFlow, full visual/configuration coverage, performance-leadership evidence, and a repository-wide structural DSL Scope consistency audit | Remains `- None.` during the first-release train and begins only after that train is tagged |
-| [Unified roadmap](../roadmap.md) | Current capability state and the two-stage next-focus statement | Must name both plans and keep first-release work separate from post-release expansion |
-| [ConstraintLayout module manual](../../modules/viewcompose-constraintlayout-androidx/README.md) | Current public API, behavior, limitations, migration, and performance guidance | Must receive durable conclusions from each accepted phase rather than leaving them only in a plan |
-| [Animation Compose-capability expansion](./animation-compose-capability-expansion.md) | Bounds animation and shared-motion decisions | Unchanged; neither ConstraintLayout plan introduces MotionScene or a competing animation engine |
-| [Demo benchmark and verification harness rearchitecture](./demo-benchmark-verification-harness-rearchitecture.md) | Reusable scenario, screenshot, fixture, and benchmark infrastructure | Unchanged; this plan owns only the ConstraintLayout fixtures, assertions, and interpreted evidence added through that harness |
+| [ConstraintLayout parity and performance expansion](../project/plans/constraintlayout-parity-performance-expansion.md) | No-op/content/scalar/environment/topology optimization, broader AndroidX parity, Grid, CircularFlow, full visual/configuration coverage, performance-leadership evidence, and a repository-wide structural DSL Scope consistency audit | Remains `- None.` during the first-release train and begins only after that train is tagged |
+| [Unified roadmap](../project/roadmap.md) | Current capability state and the two-stage next-focus statement | Must name both plans and keep first-release work separate from post-release expansion |
+| [ConstraintLayout module manual](../modules/viewcompose-constraintlayout-androidx/README.md) | Current public API, behavior, limitations, migration, and performance guidance | Must receive durable conclusions from each accepted phase rather than leaving them only in a plan |
+| [Animation Compose-capability expansion](../project/plans/animation-compose-capability-expansion.md) | Bounds animation and shared-motion decisions | Unchanged; neither ConstraintLayout plan introduces MotionScene or a competing animation engine |
+| [Demo benchmark and verification harness rearchitecture](../project/plans/demo-benchmark-verification-harness-rearchitecture.md) | Reusable scenario, screenshot, fixture, and benchmark infrastructure | Unchanged; this plan owns only the ConstraintLayout fixtures, assertions, and interpreted evidence added through that harness |
 | Android Renderer transaction and failure documentation | Framework-wide renderer commit, rollback, and failure-report concepts | Remains authoritative; this plan integrates with those contracts instead of creating a private incompatible failure model |
 
 The split is a real release boundary, not an acceptance loophole. Any defect that can produce wrong
