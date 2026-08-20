@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.1.0 — 2026-08-20
+
 ### Added
 
 - Add an independent **Locate Device DSL** toolbar and Tools-menu action for opening the

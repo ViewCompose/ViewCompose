@@ -371,6 +371,7 @@ internal class ViewComposeReleasePlanner(
     private val declaredVersions: Map<String, MavenVersion>,
     private val declaredSourceRevisions: Map<String, String>,
     private val unpublishedArtifacts: Set<String>,
+    private val retiredArtifacts: Set<String>,
     private val dependencies: Map<String, Set<String>>,
 ) {
     fun plan(): ViewComposeReleasePlan {
@@ -386,6 +387,11 @@ internal class ViewComposeReleasePlanner(
             "Unpublished release markers contain unknown artifacts: " +
                 (unpublishedArtifacts - artifacts).sorted().joinToString()
         }
+        check(retiredArtifacts.intersect(artifacts).isEmpty()) {
+            "Retired release artifacts remain active: " +
+                retiredArtifacts.intersect(artifacts).sorted().joinToString()
+        }
+        val knownChangeSetArtifacts = artifacts + retiredArtifacts
         val repositoryRootRevision = git.rootRevision()
         val baselines = artifacts.associateWith { artifact ->
             artifactReleaseBaseline(
@@ -403,9 +409,9 @@ internal class ViewComposeReleasePlanner(
             val changeSetPaths = changedPaths
                 .filter { path ->
                     path.startsWith("release/changes/") && path.endsWith(".json")
-                }
+            }
             val changeSets = changeSetPaths.map { path ->
-                ReleaseChangeSetParser.parse(root.resolve(path), artifacts)
+                ReleaseChangeSetParser.parse(root.resolve(path), knownChangeSetArtifacts)
             }
             val declarations = changeSets.flatMap { changeSet ->
                 changeSet.changes.filter { change -> change.artifact == artifact }

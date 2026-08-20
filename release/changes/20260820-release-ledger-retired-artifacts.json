@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Repair release baselines and backfill missing preview-core release intent before the coordinated release.",
+  "changes": [
+    { "artifact": "viewcompose-host-android", "impact": "fix" },
+    { "artifact": "viewcompose-overlay-android", "impact": "fix" },
+    { "artifact": "viewcompose-preview-core", "impact": "fix" }
+  ]
+}

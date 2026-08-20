@@ -184,6 +184,11 @@ repository-history rule above. The planner then:
 6. writes deterministic `build/release-plan.json` and `build/release-plan.md` files that separate
    direct changes from dependency propagation.
 
+Historical Changesets may name coordinates listed in `release.retiredModules`. The planner treats
+those identifiers as valid immutable history while computing a first-release baseline, but it never
+creates a baseline, version recommendation, or dependency-propagated release for a retired
+coordinate. A retired identifier cannot simultaneously remain an active publication.
+
 The plan recommends, but does not silently choose, versions. Stable lines use semantic versioning:
 `fix` and `dependency` increment patch, `feature` increments minor, and `breaking` increments major
 after `1.0` or minor on a `0.x` line. A prerelease increments its existing numeric channel, for
@@ -501,8 +506,8 @@ cd tools/viewcompose-studio-plugin
 ./gradlew prepareSignedMarketplaceRelease
 ```
 
-The first Marketplace release must be uploaded through JetBrains Marketplace for initial review.
-After the plugin is approved, later releases can use:
+The Marketplace listing is approved. After the release owner reviews the prepared ZIP, signature,
+compatibility report, and change notes, follow-up releases can use:
 
 ```bash
 ./gradlew publishPlugin
@@ -526,4 +531,5 @@ Use `-PviewComposeMarketplaceChannels=default,eap` to select channels; the defau
    `maven/<artifact-id>/<version>` tag for every published artifact.
 9. Run `prepareMarketplaceRelease`, install the ZIP into the target Android Studio build, and do a
    final preview smoke test.
-10. Upload the first plugin release manually; enable token-based automation only after approval.
+10. For the approved plugin listing, review the signed ZIP and compatibility report, then publish
+    the follow-up release with the Marketplace token; a new listing still requires manual review.

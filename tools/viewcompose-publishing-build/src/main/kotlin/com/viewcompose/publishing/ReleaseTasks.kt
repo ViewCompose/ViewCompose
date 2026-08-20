@@ -80,6 +80,9 @@ abstract class PlanViewComposeReleaseTask : DefaultTask() {
     abstract val unpublishedArtifacts: ListProperty<String>
 
     @get:Input
+    abstract val retiredArtifacts: ListProperty<String>
+
+    @get:Input
     abstract val artifactDependencies: MapProperty<String, String>
 
     @get:OutputFile
@@ -103,6 +106,7 @@ abstract class PlanViewComposeReleaseTask : DefaultTask() {
             },
             declaredSourceRevisions = declaredSourceRevisions.get(),
             unpublishedArtifacts = unpublishedArtifacts.get().toSet(),
+            retiredArtifacts = retiredArtifacts.get().toSet(),
             dependencies = dependencies,
         ).plan()
         jsonOutput.get().asFile.writeParented(plan.toJson())
