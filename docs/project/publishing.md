@@ -209,6 +209,11 @@ updates only those modules in `gradle/viewcompose-publishing.properties`, pins t
 metadata-only release commit. Publication selection must match `build/release-plan.json`; after
 Central reports `Published`, create the signed per-artifact tags described above.
 
+Versioned module manuals rewrite source-relative Markdown targets to their public documentation
+routes, including Docusaurus number-prefix removal such as `0009-development-tooling-isolation.md`
+to `development-tooling-isolation/`. The production site build remains the authoritative
+broken-link gate for every generated release snapshot.
+
 The backfill Changeset dated 2026-08-04 classifies publication-relevant changes made after the
 first Central boundary and before this workflow existed. It is a one-time migration record, not a
 precedent for reconstructing release intent after merge.

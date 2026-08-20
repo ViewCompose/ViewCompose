@@ -124,6 +124,7 @@ test('rewrites historical manuals to immutable API and public document routes', 
   const rewritten = rewriteSnapshotLinks(
     '[API](https://docs.viewcompose.com/api/viewcompose-runtime/current/) ' +
       '[Architecture](../../architecture/overview.md) ' +
+      '[ADR](../../architecture/decisions/0009-development-tooling-isolation.md#activation) ' +
       '[Widget](../viewcompose-widget-core/README.md)',
     {
       artifact: 'viewcompose-runtime',
@@ -136,6 +137,7 @@ test('rewrites historical manuals to immutable API and public document routes', 
     rewritten,
     '[API](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha01/) ' +
       '[Architecture](/architecture/overview/) ' +
+      '[ADR](/architecture/decisions/development-tooling-isolation/#activation) ' +
       '[Widget](/modules/viewcompose-widget-core/0.1.0-alpha01/)',
   );
 

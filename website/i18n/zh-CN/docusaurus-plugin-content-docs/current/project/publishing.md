@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: cf539c6c6c25c370f7732554ddaacd9e77ff0b47fe2f73f0248425b583339a03
+translation_source_hash: 3a86778db87190edec4c6db7e2a9b92e3dcd18f0d65d3b5692ffd5f0d7348321
 translation_status: current
 ---
 
@@ -183,6 +183,10 @@ minor，`breaking` 在 `1.0` 后增加 major、在 `0.x` 增加 minor。预发�
 并向 `gradle/viewcompose-documentation-releases.properties` 追加不可变记录。审阅该 diff 后，以仅
 元数据 release commit 提交。发布选择必须与 `build/release-plan.json` 一致；Central 显示
 `Published` 后，再按前文规则创建每制品签名 tag。
+
+版本化模块手册会把源码中的相对 Markdown 目标改写为公开文档路由，包括移除 Docusaurus 数字
+前缀，例如把 `0009-development-tooling-isolation.md` 改写为
+`development-tooling-isolation/`。生产站点构建仍是所有已生成发布快照的权威断链门禁。
 
 2026-08-04 的 backfill Changeset 一次性记录了首个 Central 边界之后、此流程建立之前影响发布的
 改动。它只是迁移记录，不能作为以后在合并后补写发布意图的先例。
