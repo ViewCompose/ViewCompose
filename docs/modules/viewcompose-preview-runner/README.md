@@ -9,7 +9,7 @@ releases every frame-scoped owner after export.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-preview-runner:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04")
 }
 ```
 

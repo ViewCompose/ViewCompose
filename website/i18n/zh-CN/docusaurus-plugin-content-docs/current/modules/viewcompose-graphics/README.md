@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-graphics/README.md
-translation_source_hash: b2fdcb9dfd11e34069f19ec18c5b845e38e6bcb7c8bc2c82ca7deb927cc327ac
+translation_source_hash: 2a3729ce420573e09911d2f0b97f3257c3ce2c80a6e0f7550314ca603079a185
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ Draw-behind 与 Content-aware Modifier、感知缓存的命令构建，以及平
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha04")
 }
 ```
 

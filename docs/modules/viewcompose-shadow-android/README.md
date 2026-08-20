@@ -8,7 +8,7 @@ multi-layer effects, and connects them to the renderer's parent drawing planes.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha04")
 }
 ```
 

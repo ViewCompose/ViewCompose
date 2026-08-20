@@ -12,7 +12,7 @@ and rich-text span adapters live in renderer and host modules and translate to t
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha03")
 }
 ```
 

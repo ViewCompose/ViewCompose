@@ -35,18 +35,18 @@ published plugin and its debug-only artifacts now:
 
 ```kotlin title="build.gradle.kts (optional preview)"
 plugins {
-    id("com.viewcompose.preview") version "0.1.0-alpha02"
+    id("com.viewcompose.preview") version "0.1.0-alpha03"
 }
 
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha03")
     add(
         "viewComposePreviewWorkerHost",
-        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha02",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha03",
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha03",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04",
     )
 }
 ```
@@ -54,7 +54,7 @@ dependencies {
 These preview entries configure the native render pipeline but do not install its Android Studio
 interface. Before opening the preview, go to **Settings | Plugins | Marketplace**, search for
 `ViewCompose Preview`, and install it. Restart Android Studio if prompted. The IDE plugin is a
-separate installation from `id("com.viewcompose.preview")`; the current Marketplace line is `1.0.1`
+separate installation from `id("com.viewcompose.preview")`; the current Marketplace line is `1.1.0`
 for Android Studio build family `261.*`.
 
 ## What you will build
@@ -89,10 +89,10 @@ released to Maven Central:
 | `viewcompose-material3` | `0.1.0-alpha01` | Transitive design-system dependency |
 | `viewcompose-lifecycle-androidx` | `0.1.0-alpha01` | Transitive AndroidX integration |
 | `viewcompose-viewmodel-androidx` | `0.1.0-alpha01` | Transitive AndroidX integration |
-| `viewcompose-preview-gradle-plugin` | `0.1.0-alpha02` | Optional explicit plugin |
-| `viewcompose-preview-core` | `0.1.0-alpha02` | Optional debug dependency |
-| `viewcompose-preview-worker-host` | `0.1.0-alpha02` | Optional preview configuration |
-| `viewcompose-preview-runner` | `0.1.0-alpha03` | Optional preview configuration |
+| `viewcompose-preview-gradle-plugin` | `0.1.0-alpha03` | Optional explicit plugin |
+| `viewcompose-preview-core` | `0.1.0-alpha03` | Optional debug dependency |
+| `viewcompose-preview-worker-host` | `0.1.0-alpha03` | Optional preview configuration |
+| `viewcompose-preview-runner` | `0.1.0-alpha04` | Optional preview configuration |
 
 ViewCompose artifacts evolve independently. Check the
 [published module catalog](../modules/README.md) before mixing versions outside this verified set.

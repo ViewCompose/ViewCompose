@@ -14,7 +14,7 @@ repositories { mavenCentral() }
 
 dependencies {
     implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

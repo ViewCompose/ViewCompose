@@ -9,7 +9,7 @@ stream, Android `MotionEvent`, coroutine, mutable gesture state, or View.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha04")
 }
 ```
 

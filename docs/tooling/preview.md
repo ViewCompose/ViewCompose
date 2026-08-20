@@ -26,18 +26,18 @@ Apply the preview Gradle plugin and keep its artifacts on debug or tooling-only 
 
 ```kotlin title="build.gradle.kts"
 plugins {
-    id("com.viewcompose.preview") version "0.1.0-alpha02"
+    id("com.viewcompose.preview") version "0.1.0-alpha03"
 }
 
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha03")
     add(
         "viewComposePreviewWorkerHost",
-        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha02",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha03",
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha03",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04",
     )
 }
 ```
@@ -54,7 +54,7 @@ install it. Restart Android Studio if prompted. This IDE installation is require
 `ViewCompose Preview` tool window, gutter render actions, gallery, source navigation, incremental
 refresh, and diagnostics.
 
-The current Marketplace line is `1.0.1` and is advertised for Android Studio build family `261.*`.
+The current Marketplace line is `1.1.0` and is advertised for Android Studio build family `261.*`.
 The IDE plugin is versioned independently from the Maven artifacts and Gradle plugin.
 
 ### 3. Declare a preview entry
@@ -113,7 +113,7 @@ The provider API is supplied by the debug-scoped `viewcompose-preview` artifact:
 
 ```kotlin
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha03")
+    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha04")
 }
 ```
 
@@ -147,7 +147,7 @@ android {
 }
 
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha03")
+    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha04")
 }
 ```
 

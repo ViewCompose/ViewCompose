@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-coil/README.md
-translation_source_hash: a8976785491532d8bbd1311da7d2773e2364945fafc7c3748aafd7b0efa3a441
+translation_source_hash: 2e62b4ef1e6f6791b08e3a696efb941972edae3587d971dfc23f096c3916a5e7
 translation_status: current
 ---
 
@@ -13,7 +13,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha04")
 }
 ```
 

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: c5c15b82eaaeb4b785a76cbfd93fda2255fb216f548f2d47a21dda7dd10d283e
+translation_source_hash: 4056aefc8bd0b1a5ce0dabc8f72870c6c8dabce407e7f92f281242d2118db1e5
 translation_status: current
 ---
 
@@ -20,7 +20,7 @@ Pager 状态。
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04")
 }
 ```
 

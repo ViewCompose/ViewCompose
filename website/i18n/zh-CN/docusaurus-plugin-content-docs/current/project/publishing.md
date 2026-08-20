@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: fa566a9435b94e20dc4940642487344852bf0eaff277c8407da84918c990fc88
+translation_source_hash: cf539c6c6c25c370f7732554ddaacd9e77ff0b47fe2f73f0248425b583339a03
 translation_status: current
 ---
 
@@ -240,9 +240,9 @@ Feature 产物会暴露编译其公开 API 所需的全部 ViewCompose 模块，
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha04")
 }
 ```
 
@@ -250,9 +250,9 @@ core 制品也可由 Kotlin/JVM 模块独立使用：
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha02")
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha04")
     implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha02")
 }
 ```

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-text-core/README.md
-translation_source_hash: b1438e2371ac67f8ff8f5689814c9f2630d82d160221bd85964c1bf580cd3cd5
+translation_source_hash: 9b5af8b6095c54187259a629913ba7dc51ad5dcc6ac610ac10e4ed1e0a2669bd
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ span adapter 位于 renderer/host 模块，并负责与这些契约相互转换�
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha03")
 }
 ```
 

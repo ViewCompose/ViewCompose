@@ -8,7 +8,7 @@ Compose `AndroidView` bridge, and the first-party preview catalog and Paparazzi 
 
 ```kotlin
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha03")
+    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha04")
 }
 ```
 

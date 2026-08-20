@@ -8,7 +8,7 @@ Studio plugin, tests, and CI. It contains no Android or IDE runtime dependency.
 
 ```kotlin
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha03")
 }
 ```
 

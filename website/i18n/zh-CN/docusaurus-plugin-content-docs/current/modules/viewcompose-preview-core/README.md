@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-core/README.md
-translation_source_hash: 3e9cdaadf0e07ca5b02b8fdbce3f35048f0766bdb6f7c8c1e635034c475e12e4
+translation_source_hash: 630399117e2936cf09c05722b5c0ab6597baa088bc498363de5e9aee1081baf2
 translation_status: current
 ---
 
@@ -13,7 +13,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha03")
 }
 ```
 

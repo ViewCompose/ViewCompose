@@ -8,7 +8,7 @@ aliases for the platform-neutral graphics contracts. Android execution is suppli
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha04")
 }
 ```
 

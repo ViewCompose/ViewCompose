@@ -274,9 +274,9 @@ including their platform-neutral core artifact:
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha04")
 }
 ```
 
@@ -284,9 +284,9 @@ Core artifacts are also independently consumable from Kotlin/JVM modules:
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha02")
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha04")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha04")
     implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha02")
 }
 ```

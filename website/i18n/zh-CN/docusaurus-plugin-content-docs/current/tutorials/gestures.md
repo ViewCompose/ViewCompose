@@ -2,7 +2,7 @@
 title: 使用手势
 sidebar_position: 12
 translation_source: tutorials/gestures.md
-translation_source_hash: 96a93f8fb8a759d2a3597b639d4ea1473b515299a58a806a8a55253eab3d645a
+translation_source_hash: ae62ea1397140040d95ecce6663abb3ccdd8860da0a4ca8f189913dd2a71c537
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ repositories { mavenCentral() }
 
 dependencies {
     implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

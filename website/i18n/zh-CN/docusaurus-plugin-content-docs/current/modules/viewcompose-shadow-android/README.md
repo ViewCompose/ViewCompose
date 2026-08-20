@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-shadow-android/README.md
-translation_source_hash: bdb9712a701438e8a66eb62746042683c9766bfa27868c161d80c1e137d9a574
+translation_source_hash: 8d8c4440572131a0cc0c64488c0c8f1e7d9f525cc41ea7acb0242dfc5ebc4581
 translation_status: current
 ---
 
@@ -13,7 +13,7 @@ Shadow Modifier 解析成像素规格，栅格化精确的多层效果，并接�
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha04")
 }
 ```
 

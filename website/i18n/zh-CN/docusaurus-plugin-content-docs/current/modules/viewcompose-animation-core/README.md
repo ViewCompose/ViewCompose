@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation-core/README.md
-translation_source_hash: 7b0e14d7f310107783c86394f46f61ee650e0b931722c31854bfb0c90d754148
+translation_source_hash: c81c33866a8c9845b33047fee857f976bd5c5744c7d2806e57c18edb45bee02e
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ Transition Segment 协调。它不依赖 Android UI 或组合系统。
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha04")
 }
 ```
 

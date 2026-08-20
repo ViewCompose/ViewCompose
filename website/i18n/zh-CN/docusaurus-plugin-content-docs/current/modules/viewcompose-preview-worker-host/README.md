@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-worker-host/README.md
-translation_source_hash: d9daf76da3b2f9f87d756daaf3b98005cff091d8c7d7d03017abeb433270b713
+translation_source_hash: 1d0c4ff38e49f603bf694c2f1377f86709d5ccbf8943f990917848f89b20dab7
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ Class，并原子发布结构化 Response。
 
 ```kotlin
 dependencies {
-    runtimeOnly("com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha02")
+    runtimeOnly("com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha03")
 }
 ```
 

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: 0ae8a73c2a98ffa2a64391a183b5975f5cb385cd274806690ddd7f9ea1722121
+translation_source_hash: a65cba34b8bd9e6bd58b9d811c3e0fedde270c51f20d9b680f4afcfdc9bdb538
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03")
 }
 ```
 

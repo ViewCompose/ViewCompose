@@ -13,7 +13,7 @@ The module contains no Android or AndroidX types. `Activity`, predictive Back, `
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03")
 }
 ```
 

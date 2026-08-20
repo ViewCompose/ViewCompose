@@ -9,7 +9,7 @@ the Android renderer owns the native pointer stream and recognition engine.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
 }
 ```
 
