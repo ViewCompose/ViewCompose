@@ -5,9 +5,78 @@ import {resolve} from 'node:path';
 import test from 'node:test';
 import {
   CURRENT_DOCUMENTATION_TOOLING_PATHS,
+  ensureRevisionAvailable,
   installCurrentDocumentationTooling,
   projectDependencyContractsForPublishingMetadata,
 } from '../assemble-versioned-api-docs.mjs';
+
+const frozenRevision = '1234567890abcdef1234567890abcdef12345678';
+
+test('frozen revisions reject movable Git references before running a command', async () => {
+  let commandCount = 0;
+  await assert.rejects(
+    ensureRevisionAvailable('release/source', {
+      captureCommand: async () => {
+        commandCount += 1;
+      },
+    }),
+    /must be a full lowercase Git SHA/u,
+  );
+  assert.equal(commandCount, 0);
+});
+
+test('available frozen revisions do not fetch from the remote', async () => {
+  const commands = [];
+  const fetched = await ensureRevisionAvailable(frozenRevision, {
+    root: '/test/repository',
+    captureCommand: async (command, args, options) => {
+      commands.push({command, args, options});
+      return '';
+    },
+  });
+
+  assert.equal(fetched, false);
+  assert.deepEqual(commands, [
+    {
+      command: 'git',
+      args: ['cat-file', '-e', `${frozenRevision}^{commit}`],
+      options: {cwd: '/test/repository'},
+    },
+  ]);
+});
+
+test('missing frozen revisions fetch the exact full SHA once and verify the result', async () => {
+  const commands = [];
+  let available = false;
+  const fetched = await ensureRevisionAvailable(frozenRevision, {
+    root: '/test/repository',
+    captureCommand: async (command, args, options) => {
+      commands.push({command, args, options});
+      if (args[0] === 'cat-file' && !available) throw new Error('missing commit');
+      if (args[0] === 'fetch') available = true;
+      return '';
+    },
+  });
+
+  assert.equal(fetched, true);
+  assert.deepEqual(commands, [
+    {
+      command: 'git',
+      args: ['cat-file', '-e', `${frozenRevision}^{commit}`],
+      options: {cwd: '/test/repository'},
+    },
+    {
+      command: 'git',
+      args: ['fetch', '--no-tags', '--depth=1', 'origin', frozenRevision],
+      options: {cwd: '/test/repository'},
+    },
+    {
+      command: 'git',
+      args: ['cat-file', '-e', `${frozenRevision}^{commit}`],
+      options: {cwd: '/test/repository'},
+    },
+  ]);
+});
 
 test('current documentation tooling replaces the complete publishing main source tree', async () => {
   const root = await mkdtemp(resolve(tmpdir(), 'viewcompose-documentation-tooling-test-'));

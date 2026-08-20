@@ -23,6 +23,10 @@ The production artifact is assembled in seven explicit stages:
    verifies the complete manifest, immutable routes, aliases, and pinned source links. Artifacts in
    `release.unpublishedModules` instead generate only a mutable `current` API tree from the working
    source; they never receive a fabricated immutable version route.
+   Before reconstruction, the generator verifies each full source SHA locally. If a frozen commit
+   is absent after a squashed release PR's temporary branch has been deleted, it fetches exactly
+   that SHA from `origin` with depth one and verifies the fetched object as a commit. It never
+   substitutes a movable branch, tag, or newer revision; an unavailable SHA fails the build.
    When a frozen revision predates the dependency-contract registry, the temporary documentation
    workspace synthesizes empty registry rows only to configure current Dokka tooling; compilation
    still follows that revision's Gradle build and the synthetic rows are never published.
@@ -193,6 +197,9 @@ verification rejects missing or movable source links. Because recording a commit
 metadata commit, release preparation uses two steps: freeze module source and manual in one commit,
 then append the history entry and update version/revision metadata in a metadata-only release
 commit. The frozen commit must be pushed and remain reachable from Git history.
+The documentation generator can recover that exact full SHA after a temporary source branch is
+deleted, but release metadata must never replace it with the squash commit or another convenient
+revision.
 
 `release.retiredModules` keeps superseded coordinates valid in immutable documentation history
 without returning them to the active module catalog; the API landing lists them in a separate
@@ -209,7 +216,8 @@ prereleases, so no `latest` route is emitted yet.
 
 Generated HTML, catalogs, and module-manual snapshots are never committed. A clean checkout restores
 the complete released documentation history from the immutable Git revisions in the registry; the
-documentation workflow therefore checks out full history rather than a shallow clone.
+documentation workflow checks out full advertised history and fetches only an otherwise-missing
+recorded SHA at depth one. It does not depend on retaining temporary release branches.
 
 For each module release:
 
