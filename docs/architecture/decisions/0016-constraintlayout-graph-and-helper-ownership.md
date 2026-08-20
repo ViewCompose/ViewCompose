@@ -123,8 +123,9 @@ revision controls and separate APKs provide comparison without shipping dual own
 
 ## Validation and rollout
 
-Implementation and acceptance evidence is recorded in the completed
-[ConstraintLayout first-release hardening plan](../../archive/constraintlayout-native-engine-hardening.md).
+Implementation and acceptance evidence is recorded in the completed ConstraintLayout
+first-release hardening plan, archived in the repository as
+`docs/archive/constraintlayout-native-engine-hardening.md`.
 Release requires pure graph and DSL tests, Robolectric exact geometry and rollback, 1,000-switch
 helper stress, focused physical-device and warning-free Demo evidence, interpreted performance-safety
 controls, Q3 compiled samples, API/documentation gates, Chinese mirrors, and immutable Changesets.

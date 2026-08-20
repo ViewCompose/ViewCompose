@@ -16,8 +16,8 @@ dependencies {
 
 - Stability: **Alpha**. The current source contains the first-release API and renderer hard cut;
   its Robolectric, physical-device, Demo, AndroidX `2.2.2`, performance-safety, documentation, and
-  repository release gates are accepted under the completed
-  [first-release hardening plan](../../archive/constraintlayout-native-engine-hardening.md).
+  repository release gates are accepted under the completed first-release hardening plan,
+  archived as `docs/archive/constraintlayout-native-engine-hardening.md`.
   Broader parity and optimization are owned by a separate
   [post-release expansion plan](../../project/plans/constraintlayout-parity-performance-expansion.md)
   that remains Changeset-free until the first release is published and tagged.

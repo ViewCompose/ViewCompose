@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-constraintlayout-androidx/README.md
-translation_source_hash: 0a197764213a6f60d6931d1738fca4ff1732e6609bf195be423320954e0c13dc
+translation_source_hash: bd54ff745e04650dfc60df041bf2254465757f89cd4843a4732772532136f834
 translation_status: current
 ---
 
@@ -22,7 +22,7 @@ dependencies {
 
 - 稳定性：**Alpha**。当前源码已经包含首发 API 与 Renderer 硬切；Robolectric、真机、
   Demo、AndroidX `2.2.2`、性能安全、文档与仓库发版门禁均已通过，首发加固计划已经完成
-  并归档。
+  并归档为 `docs/archive/constraintlayout-native-engine-hardening.md`。
   更广泛的能力对齐与优化由独立的
   [发版后扩展计划](https://docs.viewcompose.com/project/plans/constraintlayout-parity-performance-expansion)负责；
   在首版发布并完成 Tag 前，该计划保持无 Changeset 状态。

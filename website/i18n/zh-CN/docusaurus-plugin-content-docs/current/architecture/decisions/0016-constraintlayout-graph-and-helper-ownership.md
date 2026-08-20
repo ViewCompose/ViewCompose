@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0016-constraintlayout-graph-and-helper-ownership.md
-translation_source_hash: 1b2cfe3cc75783f1c6c859c2e76de8430248a776222aff266fedcdebf2597661
+translation_source_hash: bd93e925ed2f13486e73c644fddd97caaab86a4d9bf50253f6affd2bef3c3c56
 translation_status: current
 ---
 
@@ -113,7 +113,8 @@ AndroidX 运行时基线升级到稳定版 ConstraintLayout `2.2.2`。已接受�
 
 ## 验证与发布
 
-实现与验收证据已由完成并归档的 ConstraintLayout 首发加固计划记录。
+实现与验收证据已由完成的 ConstraintLayout 首发加固计划记录；该计划在仓库中归档为
+`docs/archive/constraintlayout-native-engine-hardening.md`。
 发布要求包括纯图与 DSL 测试、Robolectric 精确几何与回滚、1,000 次 Helper 切换压力、
 聚焦真机与无警告 Demo 证据、已解释的性能安全对照、Q3 编译示例、API/文档门禁、中文
 镜像以及不可变 Changeset。

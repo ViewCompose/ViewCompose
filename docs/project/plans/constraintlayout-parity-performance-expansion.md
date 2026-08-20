@@ -3,10 +3,10 @@
 ## Status
 
 Active as a deliberately deferred post-release plan. Planning and baseline preservation are
-complete; production implementation has not started and must not start until the
-[ConstraintLayout first-release hardening plan](../../archive/constraintlayout-native-engine-hardening.md)
-is complete and archived. Production implementation must still wait until its release window has
-ended with a published Central release and tag.
+complete; production implementation has not started. The ConstraintLayout first-release
+hardening plan is complete and archived as
+`docs/archive/constraintlayout-native-engine-hardening.md`. Production implementation must still
+wait until its release window has ended with a published Central release and tag.
 
 This plan is not a first-release blocker while its Maven release changeset list remains `- None.`.
 Once production implementation begins and immutable Changesets are added, it becomes the sole
