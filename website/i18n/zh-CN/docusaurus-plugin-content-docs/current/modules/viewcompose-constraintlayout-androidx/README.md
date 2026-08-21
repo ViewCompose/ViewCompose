@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-constraintlayout-androidx/README.md
-translation_source_hash: 25d3bfa4b432be9c63961f58ded677f2e0eb0eb3c999562106698c600ed55968
+translation_source_hash: 138f9a00e5f290a505fbc74f52663c4cb9a2a9ce3c1289e546e56df946015d62
 translation_status: current
 ---
 
@@ -24,7 +24,7 @@ dependencies {
   Demo、AndroidX `2.2.2`、性能安全、文档与仓库发版门禁均已通过，首发加固计划已经完成
   并归档为 `docs/archive/constraintlayout-native-engine-hardening.md`。
   更广泛的能力对齐与优化已经在归档的
-  [发版后扩展计划](https://docs.viewcompose.com/archive/constraintlayout-parity-performance-expansion)中完成。
+  [发版后扩展计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md)中完成。
   Demo 固定频率基线、Phase 0 契约冻结、Phase 1 分类协调、Phase 2 高价值能力对齐、Phase 3
   完整验收与 Phase 4 受控基准测试均已完成。该扩展线满足发版安全，但不宣称全帧性能胜利。
 - 平台：Android 7.0（API 24）及以上。

@@ -905,7 +905,7 @@ Stable-50 的 Candidate 聚合 P50/P95/P99 变化为 `-4.0%/+2.0%/+0.8%`，Peak 
 一台 API 28 设备、Workload 仅 16～17 个 Frame，且每次运行的变动持续存在。下一步是充分降温的
 Phase 4 Direct-native/Released/Candidate 矩阵；稳定复验之前不宣称全帧优化收益。
 
-#### 2.4.7 ConstraintLayout Phase 4 受控矩阵
+#### 2.4.7 ConstraintLayout Phase 4 受控矩阵 {/* #247-constraintlayout-phase-4-controlled-matrix */}
 
 2026-08-21 的 Phase 4 在已 Root 的 Xiaomi MI 6 / Android 9 参考设备上，对比冻结的已发布框架
 源码 `143b09acf3bfcda81add008b4dcf09d06a09e2dc` 与 Candidate 基线

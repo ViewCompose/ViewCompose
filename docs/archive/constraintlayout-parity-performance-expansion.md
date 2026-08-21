@@ -602,8 +602,9 @@ Changeset or API documentation field applies.
 
 Closeout verification on 2026-08-22 passed all 22 report-tool tests, the focused app benchmark and
 registry contract tests, both Benchmark APK assemblies, documentation structure/language/translation
-checks, development-tooling isolation, release-intent verification with zero affected artifacts,
-and the complete `qaQuick` gate. The controlled physical matrix is the applicable Phase 4 device
+checks, historical-manual link rewriting, the complete two-locale production site build,
+development-tooling isolation, release-intent verification with zero affected artifacts, and the
+complete `qaQuick` gate. The controlled physical matrix is the applicable Phase 4 device
 gate; no additional `qaFull` slice applies because this phase changes no published production
 behavior, while the accepted Phase 3 connected geometry/lifecycle matrix remains unchanged. No
 architecture invariant changed in Phase 4, so accepted ADR-0016 and ADR-0017 remain historical

@@ -19,7 +19,7 @@ dependencies {
   repository release gates are accepted under the completed first-release hardening plan,
   archived as `docs/archive/constraintlayout-native-engine-hardening.md`.
   Broader parity and optimization were completed under the archived
-  [post-release expansion plan](../../archive/constraintlayout-parity-performance-expansion.md).
+  [post-release expansion plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md).
   Its Demo fixed-clock baseline, Phase 0 contract freeze, Phase 1 classified reconciliation,
   Phase 2 high-value parity, Phase 3 complete acceptance, and Phase 4 controlled benchmark are all
   complete. The expansion line is release-safe; it does not claim a whole-frame performance win.

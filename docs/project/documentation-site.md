@@ -160,7 +160,7 @@ reviewed public contracts. Before this ceiling or the 6.25 MiB locale-search cei
 the site must structurally segment internal plan detail or its search indexes; exact paired
 evidence and limitations are retained below.
 
-The capability-planning branch performed that required structural review. Five large temporary
+The capability-planning branch performed that required structural review. Four large temporary
 execution plans remain rendered and directly linkable, while their routes no longer duplicate
 internal planning detail into either locale search index; the active-plan index keeps their purpose
 and scope discoverable. After that representation change, the reviewed non-API ceiling moves to
@@ -188,6 +188,10 @@ Immutable module-manual snapshots use `/modules/<artifact>/<version>`; the unver
 `/modules/<artifact>` page remains the maintained current guide. Historical manuals are generated
 as canonical English snapshots, including at the equivalent `zh-CN` route, so the locale path never
 pretends that an unreviewed historical translation exists.
+
+Relative links from a historical manual to another released module are rewritten to that module's
+versioned route. Links to temporary execution plans are instead pinned to the manual source
+revision on GitHub, so completing or archiving a plan cannot break an immutable manual snapshot.
 
 Each `module.<artifact>.version` has a matching `module.<artifact>.sourceRevision` containing a full
 40-character Git commit SHA. The append-only

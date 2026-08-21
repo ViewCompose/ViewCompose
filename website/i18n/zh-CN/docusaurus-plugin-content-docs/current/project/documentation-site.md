@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 4f892881334405479a0251c7e5f054f8dd74879dbb3cb632a8e91f5e9cc6a201
+translation_source_hash: b3778b8005f93fbfced20b5159e8bffabe00179f6bd56e391196eac56008da69
 translation_status: current
 ---
 
@@ -133,7 +133,7 @@ locale 前缀的 API 副本。提高阈值必须附有读者或发布价值的�
 有效计划路由与已审阅公共契约。该上限或单 Locale 6.25 MiB 搜索上限再次变更前，站点必须对内部
 计划明细或搜索索引实施结构化分段；精确配对证据与限制保留在下方。
 
-能力规划分支完成了这项强制结构审查。五份大型临时执行计划仍会完整渲染并可直接链接，但其路由
+能力规划分支完成了这项强制结构审查。四份大型临时执行计划仍会完整渲染并可直接链接，但其路由
 不再把内部规划明细重复写入两个 Locale 的搜索索引；有效计划索引继续提供可发现的目的与范围
 摘要。完成表示方式调整后，经审阅的非 API 上限调整为 45.5 MiB，单 Locale 6.25 MiB 搜索上限
 保持不变。
@@ -154,6 +154,9 @@ alpha、beta、RC、snapshot、preview、development 和 EAP 不得成为 `lates
 不可变模块手册快照路径为 `/modules/<artifact>/<version>`；无版本路径继续指向当前维护手册。
 历史手册只生成权威英文快照，包括等价的 `zh-CN` 路由，避免 locale 路径冒充未经审阅的历史
 翻译。
+
+历史手册指向另一个已发布模块的相对链接会改写为该模块的版本化路由；指向临时执行计划的链接
+则固定到 GitHub 上的手册 Source Revision，确保计划完成或归档后不会破坏不可变手册快照。
 
 每个 `module.<artifact>.version` 对应一个 40 位 Git SHA
 `module.<artifact>.sourceRevision`。只追加的

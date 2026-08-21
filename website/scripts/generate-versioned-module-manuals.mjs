@@ -62,8 +62,7 @@ function repositoryFileUrl(sourcePath, target, sourceRevision) {
   if (
     posix.isAbsolute(resolved) ||
     resolved === '..' ||
-    resolved.startsWith('../') ||
-    resolved.startsWith('docs/')
+    resolved.startsWith('../')
   ) {
     return undefined;
   }
@@ -95,6 +94,10 @@ export function rewriteSnapshotLinks(
     if (!target.startsWith('.')) return link;
     const route = routeForMarkdown(sourcePath, target);
     if (!route) {
+      const repositoryUrl = repositoryFileUrl(sourcePath, target, sourceRevision);
+      return repositoryUrl ? `](${repositoryUrl})` : link;
+    }
+    if (/^(?:https:\/\/docs\.viewcompose\.com)?\/project\/plans\//u.test(route)) {
       const repositoryUrl = repositoryFileUrl(sourcePath, target, sourceRevision);
       return repositoryUrl ? `](${repositoryUrl})` : link;
     }
