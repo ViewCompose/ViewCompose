@@ -68,14 +68,14 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         set(value) {
             if (field == value) return
             field = value
-            requestConstraintRebuild()
+            requestConstraintRebuild(ConstraintRebuildReason.ScalarInput)
         }
 
     var decoupledConstraintSetSpec: ConstraintSetSpec? = null
         set(value) {
             if (field == value) return
             field = value
-            requestConstraintRebuild()
+            requestConstraintRebuild(ConstraintRebuildReason.ScalarInput)
         }
 
     private val referenceIdToViewId = mutableMapOf<String, Int>()
@@ -83,7 +83,9 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     private val helperViews = mutableMapOf<String, View>()
     private val emittedDiagnostics = LinkedHashSet<ConstraintDiagnosticKey>()
     private var pendingConstraintRebuild = false
+    private var pendingConstraintRebuildReasons = 0
     private var mutatingHelperViews = false
+    private var reconciliationMetrics: ConstraintReconciliationMetrics? = null
     private var acceptedGraph: ResolvedConstraintGraph? = null
     private var acceptedEnvironment: UiEnvironmentValues? = null
     private var acceptedDecoupledConstraintSetSpec: ConstraintSetSpec? = null
@@ -98,8 +100,10 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         if (!pendingConstraintRebuild) {
             return@Runnable
         }
+        val rebuildReasons = pendingConstraintRebuildReasons
         pendingConstraintRebuild = false
-        applyConstraintsInternal()
+        pendingConstraintRebuildReasons = 0
+        applyConstraintsInternal(rebuildReasons)
     }
 
     private data class ChainResolvedItem(
@@ -224,7 +228,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         DecorationChildDrawingOrder.onViewAdded(this, child)
         decorationDrawing.onViewAdded(child)
         if (!mutatingHelperViews) {
-            requestConstraintRebuild()
+            requestConstraintRebuild(ConstraintRebuildReason.TopologyInput)
         }
     }
 
@@ -233,7 +237,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         super.onViewRemoved(child)
         DecorationChildDrawingOrder.onViewRemoved(this, child)
         if (!mutatingHelperViews) {
-            requestConstraintRebuild()
+            requestConstraintRebuild(ConstraintRebuildReason.TopologyInput)
         }
     }
 
@@ -256,7 +260,10 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         super.onDetachedFromWindow()
     }
 
-    fun requestConstraintRebuild() {
+    fun requestConstraintRebuild(
+        reason: ConstraintRebuildReason = ConstraintRebuildReason.Explicit,
+    ) {
+        pendingConstraintRebuildReasons = pendingConstraintRebuildReasons or reason.mask
         if (pendingConstraintRebuild) {
             return
         }
@@ -273,17 +280,30 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             return
         }
         removeCallbacks(rebuildRunnable)
+        val rebuildReasons = pendingConstraintRebuildReasons
         pendingConstraintRebuild = false
-        applyConstraintsInternal()
+        pendingConstraintRebuildReasons = 0
+        applyConstraintsInternal(rebuildReasons)
     }
 
-    private fun applyConstraintsInternal() {
+    private fun applyConstraintsInternal(rebuildReasons: Int) {
+        reconciliationMetrics?.recordEnvironmentResolution()
         val environment = requireUiEnvironment()
         if (matchesAcceptedInputs(environment)) {
+            val updateClass = if (
+                rebuildReasons == ConstraintRebuildReason.ContentOnly.mask
+            ) {
+                ConstraintReconciliationClass.ContentOnly
+            } else {
+                ConstraintReconciliationClass.NoOp
+            }
+            reconciliationMetrics?.recordClassification(updateClass)
             return
         }
         attemptedRevision += 1L
         val candidateRevision = attemptedRevision
+        reconciliationMetrics?.recordGraphCompilation()
+        reconciliationMetrics?.recordAdapterAllocationBatch()
         val compilation = ConstraintGraphCompiler.compile(
             contentBindings = collectContentBindings(),
             decoupled = decoupledConstraintSetSpec,
@@ -296,7 +316,14 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                 return
             }
         }
-        refreshAcceptedHelperRuntimeBaseFromBinder()
+        val updateClass = classifyReconciliation(graph, environment)
+        reconciliationMetrics?.recordClassification(updateClass)
+        val helperRuntimeBaseChanged = refreshAcceptedHelperRuntimeBaseFromBinder()
+        val preserveAcceptedHelpers =
+            updateClass == ConstraintReconciliationClass.Scalar &&
+                graph.helpers == acceptedGraph?.helpers &&
+                !helperRuntimeBaseChanged
+        reconciliationMetrics?.recordAdapterAllocationBatch()
         val committedSnapshots = captureCommitSnapshots()
         val previousGraph = acceptedGraph
         val previousEnvironment = acceptedEnvironment
@@ -306,7 +333,11 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         val contentViewIds = resolveContentViewIds(graph)
         var rollbackSnapshots = committedSnapshots
         try {
-            val releasedContentOverlay = releaseAcceptedHelperEffects()
+            val releasedContentOverlay = if (preserveAcceptedHelpers) {
+                false
+            } else {
+                releaseAcceptedHelperEffects()
+            }
             rollbackSnapshots = if (releasedContentOverlay) {
                 captureCommitSnapshots()
             } else {
@@ -318,7 +349,9 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             pruneInactiveHelperViews(helperPlan.activeKeys)
             val resolvedReferenceIds = contentViewIds + helperPlan.referenceIds
             applyContentViewIds(graph, contentViewIds)
-            stageLayerReferences(graph.helpers.layers, resolvedReferenceIds)
+            if (!preserveAcceptedHelpers) {
+                stageLayerReferences(graph.helpers.layers, resolvedReferenceIds)
+            }
             val constraintSet = ConstraintSet()
             seedHelperConstraints(constraintSet, graph)
             applyChains(
@@ -332,15 +365,22 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                 referenceIds = resolvedReferenceIds,
                 environment = environment,
             )
+            reconciliationMetrics?.recordNativeCommit()
             constraintSet.applyTo(this)
             restoreRuntimeProperties(rollbackSnapshots)
-            val helperRuntimeBase = captureHelperRuntimeBase(graph)
-            configureHelpers(
-                graph = graph,
-                referenceIds = resolvedReferenceIds,
-                environment = environment,
-                revision = candidateRevision,
-            )
+            val helperRuntimeBase = if (preserveAcceptedHelpers) {
+                acceptedHelperRuntimeBase
+            } else {
+                captureHelperRuntimeBase(graph)
+            }
+            if (!preserveAcceptedHelpers) {
+                configureHelpers(
+                    graph = graph,
+                    referenceIds = resolvedReferenceIds,
+                    environment = environment,
+                    revision = candidateRevision,
+                )
+            }
             referenceIdToViewId.clear()
             referenceIdToViewId.putAll(contentViewIds)
             helperIdToViewId.keys.retainAll(helperPlan.activeKeys)
@@ -353,8 +393,12 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             acceptedRevision = candidateRevision
             lastRejection = null
             emittedDiagnostics.removeAll { key -> key.revision < acceptedRevision }
-            requestLayout()
+            if (updateClass == ConstraintReconciliationClass.Topology) {
+                reconciliationMetrics?.recordTopologyPublish()
+            }
+            requestAdapterLayout()
         } catch (error: Throwable) {
+            reconciliationMetrics?.recordRollback()
             cancelPendingLayerTransforms()
             restoreHelperRegistry(previousHelperViews, previousHelperIds, committedSnapshots)
             restoreCommitSnapshots(
@@ -378,6 +422,24 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                         "${error.message ?: error::class.java.simpleName}$failureOrigin",
                 ),
             )
+        }
+    }
+
+    private fun requestAdapterLayout() {
+        reconciliationMetrics?.recordAdapterLayoutRequest()
+        requestLayout()
+    }
+
+    private fun classifyReconciliation(
+        graph: ResolvedConstraintGraph,
+        environment: UiEnvironmentValues,
+    ): ConstraintReconciliationClass {
+        val previous = acceptedGraph ?: return ConstraintReconciliationClass.Topology
+        if (!graph.hasSameTopologyAs(previous)) return ConstraintReconciliationClass.Topology
+        return if (graph == previous && environment != acceptedEnvironment) {
+            ConstraintReconciliationClass.Environment
+        } else {
+            ConstraintReconciliationClass.Scalar
         }
     }
 
@@ -525,7 +587,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                 snapshot.restoreRuntimeProperties()
             }
         }
-        requestLayout()
+        requestAdapterLayout()
     }
 
     private fun ViewCommitSnapshot.restoreRuntimeProperties() {
@@ -563,14 +625,17 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     private fun releaseAcceptedHelperEffects(): Boolean {
         cancelPendingLayerTransforms()
         acceptedGraph?.helpers?.placeholders?.forEach { spec ->
+            reconciliationMetrics?.recordHelperWrite()
             requireHelperView<Placeholder>(NativeConstraintHelperKind.Placeholder, spec.id)
                 .setContentId(ConstraintLayout.LayoutParams.UNSET)
         }
         acceptedGraph?.helpers?.groups?.forEach { spec ->
+            reconciliationMetrics?.recordHelperWrite()
             requireHelperView<Group>(NativeConstraintHelperKind.Group, spec.id)
                 .setReferencedIds(intArrayOf())
         }
         acceptedGraph?.helpers?.layers?.forEach { spec ->
+            reconciliationMetrics?.recordHelperWrite()
             requireHelperView<Layer>(NativeConstraintHelperKind.Layer, spec.id)
                 .setReferencedIds(intArrayOf())
         }
@@ -598,7 +663,11 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     }
 
     /** Keeps a newly rebound declarative child state when replacing an older helper overlay. */
-    private fun refreshAcceptedHelperRuntimeBaseFromBinder() {
+    private fun refreshAcceptedHelperRuntimeBaseFromBinder(): Boolean {
+        val changed = acceptedHelperRuntimeBase.values.any { snapshot ->
+            snapshot.modifierSignature != snapshot.view.runtimeModifierSignature()
+        }
+        if (!changed) return false
         acceptedHelperRuntimeBase = acceptedHelperRuntimeBase.mapValues { (_, snapshot) ->
             if (snapshot.modifierSignature != snapshot.view.runtimeModifierSignature()) {
                 snapshot.view.captureHelperRuntimeSnapshot()
@@ -606,6 +675,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                 snapshot
             }
         }
+        return true
     }
 
     private fun View.runtimeModifierSignature(): RuntimeModifierSignature {
@@ -647,6 +717,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         try {
             helperViews.filterValues { view -> view !in previousViews.values }.forEach { (_, view) ->
                 if (view.parent === this) {
+                    reconciliationMetrics?.recordHelperRemove()
                     releaseHelperView(view)
                     removeView(view)
                 }
@@ -720,6 +791,25 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     internal val lastRejectionForTest: ConstraintGraphRejection?
         get() = lastRejection
 
+    internal val acceptedTopologyFingerprintForTest: Long?
+        get() = acceptedGraph?.topologyFingerprint
+
+    internal val acceptedScalarFingerprintForTest: Long?
+        get() = acceptedGraph?.scalarFingerprint
+
+    internal val acceptedGraphForTest: ResolvedConstraintGraph?
+        get() = acceptedGraph
+
+    internal fun startReconciliationMetricsForTest(): ConstraintReconciliationMetrics {
+        return ConstraintReconciliationMetrics().also { metrics ->
+            reconciliationMetrics = metrics
+        }
+    }
+
+    internal fun stopReconciliationMetricsForTest() {
+        reconciliationMetrics = null
+    }
+
     private data class HelperCommitPlan(
         val referenceIds: Map<String, Int>,
         val activeKeys: Set<String>,
@@ -789,6 +879,14 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         environment: UiEnvironmentValues,
         revision: Long,
     ) {
+        reconciliationMetrics?.recordHelperWrite(
+            graph.helpers.guidelines.size +
+                graph.helpers.barriers.size +
+                graph.helpers.flows.size +
+                graph.helpers.groups.size +
+                graph.helpers.layers.size +
+                graph.helpers.placeholders.size,
+        )
         graph.helpers.guidelines.forEach { spec -> applyGuidelineHelper(spec, environment) }
         graph.helpers.barriers.forEach { spec -> applyBarrierHelper(spec, referenceIds, environment) }
         graph.helpers.flows.forEach { spec -> applyFlowHelper(spec, referenceIds, environment) }
@@ -810,6 +908,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         referenceIds: Map<String, Int>,
     ) {
         layers.forEach { spec ->
+            reconciliationMetrics?.recordHelperWrite()
             val layer = requireHelperView<Layer>(NativeConstraintHelperKind.Layer, spec.id)
             val resolvedIds = resolveReferencedIds(spec.referencedIds, referenceIds)
             check(resolvedIds.isNotEmpty()) {
@@ -1038,6 +1137,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             return typed
         }
         if (current != null) {
+            reconciliationMetrics?.recordHelperRemove()
             mutatingHelperViews = true
             try {
                 removeView(current)
@@ -1046,6 +1146,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             }
         }
         val created = factory()
+        reconciliationMetrics?.recordHelperCreate()
         created.id = viewId
         if (created.layoutParams == null) {
             val helperSize = when (created) {
@@ -1076,6 +1177,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         try {
             staleKeys.forEach { key ->
                 helperViews.remove(key)?.let { helperView ->
+                    reconciliationMetrics?.recordHelperRemove()
                     releaseHelperView(helperView)
                     removeView(helperView)
                 }
