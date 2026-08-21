@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: 0ad0b31e3da24b3c8082fded3fc1fb2e87749fdd73f478c2a98055b73524a7a3
+translation_source_hash: f912f7368c7cf2da60cf5433e389f121850b335793e00b974ea78bdd1ea6a563
 translation_status: current
 ---
 
@@ -124,7 +124,7 @@ translation_status: current
 | Diagnostics | render/layout 聚合、render tree、逐节点 patch、CompositionLocal 与重组原因均已结构化输出并接入 demo 检查器 | 节点边界高亮、跨 session 关联与逐节点耗时已拆分到有效的[诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability) |
 | UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |
 | Developer Preview | Compose Preview、Paparazzi 与独立 Studio 插件链路已建立；插件支持静态渲染、源码双向联动、布局/View/组合诊断、全部预览、有界缓存和增量刷新 | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |
-| ConstraintLayout | Alpha DSL 基线加首发硬切已经落地：专用 Scope、按轴类型化 Target、不可变 Helper Snapshot、事务化 Graph/Helper 所有权、API 28 全 Helper/配置验收，以及零稳定回退的 10/50/100 Node 安全矩阵 | 在 Central 发布和 Tag 完成前保持生产源码冻结。随后启动[能力与性能扩展计划](https://docs.viewcompose.com/project/plans/constraintlayout-parity-performance-expansion)，实现分类快速路径、Grid/CircularFlow、更广泛的能力对齐、结构型 DSL Scope 审计、已接受的增量易用性 API、完整视觉矩阵和 Direct-native 性能证明；类型安全的 MotionScene/MotionLayout 继续保持范围外 |
+| ConstraintLayout | Alpha DSL 基线加首发硬切已经落地：专用 Scope、按轴类型化 Target、不可变 Helper Snapshot、事务化 Graph/Helper 所有权、API 28 全 Helper/配置验收，以及零稳定回退的 10/50/100 Node 安全矩阵 | Central 发布与 Tag 已完成。执行已启动的[能力与性能扩展计划](https://docs.viewcompose.com/project/plans/constraintlayout-parity-performance-expansion)：Phase 0 先冻结发布基线、类型化 API 决策、红测目录与结构型 Scope 审计，再进入分类快速路径、类型化 Grid/声明式 CircularFlow、更广泛能力对齐、完整视觉矩阵和 Direct-native 性能证明；类型安全的 MotionScene/MotionLayout 继续保持范围外 |
 | Animation | 已具备动画 Core/DSL 分层、Transition 共享 timeline、Animatable last-mutation-wins、AnimatedVisibility、Crossfade、animateContentSize 与原始 Android interop | 物理运动与结果、完整内容/显隐变换、seek、bounds、共享运动和时间线工具已经拆分到有效的[动画能力计划](https://docs.viewcompose.com/project/plans/animation-compose-capability-expansion) |
 | Gesture | `viewcompose-gesture-core` + `viewcompose-gesture` + renderer dispatcher 已支持 tap/drag/anchoredDraggable/transform、统一 nested scroll 和结构化并发取消；双指接管与系统 CANCEL 不会触发旧拖动 settle | 扩展原生三方滚动控件与真实设备多指回归 |
 | Graphics | 2D draw 主链与独立 `viewcompose-shadow-android` 装饰层已落地，支持 Canvas、draw modifiers、不可变 `DrawScene`、有序多层外/内阴影、静态栅格缓存和后端诊断 | 扩展 dark/tablet 快照；在明确预算下研究动态 RenderEffect/转场阴影 |

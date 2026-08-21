@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-constraintlayout-androidx/README.md
-translation_source_hash: bd54ff745e04650dfc60df041bf2254465757f89cd4843a4732772532136f834
+translation_source_hash: ca82fe45eaa846d558e8454bc49c5e7207bc9dbdd2cd1142ce7c1b557d4d6d56
 translation_status: current
 ---
 
@@ -25,7 +25,9 @@ dependencies {
   并归档为 `docs/archive/constraintlayout-native-engine-hardening.md`。
   更广泛的能力对齐与优化由独立的
   [发版后扩展计划](https://docs.viewcompose.com/project/plans/constraintlayout-parity-performance-expansion)负责；
-  在首版发布并完成 Tag 前，该计划保持无 Changeset 状态。
+  Phase 0 已基于完成发布和 Tag 的 `0.1.0-alpha01` 基线完成契约冻结，正等待 Demo 固定频率
+  基线落地后合入。Phase 0 保持无 Changeset；后续生产阶段负责各自的不可变 Changeset 与
+  下一次发版门禁。
 - 平台：Android 7.0（API 24）及以上。
 - 可选：`viewcompose-ui-foundation` 不依赖该产物。
 - UI Contract 与 UI Foundation 会被传递暴露，因为它们的 Modifier、单位和 Builder 类型
