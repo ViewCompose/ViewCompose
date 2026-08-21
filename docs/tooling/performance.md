@@ -1021,6 +1021,49 @@ the source-frozen first-release window. After Central publication and tagging, t
 expansion plan may investigate classified scalar/topology fast paths with a stable multi-device
 protocol; the first-release train does not claim those wins.
 
+#### 2.4.6 ConstraintLayout Phase 1 reconciliation preflight
+
+The 2026-08-21 Phase 1 preflight compared the exact released-source control
+`143b09acf3bfcda81add008b4dcf09d06a09e2dc` with candidate `360670d4` on the same rooted Xiaomi
+MI 6 / Android 9 device. Both were R8/resource-shrunk benchmark targets. Control and candidate APK
+SHA-256 values were respectively
+`3b0510810f64de6881ec844337179b2337f92ce03700231abc00be5c66422c62` and
+`83766f3c5aff66bd13e3593cf2c8c614d514e5a7231807795dde7a06c2280fe2`. The shared benchmark APK
+was `1616fe2d5ea7aab5d8496be5b2dd3521ebf798cbbed0f9377bc3f0594d953de1`; its instrumentation-only
+Magisk transport adaptation was
+`5a8ed54feea46ec80f210d4d967c975bcfe97ebc7ec0f04480ab9eae91fdc05e`. That equal-length rewrite
+changed only AndroidX Benchmark's AOSP `su root` command form to Magisk `su -c`; target APKs,
+workloads, metric capture, and result JSON were unchanged.
+
+The preflight used five `run-from-apk` iterations, four update/reset cycles, CPU policies fixed at
+1.4016/1.8048 GHz, Adreno fixed at 515 MHz, CPU/GPU bandwidth fixed at `13763`, suspended charging,
+stopped vendor performance services, an interactive screen, and starts at 37 degrees Celsius or
+below. Each row reports aggregate frame CPU P50/P95/P99 in milliseconds, median peak heap in KiB,
+and the coefficient of variation across iteration P50 values.
+
+| Arm | Frame P50/P95/P99, ms | Median peak heap, KiB | Run-P50 CV | Acceptance |
+| --- | ---: | ---: | ---: | --- |
+| Released stable-50 | `6.035/23.179/25.138` | 7703 | `0.181` | Rejected: CV above `0.15`. |
+| Candidate stable-50 | `5.791/23.638/25.332` | 7762 | `0.212` | Rejected: CV above `0.15`. |
+| Released scalar-50 | `7.490/23.716/24.849` | 8282 | `0.261` | Rejected: CV above `0.15`. |
+| Released scalar-50 repeat | `6.399/24.112/27.994` | 9267 | `0.244` | Rejected: adjacent repeat remains unstable. |
+| Candidate scalar-50 | `6.948/24.760/26.756` | 8917 | `0.143` | Stable arm; pair remains rejected. |
+
+For stable-50, the candidate aggregate P50/P95/P99 changes are `-4.0%/+2.0%/+0.8%` and peak heap
+is `+0.8%`, but neither arm passes the stability gate. For scalar-50, the candidate versus the
+first released run is `-7.2%/+4.4%/+7.7%`; versus the adjacent released repeat it becomes
+`+8.6%/+2.7%/-4.4%`. Peak heap likewise changes from `+7.7%` against the first run to `-3.8%`
+against the repeat. The opposing reference-dependent directions are not normalized evidence.
+
+The full-frame conclusion is **inconclusive**. No direct-native result is promoted because the
+longitudinal control/candidate prerequisite failed before a three-arm claim could be formed. This
+preflight does not reject the independently passing structural Phase 1 budgets: 1,000 equal updates
+perform zero adapter graph/compiler/native/helper/layout/allocation work, while scalar updates
+create/remove no helper, clone no live LayoutParams, and commit/request layout at most once. The
+limitation is a short 16--17-frame workload on one API 28 device with persistent per-run variation.
+The next action is the cooled Phase 4 direct-native/released/candidate matrix; no whole-frame
+optimization win is claimed before that stable replication.
+
 ### 2.5 Debug tooling regression gate
 
 Release macrobenchmarks cannot detect costs that exist only in debuggable builds. Any tooling that

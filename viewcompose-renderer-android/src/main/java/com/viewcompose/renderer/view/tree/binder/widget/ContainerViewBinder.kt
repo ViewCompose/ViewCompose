@@ -8,6 +8,7 @@ import com.viewcompose.renderer.view.PaddingPx
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
+import com.viewcompose.renderer.view.container.ConstraintRebuildReason
 import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
 import com.viewcompose.renderer.view.container.DeclarativeFlowColumnLayout
 import com.viewcompose.renderer.view.container.DeclarativeFlowRowLayout
@@ -116,7 +117,7 @@ internal object ContainerViewBinder {
         view.inlineHelpersSpec = spec.inlineHelpers
         // Environment changes do not change the logical constraint spec, but they do change
         // every dp-to-pixel result. A full node rebind must therefore rebuild ConstraintSet.
-        view.requestConstraintRebuild()
+        view.requestConstraintRebuild(ConstraintRebuildReason.ContentOnly)
     }
 
     fun bindAnimatedVisibilityHost(

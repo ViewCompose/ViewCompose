@@ -6,12 +6,14 @@ Active after the post-release trigger. The ConstraintLayout first-release harden
 complete and archived as `docs/archive/constraintlayout-native-engine-hardening.md`; Maven Central
 publication `0.1.0-alpha01`, its artifact tag, and the release owner's explicit reopen are all
 complete. Phase 0 execution is complete: the published baseline, API contracts, Scope inventory,
-named red-test catalog, and performance budgets are frozen below. Its landing remains ordered after
-Demo fixed-clock baseline PR `#111`; production implementation has not started.
+named red-test catalog, and performance budgets are frozen below. Demo fixed-clock baseline PR
+`#111` and Phase 0 PR `#112` are merged in that order. Phase 1 execution is complete in the current
+change: classified reconciliation, accepted-input fast paths, structural counters, rollback
+coverage, and its renderer Changeset are implemented without changing public API.
 
-This plan remains Changeset-free during Phase 0 because the phase changes no published production
-source. Once Phase 1 or Phase 2 begins and immutable Changesets are added, this plan becomes the
-sole active owner and release gate for the affected follow-up artifacts.
+Phase 0 remains Changeset-free because it changed no published production source. Phase 1 owns the
+immutable renderer Changeset listed below, so this plan is now the sole active owner and release
+gate for the affected follow-up artifact.
 
 This plan is canonical English-only under the documentation-governance policy. Durable capability,
 performance, compatibility, and operational conclusions must move into the owning active documents,
@@ -23,14 +25,13 @@ Activation trigger: the first-release hardening plan is archived, the correspond
 release and Git tag are complete, and the release owner explicitly reopens ConstraintLayout
 development.
 
-Next action: land the completed Phase 0 contract and test-fixture freeze after Demo fixed-clock
-baseline PR `#111`, keeping `- None.` and all published production source unchanged. Phase 1 then
-starts with the classified reconciliation tests and counters frozen below; Phase 2 public APIs may
+Next action: land the completed Phase 1 reconciliation change, then begin Phase 2 with chain
+endpoints/margins and the reviewed physical/logical direction contracts. Phase 2 public APIs may
 not diverge from the reviewed names and failure contracts without updating this plan first.
 
 ## Maven release changesets
 
-- None.
+- `release/changes/20260821-constraintlayout-reconciliation-fast-path.json`
 
 ## Objective
 
@@ -373,6 +374,32 @@ Planning estimate: 2--3 engineering weeks.
 Exit criteria: content-only/equal updates perform zero adapter graph rebuilds and allocations;
 scalar updates create/remove no helper Views and never clone the live layout; topology work scales
 with the changed graph and satisfies accepted budgets.
+
+Phase 1 completion record (2026-08-21): the renderer caches accepted semantic and resolved graphs,
+environment, deterministic topology/scalar fingerprints, raw child specifications, native IDs,
+and helper ownership inside each container. Rebuilds are classified as no-op, content-only,
+scalar, environment, or topology before work is committed. Equal and content-only requests return
+without compiler/environment/native/helper/layout work; scalar updates retain helper identity and
+references, create/remove no helper, clone no live LayoutParams, and schedule at most one adapter
+layout request. Environment updates resolve once while preserving topology and IDs. An injected
+topology failure restores the accepted graph, revision, fingerprint, IDs, LayoutParams, helper
+instances, and diagnostics, then publishes exactly once on a valid retry.
+
+Named cases `CL-P1-EQUAL-001` through `CL-P1-TOPOLOGY-005` pass as part of all 459 renderer tests.
+`verifyDevelopmentToolingIsolation`, `verifyDocumentationStructure`, and
+`verifyViewComposeReleaseIntent` also pass. The counters are container-local, optional, and
+internal to test diagnostics; their inactive path performs one nullable check and owns no global
+or recurring application-process work. No public/protected API documentation field applies because
+all new symbols and activation hooks are `internal`; the owning module manuals and this plan record
+the behavior change instead. The immutable renderer fix Changeset is listed above.
+
+The same-day fixed-clock 50-node full-frame preflight is retained as `inconclusive`, not as a
+performance claim. Released-baseline stable/scalar run-P50 CVs were `0.181`/`0.261`; an adjacent
+scalar repeat remained `0.244`. Candidate stable/scalar CVs were `0.212`/`0.143`. Because each
+longitudinal pair requires both arms at or below `0.15`, no pair is directional and the direct-native
+control was intentionally not promoted into a comparison. Phase 4 owns the cooled, stable
+direct-native/released-baseline/candidate matrix. This does not block the structural Phase 1 exit,
+and it does block any whole-frame optimization-win claim.
 
 ### Phase 2: high-value AndroidX parity
 

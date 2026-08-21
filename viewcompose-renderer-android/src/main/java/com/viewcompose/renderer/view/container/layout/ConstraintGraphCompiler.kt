@@ -44,6 +44,8 @@ internal data class ResolvedConstraintGraph(
     val helpers: ConstraintHelpersSpec,
     val helperKinds: Map<String, NativeConstraintHelperKind>,
     val constrainableIds: Set<String>,
+    val topologyFingerprint: Long,
+    val scalarFingerprint: Long,
 )
 
 /** Stable category used by bounded renderer diagnostics for a rejected candidate graph. */
@@ -108,11 +110,76 @@ internal object ConstraintGraphCompiler {
                     helpers = helpers,
                     helperKinds = helperKinds,
                     constrainableIds = constrainableIds,
+                    topologyFingerprint = topologyFingerprint(
+                        contentById = contentById,
+                        constraints = constraints,
+                        helpers = helpers,
+                        helperKinds = helperKinds,
+                    ),
+                    scalarFingerprint = scalarFingerprint(
+                        constraints = constraints,
+                        helpers = helpers,
+                    ),
                 ),
             )
         } catch (failure: ConstraintGraphValidationException) {
             ConstraintGraphCompilation.Rejected(failure.rejection)
         }
+    }
+
+    private fun topologyFingerprint(
+        contentById: Map<String, ConstraintContentBinding>,
+        constraints: Map<String, ConstraintItemSpec>,
+        helpers: ConstraintHelpersSpec,
+        helperKinds: Map<String, NativeConstraintHelperKind>,
+    ): Long {
+        var result = contentById.keys.hashCode().toLong()
+        helperKinds.forEach { (id, kind) ->
+            result += 29L * id.hashCode() + kind.name.hashCode()
+        }
+        constraints.forEach { (id, item) ->
+            result += 31L * id.hashCode() + item.topologyHashCode()
+        }
+        helpers.barriers.forEach { spec ->
+            result += 37L * spec.id.hashCode() + spec.referencedIds.hashCode()
+        }
+        helpers.chains.forEach { spec ->
+            result = result * 31L + spec.orientation.name.hashCode()
+            result = result * 31L + spec.referencedIds.hashCode()
+        }
+        helpers.flows.forEach { spec ->
+            result += 41L * spec.id.hashCode() + spec.referencedIds.hashCode()
+        }
+        helpers.groups.forEach { spec ->
+            result += 43L * spec.id.hashCode() + spec.referencedIds.hashCode()
+        }
+        helpers.layers.forEach { spec ->
+            result += 47L * spec.id.hashCode() + spec.referencedIds.hashCode()
+        }
+        helpers.placeholders.forEach { spec ->
+            result += 53L * spec.id.hashCode() + (spec.contentId?.hashCode() ?: 0)
+        }
+        return result
+    }
+
+    private fun scalarFingerprint(
+        constraints: Map<String, ConstraintItemSpec>,
+        helpers: ConstraintHelpersSpec,
+    ): Long = 31L * constraints.hashCode() + helpers.hashCode()
+
+    private fun ConstraintItemSpec.topologyHashCode(): Int {
+        var result = start.topologyHashCode()
+        result = result * 31 + end.topologyHashCode()
+        result = result * 31 + top.topologyHashCode()
+        result = result * 31 + bottom.topologyHashCode()
+        result = result * 31 + baseline.topologyHashCode()
+        result = result * 31 + (circle?.targetId?.hashCode() ?: 0)
+        return result
+    }
+
+    private fun ConstraintAnchorLink?.topologyHashCode(): Int {
+        val target = this?.target ?: return 0
+        return 31 * (target.id?.hashCode() ?: 0) + target.anchor.name.hashCode()
     }
 
     private fun collectContent(
@@ -738,6 +805,102 @@ internal object ConstraintGraphCompiler {
             ),
         )
     }
+}
+
+/** Collision-safe topology comparison; fingerprints are only the constant-time rejection gate. */
+internal fun ResolvedConstraintGraph.hasSameTopologyAs(other: ResolvedConstraintGraph): Boolean {
+    if (topologyFingerprint != other.topologyFingerprint) return false
+    if (contentById.size != other.contentById.size) return false
+    if (helperKinds != other.helperKinds) return false
+    if (constrainableIds != other.constrainableIds) return false
+    contentById.forEach { (id, binding) ->
+        if (other.contentById[id]?.nativeIdentity !== binding.nativeIdentity) return false
+    }
+    constrainableIds.forEach { id ->
+        if (!sameItemTopology(constraints[id], other.constraints[id])) return false
+    }
+    if (!sameReferencedTopology(
+            helpers.barriers,
+            other.helpers.barriers,
+            id = ConstraintBarrierSpec::id,
+            references = ConstraintBarrierSpec::referencedIds,
+        )
+    ) {
+        return false
+    }
+    if (helpers.chains.size != other.helpers.chains.size) return false
+    helpers.chains.indices.forEach { index ->
+        val current = helpers.chains[index]
+        val previous = other.helpers.chains[index]
+        if (
+            current.orientation != previous.orientation ||
+            current.referencedIds != previous.referencedIds
+        ) {
+            return false
+        }
+    }
+    if (!sameReferencedTopology(
+            helpers.flows,
+            other.helpers.flows,
+            id = ConstraintFlowSpec::id,
+            references = ConstraintFlowSpec::referencedIds,
+        )
+    ) {
+        return false
+    }
+    if (!sameReferencedTopology(
+            helpers.groups,
+            other.helpers.groups,
+            id = ConstraintGroupSpec::id,
+            references = ConstraintGroupSpec::referencedIds,
+        )
+    ) {
+        return false
+    }
+    if (!sameReferencedTopology(
+            helpers.layers,
+            other.helpers.layers,
+            id = ConstraintLayerSpec::id,
+            references = ConstraintLayerSpec::referencedIds,
+        )
+    ) {
+        return false
+    }
+    if (helpers.placeholders.size != other.helpers.placeholders.size) return false
+    helpers.placeholders.indices.forEach { index ->
+        val current = helpers.placeholders[index]
+        val previous = other.helpers.placeholders[index]
+        if (current.id != previous.id || current.contentId != previous.contentId) return false
+    }
+    return true
+}
+
+private fun sameItemTopology(
+    current: ConstraintItemSpec?,
+    previous: ConstraintItemSpec?,
+): Boolean {
+    return current?.start?.target == previous?.start?.target &&
+        current?.end?.target == previous?.end?.target &&
+        current?.top?.target == previous?.top?.target &&
+        current?.bottom?.target == previous?.bottom?.target &&
+        current?.baseline?.target == previous?.baseline?.target &&
+        current?.circle?.targetId == previous?.circle?.targetId
+}
+
+private inline fun <T> sameReferencedTopology(
+    current: List<T>,
+    previous: List<T>,
+    id: (T) -> String,
+    references: (T) -> List<String>,
+): Boolean {
+    if (current.size != previous.size) return false
+    current.indices.forEach { index ->
+        val currentItem = current[index]
+        val previousItem = previous[index]
+        if (id(currentItem) != id(previousItem)) return false
+        if (references(currentItem) != references(previousItem)) return false
+    }
+    return true
 }
 
 private class ConstraintGraphValidationException(

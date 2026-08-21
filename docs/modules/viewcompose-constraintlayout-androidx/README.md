@@ -20,9 +20,9 @@ dependencies {
   archived as `docs/archive/constraintlayout-native-engine-hardening.md`.
   Broader parity and optimization are owned by a separate
   [post-release expansion plan](../../project/plans/constraintlayout-parity-performance-expansion.md)
-  whose Phase 0 contract freeze is complete against the published/tagged `0.1.0-alpha01` baseline
-  and awaits landing after the Demo fixed-clock baseline. Phase 0 remains Changeset-free; later
-  production phases own their immutable Changesets and follow-up release gate.
+  whose Demo fixed-clock baseline and Phase 0 contract freeze are merged. Phase 1 classified
+  reconciliation is implemented in current source and owns its immutable renderer Changeset;
+  Phase 2 parity is the next execution stage.
 - Platform: Android 7.0 (API 24) and newer.
 - Optional: `viewcompose-ui-foundation` does not depend on this artifact.
 - UI Contract and UI Foundation are exposed transitively because their modifier, unit, and builder
@@ -148,6 +148,15 @@ cycles, and invalid dimensions/ranges reject the whole candidate. Native failure
 previous helper registry and View state. Diagnostics are structured and bounded by graph revision,
 identity, and reason; invalid links are never dropped individually.
 
+The accepted graph now carries deterministic topology and scalar fingerprints plus its raw child,
+environment, native-ID, and helper-ownership inputs. A semantically equal or content-only update
+returns before graph compilation and performs no adapter-owned constraint allocation or native
+write. Scalar updates preserve unchanged helper instances and references, create/remove no helper,
+clone no live LayoutParams, and request layout at most once. Environment-only updates resolve the
+environment once while retaining topology and IDs; topology updates retain the existing staged
+commit and full rollback contract. These classifications are implementation behavior, not new
+public DSL controls.
+
 This transaction follows
 [ADR-0016](../../architecture/decisions/0016-constraintlayout-graph-and-helper-ownership.md).
 A focused 2026-08-18 API 35 Robolectric run against cached ConstraintLayout `2.2.1` passed 16/16
@@ -163,8 +172,17 @@ diagnostics for generated IDs. A follow-up Gradle 8.13 run resolved ConstraintLa
 core `1.1.2` and passed 75/75 UI Contract tests, 11/11 DSL tests, and 451/451 Renderer tests,
 including the 12 graph and 16 focused ConstraintLayout cases; `verifyDocumentationStructure` also
 passed. The formal JVM compatibility conclusion remains **improved**. The later device and
-performance matrices below close the first-release acceptance scope; classified update fast paths,
-Grid, CircularFlow, and broader parity remain post-release work.
+performance matrices below close the first-release acceptance scope; Grid, CircularFlow, and
+broader parity remain post-release work after the classified Phase 1 fast paths.
+
+The 2026-08-21 Phase 1 run passed all 459 renderer tests. Named cases cover 1,000 equal submissions,
+content-only child replacement, scalar helper retention, one-pass environment resolution, and an
+injected topology failure followed by a valid retry. Structural counters report zero compiler,
+environment, native commit, helper write, layout-request, and adapter-allocation work for accepted
+equal input; the scalar case creates/removes no helper, clones no live LayoutParams, and commits at
+most once. The counters and activation hook are internal and container-local, so there is no public
+API documentation addition or inactive global observer. Release-intent, development-tooling
+isolation, and documentation gates pass.
 
 The 2026-08-19 DSL safety follow-up passed 17/17 ConstraintLayout module tests: 12 behavior tests
 and five Kotlin 2.0.21 compiler fixtures. The positive typed-axis/reference sample compiled; a
@@ -250,14 +268,18 @@ deprecated compatibility alias or raw AndroidX escape hatch.
 
 - Reuse a constraint set when the graph is stable and only child content changes.
 - Keep reference IDs and helper kinds stable to reuse their generated View IDs and instances.
+- Stable equal/content-only submissions now take the classified fast path automatically; no public
+  optimization flag is required.
 - Prefer simpler containers when constraints do not add value; ConstraintLayout incurs a solver pass.
 - Avoid rebuilding large helper graphs from rapidly changing state.
 
 The accepted 10/50/100-node first-release matrix establishes **no material change** against the
 pre-hard-cut ViewCompose source for every stable row; it does not establish performance leadership.
 Direct Android Views remains materially faster, especially at P95. Do not describe this adapter as
-the fastest ViewCompose layout path. The post-release expansion plan owns classified scalar and
-topology fast paths, multi-device replication, and any future leadership claim.
+the fastest ViewCompose layout path. Phase 1 closes the structural classified-path budgets, but its
+50-node fixed-clock full-frame preflight is **inconclusive** because three of four longitudinal arms
+exceeded the `0.15` run-P50 CV gate. Phase 4 owns stable direct-native replication and any future
+end-to-end leadership claim.
 
 ## Related documentation
 

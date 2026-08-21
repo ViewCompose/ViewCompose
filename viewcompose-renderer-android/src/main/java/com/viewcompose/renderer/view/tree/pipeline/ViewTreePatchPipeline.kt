@@ -17,6 +17,7 @@ import com.viewcompose.renderer.reconcile.ReconcileResult
 import com.viewcompose.renderer.reconcile.RemovePatch
 import com.viewcompose.renderer.reconcile.RenderPatch
 import com.viewcompose.renderer.reconcile.ReusePatch
+import com.viewcompose.renderer.view.container.ConstraintRebuildReason
 import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
 import com.viewcompose.renderer.view.container.ChildHostViewGroup
 import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
@@ -621,7 +622,9 @@ internal object ViewTreePatchPipeline {
                     // Layout-modifier changes rebuild LayoutParams and ask ConstraintLayout to regenerate constraints.
                     // Layout modifier changes rebuild LayoutParams and ask ConstraintLayout to rebuild constraints.
                     mountedNode.view.layoutParams = checkNotNull(preparedPatch.layoutParams)
-                    (container as? DeclarativeConstraintLayout)?.requestConstraintRebuild()
+                    (container as? DeclarativeConstraintLayout)?.requestConstraintRebuild(
+                        ConstraintRebuildReason.ScalarInput,
+                    )
                 }
                 val childResult = if (shouldReconcileChildren(bindingPlan)) {
                     reconcileChildren(

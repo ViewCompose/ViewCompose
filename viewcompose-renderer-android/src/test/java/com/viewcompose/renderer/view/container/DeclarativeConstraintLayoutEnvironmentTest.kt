@@ -41,6 +41,8 @@ import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.dp
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -899,6 +901,228 @@ class DeclarativeConstraintLayoutEnvironmentTest {
         activityController.close()
     }
 
+    @Test
+    fun `CL-P1-EQUAL-001 semantically equal submissions bypass graph reconciliation`() {
+        val context = RuntimeEnvironment.getApplication()
+        val layout = DeclarativeConstraintLayout(context).apply {
+            installEnvironment(density = 1f)
+            addContent("child")
+            decoupledConstraintSetSpec = ConstraintSetSpec(
+                constraints = mapOf("child" to fixedItem(width = 40, startMargin = 12)),
+            )
+        }
+        layout.applyConstraintsNow()
+        val acceptedRevision = layout.acceptedRevisionForTest
+        val attemptedRevision = layout.attemptedRevision()
+        val metrics = layout.startReconciliationMetricsForTest()
+
+        repeat(1_000) {
+            layout.requestConstraintRebuild()
+            layout.applyConstraintsNow()
+        }
+
+        assertEquals(acceptedRevision, layout.acceptedRevisionForTest)
+        assertEquals(attemptedRevision, layout.attemptedRevision())
+        val snapshot = metrics.snapshot()
+        assertEquals(1_000L, snapshot.noOpClassifications)
+        assertEquals(0L, snapshot.graphCompilations)
+        assertEquals(0L, snapshot.nativeCommits)
+        assertEquals(0L, snapshot.helperWrites)
+        assertEquals(0L, snapshot.adapterLayoutRequests)
+        assertEquals(0L, snapshot.adapterAllocationBatches)
+    }
+
+    @Test
+    fun `CL-P1-CONTENT-002 content-only updates preserve accepted graph and helper identity`() {
+        val context = RuntimeEnvironment.getApplication()
+        val layout = DeclarativeConstraintLayout(context).apply { installEnvironment(density = 1f) }
+        val child = CountingMeasureView(context).apply {
+            setTag(R.id.viewcompose_constraint_layout_id, "child")
+        }
+        layout.addView(child)
+        layout.decoupledConstraintSetSpec = ConstraintSetSpec(
+            constraints = mapOf("child" to fixedItem(width = 40, startMargin = 12)),
+            helpers = barrierHelpers(),
+        )
+        layout.applyConstraintsNow()
+        layout.measureAndLayout()
+        val acceptedGraph = layout.acceptedGraphForTest
+        val topologyFingerprint = layout.acceptedTopologyFingerprintForTest
+        val scalarFingerprint = layout.acceptedScalarFingerprintForTest
+        val barrier = layout.helperChildrenExcluding(child).single() as Barrier
+        val measureCount = child.measureCount
+        val metrics = layout.startReconciliationMetricsForTest()
+
+        child.contentDescription = "updated content"
+        child.requestLayout()
+        layout.requestConstraintRebuild(ConstraintRebuildReason.ContentOnly)
+        layout.applyConstraintsNow()
+        layout.measureAndLayout()
+
+        assertSame(acceptedGraph, layout.acceptedGraphForTest)
+        assertEquals(topologyFingerprint, layout.acceptedTopologyFingerprintForTest)
+        assertEquals(scalarFingerprint, layout.acceptedScalarFingerprintForTest)
+        assertSame(barrier, layout.helperChildrenExcluding(child).single())
+        assertArrayEquals(intArrayOf(child.id), barrier.referencedIds)
+        assertTrue(child.measureCount > measureCount)
+        val snapshot = metrics.snapshot()
+        assertEquals(1L, snapshot.contentOnlyClassifications)
+        assertEquals(0L, snapshot.graphCompilations)
+        assertEquals(0L, snapshot.nativeCommits)
+        assertEquals(0L, snapshot.helperWrites)
+        assertEquals(0L, snapshot.adapterLayoutRequests)
+        assertEquals(0L, snapshot.adapterAllocationBatches)
+    }
+
+    @Test
+    fun `CL-P1-SCALAR-003 scalar update retains helpers and commits once`() {
+        val context = RuntimeEnvironment.getApplication()
+        val layout = DeclarativeConstraintLayout(context).apply { installEnvironment(density = 1f) }
+        val child = layout.addContent("child")
+        layout.decoupledConstraintSetSpec = ConstraintSetSpec(
+            constraints = mapOf("child" to fixedItem(width = 40, startMargin = 12)),
+            helpers = barrierHelpers(),
+        )
+        layout.applyConstraintsNow()
+        val topologyFingerprint = layout.acceptedTopologyFingerprintForTest
+        val scalarFingerprint = layout.acceptedScalarFingerprintForTest
+        val barrier = layout.helperChildrenExcluding(child).single() as Barrier
+        val metrics = layout.startReconciliationMetricsForTest()
+
+        layout.decoupledConstraintSetSpec = ConstraintSetSpec(
+            constraints = mapOf("child" to fixedItem(width = 40, startMargin = 28)),
+            helpers = barrierHelpers(),
+        )
+        layout.applyConstraintsNow()
+
+        assertEquals(topologyFingerprint, layout.acceptedTopologyFingerprintForTest)
+        assertNotEquals(scalarFingerprint, layout.acceptedScalarFingerprintForTest)
+        assertSame(barrier, layout.helperChildrenExcluding(child).single())
+        assertArrayEquals(intArrayOf(child.id), barrier.referencedIds)
+        assertResolvedLayoutParams(child, width = 40, height = 20, startMargin = 28)
+        val snapshot = metrics.snapshot()
+        assertEquals(1L, snapshot.scalarClassifications)
+        assertEquals(1L, snapshot.graphCompilations)
+        assertEquals(1L, snapshot.nativeCommits)
+        assertEquals(0L, snapshot.helperCreates)
+        assertEquals(0L, snapshot.helperRemoves)
+        assertEquals(0L, snapshot.helperWrites)
+        assertEquals(0L, snapshot.liveLayoutClones)
+        assertTrue(snapshot.adapterLayoutRequests <= 1L)
+    }
+
+    @Test
+    fun `CL-P1-ENV-004 environment update preserves topology helper and native id`() {
+        val context = RuntimeEnvironment.getApplication()
+        val layout = DeclarativeConstraintLayout(context).apply {
+            installEnvironment(density = 1f)
+            inlineHelpersSpec = ConstraintHelpersSpec(
+                guidelines = listOf(
+                    ConstraintGuidelineSpec(
+                        id = "guide",
+                        direction = ConstraintGuidelineDirection.FromStart,
+                        position = ConstraintGuidelinePosition.Offset(10.dp),
+                    ),
+                ),
+            )
+        }
+        layout.applyConstraintsNow()
+        val guideline = layout.getChildAt(0) as Guideline
+        val nativeId = guideline.id
+        val topologyFingerprint = layout.acceptedTopologyFingerprintForTest
+        val scalarFingerprint = layout.acceptedScalarFingerprintForTest
+        val metrics = layout.startReconciliationMetricsForTest()
+
+        layout.installEnvironment(density = 2f)
+        layout.requestConstraintRebuild()
+        layout.applyConstraintsNow()
+
+        assertSame(guideline, layout.getChildAt(0))
+        assertEquals(nativeId, guideline.id)
+        assertEquals(topologyFingerprint, layout.acceptedTopologyFingerprintForTest)
+        assertEquals(scalarFingerprint, layout.acceptedScalarFingerprintForTest)
+        assertEquals(20, (guideline.layoutParams as ConstraintLayout.LayoutParams).guideBegin)
+        val snapshot = metrics.snapshot()
+        assertEquals(1L, snapshot.environmentClassifications)
+        assertEquals(1L, snapshot.environmentResolutions)
+        assertEquals(1L, snapshot.graphCompilations)
+        assertEquals(1L, snapshot.nativeCommits)
+        assertEquals(0L, snapshot.helperCreates)
+        assertEquals(0L, snapshot.helperRemoves)
+        assertTrue(snapshot.adapterLayoutRequests <= 1L)
+    }
+
+    @Test
+    fun `CL-P1-TOPOLOGY-005 failed topology commit restores accepted native ownership`() {
+        val context = RuntimeEnvironment.getApplication()
+        val layout = DeclarativeConstraintLayout(context).apply { installEnvironment(density = 1f) }
+        val child = FailingLayoutParamsView(context).apply {
+            setTag(R.id.viewcompose_constraint_layout_id, "child")
+        }
+        layout.addView(child)
+        layout.decoupledConstraintSetSpec = ConstraintSetSpec(
+            constraints = mapOf("child" to fixedItem(width = 40, startMargin = 12)),
+            helpers = barrierHelpers(),
+        )
+        layout.applyConstraintsNow()
+        val acceptedGraph = layout.acceptedGraphForTest
+        val acceptedRevision = layout.acceptedRevisionForTest
+        val acceptedFingerprint = layout.acceptedTopologyFingerprintForTest
+        val acceptedId = child.id
+        val acceptedParams = ConstraintLayout.LayoutParams(child.layoutParams as ConstraintLayout.LayoutParams)
+        val barrier = layout.helperChildrenExcluding(child).single()
+        val metrics = layout.startReconciliationMetricsForTest()
+
+        layout.decoupledConstraintSetSpec = ConstraintSetSpec(
+            constraints = mapOf("child" to fixedItem(width = 80, startMargin = 30)),
+            helpers = barrierHelpers().copy(
+                guidelines = listOf(
+                    ConstraintGuidelineSpec(
+                        id = "temporary-guide",
+                        direction = ConstraintGuidelineDirection.FromStart,
+                        position = ConstraintGuidelinePosition.Fraction(0.5f),
+                    ),
+                ),
+            ),
+        )
+        child.failNextLayoutParamsAssignment = true
+        layout.applyConstraintsNow()
+
+        assertSame(acceptedGraph, layout.acceptedGraphForTest)
+        assertEquals(acceptedRevision, layout.acceptedRevisionForTest)
+        assertEquals(acceptedFingerprint, layout.acceptedTopologyFingerprintForTest)
+        assertEquals(acceptedId, child.id)
+        assertSame(barrier, layout.helperChildrenExcluding(child).single())
+        assertEquals(1, layout.managedHelperCountForTest)
+        assertResolvedLayoutParams(
+            child,
+            width = acceptedParams.width,
+            height = acceptedParams.height,
+            startMargin = acceptedParams.marginStart,
+        )
+        assertEquals(ConstraintGraphRejectionReason.NativeCommit, layout.lastRejectionForTest?.reason)
+        val snapshot = metrics.snapshot()
+        assertEquals(1L, snapshot.topologyClassifications)
+        assertEquals(1L, snapshot.graphCompilations)
+        assertEquals(1L, snapshot.nativeCommits)
+        assertEquals(0L, snapshot.topologyPublishes)
+        assertEquals(1L, snapshot.rollbacks)
+
+        layout.requestConstraintRebuild()
+        layout.applyConstraintsNow()
+
+        assertTrue(layout.acceptedRevisionForTest > acceptedRevision)
+        assertNotEquals(acceptedFingerprint, layout.acceptedTopologyFingerprintForTest)
+        assertSame(barrier, layout.helperChildrenExcluding(child).filterIsInstance<Barrier>().single())
+        assertEquals(2, layout.managedHelperCountForTest)
+        val retriedSnapshot = metrics.snapshot()
+        assertEquals(2L, retriedSnapshot.topologyClassifications)
+        assertEquals(2L, retriedSnapshot.graphCompilations)
+        assertEquals(2L, retriedSnapshot.nativeCommits)
+        assertEquals(1L, retriedSnapshot.topologyPublishes)
+        assertEquals(1L, retriedSnapshot.rollbacks)
+    }
+
     private fun DeclarativeConstraintLayout.installEnvironment(
         density: Float,
         layoutDirection: UiLayoutDirection = UiLayoutDirection.Ltr,
@@ -920,6 +1144,13 @@ class DeclarativeConstraintLayoutEnvironmentTest {
             child.setTag(R.id.viewcompose_constraint_layout_id, id)
             addView(child)
         }
+    }
+
+    private fun DeclarativeConstraintLayout.attemptedRevision(): Long {
+        return DeclarativeConstraintLayout::class.java
+            .getDeclaredField("attemptedRevision")
+            .apply { isAccessible = true }
+            .getLong(this)
     }
 
     private fun fixedItem(
@@ -947,6 +1178,16 @@ class DeclarativeConstraintLayoutEnvironmentTest {
                 ),
             ),
         )
+
+    private fun barrierHelpers(): ConstraintHelpersSpec = ConstraintHelpersSpec(
+        barriers = listOf(
+            ConstraintBarrierSpec(
+                id = "barrier",
+                direction = ConstraintBarrierDirection.End,
+                referencedIds = listOf("child"),
+            ),
+        ),
+    )
 
     private fun DeclarativeConstraintLayout.measureAndLayout() {
         measureAndLayoutBeforePreDraw()
@@ -999,5 +1240,15 @@ class DeclarativeConstraintLayoutEnvironmentTest {
         assertEquals(width, params.width)
         assertEquals(height, params.height)
         assertEquals(startMargin, params.marginStart)
+    }
+
+    private class CountingMeasureView(context: Context) : View(context) {
+        var measureCount: Int = 0
+            private set
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            measureCount += 1
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        }
     }
 }

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-constraintlayout-androidx/README.md
-translation_source_hash: ca82fe45eaa846d558e8454bc49c5e7207bc9dbdd2cd1142ce7c1b557d4d6d56
+translation_source_hash: 729924ec1da2ecf29f85cf13a7538eb5b4f94464809204c11732c56210965f75
 translation_status: current
 ---
 
@@ -25,9 +25,8 @@ dependencies {
   并归档为 `docs/archive/constraintlayout-native-engine-hardening.md`。
   更广泛的能力对齐与优化由独立的
   [发版后扩展计划](https://docs.viewcompose.com/project/plans/constraintlayout-parity-performance-expansion)负责；
-  Phase 0 已基于完成发布和 Tag 的 `0.1.0-alpha01` 基线完成契约冻结，正等待 Demo 固定频率
-  基线落地后合入。Phase 0 保持无 Changeset；后续生产阶段负责各自的不可变 Changeset 与
-  下一次发版门禁。
+  Demo 固定频率基线与 Phase 0 契约冻结均已合入。当前源码已实现 Phase 1 分类协调并拥有不可变
+  Renderer Changeset；Phase 2 能力对齐是下一执行阶段。
 - 平台：Android 7.0（API 24）及以上。
 - 可选：`viewcompose-ui-foundation` 不依赖该产物。
 - UI Contract 与 UI Foundation 会被传递暴露，因为它们的 Modifier、单位和 Builder 类型
@@ -146,6 +145,13 @@ Flow、Group、Layer 与 Placeholder View；AndroidX 不再通过 `applyTo` 副�
 此前的 Helper 注册表与 View 状态。诊断按图 Revision、Identity 和 Reason 结构化并保持有界；
 无效 Link 不会被单独丢弃。
 
+已接受 Graph 现在携带确定性 Topology/Scalar Fingerprint，以及原始 Child、环境、原生 ID 与 Helper
+所有权输入。语义相同或仅 Content 变化的更新会在 Graph 编译前返回，不产生 Adapter 自有约束分配
+或原生写入。Scalar 更新会保留未变 Helper 的实例与引用，不创建/删除 Helper，不克隆 Live
+LayoutParams，并且最多请求一次 Layout。仅环境变化的更新只解析一次环境并保留 Topology 与 ID；
+Topology 更新继续使用既有 Staged Commit 与完整回滚契约。这些分类属于实现行为，不是新的公开
+DSL 控制项。
+
 该事务遵循 [ADR-0016](../../architecture/decisions/0016-constraintlayout-graph-and-helper-ownership.md)。
 2026-08-18 使用缓存 ConstraintLayout `2.2.1` 的 API 35 Robolectric 聚焦运行通过了 16/16 条
 Renderer 测试。在相同 Harness 下，Trailing Barrier Control 在 ID Index 和 Direction 修复前是
@@ -158,8 +164,15 @@ Identity。这属于聚焦正确性证据，不是发版验收：它使用手工
 ConstraintLayout `2.2.2` 与 Core `1.1.2`，通过 75/75 条 UI Contract、11/11 条 DSL 和
 451/451 条 Renderer 测试，其中包含 12 条 Graph 与 16 条 ConstraintLayout 聚焦用例；
 `verifyDocumentationStructure` 也通过。正式 JVM 兼容性结论仍为 **improved**。后续真机和性能
-矩阵已闭合首发验收范围；分类更新快速路径、Grid、CircularFlow 和更广泛的能力对齐继续留在
-发版后计划。
+矩阵已闭合首发验收范围；Grid、CircularFlow 和更广泛的能力对齐在分类 Phase 1 快速路径之后
+继续留在发版后计划。
+
+2026-08-21 的 Phase 1 运行通过全部 459 条 Renderer 测试。具名用例覆盖 1,000 次 Equal 提交、
+Content-only Child 替换、Scalar Helper 保留、单次环境解析，以及注入 Topology 失败后的有效重试。
+结构计数器证明已接受 Equal 输入的 Compiler、Environment、原生提交、Helper 写入、Layout
+Request 与 Adapter Allocation 均为 0；Scalar 用例不创建/删除 Helper，不克隆 Live LayoutParams，
+并且最多提交一次。计数器与激活入口均为 Internal 且 Container-local，因此没有新增公开 API 文档
+字段或未启用的 Global Observer。Release Intent、Development Tooling Isolation 与文档门禁均通过。
 
 2026-08-19 的 DSL Safety 后续运行通过 17/17 条 ConstraintLayout 模块测试：12 条行为测试和
 5 条 Kotlin 2.0.21 Compiler Fixture。合法的类型化 Axis/Reference Sample 可以编译；把垂直
@@ -234,13 +247,15 @@ AndroidX Escape Hatch。
 
 - Graph 稳定而 Child Content 变化时复用 Constraint Set。
 - 保持 Reference ID 与 Helper 类型稳定，以复用生成的 View ID 与实例。
+- 稳定的 Equal/Content-only 提交会自动进入分类快速路径，不需要公开优化开关。
 - 不需要约束求解时使用更简单 Container；ConstraintLayout 会引入 Solver Pass。
 - 避免由高频 State 重建大型 Helper Graph。
 
 已接受的 10/50/100 Node 首发矩阵证明：相对硬切前 ViewCompose 源码，所有稳定行均为
 **no material change**；它不构成性能领先结论。Direct Android Views 仍明显更快，尤其是 P95。
-不得把该 Adapter 描述为 ViewCompose 中最快的 Layout Path。发版后扩展计划负责分类 Scalar/
-Topology 快速路径、多设备复验以及未来任何性能领先声明。
+不得把该 Adapter 描述为 ViewCompose 中最快的 Layout Path。Phase 1 已闭合分类路径的结构预算，
+但 50 Node 固定频率全帧预检为 **inconclusive**，因为四个纵向 Arm 中有三个超过 `0.15`
+Run-P50 CV 门槛。Phase 4 负责稳定的 Direct-native 复验与未来任何端到端性能领先声明。
 
 ## 相关文档
 
