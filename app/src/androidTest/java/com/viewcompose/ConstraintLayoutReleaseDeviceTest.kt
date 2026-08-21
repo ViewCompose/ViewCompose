@@ -213,6 +213,9 @@ class ConstraintLayoutReleaseDeviceTest {
                 ).centerInsideOwningRecyclerView()
             }
             waitForUiIdle()
+            var horizontalMetricBounds = IntArray(4)
+            var horizontalStatusBounds = IntArray(4)
+            var horizontalActionBounds = IntArray(4)
             scenario.onActivity { activity ->
                 val grid = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_CONTAINER)
                 val hero = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_HERO)
@@ -222,12 +225,41 @@ class ConstraintLayoutReleaseDeviceTest {
                 listOf(hero, metric, status, action).forEach { child -> assertInside(grid, child) }
                 assertTrue("The spanning Grid item must be wider than every single-cell item.",
                     hero.width > maxOf(metric.width, status.width, action.width))
-                assertEquals("The three automatic second-row cells must share a top edge.",
-                    metric.topOnScreen(), status.topOnScreen())
-                assertEquals(metric.topOnScreen(), action.topOnScreen())
-                assertTrue(metric.leftOnScreen() < status.leftOnScreen() && status.leftOnScreen() < action.leftOnScreen())
-                assertEquals("Four content Views plus two row and three column proxies are expected.",
-                    9, grid.requireConstraintLayoutSelf().childCount)
+                assertEquals("The horizontal Grid puts the metric beside the spanning hero.",
+                    hero.topOnScreen(), metric.topOnScreen())
+                assertEquals("The remaining horizontal Grid cells share the next row.",
+                    status.topOnScreen(), action.topOnScreen())
+                assertTrue(status.topOnScreen() > hero.topOnScreen())
+                assertTrue(hero.leftOnScreen() < metric.leftOnScreen())
+                assertTrue(status.leftOnScreen() < action.leftOnScreen())
+                assertEquals("Four content Views plus three row and three column proxies are expected.",
+                    10, grid.requireConstraintLayoutSelf().childCount)
+                horizontalMetricBounds = metric.screenBounds()
+                horizontalStatusBounds = status.screenBounds()
+                horizontalActionBounds = action.screenBounds()
+                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_TOGGLE)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val grid = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_CONTAINER)
+                val hero = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_HERO)
+                val metric = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_METRIC)
+                val status = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_STATUS)
+                val action = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_ACTION)
+                assertEquals("The vertical Grid fills the final free row after the skipped center.",
+                    status.topOnScreen(), action.topOnScreen())
+                assertEquals("The vertical Grid fills the first column downward.",
+                    metric.leftOnScreen(), status.leftOnScreen())
+                assertTrue(metric.topOnScreen() > hero.topOnScreen())
+                assertTrue(status.topOnScreen() > metric.topOnScreen())
+                assertTrue(status.leftOnScreen() < action.leftOnScreen())
+                assertTrue("Grid orientation must move the metric.",
+                    !metric.screenBounds().contentEquals(horizontalMetricBounds))
+                assertTrue("Grid orientation must move the status.",
+                    !status.screenBounds().contentEquals(horizontalStatusBounds))
+                assertTrue("Grid orientation must move the action.",
+                    !action.screenBounds().contentEquals(horizontalActionBounds))
+                assertEquals(10, grid.requireConstraintLayoutSelf().childCount)
             }
             scenario.onActivity { activity ->
                 activity.requireViewByTestTagVisible(
@@ -421,6 +453,13 @@ private fun View.rightOnScreen(): Int = leftOnScreen() + width
 private fun View.centerXOnScreen(): Int = leftOnScreen() + width / 2
 
 private fun View.centerYOnScreen(): Int = topOnScreen() + height / 2
+
+private fun View.screenBounds(): IntArray = intArrayOf(
+    leftOnScreen(),
+    topOnScreen(),
+    rightOnScreen(),
+    topOnScreen() + height,
+)
 
 private fun View.requireConstraintLayoutSelf(): ConstraintLayout =
     this as? ConstraintLayout ?: error("Expected ConstraintLayout but was ${javaClass.simpleName}")

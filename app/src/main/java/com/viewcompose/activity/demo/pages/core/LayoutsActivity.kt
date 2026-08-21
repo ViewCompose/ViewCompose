@@ -29,6 +29,8 @@ class LayoutsActivity : DemoRenderActivity() {
         builder.LayoutPage(
             fixture = LayoutFixture.from(scenario.id),
             scenario = scenario,
+            constraintSections = intent.getStringArrayExtra(EXTRA_VERIFICATION_SECTIONS)?.toList(),
+            hostRoot = root,
         )
     }
 
@@ -48,7 +50,8 @@ class LayoutsActivity : DemoRenderActivity() {
         UiEnvironment(
             UiEnvironmentValues(
                 density = UiDensity(
-                    density = platform.density.density,
+                    density = platform.density.density *
+                        intent.getFloatExtra(EXTRA_VERIFICATION_DENSITY_SCALE, 1f),
                     fontScale = intent.getFloatExtra(EXTRA_VERIFICATION_FONT_SCALE, 1f),
                 ),
                 locales = UiLocaleList.of(if (rtl) "ar" else "en"),
@@ -66,18 +69,26 @@ class LayoutsActivity : DemoRenderActivity() {
     }
 
     companion object {
-        private const val EXTRA_VERIFICATION_RTL = "layouts_verification_rtl"
-        private const val EXTRA_VERIFICATION_FONT_SCALE = "layouts_verification_font_scale"
+        internal const val EXTRA_VERIFICATION_RTL = "layouts_verification_rtl"
+        internal const val EXTRA_VERIFICATION_FONT_SCALE = "layouts_verification_font_scale"
+        internal const val EXTRA_VERIFICATION_DENSITY_SCALE = "layouts_verification_density_scale"
+        internal const val EXTRA_VERIFICATION_SECTIONS = "layouts_verification_sections"
 
         internal fun newConstraintVerificationIntent(
             context: Context,
             rtl: Boolean,
             fontScale: Float,
+            densityScale: Float = 1f,
+            sections: List<String>? = null,
         ): Intent = DemoScenarioRegistry.createLaunchIntent(
             context,
             DemoScenarioRegistry.require(DemoScenarioIds.LayoutConstraint.value),
         )
             .putExtra(EXTRA_VERIFICATION_RTL, rtl)
             .putExtra(EXTRA_VERIFICATION_FONT_SCALE, fontScale)
+            .putExtra(EXTRA_VERIFICATION_DENSITY_SCALE, densityScale)
+            .apply {
+                sections?.let { putExtra(EXTRA_VERIFICATION_SECTIONS, it.toTypedArray()) }
+            }
     }
 }
