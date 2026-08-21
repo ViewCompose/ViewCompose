@@ -899,6 +899,29 @@ class DeclarativeConstraintLayoutEnvironmentTest {
         activityController.close()
     }
 
+    @Test
+    fun `CL-P1-EQUAL-001 semantically equal submissions bypass graph reconciliation`() {
+        val context = RuntimeEnvironment.getApplication()
+        val layout = DeclarativeConstraintLayout(context).apply {
+            installEnvironment(density = 1f)
+            addContent("child")
+            decoupledConstraintSetSpec = ConstraintSetSpec(
+                constraints = mapOf("child" to fixedItem(width = 40, startMargin = 12)),
+            )
+        }
+        layout.applyConstraintsNow()
+        val acceptedRevision = layout.acceptedRevisionForTest
+        val attemptedRevision = layout.attemptedRevision()
+
+        repeat(1_000) {
+            layout.requestConstraintRebuild()
+            layout.applyConstraintsNow()
+        }
+
+        assertEquals(acceptedRevision, layout.acceptedRevisionForTest)
+        assertEquals(attemptedRevision, layout.attemptedRevision())
+    }
+
     private fun DeclarativeConstraintLayout.installEnvironment(
         density: Float,
         layoutDirection: UiLayoutDirection = UiLayoutDirection.Ltr,
@@ -920,6 +943,13 @@ class DeclarativeConstraintLayoutEnvironmentTest {
             child.setTag(R.id.viewcompose_constraint_layout_id, id)
             addView(child)
         }
+    }
+
+    private fun DeclarativeConstraintLayout.attemptedRevision(): Long {
+        return DeclarativeConstraintLayout::class.java
+            .getDeclaredField("attemptedRevision")
+            .apply { isAccessible = true }
+            .getLong(this)
     }
 
     private fun fixedItem(
