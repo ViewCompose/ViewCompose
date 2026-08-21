@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 2afcdb357907b1a915c44acabf7cdd5065ed6cb2dddd09488a66953e4b8a38d0
+translation_source_hash: 9da7a9cc48ff6943eed5e5b686722fa211f3b1309b7c96282308555e8f39c2c0
 translation_status: current
 ---
 
@@ -904,6 +904,60 @@ Stable-50 的 Candidate 聚合 P50/P95/P99 变化为 `-4.0%/+2.0%/+0.8%`，Peak 
 更新不创建/删除 Helper、不克隆 Live LayoutParams，并且最多提交和请求一次 Layout。局限是只有
 一台 API 28 设备、Workload 仅 16～17 个 Frame，且每次运行的变动持续存在。下一步是充分降温的
 Phase 4 Direct-native/Released/Candidate 矩阵；稳定复验之前不宣称全帧优化收益。
+
+#### 2.4.7 ConstraintLayout Phase 4 受控矩阵
+
+2026-08-21 的 Phase 4 在已 Root 的 Xiaomi MI 6 / Android 9 参考设备上，对比冻结的已发布框架
+源码 `143b09acf3bfcda81add008b4dcf09d06a09e2dc` 与 Candidate 基线
+`b1aa64f206554a91443715e2a32f37864ab71432`。Released、Candidate 与共享 Benchmark APK 的
+SHA-256 分别是
+`bdf94fdc934780afd8e46298a7f5081a402838aa08cefc1deb46fe705335e179`、
+`3b4dcf71c9952c5650d11cb448a6c3281f901fa9936e269529ae36be8053d71c` 与
+`5c4b611fee97fa35faee7303ef3f7b073f5e34de1413f03b5783f6ffcfeb0b0e`。
+
+Revision 6 直接调用已有 Accessibility Click Action，并校验每次动作后的状态变化。16 个
+Update/Reset Cycle 因而为每次运行提供至少 32 个 Content-update Frame，不再混入 Pointer
+Press/Release 动画。Direct AndroidX Cell 与 ViewCompose Cell 使用相同的可见填充；10、50、100
+节点页面在测量前都通过人工视觉检查。Revision 4 因 Direct Cell 透明且每次运行只有约 16 帧而
+作废；Revision 5 因坐标点击形成约 `16 + 16` 个快速按钮帧与较慢内容布局帧的双峰混合而作废。
+两个被拒绝的 Revision 都不是 Baseline。
+
+两份最终 Target 均经过 R8/资源压缩且不可调试。每个方法使用 5 次 `run-from-apk` 迭代、v4 固定
+CPU/GPU/互连策略，在不高于 37 摄氏度时开始，暂停充电并停止厂商性能服务。两份主矩阵各保留
+24 份 JSON 和 120 份 Trace。每个不稳定 Pair 只用一次完整成对复测替换；Candidate 保留 12 个
+复测方法/60 份 Trace，Released 保留 16/80，没有选择第三次运行。表中是 ViewCompose Frame CPU
+P50/P95/P99（毫秒）；Direct 是配对 Candidate AndroidX P50/P95；CV 是最终 Released/Candidate
+Run-P50 CV。
+
+| Action | Released ViewCompose | Candidate ViewCompose | Direct AndroidX | CV | 结论 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `stable-10` | `9.116/10.918/13.854` | `8.803/11.462/14.612` | `3.438/4.676` | `0.143/0.120` | `no material change` |
+| `stable-50` | `10.614/19.107/23.141` | `11.237/17.137/19.951` | `4.402/5.971` | `0.117/0.180` | `inconclusive` |
+| `stable-100` | `12.674/24.434/26.283` | `12.585/24.398/28.491` | `5.635/7.486` | `0.111/0.121` | `no material change` |
+| `scalar-10` | `10.478/13.931/14.977` | `9.776/13.316/14.977` | `4.828/6.421` | `0.179/0.171` | `inconclusive` |
+| `scalar-50` | `11.588/21.484/24.060` | `11.553/22.947/25.301` | `7.392/9.032` | `0.229/0.205` | `inconclusive` |
+| `scalar-100` | `15.597/36.150/41.827` | `16.100/34.624/38.874` | `11.538/14.207` | `0.021/0.125` | `no material change` |
+| `helper-10` | `7.955/10.926/13.923` | `8.320/11.380/13.513` | `4.558/6.126` | `0.128/0.124` | `no material change` |
+| `helper-50` | `7.678/12.484/14.134` | `7.346/12.243/14.959` | `6.301/8.201` | `0.227/0.140` | `inconclusive` |
+| `helper-100` | `8.303/15.280/19.498` | `7.826/14.579/16.399` | `9.373/10.830` | `0.109/0.082` | `no material change` |
+| `topology-10` | `9.774/12.489/14.589` | `10.390/14.101/19.010` | `4.811/6.366` | `0.124/0.137` | `no material change` |
+| `topology-50` | `13.570/22.272/27.262` | `12.367/21.920/25.432` | `7.312/8.683` | `0.201/0.140` | `inconclusive` |
+| `topology-100` | `15.719/32.688/34.876` | `15.390/34.778/38.771` | `11.409/12.850` | `0.110/0.098` | `no material change` |
+
+7 个 Longitudinal Pair 可解释，全部 Timing 与 Memory Regression 行通过。Direct-normalized
+Candidate P50 变化范围是 `-5.7%` 到 `+8.4%`，P95 为 `-4.0%` 到 `+14.3%`。Candidate Peak Heap
+变化范围是 `-3.8%` 到 `+10.5%`，没有任何行跨过 15% 与 2,048 KiB 的组合 Memory 门禁。其余
+5 个 Action 因至少一条最终 ViewCompose Arm 的 CV 高于 `0.15` 而为 `inconclusive`。12 个
+Candidate Action 的 P95 全部由 Direct AndroidX 更快；P50 则有 11 个由 Direct 更快。Candidate
+helper-100 的 P50 比 Direct 快 `16.5%`，但 P95 慢 `34.6%`，因此它是 Mixed，而不是性能领先结果。
+要求的 50 节点 Stable/Scalar 25% Gap Closure 没有成立。
+
+Phase 4 的发版安全结论是 **no material change**：没有稳定回退，也没有全帧优化胜利。Phase 1
+结构快速路径仍由精确的零工作与有界写入计数证明，而不是由 Frame-time 声明证明。Environment-only
+更新继续使用结构 Benchmark，因为 Direct AndroidX 没有等价的声明式环境解析动作。局限包括仅一台
+OEM/API-28 设备、`run-from-apk` JIT/代码布局敏感性、5 个未解决 CV 行、只有 Peak 而非 Post-GC
+Retained Memory，以及物理矩阵没有独立 Adapter-only Timing Probe。后续全帧工作必须建立新的归因
+优化计划；反复运行当前矩阵直到出现有利样本不是可接受的下一步。
 
 ### 2.5 Debug Tooling 回归门禁
 

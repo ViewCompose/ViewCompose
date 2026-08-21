@@ -150,6 +150,16 @@ and the scalar repeat remained `0.244`; candidate stable/scalar CV was `0.212`/`
 candidate scalar arm met `0.15`, so the result supports no longitudinal timing claim and the Phase 4
 matrix must replicate it before claiming an end-to-end win.
 
+The final revision-6 Phase 4 matrix supersedes that short preflight. Seven of twelve released-to-
+candidate pairs are stable on both ViewCompose arms and pass every Direct-normalized P50/P95 and
+peak-heap regression row; five remain `inconclusive` after the single permitted paired repeat. The
+stable rows classify the whole-frame result as **no material change**: they establish release safety
+but neither an optimization win nor performance leadership. Direct AndroidX is faster at P95 for
+all twelve Candidate actions and at P50 for eleven. This does not invalidate the exact structural
+counters above; it limits their claim to avoided adapter work and bounded mutation. The protocol,
+absolute values, normalization, limitations, and next action are recorded in
+[ViewCompose Performance](../../tooling/performance.md#247-constraintlayout-phase-4-controlled-matrix).
+
 The focused 2026-08-21 Phase 2 API-35 Robolectric acceptance passes all six frozen `CL-P2-*`
 renderer cases. Exact bounds cover parent, child, Guideline, and Barrier chain boundaries in
 logical LTR/RTL and physical coordinates; baseline normal/gone margins match a direct AndroidX

@@ -18,12 +18,11 @@ dependencies {
   its Robolectric, physical-device, Demo, AndroidX `2.2.2`, performance-safety, documentation, and
   repository release gates are accepted under the completed first-release hardening plan,
   archived as `docs/archive/constraintlayout-native-engine-hardening.md`.
-  Broader parity and optimization are owned by a separate
-  [post-release expansion plan](../../project/plans/constraintlayout-parity-performance-expansion.md)
-  whose Demo fixed-clock baseline, Phase 0 contract freeze, and Phase 1 classified reconciliation
-  are merged. Phase 2 high-value parity is merged and owns its immutable multi-artifact Changeset;
-  Phase 3 complete Demo, visual, configuration, lifecycle, and compatibility acceptance is complete
-  in the current change. Phase 4 controlled benchmarking and release closeout is next.
+  Broader parity and optimization were completed under the archived
+  [post-release expansion plan](../../archive/constraintlayout-parity-performance-expansion.md).
+  Its Demo fixed-clock baseline, Phase 0 contract freeze, Phase 1 classified reconciliation,
+  Phase 2 high-value parity, Phase 3 complete acceptance, and Phase 4 controlled benchmark are all
+  complete. The expansion line is release-safe; it does not claim a whole-frame performance win.
 - Platform: Android 7.0 (API 24) and newer.
 - Optional: `viewcompose-ui-foundation` does not depend on this artifact.
 - UI Contract and UI Foundation are exposed transitively because their modifier, unit, and builder
@@ -336,13 +335,23 @@ deprecated compatibility alias or raw AndroidX escape hatch.
 - Prefer simpler containers when constraints do not add value; ConstraintLayout incurs a solver pass.
 - Avoid rebuilding large helper graphs from rapidly changing state.
 
-The accepted 10/50/100-node first-release matrix establishes **no material change** against the
-pre-hard-cut ViewCompose source for every stable row; it does not establish performance leadership.
-Direct Android Views remains materially faster, especially at P95. Do not describe this adapter as
-the fastest ViewCompose layout path. Phase 1 closes the structural classified-path budgets, but its
-50-node fixed-clock full-frame preflight is **inconclusive** because three of four longitudinal arms
-exceeded the `0.15` run-P50 CV gate. Phase 4 owns stable direct-native replication and any future
-end-to-end leadership claim.
+The revision-6 Phase 4 matrix compares released, candidate, and direct AndroidX at 10/50/100 nodes
+for stable, scalar, helper, and topology changes. Seven longitudinal pairs are stable on both
+ViewCompose arms and pass every timing and peak-heap regression gate; five remain
+`inconclusive` after the single permitted paired repeat. The release-safety conclusion is
+**no material change**, not a whole-frame optimization win. Direct Android Views is faster at P95
+for all twelve Candidate actions and at P50 for eleven. Helper-100 has the opposing Candidate P50,
+but its P95 remains slower, so it is mixed rather than leadership evidence. Phase 1's classified
+fast paths remain justified by exact zero-work and bounded-write counters, not by a frame-time
+claim. Do not describe this adapter as the fastest ViewCompose layout path or treat repeated runs
+as a way to select a favorable sample. See the controlled protocol, absolute values, limitations,
+and next action in [ViewCompose Performance](../../tooling/performance.md#247-constraintlayout-phase-4-controlled-matrix).
+
+The direct-AndroidX Demo fixtures render every benchmark node with a visible fill. Manual review on
+the Xiaomi/API-28 reference device confirmed one row of 10 cells, a `5 x 10` field of 50 cells, and
+a `10 x 10` field of 100 cells before timing capture. Each fixture exposes update, reset, and node-
+count controls; a fixture that shows only controls or transparent cells is invalid benchmark
+evidence. The focused app test also requires ten visible non-Barrier nodes for every workload.
 
 ## Related documentation
 
@@ -358,6 +367,6 @@ The complete generated reference is available in the
 
 Source snapshots before the first-release hard cut used warning-based partial recovery and split
 helper ownership. Current source intentionally breaks that behavior and does not provide a second
-constraint solver or compatibility engine. The first-release plan still owns acceptance and release
-closure; the post-release expansion plan separately owns optimization, broader parity, and
-performance-leadership evidence.
+constraint solver or compatibility engine. The first-release and post-release plans are both
+archived; current contracts and performance boundaries are owned by this module manual and the
+linked active architecture, migration, and tooling documents.

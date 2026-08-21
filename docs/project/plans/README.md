@@ -8,12 +8,6 @@ This directory contains multi-step work that is currently active and must surviv
   the intentionally deferred collection-stress revision-3 fixed-clock baseline, broad bilingual and
   configuration visual matrix, popup pixel golden, and zero-caller hard deletion of obsolete Demo
   harness infrastructure after the coordinated framework and Preview-plugin release.
-- [ConstraintLayout parity and performance expansion](./constraintlayout-parity-performance-expansion.md) —
-  activated post-release work for classified reconciliation fast paths, typed Grid, declarative
-  CircularFlow, broader AndroidX parity, the complete visual/configuration matrix, and direct-native
-  performance-leadership evidence. Phase 0 has frozen the released baseline, public API contracts,
-  red-test catalog, and evidence-based structural DSL Scope audit while preserving already-correct
-  module-specific syntax; it remains `- None.` until production implementation begins.
 - [Animation Compose-capability expansion](./animation-compose-capability-expansion.md) — extend
   the completed animation baseline with physical spring/decay/results, full animated content,
   slide/scale visibility, seekable transitions, bounds animation, navigation-aware shared motion,

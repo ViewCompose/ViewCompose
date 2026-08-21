@@ -57,7 +57,7 @@ SCENARIOS = (
     ScenarioContract(
         "complex_layout_scroll",
         "performance.complex-layout",
-        4,
+        6,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeComplexLayoutScroll",
             COMPOSE_ENGINE: "composeComplexLayoutScroll",
@@ -67,7 +67,7 @@ SCENARIOS = (
     ScenarioContract(
         "complex_layout_property_update",
         "performance.complex-layout",
-        4,
+        6,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeComplexLayoutUpdate",
             COMPOSE_ENGINE: "composeComplexLayoutUpdate",
@@ -77,7 +77,7 @@ SCENARIOS = (
     ScenarioContract(
         "complex_layout_structure_update",
         "performance.complex-layout",
-        4,
+        6,
         {
             VIEWCOMPOSE_ENGINE: "viewComposeComplexLayoutStructureUpdate",
             COMPOSE_ENGINE: "composeComplexLayoutStructureUpdate",
@@ -124,7 +124,7 @@ SCENARIOS = (
     ScenarioContract(
         f"constraint_layout_{workload}_{node_count}",
         "performance.complex-layout",
-        4,
+        6,
         {
             VIEWCOMPOSE_ENGINE: (
                 f"viewComposeConstraintLayout{workload.title()}{node_count}"

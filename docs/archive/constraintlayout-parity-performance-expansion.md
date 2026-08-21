@@ -2,38 +2,39 @@
 
 ## Status
 
-Active after the post-release trigger. The ConstraintLayout first-release hardening plan is
-complete and archived as `docs/archive/constraintlayout-native-engine-hardening.md`; Maven Central
-publication `0.1.0-alpha01`, its artifact tag, and the release owner's explicit reopen are all
-complete. Phase 0 execution is complete: the published baseline, API contracts, Scope inventory,
-named red-test catalog, and performance budgets are frozen below. Demo fixed-clock baseline PR
-`#111` and Phase 0 PR `#112` are merged in that order. Phases 1 and 2 are merged. Phase 3 Demo,
-visual, configuration, lifecycle, compatibility, and warning acceptance is complete in the current
-change. The frozen chain-boundary, parent-wrap, physical-edge, typed Grid, and declarative
-CircularFlow contracts now span transport, DSL, graph preflight, transactional native rendering,
-compiled samples, one-purpose Demo fixtures, Preview snapshots, exact JVM and device tests, and
-manual visual review.
+Complete and archived. The ConstraintLayout first-release hardening plan is archived as
+`docs/archive/constraintlayout-native-engine-hardening.md`; Maven Central publication
+`0.1.0-alpha01`, its artifact tag, and the release owner's explicit reopen are complete. Demo
+fixed-clock baseline PR `#111`, Phase 0 PR `#112`, Phases 1 and 2, and Phase 3 acceptance are merged.
+Phase 4's revision-6 released/candidate/direct matrix, durable guidance, Demo fixture correction,
+and repository gates are complete in the final closeout change. The frozen chain-boundary,
+parent-wrap, physical-edge, typed Grid, and declarative CircularFlow contracts now span transport,
+DSL, graph preflight, transactional native rendering, compiled samples, one-purpose Demo fixtures,
+Preview snapshots, exact JVM and device tests, manual visual review, and controlled release-safety
+measurement.
 
 Phase 0 remains Changeset-free because it changed no published production source. Phase 1 owns the
 immutable renderer Changeset listed below. Phase 2 owns one immutable multi-artifact Changeset.
 Phase 3 changes only the Demo application, tests, snapshots, and active documentation; it changes no
 published-artifact production source, publication input, or compiled public API sample, so no new
-`release/changes` file is required. This plan remains the sole active owner and release gate for all
-affected follow-up artifacts.
+`release/changes` file is required. Phase 4 likewise changes only the Demo fixture, benchmark-only
+runner, report contracts, tests, and documentation. This completed plan no longer owns an active
+release blocker; any further parity or whole-frame optimization work requires a new attributed
+plan.
 
 This plan is canonical English-only under the documentation-governance policy. Durable capability,
 performance, compatibility, and operational conclusions must move into the owning active documents,
 with required Simplified Chinese mirrors, before the plan is archived.
 
-Last verified: 2026-08-21.
+Last verified: 2026-08-22.
 
 Activation trigger: the first-release hardening plan is archived, the corresponding Maven Central
 release and Git tag are complete, and the release owner explicitly reopens ConstraintLayout
 development.
 
-Next action: land the quality-gate-clean Phase 3 acceptance change, then begin Phase 4's controlled
-direct-native/published-baseline/candidate benchmark and release closeout. Phase 4 must preserve the
-accepted correctness matrix and may not infer a performance win from Phase 3 evidence.
+Next action: archive this record with the final closeout change. Preserve the accepted structural
+fast paths and require a new attributed plan before additional whole-frame performance work; the
+revision-6 matrix does not support a performance-leadership claim.
 
 ## Maven release changesets
 
@@ -145,7 +146,7 @@ unreleased checkout:
 | Supported floor | Android 7.0 / API 24 |
 | Accepted physical reference device | Rooted Xiaomi MI 6, Android 9 / API 28, 60 Hz |
 | Target mode | R8 optimized, resource-shrunk, non-debuggable benchmark target |
-| Benchmark identity | `performance.complex-layout@4`, `CompilationMode.None`, actual `run-from-apk`, five iterations, four update/reset cycles |
+| Benchmark identity | `performance.complex-layout@6`, `CompilationMode.None`, actual `run-from-apk`, five iterations, sixteen update/reset cycles driven through direct accessibility actions |
 | Workload matrix | Stable, scalar, helper, and topology at 10, 50, and 100 nodes against direct AndroidX |
 | First-release target APK SHA-256 | `a7d681b90941a8d318108d709b3a7b77147b614180a8d2124840416d07148fac` |
 | Pre-hard-cut historical APK SHA-256 | `2b32ca7539be121615fb3e7b61953101be7b9a2e4ac55215690d88a480b25161` |
@@ -163,6 +164,34 @@ same clock policy and recapture the released Maven artifact and direct AndroidX 
 to the candidate. The old v3 values are not silently relabeled as v4 results. Build order, package
 identity, target/benchmark APK hashes, actual compilation result, frame count, peak heap, thermal
 state, and raw rejected repetitions remain part of every accepted batch.
+
+The initial Phase 4 revision-4 recapture is rejected protocol evidence. Manual review found that
+the direct AndroidX scalar, helper, and topology fixtures created the requested Views but left them
+transparent while ViewCompose drew visible cells, so their renderer work was not equivalent. After
+the direct cells were made visible, stable-50 candidate preflight and its one adjacent repeat still
+failed the `0.15` gate at run-P50 CV `0.261` and `0.437`; Direct AndroidX passed at `0.080` and
+`0.054`. Each revision-4 run measured only about 16 frames. A diagnostic five-trace run showed
+main-thread traversal totals of `30.864--37.758 ms`, RenderThread `DrawFrame` totals of
+`30.364--45.315 ms`, and JIT work of `52.647--200.171 ms`, so the short sample remained vulnerable
+to runtime and display-pipeline plateaus.
+
+Revision 5 made both engines draw the same visible cells, retained every trace before cleanup, and
+raised each run to about 32 frames through eight update/reset cycles. Its complete Candidate matrix
+still rejected ViewCompose stable-100, scalar-100, helper-50, and topology-100 at CV `0.175`,
+`0.163`, `0.156`, and `0.363`; the single paired repeats produced ViewCompose/direct CV
+`0.409/0.104`, `0.116/0.097`, `0.056/0.080`, and `0.256/0.068`. Trace inspection then found a
+protocol defect rather than one 32-frame workload: every coordinate click contributed a fast
+pointer press/release frame and a slower content mutation/layout frame. The approximately
+`16 + 16` bimodal split placed run P50 at the boundary, so small frame-count shifts moved individual
+run medians from about `5 ms` to `12--22 ms`. A Released revision-5 matrix was intentionally not
+run because no longitudinal claim could survive that input defect.
+
+Revision 6 is the final protocol cut. The benchmark invokes the existing accessibility click action
+directly, asserts the resulting state transition after every action, and executes sixteen complete
+update/reset cycles so each of five runs contains at least 32 content-update frames without pointer
+press/release animation. Direct AndroidX cells carry the same visible fill as the ViewCompose
+fixture, and 10-, 50-, and 100-node screens received explicit manual visual acceptance before the
+formal batch. No revision-4 or revision-5 value may enter a Phase 4 directional or release claim.
 
 ### Phase 0 AndroidX capability audit
 
@@ -514,6 +543,72 @@ Planning estimate: 1--2 engineering weeks.
 
 Exit criteria: all gates pass; durable conclusions are in active owners; no unowned deferred release
 blocker remains; and the active plan no longer blocks its own publication train.
+
+Phase 4 completion record (2026-08-21): the frozen released framework source was
+`143b09acf3bfcda81add008b4dcf09d06a09e2dc`; the candidate framework base was
+`b1aa64f206554a91443715e2a32f37864ab71432`, while the APK hashes below pin the complete revision-6
+fixture and benchmark-runner overlay. Released, candidate, and shared benchmark APK
+SHA-256 values were respectively
+`bdf94fdc934780afd8e46298a7f5081a402838aa08cefc1deb46fe705335e179`,
+`3b4dcf71c9952c5650d11cb448a6c3281f901fa9936e269529ae36be8053d71c`, and
+`5c4b611fee97fa35faee7303ef3f7b073f5e34de1413f03b5783f6ffcfeb0b0e`. The rooted Xiaomi
+MI 6 / Android 9 reference device ran revision 6 with the v4 CPU/GPU/interconnect policy, charging
+suspended, vendor performance services stopped, starts at or below 37 degrees Celsius, five
+`run-from-apk` iterations, and sixteen state-checked update/reset cycles. The Candidate and
+Released primary matrices each retained 24 JSON files and 120 traces. One complete paired repeat
+was captured for each unstable pair: 12 Candidate methods/60 traces and 16 Released methods/80
+traces. No third attempt was selected.
+
+Every cell below is ViewCompose frame CPU P50/P95/P99 in milliseconds; Direct is the paired
+Candidate AndroidX P50/P95. CV is final Released/Candidate run-P50 CV after the single replacement
+repeat where required.
+
+| Action | Released ViewCompose | Candidate ViewCompose | Direct AndroidX | CV | Conclusion |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `stable-10` | `9.116/10.918/13.854` | `8.803/11.462/14.612` | `3.438/4.676` | `0.143/0.120` | `no material change` |
+| `stable-50` | `10.614/19.107/23.141` | `11.237/17.137/19.951` | `4.402/5.971` | `0.117/0.180` | `inconclusive` |
+| `stable-100` | `12.674/24.434/26.283` | `12.585/24.398/28.491` | `5.635/7.486` | `0.111/0.121` | `no material change` |
+| `scalar-10` | `10.478/13.931/14.977` | `9.776/13.316/14.977` | `4.828/6.421` | `0.179/0.171` | `inconclusive` |
+| `scalar-50` | `11.588/21.484/24.060` | `11.553/22.947/25.301` | `7.392/9.032` | `0.229/0.205` | `inconclusive` |
+| `scalar-100` | `15.597/36.150/41.827` | `16.100/34.624/38.874` | `11.538/14.207` | `0.021/0.125` | `no material change` |
+| `helper-10` | `7.955/10.926/13.923` | `8.320/11.380/13.513` | `4.558/6.126` | `0.128/0.124` | `no material change` |
+| `helper-50` | `7.678/12.484/14.134` | `7.346/12.243/14.959` | `6.301/8.201` | `0.227/0.140` | `inconclusive` |
+| `helper-100` | `8.303/15.280/19.498` | `7.826/14.579/16.399` | `9.373/10.830` | `0.109/0.082` | `no material change` |
+| `topology-10` | `9.774/12.489/14.589` | `10.390/14.101/19.010` | `4.811/6.366` | `0.124/0.137` | `no material change` |
+| `topology-50` | `13.570/22.272/27.262` | `12.367/21.920/25.432` | `7.312/8.683` | `0.201/0.140` | `inconclusive` |
+| `topology-100` | `15.719/32.688/34.876` | `15.390/34.778/38.771` | `11.409/12.850` | `0.110/0.098` | `no material change` |
+
+Seven longitudinal pairs are interpretable and all timing and peak-heap regression rows pass. The
+Direct-normalized Candidate P50 movement for those rows spans `-5.7%` to `+8.4%`; normalized P95
+spans `-4.0%` to `+14.3%`. Candidate peak heap changes range from `-3.8%` to `+10.5%`; the largest
+absolute increase is `2,199 KiB`, and no row crosses the combined memory gate. Stable-50,
+scalar-10, scalar-50, helper-50, and topology-50 remain `inconclusive` because at least one final
+ViewCompose arm exceeds CV `0.15`. Direct AndroidX is faster at P95 in every Candidate action and
+at P50 in eleven of twelve; helper-100 is the sole opposing median, with Candidate `16.5%` faster
+at P50 but `34.6%` slower at P95. The required 50-node stable/scalar 25% gap closure is therefore
+not established.
+
+The matrix-level conclusion is **no material change** for release safety: there is no stable
+regression and no whole-frame optimization win. The environment-only fast path remains protected
+by exact Phase 1 structural counters instead of a full-frame Direct comparison because AndroidX
+has no equivalent declarative environment-resolution action; no environment timing claim is made.
+Limitations are one OEM/API-28 point, `run-from-apk` JIT/code-placement sensitivity, five unresolved
+CV rows, peak rather than post-GC retained memory, and no isolated adapter-only timing probe in the
+physical matrix. The next action is to keep the structural fast paths, archive this completed plan,
+and require a new attributed optimization plan before further whole-frame performance work.
+Production source and public/protected API did not change in Phase 4: the diff is limited to the Demo
+fixture, benchmark-only runner, report contracts, tests, and documentation, so no published-artifact
+Changeset or API documentation field applies.
+
+Closeout verification on 2026-08-22 passed all 22 report-tool tests, the focused app benchmark and
+registry contract tests, both Benchmark APK assemblies, documentation structure/language/translation
+checks, development-tooling isolation, release-intent verification with zero affected artifacts,
+and the complete `qaQuick` gate. The controlled physical matrix is the applicable Phase 4 device
+gate; no additional `qaFull` slice applies because this phase changes no published production
+behavior, while the accepted Phase 3 connected geometry/lifecycle matrix remains unchanged. No
+architecture invariant changed in Phase 4, so accepted ADR-0016 and ADR-0017 remain historical
+records; current capability, migration, renderer, roadmap, and performance guidance own the durable
+conclusions.
 
 ## Required acceptance matrix
 

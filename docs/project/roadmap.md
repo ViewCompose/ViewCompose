@@ -46,20 +46,17 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
     `viewcompose-animation-core + viewcompose-animation + viewcompose-gesture-core +
     viewcompose-gesture`, including Compose-like APIs, a policy core, renderer event mapping,
     Lazy/Pager motion policy, and Android interop.
-14. `viewcompose-constraintlayout-androidx` and renderer `DeclarativeConstraintLayout` have a landed
-    Alpha DSL baseline for anchors, dimensions, bias, baseline extensions, circle, guideline,
-    barrier, weighted chains, Flow/Group/Layer/Placeholder, decoupled `ConstraintSet`, and
-    match-constraint min/max/percent/constrained behavior. The first-release source now also uses a
-    dedicated marked Scope, axis-typed anchor targets, immutable post-content helper snapshots, and
-    reference-based reusable entries. The first-release hardening has closed helper lifecycle,
-    geometry, rollback, DSL-safety, device, and performance-safety acceptance: the rooted API 28
-    matrix passed 3/3 tests and nine reviewed screenshots, while the fixed-clock 10/50/100-node
-    gate found zero stable timing or peak-heap regressions. The source is entering its release
-    window; classified fast paths, broader parity, the full visual matrix, structural DSL Scope
-    consistency audit, and performance leadership are deliberately deferred to the
-    [post-release expansion plan](./plans/constraintlayout-parity-performance-expansion.md), which
-    remains Changeset-free until the first release is published and tagged. Neither plan reopens
-    MotionLayout scope.
+14. `viewcompose-constraintlayout-androidx` and renderer `DeclarativeConstraintLayout` now include
+    the Alpha baseline plus typed chain endpoints, wrap contribution, physical anchors and
+    Guidelines, typed Grid, declarative CircularFlow, classified reconciliation, dedicated marked
+    Scope, axis-typed targets, immutable helper snapshots, and transactional graph/helper ownership.
+    The [archived post-release expansion plan](../archive/constraintlayout-parity-performance-expansion.md) has
+    completed Phases 0--4: exact JVM/device/lifecycle coverage, the reviewed pairwise visual matrix,
+    minimum/latest API acceptance, and the revision-6 released/candidate/direct matrix are closed.
+    Seven stable longitudinal pairs pass every timing and peak-heap regression row; five remain
+    `inconclusive`, so release safety is **no material change** and no whole-frame optimization win
+    is claimed. MotionLayout remains intentionally out of scope; any further performance work needs
+    a new attributed plan rather than another unbounded rerun.
 15. Graphics uses `viewcompose-graphics-core + viewcompose-graphics + renderer draw pipeline +
     host-android interop`, with Demo, Preview/Paparazzi, and v2 P0 fixes for four-corner RoundRect,
     Drawable DrawPaint, and ImageFilter Chain.
@@ -174,7 +171,7 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 | Diagnostics | Aggregate render/layout, tree, per-node patches, Locals, and recomposition reasons | Node highlighting, cross-session correlation, and per-node timing have moved to the active [diagnostics plan](./plans/diagnostics-correlation-inspection-observability.md) |
 | UI Testing | Core instrumentation plus P1 focus/keyboard, nested-scroll, and rollback cases | Multi-API, TV, ChromeOS, overlay host, and theme assertions |
 | Developer Preview | Compose Preview, Paparazzi, and Studio plugin with static render, source linkage, diagnostics, bounded cache, and incremental refresh | More domains and Dark/Tablet snapshots |
-| ConstraintLayout | Alpha DSL baseline plus the first-release hard cut for dedicated Scope, axis-typed targets, immutable helper snapshots, transactional graph/helper ownership, API 28 all-helper/configuration acceptance, and a 10/50/100-node safety matrix with zero stable regression | The Central release and tag are complete. Execute the active [parity/performance expansion](./plans/constraintlayout-parity-performance-expansion.md): Phase 0 freezes the released baseline, typed API decisions, red-test catalog, and structural Scope audit before classified fast paths, typed Grid/declarative CircularFlow, broader parity, the full visual matrix, and direct-native performance proof; typed MotionScene/MotionLayout remains out of scope |
+| ConstraintLayout | Alpha DSL plus classified reconciliation, typed chain/wrap/physical-direction APIs, typed Grid, declarative CircularFlow, exact helper/rollback/lifecycle coverage, pairwise visual acceptance, API 24/33/36 device coverage, and a stable-row-safe released/candidate/direct matrix | The [archived parity/performance expansion](../archive/constraintlayout-parity-performance-expansion.md) completed Phases 0--4 with **no material change** release safety and no whole-frame optimization win. Keep MotionScene/MotionLayout out of scope; require a new attributed plan for multi-OEM performance or any additional parity work |
 | Animation | Core/DSL layers, shared Transition timeline, last-mutation-wins Animatable, AnimatedVisibility, Crossfade, animateContentSize, and raw Android interop | Physical motion/results, full content and visibility transforms, seeking, bounds, shared motion, and timeline tooling have moved to the active [Animation capability plan](./plans/animation-compose-capability-expansion.md) |
 | Gesture | Policy core, DSL, dispatcher, nested scroll, structured cancellation, and tap/drag/anchored/transform support | Third-party native scrollers and real-device multi-touch |
 | Graphics | 2D drawing and optional shadow decoration with DrawScene, ordered outer/inner layers, bounded cache, and backend diagnostics | Dark/Tablet snapshots and budgeted dynamic RenderEffect research |

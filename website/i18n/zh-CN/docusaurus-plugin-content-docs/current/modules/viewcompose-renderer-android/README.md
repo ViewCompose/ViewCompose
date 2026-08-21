@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 142a99addaf7e4280be9bcdfe388fdd8c0d8c545935d4b18b1e3335086a02f65
+translation_source_hash: f314ae5abe7381ce3748d4a09c5434b9fdd0c0362f18b4dbeeaeb73e3cd19d5f
 translation_status: current
 ---
 
@@ -127,6 +127,15 @@ Allocation Batch 均为 0。Changeset、Release Intent、Development Tooling Iso
 Run-P50 CV 是 `0.181`/`0.261`，Scalar 相邻复测仍为 `0.244`；Candidate Stable/Scalar CV 是
 `0.212`/`0.143`。只有 Candidate Scalar Arm 达到 `0.15`，因此结果不支持纵向 Timing 结论；在
 声称端到端收益前，Phase 4 矩阵必须重新复验。
+
+最终 Revision 6 Phase 4 矩阵取代了该短预检。12 个 Released-to-Candidate Pair 中有 7 个的两条
+ViewCompose Arm 均稳定，并通过全部 Direct-normalized P50/P95 与 Peak-heap Regression 行；另有
+5 个在唯一允许的成对复测后仍为 `inconclusive`。稳定行把全帧结果归类为
+**no material change**：它证明发版安全，但既不是优化胜利，也不是性能领先。12 个 Candidate
+Action 的 P95 全部由 Direct AndroidX 更快；P50 则有 11 个由 Direct 更快。这个结果不否定上面的
+精确结构计数器；它把这些计数器的声明范围限定为避免 Adapter 工作与有界 Mutation。协议、绝对值、
+归一化、局限与下一步记录在
+[ViewCompose 性能](../../tooling/performance.md#247-constraintlayout-phase-4-controlled-matrix)。
 
 2026-08-21 的 Phase 2 聚焦 API-35 Robolectric 验收通过全部六条冻结的 `CL-P2-*` Renderer
 用例。精确 Bounds 覆盖逻辑 LTR/RTL 与物理坐标下的 Parent、Child、Guideline、Barrier Chain

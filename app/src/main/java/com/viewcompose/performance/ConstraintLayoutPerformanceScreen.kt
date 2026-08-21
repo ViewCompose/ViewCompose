@@ -245,6 +245,7 @@ internal fun createAndroidViewsConstraintLayoutPerformanceScreen(
     val nodes = List(profile.nodeCount) {
         View(context).apply {
             id = View.generateViewId()
+            setBackgroundColor(PERFORMANCE_BADGE_COLOR)
             target.addView(this)
         }
     }

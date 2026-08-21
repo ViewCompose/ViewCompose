@@ -253,6 +253,14 @@ XML-migration shortcut. Dimension migration targets the mutually exclusive `Wrap
 `ConstrainedWrapContent`, `Fixed`, and `MatchConstraints` algebra rather than independent
 min/max/percent fields or `MatchParent`.
 
+The post-release line adds typed chain endpoints and margins, four parent-wrap contribution modes,
+logical and physical horizontal anchors/Guidelines/Barriers, typed weighted Grid spans/skips, and a
+declarative CircularFlow that compiles to ordinary circle constraints. It deliberately does not
+expose AndroidX Grid string grammar, process-global CircularFlow defaults, imperative helper
+mutation, raw optimization bitmasks, Compose `linkTo`, or anonymous references. These omissions
+preserve one typed graph owner and the XML-friendly migration family rather than representing
+unfinished aliases.
+
 The contract elements are defined in
 [`ModifierElementsLayout.kt`](../../viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierElementsLayout.kt),
 lines 117–150. Parent-aware conversion is implemented in
@@ -261,10 +269,12 @@ lines 91–98 and 247–255.
 
 This is a practical migration path, not proof of Compose ConstraintLayout parity. Recheck
 ConstraintSet merging, baseline connections, logical start/end anchors, circular dependencies,
-helper capabilities, and dimension defaults against the ViewCompose module contract. Compose-style
-`linkTo` and anonymous references are not current compatibility requirements; the post-release
-ConstraintLayout plan will evaluate them only as additive ergonomics that preserve typed target
-planes and the XML-friendly family.
+helper capabilities, and dimension defaults against the ViewCompose module contract. The completed
+revision-6 released/candidate/direct matrix establishes **no material change** for release safety,
+not performance leadership: Direct AndroidX remains faster at P95 in all twelve Candidate actions,
+and five longitudinal actions remain `inconclusive`. Choose this module for its typed declarative
+contract, native solver behavior, and transactional safety, not because migration is expected to
+make every frame faster. See [ViewCompose Performance](../tooling/performance.md#247-constraintlayout-phase-4-controlled-matrix).
 
 ## Modifier ordering, folding, and equality
 

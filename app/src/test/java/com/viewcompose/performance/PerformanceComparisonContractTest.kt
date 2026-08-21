@@ -1,6 +1,7 @@
 package com.viewcompose.performance
 
 import android.content.Intent
+import com.viewcompose.demo.registry.DemoScenarioRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
@@ -81,6 +82,14 @@ class PerformanceComparisonContractTest {
                 assertEquals(workload, parsed?.workload)
             }
         }
+    }
+
+    @Test
+    fun `constraint layout protocol uses the revision six direct-action fixture`() {
+        assertEquals(
+            6,
+            DemoScenarioRegistry.require("performance.complex-layout").benchmark?.workloadRevision,
+        )
     }
 
     @Test
