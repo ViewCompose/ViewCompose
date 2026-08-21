@@ -2,7 +2,9 @@ package com.viewcompose.benchmark
 
 import android.graphics.Rect
 import androidx.benchmark.macro.CompilationMode
+import androidx.benchmark.macro.ExperimentalMetricApi
 import androidx.benchmark.macro.FrameTimingMetric
+import androidx.benchmark.macro.MemoryUsageMetric
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +21,7 @@ import org.junit.runner.RunWith
  * These cases exercise manual-QA anchors and catch regressions during state toggles and scrolling.
  */
 @RunWith(AndroidJUnit4::class)
+@OptIn(ExperimentalMetricApi::class)
 class DemoInteractionBenchmark {
     @get:Rule
     val benchmarkRule = MacrobenchmarkRule()
@@ -191,7 +194,7 @@ class DemoInteractionBenchmark {
         var scrollBounds = Rect()
         benchmarkRule.measureRepeated(
             packageName = TARGET_PACKAGE,
-            metrics = listOf(FrameTimingMetric()),
+            metrics = collectionStressMetrics(),
             compilationMode = CompilationMode.Partial(),
             iterations = DEFAULT_ITERATIONS,
             startupMode = StartupMode.WARM,
@@ -213,7 +216,7 @@ class DemoInteractionBenchmark {
     @Test
     fun collectionsStressMutationRevision3() = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
-        metrics = listOf(FrameTimingMetric()),
+        metrics = collectionStressMetrics(),
         compilationMode = CompilationMode.Partial(),
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
@@ -273,6 +276,11 @@ class DemoInteractionBenchmark {
         clickScenarioTarget("runtime.view-patch", DemoTargetRole.Reset)
         waitForScenarioTargetTextChange("runtime.view-patch", DemoTargetRole.State, second)
     }
+
+    private fun collectionStressMetrics() = listOf(
+        FrameTimingMetric(),
+        MemoryUsageMetric(MemoryUsageMetric.Mode.Max),
+    )
 
 }
 
