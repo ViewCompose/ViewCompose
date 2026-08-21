@@ -12,6 +12,8 @@ import com.viewcompose.ui.node.spec.ConstraintBarrierSpec
 import com.viewcompose.ui.node.spec.ConstraintChainOrientation
 import com.viewcompose.ui.node.spec.ConstraintChainSpec
 import com.viewcompose.ui.node.spec.ConstraintChainStyle
+import com.viewcompose.ui.node.spec.ConstraintCircularFlowItemSpec
+import com.viewcompose.ui.node.spec.ConstraintCircularFlowSpec
 import com.viewcompose.ui.node.spec.ConstraintCircleSpec
 import com.viewcompose.ui.node.spec.ConstraintDimension
 import com.viewcompose.ui.node.spec.ConstraintFlowHorizontalAlign
@@ -22,6 +24,10 @@ import com.viewcompose.ui.node.spec.ConstraintFlowWrapMode
 import com.viewcompose.ui.node.spec.ConstraintGuidelineDirection
 import com.viewcompose.ui.node.spec.ConstraintGuidelinePosition
 import com.viewcompose.ui.node.spec.ConstraintGuidelineSpec
+import com.viewcompose.ui.node.spec.ConstraintGridOrientation
+import com.viewcompose.ui.node.spec.ConstraintGridSkipSpec
+import com.viewcompose.ui.node.spec.ConstraintGridSpanSpec
+import com.viewcompose.ui.node.spec.ConstraintGridSpec
 import com.viewcompose.ui.node.spec.ConstraintGroupSpec
 import com.viewcompose.ui.node.spec.ConstraintHelperVisibility
 import com.viewcompose.ui.node.spec.ConstraintHelpersSpec
@@ -31,6 +37,7 @@ import com.viewcompose.ui.node.spec.ConstraintLayoutNodeProps
 import com.viewcompose.ui.node.spec.ConstraintPlaceholderSpec
 import com.viewcompose.ui.node.spec.ConstraintRatio
 import com.viewcompose.ui.node.spec.ConstraintSetSpec
+import com.viewcompose.ui.node.spec.ConstraintWrapBehavior
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.foundation.UiDslMarker
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -145,6 +152,98 @@ data object ConstraintParentReference :
 val parent: ConstraintParentReference
     get() = ConstraintParentReference
 
+/** Target side accepted by a horizontal chain boundary. */
+enum class ConstraintHorizontalAnchorSide {
+    /** Logical start side, mirrored in RTL. */
+    Start,
+
+    /** Logical end side, mirrored in RTL. */
+    End,
+
+    /** Physical left side, fixed in RTL. */
+    Left,
+
+    /** Physical right side, fixed in RTL. */
+    Right,
+}
+
+/** Target side accepted by a vertical chain boundary. */
+enum class ConstraintVerticalAnchorSide {
+    /** Physical top side. */
+    Top,
+
+    /** Physical bottom side. */
+    Bottom,
+}
+
+/**
+ * Places [reference] at an explicit Grid cell and optionally spans adjacent cells.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintGridSample
+ * @property reference member owned by the Grid
+ * @property index zero-based row-major cell index
+ * @property rowSpan number of occupied rows
+ * @property columnSpan number of occupied columns
+ * @throws IllegalArgumentException if [index] is negative or either span is not positive
+ */
+data class ConstraintGridSpan(
+    val reference: ConstraintReference,
+    val index: Int,
+    val rowSpan: Int = 1,
+    val columnSpan: Int = 1,
+) {
+    init {
+        require(index >= 0) { "ConstraintGridSpan.index must be non-negative." }
+        require(rowSpan > 0) { "ConstraintGridSpan.rowSpan must be positive." }
+        require(columnSpan > 0) { "ConstraintGridSpan.columnSpan must be positive." }
+    }
+}
+
+/**
+ * Reserves a rectangular Grid area that automatic placement cannot use.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintGridSample
+ * @property index zero-based row-major cell index
+ * @property rowSpan number of reserved rows
+ * @property columnSpan number of reserved columns
+ * @throws IllegalArgumentException if [index] is negative or either span is not positive
+ */
+data class ConstraintGridSkip(
+    val index: Int,
+    val rowSpan: Int = 1,
+    val columnSpan: Int = 1,
+) {
+    init {
+        require(index >= 0) { "ConstraintGridSkip.index must be non-negative." }
+        require(rowSpan > 0) { "ConstraintGridSkip.rowSpan must be positive." }
+        require(columnSpan > 0) { "ConstraintGridSkip.columnSpan must be positive." }
+    }
+}
+
+/**
+ * Declares one explicit member of a declarative CircularFlow.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintCircularFlowSample
+ * @property reference child positioned around the shared center
+ * @property radius finite non-negative center-to-center distance
+ * @property angle finite clockwise AndroidX angle in `0f..<360f`
+ * @throws IllegalArgumentException if radius or angle is outside its documented range
+ */
+data class ConstraintCircularFlowItem(
+    val reference: ConstraintReference,
+    val radius: UiDp,
+    val angle: Float,
+) {
+    init {
+        require(radius.value.isFinite() && radius.value >= 0f) {
+            "ConstraintCircularFlowItem.radius must be finite and non-negative."
+        }
+        require(angle.isFinite() && angle >= 0f && angle < 360f) {
+            "ConstraintCircularFlowItem.angle must be finite and within 0f..<360f."
+        }
+    }
+}
+
 /** Collects helper specs created by one ConstraintLayout DSL evaluation. */
 private class MutableConstraintHelpersCollector {
     private var nextAutoId = 0
@@ -152,6 +251,8 @@ private class MutableConstraintHelpersCollector {
     val guidelines = uniqueHelperList("Guideline", ConstraintGuidelineSpec::id)
     val barriers = uniqueHelperList("Barrier", ConstraintBarrierSpec::id)
     val chains = mutableListOf<ConstraintChainSpec>()
+    val grids = uniqueHelperList("Grid", ConstraintGridSpec::id)
+    val circularFlows = uniqueHelperList("CircularFlow", ConstraintCircularFlowSpec::id)
     val flows = uniqueHelperList("Flow", ConstraintFlowSpec::id)
     val groups = uniqueHelperList("Group", ConstraintGroupSpec::id)
     val layers = uniqueHelperList("Layer", ConstraintLayerSpec::id)
@@ -194,6 +295,8 @@ private class MutableConstraintHelpersCollector {
             guidelines = guidelines.toList(),
             barriers = barriers.toList(),
             chains = chains.toList(),
+            grids = grids.toList(),
+            circularFlows = circularFlows.toList(),
             flows = flows.toList(),
             groups = groups.toList(),
             layers = layers.toList(),
@@ -242,6 +345,16 @@ class ConstraintLayoutScope internal constructor() : UiTreeBuilder() {
     internal fun addChain(spec: ConstraintChainSpec) {
         ensureActive()
         helpers.chains += spec
+    }
+
+    internal fun addGrid(spec: ConstraintGridSpec) {
+        ensureActive()
+        helpers.grids += spec
+    }
+
+    internal fun addCircularFlow(spec: ConstraintCircularFlowSpec) {
+        ensureActive()
+        helpers.circularFlows += spec
     }
 
     internal fun addFlow(spec: ConstraintFlowSpec) {
@@ -294,6 +407,8 @@ private fun anchorTarget(
 class ConstraintConstrainScope internal constructor() {
     private var start: ConstraintAnchorLink? = null
     private var end: ConstraintAnchorLink? = null
+    private var left: ConstraintAnchorLink? = null
+    private var right: ConstraintAnchorLink? = null
     private var top: ConstraintAnchorLink? = null
     private var bottom: ConstraintAnchorLink? = null
     private var baseline: ConstraintAnchorLink? = null
@@ -307,6 +422,16 @@ class ConstraintConstrainScope internal constructor() {
     var verticalBias: Float? = null
     /** Optional positive typed ratio requiring at least one match-constraint dimension. */
     var ratio: ConstraintRatio? = null
+    /**
+     * Selects the axes on which this child expands a wrap-content [ConstraintLayout].
+     *
+     * The owning constraint block snapshots the assigned value when it completes. The default
+     * [ConstraintWrapBehavior.Included] preserves normal two-axis participation; excluding an axis
+     * does not remove the child from solving or placement.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintChainEndpointsAndWrapSample
+     */
+    var wrapBehaviorInParent: ConstraintWrapBehavior = ConstraintWrapBehavior.Included
     private var circle: ConstraintCircleSpec? = null
 
     /**
@@ -376,6 +501,100 @@ class ConstraintConstrainScope internal constructor() {
     ) {
         end = ConstraintAnchorLink(
             target = anchorTarget(target.id, ConstraintAnchor.End),
+            margin = margin,
+            goneMargin = goneMargin,
+        )
+    }
+
+    /**
+     * Connects this child's physical left to [target]'s physical left.
+     *
+     * Physical links never mirror in RTL and cannot be combined with logical start/end links.
+     * The active constraint block validates all margins before it publishes parent data.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintPhysicalEdgesSample
+     * @param target parent, child, or horizontal helper target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     * @throws IllegalArgumentException if a margin is negative or non-finite, or if the completed
+     * constraint block mixes physical and logical horizontal links
+     */
+    fun leftToLeft(
+        target: ConstraintHorizontalAnchorTarget = parent,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
+    ) {
+        left = ConstraintAnchorLink(
+            target = anchorTarget(target.id, ConstraintAnchor.Left),
+            margin = margin,
+            goneMargin = goneMargin,
+        )
+    }
+
+    /**
+     * Connects this child's physical left to [target]'s physical right without RTL mirroring.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintPhysicalEdgesSample
+     * @param target child or horizontal helper target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     * @throws IllegalArgumentException if a margin is negative or non-finite, or if the completed
+     * constraint block mixes physical and logical horizontal links
+     */
+    fun leftToRight(
+        target: ConstraintHorizontalAnchorTarget,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
+    ) {
+        left = ConstraintAnchorLink(
+            target = anchorTarget(target.id, ConstraintAnchor.Right),
+            margin = margin,
+            goneMargin = goneMargin,
+        )
+    }
+
+    /**
+     * Connects this child's physical right to [target]'s physical left without RTL mirroring.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintPhysicalEdgesSample
+     * @param target child or horizontal helper target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     * @throws IllegalArgumentException if a margin is negative or non-finite, or if the completed
+     * constraint block mixes physical and logical horizontal links
+     */
+    fun rightToLeft(
+        target: ConstraintHorizontalAnchorTarget,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
+    ) {
+        right = ConstraintAnchorLink(
+            target = anchorTarget(target.id, ConstraintAnchor.Left),
+            margin = margin,
+            goneMargin = goneMargin,
+        )
+    }
+
+    /**
+     * Connects this child's physical right to [target]'s physical right.
+     *
+     * Physical links never mirror in RTL and cannot be combined with logical start/end links.
+     * The active constraint block validates all margins before it publishes parent data.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintPhysicalEdgesSample
+     * @param target parent, child, or horizontal helper target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     * @throws IllegalArgumentException if a margin is negative or non-finite, or if the completed
+     * constraint block mixes physical and logical horizontal links
+     */
+    fun rightToRight(
+        target: ConstraintHorizontalAnchorTarget = parent,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
+    ) {
+        right = ConstraintAnchorLink(
+            target = anchorTarget(target.id, ConstraintAnchor.Right),
             margin = margin,
             goneMargin = goneMargin,
         )
@@ -550,7 +769,7 @@ class ConstraintConstrainScope internal constructor() {
     internal fun build(): ConstraintItemSpec {
         validateBias(horizontalBias, "horizontalBias")
         validateBias(verticalBias, "verticalBias")
-        listOfNotNull(start, end, top, bottom, baseline).forEach { link ->
+        listOfNotNull(start, end, left, right, top, bottom, baseline).forEach { link ->
             require(link.margin.value.isFinite() && link.margin.value >= 0f) {
                 "Constraint margin must be finite and non-negative."
             }
@@ -562,7 +781,10 @@ class ConstraintConstrainScope internal constructor() {
         require(baseline == null || top == null && bottom == null) {
             "A baseline link is mutually exclusive with top and bottom positioning."
         }
-        val hasEdgeOrBaselineLink = listOf(start, end, top, bottom, baseline).any { it != null }
+        require((start == null && end == null) || (left == null && right == null)) {
+            "Logical start/end links cannot be combined with physical left/right links."
+        }
+        val hasEdgeOrBaselineLink = listOf(start, end, left, right, top, bottom, baseline).any { it != null }
         require(circle == null || !hasEdgeOrBaselineLink) {
             "Circular positioning is mutually exclusive with edge and baseline links."
         }
@@ -580,6 +802,8 @@ class ConstraintConstrainScope internal constructor() {
         return ConstraintItemSpec(
             start = start,
             end = end,
+            left = left,
+            right = right,
             top = top,
             bottom = bottom,
             baseline = baseline,
@@ -589,6 +813,7 @@ class ConstraintConstrainScope internal constructor() {
             verticalBias = verticalBias,
             ratio = ratio,
             circle = circle,
+            wrapBehaviorInParent = wrapBehaviorInParent,
         )
     }
 }
@@ -833,6 +1058,110 @@ fun ConstraintLayoutScope.createGuidelineFromEnd(
 }
 
 /**
+ * Creates a physical-left guideline at a fixed [offset] that never mirrors in RTL.
+ *
+ * The complete graph validates [offset] before native mutation and retains the previously accepted
+ * layout when it is invalid.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintPhysicalEdgesSample
+ * @receiver active ConstraintLayout content scope
+ * @param offset finite non-negative distance from the physical left edge
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @return reference to the virtual guideline
+ * @throws IllegalArgumentException if [id] is blank or duplicates another helper identity
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
+ */
+fun ConstraintLayoutScope.createGuidelineFromLeft(
+    offset: UiDp,
+    id: String = allocHelperId("guideline-left"),
+): ConstraintHorizontalAnchorReference {
+    addGuideline(ConstraintGuidelineSpec(
+        id = id,
+        direction = ConstraintGuidelineDirection.FromLeft,
+        position = ConstraintGuidelinePosition.Offset(offset),
+    ))
+    return HorizontalAnchorReference(id)
+}
+
+/**
+ * Creates a physical-left guideline at parent-width [fraction] that never mirrors in RTL.
+ *
+ * The complete graph validates [fraction] before native mutation and retains the previously
+ * accepted layout when it is invalid.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintPhysicalEdgesSample
+ * @receiver active ConstraintLayout content scope
+ * @param fraction finite parent-width fraction in `0f..1f`
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @return reference to the virtual guideline
+ * @throws IllegalArgumentException if [id] is blank or duplicates another helper identity
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
+ */
+fun ConstraintLayoutScope.createGuidelineFromLeft(
+    fraction: Float,
+    id: String = allocHelperId("guideline-left"),
+): ConstraintHorizontalAnchorReference {
+    addGuideline(ConstraintGuidelineSpec(
+        id = id,
+        direction = ConstraintGuidelineDirection.FromLeft,
+        position = ConstraintGuidelinePosition.Fraction(fraction),
+    ))
+    return HorizontalAnchorReference(id)
+}
+
+/**
+ * Creates a physical-right guideline at a fixed [offset] that never mirrors in RTL.
+ *
+ * The complete graph validates [offset] before native mutation and retains the previously accepted
+ * layout when it is invalid.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintPhysicalEdgesSample
+ * @receiver active ConstraintLayout content scope
+ * @param offset finite non-negative distance from the physical right edge
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @return reference to the virtual guideline
+ * @throws IllegalArgumentException if [id] is blank or duplicates another helper identity
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
+ */
+fun ConstraintLayoutScope.createGuidelineFromRight(
+    offset: UiDp,
+    id: String = allocHelperId("guideline-right"),
+): ConstraintHorizontalAnchorReference {
+    addGuideline(ConstraintGuidelineSpec(
+        id = id,
+        direction = ConstraintGuidelineDirection.FromRight,
+        position = ConstraintGuidelinePosition.Offset(offset),
+    ))
+    return HorizontalAnchorReference(id)
+}
+
+/**
+ * Creates a physical-right guideline at parent-width [fraction] that never mirrors in RTL.
+ *
+ * The complete graph validates [fraction] before native mutation and retains the previously
+ * accepted layout when it is invalid.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintPhysicalEdgesSample
+ * @receiver active ConstraintLayout content scope
+ * @param fraction finite parent-width fraction in `0f..1f`
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @return reference to the virtual guideline
+ * @throws IllegalArgumentException if [id] is blank or duplicates another helper identity
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
+ */
+fun ConstraintLayoutScope.createGuidelineFromRight(
+    fraction: Float,
+    id: String = allocHelperId("guideline-right"),
+): ConstraintHorizontalAnchorReference {
+    addGuideline(ConstraintGuidelineSpec(
+        id = id,
+        direction = ConstraintGuidelineDirection.FromRight,
+        position = ConstraintGuidelinePosition.Fraction(fraction),
+    ))
+    return HorizontalAnchorReference(id)
+}
+
+/**
  * Creates a top guideline at a fixed dp [offset] from the parent edge.
  * @receiver active ConstraintLayout content scope
  * @param offset distance from top in dp
@@ -973,6 +1302,56 @@ fun ConstraintLayoutScope.createEndBarrier(
     allowsGoneWidgets: Boolean = true,
 ): ConstraintHorizontalAnchorReference {
     registerBarrier(id, ConstraintBarrierDirection.End, refs, margin, allowsGoneWidgets)
+    return HorizontalAnchorReference(id)
+}
+
+/**
+ * Creates a physical-left barrier over [refs] that never mirrors in RTL.
+ *
+ * The complete graph validates references and [margin] before native mutation.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintPhysicalEdgesSample
+ * @receiver active ConstraintLayout content scope
+ * @param refs referenced children or anchor helpers; must not be empty
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @param margin finite non-negative physical offset from the computed extreme
+ * @param allowsGoneWidgets whether gone referenced children participate
+ * @return reference to the virtual barrier
+ * @throws IllegalArgumentException if [refs] is empty or [id] is blank or duplicated
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
+ */
+fun ConstraintLayoutScope.createLeftBarrier(
+    vararg refs: ConstraintLayoutReference,
+    id: String = allocHelperId("barrier-left"),
+    margin: UiDp = UiDp.Zero,
+    allowsGoneWidgets: Boolean = true,
+): ConstraintHorizontalAnchorReference {
+    registerBarrier(id, ConstraintBarrierDirection.Left, refs, margin, allowsGoneWidgets)
+    return HorizontalAnchorReference(id)
+}
+
+/**
+ * Creates a physical-right barrier over [refs] that never mirrors in RTL.
+ *
+ * The complete graph validates references and [margin] before native mutation.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintPhysicalEdgesSample
+ * @receiver active ConstraintLayout content scope
+ * @param refs referenced children or anchor helpers; must not be empty
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @param margin finite non-negative physical offset from the computed extreme
+ * @param allowsGoneWidgets whether gone referenced children participate
+ * @return reference to the virtual barrier
+ * @throws IllegalArgumentException if [refs] is empty or [id] is blank or duplicated
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
+ */
+fun ConstraintLayoutScope.createRightBarrier(
+    vararg refs: ConstraintLayoutReference,
+    id: String = allocHelperId("barrier-right"),
+    margin: UiDp = UiDp.Zero,
+    allowsGoneWidgets: Boolean = true,
+): ConstraintHorizontalAnchorReference {
+    registerBarrier(id, ConstraintBarrierDirection.Right, refs, margin, allowsGoneWidgets)
     return HorizontalAnchorReference(id)
 }
 
@@ -1215,60 +1594,429 @@ fun ConstraintLayoutScope.createPlaceholder(
     return ConstraintReference(id)
 }
 
+private fun buildGridSpec(
+    id: String,
+    refs: Array<out ConstraintReference>,
+    rows: Int,
+    columns: Int,
+    orientation: ConstraintGridOrientation,
+    rowWeights: List<Float>,
+    columnWeights: List<Float>,
+    horizontalGap: UiDp,
+    verticalGap: UiDp,
+    spans: List<ConstraintGridSpan>,
+    skips: List<ConstraintGridSkip>,
+): ConstraintGridSpec {
+    require(id.isNotBlank()) { "Grid helper ID must not be blank." }
+    require(refs.isNotEmpty()) { "Grid requires at least one referenced child." }
+    require(refs.map { it.id }.toSet().size == refs.size) {
+        "Grid referenced children must be unique."
+    }
+    require(rows in 0..50 && columns in 0..50) {
+        "Grid rows and columns must use 0 for auto or be within 1..50."
+    }
+    require(rowWeights.all { it.isFinite() && it > 0f } && columnWeights.all { it.isFinite() && it > 0f }) {
+        "Grid weights must be finite and positive."
+    }
+    require(horizontalGap.value.isFinite() && horizontalGap.value >= 0f) {
+        "Grid horizontalGap must be finite and non-negative."
+    }
+    require(verticalGap.value.isFinite() && verticalGap.value >= 0f) {
+        "Grid verticalGap must be finite and non-negative."
+    }
+    validateGridTopology(
+        refs = refs,
+        rows = rows,
+        columns = columns,
+        orientation = orientation,
+        rowWeights = rowWeights,
+        columnWeights = columnWeights,
+        spans = spans,
+        skips = skips,
+    )
+    return ConstraintGridSpec(
+        id = id,
+        referencedIds = refs.map { it.id },
+        rows = rows,
+        columns = columns,
+        orientation = orientation,
+        rowWeights = rowWeights.toList(),
+        columnWeights = columnWeights.toList(),
+        horizontalGap = horizontalGap,
+        verticalGap = verticalGap,
+        spans = spans.map { span ->
+            ConstraintGridSpanSpec(
+                referenceId = span.reference.id,
+                index = span.index,
+                rowSpan = span.rowSpan,
+                columnSpan = span.columnSpan,
+            )
+        },
+        skips = skips.map { skip ->
+            ConstraintGridSkipSpec(
+                index = skip.index,
+                rowSpan = skip.rowSpan,
+                columnSpan = skip.columnSpan,
+            )
+        },
+    )
+}
+
+private fun validateGridTopology(
+    refs: Array<out ConstraintReference>,
+    rows: Int,
+    columns: Int,
+    orientation: ConstraintGridOrientation,
+    rowWeights: List<Float>,
+    columnWeights: List<Float>,
+    spans: List<ConstraintGridSpan>,
+    skips: List<ConstraintGridSkip>,
+) {
+    val refIds = refs.map { it.id }.toSet()
+    require(spans.map { it.reference.id }.toSet().size == spans.size) {
+        "Grid spans must reference unique children."
+    }
+    require(spans.all { it.reference.id in refIds }) {
+        "Every Grid span must reference a Grid member."
+    }
+    val rowCandidates = when {
+        rows > 0 -> listOf(rows)
+        rowWeights.isNotEmpty() -> listOf(rowWeights.size)
+        else -> (1..50).toList()
+    }
+    val columnCandidates = when {
+        columns > 0 -> listOf(columns)
+        columnWeights.isNotEmpty() -> listOf(columnWeights.size)
+        else -> (1..50).toList()
+    }
+    require(rowWeights.isEmpty() || rows == 0 || rowWeights.size == rows) {
+        "Grid rowWeights size must match the resolved row count."
+    }
+    require(columnWeights.isEmpty() || columns == 0 || columnWeights.size == columns) {
+        "Grid columnWeights size must match the resolved column count."
+    }
+    val fits = rowCandidates.any { resolvedRows ->
+        columnCandidates.any { resolvedColumns ->
+            gridPlacementFits(
+                refs = refs,
+                rows = resolvedRows,
+                columns = resolvedColumns,
+                orientation = orientation,
+                spans = spans,
+                skips = skips,
+            )
+        }
+    }
+    require(fits) {
+        "Grid spans, skips, and members do not fit within the resolved 50x50 bounds."
+    }
+}
+
+private fun gridPlacementFits(
+    refs: Array<out ConstraintReference>,
+    rows: Int,
+    columns: Int,
+    orientation: ConstraintGridOrientation,
+    spans: List<ConstraintGridSpan>,
+    skips: List<ConstraintGridSkip>,
+): Boolean {
+    val occupied = BooleanArray(rows * columns)
+    fun occupy(index: Int, rowSpan: Int, columnSpan: Int): Boolean {
+        if (index !in occupied.indices) return false
+        val startRow = index / columns
+        val startColumn = index % columns
+        if (startRow + rowSpan > rows || startColumn + columnSpan > columns) return false
+        for (row in startRow until startRow + rowSpan) {
+            for (column in startColumn until startColumn + columnSpan) {
+                val cell = row * columns + column
+                if (occupied[cell]) return false
+            }
+        }
+        for (row in startRow until startRow + rowSpan) {
+            for (column in startColumn until startColumn + columnSpan) {
+                occupied[row * columns + column] = true
+            }
+        }
+        return true
+    }
+    if (skips.any { !occupy(it.index, it.rowSpan, it.columnSpan) }) return false
+    if (spans.any { !occupy(it.index, it.rowSpan, it.columnSpan) }) return false
+    val explicitIds = spans.mapTo(mutableSetOf()) { it.reference.id }
+    val cellOrder = when (orientation) {
+        ConstraintGridOrientation.Horizontal -> occupied.indices.toList()
+        ConstraintGridOrientation.Vertical -> buildList {
+            for (column in 0 until columns) {
+                for (row in 0 until rows) add(row * columns + column)
+            }
+        }
+    }
+    return refs.asSequence()
+        .filterNot { it.id in explicitIds }
+        .all { cellOrder.firstOrNull { cell -> !occupied[cell] }?.let { cell -> occupied[cell] = true } != null }
+}
+
+/**
+ * Creates a typed Grid whose members are expanded transactionally by the renderer.
+ *
+ * Auto axes use `0`; fixed axes use `1..50`. If both axes are automatic, the smallest fitting
+ * bounded rectangle is selected by shortest maximum axis, then fewest cells, then closest axes,
+ * with [orientation] as the final tie-breaker.
+ * Empty weight lists mean equal weights. Grid owns member positioning on both axes, while each
+ * child's dimension remains declared normally. It creates bounded renderer-owned row and column
+ * anchors but no addressable semantic helper View. Reference existence and competing helper
+ * ownership are validated during complete-graph preflight; rejection preserves the accepted graph.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintGridSample
+ * @receiver active ConstraintLayout content scope
+ * @param refs unique children positioned by the Grid; must not be empty
+ * @param id unique Grid identity, auto-generated by declaration order when omitted
+ * @param rows explicit row count in `1..50`, or `0` for automatic resolution
+ * @param columns explicit column count in `1..50`, or `0` for automatic resolution
+ * @param orientation order used to place members without an explicit [ConstraintGridSpan]
+ * @param rowWeights positive finite weights matching the resolved row count, or empty for equal rows
+ * @param columnWeights positive finite weights matching the resolved column count, or empty for equal columns
+ * @param horizontalGap finite non-negative distance between adjacent columns
+ * @param verticalGap finite non-negative distance between adjacent rows
+ * @param spans explicit unique member placements using zero-based row-major indexes
+ * @param skips reserved zero-based row-major rectangles unavailable to automatic placement
+ * @return identity-only reference for helper ownership and collision checks; it is not an anchor
+ * @throws IllegalArgumentException if local identity, dimensions, weights, gaps, spans, skips, or
+ * bounded placement capacity are invalid
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
+ */
+fun ConstraintLayoutScope.createGrid(
+    vararg refs: ConstraintReference,
+    id: String = allocHelperId("grid"),
+    rows: Int = 0,
+    columns: Int = 0,
+    orientation: ConstraintGridOrientation = ConstraintGridOrientation.Horizontal,
+    rowWeights: List<Float> = emptyList(),
+    columnWeights: List<Float> = emptyList(),
+    horizontalGap: UiDp = UiDp.Zero,
+    verticalGap: UiDp = UiDp.Zero,
+    spans: List<ConstraintGridSpan> = emptyList(),
+    skips: List<ConstraintGridSkip> = emptyList(),
+): ConstraintHelperReference {
+    addGrid(buildGridSpec(
+        id,
+        refs,
+        rows,
+        columns,
+        orientation,
+        rowWeights,
+        columnWeights,
+        horizontalGap,
+        verticalGap,
+        spans,
+        skips,
+    ))
+    return HelperReference(id)
+}
+
+/**
+ * Creates a declarative CircularFlow compiled to ordinary per-child circle constraints.
+ *
+ * The declaration creates no helper View. Every item owns its circle positioning atomically and
+ * therefore cannot also participate in edge, baseline, chain, Grid, or direct circle positioning.
+ * Angles follow AndroidX coordinates: `0f` is above the center and values advance clockwise.
+ * Reference existence and competing ownership are validated during complete-graph preflight;
+ * rejection preserves the accepted graph.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintCircularFlowSample
+ * @receiver active ConstraintLayout content scope
+ * @param center existing child used as the center for every item
+ * @param items non-empty unique members with explicit non-negative radii and angles in `0f..<360f`
+ * @param id unique semantic group identity, auto-generated by declaration order when omitted
+ * @return identity-only reference for helper ownership and collision checks; it is not an anchor
+ * @throws IllegalArgumentException if local identity, members, radius, or angle values are invalid
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
+ */
+fun ConstraintLayoutScope.createCircularFlow(
+    center: ConstraintReference,
+    vararg items: ConstraintCircularFlowItem,
+    id: String = allocHelperId("circular-flow"),
+): ConstraintHelperReference {
+    addCircularFlow(buildCircularFlowSpec(id, center, items))
+    return HelperReference(id)
+}
+
+private fun buildCircularFlowSpec(
+    id: String,
+    center: ConstraintReference,
+    items: Array<out ConstraintCircularFlowItem>,
+): ConstraintCircularFlowSpec {
+    require(id.isNotBlank()) { "CircularFlow helper ID must not be blank." }
+    require(items.isNotEmpty()) { "CircularFlow requires at least one item." }
+    require(items.map { it.reference.id }.toSet().size == items.size) {
+        "CircularFlow items must reference unique children."
+    }
+    require(items.none { it.reference.id == center.id }) {
+        "CircularFlow center cannot also be a positioned item."
+    }
+    return ConstraintCircularFlowSpec(
+        id = id,
+        centerId = center.id,
+        items = items.map { item ->
+            ConstraintCircularFlowItemSpec(
+                referenceId = item.reference.id,
+                radius = item.radius,
+                angle = item.angle,
+            )
+        },
+    )
+}
+
 private fun ConstraintLayoutScope.registerChain(
     orientation: ConstraintChainOrientation,
     refs: Array<out ConstraintReference>,
     weights: List<Float>?,
     style: ConstraintChainStyle,
     bias: Float?,
+    startTarget: ConstraintAnchorTarget,
+    endTarget: ConstraintAnchorTarget,
+    startMargin: UiDp,
+    endMargin: UiDp,
 ) {
     validateChainWeights(weights, refs.size)
     validateChainReferences(refs, bias)
+    listOf(startMargin, endMargin).forEach { margin ->
+        require(margin.value.isFinite() && margin.value >= 0f) {
+            "Constraint chain boundary margins must be finite and non-negative."
+        }
+    }
     addChain(ConstraintChainSpec(
         orientation = orientation,
         referencedIds = refs.map { ref -> ref.id },
         weights = weights,
         style = style,
         bias = bias,
+        startTarget = startTarget,
+        endTarget = endTarget,
+        startMargin = startMargin,
+        endMargin = endMargin,
     ))
 }
 
+private fun horizontalChainTarget(
+    target: ConstraintHorizontalAnchorTarget,
+    side: ConstraintHorizontalAnchorSide,
+): ConstraintAnchorTarget = anchorTarget(
+    id = target.id,
+    anchor = when (side) {
+        ConstraintHorizontalAnchorSide.Start -> ConstraintAnchor.Start
+        ConstraintHorizontalAnchorSide.End -> ConstraintAnchor.End
+        ConstraintHorizontalAnchorSide.Left -> ConstraintAnchor.Left
+        ConstraintHorizontalAnchorSide.Right -> ConstraintAnchor.Right
+    },
+)
+
+private fun verticalChainTarget(
+    target: ConstraintVerticalAnchorTarget,
+    side: ConstraintVerticalAnchorSide,
+): ConstraintAnchorTarget = anchorTarget(
+    id = target.id,
+    anchor = when (side) {
+        ConstraintVerticalAnchorSide.Top -> ConstraintAnchor.Top
+        ConstraintVerticalAnchorSide.Bottom -> ConstraintAnchor.Bottom
+    },
+)
+
+private fun validateHorizontalChainPlane(
+    startSide: ConstraintHorizontalAnchorSide,
+    endSide: ConstraintHorizontalAnchorSide,
+) {
+    val startLogical = startSide == ConstraintHorizontalAnchorSide.Start ||
+        startSide == ConstraintHorizontalAnchorSide.End
+    val endLogical = endSide == ConstraintHorizontalAnchorSide.Start ||
+        endSide == ConstraintHorizontalAnchorSide.End
+    require(startLogical == endLogical) {
+        "Horizontal chain endpoints cannot mix logical start/end with physical left/right sides."
+    }
+}
+
 /**
- * Adds an ordered horizontal chain.
+ * Adds an ordered horizontal chain between explicit logical or physical boundaries.
+ *
+ * Logical boundaries mirror in RTL; physical boundaries do not. Both boundary sides must use the
+ * same plane. The chain owns horizontal positioning for every member and is validated before the
+ * complete graph replaces the previous native layout. Endpoint existence and competing helper
+ * ownership are complete-graph checks whose rejection preserves the accepted graph.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintChainEndpointsAndWrapSample
+ * @receiver active ConstraintLayout content scope
  * @param refs ordered chain members; at least two unique references are required
- * @param weights optional member weights whose size must equal [refs]
+ * @param weights optional positive member weights whose size must equal [refs]
  * @param style chain distribution policy
- * @param bias optional packed-chain bias
- * @throws IllegalArgumentException if references, weights, or bias are invalid
+ * @param bias optional finite packed-chain bias in `0f..1f`
+ * @param startTarget parent, child, guideline, or barrier used by the first boundary
+ * @param startTargetSide target side used by the first boundary
+ * @param startMargin finite non-negative spacing at the first boundary
+ * @param endTarget parent, child, guideline, or barrier used by the last boundary
+ * @param endTargetSide target side used by the last boundary
+ * @param endMargin finite non-negative spacing at the last boundary
+ * @throws IllegalArgumentException if local references, weights, bias, endpoint planes, or margins
+ * are invalid
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
  */
 fun ConstraintLayoutScope.createHorizontalChain(
     vararg refs: ConstraintReference,
     weights: List<Float>? = null,
     style: ConstraintChainStyle = ConstraintChainStyle.Spread,
     bias: Float? = null,
+    startTarget: ConstraintHorizontalAnchorTarget = parent,
+    startTargetSide: ConstraintHorizontalAnchorSide = ConstraintHorizontalAnchorSide.Start,
+    startMargin: UiDp = UiDp.Zero,
+    endTarget: ConstraintHorizontalAnchorTarget = parent,
+    endTargetSide: ConstraintHorizontalAnchorSide = ConstraintHorizontalAnchorSide.End,
+    endMargin: UiDp = UiDp.Zero,
 ) {
+    validateHorizontalChainPlane(startTargetSide, endTargetSide)
     registerChain(
         orientation = ConstraintChainOrientation.Horizontal,
         refs = refs,
         weights = weights,
         style = style,
         bias = bias,
+        startTarget = horizontalChainTarget(startTarget, startTargetSide),
+        endTarget = horizontalChainTarget(endTarget, endTargetSide),
+        startMargin = startMargin,
+        endMargin = endMargin,
     )
 }
 
 /**
- * Adds an ordered vertical chain.
+ * Adds an ordered vertical chain between explicit top or bottom boundaries.
+ *
+ * The chain owns vertical positioning for every member and is validated before the complete graph
+ * replaces the previous native layout. Endpoint existence and competing helper ownership are
+ * complete-graph checks whose rejection preserves the accepted graph.
+ *
+ * @sample com.viewcompose.constraintlayout.samples.constraintChainEndpointsAndWrapSample
+ * @receiver active ConstraintLayout content scope
  * @param refs ordered chain members; at least two unique references are required
- * @param weights optional member weights whose size must equal [refs]
+ * @param weights optional positive member weights whose size must equal [refs]
  * @param style chain distribution policy
- * @param bias optional packed-chain bias
- * @throws IllegalArgumentException if references, weights, or bias are invalid
+ * @param bias optional finite packed-chain bias in `0f..1f`
+ * @param topTarget parent, child, or vertical guideline used by the first boundary
+ * @param topTargetSide target side used by the first boundary
+ * @param topMargin finite non-negative spacing at the first boundary
+ * @param bottomTarget parent, child, or vertical guideline used by the last boundary
+ * @param bottomTargetSide target side used by the last boundary
+ * @param bottomMargin finite non-negative spacing at the last boundary
+ * @throws IllegalArgumentException if local references, weights, bias, or margins are invalid
+ * @throws IllegalStateException if a retained scope is used after content evaluation completes
  */
 fun ConstraintLayoutScope.createVerticalChain(
     vararg refs: ConstraintReference,
     weights: List<Float>? = null,
     style: ConstraintChainStyle = ConstraintChainStyle.Spread,
     bias: Float? = null,
+    topTarget: ConstraintVerticalAnchorTarget = parent,
+    topTargetSide: ConstraintVerticalAnchorSide = ConstraintVerticalAnchorSide.Top,
+    topMargin: UiDp = UiDp.Zero,
+    bottomTarget: ConstraintVerticalAnchorTarget = parent,
+    bottomTargetSide: ConstraintVerticalAnchorSide = ConstraintVerticalAnchorSide.Bottom,
+    bottomMargin: UiDp = UiDp.Zero,
 ) {
     registerChain(
         orientation = ConstraintChainOrientation.Vertical,
@@ -1276,6 +2024,10 @@ fun ConstraintLayoutScope.createVerticalChain(
         weights = weights,
         style = style,
         bias = bias,
+        startTarget = verticalChainTarget(topTarget, topTargetSide),
+        endTarget = verticalChainTarget(bottomTarget, bottomTargetSide),
+        startMargin = topMargin,
+        endMargin = bottomMargin,
     )
 }
 
@@ -1396,6 +2148,98 @@ class ConstraintSetBuilder internal constructor() {
         helpers.guidelines += ConstraintGuidelineSpec(
             id = id,
             direction = ConstraintGuidelineDirection.FromEnd,
+            position = ConstraintGuidelinePosition.Fraction(fraction),
+        )
+        return HorizontalAnchorReference(id)
+    }
+
+    /**
+     * Creates a reusable physical-left guideline at fixed [offset] without RTL mirroring.
+     *
+     * The complete graph validates [offset] when this set is applied.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintSetPhaseTwoSample
+     * @param offset finite non-negative distance from the physical left edge
+     * @param id helper identity, auto-generated by declaration order when omitted
+     * @return reference to the virtual guideline
+     * @throws IllegalArgumentException if [id] is blank or duplicates another helper identity
+     */
+    fun createGuidelineFromLeft(
+        offset: UiDp,
+        id: String = helpers.allocId("guideline-left"),
+    ): ConstraintHorizontalAnchorReference {
+        helpers.guidelines += ConstraintGuidelineSpec(
+            id = id,
+            direction = ConstraintGuidelineDirection.FromLeft,
+            position = ConstraintGuidelinePosition.Offset(offset),
+        )
+        return HorizontalAnchorReference(id)
+    }
+
+    /**
+     * Creates a reusable physical-left guideline at parent-width [fraction] without RTL mirroring.
+     *
+     * The complete graph validates [fraction] when this set is applied.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintSetPhaseTwoSample
+     * @param fraction finite parent-width fraction in `0f..1f`
+     * @param id helper identity, auto-generated by declaration order when omitted
+     * @return reference to the virtual guideline
+     * @throws IllegalArgumentException if [id] is blank or duplicates another helper identity
+     */
+    fun createGuidelineFromLeft(
+        fraction: Float,
+        id: String = helpers.allocId("guideline-left"),
+    ): ConstraintHorizontalAnchorReference {
+        helpers.guidelines += ConstraintGuidelineSpec(
+            id = id,
+            direction = ConstraintGuidelineDirection.FromLeft,
+            position = ConstraintGuidelinePosition.Fraction(fraction),
+        )
+        return HorizontalAnchorReference(id)
+    }
+
+    /**
+     * Creates a reusable physical-right guideline at fixed [offset] without RTL mirroring.
+     *
+     * The complete graph validates [offset] when this set is applied.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintSetPhaseTwoSample
+     * @param offset finite non-negative distance from the physical right edge
+     * @param id helper identity, auto-generated by declaration order when omitted
+     * @return reference to the virtual guideline
+     * @throws IllegalArgumentException if [id] is blank or duplicates another helper identity
+     */
+    fun createGuidelineFromRight(
+        offset: UiDp,
+        id: String = helpers.allocId("guideline-right"),
+    ): ConstraintHorizontalAnchorReference {
+        helpers.guidelines += ConstraintGuidelineSpec(
+            id = id,
+            direction = ConstraintGuidelineDirection.FromRight,
+            position = ConstraintGuidelinePosition.Offset(offset),
+        )
+        return HorizontalAnchorReference(id)
+    }
+
+    /**
+     * Creates a reusable physical-right guideline at parent-width [fraction] without RTL mirroring.
+     *
+     * The complete graph validates [fraction] when this set is applied.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintSetPhaseTwoSample
+     * @param fraction finite parent-width fraction in `0f..1f`
+     * @param id helper identity, auto-generated by declaration order when omitted
+     * @return reference to the virtual guideline
+     * @throws IllegalArgumentException if [id] is blank or duplicates another helper identity
+     */
+    fun createGuidelineFromRight(
+        fraction: Float,
+        id: String = helpers.allocId("guideline-right"),
+    ): ConstraintHorizontalAnchorReference {
+        helpers.guidelines += ConstraintGuidelineSpec(
+            id = id,
+            direction = ConstraintGuidelineDirection.FromRight,
             position = ConstraintGuidelinePosition.Fraction(fraction),
         )
         return HorizontalAnchorReference(id)
@@ -1528,6 +2372,66 @@ class ConstraintSetBuilder internal constructor() {
         helpers.barriers += ConstraintBarrierSpec(
             id = id,
             direction = ConstraintBarrierDirection.End,
+            referencedIds = refs.map { ref -> ref.id },
+            margin = margin,
+            allowsGoneWidgets = allowsGoneWidgets,
+        )
+        return HorizontalAnchorReference(id)
+    }
+
+    /**
+     * Creates a reusable physical-left barrier that never mirrors in RTL.
+     *
+     * The complete graph validates references and [margin] when this set is applied.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintSetPhaseTwoSample
+     * @param refs referenced children or anchor helpers; must not be empty
+     * @param id helper identity, auto-generated by declaration order when omitted
+     * @param margin finite non-negative physical offset from the computed extreme
+     * @param allowsGoneWidgets whether gone referenced children participate
+     * @return reference to the virtual barrier
+     * @throws IllegalArgumentException if [refs] is empty or [id] is blank or duplicated
+     */
+    fun createLeftBarrier(
+        vararg refs: ConstraintLayoutReference,
+        id: String = helpers.allocId("barrier-left"),
+        margin: UiDp = UiDp.Zero,
+        allowsGoneWidgets: Boolean = true,
+    ): ConstraintHorizontalAnchorReference {
+        require(refs.isNotEmpty()) { "Barrier helper requires at least one referenced id." }
+        helpers.barriers += ConstraintBarrierSpec(
+            id = id,
+            direction = ConstraintBarrierDirection.Left,
+            referencedIds = refs.map { ref -> ref.id },
+            margin = margin,
+            allowsGoneWidgets = allowsGoneWidgets,
+        )
+        return HorizontalAnchorReference(id)
+    }
+
+    /**
+     * Creates a reusable physical-right barrier that never mirrors in RTL.
+     *
+     * The complete graph validates references and [margin] when this set is applied.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintSetPhaseTwoSample
+     * @param refs referenced children or anchor helpers; must not be empty
+     * @param id helper identity, auto-generated by declaration order when omitted
+     * @param margin finite non-negative physical offset from the computed extreme
+     * @param allowsGoneWidgets whether gone referenced children participate
+     * @return reference to the virtual barrier
+     * @throws IllegalArgumentException if [refs] is empty or [id] is blank or duplicated
+     */
+    fun createRightBarrier(
+        vararg refs: ConstraintLayoutReference,
+        id: String = helpers.allocId("barrier-right"),
+        margin: UiDp = UiDp.Zero,
+        allowsGoneWidgets: Boolean = true,
+    ): ConstraintHorizontalAnchorReference {
+        require(refs.isNotEmpty()) { "Barrier helper requires at least one referenced id." }
+        helpers.barriers += ConstraintBarrierSpec(
+            id = id,
+            direction = ConstraintBarrierDirection.Right,
             referencedIds = refs.map { ref -> ref.id },
             margin = margin,
             allowsGoneWidgets = allowsGoneWidgets,
@@ -1787,52 +2691,182 @@ class ConstraintSetBuilder internal constructor() {
     }
 
     /**
-     * Adds an ordered reusable horizontal chain.
-     * @param refs ordered members
-     * @param weights optional weights whose size must equal [refs]
+     * Adds a typed Grid to this reusable constraint set.
+     *
+     * Axis inference, ownership, native expansion, and transactional failure behavior match the
+     * inline [ConstraintLayoutScope.createGrid] contract. Reference existence and competing helper
+     * ownership are complete-graph checks performed when the set is applied.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintSetPhaseTwoSample
+     * @param refs unique children positioned by the Grid; must not be empty
+     * @param id unique Grid identity, auto-generated by declaration order when omitted
+     * @param rows explicit row count in `1..50`, or `0` for automatic resolution
+     * @param columns explicit column count in `1..50`, or `0` for automatic resolution
+     * @param orientation automatic placement order
+     * @param rowWeights positive finite weights matching the resolved row count, or empty for equal rows
+     * @param columnWeights positive finite weights matching the resolved column count, or empty for equal columns
+     * @param horizontalGap finite non-negative distance between adjacent columns
+     * @param verticalGap finite non-negative distance between adjacent rows
+     * @param spans explicit unique member placements using zero-based row-major indexes
+     * @param skips reserved zero-based row-major rectangles unavailable to automatic placement
+     * @return identity-only reference for helper ownership and collision checks; it is not an anchor
+     * @throws IllegalArgumentException if local identity, dimensions, weights, gaps, spans, skips,
+     * or bounded placement capacity are invalid
+     */
+    fun createGrid(
+        vararg refs: ConstraintReference,
+        id: String = helpers.allocId("grid"),
+        rows: Int = 0,
+        columns: Int = 0,
+        orientation: ConstraintGridOrientation = ConstraintGridOrientation.Horizontal,
+        rowWeights: List<Float> = emptyList(),
+        columnWeights: List<Float> = emptyList(),
+        horizontalGap: UiDp = UiDp.Zero,
+        verticalGap: UiDp = UiDp.Zero,
+        spans: List<ConstraintGridSpan> = emptyList(),
+        skips: List<ConstraintGridSkip> = emptyList(),
+    ): ConstraintHelperReference {
+        helpers.grids += buildGridSpec(
+            id,
+            refs,
+            rows,
+            columns,
+            orientation,
+            rowWeights,
+            columnWeights,
+            horizontalGap,
+            verticalGap,
+            spans,
+            skips,
+        )
+        return HelperReference(id)
+    }
+
+    /**
+     * Adds a no-View CircularFlow to this reusable constraint set.
+     *
+     * Item coordinates, ownership, and transactional failure behavior match the inline
+     * [ConstraintLayoutScope.createCircularFlow] contract. Reference existence and competing
+     * ownership are complete-graph checks performed when the set is applied.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintSetPhaseTwoSample
+     * @param center existing child used as the center for every item
+     * @param items non-empty unique members with explicit non-negative radii and angles in `0f..<360f`
+     * @param id unique semantic group identity, auto-generated by declaration order when omitted
+     * @return identity-only reference for helper ownership and collision checks; it is not an anchor
+     * @throws IllegalArgumentException if local identity, members, radius, or angle values are invalid
+     */
+    fun createCircularFlow(
+        center: ConstraintReference,
+        vararg items: ConstraintCircularFlowItem,
+        id: String = helpers.allocId("circular-flow"),
+    ): ConstraintHelperReference {
+        helpers.circularFlows += buildCircularFlowSpec(id, center, items)
+        return HelperReference(id)
+    }
+
+    /**
+     * Adds an ordered reusable horizontal chain between logical or physical boundaries.
+     *
+     * Logical boundaries mirror in RTL; physical boundaries do not. Both sides must use the same
+     * coordinate plane. Endpoint existence and competing ownership are complete-graph checks
+     * performed when the set is applied.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintSetPhaseTwoSample
+     * @param refs ordered members; at least two unique references are required
+     * @param weights optional positive weights whose size must equal [refs]
      * @param style chain distribution policy
-     * @param bias optional packed-chain bias
-     * @throws IllegalArgumentException if references, weights, or bias are invalid
+     * @param bias optional finite packed-chain bias in `0f..1f`
+     * @param startTarget parent, child, guideline, or barrier used by the first boundary
+     * @param startTargetSide target side used by the first boundary
+     * @param startMargin finite non-negative first-boundary spacing
+     * @param endTarget parent, child, guideline, or barrier used by the last boundary
+     * @param endTargetSide target side used by the last boundary
+     * @param endMargin finite non-negative last-boundary spacing
+     * @throws IllegalArgumentException if local references, weights, bias, endpoint planes, or
+     * margins are invalid
      */
     fun createHorizontalChain(
         vararg refs: ConstraintReference,
         weights: List<Float>? = null,
         style: ConstraintChainStyle = ConstraintChainStyle.Spread,
         bias: Float? = null,
+        startTarget: ConstraintHorizontalAnchorTarget = parent,
+        startTargetSide: ConstraintHorizontalAnchorSide = ConstraintHorizontalAnchorSide.Start,
+        startMargin: UiDp = UiDp.Zero,
+        endTarget: ConstraintHorizontalAnchorTarget = parent,
+        endTargetSide: ConstraintHorizontalAnchorSide = ConstraintHorizontalAnchorSide.End,
+        endMargin: UiDp = UiDp.Zero,
     ) {
         validateChainWeights(weights, refs.size)
         validateChainReferences(refs, bias)
+        validateHorizontalChainPlane(startTargetSide, endTargetSide)
+        listOf(startMargin, endMargin).forEach { margin ->
+            require(margin.value.isFinite() && margin.value >= 0f) {
+                "Constraint chain boundary margins must be finite and non-negative."
+            }
+        }
         helpers.chains += ConstraintChainSpec(
             orientation = ConstraintChainOrientation.Horizontal,
             referencedIds = refs.map { ref -> ref.id },
             weights = weights,
             style = style,
             bias = bias,
+            startTarget = horizontalChainTarget(startTarget, startTargetSide),
+            endTarget = horizontalChainTarget(endTarget, endTargetSide),
+            startMargin = startMargin,
+            endMargin = endMargin,
         )
     }
 
     /**
-     * Adds an ordered reusable vertical chain.
-     * @param refs ordered members
-     * @param weights optional weights whose size must equal [refs]
+     * Adds an ordered reusable vertical chain between top or bottom boundaries.
+     *
+     * Endpoint existence and competing ownership are complete-graph checks performed when the set
+     * is applied.
+     *
+     * @sample com.viewcompose.constraintlayout.samples.constraintSetPhaseTwoSample
+     * @param refs ordered members; at least two unique references are required
+     * @param weights optional positive weights whose size must equal [refs]
      * @param style chain distribution policy
-     * @param bias optional packed-chain bias
-     * @throws IllegalArgumentException if references, weights, or bias are invalid
+     * @param bias optional finite packed-chain bias in `0f..1f`
+     * @param topTarget parent, child, or vertical guideline used by the first boundary
+     * @param topTargetSide target side used by the first boundary
+     * @param topMargin finite non-negative first-boundary spacing
+     * @param bottomTarget parent, child, or vertical guideline used by the last boundary
+     * @param bottomTargetSide target side used by the last boundary
+     * @param bottomMargin finite non-negative last-boundary spacing
+     * @throws IllegalArgumentException if local references, weights, bias, or margins are invalid
      */
     fun createVerticalChain(
         vararg refs: ConstraintReference,
         weights: List<Float>? = null,
         style: ConstraintChainStyle = ConstraintChainStyle.Spread,
         bias: Float? = null,
+        topTarget: ConstraintVerticalAnchorTarget = parent,
+        topTargetSide: ConstraintVerticalAnchorSide = ConstraintVerticalAnchorSide.Top,
+        topMargin: UiDp = UiDp.Zero,
+        bottomTarget: ConstraintVerticalAnchorTarget = parent,
+        bottomTargetSide: ConstraintVerticalAnchorSide = ConstraintVerticalAnchorSide.Bottom,
+        bottomMargin: UiDp = UiDp.Zero,
     ) {
         validateChainWeights(weights, refs.size)
         validateChainReferences(refs, bias)
+        listOf(topMargin, bottomMargin).forEach { margin ->
+            require(margin.value.isFinite() && margin.value >= 0f) {
+                "Constraint chain boundary margins must be finite and non-negative."
+            }
+        }
         helpers.chains += ConstraintChainSpec(
             orientation = ConstraintChainOrientation.Vertical,
             referencedIds = refs.map { ref -> ref.id },
             weights = weights,
             style = style,
             bias = bias,
+            startTarget = verticalChainTarget(topTarget, topTargetSide),
+            endTarget = verticalChainTarget(bottomTarget, bottomTargetSide),
+            startMargin = topMargin,
+            endMargin = bottomMargin,
         )
     }
 

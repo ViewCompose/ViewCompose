@@ -35,6 +35,8 @@ data class ConstraintSetSpec(
  * @property guidelines virtual guideline definitions
  * @property barriers virtual barrier definitions
  * @property chains horizontal and vertical chain definitions
+ * @property grids typed grid declarations expanded by the renderer without AndroidX Grid
+ * @property circularFlows declarative groups compiled to per-child circular constraints
  * @property flows virtual flow helper definitions
  * @property groups visibility and elevation group definitions
  * @property layers transform group definitions
@@ -44,6 +46,8 @@ data class ConstraintHelpersSpec(
     val guidelines: List<ConstraintGuidelineSpec> = emptyList(),
     val barriers: List<ConstraintBarrierSpec> = emptyList(),
     val chains: List<ConstraintChainSpec> = emptyList(),
+    val grids: List<ConstraintGridSpec> = emptyList(),
+    val circularFlows: List<ConstraintCircularFlowSpec> = emptyList(),
     val flows: List<ConstraintFlowSpec> = emptyList(),
     val groups: List<ConstraintGroupSpec> = emptyList(),
     val layers: List<ConstraintLayerSpec> = emptyList(),
@@ -58,6 +62,8 @@ data class ConstraintHelpersSpec(
  *
  * @property start logical start-edge link
  * @property end logical end-edge link
+ * @property left physical left-edge link
+ * @property right physical right-edge link
  * @property top top-edge link
  * @property bottom bottom-edge link
  * @property baseline baseline-to-baseline, baseline-to-top, or baseline-to-bottom link
@@ -67,10 +73,13 @@ data class ConstraintHelpersSpec(
  * @property verticalBias optional placement bias between vertical anchors
  * @property ratio optional typed width-to-height ratio
  * @property circle optional circular positioning, mutually exclusive with edge and baseline links
+ * @property wrapBehaviorInParent axes on which this item contributes to a wrap-content parent
  */
 data class ConstraintItemSpec(
     val start: ConstraintAnchorLink? = null,
     val end: ConstraintAnchorLink? = null,
+    val left: ConstraintAnchorLink? = null,
+    val right: ConstraintAnchorLink? = null,
     val top: ConstraintAnchorLink? = null,
     val bottom: ConstraintAnchorLink? = null,
     val baseline: ConstraintAnchorLink? = null,
@@ -80,6 +89,7 @@ data class ConstraintItemSpec(
     val verticalBias: Float? = null,
     val ratio: ConstraintRatio? = null,
     val circle: ConstraintCircleSpec? = null,
+    val wrapBehaviorInParent: ConstraintWrapBehavior = ConstraintWrapBehavior.Included,
 )
 
 /**
@@ -128,21 +138,48 @@ data class ConstraintAnchorTarget(
     }
 }
 
-/** Anchor exposed by a constraint target. */
+/**
+ * Selects a target edge in the owning constraint graph.
+ *
+ * [Start] and [End] are logical and mirror with layout direction. [Left] and [Right] are physical
+ * and remain fixed. [Top], [Bottom], and [Baseline] are physical vertical anchors.
+ */
 enum class ConstraintAnchor {
     Start,
     End,
+    Left,
+    Right,
     Top,
     Bottom,
     Baseline,
 }
 
 /**
+ * Selects the axes on which a child contributes to a wrap-content ConstraintLayout parent.
+ *
+ * The default [Included] behavior preserves the released layout contract. Axis-specific values
+ * keep the child in the solver while excluding it from the opposite wrap-content calculation.
+ */
+enum class ConstraintWrapBehavior {
+    /** Contributes to both horizontal and vertical parent wrap-content measurement. */
+    Included,
+
+    /** Contributes only to horizontal parent wrap-content measurement. */
+    HorizontalOnly,
+
+    /** Contributes only to vertical parent wrap-content measurement. */
+    VerticalOnly,
+
+    /** Does not contribute to either parent wrap-content measurement axis. */
+    Skipped,
+}
+
+/**
  * Positions a child around another referenced node.
  *
  * @property targetId center target ID
- * @property radius distance from the target center
- * @property angle clockwise angle in degrees using native ConstraintLayout coordinates
+ * @property radius finite non-negative center-to-center distance
+ * @property angle finite clockwise angle in `0f..<360f`; `0f` is above the center
  */
 data class ConstraintCircleSpec(
     val targetId: String,
@@ -290,10 +327,17 @@ data class ConstraintGuidelineSpec(
     val position: ConstraintGuidelinePosition,
 )
 
-/** Parent edge from which a guideline position is resolved. */
+/**
+ * Selects the parent edge from which a virtual guideline is measured.
+ *
+ * [FromStart] and [FromEnd] mirror with layout direction. [FromLeft] and [FromRight] remain
+ * physically fixed. Top and bottom are physical vertical edges.
+ */
 enum class ConstraintGuidelineDirection {
     FromStart,
     FromEnd,
+    FromLeft,
+    FromRight,
     FromTop,
     FromBottom,
 }
@@ -336,10 +380,17 @@ data class ConstraintBarrierSpec(
     val allowsGoneWidgets: Boolean = true,
 )
 
-/** Direction in which a barrier derives its extreme edge. */
+/**
+ * Selects the referenced extreme exposed by a Barrier.
+ *
+ * [Start] and [End] mirror with layout direction. [Left] and [Right] remain physically fixed. Top
+ * and bottom are physical vertical extremes.
+ */
 enum class ConstraintBarrierDirection {
     Start,
     End,
+    Left,
+    Right,
     Top,
     Bottom,
 }
@@ -352,6 +403,10 @@ enum class ConstraintBarrierDirection {
  * @property weights optional per-child weights in the same order as [referencedIds]
  * @property style distribution style
  * @property bias optional packed-chain bias along the chain axis
+ * @property startTarget optional first-boundary target; `null` selects the orientation default
+ * @property endTarget optional last-boundary target; `null` selects the orientation default
+ * @property startMargin finite non-negative first-boundary spacing
+ * @property endMargin finite non-negative last-boundary spacing
  */
 data class ConstraintChainSpec(
     val orientation: ConstraintChainOrientation,
@@ -359,6 +414,10 @@ data class ConstraintChainSpec(
     val weights: List<Float>? = null,
     val style: ConstraintChainStyle = ConstraintChainStyle.Spread,
     val bias: Float? = null,
+    val startTarget: ConstraintAnchorTarget? = null,
+    val endTarget: ConstraintAnchorTarget? = null,
+    val startMargin: UiDp = UiDp.Zero,
+    val endMargin: UiDp = UiDp.Zero,
 )
 
 /** Axis on which a constraint chain is formed. */
@@ -373,6 +432,106 @@ enum class ConstraintChainStyle {
     SpreadInside,
     Packed,
 }
+
+/** Fill order used when a [ConstraintGridSpec] assigns unspanned children to cells. */
+enum class ConstraintGridOrientation {
+    /** Fills each row from logical start to end before advancing vertically. */
+    Horizontal,
+
+    /** Fills each column from top to bottom before advancing toward logical end. */
+    Vertical,
+}
+
+/**
+ * Places one Grid member at an explicit cell and lets it occupy multiple rows or columns.
+ *
+ * @property referenceId member identity owned by the Grid
+ * @property index zero-based row-major cell index
+ * @property rowSpan number of occupied rows
+ * @property columnSpan number of occupied columns
+ */
+data class ConstraintGridSpanSpec(
+    val referenceId: String,
+    val index: Int,
+    val rowSpan: Int = 1,
+    val columnSpan: Int = 1,
+)
+
+/**
+ * Reserves an unoccupied rectangular Grid area.
+ *
+ * @property index zero-based row-major cell index
+ * @property rowSpan number of reserved rows
+ * @property columnSpan number of reserved columns
+ */
+data class ConstraintGridSkipSpec(
+    val index: Int,
+    val rowSpan: Int = 1,
+    val columnSpan: Int = 1,
+)
+
+/**
+ * Defines a bounded solver Grid without exposing AndroidX Grid's unchecked string grammar.
+ *
+ * A renderer validates and expands this declaration transactionally. Generated native identities
+ * are implementation details owned by [id]; application code addresses only [referencedIds].
+ * Construction performs no graph validation; callers must treat supplied lists as immutable, and
+ * renderers must reject invalid topology without partially replacing the committed layout.
+ *
+ * @property id unique semantic Grid identity
+ * @property referencedIds ordered child identities owned on both positioning axes
+ * @property rows explicit row count, or `0` to infer it
+ * @property columns explicit column count, or `0` to infer it
+ * @property orientation automatic cell fill order
+ * @property rowWeights optional positive weights, empty for equal rows
+ * @property columnWeights optional positive weights, empty for equal columns
+ * @property horizontalGap fixed gap between adjacent columns
+ * @property verticalGap fixed gap between adjacent rows
+ * @property spans explicit member placements and occupied rectangles
+ * @property skips reserved rectangles that automatic placement cannot use
+ */
+data class ConstraintGridSpec(
+    val id: String,
+    val referencedIds: List<String>,
+    val rows: Int = 0,
+    val columns: Int = 0,
+    val orientation: ConstraintGridOrientation = ConstraintGridOrientation.Horizontal,
+    val rowWeights: List<Float> = emptyList(),
+    val columnWeights: List<Float> = emptyList(),
+    val horizontalGap: UiDp = UiDp.Zero,
+    val verticalGap: UiDp = UiDp.Zero,
+    val spans: List<ConstraintGridSpanSpec> = emptyList(),
+    val skips: List<ConstraintGridSkipSpec> = emptyList(),
+)
+
+/**
+ * Stores one explicit circular member value in [ConstraintCircularFlowSpec].
+ *
+ * @property referenceId child positioned around the shared center
+ * @property radius finite non-negative center-to-center distance
+ * @property angle finite clockwise angle in `0f..<360f`; `0f` is above the center
+ */
+data class ConstraintCircularFlowItemSpec(
+    val referenceId: String,
+    val radius: UiDp,
+    val angle: Float,
+)
+
+/**
+ * Groups explicit circle constraints under one semantic declaration.
+ *
+ * This transport creates no Android helper View. The renderer validates ownership for every item
+ * and commits the complete group as ordinary circular constraints.
+ *
+ * @property id unique semantic group identity
+ * @property centerId child used as every item's circle center
+ * @property items non-empty unique member declarations
+ */
+data class ConstraintCircularFlowSpec(
+    val id: String,
+    val centerId: String,
+    val items: List<ConstraintCircularFlowItemSpec>,
+)
 
 /**
  * Defines a virtual flow helper that lays out referenced nodes into one or more chains.

@@ -22,6 +22,7 @@ architecture pages describe how the system works now.
 - [ADR-0014: Renderer-neutral interaction indication](./0014-renderer-neutral-interaction-indication.md)
 - [ADR-0015: Observed property transactions](./0015-observed-property-transactions.md)
 - [ADR-0016: ConstraintLayout graph and helper ownership](./0016-constraintlayout-graph-and-helper-ownership.md)
+- [ADR-0017: Typed ConstraintLayout helper expansion](./0017-typed-constraint-helper-expansion.md)
 
 ## Rules
 

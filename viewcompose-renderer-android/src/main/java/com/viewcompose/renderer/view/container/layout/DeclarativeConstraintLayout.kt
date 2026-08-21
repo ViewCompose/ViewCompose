@@ -27,11 +27,13 @@ import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.node.spec.ConstraintAnchor
 import com.viewcompose.ui.node.spec.ConstraintAnchorLink
+import com.viewcompose.ui.node.spec.ConstraintAnchorTarget
 import com.viewcompose.ui.node.spec.ConstraintBarrierDirection
 import com.viewcompose.ui.node.spec.ConstraintBarrierSpec
 import com.viewcompose.ui.node.spec.ConstraintChainOrientation
 import com.viewcompose.ui.node.spec.ConstraintChainSpec
 import com.viewcompose.ui.node.spec.ConstraintChainStyle
+import com.viewcompose.ui.node.spec.ConstraintCircularFlowSpec
 import com.viewcompose.ui.node.spec.ConstraintDimension
 import com.viewcompose.ui.node.spec.ConstraintFlowHorizontalAlign
 import com.viewcompose.ui.node.spec.ConstraintFlowOrientation
@@ -51,6 +53,7 @@ import com.viewcompose.ui.node.spec.ConstraintPlaceholderSpec
 import com.viewcompose.ui.node.spec.ConstraintRatio
 import com.viewcompose.ui.node.spec.ConstraintRatioSide
 import com.viewcompose.ui.node.spec.ConstraintSetSpec
+import com.viewcompose.ui.node.spec.ConstraintWrapBehavior
 
 /** Android ConstraintLayout container for the ConstraintLayout DSL. */
 internal class DeclarativeConstraintLayout @JvmOverloads constructor(
@@ -358,6 +361,13 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                 constraintSet = constraintSet,
                 chains = graph.helpers.chains,
                 referenceIds = resolvedReferenceIds,
+                environment = environment,
+            )
+            applyGrids(
+                constraintSet = constraintSet,
+                grids = graph.resolvedGrids,
+                referenceIds = resolvedReferenceIds,
+                environment = environment,
             )
             applyItemConstraints(
                 constraintSet = constraintSet,
@@ -365,8 +375,15 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                 referenceIds = resolvedReferenceIds,
                 environment = environment,
             )
+            applyCircularFlows(
+                constraintSet = constraintSet,
+                circularFlows = graph.helpers.circularFlows,
+                referenceIds = resolvedReferenceIds,
+                environment = environment,
+            )
             reconciliationMetrics?.recordNativeCommit()
             constraintSet.applyTo(this)
+            restoreConstraintSetOmittedMargins(graph, resolvedReferenceIds, environment)
             restoreRuntimeProperties(rollbackSnapshots)
             val helperRuntimeBase = if (preserveAcceptedHelpers) {
                 acceptedHelperRuntimeBase
@@ -450,7 +467,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         if (decoupledConstraintSetSpec != acceptedDecoupledConstraintSetSpec) return false
         if (inlineHelpersSpec != acceptedInlineHelpersSpec) return false
         if (acceptedContentLayoutParams.size != graph.contentBindings.size) return false
-        if (helperViews.size != graph.helperKinds.size) return false
+        if (helperViews.keys != graph.expectedNativeHelperKeys()) return false
         helperViews.forEach { (key, helper) ->
             if (helper.parent !== this) return false
             if (helperIdToViewId[key] != helper.id) return false
@@ -523,6 +540,31 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             if (view.id != targetId) {
                 view.id = targetId
             }
+        }
+    }
+
+    /**
+     * AndroidX 2.2.2 stores baseline and physical gone margins in ConstraintSet.Layout but omits
+     * them from Constraint.applyTo(LayoutParams). Repair those fields before the solver measures;
+     * resetting absent values also prevents a removed declaration from leaking into the next graph.
+     */
+    private fun restoreConstraintSetOmittedMargins(
+        graph: ResolvedConstraintGraph,
+        referenceIds: Map<String, Int>,
+        environment: UiEnvironmentValues,
+    ) {
+        graph.constrainableIds.forEach { referenceId ->
+            val viewId = requireNotNull(referenceIds[referenceId])
+            val view = findViewById<View>(viewId) ?: return@forEach
+            val params = view.layoutParams as? LayoutParams ?: return@forEach
+            val item = graph.constraints[referenceId] ?: ConstraintItemSpec()
+            params.baselineMargin = item.baseline?.let { environment.roundToPx(it.margin) } ?: 0
+            params.goneBaselineMargin = item.baseline?.goneMargin?.let(environment::roundToPx)
+                ?: LayoutParams.GONE_UNSET
+            params.goneLeftMargin = item.left?.goneMargin?.let(environment::roundToPx)
+                ?: LayoutParams.GONE_UNSET
+            params.goneRightMargin = item.right?.goneMargin?.let(environment::roundToPx)
+                ?: LayoutParams.GONE_UNSET
         }
     }
 
@@ -739,9 +781,13 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
 
     private fun restoreAcceptedHelperConfiguration() {
         val graph = acceptedGraph ?: return
-        val helperReferences = graph.helperKinds.mapValues { (id, kind) ->
-            requireNotNull(helperIdToViewId[helperKey(kind.prefix(), id)])
-        }
+        val helperReferences = graph.helperKinds.mapNotNull { (id, kind) ->
+            if (kind == NativeConstraintHelperKind.Grid || kind == NativeConstraintHelperKind.CircularFlow) {
+                null
+            } else {
+                id to requireNotNull(helperIdToViewId[helperKey(kind.prefix(), id)])
+            }
+        }.toMap()
         val references = referenceIdToViewId + helperReferences
         try {
             configureHelpers(
@@ -815,10 +861,29 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         val activeKeys: Set<String>,
     )
 
+    private fun ResolvedConstraintGraph.expectedNativeHelperKeys(): Set<String> = buildSet {
+        helperKinds.forEach { (id, kind) ->
+            if (kind != NativeConstraintHelperKind.Grid && kind != NativeConstraintHelperKind.CircularFlow) {
+                add(helperKey(kind.prefix(), id))
+            }
+        }
+        resolvedGrids.forEach { grid ->
+            repeat(grid.rows) { row -> add(gridRowKey(grid.spec.id, row)) }
+            repeat(grid.columns) { column -> add(gridColumnKey(grid.spec.id, column)) }
+        }
+    }
+
+    private fun gridRowKey(gridId: String, row: Int): String = "grid:$gridId:row:$row"
+
+    private fun gridColumnKey(gridId: String, column: Int): String = "grid:$gridId:column:$column"
+
     private fun stageHelperViews(graph: ResolvedConstraintGraph): HelperCommitPlan {
         val referenceIds = linkedMapOf<String, Int>()
         val activeKeys = linkedSetOf<String>()
         graph.helperKinds.forEach { (id, kind) ->
+            if (kind == NativeConstraintHelperKind.Grid || kind == NativeConstraintHelperKind.CircularFlow) {
+                return@forEach
+            }
             val prefix = kind.prefix()
             val key = helperKey(prefix, id)
             val viewId = helperIdToViewId.getOrPut(key) { View.generateViewId() }
@@ -858,6 +923,10 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                     viewId,
                     Placeholder::class.java,
                 ) { Placeholder(context) }
+
+                NativeConstraintHelperKind.Grid,
+                NativeConstraintHelperKind.CircularFlow,
+                -> error("Identity-only helper $kind must not create a semantic native View.")
             }
             // Retained programmatic helpers can keep their previously resolved direction on older
             // Android releases, which prevents AndroidX from resolving logical constraints in RTL.
@@ -866,6 +935,25 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             }
             activeKeys += key
             referenceIds[id] = viewId
+        }
+        graph.resolvedGrids.forEach { grid ->
+            // AndroidX Grid accepts unchecked span/skip strings and creates internal structures
+            // outside this registry. Zero-thickness row/column proxies keep the typed expansion,
+            // generated identities, replacement, and rollback under the same transaction owner.
+            repeat(grid.rows) { row ->
+                val key = gridRowKey(grid.spec.id, row)
+                val viewId = helperIdToViewId.getOrPut(key) { View.generateViewId() }
+                val proxy = ensureHelperView(key, viewId, View::class.java) { View(context) }
+                proxy.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                activeKeys += key
+            }
+            repeat(grid.columns) { column ->
+                val key = gridColumnKey(grid.spec.id, column)
+                val viewId = helperIdToViewId.getOrPut(key) { View.generateViewId() }
+                val proxy = ensureHelperView(key, viewId, View::class.java) { View(context) }
+                proxy.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                activeKeys += key
+            }
         }
         return HelperCommitPlan(
             referenceIds = referenceIds.toMap(),
@@ -923,6 +1011,9 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         graph: ResolvedConstraintGraph,
     ) {
         graph.helperKinds.forEach { (id, kind) ->
+            if (kind == NativeConstraintHelperKind.Grid || kind == NativeConstraintHelperKind.CircularFlow) {
+                return@forEach
+            }
             val helperId = requireNotNull(helperIdToViewId[helperKey(kind.prefix(), id)])
             val dimension = when (kind) {
                 NativeConstraintHelperKind.Flow,
@@ -934,6 +1025,10 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                 NativeConstraintHelperKind.Group,
                 NativeConstraintHelperKind.Layer,
                 -> 0
+
+                NativeConstraintHelperKind.Grid,
+                NativeConstraintHelperKind.CircularFlow,
+                -> error("Identity-only helpers are seeded by their declarative expansion.")
             }
             constraintSet.constrainWidth(helperId, dimension)
             constraintSet.constrainHeight(helperId, dimension)
@@ -1202,6 +1297,8 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         val orientation = when (spec.direction) {
             ConstraintGuidelineDirection.FromStart,
             ConstraintGuidelineDirection.FromEnd,
+            ConstraintGuidelineDirection.FromLeft,
+            ConstraintGuidelineDirection.FromRight,
             -> ConstraintSet.VERTICAL_GUIDELINE
 
             ConstraintGuidelineDirection.FromTop,
@@ -1210,15 +1307,19 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         }
         val params = LayoutParams(0, 0).apply {
             this.orientation = orientation
+            guidelineUseRtl = spec.direction == ConstraintGuidelineDirection.FromStart ||
+                spec.direction == ConstraintGuidelineDirection.FromEnd
         }
         when (val position = spec.position) {
             is ConstraintGuidelinePosition.Offset -> {
                 when (spec.direction) {
                     ConstraintGuidelineDirection.FromStart,
+                    ConstraintGuidelineDirection.FromLeft,
                     ConstraintGuidelineDirection.FromTop,
                     -> params.guideBegin = environment.roundToPx(position.value)
 
                     ConstraintGuidelineDirection.FromEnd,
+                    ConstraintGuidelineDirection.FromRight,
                     ConstraintGuidelineDirection.FromBottom,
                     -> params.guideEnd = environment.roundToPx(position.value)
                 }
@@ -1227,10 +1328,12 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             is ConstraintGuidelinePosition.Fraction -> {
                 val percent = when (spec.direction) {
                     ConstraintGuidelineDirection.FromStart,
+                    ConstraintGuidelineDirection.FromLeft,
                     ConstraintGuidelineDirection.FromTop,
                     -> position.value
 
                     ConstraintGuidelineDirection.FromEnd,
+                    ConstraintGuidelineDirection.FromRight,
                     ConstraintGuidelineDirection.FromBottom,
                     -> 1f - position.value
                 }
@@ -1323,6 +1426,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         constraintSet: ConstraintSet,
         chains: List<ConstraintChainSpec>,
         referenceIds: Map<String, Int>,
+        environment: UiEnvironmentValues,
     ) {
         chains.forEach { chain ->
             val chainWeights = chain.weights
@@ -1337,11 +1441,11 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             }
             when (chain.orientation) {
                 ConstraintChainOrientation.Horizontal -> {
-                    applyHorizontalChain(constraintSet, resolvedItems, chain)
+                    applyHorizontalChain(constraintSet, resolvedItems, chain, referenceIds, environment)
                 }
 
                 ConstraintChainOrientation.Vertical -> {
-                    applyVerticalChain(constraintSet, resolvedItems, chain)
+                    applyVerticalChain(constraintSet, resolvedItems, chain, referenceIds, environment)
                 }
             }
         }
@@ -1351,28 +1455,49 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         constraintSet: ConstraintSet,
         resolvedItems: List<ChainResolvedItem>,
         chain: ConstraintChainSpec,
+        referenceIds: Map<String, Int>,
+        environment: UiEnvironmentValues,
     ) {
         val resolvedIds = resolvedItems.map { item -> item.viewId }
         val first = resolvedIds.first()
         val last = resolvedIds.last()
-        constraintSet.connect(first, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
-        constraintSet.connect(last, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+        val startTarget = chain.startTarget
+            ?: com.viewcompose.ui.node.spec.ConstraintAnchorTarget.parent(ConstraintAnchor.Start)
+        val endTarget = chain.endTarget
+            ?: com.viewcompose.ui.node.spec.ConstraintAnchorTarget.parent(ConstraintAnchor.End)
+        val logical = startTarget.anchor == ConstraintAnchor.Start || startTarget.anchor == ConstraintAnchor.End
+        val sourceStart = if (logical) ConstraintSet.START else ConstraintSet.LEFT
+        val sourceEnd = if (logical) ConstraintSet.END else ConstraintSet.RIGHT
+        constraintSet.connect(
+            first,
+            sourceStart,
+            startTarget.resolveViewId(referenceIds),
+            startTarget.anchor.toConstraintSetSide(),
+            environment.roundToPx(chain.startMargin),
+        )
+        constraintSet.connect(
+            last,
+            sourceEnd,
+            endTarget.resolveViewId(referenceIds),
+            endTarget.anchor.toConstraintSetSide(),
+            environment.roundToPx(chain.endMargin),
+        )
         for (index in resolvedIds.indices) {
             val viewId = resolvedIds[index]
             if (index > 0) {
                 constraintSet.connect(
                     viewId,
-                    ConstraintSet.START,
+                    sourceStart,
                     resolvedIds[index - 1],
-                    ConstraintSet.END,
+                    sourceEnd,
                 )
             }
             if (index < resolvedIds.lastIndex) {
                 constraintSet.connect(
                     viewId,
-                    ConstraintSet.END,
+                    sourceEnd,
                     resolvedIds[index + 1],
-                    ConstraintSet.START,
+                    sourceStart,
                 )
             }
         }
@@ -1391,12 +1516,30 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         constraintSet: ConstraintSet,
         resolvedItems: List<ChainResolvedItem>,
         chain: ConstraintChainSpec,
+        referenceIds: Map<String, Int>,
+        environment: UiEnvironmentValues,
     ) {
         val resolvedIds = resolvedItems.map { item -> item.viewId }
         val first = resolvedIds.first()
         val last = resolvedIds.last()
-        constraintSet.connect(first, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
-        constraintSet.connect(last, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+        val topTarget = chain.startTarget
+            ?: com.viewcompose.ui.node.spec.ConstraintAnchorTarget.parent(ConstraintAnchor.Top)
+        val bottomTarget = chain.endTarget
+            ?: com.viewcompose.ui.node.spec.ConstraintAnchorTarget.parent(ConstraintAnchor.Bottom)
+        constraintSet.connect(
+            first,
+            ConstraintSet.TOP,
+            topTarget.resolveViewId(referenceIds),
+            topTarget.anchor.toConstraintSetSide(),
+            environment.roundToPx(chain.startMargin),
+        )
+        constraintSet.connect(
+            last,
+            ConstraintSet.BOTTOM,
+            bottomTarget.resolveViewId(referenceIds),
+            bottomTarget.anchor.toConstraintSetSide(),
+            environment.roundToPx(chain.endMargin),
+        )
         for (index in resolvedIds.indices) {
             val viewId = resolvedIds[index]
             if (index > 0) {
@@ -1423,6 +1566,126 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         resolvedItems.forEach { item ->
             item.weight?.let { weight ->
                 constraintSet.setVerticalWeight(item.viewId, weight)
+            }
+        }
+    }
+
+    private fun applyGrids(
+        constraintSet: ConstraintSet,
+        grids: List<ResolvedConstraintGrid>,
+        referenceIds: Map<String, Int>,
+        environment: UiEnvironmentValues,
+    ) {
+        grids.forEach { grid ->
+            val rowIds = List(grid.rows) { row ->
+                requireNotNull(helperIdToViewId[gridRowKey(grid.spec.id, row)])
+            }
+            val columnIds = List(grid.columns) { column ->
+                requireNotNull(helperIdToViewId[gridColumnKey(grid.spec.id, column)])
+            }
+            applyGridColumns(constraintSet, grid, columnIds, environment)
+            applyGridRows(constraintSet, grid, rowIds, environment)
+            grid.placements.forEach { placement ->
+                val childId = requireNotNull(referenceIds[placement.referenceId])
+                constraintSet.connect(
+                    childId,
+                    ConstraintSet.START,
+                    columnIds[placement.column],
+                    ConstraintSet.START,
+                )
+                constraintSet.connect(
+                    childId,
+                    ConstraintSet.END,
+                    columnIds[placement.column + placement.columnSpan - 1],
+                    ConstraintSet.END,
+                )
+                constraintSet.connect(
+                    childId,
+                    ConstraintSet.TOP,
+                    rowIds[placement.row],
+                    ConstraintSet.TOP,
+                )
+                constraintSet.connect(
+                    childId,
+                    ConstraintSet.BOTTOM,
+                    rowIds[placement.row + placement.rowSpan - 1],
+                    ConstraintSet.BOTTOM,
+                )
+            }
+        }
+    }
+
+    private fun applyGridColumns(
+        constraintSet: ConstraintSet,
+        grid: ResolvedConstraintGrid,
+        ids: List<Int>,
+        environment: UiEnvironmentValues,
+    ) {
+        val gap = environment.roundToPx(grid.spec.horizontalGap)
+        val leadingGap = gap - gap / 2
+        val trailingGap = gap / 2
+        ids.forEachIndexed { index, id ->
+            constraintSet.constrainWidth(id, ConstraintSet.MATCH_CONSTRAINT)
+            constraintSet.constrainHeight(id, 0)
+            constraintSet.connect(id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+            if (index == 0) {
+                constraintSet.connect(id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+            } else {
+                constraintSet.connect(id, ConstraintSet.START, ids[index - 1], ConstraintSet.END, leadingGap)
+            }
+            if (index == ids.lastIndex) {
+                constraintSet.connect(id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+            } else {
+                constraintSet.connect(id, ConstraintSet.END, ids[index + 1], ConstraintSet.START, trailingGap)
+            }
+            constraintSet.setHorizontalWeight(id, grid.spec.columnWeights.getOrElse(index) { 1f })
+        }
+        constraintSet.setHorizontalChainStyle(ids.first(), ConstraintSet.CHAIN_SPREAD)
+    }
+
+    private fun applyGridRows(
+        constraintSet: ConstraintSet,
+        grid: ResolvedConstraintGrid,
+        ids: List<Int>,
+        environment: UiEnvironmentValues,
+    ) {
+        val gap = environment.roundToPx(grid.spec.verticalGap)
+        val leadingGap = gap - gap / 2
+        val trailingGap = gap / 2
+        ids.forEachIndexed { index, id ->
+            constraintSet.constrainWidth(id, 0)
+            constraintSet.constrainHeight(id, ConstraintSet.MATCH_CONSTRAINT)
+            constraintSet.connect(id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+            if (index == 0) {
+                constraintSet.connect(id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+            } else {
+                constraintSet.connect(id, ConstraintSet.TOP, ids[index - 1], ConstraintSet.BOTTOM, leadingGap)
+            }
+            if (index == ids.lastIndex) {
+                constraintSet.connect(id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+            } else {
+                constraintSet.connect(id, ConstraintSet.BOTTOM, ids[index + 1], ConstraintSet.TOP, trailingGap)
+            }
+            constraintSet.setVerticalWeight(id, grid.spec.rowWeights.getOrElse(index) { 1f })
+        }
+        constraintSet.setVerticalChainStyle(ids.first(), ConstraintSet.CHAIN_SPREAD)
+    }
+
+    private fun applyCircularFlows(
+        constraintSet: ConstraintSet,
+        circularFlows: List<ConstraintCircularFlowSpec>,
+        referenceIds: Map<String, Int>,
+        environment: UiEnvironmentValues,
+    ) {
+        circularFlows.forEach { flow ->
+            val centerId = requireNotNull(referenceIds[flow.centerId])
+            flow.items.forEach { item ->
+                constraintSet.constrainCircle(
+                    requireNotNull(referenceIds[item.referenceId]),
+                    centerId,
+                    environment.roundToPx(item.radius),
+                    item.angle,
+                )
             }
         }
     }
@@ -1466,6 +1729,20 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                 referenceIds = referenceIds,
                 environment = environment,
             )
+            item.left?.applyTo(
+                constraintSet = constraintSet,
+                sourceViewId = viewId,
+                sourceAnchor = ConstraintAnchor.Left,
+                referenceIds = referenceIds,
+                environment = environment,
+            )
+            item.right?.applyTo(
+                constraintSet = constraintSet,
+                sourceViewId = viewId,
+                sourceAnchor = ConstraintAnchor.Right,
+                referenceIds = referenceIds,
+                environment = environment,
+            )
             item.top?.applyTo(
                 constraintSet = constraintSet,
                 sourceViewId = viewId,
@@ -1498,6 +1775,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             item.horizontalBias?.let { bias -> constraintSet.setHorizontalBias(viewId, bias) }
             item.verticalBias?.let { bias -> constraintSet.setVerticalBias(viewId, bias) }
             item.ratio?.let { ratio -> constraintSet.setDimensionRatio(viewId, ratio.toNativeRatio()) }
+            constraintSet.setLayoutWrapBehavior(viewId, item.wrapBehaviorInParent.toNativeWrapBehavior())
         }
     }
 
@@ -1564,13 +1842,19 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             ?: ConstraintSet.PARENT_ID
         val sourceSide = sourceAnchor.toConstraintSetSide()
         val targetSide = target.anchor.toConstraintSetSide()
+        val marginPx = environment.roundToPx(margin)
         constraintSet.connect(
             sourceViewId,
             sourceSide,
             targetId,
             targetSide,
-            environment.roundToPx(margin),
+            marginPx,
         )
+        // ConstraintSet.connect intentionally ignores the margin argument for BASELINE. Apply the
+        // dedicated field after the link so baseline-to-baseline/top/bottom preserves DSL geometry.
+        if (sourceSide == ConstraintSet.BASELINE) {
+            constraintSet.setMargin(sourceViewId, sourceSide, marginPx)
+        }
         goneMargin?.let { marginValue ->
             constraintSet.setGoneMargin(
                 sourceViewId,
@@ -1578,6 +1862,11 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                 environment.roundToPx(marginValue),
             )
         }
+    }
+
+    private fun ConstraintAnchorTarget.resolveViewId(referenceIds: Map<String, Int>): Int {
+        return id?.let { referenceId -> requireNotNull(referenceIds[referenceId]) }
+            ?: ConstraintSet.PARENT_ID
     }
 
     private fun ConstraintRatio.toNativeRatio(): String {
@@ -1593,6 +1882,8 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         return when (this) {
             ConstraintAnchor.Start -> ConstraintSet.START
             ConstraintAnchor.End -> ConstraintSet.END
+            ConstraintAnchor.Left -> ConstraintSet.LEFT
+            ConstraintAnchor.Right -> ConstraintSet.RIGHT
             ConstraintAnchor.Top -> ConstraintSet.TOP
             ConstraintAnchor.Bottom -> ConstraintSet.BOTTOM
             ConstraintAnchor.Baseline -> ConstraintSet.BASELINE
@@ -1603,8 +1894,19 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         return when (this) {
             ConstraintBarrierDirection.Start -> Barrier.START
             ConstraintBarrierDirection.End -> Barrier.END
+            ConstraintBarrierDirection.Left -> Barrier.LEFT
+            ConstraintBarrierDirection.Right -> Barrier.RIGHT
             ConstraintBarrierDirection.Top -> Barrier.TOP
             ConstraintBarrierDirection.Bottom -> Barrier.BOTTOM
+        }
+    }
+
+    private fun ConstraintWrapBehavior.toNativeWrapBehavior(): Int {
+        return when (this) {
+            ConstraintWrapBehavior.Included -> LayoutParams.WRAP_BEHAVIOR_INCLUDED
+            ConstraintWrapBehavior.HorizontalOnly -> LayoutParams.WRAP_BEHAVIOR_HORIZONTAL_ONLY
+            ConstraintWrapBehavior.VerticalOnly -> LayoutParams.WRAP_BEHAVIOR_VERTICAL_ONLY
+            ConstraintWrapBehavior.Skipped -> LayoutParams.WRAP_BEHAVIOR_SKIPPED
         }
     }
 

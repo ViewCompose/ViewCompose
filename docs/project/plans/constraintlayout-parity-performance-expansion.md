@@ -7,13 +7,15 @@ complete and archived as `docs/archive/constraintlayout-native-engine-hardening.
 publication `0.1.0-alpha01`, its artifact tag, and the release owner's explicit reopen are all
 complete. Phase 0 execution is complete: the published baseline, API contracts, Scope inventory,
 named red-test catalog, and performance budgets are frozen below. Demo fixed-clock baseline PR
-`#111` and Phase 0 PR `#112` are merged in that order. Phase 1 execution is complete in the current
-change: classified reconciliation, accepted-input fast paths, structural counters, rollback
-coverage, and its renderer Changeset are implemented without changing public API.
+`#111` and Phase 0 PR `#112` are merged in that order. Phase 1 is merged. Phase 2 implementation and
+acceptance are complete in the current change: the frozen chain-boundary, parent-wrap,
+physical-edge, typed Grid, and declarative CircularFlow contracts now span transport, DSL, graph
+preflight, transactional native rendering, compiled samples, Demo, Preview, exact JVM tests,
+focused physical-device automation, and manual visual review.
 
 Phase 0 remains Changeset-free because it changed no published production source. Phase 1 owns the
-immutable renderer Changeset listed below, so this plan is now the sole active owner and release
-gate for the affected follow-up artifact.
+immutable renderer Changeset listed below. Phase 2 owns one immutable multi-artifact Changeset, so
+this plan remains the sole active owner and release gate for all affected follow-up artifacts.
 
 This plan is canonical English-only under the documentation-governance policy. Durable capability,
 performance, compatibility, and operational conclusions must move into the owning active documents,
@@ -25,13 +27,14 @@ Activation trigger: the first-release hardening plan is archived, the correspond
 release and Git tag are complete, and the release owner explicitly reopens ConstraintLayout
 development.
 
-Next action: land the completed Phase 1 reconciliation change, then begin Phase 2 with chain
-endpoints/margins and the reviewed physical/logical direction contracts. Phase 2 public APIs may
-not diverge from the reviewed names and failure contracts without updating this plan first.
+Next action: land the quality-gate-clean Phase 2 change, then begin the Phase 3 complete Demo,
+visual, configuration, and lifecycle-stress matrix. Phase 3 must reuse the accepted Phase 2
+contracts rather than widening the API surface.
 
 ## Maven release changesets
 
 - `release/changes/20260821-constraintlayout-reconciliation-fast-path.json`
+- `release/changes/20260821-constraintlayout-phase2-parity.json`
 
 ## Objective
 
@@ -422,6 +425,26 @@ Planning estimate: 2.5--4 engineering weeks.
 Exit criteria: every addition has Q3 documentation and compiled samples, exact native geometry,
 helper lifecycle, Demo, device, and compiler-safety evidence; omitted APIs and unchanged compliant
 scopes remain explicitly documented.
+
+Completion record (2026-08-21): the six frozen `CL-P2-*` API-35 Robolectric cases pass with exact
+geometry, rollback, removal, environment-change, bounded-helper, and 1,000-replacement assertions.
+On a rooted Xiaomi MI 6 / Android 9, the complete `ConstraintLayoutReleaseDeviceTest` class passes
+4/4 in `15.674 s`; its new Phase 2 case verifies Grid span/skip ordering with exactly five generated
+row/column proxies and four CircularFlow cardinal positions at a `78 dp` radius with no helper View.
+The other three cases retain the earlier light/LTR/font-scale 1.0 and dark/RTL/font-scale 1.3 helper
+matrix plus 200 rapid state switches, and diagnostics report no unexpected renderer warning. Manual
+review of the Chinese Demo confirmed the visible `2 x 3` weighted Grid span/skip geometry and the
+four-member CircularFlow without overlap, clipping, or helper artifacts; process-filtered logs had
+no `UIConstraintLayout`, `ConstraintSet`, renderer, helper-layer, or fatal entry. The capability and
+failure-safety conclusion is **improved** relative to the released source. This is one physical
+OEM/API point and two focused screenshots, so Phase 3 still owns the broader configuration,
+screenshot, and lifecycle matrix; it is not performance evidence, and Phase 4 still owns timing
+claims.
+
+The final repository acceptance passes `qaQuick`, Demo and AndroidTest APK assembly, the selected
+three-module Q3 API-documentation audit, release intent, documentation structure and localization,
+and development-tooling isolation. The build completed 1,735 tasks with no failed test or gate;
+there is no remaining Phase 2 implementation or acceptance work before review.
 
 ### Phase 3: complete Demo, visual, configuration, and stress acceptance
 

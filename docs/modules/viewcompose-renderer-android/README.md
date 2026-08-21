@@ -95,9 +95,14 @@ back safely.
 ConstraintLayout reconciliation first compiles a complete immutable candidate and rejects invalid
 IDs, references, anchor planes, helper dependencies, ownership conflicts, dimensions, and ranges
 before touching native Views. One registry owns stable IDs, instances, type changes, references,
-and removal for Guideline, Barrier, Flow, Group, Layer, and Placeholder. Accepted candidates apply
-from a clean native set; failed native commits restore the previous helper registry, LayoutParams,
-runtime properties, environment, and accepted graph. Group/Layer/Placeholder effects are retained
+and removal for Guideline, Barrier, Flow, Group, Layer, and Placeholder plus typed Grid's bounded
+row/column solver proxies. Grid's semantic identity is not a native View; declarative CircularFlow
+compiles to ordinary per-child circle constraints and owns no helper View or generated ID. Accepted
+candidates apply from a clean native set; failed native commits restore the previous helper
+registry, LayoutParams, runtime properties, environment, and accepted graph. AndroidX `2.2.2`
+omits baseline margins and physical gone margins while copying an applied `ConstraintSet` into
+`LayoutParams`, so the renderer restores those exact fields before measurement and resets removed
+values to prevent cross-graph leakage. Group/Layer/Placeholder effects are retained
 as overlays over restorable child runtime properties instead of becoming the next graph's source of
 truth. The post-release reconciliation path additionally caches accepted raw specifications,
 semantic/resolved graphs, environment, topology/scalar fingerprints, native IDs, and helper
@@ -144,6 +149,31 @@ preflight remains **inconclusive**: released-baseline stable/scalar run-P50 CV w
 and the scalar repeat remained `0.244`; candidate stable/scalar CV was `0.212`/`0.143`. Only the
 candidate scalar arm met `0.15`, so the result supports no longitudinal timing claim and the Phase 4
 matrix must replicate it before claiming an end-to-end win.
+
+The focused 2026-08-21 Phase 2 API-35 Robolectric acceptance passes all six frozen `CL-P2-*`
+renderer cases. Exact bounds cover parent, child, Guideline, and Barrier chain boundaries in
+logical LTR/RTL and physical coordinates; baseline normal/gone margins match a direct AndroidX
+control; all four parent-wrap policies produce their documented axes; and physical links remain
+fixed through an environment-direction update. Weighted Grid retains exactly five proxies for a
+`2 x 3` graph, rolls an overlapping candidate back without changing geometry, and remains bounded
+through 1,000 add/remove replacements. CircularFlow matches AndroidX angle/radius geometry, rejects
+competing direct ownership, and owns zero helper identity through 1,000 replacements. The result is
+**improved** relative to the released renderer because it adds atomic support for the frozen Phase
+2 transport and also closes the AndroidX baseline/physical-margin copy omission. This evidence is
+not a performance comparison and covers Robolectric rather than the Phase 3 device/OEM matrix; the
+next action is complete device, visual, configuration, and lifecycle acceptance.
+
+The same 2026-08-21 candidate passed 4/4 `ConstraintLayoutReleaseDeviceTest` cases in `15.674 s` on
+a rooted Xiaomi MI 6 / Android 9. The new Phase 2 case verifies exact weighted-Grid span/skip
+ordering with exactly five generated row/column proxies, plus four direct CircularFlow circle
+constraints at the cardinal positions of a `78 dp` radius with no helper View. The retained helper
+matrix still passes in light/LTR/font-scale 1.0 and dark/RTL/font-scale 1.3, including 200 rapid
+state switches, and structured diagnostics contain no unexpected warning. Manual review of two
+focused Chinese Demo captures found no overlap, clipping, or helper artifact; process-filtered logs
+contained no `UIConstraintLayout`, `ConstraintSet`, renderer, helper-layer, or fatal entry. This
+physical-device capability and lifecycle result is **improved** relative to the released renderer.
+It covers one OEM/API point and a focused visual sample, not the complete Phase 3 configuration and
+screenshot matrix, and it is not Phase 4 performance evidence.
 
 ## Principal APIs
 

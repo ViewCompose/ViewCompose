@@ -79,6 +79,17 @@
     <string name="demo_layouts_node_a">A</string>
     <string name="demo_layouts_node_b">B</string>
     <string name="demo_layouts_node_c">C</string>
+    <string name="demo_layouts_constraint_grid_title">Typed Grid geometry</string>
+    <string name="demo_layouts_constraint_grid_summary">Weighted rows and columns expose fixed gaps, one two-column span, and one skipped cell.</string>
+    <string name="demo_layouts_constraint_grid_span">2-column span</string>
+    <string name="demo_layouts_constraint_grid_metric">Metric</string>
+    <string name="demo_layouts_constraint_grid_status">Status</string>
+    <string name="demo_layouts_constraint_grid_action">Action</string>
+    <string name="demo_layouts_constraint_circular_title">Declarative CircularFlow</string>
+    <string name="demo_layouts_constraint_circular_summary">Four explicit radius/angle items orbit one constrained center without a native helper View.</string>
+    <string name="demo_layouts_constraint_circular_center">Center</string>
+    <string name="demo_layouts_right">Right</string>
+    <string name="demo_layouts_left">Left</string>
     <string name="demo_layouts_constraint_set_title">Decoupled ConstraintSet</string>
     <string name="demo_layouts_constraint_set_summary">Switching immutable sets recomputes constraints and refreshes layout immediately.</string>
     <string name="demo_layouts_switch_vertical">Switch to vertical layout</string>

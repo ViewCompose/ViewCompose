@@ -7,9 +7,14 @@ import com.viewcompose.ui.node.spec.ConstraintBarrierDirection
 import com.viewcompose.ui.node.spec.ConstraintBarrierSpec
 import com.viewcompose.ui.node.spec.ConstraintChainOrientation
 import com.viewcompose.ui.node.spec.ConstraintChainSpec
+import com.viewcompose.ui.node.spec.ConstraintCircularFlowItemSpec
+import com.viewcompose.ui.node.spec.ConstraintCircularFlowSpec
 import com.viewcompose.ui.node.spec.ConstraintCircleSpec
 import com.viewcompose.ui.node.spec.ConstraintDimension
 import com.viewcompose.ui.node.spec.ConstraintFlowSpec
+import com.viewcompose.ui.node.spec.ConstraintGridSkipSpec
+import com.viewcompose.ui.node.spec.ConstraintGridSpanSpec
+import com.viewcompose.ui.node.spec.ConstraintGridSpec
 import com.viewcompose.ui.node.spec.ConstraintHelpersSpec
 import com.viewcompose.ui.node.spec.ConstraintItemSpec
 import com.viewcompose.ui.node.spec.ConstraintSetSpec
@@ -256,6 +261,111 @@ class ConstraintGraphCompilerTest {
                             targetId = "center",
                             radius = 20.dp,
                             angle = 45f,
+                        ),
+                    ),
+                ),
+            ),
+        ).rejection()
+
+        assertEquals(ConstraintGraphRejectionReason.InvalidAnchor, rejection.reason)
+        assertEquals("orbit", rejection.identity)
+    }
+
+    @Test
+    fun `logical and physical horizontal planes reject atomically`() {
+        val rejection = compile(
+            bindings = listOf(binding("card")),
+            decoupled = ConstraintSetSpec(
+                constraints = mapOf(
+                    "card" to ConstraintItemSpec(
+                        start = parentLink(ConstraintAnchor.Start),
+                        left = parentLink(ConstraintAnchor.Left),
+                    ),
+                ),
+            ),
+        ).rejection()
+
+        assertEquals(ConstraintGraphRejectionReason.InvalidAnchor, rejection.reason)
+        assertEquals("card", rejection.identity)
+
+        val chainRejection = compile(
+            bindings = listOf(binding("first"), binding("second")),
+            decoupled = ConstraintSetSpec(
+                helpers = ConstraintHelpersSpec(
+                    chains = listOf(
+                        ConstraintChainSpec(
+                            orientation = ConstraintChainOrientation.Horizontal,
+                            referencedIds = listOf("first", "second"),
+                            startTarget = ConstraintAnchorTarget.parent(ConstraintAnchor.Start),
+                            endTarget = ConstraintAnchorTarget.parent(ConstraintAnchor.Right),
+                        ),
+                    ),
+                ),
+            ),
+        ).rejection()
+        assertEquals(ConstraintGraphRejectionReason.InvalidAnchor, chainRejection.reason)
+    }
+
+    @Test
+    fun `grid resolves typed spans and rejects overlapping areas before commit`() {
+        val bindings = listOf(binding("one"), binding("two"), binding("three"))
+        val accepted = compile(
+            bindings = bindings,
+            decoupled = ConstraintSetSpec(
+                helpers = ConstraintHelpersSpec(
+                    grids = listOf(
+                        ConstraintGridSpec(
+                            id = "grid",
+                            referencedIds = listOf("one", "two", "three"),
+                            rows = 2,
+                            columns = 2,
+                            spans = listOf(ConstraintGridSpanSpec("one", 0, columnSpan = 2)),
+                        ),
+                    ),
+                ),
+            ),
+        ) as ConstraintGraphCompilation.Accepted
+
+        assertEquals(2, accepted.graph.resolvedGrids.single().rows)
+        assertEquals(2, accepted.graph.resolvedGrids.single().columns)
+        assertEquals(2, accepted.graph.resolvedGrids.single().placements.first().columnSpan)
+
+        val rejection = compile(
+            bindings = bindings,
+            decoupled = ConstraintSetSpec(
+                helpers = ConstraintHelpersSpec(
+                    grids = listOf(
+                        ConstraintGridSpec(
+                            id = "grid",
+                            referencedIds = listOf("one", "two", "three"),
+                            rows = 2,
+                            columns = 2,
+                            spans = listOf(ConstraintGridSpanSpec("one", 0, columnSpan = 2)),
+                            skips = listOf(ConstraintGridSkipSpec(1)),
+                        ),
+                    ),
+                ),
+            ),
+        ).rejection()
+
+        assertEquals(ConstraintGraphRejectionReason.InvalidHelper, rejection.reason)
+        assertEquals("grid", rejection.identity)
+    }
+
+    @Test
+    fun `circular flow rejects competing item ownership atomically`() {
+        val rejection = compile(
+            bindings = listOf(binding("center"), binding("orbit")),
+            decoupled = ConstraintSetSpec(
+                constraints = mapOf(
+                    "orbit" to ConstraintItemSpec(top = parentLink(ConstraintAnchor.Top)),
+                ),
+                helpers = ConstraintHelpersSpec(
+                    circularFlows = listOf(
+                        ConstraintCircularFlowSpec(
+                            id = "flow",
+                            centerId = "center",
+                            items = listOf(ConstraintCircularFlowItemSpec("orbit", 20.dp, 0f)),
                         ),
                     ),
                 ),

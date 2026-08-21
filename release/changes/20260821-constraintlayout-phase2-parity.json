@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add typed ConstraintLayout chain boundaries, parent-wrap policy, physical edges, Grid, and declarative CircularFlow with transactional Android rendering.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "feature" },
+    { "artifact": "viewcompose-constraintlayout-androidx", "impact": "feature" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

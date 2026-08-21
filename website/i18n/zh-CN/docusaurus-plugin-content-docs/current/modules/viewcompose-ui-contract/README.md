@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 4056aefc8bd0b1a5ce0dabc8f72870c6c8dabce407e7f92f281242d2118db1e5
+translation_source_hash: 27ddbacbf563ac857ed2f00fdb25d0922fecaa65cd247d4740fd55480af7f8f4
 translation_status: current
 ---
 
@@ -78,9 +78,13 @@ val gap = VNode(
   其余情况下应用声明的最大值，并在可行区间内保持请求的宽高比。
 - Q3 ConstraintLayout 传输契约为每个轴使用一个互斥的 `ConstraintDimension` 值，以
   `ConstraintMatchMode` 表达 spread/wrap/percent 行为，并使用正数类型化 `ConstraintRatio`
-  与单一 Baseline Link。它不依赖 Android，不包含 `match_parent`、独立尺寸标志或原始 Ratio
-  语法。跨节点的 Identity、Reference、Ownership 与 Range 错误会在平台 Renderer 边界拒绝
-  完整候选，而不是弱化单条 Link。
+  与单一 Baseline Link。逻辑 Start/End 与物理 Left/Right Anchor 保持独立；
+  `ConstraintWrapBehavior` 按轴选择 Wrap-parent 贡献。Chain Transport 携带类型化 Boundary
+  Target 与 Margin。类型化 Grid 携带有界 Axis、Weight、Gap、Span 与 Skip；声明式 CircularFlow
+  则携带显式 Center/Radius/Angle 值，不要求 Helper View。该 Transport 不依赖 Android，不包含
+  `match_parent`、独立尺寸标志、原始 Ratio 语法或 AndroidX Grid String Grammar。跨节点的
+  Identity、Reference、Ownership、Topology 与 Range 错误会在平台 Renderer 边界拒绝完整候选，
+  而不是弱化单条 Link。
 - `NavigationBarItem` 与 `SegmentedControlItem` 必须提供显式且唯一的逻辑 Key。非空集合的
   NodeSpec 要求选中索引位于范围内，空集合使用 `-1`；Navigation Badge 是可空的非负值。
 - `LazyListItem` 是 Q3、Renderer 中立的 Snapshot/Session 契约。逻辑相等由 Key、`contentType`、
@@ -231,6 +235,12 @@ val gap = VNode(
 `LayoutConstraintHostNodeProps` 与 `NodeType.LayoutConstraintHost` 是新增源码 API，但也扩展了
 Renderer 注册表。自定义 Renderer 必须先识别全部契约，应用才能使用这些 Modifier；静默忽略
 测量 Host 会破坏正确性。
+
+Phase 2 ConstraintLayout Transport 为不可变 Data Class Constructor 与 Helper Enum 增加了物理
+Anchor、Parent-wrap Policy、Chain Boundary、Grid 与 CircularFlow。源码默认值保持此前的逻辑
+Parent 行为，但预编译 Direct Constructor 与自定义 Renderer 必须重新构建。Renderer 不得把
+Physical Edge 静默当作 Logical Edge，不得锚定到仅表示 Identity 的 Grid/CircularFlow 声明，
+也不得局部应用无效 Ownership Graph。
 
 新增 `LazyListItemSession.prepare` 与 `activate` 是 Q3 生命周期硬切。Kotlin 源码实现可以继承安全
 默认值，但接口 JVM 形状已经变化，因此预编译自定义 Session 与 Renderer 必须重新构建。覆写

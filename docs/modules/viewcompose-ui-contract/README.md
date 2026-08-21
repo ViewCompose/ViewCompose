@@ -78,9 +78,14 @@ created for the node.
   otherwise, and preserve the requested ratio whenever the resulting interval is feasible.
 - Q3 ConstraintLayout transport uses one mutually exclusive `ConstraintDimension` value per axis,
   `ConstraintMatchMode` for spread/wrap/percent behavior, a positive typed `ConstraintRatio`, and
-  one baseline link. It has no Android dependency, `match_parent`, independent dimension flags, or
-  raw ratio grammar. Cross-node identity, reference, ownership, and range failures reject the
-  complete candidate at the platform renderer boundary rather than weakening individual links.
+  one baseline link. Logical start/end and physical left/right anchors remain distinct;
+  `ConstraintWrapBehavior` selects wrap-parent contribution per axis. Chain transport carries typed
+  boundary targets and margins. Typed Grid carries bounded axes, weights, gaps, spans, and skips,
+  while declarative CircularFlow carries explicit center/radius/angle values without requiring a
+  helper View. The transport has no Android dependency, `match_parent`, independent dimension
+  flags, raw ratio grammar, or AndroidX Grid string grammar. Cross-node identity, reference,
+  ownership, topology, and range failures reject the complete candidate at the platform renderer
+  boundary rather than weakening individual links.
 - `NavigationBarItem` and `SegmentedControlItem` require explicit unique logical keys. Their
   NodeSpecs require an in-range selected index for non-empty collections and `-1` for an empty
   collection; navigation badges are nullable non-negative values.
@@ -262,6 +267,12 @@ constructors and custom renderers must rebuild and implement the complete new co
 `LayoutConstraintHostNodeProps`, and `NodeType.LayoutConstraintHost` are additive source APIs but
 expand the renderer registry. A custom renderer must recognize all of them before application code
 uses the modifiers; silently ignoring the host would violate measurement correctness.
+
+The Phase 2 ConstraintLayout transport additions extend immutable data-class constructors and
+helper enums with physical anchors, parent-wrap policy, chain boundaries, Grid, and CircularFlow.
+Source defaults preserve the prior logical-parent behavior, but precompiled direct constructors and
+custom renderers must rebuild. A renderer may not silently treat physical edges as logical, anchor
+to identity-only Grid/CircularFlow declarations, or partially apply an invalid ownership graph.
 
 Adding `LazyListItemSession.prepare` and `activate` is a Q3 lifecycle hard cut. Kotlin source
 implementations inherit safe defaults, but the interface JVM shape changes, so precompiled custom

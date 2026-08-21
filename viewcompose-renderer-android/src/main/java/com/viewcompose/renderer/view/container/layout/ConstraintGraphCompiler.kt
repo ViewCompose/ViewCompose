@@ -5,11 +5,14 @@ import com.viewcompose.ui.node.spec.ConstraintAnchorLink
 import com.viewcompose.ui.node.spec.ConstraintBarrierSpec
 import com.viewcompose.ui.node.spec.ConstraintChainOrientation
 import com.viewcompose.ui.node.spec.ConstraintChainSpec
+import com.viewcompose.ui.node.spec.ConstraintCircularFlowSpec
 import com.viewcompose.ui.node.spec.ConstraintCircleSpec
 import com.viewcompose.ui.node.spec.ConstraintDimension
 import com.viewcompose.ui.node.spec.ConstraintFlowSpec
 import com.viewcompose.ui.node.spec.ConstraintGuidelinePosition
 import com.viewcompose.ui.node.spec.ConstraintGuidelineSpec
+import com.viewcompose.ui.node.spec.ConstraintGridOrientation
+import com.viewcompose.ui.node.spec.ConstraintGridSpec
 import com.viewcompose.ui.node.spec.ConstraintGroupSpec
 import com.viewcompose.ui.node.spec.ConstraintHelpersSpec
 import com.viewcompose.ui.node.spec.ConstraintItemSpec
@@ -34,7 +37,26 @@ internal enum class NativeConstraintHelperKind {
     Group,
     Layer,
     Placeholder,
+    Grid,
+    CircularFlow,
 }
+
+/** One child rectangle resolved from a validated typed Grid declaration. */
+internal data class ResolvedConstraintGridPlacement(
+    val referenceId: String,
+    val row: Int,
+    val column: Int,
+    val rowSpan: Int,
+    val columnSpan: Int,
+)
+
+/** Grid axes and member rectangles accepted during graph preflight. */
+internal data class ResolvedConstraintGrid(
+    val spec: ConstraintGridSpec,
+    val rows: Int,
+    val columns: Int,
+    val placements: List<ResolvedConstraintGridPlacement>,
+)
 
 /** Complete immutable candidate accepted before any native View mutation. */
 internal data class ResolvedConstraintGraph(
@@ -42,6 +64,7 @@ internal data class ResolvedConstraintGraph(
     val contentById: Map<String, ConstraintContentBinding>,
     val constraints: Map<String, ConstraintItemSpec>,
     val helpers: ConstraintHelpersSpec,
+    val resolvedGrids: List<ResolvedConstraintGrid>,
     val helperKinds: Map<String, NativeConstraintHelperKind>,
     val constrainableIds: Set<String>,
     val topologyFingerprint: Long,
@@ -100,14 +123,20 @@ internal object ConstraintGraphCompiler {
                 kind == NativeConstraintHelperKind.Flow || kind == NativeConstraintHelperKind.Placeholder
             }.keys
             validateNamespace(contentById, helperKinds)
-            validateConstraints(constraints, constrainableIds, contentById.keys + helperKinds.keys)
-            validateHelpers(helpers, contentById.keys, helperKinds, constraints)
+            validateConstraints(
+                constraints,
+                constrainableIds,
+                contentById.keys + helperKinds.keys,
+                helperKinds,
+            )
+            val resolvedGrids = validateHelpers(helpers, contentById.keys, helperKinds, constraints)
             ConstraintGraphCompilation.Accepted(
                 ResolvedConstraintGraph(
                     contentBindings = contentBindings.toList(),
                     contentById = contentById,
                     constraints = constraints,
                     helpers = helpers,
+                    resolvedGrids = resolvedGrids,
                     helperKinds = helperKinds,
                     constrainableIds = constrainableIds,
                     topologyFingerprint = topologyFingerprint(
@@ -146,6 +175,22 @@ internal object ConstraintGraphCompiler {
         helpers.chains.forEach { spec ->
             result = result * 31L + spec.orientation.name.hashCode()
             result = result * 31L + spec.referencedIds.hashCode()
+            result = result * 31L + (spec.startTarget?.hashCode() ?: 0)
+            result = result * 31L + (spec.endTarget?.hashCode() ?: 0)
+        }
+        helpers.grids.forEach { spec ->
+            result += 39L * spec.id.hashCode() + spec.referencedIds.hashCode()
+            result = result * 31L + spec.rows
+            result = result * 31L + spec.columns
+            result = result * 31L + spec.rowWeights.size
+            result = result * 31L + spec.columnWeights.size
+            result = result * 31L + spec.orientation.hashCode()
+            result = result * 31L + spec.spans.hashCode()
+            result = result * 31L + spec.skips.hashCode()
+        }
+        helpers.circularFlows.forEach { spec ->
+            result += 40L * spec.id.hashCode() + spec.centerId.hashCode()
+            result = result * 31L + spec.items.map { it.referenceId }.hashCode()
         }
         helpers.flows.forEach { spec ->
             result += 41L * spec.id.hashCode() + spec.referencedIds.hashCode()
@@ -170,6 +215,8 @@ internal object ConstraintGraphCompiler {
     private fun ConstraintItemSpec.topologyHashCode(): Int {
         var result = start.topologyHashCode()
         result = result * 31 + end.topologyHashCode()
+        result = result * 31 + left.topologyHashCode()
+        result = result * 31 + right.topologyHashCode()
         result = result * 31 + top.topologyHashCode()
         result = result * 31 + bottom.topologyHashCode()
         result = result * 31 + baseline.topologyHashCode()
@@ -256,6 +303,18 @@ internal object ConstraintGraphCompiler {
                 id = ConstraintBarrierSpec::id,
             ),
             chains = decoupled?.chains.orEmpty() + inline.chains,
+            grids = mergeHelperList(
+                kind = NativeConstraintHelperKind.Grid,
+                decoupled = decoupled?.grids.orEmpty(),
+                inline = inline.grids,
+                id = ConstraintGridSpec::id,
+            ),
+            circularFlows = mergeHelperList(
+                kind = NativeConstraintHelperKind.CircularFlow,
+                decoupled = decoupled?.circularFlows.orEmpty(),
+                inline = inline.circularFlows,
+                id = ConstraintCircularFlowSpec::id,
+            ),
             flows = mergeHelperList(
                 kind = NativeConstraintHelperKind.Flow,
                 decoupled = decoupled?.flows.orEmpty(),
@@ -327,6 +386,8 @@ internal object ConstraintGraphCompiler {
         }
         helpers.guidelines.forEach { register(it.id, NativeConstraintHelperKind.Guideline) }
         helpers.barriers.forEach { register(it.id, NativeConstraintHelperKind.Barrier) }
+        helpers.grids.forEach { register(it.id, NativeConstraintHelperKind.Grid) }
+        helpers.circularFlows.forEach { register(it.id, NativeConstraintHelperKind.CircularFlow) }
         helpers.flows.forEach { register(it.id, NativeConstraintHelperKind.Flow) }
         helpers.groups.forEach { register(it.id, NativeConstraintHelperKind.Group) }
         helpers.layers.forEach { register(it.id, NativeConstraintHelperKind.Layer) }
@@ -351,6 +412,7 @@ internal object ConstraintGraphCompiler {
         constraints: Map<String, ConstraintItemSpec>,
         constrainableIds: Set<String>,
         knownIds: Set<String>,
+        helperKinds: Map<String, NativeConstraintHelperKind>,
     ) {
         constraints.forEach { (id, item) ->
             if (id !in constrainableIds) {
@@ -360,7 +422,7 @@ internal object ConstraintGraphCompiler {
                     "Constraint item '$id' has no matching child, Flow, or Placeholder.",
                 )
             }
-            validateItem(id, item, knownIds)
+            validateItem(id, item, knownIds, helperKinds)
         }
     }
 
@@ -368,19 +430,37 @@ internal object ConstraintGraphCompiler {
         id: String,
         item: ConstraintItemSpec,
         knownIds: Set<String>,
+        helperKinds: Map<String, NativeConstraintHelperKind>,
     ) {
-        validateLink(id, ConstraintAnchor.Start, item.start, knownIds)
-        validateLink(id, ConstraintAnchor.End, item.end, knownIds)
-        validateLink(id, ConstraintAnchor.Top, item.top, knownIds)
-        validateLink(id, ConstraintAnchor.Bottom, item.bottom, knownIds)
-        validateLink(id, ConstraintAnchor.Baseline, item.baseline, knownIds)
+        validateLink(id, ConstraintAnchor.Start, item.start, knownIds, helperKinds)
+        validateLink(id, ConstraintAnchor.End, item.end, knownIds, helperKinds)
+        validateLink(id, ConstraintAnchor.Left, item.left, knownIds, helperKinds)
+        validateLink(id, ConstraintAnchor.Right, item.right, knownIds, helperKinds)
+        validateLink(id, ConstraintAnchor.Top, item.top, knownIds, helperKinds)
+        validateLink(id, ConstraintAnchor.Bottom, item.bottom, knownIds, helperKinds)
+        validateLink(id, ConstraintAnchor.Baseline, item.baseline, knownIds, helperKinds)
         validateDimension("$id.width", item.width)
         validateDimension("$id.height", item.height)
         validateUnitFloat("$id.horizontalBias", item.horizontalBias, 0f..1f)
         validateUnitFloat("$id.verticalBias", item.verticalBias, 0f..1f)
 
-        val edgeOrBaseline = listOf(item.start, item.end, item.top, item.bottom, item.baseline)
+        val edgeOrBaseline = listOf(
+            item.start,
+            item.end,
+            item.left,
+            item.right,
+            item.top,
+            item.bottom,
+            item.baseline,
+        )
             .any { it != null }
+        if ((item.start != null || item.end != null) && (item.left != null || item.right != null)) {
+            reject(
+                ConstraintGraphRejectionReason.InvalidAnchor,
+                id,
+                "Constraint item '$id' combines logical start/end with physical left/right links.",
+            )
+        }
         if (item.baseline != null && (item.top != null || item.bottom != null)) {
             reject(
                 ConstraintGraphRejectionReason.InvalidAnchor,
@@ -414,6 +494,7 @@ internal object ConstraintGraphCompiler {
         sourceAnchor: ConstraintAnchor,
         link: ConstraintAnchorLink?,
         knownIds: Set<String>,
+        helperKinds: Map<String, NativeConstraintHelperKind>,
     ) {
         link ?: return
         val targetId = link.target.id
@@ -433,11 +514,24 @@ internal object ConstraintGraphCompiler {
                     "Constraint item '$sourceId' references missing ID '$targetId'.",
                 )
             }
+            if (helperKinds[targetId] == NativeConstraintHelperKind.Grid ||
+                helperKinds[targetId] == NativeConstraintHelperKind.CircularFlow
+            ) {
+                reject(
+                    ConstraintGraphRejectionReason.InvalidAnchor,
+                    sourceId,
+                    "Constraint item '$sourceId' cannot anchor to identity-only helper '$targetId'.",
+                )
+            }
         }
         val validPlane = when (sourceAnchor) {
             ConstraintAnchor.Start,
             ConstraintAnchor.End,
             -> link.target.anchor == ConstraintAnchor.Start || link.target.anchor == ConstraintAnchor.End
+
+            ConstraintAnchor.Left,
+            ConstraintAnchor.Right,
+            -> link.target.anchor == ConstraintAnchor.Left || link.target.anchor == ConstraintAnchor.Right
 
             ConstraintAnchor.Top,
             ConstraintAnchor.Bottom,
@@ -532,7 +626,7 @@ internal object ConstraintGraphCompiler {
         contentIds: Set<String>,
         helperKinds: Map<String, NativeConstraintHelperKind>,
         constraints: Map<String, ConstraintItemSpec>,
-    ) {
+    ): List<ResolvedConstraintGrid> {
         val knownIds = contentIds + helperKinds.keys
         helpers.guidelines.forEach(::validateGuideline)
         helpers.barriers.forEach { spec ->
@@ -540,8 +634,10 @@ internal object ConstraintGraphCompiler {
             validateNonNegative("Barrier '${spec.id}'.margin", spec.margin)
         }
         helpers.chains.forEachIndexed { index, spec ->
-            validateChain(index, spec, contentIds)
+            validateChain(index, spec, contentIds, knownIds, helperKinds)
         }
+        val resolvedGrids = helpers.grids.map { spec -> resolveGrid(spec, contentIds) }
+        helpers.circularFlows.forEach { spec -> validateCircularFlow(spec, contentIds) }
         helpers.flows.forEach { spec ->
             validateReferenceList("Flow '${spec.id}'", spec.id, spec.referencedIds, knownIds, 1)
             validateNonNegative("Flow '${spec.id}'.horizontalGap", spec.horizontalGap)
@@ -597,17 +693,18 @@ internal object ConstraintGraphCompiler {
                 }
             }
         }
-        validateChainOwnership(helpers.chains, constraints)
+        validatePositionOwnership(helpers, constraints)
         validateHelperCycles(helpers, helperKinds)
+        return resolvedGrids
     }
 
-    private fun validateChainOwnership(
-        chains: List<ConstraintChainSpec>,
+    private fun validatePositionOwnership(
+        helpers: ConstraintHelpersSpec,
         constraints: Map<String, ConstraintItemSpec>,
     ) {
         val horizontalMembers = mutableSetOf<String>()
         val verticalMembers = mutableSetOf<String>()
-        chains.forEachIndexed { index, chain ->
+        helpers.chains.forEachIndexed { index, chain ->
             val ownedMembers = when (chain.orientation) {
                 ConstraintChainOrientation.Horizontal -> horizontalMembers
                 ConstraintChainOrientation.Vertical -> verticalMembers
@@ -623,7 +720,8 @@ internal object ConstraintGraphCompiler {
                 val item = constraints[id] ?: return@forEach
                 val competing = when (chain.orientation) {
                     ConstraintChainOrientation.Horizontal ->
-                        item.start != null || item.end != null || item.circle != null
+                        item.start != null || item.end != null || item.left != null ||
+                            item.right != null || item.circle != null
 
                     ConstraintChainOrientation.Vertical ->
                         item.top != null || item.bottom != null || item.baseline != null || item.circle != null
@@ -635,6 +733,83 @@ internal object ConstraintGraphCompiler {
                         "Chain[$index] owns the ${chain.orientation} anchors for '$id'; " +
                             "the item must not declare competing links.",
                     )
+                }
+            }
+        }
+        val gridMembers = mutableSetOf<String>()
+        helpers.grids.forEach { grid ->
+            grid.referencedIds.forEach { id ->
+                if (!gridMembers.add(id)) {
+                    reject(
+                        ConstraintGraphRejectionReason.InvalidHelper,
+                        id,
+                        "Constraint item '$id' belongs to multiple Grids.",
+                    )
+                }
+                if (id in horizontalMembers || id in verticalMembers) {
+                    reject(
+                        ConstraintGraphRejectionReason.InvalidHelper,
+                        id,
+                        "Grid '${grid.id}' member '$id' also belongs to a chain.",
+                    )
+                }
+                constraints[id]?.let { item ->
+                    if (listOf(
+                            item.start,
+                            item.end,
+                            item.left,
+                            item.right,
+                            item.top,
+                            item.bottom,
+                            item.baseline,
+                            item.circle,
+                        ).any { it != null }
+                    ) {
+                        reject(
+                            ConstraintGraphRejectionReason.InvalidAnchor,
+                            id,
+                            "Grid '${grid.id}' owns every positioning anchor for '$id'.",
+                        )
+                    }
+                }
+            }
+        }
+        val circularMembers = mutableSetOf<String>()
+        helpers.circularFlows.forEach { flow ->
+            flow.items.forEach { circular ->
+                val id = circular.referenceId
+                if (!circularMembers.add(id)) {
+                    reject(
+                        ConstraintGraphRejectionReason.InvalidHelper,
+                        id,
+                        "Constraint item '$id' belongs to multiple CircularFlows.",
+                    )
+                }
+                if (id in horizontalMembers || id in verticalMembers || id in gridMembers) {
+                    reject(
+                        ConstraintGraphRejectionReason.InvalidHelper,
+                        id,
+                        "CircularFlow '${flow.id}' member '$id' has competing helper ownership.",
+                    )
+                }
+                constraints[id]?.let { item ->
+                    if (listOf(
+                            item.start,
+                            item.end,
+                            item.left,
+                            item.right,
+                            item.top,
+                            item.bottom,
+                            item.baseline,
+                            item.circle,
+                        ).any { it != null }
+                    ) {
+                        reject(
+                            ConstraintGraphRejectionReason.InvalidAnchor,
+                            id,
+                            "CircularFlow '${flow.id}' owns circular positioning for '$id'.",
+                        )
+                    }
                 }
             }
         }
@@ -663,6 +838,8 @@ internal object ConstraintGraphCompiler {
         index: Int,
         spec: ConstraintChainSpec,
         contentIds: Set<String>,
+        knownIds: Set<String>,
+        helperKinds: Map<String, NativeConstraintHelperKind>,
     ) {
         val identity = "Chain[$index]"
         validateReferenceList(identity, null, spec.referencedIds, contentIds, 2)
@@ -676,6 +853,296 @@ internal object ConstraintGraphCompiler {
             }
         }
         validateUnitFloat("$identity.bias", spec.bias, 0f..1f)
+        validateNonNegative("$identity.startMargin", spec.startMargin)
+        validateNonNegative("$identity.endMargin", spec.endMargin)
+        val start = spec.startTarget ?: when (spec.orientation) {
+            ConstraintChainOrientation.Horizontal -> com.viewcompose.ui.node.spec.ConstraintAnchorTarget.parent(
+                ConstraintAnchor.Start,
+            )
+            ConstraintChainOrientation.Vertical -> com.viewcompose.ui.node.spec.ConstraintAnchorTarget.parent(
+                ConstraintAnchor.Top,
+            )
+        }
+        val end = spec.endTarget ?: when (spec.orientation) {
+            ConstraintChainOrientation.Horizontal -> com.viewcompose.ui.node.spec.ConstraintAnchorTarget.parent(
+                ConstraintAnchor.End,
+            )
+            ConstraintChainOrientation.Vertical -> com.viewcompose.ui.node.spec.ConstraintAnchorTarget.parent(
+                ConstraintAnchor.Bottom,
+            )
+        }
+        listOf(start, end).forEach { target ->
+            target.id?.let { targetId ->
+                if (targetId !in knownIds) {
+                    reject(
+                        ConstraintGraphRejectionReason.MissingReference,
+                        identity,
+                        "$identity references missing endpoint '$targetId'.",
+                    )
+                }
+                if (targetId in spec.referencedIds ||
+                    helperKinds[targetId] == NativeConstraintHelperKind.Grid ||
+                    helperKinds[targetId] == NativeConstraintHelperKind.CircularFlow
+                ) {
+                    reject(
+                        ConstraintGraphRejectionReason.InvalidAnchor,
+                        identity,
+                        "$identity has invalid endpoint '$targetId'.",
+                    )
+                }
+            }
+        }
+        when (spec.orientation) {
+            ConstraintChainOrientation.Horizontal -> {
+                val horizontal = setOf(
+                    ConstraintAnchor.Start,
+                    ConstraintAnchor.End,
+                    ConstraintAnchor.Left,
+                    ConstraintAnchor.Right,
+                )
+                if (start.anchor !in horizontal || end.anchor !in horizontal) {
+                    reject(
+                        ConstraintGraphRejectionReason.InvalidAnchor,
+                        identity,
+                        "$identity horizontal endpoints must use a horizontal anchor.",
+                    )
+                }
+                val startLogical = start.anchor == ConstraintAnchor.Start || start.anchor == ConstraintAnchor.End
+                val endLogical = end.anchor == ConstraintAnchor.Start || end.anchor == ConstraintAnchor.End
+                if (startLogical != endLogical) {
+                    reject(
+                        ConstraintGraphRejectionReason.InvalidAnchor,
+                        identity,
+                        "$identity cannot mix logical and physical endpoint planes.",
+                    )
+                }
+            }
+            ConstraintChainOrientation.Vertical -> if (
+                start.anchor !in setOf(ConstraintAnchor.Top, ConstraintAnchor.Bottom) ||
+                end.anchor !in setOf(ConstraintAnchor.Top, ConstraintAnchor.Bottom)
+            ) {
+                reject(
+                    ConstraintGraphRejectionReason.InvalidAnchor,
+                    identity,
+                    "$identity vertical endpoints must use top or bottom anchors.",
+                )
+            }
+        }
+    }
+
+    private fun resolveGrid(
+        spec: ConstraintGridSpec,
+        contentIds: Set<String>,
+    ): ResolvedConstraintGrid {
+        val identity = "Grid '${spec.id}'"
+        validateReferenceList(identity, spec.id, spec.referencedIds, contentIds, 1)
+        if (spec.rows !in 0..50 || spec.columns !in 0..50) {
+            reject(
+                ConstraintGraphRejectionReason.InvalidHelper,
+                spec.id,
+                "$identity rows and columns must use 0 for auto or be within 1..50.",
+            )
+        }
+        listOf(spec.rowWeights, spec.columnWeights).flatten().forEach { weight ->
+            if (!weight.isFinite() || weight <= 0f) {
+                reject(
+                    ConstraintGraphRejectionReason.InvalidValue,
+                    spec.id,
+                    "$identity weights must be finite and positive.",
+                )
+            }
+        }
+        validateNonNegative("$identity.horizontalGap", spec.horizontalGap)
+        validateNonNegative("$identity.verticalGap", spec.verticalGap)
+        if (spec.spans.map { it.referenceId }.toSet().size != spec.spans.size) {
+            reject(
+                ConstraintGraphRejectionReason.DuplicateId,
+                spec.id,
+                "$identity spans must reference unique members.",
+            )
+        }
+        spec.spans.forEach { span ->
+            if (span.referenceId !in spec.referencedIds) {
+                reject(
+                    ConstraintGraphRejectionReason.MissingReference,
+                    spec.id,
+                    "$identity span references non-member '${span.referenceId}'.",
+                )
+            }
+            if (span.index < 0 || span.rowSpan <= 0 || span.columnSpan <= 0) {
+                reject(
+                    ConstraintGraphRejectionReason.InvalidHelper,
+                    spec.id,
+                    "$identity spans require a non-negative index and positive extents.",
+                )
+            }
+        }
+        spec.skips.forEach { skip ->
+            if (skip.index < 0 || skip.rowSpan <= 0 || skip.columnSpan <= 0) {
+                reject(
+                    ConstraintGraphRejectionReason.InvalidHelper,
+                    spec.id,
+                    "$identity skips require a non-negative index and positive extents.",
+                )
+            }
+        }
+        val rowCandidates = when {
+            spec.rows > 0 -> listOf(spec.rows)
+            spec.rowWeights.isNotEmpty() -> listOf(spec.rowWeights.size)
+            else -> (1..50).toList()
+        }
+        val columnCandidates = when {
+            spec.columns > 0 -> listOf(spec.columns)
+            spec.columnWeights.isNotEmpty() -> listOf(spec.columnWeights.size)
+            else -> (1..50).toList()
+        }
+        if (spec.rows > 0 && spec.rowWeights.isNotEmpty() && spec.rowWeights.size != spec.rows) {
+            reject(
+                ConstraintGraphRejectionReason.InvalidHelper,
+                spec.id,
+                "$identity rowWeights size must match rows.",
+            )
+        }
+        if (spec.columns > 0 && spec.columnWeights.isNotEmpty() && spec.columnWeights.size != spec.columns) {
+            reject(
+                ConstraintGraphRejectionReason.InvalidHelper,
+                spec.id,
+                "$identity columnWeights size must match columns.",
+            )
+        }
+        val candidates = buildList {
+            rowCandidates.forEach { rows ->
+                columnCandidates.forEach { columns -> add(rows to columns) }
+            }
+        }.sortedWith(
+            compareBy<Pair<Int, Int>>(
+                { (rows, columns) -> maxOf(rows, columns) },
+                { (rows, columns) -> rows * columns },
+                { (rows, columns) -> kotlin.math.abs(rows - columns) },
+                { (rows, columns) ->
+                    when (spec.orientation) {
+                        ConstraintGridOrientation.Horizontal -> if (columns >= rows) 0 else 1
+                        ConstraintGridOrientation.Vertical -> if (rows >= columns) 0 else 1
+                    }
+                },
+            ),
+        )
+        candidates.forEach { (rows, columns) ->
+            val placements = tryResolveGridPlacements(spec, rows, columns)
+            if (placements != null) {
+                return ResolvedConstraintGrid(
+                    spec = spec,
+                    rows = rows,
+                    columns = columns,
+                    placements = placements,
+                )
+            }
+        }
+        reject(
+            ConstraintGraphRejectionReason.InvalidHelper,
+            spec.id,
+            "$identity members, spans, and skips do not fit within the resolved 50x50 bounds.",
+        )
+    }
+
+    private fun tryResolveGridPlacements(
+        spec: ConstraintGridSpec,
+        rows: Int,
+        columns: Int,
+    ): List<ResolvedConstraintGridPlacement>? {
+        val occupied = BooleanArray(rows * columns)
+        fun occupy(index: Int, rowSpan: Int, columnSpan: Int): Pair<Int, Int>? {
+            if (index !in occupied.indices) return null
+            val rowStart = index / columns
+            val columnStart = index % columns
+            if (rowStart + rowSpan > rows || columnStart + columnSpan > columns) return null
+            for (row in rowStart until rowStart + rowSpan) {
+                for (column in columnStart until columnStart + columnSpan) {
+                    if (occupied[row * columns + column]) return null
+                }
+            }
+            for (row in rowStart until rowStart + rowSpan) {
+                for (column in columnStart until columnStart + columnSpan) {
+                    occupied[row * columns + column] = true
+                }
+            }
+            return rowStart to columnStart
+        }
+        spec.skips.forEach { skip ->
+            if (occupy(skip.index, skip.rowSpan, skip.columnSpan) == null) return null
+        }
+        val placements = linkedMapOf<String, ResolvedConstraintGridPlacement>()
+        spec.spans.forEach { span ->
+            val (row, column) = occupy(span.index, span.rowSpan, span.columnSpan) ?: return null
+            placements[span.referenceId] = ResolvedConstraintGridPlacement(
+                referenceId = span.referenceId,
+                row = row,
+                column = column,
+                rowSpan = span.rowSpan,
+                columnSpan = span.columnSpan,
+            )
+        }
+        val cells = when (spec.orientation) {
+            ConstraintGridOrientation.Horizontal -> occupied.indices.toList()
+            ConstraintGridOrientation.Vertical -> buildList {
+                for (column in 0 until columns) {
+                    for (row in 0 until rows) add(row * columns + column)
+                }
+            }
+        }
+        spec.referencedIds.forEach { referenceId ->
+            if (referenceId in placements) return@forEach
+            val cell = cells.firstOrNull { !occupied[it] } ?: return null
+            occupied[cell] = true
+            placements[referenceId] = ResolvedConstraintGridPlacement(
+                referenceId = referenceId,
+                row = cell / columns,
+                column = cell % columns,
+                rowSpan = 1,
+                columnSpan = 1,
+            )
+        }
+        return spec.referencedIds.map { referenceId -> requireNotNull(placements[referenceId]) }
+    }
+
+    private fun validateCircularFlow(
+        spec: ConstraintCircularFlowSpec,
+        contentIds: Set<String>,
+    ) {
+        val identity = "CircularFlow '${spec.id}'"
+        requireId(spec.centerId, "$identity center")
+        if (spec.centerId !in contentIds) {
+            reject(
+                ConstraintGraphRejectionReason.MissingReference,
+                spec.id,
+                "$identity center '${spec.centerId}' is not a mounted child.",
+            )
+        }
+        validateReferenceList(
+            identity,
+            spec.id,
+            spec.items.map { item -> item.referenceId },
+            contentIds,
+            1,
+        )
+        spec.items.forEach { item ->
+            if (item.referenceId == spec.centerId) {
+                reject(
+                    ConstraintGraphRejectionReason.InvalidHelper,
+                    spec.id,
+                    "$identity center cannot also be a positioned item.",
+                )
+            }
+            if (!item.radius.value.isFinite() || item.radius.value < 0f ||
+                !item.angle.isFinite() || item.angle < 0f || item.angle >= 360f
+            ) {
+                reject(
+                    ConstraintGraphRejectionReason.InvalidValue,
+                    spec.id,
+                    "$identity radius must be finite/non-negative and angle within 0f..<360f.",
+                )
+            }
+        }
     }
 
     private fun validateReferenceList(
@@ -724,6 +1191,8 @@ internal object ConstraintGraphCompiler {
         helpers.barriers.forEach { dependencies[it.id] = it.referencedIds.filterTo(mutableSetOf()) { id -> id in helperIds } }
         helpers.flows.forEach { dependencies[it.id] = it.referencedIds.filterTo(mutableSetOf()) { id -> id in helperIds } }
         helpers.guidelines.forEach { dependencies.putIfAbsent(it.id, emptySet()) }
+        helpers.grids.forEach { dependencies.putIfAbsent(it.id, emptySet()) }
+        helpers.circularFlows.forEach { dependencies.putIfAbsent(it.id, emptySet()) }
         helpers.groups.forEach { dependencies.putIfAbsent(it.id, emptySet()) }
         helpers.layers.forEach { dependencies.putIfAbsent(it.id, emptySet()) }
         helpers.placeholders.forEach { dependencies.putIfAbsent(it.id, emptySet()) }
@@ -834,7 +1303,37 @@ internal fun ResolvedConstraintGraph.hasSameTopologyAs(other: ResolvedConstraint
         val previous = other.helpers.chains[index]
         if (
             current.orientation != previous.orientation ||
-            current.referencedIds != previous.referencedIds
+            current.referencedIds != previous.referencedIds ||
+            current.startTarget != previous.startTarget ||
+            current.endTarget != previous.endTarget
+        ) {
+            return false
+        }
+    }
+    if (helpers.grids.size != other.helpers.grids.size) return false
+    helpers.grids.indices.forEach { index ->
+        val current = helpers.grids[index]
+        val previous = other.helpers.grids[index]
+        if (current.id != previous.id ||
+            current.referencedIds != previous.referencedIds ||
+            current.rows != previous.rows ||
+            current.columns != previous.columns ||
+            current.rowWeights.size != previous.rowWeights.size ||
+            current.columnWeights.size != previous.columnWeights.size ||
+            current.orientation != previous.orientation ||
+            current.spans != previous.spans ||
+            current.skips != previous.skips
+        ) {
+            return false
+        }
+    }
+    if (helpers.circularFlows.size != other.helpers.circularFlows.size) return false
+    helpers.circularFlows.indices.forEach { index ->
+        val current = helpers.circularFlows[index]
+        val previous = other.helpers.circularFlows[index]
+        if (current.id != previous.id ||
+            current.centerId != previous.centerId ||
+            current.items.map { it.referenceId } != previous.items.map { it.referenceId }
         ) {
             return false
         }
@@ -881,6 +1380,8 @@ private fun sameItemTopology(
 ): Boolean {
     return current?.start?.target == previous?.start?.target &&
         current?.end?.target == previous?.end?.target &&
+        current?.left?.target == previous?.left?.target &&
+        current?.right?.target == previous?.right?.target &&
         current?.top?.target == previous?.top?.target &&
         current?.bottom?.target == previous?.bottom?.target &&
         current?.baseline?.target == previous?.baseline?.target &&
