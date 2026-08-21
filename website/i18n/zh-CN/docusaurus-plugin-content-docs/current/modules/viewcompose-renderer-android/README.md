@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: fba0069790afb4eaf72d0007afda216582dcbb329a396710208218e5a846bd15
+translation_source_hash: 142a99addaf7e4280be9bcdfe388fdd8c0d8c545935d4b18b1e3335086a02f65
 translation_status: current
 ---
 
@@ -136,8 +136,7 @@ Boundary；Baseline 普通/Gone Margin 与 Direct AndroidX Control 一致；四�
 CircularFlow 与 AndroidX Angle/Radius 几何一致，会拒绝竞争的 Direct Ownership，并在 1,000 次
 替换中保持零 Helper Identity。相对已发布 Renderer，结论为 **improved**：它新增冻结的 Phase 2
 Transport 原子支持，并关闭 AndroidX Baseline/Physical Margin Copy 遗漏。该证据不是性能对比，
-且覆盖 Robolectric 而不是 Phase 3 Device/OEM Matrix；下一步是完整 Device、Visual、
-Configuration 与 Lifecycle 验收。
+且覆盖 Robolectric 而不是后续 Phase 3 Device/OEM Matrix。
 
 同一份 2026-08-21 Candidate 在已 Root 的 Xiaomi MI 6 / Android 9 上用 `15.674 s` 通过 4/4 条
 `ConstraintLayoutReleaseDeviceTest`。新增 Phase 2 用例验证 Weighted Grid Span/Skip 的精确顺序，
@@ -148,6 +147,23 @@ Configuration 与 Lifecycle 验收。
 过滤的日志也未出现 `UIConstraintLayout`、`ConstraintSet`、Renderer、Helper Layer 或 Fatal 条目。
 相对已发布 Renderer，这份真机能力与 Lifecycle 结果为 **improved**。它只覆盖一个 OEM/API 点与
 聚焦视觉样本，不代表完整 Phase 3 Configuration/Screenshot Matrix，也不是 Phase 4 性能证据。
+
+2026-08-21 的 Phase 3 验收新增了 App 自有的单一用途 Fixture 与 Mounted-scene Diagnostics，
+没有修改 Renderer Production Source、公开 API 或 Inactive-path Work。12/12 张经人工复核的
+Paparazzi Snapshot 采用 Pairwise/Orthogonal 组合，覆盖 Phone/Tablet、Portrait/Landscape、
+Light/Dark、LTR/RTL，以及 `1.0`、`1.3`、`2.0` 字体缩放；未发现重叠、裁切、几何语义不明确
+或方向/主题缺陷。Phase 2/3 合并设备套件在 API 24 以 `16.45 s` 通过 8/8，在 API 36 的最终
+聚焦运行中通过 8/8，并在 Google Pixel 4 XL / Android 13（API 33）实体机上以 `26.442 s`
+通过 8/8。测试断言精确或容差有界的 Grid、CircularFlow、普通/Gone Margin、四种 Parent-wrap
+Policy、Anchor、Dimension、Bias、Direction 与 Chain Geometry，并覆盖 Reorder、Key Reuse、
+Detach/Reattach、Density/Direction Recreation、Rejection Rollback 与有效 Retry。未观察到
+非预期的 `UIConstraintLayout`、`ConstraintSet` 或未捕获 AndroidX Warning；刻意构造的无效
+Candidate 只产生一条有界 Rejection，随后成功恢复。相对只完成 Phase 2 的验收，Renderer 的
+配置、视觉、生命周期与 API 兼容性置信度为 **improved**。由于 Renderer 行为没有改变，也没有
+运行受控 Timing 对比，性能结论为 **no material change**。局限包括：最终实体机点只有
+Google/API 33，另有此前 Xiaomi/API 28 证据；视觉矩阵是 12 个 Pairwise Case，而不是全部
+48 个 Cartesian Combination；尚未运行降温后的 Direct-native/Released-baseline/Candidate
+Matrix。Phase 4 负责该基准与最终指导。
 
 ## 主要 API
 

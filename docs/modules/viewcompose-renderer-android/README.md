@@ -160,8 +160,8 @@ through 1,000 add/remove replacements. CircularFlow matches AndroidX angle/radiu
 competing direct ownership, and owns zero helper identity through 1,000 replacements. The result is
 **improved** relative to the released renderer because it adds atomic support for the frozen Phase
 2 transport and also closes the AndroidX baseline/physical-margin copy omission. This evidence is
-not a performance comparison and covers Robolectric rather than the Phase 3 device/OEM matrix; the
-next action is complete device, visual, configuration, and lifecycle acceptance.
+not a performance comparison and covers Robolectric rather than the later Phase 3 device/OEM
+matrix.
 
 The same 2026-08-21 candidate passed 4/4 `ConstraintLayoutReleaseDeviceTest` cases in `15.674 s` on
 a rooted Xiaomi MI 6 / Android 9. The new Phase 2 case verifies exact weighted-Grid span/skip
@@ -174,6 +174,24 @@ contained no `UIConstraintLayout`, `ConstraintSet`, renderer, helper-layer, or f
 physical-device capability and lifecycle result is **improved** relative to the released renderer.
 It covers one OEM/API point and a focused visual sample, not the complete Phase 3 configuration and
 screenshot matrix, and it is not Phase 4 performance evidence.
+
+The 2026-08-21 Phase 3 acceptance adds app-owned one-purpose fixtures and mounted-scene diagnostics
+without changing renderer production source, public API, or inactive-path work. The 12/12 reviewed
+Paparazzi snapshots span a pairwise/orthogonal selection of phone/tablet, portrait/landscape,
+light/dark, LTR/RTL, and font scales `1.0`, `1.3`, and `2.0`, with no overlap, clipping, ambiguous
+geometry, or direction/theme defect. The combined Phase 2/3 device suite passes 8/8 on API 24 in
+`16.45 s`, 8/8 on API 36 across the final focused runs, and 8/8 in `26.442 s` on a physical Google
+Pixel 4 XL / Android 13 (API 33). It asserts exact or tolerance-bounded Grid, CircularFlow,
+normal/gone-margin, four-policy parent-wrap, anchor, dimension, bias, direction, and chain geometry,
+then covers reorder, key reuse, detach/reattach, density/direction recreation, rejection rollback,
+and valid retry. No unexpected `UIConstraintLayout`, `ConstraintSet`, or uncaught AndroidX warning
+was observed; the deliberate invalid candidate emits one bounded rejection and recovers. Relative
+to Phase 2-only acceptance, renderer configuration, visual, lifecycle, and API-compatibility
+confidence is **improved**. Because renderer behavior did not change and no controlled timing
+comparison ran, the performance conclusion is **no material change**. Limits are one final physical
+Google/API-33 point alongside the earlier Xiaomi/API-28 evidence, 12 pairwise cases rather than all
+48 Cartesian visual combinations, and no cooled direct-native/released-baseline/candidate matrix.
+Phase 4 owns that benchmark and final guidance.
 
 ## Principal APIs
 

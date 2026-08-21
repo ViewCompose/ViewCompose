@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-constraintlayout-androidx/README.md
-translation_source_hash: c1b8930c1d96873f5b6aa9f3fa603d938de4dfea7bc403425a2790cd05d805e1
+translation_source_hash: b9791148e41c8a2ab82f2b056d434ec7df4065ef2faf76c1daa29ac71947996c
 translation_status: current
 ---
 
@@ -25,8 +25,9 @@ dependencies {
   并归档为 `docs/archive/constraintlayout-native-engine-hardening.md`。
   更广泛的能力对齐与优化由独立的
   [发版后扩展计划](https://docs.viewcompose.com/project/plans/constraintlayout-parity-performance-expansion)负责；
-  Demo 固定频率基线、Phase 0 契约冻结与 Phase 1 分类协调均已合入。当前源码已实现 Phase 2
-  高价值能力对齐，并拥有不可变的多产物 Changeset；下一步是 Phase 3 完整视觉/配置验收。
+  Demo 固定频率基线、Phase 0 契约冻结与 Phase 1 分类协调均已合入。Phase 2 高价值能力对齐
+  已合入，并拥有不可变的多产物 Changeset；当前变更已完成 Phase 3 的 Demo、视觉、配置、
+  生命周期与兼容性验收。下一步是 Phase 4 受控基准测试与发版收尾。
 - 平台：Android 7.0（API 24）及以上。
 - 可选：`viewcompose-ui-foundation` 不依赖该产物。
 - UI Contract 与 UI Foundation 会被传递暴露，因为它们的 Modifier、单位和 Builder 类型
@@ -210,6 +211,25 @@ CircularFlow 清晰可读、没有裁切、重叠或 Helper Artifact。按进程
 `UIConstraintLayout`、`ConstraintSet`、Renderer、Helper Layer 或 Fatal 条目。相对已发布源码，
 真机能力与失败安全结论为 **improved**。该证据只覆盖一个 OEM/API 点和聚焦视觉样本，不能替代
 完整 Phase 3 Screenshot/Lifecycle Matrix，也不提供 Phase 4 性能结论。
+
+2026-08-21 的 Phase 3 验收新增了可发现、单一用途的 Grid、CircularFlow、Gone Margin、
+Parent-wrap、Chain 与 Helper Lifecycle Demo Fixture，以及仅属于 App 的 Mounted-scene
+Diagnostics。12/12 张经人工复核的 Paparazzi Snapshot 采用 Pairwise/Orthogonal 组合，覆盖
+Phone/Tablet、Portrait/Landscape、Light/Dark、LTR/RTL，以及 `1.0`、`1.3`、`2.0` 字体缩放；
+未发现重叠、裁切、语义不明确的 Fixture 或方向/主题缺陷。Phase 2/3 合并设备套件在 API 24
+以 `16.45 s` 通过 8/8，在 API 36 的最终聚焦运行中通过 8/8，并在 Google Pixel 4 XL /
+Android 13（API 33）实体机上以 `26.442 s` 通过 8/8。精确原生几何覆盖 Grid
+Orientation/Span/Skip、CircularFlow、普通/Gone Margin、四种 Parent-wrap Policy、Anchor、
+Dimension、Bias、逻辑/物理方向，以及 Fixed/Weighted Chain。生命周期覆盖 Child Reorder、
+Key Reuse、Detach/Reattach、Density/Direction Recreation、Rejected-candidate Rollback、有效
+Retry，以及保留的 200 次真机 Toggle 和 Phase 2 的 1,000 次替换压力测试。未出现非预期的
+`UIConstraintLayout`、`ConstraintSet` 或未捕获 AndroidX Warning；唯一预期 Rejection 保持
+有界，并在其后成功恢复。相对只完成 Phase 2 的验收，配置、视觉、生命周期与 API 兼容性
+置信度为 **improved**。本阶段没有修改已发布 Renderer 行为，也没有运行受控 Timing 对比，
+因此 Phase 3 性能结论为 **no material change**。局限包括：最终实体机点只有 Google/API 33，
+另有此前 Xiaomi/API 28 证据；视觉矩阵是 12 个 Pairwise Case，而不是全部 48 个 Cartesian
+Combination；尚未运行降温后的 Direct-native/Released-baseline/Candidate Matrix。Phase 4
+负责该基准与最终发版指导。
 
 2026-08-19 的 DSL Safety 后续运行通过 17/17 条 ConstraintLayout 模块测试：12 条行为测试和
 5 条 Kotlin 2.0.21 Compiler Fixture。合法的类型化 Axis/Reference Sample 可以编译；把垂直

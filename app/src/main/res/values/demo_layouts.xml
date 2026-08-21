@@ -85,9 +85,31 @@
     <string name="demo_layouts_constraint_grid_metric">Metric</string>
     <string name="demo_layouts_constraint_grid_status">Status</string>
     <string name="demo_layouts_constraint_grid_action">Action</string>
+    <string name="demo_layouts_constraint_diagnostics_status">Accepted %1$d / attempted %2$d · native helpers %3$d · native children %4$d · update %5$s</string>
+    <string name="demo_layouts_constraint_diagnostics_no_failure">Failure: none</string>
+    <string name="demo_layouts_constraint_diagnostics_failure">Rejected: %1$s · identity %2$s · %3$s</string>
+    <string name="demo_layouts_constraint_diagnostics_unavailable">Native diagnostics: %1$s</string>
     <string name="demo_layouts_constraint_circular_title">Declarative CircularFlow</string>
     <string name="demo_layouts_constraint_circular_summary">Four explicit radius/angle items orbit one constrained center without a native helper View.</string>
     <string name="demo_layouts_constraint_circular_center">Center</string>
+    <string name="demo_layouts_circular_expand">Use 90dp radius + 15° offset</string>
+    <string name="demo_layouts_circular_compact">Use 78dp cardinal orbit</string>
+    <string name="demo_layouts_lifecycle_title">Native helper lifecycle</string>
+    <string name="demo_layouts_lifecycle_summary">Cycles through valid Grid helpers, complete removal, rejected missing reference, and reordered stable-key recovery.</string>
+    <string name="demo_layouts_lifecycle_action">Advance to %1$s</string>
+    <string name="demo_layouts_lifecycle_mode">Requested mode: %1$s</string>
+    <string name="demo_layouts_gone_margin_title">Gone margin</string>
+    <string name="demo_layouts_gone_margin_summary">The marker uses 24dp while its target is visible and 64dp when the same target is gone.</string>
+    <string name="demo_layouts_gone_margin_hide">Make target gone</string>
+    <string name="demo_layouts_gone_margin_show">Restore target</string>
+    <string name="demo_layouts_gone_margin_marker">Linked marker</string>
+    <string name="demo_layouts_gone_margin_visible_status">Visible target: normal start margin = 24dp.</string>
+    <string name="demo_layouts_gone_margin_gone_status">Gone target: gone start margin = 64dp.</string>
+    <string name="demo_layouts_wrap_behavior_title">Wrap-content participation</string>
+    <string name="demo_layouts_wrap_behavior_summary">The outer background reveals which axes the remote child contributes to while solver placement remains unchanged.</string>
+    <string name="demo_layouts_wrap_behavior_action">Advance to %1$s</string>
+    <string name="demo_layouts_wrap_behavior_remote">Remote B</string>
+    <string name="demo_layouts_wrap_behavior_status">wrapBehaviorInParent = %1$s</string>
     <string name="demo_layouts_right">Right</string>
     <string name="demo_layouts_left">Left</string>
     <string name="demo_layouts_constraint_set_title">Decoupled ConstraintSet</string>
@@ -129,9 +151,9 @@
     <string name="demo_layouts_helpers_fraction_status">Fraction mode: End/Top/Bottom guidelines use fractions; barriers use larger margins and allowsGoneWidgets=true.</string>
     <string name="demo_layouts_helpers_offset_status">Offset mode: End/Top/Bottom guidelines use offsets; barriers use smaller margins and allowsGoneWidgets=false.</string>
     <string name="demo_layouts_vertical_chain_title">Vertical chain</string>
-    <string name="demo_layouts_vertical_chain_summary">Covers createVerticalChain weights, bias, and style.</string>
-    <string name="demo_layouts_switch_spread_inside">Switch to SpreadInside</string>
-    <string name="demo_layouts_switch_packed">Switch to Packed</string>
+    <string name="demo_layouts_vertical_chain_summary">Compares fixed-height SpreadInside geometry with effective MatchConstraints weights of 1:2:1.</string>
+    <string name="demo_layouts_switch_fixed_chain">Use fixed SpreadInside chain</string>
+    <string name="demo_layouts_switch_weighted_chain">Use weighted 1:2:1 chain</string>
     <string name="demo_layouts_middle">Middle</string>
     <string name="demo_layouts_set_helpers_title">ConstraintSet helper mirror</string>
     <string name="demo_layouts_set_helpers_summary">Reuses helpers and chains inside a decoupled ConstraintSet.</string>

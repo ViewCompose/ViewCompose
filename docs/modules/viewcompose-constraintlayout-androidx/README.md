@@ -21,8 +21,9 @@ dependencies {
   Broader parity and optimization are owned by a separate
   [post-release expansion plan](../../project/plans/constraintlayout-parity-performance-expansion.md)
   whose Demo fixed-clock baseline, Phase 0 contract freeze, and Phase 1 classified reconciliation
-  are merged. Phase 2 high-value parity is implemented in current source and owns its immutable
-  multi-artifact Changeset; Phase 3 complete visual/configuration acceptance is next.
+  are merged. Phase 2 high-value parity is merged and owns its immutable multi-artifact Changeset;
+  Phase 3 complete Demo, visual, configuration, lifecycle, and compatibility acceptance is complete
+  in the current change. Phase 4 controlled benchmarking and release closeout is next.
 - Platform: Android 7.0 (API 24) and newer.
 - Optional: `viewcompose-ui-foundation` does not depend on this artifact.
 - UI Contract and UI Foundation are exposed transitively because their modifier, unit, and builder
@@ -223,6 +224,26 @@ legible, unclipped, and free of overlap or helper artifacts. Process-filtered lo
 capability and failure-safety conclusion is **improved** relative to the released source. This is
 one OEM/API point and a focused visual sample rather than the complete Phase 3 screenshot and
 lifecycle matrix, and it provides no Phase 4 performance conclusion.
+
+The 2026-08-21 Phase 3 acceptance adds discoverable one-purpose Grid, CircularFlow, gone-margin,
+parent-wrap, chain, and helper-lifecycle Demo fixtures plus app-only mounted-scene diagnostics. Its
+12/12 reviewed Paparazzi snapshots use a pairwise/orthogonal selection across phone/tablet,
+portrait/landscape, light/dark, LTR/RTL, and font scales `1.0`, `1.3`, and `2.0`; manual review found
+no overlap, clipping, ambiguous fixture, or direction/theme defect. The combined Phase 2/3 suite
+passes 8/8 on API 24 in `16.45 s`, 8/8 on API 36 across the final focused runs, and 8/8 in
+`26.442 s` on a physical Google Pixel 4 XL / Android 13 (API 33). Exact native geometry covers Grid
+orientation/span/skip, CircularFlow, normal/gone margins, all four parent-wrap policies, anchors,
+dimensions, bias, logical/physical direction, and fixed/weighted chains. Lifecycle coverage includes
+child reorder, key reuse, detach/reattach, density/direction recreation, rejected-candidate rollback,
+valid retry, the retained 200-toggle device case, and the retained Phase 2 1,000-replacement stress.
+There is no unexpected `UIConstraintLayout`, `ConstraintSet`, or uncaught AndroidX warning; the one
+expected rejection is bounded and followed by recovery. Relative to Phase 2-only acceptance, the
+configuration, visual, lifecycle, and API-compatibility confidence is **improved**. No published
+renderer behavior changed and no controlled timing comparison ran, so the Phase 3 performance
+conclusion is **no material change**. Limits are one final physical Google/API-33 point alongside
+the earlier Xiaomi/API-28 evidence, 12 pairwise cases rather than all 48 Cartesian visual
+combinations, and no cooled direct-native/released-baseline/candidate matrix. Phase 4 owns that
+benchmark and final release guidance.
 
 The 2026-08-19 DSL safety follow-up passed 17/17 ConstraintLayout module tests: 12 behavior tests
 and five Kotlin 2.0.21 compiler fixtures. The positive typed-axis/reference sample compiled; a

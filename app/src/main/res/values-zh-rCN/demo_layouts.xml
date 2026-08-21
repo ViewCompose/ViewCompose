@@ -85,9 +85,31 @@
     <string name="demo_layouts_constraint_grid_metric">指标</string>
     <string name="demo_layouts_constraint_grid_status">状态</string>
     <string name="demo_layouts_constraint_grid_action">操作</string>
+    <string name="demo_layouts_constraint_diagnostics_status">已接受 %1$d / 已尝试 %2$d · 原生 Helper %3$d · 原生子节点 %4$d · 更新 %5$s</string>
+    <string name="demo_layouts_constraint_diagnostics_no_failure">失败：无</string>
+    <string name="demo_layouts_constraint_diagnostics_failure">已拒绝：%1$s · 标识 %2$s · %3$s</string>
+    <string name="demo_layouts_constraint_diagnostics_unavailable">原生诊断：%1$s</string>
     <string name="demo_layouts_constraint_circular_title">声明式 CircularFlow</string>
     <string name="demo_layouts_constraint_circular_summary">四个显式半径和角度的成员围绕同一中心排列，且不创建原生 Helper View。</string>
     <string name="demo_layouts_constraint_circular_center">中心</string>
+    <string name="demo_layouts_circular_expand">使用 90dp 半径 + 15° 偏移</string>
+    <string name="demo_layouts_circular_compact">使用 78dp 正交轨道</string>
+    <string name="demo_layouts_lifecycle_title">原生 Helper 生命周期</string>
+    <string name="demo_layouts_lifecycle_summary">依次验证有效 Grid Helper、完整移除、缺失引用拒绝，以及重排后按稳定 Key 恢复。</string>
+    <string name="demo_layouts_lifecycle_action">进入 %1$s</string>
+    <string name="demo_layouts_lifecycle_mode">请求模式：%1$s</string>
+    <string name="demo_layouts_gone_margin_title">Gone margin</string>
+    <string name="demo_layouts_gone_margin_summary">目标可见时标记使用 24dp，目标为 Gone 时同一锚点改用 64dp。</string>
+    <string name="demo_layouts_gone_margin_hide">将目标设为 Gone</string>
+    <string name="demo_layouts_gone_margin_show">恢复目标</string>
+    <string name="demo_layouts_gone_margin_marker">关联标记</string>
+    <string name="demo_layouts_gone_margin_visible_status">目标可见：普通 start margin = 24dp。</string>
+    <string name="demo_layouts_gone_margin_gone_status">目标 Gone：gone start margin = 64dp。</string>
+    <string name="demo_layouts_wrap_behavior_title">Wrap-content 参与轴</string>
+    <string name="demo_layouts_wrap_behavior_summary">外层背景展示远端子节点参与哪些父布局轴，其 Solver 位置始终不变。</string>
+    <string name="demo_layouts_wrap_behavior_action">进入 %1$s</string>
+    <string name="demo_layouts_wrap_behavior_remote">远端 B</string>
+    <string name="demo_layouts_wrap_behavior_status">wrapBehaviorInParent = %1$s</string>
     <string name="demo_layouts_right">右侧</string>
     <string name="demo_layouts_left">左侧</string>
     <string name="demo_layouts_constraint_set_title">解耦 ConstraintSet</string>
@@ -129,9 +151,9 @@
     <string name="demo_layouts_helpers_fraction_status">Fraction 模式：End/Top/Bottom Guideline 使用比例；Barrier 使用更大 margin 且 allowsGoneWidgets=true。</string>
     <string name="demo_layouts_helpers_offset_status">Offset 模式：End/Top/Bottom Guideline 使用偏移；Barrier 使用更小 margin 且 allowsGoneWidgets=false。</string>
     <string name="demo_layouts_vertical_chain_title">竖向 Chain</string>
-    <string name="demo_layouts_vertical_chain_summary">覆盖 createVerticalChain 的权重、偏移和样式。</string>
-    <string name="demo_layouts_switch_spread_inside">切到 SpreadInside</string>
-    <string name="demo_layouts_switch_packed">切到 Packed</string>
+    <string name="demo_layouts_vertical_chain_summary">对比固定高度 SpreadInside 几何与真正生效的 MatchConstraints 1:2:1 权重。</string>
+    <string name="demo_layouts_switch_fixed_chain">使用固定高度 SpreadInside</string>
+    <string name="demo_layouts_switch_weighted_chain">使用加权 1:2:1 Chain</string>
     <string name="demo_layouts_middle">中部</string>
     <string name="demo_layouts_set_helpers_title">ConstraintSet Helper 镜像</string>
     <string name="demo_layouts_set_helpers_summary">在解耦 ConstraintSet 中复用 Helper 与 Chain。</string>

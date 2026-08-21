@@ -7,15 +7,19 @@ complete and archived as `docs/archive/constraintlayout-native-engine-hardening.
 publication `0.1.0-alpha01`, its artifact tag, and the release owner's explicit reopen are all
 complete. Phase 0 execution is complete: the published baseline, API contracts, Scope inventory,
 named red-test catalog, and performance budgets are frozen below. Demo fixed-clock baseline PR
-`#111` and Phase 0 PR `#112` are merged in that order. Phase 1 is merged. Phase 2 implementation and
-acceptance are complete in the current change: the frozen chain-boundary, parent-wrap,
-physical-edge, typed Grid, and declarative CircularFlow contracts now span transport, DSL, graph
-preflight, transactional native rendering, compiled samples, Demo, Preview, exact JVM tests,
-focused physical-device automation, and manual visual review.
+`#111` and Phase 0 PR `#112` are merged in that order. Phases 1 and 2 are merged. Phase 3 Demo,
+visual, configuration, lifecycle, compatibility, and warning acceptance is complete in the current
+change. The frozen chain-boundary, parent-wrap, physical-edge, typed Grid, and declarative
+CircularFlow contracts now span transport, DSL, graph preflight, transactional native rendering,
+compiled samples, one-purpose Demo fixtures, Preview snapshots, exact JVM and device tests, and
+manual visual review.
 
 Phase 0 remains Changeset-free because it changed no published production source. Phase 1 owns the
-immutable renderer Changeset listed below. Phase 2 owns one immutable multi-artifact Changeset, so
-this plan remains the sole active owner and release gate for all affected follow-up artifacts.
+immutable renderer Changeset listed below. Phase 2 owns one immutable multi-artifact Changeset.
+Phase 3 changes only the Demo application, tests, snapshots, and active documentation; it changes no
+published-artifact production source, publication input, or compiled public API sample, so no new
+`release/changes` file is required. This plan remains the sole active owner and release gate for all
+affected follow-up artifacts.
 
 This plan is canonical English-only under the documentation-governance policy. Durable capability,
 performance, compatibility, and operational conclusions must move into the owning active documents,
@@ -27,9 +31,9 @@ Activation trigger: the first-release hardening plan is archived, the correspond
 release and Git tag are complete, and the release owner explicitly reopens ConstraintLayout
 development.
 
-Next action: land the quality-gate-clean Phase 2 change, then begin the Phase 3 complete Demo,
-visual, configuration, and lifecycle-stress matrix. Phase 3 must reuse the accepted Phase 2
-contracts rather than widening the API surface.
+Next action: land the quality-gate-clean Phase 3 acceptance change, then begin Phase 4's controlled
+direct-native/published-baseline/candidate benchmark and release closeout. Phase 4 must preserve the
+accepted correctness matrix and may not infer a performance win from Phase 3 evidence.
 
 ## Maven release changesets
 
@@ -461,6 +465,33 @@ Planning estimate: 1.5--2.5 engineering weeks.
    AndroidX warnings in a supported fixture.
 6. Exercise rapid toggles, child reorder, key reuse, detach/reattach, density and direction changes,
    process recreation where applicable, and failure followed by valid retry.
+
+Completion record (2026-08-21): the Demo now exposes one-purpose Grid, CircularFlow, gone-margin,
+parent-wrap, chain, and helper-lifecycle scenes. The lifecycle fixture reports mounted accepted
+revision, helper count, update class, and structured rejection state after two animation frames;
+its instrumentation remains app-only and does not add renderer work, public API, or an inactive
+production observer. Exact device assertions cover those scenes plus anchors, dimensions, bias,
+logical and physical direction, recreation at density scale `1.25`, child reorder, key reuse,
+detach/reattach, invalid-candidate rollback, and valid retry.
+
+The deterministic Paparazzi matrix passes 12/12 reviewed snapshots across a pairwise/orthogonal
+selection of phone/tablet, portrait/landscape, light/dark, LTR/RTL, and font scales `1.0`, `1.3`,
+and `2.0`. Manual review found no overlap, clipping, ambiguous geometry, or direction/theme defect.
+The combined Phase 2/3 device suite passes 8/8 on the minimum API-24 emulator in `16.45 s`, 8/8 on
+the latest API-36 emulator across the final focused runs, and 8/8 in `26.442 s` on a physical Google
+Pixel 4 XL / Android 13 (API 33); the final physical Gradle invocation completed in `39 s`.
+Structured log filtering reports no unexpected `UIConstraintLayout`, `ConstraintSet`, or uncaught
+AndroidX warning. The one deliberately invalid lifecycle candidate produces exactly the expected
+bounded rejection before a successful retry. The earlier 200-toggle physical case and Phase 2
+1,000-replacement JVM cases remain green.
+
+Relative to Phase 2-only acceptance, confidence in configuration, visual geometry, lifecycle, and
+minimum/latest-API compatibility is **improved**. Phase 3 changes no renderer behavior and supplies
+no controlled timing comparison, so its performance conclusion is **no material change** and it
+does not support a Phase 4 optimization claim. Limitations are one final physical Google/API-33
+point in addition to the earlier Xiaomi/API-28 evidence, a 12-case pairwise matrix rather than all
+48 Cartesian visual combinations, and no cooled direct-native/released-baseline/candidate run.
+Phase 4 owns that benchmark, durable performance guidance, release gates, and plan archive.
 
 Exit criteria: every public capability maps to exact automation and a discoverable Demo fixture;
 the screenshot matrix is reviewed; interactions are warning-free; and no device test passes only
