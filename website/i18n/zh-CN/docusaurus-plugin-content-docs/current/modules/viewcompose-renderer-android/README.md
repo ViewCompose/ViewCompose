@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 846ed989b236ab3315f2d94872289bc627766cbdb5e5eaa1ca33042357b86ad3
+translation_source_hash: e73c7e5178a685e3495320821c8f40cb7e1f688fefda299809a9e37c1f90c197
 translation_status: current
 ---
 
@@ -86,7 +86,13 @@ Anchor Plane、Helper 依赖、所有权冲突、尺寸与范围。一个注册�
 Group、Layer 与 Placeholder 的稳定 ID、实例、类型变化、引用和删除。已接受候选从干净的原生
 Set 应用；原生提交失败会恢复此前的 Helper 注册表、LayoutParams、运行时属性、环境与已接受图。
 Group/Layer/Placeholder 效果是叠加在可恢复 Child 运行时属性之上的 Overlay，不会成为下一候选的
-事实来源。完整契约记录在
+事实来源。发版后协调路径还会按 Container 缓存已接受的原始 Spec、Semantic/Resolved Graph、
+环境、Topology/Scalar Fingerprint、原生 ID 与 Helper 所有权，并在提交前把更新分类为 No-op、
+Content-only、Scalar、Environment 或 Topology。Equal/Content-only 请求会跳过 Graph 编译、环境
+解析、原生提交、Helper 写入、Adapter Layout Request 与 Adapter 自有分配；Scalar 请求保留未变
+Helper 的实例和引用，不创建/删除 Helper，不克隆 Live LayoutParams，并且最多发出一次 Adapter
+Layout Request。可选结构计数器是 Container-local 且仅供内部测试使用；未启用时不拥有 Global
+Observer 或周期工作。完整契约记录在
 [ADR-0016](../../architecture/decisions/0016-constraintlayout-graph-and-helper-ownership.md)。
 2026-08-18 的 API 35 离线聚焦运行通过了 16/16 条 ConstraintLayout Renderer 回归，覆盖原先为
 `0 px`、修复后精确为 `125 px` 的 Barrier 几何、拒绝候选时的状态保留与后续有效重试、Group
@@ -108,6 +114,15 @@ Child Index 查询，并在没有 Group/Layer/Placeholder Content Overlay 被释
 topology-50 P50 从失败的 `7.076 ms` 变为 `6.162 ms`，Baseline 为 `6.304 ms`。性能安全结论为
 **no material change**；4 个不稳定动作保持 `inconclusive`，Direct Android Views 仍具有明显
 P95 优势。更广泛的跨 OEM/API 与性能领先工作属于发版后限制，而不是已观察到的首发正确性缺陷。
+
+2026-08-21 的 Phase 1 验收通过全部 459 条 Renderer 测试，其中包含具名 No-op、Content-only、
+Scalar、Environment 与 Topology/Rollback 用例。Equal-input 压力用例在接受 Graph 后执行 1,000 次
+分类，Compiler、Environment、原生提交、Helper 写入、Adapter Layout Request 与 Adapter
+Allocation Batch 均为 0。Changeset、Release Intent、Development Tooling Isolation 和文档门禁均
+通过。固定频率 50 Node 全帧预检仍为 **inconclusive**：Released Baseline 的 Stable/Scalar
+Run-P50 CV 是 `0.181`/`0.261`，Scalar 相邻复测仍为 `0.244`；Candidate Stable/Scalar CV 是
+`0.212`/`0.143`。只有 Candidate Scalar Arm 达到 `0.15`，因此结果不支持纵向 Timing 结论；在
+声称端到端收益前，Phase 4 矩阵必须重新复验。
 
 ## 主要 API
 

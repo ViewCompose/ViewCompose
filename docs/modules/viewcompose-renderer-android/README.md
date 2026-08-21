@@ -99,7 +99,15 @@ and removal for Guideline, Barrier, Flow, Group, Layer, and Placeholder. Accepte
 from a clean native set; failed native commits restore the previous helper registry, LayoutParams,
 runtime properties, environment, and accepted graph. Group/Layer/Placeholder effects are retained
 as overlays over restorable child runtime properties instead of becoming the next graph's source of
-truth. The complete contract is recorded in
+truth. The post-release reconciliation path additionally caches accepted raw specifications,
+semantic/resolved graphs, environment, topology/scalar fingerprints, native IDs, and helper
+ownership per container. It classifies no-op, content-only, scalar, environment, and topology
+updates before commit. Equal/content-only requests bypass graph compilation, environment
+resolution, native commit, helper writes, adapter layout requests, and adapter-owned allocation;
+scalar requests retain unchanged helper instances and references, create/remove no helper, clone no
+live LayoutParams, and issue at most one adapter layout request. Optional structural counters are
+container-local and internal to tests; when inactive they own no global observer or recurring work.
+The complete contract is recorded in
 [ADR-0016](../../architecture/decisions/0016-constraintlayout-graph-and-helper-ownership.md).
 The focused 2026-08-18 offline API 35 run passed 16/16 ConstraintLayout renderer regressions,
 including exact `125 px` Barrier geometry after a prior `0 px` result, rejected-candidate state
@@ -126,6 +134,16 @@ no Group/Layer/Placeholder content overlay was released; topology-50 P50 moved f
 **no material change**; four unstable actions remain `inconclusive`, and direct Android Views still
 owns a material P95 advantage. Broader cross-OEM/API and performance-leadership work remains a
 post-release limitation rather than an observed first-release correctness defect.
+
+The 2026-08-21 Phase 1 acceptance passed all 459 renderer tests, including named no-op,
+content-only, scalar, environment, and topology/rollback cases. Equal-input stress performed 1,000
+classifications with zero compiler, environment, native commit, helper write, adapter layout
+request, or adapter allocation batches after the accepted graph. The Changeset and release-intent,
+development-tooling-isolation, and documentation gates pass. A fixed-clock 50-node full-frame
+preflight remains **inconclusive**: released-baseline stable/scalar run-P50 CV was `0.181`/`0.261`
+and the scalar repeat remained `0.244`; candidate stable/scalar CV was `0.212`/`0.143`. Only the
+candidate scalar arm met `0.15`, so the result supports no longitudinal timing claim and the Phase 4
+matrix must replicate it before claiming an end-to-end win.
 
 ## Principal APIs
 

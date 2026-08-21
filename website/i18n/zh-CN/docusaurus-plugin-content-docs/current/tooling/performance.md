@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 20e60aaac2c310f8ef2252f3e929ae21338f3bbf99120daf0e22bd381a79ab7e
+translation_source_hash: 2afcdb357907b1a915c44acabf7cdd5065ed6cb2dddd09488a66953e4b8a38d0
 translation_status: current
 ---
 
@@ -865,6 +865,45 @@ Direct Android Views 仍明显更快，尤其是 P95；该差距属于发版后�
 而非 Post-GC Retained Memory，以及该 Workload 没有 P99。下一步是源码冻结的首发窗口。Central
 发布并完成 Tag 后，ConstraintLayout 扩展计划可以用稳定的多设备协议研究分类 Scalar/Topology
 快速路径；首发列车不宣称这些收益。
+
+#### 2.4.6 ConstraintLayout Phase 1 协调预检
+
+2026-08-21 的 Phase 1 预检在同一台已 Root 的 Xiaomi MI 6 / Android 9 上比较精确的已发布源码
+Control `143b09acf3bfcda81add008b4dcf09d06a09e2dc` 与 Candidate `360670d4`。两侧均为 R8/资源
+压缩 Benchmark Target。Control 与 Candidate APK SHA-256 分别是
+`3b0510810f64de6881ec844337179b2337f92ce03700231abc00be5c66422c62` 和
+`83766f3c5aff66bd13e3593cf2c8c614d514e5a7231807795dde7a06c2280fe2`。共享 Benchmark APK 是
+`1616fe2d5ea7aab5d8496be5b2dd3521ebf798cbbed0f9377bc3f0594d953de1`；只修改 Instrumentation
+Magisk 传输边界后的 APK 是
+`5a8ed54feea46ec80f210d4d967c975bcfe97ebc7ec0f04480ab9eae91fdc05e`。该等长改写只把 AndroidX
+Benchmark 的 AOSP `su root` 命令形式换为 Magisk `su -c`；Target APK、Workload、Metric Capture
+与结果 JSON 均未改变。
+
+预检使用 5 次 `run-from-apk` 迭代、4 个 Update/Reset Cycle，CPU Policy 固定为
+1.4016/1.8048 GHz，Adreno 固定为 515 MHz，CPU/GPU 带宽固定为 `13763`，暂停充电、停止厂商
+性能服务、保持屏幕可交互，并在不高于 37 摄氏度时开始每个方法。每行依次记录聚合 Frame CPU
+P50/P95/P99（毫秒）、Median Peak Heap（KiB）以及各次迭代 P50 的变异系数。
+
+| Arm | Frame P50/P95/P99，ms | Median Peak Heap，KiB | Run-P50 CV | 验收 |
+| --- | ---: | ---: | ---: | --- |
+| Released stable-50 | `6.035/23.179/25.138` | 7703 | `0.181` | 拒绝：CV 高于 `0.15`。 |
+| Candidate stable-50 | `5.791/23.638/25.332` | 7762 | `0.212` | 拒绝：CV 高于 `0.15`。 |
+| Released scalar-50 | `7.490/23.716/24.849` | 8282 | `0.261` | 拒绝：CV 高于 `0.15`。 |
+| Released scalar-50 repeat | `6.399/24.112/27.994` | 9267 | `0.244` | 拒绝：相邻复测仍不稳定。 |
+| Candidate scalar-50 | `6.948/24.760/26.756` | 8917 | `0.143` | 单 Arm 稳定；Pair 仍拒绝。 |
+
+Stable-50 的 Candidate 聚合 P50/P95/P99 变化为 `-4.0%/+2.0%/+0.8%`，Peak Heap 为 `+0.8%`，
+但两侧都没有通过稳定性门槛。Scalar-50 的 Candidate 相对第一次 Released 运行是
+`-7.2%/+4.4%/+7.7%`；相对相邻 Released 复测则变为 `+8.6%/+2.7%/-4.4%`。Peak Heap 也从
+相对第一次运行的 `+7.7%` 变为相对复测的 `-3.8%`。这些依赖 Reference 且方向相反的结果不能
+作为归一化证据。
+
+全帧结论为 **inconclusive**。Longitudinal Control/Candidate 前置条件失败，无法形成 Three-arm
+声明，因此没有把 Direct-native 结果提升为对照结论。该预检不否定已经独立通过的 Phase 1 结构预算：
+1,000 次 Equal 更新的 Adapter Graph/Compiler/Native/Helper/Layout/Allocation 工作均为 0；Scalar
+更新不创建/删除 Helper、不克隆 Live LayoutParams，并且最多提交和请求一次 Layout。局限是只有
+一台 API 28 设备、Workload 仅 16～17 个 Frame，且每次运行的变动持续存在。下一步是充分降温的
+Phase 4 Direct-native/Released/Candidate 矩阵；稳定复验之前不宣称全帧优化收益。
 
 ### 2.5 Debug Tooling 回归门禁
 
