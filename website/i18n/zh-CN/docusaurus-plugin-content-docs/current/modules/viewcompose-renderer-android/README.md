@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: e73c7e5178a685e3495320821c8f40cb7e1f688fefda299809a9e37c1f90c197
+translation_source_hash: fba0069790afb4eaf72d0007afda216582dcbb329a396710208218e5a846bd15
 translation_status: current
 ---
 
@@ -83,8 +83,12 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 
 ConstraintLayout 协调会先编译完整不可变候选，并在接触原生 View 前拒绝无效 ID、Reference、
 Anchor Plane、Helper 依赖、所有权冲突、尺寸与范围。一个注册表拥有 Guideline、Barrier、Flow、
-Group、Layer 与 Placeholder 的稳定 ID、实例、类型变化、引用和删除。已接受候选从干净的原生
-Set 应用；原生提交失败会恢复此前的 Helper 注册表、LayoutParams、运行时属性、环境与已接受图。
+Group、Layer、Placeholder，以及类型化 Grid 有界行/列 Solver Proxy 的稳定 ID、实例、类型变化、
+引用和删除。Grid 的语义 Identity 不是原生 View；声明式 CircularFlow 会编译为普通 Per-child
+Circle Constraint，不拥有 Helper View 或生成 ID。已接受候选从干净的原生 Set 应用；原生提交
+失败会恢复此前的 Helper 注册表、LayoutParams、运行时属性、环境与已接受图。AndroidX `2.2.2`
+把已应用 `ConstraintSet` 复制到 `LayoutParams` 时会遗漏 Baseline Margin 与物理 Gone Margin，
+因此 Renderer 会在测量前恢复这些精确字段，并重置已移除值，防止其泄漏到下一 Graph。
 Group/Layer/Placeholder 效果是叠加在可恢复 Child 运行时属性之上的 Overlay，不会成为下一候选的
 事实来源。发版后协调路径还会按 Container 缓存已接受的原始 Spec、Semantic/Resolved Graph、
 环境、Topology/Scalar Fingerprint、原生 ID 与 Helper 所有权，并在提交前把更新分类为 No-op、
@@ -123,6 +127,27 @@ Allocation Batch 均为 0。Changeset、Release Intent、Development Tooling Iso
 Run-P50 CV 是 `0.181`/`0.261`，Scalar 相邻复测仍为 `0.244`；Candidate Stable/Scalar CV 是
 `0.212`/`0.143`。只有 Candidate Scalar Arm 达到 `0.15`，因此结果不支持纵向 Timing 结论；在
 声称端到端收益前，Phase 4 矩阵必须重新复验。
+
+2026-08-21 的 Phase 2 聚焦 API-35 Robolectric 验收通过全部六条冻结的 `CL-P2-*` Renderer
+用例。精确 Bounds 覆盖逻辑 LTR/RTL 与物理坐标下的 Parent、Child、Guideline、Barrier Chain
+Boundary；Baseline 普通/Gone Margin 与 Direct AndroidX Control 一致；四种 Parent-wrap Policy
+产生各自文档化轴；Physical Link 在环境方向更新时保持固定。Weighted Grid 的 `2 x 3` Graph
+恰好保留五个 Proxy；重叠候选会回滚且不改变几何，1,000 次 Add/Remove 替换始终有界。
+CircularFlow 与 AndroidX Angle/Radius 几何一致，会拒绝竞争的 Direct Ownership，并在 1,000 次
+替换中保持零 Helper Identity。相对已发布 Renderer，结论为 **improved**：它新增冻结的 Phase 2
+Transport 原子支持，并关闭 AndroidX Baseline/Physical Margin Copy 遗漏。该证据不是性能对比，
+且覆盖 Robolectric 而不是 Phase 3 Device/OEM Matrix；下一步是完整 Device、Visual、
+Configuration 与 Lifecycle 验收。
+
+同一份 2026-08-21 Candidate 在已 Root 的 Xiaomi MI 6 / Android 9 上用 `15.674 s` 通过 4/4 条
+`ConstraintLayoutReleaseDeviceTest`。新增 Phase 2 用例验证 Weighted Grid Span/Skip 的精确顺序，
+并确认生成的 Row/Column Proxy 恰为五个；同时验证四条 Direct CircularFlow Circle Constraint
+位于 `78 dp` 半径的四个正方向，且不存在 Helper View。保留 Helper Matrix 仍在浅色/LTR/字体缩放
+1.0 与深色/RTL/字体缩放 1.3 下通过，包括 200 次快速状态切换；结构化 Diagnostics 未出现
+非预期 Warning。人工复核两张聚焦中文 Demo 截图，未发现重叠、裁切或 Helper Artifact；按进程
+过滤的日志也未出现 `UIConstraintLayout`、`ConstraintSet`、Renderer、Helper Layer 或 Fatal 条目。
+相对已发布 Renderer，这份真机能力与 Lifecycle 结果为 **improved**。它只覆盖一个 OEM/API 点与
+聚焦视觉样本，不代表完整 Phase 3 Configuration/Screenshot Matrix，也不是 Phase 4 性能证据。
 
 ## 主要 API
 

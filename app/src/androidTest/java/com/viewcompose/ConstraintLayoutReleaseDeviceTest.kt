@@ -203,6 +203,66 @@ class ConstraintLayoutReleaseDeviceTest {
         }
     }
 
+    @Test
+    fun phaseTwoGridAndCircularFlow_publishExactNativeGeometryWithoutUnownedHelpers() {
+        launchConstraintFixture(FixtureCase.default).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                activity.requireViewByTestTagVisible(
+                    DemoTestTags.LAYOUTS_CONSTRAINT_GRID_HERO,
+                ).centerInsideOwningRecyclerView()
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val grid = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_CONTAINER)
+                val hero = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_HERO)
+                val metric = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_METRIC)
+                val status = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_STATUS)
+                val action = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_ACTION)
+                listOf(hero, metric, status, action).forEach { child -> assertInside(grid, child) }
+                assertTrue("The spanning Grid item must be wider than every single-cell item.",
+                    hero.width > maxOf(metric.width, status.width, action.width))
+                assertEquals("The three automatic second-row cells must share a top edge.",
+                    metric.topOnScreen(), status.topOnScreen())
+                assertEquals(metric.topOnScreen(), action.topOnScreen())
+                assertTrue(metric.leftOnScreen() < status.leftOnScreen() && status.leftOnScreen() < action.leftOnScreen())
+                assertEquals("Four content Views plus two row and three column proxies are expected.",
+                    9, grid.requireConstraintLayoutSelf().childCount)
+            }
+            scenario.onActivity { activity ->
+                activity.requireViewByTestTagVisible(
+                    DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CENTER,
+                ).centerInsideOwningRecyclerView()
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val container = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CONTAINER)
+                val center = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CENTER)
+                val top = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_TOP)
+                val right = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_RIGHT)
+                val bottom = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_BOTTOM)
+                val left = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_LEFT)
+                listOf(center, top, right, bottom, left).forEach { child -> assertInside(container, child) }
+                assertTrue(top.centerYOnScreen() < center.centerYOnScreen())
+                assertTrue(right.centerXOnScreen() > center.centerXOnScreen())
+                assertTrue(bottom.centerYOnScreen() > center.centerYOnScreen())
+                assertTrue(left.centerXOnScreen() < center.centerXOnScreen())
+                val radius = (78 * activity.resources.displayMetrics.density).toInt()
+                listOf(
+                    abs(center.centerYOnScreen() - top.centerYOnScreen()),
+                    abs(right.centerXOnScreen() - center.centerXOnScreen()),
+                    abs(bottom.centerYOnScreen() - center.centerYOnScreen()),
+                    abs(center.centerXOnScreen() - left.centerXOnScreen()),
+                ).forEach { actual ->
+                    assertTrue("CircularFlow radius must match 78dp. expected=$radius actual=$actual", abs(actual - radius) <= 2)
+                }
+                assertEquals("CircularFlow must create no helper View.",
+                    5, center.requireConstraintLayoutAncestor().childCount)
+            }
+            assertNoRenderWarnings()
+        }
+    }
+
     private fun verifyConfiguration(fixture: FixtureCase) {
         DemoRenderDiagnosticsStore.reset()
         launchConstraintFixture(fixture).use { scenario ->
@@ -357,6 +417,13 @@ private fun View.topOnScreen(): Int = IntArray(2).also(::getLocationOnScreen)[1]
 private fun View.leftOnScreen(): Int = IntArray(2).also(::getLocationOnScreen)[0]
 
 private fun View.rightOnScreen(): Int = leftOnScreen() + width
+
+private fun View.centerXOnScreen(): Int = leftOnScreen() + width / 2
+
+private fun View.centerYOnScreen(): Int = topOnScreen() + height / 2
+
+private fun View.requireConstraintLayoutSelf(): ConstraintLayout =
+    this as? ConstraintLayout ?: error("Expected ConstraintLayout but was ${javaClass.simpleName}")
 
 private fun assertInside(container: View, child: View, context: String = "") {
     val containerBounds = "container=[${container.leftOnScreen()},${container.topOnScreen()}..${container.rightOnScreen()},${container.topOnScreen() + container.height}]"

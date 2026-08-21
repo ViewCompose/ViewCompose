@@ -20,15 +20,17 @@ dependencies {
   archived as `docs/archive/constraintlayout-native-engine-hardening.md`.
   Broader parity and optimization are owned by a separate
   [post-release expansion plan](../../project/plans/constraintlayout-parity-performance-expansion.md)
-  whose Demo fixed-clock baseline and Phase 0 contract freeze are merged. Phase 1 classified
-  reconciliation is implemented in current source and owns its immutable renderer Changeset;
-  Phase 2 parity is the next execution stage.
+  whose Demo fixed-clock baseline, Phase 0 contract freeze, and Phase 1 classified reconciliation
+  are merged. Phase 2 high-value parity is implemented in current source and owns its immutable
+  multi-artifact Changeset; Phase 3 complete visual/configuration acceptance is next.
 - Platform: Android 7.0 (API 24) and newer.
 - Optional: `viewcompose-ui-foundation` does not depend on this artifact.
 - UI Contract and UI Foundation are exposed transitively because their modifier, unit, and builder
   types appear in the public DSL; runtime remains an implementation dependency.
 - Native engine: AndroidX ConstraintLayout `2.2.2` and its Guideline, Barrier, Flow, Group, Layer,
-  and Placeholder helpers.
+  and Placeholder helpers. Typed Grid expands into renderer-owned row/column solver proxies rather
+  than AndroidX Grid's string grammar; declarative CircularFlow expands into ordinary circle
+  constraints and creates no helper View.
 
 ## Inline constraints
 
@@ -51,9 +53,12 @@ ConstraintLayout {
 
 References are non-blank string identities local to one layout. Duplicate child IDs, helper IDs,
 and child/helper collisions reject the complete candidate. A repeated source-anchor call replaces
-its earlier link. `start` and `end` follow layout direction; top, bottom, and baseline are
-physical/native anchors. A baseline link is mutually exclusive with top/bottom positioning, and a
-circle is mutually exclusive with all edge/baseline links.
+its earlier link. `start` and `end` follow layout direction; `left` and `right` remain physical;
+top, bottom, and baseline are physical/native anchors. One item cannot mix logical and physical
+horizontal links. A baseline link is mutually exclusive with top/bottom positioning, and a circle
+is mutually exclusive with all edge/baseline links. `wrapBehaviorInParent` independently selects
+whether the item contributes to both, one, or neither wrap-content parent axis without removing it
+from solving or placement.
 
 `ConstraintLayoutScope` is a dedicated `@UiDslMarker` receiver rather than a `UiTreeBuilder` type
 alias. It still exposes every ordinary widget, but helper declarations belong directly to the
@@ -88,7 +93,7 @@ Available dimensions are `WrapContent`, `ConstrainedWrapContent`, `Fixed`, and
 `MatchParent`, independent min/max/percent/constrained fields, and raw ratio strings are absent.
 Typed ratios require positive finite terms and at least one match-constraint axis. Biases and
 guideline percentages use `0f..1f`. Circular angles use the finite `0f..<360f` Android clockwise
-convention.
+convention: `0f` is above the center and values advance clockwise.
 
 ## Reusable constraint sets
 
@@ -119,10 +124,17 @@ inline child; `Modifier.constrainAs(ref, ...)` is the reference-based form.
 
 ## Virtual helpers
 
-- Guidelines use finite non-negative dp offsets or inclusive `0f..1f` parent fractions.
-- Barriers track logical/physical extremes with margins and gone-widget policy.
-- Chains require at least two unique members, own their members' anchors on the chain axis, and
-  validate finite positive weights plus bias.
+- Guidelines use finite non-negative dp offsets or inclusive `0f..1f` parent fractions. Explicit
+  left/right variants remain physically fixed while start/end variants mirror in RTL.
+- Barriers track logical or physical extremes with margins and gone-widget policy.
+- Chains require at least two unique members, own their members' anchors on the chain axis, validate
+  finite positive weights plus bias, and accept explicit parent/child/Guideline/Barrier endpoints
+  with non-negative boundary margins. Horizontal endpoints must stay entirely logical or physical.
+- Typed Grid accepts fixed or inferred axes bounded to `50 x 50`, positive row/column weights,
+  logical fill orientation, dp gaps, typed spans, and typed skips. It owns both positioning axes of
+  every member; overlapping or insufficient topology rejects the complete candidate.
+- Declarative CircularFlow groups explicit child/radius/angle values around one child center. It
+  owns each member's circular positioning and creates no native helper identity.
 - Flow maps orientation, wrapping, styles, biases, alignment, gaps, padding, and maximum wrap count.
 - Group propagates visibility and elevation.
 - Layer propagates visibility, elevation, rotation, scale, translation, and optional pivots.
@@ -138,8 +150,10 @@ constraint-item sources.
 
 The native container coalesces rebuild requests and preflights the complete merged graph before
 mutation. Child and helper strings map to stable Android View IDs. One registry creates, reuses,
-retypes, and removes Guideline, Barrier, Flow, Group, Layer, and Placeholder Views; AndroidX no
-longer creates unowned helpers as an `applyTo` side effect.
+retypes, and removes Guideline, Barrier, Flow, Group, Layer, and Placeholder Views plus Grid's
+zero-thickness row/column proxies; AndroidX no longer creates unowned helpers as an `applyTo` side
+effect. Grid's semantic ID is identity-only and never maps to a View; CircularFlow has neither a
+helper View nor generated native ID.
 
 An accepted candidate is built from a clean native set. The renderer snapshots touched IDs,
 LayoutParams, helper membership, accessibility, visibility, and transforms before apply. Missing
@@ -172,8 +186,8 @@ diagnostics for generated IDs. A follow-up Gradle 8.13 run resolved ConstraintLa
 core `1.1.2` and passed 75/75 UI Contract tests, 11/11 DSL tests, and 451/451 Renderer tests,
 including the 12 graph and 16 focused ConstraintLayout cases; `verifyDocumentationStructure` also
 passed. The formal JVM compatibility conclusion remains **improved**. The later device and
-performance matrices below close the first-release acceptance scope; Grid, CircularFlow, and
-broader parity remain post-release work after the classified Phase 1 fast paths.
+performance matrices below close the first-release acceptance scope; the post-release plan now
+owns typed Grid, CircularFlow, broader visual acceptance, and final performance comparison.
 
 The 2026-08-21 Phase 1 run passed all 459 renderer tests. Named cases cover 1,000 equal submissions,
 content-only child replacement, scalar helper retention, one-pass environment resolution, and an
@@ -183,6 +197,32 @@ equal input; the scalar case creates/removes no helper, clones no live LayoutPar
 most once. The counters and activation hook are internal and container-local, so there is no public
 API documentation addition or inactive global observer. Release-intent, development-tooling
 isolation, and documentation gates pass.
+
+The 2026-08-21 Phase 2 focused JVM run passes the six frozen `CL-P2-*` renderer cases. Chain tests
+cover exact parent/child/Guideline/Barrier boundaries, margins, physical placement, and logical
+LTR/RTL mirroring. Baseline normal/gone margins match a direct AndroidX control and an invalid retry
+retains the accepted graph. All four parent-wrap policies produce exact two-axis sizes. Physical
+links and Guidelines remain fixed through an RTL-to-LTR environment update while logical start
+mirrors. Weighted Grid produces exact span/skip geometry, rejects an overlapping candidate without
+changing five retained proxies, and stays within `0..5` proxies across 1,000 replacements.
+CircularFlow matches AndroidX circle coordinates, rejects competing direct ownership atomically,
+and retains zero helper identity across 1,000 replacements. This is **improved** capability and
+failure-safety evidence relative to the released source, which has none of these Phase 2 contracts.
+It is JVM/API-35 Robolectric evidence; Phase 3 still owns the complete device, screenshot,
+configuration, and lifecycle matrix, and Phase 4 still owns performance conclusions.
+
+The same 2026-08-21 candidate passed 4/4 `ConstraintLayoutReleaseDeviceTest` cases in `15.674 s` on
+a rooted Xiaomi MI 6 / Android 9. The new Phase 2 case verifies exact Grid span/skip ordering with
+four content children plus five generated row/column proxies, and verifies four CircularFlow
+members at the cardinal positions of a `78 dp` radius with no helper View. The other three cases
+retain the earlier light/LTR/font-scale 1.0 and dark/RTL/font-scale 1.3 helper matrix and 200 rapid
+state switches; structured diagnostics reported no unexpected warning. Manual review of two
+focused Chinese Demo captures confirmed the weighted `2 x 3` Grid and four-member CircularFlow are
+legible, unclipped, and free of overlap or helper artifacts. Process-filtered logs contained no
+`UIConstraintLayout`, `ConstraintSet`, renderer, helper-layer, or fatal entry. The physical-device
+capability and failure-safety conclusion is **improved** relative to the released source. This is
+one OEM/API point and a focused visual sample rather than the complete Phase 3 screenshot and
+lifecycle matrix, and it provides no Phase 4 performance conclusion.
 
 The 2026-08-19 DSL safety follow-up passed 17/17 ConstraintLayout module tests: 12 behavior tests
 and five Kotlin 2.0.21 compiler fixtures. The positive typed-axis/reference sample compiled; a
@@ -259,6 +299,8 @@ CVs, limitations, and protocol are recorded in
 | `ConstraintLayoutScope` as a `UiTreeBuilder` alias | Use the dedicated receiver supplied by `ConstraintLayout { ... }`; do not retain or construct it |
 | one generic anchor-target type for every helper | Link start/end only to horizontal targets, top/bottom only to vertical targets, and baselines only to baseline-capable children |
 | `constraintSet { constrain(ref.id) { ... } }` | `constraintSet { constrain(ref) { ... } }` |
+| AndroidX Grid string spans/skips | Use typed `ConstraintGridSpan` and `ConstraintGridSkip` values in `createGrid(...)` |
+| logical start/end used as fixed screen edges | Use explicit left/right anchors, Guidelines, Barriers, and physical chain sides |
 
 The changed public surface is Q3: transport invariants, defaults, failure timing, DSL scope,
 merge precedence, native mapping, and replacement samples are contract fields. There is no

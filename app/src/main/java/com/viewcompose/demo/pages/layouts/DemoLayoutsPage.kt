@@ -32,6 +32,7 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.spec.ConstraintChainStyle
 import com.viewcompose.ui.node.spec.ConstraintDimension
 import com.viewcompose.ui.node.spec.ConstraintFlowWrapMode
+import com.viewcompose.ui.node.spec.ConstraintGridOrientation
 import com.viewcompose.ui.node.spec.ConstraintHelperVisibility
 import com.viewcompose.ui.node.spec.ConstraintMatchMode
 import com.viewcompose.ui.node.spec.ConstraintRatio
@@ -93,6 +94,22 @@ internal fun UiTreeBuilder.PreviewLayoutsConstraint() {
     LayoutPage(LayoutFixture.Constraint)
 }
 
+@ViewComposePreview(name = "Layouts · Constraint Grid", group = "Demo/ConstraintLayout")
+internal fun UiTreeBuilder.PreviewLayoutsConstraintGrid() {
+    LayoutPage(
+        fixture = LayoutFixture.Constraint,
+        constraintSections = listOf("constraint_grid"),
+    )
+}
+
+@ViewComposePreview(name = "Layouts · Circular Flow", group = "Demo/ConstraintLayout")
+internal fun UiTreeBuilder.PreviewLayoutsCircularFlow() {
+    LayoutPage(
+        fixture = LayoutFixture.Constraint,
+        constraintSections = listOf("constraint_circular_flow"),
+    )
+}
+
 internal enum class LayoutFixture(
     val scenarioId: DemoScenarioId,
 ) {
@@ -114,6 +131,7 @@ internal enum class LayoutFixture(
 internal fun UiTreeBuilder.LayoutPage(
     fixture: LayoutFixture,
     scenario: DemoScenarioSpec? = null,
+    constraintSections: List<String>? = null,
 ) {
     val boxTapState = remember { mutableStateOf(0) }
     val benchmarkState = remember { mutableStateOf(false) }
@@ -132,10 +150,12 @@ internal fun UiTreeBuilder.LayoutPage(
         LayoutFixture.Edges -> listOf("edge")
         LayoutFixture.Flow -> listOf("flow")
         LayoutFixture.Scroll -> listOf("scrollable")
-        LayoutFixture.Constraint -> listOf(
+        LayoutFixture.Constraint -> constraintSections ?: listOf(
             "constraint_basic",
             "constraint_helpers",
             "constraint_chain",
+            "constraint_grid",
+            "constraint_circular_flow",
             "constraint_set",
             "constraint_virtual_helpers",
             "constraint_anchor_advanced",
@@ -769,13 +789,40 @@ internal fun UiTreeBuilder.LayoutPage(
                         .padding(12.dp)
                         .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_CONTAINER),
                 ) {
-                    val (startRef, middleRef, endRef) = createRefs("start", "middle", "end")
+                    val (startRef, middleRef, endRef, leftEdgeRef, rightEdgeRef) = createRefs(
+                        "start",
+                        "middle",
+                        "end",
+                        "left-edge-indicator",
+                        "right-edge-indicator",
+                    )
+                    val physicalLeft = createGuidelineFromLeft(8.dp)
+                    val physicalRight = createGuidelineFromRight(8.dp)
                     createHorizontalChain(
                         startRef,
                         middleRef,
                         endRef,
                         style = ConstraintChainStyle.SpreadInside,
+                        startTarget = physicalLeft,
+                        startTargetSide = ConstraintHorizontalAnchorSide.Left,
+                        startMargin = 8.dp,
+                        endTarget = physicalRight,
+                        endTargetSide = ConstraintHorizontalAnchorSide.Right,
+                        endMargin = 8.dp,
                     )
+                    listOf(leftEdgeRef to physicalLeft, rightEdgeRef to physicalRight).forEach { (ref, guide) ->
+                        Spacer(
+                            modifier = Modifier
+                                .constrainAs(ref) {
+                                    leftToLeft(guide)
+                                    topToTop(parent)
+                                    bottomToBottom(parent)
+                                    width = ConstraintDimension.Fixed(2.dp)
+                                    height = ConstraintDimension.MatchConstraints()
+                                }
+                                .backgroundColor(Theme.colors.primary),
+                        )
+                    }
                     Surface(
                         variant = SurfaceVariant.Variant,
                         modifier = Modifier
@@ -809,6 +856,153 @@ internal fun UiTreeBuilder.LayoutPage(
                             }
                             .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_END),
                     ) { Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) { Text(text = stringResource(R.string.demo_layouts_node_c)) } }
+                }
+            }
+
+            "constraint_grid" -> ScenarioSection(
+                kind = ScenarioKind.Core,
+                title = stringResource(R.string.demo_layouts_constraint_grid_title),
+                subtitle = stringResource(R.string.demo_layouts_constraint_grid_summary),
+            ) {
+                ConstraintLayout(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .backgroundColor(SurfaceDefaults.variantBackgroundColor())
+                        .shape(SurfaceDefaults.shape())
+                        .padding(12.dp)
+                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_CONTAINER),
+                ) {
+                    val (hero, metric, status, action) = createRefs(
+                        "grid-hero",
+                        "grid-metric",
+                        "grid-status",
+                        "grid-action",
+                    )
+                    createGrid(
+                        hero,
+                        metric,
+                        status,
+                        action,
+                        id = "demo-grid",
+                        rows = 2,
+                        columns = 3,
+                        orientation = ConstraintGridOrientation.Horizontal,
+                        rowWeights = listOf(1f, 1.25f),
+                        columnWeights = listOf(1f, 1.6f, 1f),
+                        horizontalGap = 8.dp,
+                        verticalGap = 8.dp,
+                        spans = listOf(ConstraintGridSpan(hero, index = 0, columnSpan = 2)),
+                        skips = listOf(ConstraintGridSkip(index = 2)),
+                    )
+                    fun gridModifier(
+                        ref: ConstraintReference,
+                        tag: String,
+                    ): Modifier = Modifier
+                        .constrainAs(ref) {
+                            width = ConstraintDimension.MatchConstraints()
+                            height = ConstraintDimension.MatchConstraints()
+                        }
+                        .testTag(tag)
+                    Surface(
+                        variant = SurfaceVariant.Variant,
+                        modifier = gridModifier(hero, DemoTestTags.LAYOUTS_CONSTRAINT_GRID_HERO),
+                    ) {
+                        Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Text(text = stringResource(R.string.demo_layouts_constraint_grid_span))
+                        }
+                    }
+                    Surface(
+                        variant = SurfaceVariant.Default,
+                        modifier = gridModifier(metric, DemoTestTags.LAYOUTS_CONSTRAINT_GRID_METRIC),
+                    ) {
+                        Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Text(text = stringResource(R.string.demo_layouts_constraint_grid_metric))
+                        }
+                    }
+                    Surface(
+                        variant = SurfaceVariant.Variant,
+                        modifier = gridModifier(status, DemoTestTags.LAYOUTS_CONSTRAINT_GRID_STATUS),
+                    ) {
+                        Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Text(text = stringResource(R.string.demo_layouts_constraint_grid_status))
+                        }
+                    }
+                    Surface(
+                        variant = SurfaceVariant.Default,
+                        modifier = gridModifier(action, DemoTestTags.LAYOUTS_CONSTRAINT_GRID_ACTION),
+                    ) {
+                        Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Text(text = stringResource(R.string.demo_layouts_constraint_grid_action))
+                        }
+                    }
+                }
+            }
+
+            "constraint_circular_flow" -> ScenarioSection(
+                kind = ScenarioKind.Visual,
+                title = stringResource(R.string.demo_layouts_constraint_circular_title),
+                subtitle = stringResource(R.string.demo_layouts_constraint_circular_summary),
+            ) {
+                ConstraintLayout(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(260.dp)
+                        .backgroundColor(SurfaceDefaults.backgroundColor())
+                        .shape(SurfaceDefaults.shape())
+                        .padding(12.dp)
+                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CONTAINER),
+                ) {
+                    val (center, top, right, bottom, left) = createRefs(
+                        "orbit-center",
+                        "orbit-top",
+                        "orbit-right",
+                        "orbit-bottom",
+                        "orbit-left",
+                    )
+                    createCircularFlow(
+                        center,
+                        ConstraintCircularFlowItem(top, radius = 78.dp, angle = 0f),
+                        ConstraintCircularFlowItem(right, radius = 78.dp, angle = 90f),
+                        ConstraintCircularFlowItem(bottom, radius = 78.dp, angle = 180f),
+                        ConstraintCircularFlowItem(left, radius = 78.dp, angle = 270f),
+                        id = "demo-orbit",
+                    )
+                    Surface(
+                        variant = SurfaceVariant.Variant,
+                        modifier = Modifier
+                            .constrainAs(center) {
+                                centerHorizontallyTo()
+                                centerVerticallyTo()
+                                width = ConstraintDimension.Fixed(72.dp)
+                                height = ConstraintDimension.Fixed(72.dp)
+                            }
+                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CENTER),
+                    ) {
+                        Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Text(text = stringResource(R.string.demo_layouts_constraint_circular_center))
+                        }
+                    }
+                    listOf(
+                        Triple(top, DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_TOP, R.string.demo_layouts_top),
+                        Triple(right, DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_RIGHT, R.string.demo_layouts_right),
+                        Triple(bottom, DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_BOTTOM, R.string.demo_layouts_bottom),
+                        Triple(left, DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_LEFT, R.string.demo_layouts_left),
+                    ).forEach { (ref, tag, label) ->
+                        Surface(
+                            variant = SurfaceVariant.Default,
+                            modifier = Modifier
+                                .constrainAs(ref) {
+                                    width = ConstraintDimension.Fixed(48.dp)
+                                    height = ConstraintDimension.Fixed(48.dp)
+                                }
+                                .testTag(tag),
+                        ) {
+                            Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Text(text = stringResource(label), style = UiTextStyle(fontSizeSp = 12.sp))
+                            }
+                        }
+                    }
                 }
             }
 

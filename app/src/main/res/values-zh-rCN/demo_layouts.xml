@@ -79,6 +79,17 @@
     <string name="demo_layouts_node_a">A</string>
     <string name="demo_layouts_node_b">B</string>
     <string name="demo_layouts_node_c">C</string>
+    <string name="demo_layouts_constraint_grid_title">类型安全 Grid 几何</string>
+    <string name="demo_layouts_constraint_grid_summary">通过行列权重、固定间距、一个跨两列区域和一个跳过单元格突出显示布局结果。</string>
+    <string name="demo_layouts_constraint_grid_span">跨 2 列</string>
+    <string name="demo_layouts_constraint_grid_metric">指标</string>
+    <string name="demo_layouts_constraint_grid_status">状态</string>
+    <string name="demo_layouts_constraint_grid_action">操作</string>
+    <string name="demo_layouts_constraint_circular_title">声明式 CircularFlow</string>
+    <string name="demo_layouts_constraint_circular_summary">四个显式半径和角度的成员围绕同一中心排列，且不创建原生 Helper View。</string>
+    <string name="demo_layouts_constraint_circular_center">中心</string>
+    <string name="demo_layouts_right">右侧</string>
+    <string name="demo_layouts_left">左侧</string>
     <string name="demo_layouts_constraint_set_title">解耦 ConstraintSet</string>
     <string name="demo_layouts_constraint_set_summary">切换不可变 Set 后立即重算约束和刷新布局。</string>
     <string name="demo_layouts_switch_vertical">切换到竖向布局</string>

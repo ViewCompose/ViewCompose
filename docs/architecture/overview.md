@@ -120,10 +120,13 @@ The project is a maintainable View-based declarative UI v1:
 6. Animation and gesture use kernel, DSL, and Android interop layers.
 7. Graphics uses core, DSL, renderer pipeline, and host interop layers.
 8. ConstraintLayout separates Q3 authoring from renderer-neutral transport and AndroidX mapping.
-   Its immutable graph preflight owns IDs, references, anchor planes, typed dimensions/ratios, and
-   chain/helper validity; one Android registry owns Guideline, Barrier, Flow, Group, Layer, and
-   Placeholder Views, while native publication follows the rollback boundary in
-   [ADR-0016](./decisions/0016-constraintlayout-graph-and-helper-ownership.md).
+   Its immutable graph preflight owns IDs, references, logical/physical anchor planes, typed
+   dimensions/ratios, Chain/Grid/CircularFlow placement, and helper validity. One Android registry
+   owns native helpers plus typed Grid's bounded row/column proxies; CircularFlow expands to
+   ordinary circle constraints without a helper View. Native publication follows the rollback
+   boundary in [ADR-0016](./decisions/0016-constraintlayout-graph-and-helper-ownership.md) and the
+   typed expansion decision in
+   [ADR-0017](./decisions/0017-typed-constraint-helper-expansion.md).
 9. Theme tokens are in a consumption-closure phase: every new token must be consumed by defaults/composite defaults or explicitly registered as a reserved semantic palette entry.
 10. Text input has one source of truth, `TextFieldState`. The pure-Kotlin editor owns value, selection, composition, and history; renderer's `ViewComposeEditText` only adapts Android `Editable` and `InputConnection`.
 11. System navigation keeps its pure-Kotlin transaction kernel separate from Android page sessions and back dispatch.

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: bf570a3d10d58244d66eeefa41eba41cd29c9b2abbceb6d448a6ae5ae84bf574
+translation_source_hash: b528e412f549abcc585f34b1ac204ac9d4bbc1d637704d93fe84a2ba65aa392c
 translation_status: current
 ---
 
@@ -27,6 +27,7 @@ translation_status: current
 - [ADR-0014：渲染器中立的交互指示](./0014-renderer-neutral-interaction-indication.md)
 - [ADR-0015：可观察属性事务](./0015-observed-property-transactions.md)
 - [ADR-0016：ConstraintLayout 图与 Helper 所有权](./0016-constraintlayout-graph-and-helper-ownership.md)
+- [ADR-0017：类型化 ConstraintLayout Helper 展开](./0017-typed-constraint-helper-expansion.md)
 
 ## 规则
 

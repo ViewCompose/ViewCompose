@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-constraintlayout-androidx/README.md
-translation_source_hash: 729924ec1da2ecf29f85cf13a7538eb5b4f94464809204c11732c56210965f75
+translation_source_hash: c1b8930c1d96873f5b6aa9f3fa603d938de4dfea7bc403425a2790cd05d805e1
 translation_status: current
 ---
 
@@ -25,14 +25,16 @@ dependencies {
   并归档为 `docs/archive/constraintlayout-native-engine-hardening.md`。
   更广泛的能力对齐与优化由独立的
   [发版后扩展计划](https://docs.viewcompose.com/project/plans/constraintlayout-parity-performance-expansion)负责；
-  Demo 固定频率基线与 Phase 0 契约冻结均已合入。当前源码已实现 Phase 1 分类协调并拥有不可变
-  Renderer Changeset；Phase 2 能力对齐是下一执行阶段。
+  Demo 固定频率基线、Phase 0 契约冻结与 Phase 1 分类协调均已合入。当前源码已实现 Phase 2
+  高价值能力对齐，并拥有不可变的多产物 Changeset；下一步是 Phase 3 完整视觉/配置验收。
 - 平台：Android 7.0（API 24）及以上。
 - 可选：`viewcompose-ui-foundation` 不依赖该产物。
 - UI Contract 与 UI Foundation 会被传递暴露，因为它们的 Modifier、单位和 Builder 类型
   出现在公开 DSL 中；Runtime 保持为实现依赖。
 - 原生引擎：AndroidX ConstraintLayout `2.2.2` 及其 Guideline、Barrier、Flow、Group、
-  Layer 与 Placeholder Helper。
+  Layer 与 Placeholder Helper。类型化 Grid 会展开为 Renderer 自有的行/列 Solver Proxy，
+  不使用 AndroidX Grid 的 String Grammar；声明式 CircularFlow 会展开为普通 Circle Constraint，
+  不创建 Helper View。
 
 ## 内联约束
 
@@ -55,8 +57,11 @@ ConstraintLayout {
 
 Reference 是一个 Layout 内的非空 String Identity。重复 Child ID、Helper ID 或
 Child/Helper 冲突会拒绝完整候选。同一 Source Anchor 被重复设置时，后者替换前者。
-`start`/`end` 跟随 Layout Direction；Top、Bottom、Baseline 是物理/原生 Anchor。
-Baseline Link 与 Top/Bottom 定位互斥；Circle 与所有 Edge/Baseline Link 互斥。
+`start`/`end` 跟随 Layout Direction；`left`/`right` 保持物理方向；Top、Bottom、Baseline
+也是物理/原生 Anchor。一个 Item 不能混用逻辑与物理水平 Link。Baseline Link 与
+Top/Bottom 定位互斥；Circle 与所有 Edge/Baseline Link 互斥。`wrapBehaviorInParent`
+可独立选择该 Item 是否参与 Parent 两个、一个或零个 Wrap-content 轴，同时不会把它从
+Solver 或 Placement 中移除。
 
 `ConstraintLayoutScope` 现在是专用的 `@UiDslMarker` Receiver，不再是 `UiTreeBuilder` 的
 Type Alias。它仍然提供所有普通 Widget，但 Helper 声明直接归当前 Layout 所有；进入嵌套的
@@ -89,7 +94,8 @@ ratio = ConstraintRatio(width = 16f, height = 9f, constrainedSide = ConstraintRa
 `MatchConstraints(Spread|Wrap|Percent, min, max)`。边界和百分比会立即校验；契约不再包含
 `MatchParent`、独立 min/max/percent/constrained 字段或原始 Ratio String。类型化 Ratio
 要求宽高项为有限正数，且至少一个轴使用 Match Constraint。Bias 与 Guideline Percentage
-使用 `0f..1f`；Circular Angle 使用有限的 `0f..<360f` Android 顺时针约定。
+使用 `0f..1f`；Circular Angle 使用有限的 `0f..<360f` Android 顺时针约定：`0f` 位于
+Center 上方，数值沿顺时针增加。
 
 ## 可复用 Constraint Set
 
@@ -120,9 +126,16 @@ val set = constraintSet {
 
 ## Virtual Helper 虚拟辅助对象
 
-- Guideline 使用有限非负 dp Offset 或 `0f..1f` Parent Fraction。
-- Barrier 使用 Margin 与 Gone-widget Policy 跟踪逻辑/物理极值。
-- Chain 至少需要两个唯一成员，拥有成员在 Chain 轴上的 Anchor，并校验有限正 Weight 与 Bias。
+- Guideline 使用有限非负 dp Offset 或 `0f..1f` Parent Fraction。显式 Left/Right 变体保持
+  物理固定，Start/End 变体在 RTL 中镜像。
+- Barrier 使用 Margin 与 Gone-widget Policy 跟踪逻辑或物理极值。
+- Chain 至少需要两个唯一成员，拥有成员在 Chain 轴上的 Anchor，校验有限正 Weight 与 Bias，
+  并接受显式 Parent/Child/Guideline/Barrier Endpoint 及非负边界 Margin。Horizontal Endpoint
+  必须全部使用逻辑平面或全部使用物理平面。
+- 类型化 Grid 接受上限为 `50 x 50` 的固定或推导轴、正数行列 Weight、逻辑 Fill Orientation、
+  dp Gap、类型化 Span 与 Skip。它拥有每个成员的两个定位轴；区域重叠或容量不足会拒绝完整候选。
+- 声明式 CircularFlow 把显式 Child/Radius/Angle 值围绕一个 Child Center 分组。它拥有每个成员
+  的 Circular Position，且不创建原生 Helper Identity。
 - Flow 映射 Orientation、Wrap、Style、Bias、Alignment、Gap、Padding 与最大换行数。
 - Group 传播 Visibility 与 Elevation。
 - Layer 传播 Visibility、Elevation、Rotation、Scale、Translation 与可选 Pivot。
@@ -137,7 +150,9 @@ Reference；Guideline、Barrier、Group 与 Layer 不能作为普通 Constraint 
 
 Native Container 会合并 Rebuild Request，并在修改前预检完整合并图。Child 与 Helper String
 ID 映射为稳定 Android View ID。一个注册表负责创建、复用、换型和删除 Guideline、Barrier、
-Flow、Group、Layer 与 Placeholder View；AndroidX 不再通过 `applyTo` 副作用创建无主 Helper。
+Flow、Group、Layer、Placeholder View，以及 Grid 的零厚度行/列 Proxy；AndroidX 不再通过
+`applyTo` 副作用创建无主 Helper。Grid 的语义 ID 只表示 Identity，不映射为 View；CircularFlow
+既没有 Helper View，也没有生成的原生 ID。
 
 已接受候选从干净的原生 Set 构建。Renderer 在应用前快照受影响的 ID、LayoutParams、Helper
 成员关系、无障碍、Visibility 与 Transform。缺失引用、重复/冲突 ID、无效 Anchor Plane、
@@ -164,8 +179,8 @@ Identity。这属于聚焦正确性证据，不是发版验收：它使用手工
 ConstraintLayout `2.2.2` 与 Core `1.1.2`，通过 75/75 条 UI Contract、11/11 条 DSL 和
 451/451 条 Renderer 测试，其中包含 12 条 Graph 与 16 条 ConstraintLayout 聚焦用例；
 `verifyDocumentationStructure` 也通过。正式 JVM 兼容性结论仍为 **improved**。后续真机和性能
-矩阵已闭合首发验收范围；Grid、CircularFlow 和更广泛的能力对齐在分类 Phase 1 快速路径之后
-继续留在发版后计划。
+矩阵已闭合首发验收范围；发版后计划现在负责类型化 Grid、CircularFlow、更广泛的视觉验收和
+最终性能对比。
 
 2026-08-21 的 Phase 1 运行通过全部 459 条 Renderer 测试。具名用例覆盖 1,000 次 Equal 提交、
 Content-only Child 替换、Scalar Helper 保留、单次环境解析，以及注入 Topology 失败后的有效重试。
@@ -173,6 +188,28 @@ Content-only Child 替换、Scalar Helper 保留、单次环境解析，以及�
 Request 与 Adapter Allocation 均为 0；Scalar 用例不创建/删除 Helper，不克隆 Live LayoutParams，
 并且最多提交一次。计数器与激活入口均为 Internal 且 Container-local，因此没有新增公开 API 文档
 字段或未启用的 Global Observer。Release Intent、Development Tooling Isolation 与文档门禁均通过。
+
+2026-08-21 的 Phase 2 聚焦 JVM 运行通过六条冻结的 `CL-P2-*` Renderer 用例。Chain 测试覆盖
+Parent/Child/Guideline/Barrier 的精确 Boundary、Margin、物理 Placement 与逻辑 LTR/RTL 镜像。
+Baseline 普通/Gone Margin 与 Direct AndroidX Control 一致，无效重试会保留已接受 Graph。四种
+Parent-wrap Policy 都产生精确的双轴尺寸。Physical Link 与 Guideline 在 RTL-to-LTR 环境更新中
+保持固定，而 Logical Start 会镜像。Weighted Grid 产生精确 Span/Skip 几何；重叠候选被拒绝时
+五个保留 Proxy 不变，1,000 次替换期间 Proxy 数量始终位于 `0..5`。CircularFlow 与 AndroidX
+Circle 坐标一致，会原子拒绝竞争的 Direct Ownership，并在 1,000 次替换中始终不持有 Helper
+Identity。相对不包含这些 Phase 2 契约的已发布源码，这份能力与失败安全证据结论为
+**improved**。它属于 JVM/API-35 Robolectric 证据；Phase 3 仍负责完整 Device、Screenshot、
+Configuration 与 Lifecycle Matrix，Phase 4 仍负责性能结论。
+
+同一份 2026-08-21 Candidate 在已 Root 的 Xiaomi MI 6 / Android 9 上用 `15.674 s` 通过 4/4 条
+`ConstraintLayoutReleaseDeviceTest`。新增 Phase 2 用例验证 Grid Span/Skip 的精确顺序，其中包含
+四个 Content Child 与五个生成的 Row/Column Proxy；同时验证四个 CircularFlow Member 位于
+`78 dp` 半径的四个正方向，且不存在 Helper View。其余三条用例继续覆盖此前的浅色/LTR/字体缩放
+1.0、深色/RTL/字体缩放 1.3 Helper Matrix 与 200 次快速状态切换；结构化 Diagnostics 未报告
+非预期 Warning。人工复核两张聚焦中文 Demo 截图，确认加权 `2 x 3` Grid 与四成员
+CircularFlow 清晰可读、没有裁切、重叠或 Helper Artifact。按进程过滤的日志未出现
+`UIConstraintLayout`、`ConstraintSet`、Renderer、Helper Layer 或 Fatal 条目。相对已发布源码，
+真机能力与失败安全结论为 **improved**。该证据只覆盖一个 OEM/API 点和聚焦视觉样本，不能替代
+完整 Phase 3 Screenshot/Lifecycle Matrix，也不提供 Phase 4 性能结论。
 
 2026-08-19 的 DSL Safety 后续运行通过 17/17 条 ConstraintLayout 模块测试：12 条行为测试和
 5 条 Kotlin 2.0.21 Compiler Fixture。合法的类型化 Axis/Reference Sample 可以编译；把垂直
@@ -238,6 +275,8 @@ O(n²) Child Index 查询，并在没有 Content Overlay 被释放时跳过完�
 | 把 `ConstraintLayoutScope` 当作 `UiTreeBuilder` Alias | 使用 `ConstraintLayout { ... }` 提供的专用 Receiver；不要保留或自行构造它 |
 | 所有 Helper 共用一个通用 Anchor Target 类型 | Start/End 只连接水平 Target，Top/Bottom 只连接垂直 Target，Baseline 只连接具备 Baseline 的 Child |
 | `constraintSet { constrain(ref.id) { ... } }` | `constraintSet { constrain(ref) { ... } }` |
+| AndroidX Grid String Span/Skip | 在 `createGrid(...)` 中使用类型化 `ConstraintGridSpan` 与 `ConstraintGridSkip` |
+| 把逻辑 Start/End 当作固定屏幕边缘 | 使用显式 Left/Right Anchor、Guideline、Barrier 与物理 Chain Side |
 
 变更后的公开 Surface 属于 Q3：传输不变量、默认值、失败时机、DSL Scope、合并优先级、
 Native Mapping 与替代 Sample 都是契约字段。不提供 Deprecated Compatibility Alias 或原始
