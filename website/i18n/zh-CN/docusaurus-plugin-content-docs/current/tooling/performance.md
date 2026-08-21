@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 09d5e816c72a697f6d75f6189052a9974182ae0450cb515a0bbbde20ef8d5468
+translation_source_hash: 20e60aaac2c310f8ef2252f3e929ae21338f3bbf99120daf0e22bd381a79ab7e
 translation_status: current
 ---
 
@@ -268,12 +268,18 @@ GPU 与互连控制保持不变，应用主线程总时间也没有实质差异�
 失败；该实验没有改变生产源码，并在排除混合进程生命周期后删除。剩余滚动方差因此归因于
 API 28 的 display/BufferQueue pipeline，而不是 revision-3 列表协调，但它仍会使 timing 基线失效。
 
+设备重新连接后执行的同机 root 审计没有发现可在不改变渲染管线的前提下继续加入的公开控制项：
+面板只公开一个固定 60 Hz 模式；framebuffer 的 `idle_time`、动态局部更新、command-mode 自动刷新
+和动态 FPS 均已为 `0`；SurfaceFlinger 也已使用 `debug.sf.disable_backpressure=1` 与
+`debug.sf.latch_unsignaled=1`。强制 MDP/HWC 合成、修改 SurfaceFlinger phase offset 或替换
+HWUI renderer 会改变被测系统路径，而不是控制既有变量，因此不能用于基线验收。本次设备审计
+关闭的是安全控制项搜索，而不是滚动门禁。
+
 限定结论为 `mixed`：变更已经拥有稳定的固定频率绝对基线；由于 revision 2 fixture 已退役，
 方向性比较仍为 `inconclusive`。滚动仍为 `inconclusive`，因此发布后 Phase 1 门禁尚未完成。
 限制包括仅覆盖一台 API 28 设备、`run-from-apk` JIT/code placement，以及尚未解决的系统显示
-缓冲平台。下一步保持 revision 3 和 `0.15` 门禁不变：要么建立不改变 measured action 的额外
-显示 pipeline 控制，要么在另一台可 root 且可控频的参考设备上重新采集滚动。不得仅为得到
-通过批次而修改 swipe 次数、节奏或 fixture。
+缓冲平台。下一步保持 revision 3 和 `0.15` 门禁不变，在另一台可 root 且能稳定控制时钟与显示
+管线的参考设备上重新采集滚动。不得仅为得到通过批次而修改 swipe 次数、节奏或 fixture。
 
 集合滚动预检也是手势驱动污染的参考案例。最初在 measured block 中重复定位 target 会增加
 Accessibility 遍历；移除后，连续无间隔 swipe 仍产生约 3.6、7.2 与 14.7 ms 的 run-P50 平台。

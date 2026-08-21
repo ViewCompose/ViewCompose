@@ -314,13 +314,22 @@ changed no production source and was removed after disproving mixed process life
 cause. The remaining scroll variance is therefore attributed to the API-28 display/BufferQueue
 pipeline, not to revision-3 list reconciliation, but it still invalidates a timing baseline.
 
+A same-device root audit after reconnection found no additional exposed control that can be added
+without changing the rendering pipeline: the panel advertises one fixed 60 Hz mode; framebuffer
+`idle_time`, dynamic partial update, command-mode auto-refresh, and dynamic FPS are already `0`;
+and SurfaceFlinger already has `debug.sf.disable_backpressure=1` and
+`debug.sf.latch_unsignaled=1`. Forcing MDP/HWC composition, changing SurfaceFlinger phase offsets,
+or replacing the HWUI renderer would change the system path being measured rather than control an
+existing variable, so those experiments are excluded from baseline acceptance. This device audit
+therefore closes the safe-control search, not the scroll gate.
+
 The scoped conclusion is `mixed`: mutation now has a stable fixed-clock absolute baseline, with
 directional comparison `inconclusive` because revision 2 is a retired fixture; scroll remains
 `inconclusive`, so the post-release Phase 1 gate is not complete. Limitations are one API-28 device,
 `run-from-apk` JIT/code placement, and an unresolved system display-buffer plateau. The next action
-is to preserve revision 3 and the `0.15` gate, then either establish an additional display-pipeline
-control that does not change the measured action or recapture scroll on another root-controllable
-reference device. Do not change swipe count, pacing, or fixture merely to obtain a passing batch.
+is to preserve revision 3 and the `0.15` gate, then recapture scroll on another root-controllable
+reference device whose clocks and display pipeline can be held stable. Do not change swipe count,
+pacing, or fixture merely to obtain a passing batch.
 
 The collection-scroll preflight is also the reference for gesture-driver contamination. Repeated
 target lookup inside measurement first added Accessibility traversal. After that was removed,

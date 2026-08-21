@@ -14,12 +14,17 @@ CV `0.191` and `0.196`; Perfetto attributes the two plateaus to system RenderThr
 wait while application work and controlled clocks remain materially equal. No fixture or measured
 action was changed in response.
 
+A same-device root audit found no remaining exposed control that can be added without changing the
+rendering path: the panel has one fixed 60 Hz mode, its framebuffer idle/dynamic-update controls are
+already disabled, and SurfaceFlinger already uses the available backpressure/latch controls. Scroll
+recapture on this device is therefore deferred rather than tuned into a passing batch.
+
 Last verified: 2026-08-21.
 
 Next action: proceed with the test-only visual/configuration matrix and popup golden while preserving
-the frozen target, and recapture revision-3 scroll only after establishing an additional
-display-pipeline control or another root-controllable reference device. Do not remove production
-harness infrastructure or close Phase 1 until scroll passes the unchanged `0.15` gate.
+the frozen target, and recapture revision-3 scroll on another root-controllable reference device.
+Do not remove production harness infrastructure or close Phase 1 until scroll passes the unchanged
+`0.15` gate.
 
 ## Maven release changesets
 
