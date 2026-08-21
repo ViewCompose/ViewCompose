@@ -8,11 +8,18 @@ archived in `docs/archive/demo-benchmark-verification-harness-rearchitecture.md`
 the remaining internal harness baseline, broad visual matrix, golden coverage, and dead-infrastructure
 cleanup.
 
-Last verified: 2026-08-20.
+Phase 1 is partially complete. The rooted Xiaomi run accepted the revision-3 eight-cycle mutation
+absolute baseline at run-P50 CV `0.025`. Scroll remains unaccepted after two complete v4 batches at
+CV `0.191` and `0.196`; Perfetto attributes the two plateaus to system RenderThread/BufferQueue
+wait while application work and controlled clocks remain materially equal. No fixture or measured
+action was changed in response.
 
-Next action: after the release window closes, run collection-stress revision 3 on the rooted
-fixed-clock reference device, then execute the frozen visual/configuration matrix before removing
-the remaining obsolete harness infrastructure.
+Last verified: 2026-08-21.
+
+Next action: proceed with the test-only visual/configuration matrix and popup golden while preserving
+the frozen target, and recapture revision-3 scroll only after establishing an additional
+display-pipeline control or another root-controllable reference device. Do not remove production
+harness infrastructure or close Phase 1 until scroll passes the unchanged `0.15` gate.
 
 ## Maven release changesets
 
@@ -78,9 +85,15 @@ finished state has:
 
 ### Phase 1: collection-stress revision 3 baseline
 
+Progress on 2026-08-21: mutation is accepted as a stable absolute baseline; scroll and therefore
+the phase remain incomplete. The complete interpretation, APK hashes, rejected batches,
+BufferQueue attribution, limitations, and next action live in
+[`docs/tooling/performance.md`](../../tooling/performance.md).
+
 1. Build one release-like target and benchmark APK from a reviewed source revision.
-2. Run scroll and mutation separately on the rooted reference device with CPU/GPU policy, thermal
-   start, compilation identity, frame count, heap, and APK hashes recorded.
+2. Run scroll and mutation separately on the rooted reference device with CPU/GPU and required
+   renderer-interconnect policy, thermal start, compilation identity, frame count, heap, and APK
+   hashes recorded.
 3. Accept only five-run batches whose run-P50 CV is at most `0.15`; unstable results are rerun, not
    averaged into acceptance.
 4. Record P50/P95/P99, frame count, peak heap, absolute values, normalized direction, conclusion,

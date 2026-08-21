@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: dd26b4f783b00c0ec05d26bad06ebb0694665afc987164ecd2c05400496772b0
+translation_source_hash: 09d5e816c72a697f6d75f6189052a9974182ae0450cb515a0bbbde20ef8d5468
 translation_status: current
 ---
 
@@ -124,9 +124,11 @@ block 外、所有 control 共享报告中的编译身份且稳定性通过时�
 对 renderer 敏感的固定频率诊断必须控制所有可能执行被测帧的时钟域。RenderThread 或 GPU
 仍受 DVFS 控制时，只锁 CPU 不足以形成有效对照。应把 CPU policy 的最低/最高频率、GPU
 devfreq governor 和边界，以及设备公开时的 KGSL power-level 边界写入持久化
-`clockPolicy`，并在 target 启动后再次核对当前频率。只有证明 OEM 性能服务会覆盖请求的边界时
-才可以停止它；批次开始前必须记录其原始状态、全部被修改的时钟边界、充电/输入状态和 root 或
-策略变更，并在拉取最后一份结果后完整恢复。
+`clockPolicy`，并在 target 启动后再次核对当前频率。如果 Qualcomm `cpubw`、`gpubw` 等 CPU/GPU
+内存互连 devfreq 域会改变 RenderThread 或 buffer-queue timing，就必须在同一策略中快照并控制
+这些票；只有 core/GPU 频率稳定并不足以验收批次。只有证明 OEM 性能服务会覆盖请求的边界时
+才可以停止它；批次开始前必须记录其原始状态、全部被修改的时钟边界或带宽票、充电/输入状态和
+root 或策略变更，并在拉取最后一份结果后完整恢复。
 
 与同设备历史基线比较并执行回归门禁：
 
@@ -233,10 +235,45 @@ Android Views，ViewCompose 在列表变更中的 heap/RSS 高 `12.2%/2.8%`，�
 
 2026-08-17 的人工审查修复移除了 `collection.stress` 的外层/内层列表嵌套，并把场景推进到
 revision 3。Revision 2 数值仅保留为已退役 fixture 的历史证据，不能作为 revision 3 基线。
-目前尚未验收 revision 3 benchmark 批次，因此性能结论为 `inconclusive`：语义工作负载得以
-保留，但几何与手势 Ownership 已改变。下一步是在相同 SM-G991B 协议上重新采集滚动与 8 轮
-变更批次，针对明确匹配的 control 比较绝对 P50/P95 与归一化差异，并且仅在现有稳定性和时钟
-策略 Gate 通过后验收结果。
+
+2026-08-21 的发布后运行使用已 root 的 Xiaomi MI 6 / Android 9 参考设备、目标源码
+`9443edef`、benchmark harness 源码 `93afee0f`、R8/资源收缩目标 APK SHA-256
+`179f26d15b35d9add9bfacccf03be046ff4e5dccac633c827e90fb3cada126f2`，以及实际测量的 benchmark
+APK SHA-256 `b5d70245eeebbbdb90260b3157728772cce0241c3fb522ef9cf1cc52b6457b28`。harness 变更只为两个
+revision-3 方法采集 `MemoryUsageMetric(Mode.Max)`，没有改变目标 fixture 或 measured action。
+每个方法均执行 5 次 iteration，使用 measured block 外 5 秒 ready 稳定窗口；每个方法之间熄屏
+冷却到不高于 37 摄氏度，8 个 CPU 全部在线，暂停充电并停止厂商性能服务，实际编译身份为
+`run-from-apk`。AndroidX 报告 `cpuLocked=true`，热降频等待为 0。
+
+初始 v3 策略把 CPU policy 0/4 固定为 1.4016/1.8048 GHz，并把 Adreno 固定为 515 MHz。滚动
+复跑的 run-P50 CV 达到 `0.004`，但两批变更的 CV 分别为 `0.192` 和 `0.224`，均不通过。
+Perfetto 显示应用主线程工作不变，而慢速变更 iteration 的 RenderThread 总时间从 `2.05` 增至
+`3.25 s`；平均 `dequeueBuffer` 从 `0.319` 增至 `1.748 ms/frame`，GPU/CPU 内存互连票处于较低
+平台。由于 renderer-sensitive 时钟契约要求控制所有实际执行域，全部 v3 数值只保留为诊断，
+不能作为正式 revision-3 基线。
+
+v4 策略进一步把 `cpubw` 和 `gpubw` 固定为最大 `13763` performance 票，并在原始 payload 中记录
+`root-fixed-cpu-1401600-1804800-gpu-515000000-cpubw-gpubw-13763-perf-hal-off-v4`：
+
+| Revision-3 动作/运行 | Frame CPU P50/P95/P99 | 帧数范围 | 峰值 heap 中位数（范围） | Run-P50 CV | 结果 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| 滚动，首批 v4 | 4.206 / 6.221 / 6.680 ms | 803--804 | 4,824 KiB（4,115--5,793） | 0.191 | 已拒绝 |
+| 滚动，完整 v4 复跑 | 4.173 / 6.248 / 6.765 ms | 803--805 | 5,149 KiB（4,294--6,251） | 0.196 | 已拒绝 |
+| 8 轮变更 | 2.861 / 14.320 / 23.554 ms | 279--299 | 6,662 KiB（6,371--6,732） | 0.025 | 已验收绝对基线 |
+
+两批滚动都形成相同的两个 run-P50 平台：约 `6.0 ms` 与 `4.03--4.11 ms`。成对 trace 中的 CPU、
+GPU 与互连控制保持不变，应用主线程总时间也没有实质差异；但慢速运行的 RenderThread
+`DrawFrame` 从 `3.298` 增至 `5.093 ms/frame`，`dequeueBuffer` 从 `0.261` 增至
+`2.261 ms/frame`。一个每次 iteration 前重启目标进程的诊断 benchmark APK 仍以 CV `0.197`
+失败；该实验没有改变生产源码，并在排除混合进程生命周期后删除。剩余滚动方差因此归因于
+API 28 的 display/BufferQueue pipeline，而不是 revision-3 列表协调，但它仍会使 timing 基线失效。
+
+限定结论为 `mixed`：变更已经拥有稳定的固定频率绝对基线；由于 revision 2 fixture 已退役，
+方向性比较仍为 `inconclusive`。滚动仍为 `inconclusive`，因此发布后 Phase 1 门禁尚未完成。
+限制包括仅覆盖一台 API 28 设备、`run-from-apk` JIT/code placement，以及尚未解决的系统显示
+缓冲平台。下一步保持 revision 3 和 `0.15` 门禁不变：要么建立不改变 measured action 的额外
+显示 pipeline 控制，要么在另一台可 root 且可控频的参考设备上重新采集滚动。不得仅为得到
+通过批次而修改 swipe 次数、节奏或 fixture。
 
 集合滚动预检也是手势驱动污染的参考案例。最初在 measured block 中重复定位 target 会增加
 Accessibility 遍历；移除后，连续无间隔 swipe 仍产生约 3.6、7.2 与 14.7 ms 的 run-P50 平台。

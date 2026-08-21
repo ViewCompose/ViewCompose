@@ -147,9 +147,12 @@ Renderer-sensitive fixed-clock diagnostics must control every clock domain that 
 measured frame. A CPU-only lock is insufficient when RenderThread or GPU work remains under DVFS.
 Record the CPU policy minima and maxima, GPU devfreq governor and bounds, and, when exposed, the
 KGSL power-level bounds in the durable `clockPolicy`; verify the current frequencies again after
-target launch. An OEM performance service may be stopped only after proving that it overrides the
-requested bounds. Its prior state, every modified clock bound, charging/input state, and all root
-or policy changes must be captured before the batch and restored after the last result is pulled.
+target launch. If CPU/GPU memory-interconnect devfreq domains such as Qualcomm `cpubw` or `gpubw`
+change RenderThread or buffer-queue timing, snapshot and control those votes as part of the same
+policy; a stable core/GPU frequency alone does not validate the batch. An OEM performance service
+may be stopped only after proving that it overrides the requested bounds. Its prior state, every
+modified clock bound or bandwidth vote, charging/input state, and all root or policy changes must
+be captured before the batch and restored after the last result is pulled.
 
 Compare with a same-device historical baseline and apply the regression gate. The baseline input is
 the previously generated revisioned comparison report, not raw Macrobenchmark JSON:
@@ -272,12 +275,52 @@ per-method `NONE`/`LIGHT` starts, `CompilationMode.Partial`, and clock policy
 
 The 2026-08-17 manual-review repair removes the nested outer/inner list hierarchy from
 `collection.stress` and advances the scenario to revision 3. The revision 2 numbers remain useful
-only as historical evidence for the retired fixture and are not a baseline for revision 3. No
-revision 3 benchmark batch has been accepted yet, so the performance conclusion is
-`inconclusive`: the semantic workload is preserved, but geometry and gesture ownership changed.
-The next action is to recapture scroll and eight-cycle mutation batches on the same SM-G991B
-protocol, compare absolute P50/P95 and normalized deltas against an explicitly matched control,
-and accept them only if the existing stability and clock-policy gates pass.
+only as historical evidence for the retired fixture and are not a baseline for revision 3.
+
+The 2026-08-21 post-release run used the rooted Xiaomi MI 6 / Android 9 reference device, target
+source `9443edef`, benchmark harness source `93afee0f`, R8/resource-shrunk target APK SHA-256
+`179f26d15b35d9add9bfacccf03be046ff4e5dccac633c827e90fb3cada126f2`, and measured benchmark APK
+SHA-256 `b5d70245eeebbbdb90260b3157728772cce0241c3fb522ef9cf1cc52b6457b28`. The harness addition only
+captures `MemoryUsageMetric(Mode.Max)` for the two revision-3 methods; it does not change the target
+fixture or measured action. Every method used five iterations, a 5-second unmeasured ready settle,
+per-method screen-off cooling to at most 37 degrees Celsius, eight online CPUs, suspended charging,
+stopped vendor performance services, and the actual `run-from-apk` identity. AndroidX reported
+`cpuLocked=true` and zero thermal-throttle sleep.
+
+The initial v3 policy fixed CPU policies 0/4 at 1.4016/1.8048 GHz and Adreno at 515 MHz. Its scroll
+repeat reached run-P50 CV `0.004`, but two mutation batches failed at `0.192` and `0.224`. Perfetto
+showed unchanged application main-thread work while the slow mutation iteration increased
+RenderThread time from `2.05` to `3.25 s`; average `dequeueBuffer` increased from `0.319` to
+`1.748 ms/frame`, and the GPU/CPU memory-interconnect vote occupied a lower plateau. Because the
+renderer-sensitive clock contract requires every executing domain to be controlled, all v3 values
+remain diagnostic rather than formal revision-3 baselines.
+
+Policy v4 additionally fixed `cpubw` and `gpubw` to their maximum `13763` performance vote and
+records
+`root-fixed-cpu-1401600-1804800-gpu-515000000-cpubw-gpubw-13763-perf-hal-off-v4` in the raw payload:
+
+| Revision-3 action/run | Frame CPU P50/P95/P99 | Frame count range | Median peak heap (range) | Run-P50 CV | Result |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Scroll, first v4 batch | 4.206 / 6.221 / 6.680 ms | 803--804 | 4,824 KiB (4,115--5,793) | 0.191 | Rejected |
+| Scroll, complete v4 repeat | 4.173 / 6.248 / 6.765 ms | 803--805 | 5,149 KiB (4,294--6,251) | 0.196 | Rejected |
+| Eight-cycle mutation | 2.861 / 14.320 / 23.554 ms | 279--299 | 6,662 KiB (6,371--6,732) | 0.025 | Accepted absolute baseline |
+
+Both scroll batches formed the same two run-P50 plateaus: about `6.0 ms` and `4.03--4.11 ms`.
+Their paired traces held CPU, GPU, and interconnect controls constant and kept application
+main-thread totals materially equal, while the slow run increased RenderThread `DrawFrame` from
+`3.298` to `5.093 ms/frame` and `dequeueBuffer` from `0.261` to `2.261 ms/frame`. A diagnostic
+benchmark APK that restarted the target before every iteration still failed at CV `0.197`; it
+changed no production source and was removed after disproving mixed process lifecycle as the
+cause. The remaining scroll variance is therefore attributed to the API-28 display/BufferQueue
+pipeline, not to revision-3 list reconciliation, but it still invalidates a timing baseline.
+
+The scoped conclusion is `mixed`: mutation now has a stable fixed-clock absolute baseline, with
+directional comparison `inconclusive` because revision 2 is a retired fixture; scroll remains
+`inconclusive`, so the post-release Phase 1 gate is not complete. Limitations are one API-28 device,
+`run-from-apk` JIT/code placement, and an unresolved system display-buffer plateau. The next action
+is to preserve revision 3 and the `0.15` gate, then either establish an additional display-pipeline
+control that does not change the measured action or recapture scroll on another root-controllable
+reference device. Do not change swipe count, pacing, or fixture merely to obtain a passing batch.
 
 The collection-scroll preflight is also the reference for gesture-driver contamination. Repeated
 target lookup inside measurement first added Accessibility traversal. After that was removed,
