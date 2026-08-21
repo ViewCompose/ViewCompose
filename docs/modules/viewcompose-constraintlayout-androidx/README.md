@@ -20,7 +20,9 @@ dependencies {
   archived as `docs/archive/constraintlayout-native-engine-hardening.md`.
   Broader parity and optimization are owned by a separate
   [post-release expansion plan](../../project/plans/constraintlayout-parity-performance-expansion.md)
-  that remains Changeset-free until the first release is published and tagged.
+  whose Phase 0 contract freeze is complete against the published/tagged `0.1.0-alpha01` baseline
+  and awaits landing after the Demo fixed-clock baseline. Phase 0 remains Changeset-free; later
+  production phases own their immutable Changesets and follow-up release gate.
 - Platform: Android 7.0 (API 24) and newer.
 - Optional: `viewcompose-ui-foundation` does not depend on this artifact.
 - UI Contract and UI Foundation are exposed transitively because their modifier, unit, and builder
