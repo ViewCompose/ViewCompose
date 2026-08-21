@@ -86,6 +86,9 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     private var mutatingHelperViews = false
     private var acceptedGraph: ResolvedConstraintGraph? = null
     private var acceptedEnvironment: UiEnvironmentValues? = null
+    private var acceptedDecoupledConstraintSetSpec: ConstraintSetSpec? = null
+    private var acceptedInlineHelpersSpec: ConstraintHelpersSpec? = null
+    private var acceptedContentLayoutParams: Map<View, ViewGroup.LayoutParams?> = emptyMap()
     private var acceptedHelperRuntimeBase: Map<View, HelperRuntimeSnapshot> = emptyMap()
     private var acceptedRevision: Long = 0L
     private var attemptedRevision: Long = 0L
@@ -275,6 +278,10 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     }
 
     private fun applyConstraintsInternal() {
+        val environment = requireUiEnvironment()
+        if (matchesAcceptedInputs(environment)) {
+            return
+        }
         attemptedRevision += 1L
         val candidateRevision = attemptedRevision
         val compilation = ConstraintGraphCompiler.compile(
@@ -289,17 +296,6 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                 return
             }
         }
-        val environment = requireUiEnvironment()
-        if (
-            graph == acceptedGraph &&
-            environment == acceptedEnvironment &&
-            graph.contentById.all { (id, binding) ->
-                referenceIdToViewId[id] == binding.requireView().id
-            }
-        ) {
-            return
-        }
-
         refreshAcceptedHelperRuntimeBaseFromBinder()
         val committedSnapshots = captureCommitSnapshots()
         val previousGraph = acceptedGraph
@@ -350,6 +346,9 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             helperIdToViewId.keys.retainAll(helperPlan.activeKeys)
             acceptedGraph = graph
             acceptedEnvironment = environment
+            acceptedDecoupledConstraintSetSpec = decoupledConstraintSetSpec
+            acceptedInlineHelpersSpec = inlineHelpersSpec
+            acceptedContentLayoutParams = captureAcceptedContentLayoutParams(graph)
             acceptedHelperRuntimeBase = helperRuntimeBase
             acceptedRevision = candidateRevision
             lastRejection = null
@@ -364,6 +363,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             )
             acceptedGraph = previousGraph
             acceptedEnvironment = previousEnvironment
+            acceptedContentLayoutParams = captureAcceptedContentLayoutParams(previousGraph)
             acceptedHelperRuntimeBase = previousHelperRuntimeBase
             restoreAcceptedHelperConfiguration()
             val failureOrigin = error.stackTrace.firstOrNull()?.let { frame ->
@@ -378,6 +378,45 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                         "${error.message ?: error::class.java.simpleName}$failureOrigin",
                 ),
             )
+        }
+    }
+
+    /** Checks accepted inputs without constructing a candidate graph or adapter scratch objects. */
+    private fun matchesAcceptedInputs(environment: UiEnvironmentValues): Boolean {
+        val graph = acceptedGraph ?: return false
+        if (environment != acceptedEnvironment) return false
+        if (decoupledConstraintSetSpec != acceptedDecoupledConstraintSetSpec) return false
+        if (inlineHelpersSpec != acceptedInlineHelpersSpec) return false
+        if (acceptedContentLayoutParams.size != graph.contentBindings.size) return false
+        if (helperViews.size != graph.helperKinds.size) return false
+        helperViews.forEach { (key, helper) ->
+            if (helper.parent !== this) return false
+            if (helperIdToViewId[key] != helper.id) return false
+        }
+
+        var bindingIndex = 0
+        for (childIndex in 0 until childCount) {
+            val child = getChildAt(childIndex)
+            if (helperViews.containsValue(child)) continue
+            if (bindingIndex >= graph.contentBindings.size) return false
+            val binding = graph.contentBindings[bindingIndex++]
+            if (binding.nativeIdentity !== child) return false
+            if (binding.referenceId != child.getTag(R.id.viewcompose_constraint_layout_id)) return false
+            if (binding.inlineSpec != child.getTag(R.id.viewcompose_constraint_item_spec)) return false
+            if (acceptedContentLayoutParams[child] !== child.layoutParams) return false
+            val referenceId = binding.referenceId ?: return false
+            if (referenceIdToViewId[referenceId] != child.id) return false
+        }
+        return bindingIndex == graph.contentBindings.size
+    }
+
+    private fun captureAcceptedContentLayoutParams(
+        graph: ResolvedConstraintGraph?,
+    ): Map<View, ViewGroup.LayoutParams?> {
+        if (graph == null) return emptyMap()
+        return graph.contentBindings.associate { binding ->
+            val view = binding.requireView()
+            view to view.layoutParams
         }
     }
 

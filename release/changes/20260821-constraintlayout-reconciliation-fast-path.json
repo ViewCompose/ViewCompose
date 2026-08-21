@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Bypass ConstraintLayout graph compilation and adapter allocation when accepted semantic, environment, child, helper, and native ID inputs are unchanged.",
+  "changes": [
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" }
+  ],
+  "ignored": [],
+  "shared": []
+}
