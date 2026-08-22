@@ -10,7 +10,7 @@ migration preserves ownership, lifecycle, and observable behavior rather than re
 named functions. Use this section to identify semantic gaps before moving a screen to the native
 Android View renderer.
 
-Last verified: **2026-08-15**
+Last verified: **2026-08-22**
 
 Re-verification owner: **maintainers of the Kernel, UI Foundation, Android Engine, Android
 aggregate, and navigation module families**
@@ -25,6 +25,7 @@ The target is the following independently versioned ViewCompose set:
 | UI and rendering | `viewcompose-ui-contract`, `viewcompose-renderer-android`, `viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha03`; renderer/ConstraintLayout `0.1.0-alpha01` |
 | Android ownership | `viewcompose-android`, `viewcompose-material3-android`, `viewcompose-host-android`, `viewcompose-lifecycle-androidx`, `viewcompose-viewmodel-androidx` | aggregates/integrations `0.1.0-alpha01`; host `0.1.0-alpha03` |
 | Navigation | `viewcompose-navigation-core`, `viewcompose-navigation-android` | core `0.1.0-alpha02`; Android `0.1.0-alpha01` |
+| Animation | `viewcompose-animation-core`, `viewcompose-animation` | both `0.1.0-alpha04` |
 
 The immutable release revisions are recorded in
 [`gradle/viewcompose-publishing.properties`](../../gradle/viewcompose-publishing.properties).
@@ -61,6 +62,7 @@ build modes, workloads, warm-up, sampling, and statistical treatment.
 | Image loading | [Image loading](image-loading.md) | Source types, loader ownership, request policy, and recycled-View disposal |
 | Lazy collections and pagers | [Lazy collection revisions and reuse](lazy-collection-revision-and-reuse.md) | Semantic revisions, mounted-tree reuse, interop reset/release, and TabRow/Pager hard cuts |
 | Component DSL aliases, interaction feedback, TextField wrappers, or alpha-only content animation | [DSL contract convergence](dsl-contract-convergence.md) | Variant replacement, indication ownership, typed input profiles, and Crossfade naming |
+| Physics, `Animatable`, content/visibility transitions, seeking, bounds, shared motion, or animation tooling | [Animation](compose-animation.md) | Duration versus physical semantics, velocity, subtree identity, geometry owner, and inspection activation |
 
 Read more than one page when a boundary crosses concerns. For example, `rememberSaveable` in a
 navigation destination requires both the state/restoration and navigation ownership contracts.
@@ -109,6 +111,8 @@ evidence. Status terms have one meaning across all pages:
 | Navigation | Deep links | **Partially supported** | Replace action/MIME rules; undeclared query values are tolerated but cannot affect navigation policy. | [Deep links](compose-navigation.md#deep-links) |
 | Navigation | Save/restore, system Back, and Predictive Back | **Supported** | Recreate live objects after restore and retain device validation in the release procedure. | [Restoration and Back](compose-navigation.md#save-restore-and-process-death) |
 | Navigation | Direct NavigationEvent integration | **Unsupported** | Keep direct dispatcher-owner, forward-event, test-fake, and Preview needs outside ViewCompose. | [NavigationEvent](compose-navigation.md#system-back-and-predictive-back) |
+| Animation | Duration sampling, target-as-state, autonomous transitions, fade/size visibility, Crossfade, and content-size animation | **Partially supported** | Use only the current documented subset and do not treat the duration-bearing `SpringSpec` as physical. | [Animation](compose-animation.md#capability-matrix) |
+| Animation | Physical spring, decay, seekable transitions, bounds, shared motion, and timeline inspection | **Unsupported** | Follow the accepted phased contract; planned APIs are not migration targets until released. | [Animation](compose-animation.md#the-spring-hard-cut) |
 
 ## Migration sequence
 
