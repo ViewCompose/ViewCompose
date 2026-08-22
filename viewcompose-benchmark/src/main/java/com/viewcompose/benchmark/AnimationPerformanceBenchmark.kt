@@ -15,11 +15,11 @@ import org.junit.runner.RunWith
 /**
  * Revisioned physical-device workloads for the Animation Compose-capability expansion.
  *
- * Historical methods preserve the Phase 0/1 baselines. The revision-2 methods compare keyed
- * AnimatedContent with the same-page alpha-only Crossfade control. Each method measures complete
- * forward and reverse animations after an unmeasured launch settle. Accessibility actions avoid
- * mixing pointer press frames into the animation distribution, while state assertions prove that
- * every requested transition reached the application.
+ * Historical methods preserve the Phase 0/1 baselines. Revision 2 compares keyed AnimatedContent
+ * with the same-page alpha-only Crossfade control. Revision 3 measures rich parent-plus-descendant
+ * visibility choreography. Each method measures complete forward and reverse animations after an
+ * unmeasured launch settle. Accessibility actions avoid mixing pointer press frames into the
+ * animation distribution, while state assertions prove every request reached the application.
  */
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalMetricApi::class)
@@ -66,6 +66,16 @@ class AnimationPerformanceBenchmark {
             forwardRole = DemoTargetRole.SecondaryAction,
             reverseRole = DemoTargetRole.SecondaryAction,
             settleMillis = CONTENT_REPLACEMENT_SETTLE_MILLIS,
+        )
+    }
+
+    @Test
+    fun richAnimatedVisibilityRevision3() {
+        benchmarkRoundTrips(
+            scenarioId = ANIMATION_CORE_SCENARIO,
+            forwardRole = DemoTargetRole.PrimaryAction,
+            reverseRole = DemoTargetRole.PrimaryAction,
+            settleMillis = RICH_VISIBILITY_SETTLE_MILLIS,
         )
     }
 
@@ -131,6 +141,7 @@ class AnimationPerformanceBenchmark {
     }
 
     private companion object {
+        const val ANIMATION_CORE_SCENARIO = "animation.core"
         const val ANIMATION_SPECS_SCENARIO = "animation.specs"
         const val ANIMATION_CONTENT_SCENARIO = "animation.content"
         const val ANIMATION_CONTENT_SIZE_SCENARIO = "animation.content-size"
@@ -138,6 +149,7 @@ class AnimationPerformanceBenchmark {
         const val ROUND_TRIPS_PER_ITERATION = 4
         const val VALUE_CHANNEL_SETTLE_MILLIS = 600L
         const val CONTENT_REPLACEMENT_SETTLE_MILLIS = 380L
+        const val RICH_VISIBILITY_SETTLE_MILLIS = 900L
         const val CONTENT_SIZE_SETTLE_MILLIS = 650L
         const val TRANSITION_SETTLE_MILLIS = 540L
     }

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add rich AnimatedVisibility slide, pivoted scale, aligned reveal, shared-clock descendant choreography, and explicit native interaction ownership while hard-cutting content to the type-safe visibility scope.",
+  "changes": [
+    { "artifact": "viewcompose-animation", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" },
+    { "artifact": "viewcompose-preview", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

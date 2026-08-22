@@ -2,8 +2,8 @@
 
 ## Status
 
-Active. Phases 0 and 1 are complete and merged. Phase 2 implementation and acceptance are complete
-on the candidate branch; pull-request delivery remains before Phase 3 begins.
+Active. Phases 0 through 2 are complete and merged. Phase 3 implementation and acceptance are
+complete on the candidate branch; pull-request delivery remains before Phase 4 begins.
 This plan was split out on 2026-08-18 from the Animation follow-up in the unified roadmap and the
 framework-wide physical-spring candidate recorded by the multi-design-system plan. Those documents
 now point here; this file is the only active plan that owns the seven animation expansions defined
@@ -19,17 +19,20 @@ This plan is canonical English-only under the documentation-governance policy. E
 behavior, migration, tooling, dependency, and compatibility contract must move into active
 architecture, guide, reference, and owning-module documentation before this plan is archived.
 
-Last verified: 2026-08-22.
+Last verified: 2026-08-23.
 
-Next action: submit and merge the Phase 2 pull request, then begin Phase 3 without reopening the
-accepted physical or content-ownership contracts.
+Next action: submit and merge the Phase 3 pull request, then begin Phase 4 without reopening the
+accepted visibility scope, shared-clock, native-ownership, or transform-geometry contracts.
 
 ## Maven release changesets
 
 - `release/changes/20260822-animation-physical-foundation.json` — Phase 1 hard cut and shared
   physical engine; accepted and merged.
 - `release/changes/20260822-animated-content-phase2.json` — Phase 2 keyed content replacement,
-  renderer ownership, and rollback contracts; accepted on the candidate branch and pending merge.
+  renderer ownership, and rollback contracts; accepted and merged.
+- `release/changes/20260823-animated-visibility-phase3.json` — Phase 3 rich visibility primitives,
+  type-safe content scope, shared descendant clock, and native interaction ownership; candidate
+  changeset pending Phase 3 delivery.
 
 ## Objective
 
@@ -360,7 +363,8 @@ tasks (254 executed and 1,370 up-to-date). MIUI rejected Gradle's ordinary conne
 and produced a zero-test report, which is excluded from evidence. Installing the same six generated
 application/test APKs through the authorized root channel and invoking the same AndroidJUnitRunner
 suites passed Demo 137/137, Counter 1/1, and Tutorials 2/2, with no skipped or failed tests. Phase 2
-is accepted on the candidate branch; merge is the only remaining delivery step.
+was merged in `84dce0ae6220517b5488070fa285ccc9226235f7`; its physical, keyed-identity, interaction,
+rollback, and release contracts remain closed.
 
 ## Phase 3: Rich AnimatedVisibility transitions
 
@@ -382,6 +386,37 @@ Required evidence covers every primitive alone and in combination, LTR/RTL offse
 spacing, clipping, negative/full-size offsets, transform origins, parent plus child motion, rapid
 enter/exit reversal, first composition, externally controlled state, focus/accessibility removal,
 reduced motion, renderer rollback, and no leaked empty hosts or effects after disposal.
+
+Implementation status on 2026-08-23: the Q3 surface is implemented with finite fraction-based
+logical and axis-specific slide, pivoted scale, aligned expand/shrink, duplicate-channel
+last-declaration precedence, and an `AnimatedVisibilityScope` whose `AnimatedEnterExit` descendants
+share the parent's Boolean `Transition` and removal lifetime. The old `BoxScope` receiver is hard-cut
+rather than bridged. Initial composition remains settled, layout direction is frozen per segment,
+and inactive content loses input, focus, and accessibility ownership immediately while its host is
+retained only for drawing until every parent and descendant channel settles. The Android renderer
+applies translation and pivot from the complete measured host rather than the first child, preserves
+parent-before-descendant transform order, and rolls failed patches back transactionally.
+
+Twelve deterministic composition tests, five renderer geometry/lifecycle tests, one renderer
+rollback test, compiled Q3 samples in both owner modules, the Preview fixture, and the updated Demo
+cover first composition, combination and precedence, LTR/RTL, multi-child geometry, rapid reversal,
+shared time, active ownership, reduced-motion endpoints, disposal, and rollback. Manual Xiaomi
+review found and corrected the initial multi-child transform-geometry error; settled, hide midpoint,
+hidden, and show midpoint paths then made the parent and opposing descendant choreography visibly
+distinct. The same-device fixed-frequency release-safety comparison is accepted in
+[performance Section 2.4.11](../../tooling/performance.md#2411-animation-revision-3-rich-visibility-release-safety-comparison):
+candidate P50/P95/peak heap changed by `+2.4%/+3.3%/+3.9%` (`+0.197 ms/+0.355 ms/+303 KiB`) versus
+the merged pre-Phase-3 control, so none crosses the frozen gate and the scoped conclusion is
+`no material change`. Candidate P99 increased by `3.380 ms` to `15.723 ms` and remains a tail watch
+item. The workload deliberately grows from a single old visibility host to rich parent-plus-child
+choreography, so frame-count growth is not interpreted as throughput or energy. The final
+`qaQuick qaPreview verifyDevelopmentToolingIsolation` gate passed in 2 minutes 26 seconds with
+1,624 actionable tasks (197 executed and 1,427 up-to-date), covering repository, documentation,
+compiled API samples, Preview, and tooling isolation. After the expected animation Preview Golden
+was reviewed and accepted, its focused snapshot and full Preview suite passed. Installing the same
+six generated application/test APKs through the authorized root channel then passed Demo 137/137,
+Counter 1/1, and Tutorials 2/2 with no skipped or failed tests. Phase 3 is accepted on the candidate
+branch; pull-request merge is the only remaining delivery step.
 
 ## Phase 4: Generic, segment-aware, and seekable transitions
 
@@ -593,11 +628,13 @@ This plan is complete only when:
    limits, budgets, revision-1 scenarios, and the stable Xiaomi fixed-clock baseline are frozen.
 2. **Complete — Phase 1:** hard-cut the duration spring/converter/result surface and implement
    physical spring, velocity continuity, decay, bounds, and results.
-3. **Complete on candidate branch — Phase 2:** keyed `AnimatedContent`, content transforms, size
-   transforms, renderer ownership, repository/Preview/full-device validation, and performance
-   comparison are accepted; pull-request merge remains.
-4. **Next — Phase 3:** implement slide/scale visibility primitives and descendant enter/exit
-   choreography.
+3. **Complete — Phase 2:** keyed `AnimatedContent`, content transforms, size transforms, renderer
+   ownership, repository/Preview/full-device validation, and performance comparison are accepted
+   and merged.
+4. **Complete on candidate branch — Phase 3:** slide/scale/aligned visibility primitives,
+   type-safe scope, shared-clock descendant choreography, focused/full tests, manual-device review,
+   Preview Golden, fixed-frequency performance, and root-installed device suites are accepted;
+   pull-request merge remains.
 5. **Pending — Phase 4:** implement public generic/segment-aware channels and seekable transition
    state.
 6. **Pending — Phase 5:** implement transactional layout-coordinate and bounds animation.
@@ -633,3 +670,7 @@ This plan is complete only when:
 | 2026-08-22 | Accept four revision-1 absolute animation baselines on the root-controlled Xiaomi reference device; normalized direction remains `inconclusive` until Phase 1 supplies a same-device candidate. |
 | 2026-08-22 | Accept the Phase 2 keyed-content architecture and focused Xiaomi evidence: incoming content owns interaction, failed candidate apply cannot publish replacement identity, at most two keyed subtrees are retained, and fixed-frequency AnimatedContent versus Crossfade is `no material change`. |
 | 2026-08-22 | Accept the Phase 2 final gates: repository, documentation, Preview, and tooling checks pass; MIUI's zero-test ordinary-install result is rejected, while root installation of the same APKs passes Demo 137/137, Counter 1/1, and Tutorials 2/2. |
+| 2026-08-23 | Record Phase 2 merged at `84dce0ae6220517b5488070fa285ccc9226235f7` and begin Phase 3 without reopening its physical or content-ownership contracts. |
+| 2026-08-23 | Accept the Phase 3 hard-cut design and focused evidence: `AnimatedVisibilityScope` replaces `BoxScope`, descendants share one transition/removal lifetime, inactive native content relinquishes interaction immediately, and renderer transforms use complete host geometry. |
+| 2026-08-23 | Accept the Phase 3 Xiaomi fixed-frequency release-safety comparison as `no material change`; P50/P95/heap remain inside frozen gates, while P99 at `15.723 ms` is retained as a Phase 4 tail watch item rather than hidden or converted into an unfrozen blocker. |
+| 2026-08-23 | Accept the Phase 3 final gates: repository, documentation, compiled samples, Preview, and tooling isolation pass in the 1,624-task gate; the reviewed rich-visibility Golden passes; root-installed device suites pass Demo 137/137, Counter 1/1, and Tutorials 2/2. |

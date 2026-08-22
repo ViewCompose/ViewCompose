@@ -183,31 +183,70 @@ not essential.
 
 ## AnimatedVisibility
 
-`AnimatedVisibility` combines alpha and measured-size channels while controlling content lifetime:
+`AnimatedVisibility` coordinates alpha, measured reveal, measured-size-relative slide, pivoted
+visual scale, and descendant choreography while controlling one content lifetime:
 
 ```kotlin
 AnimatedVisibility(
     visible = showDetails,
-    enter = fadeIn(tween(durationMillis = 160)) + expandVertically(),
-    exit = shrinkVertically() + fadeOut(tween(durationMillis = 120)),
+    enter = fadeIn(tween(durationMillis = 160)) +
+        slideInHorizontally(
+            from = SlideDirection.Start,
+            distanceFraction = 0.5f,
+        ) +
+        scaleIn(
+            initialScale = 0.9f,
+            transformOrigin = TransformOrigin(0f, 1f),
+        ) +
+        expandVertically(alignment = BoxAlignment.BottomStart),
+    exit = shrinkVertically(alignment = BoxAlignment.TopEnd) +
+        scaleOut(
+            targetScale = 0.92f,
+            transformOrigin = TransformOrigin(1f, 0f),
+        ) +
+        slideOutHorizontally(towards = SlideDirection.End) +
+        fadeOut(tween(durationMillis = 120)),
 ) {
-    Text("Details")
+    Text("Parent transition running: ${transition.isRunning}")
+    AnimatedEnterExit(
+        enter = slideInVertically(from = SlideDirection.Down),
+        exit = slideOutVertically(towards = SlideDirection.Up),
+    ) {
+        Text("Descendant shares the parent clock")
+    }
 }
 ```
 
 The first composition is settled and does not run enter motion. Later exit keeps content mounted
-until every channel finishes, then removes the content subtree. The empty host remains mounted at
-zero size as an identity anchor, so later visibility changes do not recreate following unkeyed
-native sibling Views or truncate their pressed and focus state. An interrupted exit or enter
-retargets from current alpha and size samples. Every new segment samples its live reset play time;
-it never reuses the preceding segment's terminal time from a pinned composition snapshot. Size
-motion clips content to animated bounds. When the host is a direct `Row` or `Column` child,
-surrounding item spacing follows the applicable width or height progress; the lifecycle endpoints
-therefore do not insert or remove a full gap in one frame.
+for drawing until every parent and descendant channel finishes, then removes the content subtree.
+Accepting an exit target immediately removes that retained subtree from pointer, focus, and
+accessibility ownership. The empty host remains mounted at zero size as an identity anchor, so later
+visibility changes do not recreate following unkeyed native sibling Views or truncate their pressed
+and focus state. An interrupted exit or enter retargets every channel from its current sample.
+Every new segment samples its live reset play time; it never reuses the preceding segment's terminal
+time from a pinned composition snapshot.
+
+`slideIn`/`slideOut` accept non-negative finite fractions of the full measured width or height.
+Logical start/end resolve from the layout direction captured at segment start; up/down remain
+physical. Expand and shrink keep their declared `BoxAlignment` edge stable and clip drawing to the
+animated bounds. `scaleIn`/`scaleOut` use their explicit `TransformOrigin`. Translation and visual
+scale do not change parent measurement. When the host is a direct `Row` or `Column` child,
+surrounding item spacing follows the applicable width or height reveal progress, so lifecycle
+endpoints do not insert or remove a full gap in one frame.
 
 Tree-builder defaults affect both axes. `RowScope` defaults affect width; `ColumnScope` defaults
-affect height. Transition `+` concatenates elements, and the last fade or applicable size element
-wins for a duplicate channel.
+affect height. Transition `+` concatenates elements, and the last applicable alpha, size, slide, or
+scale element wins for a duplicate channel. `AnimatedVisibilityScope.transition` is the owning
+Boolean `Transition`; scoped `AnimatedEnterExit` adds descendant channels to that coordinator
+instead of starting another frame loop. Descendant-local alpha/translation/scale/reveal applies
+before the parent transform, with parent clipping last. A motion policy that resolves these finite
+specifications to `snap` still commits visibility endpoints and removes exit content correctly.
+
+The content receiver is now the Q3 `AnimatedVisibilityScope`, not `BoxScope`. This is an intentional
+hard cut that makes shared transition ownership type-safe. Ordinary builder calls remain direct;
+callers that relied on `BoxScope.align` must emit an explicit `Box` and apply child alignment there.
+The slide/scale helpers, transition elements, scope, descendant host, renderer transport, and
+compiled `richVisibilityTransitionsSample` form one Q3 API family.
 
 Use `MutableTransitionState<Boolean>` when code outside the call needs to set `targetState` and
 observe `currentState` or `isIdle`. One object should be bound to one active host. In this release,
@@ -250,7 +289,8 @@ Both trees are measured under the same incoming parent constraints. A non-null `
 interpolates from the last committed host size to the incoming size and controls clipping; `null`
 uses the maximum current child size. Slide distances are non-negative finite fractions of the
 participating item's measured axis, with start/end resolved from the layout direction captured for
-that segment. Full-size callback offsets and general visibility slide/scale remain Phase 3 work.
+that segment. Callback-calculated offsets remain unsupported; general visibility slide/scale and
+descendant choreography are provided by the separate `AnimatedVisibility` family above.
 
 Incoming content exclusively owns pointer input, focus traversal, and accessibility after the
 replacement transaction commits. Outgoing content remains draw-only until every channel settles.

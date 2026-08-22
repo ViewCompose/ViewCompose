@@ -10,16 +10,25 @@ import com.viewcompose.animation.EnterTransition
 import com.viewcompose.animation.ExitTransition
 import com.viewcompose.animation.MutableTransitionState
 import com.viewcompose.animation.SizeTransform
+import com.viewcompose.animation.SlideDirection
 import com.viewcompose.animation.animateContentSize
 import com.viewcompose.animation.animateFloat
 import com.viewcompose.animation.animateFloatAsState
 import com.viewcompose.animation.animateValueAsState
 import com.viewcompose.animation.expandVertically
+import com.viewcompose.animation.expandIn
 import com.viewcompose.animation.fadeIn
 import com.viewcompose.animation.fadeOut
 import com.viewcompose.animation.rememberAnimatable
 import com.viewcompose.animation.rememberInfiniteTransition
 import com.viewcompose.animation.shrinkVertically
+import com.viewcompose.animation.shrinkOut
+import com.viewcompose.animation.slideInHorizontally
+import com.viewcompose.animation.slideInVertically
+import com.viewcompose.animation.slideOutHorizontally
+import com.viewcompose.animation.slideOutVertically
+import com.viewcompose.animation.scaleIn
+import com.viewcompose.animation.scaleOut
 import com.viewcompose.animation.togetherWith
 import com.viewcompose.animation.updateTransition
 import com.viewcompose.animation.using
@@ -35,6 +44,8 @@ import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.frame.MonotonicFrameClock
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.TransformOrigin
+import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.dp
@@ -135,6 +146,54 @@ fun UiTreeBuilder.animatedVisibilitySample(visible: Boolean) {
         exit = exit,
     ) {
         Text("Details")
+    }
+}
+
+/** Shares one visibility timeline across parent slide/scale/reveal and descendant choreography. */
+fun UiTreeBuilder.richVisibilityTransitionsSample(visible: Boolean) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(tween(durationMillis = 160)) +
+            slideInHorizontally(
+                from = SlideDirection.Start,
+                animationSpec = tween(durationMillis = 240),
+                distanceFraction = 0.5f,
+            ) +
+            scaleIn(
+                animationSpec = tween(durationMillis = 220),
+                initialScale = 0.9f,
+                transformOrigin = TransformOrigin(0f, 1f),
+            ) +
+            expandIn(
+                animationSpec = tween(durationMillis = 240),
+                alignment = BoxAlignment.BottomStart,
+            ),
+        exit = shrinkOut(
+            animationSpec = tween(durationMillis = 220),
+            alignment = BoxAlignment.BottomEnd,
+        ) + scaleOut(
+            animationSpec = tween(durationMillis = 180),
+            targetScale = 0.94f,
+            transformOrigin = TransformOrigin(1f, 1f),
+        ) + slideOutHorizontally(
+            towards = SlideDirection.End,
+            animationSpec = tween(durationMillis = 220),
+            distanceFraction = 0.35f,
+        ) + fadeOut(tween(durationMillis = 140)),
+    ) {
+        Text("Shared transition running: ${transition.isRunning}")
+        AnimatedEnterExit(
+            enter = slideInVertically(
+                from = SlideDirection.Down,
+                animationSpec = tween(durationMillis = 320),
+            ),
+            exit = slideOutVertically(
+                towards = SlideDirection.Up,
+                animationSpec = tween(durationMillis = 320),
+            ),
+        ) {
+            Text("Descendant joins the parent timeline")
+        }
     }
 }
 

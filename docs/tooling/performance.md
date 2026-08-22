@@ -1258,6 +1258,54 @@ or post-GC retained memory. Other limits are one OEM/API-28 device, `run-from-ap
 sensitivity, no Compose control, and no direct power measurement. The scoped Phase 2 performance
 decision is accepted; the next action is the full project and device gate, not repeated sampling.
 
+#### 2.4.11 Animation revision-3 rich visibility release-safety comparison
+
+The 2026-08-23 Phase 3 batch compared the merged pre-Phase-3 target at `84dce0ae6220517b5488070fa285ccc9226235f7`
+with the rich-visibility candidate on the same Xiaomi MI 6 / Android 9 reference device. The same
+revision-3 benchmark method drove the `animation.core` primary action through four hide/show round
+trips after a five-second unmeasured launch settle, using five `run-from-apk` iterations and the
+Section 2.4.8 fixed CPU/GPU/interconnect policy. The baseline target APK SHA-256 was
+`f47db32116f93158176d217c4630c4a56c44b8b6d33a29da8d598a09495dca86`; the candidate target APK
+SHA-256 was `531d620917439cd565b5e4e1986fc0ecca865d7c9747459d57b4238f28d69e23`.
+
+The original and Magisk-adapted benchmark APK SHA-256 values were respectively
+`59179c56ac34166091f4285efb6937f9148dad8a31187f8dbfd231d3e591c86e` and
+`3f7f605c97c9fbd2223eb5a34dea9160d9f13d409c0a95f9c355a1f2a039a6d4`. The equal-length
+`su root` to `su 0 -c` transport adaptation and checksum/signature repair did not alter the target,
+workload, metrics, or result JSON. Both runs reported `cpuLocked=true`, the revision-3 payload, and
+zero thermal-throttle sleep. Pre/post controls held CPU policies 0/4 at 1.4016/1.8048 GHz, GPU at
+515 MHz, and exposed interconnect votes at 13,763 with vendor performance services stopped and
+charging suspended. Battery temperature remained 32--33 degrees Celsius, and all controls were
+restored after the batch. No 33-degree start gate was imposed; same-batch temperature, fixed clocks,
+and absence of benchmark thermal sleep are the accepted controls.
+
+| Target | Frames per run | Frame CPU P50/P90/P95/P99, ms | Median peak heap, KiB | Run-P50 CV | Acceptance |
+| --- | --- | ---: | ---: | ---: | --- |
+| Pre-Phase-3 visibility baseline | `164/164/164/164/164` | `8.138/10.014/10.760/12.343` | 7846 | 0.068 | Release-safety control accepted |
+| Phase 3 parent-plus-descendant visibility | `384/384/384/384/384` | `8.334/10.760/11.115/15.723` | 8149 | 0.041 | Pass |
+
+Relative to the pre-Phase-3 target, the candidate changes P50/P90/P95/P99 by
+`+2.4%/+7.4%/+3.3%/+27.4%`; the absolute P50 and P95 changes are only `+0.197 ms` and `+0.355 ms`.
+Median peak heap changes by `+303 KiB` (`+3.9%`). P50, P95, and memory remain inside the ADR-0019
+combined regression gates, both run-P50 CV values are below `0.15`, and every target has identical
+frame counts across its five iterations. P99 rises by `3.380 ms` but remains below one 60 Hz frame
+budget at `15.723 ms`; P99 is recorded as a tail watch item rather than hidden or promoted into an
+unfrozen blocking threshold. The scoped frame and peak-memory conclusion is therefore
+**no material change**.
+
+This comparison deliberately changes visible workload complexity. The baseline animates the old
+fade/size parent, while the candidate animates parent fade, logical slide, pivoted scale, aligned
+reveal, and a descendant's opposing slide/scale/fade on the same clock. Its frame-count increase
+from 164 to 384 is expected choreography duration and coverage, not a throughput, energy, or
+like-for-like longitudinal claim. The baseline is consequently a pre-change release-safety control,
+not the reusable `animation.core@3` baseline; the candidate row becomes that absolute baseline.
+Other limits are one OEM/API-28 device, `run-from-apk` JIT/code-placement sensitivity, peak rather
+than post-GC retained memory, no per-object allocation events, no Compose control, and no direct
+power measurement. Deterministic tests separately prove one shared frame owner, one-time subtree
+release, inactive interaction removal, and renderer rollback. Phase 3 performance is accepted; the
+complete project and rooted-device gates subsequently passed, so the next action is pull-request
+delivery rather than repeated sampling.
+
 ### 2.5 Debug tooling regression gate
 
 Release macrobenchmarks cannot detect costs that exist only in debuggable builds. Any tooling that

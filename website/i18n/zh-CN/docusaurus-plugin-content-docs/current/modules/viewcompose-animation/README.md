@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: 5b280c0ec35ba98e98661fd31d8fb8b6306e3013ee7e071ce4ad4015bab029af
+translation_source_hash: 261ef24afa9cb08d18ab786b49cba1b7d872189c803b805d18c21f0f9250a1b4
 translation_status: current
 ---
 
@@ -170,27 +170,65 @@ val scale = pulse.animateFloat(
 
 ## AnimatedVisibility 可见性动画
 
-`AnimatedVisibility` 在控制内容生命周期的同时组合 Alpha 与测量尺寸 Channel：
+`AnimatedVisibility` 在一个 Content 生命周期内协调 Alpha、实测 Reveal、按实测尺寸计算的
+Slide、带轴心的视觉 Scale 与后代编排：
 
 ```kotlin
 AnimatedVisibility(
     visible = showDetails,
-    enter = fadeIn(tween(durationMillis = 160)) + expandVertically(),
-    exit = shrinkVertically() + fadeOut(tween(durationMillis = 120)),
+    enter = fadeIn(tween(durationMillis = 160)) +
+        slideInHorizontally(
+            from = SlideDirection.Start,
+            distanceFraction = 0.5f,
+        ) +
+        scaleIn(
+            initialScale = 0.9f,
+            transformOrigin = TransformOrigin(0f, 1f),
+        ) +
+        expandVertically(alignment = BoxAlignment.BottomStart),
+    exit = shrinkVertically(alignment = BoxAlignment.TopEnd) +
+        scaleOut(
+            targetScale = 0.92f,
+            transformOrigin = TransformOrigin(1f, 0f),
+        ) +
+        slideOutHorizontally(towards = SlideDirection.End) +
+        fadeOut(tween(durationMillis = 120)),
 ) {
-    Text("Details")
+    Text("Parent transition running: ${transition.isRunning}")
+    AnimatedEnterExit(
+        enter = slideInVertically(from = SlideDirection.Down),
+        exit = slideOutVertically(towards = SlideDirection.Up),
+    ) {
+        Text("Descendant shares the parent clock")
+    }
 }
 ```
 
-首次组合为稳定态，不播放 Enter。后续 Exit 会保留内容到所有 Channel 完成，再移除内容子树。
-空 Host 会以零尺寸身份锚点继续挂载，因此后续可见性变化不会重建其后的无 Key 原生同级 View，
-也不会截断这些 View 的按压态和焦点状态。被中断的 Enter/Exit 从当前 Alpha 与尺寸样本 Retarget。
-每个新 Segment 都使用实时归零后的 Play Time 采样，不会误用固定组合快照中上一 Segment 的结束
-时间。尺寸动画会按动态 Bounds 裁剪内容。当 Host 是 `Row` 或 `Column` 的直接 Child 时，周围的
-Item 间距会跟随对应的宽度或高度进度，因此生命周期端点不会在单帧内突然插入或移除一整段间距。
+首次组合为稳定态，不播放 Enter。后续 Exit 会为绘制保留内容，直到父级和后代的全部 Channel
+完成，再移除内容子树；接受 Exit 目标时，保留子树会立即失去 Pointer、焦点和无障碍所有权。空
+Host 会以零尺寸身份锚点继续挂载，因此后续可见性变化不会重建其后的无 Key 原生同级 View，也
+不会截断这些 View 的按压态和焦点状态。被中断的 Enter/Exit 会让每个 Channel 从当前样本
+Retarget。每个新 Segment 都使用实时归零后的 Play Time 采样，不会误用固定组合快照中上一
+Segment 的结束时间。
+
+`slideIn`/`slideOut` 接受完整实测宽度或高度的非负有限比例。逻辑 Start/End 按 Segment 开始时
+捕获的布局方向解析，Up/Down 保持物理方向。Expand/Shrink 会固定声明的 `BoxAlignment` 边缘，
+并把绘制裁剪到动态 Bounds；`scaleIn`/`scaleOut` 使用显式 `TransformOrigin`。Translation 与
+视觉 Scale 不改变父级测量。当 Host 是 `Row` 或 `Column` 的直接 Child 时，周围 Item 间距会
+跟随对应的宽度或高度 Reveal 进度，因此生命周期端点不会在单帧内突然插入或移除一整段间距。
 
 Tree-builder 默认影响双轴；`RowScope` 默认影响宽度；`ColumnScope` 默认影响高度。Transition
-的 `+` 会拼接 Element，重复 Channel 由最后一个适用 Fade 或尺寸 Element 决定。
+的 `+` 会拼接 Element，重复 Channel 由最后一个适用的 Alpha、尺寸、Slide 或 Scale Element
+决定。`AnimatedVisibilityScope.transition` 是所属 Boolean `Transition`；作用域内的
+`AnimatedEnterExit` 会把后代 Channel 加入同一个协调器，不会启动第二条 Frame Loop。先应用
+后代局部 Alpha/Translation/Scale/Reveal，再应用父级 Transform，最后应用父级裁剪。Motion
+Policy 把有限 Spec 解析为 `snap` 时，显隐端点提交与 Exit 内容移除仍然正确。
+
+Content Receiver 现在是 Q3 `AnimatedVisibilityScope`，不再是 `BoxScope`。这是为了让共享
+Transition 所有权具备类型安全而进行的有意硬切。普通 Builder 调用仍可直接使用；依赖
+`BoxScope.align` 的调用方需要显式发射 `Box`，并在其中应用 Child Alignment。Slide/Scale
+Helper、Transition Element、Scope、后代 Host、Renderer Transport 与已编译
+`richVisibilityTransitionsSample` 共同构成一个 Q3 API Family。
 
 需要在调用外设置 `targetState` 并观察 `currentState` 或 `isIdle` 时，使用
 `MutableTransitionState<Boolean>`。一个对象只能绑定一个活动 Host。本版本中，在 Host 首次组合
@@ -229,8 +267,8 @@ AnimatedContent(
 
 两棵树使用同一组 Incoming 父约束测量。非空 `SizeTransform` 从最后提交的 Host 尺寸插值到
 Incoming 尺寸并控制裁剪；`null` 使用当前 Child 最大尺寸。Slide 距离是参与 Item 实测轴尺寸的
-非负有限比例，Start/End 根据该 Segment 捕获的布局方向解析。接收 Full-size Callback 的 Offset
-以及通用 Visibility Slide/Scale 仍属于 Phase 3。
+非负有限比例，Start/End 根据该 Segment 捕获的布局方向解析。按 Callback 计算 Offset 仍未支持；
+通用 Visibility Slide/Scale 与后代编排由上文独立的 `AnimatedVisibility` Family 提供。
 
 替换事务提交后，只有 Incoming Content 拥有 Pointer Input、焦点遍历和无障碍能力。Outgoing
 Content 在全部 Channel 停稳前只参与绘制。变化请求只会在一棵候选树成功提交后接受，因此

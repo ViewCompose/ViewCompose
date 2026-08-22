@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: d41bdd8b28b5ca4f8388a45d38a8eada9141d2a9a8891d267349f27b8d9fc221
+translation_source_hash: 87dd3455be4176b20ff8ef64877001028b3450c287edc4e985fe03a907f33c3c
 translation_status: current
 ---
 
@@ -1074,6 +1074,49 @@ Owner，并在全部参与 Channel Settled 后移除 Outgoing Subtree。Android 
 逐对象 Allocation Event，因此该证据不宣称更低的 Allocation Churn 或 Post-GC Retained Memory。
 其他局限包括仅一台 OEM/API-28 设备、`run-from-apk` 对 JIT/代码布局敏感、没有 Compose Control，
 以及没有直接功耗测量。Phase 2 的限定性能决策已接收；下一步是完整项目和设备门禁，而不是重复采样。
+
+#### 2.4.11 Animation revision-3 丰富 Visibility 发版安全对照 {/* #2411-animation-revision-3-rich-visibility-release-safety-comparison */}
+
+2026-08-23 的 Phase 3 批次在同一台 Xiaomi MI 6 / Android 9 参考设备上，对比了合并后的
+Pre-Phase-3 Target `84dce0ae6220517b5488070fa285ccc9226235f7` 与 Rich Visibility Candidate。
+同一个 Revision-3 Benchmark 方法驱动 `animation.core` Primary Action，在测量外等待启动 5 秒后
+执行 4 个 Hide/Show Round Trip；两组均采用 5 次 `run-from-apk` 迭代和 2.4.8 节固定
+CPU/GPU/Interconnect Policy。Baseline Target APK SHA-256 为
+`f47db32116f93158176d217c4630c4a56c44b8b6d33a29da8d598a09495dca86`，Candidate Target APK
+SHA-256 为 `531d620917439cd565b5e4e1986fc0ecca865d7c9747459d57b4238f28d69e23`。
+
+原始与 Magisk 适配后的 Benchmark APK SHA-256 分别为
+`59179c56ac34166091f4285efb6937f9148dad8a31187f8dbfd231d3e591c86e` 和
+`3f7f605c97c9fbd2223eb5a34dea9160d9f13d409c0a95f9c355a1f2a039a6d4`。等长的
+`su root` 到 `su 0 -c` 传输适配及 Checksum/Signature 修复没有改变 Target、Workload、Metric 或
+Result JSON。两组运行均报告 `cpuLocked=true`、Revision-3 Payload，且 Thermal-throttle Sleep
+为 0。前后控制把 CPU Policy 0/4 固定在 1.4016/1.8048 GHz、GPU 固定在 515 MHz、已暴露的
+Interconnect Vote 固定在 13,763，并停止厂商 Performance Service、暂停充电。电池温度保持在
+32～33 摄氏度，批次后恢复全部控制。不设置 33 摄氏度起跑门禁；同批次温度、固定频率和无
+Benchmark Thermal Sleep 是接收条件。
+
+| Target | 每轮帧数 | Frame CPU P50/P90/P95/P99，ms | Peak Heap 中位数，KiB | Run-P50 CV | 验收 |
+| --- | --- | ---: | ---: | ---: | --- |
+| Pre-Phase-3 Visibility Baseline | `164/164/164/164/164` | `8.138/10.014/10.760/12.343` | 7846 | 0.068 | 已接收发版安全 Control |
+| Phase 3 父级与后代 Visibility | `384/384/384/384/384` | `8.334/10.760/11.115/15.723` | 8149 | 0.041 | 通过 |
+
+相对 Pre-Phase-3 Target，Candidate 的 P50/P90/P95/P99 变化为
+`+2.4%/+7.4%/+3.3%/+27.4%`；P50 与 P95 的绝对变化只有 `+0.197 ms` 与 `+0.355 ms`。
+Peak Heap 中位数增加 `303 KiB`（`+3.9%`）。P50、P95 与内存仍在 ADR-0019 组合回退门禁内，
+两组 Run-P50 CV 均低于 `0.15`，且各 Target 的 5 轮帧数完全一致。P99 增加 `3.380 ms`，但
+`15.723 ms` 仍低于 60 Hz 的单帧预算；P99 被明确记录为后续 Tail Watch Item，不会隐藏，也不会
+临时提升为尚未冻结的阻断门禁。因此限定在 Frame 与 Peak Memory 的结论为
+**no material change**。
+
+这项对照有意改变可见 Workload 的复杂度。Baseline 只执行旧的父级 Fade/Size；Candidate 则在
+同一时钟上执行父级 Fade、逻辑 Slide、Pivot Scale、对齐 Reveal，以及后代反向
+Slide/Scale/Fade。从 164 帧增加到 384 帧是预期的编舞时长与覆盖变化，不是 Throughput、能耗或
+严格同负载的纵向结论。因此 Baseline 只是变更前发版安全 Control，不能作为可复用的
+`animation.core@3` 基线；Candidate 行才成为该绝对基线。其他局限包括仅一台 OEM/API-28 设备、
+`run-from-apk` 对 JIT/代码布局敏感、只有 Peak 而非 Post-GC Retained Memory、没有逐对象
+Allocation Event、没有 Compose Control，以及没有直接功耗测量。确定性测试另外证明单一共享
+Frame Owner、子树仅释放一次、非活跃交互移除与 Renderer Rollback。Phase 3 性能已接收；下一步是
+完整项目与 Root 真机门禁；这些门禁随后已经通过，因此下一步是提交 Pull Request，而不是重复采样。
 
 ### 2.5 Debug Tooling 回归门禁
 

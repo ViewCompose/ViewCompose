@@ -33,6 +33,7 @@ import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
+import com.viewcompose.ui.node.spec.AnimatedVisibilityHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedContentHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedContentItemNodeProps
 import com.viewcompose.ui.node.spec.ConstraintDimension
@@ -176,6 +177,28 @@ fun vNodeModelSample() {
     check(spacer.type == NodeType.Spacer)
     check(spacer.key == "content-gap")
     check(spacer.children.isEmpty())
+}
+
+/** Builds one interactive visibility frame with measured reveal and visual transforms. */
+fun animatedVisibilityHostNodeContractSample() {
+    val host = VNode(
+        type = NodeType.AnimatedVisibilityHost,
+        spec = AnimatedVisibilityHostNodeProps(
+            alpha = 0.7f,
+            widthScale = 0.8f,
+            heightScale = 0.6f,
+            scaleX = 0.95f,
+            scaleY = 0.95f,
+            translationXFraction = -0.25f,
+            translationYFraction = 0f,
+            transformOrigin = TransformOrigin(0f, 1f),
+            contentAlignment = BoxAlignment.BottomStart,
+            clipToBounds = true,
+            active = true,
+        ),
+    )
+
+    check(host.type == NodeType.AnimatedVisibilityHost)
 }
 
 /** Builds the bounded renderer pair used by a keyed content replacement frame. */

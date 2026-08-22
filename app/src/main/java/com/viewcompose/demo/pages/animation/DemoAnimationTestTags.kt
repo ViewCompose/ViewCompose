@@ -4,6 +4,7 @@ package com.viewcompose
 internal object DemoAnimationTestTags {
     const val ANIMATION_VISIBILITY_TOGGLE = "animation_visibility_toggle"
     const val ANIMATION_VISIBILITY_TARGET = "animation_visibility_target"
+    const val ANIMATION_VISIBILITY_CHILD = "animation_visibility_child"
     const val ANIMATION_VISIBILITY_FOOTER = "animation_visibility_footer"
     const val ANIMATION_TASK_TOGGLE = "animation_task_toggle"
     const val ANIMATION_TASK_STATUS = "animation_task_status"

@@ -1357,9 +1357,13 @@ class DemoVisualUiTest {
                 val target = activity.requireScenarioViewByIdVisible<View>(
                     R.id.demo_animation_core_target,
                 )
+                val child = activity.requireViewByTestTagVisible(
+                    DemoAnimationTestTags.ANIMATION_VISIBILITY_CHILD,
+                )
                 val footer = activity.requireViewByTestTagVisible(DemoAnimationTestTags.ANIMATION_VISIBILITY_FOOTER)
                 footerTopBeforeHide = viewTopOnScreen(footer)
                 assertViewFullyVisible(target)
+                assertViewFullyVisible(child)
                 activity.clickScenarioViewByIdVisible(R.id.demo_animation_core_primary_action)
             }
             waitForUiIdle()
@@ -1367,10 +1371,15 @@ class DemoVisualUiTest {
                 val toggle = activity.requireScenarioViewById<TextView>(
                     R.id.demo_animation_core_primary_action,
                 )
+                val child = findViewByTestTag(
+                    activity.findViewById(android.R.id.content),
+                    DemoAnimationTestTags.ANIMATION_VISIBILITY_CHILD,
+                )
                 val footer = activity.requireViewByTestTagVisible(DemoAnimationTestTags.ANIMATION_VISIBILITY_FOOTER)
                 footerTopAfterHide = viewTopOnScreen(footer)
                 toggle.text.toString() == activity.getString(R.string.demo_animation_core_show) &&
-                    footerTopAfterHide < footerTopBeforeHide
+                    footerTopAfterHide < footerTopBeforeHide &&
+                    (child == null || !isViewVisible(child))
             }
             assertTrue(
                 "Expected footer to move up after hide, before=$footerTopBeforeHide, after=$footerTopAfterHide",
@@ -1387,13 +1396,17 @@ class DemoVisualUiTest {
                 val footer = activity.requireViewByTestTagVisible(DemoAnimationTestTags.ANIMATION_VISIBILITY_FOOTER)
                 val footerTopAfterShow = viewTopOnScreen(footer)
                 val target = activity.findViewById<View>(R.id.demo_animation_core_target)
+                val child = findViewByTestTag(
+                    activity.findViewById(android.R.id.content),
+                    DemoAnimationTestTags.ANIMATION_VISIBILITY_CHILD,
+                )
                 if (toggle.text.toString() != activity.getString(R.string.demo_animation_core_hide)) {
                     return@waitUntilActivityCondition false
                 }
                 if (footerTopAfterShow <= footerTopAfterHide) {
                     return@waitUntilActivityCondition false
                 }
-                target != null && isViewVisible(target)
+                target != null && isViewVisible(target) && child != null && isViewVisible(child)
             }
             assertTrue(
                 "Expected footer to move down after show, hidden=$footerTopAfterHide",
