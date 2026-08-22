@@ -2,11 +2,11 @@
 
 ## Status
 
-Active and intentionally deferred until after the coordinated Maven and ViewCompose Preview 1.1.0
-release. The release-bearing Demo rearchitecture and its renderer/overlay repairs are complete and
-archived in `docs/archive/demo-benchmark-verification-harness-rearchitecture.md`. This plan owns only
-the remaining internal harness baseline, broad visual matrix, golden coverage, and dead-infrastructure
-cleanup.
+Active. The coordinated Maven and ViewCompose Preview 1.1.0 release and the preempting focus
+visibility hard cut are complete. The release-bearing Demo rearchitecture and its renderer/overlay
+repairs are archived in `docs/archive/demo-benchmark-verification-harness-rearchitecture.md`. This
+plan now resumes ownership of the remaining internal harness baseline, broad visual matrix, golden
+coverage, and dead-infrastructure cleanup.
 
 Phase 1 is partially complete. The rooted Xiaomi run accepted the revision-3 eight-cycle mutation
 absolute baseline at run-P50 CV `0.025`. Scroll remains unaccepted after two complete v4 batches at
@@ -19,18 +19,17 @@ rendering path: the panel has one fixed 60 Hz mode, its framebuffer idle/dynamic
 already disabled, and SurfaceFlinger already uses the available backpressure/latch controls. Scroll
 recapture on this device is therefore deferred rather than tuned into a passing batch.
 
-Last verified: 2026-08-21.
+Last verified: 2026-08-22.
 
-The configuration matrix exposed an unstable framework-level focus-visibility design. That slice is
-split into the higher-priority
-[`focus-visibility-scroll-ownership-hard-cut.md`](./focus-visibility-scroll-ownership-hard-cut.md)
-plan and is no longer closed by adding more tests to the existing Boolean policy. This plan retains
-the popup, navigation, theme, segmented, rounded-grid, and nested-scroll slices.
+The configuration matrix exposed an unstable framework-level focus-visibility design. That slice
+was completed by the higher-priority
+[archived focus visibility and scroll ownership hard-cut plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/focus-visibility-scroll-ownership-hard-cut.md)
+plan and was not closed by adding more tests to the rejected Boolean policy. This plan retains the
+popup, navigation, theme, segmented, rounded-grid, and nested-scroll slices.
 
-Next action: pause this lower-priority closeout while the hard-cut focus-visibility plan executes,
-then resume the remaining visual/configuration matrix and popup golden. Recapture revision-3 scroll
-on another root-controllable reference device. Do not remove production harness infrastructure or
-close Phase 1 until scroll passes the unchanged `0.15` gate.
+Next action: execute the remaining visual/configuration matrix and popup golden, then recapture
+revision-3 scroll on another root-controllable reference device. Do not remove production harness
+infrastructure or close Phase 1 until scroll passes the unchanged `0.15` gate.
 
 ## Maven release changesets
 
