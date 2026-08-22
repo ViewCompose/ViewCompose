@@ -1124,6 +1124,49 @@ unresolved CV rows, peak rather than post-GC retained memory, and no isolated ad
 probe in the physical matrix. Further whole-frame work requires a new attributed optimization plan;
 rerunning this matrix until favorable samples appear is not an accepted next action.
 
+#### 2.4.8 Animation revision-1 pre-physics baseline
+
+The 2026-08-22 Phase 0 batch froze the duration-based animation baseline before the physical
+spring hard cut. It used the rooted Xiaomi MI 6 / Android 9 reference device at 60 Hz, an
+R8/resource-shrunk nondebuggable target, five `run-from-apk` iterations, a five-second unmeasured
+launch settle, accessibility click actions, and four complete forward/reverse round trips per
+iteration. Target source started from `3cf6668f516ace95fabfb80dac049a6e83e1fbd5`; the target APK
+SHA-256 was `3a5ca305815ca3ba3d60841376b72a46f9f79e3cb943aca8dc706d8e845a42b1`.
+
+The clock policy was
+`root-fixed-cpu-1401600-1804800-gpu-515000000-interconnect-13763-perf-hal-off-animation-v1`:
+CPU policies 0/4 were fixed at 1.4016/1.8048 GHz, GPU at 515 MHz, exposed CPU/GPU interconnect
+minimum votes at 13,763, vendor performance services stopped, and charging suspended. Every JSON
+reported `cpuLocked=true` and zero thermal-throttle sleep. Android 9 does not expose the platform
+thermal-status service on this device, so per-method battery temperatures of 31--33 degrees
+Celsius are the thermal evidence; current frequencies were verified at each start. All modified
+governors, bounds, services, and charging state were restored after each method.
+
+AndroidX Benchmark 1.4.1 emits the AOSP-only `su root` command form, which Magisk 30.6 does not
+execute. The instrumentation APK was adapted only at that command-transport boundary with an
+equal-length `su 0 -c` substitution and checksum/signature repair. Original and adapted benchmark
+APK SHA-256 values were respectively
+`a2524805d77da2dc7bad578f697c2051bc8615e8bcbb2b43554178c48c37ff96` and
+`c70f1fc3190949d030975fcc9025d90246fe70e88cf70ebe42adbd0effe54a5e`; the target APK, workload,
+metrics, and result JSON were unchanged.
+
+| Workload | Frames per run | Frame CPU P50/P90/P95/P99, ms | Median peak heap, KiB | Run-P50 CV | Acceptance |
+| --- | --- | ---: | ---: | ---: | --- |
+| `animation.specs@1` duration spring/value channels | `152/152/152/152/152` | `8.854/12.350/13.067/14.641` | 8113 | 0.075 | Accepted absolute baseline |
+| `animation.content@1` Crossfade | `144/144/144/144/144` | `7.102/9.791/10.454/16.038` | 7341 | 0.029 | Accepted absolute baseline |
+| `animation.content-size@1` measured-size motion | `184/184/184/184/184` | `4.850/6.165/7.258/23.159` | 6514 | 0.010 | Accepted absolute baseline |
+| `animation.transition@1` synchronized channels | `168/168/168/168/168` | `8.231/12.094/12.388/14.248` | 8283 | 0.028 | Accepted absolute baseline |
+
+All four workloads have identical frame counts across their five runs and pass the `0.15`
+stability ceiling. This is an accepted absolute baseline, but the normalized conclusion is
+**inconclusive** because Phase 0 has no candidate or same-run Compose control; it establishes no
+performance improvement or regression. Limitations are one OEM/API-28 device, `run-from-apk`
+JIT/code-placement sensitivity, battery temperature in place of a platform thermal-status value,
+peak rather than post-GC retained memory, and no Compose comparison. Phase 1 must preserve the
+scenario revisions and clock policy, compare the physical engine against the relevant row, report
+absolute and normalized deltas, and pass the ADR-0019 allocation and terminal-state counters before
+claiming completion.
+
 ### 2.5 Debug tooling regression gate
 
 Release macrobenchmarks cannot detect costs that exist only in debuggable builds. Any tooling that

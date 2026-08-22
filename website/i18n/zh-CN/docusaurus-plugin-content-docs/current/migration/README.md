@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: f4effc7df2c0b6bcd19dfc936eb6ded86c995fdedf70643c2a106b0edaeaa0fa
+translation_source_hash: 1c3c1aa96865d404ae6325d584a150cd8aa23dec20d7b2e1a1a1632dbe402fc2
 translation_status: current
 ---
 
@@ -12,7 +12,7 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 生命周期和可观察行为，而不是替换名称相似的函数。在把页面迁移到原生 Android View
 渲染器之前，先用本节识别语义缺口。
 
-最后验证日期：**2026-08-15**
+最后验证日期：**2026-08-22**
 
 复核责任人：**Kernel、UI Foundation、Android Engine、Android 聚合层与 navigation 模块族的维护者**
 
@@ -26,6 +26,7 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 | UI 与渲染 | `viewcompose-ui-contract`、`viewcompose-renderer-android`、`viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha03`；renderer/ConstraintLayout `0.1.0-alpha01` |
 | Android 所有权 | `viewcompose-android`、`viewcompose-material3-android`、`viewcompose-host-android`、`viewcompose-lifecycle-androidx`、`viewcompose-viewmodel-androidx` | 聚合层/集成层 `0.1.0-alpha01`；host `0.1.0-alpha03` |
 | 导航 | `viewcompose-navigation-core`、`viewcompose-navigation-android` | core `0.1.0-alpha02`；Android `0.1.0-alpha01` |
+| 动画 | `viewcompose-animation-core`、`viewcompose-animation` | 均为 `0.1.0-alpha04` |
 
 不可变的发布源码 revision 记录在
 [`gradle/viewcompose-publishing.properties`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/gradle/viewcompose-publishing.properties)。
@@ -61,6 +62,7 @@ Kotlin `2.0.21`，声明位置是
 | 图片加载 | [图片加载](image-loading.md) | source 类型、loader 所有权、request 策略和回收 View 释放 |
 | Lazy 集合与 Pager | [Lazy 集合 Revision 与复用](lazy-collection-revision-and-reuse.md) | 语义 Revision、Mounted Tree 复用、互操作 Reset/Release，以及 TabRow/Pager 硬切 |
 | 组件 DSL 别名、交互反馈、TextField Wrapper 或仅 Alpha 的内容动画 | [DSL 契约收敛](dsl-contract-convergence.md) | Variant 替代、Indication 所有权、类型化输入 Profile 与 Crossfade 命名 |
+| 物理动画、`Animatable`、内容/可见性过渡、Seek、Bounds、共享运动或动画工具 | [动画](compose-animation.md) | 时长与物理语义、速度、子树身份、几何所有者和检查激活条件 |
 
 一个边界跨越多个关注点时，需要阅读多份页面。例如，导航目的地中的
 `rememberSaveable` 同时受状态/恢复契约和导航所有权契约约束。
@@ -108,6 +110,8 @@ Kotlin `2.0.21`，声明位置是
 | 导航 | 深链 | **Partially supported（部分支持）** | 替换 action/MIME 规则；未声明 query 值可存在，但不能影响导航策略。 | [深链](compose-navigation.md#deep-links) |
 | 导航 | 保存/恢复、系统 Back 和 Predictive Back | **Supported（支持）** | 恢复后重建存活对象，并在发布流程中保留设备验证。 | [恢复与 Back](compose-navigation.md#save-restore-and-process-death) |
 | 导航 | 直接 NavigationEvent 集成 | **Unsupported（不支持）** | 把 dispatcher-owner、forward event、测试 fake 和 Preview 需求留在 ViewCompose 外。 | [NavigationEvent](compose-navigation.md#system-back-and-predictive-back) |
+| 动画 | 时长采样、target-as-state、自主 Transition、淡入淡出/尺寸可见性、Crossfade 与内容尺寸动画 | **Partially supported（部分支持）** | 只使用当前已记录子集，不要把带时长的 `SpringSpec` 当成物理弹簧。 | [动画](compose-animation.md#capability-matrix) |
+| 动画 | 物理弹簧、Decay、Seekable Transition、Bounds、共享运动与时间线检查 | **Unsupported（不支持）** | 遵循已接受的分阶段契约；计划 API 发布前不是迁移目标。 | [动画](compose-animation.md#the-spring-hard-cut) |
 
 ## 迁移顺序
 

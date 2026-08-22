@@ -25,11 +25,16 @@ import org.junit.runner.RunWith
 class ConstraintLayoutPhase3DeviceTest {
     private val device: UiDevice
         get() = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private lateinit var constraintWarningLogMarker: String
 
     @Before
     fun resetDiagnosticsAndLogs() {
+        waitForUiIdle()
         DemoRenderDiagnosticsStore.reset()
         device.executeShellCommand("logcat -c")
+        // The marker orders capture after prior Activity teardown even when an OEM logcat clear lags.
+        constraintWarningLogMarker = "constraint-test-${SystemClock.elapsedRealtimeNanos()}"
+        device.executeShellCommand("log -p i -t $CONSTRAINT_TEST_LOG_TAG $constraintWarningLogMarker")
     }
 
     @Test
@@ -447,15 +452,27 @@ class ConstraintLayoutPhase3DeviceTest {
         assertNear(activity.dp(if (expanded) 45f else 80f), ratioNode.height)
     }
 
-    private fun relevantConstraintWarnings(): List<String> = device
-        .executeShellCommand("logcat -d -v brief UIConstraintLayout:W ConstraintSet:W AndroidRuntime:E '*:S'")
-        .lineSequence()
-        .filter { line ->
-            line.startsWith("W/UIConstraintLayout") ||
-                line.startsWith("W/ConstraintSet") ||
-                line.startsWith("E/AndroidRuntime")
-        }
-        .toList()
+    private fun relevantConstraintWarnings(): List<String> {
+        val lines = device
+            .executeShellCommand(
+                "logcat -d -v brief $CONSTRAINT_TEST_LOG_TAG:I " +
+                    "UIConstraintLayout:W ConstraintSet:W AndroidRuntime:E '*:S'",
+            )
+            .lineSequence()
+            .toList()
+        val markerIndex = lines.indexOfFirst { it.contains(constraintWarningLogMarker) }
+        assertTrue(
+            "Constraint warning capture marker must be present before evaluating logs.",
+            markerIndex >= 0,
+        )
+        return lines
+            .drop(markerIndex + 1)
+            .filter { line ->
+                line.startsWith("W/UIConstraintLayout") ||
+                    line.startsWith("W/ConstraintSet") ||
+                    line.startsWith("E/AndroidRuntime")
+            }
+    }
 
     private fun assertNoRenderWarnings() {
         val warnings = DemoRenderDiagnosticsStore.recentSnapshots().flatMap { it.warnings }.distinct()
@@ -463,6 +480,7 @@ class ConstraintLayoutPhase3DeviceTest {
     }
 
     private companion object {
+        const val CONSTRAINT_TEST_LOG_TAG = "VCConstraintTest"
         const val DIAGNOSTIC_SETTLE_MILLIS = 120L
         const val RECREATION_SETTLE_MILLIS = 750L
     }

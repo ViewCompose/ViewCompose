@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 9da7a9cc48ff6943eed5e5b686722fa211f3b1309b7c96282308555e8f39c2c0
+translation_source_hash: bfc857e29f715f88fc94141f157229656c83b8ba1229451c6a1a55483ea1d170
 translation_status: current
 ---
 
@@ -958,6 +958,44 @@ Phase 4 的发版安全结论是 **no material change**：没有稳定回退，�
 OEM/API-28 设备、`run-from-apk` JIT/代码布局敏感性、5 个未解决 CV 行、只有 Peak 而非 Post-GC
 Retained Memory，以及物理矩阵没有独立 Adapter-only Timing Probe。后续全帧工作必须建立新的归因
 优化计划；反复运行当前矩阵直到出现有利样本不是可接受的下一步。
+
+#### 2.4.8 Animation revision-1 物理动画改造前基线 {/* #248-animation-revision-1-pre-physics-baseline */}
+
+2026-08-22 的 Phase 0 批次在物理 Spring 硬切前冻结了基于 Duration 的 Animation 基线。测试使用
+已 Root 的 Xiaomi MI 6 / Android 9 参考设备并固定为 60 Hz；Target 经过 R8/资源压缩且不可调试。
+每个方法运行 5 次 `run-from-apk` 迭代，在测量外等待 5 秒，通过 Accessibility Click Action
+驱动，每次迭代执行 4 个完整的正向/反向 Round Trip。Target 源码基于
+`3cf6668f516ace95fabfb80dac049a6e83e1fbd5`，Target APK SHA-256 为
+`3a5ca305815ca3ba3d60841376b72a46f9f79e3cb943aca8dc706d8e845a42b1`。
+
+Clock Policy 为
+`root-fixed-cpu-1401600-1804800-gpu-515000000-interconnect-13763-perf-hal-off-animation-v1`：
+CPU Policy 0/4 固定为 1.4016/1.8048 GHz，GPU 固定为 515 MHz，已暴露的 CPU/GPU Interconnect
+最小 Vote 固定为 13,763，停止厂商 Performance Service，并暂停充电。所有 JSON 都报告
+`cpuLocked=true` 且 Thermal-throttle Sleep 为 0。该设备上的 Android 9 没有暴露平台
+Thermal-status Service，因此以每个方法开始时 31～33 摄氏度的电池温度作为温度证据，并逐次确认
+当前频率。每个方法结束后都恢复了所有修改过的 Governor、频率边界、服务和充电状态。
+
+AndroidX Benchmark 1.4.1 会发出仅适用于 AOSP 的 `su root` 命令，而 Magisk 30.6 无法在该设备
+执行它。Instrumentation APK 只在命令传输边界用等长 `su 0 -c` 替换并修复 Checksum/Signature。
+原始与适配后的 Benchmark APK SHA-256 分别为
+`a2524805d77da2dc7bad578f697c2051bc8615e8bcbb2b43554178c48c37ff96` 和
+`c70f1fc3190949d030975fcc9025d90246fe70e88cf70ebe42adbd0effe54a5e`；Target APK、Workload、
+Metric 与 Result JSON 均未改写。
+
+| Workload | 每轮帧数 | Frame CPU P50/P90/P95/P99，ms | Peak Heap 中位数，KiB | Run-P50 CV | 验收 |
+| --- | --- | ---: | ---: | ---: | --- |
+| `animation.specs@1` Duration Spring/Value Channel | `152/152/152/152/152` | `8.854/12.350/13.067/14.641` | 8113 | 0.075 | 已接收绝对基线 |
+| `animation.content@1` Crossfade | `144/144/144/144/144` | `7.102/9.791/10.454/16.038` | 7341 | 0.029 | 已接收绝对基线 |
+| `animation.content-size@1` 实测尺寸动画 | `184/184/184/184/184` | `4.850/6.165/7.258/23.159` | 6514 | 0.010 | 已接收绝对基线 |
+| `animation.transition@1` 同步 Channel | `168/168/168/168/168` | `8.231/12.094/12.388/14.248` | 8283 | 0.028 | 已接收绝对基线 |
+
+4 个 Workload 在 5 次运行中的帧数都完全一致，并通过 `0.15` 稳定性上限。这是一份已接收的绝对
+基线，但归一化结论为 **inconclusive**：Phase 0 没有 Candidate 或同轮 Compose Control，因此
+不能证明性能改善或回退。局限包括只有一台 OEM/API-28 设备、`run-from-apk` 对 JIT/代码布局敏感、
+用电池温度代替平台 Thermal-status 数值、只有 Peak 而非 Post-GC Retained Memory，以及没有
+Compose 对照。Phase 1 必须保持 Scenario Revision 与 Clock Policy 不变，将物理引擎与对应行对比，
+报告绝对值与归一化变化，并通过 ADR-0019 的 Allocation 与 Terminal-state Counter 后才能完成。
 
 ### 2.5 Debug Tooling 回归门禁
 

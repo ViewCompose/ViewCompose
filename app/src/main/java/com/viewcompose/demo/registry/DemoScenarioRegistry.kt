@@ -479,6 +479,8 @@ internal object DemoScenarioRegistry {
             reset = R.id.demo_animation_content_reset,
             state = R.id.demo_animation_content_state,
             target = R.id.demo_animation_content_target,
+            benchmarkRevision = 1,
+            benchmarkActions = listOf(DemoAutomationRole.PrimaryAction),
         ),
         animationScenario(
             id = DemoScenarioIds.AnimationListMotion,
@@ -503,6 +505,11 @@ internal object DemoScenarioRegistry {
             reset = R.id.demo_animation_specs_reset,
             state = R.id.demo_animation_specs_state,
             target = R.id.demo_animation_specs_target,
+            benchmarkRevision = 1,
+            benchmarkActions = listOf(
+                DemoAutomationRole.SecondaryAction,
+                DemoAutomationRole.PrimaryAction,
+            ),
         ),
         animationScenario(
             id = DemoScenarioIds.AnimationContentSize,
@@ -515,6 +522,11 @@ internal object DemoScenarioRegistry {
             reset = R.id.demo_animation_content_size_reset,
             state = R.id.demo_animation_content_size_state,
             target = R.id.demo_animation_content_size_target,
+            benchmarkRevision = 1,
+            benchmarkActions = listOf(
+                DemoAutomationRole.PrimaryAction,
+                DemoAutomationRole.SecondaryAction,
+            ),
         ),
         animationScenario(
             id = DemoScenarioIds.AnimationTransition,
@@ -527,6 +539,8 @@ internal object DemoScenarioRegistry {
             reset = R.id.demo_animation_transition_reset,
             state = R.id.demo_animation_transition_state,
             target = R.id.demo_animation_transition_target,
+            benchmarkRevision = 1,
+            benchmarkActions = listOf(DemoAutomationRole.PrimaryAction),
         ),
         animationScenario(
             id = DemoScenarioIds.AnimationInfinite,
@@ -1479,13 +1493,19 @@ internal object DemoScenarioRegistry {
         reset: Int,
         state: Int,
         target: Int,
+        benchmarkRevision: Int? = null,
+        benchmarkActions: List<DemoAutomationRole>? = null,
     ): DemoScenarioSpec = scenario(
         id = id,
         category = DemoScenarioCategory.Rendering,
         titleRes = titleRes,
         summaryRes = summaryRes,
         host = DemoHostPolicy.SharedFixture,
-        verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+        verificationKinds = buildSet {
+            add(DemoVerificationKind.Manual)
+            add(DemoVerificationKind.Visual)
+            if (benchmarkRevision != null) add(DemoVerificationKind.Benchmark)
+        },
         route = DemoScenarioRoute(AnimationActivity::class.java),
         mutable = true,
         ids = TargetIds(
@@ -1497,6 +1517,8 @@ internal object DemoScenarioRegistry {
             state = state,
             target = target,
         ),
+        benchmarkRevision = benchmarkRevision,
+        benchmarkActions = benchmarkActions,
     )
 
     private fun inputFocusFollowScenario(

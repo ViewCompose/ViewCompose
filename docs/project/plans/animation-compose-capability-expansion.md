@@ -2,7 +2,8 @@
 
 ## Status
 
-Active. Planning baseline only; no production implementation or publication input has started.
+Active. Phase 0 contract and pre-physics performance baseline are complete; no production
+implementation or publication input has started.
 This plan was split out on 2026-08-18 from the Animation follow-up in the unified roadmap and the
 framework-wide physical-spring candidate recorded by the multi-design-system plan. Those documents
 now point here; this file is the only active plan that owns the seven animation expansions defined
@@ -18,12 +19,11 @@ This plan is canonical English-only under the documentation-governance policy. E
 behavior, migration, tooling, dependency, and compatibility contract must move into active
 architecture, guide, reference, and owning-module documentation before this plan is archived.
 
-Last verified: 2026-08-18.
+Last verified: 2026-08-22.
 
-Next action: complete Phase 0 by freezing the Compose comparison baseline, Q levels, physical
-termination and velocity model, content/visibility transition algebra, seek ownership, layout
-coordinate contract, shared-transition boundary, tooling activation protocol, module impact, and
-performance budgets before production source is added.
+Next action: execute Phase 1 as one hard cut of the fixed-duration spring and converter/result
+contracts, then add the shared physical spring, velocity, decay, bounds, and structured-result
+engine against the frozen revision-1 benchmark.
 
 ## Maven release changesets
 
@@ -96,10 +96,12 @@ animation semantics and acceptance.
 
 ## Baseline and comparison reference
 
-The current repository catalog uses Compose UI `1.7.8` for its Compose-backed Preview and migration
-samples. Phase 0 must re-verify the selected comparison baseline against the then-current stable
-AndroidX release and record exact source links and versions in the migration documentation before
-claiming parity.
+The upstream semantic comparison is frozen at stable Compose Animation `1.12.0`, released on
+2026-08-12. The current repository catalog uses Compose UI `1.7.8` for its executable
+Compose-backed Preview and migration samples. Compose `1.12.0` requires compile SDK 37 and AGP 9.2,
+so the older local fixture is executable evidence only and cannot prove `1.12.0` parity. Exact
+official sources and evidence limits are recorded in the
+[animation migration comparison](../../migration/compose-animation.md).
 
 The ViewCompose baseline is:
 
@@ -183,24 +185,41 @@ Exit criteria:
 - baseline benchmarks and device fixtures are reproducible before implementation; and
 - no Phase 1 production API is added while physical units or termination remain implicit.
 
+Phase 0 was accepted on 2026-08-22. ADR-0019 freezes the hard-cut compatibility choice, physical
+equations and units, typed velocity/result model, cancellation and bounds behavior,
+content/visibility algebra, seek ownership, real layout geometry, session-scoped shared motion,
+request-driven tooling, Q3 inventory, and budgets. The migration comparison records supported and
+planned semantics against Compose `1.12.0`. The four revision-1 Xiaomi MI 6 / API 28 fixed-clock
+workloads all have identical per-run frame counts and run-P50 CV `0.010..0.075`, below the `0.15`
+ceiling. Their exact frame percentiles, heap values, APK identities, protocol, limitations, and
+`inconclusive` normalized conclusion are interpreted in
+[performance Section 2.4.8](../../tooling/performance.md#248-animation-revision-1-pre-physics-baseline).
+The connected gate passed 134/137 tests before three warning-free ConstraintLayout checks read the
+expected `lifecycle-invalid-grid` warning from the immediately preceding lifecycle case. All three
+passed in isolation. The test harness was hard-cut from an unbounded global logcat read to a unique
+per-test marker window, and the exact four-test class then passed 4/4 in the contaminating order.
+This closes verification isolation without changing framework production behavior.
+
 ## Phase 1: Physical spring, velocity, decay, bounds, and results
 
 Replace the fixed-duration approximation only through the compatibility decision from Phase 0 and
 add one vector-aware physical execution model shared by deterministic sampling, `AnimatableCore`,
 composition `Animatable`, gestures, and transition channels.
 
-The provisional API vocabulary is:
+ADR-0019 freezes the Phase 1 result vocabulary as:
 
 ```kotlin
 enum class AnimationEndReason {
     Finished,
     BoundReached,
-    Interrupted,
+    DurationLimitReached,
 }
+
+data class AnimationVelocity<T>(val valuePerSecond: T)
 
 data class AnimationState<T>(
     val value: T,
-    val velocity: T,
+    val velocity: AnimationVelocity<T>,
     val playTimeNanos: Long,
 )
 
@@ -212,11 +231,11 @@ data class AnimationResult<T>(
 suspend fun Animatable<T>.animateTo(
     targetValue: T,
     animationSpec: AnimationSpec,
-    initialVelocity: T = velocity,
+    initialVelocity: AnimationVelocity<T> = velocity,
 ): AnimationResult<T>
 
 suspend fun Animatable<T>.animateDecay(
-    initialVelocity: T,
+    initialVelocity: AnimationVelocity<T>,
     animationSpec: DecayAnimationSpec,
 ): AnimationResult<T>
 
@@ -226,12 +245,14 @@ fun Animatable<T>.updateBounds(
 )
 ```
 
-This shape is illustrative, not approved. Phase 0 may use a distinct vector velocity/result type if
-that gives safer generic behavior. The retained contract must:
+The exact overload set may be refined during implementation only within the accepted ADR contract;
+it cannot restore a duration spring, return interruption as a normal result, or weaken typed
+velocity. The retained contract must:
 
 1. continue velocity from an interrupted physical animation unless the caller supplies a new
    initial velocity or selects a non-physical spec;
-2. report interruption consistently with coroutine cancellation and last-mutation-wins ownership;
+2. propagate interruption as coroutine cancellation while preserving last-mutation-wins
+   ownership and the last committed value/velocity;
 3. stop at bounds without publishing a sample outside accepted bounds;
 4. expose an exact target at successful target completion while retaining physically meaningful
    terminal velocity rules;
@@ -348,11 +369,11 @@ position and size between accepted layout states. It must not be implemented as 
 or as a wrapper that permanently changes hit/accessibility bounds independently from what users
 see.
 
-Phase 0 must choose whether ViewCompose needs a small target-measure/lookahead contract or whether
-the renderer can stage accepted current and target bounds transactionally. The implementation must
-define parent-local and window coordinate conversions, alignment, clipping, RTL, scroll, density
-and configuration changes, nested bounds animation, z-order, hit testing, accessibility bounds,
-focus, detach/reattach, and retargeting while a previous layout transition is active.
+ADR-0019 selects one lookahead-style candidate measurement when constraints or target topology
+change and stages measure, layout, hit geometry, accessibility geometry, and animation ownership
+transactionally. The implementation must preserve that immediate-parent physical-pixel contract
+through parent-local conversions, alignment, clipping, RTL, scroll, density and configuration
+changes, nested bounds animation, z-order, focus, detach/reattach, and active retargeting.
 
 Required evidence includes position-only, size-only, and combined motion; parent constraint
 changes; Row/Column/Box/ConstraintLayout parents; nested scroll and lazy reuse; RTL; density/font
@@ -509,9 +530,10 @@ This plan is complete only when:
 
 ## Ordered execution checklist
 
-1. **Pending — Phase 0:** freeze comparison baseline, public contracts, ownership, compatibility,
-   budgets, and validation fixtures.
-2. **Pending — Phase 1:** implement physical spring, velocity continuity, decay, bounds, and results.
+1. **Complete — Phase 0:** Compose `1.12.0` semantics, ADR-0019 contracts/Q3 inventory, migration
+   limits, budgets, revision-1 scenarios, and the stable Xiaomi fixed-clock baseline are frozen.
+2. **Next — Phase 1:** hard-cut the duration spring/converter/result surface and implement physical
+   spring, velocity continuity, decay, bounds, and results.
 3. **Pending — Phase 2:** implement keyed `AnimatedContent`, content transforms, and size transforms.
 4. **Pending — Phase 3:** implement slide/scale visibility primitives and descendant enter/exit
    choreography.
@@ -545,3 +567,6 @@ This plan is complete only when:
 | 2026-08-18 | Activate one plan for the seven ordered animation expansions: physics/results, animated content, rich visibility, seekable transitions, bounds, shared motion, and timeline tooling. |
 | 2026-08-18 | Do not schedule MotionLayout expansion. Retain raw host interop and reconsider typed MotionScene support only from a future concrete requirement. |
 | 2026-08-18 | Preserve the completed first-round Animation milestone as the baseline; this plan extends it rather than rewriting historical completion. |
+| 2026-08-22 | Complete Phase 0 through ADR-0019: hard-cut the duration spring without a compatibility layer, freeze one physical/transition/layout/tooling ownership model, and assign every planned public family Q3. |
+| 2026-08-22 | Freeze Compose Animation `1.12.0` as the semantic baseline and retain local Compose `1.7.8` only as the executable comparison because the stable upstream release requires compile SDK 37 and AGP 9.2. |
+| 2026-08-22 | Accept four revision-1 absolute animation baselines on the root-controlled Xiaomi reference device; normalized direction remains `inconclusive` until Phase 1 supplies a same-device candidate. |
