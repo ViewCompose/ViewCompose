@@ -297,7 +297,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(bottom = 8.dp)
-                        .testTag(DemoTestTags.DIAGNOSTICS_RENDER_REFRESH_SEQUENCE)
+                        .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_RENDER_REFRESH_SEQUENCE)
                         .scenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Button(
@@ -310,7 +310,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     },
                     modifier = Modifier
                         .padding(bottom = 8.dp)
-                        .testTag(DemoTestTags.DIAGNOSTICS_RENDERER_REFRESH)
+                        .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_RENDERER_REFRESH)
                         .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                 )
                 if (pendingSnapshotRefreshState.value) {
@@ -379,7 +379,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(bottom = 4.dp)
-                        .testTag(DemoTestTags.DIAGNOSTICS_RENDER_COUNT),
+                        .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_RENDER_COUNT),
                 )
                 Text(
                     text = stringResource(
@@ -389,7 +389,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(bottom = 8.dp)
-                        .testTag(DemoTestTags.DIAGNOSTICS_RENDER_UPDATED_AT),
+                        .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_RENDER_UPDATED_AT),
                 )
                 Text(
                     text = stringResource(
@@ -399,7 +399,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(bottom = 4.dp)
-                        .testTag(DemoTestTags.DIAGNOSTICS_PATCH_ACTIVE_PATCHED),
+                        .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_PATCH_ACTIVE_PATCHED),
                 )
                 Text(
                     text = stringResource(
@@ -409,7 +409,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(bottom = 8.dp)
-                        .testTag(DemoTestTags.DIAGNOSTICS_PATCH_ACTIVE_CAPTURED_AT),
+                        .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_PATCH_ACTIVE_CAPTURED_AT),
                 )
                 DiagnosticFactGroup(
                     title = stringResource(R.string.demo_diagnostics_key_probe),
@@ -425,10 +425,10 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                         ),
                     ),
                     valueTagsByLabel = mapOf(
-                        stringResource(R.string.demo_diagnostics_probe_key) to DemoTestTags.DIAGNOSTICS_RENDER_PROBE_KEY,
-                        stringResource(R.string.demo_diagnostics_probe_tick) to DemoTestTags.DIAGNOSTICS_RENDER_PROBE_TICK,
-                        stringResource(R.string.demo_diagnostics_object_hash) to DemoTestTags.DIAGNOSTICS_RENDER_PROBE_HASH,
-                        stringResource(R.string.demo_diagnostics_recent_history) to DemoTestTags.DIAGNOSTICS_RENDER_HISTORY,
+                        stringResource(R.string.demo_diagnostics_probe_key) to DemoDiagnosticsTestTags.DIAGNOSTICS_RENDER_PROBE_KEY,
+                        stringResource(R.string.demo_diagnostics_probe_tick) to DemoDiagnosticsTestTags.DIAGNOSTICS_RENDER_PROBE_TICK,
+                        stringResource(R.string.demo_diagnostics_object_hash) to DemoDiagnosticsTestTags.DIAGNOSTICS_RENDER_PROBE_HASH,
+                        stringResource(R.string.demo_diagnostics_recent_history) to DemoDiagnosticsTestTags.DIAGNOSTICS_RENDER_HISTORY,
                     ),
                 )
             }

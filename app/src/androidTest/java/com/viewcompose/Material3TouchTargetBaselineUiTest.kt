@@ -38,21 +38,21 @@ class Material3TouchTargetBaselineUiTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 activity.requireViewByTestTagVisible(
-                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                    DemoMaterial3TestTags.MATERIAL3_NAMED_SWITCH,
                 ).centerInsideOwningRecyclerView()
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val switch = activity.requireViewByTestTagVisible(
-                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                    DemoMaterial3TestTags.MATERIAL3_NAMED_SWITCH,
                 ) as android.widget.Switch
                 assertTrue(switch.isChecked)
-                activity.tapByTestTag(DemoTestTags.MATERIAL3_NAMED_SWITCH)
+                activity.tapByTestTag(DemoMaterial3TestTags.MATERIAL3_NAMED_SWITCH)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val switch = activity.requireViewByTestTagVisible(
-                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                    DemoMaterial3TestTags.MATERIAL3_NAMED_SWITCH,
                 ) as android.widget.Switch
                 assertTrue(!switch.isChecked)
             }
@@ -60,7 +60,7 @@ class Material3TouchTargetBaselineUiTest {
             var thumbY = 0
             scenario.onActivity { activity ->
                 val switch = activity.requireViewByTestTagVisible(
-                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                    DemoMaterial3TestTags.MATERIAL3_NAMED_SWITCH,
                 ) as android.widget.Switch
                 val location = IntArray(2).also(switch::getLocationOnScreen)
                 val thumbBounds = requireNotNull(switch.thumbDrawable).bounds
@@ -77,7 +77,7 @@ class Material3TouchTargetBaselineUiTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val switch = activity.requireViewByTestTagVisible(
-                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                    DemoMaterial3TestTags.MATERIAL3_NAMED_SWITCH,
                 ) as android.widget.Switch
                 assertTrue(switch.isChecked)
             }
@@ -98,53 +98,53 @@ class Material3TouchTargetBaselineUiTest {
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     activity.requireViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_DEFAULT_BUTTON,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_BUTTON,
                     ).centerInsideOwningRecyclerView()
                 }
                 waitForUiIdle()
                 var evidence = ""
                 scenario.onActivity { activity ->
                     val sourceValue = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_THEME_SOURCE,
+                        DemoMaterial3TestTags.MATERIAL3_THEME_SOURCE,
                     ).text.toString()
                     val originValue = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_THEME_ORIGIN,
+                        DemoMaterial3TestTags.MATERIAL3_THEME_ORIGIN,
                     ).text.toString()
                     val modeValue = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_THEME_MODE,
+                        DemoMaterial3TestTags.MATERIAL3_THEME_MODE,
                     ).text.toString()
                     val tokenProducer = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_TOKEN_PRODUCER,
+                        DemoMaterial3TestTags.MATERIAL3_TOKEN_PRODUCER,
                     ).text.toString()
                     val primaryOrigin = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_PRIMARY_ORIGIN,
+                        DemoMaterial3TestTags.MATERIAL3_PRIMARY_ORIGIN,
                     ).text.toString()
                     val shapeOrigin = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_SHAPE_ORIGIN,
+                        DemoMaterial3TestTags.MATERIAL3_SHAPE_ORIGIN,
                     ).text.toString()
                     val designSystem = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_DESIGN_SYSTEM,
+                        DemoMaterial3TestTags.MATERIAL3_DESIGN_SYSTEM,
                     ).text.toString()
                     val recipeSet = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_RECIPE_SET,
+                        DemoMaterial3TestTags.MATERIAL3_RECIPE_SET,
                     ).text.toString()
                     val componentBackends = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_COMPONENT_BACKENDS,
+                        DemoMaterial3TestTags.MATERIAL3_COMPONENT_BACKENDS,
                     ).text.toString()
                     val overlayTransport = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_OVERLAY_TRANSPORT,
+                        DemoMaterial3TestTags.MATERIAL3_OVERLAY_TRANSPORT,
                     ).text.toString()
                     val overlayPresenters = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_OVERLAY_PRESENTERS,
+                        DemoMaterial3TestTags.MATERIAL3_OVERLAY_PRESENTERS,
                     ).text.toString()
                     val secondaryValue = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_THEME_SECONDARY,
+                        DemoMaterial3TestTags.MATERIAL3_THEME_SECONDARY,
                     ).text.toString()
                     val secondaryContainerValue = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_THEME_SECONDARY_CONTAINER,
+                        DemoMaterial3TestTags.MATERIAL3_THEME_SECONDARY_CONTAINER,
                     ).text.toString()
                     val roleCheck = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_THEME_ROLE_COLLISION,
+                        DemoMaterial3TestTags.MATERIAL3_THEME_ROLE_COLLISION,
                     ).text.toString()
 
                     assertEquals(
@@ -204,7 +204,7 @@ class Material3TouchTargetBaselineUiTest {
                 }
                 scenario.onActivity { activity ->
                     activity.requireViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_TOKEN_PRODUCER,
+                        DemoMaterial3TestTags.MATERIAL3_TOKEN_PRODUCER,
                     ).centerInsideOwningRecyclerView()
                 }
                 waitForUiIdle()
@@ -220,14 +220,14 @@ class Material3TouchTargetBaselineUiTest {
                 preserveAfterConnectedTest(screenshot)
                 preserveAfterConnectedTest(metadata)
                 scenario.onActivity { activity ->
-                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_NAMED_SURFACE)
-                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_NAMED_CARD)
-                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_NAMED_BUTTON)
-                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_NAMED_SWITCH)
-                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_NAMED_TEXT_FIELD)
-                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_NAMED_NAVIGATION)
+                    activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_NAMED_SURFACE)
+                    activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_NAMED_CARD)
+                    activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_NAMED_BUTTON)
+                    activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_NAMED_SWITCH)
+                    activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_NAMED_TEXT_FIELD)
+                    activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_NAMED_NAVIGATION)
                     activity.requireViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_NAMED_BUTTON,
+                        DemoMaterial3TestTags.MATERIAL3_NAMED_BUTTON,
                     ).centerInsideOwningRecyclerView()
                 }
                 waitForUiIdle()
@@ -240,7 +240,7 @@ class Material3TouchTargetBaselineUiTest {
                 preserveAfterConnectedTest(componentScreenshot)
                 scenario.onActivity { activity ->
                     activity.requireViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_NAMED_TEXT_FIELD,
+                        DemoMaterial3TestTags.MATERIAL3_NAMED_TEXT_FIELD,
                     ).centerInsideOwningRecyclerView()
                 }
                 waitForUiIdle()
@@ -264,7 +264,7 @@ class Material3TouchTargetBaselineUiTest {
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     activity.requireViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_DEFAULT_BUTTON,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_BUTTON,
                     ).centerInsideOwningRecyclerView()
                 }
                 waitForUiIdle()
@@ -272,7 +272,7 @@ class Material3TouchTargetBaselineUiTest {
                 var touchX = 0
                 var touchY = 0
                 scenario.onActivity { activity ->
-                    val button = activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_DEFAULT_BUTTON)
+                    val button = activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_DEFAULT_BUTTON)
                     val density = activity.resources.displayMetrics.density
                     assertEquals(48, (button.height / density).toInt())
                     val visualBounds = requireVisualSurfaceBounds(button)
@@ -284,10 +284,10 @@ class Material3TouchTargetBaselineUiTest {
                     assertEquals(48, (semanticBounds.height() / density).roundToInt())
 
                     listOf(
-                        DemoTestTags.MATERIAL3_DEFAULT_CHECKBOX,
-                        DemoTestTags.MATERIAL3_DEFAULT_RADIO,
-                        DemoTestTags.MATERIAL3_DEFAULT_SWITCH,
-                        DemoTestTags.MATERIAL3_DEFAULT_SLIDER,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_CHECKBOX,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_RADIO,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_SWITCH,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_SLIDER,
                     ).forEach { tag ->
                         val view = activity.requireViewByTestTagVisible(tag)
                         view.centerInsideOwningRecyclerView()
@@ -303,14 +303,14 @@ class Material3TouchTargetBaselineUiTest {
                     }
 
                     val tags = listOf(
-                        DemoTestTags.MATERIAL3_DEFAULT_BUTTON,
-                        DemoTestTags.MATERIAL3_DEFAULT_ICON_BUTTON,
-                        DemoTestTags.MATERIAL3_DEFAULT_CHIP,
-                        DemoTestTags.MATERIAL3_DEFAULT_CHECKBOX,
-                        DemoTestTags.MATERIAL3_DEFAULT_RADIO,
-                        DemoTestTags.MATERIAL3_DEFAULT_SWITCH,
-                        DemoTestTags.MATERIAL3_DEFAULT_SLIDER,
-                        DemoTestTags.MATERIAL3_DEFAULT_NAVIGATION,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_BUTTON,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_ICON_BUTTON,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_CHIP,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_CHECKBOX,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_RADIO,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_SWITCH,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_SLIDER,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_NAVIGATION,
                     )
                     evidence = buildString {
                         appendLine("suite=material3-phase2-touch-targets")
@@ -328,12 +328,12 @@ class Material3TouchTargetBaselineUiTest {
                 }
                 scenario.onActivity { activity ->
                     activity.requireViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_DEFAULT_BUTTON,
+                        DemoMaterial3TestTags.MATERIAL3_DEFAULT_BUTTON,
                     ).centerInsideOwningRecyclerView()
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
-                    val button = activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_DEFAULT_BUTTON)
+                    val button = activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_DEFAULT_BUTTON)
                     val density = activity.resources.displayMetrics.density
                     val location = IntArray(2).also(button::getLocationOnScreen)
                     touchX = location[0] + button.width / 2
@@ -345,7 +345,7 @@ class Material3TouchTargetBaselineUiTest {
                     assertEquals(
                         activity.getString(R.string.demo_material3_default_clicks, 1),
                         activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.MATERIAL3_DEFAULT_BUTTON_STATUS,
+                            DemoMaterial3TestTags.MATERIAL3_DEFAULT_BUTTON_STATUS,
                         ).text.toString(),
                     )
                 }
@@ -369,7 +369,7 @@ class Material3TouchTargetBaselineUiTest {
         launchDemoActivity<Material3DefaultThemeActivity>(intent, DemoThemeMode.Light).use { scenario ->
             scenario.onActivity { activity ->
                 activity.requireViewByTestTagVisible(
-                    DemoTestTags.MATERIAL3_TARGET_ADJACENT_FIRST,
+                    DemoMaterial3TestTags.MATERIAL3_TARGET_ADJACENT_FIRST,
                 ).centerInsideOwningRecyclerView()
             }
             waitForUiIdle()
@@ -379,16 +379,16 @@ class Material3TouchTargetBaselineUiTest {
             var secondTouchY = 0
             scenario.onActivity { activity ->
                 val density = activity.resources.displayMetrics.density
-                val first = activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_TARGET_ADJACENT_FIRST)
-                val second = activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_TARGET_ADJACENT_SECOND)
+                val first = activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_TARGET_ADJACENT_FIRST)
+                val second = activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_TARGET_ADJACENT_SECOND)
                 val explicit = activity.requireViewByTestTagVisible(
-                    DemoTestTags.MATERIAL3_TARGET_EXPLICIT_COMPACT,
+                    DemoMaterial3TestTags.MATERIAL3_TARGET_EXPLICIT_COMPACT,
                 )
                 val clippedParent = activity.requireViewByTestTagVisible(
-                    DemoTestTags.MATERIAL3_TARGET_CLIPPED_PARENT,
+                    DemoMaterial3TestTags.MATERIAL3_TARGET_CLIPPED_PARENT,
                 )
                 val clippedChild = activity.requireViewByTestTagVisible(
-                    DemoTestTags.MATERIAL3_TARGET_CLIPPED_CHILD,
+                    DemoMaterial3TestTags.MATERIAL3_TARGET_CLIPPED_CHILD,
                 )
 
                 assertEquals(48, (first.height / density).roundToInt())
@@ -417,7 +417,7 @@ class Material3TouchTargetBaselineUiTest {
                         false.toString(),
                     ),
                     activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_TARGET_ADJACENT_STATUS,
+                        DemoMaterial3TestTags.MATERIAL3_TARGET_ADJACENT_STATUS,
                     ).text.toString(),
                 )
             }
@@ -431,7 +431,7 @@ class Material3TouchTargetBaselineUiTest {
                         true.toString(),
                     ),
                     activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_TARGET_ADJACENT_STATUS,
+                        DemoMaterial3TestTags.MATERIAL3_TARGET_ADJACENT_STATUS,
                     ).text.toString(),
                 )
             }
@@ -446,14 +446,14 @@ class Material3TouchTargetBaselineUiTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 activity.requireViewByTestTagVisible(
-                    DemoTestTags.MATERIAL3_STATE_LAYER_PRIMARY,
+                    DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_PRIMARY,
                 ).centerInsideOwningRecyclerView()
             }
             waitForUiIdle()
             var evidence = ""
             scenario.onActivity { activity ->
                 val button = activity.requireViewByTestTagVisible(
-                    DemoTestTags.MATERIAL3_STATE_LAYER_PRIMARY,
+                    DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_PRIMARY,
                 )
                 val ripple = findRippleDrawable(button.background)
                 assertNotNull("Expected Material3 Button RippleDrawable", ripple)
@@ -477,20 +477,20 @@ class Material3TouchTargetBaselineUiTest {
                     appendLine("referenceFocused=${referenceFocused.toArgbHex()}")
                     appendLine("referenceHovered=${referenceHovered.toArgbHex()}")
                 }
-                activity.clickByTestTag(DemoTestTags.MATERIAL3_STATE_LAYER_FOCUS_ACTION)
+                activity.clickByTestTag(DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_FOCUS_ACTION)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 assertTrue(
                     "Expected focus action to retain focus on the Primary fixture",
                     activity.requireViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_STATE_LAYER_PRIMARY,
+                        DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_PRIMARY,
                     ).isFocused,
                 )
             }
             scenario.onActivity { activity ->
                 val button = activity.requireViewByTestTagVisible(
-                    DemoTestTags.MATERIAL3_STATE_LAYER_PRIMARY,
+                    DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_PRIMARY,
                 )
                 button.centerInsideOwningRecyclerView()
             }
@@ -498,7 +498,7 @@ class Material3TouchTargetBaselineUiTest {
             listOf("default", "pressed", "focused", "hovered").forEach { state ->
                 scenario.onActivity { activity ->
                     val button = activity.requireViewByTestTagVisible(
-                        DemoTestTags.MATERIAL3_STATE_LAYER_PRIMARY,
+                        DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_PRIMARY,
                     )
                     button.isPressed = false
                     button.isHovered = false
@@ -525,14 +525,14 @@ class Material3TouchTargetBaselineUiTest {
             }
             scenario.onActivity { activity ->
                 activity.requireViewByTestTag(
-                    DemoTestTags.MATERIAL3_STATE_LAYER_SEGMENTED,
+                    DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_SEGMENTED,
                 ).centerInsideOwningRecyclerView()
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 listOf(
-                    DemoTestTags.MATERIAL3_STATE_LAYER_CHIP,
-                    DemoTestTags.MATERIAL3_STATE_LAYER_FAB,
+                    DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_CHIP,
+                    DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_FAB,
                 ).forEach { tag ->
                     val compositeRipple = findRippleDrawable(
                         activity.requireViewByTestTagVisible(tag).background,
@@ -542,7 +542,7 @@ class Material3TouchTargetBaselineUiTest {
                     assertTrue(compositeRipple.hasFocusStateSpecified())
                 }
                 val segmented = activity.requireViewByTestTagVisible(
-                    DemoTestTags.MATERIAL3_STATE_LAYER_SEGMENTED,
+                    DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_SEGMENTED,
                 ) as ViewGroup
                 assertTrue(segmented.childCount >= 2)
                 (0 until segmented.childCount).forEach { index ->

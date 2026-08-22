@@ -1,0 +1,28 @@
+package com.viewcompose
+
+/** In-process tags owned by the system-navigation demo fixtures. */
+internal object DemoSystemNavigationTestTags {
+    const val SYSTEM_NAV_DESTINATION = "system_nav_destination"
+    const val SYSTEM_NAV_STATUS = "system_nav_status"
+    const val SYSTEM_NAV_EXTERNAL_DEEP_LINK = "system_nav_external_deep_link"
+    const val SYSTEM_NAV_COUNTER_STATUS = "system_nav_counter_status"
+    const val SYSTEM_NAV_SAVEABLE_INCREMENT = "system_nav_saveable_increment"
+    const val SYSTEM_NAV_HANDLE_INCREMENT = "system_nav_handle_increment"
+    const val SYSTEM_NAV_VIEW_MODEL_INCREMENT = "system_nav_view_model_increment"
+    const val SYSTEM_NAV_GRAPH_STATUS = "system_nav_graph_status"
+    const val SYSTEM_NAV_GRAPH_INCREMENT = "system_nav_graph_increment"
+    const val SYSTEM_NAV_SINGLE_TOP = "system_nav_single_top"
+    const val SYSTEM_NAV_POP = "system_nav_pop"
+    const val SYSTEM_NAV_REPLACE = "system_nav_replace"
+    const val SYSTEM_NAV_ENTER_GRAPH = "system_nav_enter_graph"
+    const val SYSTEM_NAV_DEEP_LINK_VALID = "system_nav_deep_link_valid"
+    const val SYSTEM_NAV_DEEP_LINK_PUSH = "system_nav_deep_link_push"
+    const val SYSTEM_NAV_DEEP_LINK_INVALID = "system_nav_deep_link_invalid"
+    const val SYSTEM_NAV_DEEP_LINK_NO_MATCH = "system_nav_deep_link_no_match"
+    const val SYSTEM_NAV_DEEP_LINK_SECURITY = "system_nav_deep_link_security"
+    const val SYSTEM_NAV_SEED_ADAPTIVE = "system_nav_seed_adaptive"
+    const val SYSTEM_NAV_ADAPTIVE_TOGGLE = "system_nav_adaptive_toggle"
+    const val SYSTEM_NAV_MOTION_TOGGLE = "system_nav_motion_toggle"
+    const val SYSTEM_NAV_BACK_TOGGLE = "system_nav_back_toggle"
+    const val SYSTEM_NAV_ACCOUNT_POP_ROOT = "system_nav_account_pop_root"
+}

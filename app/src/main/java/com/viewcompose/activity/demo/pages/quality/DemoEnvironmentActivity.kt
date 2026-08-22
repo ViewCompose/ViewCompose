@@ -64,7 +64,7 @@ private fun UiTreeBuilder.DemoEnvironmentPage(root: ViewGroup) {
                 Text(
                     text = themeModeState.value.name,
                     color = TextDefaults.secondaryColor(),
-                    modifier = Modifier.testTag(DemoTestTags.SETTINGS_THEME_STATUS),
+                    modifier = Modifier.testTag(DemoSettingsTestTags.SETTINGS_THEME_STATUS),
                 )
                 SegmentedControl(
                     items = demoSegmentedItems(
@@ -79,7 +79,7 @@ private fun UiTreeBuilder.DemoEnvironmentPage(root: ViewGroup) {
                     size = SegmentedControlSize.Medium,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SETTINGS_THEME_CONTROL),
+                        .testTag(DemoSettingsTestTags.SETTINGS_THEME_CONTROL),
                 )
             }
 
@@ -132,7 +132,7 @@ private fun UiTreeBuilder.DemoEnvironmentPage(root: ViewGroup) {
                             },
                         ),
                         color = TextDefaults.secondaryColor(),
-                        modifier = Modifier.testTag(DemoTestTags.SETTINGS_LANGUAGE_STATUS),
+                        modifier = Modifier.testTag(DemoSettingsTestTags.SETTINGS_LANGUAGE_STATUS),
                     )
                     SegmentedControl(
                         items = demoSegmentedItems(
@@ -152,7 +152,7 @@ private fun UiTreeBuilder.DemoEnvironmentPage(root: ViewGroup) {
                         size = SegmentedControlSize.Medium,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .testTag(DemoTestTags.SETTINGS_LANGUAGE_CONTROL),
+                            .testTag(DemoSettingsTestTags.SETTINGS_LANGUAGE_CONTROL),
                     )
                     Text(
                         text = stringResource(R.string.demo_environment_language_note),

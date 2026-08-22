@@ -213,14 +213,14 @@ private fun UiTreeBuilder.RuntimeStateFixture(scenario: DemoScenarioSpec?) {
                     text = stringResource(R.string.demo_state_viewmodel_count, vmCounterState.value),
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.STATE_VM_COUNTER),
+                        .testTag(DemoStateTestTags.STATE_VM_COUNTER),
                 )
                 Button(
                     text = stringResource(R.string.demo_state_viewmodel_increment),
                     onClick = {
                         vmStateHandle["counter"] = vmCounterState.value + 1
                     },
-                    modifier = Modifier.testTag(DemoTestTags.STATE_VM_INCREMENT),
+                    modifier = Modifier.testTag(DemoStateTestTags.STATE_VM_INCREMENT),
                 )
             }
 
@@ -360,7 +360,7 @@ private fun UiTreeBuilder.ViewPatchFixture(
                     Button(
                         text = stringResource(R.string.demo_state_patch_advance, step),
                         modifier = Modifier
-                            .testTag(DemoTestTags.STATE_PATCH_ADVANCE)
+                            .testTag(DemoStateTestTags.STATE_PATCH_ADVANCE)
                             .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                         onClick = {
                             val nextStep = patchStepState.value + 1
@@ -393,7 +393,7 @@ private fun UiTreeBuilder.ViewPatchFixture(
                     onClick = onOpenDiagnostics,
                     modifier = Modifier
                         .margin(bottom = 12.dp)
-                        .testTag(DemoTestTags.STATE_PATCH_OPEN_DIAGNOSTICS),
+                        .testTag(DemoStateTestTags.STATE_PATCH_OPEN_DIAGNOSTICS),
                 )
                 TextField(
                     state = patchFieldValueState,
@@ -421,7 +421,7 @@ private fun UiTreeBuilder.ViewPatchFixture(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(bottom = 12.dp)
-                        .testTag(DemoTestTags.STATE_PATCH_SEGMENT_SUMMARY),
+                        .testTag(DemoStateTestTags.STATE_PATCH_SEGMENT_SUMMARY),
                 )
                 Row(
                     spacing = if (step % 2 == 0) 8.dp else 16.dp,
@@ -466,7 +466,7 @@ private fun UiTreeBuilder.ViewPatchFixture(
                         color = TextDefaults.secondaryColor(),
                         modifier = Modifier
                             .margin(bottom = 8.dp)
-                            .testTag(DemoTestTags.STATE_PATCH_TAB_SUMMARY),
+                            .testTag(DemoStateTestTags.STATE_PATCH_TAB_SUMMARY),
                     )
                     TabRow(
                         selectedIndex = patchTabIndexState.value,
@@ -482,7 +482,7 @@ private fun UiTreeBuilder.ViewPatchFixture(
                             Text(
                                 text = stringResource(R.string.demo_state_patch_tab_details),
                                 color = if (selected) TextDefaults.primaryColor() else TextDefaults.secondaryColor(),
-                                modifier = Modifier.testTag(DemoTestTags.STATE_PATCH_TAB_DETAILS),
+                                modifier = Modifier.testTag(DemoStateTestTags.STATE_PATCH_TAB_DETAILS),
                             )
                         }
                     }
@@ -501,7 +501,7 @@ private fun UiTreeBuilder.ViewPatchFixture(
                             ) {
                                 Text(
                                     text = stringResource(R.string.demo_state_patch_page_summary, step),
-                                    modifier = Modifier.testTag(DemoTestTags.STATE_HORIZONTAL_PAGER_SUMMARY),
+                                    modifier = Modifier.testTag(DemoStateTestTags.STATE_HORIZONTAL_PAGER_SUMMARY),
                                 )
                                 Text(
                                     text = stringResource(R.string.demo_state_patch_page_summary_note),
@@ -519,7 +519,7 @@ private fun UiTreeBuilder.ViewPatchFixture(
                             ) {
                                 Text(
                                     text = stringResource(R.string.demo_state_patch_page_details, step),
-                                    modifier = Modifier.testTag(DemoTestTags.STATE_HORIZONTAL_PAGER_DETAILS),
+                                    modifier = Modifier.testTag(DemoStateTestTags.STATE_HORIZONTAL_PAGER_DETAILS),
                                 )
                                 Text(
                                     text = stringResource(R.string.demo_state_patch_page_details_note),
@@ -568,7 +568,7 @@ private fun UiTreeBuilder.ViewPatchFixture(
                             ) {
                                 Text(
                                     text = stringResource(R.string.demo_state_stable_summary, step),
-                                    modifier = Modifier.testTag(DemoTestTags.STATE_STABLE_SUMMARY),
+                                    modifier = Modifier.testTag(DemoStateTestTags.STATE_STABLE_SUMMARY),
                                 )
                                 Text(
                                     text = stringResource(R.string.demo_state_stable_summary_note),
@@ -616,7 +616,7 @@ private fun UiTreeBuilder.ViewPatchFixture(
                         ) {
                             Text(
                                 text = stringResource(R.string.demo_state_vertical_summary, step),
-                                modifier = Modifier.testTag(DemoTestTags.STATE_VERTICAL_PAGER_SUMMARY),
+                                modifier = Modifier.testTag(DemoStateTestTags.STATE_VERTICAL_PAGER_SUMMARY),
                             )
                             Text(
                                 text = stringResource(R.string.demo_state_vertical_summary_note),
@@ -634,7 +634,7 @@ private fun UiTreeBuilder.ViewPatchFixture(
                         ) {
                             Text(
                                 text = stringResource(R.string.demo_state_vertical_details, step),
-                                modifier = Modifier.testTag(DemoTestTags.STATE_VERTICAL_PAGER_DETAILS),
+                                modifier = Modifier.testTag(DemoStateTestTags.STATE_VERTICAL_PAGER_DETAILS),
                             )
                             Text(
                                 text = stringResource(R.string.demo_state_vertical_details_note),

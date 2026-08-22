@@ -65,7 +65,7 @@ class Material3VisualBaselineUiTest {
             SystemClock.sleep(WINDOW_TRANSITION_SETTLE_MILLIS)
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_ROOT)
+                activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_ROOT)
                 when (page) {
                     Material3VisualBaselineActivity.PAGE_ACTIONS -> assertActionsVisible(activity)
                     Material3VisualBaselineActivity.PAGE_INPUTS -> assertInputsVisible(activity)
@@ -88,25 +88,25 @@ class Material3VisualBaselineUiTest {
     }
 
     private fun assertActionsVisible(activity: Material3VisualBaselineActivity) {
-        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_ACTION_PRIMARY)
-        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_ACTION_ICON)
-        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_ACTION_CHIP)
-        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_ACTION_CARD)
-        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_ACTION_FAB)
+        activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_ACTION_PRIMARY)
+        activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_ACTION_ICON)
+        activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_ACTION_CHIP)
+        activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_ACTION_CARD)
+        activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_ACTION_FAB)
     }
 
     private fun assertInputsVisible(activity: Material3VisualBaselineActivity) {
-        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_INPUT_SEARCH)
-        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_INPUT_FIELD)
-        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_INPUT_CHECKBOX)
-        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_INPUT_SWITCH)
-        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_INPUT_SLIDER)
+        activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_INPUT_SEARCH)
+        activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_INPUT_FIELD)
+        activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_INPUT_CHECKBOX)
+        activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_INPUT_SWITCH)
+        activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_INPUT_SLIDER)
     }
 
     private fun assertSurfacesVisible(activity: Material3VisualBaselineActivity) {
-        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_SURFACE_TYPOGRAPHY)
-        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_SURFACE_PROGRESS)
-        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_BASELINE_SURFACE_NAVIGATION)
+        activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_SURFACE_TYPOGRAPHY)
+        activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_SURFACE_PROGRESS)
+        activity.requireViewByTestTagVisible(DemoMaterial3TestTags.MATERIAL3_BASELINE_SURFACE_NAVIGATION)
     }
 
     private fun writeEnvironmentMetadata(

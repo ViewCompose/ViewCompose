@@ -463,7 +463,7 @@ internal fun UiTreeBuilder.InputPage(
                     size = TextFieldSize.Large,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.INPUT_BIO_FIELD)
+                        .testTag(DemoInputTestTags.INPUT_BIO_FIELD)
                         .margin(bottom = 12.dp),
                 )
                 Button(
@@ -728,7 +728,7 @@ internal fun UiTreeBuilder.InputPage(
                         ),
                         size = ButtonSize.Compact,
                         variant = ButtonVariant.Tonal,
-                        modifier = Modifier.testTag(DemoTestTags.INPUT_STRESS_ERROR),
+                        modifier = Modifier.testTag(DemoInputTestTags.INPUT_STRESS_ERROR),
                         onClick = {
                             stressErrorState.value = !stressErrorState.value
                             if (stressErrorState.value) {
@@ -780,7 +780,7 @@ internal fun UiTreeBuilder.InputPage(
                     size = TextFieldSize.Large,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.INPUT_STRESS_NOTES_FIELD)
+                        .testTag(DemoInputTestTags.INPUT_STRESS_NOTES_FIELD)
                         .margin(bottom = 12.dp),
                 )
                 TextField(
@@ -989,7 +989,7 @@ private fun UiTreeBuilder.InputFocusFollowLazyColumnPage(scenario: DemoScenarioS
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(focusRequester)
-                    .testTag(DemoTestTags.INPUT_FOCUS_LAZY_COLUMN_SEARCH)
+                    .testTag(DemoInputTestTags.INPUT_FOCUS_LAZY_COLUMN_SEARCH)
                     .inputScenarioTarget(scenario, DemoAutomationRole.Target),
             )
         }
@@ -1098,7 +1098,7 @@ private fun UiTreeBuilder.InputFocusFollowScrollableColumnPage(scenario: DemoSce
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester)
-                .testTag(DemoTestTags.INPUT_FOCUS_SCROLLABLE_SEARCH)
+                .testTag(DemoInputTestTags.INPUT_FOCUS_SCROLLABLE_SEARCH)
                 .inputScenarioTarget(scenario, DemoAutomationRole.Target),
         )
         (8..19).forEach { index -> FocusFollowPlaceholder(index) }
@@ -1153,7 +1153,7 @@ private fun UiTreeBuilder.InputFocusFollowVerticalPagerPage(scenario: DemoScenar
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focusRequester)
-                        .testTag(DemoTestTags.INPUT_FOCUS_VERTICAL_PAGER_SEARCH)
+                        .testTag(DemoInputTestTags.INPUT_FOCUS_VERTICAL_PAGER_SEARCH)
                         .inputScenarioTarget(scenario, DemoAutomationRole.Target),
                 )
                 (5..12).forEach { index -> FocusFollowPlaceholder(index) }
@@ -1231,7 +1231,7 @@ private fun UiTreeBuilder.InputFocusFollowPullRefreshPage(scenario: DemoScenario
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(focusRequester)
-                    .testTag(DemoTestTags.INPUT_FOCUS_PULL_REFRESH_SEARCH)
+                    .testTag(DemoInputTestTags.INPUT_FOCUS_PULL_REFRESH_SEARCH)
                     .inputScenarioTarget(scenario, DemoAutomationRole.Target),
             )
             (8..19).forEach { index -> FocusFollowPlaceholder(index) }
@@ -1248,7 +1248,7 @@ private fun UiTreeBuilder.FocusFollowHeader(
         spacing = 6.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .testTag(DemoTestTags.INPUT_FOCUS_FOLLOW_HEADER),
+            .testTag(DemoInputTestTags.INPUT_FOCUS_FOLLOW_HEADER),
     ) {
         Text(
             text = stringResource(scenario?.titleRes ?: fallbackTitle),

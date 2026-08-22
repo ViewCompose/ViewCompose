@@ -85,12 +85,12 @@ class MainDemoDeviceTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 assertTheme(activity, DemoThemeMode.Dark)
-                activity.clickSegment(DemoTestTags.SETTINGS_THEME_CONTROL, index = 1)
+                activity.clickSegment(DemoSettingsTestTags.SETTINGS_THEME_CONTROL, index = 1)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 assertTheme(activity, DemoThemeMode.Light)
-                activity.clickSegment(DemoTestTags.SETTINGS_THEME_CONTROL, index = 2)
+                activity.clickSegment(DemoSettingsTestTags.SETTINGS_THEME_CONTROL, index = 2)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
@@ -187,7 +187,7 @@ class MainDemoDeviceTest {
     private fun assertTheme(
         activity: Activity,
         mode: DemoThemeMode,
-        statusTestTag: String? = DemoTestTags.SETTINGS_THEME_STATUS,
+        statusTestTag: String? = DemoSettingsTestTags.SETTINGS_THEME_STATUS,
     ) {
         val expected = DemoThemeTokens.select(
             mode = mode,

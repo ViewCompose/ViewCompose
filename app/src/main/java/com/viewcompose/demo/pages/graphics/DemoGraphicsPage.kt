@@ -186,7 +186,7 @@ private fun UiTreeBuilder.GraphicsDrawingFixture(scenario: DemoScenarioSpec?) {
                         .backgroundColor(0xFFF8FAFC.toInt())
                         .cornerRadius(16.dp)
                         .padding(8.dp)
-                        .testTag(DemoTestTags.GRAPHICS_PRIMITIVES_CANVAS)
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_PRIMITIVES_CANVAS)
                         .graphicsScenarioTarget(scenario, DemoAutomationRole.Target),
                 ) { context ->
                     val width = context.size.width
@@ -246,7 +246,7 @@ private fun UiTreeBuilder.GraphicsDrawingFixture(scenario: DemoScenarioSpec?) {
                         .backgroundColor(0xFFF1F5F9.toInt())
                         .cornerRadius(16.dp)
                         .padding(8.dp)
-                        .testTag(DemoTestTags.GRAPHICS_PATH_CLIP_CANVAS),
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_PATH_CLIP_CANVAS),
                 ) { context ->
                     val width = context.size.width
                     val height = context.size.height
@@ -307,7 +307,7 @@ private fun UiTreeBuilder.GraphicsDrawingFixture(scenario: DemoScenarioSpec?) {
                     onClick = { blendMultiplyState.value = !blendMultiplyState.value },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.GRAPHICS_BLEND_TOGGLE),
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_BLEND_TOGGLE),
                 )
                 Text(
                     text = stringResource(
@@ -320,7 +320,7 @@ private fun UiTreeBuilder.GraphicsDrawingFixture(scenario: DemoScenarioSpec?) {
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp, bottom = 8.dp)
-                        .testTag(DemoTestTags.GRAPHICS_BLEND_STATUS),
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_BLEND_STATUS),
                 )
                 Canvas(
                     modifier = Modifier
@@ -329,7 +329,7 @@ private fun UiTreeBuilder.GraphicsDrawingFixture(scenario: DemoScenarioSpec?) {
                         .backgroundColor(0xFFF8FAFC.toInt())
                         .cornerRadius(16.dp)
                         .padding(8.dp)
-                        .testTag(DemoTestTags.GRAPHICS_BLEND_CANVAS),
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_BLEND_CANVAS),
                 ) { context ->
                     val width = context.size.width
                     val height = context.size.height
@@ -409,7 +409,7 @@ private fun UiTreeBuilder.GraphicsDrawingFixture(scenario: DemoScenarioSpec?) {
                     onClick = { drawContentVisibleState.value = !drawContentVisibleState.value },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.GRAPHICS_DRAW_CONTENT_TOGGLE),
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_DRAW_CONTENT_TOGGLE),
                 )
                 Text(
                     text = stringResource(
@@ -422,7 +422,7 @@ private fun UiTreeBuilder.GraphicsDrawingFixture(scenario: DemoScenarioSpec?) {
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp, bottom = 8.dp)
-                        .testTag(DemoTestTags.GRAPHICS_DRAW_CONTENT_STATUS),
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_DRAW_CONTENT_STATUS),
                 )
                 Canvas(
                     modifier = Modifier
@@ -447,7 +447,7 @@ private fun UiTreeBuilder.GraphicsDrawingFixture(scenario: DemoScenarioSpec?) {
                             }
                         }
                         .padding(8.dp)
-                        .testTag(DemoTestTags.GRAPHICS_DRAW_CONTENT_CANVAS),
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_DRAW_CONTENT_CANVAS),
                 ) { context ->
                     val width = context.size.width
                     val height = context.size.height
@@ -482,7 +482,7 @@ private fun UiTreeBuilder.GraphicsDrawingFixture(scenario: DemoScenarioSpec?) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.GRAPHICS_CACHE_KEY_BUMP),
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_CACHE_KEY_BUMP),
                 )
                 Button(
                     text = stringResource(
@@ -510,7 +510,7 @@ private fun UiTreeBuilder.GraphicsDrawingFixture(scenario: DemoScenarioSpec?) {
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp, bottom = 8.dp)
-                        .testTag(DemoTestTags.GRAPHICS_CACHE_STATUS),
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_CACHE_STATUS),
                 )
                 Canvas(
                     modifier = Modifier
@@ -543,7 +543,7 @@ private fun UiTreeBuilder.GraphicsDrawingFixture(scenario: DemoScenarioSpec?) {
                             }
                         }
                         .padding(8.dp)
-                        .testTag(DemoTestTags.GRAPHICS_CACHE_CANVAS),
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_CACHE_CANVAS),
                 ) { context ->
                     val width = context.size.width
                     val height = context.size.height

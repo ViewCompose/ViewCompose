@@ -56,41 +56,41 @@ class ConstraintLayoutReleaseDeviceTest {
             var placeholderAInitialTop = 0
             var placeholderBInitialTop = 0
             scenario.onActivity { activity ->
-                val flowA = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_A)
-                val flowB = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_B)
-                val flowC = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_C)
-                val flowD = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_D)
+                val flowA = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_A)
+                val flowB = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_B)
+                val flowC = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_C)
+                val flowD = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_D)
                 flowAInitialTop = flowA.topOnScreen()
                 flowBInitialTop = flowB.topOnScreen()
                 assertEquals("Flow A and B should share the first row before toggle.", flowAInitialTop, flowBInitialTop)
                 assertEquals("Flow C and D should share the second row before toggle.", flowC.topOnScreen(), flowD.topOnScreen())
 
-                val groupA = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER)
-                val groupB = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER_B)
+                val groupA = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER)
+                val groupB = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER_B)
                 assertEquals(View.VISIBLE, groupA.visibility)
                 assertEquals(View.VISIBLE, groupB.visibility)
 
-                val layerA = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_A)
-                val layerB = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_B)
+                val layerA = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_A)
+                val layerB = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_B)
                 assertLayerTransform(layerA, rotation = 0f, scale = 1f, translationX = 0f, translationY = 0f)
                 assertLayerTransform(layerB, rotation = 0f, scale = 1f, translationX = 0f, translationY = 0f)
 
-                val placeholderA = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_A)
-                val placeholderB = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_B)
+                val placeholderA = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_A)
+                val placeholderB = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_B)
                 placeholderAInitialTop = placeholderA.top
                 placeholderBInitialTop = placeholderB.top
                 assertTrue(
                     "Placeholder B should occupy the lower host before toggle.",
                     placeholderBInitialTop > placeholderAInitialTop,
                 )
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_TOGGLE)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val flowA = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_A)
-                val flowB = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_B)
-                val flowC = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_C)
-                val flowD = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_D)
+                val flowA = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_A)
+                val flowB = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_B)
+                val flowC = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_C)
+                val flowD = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_D)
                 assertTrue("One-element Flow rows should place B below A.", flowB.topOnScreen() > flowA.topOnScreen())
                 assertTrue("One-element Flow rows should place C below B.", flowC.topOnScreen() > flowB.topOnScreen())
                 assertTrue("One-element Flow rows should place D below C.", flowD.topOnScreen() > flowC.topOnScreen())
@@ -100,13 +100,13 @@ class ConstraintLayoutReleaseDeviceTest {
                 )
 
                 val root = activity.findViewById<ViewGroup>(android.R.id.content)
-                val groupA = requireNotNull(findViewByTestTag(root, DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER))
-                val groupB = requireNotNull(findViewByTestTag(root, DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER_B))
+                val groupA = requireNotNull(findViewByTestTag(root, DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER))
+                val groupB = requireNotNull(findViewByTestTag(root, DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER_B))
                 assertEquals("Group must own member A visibility.", View.GONE, groupA.visibility)
                 assertEquals("Group must own member B visibility.", View.GONE, groupB.visibility)
 
-                val layerA = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_A)
-                val layerB = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_B)
+                val layerA = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_A)
+                val layerB = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_B)
                 assertLayerScaleAndRotation(layerA, rotation = 18f, scale = 1.1f)
                 assertLayerScaleAndRotation(layerB, rotation = 18f, scale = 1.1f)
                 assertTrue(
@@ -118,8 +118,8 @@ class ConstraintLayoutReleaseDeviceTest {
                     abs(layerB.translationX) > 1f || abs(layerB.translationY) > 1f,
                 )
 
-                val placeholderA = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_A)
-                val placeholderB = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_B)
+                val placeholderA = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_A)
+                val placeholderB = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_B)
                 assertTrue(
                     "Placeholder A should move into the lower host after toggle.",
                     placeholderA.top > placeholderB.top,
@@ -127,7 +127,7 @@ class ConstraintLayoutReleaseDeviceTest {
                 assertTrue("Placeholder A must leave its original local top position.", placeholderA.top > placeholderAInitialTop)
                 assertTrue("Placeholder B must leave the lower host.", placeholderB.top < placeholderBInitialTop)
                 activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_NOTE,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_NOTE,
                 ).centerInsideOwningRecyclerView()
             }
             waitForUiIdle()
@@ -145,19 +145,19 @@ class ConstraintLayoutReleaseDeviceTest {
             var initialChildCount = 0
             var initialBarrierCount = 0
             scenario.onActivity { activity ->
-                val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER)
+                val marker = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER)
                 val layout = marker.requireConstraintLayoutAncestor()
                 initialChildCount = layout.childCount
                 initialBarrierCount = layout.childrenOfType<Barrier>().size
             }
             repeat(100) {
                 scenario.onActivity { activity ->
-                    activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_TOGGLE)
+                    activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_TOGGLE)
                 }
                 waitForUiIdle()
             }
             scenario.onActivity { activity ->
-                val finalMarker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER)
+                val finalMarker = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER)
                 val finalLayout = finalMarker.requireConstraintLayoutAncestor()
                 assertEquals("Helper switching must retain a bounded native child count.", initialChildCount, finalLayout.childCount)
                 assertEquals("Exactly one Barrier should remain after helper switching.", initialBarrierCount, finalLayout.childrenOfType<Barrier>().size)
@@ -165,30 +165,30 @@ class ConstraintLayoutReleaseDeviceTest {
 
             var initialVirtualCounts = emptyList<Int>()
             scenario.onActivity { activity ->
-                val flow = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_A)
+                val flow = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_A)
                     .requireConstraintLayoutAncestor()
-                val group = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER)
+                val group = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER)
                     .requireConstraintLayoutAncestor()
-                val layer = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_A)
+                val layer = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_A)
                     .requireConstraintLayoutAncestor()
-                val placeholder = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_NOTE)
+                val placeholder = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_NOTE)
                     .requireConstraintLayoutAncestor()
                 initialVirtualCounts = listOf(flow.childCount, group.childCount, layer.childCount, placeholder.childCount)
             }
             repeat(100) {
                 scenario.onActivity { activity ->
-                    activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_TOGGLE)
+                    activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_TOGGLE)
                 }
                 waitForUiIdle()
             }
             scenario.onActivity { activity ->
-                val flow = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_A)
+                val flow = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_A)
                     .requireConstraintLayoutAncestor()
-                val group = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER)
+                val group = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER)
                     .requireConstraintLayoutAncestor()
-                val layer = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_A)
+                val layer = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_A)
                     .requireConstraintLayoutAncestor()
-                val placeholder = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_NOTE)
+                val placeholder = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_NOTE)
                     .requireConstraintLayoutAncestor()
                 assertEquals(initialVirtualCounts[0], flow.childCount)
                 assertEquals(initialVirtualCounts[1], group.childCount)
@@ -209,7 +209,7 @@ class ConstraintLayoutReleaseDeviceTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_GRID_HERO,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_HERO,
                 ).centerInsideOwningRecyclerView()
             }
             waitForUiIdle()
@@ -217,11 +217,11 @@ class ConstraintLayoutReleaseDeviceTest {
             var horizontalStatusBounds = IntArray(4)
             var horizontalActionBounds = IntArray(4)
             scenario.onActivity { activity ->
-                val grid = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_CONTAINER)
-                val hero = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_HERO)
-                val metric = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_METRIC)
-                val status = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_STATUS)
-                val action = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_ACTION)
+                val grid = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_CONTAINER)
+                val hero = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_HERO)
+                val metric = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_METRIC)
+                val status = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_STATUS)
+                val action = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_ACTION)
                 listOf(hero, metric, status, action).forEach { child -> assertInside(grid, child) }
                 assertTrue("The spanning Grid item must be wider than every single-cell item.",
                     hero.width > maxOf(metric.width, status.width, action.width))
@@ -237,15 +237,15 @@ class ConstraintLayoutReleaseDeviceTest {
                 horizontalMetricBounds = metric.screenBounds()
                 horizontalStatusBounds = status.screenBounds()
                 horizontalActionBounds = action.screenBounds()
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_TOGGLE)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val grid = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_CONTAINER)
-                val hero = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_HERO)
-                val metric = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_METRIC)
-                val status = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_STATUS)
-                val action = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_ACTION)
+                val grid = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_CONTAINER)
+                val hero = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_HERO)
+                val metric = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_METRIC)
+                val status = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_STATUS)
+                val action = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_ACTION)
                 assertEquals("The vertical Grid fills the final free row after the skipped center.",
                     status.topOnScreen(), action.topOnScreen())
                 assertEquals("The vertical Grid fills the first column downward.",
@@ -263,17 +263,17 @@ class ConstraintLayoutReleaseDeviceTest {
             }
             scenario.onActivity { activity ->
                 activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CENTER,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CENTER,
                 ).centerInsideOwningRecyclerView()
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val container = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CONTAINER)
-                val center = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CENTER)
-                val top = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_TOP)
-                val right = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_RIGHT)
-                val bottom = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_BOTTOM)
-                val left = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_LEFT)
+                val container = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CONTAINER)
+                val center = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CENTER)
+                val top = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_TOP)
+                val right = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_RIGHT)
+                val bottom = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_BOTTOM)
+                val left = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_LEFT)
                 listOf(center, top, right, bottom, left).forEach { child -> assertInside(container, child) }
                 assertTrue(top.centerYOnScreen() < center.centerYOnScreen())
                 assertTrue(right.centerXOnScreen() > center.centerXOnScreen())
@@ -307,12 +307,12 @@ class ConstraintLayoutReleaseDeviceTest {
                     if (fixture.rtl) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR,
                     root.layoutDirection,
                 )
-                val helperContainer = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_CONTAINER)
-                val headline = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_HEADLINE)
-                val summary = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_SUMMARY)
-                val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_MARKER)
+                val helperContainer = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_CONTAINER)
+                val headline = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_HEADLINE)
+                val summary = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_SUMMARY)
+                val marker = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_MARKER)
                 val guidelineLabel = activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_GUIDELINE_LABEL,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_GUIDELINE_LABEL,
                 )
                 val sourceTrailingEdge = if (fixture.rtl) {
                     minOf(headline.leftOnScreen(), summary.leftOnScreen())
@@ -331,13 +331,13 @@ class ConstraintLayoutReleaseDeviceTest {
             )
 
             scenario.onActivity { activity ->
-                val top = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_TOP)
-                val middle = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_MIDDLE)
-                val bottom = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_BOTTOM)
+                val top = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_TOP)
+                val middle = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_MIDDLE)
+                val bottom = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_BOTTOM)
                 val marker = requireNotNull(
                     findViewByTestTag(
                         activity.findViewById(android.R.id.content),
-                        DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER,
+                        DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER,
                     ),
                 )
                 val container = top.requireConstraintLayoutAncestor()
@@ -362,12 +362,12 @@ class ConstraintLayoutReleaseDeviceTest {
                     )
                 }
                 assertTrue("Top/middle/bottom probes must preserve vertical order.", top.topOnScreen() < middle.topOnScreen() && middle.topOnScreen() < bottom.topOnScreen())
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_TOGGLE)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER,
                 ).centerInsideOwningRecyclerView()
             }
             waitForUiIdle()
@@ -376,16 +376,16 @@ class ConstraintLayoutReleaseDeviceTest {
             )
 
             scenario.onActivity { activity ->
-                val groupA = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER)
-                val groupB = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER_B)
+                val groupA = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER)
+                val groupB = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER_B)
                 assertEquals(View.VISIBLE, groupA.visibility)
                 assertEquals(View.VISIBLE, groupB.visibility)
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_TOGGLE)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_C,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_C,
                 ).centerInsideOwningRecyclerView()
             }
             waitForUiIdle()
@@ -394,7 +394,7 @@ class ConstraintLayoutReleaseDeviceTest {
             )
             scenario.onActivity { activity ->
                 activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_NOTE,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_NOTE,
                 ).centerInsideOwningRecyclerView()
             }
             waitForUiIdle()

@@ -271,7 +271,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         onClick = { visibleState.value = !visibleState.value },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_VISIBILITY_TOGGLE)
+                            .testTag(DemoAnimationTestTags.ANIMATION_VISIBILITY_TOGGLE)
                             .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     )
                     Button(
@@ -305,7 +305,7 @@ internal fun UiTreeBuilder.AnimationPage(
                     visible = visibleState.value,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.ANIMATION_VISIBILITY_TARGET)
+                        .testTag(DemoAnimationTestTags.ANIMATION_VISIBILITY_TARGET)
                         .animationScenarioTarget(scenario, DemoAutomationRole.Target),
                 ) {
                     Surface(
@@ -326,7 +326,7 @@ internal fun UiTreeBuilder.AnimationPage(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp)
-                        .testTag(DemoTestTags.ANIMATION_VISIBILITY_FOOTER),
+                        .testTag(DemoAnimationTestTags.ANIMATION_VISIBILITY_FOOTER),
                 )
                 LazyColumn(
                     items = listOf(
@@ -358,7 +358,7 @@ internal fun UiTreeBuilder.AnimationPage(
                             )
                             AnimatedVisibility(
                                 visible = task.completed,
-                                modifier = Modifier.testTag(DemoTestTags.ANIMATION_TASK_STATUS),
+                                modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_TASK_STATUS),
                             ) {
                                 Text(text = stringResource(R.string.demo_animation_task_completed))
                             }
@@ -373,13 +373,13 @@ internal fun UiTreeBuilder.AnimationPage(
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .testTag(DemoTestTags.ANIMATION_TASK_TOGGLE),
+                                    .testTag(DemoAnimationTestTags.ANIMATION_TASK_TOGGLE),
                             )
                             Row(
                                 spacing = 8.dp,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .testTag(DemoTestTags.ANIMATION_TASK_ACTIONS),
+                                    .testTag(DemoAnimationTestTags.ANIMATION_TASK_ACTIONS),
                             ) {
                                 Button(
                                     text = stringResource(R.string.demo_animation_task_details, task.title),
@@ -433,7 +433,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         onClick = { contentState.value = !contentState.value },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_CONTENT_TOGGLE)
+                            .testTag(DemoAnimationTestTags.ANIMATION_CONTENT_TOGGLE)
                             .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     )
                     Button(
@@ -448,7 +448,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         onClick = { crossfadeState.value = !crossfadeState.value },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_CROSSFADE_TOGGLE)
+                            .testTag(DemoAnimationTestTags.ANIMATION_CROSSFADE_TOGGLE)
                             .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                     )
                 }
@@ -485,7 +485,7 @@ internal fun UiTreeBuilder.AnimationPage(
                                     R.string.demo_animation_content_primary
                                 },
                             ),
-                            modifier = Modifier.testTag(DemoTestTags.ANIMATION_CONTENT_LABEL),
+                            modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_CONTENT_LABEL),
                         )
                     }
                 }
@@ -508,7 +508,7 @@ internal fun UiTreeBuilder.AnimationPage(
                                     R.string.demo_animation_crossfade_primary
                                 },
                             ),
-                            modifier = Modifier.testTag(DemoTestTags.ANIMATION_CROSSFADE_LABEL),
+                            modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_CROSSFADE_LABEL),
                         )
                     }
                 }
@@ -547,7 +547,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_LIST_ADD)
+                            .testTag(DemoAnimationTestTags.ANIMATION_LIST_ADD)
                             .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     )
                     Button(
@@ -561,7 +561,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_LIST_REORDER)
+                            .testTag(DemoAnimationTestTags.ANIMATION_LIST_REORDER)
                             .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                     )
                 }
@@ -601,7 +601,7 @@ internal fun UiTreeBuilder.AnimationPage(
                             text = animationListItemLabel(item),
                             style = UiTextStyle(fontSizeSp = 14.sp),
                             modifier = if (item == listItemsState.value.firstOrNull()) {
-                                Modifier.testTag(DemoTestTags.ANIMATION_LIST_FIRST)
+                                Modifier.testTag(DemoAnimationTestTags.ANIMATION_LIST_FIRST)
                             } else {
                                 Modifier
                             },
@@ -721,7 +721,7 @@ internal fun UiTreeBuilder.AnimationPage(
                             },
                             modifier = Modifier
                                 .weight(1f)
-                                .testTag(DemoTestTags.ANIMATION_SPEC_KIND_TOGGLE)
+                                .testTag(DemoAnimationTestTags.ANIMATION_SPEC_KIND_TOGGLE)
                                 .animationScenarioTarget(
                                     scenario,
                                     DemoAutomationRole.SecondaryAction,
@@ -739,7 +739,7 @@ internal fun UiTreeBuilder.AnimationPage(
                             onClick = { specTargetState.value = !specTargetState.value },
                             modifier = Modifier
                                 .weight(1f)
-                                .testTag(DemoTestTags.ANIMATION_SPEC_TARGET_TOGGLE)
+                                .testTag(DemoAnimationTestTags.ANIMATION_SPEC_TARGET_TOGGLE)
                                 .animationScenarioTarget(
                                     scenario,
                                     DemoAutomationRole.PrimaryAction,
@@ -762,7 +762,7 @@ internal fun UiTreeBuilder.AnimationPage(
                             onClick = { easingLinearState.value = !easingLinearState.value },
                             modifier = Modifier
                                 .weight(1f)
-                                .testTag(DemoTestTags.ANIMATION_SPEC_EASING_TOGGLE),
+                                .testTag(DemoAnimationTestTags.ANIMATION_SPEC_EASING_TOGGLE),
                         )
                         Button(
                             text = stringResource(
@@ -776,7 +776,7 @@ internal fun UiTreeBuilder.AnimationPage(
                             onClick = { repeatModeReverseState.value = !repeatModeReverseState.value },
                             modifier = Modifier
                                 .weight(1f)
-                                .testTag(DemoTestTags.ANIMATION_SPEC_REPEAT_MODE_TOGGLE),
+                                .testTag(DemoAnimationTestTags.ANIMATION_SPEC_REPEAT_MODE_TOGGLE),
                         )
                     }
                     Button(
@@ -808,21 +808,21 @@ internal fun UiTreeBuilder.AnimationPage(
                                     R.string.demo_animation_specs_float,
                                     floatValueState.value.format2(),
                                 ),
-                                modifier = Modifier.testTag(DemoTestTags.ANIMATION_SPEC_FLOAT_VALUE),
+                                modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_SPEC_FLOAT_VALUE),
                             )
                             Text(
                                 text = stringResource(
                                     R.string.demo_animation_specs_int,
                                     intValueState.value,
                                 ),
-                                modifier = Modifier.testTag(DemoTestTags.ANIMATION_SPEC_INT_VALUE),
+                                modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_SPEC_INT_VALUE),
                             )
                             Text(
                                 text = stringResource(
                                     R.string.demo_animation_specs_dp,
                                     dpValueState.value.toString(),
                                 ),
-                                modifier = Modifier.testTag(DemoTestTags.ANIMATION_SPEC_DP_VALUE),
+                                modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_SPEC_DP_VALUE),
                             )
                             Text(
                                 text = stringResource(
@@ -830,7 +830,7 @@ internal fun UiTreeBuilder.AnimationPage(
                                     colorValueState.value.toUInt().toString(16).uppercase(),
                                 ),
                                 color = colorValueState.value,
-                                modifier = Modifier.testTag(DemoTestTags.ANIMATION_SPEC_COLOR_VALUE),
+                                modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_SPEC_COLOR_VALUE),
                             )
                         }
                     }
@@ -849,7 +849,7 @@ internal fun UiTreeBuilder.AnimationPage(
                             onClick = { vectorTargetState.value = !vectorTargetState.value },
                             modifier = Modifier
                                 .weight(1f)
-                                .testTag(DemoTestTags.ANIMATION_SPEC_VECTOR_TOGGLE),
+                                .testTag(DemoAnimationTestTags.ANIMATION_SPEC_VECTOR_TOGGLE),
                         )
                         Text(
                             text = stringResource(
@@ -859,7 +859,7 @@ internal fun UiTreeBuilder.AnimationPage(
                             ),
                             modifier = Modifier
                                 .weight(1f)
-                                .testTag(DemoTestTags.ANIMATION_SPEC_VECTOR_VALUE),
+                                .testTag(DemoAnimationTestTags.ANIMATION_SPEC_VECTOR_VALUE),
                         )
                     }
                 }
@@ -922,7 +922,7 @@ internal fun UiTreeBuilder.AnimationPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.ANIMATION_TRANSITION_TOGGLE)
+                        .testTag(DemoAnimationTestTags.ANIMATION_TRANSITION_TOGGLE)
                         .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                 )
                 Surface(
@@ -941,21 +941,21 @@ internal fun UiTreeBuilder.AnimationPage(
                                 R.string.demo_animation_transition_alpha,
                                 transitionAlphaState.value.format2(),
                             ),
-                            modifier = Modifier.testTag(DemoTestTags.ANIMATION_TRANSITION_ALPHA),
+                            modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_TRANSITION_ALPHA),
                         )
                         Text(
                             text = stringResource(
                                 R.string.demo_animation_transition_int,
                                 transitionIntState.value,
                             ),
-                            modifier = Modifier.testTag(DemoTestTags.ANIMATION_TRANSITION_INT),
+                            modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_TRANSITION_INT),
                         )
                         Text(
                             text = stringResource(
                                 R.string.demo_animation_transition_dp,
                                 transitionDpState.value.toString(),
                             ),
-                            modifier = Modifier.testTag(DemoTestTags.ANIMATION_TRANSITION_DP),
+                            modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_TRANSITION_DP),
                         )
                         Text(
                             text = stringResource(
@@ -963,7 +963,7 @@ internal fun UiTreeBuilder.AnimationPage(
                                 transitionColorState.value.toUInt().toString(16).uppercase(),
                             ),
                             color = transitionColorState.value,
-                            modifier = Modifier.testTag(DemoTestTags.ANIMATION_TRANSITION_COLOR),
+                            modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_TRANSITION_COLOR),
                         )
                     }
                 }
@@ -994,7 +994,7 @@ internal fun UiTreeBuilder.AnimationPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(top = 10.dp, bottom = 8.dp)
-                        .testTag(DemoTestTags.ANIMATION_VISIBILITY_STATE_TOGGLE)
+                        .testTag(DemoAnimationTestTags.ANIMATION_VISIBILITY_STATE_TOGGLE)
                         .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                 )
                 Text(
@@ -1006,7 +1006,7 @@ internal fun UiTreeBuilder.AnimationPage(
                     ),
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.ANIMATION_VISIBILITY_STATE_STATUS),
+                        .testTag(DemoAnimationTestTags.ANIMATION_VISIBILITY_STATE_STATUS),
                 )
                 AnimatedVisibility(
                     visibleState = mutableVisibilityState,
@@ -1014,7 +1014,7 @@ internal fun UiTreeBuilder.AnimationPage(
                     exit = shrinkOut(tween(220)) + fadeOut(tween(180)),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.ANIMATION_VISIBILITY_STATE_TARGET),
+                        .testTag(DemoAnimationTestTags.ANIMATION_VISIBILITY_STATE_TARGET),
                 ) {
                     Surface(
                         variant = SurfaceVariant.Variant,
@@ -1043,7 +1043,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         onClick = { rowAxisVisibleState.value = !rowAxisVisibleState.value },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_ROW_AXIS_TOGGLE),
+                            .testTag(DemoAnimationTestTags.ANIMATION_ROW_AXIS_TOGGLE),
                     )
                     AnimatedVisibility(
                         visible = rowAxisVisibleState.value,
@@ -1051,7 +1051,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         exit = shrinkHorizontally(tween(240)) + fadeOut(tween(160)),
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_ROW_AXIS_TARGET),
+                            .testTag(DemoAnimationTestTags.ANIMATION_ROW_AXIS_TARGET),
                     ) {
                         Surface(
                             variant = SurfaceVariant.Variant,
@@ -1081,7 +1081,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         onClick = { columnAxisVisibleState.value = !columnAxisVisibleState.value },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .testTag(DemoTestTags.ANIMATION_COLUMN_AXIS_TOGGLE),
+                            .testTag(DemoAnimationTestTags.ANIMATION_COLUMN_AXIS_TOGGLE),
                     )
                     AnimatedVisibility(
                         visible = columnAxisVisibleState.value,
@@ -1089,7 +1089,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         exit = shrinkVertically(tween(240)) + fadeOut(tween(160)),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .testTag(DemoTestTags.ANIMATION_COLUMN_AXIS_TARGET),
+                            .testTag(DemoAnimationTestTags.ANIMATION_COLUMN_AXIS_TARGET),
                     ) {
                         Surface(
                             variant = SurfaceVariant.Variant,
@@ -1156,7 +1156,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         onClick = { infinitePulseState.value = !infinitePulseState.value },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_INFINITE_RUN_TOGGLE)
+                            .testTag(DemoAnimationTestTags.ANIMATION_INFINITE_RUN_TOGGLE)
                             .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     )
                     Button(
@@ -1171,7 +1171,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         onClick = { infiniteReverseState.value = !infiniteReverseState.value },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_INFINITE_REPEAT_MODE),
+                            .testTag(DemoAnimationTestTags.ANIMATION_INFINITE_REPEAT_MODE),
                     )
                 }
                 Button(
@@ -1203,7 +1203,7 @@ internal fun UiTreeBuilder.AnimationPage(
                             R.string.demo_animation_infinite_scale,
                             infiniteScaleState.value.format2(),
                         ),
-                        modifier = Modifier.testTag(DemoTestTags.ANIMATION_INFINITE_VALUE),
+                        modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_INFINITE_VALUE),
                     )
                 }
                 Text(
@@ -1223,7 +1223,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_ANIMATABLE_TO_HIGH),
+                            .testTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_TO_HIGH),
                     )
                     Button(
                         text = stringResource(R.string.demo_animation_animatable_to_low),
@@ -1234,7 +1234,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_ANIMATABLE_TO_LOW),
+                            .testTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_TO_LOW),
                     )
                 }
                 Row(
@@ -1252,7 +1252,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_ANIMATABLE_SNAP_HIGH)
+                            .testTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_SNAP_HIGH)
                             .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                     )
                     Button(
@@ -1264,7 +1264,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.ANIMATION_ANIMATABLE_SNAP_LOW),
+                            .testTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_SNAP_LOW),
                     )
                 }
                 Button(
@@ -1277,7 +1277,7 @@ internal fun UiTreeBuilder.AnimationPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(top = 8.dp)
-                        .testTag(DemoTestTags.ANIMATION_ANIMATABLE_STOP),
+                        .testTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_STOP),
                 )
                 Surface(
                     variant = SurfaceVariant.Variant,
@@ -1291,7 +1291,7 @@ internal fun UiTreeBuilder.AnimationPage(
                             R.string.demo_animation_animatable_value,
                             animatable.asState.value.format2(),
                         ),
-                        modifier = Modifier.testTag(DemoTestTags.ANIMATION_ANIMATABLE_VALUE),
+                        modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_VALUE),
                     )
                 }
                 }
@@ -1339,7 +1339,7 @@ private fun UiTreeBuilder.AnimationContentSizePage(scenario: DemoScenarioSpec?) 
                 onClick = { expandedState.value = true },
                 modifier = Modifier
                     .weight(1f)
-                    .testTag(DemoTestTags.ANIMATION_SPEC_SIZE_TOGGLE)
+                    .testTag(DemoAnimationTestTags.ANIMATION_SPEC_SIZE_TOGGLE)
                     .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
             )
             Button(
@@ -1376,7 +1376,7 @@ private fun UiTreeBuilder.AnimationContentSizePage(scenario: DemoScenarioSpec?) 
                 if (expandedState.value) {
                     Text(
                         text = stringResource(R.string.demo_animation_specs_size_content_a),
-                        modifier = Modifier.testTag(DemoTestTags.ANIMATION_SPEC_SIZE_PROBE),
+                        modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_SPEC_SIZE_PROBE),
                     )
                     Text(text = stringResource(R.string.demo_animation_specs_size_content_b))
                     Text(text = stringResource(R.string.demo_animation_specs_size_content_c))

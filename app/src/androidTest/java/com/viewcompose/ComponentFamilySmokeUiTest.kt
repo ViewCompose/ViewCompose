@@ -89,7 +89,7 @@ class ComponentFamilySmokeUiTest {
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.COLLECTIONS_LAZY_ROW_PRIMARY))
+                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoCollectionsTestTags.COLLECTIONS_LAZY_ROW_PRIMARY))
             }
         }
 
@@ -99,7 +99,7 @@ class ComponentFamilySmokeUiTest {
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_FLOW_ROW))
+                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_FLOW_ROW))
             }
         }
     }

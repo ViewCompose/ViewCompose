@@ -19,7 +19,7 @@ class AdvancedShadowDemoDeviceTest {
                     R.id.demo_graphics_outer_shadow_target,
                 )
                 val multi = activity.requireViewByTestTagVisible(
-                    DemoTestTags.GRAPHICS_SHADOW_OUTER_MULTI,
+                    DemoGraphicsTestTags.GRAPHICS_SHADOW_OUTER_MULTI,
                 )
 
                 val singleSpec = ShadowDecorationLayer.specOrNull(single)
@@ -46,12 +46,12 @@ class AdvancedShadowDemoDeviceTest {
                     R.id.demo_graphics_inner_shadow_target,
                 )
                 val multi = activity.requireViewByTestTagVisible(
-                    DemoTestTags.GRAPHICS_SHADOW_INNER_MULTI,
+                    DemoGraphicsTestTags.GRAPHICS_SHADOW_INNER_MULTI,
                 )
                 assertEquals(1, ShadowDecorationLayer.innerSpecOrNull(single)?.layerCount)
                 assertEquals(2, ShadowDecorationLayer.innerSpecOrNull(multi)?.layerCount)
 
-                activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_SHADOW_INNER_FIELD)
+                activity.requireViewByTestTagVisible(DemoGraphicsTestTags.GRAPHICS_SHADOW_INNER_FIELD)
                     .requestFocus()
                 activity.clickScenarioViewById(R.id.demo_graphics_inner_shadow_primary_action)
             }
@@ -80,13 +80,13 @@ class AdvancedShadowDemoDeviceTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val policy = activity.requireTextViewByTestTagVisible(
-                    DemoTestTags.GRAPHICS_SHADOW_BACKEND_POLICY,
+                    DemoGraphicsTestTags.GRAPHICS_SHADOW_BACKEND_POLICY,
                 )
                 val backend = activity.requireTextViewByTestTagVisible(
-                    DemoTestTags.GRAPHICS_SHADOW_BACKEND_ACTUAL,
+                    DemoGraphicsTestTags.GRAPHICS_SHADOW_BACKEND_ACTUAL,
                 )
                 val misses = activity.requireTextViewByTestTagVisible(
-                    DemoTestTags.GRAPHICS_SHADOW_CACHE_MISSES,
+                    DemoGraphicsTestTags.GRAPHICS_SHADOW_CACHE_MISSES,
                 )
 
                 assertEquals("auto", policy.text.toString())

@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.autofill.AutofillValue
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -47,7 +48,7 @@ class DemoDesignSystemVerificationUiTest {
                     activity.getString(R.string.demo_design_system_button_status, 1),
                     activity.requireScenarioTextTarget(DemoAutomationRole.State).text.toString(),
                 )
-                activity.clickByTestTag(DemoTestTags.DESIGN_SYSTEM_REPLACE_ROOT)
+                activity.clickByTestTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_REPLACE_ROOT)
             }
             waitForUiIdle()
             SystemClock.sleep(WINDOW_TRANSITION_SETTLE_MS)
@@ -61,7 +62,7 @@ class DemoDesignSystemVerificationUiTest {
                         DemoDesignSystemKind.RoundedReference.labelRes,
                     ),
                     activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.DESIGN_SYSTEM_IDENTITY,
+                        DemoDesignSystemTestTags.DESIGN_SYSTEM_IDENTITY,
                     ).text.toString(),
                 )
                 assertEquals(
@@ -70,14 +71,14 @@ class DemoDesignSystemVerificationUiTest {
                         DemoDesignSystemKind.RoundedReference.id,
                     ),
                     activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.DESIGN_SYSTEM_LAZY_IDENTITY,
+                        DemoDesignSystemTestTags.DESIGN_SYSTEM_LAZY_IDENTITY,
                     ).text.toString(),
                 )
                 assertEquals(
                     activity.getString(R.string.demo_design_system_button_status, 1),
                     activity.requireScenarioTextTarget(DemoAutomationRole.State).text.toString(),
                 )
-                activity.clickByTestTag(DemoTestTags.DESIGN_SYSTEM_OPEN_DIALOG)
+                activity.clickByTestTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_OPEN_DIALOG)
             }
 
             val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -121,7 +122,7 @@ class DemoDesignSystemVerificationUiTest {
                         DemoDesignSystemKind.CupertinoPressure.labelRes,
                     ),
                     activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.DESIGN_SYSTEM_IDENTITY,
+                        DemoDesignSystemTestTags.DESIGN_SYSTEM_IDENTITY,
                     ).text.toString(),
                 )
                 assertEquals(
@@ -130,7 +131,7 @@ class DemoDesignSystemVerificationUiTest {
                         DemoDesignSystemKind.CupertinoPressure.id,
                     ),
                     activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.DESIGN_SYSTEM_LAZY_IDENTITY,
+                        DemoDesignSystemTestTags.DESIGN_SYSTEM_LAZY_IDENTITY,
                     ).text.toString(),
                 )
                 assertEquals(
@@ -155,6 +156,7 @@ class DemoDesignSystemVerificationUiTest {
     fun designSystemPressureSlice_exportsAttributionAndPreservesBehaviorAcrossMatrix() {
         resetPublicEvidenceDirectory()
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         val requestedKind = InstrumentationRegistry.getArguments()
             .getString("designSystemKind")
             ?.let(DemoDesignSystemKind::fromId)
@@ -207,43 +209,43 @@ class DemoDesignSystemVerificationUiTest {
                     assertEquals(
                         "${fixture.kind.id} · ${activity.getString(fixture.kind.labelRes)}",
                         activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_IDENTITY,
+                            DemoDesignSystemTestTags.DESIGN_SYSTEM_IDENTITY,
                         ).text.toString(),
                     )
                     assertEquals(
                         "demo-design-system/${fixture.kind.id}",
                         activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_TOKEN_SOURCE,
+                            DemoDesignSystemTestTags.DESIGN_SYSTEM_TOKEN_SOURCE,
                         ).text.toString(),
                     )
                     assertTrue(
                         "Expected the pre-extraction Material context wrapper baseline",
                         activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_ROOT_CONTEXT,
+                            DemoDesignSystemTestTags.DESIGN_SYSTEM_ROOT_CONTEXT,
                         ).text.toString().startsWith("MutableContextWrapper > "),
                     )
                     assertEquals(
                         "#FF7B9E68",
                         activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_ANDROID_PRIMARY,
+                            DemoDesignSystemTestTags.DESIGN_SYSTEM_ANDROID_PRIMARY,
                         ).text.toString(),
                     )
                     assertEquals(
                         activity.getString(R.string.demo_design_system_component_backends_value),
                         activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_COMPONENT_BACKENDS,
+                            DemoDesignSystemTestTags.DESIGN_SYSTEM_COMPONENT_BACKENDS,
                         ).text.toString(),
                     )
                     assertEquals(
                         fixture.reducedMotion.toString(),
                         activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_REDUCED_MOTION,
+                            DemoDesignSystemTestTags.DESIGN_SYSTEM_REDUCED_MOTION,
                         ).text.toString(),
                     )
                     assertEquals(
                         fixture.fontScale.toString(),
                         activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_FONT_SCALE,
+                            DemoDesignSystemTestTags.DESIGN_SYSTEM_FONT_SCALE,
                         ).text.toString(),
                     )
                     assertEquals(
@@ -260,29 +262,31 @@ class DemoDesignSystemVerificationUiTest {
 
                 scenario.onActivity { activity ->
                     listOf(
-                        DemoTestTags.DESIGN_SYSTEM_BUTTON_DISABLED,
-                        DemoTestTags.DESIGN_SYSTEM_SURFACE,
-                        DemoTestTags.DESIGN_SYSTEM_SWITCH_DISABLED,
-                        DemoTestTags.DESIGN_SYSTEM_TEXT_FIELD,
-                        DemoTestTags.DESIGN_SYSTEM_TEXT_FIELD_ERROR,
-                        DemoTestTags.DESIGN_SYSTEM_SEGMENTED,
-                        DemoTestTags.DESIGN_SYSTEM_NAVIGATION,
+                        DemoDesignSystemTestTags.DESIGN_SYSTEM_BUTTON_DISABLED,
+                        DemoDesignSystemTestTags.DESIGN_SYSTEM_SURFACE,
+                        DemoDesignSystemTestTags.DESIGN_SYSTEM_SWITCH_DISABLED,
+                        DemoDesignSystemTestTags.DESIGN_SYSTEM_TEXT_FIELD,
+                        DemoDesignSystemTestTags.DESIGN_SYSTEM_TEXT_FIELD_ERROR,
+                        DemoDesignSystemTestTags.DESIGN_SYSTEM_SEGMENTED,
+                        DemoDesignSystemTestTags.DESIGN_SYSTEM_NAVIGATION,
                     ).forEach { tag ->
                         val view = activity.requireViewByTestTagVisible(tag)
                         assertTrue("Expected measured fixture for $tag", view.width > 0 && view.height > 0)
                     }
-                    activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_SURFACE)
+                    activity.requireViewByTestTagVisible(DemoDesignSystemTestTags.DESIGN_SYSTEM_SURFACE)
                     activity.requireScenarioTarget(DemoAutomationRole.PrimaryAction)
                 }
                 waitForUiIdle()
                 captureEvidence("$label-button-surface", metadata)
 
                 scenario.onActivity { activity ->
-                    activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_TEXT_FIELD_ERROR)
+                    activity.requireViewByTestTagVisible(DemoDesignSystemTestTags.DESIGN_SYSTEM_TEXT_FIELD_ERROR)
                 }
                 waitForUiIdle()
                 captureEvidence("$label-switch-text-field", metadata)
 
+                var navigationTouchX = 0
+                var navigationTouchY = 0
                 scenario.onActivity { activity ->
                     val button = activity.requireScenarioTarget(DemoAutomationRole.PrimaryAction)
                     assertTrue("Expected a stateful Button background", button.background?.isStateful == true)
@@ -314,7 +318,7 @@ class DemoDesignSystemVerificationUiTest {
                         switch.performAccessibilityAction(AccessibilityNodeInfo.ACTION_CLICK, null),
                     )
 
-                    val fieldRoot = activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_TEXT_FIELD)
+                    val fieldRoot = activity.requireViewByTestTagVisible(DemoDesignSystemTestTags.DESIGN_SYSTEM_TEXT_FIELD)
                     val nativeField = findDescendant(fieldRoot, EditText::class.java)
                     assertNotNull("Expected native EditText editing core", nativeField)
                     requireNotNull(nativeField).apply {
@@ -332,15 +336,57 @@ class DemoDesignSystemVerificationUiTest {
                             setText("Grace")
                         }
                         setSelection(1, 3)
+                        clearFocus()
+                        activity.getSystemService(InputMethodManager::class.java)
+                            .hideSoftInputFromWindow(windowToken, 0)
                     }
+                }
+                waitForUiIdle()
+                SystemClock.sleep(WINDOW_TRANSITION_SETTLE_MS)
+                waitForUiIdle()
 
-                    val navigation = activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_NAVIGATION)
+                scenario.onActivity { activity ->
+                    val navigation = activity.requireViewByTestTagVisible(DemoDesignSystemTestTags.DESIGN_SYSTEM_NAVIGATION)
                     assertEquals(3, navigation.childCountOrZero())
                     val middleItem = (navigation as ViewGroup).getChildAt(1)
-                    activity.tapView(middleItem)
-                    activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_SEGMENTED)
-                    activity.tapTextView(activity.getString(R.string.demo_design_system_week))
+                    val location = IntArray(2).also(middleItem::getLocationOnScreen)
+                    navigationTouchX = location[0] + middleItem.width / 2
+                    navigationTouchY = location[1] + middleItem.height / 2
                 }
+                assertTrue(
+                    "Expected the middle navigation item to handle a physical tap",
+                    device.click(navigationTouchX, navigationTouchY),
+                )
+                waitForUiIdle()
+
+                var segmentTouchX = 0
+                var segmentTouchY = 0
+                scenario.onActivity { activity ->
+                    assertEquals(
+                        activity.getString(
+                            R.string.demo_design_system_selected_status,
+                            activity.getString(R.string.demo_design_system_search),
+                        ),
+                        activity.requireTextViewByTestTagVisible(
+                            DemoDesignSystemTestTags.DESIGN_SYSTEM_NAVIGATION_STATUS,
+                        ).text.toString(),
+                    )
+                    activity.requireViewByTestTagVisible(DemoDesignSystemTestTags.DESIGN_SYSTEM_SEGMENTED)
+                    var segmentTarget: View? = activity.requireTextViewVisible(
+                        activity.getString(R.string.demo_design_system_week),
+                    )
+                    while (segmentTarget != null && !segmentTarget.isClickable) {
+                        segmentTarget = segmentTarget.parent as? View
+                    }
+                    assertNotNull("Expected a clickable week segment", segmentTarget)
+                    val location = IntArray(2).also(requireNotNull(segmentTarget)::getLocationOnScreen)
+                    segmentTouchX = location[0] + requireNotNull(segmentTarget).width / 2
+                    segmentTouchY = location[1] + requireNotNull(segmentTarget).height / 2
+                }
+                assertTrue(
+                    "Expected the week segment to handle a physical tap",
+                    device.click(segmentTouchX, segmentTouchY),
+                )
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     assertEquals(
@@ -359,7 +405,7 @@ class DemoDesignSystemVerificationUiTest {
                             activity.getString(R.string.demo_design_system_search),
                         ),
                         activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_NAVIGATION_STATUS,
+                            DemoDesignSystemTestTags.DESIGN_SYSTEM_NAVIGATION_STATUS,
                         ).text.toString(),
                     )
                     assertEquals(
@@ -368,7 +414,7 @@ class DemoDesignSystemVerificationUiTest {
                             activity.getString(R.string.demo_design_system_week),
                         ),
                         activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS,
+                            DemoDesignSystemTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS,
                         ).text.toString(),
                     )
                 }
@@ -392,7 +438,7 @@ class DemoDesignSystemVerificationUiTest {
                             activity.getString(R.string.demo_design_system_search),
                         ),
                         activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_NAVIGATION_STATUS,
+                            DemoDesignSystemTestTags.DESIGN_SYSTEM_NAVIGATION_STATUS,
                         ).text.toString(),
                     )
                     assertEquals(
@@ -401,10 +447,10 @@ class DemoDesignSystemVerificationUiTest {
                             activity.getString(R.string.demo_design_system_week),
                         ),
                         activity.requireTextViewByTestTagVisible(
-                            DemoTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS,
+                            DemoDesignSystemTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS,
                         ).text.toString(),
                     )
-                    val fieldRoot = activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_TEXT_FIELD)
+                    val fieldRoot = activity.requireViewByTestTagVisible(DemoDesignSystemTestTags.DESIGN_SYSTEM_TEXT_FIELD)
                     val restoredField = requireNotNull(findDescendant(fieldRoot, EditText::class.java))
                     assertEquals("Grace", restoredField.text.toString())
                     assertEquals(1, restoredField.selectionStart)
@@ -424,12 +470,12 @@ class DemoDesignSystemVerificationUiTest {
             appendLine("recipeIdentity=${kind.id}/pressure-v2")
             appendLine(
                 "rootContext=" + activity.requireTextViewByTestTagVisible(
-                    DemoTestTags.DESIGN_SYSTEM_ROOT_CONTEXT,
+                    DemoDesignSystemTestTags.DESIGN_SYSTEM_ROOT_CONTEXT,
                 ).text,
             )
             appendLine(
                 "androidColorPrimary=" + activity.requireTextViewByTestTagVisible(
-                    DemoTestTags.DESIGN_SYSTEM_ANDROID_PRIMARY,
+                    DemoDesignSystemTestTags.DESIGN_SYSTEM_ANDROID_PRIMARY,
                 ).text,
             )
             appendLine("mode=${if (dark) "dark" else "light"}")

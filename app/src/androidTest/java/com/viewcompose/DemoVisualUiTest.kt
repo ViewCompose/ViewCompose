@@ -42,7 +42,7 @@ class DemoVisualUiTest {
             var endY = 0
             scenario.onActivity { activity ->
                 val scrollView = activity.requireViewByTestTag(
-                    DemoTestTags.LAYOUTS_SCROLLABLE_COLUMN,
+                    DemoLayoutsTestTags.LAYOUTS_SCROLLABLE_COLUMN,
                 ) as NestedScrollView
                 assertTrue("Expected ScrollableColumn content to overflow", scrollView.canScrollVertically(1))
                 val location = IntArray(2)
@@ -57,7 +57,7 @@ class DemoVisualUiTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val scrollView = activity.requireViewByTestTag(
-                    DemoTestTags.LAYOUTS_SCROLLABLE_COLUMN,
+                    DemoLayoutsTestTags.LAYOUTS_SCROLLABLE_COLUMN,
                 ) as NestedScrollView
                 assertTrue(
                     "Expected device swipe from y=$startY to y=$endY to increase ScrollableColumn scrollY",
@@ -110,7 +110,7 @@ class DemoVisualUiTest {
                 assertTextNotEllipsized(toggle)
                 assertTextNotEllipsized(reset)
                 val itemA = activity.requireTextViewByTestTagVisible(
-                    DemoTestTags.COLLECTIONS_BENCHMARK_ITEM_A,
+                    DemoCollectionsTestTags.COLLECTIONS_BENCHMARK_ITEM_A,
                 )
                 assertTrue(itemA.text.toString().contains("A"))
                 activity.clickScenarioViewById(R.id.demo_collection_controls_primary_action)
@@ -118,7 +118,7 @@ class DemoVisualUiTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val rotatedItemA = activity.requireTextViewByTestTagVisible(
-                    DemoTestTags.COLLECTIONS_BENCHMARK_ITEM_A,
+                    DemoCollectionsTestTags.COLLECTIONS_BENCHMARK_ITEM_A,
                 )
                 assertViewFullyVisible(rotatedItemA)
                 assertTrue(rotatedItemA.text.toString().contains("A"))
@@ -127,7 +127,7 @@ class DemoVisualUiTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val resetItem = activity.requireTextViewByTestTagVisible(
-                    DemoTestTags.COLLECTIONS_BENCHMARK_ITEM_A,
+                    DemoCollectionsTestTags.COLLECTIONS_BENCHMARK_ITEM_A,
                 )
                 assertViewFullyVisible(resetItem)
                 assertTrue(resetItem.text.toString().contains("A"))
@@ -144,34 +144,36 @@ class DemoVisualUiTest {
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val toggle = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LABEL_TOGGLE)
-                val itemA = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                val toggle = activity.requireScenarioViewByIdVisible<TextView>(
+                    R.id.demo_collection_lazy_list_secondary_action,
+                )
+                val itemA = activity.requireTextViewByTestTagVisible(DemoCollectionsTestTags.COLLECTIONS_LIST_ITEM_A)
                 assertViewFullyVisible(toggle)
                 assertTrue(itemA.text.toString().contains("A"))
                 primaryLabel = itemA.text.toString()
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_LABEL_TOGGLE)
+                activity.clickScenarioViewById(R.id.demo_collection_lazy_list_secondary_action)
             }
             waitForUiIdle()
             val switchedToAlternate = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                activity.requireTextViewByTestTagVisible(DemoCollectionsTestTags.COLLECTIONS_LIST_ITEM_A)
                     .text
                     .toString() != primaryLabel
             }
             assertTrue("Expected visible LazyColumn item to refresh its alternate label", switchedToAlternate)
             scenario.onActivity { activity ->
-                val itemA = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                val itemA = activity.requireTextViewByTestTagVisible(DemoCollectionsTestTags.COLLECTIONS_LIST_ITEM_A)
                 assertViewFullyVisible(itemA)
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_LABEL_TOGGLE)
+                activity.clickScenarioViewById(R.id.demo_collection_lazy_list_secondary_action)
             }
             waitForUiIdle()
             val switchedToPrimary = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                activity.requireTextViewByTestTagVisible(DemoCollectionsTestTags.COLLECTIONS_LIST_ITEM_A)
                     .text
                     .toString() == primaryLabel
             }
             assertTrue("Expected visible LazyColumn item to restore its primary label", switchedToPrimary)
             scenario.onActivity { activity ->
-                val itemA = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                val itemA = activity.requireTextViewByTestTagVisible(DemoCollectionsTestTags.COLLECTIONS_LIST_ITEM_A)
                 assertViewFullyVisible(itemA)
             }
         }
@@ -509,7 +511,7 @@ class DemoVisualUiTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 assertViewFullyVisible(
-                    activity.requireViewByTestTagVisible(DemoTestTags.INPUT_BIO_FIELD),
+                    activity.requireViewByTestTagVisible(DemoInputTestTags.INPUT_BIO_FIELD),
                 )
             }
         }
@@ -541,13 +543,13 @@ class DemoVisualUiTest {
                     ),
                 )
                 assertReadable(
-                    activity.requireTextViewByTestTagVisible(DemoTestTags.INPUT_STRESS_ERROR),
+                    activity.requireTextViewByTestTagVisible(DemoInputTestTags.INPUT_STRESS_ERROR),
                 )
                 val protectedField = activity.requireScenarioViewByIdVisible<View>(
                     R.id.demo_input_stress_target,
                 )
                 assertViewFullyVisible(
-                    activity.requireViewByTestTagVisible(DemoTestTags.INPUT_STRESS_NOTES_FIELD),
+                    activity.requireViewByTestTagVisible(DemoInputTestTags.INPUT_STRESS_NOTES_FIELD),
                 )
                 assertViewFullyVisible(protectedField)
             }
@@ -641,9 +643,9 @@ class DemoVisualUiTest {
                 val toggle = activity.requireScenarioViewById<android.widget.TextView>(
                     R.id.demo_layout_edges_primary_action,
                 )
-                val weighted = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_EDGE_WEIGHTED)
-                val action = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_EDGE_ACTION)
-                val icon = activity.requireViewByTestTag(DemoTestTags.LAYOUTS_EDGE_PROBE_ICON)
+                val weighted = activity.requireTextViewByTestTag(DemoLayoutsTestTags.LAYOUTS_EDGE_WEIGHTED)
+                val action = activity.requireTextViewByTestTag(DemoLayoutsTestTags.LAYOUTS_EDGE_ACTION)
+                val icon = activity.requireViewByTestTag(DemoLayoutsTestTags.LAYOUTS_EDGE_PROBE_ICON)
                 assertViewFullyVisible(toggle)
                 assertViewFullyVisible(weighted)
                 assertViewFullyVisible(action)
@@ -664,8 +666,8 @@ class DemoVisualUiTest {
             waitForUiIdle()
             captureDeviceScreenshot("layouts-constraint-core-light")
             scenario.onActivity { activity ->
-                val basicContainer = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_BASIC_CONTAINER)
-                val basicBadge = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_BASIC_BADGE)
+                val basicContainer = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_BASIC_CONTAINER)
+                val basicBadge = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_BASIC_BADGE)
                 assertViewFullyVisible(basicContainer)
                 assertViewFullyVisible(basicBadge)
 
@@ -680,10 +682,10 @@ class DemoVisualUiTest {
             var shortSummaryRight = 0
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val helpersContainer = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_CONTAINER)
-                val helpersHeadline = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_HEADLINE)
-                val helpersSummary = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_SUMMARY)
-                val helpersMarker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_MARKER)
+                val helpersContainer = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_CONTAINER)
+                val helpersHeadline = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_HEADLINE)
+                val helpersSummary = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_SUMMARY)
+                val helpersMarker = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_MARKER)
                 assertViewFullyVisible(helpersContainer)
                 assertViewFullyVisible(helpersHeadline)
                 assertViewFullyVisible(helpersSummary)
@@ -712,13 +714,13 @@ class DemoVisualUiTest {
                         "markerTop=$markerTop, containerTop=$containerTop",
                     markerTop <= containerTop + helpersContainer.height / 3,
                 )
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_TOGGLE)
             }
             val barrierFollowedLongCopy = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val container = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_CONTAINER)
-                val headline = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_HEADLINE)
-                val summary = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_SUMMARY)
-                val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_MARKER)
+                val container = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_CONTAINER)
+                val headline = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_HEADLINE)
+                val summary = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_SUMMARY)
+                val marker = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_MARKER)
                 val markerLeft = viewLeftOnScreen(marker)
                 val markerRight = markerLeft + marker.width
                 val headlineRight = viewLeftOnScreen(headline) + headline.width
@@ -735,10 +737,10 @@ class DemoVisualUiTest {
             )
             waitForUiIdle()
             val chainStable = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val chainContainer = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_CONTAINER)
-                val chainStart = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_START)
-                val chainMiddle = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_MIDDLE)
-                val chainEnd = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_END)
+                val chainContainer = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CHAIN_CONTAINER)
+                val chainStart = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CHAIN_START)
+                val chainMiddle = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CHAIN_MIDDLE)
+                val chainEnd = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CHAIN_END)
                 val startCenterX = viewCenterXOnScreen(chainStart)
                 val middleCenterX = viewCenterXOnScreen(chainMiddle)
                 val endCenterX = viewCenterXOnScreen(chainEnd)
@@ -765,13 +767,13 @@ class DemoVisualUiTest {
             var beforeLeft = 0
             var beforeTop = 0
             scenario.onActivity { activity ->
-                val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_SET_MARKER)
+                val marker = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_MARKER)
                 beforeLeft = viewLeftOnScreen(marker)
                 beforeTop = viewTopOnScreen(marker)
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_TOGGLE)
             }
             val moved = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_SET_MARKER)
+                val marker = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_MARKER)
                 val leftDelta = abs(viewLeftOnScreen(marker) - beforeLeft)
                 val topDelta = abs(viewTopOnScreen(marker) - beforeTop)
                 leftDelta >= 12 || topDelta >= 12
@@ -791,24 +793,24 @@ class DemoVisualUiTest {
             var observedStatus = ""
             var observedVisibility: Int? = null
             scenario.onActivity { activity ->
-                val container = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CONTAINER)
+                val container = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CONTAINER)
                 assertViewFullyVisible(container)
                 initialStatus = activity.requireTextViewByTestTag(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_STATUS,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_STATUS,
                 ).text.toString()
                 assertEquals(
                     View.VISIBLE,
                     activity.requireViewByTestTagVisible(
-                        DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER,
+                        DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER,
                     ).visibility,
                 )
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_TOGGLE)
             }
             val updated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_STATUS)
+                val status = activity.requireTextViewByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_STATUS)
                 val member = findViewByTestTag(
                     activity.findViewById(android.R.id.content),
-                    DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER,
                 )
                 observedStatus = status.text.toString()
                 observedVisibility = member?.visibility
@@ -832,20 +834,20 @@ class DemoVisualUiTest {
             var ratioBeforeWidth = 0
             var ratioBeforeHeight = 0
             scenario.onActivity { activity ->
-                val container = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CONTAINER)
-                val baseline = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE)
-                val circle = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CIRCLE)
+                val container = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CONTAINER)
+                val baseline = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE)
+                val circle = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CIRCLE)
                 assertViewFullyVisible(container)
                 assertViewFullyVisible(baseline)
                 assertViewFullyVisible(circle)
 
-                val ratio = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO)
+                val ratio = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO)
                 ratioBeforeWidth = ratio.width
                 ratioBeforeHeight = ratio.height
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_TOGGLE)
             }
             val ratioUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val ratio = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO)
+                val ratio = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO)
                 abs(ratio.width - ratioBeforeWidth) >= 8 || abs(ratio.height - ratioBeforeHeight) >= 8
             }
             assertTrue("Expected dimension advanced toggle to update ratio card size and status.", ratioUpdated)
@@ -867,20 +869,20 @@ class DemoVisualUiTest {
             var initialHelperStatus = ""
             var helperStatus = ""
             scenario.onActivity { activity ->
-                val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER)
+                val marker = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER)
                 markerBeforeLeft = viewLeftOnScreen(marker)
                 markerBeforeTop = viewTopOnScreen(marker)
                 initialHelperStatus = activity.requireTextViewByTestTag(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_STATUS,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_STATUS,
                 ).text.toString()
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_TOGGLE)
             }
             val helperUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER)
+                val marker = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER)
                 helperLeftDelta = abs(viewLeftOnScreen(marker) - markerBeforeLeft)
                 helperTopDelta = abs(viewTopOnScreen(marker) - markerBeforeTop)
                 helperStatus = activity.requireTextViewByTestTag(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_STATUS,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_STATUS,
                 ).text.toString()
                 helperStatus != initialHelperStatus
             }
@@ -891,12 +893,12 @@ class DemoVisualUiTest {
             )
 
             scenario.onActivity { activity ->
-                val middle = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_MIDDLE)
+                val middle = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_MIDDLE)
                 middleBeforeTop = viewTopOnScreen(middle)
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_TOGGLE)
             }
             val chainUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val middle = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_MIDDLE)
+                val middle = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_MIDDLE)
                 abs(viewTopOnScreen(middle) - middleBeforeTop) >= 8
             }
             assertTrue("Expected vertical chain toggle to change chain arrangement and middle item position.", chainUpdated)
@@ -913,13 +915,13 @@ class DemoVisualUiTest {
             var markerBeforeLeft = 0
             var markerBeforeTop = 0
             scenario.onActivity { activity ->
-                val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER)
+                val marker = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER)
                 markerBeforeLeft = viewLeftOnScreen(marker)
                 markerBeforeTop = viewTopOnScreen(marker)
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_TOGGLE)
             }
             val switched = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER)
+                val marker = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER)
                 val leftDelta = abs(viewLeftOnScreen(marker) - markerBeforeLeft)
                 val topDelta = abs(viewTopOnScreen(marker) - markerBeforeTop)
                 leftDelta >= 10 || topDelta >= 10
@@ -1006,15 +1008,15 @@ class DemoVisualUiTest {
             scenario.onActivity { activity ->
                 val grid = activity.requireScenarioViewById<View>(R.id.demo_collection_grid_target)
                 assertTrue("Expected the rounded grid host to clip its children", grid.clipToOutline)
-                val firstItem = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_GRID_FIRST_ITEM)
+                val firstItem = activity.requireTextViewByTestTag(DemoCollectionsTestTags.COLLECTIONS_GRID_FIRST_ITEM)
                 assertViewFullyVisible(firstItem)
                 twoColumnLabel = firstItem.text.toString()
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_GRID_THREE_COLS)
+                activity.clickByTestTag(DemoCollectionsTestTags.COLLECTIONS_GRID_THREE_COLS)
             }
             waitForUiIdle()
             captureDeviceScreenshot("collections-grid-refresh-light")
             scenario.onActivity { activity ->
-                val firstItem = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_GRID_FIRST_ITEM)
+                val firstItem = activity.requireTextViewByTestTag(DemoCollectionsTestTags.COLLECTIONS_GRID_FIRST_ITEM)
                 assertViewFullyVisible(firstItem)
                 assertNotEquals(twoColumnLabel, firstItem.text.toString())
             }
@@ -1159,15 +1161,15 @@ class DemoVisualUiTest {
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_VM_COUNTER)
+                val summary = activity.requireTextViewByTestTag(DemoStateTestTags.STATE_VM_COUNTER)
                 assertViewFullyVisible(summary)
                 assertTrue(summary.text.toString().contains("0"))
-                activity.clickByTestTag(DemoTestTags.STATE_VM_INCREMENT)
+                activity.clickByTestTag(DemoStateTestTags.STATE_VM_INCREMENT)
             }
             waitForUiIdle()
             captureDeviceScreenshot("state-viewmodel-counter-light")
             scenario.onActivity { activity ->
-                val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_VM_COUNTER)
+                val summary = activity.requireTextViewByTestTag(DemoStateTestTags.STATE_VM_COUNTER)
                 assertViewFullyVisible(summary)
                 assertTextNotEllipsized(summary)
                 assertTrue(summary.text.toString().contains("1"))
@@ -1220,7 +1222,7 @@ class DemoVisualUiTest {
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_PATCH_SEGMENT_SUMMARY)
+                val summary = activity.requireTextViewByTestTag(DemoStateTestTags.STATE_PATCH_SEGMENT_SUMMARY)
                 assertViewFullyVisible(summary)
                 assertTrue(summary.text.toString().contains("0"))
                 activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
@@ -1229,7 +1231,7 @@ class DemoVisualUiTest {
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-segmented-step2-light")
             scenario.onActivity { activity ->
-                val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_PATCH_SEGMENT_SUMMARY)
+                val summary = activity.requireTextViewByTestTag(DemoStateTestTags.STATE_PATCH_SEGMENT_SUMMARY)
                 assertViewFullyVisible(summary)
                 assertTextNotEllipsized(summary)
                 assertTrue(summary.text.toString().contains("2"))
@@ -1245,17 +1247,17 @@ class DemoVisualUiTest {
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_PATCH_TAB_SUMMARY)
+                val summary = activity.requireTextViewByTestTag(DemoStateTestTags.STATE_PATCH_TAB_SUMMARY)
                 assertViewFullyVisible(summary)
                 assertTrue(summary.text.toString().contains("0"))
             }
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_TAB_DETAILS)
+                activity.clickByTestTag(DemoStateTestTags.STATE_PATCH_TAB_DETAILS)
             }
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-tab-selection-light")
             scenario.onActivity { activity ->
-                val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_PATCH_TAB_SUMMARY)
+                val summary = activity.requireTextViewByTestTag(DemoStateTestTags.STATE_PATCH_TAB_SUMMARY)
                 assertViewFullyVisible(summary)
                 assertTextNotEllipsized(summary)
                 assertTrue(summary.text.toString().contains("1"))
@@ -1276,7 +1278,7 @@ class DemoVisualUiTest {
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-stable-tab-light")
             scenario.onActivity { activity ->
-                val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_STABLE_SUMMARY)
+                val summary = activity.requireTextViewByTestTag(DemoStateTestTags.STATE_STABLE_SUMMARY)
                 assertViewFullyVisible(summary)
                 assertTextNotEllipsized(summary)
                 val text = summary.text.toString()
@@ -1299,7 +1301,7 @@ class DemoVisualUiTest {
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-stable-tab-step2-light")
             scenario.onActivity { activity ->
-                val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_STABLE_SUMMARY)
+                val summary = activity.requireTextViewByTestTag(DemoStateTestTags.STATE_STABLE_SUMMARY)
                 assertViewFullyVisible(summary)
                 assertTextNotEllipsized(summary)
                 val text = summary.text.toString()
@@ -1322,7 +1324,7 @@ class DemoVisualUiTest {
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-vertical-pager-step2-light")
             scenario.onActivity { activity ->
-                val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_VERTICAL_PAGER_SUMMARY)
+                val summary = activity.requireTextViewByTestTag(DemoStateTestTags.STATE_VERTICAL_PAGER_SUMMARY)
                 assertViewFullyVisible(summary)
                 assertTextNotEllipsized(summary)
                 val text = summary.text.toString()
@@ -1355,7 +1357,7 @@ class DemoVisualUiTest {
                 val target = activity.requireScenarioViewByIdVisible<View>(
                     R.id.demo_animation_core_target,
                 )
-                val footer = activity.requireViewByTestTagVisible(DemoTestTags.ANIMATION_VISIBILITY_FOOTER)
+                val footer = activity.requireViewByTestTagVisible(DemoAnimationTestTags.ANIMATION_VISIBILITY_FOOTER)
                 footerTopBeforeHide = viewTopOnScreen(footer)
                 assertViewFullyVisible(target)
                 activity.clickScenarioViewByIdVisible(R.id.demo_animation_core_primary_action)
@@ -1365,7 +1367,7 @@ class DemoVisualUiTest {
                 val toggle = activity.requireScenarioViewById<TextView>(
                     R.id.demo_animation_core_primary_action,
                 )
-                val footer = activity.requireViewByTestTagVisible(DemoTestTags.ANIMATION_VISIBILITY_FOOTER)
+                val footer = activity.requireViewByTestTagVisible(DemoAnimationTestTags.ANIMATION_VISIBILITY_FOOTER)
                 footerTopAfterHide = viewTopOnScreen(footer)
                 toggle.text.toString() == activity.getString(R.string.demo_animation_core_show) &&
                     footerTopAfterHide < footerTopBeforeHide
@@ -1382,7 +1384,7 @@ class DemoVisualUiTest {
                 val toggle = activity.requireScenarioViewById<TextView>(
                     R.id.demo_animation_core_primary_action,
                 )
-                val footer = activity.requireViewByTestTagVisible(DemoTestTags.ANIMATION_VISIBILITY_FOOTER)
+                val footer = activity.requireViewByTestTagVisible(DemoAnimationTestTags.ANIMATION_VISIBILITY_FOOTER)
                 val footerTopAfterShow = viewTopOnScreen(footer)
                 val target = activity.findViewById<View>(R.id.demo_animation_core_target)
                 if (toggle.text.toString() != activity.getString(R.string.demo_animation_core_hide)) {
@@ -1409,7 +1411,7 @@ class DemoVisualUiTest {
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val label = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_CONTENT_LABEL)
+                val label = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_CONTENT_LABEL)
                 assertEquals(activity.getString(R.string.demo_animation_content_primary), label.text.toString())
                 activity.clickScenarioViewByIdVisible(R.id.demo_animation_content_primary_action)
             }
@@ -1418,7 +1420,7 @@ class DemoVisualUiTest {
                 val toggle = activity.requireScenarioViewById<TextView>(
                     R.id.demo_animation_content_primary_action,
                 )
-                val label = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_CONTENT_LABEL)
+                val label = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_CONTENT_LABEL)
                 toggle.text.toString() == activity.getString(R.string.demo_animation_content_to_primary) &&
                     label.text.toString() == activity.getString(R.string.demo_animation_content_alternative)
             }
@@ -1431,7 +1433,7 @@ class DemoVisualUiTest {
                 val toggle = activity.requireScenarioViewById<TextView>(
                     R.id.demo_animation_content_primary_action,
                 )
-                val label = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_CONTENT_LABEL)
+                val label = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_CONTENT_LABEL)
                 toggle.text.toString() == activity.getString(R.string.demo_animation_content_to_alternative) &&
                     label.text.toString() == activity.getString(R.string.demo_animation_content_primary)
             }
@@ -1448,13 +1450,13 @@ class DemoVisualUiTest {
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val first = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_LIST_FIRST)
+                val first = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_LIST_FIRST)
                 assertEquals(activity.getString(R.string.demo_animation_list_item_a), first.text.toString())
                 activity.clickScenarioViewByIdVisible(R.id.demo_animation_list_motion_primary_action)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val first = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_LIST_FIRST)
+                val first = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_LIST_FIRST)
                 assertEquals(
                     activity.getString(R.string.demo_animation_list_item_new, 1),
                     first.text.toString(),
@@ -1463,7 +1465,7 @@ class DemoVisualUiTest {
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val first = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_LIST_FIRST)
+                val first = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_LIST_FIRST)
                 assertEquals(activity.getString(R.string.demo_animation_list_item_a), first.text.toString())
             }
         }
@@ -1480,16 +1482,16 @@ class DemoVisualUiTest {
             var floatBefore = ""
             var vectorBefore = ""
             scenario.onActivity { activity ->
-                floatBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_SPEC_FLOAT_VALUE).text.toString()
-                vectorBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_SPEC_VECTOR_VALUE).text.toString()
+                floatBefore = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_SPEC_FLOAT_VALUE).text.toString()
+                vectorBefore = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_SPEC_VECTOR_VALUE).text.toString()
                 activity.clickScenarioViewByIdVisible(R.id.demo_animation_specs_secondary_action)
                 activity.clickScenarioViewByIdVisible(R.id.demo_animation_specs_primary_action)
-                activity.clickByTestTag(DemoTestTags.ANIMATION_SPEC_VECTOR_TOGGLE)
+                activity.clickByTestTag(DemoAnimationTestTags.ANIMATION_SPEC_VECTOR_TOGGLE)
             }
             waitForUiIdle()
             val typedAndGenericUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val floatAfter = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_SPEC_FLOAT_VALUE).text.toString()
-                val vectorAfter = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_SPEC_VECTOR_VALUE).text.toString()
+                val floatAfter = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_SPEC_FLOAT_VALUE).text.toString()
+                val vectorAfter = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_SPEC_VECTOR_VALUE).text.toString()
                 floatAfter != floatBefore &&
                     vectorAfter != vectorBefore
             }
@@ -1514,7 +1516,7 @@ class DemoVisualUiTest {
             scenario.onActivity { activity ->
                 assertViewFullyVisible(
                     activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.ANIMATION_SPEC_SIZE_PROBE,
+                        DemoAnimationTestTags.ANIMATION_SPEC_SIZE_PROBE,
                     ),
                 )
                 assertViewFullyVisible(
@@ -1539,19 +1541,19 @@ class DemoVisualUiTest {
             var dpBefore = ""
             var colorBefore = ""
             scenario.onActivity { activity ->
-                alphaBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_ALPHA).text.toString()
-                intBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_INT).text.toString()
-                dpBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_DP).text.toString()
-                colorBefore = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_COLOR).text.toString()
+                alphaBefore = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_TRANSITION_ALPHA).text.toString()
+                intBefore = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_TRANSITION_INT).text.toString()
+                dpBefore = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_TRANSITION_DP).text.toString()
+                colorBefore = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_TRANSITION_COLOR).text.toString()
                 activity.clickScenarioViewByIdVisible(R.id.demo_animation_transition_primary_action)
             }
             waitForUiIdle()
             var transitionAfterSnapshot = ""
             val transitionValuesUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val alphaAfter = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_ALPHA).text.toString()
-                val intAfter = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_INT).text.toString()
-                val dpAfter = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_DP).text.toString()
-                val colorAfter = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_COLOR).text.toString()
+                val alphaAfter = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_TRANSITION_ALPHA).text.toString()
+                val intAfter = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_TRANSITION_INT).text.toString()
+                val dpAfter = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_TRANSITION_DP).text.toString()
+                val colorAfter = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_TRANSITION_COLOR).text.toString()
                 transitionAfterSnapshot = "$alphaAfter, $intAfter, $dpAfter, $colorAfter"
                 alphaAfter != alphaBefore &&
                     intAfter != intBefore &&
@@ -1577,15 +1579,15 @@ class DemoVisualUiTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 activity.clickScenarioViewByIdVisible(R.id.demo_animation_transition_secondary_action)
-                activity.clickByTestTag(DemoTestTags.ANIMATION_ROW_AXIS_TOGGLE)
-                activity.clickByTestTag(DemoTestTags.ANIMATION_COLUMN_AXIS_TOGGLE)
+                activity.clickByTestTag(DemoAnimationTestTags.ANIMATION_ROW_AXIS_TOGGLE)
+                activity.clickByTestTag(DemoAnimationTestTags.ANIMATION_COLUMN_AXIS_TOGGLE)
             }
             waitForUiIdle()
             var visibilityAfterSnapshot = ""
             val visibilityStateAndAxisUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val status = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_VISIBILITY_STATE_STATUS).text.toString()
-                val rowToggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_ROW_AXIS_TOGGLE).text.toString()
-                val columnToggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_COLUMN_AXIS_TOGGLE).text.toString()
+                val status = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_VISIBILITY_STATE_STATUS).text.toString()
+                val rowToggle = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_ROW_AXIS_TOGGLE).text.toString()
+                val columnToggle = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_COLUMN_AXIS_TOGGLE).text.toString()
                 visibilityAfterSnapshot = "$status, row=$rowToggle, column=$columnToggle"
                 status == activity.getString(
                     R.string.demo_animation_visibility_status,
@@ -1604,7 +1606,7 @@ class DemoVisualUiTest {
             val rowTargetShown = waitUntilActivityCondition(scenario, timeoutMs = 1_000L) { activity ->
                 val rowTarget = findViewByTestTag(
                     activity.findViewById<ViewGroup>(android.R.id.content),
-                    DemoTestTags.ANIMATION_ROW_AXIS_TARGET,
+                    DemoAnimationTestTags.ANIMATION_ROW_AXIS_TARGET,
                 )
                 if (rowTarget == null || !isViewVisible(rowTarget)) {
                     return@waitUntilActivityCondition false
@@ -1614,12 +1616,12 @@ class DemoVisualUiTest {
             }
             assertTrue("Expected row-axis visibility target to become visible", rowTargetShown)
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.ANIMATION_ROW_AXIS_TOGGLE)
+                activity.clickByTestTag(DemoAnimationTestTags.ANIMATION_ROW_AXIS_TOGGLE)
             }
             val rowTargetExitProgressed = waitUntilActivityCondition(scenario, timeoutMs = 1_000L) { activity ->
                 val rowTarget = findViewByTestTag(
                     activity.findViewById<ViewGroup>(android.R.id.content),
-                    DemoTestTags.ANIMATION_ROW_AXIS_TARGET,
+                    DemoAnimationTestTags.ANIMATION_ROW_AXIS_TARGET,
                 )
                 if (rowTarget == null || !isViewVisible(rowTarget)) {
                     return@waitUntilActivityCondition true
@@ -1643,22 +1645,22 @@ class DemoVisualUiTest {
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_INFINITE_VALUE)
-                activity.clickByTestTag(DemoTestTags.ANIMATION_INFINITE_REPEAT_MODE)
+                activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_INFINITE_VALUE)
+                activity.clickByTestTag(DemoAnimationTestTags.ANIMATION_INFINITE_REPEAT_MODE)
                 activity.clickScenarioViewByIdVisible(R.id.demo_animation_infinite_secondary_action)
             }
             waitForUiIdle()
             val snapHighApplied = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val text = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_ANIMATABLE_VALUE).text.toString()
+                val text = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_VALUE).text.toString()
                 extractFirstFloat(text)?.let { it >= 0.99f } == true
             }
             assertTrue("Expected animatable value to reach ~1.0 after snap high", snapHighApplied)
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.ANIMATION_ANIMATABLE_SNAP_LOW)
+                activity.clickByTestTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_SNAP_LOW)
             }
             waitForUiIdle()
             val snapLowApplied = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val text = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_ANIMATABLE_VALUE).text.toString()
+                val text = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_VALUE).text.toString()
                 extractFirstFloat(text)?.let { it <= 0.01f } == true
             }
             assertTrue("Expected animatable value to reach ~0.0 after snap low", snapLowApplied)
@@ -1684,7 +1686,7 @@ class DemoVisualUiTest {
                 assertViewFullyVisible(dragTarget)
                 assertViewFullyVisible(swipeTarget)
                 dragBefore = extractFirstFloat(
-                    activity.requireTextViewByTestTag(DemoTestTags.GESTURE_DRAG_VALUE).text.toString(),
+                    activity.requireTextViewByTestTag(DemoGestureTestTags.GESTURE_DRAG_VALUE).text.toString(),
                 ) ?: 0f
                 activity.dragScenarioViewById(
                     id = R.id.demo_gesture_drag_swipe_target,
@@ -1701,10 +1703,10 @@ class DemoVisualUiTest {
             waitForUiIdle()
             var rightAnchorSnapshot = ""
             val movedToRightAnchor = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val dragAfterText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_DRAG_VALUE).text.toString()
-                val swipeAfterText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_VALUE).text.toString()
-                val swipeTargetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
-                val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
+                val dragAfterText = activity.requireTextViewByTestTagVisible(DemoGestureTestTags.GESTURE_DRAG_VALUE).text.toString()
+                val swipeAfterText = activity.requireTextViewByTestTagVisible(DemoGestureTestTags.GESTURE_SWIPE_VALUE).text.toString()
+                val swipeTargetText = activity.requireTextViewByTestTagVisible(DemoGestureTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
+                val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoGestureTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
                 val dragAfter = extractFirstFloat(dragAfterText) ?: dragBefore
                 val offset = extractFirstFloat(swipeOffsetText) ?: 0f
                 val rightLabel = activity.getString(R.string.demo_gesture_anchor_right)
@@ -1727,9 +1729,9 @@ class DemoVisualUiTest {
             waitForUiIdle()
             var centerAnchorSnapshot = ""
             val movedToCenterAnchor = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val swipeAfterText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_VALUE).text.toString()
-                val swipeTargetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
-                val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
+                val swipeAfterText = activity.requireTextViewByTestTagVisible(DemoGestureTestTags.GESTURE_SWIPE_VALUE).text.toString()
+                val swipeTargetText = activity.requireTextViewByTestTagVisible(DemoGestureTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
+                val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoGestureTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
                 val offset = extractFirstFloat(swipeOffsetText) ?: 0f
                 val centerLabel = activity.getString(R.string.demo_gesture_anchor_center)
                 centerAnchorSnapshot = "$swipeAfterText, $swipeTargetText, $swipeOffsetText"
@@ -1751,9 +1753,9 @@ class DemoVisualUiTest {
             waitForUiIdle()
             var leftAnchorSnapshot = ""
             val movedToLeftAnchor = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val swipeAfterText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_VALUE).text.toString()
-                val swipeTargetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
-                val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
+                val swipeAfterText = activity.requireTextViewByTestTagVisible(DemoGestureTestTags.GESTURE_SWIPE_VALUE).text.toString()
+                val swipeTargetText = activity.requireTextViewByTestTagVisible(DemoGestureTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
+                val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoGestureTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
                 val offset = extractFirstFloat(swipeOffsetText) ?: 0f
                 val leftLabel = activity.getString(R.string.demo_gesture_anchor_left)
                 leftAnchorSnapshot = "$swipeAfterText, $swipeTargetText, $swipeOffsetText"
@@ -1785,7 +1787,7 @@ class DemoVisualUiTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val count =
-                    activity.requireTextViewByTestTag(DemoTestTags.GESTURE_POINTER_CONSUMED_CLICK_COUNT).text.toString()
+                    activity.requireTextViewByTestTag(DemoGestureTestTags.GESTURE_POINTER_CONSUMED_CLICK_COUNT).text.toString()
                 assertTrue(
                     "Expected consumed pointer input to suppress combinedClickable click",
                     extractIntegers(count).firstOrNull() == 0,
@@ -1809,10 +1811,10 @@ class DemoVisualUiTest {
             waitForUiIdle()
             val pointerAndTapStable = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val consumedText = activity.requireTextViewByTestTag(
-                    DemoTestTags.GESTURE_POINTER_CONSUMED_CLICK_COUNT,
+                    DemoGestureTestTags.GESTURE_POINTER_CONSUMED_CLICK_COUNT,
                 ).text.toString()
                 val tapText = activity.requireTextViewByTestTag(
-                    DemoTestTags.GESTURE_TAP_COUNT,
+                    DemoGestureTestTags.GESTURE_TAP_COUNT,
                 ).text.toString()
                 val consumedCounts = extractIntegers(consumedText)
                 consumedCounts.getOrNull(0) == 0 &&
@@ -1871,16 +1873,16 @@ class DemoVisualUiTest {
                 assertViewFullyVisible(
                     activity.requireScenarioViewByIdVisible<View>(R.id.demo_graphics_drawing_target),
                 )
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_PATH_CLIP_CANVAS))
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_BLEND_CANVAS))
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_DRAW_CONTENT_CANVAS))
-                activity.clickByTestTag(DemoTestTags.GRAPHICS_BLEND_TOGGLE)
-                activity.clickByTestTag(DemoTestTags.GRAPHICS_DRAW_CONTENT_TOGGLE)
+                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoGraphicsTestTags.GRAPHICS_PATH_CLIP_CANVAS))
+                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoGraphicsTestTags.GRAPHICS_BLEND_CANVAS))
+                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoGraphicsTestTags.GRAPHICS_DRAW_CONTENT_CANVAS))
+                activity.clickByTestTag(DemoGraphicsTestTags.GRAPHICS_BLEND_TOGGLE)
+                activity.clickByTestTag(DemoGraphicsTestTags.GRAPHICS_DRAW_CONTENT_TOGGLE)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val blendStatus = activity.requireTextViewByTestTag(DemoTestTags.GRAPHICS_BLEND_STATUS).text.toString()
-                val drawStatus = activity.requireTextViewByTestTag(DemoTestTags.GRAPHICS_DRAW_CONTENT_STATUS).text.toString()
+                val blendStatus = activity.requireTextViewByTestTag(DemoGraphicsTestTags.GRAPHICS_BLEND_STATUS).text.toString()
+                val drawStatus = activity.requireTextViewByTestTag(DemoGraphicsTestTags.GRAPHICS_DRAW_CONTENT_STATUS).text.toString()
                 assertEquals(
                     activity.getString(R.string.demo_graphics_blend_status_multiply),
                     blendStatus,
@@ -1901,14 +1903,14 @@ class DemoVisualUiTest {
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_CACHE_CANVAS))
-                val before = activity.requireTextViewByTestTag(DemoTestTags.GRAPHICS_CACHE_STATUS).text.toString()
+                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoGraphicsTestTags.GRAPHICS_CACHE_CANVAS))
+                val before = activity.requireTextViewByTestTag(DemoGraphicsTestTags.GRAPHICS_CACHE_STATUS).text.toString()
                 assertTrue(before.contains("cacheKey=0"))
-                activity.clickByTestTag(DemoTestTags.GRAPHICS_CACHE_KEY_BUMP)
+                activity.clickByTestTag(DemoGraphicsTestTags.GRAPHICS_CACHE_KEY_BUMP)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val after = activity.requireTextViewByTestTag(DemoTestTags.GRAPHICS_CACHE_STATUS).text.toString()
+                val after = activity.requireTextViewByTestTag(DemoGraphicsTestTags.GRAPHICS_CACHE_STATUS).text.toString()
                 assertTrue("Expected cache key to increase after bump button", after.contains("cacheKey=1"))
             }
         }
@@ -1928,26 +1930,26 @@ class DemoVisualUiTest {
             var beforeUpdatedAt = ""
             scenario.onActivity { activity ->
                 beforeSequence = activity.requireTextViewByTestTag(
-                    DemoTestTags.DIAGNOSTICS_RENDER_REFRESH_SEQUENCE,
+                    DemoDiagnosticsTestTags.DIAGNOSTICS_RENDER_REFRESH_SEQUENCE,
                 ).text.toString()
                 beforeRenderCount = activity.requireTextViewByTestTag(
-                    DemoTestTags.DIAGNOSTICS_RENDER_COUNT,
+                    DemoDiagnosticsTestTags.DIAGNOSTICS_RENDER_COUNT,
                 ).text.toString()
                 beforeUpdatedAt = activity.requireTextViewByTestTag(
-                    DemoTestTags.DIAGNOSTICS_RENDER_UPDATED_AT,
+                    DemoDiagnosticsTestTags.DIAGNOSTICS_RENDER_UPDATED_AT,
                 ).text.toString()
-                activity.clickByTestTag(DemoTestTags.DIAGNOSTICS_RENDERER_REFRESH)
+                activity.clickByTestTag(DemoDiagnosticsTestTags.DIAGNOSTICS_RENDERER_REFRESH)
             }
             waitForUiIdle()
             val updated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val sequence = activity.requireTextViewByTestTag(
-                    DemoTestTags.DIAGNOSTICS_RENDER_REFRESH_SEQUENCE,
+                    DemoDiagnosticsTestTags.DIAGNOSTICS_RENDER_REFRESH_SEQUENCE,
                 ).text.toString()
                 val count = activity.requireTextViewByTestTag(
-                    DemoTestTags.DIAGNOSTICS_RENDER_COUNT,
+                    DemoDiagnosticsTestTags.DIAGNOSTICS_RENDER_COUNT,
                 ).text.toString()
                 val updatedAt = activity.requireTextViewByTestTag(
-                    DemoTestTags.DIAGNOSTICS_RENDER_UPDATED_AT,
+                    DemoDiagnosticsTestTags.DIAGNOSTICS_RENDER_UPDATED_AT,
                 ).text.toString()
                 sequence != beforeSequence &&
                     (count != beforeRenderCount || updatedAt != beforeUpdatedAt)
@@ -1985,10 +1987,10 @@ class DemoVisualUiTest {
             waitForUiIdle()
             val patchCaptured = waitUntilActivityCondition(scenario, timeoutMs = 2_000L) { activity ->
                 val patchedText = activity.requireTextViewByTestTag(
-                    DemoTestTags.DIAGNOSTICS_PATCH_ACTIVE_PATCHED,
+                    DemoDiagnosticsTestTags.DIAGNOSTICS_PATCH_ACTIVE_PATCHED,
                 ).text.toString()
                 val capturedAtText = activity.requireTextViewByTestTag(
-                    DemoTestTags.DIAGNOSTICS_PATCH_ACTIVE_CAPTURED_AT,
+                    DemoDiagnosticsTestTags.DIAGNOSTICS_PATCH_ACTIVE_CAPTURED_AT,
                 ).text.toString()
                 val patched = extractCount(patchedText)
                 patched > 0 && !capturedAtText.contains(
@@ -2030,7 +2032,7 @@ class DemoVisualUiTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val summary = activity.requireTextViewByTestTagVisible(
-                    DemoTestTags.STATE_HORIZONTAL_PAGER_SUMMARY,
+                    DemoStateTestTags.STATE_HORIZONTAL_PAGER_SUMMARY,
                 )
                 var pagerAncestor: View? = summary
                 while (pagerAncestor != null && pagerAncestor !is RecyclerView) {
@@ -2042,7 +2044,7 @@ class DemoVisualUiTest {
                     pagerAncestor?.layoutDirection,
                 )
                 activity.dragByTestTag(
-                    tag = DemoTestTags.STATE_HORIZONTAL_PAGER_SUMMARY,
+                    tag = DemoStateTestTags.STATE_HORIZONTAL_PAGER_SUMMARY,
                     deltaX = if (rtl) 700f else -700f,
                     steps = 12,
                 )
@@ -2050,7 +2052,7 @@ class DemoVisualUiTest {
             val horizontalSettled = waitUntilActivityCondition(scenario, timeoutMs = 2_000L) { activity ->
                 val target = findViewByTestTag(
                     activity.findViewById(android.R.id.content),
-                    DemoTestTags.STATE_HORIZONTAL_PAGER_DETAILS,
+                    DemoStateTestTags.STATE_HORIZONTAL_PAGER_DETAILS,
                 ) ?: return@waitUntilActivityCondition false
                 val bounds = Rect()
                 target.isShown && target.getGlobalVisibleRect(bounds) && !bounds.isEmpty
@@ -2059,14 +2061,14 @@ class DemoVisualUiTest {
             scenario.onActivity { activity ->
                 assertViewFullyVisible(
                     activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.STATE_HORIZONTAL_PAGER_DETAILS,
+                        DemoStateTestTags.STATE_HORIZONTAL_PAGER_DETAILS,
                     ),
                 )
                 activity.requireTextViewByTestTagVisible(
-                    DemoTestTags.STATE_VERTICAL_PAGER_SUMMARY,
+                    DemoStateTestTags.STATE_VERTICAL_PAGER_SUMMARY,
                 )
                 activity.dragByTestTag(
-                    tag = DemoTestTags.STATE_VERTICAL_PAGER_SUMMARY,
+                    tag = DemoStateTestTags.STATE_VERTICAL_PAGER_SUMMARY,
                     deltaX = 0f,
                     deltaY = -420f,
                     steps = 12,
@@ -2075,7 +2077,7 @@ class DemoVisualUiTest {
             val verticalSettled = waitUntilActivityCondition(scenario, timeoutMs = 2_000L) { activity ->
                 val target = findViewByTestTag(
                     activity.findViewById(android.R.id.content),
-                    DemoTestTags.STATE_VERTICAL_PAGER_DETAILS,
+                    DemoStateTestTags.STATE_VERTICAL_PAGER_DETAILS,
                 ) ?: return@waitUntilActivityCondition false
                 val bounds = Rect()
                 target.isShown && target.getGlobalVisibleRect(bounds) && !bounds.isEmpty
@@ -2084,7 +2086,7 @@ class DemoVisualUiTest {
             scenario.onActivity { activity ->
                 assertViewFullyVisible(
                     activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.STATE_VERTICAL_PAGER_DETAILS,
+                        DemoStateTestTags.STATE_VERTICAL_PAGER_DETAILS,
                     ),
                 )
             }
