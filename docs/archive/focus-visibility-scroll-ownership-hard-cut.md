@@ -2,8 +2,9 @@
 
 ## Status
 
-Active. Implementation, repository gates, and physical-device acceptance are complete; PR review,
-CI, and merge remain. This plan preempted additive roadmap work because device verification proved
+Complete. [PR #117](https://github.com/ViewCompose/ViewCompose/pull/117) passed `qaPreview`,
+`qaQuick`, and the complete documentation build, then merged to `main` as `3f74fdf3` on 2026-08-22.
+This plan preempted additive roadmap work because device verification proved
 that `focusFollowKeyboard` disabled Android's native child-rectangle protocol and reconstructed it
 with incompatible container-specific callbacks. The hard cut has removed that policy and its
 synthetic monitors, restored native scroll ownership, and replaced the ViewPager2 backend with a
@@ -15,8 +16,9 @@ That contract is now hard-cut to exactly one root, with failure during compositi
 no renderer commit. Callers use an explicit `Column`, `Row`, or `Box`, or `Spacer` for an empty
 entry.
 
-Next action: submit the PR, follow CI, and merge it. Do not begin additive work until this
-foundational correction is merged.
+Final disposition: the foundational correction is merged, its durable contracts live in ADR-0018,
+the active architecture, migration guidance, module manuals, KDoc, samples, and project workflow,
+and this execution record is archived. The deferred Demo post-release closeout may resume.
 
 ## Maven release changesets
 
@@ -154,9 +156,10 @@ all 370 tests, including rollback before native rendering for empty and sibling 
 successful explicit-`Column` retry. The application and instrumentation APK build completed all 470
 tasks.
 
-The final fixed focus-matrix replay completed in 30.049 seconds. It exercised five focus-owner scenarios and two
-nested-scroll scenarios in each of two configurations: English/light/LTR/font `1.0`/density `1.0`,
-and Chinese/dark/RTL/font `1.3`/density `1.25`. Manual inspection of all ten retained focus
+The final fixed focus-matrix replay completed in 30.049 seconds. It exercised five focus-owner
+scenarios and two nested-scroll scenarios in each of two configurations:
+English/light/LTR/font `1.0`/density `1.0`, and Chinese/dark/RTL/font `1.3`/density `1.25`. Manual
+inspection of all ten retained focus
 screenshots found every editor fully visible above the IME with focus retained and no overlapping
 delayed roots. The final paired LTR/RTL horizontal and vertical pager gesture replay completed in
 1.819 seconds; both selected only the adjacent page after settling and asserted the native
@@ -168,14 +171,13 @@ Conclusion: **improved**. The hard cut removes competing synthetic focus owners,
 page content through pager idle relayout, and turns ambiguous delayed-holder geometry into a
 fail-fast composition contract. Limitations: physical evidence currently covers one Android 9
 device, and the Chinese stress configuration wraps or clips some non-focus top-chrome text even
-though the focus-owner output is correct. The next action is PR CI and merge; broader device
-coverage remains a future acceptance expansion, not a compatibility reason to retain the rejected
-design.
+though the focus-owner output is correct. PR CI reproduced the repository gates before merge.
+Broader device coverage remains a future acceptance expansion, not a compatibility reason to
+retain the rejected design.
 
 ## Completion criteria
 
-This plan completes only when the old symbol and all synthetic focus-follow infrastructure have zero
-production references; the hard-cut API and migration contract are documented; all five owner
-shapes pass automated and manual physical-device acceptance; no compatibility shim or timing poll
-remains; publication impact is represented by an immutable Changeset; and the PR is merged to the
-main branch.
+Met. The old symbol and all synthetic focus-follow infrastructure have zero production references;
+the hard-cut API and migration contract are documented; all five owner shapes passed automated and
+manual physical-device acceptance; no compatibility shim or timing poll remains; publication
+impact is represented by an immutable Changeset; and PR #117 is merged to `main`.
