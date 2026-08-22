@@ -13,7 +13,6 @@ fragment = "1.8.9"
 savedstate = "1.5.0"
 constraintlayout = "2.2.2"
 recyclerview = "1.4.0"
-viewpager2 = "1.1.0"
 swiperefreshlayout = "1.1.0"
 coil = "3.2.0"
 glide = "5.0.7"
@@ -44,7 +43,6 @@ androidx-fragment = { group = "androidx.fragment", name = "fragment-ktx", versio
 androidx-savedstate = { group = "androidx.savedstate", name = "savedstate", version.ref = "savedstate" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
-androidx-viewpager2 = { group = "androidx.viewpager2", name = "viewpager2", version.ref = "viewpager2" }
 androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
 androidx-dynamicanimation = { group = "androidx.dynamicanimation", name = "dynamicanimation", version.ref = "dynamicanimation" }
 coil-core = { group = "io.coil-kt.coil3", name = "coil-core", version.ref = "coil" }

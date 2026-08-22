@@ -48,6 +48,7 @@ internal object DemoScenarioIds {
     val InputStress = DemoScenarioId("input.stress")
     val InputSearch = DemoScenarioId("input.search")
     val InputFocusFollowLazyColumn = DemoScenarioId("input.focus-follow-lazy-column")
+    val InputFocusFollowLazyGrid = DemoScenarioId("input.focus-follow-lazy-grid")
     val InputFocusFollowScrollableColumn = DemoScenarioId("input.focus-follow-scrollable-column")
     val InputFocusFollowVerticalPager = DemoScenarioId("input.focus-follow-vertical-pager")
     val InputFocusFollowPullRefresh = DemoScenarioId("input.focus-follow-pull-refresh")
@@ -263,6 +264,17 @@ internal object DemoScenarioRegistry {
             reset = R.id.demo_input_focus_follow_lazy_column_reset,
             state = R.id.demo_input_focus_follow_lazy_column_state,
             target = R.id.demo_input_focus_follow_lazy_column_target,
+        ),
+        inputFocusFollowScenario(
+            id = DemoScenarioIds.InputFocusFollowLazyGrid,
+            titleRes = R.string.demo_scenario_input_focus_follow_lazy_grid_title,
+            summaryRes = R.string.demo_scenario_input_focus_follow_lazy_grid_summary,
+            root = R.id.demo_input_focus_follow_lazy_grid_root,
+            ready = R.id.demo_input_focus_follow_lazy_grid_ready,
+            primaryAction = R.id.demo_input_focus_follow_lazy_grid_primary_action,
+            reset = R.id.demo_input_focus_follow_lazy_grid_reset,
+            state = R.id.demo_input_focus_follow_lazy_grid_state,
+            target = R.id.demo_input_focus_follow_lazy_grid_target,
         ),
         inputFocusFollowScenario(
             id = DemoScenarioIds.InputFocusFollowScrollableColumn,

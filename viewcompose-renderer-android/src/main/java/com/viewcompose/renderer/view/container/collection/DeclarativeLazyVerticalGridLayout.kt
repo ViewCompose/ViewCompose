@@ -3,13 +3,12 @@ package com.viewcompose.renderer.view.container
 import android.content.Context
 import android.graphics.Canvas
 import android.view.MotionEvent
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.R
 import com.viewcompose.renderer.view.PaddingPx
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
-import com.viewcompose.renderer.view.lazy.focus.LazyGridLayoutManager
-import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.layout.LazyGridSpacingDecoration
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
@@ -94,7 +93,7 @@ internal class DeclarativeLazyVerticalGridLayout(
         reverseLayoutState = reverseLayout
         updateResolvedSpanCount(width - contentPadding.left - contentPadding.right)
         ensureLayoutManager()
-        val gridLayoutManager = checkNotNull(layoutManager as? LazyGridLayoutManager)
+        val gridLayoutManager = checkNotNull(layoutManager as? GridLayoutManager)
         gridLayoutManager.initialPrefetchItemCount = prefetchPolicy.nestedInitialPrefetchItemCount
         installSpanSizeLookup(gridLayoutManager)
         setItemViewCacheSize(prefetchPolicy.itemViewCacheSize)
@@ -154,13 +153,6 @@ internal class DeclarativeLazyVerticalGridLayout(
         )
     }
 
-    fun setFocusFollowKeyboardEnabled(enabled: Boolean) {
-        LazyFocusFollowLayoutMonitor.apply(
-            recyclerView = this,
-            enabled = enabled,
-        )
-    }
-
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
         return userScrollEnabled && super.onInterceptTouchEvent(event)
     }
@@ -212,7 +204,7 @@ internal class DeclarativeLazyVerticalGridLayout(
     }
 
     private fun ensureLayoutManager() {
-        val current = layoutManager as? LazyGridLayoutManager
+        val current = layoutManager as? GridLayoutManager
         if (current != null && current.reverseLayout == reverseLayoutState) {
             if (current.spanCount != resolvedSpanCount) {
                 current.spanCount = resolvedSpanCount
@@ -220,15 +212,16 @@ internal class DeclarativeLazyVerticalGridLayout(
             }
             return
         }
-        layoutManager = LazyGridLayoutManager(
-            context = context,
-            spanCount = resolvedSpanCount,
-            reverseLayout = reverseLayoutState,
+        layoutManager = GridLayoutManager(
+            context,
+            resolvedSpanCount,
+            RecyclerView.VERTICAL,
+            reverseLayoutState,
         ).also(::installSpanSizeLookup)
     }
 
-    private fun installSpanSizeLookup(layoutManager: LazyGridLayoutManager) {
-        layoutManager.spanSizeLookup = object : androidx.recyclerview.widget.GridLayoutManager.SpanSizeLookup() {
+    private fun installSpanSizeLookup(layoutManager: GridLayoutManager) {
+        layoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int {
                 return when (val span = gridAdapter.itemSpanAt(position)) {
                     GridItemSpan.Single -> 1

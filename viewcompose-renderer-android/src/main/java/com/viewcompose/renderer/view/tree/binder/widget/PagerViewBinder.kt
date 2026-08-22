@@ -71,7 +71,6 @@ internal object PagerViewBinder {
         val userScrollEnabled: Boolean,
         val reusePolicy: CollectionReusePolicy,
         val motionPolicy: CollectionMotionPolicy,
-        val focusFollowKeyboard: Boolean,
     )
 
     data class TabRowSpec(
@@ -183,7 +182,6 @@ internal object PagerViewBinder {
             animateMove = spec.motionPolicy.animateMove,
             animateChange = spec.motionPolicy.animateChange,
         )
-        view.setFocusFollowKeyboardEnabled(spec.focusFollowKeyboard)
         view.bind(
             pages = spec.pages,
             currentPage = spec.currentPage,
@@ -268,7 +266,6 @@ internal object PagerViewBinder {
             userScrollEnabled = spec.userScrollEnabled,
             reusePolicy = spec.reusePolicy,
             motionPolicy = spec.motionPolicy,
-            focusFollowKeyboard = spec.focusFollowKeyboard,
         )
     }
 }

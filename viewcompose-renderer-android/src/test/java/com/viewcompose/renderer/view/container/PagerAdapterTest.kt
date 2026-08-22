@@ -1,7 +1,7 @@
 package com.viewcompose.renderer.view.container
 
 import android.widget.FrameLayout
-import androidx.viewpager2.widget.ViewPager2
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.lazyListItemSessionStrategy
@@ -25,7 +25,7 @@ class PagerAdapterTest {
         bindHorizontalPager(view, pages, currentPage = 0)
         bindHorizontalPager(view, pages, currentPage = 1)
 
-        assertEquals(1, (view.getChildAt(0) as ViewPager2).currentItem)
+        assertEquals(1, (view.getChildAt(0) as DeclarativePagerRecyclerView).currentPage)
     }
 
     @Test
@@ -36,7 +36,7 @@ class PagerAdapterTest {
         bindVerticalPager(view, pages, currentPage = 0)
         bindVerticalPager(view, pages, currentPage = 1)
 
-        assertEquals(1, (view.getChildAt(0) as ViewPager2).currentItem)
+        assertEquals(1, (view.getChildAt(0) as DeclarativePagerRecyclerView).currentPage)
     }
 
     @Test
@@ -56,10 +56,10 @@ class PagerAdapterTest {
         )
         state.scrollToPage(2)
 
-        val nativePager = view.getChildAt(0) as ViewPager2
-        assertEquals(ViewPager2.ORIENTATION_HORIZONTAL, nativePager.orientation)
-        assertEquals(false, nativePager.isUserInputEnabled)
-        assertEquals(2, nativePager.currentItem)
+        val nativePager = view.getChildAt(0) as DeclarativePagerRecyclerView
+        assertEquals(LinearLayoutManager.HORIZONTAL, nativePager.pagerOrientation)
+        assertEquals(false, nativePager.isUserScrollEnabled)
+        assertEquals(2, nativePager.currentPage)
         assertEquals(2, state.currentPage)
         assertEquals(2, state.settledPage)
         assertEquals(3, state.pageCount)
@@ -83,10 +83,10 @@ class PagerAdapterTest {
         )
         state.scrollToPage(2)
 
-        val nativePager = view.getChildAt(0) as ViewPager2
-        assertEquals(ViewPager2.ORIENTATION_VERTICAL, nativePager.orientation)
-        assertEquals(false, nativePager.isUserInputEnabled)
-        assertEquals(2, nativePager.currentItem)
+        val nativePager = view.getChildAt(0) as DeclarativePagerRecyclerView
+        assertEquals(LinearLayoutManager.VERTICAL, nativePager.pagerOrientation)
+        assertEquals(false, nativePager.isUserScrollEnabled)
+        assertEquals(2, nativePager.currentPage)
         assertEquals(2, state.currentPage)
         assertEquals(2, state.settledPage)
         assertEquals(3, state.pageCount)
@@ -107,7 +107,7 @@ class PagerAdapterTest {
         view.dispose()
         state.scrollToPage(1)
 
-        assertEquals(0, (view.getChildAt(0) as ViewPager2).currentItem)
+        assertEquals(0, (view.getChildAt(0) as DeclarativePagerRecyclerView).currentPage)
     }
 
     @Test
@@ -314,7 +314,7 @@ class PagerAdapterTest {
             pages = pages,
             currentPage = currentPage,
             onPageChanged = onPageChanged,
-            offscreenPageLimit = ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT,
+            offscreenPageLimit = DeclarativePagerRecyclerView.DEFAULT_OFFSCREEN_PAGE_LIMIT,
             pagerState = pagerState,
             userScrollEnabled = userScrollEnabled,
             mountedTreeCacheSize = 2,
@@ -333,7 +333,7 @@ class PagerAdapterTest {
             pages = pages,
             currentPage = currentPage,
             onPageChanged = onPageChanged,
-            offscreenPageLimit = ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT,
+            offscreenPageLimit = DeclarativePagerRecyclerView.DEFAULT_OFFSCREEN_PAGE_LIMIT,
             pagerState = pagerState,
             userScrollEnabled = userScrollEnabled,
             mountedTreeCacheSize = 2,

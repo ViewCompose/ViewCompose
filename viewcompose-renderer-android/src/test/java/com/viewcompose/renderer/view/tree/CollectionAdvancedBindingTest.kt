@@ -7,7 +7,6 @@ import com.viewcompose.renderer.view.container.DeclarativeLazyListView
 import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
 import com.viewcompose.renderer.view.container.LazyGridCellsPx
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
-import com.viewcompose.renderer.view.lazy.focus.LazyLinearLayoutManager
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
@@ -37,7 +36,7 @@ class CollectionAdvancedBindingTest {
     @Test
     fun `lazy column maps asymmetric padding reverse scrolling and prefetch`() {
         val view = DeclarativeLazyListView(context).apply {
-            layoutManager = LazyLinearLayoutManager(context)
+            layoutManager = LinearLayoutManager(context)
             adapter = LazyListAdapter()
         }
         CollectionViewBinder.bindLazyColumn(
@@ -60,7 +59,6 @@ class CollectionAdvancedBindingTest {
                 ),
                 reusePolicy = CollectionReusePolicy(),
                 motionPolicy = CollectionMotionPolicy(),
-                focusFollowKeyboard = false,
             ),
         )
 

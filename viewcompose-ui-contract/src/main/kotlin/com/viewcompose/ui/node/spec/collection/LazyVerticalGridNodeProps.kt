@@ -12,6 +12,8 @@ import com.viewcompose.ui.unit.UiDp
 /**
  * Immutable renderer properties for a vertically scrolling grid.
  *
+ * Focused descendants use the renderer's native child-rectangle protocol without an opt-in field.
+ *
  * @property cells fixed or adaptive horizontal cell policy
  * @property contentPadding logical padding inside the scrollable content
  * @property horizontalSpacing spacing between adjacent columns
@@ -23,7 +25,6 @@ import com.viewcompose.ui.unit.UiDp
  * @property prefetchPolicy eager preparation and native view-cache hints
  * @property reusePolicy native item-view pool policy
  * @property motionPolicy native item mutation animation policy
- * @property focusFollowKeyboard whether focus navigation may scroll the focused item into view
  * @throws IllegalArgumentException when either spacing is negative or non-finite
  */
 data class LazyVerticalGridNodeProps(
@@ -38,7 +39,6 @@ data class LazyVerticalGridNodeProps(
     val prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
     val reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     val motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-    val focusFollowKeyboard: Boolean = false,
 ) : NodeSpec {
     init {
         require(horizontalSpacing.value.isFinite() && horizontalSpacing >= UiDp.Zero) {

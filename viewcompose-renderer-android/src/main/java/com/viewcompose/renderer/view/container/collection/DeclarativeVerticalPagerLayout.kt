@@ -3,15 +3,14 @@ package com.viewcompose.renderer.view.container
 import android.content.Context
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager2.widget.ViewPager2
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.renderer.interop.asRenderContainerHandle
 import com.viewcompose.ui.tooling.UiSourceSessionRole
 import com.viewcompose.renderer.reconcile.LazyListDiff
-import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.session.LazyHolderRegistry
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionHost
@@ -20,38 +19,38 @@ import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.lazy.reuse.MountedTreeReuseCache
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
 import com.viewcompose.renderer.view.tree.RetainedSessionSubmission
-import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 
 /**
- * Android ViewPager2 host for a vertical pager.
+ * Android RecyclerView host for a vertical pager.
  *
- * Synchronizes page state and applies keyboard focus-follow behavior to the underlying RecyclerView.
+ * Synchronizes discrete page state. Scrollable content inside a page owns descendant visibility.
  */
 internal class DeclarativeVerticalPagerLayout(
     context: Context,
 ) : FrameLayout(context) {
-    private val viewPager = ViewPager2(context)
+    private val pagerViewport = DeclarativePagerRecyclerView(
+        context = context,
+        orientation = LinearLayoutManager.VERTICAL,
+    )
     private val adapter = VerticalPagerAdapter()
     private var onPageChanged: ((Int) -> Unit)? = null
     private var pagerState: PagerState? = null
-    private var focusFollowKeyboardEnabled: Boolean = false
     private val stateCoordinator = PagerStateCoordinator(
-        viewPager = viewPager,
+        currentViewportPage = pagerViewport::currentPage,
+        moveViewportToPage = pagerViewport::moveToPage,
         pageCount = adapter::getItemCount,
         onSettledPageChanged = { onPageChanged },
     )
 
     init {
-        viewPager.layoutParams = LayoutParams(
+        pagerViewport.layoutParams = LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT,
         )
-        viewPager.orientation = ViewPager2.ORIENTATION_VERTICAL
-        viewPager.adapter = adapter
-        viewPager.registerOnPageChangeCallback(stateCoordinator.pageChangeCallback)
+        pagerViewport.adapter = adapter
+        pagerViewport.viewportListener = stateCoordinator
         applyRecyclerDefaults()
-        applyFocusFollowPolicy()
-        addView(viewPager)
+        addView(pagerViewport)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -82,13 +81,9 @@ internal class DeclarativeVerticalPagerLayout(
         }
         this.pagerState = pagerState
         pagerState?.attach(stateCoordinator)
-        require(offscreenPageLimit == ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT || offscreenPageLimit >= 1) {
-            "offscreenPageLimit must be ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT (-1) or at least 1."
-        }
-        viewPager.offscreenPageLimit = offscreenPageLimit
-        viewPager.isUserInputEnabled = userScrollEnabled
+        pagerViewport.setOffscreenPageLimit(offscreenPageLimit)
+        pagerViewport.setUserScrollEnabled(userScrollEnabled)
         adapter.configureMountedTreeCache(mountedTreeCacheSize)
-        applyFocusFollowPolicy()
         submission.publish {
             if (adapter.submitPages(pages, submission.revision) == PagerSubmissionResult.Rejected) {
                 return@publish
@@ -101,9 +96,8 @@ internal class DeclarativeVerticalPagerLayout(
     }
 
     fun dispose() {
-        applyFocusFollowPolicy(enabled = false)
         pagerState?.attach(null)
-        viewPager.unregisterOnPageChangeCallback(stateCoordinator.pageChangeCallback)
+        pagerViewport.release()
         adapter.disposeAll()
     }
 
@@ -115,35 +109,15 @@ internal class DeclarativeVerticalPagerLayout(
         animateMove: Boolean = true,
         animateChange: Boolean = true,
     ) {
-        resolvePagerRecyclerView()?.let { recyclerView ->
-            FrameworkRecyclerViewDefaults.applyVerticalPagerDefaults(
-                recyclerView = recyclerView,
-                sharePool = sharePool,
-                disableItemAnimator = disableItemAnimator,
-                animateInsert = animateInsert,
-                animateRemove = animateRemove,
-                animateMove = animateMove,
-                animateChange = animateChange,
-            )
-        }
-    }
-
-    fun setFocusFollowKeyboardEnabled(enabled: Boolean) {
-        focusFollowKeyboardEnabled = enabled
-        applyFocusFollowPolicy()
-    }
-
-    private fun applyFocusFollowPolicy(enabled: Boolean = focusFollowKeyboardEnabled) {
-        resolvePagerRecyclerView()?.let { recyclerView ->
-            LazyFocusFollowLayoutMonitor.apply(
-                recyclerView = recyclerView,
-                enabled = enabled,
-            )
-        }
-    }
-
-    private fun resolvePagerRecyclerView(): RecyclerView? {
-        return viewPager.getChildAt(0) as? RecyclerView
+        FrameworkRecyclerViewDefaults.applyVerticalPagerDefaults(
+            recyclerView = pagerViewport,
+            sharePool = sharePool,
+            disableItemAnimator = disableItemAnimator,
+            animateInsert = animateInsert,
+            animateRemove = animateRemove,
+            animateMove = animateMove,
+            animateChange = animateChange,
+        )
     }
 }
 
@@ -169,7 +143,7 @@ internal class VerticalPagerAdapter : RecyclerView.Adapter<VerticalPagerViewHold
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VerticalPagerViewHolder {
-        val container = ViewDecorationHostLayout(parent.context).apply {
+        val container = PagerPageHostLayout(parent.context).apply {
             layoutParams = RecyclerView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,

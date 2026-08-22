@@ -87,11 +87,11 @@
     <string name="demo_input_search_clear_description">清除</string>
     <string name="demo_input_search_disabled">禁用搜索栏</string>
     <string name="demo_input_search_unavailable_placeholder">搜索不可用</string>
-    <string name="demo_input_search_scrollable_title">ScrollableColumn + focusFollowKeyboard</string>
+    <string name="demo_input_search_scrollable_title">ScrollableColumn + 自动焦点可见</string>
     <string name="demo_input_search_scrollable_note">滚动容器内聚焦输入框时，焦点跟随策略应只影响当前垂直容器。</string>
     <string name="demo_input_search_scrollable_placeholder">ScrollableColumn 内搜索…</string>
     <string name="demo_input_search_placeholder_row">滚动占位行 %1$d</string>
-    <string name="demo_input_search_pager_title">VerticalPager + focusFollowKeyboard</string>
+    <string name="demo_input_search_pager_title">VerticalPager + 页内焦点可见</string>
     <string name="demo_input_search_pager_first_note">第一页用于回归输入框焦点跟随。</string>
     <string name="demo_input_search_pager_placeholder">VerticalPager 页内搜索…</string>
     <string name="demo_input_search_pager_second_title">第二页用于手动切换验证</string>

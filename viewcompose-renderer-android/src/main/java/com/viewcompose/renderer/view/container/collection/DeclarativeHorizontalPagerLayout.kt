@@ -3,8 +3,8 @@ package com.viewcompose.renderer.view.container
 import android.content.Context
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager2.widget.ViewPager2
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
@@ -19,35 +19,38 @@ import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.lazy.reuse.MountedTreeReuseCache
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
 import com.viewcompose.renderer.view.tree.RetainedSessionSubmission
-import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 
 /**
- * Android ViewPager2 host for a horizontal pager.
+ * Android RecyclerView host for a horizontal pager.
  *
- * Binds declarative pages to the ViewPager2 adapter and synchronizes PagerState and callbacks.
+ * Binds declarative pages to the snapping viewport and synchronizes PagerState and callbacks.
  */
 internal class DeclarativeHorizontalPagerLayout(
     context: Context,
 ) : FrameLayout(context) {
-    private val viewPager = ViewPager2(context)
+    private val pagerViewport = DeclarativePagerRecyclerView(
+        context = context,
+        orientation = LinearLayoutManager.HORIZONTAL,
+    )
     private val adapter = HorizontalPagerAdapter()
     private var onPageChanged: ((Int) -> Unit)? = null
     private var pagerState: PagerState? = null
     private val stateCoordinator = PagerStateCoordinator(
-        viewPager = viewPager,
+        currentViewportPage = pagerViewport::currentPage,
+        moveViewportToPage = pagerViewport::moveToPage,
         pageCount = adapter::getItemCount,
         onSettledPageChanged = { onPageChanged },
     )
 
     init {
-        viewPager.layoutParams = LayoutParams(
+        pagerViewport.layoutParams = LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT,
         )
-        viewPager.adapter = adapter
-        viewPager.registerOnPageChangeCallback(stateCoordinator.pageChangeCallback)
+        pagerViewport.adapter = adapter
+        pagerViewport.viewportListener = stateCoordinator
         applyRecyclerDefaults()
-        addView(viewPager)
+        addView(pagerViewport)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -78,11 +81,8 @@ internal class DeclarativeHorizontalPagerLayout(
         }
         this.pagerState = pagerState
         pagerState?.attach(stateCoordinator)
-        require(offscreenPageLimit == ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT || offscreenPageLimit >= 1) {
-            "offscreenPageLimit must be ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT (-1) or at least 1."
-        }
-        viewPager.offscreenPageLimit = offscreenPageLimit
-        viewPager.isUserInputEnabled = userScrollEnabled
+        pagerViewport.setOffscreenPageLimit(offscreenPageLimit)
+        pagerViewport.setUserScrollEnabled(userScrollEnabled)
         adapter.configureMountedTreeCache(mountedTreeCacheSize)
         submission.publish {
             if (adapter.submitPages(pages, submission.revision) == PagerSubmissionResult.Rejected) {
@@ -97,7 +97,7 @@ internal class DeclarativeHorizontalPagerLayout(
 
     fun dispose() {
         pagerState?.attach(null)
-        viewPager.unregisterOnPageChangeCallback(stateCoordinator.pageChangeCallback)
+        pagerViewport.release()
         adapter.disposeAll()
     }
 
@@ -109,21 +109,15 @@ internal class DeclarativeHorizontalPagerLayout(
         animateMove: Boolean = true,
         animateChange: Boolean = true,
     ) {
-        resolvePagerRecyclerView()?.let { recyclerView ->
-            FrameworkRecyclerViewDefaults.applyHorizontalPagerDefaults(
-                recyclerView = recyclerView,
-                sharePool = sharePool,
-                disableItemAnimator = disableItemAnimator,
-                animateInsert = animateInsert,
-                animateRemove = animateRemove,
-                animateMove = animateMove,
-                animateChange = animateChange,
-            )
-        }
-    }
-
-    private fun resolvePagerRecyclerView(): RecyclerView? {
-        return viewPager.getChildAt(0) as? RecyclerView
+        FrameworkRecyclerViewDefaults.applyHorizontalPagerDefaults(
+            recyclerView = pagerViewport,
+            sharePool = sharePool,
+            disableItemAnimator = disableItemAnimator,
+            animateInsert = animateInsert,
+            animateRemove = animateRemove,
+            animateMove = animateMove,
+            animateChange = animateChange,
+        )
     }
 }
 
@@ -149,7 +143,7 @@ internal class HorizontalPagerAdapter : RecyclerView.Adapter<HorizontalPagerView
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HorizontalPagerViewHolder {
-        val container = ViewDecorationHostLayout(parent.context).apply {
+        val container = PagerPageHostLayout(parent.context).apply {
             layoutParams = RecyclerView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,

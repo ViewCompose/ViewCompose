@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0012-lazy-collection-logical-and-physical-ownership.md
-translation_source_hash: f0cd3a51c576a6b03844c1bc3c0d0a92e9902cf9cab0f100bfbb9048e396ee55
+translation_source_hash: 4a2220922d02ed8ebbc9d60f373f262bebf6722354a661573be1482fa1d36448
 translation_status: current
 ---
 
@@ -9,6 +9,8 @@ translation_status: current
 - 状态：已接受
 - 日期：2026-08-13
 - 替代：[ADR-0011](./0011-prefetched-session-activation-boundary.md) 中关于标识与保留的部分
+- 部分已被替代：[ADR-0018](./0018-focus-visibility-and-pager-selection-ownership.md) 替换了
+  ViewPager2 物理宿主和离屏默认值决策；本记录中的逻辑 Page Session 所有权仍然有效
 
 ## 背景
 

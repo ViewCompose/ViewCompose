@@ -11,7 +11,13 @@ import com.viewcompose.demo.registry.DemoScenarioRegistry
 import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost
 import com.viewcompose.material3.Material3DynamicColorPolicy
+import com.viewcompose.ui.environment.UiEnvironmentValues
+import com.viewcompose.ui.environment.UiLayoutDirection
+import com.viewcompose.ui.environment.UiLocaleList
+import com.viewcompose.ui.foundation.Environment
+import com.viewcompose.ui.foundation.UiEnvironment
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.unit.UiDensity
 
 /**
  * demo Activity 的 ViewCompose 渲染基类。
@@ -79,12 +85,23 @@ abstract class DemoRenderActivity : AppCompatActivity() {
      * Builds the root scaffold; normal sub-pages use the shared shell, while home can provide its own pager.
      */
     protected open fun UiTreeBuilder.buildRootScaffold(root: ViewGroup) {
-        DemoSubPageScaffold(
-            root = root,
-            titleRes = demoTitleRes,
-            scenario = currentScenario(),
-        ) { builder ->
-            buildDemoContent(root, builder)
+        val scaffoldContent: UiTreeBuilder.() -> Unit = {
+            DemoSubPageScaffold(
+                root = root,
+                titleRes = demoTitleRes,
+                scenario = currentScenario(),
+            ) { builder ->
+                buildDemoContent(root, builder)
+            }
+        }
+        val verificationEnvironment = intent.demoVerificationEnvironmentOrNull()
+        if (verificationEnvironment == null) {
+            scaffoldContent()
+        } else {
+            UiEnvironment(
+                values = verificationEnvironment.resolve(Environment.values),
+                content = scaffoldContent,
+            )
         }
     }
 
@@ -105,3 +122,57 @@ abstract class DemoRenderActivity : AppCompatActivity() {
         return false
     }
 }
+
+/**
+ * Adds deterministic environment inputs used only by direct Demo verification launches.
+ *
+ * Keeping these inputs on the fixture Intent avoids mutating global device configuration while a
+ * visual matrix is running. Ordinary catalog and scenario launches omit them and preserve the
+ * platform environment installed by the Android host.
+ */
+internal fun Intent.withDemoVerificationEnvironment(
+    localeTag: String,
+    rtl: Boolean,
+    fontScale: Float,
+    densityScale: Float,
+): Intent {
+    require(localeTag.isNotBlank()) { "localeTag must not be blank." }
+    require(fontScale > 0f && fontScale.isFinite()) { "fontScale must be positive and finite." }
+    require(densityScale > 0f && densityScale.isFinite()) { "densityScale must be positive and finite." }
+    return putExtra(EXTRA_DEMO_VERIFICATION_LOCALE, localeTag)
+        .putExtra(EXTRA_DEMO_VERIFICATION_RTL, rtl)
+        .putExtra(EXTRA_DEMO_VERIFICATION_FONT_SCALE, fontScale)
+        .putExtra(EXTRA_DEMO_VERIFICATION_DENSITY_SCALE, densityScale)
+}
+
+private data class DemoVerificationEnvironment(
+    val localeTag: String,
+    val rtl: Boolean,
+    val fontScale: Float,
+    val densityScale: Float,
+) {
+    fun resolve(platform: UiEnvironmentValues): UiEnvironmentValues = UiEnvironmentValues(
+        density = UiDensity(
+            density = platform.density.density * densityScale,
+            fontScale = fontScale,
+        ),
+        locales = UiLocaleList.of(localeTag),
+        layoutDirection = if (rtl) UiLayoutDirection.Rtl else UiLayoutDirection.Ltr,
+        resourceRevision = platform.resourceRevision,
+    )
+}
+
+private fun Intent.demoVerificationEnvironmentOrNull(): DemoVerificationEnvironment? {
+    if (!hasExtra(EXTRA_DEMO_VERIFICATION_LOCALE)) return null
+    return DemoVerificationEnvironment(
+        localeTag = requireNotNull(getStringExtra(EXTRA_DEMO_VERIFICATION_LOCALE)),
+        rtl = getBooleanExtra(EXTRA_DEMO_VERIFICATION_RTL, false),
+        fontScale = getFloatExtra(EXTRA_DEMO_VERIFICATION_FONT_SCALE, 1f),
+        densityScale = getFloatExtra(EXTRA_DEMO_VERIFICATION_DENSITY_SCALE, 1f),
+    )
+}
+
+private const val EXTRA_DEMO_VERIFICATION_LOCALE = "demo_verification_locale"
+private const val EXTRA_DEMO_VERIFICATION_RTL = "demo_verification_rtl"
+private const val EXTRA_DEMO_VERIFICATION_FONT_SCALE = "demo_verification_font_scale"
+private const val EXTRA_DEMO_VERIFICATION_DENSITY_SCALE = "demo_verification_density_scale"

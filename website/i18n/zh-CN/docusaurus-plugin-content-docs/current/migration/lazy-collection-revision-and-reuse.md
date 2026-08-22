@@ -1,7 +1,7 @@
 ---
 title: 迁移 Lazy 集合 Revision 与复用
 translation_source: migration/lazy-collection-revision-and-reuse.md
-translation_source_hash: f32b8dfed88492b3bf4b5c1157111b5c84f5c67abbc8c2e29dfe22dd050f2a61
+translation_source_hash: 0e28bdf72f7c04aa215d2f603d0b40c048e45b7cf34686fa7c7e64318e8265a9
 translation_status: current
 ---
 
@@ -154,6 +154,36 @@ Snapshot，因此用相同 Identity 与 Environment Retry 时会重新执行全�
 Identity 快路。Scoped `LazyColumn { items(...) }` 与 `LazyVerticalGrid { items(...) }` 有意不提供
 `LazyItemsSnapshot` Overload，并继续在每轮 Declaration Pass 执行 Selector。
 
+## 用一个显式根节点包装延迟 Sibling
+
+每个 Lazy `item`、`stickyHeader`、Typed Item Content 调用和 Pager `Page` 都拥有一个原生 Holder，
+现在必须只发射一个根节点。旧的多根行为会把 Sibling 静默放进同一个中立 Holder，却没有定义它们
+应该纵向、横向还是覆盖布局。本次硬切会在 Composition Prepare 阶段拒绝零个或多个根节点，不会
+提交任何原生候选。Entry 有意不显示内容时使用 `Spacer`。
+
+把隐式 Sibling：
+
+```kotlin
+item(key = "account", contentRevision = account.version) {
+    Text(account.name)
+    Text(account.status)
+}
+```
+
+改为显式布局所有者：
+
+```kotlin
+item(key = "account", contentRevision = account.version) {
+    Column {
+        Text(account.name)
+        Text(account.status)
+    }
+}
+```
+
+同一规则也适用于 `HorizontalPagerScope.Page` 和 `VerticalPager` Page。`TabRow` 仍是 Eager Parent
+Content，不受此延迟 Holder 限制。
+
 ## 更新原生互操作复用
 
 包含 `AndroidView` 的 Lazy Mounted Tree，只有所有互操作节点都声明 `onReset` 才能跨 Key。
@@ -174,8 +204,11 @@ AndroidView(
 
 ## 更新容器假设
 
-- Pager `offscreenPageLimit` 默认使用 ViewPager2 原生 `-1` Policy；只有明确需要额外驻留页时才传
-  至少 `1`。
+- Pager `offscreenPageLimit` 在 `-1` 时使用 Renderer 的 RecyclerView 缓存策略；只有应用明确
+  需要两侧各增加对应数量的整页布局空间时，才传至少 `1` 的值。
+- 删除所有 `focusFollowKeyboard` 参数。LazyColumn、LazyVerticalGrid 和 ScrollableColumn 中的
+  焦点编辑器现在自动使用 Android 原生矩形请求链。VerticalPager 页面可能被 IME 遮挡时，必须
+  把表单放进页内 ScrollableColumn、LazyColumn 或其他真实垂直滚动所有者；Pager 只负责页面选择。
 - `TabRow` 是 Eager Keyed Parent Content，不再拥有 Lazy Child Session。稳定 Tab Key 在重排时保留
   Remember/Saveable Identity，选择变化只失效旧选中项与新选中项。
 - `CollectionReusePolicy.mountedTreeCacheSize` 限制每个集合保留的 Reset 物理树；`0` 会关闭 Mounted

@@ -67,6 +67,7 @@ internal enum class ScenarioKind(
 internal fun UiTreeBuilder.ThemeSwatchRow(
     label: String,
     swatches: List<ThemeSwatch>,
+    rowModifier: Modifier = Modifier,
 ) {
     Column(
         spacing = 8.dp,
@@ -81,7 +82,7 @@ internal fun UiTreeBuilder.ThemeSwatchRow(
         )
         Row(
             spacing = 8.dp,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().then(rowModifier),
         ) {
             swatches.forEach { swatch ->
                 Column(

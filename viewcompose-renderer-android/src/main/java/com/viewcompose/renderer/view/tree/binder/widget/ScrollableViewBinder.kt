@@ -4,7 +4,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.viewcompose.renderer.R
 import com.viewcompose.renderer.view.container.DeclarativeScrollableColumnLayout
 import com.viewcompose.renderer.view.container.DeclarativeScrollableRowLayout
-import com.viewcompose.renderer.view.lazy.focus.ScrollableFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.roundToPx
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.PullToRefreshNodeProps
@@ -12,8 +11,7 @@ import com.viewcompose.ui.node.spec.ScrollableColumnNodeProps
 import com.viewcompose.ui.node.spec.ScrollableRowNodeProps
 
 /**
- * Binds scroll containers and pull-to-refresh nodes by reusing container binders and wiring
- * keyboard-follow scrolling policy.
+ * Binds scroll containers and pull-to-refresh nodes by reusing container binders.
  */
 internal object ScrollableViewBinder {
     data class PullToRefreshSpec(
@@ -27,7 +25,6 @@ internal object ScrollableViewBinder {
         val linearSpec: ContainerViewBinder.LinearSpec,
         val state: com.viewcompose.ui.state.ScrollState?,
         val userScrollEnabled: Boolean,
-        val focusFollowKeyboard: Boolean,
     )
 
     data class ScrollableRowSpec(
@@ -42,10 +39,6 @@ internal object ScrollableViewBinder {
     ) {
         ContainerViewBinder.bindColumn(view.innerLayout, spec.linearSpec)
         view.bindScrollState(spec.state, spec.userScrollEnabled)
-        ScrollableFocusFollowLayoutMonitor.apply(
-            scrollView = view,
-            enabled = spec.focusFollowKeyboard,
-        )
     }
 
     fun bindScrollableRow(
@@ -82,7 +75,6 @@ internal object ScrollableViewBinder {
             ),
             state = spec.state,
             userScrollEnabled = spec.userScrollEnabled,
-            focusFollowKeyboard = spec.focusFollowKeyboard,
         )
     }
 

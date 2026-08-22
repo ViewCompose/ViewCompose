@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: a0078b948fa185db3c0d0932152914b05944080c3f8c3a9f17759ffa25a3334d
+translation_source_hash: fb8897bca0af19ecd2b8af7d703440ef5fc6415719585027c7996ac22e5460f6
 translation_status: current
 ---
 
@@ -248,7 +248,10 @@ flowchart TD
 1. 结构稳定时的可见内容刷新路径
 2. 空 diff 刷新保障
 3. recycle/dispose 与生命周期一致性
-4. framework 托管的 `RecyclerView/ViewPager2` 容器默认保持“本地池 + 系统动画器”；可通过容器参数 `reusePolicy/motionPolicy` 对单个容器启用共享池与动画策略，并通过垂直容器参数 `focusFollowKeyboard` 控制键盘跟随。
+4. framework 托管的 RecyclerView 默认保持“本地池 + 系统动画器”，并通过容器参数
+   `reusePolicy` 与 `motionPolicy` 管理复用和运动；
+5. 真实滚动所有者保留原生焦点后代矩形传播；Pager 只负责离散选择，页内 IME 露出必须由
+   页面自己的滚动所有者负责。
 
 专项清单：
 

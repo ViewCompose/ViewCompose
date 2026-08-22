@@ -28,8 +28,8 @@ dependencies {
 - UI contract is exposed transitively because renderer entry points accept and return its node and
   modifier types. Runtime, text core, graphics core, and gesture core remain implementation
   dependencies.
-- Android runtime dependencies: AndroidX Core, AppCompat, RecyclerView, ViewPager2,
-  ConstraintLayout, and SwipeRefreshLayout. Material Components is not a dependency.
+- Android runtime dependencies: AndroidX Core, AppCompat, RecyclerView, ConstraintLayout, and
+  SwipeRefreshLayout. Material Components and ViewPager2 are not dependencies.
 - Generic surfaces, rounded/cut/continuous shapes, and progress indicators use engine-owned Android drawing
   implementations driven by resolved node values.
 - `SurfaceNodeProps` uses cached `UiShapeDrawable` geometry for solid or gradient fill, an optional
@@ -217,8 +217,10 @@ Phase 4 owns that benchmark and final guidance.
   converts stable lazy-item keys into ordered RecyclerView updates and deliberately falls back to a
   full reload when identity is missing or ambiguous.
 - Eager scroll containers use one renderer connector to publish logical offsets, range, viewport,
-  direction, and motion while preserving pending commands until layout. Pager containers use one
-  settled-state coordinator for both ViewPager2 observation and callback de-duplication. A vertical
+  direction, and motion while preserving pending commands until layout. Pager containers use a
+  framework-owned RecyclerView, LinearLayoutManager, PagerSnapHelper, and one settled-state
+  coordinator for observation and callback de-duplication. An idle relayout is not a page
+  selection and cannot clear current-page focus. A vertical
   eager container nested inside a same-axis non-nested-scrolling parent reserves the pointer stream
   only while it can consume that direction, then releases the stream at the matching scroll edge;
   disabling user scrolling never reserves the parent stream.
@@ -309,8 +311,9 @@ Because the current line is alpha, the documentation site intentionally does not
   merging physical and logical identity.
 - Pager stable IDs use renderer-assigned values rather than key hashes. Pager view types partition
   incompatible `contentType`/kind pairs, keyed moves refresh only uniquely owned changed holders,
-  and every public page declaration requires a unique stable key. ViewPager2's native default owns
-  offscreen residency unless callers explicitly request a limit. An accepted pager submission
+  and every public page declaration requires a unique stable key. RecyclerView's default caching
+  policy owns offscreen residency unless callers explicitly request a positive page limit. An
+  accepted pager submission
   applies `currentPage` even when its page snapshot is unchanged; page-content diffing never gates
   destination selection.
 - Targeted patching and subtree skipping are optimizations. A complete native subtree is skipped

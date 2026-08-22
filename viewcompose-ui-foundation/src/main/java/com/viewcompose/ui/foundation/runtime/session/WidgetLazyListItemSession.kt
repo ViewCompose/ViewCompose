@@ -38,8 +38,10 @@ internal class WidgetLazyListItemSession(
     private val session = RenderSession(
         container = container,
         content = {
-            LocalContext.withSnapshot(capturedLocals) {
-                renderContent.render(this, renderContentPayload)
+            emitDelayedContentRoot(owner = "Lazy item or pager page") {
+                LocalContext.withSnapshot(capturedLocals) {
+                    renderContent.render(this, renderContentPayload)
+                }
             }
         },
         onRenderResult = { result ->

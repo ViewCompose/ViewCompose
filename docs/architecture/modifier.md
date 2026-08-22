@@ -15,11 +15,14 @@ across layers.
    `Modifier.imeInsetsPadding(...)` or their direction-aware `Relative` forms. An Activity using
    `adjustResize` normally does not add IME padding, which would move content twice.
 5. Collection policies are container parameters: `reusePolicy` (`sharePool`) and `motionPolicy`
-   (`disableItemAnimator/animateInsert/animateRemove/animateMove/animateChange`).
-6. Keyboard focus following is the vertical-container parameter `focusFollowKeyboard`, implemented
-   by `LazyColumn`, `LazyVerticalGrid`, `VerticalPager`, and `ScrollableColumn`.
-7. `LazyRow`, `HorizontalPager`, and `ScrollableRow` do not expose `focusFollowKeyboard`; an API that
-   can be called but has no effect is prohibited.
+   (`disableItemAnimator/animateInsert/animateRemove/animateMove/animateChange`). Pager residency
+   and direct user input remain pager parameters.
+6. Focused-editor visibility is an invariant of a real Android scroll owner, not a Modifier or
+   container Boolean. LazyColumn, LazyVerticalGrid, and ScrollableColumn preserve native
+   child-rectangle propagation even when direct user scrolling is disabled.
+7. HorizontalPager and VerticalPager own discrete page selection only. A page that can be obscured
+   by the IME declares its own page-local scroll owner; the pager never interprets within-page
+   coordinates as page motion.
 8. `Modifier.backgroundDrawableRes(resId)` installs a drawable background. It takes precedence over
    `backgroundColor`, clips automatically with `cornerRadius`, and can still be forced through the
    general `clip()` switch.
@@ -220,8 +223,9 @@ Modifier owns:
 7. the `nativeView` escape hatch;
 8. drawing, gesture, nested-scroll, shadow, and layout-size-animation decoration.
 
-Collection reuse/motion and vertical focus following remain container parameters rather than
-Modifier entries.
+Collection reuse/motion remains container policy rather than Modifier data. Focused-editor
+visibility has no opt-in parameter: it follows the native child-rectangle contract of the nearest
+real scroll owner.
 
 ### 4.2 Scoped Modifier: parent-specific data
 

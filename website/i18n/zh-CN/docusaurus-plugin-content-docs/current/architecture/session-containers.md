@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/session-containers.md
-translation_source_hash: c773ff6d76431fc27f2c32b566923b10c9170985746e53fc8e478cea55058169
+translation_source_hash: a6f73c530841eec0d6997d968e9d06cb1f8065a33d27483871ad2416e8fd7e30
 translation_status: current
 ---
 
@@ -42,8 +42,9 @@ translation_status: current
    生命周期对齐
 6. `Change` 更新优先走 payload 通道，避免无条件全量变更通知
 7. key 不可用回退 `ReloadAll` 时，应尽量保持当前滚动锚点，避免交互后列表跳顶
-8. 输入控件获取焦点时，不得触发无关的列表跳位。容器启用焦点跟随策略后，只能滚动到足以完整
-   显示焦点编辑器的位置，并保持逻辑 Item 锚点不变
+8. 输入控件获取焦点时，不得触发无关的列表跳位。真实垂直滚动所有者始终保留 Android 子矩形
+   协议，并且只能滚动到足以完整显示焦点编辑器的位置，同时保持逻辑 Item 锚点不变；不存在
+   容器 Opt-in 策略
 9. 一次父级集合提交对应一个单调递增的子 Session 修订。保留子项的更新只能由父渲染帧的
    commit effect 在 composition commit 之后发布；父帧回滚会直接丢弃更新，不得运行子 composition
    或 effect
@@ -51,7 +52,11 @@ translation_status: current
     `contentRevision`；仅对象分配绝不刷新内容。单条 Item、Sticky Header、Page 与 Tab
     Declaration 必须在 `key` 后立即提供非空 Revision，再排列可选物理复用与布局参数；`null` 不是
     哨兵。`StaticContentRevision` 承诺不存在这类普通输入变化；批量可空 `{ it }` 默认值仅适用于
-    Equality 覆盖 Item Content 所读取全部普通输入的不可变值模型
+    Equality 覆盖 Item Content 所读取全部普通输入的不可变值模型。每个独立组合的 Lazy Item、
+    Sticky Header 或 Pager Page 只发射一个根 VNode。其物理 Holder 只有一个测量和放置边界，不能
+    推断 Sibling 应堆叠、横排还是覆盖。零个或多个根节点会在 Composition Prepare 阶段失败，并在
+    Renderer 看到候选前回滚；调用方用显式 `Column`、`Row` 或 `Box` 表达 Sibling 布局，用 `Spacer`
+    表达空 Entry
 11. 每个普通 Typed `List` Declaration 都会在父 Composition 的每一轮执行中重新求值顺序、成员，以及
     `key`、`contentType`、`contentRevision` 和网格 Span Selector。只有 Key、Content Revision、
     Environment、Content Type、Kind 与 Span 全部相等时，Collector 才能复用已提交的逻辑 Item。
@@ -79,7 +84,9 @@ translation_status: current
     已 Active 的 Detach Holder 只暂存最新修订并在 Reattach 时渲染；重复 Key 存在歧义时，绝不能
     通过 First Match 查询猜测 Holder 归属
 13. Pager 对唯一 Key 使用无碰撞稳定 ID，并按 `contentType`/Kind 组合划分结构不兼容的原生
-    View Type。所有公开 Page 都要求唯一且稳定的 Key
+    View Type。所有公开 Page 都要求唯一且稳定的 Key。RecyclerView Pager 视口只把真正停稳的
+    页面切换视为选择，因此空闲重布局不会清除当前页焦点。页内焦点可见性由页内滚动所有者负责，
+    并在 Pager 边界前终止传播
 14. 每个独立组合的 Item/Page 都必须接收由父组合 Holder 和稳定逻辑 Key 持有的子
     `SaveableStateRegistry`。回收会保留该 Registry 的 Saved Map，重排跟随 Key，嵌套容器递归
     应用同一层级

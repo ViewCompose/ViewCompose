@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: 86e80beaae8e3a3a3245cfe8de5c6e09e6b2d0be1626fb4b3402bca9c42cc491
+translation_source_hash: 8ab2f9a9796e760ba5a7b922f55aa7fb39050abcc1434ce0485d16aff85c35b1
 translation_status: current
 ---
 
@@ -40,6 +40,14 @@ translation_status: current
 
 1. 把多个无关 bug 修复混成一个提交
 2. 把“文档规划 + 大段实现 + 多组测试”长期堆在工作区不提交
+
+### 2.1 底层不稳定问题抢占规则
+
+不稳定的底层契约、所有权模型或核心实现，优先级高于发版窗口便利性、当前计划阶段和新增
+Roadmap 工作。一旦证据确认设计本身不成立，必须暂停依赖它的扩展，在责任层直接替换，并在
+一次硬切中完成调用方迁移，同时删除旧 API、Transport、Fallback 与兼容分支。已确认的底层修正
+不得推迟到后续阶段。时序 Guard、弃用但无效的字段、调用方专用 Wrapper 或并行 Legacy 路径都
+不能替代底层模型修正；证据、迁移和发布影响必须明确记录。
 
 ## 3. 文档同步原则
 
@@ -347,11 +355,14 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 
 ## 5.16 Modifier 与容器策略边界
 
-涉及 `Modifier` 或容器策略（reuse/motion/focus follow）相关改动时，必须遵守：
+涉及 `Modifier` 或容器策略相关改动时，必须遵守：
 
 1. `viewcompose-ui-contract` 的 `Modifier` 仅维护“全局稳定语义”的元素与 builder API，禁止新增“仅特定容器生效”的策略型 modifier。
-2. 容器策略必须进入容器 DSL 参数与 `NodeSpec`（`reusePolicy/motionPolicy/focusFollowKeyboard`），renderer 直接读取 spec 应用，不再走 modifier 提取链路。
-3. 若新增策略类型，必须同轮补齐 DSL->NodeSpec 映射测试与 renderer bind/patch 生效测试。
+2. `reusePolicy` 与 `motionPolicy` 必须进入容器 DSL 参数和 `NodeSpec`，由 Renderer 直接读取。原生
+   焦点后代可见性这类正确性要求属于不变量，不是 Opt-in 策略。
+3. Pager 驻留与直接输入控制仍是显式容器字段。禁用直接输入不得禁用状态命令或程序化焦点可见性。
+4. 新增策略类型必须同轮补齐 DSL->NodeSpec 映射测试与 Renderer Bind/Patch 生效测试。新增 Boolean
+   前必须先证明该行为确实可选且只有一个稳定所有者。
 
 ## 5.17 开发预览约束
 

@@ -293,7 +293,7 @@ Samsung SM-G991B regression, plus observable cache/backend/fallback diagnostics.
 A capability cannot be marked implemented without unit tests, a Demo scenario with verification
 points, and any required Demo UI test.
 
-Add delayed-session special coverage for RecyclerView/ViewPager2 reuse containers, containers whose
+Add delayed-session special coverage for RecyclerView-based lazy and pager reuse containers, containers whose
 structure diff can diverge from content refresh, and independent overlay-surface sessions.
 
 Before a milestone is `Completed`:

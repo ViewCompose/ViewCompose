@@ -1,56 +1,67 @@
 package com.viewcompose.renderer.view.container
 
-import androidx.viewpager2.widget.ViewPager2
 import com.viewcompose.ui.state.PagerConnector
 import com.viewcompose.ui.state.PagerStateSnapshot
 
-/** Keeps ViewPager2 motion, the portable snapshot, and settled callbacks on one state machine. */
+/** Keeps pager motion, the portable snapshot, and settled callbacks on one state machine. */
 internal class PagerStateCoordinator(
-    private val viewPager: ViewPager2,
+    private val currentViewportPage: () -> Int,
+    private val moveViewportToPage: (page: Int, animated: Boolean) -> Unit,
     private val pageCount: () -> Int,
     private val onSettledPageChanged: () -> ((Int) -> Unit)?,
-) : PagerConnector {
+) : PagerConnector, PagerViewportListener {
     private var snapshotListener: ((PagerStateSnapshot) -> Unit)? = null
     private var currentSnapshot = PagerStateSnapshot.initial()
     private var currentPage = 0
     private var settledPage = 0
     private var targetPage = 0
     private var pageOffset = 0f
-    private var scrollState = ViewPager2.SCROLL_STATE_IDLE
+    private var scrollState = PagerScrollState.Idle
     private var lastCallbackPage: Int? = null
+    private var lastLogicalPosition: Float? = null
+    private var commandedTargetPage: Int? = null
 
-    val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
-        override fun onPageSelected(position: Int) {
-            targetPage = position
-            if (scrollState == ViewPager2.SCROLL_STATE_IDLE) {
-                currentPage = position
-                pageOffset = 0f
-                settleAndPublish(dispatchCallback = true)
-            } else {
-                publish()
-            }
-        }
-
-        override fun onPageScrolled(
-            position: Int,
-            positionOffset: Float,
-            positionOffsetPixels: Int,
-        ) {
+    override fun onPageSelected(position: Int) {
+        targetPage = position
+        if (scrollState == PagerScrollState.Idle) {
             currentPage = position
-            pageOffset = positionOffset.coerceIn(0f, 1f)
+            pageOffset = 0f
+            settleAndPublish(dispatchCallback = true)
+        } else {
             publish()
         }
+    }
 
-        override fun onPageScrollStateChanged(state: Int) {
-            scrollState = state
-            if (state == ViewPager2.SCROLL_STATE_IDLE) {
-                currentPage = viewPager.currentItem
-                targetPage = currentPage
-                pageOffset = 0f
-                settleAndPublish(dispatchCallback = true)
-            } else {
-                publish()
+    override fun onPageScrolled(position: Int, offset: Float) {
+        currentPage = position
+        pageOffset = offset.coerceIn(0f, 1f)
+        val logicalPosition = position + pageOffset
+        val previousLogicalPosition = lastLogicalPosition ?: settledPage.toFloat()
+        targetPage = commandedTargetPage ?: when {
+            logicalPosition > previousLogicalPosition -> position + 1
+            logicalPosition < previousLogicalPosition -> position
+            else -> targetPage
+        }
+        targetPage = targetPage.coerceIn(0, (pageCount() - 1).coerceAtLeast(0))
+        lastLogicalPosition = logicalPosition
+        publish()
+    }
+
+    override fun onScrollStateChanged(state: PagerScrollState) {
+        scrollState = state
+        if (state == PagerScrollState.Idle) {
+            currentPage = currentViewportPage()
+            targetPage = currentPage
+            pageOffset = 0f
+            lastLogicalPosition = currentPage.toFloat()
+            commandedTargetPage = null
+            settleAndPublish(dispatchCallback = true)
+        } else {
+            if (state == PagerScrollState.Dragging) {
+                commandedTargetPage = null
+                lastLogicalPosition = settledPage.toFloat()
             }
+            publish()
         }
     }
 
@@ -63,14 +74,16 @@ internal class PagerStateCoordinator(
         }
         val resolvedPage = page.coerceIn(0, count - 1)
         lastCallbackPage = resolvedPage
-        if (viewPager.currentItem != resolvedPage) {
-            viewPager.setCurrentItem(resolvedPage, false)
+        if (currentViewportPage() != resolvedPage) {
+            moveViewportToPage(resolvedPage, false)
         }
         currentPage = resolvedPage
         settledPage = resolvedPage
         targetPage = resolvedPage
         pageOffset = 0f
-        scrollState = ViewPager2.SCROLL_STATE_IDLE
+        scrollState = PagerScrollState.Idle
+        lastLogicalPosition = resolvedPage.toFloat()
+        commandedTargetPage = null
         publish()
     }
 
@@ -92,10 +105,12 @@ internal class PagerStateCoordinator(
         if (count == 0) return
         val resolvedPage = page.coerceIn(0, count - 1)
         targetPage = resolvedPage
-        viewPager.setCurrentItem(resolvedPage, animated)
+        commandedTargetPage = resolvedPage.takeIf { animated }
+        moveViewportToPage(resolvedPage, animated)
         if (!animated) {
-            currentPage = viewPager.currentItem
+            currentPage = currentViewportPage()
             pageOffset = 0f
+            lastLogicalPosition = currentPage.toFloat()
             settleAndPublish(dispatchCallback = true)
         }
     }
@@ -121,8 +136,10 @@ internal class PagerStateCoordinator(
         settledPage = 0
         targetPage = 0
         pageOffset = 0f
-        scrollState = ViewPager2.SCROLL_STATE_IDLE
+        scrollState = PagerScrollState.Idle
         lastCallbackPage = null
+        lastLogicalPosition = null
+        commandedTargetPage = null
         publish()
     }
 
@@ -139,7 +156,7 @@ internal class PagerStateCoordinator(
                 targetPage = targetPage.coerceIn(0, lastIndex),
                 pageOffset = pageOffset.coerceIn(0f, 1f),
                 pageCount = count,
-                isScrollInProgress = scrollState != ViewPager2.SCROLL_STATE_IDLE,
+                isScrollInProgress = scrollState != PagerScrollState.Idle,
                 canScrollBackward = resolvedCurrentPage > 0 || pageOffset > 0f,
                 canScrollForward = resolvedCurrentPage < lastIndex,
             )

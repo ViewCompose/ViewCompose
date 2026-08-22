@@ -155,8 +155,12 @@ by a later renderer or child render session.
   `contentRevision: (T) -> Any? = { it }` selector only for immutable value models whose equality
   covers every ordinary input read by item content. Other item-content inputs must be read as
   observed State inside the active Session or participate in an explicit revision. Pager pages
-  also declare `contentType`, while `TabRow` uses eager keyed children rather than lazy item
-  sessions.
+  also declare `contentType`. Every independently composed lazy item, sticky header, or pager page
+  must emit exactly one root node because its native holder owns one measurement and placement
+  boundary. Zero or multiple roots roll the candidate back before native rendering; wrap siblings
+  in `Column`, `Row`, or `Box`, and use `Spacer` for an intentionally empty entry. `TabRow` uses
+  eager keyed children rather than lazy item sessions. The compiled
+  `delayedContentSingleRootSample` demonstrates the delayed-root contract.
 - Every ordinary typed `List` declaration, including scoped `items` and the typed
   `ScrollableScope` wrappers, evaluates order, membership, and item selectors on each parent
   composition pass. Equal key, content revision, framework environment, content type, kind, and
@@ -175,8 +179,11 @@ by a later renderer or child render session.
   checks.
 - `ScrollableColumn` and `ScrollableRow` accept Q3 `ScrollState` plus `userScrollEnabled` without
   unmounting eager children. `HorizontalPager` and `VerticalPager` accept Q3 `PagerState`; their
-  change callback fires only after a different page settles. The compiled `eagerScrollStateSample`
-  demonstrates caller-owned eager scrolling.
+  change callback fires only after a different page settles. Focused editors in real vertical
+  scroll owners use native rectangle propagation automatically, including when direct user
+  scrolling is disabled. Pager pages declare their own vertical scroll owner when content may be
+  obscured by the IME. The compiled `eagerScrollStateSample` and
+  `focusVisibilityOwnershipSample` demonstrate state control and ownership.
 - `LazyVerticalGrid` accepts `GridCells.Fixed` or `GridCells.Adaptive`, and grid items declare
   `GridItemSpan.Single`, `Fixed`, or `FullLine`. Adaptive resizing changes the native column count,
   not logical item identity. The compiled `adaptiveGridSample` covers full-line content.

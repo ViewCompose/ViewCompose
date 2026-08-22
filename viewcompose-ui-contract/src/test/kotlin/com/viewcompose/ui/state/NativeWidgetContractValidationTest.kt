@@ -11,7 +11,9 @@ import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
 import com.viewcompose.ui.node.spec.LayoutConstraintHostNodeProps
+import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
 import com.viewcompose.ui.node.spec.SliderNodeProps
+import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 import com.viewcompose.ui.unit.dp
 import org.junit.Test
 
@@ -60,6 +62,30 @@ class NativeWidgetContractValidationTest {
             verticalSpacing = 0.dp,
             items = emptyList(),
             state = null,
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `horizontal pager rejects zero offscreen limit`() {
+        HorizontalPagerNodeProps(
+            pages = emptyList(),
+            currentPage = 0,
+            onPageChanged = null,
+            offscreenPageLimit = 0,
+            pagerState = null,
+            userScrollEnabled = true,
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `vertical pager rejects zero offscreen limit`() {
+        VerticalPagerNodeProps(
+            pages = emptyList(),
+            currentPage = 0,
+            onPageChanged = null,
+            offscreenPageLimit = 0,
+            pagerState = null,
+            userScrollEnabled = true,
         )
     }
 

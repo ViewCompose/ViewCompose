@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/modifier.md
-translation_source_hash: 5781489a4381e469f753c602941bf9f97b1fb25938f94afd0259560e5c8fa1cc
+translation_source_hash: af832cc8e6865c96fca66dfb4783012f487438f2c1a9ff9a5d32d814e0acca5b
 translation_status: current
 ---
 
@@ -18,9 +18,9 @@ translation_status: current
 2. 文本语义类历史 modifier（如 `textColor/textSize`）已退场
 3. `weight/align/FlexibleSpacer` 仅通过 `RowScope/ColumnScope/BoxScope` 暴露
 4. 系统栏/键盘 Inset 适配可使用物理 `Modifier.systemBarsInsetsPadding(...)` / `Modifier.imeInsetsPadding(...)` 或感知方向的 `Relative` 形式（若 Activity 使用 `adjustResize`，通常不再叠加 IME Padding，避免双重位移）
-5. 列表容器策略已收口为容器参数：`reusePolicy`（`sharePool`）与 `motionPolicy`（`disableItemAnimator/animateInsert/animateRemove/animateMove/animateChange`）
-6. 键盘焦点跟随已收口为垂直容器参数：`focusFollowKeyboard`；当前覆盖 `LazyColumn`、`LazyVerticalGrid`、`VerticalPager`、`ScrollableColumn`
-7. `LazyRow`、`HorizontalPager`、`ScrollableRow` 不暴露 `focusFollowKeyboard`，避免“可调用但无效”的 API 漂移
+5. 列表容器策略已收口为容器参数：`reusePolicy`（`sharePool`）与 `motionPolicy`（`disableItemAnimator/animateInsert/animateRemove/animateMove/animateChange`）；Pager 驻留与直接用户输入仍是 Pager 参数
+6. 焦点编辑器可见性是真实 Android 滚动所有者的不变量，不是 Modifier 或容器 Boolean。LazyColumn、LazyVerticalGrid 与 ScrollableColumn 即使禁用直接用户滚动，也会保留原生子矩形传播
+7. HorizontalPager 与 VerticalPager 只负责离散页面选择。可能被 IME 遮挡的页面必须声明页内滚动所有者；Pager 绝不把页内坐标解释成页面运动
 8. 背景资源支持 `Modifier.backgroundDrawableRes(resId)`；与 `backgroundColor` 同时存在时，drawable 优先；当同时存在 `cornerRadius` 时自动裁剪内容，`clip()` 仍可作为通用强制裁剪开关
 9. 内容尺寸动画支持 `Modifier.animateContentSize(...)`；renderer 会在 patch 前自动插入 `AnimatedSizeHost`，以“真实测量尺寸插值”参与父布局重排（非 graphicsLayer 视觉缩放），并保留 `AnimationSpec` 的 easing/spring/keyframes/repeat 语义（含 reverse 终态）
 10. 约束 parent-data 支持 `Modifier.layoutId(...)`、`Modifier.constrainAs(...)`、`Modifier.constrain(...)`；仅对 `ConstraintLayout` 子节点生效
@@ -196,15 +196,14 @@ Surface(
 1. 尺寸与占位：`size/width/height/minWidth/minHeight/maxWidth/maxHeight/aspectRatio/padding/paddingRelative/margin/marginRelative`
 2. 外观修饰：`backgroundColor/backgroundDrawableRes/border/cornerRadius/alpha/elevation`
 3. 可见性与层级：`visibility/offset/offsetRelative/zIndex`
-4. 通用交互与可访问性：`clickable/interactionIndication/focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent/contentDescription`
-5. 测试定位：`testTag`
-6. 系统栏内边距：`systemBarsInsetsPadding/systemBarsInsetsPaddingRelative`
-7. 软键盘内边距：`imeInsetsPadding/imeInsetsPaddingRelative`
-8. 逃生通道：`nativeView(key, configure)`
-9. 列表性能策略：容器参数 `reusePolicy/motionPolicy`
-10. 容器输入跟随策略：垂直容器参数 `focusFollowKeyboard`
-11. 内容尺寸过渡：`animateContentSize(animationSpec)`（对节点尺寸变化做布局级动画，spec 语义透传到执行层）
-12. 图形绘制阶段：`drawBehind/drawWithContent/drawWithCache`（用于自定义绘制与缓存命令）
+4. 通用交互、Renderer-neutral `interactionIndication`、焦点、按键与无障碍
+5. 通过 `testTag` 提供测试标识
+6. 物理方向或感知布局方向的系统栏与 IME Padding
+7. `nativeView` 逃生通道
+8. 绘制、手势、嵌套滚动、阴影和布局尺寸动画修饰
+
+集合复用与动画仍是容器策略，而非 Modifier 数据。焦点编辑器可见性没有 Opt-in 参数；它遵循最近
+真实滚动所有者的原生子矩形契约。
 
 ### 4.2 Scoped Modifier（父容器相关 parent-data）
 

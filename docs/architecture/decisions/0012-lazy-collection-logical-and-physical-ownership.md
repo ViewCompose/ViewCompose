@@ -4,6 +4,9 @@
 - Date: 2026-08-13
 - Supersedes: the identity and retention parts of
   [ADR-0011](./0011-prefetched-session-activation-boundary.md)
+- Superseded in part: [ADR-0018](./0018-focus-visibility-and-pager-selection-ownership.md) replaces
+  the ViewPager2 physical-host and offscreen-default decisions; logical page-session ownership
+  remains accepted here.
 
 ## Context
 

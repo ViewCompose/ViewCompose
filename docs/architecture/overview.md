@@ -258,7 +258,10 @@ Every container with lazy creation and holder/session reuse is a first-class arc
 1. a visible-content refresh path when structure is stable;
 2. refresh behavior for an empty diff;
 3. recycle/dispose behavior aligned with lifecycle; and
-4. framework-managed RecyclerView/ViewPager2 defaults of a local pool and system animator, with per-container `reusePolicy`, `motionPolicy`, and vertical `focusFollowKeyboard` overrides.
+4. framework-managed RecyclerView defaults of a local pool and system animator, with per-container
+   `reusePolicy` and `motionPolicy`; and
+5. native focused-descendant rectangle propagation for real scroll owners, while pagers own only
+   discrete selection and require a page-local scroll owner for within-page IME reveal.
 
 Use the [session-container checklist](session-containers.md).
 

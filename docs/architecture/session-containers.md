@@ -39,9 +39,9 @@ Every delayed-session container must satisfy these constraints:
 6. A `Change` update prefers the payload path instead of an unconditional full-change signal.
 7. When unusable keys force `ReloadAll`, preserve the current scroll anchor where possible instead
    of jumping the collection to the top after an interaction.
-8. Focusing an input must not cause an unrelated list jump. When the container's focus-follow
-   policy is enabled, it may scroll only enough to reveal the focused editor while preserving the
-   logical item anchor.
+8. Focusing an input must not cause an unrelated list jump. A real vertical scroll owner always
+   preserves Android's child-rectangle protocol and may move only enough to reveal the focused
+   editor while preserving the logical item anchor; there is no container opt-in policy.
 9. A parent collection submission is one monotonic child-session revision. Its retained-child
    updates publish only from the parent render frame's commit effects, after composition commit;
    parent rollback discards them without running child composition or effects.
@@ -51,7 +51,11 @@ Every delayed-session container must satisfy these constraints:
     physical-reuse and layout arguments follow it. `null` is not a sentinel.
     `StaticContentRevision` promises that no such ordinary input changes, while the nullable bulk
     `{ it }` default is limited to immutable value models whose equality covers every ordinary input
-    read by item content.
+    read by item content. Each independently composed lazy item, sticky header, or pager page emits
+    exactly one root VNode. Its physical holder has one measurement and placement boundary and does
+    not infer whether siblings should stack, line up, or overlay. Zero or multiple roots fail during
+    composition preparation and roll back before the renderer sees the candidate; callers express
+    sibling layout with an explicit `Column`, `Row`, or `Box` and use `Spacer` for an empty entry.
 11. Every ordinary typed `List` declaration reevaluates order, membership, and its `key`,
     `contentType`, `contentRevision`, and grid-span selectors on each parent composition pass. The
     collector may reuse an already committed logical item only when its key, content revision,
@@ -88,6 +92,9 @@ Every delayed-session container must satisfy these constraints:
 13. Pager stable IDs are collision-free for unique keys, and native view types partition
     structurally incompatible `contentType`/kind pairs. Unkeyed cached pages retain position
     ownership; keyed moves resolve only through a unique key in both snapshots.
+    The RecyclerView pager viewport treats only a real settled transition as selection, so an idle
+    relayout cannot clear focus from the current page. Within-page focus visibility belongs to a
+    page-local scroll owner and stops before the pager boundary.
 14. Every independently composed item/page receives a child `SaveableStateRegistry` owned by a
     parent-composition holder and its stable logical key. Recycling retains that registry's saved
     map, reordering follows the key, and nested containers repeat the hierarchy.

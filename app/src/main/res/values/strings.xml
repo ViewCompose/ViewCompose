@@ -55,6 +55,8 @@
     <string name="demo_scenario_input_search_summary">Search input, clear and submit behavior, and the disabled state without unrelated nested containers.</string>
     <string name="demo_scenario_input_focus_follow_lazy_column_title">Focus follow · LazyColumn</string>
     <string name="demo_scenario_input_focus_follow_lazy_column_summary">A single LazyColumn owns scrolling while keyboard focus brings a lower search field into view.</string>
+    <string name="demo_scenario_input_focus_follow_lazy_grid_title">Focus follow · LazyVerticalGrid</string>
+    <string name="demo_scenario_input_focus_follow_lazy_grid_summary">A two-column lazy grid verifies that a full-line editor follows the same window visibility protocol.</string>
     <string name="demo_scenario_input_focus_follow_scrollable_column_title">Focus follow · ScrollableColumn</string>
     <string name="demo_scenario_input_focus_follow_scrollable_column_summary">A single eager scroll container verifies keyboard focus handoff without an outer scroller.</string>
     <string name="demo_scenario_input_focus_follow_vertical_pager_title">Focus follow · VerticalPager</string>

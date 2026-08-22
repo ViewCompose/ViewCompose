@@ -21,10 +21,16 @@ recapture on this device is therefore deferred rather than tuned into a passing 
 
 Last verified: 2026-08-21.
 
-Next action: proceed with the test-only visual/configuration matrix and popup golden while preserving
-the frozen target, and recapture revision-3 scroll on another root-controllable reference device.
-Do not remove production harness infrastructure or close Phase 1 until scroll passes the unchanged
-`0.15` gate.
+The configuration matrix exposed an unstable framework-level focus-visibility design. That slice is
+split into the higher-priority
+[`focus-visibility-scroll-ownership-hard-cut.md`](./focus-visibility-scroll-ownership-hard-cut.md)
+plan and is no longer closed by adding more tests to the existing Boolean policy. This plan retains
+the popup, navigation, theme, segmented, rounded-grid, and nested-scroll slices.
+
+Next action: pause this lower-priority closeout while the hard-cut focus-visibility plan executes,
+then resume the remaining visual/configuration matrix and popup golden. Recapture revision-3 scroll
+on another root-controllable reference device. Do not remove production harness infrastructure or
+close Phase 1 until scroll passes the unchanged `0.15` gate.
 
 ## Maven release changesets
 
@@ -59,7 +65,7 @@ finished state has:
 - `collection.stress@3` scroll and mutation under the existing five-iteration, per-method cooling,
   ready/action/state/reset, fixed-clock, and `run-from-apk` protocol;
 - the focused menu-shadow, theme-swatch, NavigationBar quick-tap, One UI navigation, segmented
-  shape, nested-scroll, rounded-grid, and input/focus-follow pressure slices;
+  shape, nested-scroll, and rounded-grid pressure slices;
 - English and Simplified Chinese, light and dark themes, LTR and RTL where supported, font scales
   `1.0` and `1.3`, and at least one non-default representative density;
 - popup visual-outset pixel assertions at representative anchor positions plus real-device
@@ -71,6 +77,7 @@ finished state has:
 
 - new framework APIs, new design-system components, public diagnostics redesign, or benchmark
   workloads unrelated to the remaining Demo closure;
+- focus visibility and scroll ownership, now owned by the separate highest-priority hard-cut plan;
 - changing a fixture merely to produce a more favorable performance number;
 - weakening locale-independent selector, deterministic reset, direct-scenario routing, or
   workload-revision contracts; and

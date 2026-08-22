@@ -11,6 +11,8 @@ import com.viewcompose.ui.unit.UiDp
 /**
  * Immutable renderer properties for a vertically scrolling lazy list.
  *
+ * Focused descendants use the renderer's native child-rectangle protocol without an opt-in field.
+ *
  * @property contentPadding logical padding inside the scrollable content
  * @property spacing main-axis spacing between adjacent items
  * @property items ordered keyed item models
@@ -20,7 +22,6 @@ import com.viewcompose.ui.unit.UiDp
  * @property prefetchPolicy eager preparation and native view-cache hints
  * @property reusePolicy native item-view pool policy
  * @property motionPolicy native item mutation animation policy
- * @property focusFollowKeyboard whether focus navigation may scroll the focused item into view
  */
 data class LazyColumnNodeProps(
     val contentPadding: LazyContentPadding,
@@ -32,5 +33,4 @@ data class LazyColumnNodeProps(
     val prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
     val reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     val motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-    val focusFollowKeyboard: Boolean = false,
 ) : NodeSpec
