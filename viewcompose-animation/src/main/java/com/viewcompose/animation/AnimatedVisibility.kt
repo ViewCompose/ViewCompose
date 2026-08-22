@@ -1041,23 +1041,23 @@ private fun Transition<Boolean>.sampleVisibilityVisuals(
         exitEnd: Float,
         exitSpec: FiniteAnimationSpec?,
     ): Float {
-        return sampleFloatBySegment(
-            transitionSpec = { initial, target ->
+        return sampleFloat(
+            transitionSpec = {
                 when {
-                    !initial && target -> enterSpec ?: snap()
-                    initial && !target -> exitSpec ?: snap()
+                    !initialState && targetState -> enterSpec ?: snap()
+                    initialState && !targetState -> exitSpec ?: snap()
                     else -> snap()
                 }
             },
-            segmentEndpoints = { initial, target, current ->
+            segmentEndpoints = { segment, current ->
                 when {
-                    !initial && target -> {
+                    !segment.initialState && segment.targetState -> {
                         val start = if (current.isApproximately(exitEnd)) enterStart else current
                         start to visibleValue
                     }
 
-                    initial && !target -> current to exitEnd
-                    else -> current to if (target) visibleValue else exitEnd
+                    segment.initialState && !segment.targetState -> current to exitEnd
+                    else -> current to if (segment.targetState) visibleValue else exitEnd
                 }
             },
             valueForSettledState = { settledVisible ->

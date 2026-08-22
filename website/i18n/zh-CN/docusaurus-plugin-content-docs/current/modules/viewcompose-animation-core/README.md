@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation-core/README.md
-translation_source_hash: fbf24cda85f66cd3843874876d45204b9bcb121a9f69c65030986db49a776c4e
+translation_source_hash: 7e7ece164cef194887d05209fafdb08f15bdd7891295dabe1fdba347398a885d
 translation_status: current
 ---
 
@@ -172,10 +172,18 @@ Mutation 以 `BoundReached` 终止并发布零速度。Idle Bound Update 与之�
 
 `TransitionCore<S>` 在多个 Channel 之间协调逻辑端点和一条 Timeline。Transition Owner 更新
 Target、注册各 Channel Duration、推进共享 Play Time，并在最长 Channel 完成时提交 Target。
-较短 Channel 在自身 Evaluator 中稳定。上层 Channel Owner 在 Retarget 时保留视觉连续性。
+较短 Channel 在自身 Evaluator 中稳定。动态 Owner 会在重新计算完整已提交 Channel 集合后调用
+`replaceDuration`，因此新增或移除 Channel 都可以增长或缩短共享时长。
+
+`seekToPlayTime` 可以在当前 Segment 上显式向前或向后采样，并能在终点 Seek 后重新激活该
+Segment。`restartRunningSegment` 为未完成的上层样本继续自主运行时创建新的 Timing Identity。
+`snapTo` 把 Current State、Target State 与两个 Segment Endpoint 原子折叠成一个 Idle Snapshot。
+这些都是协调 Primitive，而不是相互竞争的 Owner：上层必须把它们与 Frame Loop 串行化，并负责
+保存 Channel Value 与 Velocity。
 
 `TransitionCore` 非线程安全，也不启动或取消任务。物理 Channel 注册解析后的平衡时长，因此
-Transition State 仍会等全部 Channel 稳定后提交。
+Transition State 仍会等全部 Channel 稳定后提交。`viewcompose-animation` 提供 Q3 泛型 Channel、
+稳定 Segment API、归一化 Seek 所有权、取消/Join 策略、Composition Binding 与原子可观察发布。
 
 ## 测试自定义动画代码
 
@@ -184,10 +192,12 @@ Transition State 仍会等全部 Channel 稳定后提交。
 - 验证 Target 完成前的取消，确保不会强制终止状态。
 - 验证自定义值/速度往返、稳定维度、阈值、零速度与数值精度。
 - 覆盖欠阻尼、临界阻尼、过阻尼、安全上限、Bounds、快速 Retarget 与 Decay。
-- 推进共享 Segment 前注册全部 Transition Channel。
+- 推进共享 Segment 前注册全部 Transition Channel；动态 Channel 被移除时测试完整集合时长替换。
+- 测试显式 Seek Endpoint、反向 Seek、Restart Identity、Snap 折叠，以及上层 Owner 的单 Writer
+  串行化。
 
 模块测试覆盖这些物理分支、Overshoot、结构化结果、有符号 ARGB 速度、Converter 失败、
-Reduced Motion、Transition Retarget 与时长行为。
+Reduced Motion、Transition Retarget、动态时长、显式 Seek/Restart 与 Snap 行为。
 
 ## 相关文档
 

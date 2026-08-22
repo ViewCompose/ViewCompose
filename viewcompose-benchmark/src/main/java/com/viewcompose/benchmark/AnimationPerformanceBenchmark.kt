@@ -17,9 +17,11 @@ import org.junit.runner.RunWith
  *
  * Historical methods preserve the Phase 0/1 baselines. Revision 2 compares keyed AnimatedContent
  * with the same-page alpha-only Crossfade control. Revision 3 measures rich parent-plus-descendant
- * visibility choreography. Each method measures complete forward and reverse animations after an
- * unmeasured launch settle. Accessibility actions avoid mixing pointer press frames into the
- * animation distribution, while state assertions prove every request reached the application.
+ * visibility choreography. Transition revision 2 measures explicit normalized seeking followed by
+ * autonomous completion on the same generic, unequal-duration channel set. Each method measures
+ * complete forward and reverse interactions after an unmeasured launch settle. Accessibility
+ * actions avoid mixing pointer press frames into the animation distribution, while state assertions
+ * prove every request reached the application.
  */
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalMetricApi::class)
@@ -90,11 +92,11 @@ class AnimationPerformanceBenchmark {
     }
 
     @Test
-    fun synchronizedTransitionRevision1() {
+    fun seekableTransitionRevision2() {
         benchmarkRoundTrips(
             scenarioId = ANIMATION_TRANSITION_SCENARIO,
             forwardRole = DemoTargetRole.PrimaryAction,
-            reverseRole = DemoTargetRole.PrimaryAction,
+            reverseRole = DemoTargetRole.SecondaryAction,
             settleMillis = TRANSITION_SETTLE_MILLIS,
         )
     }
@@ -151,6 +153,6 @@ class AnimationPerformanceBenchmark {
         const val CONTENT_REPLACEMENT_SETTLE_MILLIS = 380L
         const val RICH_VISIBILITY_SETTLE_MILLIS = 900L
         const val CONTENT_SIZE_SETTLE_MILLIS = 650L
-        const val TRANSITION_SETTLE_MILLIS = 540L
+        const val TRANSITION_SETTLE_MILLIS = 850L
     }
 }

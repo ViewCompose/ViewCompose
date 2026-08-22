@@ -282,6 +282,20 @@ identity token.
 
 <div className="search-partition-detail">
 
+2026-08-23: paired locale builds reused the same complete 100-version generated API corpus and
+compared `main` at `2a21db65` with the Phase 4 animation candidate. `main` measured 47,667,169
+non-API bytes and 5,338,242/5,806,681 English/Chinese search bytes. Before consolidation, the
+candidate measured 47,810,162 non-API bytes and exceeded the 45.5 MiB ceiling by 99,954 bytes.
+Replacing the completed Phase 0--4 execution ledger with one active status table, while retaining
+all unresolved Phase 5--7 requirements and linking durable contracts to their owning manuals,
+reduced the final documented candidate to 47,678,361 bytes. That is 131,801 bytes below the
+unconsolidated candidate and only 11,192 bytes (0.02%) above `main`, leaving 31,847 bytes of
+non-API headroom without moving any
+budget. Final search indexes are 5,369,073/5,841,187 bytes, increases of 30,831/34,506 bytes that
+remain below the unchanged 6.25 MiB limits. The conclusion is **improved** representation with no
+threshold change. Reusing one API corpus is a limitation of the pair, but non-API accounting
+excludes that corpus and both locale render/search trees were rebuilt completely.
+
 2026-08-18: paired Docusaurus locale builds on the same checkout dependency set compared `main` at
 `a9d1a092` with PR #105 at `28abaea7`. `main` measured 45,313,029 non-API bytes and
 5,865,709/6,314,030 English/Chinese search bytes. Before route-level search segmentation, the

@@ -12,6 +12,7 @@ import com.viewcompose.animation.ContentSlideDirection
 import com.viewcompose.animation.ContentTransform
 import com.viewcompose.animation.Crossfade
 import com.viewcompose.animation.MutableTransitionState
+import com.viewcompose.animation.SeekableTransitionState
 import com.viewcompose.animation.SizeTransform
 import com.viewcompose.animation.SlideDirection
 import com.viewcompose.animation.animateColorAsState
@@ -38,6 +39,7 @@ import com.viewcompose.animation.core.keyframe
 import com.viewcompose.animation.core.keyframes
 import com.viewcompose.animation.rememberInfiniteTransition
 import com.viewcompose.animation.rememberAnimatable
+import com.viewcompose.animation.rememberTransition
 import com.viewcompose.animation.scaleIn
 import com.viewcompose.animation.scaleOut
 import com.viewcompose.animation.slideInHorizontally
@@ -167,7 +169,21 @@ internal fun UiTreeBuilder.AnimationPage(
     val easingLinearState = if (fixture == AnimationFixture.Specs) remember { mutableStateOf(false) } else null
     val repeatModeReverseState = if (fixture == AnimationFixture.Specs) remember { mutableStateOf(false) } else null
     val vectorTargetState = if (fixture == AnimationFixture.Specs) remember { mutableStateOf(false) } else null
-    val transitionState = if (fixture == AnimationFixture.Transition) remember { mutableStateOf(false) } else null
+    val seekableTransitionState = if (fixture == AnimationFixture.Transition) {
+        remember { SeekableTransitionState(false) }
+    } else {
+        null
+    }
+    val seekableCommandState = if (fixture == AnimationFixture.Transition) {
+        remember { mutableStateOf<SeekableDemoCommand>(SeekableDemoCommand.None) }
+    } else {
+        null
+    }
+    val seekableCommandNonceState = if (fixture == AnimationFixture.Transition) {
+        remember { mutableStateOf(0) }
+    } else {
+        null
+    }
     val mutableVisibilityState = if (fixture == AnimationFixture.Transition) {
         remember { MutableTransitionState(false) }
     } else {
@@ -1043,7 +1059,9 @@ internal fun UiTreeBuilder.AnimationPage(
             }
 
             "transition_matrix" -> {
-                val transitionState = checkNotNull(transitionState)
+                val seekableTransitionState = checkNotNull(seekableTransitionState)
+                val seekableCommandState = checkNotNull(seekableCommandState)
+                val seekableCommandNonceState = checkNotNull(seekableCommandNonceState)
                 val mutableVisibilityState = checkNotNull(mutableVisibilityState)
                 val rowAxisVisibleState = checkNotNull(rowAxisVisibleState)
                 val columnAxisVisibleState = checkNotNull(columnAxisVisibleState)
@@ -1052,55 +1070,132 @@ internal fun UiTreeBuilder.AnimationPage(
                 title = stringResource(R.string.demo_animation_transition_title),
                 subtitle = stringResource(R.string.demo_animation_transition_summary),
             ) {
-                val transition = updateTransition(
-                    targetState = transitionState.value,
-                    label = DEMO_TRANSITION_LABEL,
+                val transition = rememberTransition(
+                    transitionState = seekableTransitionState,
+                    label = DEMO_SEEKABLE_TRANSITION_LABEL,
+                )
+                val transitionPositionState = transition.animateValue(
+                    converter = DemoVector2Converter,
+                    transitionSpec = {
+                        if (isTransitioningTo(false, true)) {
+                            tween(720, easing = EasingDefaults.FastOutSlowIn)
+                        } else {
+                            tween(520, easing = EasingDefaults.LinearOutSlowIn)
+                        }
+                    },
+                    targetValueByState = { toggled ->
+                        if (toggled) DemoVector2(92f, 30f) else DemoVector2(0f, 0f)
+                    },
                 )
                 val transitionAlphaState = transition.animateFloat(
-                    animationSpec = { tween(260) },
+                    transitionSpec = { tween(180) },
                 ) { toggled ->
                     if (toggled) 1f else 0.35f
                 }
                 val transitionIntState = transition.animateInt(
-                    animationSpec = { spring(dampingRatio = 0.82f, stiffness = 230f) },
+                    transitionSpec = {
+                        if (isTransitioningTo(false, true)) tween(420) else tween(260)
+                    },
                 ) { toggled ->
                     if (toggled) 9 else 2
                 }
                 val transitionDpState = transition.animateDp(
-                    animationSpec = { tween(260) },
+                    transitionSpec = { tween(600) },
                 ) { toggled ->
                     if (toggled) 14.dp else 4.dp
                 }
                 val transitionColorState = transition.animateColor(
-                    animationSpec = { tween(300) },
+                    transitionSpec = { tween(720) },
                 ) { toggled ->
                     if (toggled) 0xFF2E7D32.toInt() else 0xFFAD1457.toInt()
+                }
+                LaunchedEffect(
+                    seekableCommandState.value,
+                    seekableCommandNonceState.value,
+                    seekableTransitionState,
+                ) {
+                    when (val command = seekableCommandState.value) {
+                        SeekableDemoCommand.None -> Unit
+                        is SeekableDemoCommand.Seek -> seekableTransitionState.seekTo(
+                            fraction = command.fraction,
+                            targetState = command.target,
+                        )
+                        is SeekableDemoCommand.Animate -> {
+                            seekableTransitionState.animateTo(command.target)
+                        }
+                        is SeekableDemoCommand.Snap -> seekableTransitionState.snapTo(command.target)
+                    }
+                }
+                val transitionMode = when {
+                    seekableTransitionState.isAnimating -> {
+                        stringResource(R.string.demo_animation_transition_mode_animating)
+                    }
+                    seekableTransitionState.isSeeking -> {
+                        stringResource(R.string.demo_animation_transition_mode_seeking)
+                    }
+                    else -> stringResource(R.string.demo_animation_transition_mode_idle)
                 }
                 Text(
                     text = stringResource(
                         R.string.demo_animation_transition_state,
-                        transitionState.value,
-                        mutableVisibilityState.targetState,
-                        rowAxisVisibleState.value,
-                        columnAxisVisibleState.value,
+                        seekableTransitionState.currentState,
+                        seekableTransitionState.targetState,
+                        seekableTransitionState.fraction.format2(),
+                        transitionMode,
+                        "${transition.segment.initialState} → ${transition.segment.targetState}",
                     ),
-                    modifier = Modifier.animationScenarioTarget(scenario, DemoAutomationRole.State),
-                )
-                Button(
-                    text = stringResource(
-                        if (transitionState.value) {
-                            R.string.demo_animation_transition_to_primary
-                        } else {
-                            R.string.demo_animation_transition_to_alternative
-                        },
-                    ),
-                    onClick = { transitionState.value = !transitionState.value },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .margin(bottom = 8.dp)
-                        .testTag(DemoAnimationTestTags.ANIMATION_TRANSITION_TOGGLE)
-                        .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+                        .testTag(DemoAnimationTestTags.ANIMATION_TRANSITION_SEEK_STATUS)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.State),
                 )
+                Row(
+                    spacing = 8.dp,
+                    modifier = Modifier.fillMaxWidth().margin(bottom = 8.dp),
+                ) {
+                    Button(
+                        text = stringResource(
+                            if (seekableTransitionState.fraction < 0.55f) {
+                                R.string.demo_animation_transition_seek_late
+                            } else {
+                                R.string.demo_animation_transition_seek_early
+                            },
+                        ),
+                        onClick = {
+                            val target = if (seekableTransitionState.isSeeking) {
+                                seekableTransitionState.targetState
+                            } else {
+                                !seekableTransitionState.currentState
+                            }
+                            val fraction = if (seekableTransitionState.fraction < 0.55f) {
+                                0.70f
+                            } else {
+                                0.35f
+                            }
+                            seekableCommandState.value = SeekableDemoCommand.Seek(fraction, target)
+                            seekableCommandNonceState.value += 1
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(DemoAnimationTestTags.ANIMATION_TRANSITION_TOGGLE)
+                            .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+                    )
+                    Button(
+                        text = stringResource(R.string.demo_animation_transition_animate),
+                        variant = ButtonVariant.Outlined,
+                        onClick = {
+                            val target = if (seekableTransitionState.isSeeking) {
+                                seekableTransitionState.targetState
+                            } else {
+                                !seekableTransitionState.currentState
+                            }
+                            seekableCommandState.value = SeekableDemoCommand.Animate(target)
+                            seekableCommandNonceState.value += 1
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
+                    )
+                }
                 Surface(
                     variant = SurfaceVariant.Variant,
                     modifier = Modifier
@@ -1112,6 +1207,25 @@ internal fun UiTreeBuilder.AnimationPage(
                         spacing = 4.dp,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
+                        Surface(
+                            variant = SurfaceVariant.Default,
+                            modifier = Modifier
+                                .graphicsLayer(
+                                    translationX = transitionPositionState.value.x,
+                                    translationY = transitionPositionState.value.y,
+                                    alpha = transitionAlphaState.value,
+                                )
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                .testTag(DemoAnimationTestTags.ANIMATION_TRANSITION_POSITION),
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    R.string.demo_animation_transition_position,
+                                    transitionPositionState.value.x.format2(),
+                                    transitionPositionState.value.y.format2(),
+                                ),
+                            )
+                        }
                         Text(
                             text = stringResource(
                                 R.string.demo_animation_transition_alpha,
@@ -1146,7 +1260,8 @@ internal fun UiTreeBuilder.AnimationPage(
                 Button(
                     text = stringResource(R.string.demo_animation_reset),
                     onClick = {
-                        transitionState.value = false
+                        seekableCommandState.value = SeekableDemoCommand.Snap(false)
+                        seekableCommandNonceState.value += 1
                         mutableVisibilityState.targetState = false
                         rowAxisVisibleState.value = false
                         columnAxisVisibleState.value = false
@@ -1170,8 +1285,7 @@ internal fun UiTreeBuilder.AnimationPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(top = 10.dp, bottom = 8.dp)
-                        .testTag(DemoAnimationTestTags.ANIMATION_VISIBILITY_STATE_TOGGLE)
-                        .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
+                        .testTag(DemoAnimationTestTags.ANIMATION_VISIBILITY_STATE_TOGGLE),
                 )
                 Text(
                     text = stringResource(
@@ -1656,6 +1770,23 @@ private enum class AnimatableCommand {
     Stop,
 }
 
+private sealed interface SeekableDemoCommand {
+    data object None : SeekableDemoCommand
+
+    data class Seek(
+        val fraction: Float,
+        val target: Boolean,
+    ) : SeekableDemoCommand
+
+    data class Animate(
+        val target: Boolean,
+    ) : SeekableDemoCommand
+
+    data class Snap(
+        val target: Boolean,
+    ) : SeekableDemoCommand
+}
+
 private data class DemoVector2(
     val x: Float,
     val y: Float,
@@ -1713,5 +1844,5 @@ private fun Modifier.animationScenarioTarget(
     return demoAutomationTarget(target)
 }
 
-private const val DEMO_TRANSITION_LABEL = "demo_transition"
+private const val DEMO_SEEKABLE_TRANSITION_LABEL = "demo_seekable_transition"
 private const val DEMO_INFINITE_TRANSITION_LABEL = "demo_infinite"

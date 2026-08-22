@@ -4,7 +4,7 @@ This page compares Jetpack Compose Animation with the current ViewCompose animat
 accepted expansion contract. It is not a source-compatibility promise. Similar names describe the
 same concept only where the lifecycle, timing, geometry, and interruption rows below agree.
 
-Last verified: **2026-08-22**
+Last verified: **2026-08-23**
 
 Re-verification owner: **maintainers of `viewcompose-animation-core`, `viewcompose-animation`, the
 Android renderer, navigation, Preview, and Studio tooling**
@@ -15,8 +15,8 @@ The current ViewCompose target is:
 
 | Artifact | Version | Current role |
 | --- | --- | --- |
-| `viewcompose-animation-core` | `0.1.0-alpha04` | Platform-neutral duration/physical sampling, typed velocity, mutation, motion policy, and transition coordination |
-| `viewcompose-animation` | `0.1.0-alpha04` | Composition-owned physical/state animation, transitions, visibility, Crossfade, and content-size animation |
+| `viewcompose-animation-core` | `0.1.0-alpha04` | Platform-neutral duration/physical sampling, typed velocity, mutation, motion policy, and explicit transition coordination |
+| `viewcompose-animation` | `0.1.0-alpha04` | Composition-owned physical/state animation, generic and seekable transitions, visibility, Crossfade, and content-size animation |
 
 The upstream stable semantic baseline is Compose Animation `1.12.0`, released on 2026-08-12. It was
 verified against the official [Compose Animation release notes](https://developer.android.com/jetpack/androidx/releases/compose-animation),
@@ -49,7 +49,7 @@ implemented, documented in the owning module, and released.
 | `Animatable` mutation ownership | Last mutation cancels the previous call; completion returns result state | **Supported** with `Animatable<T, V>`, retained velocity, structured results, bounds, and last-writer cancellation | Preserve structured ownership; cancellation throws rather than returning an interrupted result |
 | Decay and fling handoff | Decay specs and velocity continuation | **Supported** with platform-neutral exponential decay | Gesture owners still convert density, direction, axis, and nested-scroll velocity before handoff |
 | Target-as-state animation | State-driven typed animation | **Supported** for generic values, Float, Int, encoded ARGB, and `UiDp` | Color interpolation is encoded-channel, not color-space aware |
-| `Transition` | Shared state segment, generic channels, seeking | **Partially supported**; one autonomous timeline and four built-in channel types exist | Phase 4 adds public generic, segment-aware, and seekable control |
+| `Transition` | Shared state segment, generic channels, seeking | **Supported** with generic `AnimationConverter<T, V>` channels, stable segment-aware specifications, one autonomous or seeking writer, and normalized seek progress | Use `updateTransition` for composition-owned targets or bind one `SeekableTransitionState` through `rememberTransition`; play-time seeking and initial seek velocity are intentionally not public |
 | `AnimatedVisibility` | Enter/exit algebra, slide, scale, descendant choreography | **Supported** for fade, aligned measured reveal, measured-fraction slide, pivoted scale, owning scope, and shared-clock descendant enter/exit | Use `AnimatedVisibilityScope.AnimatedEnterExit` rather than Compose's modifier form; callback-calculated offsets remain unsupported |
 | `AnimatedContent` | Keyed outgoing/incoming replacement and content transforms | **Supported** for keyed replacement, pair-specific fade/slide/scale, z-order, alignment, and optional size transforms | Keep `Crossfade` for alpha-only replacement; full-size callback offsets and descendant choreography remain unsupported |
 | Content-size animation | Layout size changes | **Supported**, using an Android renderer wrapper and the shared physical spring solver | Revalidate parent constraints and wrapper placement; infinite specifications are rejected |
@@ -149,10 +149,21 @@ For keyed `AnimatedContent`, a changed target is admitted only after one candida
 successfully, adding one commit boundary before the replacement segment so renderer failure cannot
 mutate content identity.
 
-Seekable transitions have one writer. `seekTo` cancels and joins autonomous animation before it
-publishes a finite `0f..1f` fraction. Seeking does not manufacture velocity. `animateTo` can resume
-from the sampled values with explicit gesture velocity. Seek state is not saveable, and navigation
-continues to own predictive-Back commit or rollback.
+Seekable transitions have one writer and one active composition binding. `seekTo` validates a
+finite `0f..1f` fraction before ownership changes, cancels and joins the previous command, and maps
+that fraction to the longest committed channel duration; shorter channels clamp at their endpoints.
+Dynamic channel additions or removals retain the normalized fraction and resample against the new
+maximum. A changed target freezes every sampled value as the new start, and seeking always retains
+zero physical velocity.
+
+`animateTo` resumes from the seek sample on one autonomous frame loop with zero initial velocity;
+there is no public initial-velocity parameter in this phase. `snapTo` publishes no frame and
+collapses current state, target state, and both segment endpoints to one idle value. Removing the
+binding cancels an active writer and preserves unfinished progress as seeking state. The state owns
+no scope, is not automatically saveable, and navigation continues to own predictive-Back commit or
+rollback. ViewCompose exposes normalized fraction rather than public nanosecond play-time control,
+and it requires explicit `animateTo`/`snapTo` after predictive progress instead of mutating the
+navigation transaction.
 
 ## Layout and shared-motion mapping
 
@@ -213,6 +224,16 @@ fixed-frequency Xiaomi batch, candidate P50/P95/peak heap changed by `+2.4%/+3.3
 not identical, this is `no material change` release-safety evidence rather than a like-for-like
 throughput or power claim. Exact values, controls, and limitations are recorded in
 [performance Section 2.4.11](../tooling/performance.md#2411-animation-revision-3-rich-visibility-release-safety-comparison).
+
+Phase 4 advances only the transition fixture to `animation.transition@2`. It measures normalized
+seek followed by autonomous completion across one generic two-dimensional channel and four typed
+channels with unequal durations. The rooted Xiaomi fixed-frequency batch produced identical
+`200/200/200/200/200` frame counts, frame CPU P50/P95/P99 of
+`7.775/10.493/11.718 ms`, median peak heap of `8,474 KiB`, run-P50 CV `0.011`, and zero thermal
+throttle sleep. This is an accepted **absolute baseline** for the new workload. It is not compared
+longitudinally with `animation.transition@1`, whose controls, action path, channel set, and revision
+differ. Exact APK identities, temperature, clock checks, limits, and next action are recorded in
+[performance Section 2.4.12](../tooling/performance.md#2412-animation-revision-2-seekable-transition-baseline).
 
 ## Migration sequence
 

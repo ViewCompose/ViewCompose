@@ -525,9 +525,9 @@ private fun Transition<ContentIdentity>.sampleContentVisuals(
         initialValue: Float,
         animationSpec: FiniteAnimationSpec?,
         settledValue: Float,
-    ) = sampleFloatBySegment(
-        transitionSpec = { _, _ -> animationSpec ?: snap() },
-        segmentEndpoints = { _, _, _ -> initialValue to settledValue },
+    ) = sampleFloat(
+        transitionSpec = { animationSpec ?: snap() },
+        segmentEndpoints = { _, _ -> initialValue to settledValue },
         valueForSettledState = { settledValue },
     )
 
@@ -535,9 +535,9 @@ private fun Transition<ContentIdentity>.sampleContentVisuals(
         initialValue: Float,
         targetValue: Float,
         animationSpec: FiniteAnimationSpec?,
-    ) = sampleFloatBySegment(
-        transitionSpec = { _, _ -> animationSpec ?: snap() },
-        segmentEndpoints = { _, _, _ -> initialValue to targetValue },
+    ) = sampleFloat(
+        transitionSpec = { animationSpec ?: snap() },
+        segmentEndpoints = { _, _ -> initialValue to targetValue },
         valueForSettledState = { targetValue },
     )
 

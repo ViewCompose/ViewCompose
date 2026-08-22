@@ -89,8 +89,8 @@
     <string name="demo_scenario_animation_specs_summary">Verify typed and generic values across easing and repeat specifications.</string>
     <string name="demo_scenario_animation_content_size_title">Animated content size</string>
     <string name="demo_scenario_animation_content_size_summary">A non-scrolling, always-visible stage for verifying animateContentSize expansion and collapse.</string>
-    <string name="demo_scenario_animation_transition_title">Transition channels</string>
-    <string name="demo_scenario_animation_transition_summary">Verify coordinated transition channels and axis-aware visibility.</string>
+    <string name="demo_scenario_animation_transition_title">Seekable transition channels</string>
+    <string name="demo_scenario_animation_transition_summary">Verify generic segment-aware channels, explicit seek, autonomous handoff, and axis-aware visibility.</string>
     <string name="demo_scenario_animation_infinite_title">Infinite and animatable</string>
     <string name="demo_scenario_animation_infinite_summary">Verify infinite repetition and explicit Animatable commands in isolation.</string>
     <string name="demo_scenario_modifier_visual_title">Visual modifiers</string>

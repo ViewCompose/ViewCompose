@@ -1649,7 +1649,7 @@ class DemoVisualUiTest {
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickScenarioViewByIdVisible(R.id.demo_animation_transition_secondary_action)
+                activity.clickByTestTag(DemoAnimationTestTags.ANIMATION_VISIBILITY_STATE_TOGGLE)
                 activity.clickByTestTag(DemoAnimationTestTags.ANIMATION_ROW_AXIS_TOGGLE)
                 activity.clickByTestTag(DemoAnimationTestTags.ANIMATION_COLUMN_AXIS_TOGGLE)
             }

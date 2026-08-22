@@ -2,8 +2,8 @@
 
 ## Status
 
-Active. Phases 0 through 2 are complete and merged. Phase 3 implementation and acceptance are
-complete on the candidate branch; pull-request delivery remains before Phase 4 begins.
+Active. Phases 0 through 3 are complete and merged. Phase 4 implementation and acceptance are
+complete on PR #124; pull-request delivery remains before Phase 5 begins.
 This plan was split out on 2026-08-18 from the Animation follow-up in the unified roadmap and the
 framework-wide physical-spring candidate recorded by the multi-design-system plan. Those documents
 now point here; this file is the only active plan that owns the seven animation expansions defined
@@ -21,8 +21,8 @@ architecture, guide, reference, and owning-module documentation before this plan
 
 Last verified: 2026-08-23.
 
-Next action: submit and merge the Phase 3 pull request, then begin Phase 4 without reopening the
-accepted visibility scope, shared-clock, native-ownership, or transform-geometry contracts.
+Next action: merge PR #124, then begin Phase 5 without reopening the accepted seek ownership,
+dynamic-duration, segment-identity, or zero-velocity continuation contracts.
 
 ## Maven release changesets
 
@@ -31,8 +31,10 @@ accepted visibility scope, shared-clock, native-ownership, or transform-geometry
 - `release/changes/20260822-animated-content-phase2.json` — Phase 2 keyed content replacement,
   renderer ownership, and rollback contracts; accepted and merged.
 - `release/changes/20260823-animated-visibility-phase3.json` — Phase 3 rich visibility primitives,
-  type-safe content scope, shared descendant clock, and native interaction ownership; candidate
-  changeset pending Phase 3 delivery.
+  type-safe content scope, shared descendant clock, and native interaction ownership; accepted and
+  merged.
+- `release/changes/20260823-seekable-transition-phase4.json` — Phase 4 generic, segment-aware, and
+  seekable transition hard cut; accepted on PR #124 pending merge.
 
 ## Objective
 
@@ -150,311 +152,44 @@ The total planning range is approximately 19--31 engineering weeks. It is an ord
 aid, not a delivery commitment. A phase cannot trade away transaction safety, lifecycle release,
 inactive-path performance, or deterministic tests merely to meet the estimate.
 
-## Phase 0: Contract, baseline, and budget freeze
+## Completed Phases 0–4
 
-Before source changes, record one reviewed design decision covering:
+The detailed execution ledger for completed phases was consolidated on 2026-08-23 after Phase 4
+acceptance. Durable semantics remain in
+[ADR-0019](../../architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md),
+[ADR-0020](../../architecture/decisions/0020-separate-animation-value-and-velocity-domains.md), the
+[animation manual](../../modules/viewcompose-animation/README.md), the
+[animation-core manual](../../modules/viewcompose-animation-core/README.md), and the
+[Compose migration guide](../../migration/compose-animation.md). This table remains the active
+plan-status authority; exact measurements, device controls, limitations, and interpretations stay
+in the linked performance sections instead of being duplicated here.
 
-1. exact stable Compose/AndroidX comparison versions and which semantics are intentionally
-   different for an Android View renderer;
-2. Q level and every applicable contract field for each proposed public/protected API, including
-   units, coordinate spaces, lifecycle, cancellation, thread confinement, ownership, and failure;
-3. physical spring equations, damping/stiffness units, vector velocity representation,
-   visibility thresholds, equilibrium test, maximum-duration/failure guard, numeric precision, and
-   deterministic clock behavior;
-4. decay model, friction/velocity units, bounds collision, terminal reason, and gesture-to-animation
-   handoff;
-5. content/visibility transition composition rules, duplicate-channel precedence, measurement,
-   clipping, z-order, identity, interruption, and subtree release;
-6. transition seek ownership, frame-loop exclusion, legal progress/time range, retarget behavior,
-   save/restore decision, and relationship to predictive Back;
-7. bounds coordinate system, parent/scroll/RTL changes, measurement strategy, hit testing,
-   accessibility bounds, and transactional rollback;
-8. shared-key namespace, pairing, overlay, collision/missing-pair fallback, destination lifecycle,
-   input/accessibility owner, and cross-session limit;
-9. runtime-neutral inspection port and request protocol compliant with ADR-0009, including whether
-   controlled live seeking requires a follow-up ADR; and
-10. per-frame CPU, allocation, retained-tree, extra-measure, inactive-tooling, and request-driven
-    tooling budgets with reproducible baseline scenarios.
+| Phase | Accepted boundary | Delivery status | Performance and final evidence |
+| --- | --- | --- | --- |
+| 0 | Hard-cut compatibility, physical units and termination, content/visibility algebra, seek/layout/shared-motion ownership, Q3 inventory, and fixed budgets | Complete and merged in `6d6bdbe4` | [Revision-1 pre-physics baseline](../../tooling/performance.md#248-animation-revision-1-pre-physics-baseline); verification isolation was corrected before implementation |
+| 1 | Analytic physical spring, typed value/velocity domains, decay, bounds, structured results, fail-before-ownership validation, and one last-writer mutation model | Complete and merged in `a8196f0b` | [Physical candidate comparison](../../tooling/performance.md#249-animation-revision-1-phase-1-physical-candidate); fixed-frequency rows passed and rooted gesture handoff reached `BoundReached` |
+| 2 | Keyed `AnimatedContent`, pair-specific transforms, measured size, bounded two-subtree ownership, incoming-only interaction, rollback, and exact release | Complete and merged in `84dce0ae` | [AnimatedContent comparison](../../tooling/performance.md#2410-animation-revision-2-animatedcontent-comparison); frame and peak memory were `no material change` |
+| 3 | Slide/scale/aligned visibility, hard-cut typed scope, shared parent/descendant timeline, complete-host geometry, and immediate inactive interaction removal | Complete and merged in `2a21db65` | [Rich-visibility comparison](../../tooling/performance.md#2411-animation-revision-3-rich-visibility-release-safety-comparison); frozen gates passed and P99 remains a recorded watch item |
+| 4 | Stable `TransitionSegment`, generic `animateValue<T, V>`, hard-cut `transitionSpec` name, dynamic committed-channel duration, and one seek/animate/snap writer | Complete on PR #124; merge remains | [Seekable-transition absolute baseline](../../tooling/performance.md#2412-animation-revision-2-seekable-transition-baseline): five 200-frame runs, P50/P95/P99 `7.775/10.493/11.718 ms`, heap `8,474 KiB`, CV `0.011`, zero thermal sleep |
 
-Phase 0 must decide whether the current duration-bearing `SpringSpec` is hard-cut, renamed as a
-legacy approximation, or preserved as a separate duration specification. A physical spring must
-not silently reinterpret `durationMillis`, and two factories named `spring` must not produce
-ambiguous termination semantics.
+The cumulative accepted contract through Phase 4 is:
 
-Exit criteria:
+- physical and finite specifications share one vector-aware sampling engine; invalid replacement
+  input cannot take mutation ownership or publish a partial snapshot;
+- keyed content and visibility retain bounded renderer ownership, transactional rollback, and one
+  shared transition timeline rather than feature-specific frame loops;
+- normalized seeking maps to the longest complete committed channel set, clamps shorter channels,
+  resamples dynamic membership at the retained fraction, and uses zero velocity when handing an
+  explicit seek to autonomous continuation;
+- `snapTo` atomically collapses current state, target state, and segment endpoints; the controller
+  owns no scope, saved state, or navigation commit/rollback; and
+- every Q3 surface landed with canonical KDoc, compiled samples, owning-module documentation,
+  Demo/Preview coverage, reviewed Chinese mirrors, immutable Changesets, and interpreted
+  performance evidence.
 
-- the design is reviewed against the five-layer architecture, renderer transaction model,
-  navigation ownership, API documentation standard, and development-tooling isolation ADR;
-- each planned API has a Q level, owner module, compiled-sample destination, compatibility choice,
-  and test category;
-- baseline benchmarks and device fixtures are reproducible before implementation; and
-- no Phase 1 production API is added while physical units or termination remain implicit.
-
-Phase 0 was accepted on 2026-08-22. ADR-0019 freezes the hard-cut compatibility choice, physical
-equations and units, typed velocity/result model, cancellation and bounds behavior,
-content/visibility algebra, seek ownership, real layout geometry, session-scoped shared motion,
-request-driven tooling, Q3 inventory, and budgets. The migration comparison records supported and
-planned semantics against Compose `1.12.0`. The four revision-1 Xiaomi MI 6 / API 28 fixed-clock
-workloads all have identical per-run frame counts and run-P50 CV `0.010..0.075`, below the `0.15`
-ceiling. Their exact frame percentiles, heap values, APK identities, protocol, limitations, and
-`inconclusive` normalized conclusion are interpreted in
-[performance Section 2.4.8](../../tooling/performance.md#248-animation-revision-1-pre-physics-baseline).
-The connected gate passed 134/137 tests before three warning-free ConstraintLayout checks read the
-expected `lifecycle-invalid-grid` warning from the immediately preceding lifecycle case. All three
-passed in isolation. The test harness was hard-cut from an unbounded global logcat read to a unique
-per-test marker window, and the exact four-test class then passed 4/4 in the contaminating order.
-This closes verification isolation without changing framework production behavior.
-
-## Phase 1: Physical spring, velocity, decay, bounds, and results
-
-Replace the fixed-duration approximation only through the compatibility decision from Phase 0 and
-add one vector-aware physical execution model shared by deterministic sampling, `AnimatableCore`,
-composition `Animatable`, gestures, and transition channels.
-
-ADR-0019 freezes the Phase 1 behavior, while ADR-0020 supersedes its provisional single-type
-generic vocabulary because packed values such as ARGB cannot represent signed multi-channel
-velocity. The accepted Phase 1 result vocabulary is:
-
-```kotlin
-enum class AnimationEndReason {
-    Finished,
-    BoundReached,
-    DurationLimitReached,
-}
-
-data class AnimationVelocity<V>(val valuePerSecond: V)
-
-data class AnimationState<T, V>(
-    val value: T,
-    val velocity: AnimationVelocity<V>,
-    val playTimeNanos: Long,
-)
-
-data class AnimationResult<T, V>(
-    val endState: AnimationState<T, V>,
-    val endReason: AnimationEndReason,
-)
-
-suspend fun Animatable<T, V>.animateTo(
-    targetValue: T,
-    animationSpec: FiniteAnimationSpec,
-    initialVelocity: AnimationVelocity<V>? = null,
-): AnimationResult<T, V>
-
-suspend fun Animatable<T, V>.animateDecay(
-    initialVelocity: AnimationVelocity<V>,
-    animationSpec: DecayAnimationSpec,
-): AnimationResult<T, V>
-
-fun Animatable<T, V>.updateBounds(
-    lowerBound: T? = null,
-    upperBound: T? = null,
-)
-```
-
-The exact overload set may be refined during implementation only within the accepted ADR contracts;
-it cannot restore a duration spring, return interruption as a normal result, or weaken typed
-velocity. The retained contract must:
-
-1. capture the retained value and velocity atomically when `initialVelocity` is `null`, while an
-   explicit initial velocity replaces only the captured velocity and a non-physical spec ignores it;
-2. propagate interruption as coroutine cancellation while preserving last-mutation-wins
-   ownership and the last committed value/velocity;
-3. validate a candidate target animation before it replaces or cancels the active mutation;
-4. validate construction before exposing state, and commit `snapTo`/`stop` as one atomic idle
-   snapshot without cancelling active work when snap validation fails;
-5. stop at bounds without publishing a sample outside accepted bounds;
-6. expose an exact target at successful target completion while retaining physically meaningful
-   terminal velocity rules;
-7. keep deterministic explicit-time sampling for tests, Preview, transition seeking, and tooling;
-8. resolve reduced-motion and `MotionScheme` roles without inventing a duration for an unbounded
-   physical solve; and
-9. allocate no avoidable objects per frame beyond the accepted converter/vector strategy.
-
-Required evidence includes under-, critical-, and over-damped cases; overshoot; threshold and
-maximum-duration termination; velocity continuation; decay; bounds; rapid retarget; external
-cancellation; reduced motion; zero-distance motion; invalid configuration; float/vector numeric
-stability; gesture handoff; and same-device performance against the duration-based baseline.
-
-Implementation status on 2026-08-22: the production hard cut is implemented for separate value and
-velocity domains, destination-buffer converters, analytic physical springs, exponential decay,
-bounds, structured results, last-writer velocity continuation, finite target-as-state/visibility/
-content-size contracts, transition channels, motion scaling, and the Android animated-size host.
-ADR-0020 supersedes only ADR-0019's invalid single-type generic detail; all physical and ownership
-decisions remain in force. Focused core, composition, renderer, and Demo tests accept analytic
-damping and terminal reasons, velocity continuation, cancellation, bounds, converter-buffer
-reuse, renderer physical sizing, and one-snapshot instant mutations. Invalid construction, target
-replacement, and snap input are also accepted as fail-before-publication contracts: they neither
-publish a partial state nor take ownership from the active mutation. A rooted-device gesture
-handoff accepted a measured `2222 px/s` swipe and reached the bound with `BoundReached`, confirming
-the Demo path uses physical decay rather than a separate gesture approximation. The final
-`qaQuick qaPreview` gate passed together with 1,624 actionable tasks (156 executed and 1,468
-up-to-date), so compilation, unit, API-sample, documentation-structure, and Preview coverage show
-no local regression. This evidence supports the conclusion `no material change` for the covered
-deterministic and visual-test contracts. The same-device fixed-frequency comparison is accepted in
-[performance Section 2.4.9](../../tooling/performance.md#249-animation-revision-1-phase-1-physical-candidate):
-all four rows pass, run-P50 CV is `0.002..0.012`, frame CPU is `improved`, and peak heap is
-`no material change`. The warmer 36--38 degree environment, changed physical-settling frame counts,
-and absence of direct energy measurement remain explicit limitations. Manual Xiaomi validation
-then accepted critical Spring at exact targets with `Finished` and corrected the Demo's insufficient
-decay velocity from `2.4/s` to `4.8/s`; positive and negative decay now visibly clamp with
-`BoundReached`. The exact four-direction device regression passed 1/1. The final `qaFull` gate then
-passed in 22 minutes 9 seconds with 1,763 actionable tasks (168 executed and 1,595 up-to-date): the
-main Demo passed 137/137 device tests, Counter passed 1/1, and Tutorials passed 2/2, with no skipped
-or failed tests. Phase 1 is accepted on the candidate branch; merge is the only remaining delivery
-step before Phase 2 begins.
-
-## Phase 2: Full animated content replacement
-
-Add a true `AnimatedContent` contract while retaining `Crossfade` as the small alpha-only API. The
-first accepted surface is expected to include a stable content key, initial/target-pair transition
-selection, enter/exit composition, size transformation, slide/scale primitives, and a scope that
-can derive direction from the logical segment.
-
-The planning vocabulary is:
-
-```kotlin
-data class ContentTransform(
-    val targetContentEnter: EnterTransition,
-    val initialContentExit: ExitTransition,
-    val sizeTransform: SizeTransform? = SizeTransform(),
-)
-
-fun <S> UiTreeBuilder.AnimatedContent(
-    targetState: S,
-    modifier: Modifier = Modifier,
-    contentKey: (S) -> Any? = { it },
-    transitionSpec: AnimatedContentTransitionScope<S>.() -> ContentTransform,
-    content: AnimatedContentScope.(S) -> Unit,
-)
-```
-
-The final implementation must define outgoing/incoming measurement, z-order, clipping, alignment,
-focus and accessibility ownership, keyed descendant state, nullable targets, equal keys with
-changed content, pair-specific direction, rapid A-to-B-to-C retargeting, removed-subtree effects,
-renderer rollback, and disposal after every participating channel settles. `Crossfade` may delegate
-to a proven alpha-only configuration only if doing so preserves its existing retarget and identity
-contract without adding size or layout behavior.
-
-Required evidence covers fixed and changing sizes, slide directions, scale origin, simultaneous
-fade/size motion, interruption at multiple fractions, key collision behavior, nullable state,
-focus/accessibility transfer, nested content transitions, failed candidate apply, host detach,
-reduced motion, screenshots, and frame/allocation comparison with current `Crossfade`.
-
-Implementation status on 2026-08-22: the Q3 surface is implemented with nullable-safe keyed
-identity, pair-specific `ContentTransform`, logical measured-item slide, scale origins, target
-z-order, optional `SizeTransform`, and a typed content scope. The renderer owns one dedicated size
-host and at most two item hosts; the incoming item exclusively owns input, focus traversal, and
-accessibility, while the outgoing item is draw-only. Admission occurs after successful candidate
-commit, renderer rollback restores the previous visuals and owner, A-to-B-to-C interruption keeps
-B's keyed composition scope and releases A once, and Crossfade remains on its original alpha-only
-engine. Twelve deterministic animation tests, five renderer layout tests, two renderer transaction
-tests, compiled samples in both public owner modules, and the focused Xiaomi device regression
-cover the implemented contract. Manual primary/midpoint/alternative screenshots accept unequal
-height, clipping, simultaneous channels, and settled geometry. The same-device fixed-frequency
-comparison in [performance Section 2.4.10](../../tooling/performance.md#2410-animation-revision-2-animatedcontent-comparison)
-reports run-P50 CV `0.004..0.008`; relative to Crossfade, AnimatedContent changes P50/P95/peak heap
-by `-1.6%/+7.5%/+3.9%`, with no budget crossing, so frame and peak memory are
-`no material change`. Android 9 exposes no per-object allocation events; retained-tree and exact
-release counters therefore bound the structural allocation evidence without claiming lower churn.
-The full repository, documentation, API-sample, Preview, and tooling-isolation gate passed through
-`./gradlew qaQuick qaPreview verifyDevelopmentToolingIsolation` in 4 minutes with 1,624 actionable
-tasks (254 executed and 1,370 up-to-date). MIUI rejected Gradle's ordinary connected-test install
-and produced a zero-test report, which is excluded from evidence. Installing the same six generated
-application/test APKs through the authorized root channel and invoking the same AndroidJUnitRunner
-suites passed Demo 137/137, Counter 1/1, and Tutorials 2/2, with no skipped or failed tests. Phase 2
-was merged in `84dce0ae6220517b5488070fa285ccc9226235f7`; its physical, keyed-identity, interaction,
-rollback, and release contracts remain closed.
-
-## Phase 3: Rich AnimatedVisibility transitions
-
-Extend the existing fade/expand/shrink algebra with:
-
-- `slideIn`/`slideOut` and horizontal/vertical convenience primitives;
-- `scaleIn`/`scaleOut` with an explicit transform origin;
-- alignment and full-size-dependent offset contracts;
-- an `AnimatedVisibilityScope` exposing the owning transition; and
-- a descendant `animateEnterExit` modifier or an equivalently scoped mechanism that does not
-  create an unrelated frame loop.
-
-Existing tree-builder, `RowScope`, `ColumnScope`, and `MutableTransitionState` behavior remains one
-coherent state machine. Phase 3 must settle initial-enter behavior explicitly rather than silently
-changing the current first-composition rule. Duplicate transition channels require documented
-precedence; parent and descendant transformations require deterministic composition order.
-
-Required evidence covers every primitive alone and in combination, LTR/RTL offsets, Row/Column
-spacing, clipping, negative/full-size offsets, transform origins, parent plus child motion, rapid
-enter/exit reversal, first composition, externally controlled state, focus/accessibility removal,
-reduced motion, renderer rollback, and no leaked empty hosts or effects after disposal.
-
-Implementation status on 2026-08-23: the Q3 surface is implemented with finite fraction-based
-logical and axis-specific slide, pivoted scale, aligned expand/shrink, duplicate-channel
-last-declaration precedence, and an `AnimatedVisibilityScope` whose `AnimatedEnterExit` descendants
-share the parent's Boolean `Transition` and removal lifetime. The old `BoxScope` receiver is hard-cut
-rather than bridged. Initial composition remains settled, layout direction is frozen per segment,
-and inactive content loses input, focus, and accessibility ownership immediately while its host is
-retained only for drawing until every parent and descendant channel settles. The Android renderer
-applies translation and pivot from the complete measured host rather than the first child, preserves
-parent-before-descendant transform order, and rolls failed patches back transactionally.
-
-Twelve deterministic composition tests, five renderer geometry/lifecycle tests, one renderer
-rollback test, compiled Q3 samples in both owner modules, the Preview fixture, and the updated Demo
-cover first composition, combination and precedence, LTR/RTL, multi-child geometry, rapid reversal,
-shared time, active ownership, reduced-motion endpoints, disposal, and rollback. Manual Xiaomi
-review found and corrected the initial multi-child transform-geometry error; settled, hide midpoint,
-hidden, and show midpoint paths then made the parent and opposing descendant choreography visibly
-distinct. The same-device fixed-frequency release-safety comparison is accepted in
-[performance Section 2.4.11](../../tooling/performance.md#2411-animation-revision-3-rich-visibility-release-safety-comparison):
-candidate P50/P95/peak heap changed by `+2.4%/+3.3%/+3.9%` (`+0.197 ms/+0.355 ms/+303 KiB`) versus
-the merged pre-Phase-3 control, so none crosses the frozen gate and the scoped conclusion is
-`no material change`. Candidate P99 increased by `3.380 ms` to `15.723 ms` and remains a tail watch
-item. The workload deliberately grows from a single old visibility host to rich parent-plus-child
-choreography, so frame-count growth is not interpreted as throughput or energy. The final
-`qaQuick qaPreview verifyDevelopmentToolingIsolation` gate passed in 2 minutes 26 seconds with
-1,624 actionable tasks (197 executed and 1,427 up-to-date), covering repository, documentation,
-compiled API samples, Preview, and tooling isolation. After the expected animation Preview Golden
-was reviewed and accepted, its focused snapshot and full Preview suite passed. Installing the same
-six generated application/test APKs through the authorized root channel then passed Demo 137/137,
-Counter 1/1, and Tutorials 2/2 with no skipped or failed tests. Phase 3 is accepted on the candidate
-branch; pull-request merge is the only remaining delivery step.
-
-## Phase 4: Generic, segment-aware, and seekable transitions
-
-Publish a generic channel using `AnimationConverter<T, V>`, expose a stable segment object to
-transition-spec selection, and add a controlled seek state that cannot race an autonomous frame
-loop. The provisional model is:
-
-```kotlin
-interface TransitionSegment<S> {
-    val initialState: S
-    val targetState: S
-    fun isTransitioningTo(initial: S, target: S): Boolean
-}
-
-fun <S, T, V> Transition<S>.animateValue(
-    converter: AnimationConverter<T, V>,
-    transitionSpec: TransitionSegment<S>.() -> AnimationSpec,
-    targetValueByState: (S) -> T,
-): State<T>
-
-class SeekableTransitionState<S>(initialState: S) {
-    suspend fun animateTo(targetState: S)
-    suspend fun seekTo(fraction: Float, targetState: S)
-    suspend fun snapTo(targetState: S)
-}
-```
-
-The final API must define whether seeking uses normalized fraction or play time when channel
-durations differ, how the longest-channel duration is recomputed, how a seek becomes autonomous
-animation, how retargeting preserves visual continuity and velocity, and how state publication
-remains atomic. A seek state is composition/lifecycle owned and is not automatically saveable
-unless an explicit durable contract is approved.
-
-Required evidence includes generic converter dimensions, segment-specific specs, channels added or
-removed during a segment, zero/unequal/infinite durations, seek endpoints and out-of-range inputs,
-seek-to-animate handoff, animate-to-seek takeover, cancellation, rapid target replacement,
-predictive-Back progress adaptation, deterministic explicit-time sampling, and no duplicate frame
-owners.
+Phase 4 final gates pass: the quick/Preview/tooling-isolation gate completed 1,624 tasks,
+`qaFull` completed 1,763 tasks, and Xiaomi suites passed Demo 137/137, Counter 1/1, and Tutorials
+2/2 with no skips or failures. Phases 5–7 below retain their full unresolved requirements.
 
 ## Phase 5: Layout-coordinate and bounds animation
 
@@ -631,12 +366,13 @@ This plan is complete only when:
 3. **Complete — Phase 2:** keyed `AnimatedContent`, content transforms, size transforms, renderer
    ownership, repository/Preview/full-device validation, and performance comparison are accepted
    and merged.
-4. **Complete on candidate branch — Phase 3:** slide/scale/aligned visibility primitives,
-   type-safe scope, shared-clock descendant choreography, focused/full tests, manual-device review,
-   Preview Golden, fixed-frequency performance, and root-installed device suites are accepted;
-   pull-request merge remains.
-5. **Pending — Phase 4:** implement public generic/segment-aware channels and seekable transition
-   state.
+4. **Complete and merged — Phase 3:** slide/scale/aligned visibility primitives, type-safe scope,
+   shared-clock descendant choreography, focused/full tests, manual-device review, Preview Golden,
+   fixed-frequency performance, and root-installed device suites were merged in `2a21db65`.
+5. **Complete on candidate branch — Phase 4:** public generic/segment-aware channels, normalized
+   seekable ownership, focused tests, Demo/Preview/manual review, the stable fixed-frequency
+   absolute baseline, repository gates, and full physical-device suites are accepted; pull-request
+   delivery remains.
 6. **Pending — Phase 5:** implement transactional layout-coordinate and bounds animation.
 7. **Pending — Phase 6:** implement bounded shared-element/shared-bounds coordination and navigation
    integration.
@@ -674,3 +410,7 @@ This plan is complete only when:
 | 2026-08-23 | Accept the Phase 3 hard-cut design and focused evidence: `AnimatedVisibilityScope` replaces `BoxScope`, descendants share one transition/removal lifetime, inactive native content relinquishes interaction immediately, and renderer transforms use complete host geometry. |
 | 2026-08-23 | Accept the Phase 3 Xiaomi fixed-frequency release-safety comparison as `no material change`; P50/P95/heap remain inside frozen gates, while P99 at `15.723 ms` is retained as a Phase 4 tail watch item rather than hidden or converted into an unfrozen blocker. |
 | 2026-08-23 | Accept the Phase 3 final gates: repository, documentation, compiled samples, Preview, and tooling isolation pass in the 1,624-task gate; the reviewed rich-visibility Golden passes; root-installed device suites pass Demo 137/137, Counter 1/1, and Tutorials 2/2. |
+| 2026-08-23 | Record Phase 3 merged at `2a21db658f3214afef1436a25c3463b7f78e53d0` and begin Phase 4 without reopening its visibility ownership or performance conclusions. |
+| 2026-08-23 | Freeze the Phase 4 hard cut: one stable segment-aware finite channel surface, one explicit seek/animate/snap writer, normalized longest-duration progress, zero seek velocity, cancel-and-join takeover, one post-commit binding, and no save/navigation ownership. |
+| 2026-08-23 | Accept the `animation.transition@2` Xiaomi fixed-frequency absolute baseline: five identical 200-frame runs, run-P50 CV `0.011`, P50/P95/P99 `7.775/10.493/11.718 ms`, median peak heap `8,474 KiB`, and zero thermal sleep; reject longitudinal comparison with revision 1. |
+| 2026-08-23 | Accept the Phase 4 final gates: the 1,624-task quick/Preview/tooling-isolation gate and 1,763-task `qaFull` gate pass; physical-device suites pass Demo 137/137, Counter 1/1, and Tutorials 2/2 with no skips or failures. |

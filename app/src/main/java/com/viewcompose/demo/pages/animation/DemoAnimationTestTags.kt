@@ -35,6 +35,8 @@ internal object DemoAnimationTestTags {
     const val ANIMATION_TRANSITION_INT = "animation_transition_int"
     const val ANIMATION_TRANSITION_DP = "animation_transition_dp"
     const val ANIMATION_TRANSITION_COLOR = "animation_transition_color"
+    const val ANIMATION_TRANSITION_POSITION = "animation_transition_position"
+    const val ANIMATION_TRANSITION_SEEK_STATUS = "animation_transition_seek_status"
     const val ANIMATION_VISIBILITY_STATE_TOGGLE = "animation_visibility_state_toggle"
     const val ANIMATION_VISIBILITY_STATE_STATUS = "animation_visibility_state_status"
     const val ANIMATION_VISIBILITY_STATE_TARGET = "animation_visibility_state_target"

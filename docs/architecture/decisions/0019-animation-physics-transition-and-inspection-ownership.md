@@ -5,6 +5,8 @@
 - Supersedes: the fixed-duration meaning of `SpringSpec` and `spring` in the alpha animation line
 - Amended by: [ADR-0020](0020-separate-animation-value-and-velocity-domains.md), which replaces the
   provisional single-type value/velocity generic vocabulary below
+- Phase 4 clarification: 2026-08-23, fixing committed-channel duration, zero-velocity continuation,
+  snap endpoint, and typed-channel named-argument semantics
 
 ## Context
 
@@ -175,13 +177,17 @@ frame-loop writer for the same transition.
 
 - `fraction` is finite and in `0f..1f`; invalid input throws `IllegalArgumentException` and does not
   coerce or publish;
-- normalized fraction maps to the longest registered channel duration, and shorter channels clamp
-  to their own terminal sample;
+- normalized fraction maps to the longest duration in the complete committed channel set, and
+  shorter channels clamp to their own terminal sample; committed channel additions or removals
+  recompute that duration and resample every surviving channel at the retained fraction;
 - retargeting while seeking freezes current sampled channel values as the new starts and resets
   fraction to zero;
-- seeking supplies zero physical velocity because position samples do not establish real elapsed
-  input velocity; a caller with gesture velocity must hand it to the autonomous continuation;
-- `snapTo` commits current and target state atomically with fraction zero and no frame loop;
+- seeking and the Phase 4 seek-to-autonomous continuation supply zero physical velocity because
+  position samples do not establish real elapsed input velocity; accepting an explicit gesture
+  velocity requires a separately designed overload and a later amendment rather than an implicit
+  estimate;
+- `snapTo` atomically collapses current state, target state, and both segment endpoints to the
+  requested target with fraction zero and no frame loop;
 - seek state is not saveable; the logical application or navigation state is restored and the
   visual transition is reconstructed at an endpoint; and
 - predictive Back continues to be owned by navigation. Its adapter may drive a seek state, but the
@@ -253,7 +259,7 @@ request codecs are Q0 and cannot appear in compiled samples.
 | 1 | changed `Animatable.animateTo`, `animateDecay`, `updateBounds`, `velocity` | `viewcompose-animation` | composition sample; last-writer, lifecycle, snapshot tests | hard cut |
 | 2 | `ContentTransform`, `SizeTransform`, `AnimatedContentTransitionScope`, `AnimatedContentScope`, `AnimatedContent` | `viewcompose-animation` | keyed replacement sample; identity, measure, focus, rollback, device tests | additive |
 | 3 | slide/scale transition factories, `AnimatedVisibilityScope`, `animateEnterExit` | `viewcompose-animation` | combined visibility sample; algebra, RTL, release, device tests | additive |
-| 4 | `TransitionSegment`, generic `Transition.animateValue`, segment-aware channel overloads, `SeekableTransitionState`, seekable `rememberTransition` | `viewcompose-animation` | segment/seek sample; ownership, range, retarget, predictive-Back adapter tests | additive; internal segment helpers removed |
+| 4 | `TransitionSegment`, generic `Transition.animateValue`, segment-aware channel overloads, `SeekableTransitionState`, seekable `rememberTransition` | `viewcompose-animation` | segment/seek sample; ownership, range, retarget, predictive-Back adapter tests | additive except the typed-channel named argument hard-cut from `animationSpec` to `transitionSpec`; internal segment helpers removed |
 | 5 | `Modifier.animateBounds`, bounds scope/configuration | `viewcompose-animation` | bounds sample; coordinate, remeasure, input, accessibility, rollback device tests | additive |
 | 6 | `SharedTransitionLayout`, shared key/state/scope, `sharedElement`, `sharedBounds`, resize and bounds transforms | `viewcompose-animation` plus navigation adapter in `viewcompose-navigation-android` | navigation shared-motion sample; pairing, overlay, lifecycle, rollback, accessibility device tests | additive |
 | 7 | immutable animation inspection request/response and snapshot types | `viewcompose-preview-core` | protocol sample; codec, limit, stale-request, privacy tests | additive and optional |
