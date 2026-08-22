@@ -17,7 +17,6 @@ import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Divider
 import com.viewcompose.ui.foundation.Row
-import com.viewcompose.ui.foundation.SegmentedControl
 import com.viewcompose.ui.foundation.Surface
 import com.viewcompose.ui.foundation.SurfaceDefaults
 import com.viewcompose.ui.foundation.SurfaceVariant
@@ -200,43 +199,6 @@ internal fun UiTreeBuilder.DemoSection(
             Divider()
             content()
         }
-    }
-}
-
-internal fun UiTreeBuilder.ChapterPageOverviewSection(
-    title: String,
-    goal: String,
-    modules: List<String>,
-) {
-    DemoSection(
-        title = title,
-        subtitle = stringResource(R.string.demo_chapter_overview_subtitle),
-    ) {
-        Text(text = goal)
-        ChecklistGroup(
-            title = stringResource(R.string.demo_framework_modules),
-            items = modules,
-        )
-    }
-}
-
-internal fun UiTreeBuilder.ChapterPageFilterSection(
-    pages: List<String>,
-    selectedIndex: Int,
-    onSelectionChange: (Int) -> Unit,
-) {
-    DemoSection(
-        title = stringResource(R.string.demo_chapter_pages),
-        subtitle = stringResource(R.string.demo_chapter_pages_subtitle),
-    ) {
-        SegmentedControl(
-            items = pages.mapIndexed { index, label ->
-                SegmentedControlItem(key = index, label = label)
-            },
-            selectedIndex = selectedIndex,
-            onSelectionChange = onSelectionChange,
-            modifier = Modifier.fillMaxWidth(),
-        )
     }
 }
 

@@ -98,7 +98,7 @@ class SystemNavigationDemoDeviceTest {
             }
 
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.SYSTEM_NAV_SEED_ADAPTIVE)
+                activity.clickByTestTag(DemoSystemNavigationTestTags.SYSTEM_NAV_SEED_ADAPTIVE)
             }
             awaitNavigation()
             scenario.onActivity { activity ->
@@ -154,7 +154,7 @@ class SystemNavigationDemoDeviceTest {
                     .activeStack
                     .entries
                     .map { it.id }
-                activity.clickByTestTag(DemoTestTags.SYSTEM_NAV_DEEP_LINK_INVALID)
+                activity.clickByTestTag(DemoSystemNavigationTestTags.SYSTEM_NAV_DEEP_LINK_INVALID)
                 assertEquals(
                     before,
                     activity.navigationSnapshot().activeStack.entries.map { it.id },
@@ -166,7 +166,7 @@ class SystemNavigationDemoDeviceTest {
                     .activeStack
                     .entries
                     .map { it.id }
-                activity.clickByTestTag(DemoTestTags.SYSTEM_NAV_DEEP_LINK_NO_MATCH)
+                activity.clickByTestTag(DemoSystemNavigationTestTags.SYSTEM_NAV_DEEP_LINK_NO_MATCH)
                 assertEquals(
                     before,
                     activity.navigationSnapshot().activeStack.entries.map { it.id },
@@ -174,7 +174,7 @@ class SystemNavigationDemoDeviceTest {
             }
             awaitNavigation()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.SYSTEM_NAV_DEEP_LINK_VALID)
+                activity.clickByTestTag(DemoSystemNavigationTestTags.SYSTEM_NAV_DEEP_LINK_VALID)
             }
             awaitNavigation()
             scenario.onActivity { activity ->
@@ -201,10 +201,10 @@ class SystemNavigationDemoDeviceTest {
             awaitNavigation()
 
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.SYSTEM_NAV_SAVEABLE_INCREMENT)
-                activity.clickByTestTag(DemoTestTags.SYSTEM_NAV_HANDLE_INCREMENT)
-                activity.clickByTestTag(DemoTestTags.SYSTEM_NAV_VIEW_MODEL_INCREMENT)
-                activity.clickByTestTag(DemoTestTags.SYSTEM_NAV_GRAPH_INCREMENT)
+                activity.clickByTestTag(DemoSystemNavigationTestTags.SYSTEM_NAV_SAVEABLE_INCREMENT)
+                activity.clickByTestTag(DemoSystemNavigationTestTags.SYSTEM_NAV_HANDLE_INCREMENT)
+                activity.clickByTestTag(DemoSystemNavigationTestTags.SYSTEM_NAV_VIEW_MODEL_INCREMENT)
+                activity.clickByTestTag(DemoSystemNavigationTestTags.SYSTEM_NAV_GRAPH_INCREMENT)
             }
             awaitNavigation()
 
@@ -217,11 +217,11 @@ class SystemNavigationDemoDeviceTest {
                 entryId = entry.id.value
                 graphIds = entry.graphEntries.map { it.id.value }
                 counterStatus = activity
-                    .requireTextViewByTestTagVisible(DemoTestTags.SYSTEM_NAV_COUNTER_STATUS)
+                    .requireTextViewByTestTagVisible(DemoSystemNavigationTestTags.SYSTEM_NAV_COUNTER_STATUS)
                     .text
                     .toString()
                 graphStatus = activity
-                    .requireTextViewByTestTagVisible(DemoTestTags.SYSTEM_NAV_GRAPH_STATUS)
+                    .requireTextViewByTestTagVisible(DemoSystemNavigationTestTags.SYSTEM_NAV_GRAPH_STATUS)
                     .text
                     .toString()
                 assertTrue(counterStatus.contains("rememberSaveable=1"))
@@ -238,7 +238,7 @@ class SystemNavigationDemoDeviceTest {
                 assertEquals(entryId, entry.id.value)
                 assertEquals(graphIds, entry.graphEntries.map { it.id.value })
                 val restoredCounterStatus = activity
-                    .requireTextViewByTestTagVisible(DemoTestTags.SYSTEM_NAV_COUNTER_STATUS)
+                    .requireTextViewByTestTagVisible(DemoSystemNavigationTestTags.SYSTEM_NAV_COUNTER_STATUS)
                     .text
                     .toString()
                 assertTrue(restoredCounterStatus.contains("rememberSaveable=1"))
@@ -248,7 +248,7 @@ class SystemNavigationDemoDeviceTest {
                 assertEquals(
                     graphStatus,
                     activity
-                        .requireTextViewByTestTagVisible(DemoTestTags.SYSTEM_NAV_GRAPH_STATUS)
+                        .requireTextViewByTestTagVisible(DemoSystemNavigationTestTags.SYSTEM_NAV_GRAPH_STATUS)
                         .text
                         .toString(),
                 )

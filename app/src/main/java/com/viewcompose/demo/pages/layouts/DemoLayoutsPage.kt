@@ -420,7 +420,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         Icon(
                             source = ImageSource.Resource(R.drawable.demo_media_icon),
                             contentDescription = stringResource(R.string.demo_layouts_probe_icon_description),
-                            modifier = Modifier.testTag(DemoTestTags.LAYOUTS_EDGE_PROBE_ICON),
+                            modifier = Modifier.testTag(DemoLayoutsTestTags.LAYOUTS_EDGE_PROBE_ICON),
                         )
                     }
                     Button(
@@ -431,14 +431,14 @@ internal fun UiTreeBuilder.LayoutPage(
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.LAYOUTS_EDGE_WEIGHTED),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_EDGE_WEIGHTED),
                     )
                     Button(
                         text = stringResource(R.string.demo_layouts_action),
                         variant = ButtonVariant.Outlined,
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.LAYOUTS_EDGE_ACTION),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_EDGE_ACTION),
                     )
                 }
                 Button(
@@ -526,7 +526,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(bottom = 16.dp)
-                        .testTag(DemoTestTags.LAYOUTS_FLOW_ROW),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_FLOW_ROW),
                 ) {
                     (1..flowItemCountState.value).forEach { i ->
                         Surface(
@@ -580,7 +580,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_SCROLLABLE_COLUMN),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_SCROLLABLE_COLUMN),
                 ) {
                     (1..15).forEach { i ->
                         Surface(
@@ -611,7 +611,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(8.dp)
-                        .testTag(DemoTestTags.LAYOUTS_SCROLLABLE_ROW),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_SCROLLABLE_ROW),
                 ) {
                     (1..20).forEach { i ->
                         Surface(
@@ -658,7 +658,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.backgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_BASIC_CONTAINER),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_BASIC_CONTAINER),
                 ) {
                     val (titleRef, contentRef, badgeRef) = createRefs("title", "content", "badge")
                     Text(
@@ -669,7 +669,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 topToTop(parent)
                                 startToStart(parent)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_BASIC_TITLE),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_BASIC_TITLE),
                     )
                     Surface(
                         variant = SurfaceVariant.Variant,
@@ -683,7 +683,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 height = ConstraintDimension.MatchConstraints()
                             }
                             .padding(12.dp)
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_BASIC_CONTENT),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_BASIC_CONTENT),
                     ) {
                         Text(
                             text = stringResource(R.string.demo_layouts_constraint_content_note),
@@ -701,7 +701,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 horizontalBias = 0.78f
                             }
                             .padding(horizontal = 10.dp, vertical = 6.dp)
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_BASIC_BADGE),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_BASIC_BADGE),
                     ) {
                         Text(text = stringResource(R.string.demo_layouts_bias))
                     }
@@ -725,7 +725,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_TOGGLE),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_TOGGLE),
                     onClick = { constraintHelperLongState.value = !constraintHelperLongState.value },
                 )
                 ConstraintLayout(
@@ -735,7 +735,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_CONTAINER),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_CONTAINER),
                 ) {
                     val leftPartition = createGuidelineFromStart(0.55f)
                     val (
@@ -774,7 +774,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 horizontalBias = 0f
                             }
                             .padding(horizontal = 8.dp, vertical = 4.dp)
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_HEADLINE),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_HEADLINE),
                     ) {
                         Text(
                             text = stringResource(R.string.demo_layouts_helper_area),
@@ -792,7 +792,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 horizontalBias = 0f
                             }
                             .padding(horizontal = 8.dp, vertical = 4.dp)
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_SUMMARY),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_SUMMARY),
                     ) {
                         Text(
                             text = if (constraintHelperLongState.value) {
@@ -815,7 +815,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 horizontalBias = 0f
                             }
                             .padding(horizontal = 10.dp, vertical = 6.dp)
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_MARKER),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_MARKER),
                     ) {
                         Text(text = stringResource(R.string.demo_layouts_barrier_marker))
                     }
@@ -830,7 +830,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 bottomToBottom(parent)
                                 width = ConstraintDimension.MatchConstraints()
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_GUIDELINE_LABEL),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_GUIDELINE_LABEL),
                     )
                 }
             }
@@ -847,7 +847,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.backgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_CONTAINER),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CHAIN_CONTAINER),
                 ) {
                     val (startRef, middleRef, endRef, leftEdgeRef, rightEdgeRef) = createRefs(
                         "start",
@@ -892,7 +892,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 width = ConstraintDimension.Fixed(88.dp)
                                 height = ConstraintDimension.Fixed(56.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_START),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CHAIN_START),
                     ) { Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) { Text(text = stringResource(R.string.demo_layouts_node_a)) } }
                     Surface(
                         variant = SurfaceVariant.Default,
@@ -903,7 +903,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 width = ConstraintDimension.Fixed(88.dp)
                                 height = ConstraintDimension.Fixed(56.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_MIDDLE),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CHAIN_MIDDLE),
                     ) { Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) { Text(text = stringResource(R.string.demo_layouts_node_b)) } }
                     Surface(
                         variant = SurfaceVariant.Variant,
@@ -914,7 +914,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 width = ConstraintDimension.Fixed(88.dp)
                                 height = ConstraintDimension.Fixed(56.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_END),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CHAIN_END),
                     ) { Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) { Text(text = stringResource(R.string.demo_layouts_node_c)) } }
                 }
             }
@@ -935,7 +935,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_TOGGLE),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_TOGGLE),
                     onClick = { constraintGridVerticalState.value = !constraintGridVerticalState.value },
                 )
                 ConstraintLayout(
@@ -945,7 +945,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_CONTAINER),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_CONTAINER),
                 ) {
                     val (hero, metric, status, action) = createRefs(
                         "grid-hero",
@@ -984,7 +984,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .testTag(tag)
                     Surface(
                         variant = SurfaceVariant.Variant,
-                        modifier = gridModifier(hero, DemoTestTags.LAYOUTS_CONSTRAINT_GRID_HERO),
+                        modifier = gridModifier(hero, DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_HERO),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_constraint_grid_span))
@@ -992,7 +992,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     }
                     Surface(
                         variant = SurfaceVariant.Default,
-                        modifier = gridModifier(metric, DemoTestTags.LAYOUTS_CONSTRAINT_GRID_METRIC),
+                        modifier = gridModifier(metric, DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_METRIC),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_constraint_grid_metric))
@@ -1000,7 +1000,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     }
                     Surface(
                         variant = SurfaceVariant.Variant,
-                        modifier = gridModifier(status, DemoTestTags.LAYOUTS_CONSTRAINT_GRID_STATUS),
+                        modifier = gridModifier(status, DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_STATUS),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_constraint_grid_status))
@@ -1008,7 +1008,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     }
                     Surface(
                         variant = SurfaceVariant.Default,
-                        modifier = gridModifier(action, DemoTestTags.LAYOUTS_CONSTRAINT_GRID_ACTION),
+                        modifier = gridModifier(action, DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_ACTION),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_constraint_grid_action))
@@ -1017,14 +1017,14 @@ internal fun UiTreeBuilder.LayoutPage(
                 }
                 ObserveDemoConstraintLayoutDiagnostics(
                     hostRoot = hostRoot,
-                    testTag = DemoTestTags.LAYOUTS_CONSTRAINT_GRID_CONTAINER,
+                    testTag = DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_CONTAINER,
                     trigger = constraintGridVerticalState.value,
                     state = constraintGridDiagnostics,
                 )
                 ConstraintDiagnosticsSummary(
                     diagnostics = constraintGridDiagnostics.value,
-                    statusTag = DemoTestTags.LAYOUTS_CONSTRAINT_GRID_DIAGNOSTICS,
-                    failureTag = DemoTestTags.LAYOUTS_CONSTRAINT_GRID_FAILURE,
+                    statusTag = DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_DIAGNOSTICS,
+                    failureTag = DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_FAILURE,
                 )
             }
 
@@ -1044,7 +1044,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_TOGGLE),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_TOGGLE),
                     onClick = {
                         constraintCircularExpandedState.value = !constraintCircularExpandedState.value
                     },
@@ -1056,7 +1056,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.backgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CONTAINER),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CONTAINER),
                 ) {
                     val (center, top, right, bottom, left) = createRefs(
                         "orbit-center",
@@ -1098,17 +1098,17 @@ internal fun UiTreeBuilder.LayoutPage(
                                 width = ConstraintDimension.Fixed(72.dp)
                                 height = ConstraintDimension.Fixed(72.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CENTER),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CENTER),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_constraint_circular_center))
                         }
                     }
                     listOf(
-                        Triple(top, DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_TOP, R.string.demo_layouts_top),
-                        Triple(right, DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_RIGHT, R.string.demo_layouts_right),
-                        Triple(bottom, DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_BOTTOM, R.string.demo_layouts_bottom),
-                        Triple(left, DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_LEFT, R.string.demo_layouts_left),
+                        Triple(top, DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_TOP, R.string.demo_layouts_top),
+                        Triple(right, DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_RIGHT, R.string.demo_layouts_right),
+                        Triple(bottom, DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_BOTTOM, R.string.demo_layouts_bottom),
+                        Triple(left, DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_LEFT, R.string.demo_layouts_left),
                     ).forEach { (ref, tag, label) ->
                         Surface(
                             variant = SurfaceVariant.Default,
@@ -1127,14 +1127,14 @@ internal fun UiTreeBuilder.LayoutPage(
                 }
                 ObserveDemoConstraintLayoutDiagnostics(
                     hostRoot = hostRoot,
-                    testTag = DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CONTAINER,
+                    testTag = DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CONTAINER,
                     trigger = constraintCircularExpandedState.value,
                     state = constraintCircularDiagnostics,
                 )
                 ConstraintDiagnosticsSummary(
                     diagnostics = constraintCircularDiagnostics.value,
-                    statusTag = DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_DIAGNOSTICS,
-                    failureTag = DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_FAILURE,
+                    statusTag = DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_DIAGNOSTICS,
+                    failureTag = DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_FAILURE,
                 )
             }
 
@@ -1151,7 +1151,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_TOGGLE),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_TOGGLE),
                     onClick = {
                         constraintLifecycleModeState.value = constraintLifecycleModeState.value.next()
                     },
@@ -1164,7 +1164,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_CONTAINER),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_CONTAINER),
                 ) {
                     val (firstRef, secondRef, thirdRef, missingRef) = createRefs(
                         "lifecycle-first",
@@ -1212,9 +1212,9 @@ internal fun UiTreeBuilder.LayoutPage(
                         }
                         val refs = listOf(firstRef, secondRef, thirdRef)
                         val tags = listOf(
-                            DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FIRST,
-                            DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_SECOND,
-                            DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_THIRD,
+                            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FIRST,
+                            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_SECOND,
+                            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_THIRD,
                         )
                         val labels = listOf(
                             R.string.demo_layouts_node_a,
@@ -1237,17 +1237,17 @@ internal fun UiTreeBuilder.LayoutPage(
                     val nodes = listOf(
                         Triple(
                             firstRef,
-                            DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FIRST,
+                            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FIRST,
                             R.string.demo_layouts_node_a,
                         ),
                         Triple(
                             secondRef,
-                            DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_SECOND,
+                            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_SECOND,
                             R.string.demo_layouts_node_b,
                         ),
                         Triple(
                             thirdRef,
-                            DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_THIRD,
+                            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_THIRD,
                             R.string.demo_layouts_node_c,
                         ),
                     ).let { nodes ->
@@ -1272,7 +1272,7 @@ internal fun UiTreeBuilder.LayoutPage(
                 }
                 ObserveDemoConstraintLayoutDiagnostics(
                     hostRoot = hostRoot,
-                    testTag = DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_CONTAINER,
+                    testTag = DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_CONTAINER,
                     trigger = lifecycleMode,
                     state = constraintLifecycleDiagnostics,
                 )
@@ -1285,12 +1285,12 @@ internal fun UiTreeBuilder.LayoutPage(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_MODE),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_MODE),
                 )
                 ConstraintDiagnosticsSummary(
                     diagnostics = constraintLifecycleDiagnostics.value,
-                    statusTag = DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_DIAGNOSTICS,
-                    failureTag = DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FAILURE,
+                    statusTag = DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_DIAGNOSTICS,
+                    failureTag = DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FAILURE,
                 )
             }
 
@@ -1310,7 +1310,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_TOGGLE),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_TOGGLE),
                     onClick = {
                         constraintGoneTargetVisibleState.value = !constraintGoneTargetVisibleState.value
                     },
@@ -1322,7 +1322,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_CONTAINER),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_CONTAINER),
                 ) {
                     val (targetRef, markerRef) = createRefs("gone-target", "gone-marker")
                     Surface(
@@ -1341,7 +1341,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                     Visibility.Gone
                                 },
                             )
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_TARGET),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_TARGET),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_target))
@@ -1356,7 +1356,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 width = ConstraintDimension.Fixed(104.dp)
                                 height = ConstraintDimension.Fixed(44.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_MARKER),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_MARKER),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(
@@ -1378,7 +1378,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_STATUS),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_STATUS),
                 )
             }
 
@@ -1395,7 +1395,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_TOGGLE),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_TOGGLE),
                     onClick = {
                         constraintWrapBehaviorState.value = constraintWrapBehaviorState.value.next()
                     },
@@ -1412,7 +1412,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         modifier = Modifier
                             .backgroundColor(SurfaceDefaults.backgroundColor())
                             .shape(SurfaceDefaults.shape())
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_CONTAINER),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_CONTAINER),
                     ) {
                         val (originRef, remoteRef) = createRefs("wrap-origin", "wrap-remote")
                         Surface(
@@ -1424,7 +1424,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                     width = ConstraintDimension.Fixed(36.dp)
                                     height = ConstraintDimension.Fixed(36.dp)
                                 }
-                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_ORIGIN),
+                                .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_ORIGIN),
                         ) {
                             Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                                 Text(text = stringResource(R.string.demo_layouts_node_a))
@@ -1440,7 +1440,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                     height = ConstraintDimension.Fixed(44.dp)
                                     wrapBehaviorInParent = constraintWrapBehaviorState.value
                                 }
-                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_REMOTE),
+                                .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_REMOTE),
                         ) {
                             Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                                 Text(
@@ -1460,7 +1460,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_STATUS),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_STATUS),
                 )
             }
 
@@ -1480,7 +1480,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_TOGGLE),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_TOGGLE),
                     onClick = { constraintSetExpandedState.value = !constraintSetExpandedState.value },
                 )
                 val compactSet = constraintSet {
@@ -1536,7 +1536,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         modifier = Modifier
                             .layoutId("marker")
                             .padding(horizontal = 12.dp, vertical = 8.dp)
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_MARKER),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_MARKER),
                     ) {
                         Text(
                             text = if (constraintSetExpandedState.value) {
@@ -1561,7 +1561,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.backgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CONTAINER),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CONTAINER),
                 ) {
                     val leaderRef = createRef("anchor-leader")
                     val baselineRef = createRef("anchor-baseline")
@@ -1580,7 +1580,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 topToTop(parent)
                                 startToStart(parent)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_LEADER),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_LEADER),
                     )
                     Text(
                         text = stringResource(R.string.demo_layouts_baseline),
@@ -1590,7 +1590,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 startToEnd(leaderRef, margin = 10.dp)
                                 baselineToBaseline(leaderRef)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE),
                     )
                     Text(
                         text = stringResource(R.string.demo_layouts_baseline_top),
@@ -1600,7 +1600,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 startToEnd(baselineRef, margin = 10.dp)
                                 baselineToTop(leaderRef, margin = 2.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE_TOP),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE_TOP),
                     )
                     Text(
                         text = stringResource(R.string.demo_layouts_baseline_bottom),
@@ -1610,7 +1610,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 startToEnd(baselineTopRef, margin = 10.dp)
                                 baselineToBottom(leaderRef, margin = 2.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE_BOTTOM),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE_BOTTOM),
                     )
                     Surface(
                         variant = SurfaceVariant.Variant,
@@ -1621,7 +1621,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 width = ConstraintDimension.Fixed(118.dp)
                                 height = ConstraintDimension.Fixed(44.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CENTERED),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CENTERED),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_center_apis))
@@ -1636,7 +1636,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 width = ConstraintDimension.Fixed(40.dp)
                                 height = ConstraintDimension.Fixed(40.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CIRCLE_CENTER),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CIRCLE_CENTER),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_node_c))
@@ -1654,7 +1654,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 width = ConstraintDimension.Fixed(56.dp)
                                 height = ConstraintDimension.Fixed(30.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CIRCLE),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CIRCLE),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_circular))
@@ -1669,7 +1669,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 width = ConstraintDimension.Fixed(92.dp)
                                 height = ConstraintDimension.Fixed(32.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_TARGET),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_TARGET),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_target))
@@ -1684,7 +1684,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 width = ConstraintDimension.Fixed(92.dp)
                                 height = ConstraintDimension.Fixed(32.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_LINKED),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_LINKED),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_bottom_to_top))
@@ -1697,7 +1697,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_STATUS),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_STATUS),
                 )
             }
 
@@ -1717,7 +1717,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_TOGGLE),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_TOGGLE),
                     onClick = { constraintDimensionAdvancedState.value = !constraintDimensionAdvancedState.value },
                 )
                 ConstraintLayout(
@@ -1727,7 +1727,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_CONTAINER),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_CONTAINER),
                 ) {
                     val (widthRef, heightRef, ratioRef) = createRefs("dim-width", "dim-height", "dim-ratio")
                     Surface(
@@ -1747,7 +1747,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 height = ConstraintDimension.Fixed(38.dp)
                             }
                             .padding(horizontal = 10.dp, vertical = 6.dp)
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_WIDTH),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_WIDTH),
                     ) {
                         Text(text = stringResource(R.string.demo_layouts_width_dimension))
                     }
@@ -1768,7 +1768,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 )
                             }
                             .padding(horizontal = 8.dp, vertical = 6.dp)
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_HEIGHT),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_HEIGHT),
                     ) {
                         Text(text = stringResource(R.string.demo_layouts_height_dimension))
                     }
@@ -1788,7 +1788,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                     ConstraintRatio(width = 1f, height = 1f)
                                 }
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(
@@ -1813,7 +1813,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_STATUS),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_STATUS),
                 )
             }
 
@@ -1833,7 +1833,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_TOGGLE),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_TOGGLE),
                     onClick = { constraintHelpersFullState.value = !constraintHelpersFullState.value },
                 )
                 ConstraintLayout(
@@ -1843,7 +1843,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.backgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_CONTAINER),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_CONTAINER),
                 ) {
                     val guideEnd = if (constraintHelpersFullState.value) {
                         createGuidelineFromEnd(0.26f, id = "helpers-full-guide-end")
@@ -1897,7 +1897,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 width = ConstraintDimension.Fixed(110.dp)
                                 height = ConstraintDimension.Fixed(30.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_TOP),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_TOP),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(
@@ -1915,7 +1915,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 width = ConstraintDimension.Fixed(126.dp)
                                 height = ConstraintDimension.Fixed(30.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_MIDDLE),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_MIDDLE),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(
@@ -1933,7 +1933,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                 width = ConstraintDimension.Fixed(98.dp)
                                 height = ConstraintDimension.Fixed(30.dp)
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_BOTTOM),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_PROBE_BOTTOM),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(
@@ -1954,7 +1954,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             }
                             .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                             .shape(SurfaceDefaults.shape())
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER),
                     ) {
                         Text(
                             text = stringResource(R.string.demo_layouts_barrier_start_side),
@@ -1972,7 +1972,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_STATUS),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_STATUS),
                 )
             }
 
@@ -1992,7 +1992,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_TOGGLE),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_TOGGLE),
                     onClick = { constraintVerticalChainPackedState.value = !constraintVerticalChainPackedState.value },
                 )
                 ConstraintLayout(
@@ -2002,7 +2002,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_CONTAINER),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_CONTAINER),
                 ) {
                     val (topRef, middleRef, bottomRef) = createRefs("v-chain-top", "v-chain-middle", "v-chain-bottom")
                     createVerticalChain(
@@ -2033,7 +2033,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                     ConstraintDimension.Fixed(42.dp)
                                 }
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_TOP),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_TOP),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_top))
@@ -2052,7 +2052,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                     ConstraintDimension.Fixed(42.dp)
                                 }
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_MIDDLE),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_MIDDLE),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_middle))
@@ -2071,7 +2071,7 @@ internal fun UiTreeBuilder.LayoutPage(
                                     ConstraintDimension.Fixed(42.dp)
                                 }
                             }
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_BOTTOM),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_BOTTOM),
                     ) {
                         Box(contentAlignment = BoxAlignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = stringResource(R.string.demo_layouts_bottom))
@@ -2096,7 +2096,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_TOGGLE),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_TOGGLE),
                     onClick = { constraintSetHelpersAlternateState.value = !constraintSetHelpersAlternateState.value },
                 )
                 val helperSetHorizontal = constraintSet {
@@ -2190,7 +2190,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.backgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_CONTAINER),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_CONTAINER),
                 ) {
                     Surface(
                         variant = SurfaceVariant.Default,
@@ -2215,7 +2215,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         modifier = Modifier
                             .layoutId("set-marker")
                             .padding(horizontal = 8.dp, vertical = 6.dp)
-                            .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER),
+                            .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER),
                     ) {
                         Text(
                             text = stringResource(
@@ -2238,7 +2238,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .margin(top = 6.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_STATUS),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_STATUS),
                 )
             }
 
@@ -2256,7 +2256,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     variant = ButtonVariant.Outlined,
                     modifier = Modifier
                         .margin(bottom = 8.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_TOGGLE),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_TOGGLE),
                     onClick = { constraintVirtualAlternateState.value = !constraintVirtualAlternateState.value },
                 )
                 Column(
@@ -2266,7 +2266,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CONTAINER),
+                        .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CONTAINER),
                 ) {
                     Text(
                         text = if (constraintVirtualAlternateState.value) {
@@ -2309,28 +2309,28 @@ internal fun UiTreeBuilder.LayoutPage(
                             modifier = Modifier
                                 .layoutId("flow-a")
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
-                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_A),
+                                .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_A),
                         ) { Text(stringResource(R.string.demo_layouts_flow_node, 1)) }
                         Surface(
                             variant = SurfaceVariant.Variant,
                             modifier = Modifier
                                 .layoutId("flow-b")
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
-                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_B),
+                                .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_B),
                         ) { Text(stringResource(R.string.demo_layouts_flow_node, 2)) }
                         Surface(
                             variant = SurfaceVariant.Default,
                             modifier = Modifier
                                 .layoutId("flow-c")
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
-                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_C),
+                                .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_C),
                         ) { Text(stringResource(R.string.demo_layouts_flow_node, 3)) }
                         Surface(
                             variant = SurfaceVariant.Variant,
                             modifier = Modifier
                                 .layoutId("flow-d")
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
-                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_D),
+                                .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_FLOW_D),
                         ) { Text(stringResource(R.string.demo_layouts_flow_node, 4)) }
                     }
 
@@ -2365,7 +2365,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             modifier = Modifier
                                 .layoutId("group-a")
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
-                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER),
+                                .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER),
                         ) {
                             Text(text = stringResource(R.string.demo_layouts_group_a))
                         }
@@ -2374,7 +2374,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             modifier = Modifier
                                 .layoutId("group-b")
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
-                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER_B),
+                                .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER_B),
                         ) {
                             Text(text = stringResource(R.string.demo_layouts_group_b))
                         }
@@ -2411,7 +2411,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             modifier = Modifier
                                 .layoutId("layer-a")
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
-                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_A),
+                                .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_A),
                         ) {
                             Text(text = stringResource(R.string.demo_layouts_layer_a))
                         }
@@ -2420,7 +2420,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             modifier = Modifier
                                 .layoutId("layer-b")
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
-                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_B),
+                                .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CHIP_B),
                         ) {
                             Text(text = stringResource(R.string.demo_layouts_layer_b))
                         }
@@ -2468,7 +2468,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             modifier = Modifier
                                 .layoutId("placeholder-a")
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
-                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_A),
+                                .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_A),
                         ) {
                             Text(text = stringResource(R.string.demo_layouts_placeholder_a))
                         }
@@ -2477,7 +2477,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             modifier = Modifier
                                 .layoutId("placeholder-b")
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
-                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_B),
+                                .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_B),
                         ) {
                             Text(text = stringResource(R.string.demo_layouts_placeholder_b))
                         }
@@ -2486,7 +2486,7 @@ internal fun UiTreeBuilder.LayoutPage(
                             modifier = Modifier
                                 .layoutId("placeholder-note")
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
-                                .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_NOTE),
+                                .testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_PLACEHOLDER_NOTE),
                         ) {
                             Text(
                                 text = stringResource(
@@ -2508,7 +2508,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         },
                         style = UiTextStyle(fontSizeSp = 12.sp),
                         color = TextDefaults.secondaryColor(),
-                        modifier = Modifier.testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_STATUS),
+                        modifier = Modifier.testTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_STATUS),
                     )
                 }
             }

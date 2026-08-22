@@ -199,7 +199,7 @@ private fun UiTreeBuilder.GraphicsSingleOuterShadowSection(scenario: DemoScenari
                     offsetY = 7.dp,
                 ),
             ),
-            testTag = DemoTestTags.GRAPHICS_SHADOW_OUTER_SINGLE,
+            testTag = DemoGraphicsTestTags.GRAPHICS_SHADOW_OUTER_SINGLE,
             modifier = Modifier.shadowScenarioTarget(scenario, DemoAutomationRole.Target),
         )
     }
@@ -233,7 +233,7 @@ private fun UiTreeBuilder.GraphicsMultiOuterShadowSection() {
                     offsetY = 9.dp,
                 ),
             ),
-            testTag = DemoTestTags.GRAPHICS_SHADOW_OUTER_MULTI,
+            testTag = DemoGraphicsTestTags.GRAPHICS_SHADOW_OUTER_MULTI,
         )
     }
 }
@@ -259,7 +259,7 @@ private fun UiTreeBuilder.GraphicsSpreadShadowSection() {
                     offsetY = 3.dp,
                 ),
             ),
-            testTag = DemoTestTags.GRAPHICS_SHADOW_SPREAD_POSITIVE,
+            testTag = DemoGraphicsTestTags.GRAPHICS_SHADOW_SPREAD_POSITIVE,
         )
         OuterShadowSample(
             key = "outer-spread-negative",
@@ -276,7 +276,7 @@ private fun UiTreeBuilder.GraphicsSpreadShadowSection() {
                     offsetY = 3.dp,
                 ),
             ),
-            testTag = DemoTestTags.GRAPHICS_SHADOW_SPREAD_NEGATIVE,
+            testTag = DemoGraphicsTestTags.GRAPHICS_SHADOW_SPREAD_NEGATIVE,
         )
     }
 }
@@ -302,7 +302,7 @@ private fun UiTreeBuilder.GraphicsShapeShadowSection() {
                     offsetY = 6.dp,
                 ),
             ),
-            testTag = DemoTestTags.GRAPHICS_SHADOW_CUT_SHAPE,
+            testTag = DemoGraphicsTestTags.GRAPHICS_SHADOW_CUT_SHAPE,
         )
     }
 }
@@ -328,7 +328,7 @@ private fun UiTreeBuilder.GraphicsSingleInnerShadowSection(scenario: DemoScenari
                     offsetY = 4.dp,
                 ),
             ),
-            testTag = DemoTestTags.GRAPHICS_SHADOW_INNER_SINGLE,
+            testTag = DemoGraphicsTestTags.GRAPHICS_SHADOW_INNER_SINGLE,
             modifier = Modifier.shadowScenarioTarget(scenario, DemoAutomationRole.Target),
         )
     }
@@ -361,7 +361,7 @@ private fun UiTreeBuilder.GraphicsMultiInnerShadowSection() {
                     offsetY = 5.dp,
                 ),
             ),
-            testTag = DemoTestTags.GRAPHICS_SHADOW_INNER_MULTI,
+            testTag = DemoGraphicsTestTags.GRAPHICS_SHADOW_INNER_MULTI,
         )
     }
 }
@@ -391,7 +391,7 @@ private fun UiTreeBuilder.GraphicsInnerShadowInteropSection(
                     shape = UiShape.rounded(24.dp),
                 )
                 .padding(18.dp)
-                .testTag(DemoTestTags.GRAPHICS_SHADOW_INNER_INTEROP),
+                .testTag(DemoGraphicsTestTags.GRAPHICS_SHADOW_INNER_INTEROP),
         ) {
             Column(
                 spacing = 10.dp,
@@ -403,7 +403,7 @@ private fun UiTreeBuilder.GraphicsInnerShadowInteropSection(
                     size = TextFieldSize.Medium,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.GRAPHICS_SHADOW_INNER_FIELD),
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_SHADOW_INNER_FIELD),
                 )
                 Button(
                     text = stringResource(
@@ -415,7 +415,7 @@ private fun UiTreeBuilder.GraphicsInnerShadowInteropSection(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.GRAPHICS_SHADOW_INNER_CLICK_BUTTON)
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_SHADOW_INNER_CLICK_BUTTON)
                         .shadowScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                 )
                 Button(
@@ -435,7 +435,7 @@ private fun UiTreeBuilder.GraphicsInnerShadowInteropSection(
                     ),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
-                        .testTag(DemoTestTags.GRAPHICS_SHADOW_INNER_CLICK_COUNT)
+                        .testTag(DemoGraphicsTestTags.GRAPHICS_SHADOW_INNER_CLICK_COUNT)
                         .shadowScenarioTarget(scenario, DemoAutomationRole.State),
                 )
             }
@@ -485,7 +485,7 @@ private fun UiTreeBuilder.GraphicsShadowDiagnosticsSection(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag(DemoTestTags.GRAPHICS_SHADOW_POLICY),
+                .testTag(DemoGraphicsTestTags.GRAPHICS_SHADOW_POLICY),
         )
         Row(
             spacing = 8.dp,
@@ -501,7 +501,7 @@ private fun UiTreeBuilder.GraphicsShadowDiagnosticsSection(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .testTag(DemoTestTags.GRAPHICS_SHADOW_DIAGNOSTICS_REFRESH)
+                    .testTag(DemoGraphicsTestTags.GRAPHICS_SHADOW_DIAGNOSTICS_REFRESH)
                     .shadowScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
             )
             Button(
@@ -514,7 +514,7 @@ private fun UiTreeBuilder.GraphicsShadowDiagnosticsSection(
                 },
                 modifier = Modifier
                     .weight(1f)
-                    .testTag(DemoTestTags.GRAPHICS_SHADOW_CACHE_CLEAR)
+                    .testTag(DemoGraphicsTestTags.GRAPHICS_SHADOW_CACHE_CLEAR)
                     .shadowScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
             )
         }
@@ -539,7 +539,7 @@ private fun UiTreeBuilder.GraphicsShadowDiagnosticsSection(
             description = stringResource(R.string.demo_graphics_shadow_probe_description),
             shape = UiShape.rounded(18.dp),
             shadows = LazyItemShadows,
-            testTag = DemoTestTags.GRAPHICS_SHADOW_DIAGNOSTIC_SAMPLE,
+            testTag = DemoGraphicsTestTags.GRAPHICS_SHADOW_DIAGNOSTIC_SAMPLE,
         )
         DiagnosticFactGroup(
             title = stringResource(R.string.demo_graphics_shadow_backend_group),
@@ -578,8 +578,8 @@ private fun UiTreeBuilder.GraphicsShadowDiagnosticsSection(
                 ),
             ),
             valueTagsByLabel = mapOf(
-                policyLabel to DemoTestTags.GRAPHICS_SHADOW_BACKEND_POLICY,
-                latestBackendLabel to DemoTestTags.GRAPHICS_SHADOW_BACKEND_ACTUAL,
+                policyLabel to DemoGraphicsTestTags.GRAPHICS_SHADOW_BACKEND_POLICY,
+                latestBackendLabel to DemoGraphicsTestTags.GRAPHICS_SHADOW_BACKEND_ACTUAL,
             ),
         )
         DiagnosticFactGroup(
@@ -619,8 +619,8 @@ private fun UiTreeBuilder.GraphicsShadowDiagnosticsSection(
                 ),
             ),
             valueTagsByLabel = mapOf(
-                outerHitsLabel to DemoTestTags.GRAPHICS_SHADOW_CACHE_HITS,
-                outerMissesLabel to DemoTestTags.GRAPHICS_SHADOW_CACHE_MISSES,
+                outerHitsLabel to DemoGraphicsTestTags.GRAPHICS_SHADOW_CACHE_HITS,
+                outerMissesLabel to DemoGraphicsTestTags.GRAPHICS_SHADOW_CACHE_MISSES,
             ),
         )
         val decisions = backend.decisionsByReason.entries
@@ -658,7 +658,7 @@ private fun UiTreeBuilder.GraphicsShadowLazyItem(
     scenario: DemoScenarioSpec?,
 ) {
     val tagModifier = if (index == 0) {
-        Modifier.testTag(DemoTestTags.GRAPHICS_SHADOW_LAZY_FIRST)
+        Modifier.testTag(DemoGraphicsTestTags.GRAPHICS_SHADOW_LAZY_FIRST)
     } else {
         Modifier
     }

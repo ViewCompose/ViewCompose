@@ -20,6 +20,7 @@ import androidx.core.os.LocaleListCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
@@ -58,7 +59,12 @@ class DemoPostReleaseVisualMatrixUiTest {
 
     @Test
     fun popupThemeGridAndSegmentedSlices_coverPairwiseConfigurationMatrix() {
-        prepareEvidenceDirectory()
+        prepareEvidenceDirectory(
+            "overlay.menu",
+            "diagnostics.theme",
+            "collection.grid",
+            "design.bundle-material3",
+        )
         MATRIX.forEach { configuration ->
             setApplicationLanguageTags(configuration.localeTag)
             verifyPopupShadowAndInteraction(configuration)
@@ -70,7 +76,7 @@ class DemoPostReleaseVisualMatrixUiTest {
 
     @Test
     fun navigationQuickTapSlices_preserveReleaseFeedbackAcrossPairwiseConfigurationMatrix() {
-        prepareEvidenceDirectory()
+        prepareEvidenceDirectory("component.navigation-bar", "design.oneui7")
         MATRIX.forEach { configuration ->
             setApplicationLanguageTags(configuration.localeTag)
             verifyStandardNavigationQuickTap(configuration)
@@ -80,7 +86,10 @@ class DemoPostReleaseVisualMatrixUiTest {
 
     @Test
     fun nestedScrollAndFocusFollowSlices_coverPairwiseConfigurationMatrix() {
-        prepareEvidenceDirectory()
+        prepareEvidenceDirectory(
+            "collection.nested-lazy-list",
+            *FOCUS_FOLLOW_CASES.map(FocusFollowCase::scenarioId).toTypedArray(),
+        )
         MATRIX.forEach { configuration ->
             setApplicationLanguageTags(configuration.localeTag)
             verifyNestedSameAxisHandoff(configuration)
@@ -123,10 +132,12 @@ class DemoPostReleaseVisualMatrixUiTest {
                 )
             }
             val screenshot = captureMatrixEvidence(
+                scenario = scenario,
                 scenarioId = "overlay.menu",
                 configuration = configuration,
                 action = "open-menu",
                 expected = "semantic anchor alignment; rounded surface; transparent corners; native shadow on illuminated edges",
+                allowAppOwnedOverlay = true,
             )
             assertPopupPixelGolden(
                 bitmap = requireNotNull(BitmapFactory.decodeFile(screenshot.absolutePath)),
@@ -176,7 +187,7 @@ class DemoPostReleaseVisualMatrixUiTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val taggedSection = activity.requireViewByTestTagVisible(
-                    DemoTestTags.DIAGNOSTICS_THEME_SWATCH_ROW,
+                    DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_SWATCH_ROW,
                 )
                 assertTrue("Expected the four-token swatch row.", taggedSection is ViewGroup)
                 val swatchRow = taggedSection as ViewGroup
@@ -188,8 +199,31 @@ class DemoPostReleaseVisualMatrixUiTest {
                     "Expected equal theme-swatch columns, but widths were $widths.",
                     widths.max() - widths.min() <= 2,
                 )
+                taggedSection.requestRectangleOnScreen(
+                    Rect(0, 0, taggedSection.width, taggedSection.height),
+                    true,
+                )
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val swatchRow = activity.requireViewByTestTagVisible(
+                    DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_SWATCH_ROW,
+                ) as ViewGroup
+                assertViewCompletelyVisible(swatchRow)
+                repeat(swatchRow.childCount) { index ->
+                    val swatch = swatchRow.getChildAt(index)
+                    assertViewCompletelyVisible(swatch)
+                    val labels = swatch.descendantViews().filterIsInstance<TextView>()
+                    assertTrue("Expected swatch $index to expose a readable label.", labels.isNotEmpty())
+                    labels.forEach { label ->
+                        assertTrue("Expected a non-blank swatch label.", label.text.isNotBlank())
+                        assertTextFitsVertically(label)
+                        assertTextNotEllipsized(label)
+                    }
+                }
             }
             captureMatrixEvidence(
+                scenario = scenario,
                 scenarioId = "diagnostics.theme",
                 configuration = configuration,
                 action = "inspect-primary-secondary-swatches",
@@ -201,28 +235,66 @@ class DemoPostReleaseVisualMatrixUiTest {
     private fun verifyRoundedGrid(configuration: MatrixConfiguration) {
         launchScenario(CollectionsActivity::class.java, "collection.grid", configuration).use { scenario ->
             waitForUiIdle()
-            var initialLabel = ""
             scenario.onActivity { activity ->
-                val grid = activity.requireScenarioViewById<View>(R.id.demo_collection_grid_target)
+                val grid = activity.requireScenarioViewById<RecyclerView>(R.id.demo_collection_grid_target)
                 assertTrue("Expected the rounded grid to clip descendants.", grid.clipToOutline)
-                initialLabel = activity.requireTextViewByTestTagVisible(
-                    DemoTestTags.COLLECTIONS_GRID_FIRST_ITEM,
-                ).text.toString()
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_GRID_THREE_COLS)
+                activity.clickScenarioViewByIdVisible(R.id.demo_collection_grid_reset)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
+                val first = activity.requireTextViewByTestTagVisible(
+                    DemoCollectionsTestTags.COLLECTIONS_GRID_FIRST_ITEM,
+                )
+                assertEquals(activity.expectedGridItemLabel(spanCount = 2), first.text.toString())
+                activity.clickByTestTag(DemoCollectionsTestTags.COLLECTIONS_GRID_THREE_COLS)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val grid = activity.requireScenarioViewById<RecyclerView>(
+                    R.id.demo_collection_grid_target,
+                )
+                grid.requestRectangleOnScreen(Rect(0, 0, grid.width, grid.height), true)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val grid = activity.requireScenarioViewById<RecyclerView>(R.id.demo_collection_grid_target)
                 val changed = activity.requireTextViewByTestTagVisible(
-                    DemoTestTags.COLLECTIONS_GRID_FIRST_ITEM,
-                ).text.toString()
-                assertNotEquals(initialLabel, changed)
-                assertTrue(activity.requireScenarioViewById<View>(R.id.demo_collection_grid_target).clipToOutline)
+                    DemoCollectionsTestTags.COLLECTIONS_GRID_FIRST_ITEM,
+                )
+                assertEquals(activity.expectedGridItemLabel(spanCount = 3), changed.text.toString())
+                assertViewCompletelyVisible(changed)
+                assertTrue(grid.clipToOutline)
             }
             captureMatrixEvidence(
+                scenario = scenario,
                 scenarioId = "collection.grid",
                 configuration = configuration,
-                action = "switch-to-three-columns",
-                expected = "first and last rows remain reachable; no child pixel escapes any rounded corner",
+                action = "three-columns-first-row",
+                expected = "three-column state is exact and the first row stays inside every rounded corner",
+            )
+            scenario.onActivity { activity ->
+                val grid = activity.requireScenarioViewById<RecyclerView>(R.id.demo_collection_grid_target)
+                val layoutManager = grid.layoutManager as GridLayoutManager
+                layoutManager.scrollToPositionWithOffset(
+                    requireNotNull(grid.adapter).itemCount - 1,
+                    grid.paddingTop,
+                )
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val grid = activity.requireScenarioViewById<RecyclerView>(R.id.demo_collection_grid_target)
+                val lastPosition = requireNotNull(grid.adapter).itemCount - 1
+                val last = requireNotNull(grid.layoutManager).findViewByPosition(lastPosition)
+                assertNotNull("Expected the last grid item to be reachable.", last)
+                assertViewCompletelyVisible(requireNotNull(last))
+                assertTrue("Expected the rounded grid to keep clipping at its last row.", grid.clipToOutline)
+            }
+            captureMatrixEvidence(
+                scenario = scenario,
+                scenarioId = "collection.grid",
+                configuration = configuration,
+                action = "three-columns-last-row",
+                expected = "the last row is reachable and stays inside every rounded corner",
             )
         }
     }
@@ -241,19 +313,20 @@ class DemoPostReleaseVisualMatrixUiTest {
         launchDemoActivity<DemoDesignSystemVerificationActivity>(intent, configuration.themeMode).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val segmented = activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_SEGMENTED)
+                val segmented = activity.requireViewByTestTagVisible(DemoDesignSystemTestTags.DESIGN_SYSTEM_SEGMENTED)
                 assertTrue(segmented is ViewGroup && segmented.childCount >= 2)
                 activity.clickTextView(activity.getString(R.string.demo_design_system_week))
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 assertTrue(
-                    activity.requireTextViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS)
+                    activity.requireTextViewByTestTagVisible(DemoDesignSystemTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS)
                         .text.toString()
                         .contains(activity.getString(R.string.demo_design_system_week)),
                 )
             }
             captureMatrixEvidence(
+                scenario = scenario,
                 scenarioId = "design.bundle-material3",
                 configuration = configuration,
                 action = "select-week-segment",
@@ -296,6 +369,13 @@ class DemoPostReleaseVisualMatrixUiTest {
                 }
             }
             SystemClock.sleep(16L)
+            captureMatrixEvidence(
+                scenario = scenario,
+                scenarioId = "component.navigation-bar",
+                configuration = configuration,
+                action = "quick-tap-middle-icon-pressed-frame",
+                expected = "pressed ripple is visible before the synchronous selection patch",
+            )
             scenario.onActivity {
                 val up = MotionEvent.obtain(
                     downTime,
@@ -313,6 +393,7 @@ class DemoPostReleaseVisualMatrixUiTest {
             }
             SystemClock.sleep(48L)
             captureMatrixEvidence(
+                scenario = scenario,
                 scenarioId = "component.navigation-bar",
                 configuration = configuration,
                 action = "quick-tap-middle-icon-release-frame",
@@ -345,42 +426,61 @@ class DemoPostReleaseVisualMatrixUiTest {
             waitForUiIdle()
             lateinit var tappedItem: View
             lateinit var retainedRipple: RippleDrawable
+            var touchX = 0f
+            var touchY = 0f
+            var downTime = 0L
             scenario.onActivity { activity ->
-                val navigation = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_NAVIGATION)
+                val navigation = activity.requireViewByTestTagVisible(DemoOneUi7TestTags.ONE_UI_7_NAVIGATION)
                 tappedItem = navigation.descendantViews().first { view ->
                     AccessibilityNodeInfoCompat.wrap(view.createAccessibilityNodeInfo())
                         .collectionItemInfo?.columnIndex == 1
                 }
                 val label = tappedItem.descendantViews().filterIsInstance<TextView>().first()
                 val center = label.centerRelativeTo(tappedItem as ViewGroup)
+                touchX = center.first
+                touchY = center.second
                 retainedRipple = tappedItem.background as RippleDrawable
-                val downTime = SystemClock.uptimeMillis()
+                downTime = SystemClock.uptimeMillis()
                 val down = MotionEvent.obtain(
                     downTime,
                     downTime,
                     MotionEvent.ACTION_DOWN,
-                    center.first,
-                    center.second,
-                    0,
-                )
-                val up = MotionEvent.obtain(
-                    downTime,
-                    downTime + 16L,
-                    MotionEvent.ACTION_UP,
-                    center.first,
-                    center.second,
+                    touchX,
+                    touchY,
                     0,
                 )
                 try {
                     assertTrue(tappedItem.dispatchTouchEvent(down))
-                    assertTrue(tappedItem.dispatchTouchEvent(up))
                 } finally {
                     down.recycle()
+                }
+            }
+            SystemClock.sleep(16L)
+            captureMatrixEvidence(
+                scenario = scenario,
+                scenarioId = "design.oneui7",
+                configuration = configuration,
+                action = "quick-tap-middle-label-pressed-frame",
+                expected = "text-item pressed state is visible before the selected role changes",
+            )
+            scenario.onActivity {
+                val up = MotionEvent.obtain(
+                    downTime,
+                    SystemClock.uptimeMillis(),
+                    MotionEvent.ACTION_UP,
+                    touchX,
+                    touchY,
+                    0,
+                )
+                try {
+                    assertTrue(tappedItem.dispatchTouchEvent(up))
+                } finally {
                     up.recycle()
                 }
             }
             SystemClock.sleep(48L)
             captureMatrixEvidence(
+                scenario = scenario,
                 scenarioId = "design.oneui7",
                 configuration = configuration,
                 action = "quick-tap-middle-label-release-frame",
@@ -418,6 +518,7 @@ class DemoPostReleaseVisualMatrixUiTest {
             assertFullyVisibleInsideOuter(inner, outer)
             assertTrue("Expected inner content beyond the initial viewport.", inner.canScrollVertically(1))
             captureMatrixEvidence(
+                scenario = scenario,
                 scenarioId = "collection.nested-lazy-list",
                 configuration = configuration,
                 action = "inner-at-start-edge",
@@ -469,6 +570,7 @@ class DemoPostReleaseVisualMatrixUiTest {
                 outer.verticalScrollSnapshot().isBefore(outerBeforeReverseHandoff),
             )
             captureMatrixEvidence(
+                scenario = scenario,
                 scenarioId = "collection.nested-lazy-list",
                 configuration = configuration,
                 action = "inner-scroll-forward-and-reverse-edge-handoff",
@@ -490,7 +592,7 @@ class DemoPostReleaseVisualMatrixUiTest {
             var hostHeight = 0
             scenario.onActivity { activity ->
                 val header = activity.requireViewByTestTagVisible(
-                    DemoTestTags.INPUT_FOCUS_FOLLOW_HEADER,
+                    DemoInputTestTags.INPUT_FOCUS_FOLLOW_HEADER,
                 )
                 val action = activity.requireScenarioViewByIdVisible<View>(focusCase.primaryActionId)
                 val headerBounds = Rect()
@@ -526,6 +628,7 @@ class DemoPostReleaseVisualMatrixUiTest {
                     visible.bottom <= imeTop
             }
             captureMatrixEvidence(
+                scenario = scenario,
                 scenarioId = focusCase.scenarioId,
                 configuration = configuration,
                 action = "request-editor-focus",
@@ -570,12 +673,26 @@ class DemoPostReleaseVisualMatrixUiTest {
         return launchDemoActivity(intent, configuration.themeMode)
     }
 
-    private fun captureMatrixEvidence(
+    private fun <A : android.app.Activity> captureMatrixEvidence(
+        scenario: ActivityScenario<A>,
         scenarioId: String,
         configuration: MatrixConfiguration,
         action: String,
         expected: String,
+        allowAppOwnedOverlay: Boolean = false,
     ): File {
+        val targetPackage = instrumentation.targetContext.packageName
+        assertTrue(
+            "Expected $scenarioId to own the active application window before screenshot capture.",
+            device.wait(Until.hasObject(By.pkg(targetPackage)), UI_TIMEOUT_MILLIS) &&
+                device.currentPackageName == targetPackage,
+        )
+        if (!allowAppOwnedOverlay) {
+            assertTrue(
+                "Expected $scenarioId Activity to own window focus before screenshot capture.",
+                waitUntil(scenario) { activity -> activity.hasWindowFocus() },
+            )
+        }
         val safeScenario = scenarioId.replace('.', '-')
         val label = "$safeScenario-${configuration.label}-$action"
         val screenshot = captureDeviceScreenshot(label, PRIVATE_EVIDENCE_DIRECTORY)
@@ -812,6 +929,12 @@ class DemoPostReleaseVisualMatrixUiTest {
     private fun effectiveDensity(configuration: MatrixConfiguration): Float =
         instrumentation.targetContext.resources.displayMetrics.density * configuration.densityScale
 
+    private fun android.app.Activity.expectedGridItemLabel(spanCount: Int): String = getString(
+        R.string.demo_collections_grid_item_span,
+        getString(R.string.demo_collections_grid_item, 1),
+        spanCount,
+    )
+
     private fun colorDistance(first: Int, second: Int): Int = maxOf(
         abs(Color.red(first) - Color.red(second)),
         abs(Color.green(first) - Color.green(second)),
@@ -826,8 +949,20 @@ class DemoPostReleaseVisualMatrixUiTest {
         assertEquals(outputPath, device.executeShellCommand("ls $outputPath").trim())
     }
 
-    private fun prepareEvidenceDirectory() {
-        device.executeShellCommand("mkdir -p /sdcard/Download/$PUBLIC_EVIDENCE_DIRECTORY")
+    private fun prepareEvidenceDirectory(vararg ownedScenarioIds: String) {
+        val outputDirectory = "/sdcard/Download/$PUBLIC_EVIDENCE_DIRECTORY"
+        device.executeShellCommand("mkdir -p $outputDirectory")
+        val ownedPrefixes = ownedScenarioIds
+            .map { scenarioId -> "${scenarioId.replace('.', '-')}-" }
+        device.executeShellCommand("ls -1 $outputDirectory")
+            .lineSequence()
+            .filter { fileName -> ownedPrefixes.any(fileName::startsWith) }
+            .forEach { fileName ->
+                require(EVIDENCE_FILE_NAME.matches(fileName)) {
+                    "Refusing to delete an unexpected evidence file name: $fileName"
+                }
+                device.executeShellCommand("rm $outputDirectory/$fileName")
+            }
     }
 
     private data class MatrixConfiguration(
@@ -919,5 +1054,6 @@ class DemoPostReleaseVisualMatrixUiTest {
         const val PUBLIC_EVIDENCE_DIRECTORY = "viewcompose-demo-post-release-visual-matrix"
         const val MIN_SHADOW_COLOR_DISTANCE = 1
         const val MIN_ROUNDED_CORNER_COLOR_DISTANCE = 4
+        val EVIDENCE_FILE_NAME = Regex("[A-Za-z0-9._-]+")
     }
 }

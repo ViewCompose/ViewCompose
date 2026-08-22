@@ -156,9 +156,9 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(
                 ),
             ),
             valueTagsByLabel = mapOf(
-                modeFactLabel to DemoTestTags.DIAGNOSTICS_THEME_MODE,
-                sourceFactLabel to DemoTestTags.DIAGNOSTICS_THEME_SOURCE,
-                secondaryContainerFactLabel to DemoTestTags.DIAGNOSTICS_THEME_SECONDARY_CONTAINER,
+                modeFactLabel to DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_MODE,
+                sourceFactLabel to DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_SOURCE,
+                secondaryContainerFactLabel to DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_SECONDARY_CONTAINER,
             ),
         )
     }
@@ -204,7 +204,7 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotPaletteSection() {
                 ThemeSwatch("SC", Theme.colors.secondaryContainer),
                 ThemeSwatch("OnS", Theme.colors.onSecondaryContainer),
             ),
-            rowModifier = Modifier.testTag(DemoTestTags.DIAGNOSTICS_THEME_SWATCH_ROW),
+            rowModifier = Modifier.testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_SWATCH_ROW),
         )
         ThemeSwatchRow(
             label = stringResource(R.string.demo_diagnostics_theme_error_outline),
@@ -273,7 +273,7 @@ private fun UiTreeBuilder.DiagnosticsThemeSurfaceSection() {
             Surface(
                 modifier = Modifier
                     .weight(1f)
-                    .testTag(DemoTestTags.DIAGNOSTICS_THEME_SURFACE_SAMPLE)
+                    .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_SURFACE_SAMPLE)
                     .padding(12.dp),
             ) {
                 Column(spacing = 4.dp, modifier = Modifier.fillMaxWidth()) {
@@ -367,7 +367,7 @@ private fun UiTreeBuilder.DiagnosticsThemeActionSection() {
                 variant = ButtonVariant.Primary,
                 modifier = Modifier
                     .weight(1f)
-                    .testTag(DemoTestTags.DIAGNOSTICS_THEME_BUTTON_PRIMARY),
+                    .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_BUTTON_PRIMARY),
             )
             Button(
                 text = stringResource(R.string.demo_diagnostics_theme_secondary),
@@ -417,7 +417,7 @@ private fun UiTreeBuilder.DiagnosticsThemeActionSection() {
             FloatingActionButton(
                 onClick = {},
                 size = FabSize.Medium,
-                modifier = Modifier.testTag(DemoTestTags.DIAGNOSTICS_THEME_FAB),
+                modifier = Modifier.testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_FAB),
             ) {
                 Icon(
                     source = ImageSource.Resource(R.drawable.demo_media_icon),
@@ -500,7 +500,7 @@ private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
             isError = true,
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag(DemoTestTags.DIAGNOSTICS_THEME_TEXTFIELD_ERROR)
+                .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_TEXTFIELD_ERROR)
                 .padding(bottom = 8.dp),
         )
         TextField(
@@ -518,7 +518,7 @@ private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
             leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag(DemoTestTags.DIAGNOSTICS_THEME_SEARCHBAR)
+                .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_SEARCHBAR)
                 .padding(bottom = 8.dp),
         )
         Row(
@@ -587,7 +587,7 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
             onItemSelected = { navIndexState.value = it },
             modifier = Modifier
                 .margin(bottom = 8.dp)
-                .testTag(DemoTestTags.DIAGNOSTICS_THEME_NAVIGATION),
+                .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_NAVIGATION),
         ) {
             Item(
                 key = "home",
@@ -617,7 +617,7 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
             size = SegmentedControlSize.Medium,
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag(DemoTestTags.DIAGNOSTICS_THEME_SEGMENTED)
+                .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_SEGMENTED)
                 .padding(bottom = 8.dp),
         )
         TabRow(
@@ -671,7 +671,7 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection(modifier: Modifier) {
                 shape = Theme.shapes.small,
                 modifier = Modifier
                     .weight(1f)
-                    .testTag(DemoTestTags.DIAGNOSTICS_THEME_SHAPE_SMALL),
+                    .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_SHAPE_SMALL),
             )
             ShapeProbe(
                 stringResource(R.string.demo_diagnostics_theme_medium),
@@ -683,7 +683,7 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection(modifier: Modifier) {
                 shape = Theme.shapes.large,
                 modifier = Modifier
                     .weight(1f)
-                    .testTag(DemoTestTags.DIAGNOSTICS_THEME_SHAPE_LARGE),
+                    .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_THEME_SHAPE_LARGE),
             )
         }
         Row(

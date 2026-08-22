@@ -167,7 +167,7 @@ private fun UiTreeBuilder.TapGestureFixture(scenario: DemoScenarioSpec?) {
             }
             Text(
                 text = stringResource(R.string.demo_gesture_tap_count, tapCountState.value),
-                modifier = Modifier.testTag(DemoTestTags.GESTURE_TAP_COUNT),
+                modifier = Modifier.testTag(DemoGestureTestTags.GESTURE_TAP_COUNT),
             )
             Text(
                 text = stringResource(
@@ -176,7 +176,7 @@ private fun UiTreeBuilder.TapGestureFixture(scenario: DemoScenarioSpec?) {
                         ?: stringResource(R.string.demo_gesture_pointer_none),
                 ),
                 color = TextDefaults.secondaryColor(),
-                modifier = Modifier.testTag(DemoTestTags.GESTURE_POINTER_LOG),
+                modifier = Modifier.testTag(DemoGestureTestTags.GESTURE_POINTER_LOG),
             )
             Surface(
                 variant = SurfaceVariant.Variant,
@@ -205,7 +205,7 @@ private fun UiTreeBuilder.TapGestureFixture(scenario: DemoScenarioSpec?) {
                     consumedPointerBlockedTapCountState.value,
                 ),
                 color = TextDefaults.secondaryColor(),
-                modifier = Modifier.testTag(DemoTestTags.GESTURE_POINTER_CONSUMED_CLICK_COUNT),
+                modifier = Modifier.testTag(DemoGestureTestTags.GESTURE_POINTER_CONSUMED_CLICK_COUNT),
             )
             Text(
                 text = stringResource(
@@ -324,7 +324,7 @@ private fun UiTreeBuilder.DragSwipeGestureFixture(scenario: DemoScenarioSpec?) {
                 ),
                 modifier = Modifier
                     .margin(top = 6.dp)
-                    .testTag(DemoTestTags.GESTURE_DRAG_VALUE),
+                    .testTag(DemoGestureTestTags.GESTURE_DRAG_VALUE),
             )
             Surface(
                 variant = SurfaceVariant.Variant,
@@ -361,7 +361,7 @@ private fun UiTreeBuilder.DragSwipeGestureFixture(scenario: DemoScenarioSpec?) {
                 ),
                 modifier = Modifier
                     .margin(top = 6.dp)
-                    .testTag(DemoTestTags.GESTURE_SWIPE_VALUE),
+                    .testTag(DemoGestureTestTags.GESTURE_SWIPE_VALUE),
             )
             Text(
                 text = stringResource(
@@ -370,7 +370,7 @@ private fun UiTreeBuilder.DragSwipeGestureFixture(scenario: DemoScenarioSpec?) {
                 ),
                 color = TextDefaults.secondaryColor(),
                 style = UiTextStyle(fontSizeSp = 12.sp),
-                modifier = Modifier.testTag(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE),
+                modifier = Modifier.testTag(DemoGestureTestTags.GESTURE_SWIPE_TARGET_VALUE),
             )
             Text(
                 text = stringResource(
@@ -379,7 +379,7 @@ private fun UiTreeBuilder.DragSwipeGestureFixture(scenario: DemoScenarioSpec?) {
                 ),
                 color = TextDefaults.secondaryColor(),
                 style = UiTextStyle(fontSizeSp = 12.sp),
-                modifier = Modifier.testTag(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE),
+                modifier = Modifier.testTag(DemoGestureTestTags.GESTURE_SWIPE_OFFSET_VALUE),
             )
             Text(
                 text = stringResource(

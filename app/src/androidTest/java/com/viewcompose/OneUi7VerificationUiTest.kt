@@ -51,7 +51,7 @@ class OneUi7VerificationUiTest {
                 scenario.onActivity { activity ->
                     assertEquals(
                         "one-ui-7-five-component-alpha",
-                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_IDENTITY)
+                        activity.requireTextViewByTestTagVisible(DemoOneUi7TestTags.ONE_UI_7_IDENTITY)
                             .text.toString(),
                     )
                     assertEquals(
@@ -59,25 +59,25 @@ class OneUi7VerificationUiTest {
                         activity.requireScenarioTarget(DemoAutomationRole.Root).layoutDirection,
                     )
                     val tokenProducer = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.ONE_UI_7_TOKEN_PRODUCER,
+                        DemoOneUi7TestTags.ONE_UI_7_TOKEN_PRODUCER,
                     ).text.toString()
                     val primaryOrigin = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.ONE_UI_7_PRIMARY_ORIGIN,
+                        DemoOneUi7TestTags.ONE_UI_7_PRIMARY_ORIGIN,
                     ).text.toString()
                     val designSystem = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.ONE_UI_7_DESIGN_SYSTEM,
+                        DemoOneUi7TestTags.ONE_UI_7_DESIGN_SYSTEM,
                     ).text.toString()
                     val recipeSet = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.ONE_UI_7_RECIPE_SET,
+                        DemoOneUi7TestTags.ONE_UI_7_RECIPE_SET,
                     ).text.toString()
                     val componentBackends = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.ONE_UI_7_COMPONENT_BACKENDS,
+                        DemoOneUi7TestTags.ONE_UI_7_COMPONENT_BACKENDS,
                     ).text.toString()
                     val overlayTransport = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.ONE_UI_7_OVERLAY_TRANSPORT,
+                        DemoOneUi7TestTags.ONE_UI_7_OVERLAY_TRANSPORT,
                     ).text.toString()
                     val overlayPresenters = activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.ONE_UI_7_OVERLAY_PRESENTERS,
+                        DemoOneUi7TestTags.ONE_UI_7_OVERLAY_PRESENTERS,
                     ).text.toString()
                     assertEquals("viewcompose-oneui7/static", tokenProducer)
                     assertEquals("FrameworkDefault", primaryOrigin)
@@ -184,7 +184,7 @@ class OneUi7VerificationUiTest {
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
-                    val fieldRoot = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_TEXT_FIELD)
+                    val fieldRoot = activity.requireViewByTestTagVisible(DemoOneUi7TestTags.ONE_UI_7_TEXT_FIELD)
                     val editText = requireNotNull(findDescendant(fieldRoot, EditText::class.java))
                     assertEquals(
                         activity.getString(R.string.demo_one_ui7_account_initial_value),
@@ -195,7 +195,7 @@ class OneUi7VerificationUiTest {
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
-                    activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_NAVIGATION)
+                    activity.requireViewByTestTagVisible(DemoOneUi7TestTags.ONE_UI_7_NAVIGATION)
                 }
 
                 val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -211,7 +211,7 @@ class OneUi7VerificationUiTest {
                             R.string.demo_one_ui7_selected_status,
                             activity.getString(R.string.demo_one_ui7_search),
                         ),
-                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_NAVIGATION_STATUS)
+                        activity.requireTextViewByTestTagVisible(DemoOneUi7TestTags.ONE_UI_7_NAVIGATION_STATUS)
                             .text.toString(),
                     )
                 }
@@ -225,7 +225,7 @@ class OneUi7VerificationUiTest {
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
-                    activity.clickByTestTag(DemoTestTags.ONE_UI_7_SNACKBAR_ACTION)
+                    activity.clickByTestTag(DemoOneUi7TestTags.ONE_UI_7_SNACKBAR_ACTION)
                 }
                 val snackbar = device.wait(
                     Until.findObject(By.desc("One UI Snackbar")),
@@ -241,7 +241,7 @@ class OneUi7VerificationUiTest {
                 requireNotNull(snackbarAction).click()
                 waitForUiIdle()
                 scenario.onActivity { activity ->
-                    activity.clickByTestTag(DemoTestTags.ONE_UI_7_BOTTOM_SHEET_ACTION)
+                    activity.clickByTestTag(DemoOneUi7TestTags.ONE_UI_7_BOTTOM_SHEET_ACTION)
                 }
                 assertTrue(
                     "Expected One UI bottom-sheet presenter",
@@ -331,7 +331,7 @@ class OneUi7VerificationUiTest {
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val fieldRoot = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_TEXT_FIELD)
+                val fieldRoot = activity.requireViewByTestTagVisible(DemoOneUi7TestTags.ONE_UI_7_TEXT_FIELD)
                 requireNotNull(findDescendant(fieldRoot, EditText::class.java)).setText("Changed")
                 activity.scrollFixtureToPosition(NAVIGATION_POSITION)
             }
@@ -342,7 +342,7 @@ class OneUi7VerificationUiTest {
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.ONE_UI_7_SNACKBAR_ACTION)
+                activity.clickByTestTag(DemoOneUi7TestTags.ONE_UI_7_SNACKBAR_ACTION)
             }
             assertTrue(
                 device.wait(Until.hasObject(By.desc("One UI Snackbar")), UI_TIMEOUT_MILLIS),
@@ -362,7 +362,7 @@ class OneUi7VerificationUiTest {
             scenario.onActivity { activity -> activity.scrollFixtureToPosition(OVERLAY_POSITION) }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.ONE_UI_7_BOTTOM_SHEET_ACTION)
+                activity.clickByTestTag(DemoOneUi7TestTags.ONE_UI_7_BOTTOM_SHEET_ACTION)
             }
             assertTrue(
                 device.wait(Until.hasObject(By.desc("One UI Bottom Sheet")), UI_TIMEOUT_MILLIS),
@@ -395,7 +395,7 @@ class OneUi7VerificationUiTest {
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val fieldRoot = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_TEXT_FIELD)
+                val fieldRoot = activity.requireViewByTestTagVisible(DemoOneUi7TestTags.ONE_UI_7_TEXT_FIELD)
                 val field = requireNotNull(findDescendant(fieldRoot, EditText::class.java))
                 assertEquals(
                     activity.getString(R.string.demo_one_ui7_account_initial_value),
@@ -411,7 +411,7 @@ class OneUi7VerificationUiTest {
                         activity.getString(R.string.demo_one_ui7_home),
                     ),
                     activity.requireTextViewByTestTagVisible(
-                        DemoTestTags.ONE_UI_7_NAVIGATION_STATUS,
+                        DemoOneUi7TestTags.ONE_UI_7_NAVIGATION_STATUS,
                     ).text.toString(),
                 )
             }
@@ -434,7 +434,7 @@ class OneUi7VerificationUiTest {
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
-                    val navigation = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_NAVIGATION)
+                    val navigation = activity.requireViewByTestTagVisible(DemoOneUi7TestTags.ONE_UI_7_NAVIGATION)
                     val collectionNode = AccessibilityNodeInfoCompat.wrap(
                         navigation.createAccessibilityNodeInfo(),
                     )
@@ -474,7 +474,7 @@ class OneUi7VerificationUiTest {
             lateinit var tappedItem: View
             lateinit var retainedRipple: RippleDrawable
             scenario.onActivity { activity ->
-                val navigation = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_NAVIGATION)
+                val navigation = activity.requireViewByTestTagVisible(DemoOneUi7TestTags.ONE_UI_7_NAVIGATION)
                 tappedItem = navigation.descendantViews().first { view ->
                     val info = AccessibilityNodeInfoCompat.wrap(view.createAccessibilityNodeInfo())
                     info.collectionItemInfo?.columnIndex == 1

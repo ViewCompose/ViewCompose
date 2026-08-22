@@ -273,7 +273,7 @@ internal fun UiTreeBuilder.CollectionPage(
                             Text(
                                 text = item.title,
                                 modifier = if (item.id == "A") {
-                                    Modifier.testTag(DemoTestTags.COLLECTIONS_BENCHMARK_ITEM_A)
+                                    Modifier.testTag(DemoCollectionsTestTags.COLLECTIONS_BENCHMARK_ITEM_A)
                                 } else {
                                     Modifier
                                 },
@@ -315,7 +315,6 @@ internal fun UiTreeBuilder.CollectionPage(
                                 R.string.demo_collections_alternate_labels
                             },
                         ),
-                        modifier = Modifier.testTag(DemoTestTags.COLLECTIONS_LABEL_TOGGLE),
                         onClick = { alternateLabelsState.value = !alternateLabelsState.value },
                     )
                 }
@@ -414,7 +413,7 @@ internal fun UiTreeBuilder.CollectionPage(
                                 .padding(12.dp),
                         ) {
                             val titleModifier = if (item.id == "A") {
-                                Modifier.testTag(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                                Modifier.testTag(DemoCollectionsTestTags.COLLECTIONS_LIST_ITEM_A)
                             } else {
                                 Modifier
                             }
@@ -604,7 +603,7 @@ internal fun UiTreeBuilder.CollectionPage(
                         .fillMaxWidth()
                         .height(140.dp)
                         .margin(bottom = 16.dp)
-                        .testTag(DemoTestTags.COLLECTIONS_LAZY_ROW_PRIMARY),
+                        .testTag(DemoCollectionsTestTags.COLLECTIONS_LAZY_ROW_PRIMARY),
                 ) { item ->
                     Card(
                         variant = CardVariant.Outlined,
@@ -670,7 +669,7 @@ internal fun UiTreeBuilder.CollectionPage(
                         onClick = { spanCountState.value = 2 },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.COLLECTIONS_GRID_TWO_COLS),
+                            .testTag(DemoCollectionsTestTags.COLLECTIONS_GRID_TWO_COLS),
                     )
                     Button(
                         text = stringResource(R.string.demo_collections_columns, 3),
@@ -678,7 +677,7 @@ internal fun UiTreeBuilder.CollectionPage(
                         onClick = { spanCountState.value = 3 },
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.COLLECTIONS_GRID_THREE_COLS),
+                            .testTag(DemoCollectionsTestTags.COLLECTIONS_GRID_THREE_COLS),
                     )
                 }
                 Button(
@@ -730,7 +729,7 @@ internal fun UiTreeBuilder.CollectionPage(
                                 ),
                                 style = UiTextStyle(fontSizeSp = 13.sp),
                                 modifier = if (item.id == "1") {
-                                    Modifier.testTag(DemoTestTags.COLLECTIONS_GRID_FIRST_ITEM)
+                                    Modifier.testTag(DemoCollectionsTestTags.COLLECTIONS_GRID_FIRST_ITEM)
                                 } else {
                                     Modifier
                                 },
@@ -889,7 +888,6 @@ private fun UiTreeBuilder.CollectionLazyListPage(scenario: DemoScenarioSpec?) {
                         ),
                         modifier = Modifier
                             .weight(1f)
-                            .testTag(DemoTestTags.COLLECTIONS_LABEL_TOGGLE)
                             .scenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                         onClick = { alternateLabelsState.value = !alternateLabelsState.value },
                     )
@@ -954,7 +952,7 @@ private fun UiTreeBuilder.CollectionLazyListPage(scenario: DemoScenarioSpec?) {
                 Text(
                     text = item.title,
                     modifier = if (item.id == "A") {
-                        Modifier.testTag(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                        Modifier.testTag(DemoCollectionsTestTags.COLLECTIONS_LIST_ITEM_A)
                     } else {
                         Modifier
                     },

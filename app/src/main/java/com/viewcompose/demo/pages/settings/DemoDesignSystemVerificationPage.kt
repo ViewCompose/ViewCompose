@@ -123,7 +123,7 @@ private fun UiTreeBuilder.DemoDesignSystemVerificationSession(
                     text = stringResource(R.string.demo_design_system_lazy_identity, bundle.kind.id),
                     color = Theme.colors.onSurfaceVariant,
                     style = Theme.typography.bodyMedium,
-                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_LAZY_IDENTITY),
+                    modifier = Modifier.testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_LAZY_IDENTITY),
                 )
                 FlowRow(
                     horizontalSpacing = 10.dp,
@@ -133,13 +133,13 @@ private fun UiTreeBuilder.DemoDesignSystemVerificationSession(
                     DemoDesignButton(
                         text = stringResource(R.string.demo_design_system_switch_kind, nextKind.id),
                         onClick = { onReplaceDesignSystem(nextKind) },
-                        modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_REPLACE_ROOT),
+                        modifier = Modifier.testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_REPLACE_ROOT),
                     )
                     DemoDesignButton(
                         text = stringResource(R.string.demo_design_system_open_dialog),
                         onClick = { dialogVisible.value = true },
                         modifier = Modifier
-                            .testTag(DemoTestTags.DESIGN_SYSTEM_OPEN_DIALOG)
+                            .testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_OPEN_DIALOG)
                             .designSystemAndroidId(
                                 R.id.demo_design_system_dialog_open,
                                 "dialog-open",
@@ -157,7 +157,7 @@ private fun UiTreeBuilder.DemoDesignSystemVerificationSession(
                     onClick = {},
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.DESIGN_SYSTEM_SURFACE),
+                        .testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_SURFACE),
                 ) {
                     Column(spacing = 6.dp) {
                         Text(
@@ -194,7 +194,7 @@ private fun UiTreeBuilder.DemoDesignSystemVerificationSession(
                     enabled = false,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.DESIGN_SYSTEM_SWITCH_DISABLED),
+                        .testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_SWITCH_DISABLED),
                 )
                 Text(
                     text = stringResource(
@@ -224,7 +224,7 @@ private fun UiTreeBuilder.DemoDesignSystemVerificationSession(
                     autofillHints = setOf(TextFieldAutofillHint.Username),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.DESIGN_SYSTEM_TEXT_FIELD),
+                        .testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_TEXT_FIELD),
                 )
                 DemoDesignTextField(
                     state = errorField,
@@ -234,7 +234,7 @@ private fun UiTreeBuilder.DemoDesignSystemVerificationSession(
                     isError = true,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.DESIGN_SYSTEM_TEXT_FIELD_ERROR),
+                        .testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_TEXT_FIELD_ERROR),
                 )
             }
 
@@ -247,7 +247,7 @@ private fun UiTreeBuilder.DemoDesignSystemVerificationSession(
                     labels = segmentLabels,
                     selectedIndex = selectedSegment.value,
                     onItemSelected = { selectedSegment.value = it },
-                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_SEGMENTED),
+                    modifier = Modifier.testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_SEGMENTED),
                 )
                 Text(
                     text = stringResource(
@@ -256,7 +256,7 @@ private fun UiTreeBuilder.DemoDesignSystemVerificationSession(
                     ),
                     color = Theme.colors.onSurfaceVariant,
                     style = Theme.typography.bodySmall,
-                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS),
+                    modifier = Modifier.testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS),
                 )
             }
 
@@ -269,7 +269,7 @@ private fun UiTreeBuilder.DemoDesignSystemVerificationSession(
                     items = navigationItems,
                     selectedIndex = selectedIndex.value,
                     onItemSelected = { selectedIndex.value = it },
-                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_NAVIGATION),
+                    modifier = Modifier.testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_NAVIGATION),
                 )
                 Text(
                     text = stringResource(
@@ -278,7 +278,7 @@ private fun UiTreeBuilder.DemoDesignSystemVerificationSession(
                     ),
                     color = Theme.colors.onSurfaceVariant,
                     style = Theme.typography.bodySmall,
-                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_NAVIGATION_STATUS),
+                    modifier = Modifier.testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_NAVIGATION_STATUS),
                 )
             }
         }
@@ -298,7 +298,7 @@ private fun UiTreeBuilder.DemoDesignSystemVerificationSession(
                     color = Theme.colors.onSurface,
                     style = Theme.typography.titleMedium,
                     modifier = Modifier
-                        .testTag(DemoTestTags.DESIGN_SYSTEM_OVERLAY_IDENTITY)
+                        .testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_OVERLAY_IDENTITY)
                         .designSystemAndroidId(
                             R.id.demo_design_system_dialog_state,
                             "dialog-state",
@@ -308,7 +308,7 @@ private fun UiTreeBuilder.DemoDesignSystemVerificationSession(
                     text = stringResource(R.string.demo_design_system_overlay_token, bundle.kind.id),
                     color = Theme.colors.onSurfaceVariant,
                     style = Theme.typography.bodyMedium,
-                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_OVERLAY_TOKEN_SOURCE),
+                    modifier = Modifier.testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_OVERLAY_TOKEN_SOURCE),
                 )
                 DemoDesignButton(
                     text = stringResource(R.string.demo_design_system_overlay_switch, nextKind.id),
@@ -382,7 +382,7 @@ private fun UiTreeBuilder.DemoDesignSystemIdentitySection(
             DemoDesignButton(
                 text = stringResource(R.string.demo_design_system_button_disabled),
                 enabled = false,
-                modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_BUTTON_DISABLED),
+                modifier = Modifier.testTag(DemoDesignSystemTestTags.DESIGN_SYSTEM_BUTTON_DISABLED),
             )
         }
         Text(
@@ -446,16 +446,16 @@ private fun UiTreeBuilder.DemoDesignSystemIdentitySection(
                 DiagnosticFact(capabilityLabel, bundle.capabilitySummary()),
             ),
             valueTagsByLabel = mapOf(
-                designSystemLabel to DemoTestTags.DESIGN_SYSTEM_IDENTITY,
-                tokenSourceLabel to DemoTestTags.DESIGN_SYSTEM_TOKEN_SOURCE,
-                recipeIdentityLabel to DemoTestTags.DESIGN_SYSTEM_RECIPE_IDENTITY,
-                rootContextLabel to DemoTestTags.DESIGN_SYSTEM_ROOT_CONTEXT,
-                androidPrimaryLabel to DemoTestTags.DESIGN_SYSTEM_ANDROID_PRIMARY,
-                componentBackendsLabel to DemoTestTags.DESIGN_SYSTEM_COMPONENT_BACKENDS,
-                modeLabel to DemoTestTags.DESIGN_SYSTEM_MODE,
-                reducedMotionLabel to DemoTestTags.DESIGN_SYSTEM_REDUCED_MOTION,
-                fontScaleLabel to DemoTestTags.DESIGN_SYSTEM_FONT_SCALE,
-                capabilityLabel to DemoTestTags.DESIGN_SYSTEM_CAPABILITY,
+                designSystemLabel to DemoDesignSystemTestTags.DESIGN_SYSTEM_IDENTITY,
+                tokenSourceLabel to DemoDesignSystemTestTags.DESIGN_SYSTEM_TOKEN_SOURCE,
+                recipeIdentityLabel to DemoDesignSystemTestTags.DESIGN_SYSTEM_RECIPE_IDENTITY,
+                rootContextLabel to DemoDesignSystemTestTags.DESIGN_SYSTEM_ROOT_CONTEXT,
+                androidPrimaryLabel to DemoDesignSystemTestTags.DESIGN_SYSTEM_ANDROID_PRIMARY,
+                componentBackendsLabel to DemoDesignSystemTestTags.DESIGN_SYSTEM_COMPONENT_BACKENDS,
+                modeLabel to DemoDesignSystemTestTags.DESIGN_SYSTEM_MODE,
+                reducedMotionLabel to DemoDesignSystemTestTags.DESIGN_SYSTEM_REDUCED_MOTION,
+                fontScaleLabel to DemoDesignSystemTestTags.DESIGN_SYSTEM_FONT_SCALE,
+                capabilityLabel to DemoDesignSystemTestTags.DESIGN_SYSTEM_CAPABILITY,
             ),
         )
         DiagnosticFactGroup(

@@ -144,7 +144,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                         entry.id.value.take(8),
                         lifecycleState,
                     ),
-                    modifier = Modifier.testTag(DemoTestTags.SYSTEM_NAV_STATUS),
+                    modifier = Modifier.testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_STATUS),
                 )
                 Text(
                     text = stringResource(
@@ -173,7 +173,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                         sourceRes = R.string.demo_system_nav_source_external,
                     ),
                     color = TextDefaults.secondaryColor(),
-                    modifier = Modifier.testTag(DemoTestTags.SYSTEM_NAV_EXTERNAL_DEEP_LINK),
+                    modifier = Modifier.testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_EXTERNAL_DEEP_LINK),
                 )
             }
 
@@ -190,14 +190,14 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                         entryViewModel.instanceId,
                         entryViewModel.counter.value,
                     ),
-                    modifier = Modifier.testTag(DemoTestTags.SYSTEM_NAV_COUNTER_STATUS),
+                    modifier = Modifier.testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_COUNTER_STATUS),
                 )
                 Button(
                     text = stringResource(R.string.demo_system_nav_increment_saveable),
                     onClick = { saveableCounter.value += 1 },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_SAVEABLE_INCREMENT),
+                        .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_SAVEABLE_INCREMENT),
                 )
                 Button(
                     text = stringResource(R.string.demo_system_nav_increment_handle),
@@ -207,7 +207,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_HANDLE_INCREMENT),
+                        .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_HANDLE_INCREMENT),
                 )
                 Button(
                     text = stringResource(R.string.demo_system_nav_increment_view_model),
@@ -215,7 +215,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     onClick = entryViewModel::increment,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_VIEW_MODEL_INCREMENT),
+                        .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_VIEW_MODEL_INCREMENT),
                 )
                 GraphOwnerStateBlock()
             }
@@ -235,7 +235,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_SINGLE_TOP),
+                        .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_SINGLE_TOP),
                 )
                 Button(
                     text = stringResource(R.string.demo_system_nav_pop),
@@ -247,7 +247,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_POP),
+                        .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_POP),
                 )
                 Button(
                     text = stringResource(R.string.demo_system_nav_replace_top),
@@ -259,7 +259,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_REPLACE),
+                        .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_REPLACE),
                 )
             }
 
@@ -285,7 +285,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_SEED_ADAPTIVE),
+                        .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_SEED_ADAPTIVE),
                 )
                 Button(
                     text = stringResource(
@@ -303,7 +303,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_ADAPTIVE_TOGGLE),
+                        .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_ADAPTIVE_TOGGLE),
                 )
                 Button(
                     text = stringResource(
@@ -322,7 +322,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_MOTION_TOGGLE),
+                        .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_MOTION_TOGGLE),
                 )
                 Button(
                     text = stringResource(
@@ -341,7 +341,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_BACK_TOGGLE),
+                        .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_BACK_TOGGLE),
                 )
                 Button(
                     text = stringResource(R.string.demo_system_nav_account_pop_root),
@@ -356,7 +356,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_ACCOUNT_POP_ROOT),
+                        .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_ACCOUNT_POP_ROOT),
                 )
             }
         }
@@ -364,7 +364,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .testTag(DemoTestTags.SYSTEM_NAV_DESTINATION),
+            .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_DESTINATION),
     ) {
         sections.forEach { section ->
             item(
@@ -429,7 +429,7 @@ private fun UiTreeBuilder.GraphOwnerStateBlock() {
                 ),
                 style = UiTextStyle(fontSizeSp = 13.sp),
                 color = TextDefaults.secondaryColor(),
-                modifier = Modifier.testTag(DemoTestTags.SYSTEM_NAV_GRAPH_STATUS),
+                modifier = Modifier.testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_GRAPH_STATUS),
             )
             Button(
                 text = stringResource(R.string.demo_system_nav_increment_graph),
@@ -437,7 +437,7 @@ private fun UiTreeBuilder.GraphOwnerStateBlock() {
                 onClick = { graphHandle["counter"] = graphCounter.value + 1 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag(DemoTestTags.SYSTEM_NAV_GRAPH_INCREMENT),
+                    .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_GRAPH_INCREMENT),
             )
         }
     }
@@ -462,7 +462,7 @@ private fun UiTreeBuilder.RouteSpecificActions(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag(DemoTestTags.SYSTEM_NAV_ENTER_GRAPH),
+                    .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_ENTER_GRAPH),
             )
             Button(
                 text = stringResource(R.string.demo_system_nav_open_receipt),
@@ -483,7 +483,7 @@ private fun UiTreeBuilder.RouteSpecificActions(
         ) {
             DeepLinkButton(
                 text = stringResource(R.string.demo_system_nav_deep_link_valid_reset),
-                tag = DemoTestTags.SYSTEM_NAV_DEEP_LINK_VALID,
+                tag = DemoSystemNavigationTestTags.SYSTEM_NAV_DEEP_LINK_VALID,
             ) {
                 lastEvent.value = SystemNavigationEvent.DeepLink(
                     controller.navigateDeepLink(SystemNavigationDemoModel.SearchDeepLink)
@@ -492,7 +492,7 @@ private fun UiTreeBuilder.RouteSpecificActions(
             }
             DeepLinkButton(
                 text = stringResource(R.string.demo_system_nav_deep_link_valid_push),
-                tag = DemoTestTags.SYSTEM_NAV_DEEP_LINK_PUSH,
+                tag = DemoSystemNavigationTestTags.SYSTEM_NAV_DEEP_LINK_PUSH,
             ) {
                 lastEvent.value = SystemNavigationEvent.DeepLink(
                     controller.navigateDeepLink(
@@ -503,7 +503,7 @@ private fun UiTreeBuilder.RouteSpecificActions(
             }
             DeepLinkButton(
                 text = stringResource(R.string.demo_system_nav_deep_link_invalid),
-                tag = DemoTestTags.SYSTEM_NAV_DEEP_LINK_INVALID,
+                tag = DemoSystemNavigationTestTags.SYSTEM_NAV_DEEP_LINK_INVALID,
             ) {
                 lastEvent.value = SystemNavigationEvent.DeepLink(
                     controller.navigateDeepLink(SystemNavigationDemoModel.InvalidSearchDeepLink)
@@ -512,7 +512,7 @@ private fun UiTreeBuilder.RouteSpecificActions(
             }
             DeepLinkButton(
                 text = stringResource(R.string.demo_system_nav_deep_link_no_match),
-                tag = DemoTestTags.SYSTEM_NAV_DEEP_LINK_NO_MATCH,
+                tag = DemoSystemNavigationTestTags.SYSTEM_NAV_DEEP_LINK_NO_MATCH,
             ) {
                 lastEvent.value = SystemNavigationEvent.DeepLink(
                     controller.navigateDeepLink(SystemNavigationDemoModel.NoMatchDeepLink)
@@ -528,7 +528,7 @@ private fun UiTreeBuilder.RouteSpecificActions(
         ) {
             DeepLinkButton(
                 text = stringResource(R.string.demo_system_nav_security_deep_link),
-                tag = DemoTestTags.SYSTEM_NAV_DEEP_LINK_SECURITY,
+                tag = DemoSystemNavigationTestTags.SYSTEM_NAV_DEEP_LINK_SECURITY,
             ) {
                 lastEvent.value = SystemNavigationEvent.DeepLink(
                     controller.navigateDeepLink(

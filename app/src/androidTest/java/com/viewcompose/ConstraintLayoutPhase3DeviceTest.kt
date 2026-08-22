@@ -38,12 +38,12 @@ class ConstraintLayoutPhase3DeviceTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val first = activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FIRST,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FIRST,
                 )
                 val layout = first.requireConstraintLayoutAncestor()
                 assertEquals(4, layout.managedHelperCount())
                 assertEquals(7, layout.childCount)
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_TOGGLE)
             }
             waitForUiIdle()
 
@@ -60,7 +60,7 @@ class ConstraintLayoutPhase3DeviceTest {
                 removedAttempt = layout.attemptedRevision()
                 removedBounds = tagged.mapValues { (_, view) -> view.screenBounds() }
                 retainedNodeIdentities = tagged.mapValues { (_, view) -> System.identityHashCode(view) }
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_TOGGLE)
             }
             waitForUiIdle()
             SystemClock.sleep(DIAGNOSTIC_SETTLE_MILLIS)
@@ -76,10 +76,10 @@ class ConstraintLayoutPhase3DeviceTest {
                 assertEquals("MissingReference", layout.rejectionReason())
                 assertEquals(removedBounds, tagged.mapValues { (_, view) -> view.screenBounds() })
                 assertTrue(
-                    activity.textForTag(DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FAILURE)
+                    activity.textForTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FAILURE)
                         .contains("MissingReference"),
                 )
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_TOGGLE)
             }
             waitForUiIdle()
 
@@ -97,13 +97,13 @@ class ConstraintLayoutPhase3DeviceTest {
                 )
                 assertTrue(tagged.getValue("first").leftOnScreen() < tagged.getValue("second").leftOnScreen())
                 assertTrue(tagged.getValue("second").leftOnScreen() < tagged.getValue("third").leftOnScreen())
-                activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_STATUS)
+                activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_STATUS)
             }
             waitForUiIdle()
 
             scenario.onActivity { activity ->
                 val first = activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FIRST,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FIRST,
                 )
                 val remounted = first.requireConstraintLayoutAncestor()
                 assertEquals("Reattached fixture must recreate only the active Grid proxies.", 4, remounted.managedHelperCount())
@@ -132,16 +132,16 @@ class ConstraintLayoutPhase3DeviceTest {
             var gridTopology: Long? = null
             var gridScalar: Long? = null
             scenario.onActivity { activity ->
-                val hero = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_HERO)
+                val hero = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_HERO)
                 val layout = hero.requireConstraintLayoutAncestor()
                 gridTopology = layout.topologyFingerprint()
                 gridScalar = layout.scalarFingerprint()
                 assertEquals(6, layout.managedHelperCount())
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_TOGGLE)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val updated = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GRID_HERO)
+                val updated = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GRID_HERO)
                     .requireConstraintLayoutAncestor()
                 assertTrue(
                     "Grid orientation changes resolved member placement and therefore topology.",
@@ -154,18 +154,18 @@ class ConstraintLayoutPhase3DeviceTest {
             var circularTopology: Long? = null
             var circularScalar: Long? = null
             scenario.onActivity { activity ->
-                val center = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CENTER)
+                val center = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CENTER)
                 assertCircularOrbit(activity, center, radiusDp = 78f, angleOffsetDegrees = 0f)
                 val layout = center.requireConstraintLayoutAncestor()
                 circularTopology = layout.topologyFingerprint()
                 circularScalar = layout.scalarFingerprint()
                 assertEquals(0, layout.managedHelperCount())
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_TOGGLE)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val updatedCenter = activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CENTER,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_CENTER,
                 )
                 val updatedLayout = updatedCenter.requireConstraintLayoutAncestor()
                 assertEquals(circularTopology, updatedLayout.topologyFingerprint())
@@ -175,18 +175,18 @@ class ConstraintLayoutPhase3DeviceTest {
             }
 
             scenario.onActivity { activity ->
-                activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_TARGET)
-                val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_MARKER)
+                activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_TARGET)
+                val marker = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_MARKER)
                 val layout = marker.requireConstraintLayoutAncestor()
                 val targetHost = layout.requireContentView("gone-target")
                 val markerHost = layout.requireContentView("gone-marker")
                 assertEquals(View.VISIBLE, targetHost.visibility)
                 assertNear(activity.dp(24f), markerHost.left - targetHost.right)
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_TOGGLE)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_MARKER)
+                val marker = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_MARKER)
                 val layout = marker.requireConstraintLayoutAncestor()
                 val targetHost = layout.requireContentView("gone-target")
                 val markerHost = layout.requireContentView("gone-marker")
@@ -205,17 +205,17 @@ class ConstraintLayoutPhase3DeviceTest {
             expectedWrapSizes.forEachIndexed { index, (widthDp, heightDp) ->
                 scenario.onActivity { activity ->
                     val container = activity.requireViewByTestTagVisible(
-                        DemoTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_CONTAINER,
+                        DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_CONTAINER,
                     )
                     val remote = activity.requireViewByTestTagVisible(
-                        DemoTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_REMOTE,
+                        DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_REMOTE,
                     )
                     assertNear(activity.dp(widthDp), container.width)
                     assertNear(activity.dp(heightDp), container.height)
                     assertNear(activity.dp(148f), remote.leftOnScreen() - container.leftOnScreen())
                     assertNear(activity.dp(92f), remote.topOnScreen() - container.topOnScreen())
                     if (index < expectedWrapSizes.lastIndex) {
-                        activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_TOGGLE)
+                        activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_WRAP_BEHAVIOR_TOGGLE)
                     }
                 }
                 waitForUiIdle()
@@ -256,7 +256,7 @@ class ConstraintLayoutPhase3DeviceTest {
                 assertNear(container.topOnScreen() + container.paddingTop, top.topOnScreen())
                 assertNear(container.bottomOnScreen() - container.paddingBottom, bottom.bottomOnScreen())
                 assertNear(middle.topOnScreen() - top.bottomOnScreen(), bottom.topOnScreen() - middle.bottomOnScreen())
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_TOGGLE)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
@@ -271,9 +271,9 @@ class ConstraintLayoutPhase3DeviceTest {
             }
 
             scenario.onActivity { activity ->
-                val container = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_BASIC_CONTAINER)
-                val content = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_BASIC_CONTENT)
-                val badge = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_BASIC_BADGE)
+                val container = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_BASIC_CONTAINER)
+                val content = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_BASIC_CONTENT)
+                val badge = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_BASIC_BADGE)
                 val margin = activity.dp(8f)
                 val available = content.width - badge.width - margin * 2
                 val expectedLeft = content.leftOnScreen() + margin + (available * 0.78f).roundToInt()
@@ -282,15 +282,15 @@ class ConstraintLayoutPhase3DeviceTest {
             }
 
             scenario.onActivity { activity ->
-                val leader = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_LEADER)
+                val leader = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_LEADER)
                 val baseline = activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE,
                 ) as TextView
                 val baselineTop = activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE_TOP,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE_TOP,
                 ) as TextView
                 val baselineBottom = activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE_BOTTOM,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE_BOTTOM,
                 ) as TextView
                 val leaderText = leader as TextView
                 assertNear(leaderText.topOnScreen() + leaderText.baseline, baseline.topOnScreen() + baseline.baseline)
@@ -298,28 +298,28 @@ class ConstraintLayoutPhase3DeviceTest {
                 assertNear(leaderText.bottomOnScreen() + activity.dp(2f), baselineBottom.topOnScreen() + baselineBottom.baseline)
 
                 val container = activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CONTAINER,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CONTAINER,
                 )
                 val centered = activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CENTERED,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CENTERED,
                 )
                 assertNear(container.centerXOnScreen(), centered.centerXOnScreen())
                 assertNear(container.centerYOnScreen(), centered.centerYOnScreen())
                 val circleCenter = activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CIRCLE_CENTER,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CIRCLE_CENTER,
                 )
                 val circle = activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CIRCLE,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CIRCLE,
                 )
                 assertPolarOffset(activity, circleCenter, circle, radiusDp = 54f, angleDegrees = 225f)
-                val target = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_TARGET)
-                val linked = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_LINKED)
+                val target = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_TARGET)
+                val linked = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_LINKED)
                 assertNear(activity.dp(8f), target.topOnScreen() - linked.bottomOnScreen())
             }
 
             scenario.onActivity { activity ->
                 assertDimensionState(activity, expanded = false)
-                activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_TOGGLE)
+                activity.clickByTestTag(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_TOGGLE)
             }
             waitForUiIdle()
             scenario.onActivity { activity -> assertDimensionState(activity, expanded = true) }
@@ -340,7 +340,7 @@ class ConstraintLayoutPhase3DeviceTest {
             waitForUiIdle()
             var ltrTargetLeft = 0
             scenario.onActivity { activity ->
-                val target = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_TARGET)
+                val target = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_TARGET)
                 ltrTargetLeft = target.leftOnScreen()
                 assertNear(activity.dp(72f), target.width)
                 activity.intent
@@ -354,11 +354,11 @@ class ConstraintLayoutPhase3DeviceTest {
             scenario.onActivity { activity ->
                 val root = activity.requireScenarioViewById<View>(R.id.demo_layout_constraint_root)
                 assertEquals(View.LAYOUT_DIRECTION_RTL, root.layoutDirection)
-                val target = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_TARGET)
+                val target = activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_GONE_MARGIN_TARGET)
                 assertNear((activity.dp(72f) * 1.25f).roundToInt(), target.width)
                 assertTrue("Logical start must move the target across the parent in RTL.", target.leftOnScreen() > ltrTargetLeft)
                 val lifecycle = activity.requireViewByTestTagVisible(
-                    DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FIRST,
+                    DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FIRST,
                 ).requireConstraintLayoutAncestor()
                 assertEquals(4, lifecycle.managedHelperCount())
                 assertEquals(7, lifecycle.childCount)
@@ -380,9 +380,9 @@ class ConstraintLayoutPhase3DeviceTest {
     )
 
     private fun lifecycleNodes(activity: LayoutsActivity): Map<String, View> = mapOf(
-        "first" to activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FIRST),
-        "second" to activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_SECOND),
-        "third" to activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_THIRD),
+        "first" to activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_FIRST),
+        "second" to activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_SECOND),
+        "third" to activity.requireViewByTestTagVisible(DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_LIFECYCLE_THIRD),
     )
 
     private fun assertCircularOrbit(
@@ -392,10 +392,10 @@ class ConstraintLayoutPhase3DeviceTest {
         angleOffsetDegrees: Float,
     ) {
         listOf(
-            DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_TOP to angleOffsetDegrees,
-            DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_RIGHT to angleOffsetDegrees + 90f,
-            DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_BOTTOM to angleOffsetDegrees + 180f,
-            DemoTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_LEFT to angleOffsetDegrees + 270f,
+            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_TOP to angleOffsetDegrees,
+            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_RIGHT to angleOffsetDegrees + 90f,
+            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_BOTTOM to angleOffsetDegrees + 180f,
+            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_CIRCULAR_LEFT to angleOffsetDegrees + 270f,
         ).forEach { (tag, angle) ->
             assertPolarOffset(
                 activity = activity,
@@ -424,16 +424,16 @@ class ConstraintLayoutPhase3DeviceTest {
 
     private fun assertDimensionState(activity: LayoutsActivity, expanded: Boolean) {
         val container = activity.requireViewByTestTagVisible(
-            DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_CONTAINER,
+            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_CONTAINER,
         )
         val widthNode = activity.requireViewByTestTagVisible(
-            DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_WIDTH,
+            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_WIDTH,
         )
         val heightNode = activity.requireViewByTestTagVisible(
-            DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_HEIGHT,
+            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_HEIGHT,
         )
         val ratioNode = activity.requireViewByTestTagVisible(
-            DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO,
+            DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO,
         )
         val solverWidth = container.width - container.paddingLeft - container.paddingRight
         val solverHeight = container.height - container.paddingTop - container.paddingBottom
@@ -523,7 +523,7 @@ private fun LayoutsActivity.textForTag(tag: String): String {
 
 private fun LayoutsActivity.requireVerticalChainLayout(): ConstraintLayout {
     val root = findViewById<ViewGroup>(android.R.id.content)
-    val container = findViewByTestTag(root, DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_CONTAINER)
+    val container = findViewByTestTag(root, DemoLayoutsTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_CONTAINER)
         ?: error(
             "Missing vertical-chain container; verification sections=" +
                 intent.getStringArrayExtra(LayoutsActivity.EXTRA_VERIFICATION_SECTIONS)?.toList(),

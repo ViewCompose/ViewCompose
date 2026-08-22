@@ -177,7 +177,7 @@ private fun UiTreeBuilder.DemoOneUi7VerificationSession(
                     supportingText = stringResource(R.string.demo_one_ui7_text_field_support),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.ONE_UI_7_TEXT_FIELD),
+                        .testTag(DemoOneUi7TestTags.ONE_UI_7_TEXT_FIELD),
                 )
             }
 
@@ -194,7 +194,7 @@ private fun UiTreeBuilder.DemoOneUi7VerificationSession(
                     items = destinations,
                     selectedIndex = selected.value,
                     onItemSelected = { selected.value = it },
-                    modifier = Modifier.testTag(DemoTestTags.ONE_UI_7_NAVIGATION),
+                    modifier = Modifier.testTag(DemoOneUi7TestTags.ONE_UI_7_NAVIGATION),
                 )
                 Text(
                     stringResource(
@@ -203,7 +203,7 @@ private fun UiTreeBuilder.DemoOneUi7VerificationSession(
                     ),
                     color = Theme.colors.onSurfaceVariant,
                     style = Theme.typography.bodySmall,
-                    modifier = Modifier.testTag(DemoTestTags.ONE_UI_7_NAVIGATION_STATUS),
+                    modifier = Modifier.testTag(DemoOneUi7TestTags.ONE_UI_7_NAVIGATION_STATUS),
                 )
             }
 
@@ -226,7 +226,7 @@ private fun UiTreeBuilder.DemoOneUi7VerificationSession(
                         text = stringResource(R.string.demo_one_ui7_show_snackbar),
                         onClick = { snackbarVisible.value = true },
                         modifier = Modifier
-                            .testTag(DemoTestTags.ONE_UI_7_SNACKBAR_ACTION)
+                            .testTag(DemoOneUi7TestTags.ONE_UI_7_SNACKBAR_ACTION)
                             .oneUi7AndroidId(R.id.demo_oneui7_snackbar_show, "snackbar-show"),
                     )
                     OneUi7Button(
@@ -234,7 +234,7 @@ private fun UiTreeBuilder.DemoOneUi7VerificationSession(
                         onClick = { sheetVisible.value = true },
                         variant = OneUi7ButtonVariant.Neutral,
                         modifier = Modifier
-                            .testTag(DemoTestTags.ONE_UI_7_BOTTOM_SHEET_ACTION)
+                            .testTag(DemoOneUi7TestTags.ONE_UI_7_BOTTOM_SHEET_ACTION)
                             .oneUi7AndroidId(R.id.demo_oneui7_sheet_show, "sheet-show"),
                     )
                 }
@@ -262,7 +262,7 @@ private fun UiTreeBuilder.DemoOneUi7VerificationSession(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 12.dp)
-                .testTag(DemoTestTags.ONE_UI_7_BOTTOM_SHEET_CONTENT)
+                .testTag(DemoOneUi7TestTags.ONE_UI_7_BOTTOM_SHEET_CONTENT)
                 .oneUi7AndroidId(R.id.demo_oneui7_sheet_content, "sheet-content"),
         ) {
             Text(
@@ -280,7 +280,7 @@ private fun UiTreeBuilder.DemoOneUi7VerificationSession(
                 onClick = { sheetVisible.value = false },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag(DemoTestTags.ONE_UI_7_BOTTOM_SHEET_DISMISS)
+                    .testTag(DemoOneUi7TestTags.ONE_UI_7_BOTTOM_SHEET_DISMISS)
                     .oneUi7AndroidId(R.id.demo_oneui7_sheet_dismiss, "sheet-dismiss"),
             )
         }
@@ -407,14 +407,14 @@ private fun UiTreeBuilder.DemoOneUi7IdentitySection(
                 ),
             ),
             valueTagsByLabel = mapOf(
-                componentSetLabel to DemoTestTags.ONE_UI_7_IDENTITY,
-                tokenSourceLabel to DemoTestTags.ONE_UI_7_TOKEN_PRODUCER,
-                primarySourceLabel to DemoTestTags.ONE_UI_7_PRIMARY_ORIGIN,
-                designSystemLabel to DemoTestTags.ONE_UI_7_DESIGN_SYSTEM,
-                recipeSetLabel to DemoTestTags.ONE_UI_7_RECIPE_SET,
-                componentBackendsLabel to DemoTestTags.ONE_UI_7_COMPONENT_BACKENDS,
-                overlayTransportLabel to DemoTestTags.ONE_UI_7_OVERLAY_TRANSPORT,
-                overlayPresentersLabel to DemoTestTags.ONE_UI_7_OVERLAY_PRESENTERS,
+                componentSetLabel to DemoOneUi7TestTags.ONE_UI_7_IDENTITY,
+                tokenSourceLabel to DemoOneUi7TestTags.ONE_UI_7_TOKEN_PRODUCER,
+                primarySourceLabel to DemoOneUi7TestTags.ONE_UI_7_PRIMARY_ORIGIN,
+                designSystemLabel to DemoOneUi7TestTags.ONE_UI_7_DESIGN_SYSTEM,
+                recipeSetLabel to DemoOneUi7TestTags.ONE_UI_7_RECIPE_SET,
+                componentBackendsLabel to DemoOneUi7TestTags.ONE_UI_7_COMPONENT_BACKENDS,
+                overlayTransportLabel to DemoOneUi7TestTags.ONE_UI_7_OVERLAY_TRANSPORT,
+                overlayPresentersLabel to DemoOneUi7TestTags.ONE_UI_7_OVERLAY_PRESENTERS,
             ),
         )
         DiagnosticFactGroup(

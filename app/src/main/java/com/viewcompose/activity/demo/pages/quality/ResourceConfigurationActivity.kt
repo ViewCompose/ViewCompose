@@ -225,7 +225,7 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
             .systemBarsInsetsPadding()
             .backgroundColor(Theme.colors.background)
             .padding(horizontal = 16.dp)
-            .testTag(DemoTestTags.RESOURCE_CONFIGURATION_ROOT)
+            .testTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_ROOT)
             .scenarioTarget(scenario, DemoAutomationRole.Root),
     ) { section ->
         when (section) {
@@ -238,7 +238,7 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
                     style = UiTextStyle(fontSizeSp = 24.sp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.RESOURCE_CONFIGURATION_TITLE)
+                        .testTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_TITLE)
                         .scenarioTarget(scenario, DemoAutomationRole.Ready),
                 )
                 Text(
@@ -256,28 +256,28 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
                     onClick = controller::toggleLanguage,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.RESOURCE_CONFIGURATION_LANGUAGE)
+                        .testTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_LANGUAGE)
                         .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                 )
                 Button(
                     text = stringResource(R.string.resource_configuration_night_action),
                     onClick = controller::toggleNightMode,
-                    modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.RESOURCE_CONFIGURATION_NIGHT),
+                    modifier = Modifier.fillMaxWidth().testTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_NIGHT),
                 )
                 Button(
                     text = stringResource(R.string.resource_configuration_font_action),
                     onClick = controller::toggleFontScale,
-                    modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.RESOURCE_CONFIGURATION_FONT_SCALE),
+                    modifier = Modifier.fillMaxWidth().testTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_FONT_SCALE),
                 )
                 Button(
                     text = stringResource(R.string.resource_configuration_density_action),
                     onClick = controller::toggleDensity,
-                    modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.RESOURCE_CONFIGURATION_DENSITY),
+                    modifier = Modifier.fillMaxWidth().testTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_DENSITY),
                 )
                 Button(
                     text = stringResource(R.string.resource_configuration_direction_action),
                     onClick = controller::toggleLayoutDirection,
-                    modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.RESOURCE_CONFIGURATION_DIRECTION),
+                    modifier = Modifier.fillMaxWidth().testTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_DIRECTION),
                 )
                 Button(
                     text = stringResource(R.string.resource_configuration_reset_action),
@@ -293,7 +293,7 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
                 modifier = Modifier
                     .fillMaxWidth()
                     .margin(top = 16.dp)
-                    .testTag(DemoTestTags.RESOURCE_CONFIGURATION_FACTS)
+                    .testTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_FACTS)
                     .scenarioTarget(scenario, DemoAutomationRole.State),
             )
 
@@ -303,7 +303,7 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
                 modifier = Modifier
                     .fillMaxWidth()
                     .margin(top = 12.dp)
-                    .testTag(DemoTestTags.RESOURCE_CONFIGURATION_VALUES),
+                    .testTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_VALUES),
             )
 
             "image" -> Image(
@@ -312,7 +312,7 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
                 modifier = Modifier
                     .size(96.dp, 96.dp)
                     .margin(top = 16.dp, bottom = 24.dp)
-                    .testTag(DemoTestTags.RESOURCE_CONFIGURATION_IMAGE)
+                    .testTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_IMAGE)
                     .scenarioTarget(scenario, DemoAutomationRole.Target),
             )
         }

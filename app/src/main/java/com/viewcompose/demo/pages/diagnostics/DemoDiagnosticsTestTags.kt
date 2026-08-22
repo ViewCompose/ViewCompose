@@ -1,0 +1,28 @@
+package com.viewcompose
+
+/** In-process tags owned by the Diagnostics demo fixtures. */
+internal object DemoDiagnosticsTestTags {
+    const val DIAGNOSTICS_RENDERER_REFRESH = "diagnostics_renderer_refresh"
+    const val DIAGNOSTICS_RENDER_REFRESH_SEQUENCE = "diagnostics_render_refresh_sequence"
+    const val DIAGNOSTICS_RENDER_COUNT = "diagnostics_render_count"
+    const val DIAGNOSTICS_RENDER_UPDATED_AT = "diagnostics_render_updated_at"
+    const val DIAGNOSTICS_PATCH_ACTIVE_PATCHED = "diagnostics_patch_active_patched"
+    const val DIAGNOSTICS_PATCH_ACTIVE_CAPTURED_AT = "diagnostics_patch_active_captured_at"
+    const val DIAGNOSTICS_RENDER_PROBE_KEY = "diagnostics_render_probe_key"
+    const val DIAGNOSTICS_RENDER_PROBE_TICK = "diagnostics_render_probe_tick"
+    const val DIAGNOSTICS_RENDER_PROBE_HASH = "diagnostics_render_probe_hash"
+    const val DIAGNOSTICS_RENDER_HISTORY = "diagnostics_render_history"
+    const val DIAGNOSTICS_THEME_MODE = "diagnostics_theme_mode"
+    const val DIAGNOSTICS_THEME_SOURCE = "diagnostics_theme_source"
+    const val DIAGNOSTICS_THEME_SECONDARY_CONTAINER = "diagnostics_theme_secondary_container"
+    const val DIAGNOSTICS_THEME_SWATCH_ROW = "diagnostics_theme_swatch_row"
+    const val DIAGNOSTICS_THEME_SURFACE_SAMPLE = "diagnostics_theme_surface_sample"
+    const val DIAGNOSTICS_THEME_BUTTON_PRIMARY = "diagnostics_theme_button_primary"
+    const val DIAGNOSTICS_THEME_FAB = "diagnostics_theme_fab"
+    const val DIAGNOSTICS_THEME_TEXTFIELD_ERROR = "diagnostics_theme_textfield_error"
+    const val DIAGNOSTICS_THEME_SEARCHBAR = "diagnostics_theme_searchbar"
+    const val DIAGNOSTICS_THEME_NAVIGATION = "diagnostics_theme_navigation"
+    const val DIAGNOSTICS_THEME_SEGMENTED = "diagnostics_theme_segmented"
+    const val DIAGNOSTICS_THEME_SHAPE_SMALL = "diagnostics_theme_shape_small"
+    const val DIAGNOSTICS_THEME_SHAPE_LARGE = "diagnostics_theme_shape_large"
+}

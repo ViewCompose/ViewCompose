@@ -50,7 +50,7 @@ internal fun UiTreeBuilder.Material3VisualBaselinePage(page: Int) {
             .backgroundColor(Theme.colors.background)
             .systemBarsInsetsPadding()
             .padding(16.dp)
-            .testTag(DemoTestTags.MATERIAL3_BASELINE_ROOT),
+            .testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_ROOT),
     ) {
         when (page) {
             Material3VisualBaselineActivity.PAGE_ACTIONS -> Material3ActionsBaseline()
@@ -88,7 +88,7 @@ private fun UiTreeBuilder.Material3ActionsBaseline() {
         Button(
             text = "Primary",
             onClick = {},
-            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_BASELINE_ACTION_PRIMARY),
+            modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_ACTION_PRIMARY),
         )
         Button(text = "Outlined", variant = ButtonVariant.Outlined, onClick = {})
         Button(text = "Disabled", enabled = false, onClick = {})
@@ -101,7 +101,7 @@ private fun UiTreeBuilder.Material3ActionsBaseline() {
             icon = ImageSource.Resource(R.drawable.demo_media_icon),
             contentDescription = "Standard icon button",
             onClick = {},
-            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_BASELINE_ACTION_ICON),
+            modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_ACTION_ICON),
         )
         IconButton(
             icon = ImageSource.Resource(R.drawable.demo_media_icon),
@@ -119,7 +119,7 @@ private fun UiTreeBuilder.Material3ActionsBaseline() {
                 variant = ChipVariant.Filter,
                 selected = true,
                 onClick = {},
-                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_BASELINE_ACTION_CHIP),
+                modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_ACTION_CHIP),
             )
         }
     }
@@ -148,7 +148,7 @@ private fun UiTreeBuilder.Material3ActionsBaseline() {
                     .weight(1f)
                     .then(
                         if (index == 0) {
-                            Modifier.testTag(DemoTestTags.MATERIAL3_BASELINE_ACTION_CARD)
+                            Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_ACTION_CARD)
                         } else {
                             Modifier
                         },
@@ -172,7 +172,7 @@ private fun UiTreeBuilder.Material3ActionsBaseline() {
                 onClick = {},
                 size = size,
                 modifier = if (index == 1) {
-                    Modifier.testTag(DemoTestTags.MATERIAL3_BASELINE_ACTION_FAB)
+                    Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_ACTION_FAB)
                 } else {
                     Modifier
                 },
@@ -200,7 +200,7 @@ private fun UiTreeBuilder.Material3InputsBaseline() {
         leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
         modifier = Modifier
             .fillMaxWidth()
-            .testTag(DemoTestTags.MATERIAL3_BASELINE_INPUT_SEARCH),
+            .testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_INPUT_SEARCH),
     )
     TextField(
         state = filledState,
@@ -208,7 +208,7 @@ private fun UiTreeBuilder.Material3InputsBaseline() {
         supportingText = "Filled field · body large",
         modifier = Modifier
             .fillMaxWidth()
-            .testTag(DemoTestTags.MATERIAL3_BASELINE_INPUT_FIELD),
+            .testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_INPUT_FIELD),
     )
     TextField(
         state = errorState,
@@ -226,13 +226,13 @@ private fun UiTreeBuilder.Material3InputsBaseline() {
             text = "Checked",
             checked = selectedState.value,
             onCheckedChange = { selectedState.value = it },
-            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_BASELINE_INPUT_CHECKBOX),
+            modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_INPUT_CHECKBOX),
         )
         Switch(
             text = "On",
             checked = selectedState.value,
             onCheckedChange = { selectedState.value = it },
-            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_BASELINE_INPUT_SWITCH),
+            modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_INPUT_SWITCH),
         )
     }
     Row(
@@ -247,7 +247,7 @@ private fun UiTreeBuilder.Material3InputsBaseline() {
         onValueChange = { sliderState.value = it },
         modifier = Modifier
             .fillMaxWidth()
-            .testTag(DemoTestTags.MATERIAL3_BASELINE_INPUT_SLIDER),
+            .testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_INPUT_SLIDER),
     )
 }
 
@@ -258,7 +258,7 @@ private fun UiTreeBuilder.Material3SurfacesBaseline() {
     )
     Column(
         spacing = 2.dp,
-        modifier = Modifier.testTag(DemoTestTags.MATERIAL3_BASELINE_SURFACE_TYPOGRAPHY),
+        modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_SURFACE_TYPOGRAPHY),
     ) {
         Text(text = "Headline small", style = Theme.typography.headlineSmall)
         Text(text = "Title medium", style = Theme.typography.titleMedium)
@@ -293,7 +293,7 @@ private fun UiTreeBuilder.Material3SurfacesBaseline() {
         spacing = 12.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .testTag(DemoTestTags.MATERIAL3_BASELINE_SURFACE_PROGRESS),
+            .testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_SURFACE_PROGRESS),
     ) {
         LinearProgressIndicator(
             progress = 0.64f,
@@ -304,7 +304,7 @@ private fun UiTreeBuilder.Material3SurfacesBaseline() {
     NavigationBar(
         selectedIndex = 1,
         onItemSelected = {},
-        modifier = Modifier.testTag(DemoTestTags.MATERIAL3_BASELINE_SURFACE_NAVIGATION),
+        modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_BASELINE_SURFACE_NAVIGATION),
     ) {
         Item(key = "home", label = "Home", icon = ImageSource.Resource(R.drawable.demo_media_icon))
         Item(key = "library", label = "Library", icon = ImageSource.Resource(R.drawable.demo_media_icon), badgeCount = 3)

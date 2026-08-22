@@ -186,7 +186,7 @@ private fun UiTreeBuilder.Material3DefaultThemeSession(
                     Button(
                         text = stringResource(R.string.demo_material3_button_default),
                         onClick = { defaultButtonClicks.value += 1 },
-                        modifier = Modifier.testTag(DemoTestTags.MATERIAL3_DEFAULT_BUTTON),
+                        modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_DEFAULT_BUTTON),
                     )
                     Button(
                         text = stringResource(R.string.demo_material3_button_outlined),
@@ -199,7 +199,7 @@ private fun UiTreeBuilder.Material3DefaultThemeSession(
                     text = stringResource(R.string.demo_material3_default_clicks, defaultButtonClicks.value),
                     style = Theme.typography.bodySmall,
                     color = Theme.colors.onSurfaceVariant,
-                    modifier = Modifier.testTag(DemoTestTags.MATERIAL3_DEFAULT_BUTTON_STATUS),
+                    modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_DEFAULT_BUTTON_STATUS),
                 )
             }
 
@@ -221,12 +221,12 @@ private fun UiTreeBuilder.Material3DefaultThemeSession(
                         icon = ImageSource.Resource(R.drawable.demo_media_icon),
                         contentDescription = stringResource(R.string.demo_material3_default_icon_description),
                         onClick = {},
-                        modifier = Modifier.testTag(DemoTestTags.MATERIAL3_DEFAULT_ICON_BUTTON),
+                        modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_DEFAULT_ICON_BUTTON),
                     )
                     Chip(
                         label = stringResource(R.string.demo_material3_assist_chip),
                         onClick = {},
-                        modifier = Modifier.testTag(DemoTestTags.MATERIAL3_DEFAULT_CHIP),
+                        modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_DEFAULT_CHIP),
                     )
                 }
             }
@@ -242,7 +242,7 @@ private fun UiTreeBuilder.Material3DefaultThemeSession(
                 NavigationBar(
                     selectedIndex = 0,
                     onItemSelected = {},
-                    modifier = Modifier.testTag(DemoTestTags.MATERIAL3_DEFAULT_NAVIGATION),
+                    modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_DEFAULT_NAVIGATION),
                 ) {
                     Item(
                         key = "home",
@@ -300,19 +300,19 @@ private fun UiTreeBuilder.Material3StateLayerVerification(
                 modifier = Modifier
                     .focusRequester(focusRequester)
                     .focusable()
-                    .testTag(DemoTestTags.MATERIAL3_STATE_LAYER_PRIMARY),
+                    .testTag(DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_PRIMARY),
             )
             Button(
                 text = stringResource(R.string.demo_material3_tonal),
                 variant = ButtonVariant.Tonal,
                 onClick = {},
-                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_STATE_LAYER_TONAL),
+                modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_TONAL),
             )
             Button(
                 text = stringResource(R.string.demo_material3_button_outlined),
                 variant = ButtonVariant.Outlined,
                 onClick = {},
-                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_STATE_LAYER_OUTLINED),
+                modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_OUTLINED),
             )
         }
         Row(spacing = 8.dp, verticalAlignment = VerticalAlignment.Center) {
@@ -320,13 +320,13 @@ private fun UiTreeBuilder.Material3StateLayerVerification(
                 icon = ImageSource.Resource(R.drawable.demo_media_icon),
                 contentDescription = stringResource(R.string.demo_material3_state_layer_icon_description),
                 onClick = {},
-                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_STATE_LAYER_ICON),
+                modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_ICON),
             )
             Button(
                 text = stringResource(R.string.demo_material3_focus_primary),
                 variant = ButtonVariant.Outlined,
                 onClick = { focusRequester.requestFocus() },
-                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_STATE_LAYER_FOCUS_ACTION),
+                modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_FOCUS_ACTION),
             )
             Button(
                 text = stringResource(R.string.demo_material3_clear_focus),
@@ -347,11 +347,11 @@ private fun UiTreeBuilder.Material3StateLayerVerification(
             Chip(
                 label = stringResource(R.string.demo_material3_assist_chip),
                 onClick = {},
-                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_STATE_LAYER_CHIP),
+                modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_CHIP),
             )
             FloatingActionButton(
                 onClick = {},
-                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_STATE_LAYER_FAB),
+                modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_FAB),
             ) {
                 Icon(
                     source = ImageSource.Resource(R.drawable.demo_media_icon),
@@ -368,7 +368,7 @@ private fun UiTreeBuilder.Material3StateLayerVerification(
             onSelectionChange = onSegmentSelected,
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag(DemoTestTags.MATERIAL3_STATE_LAYER_SEGMENTED),
+                .testTag(DemoMaterial3TestTags.MATERIAL3_STATE_LAYER_SEGMENTED),
         )
         Text(
             text = stringResource(R.string.demo_material3_composite_instruction),
@@ -541,20 +541,20 @@ private fun UiTreeBuilder.ThemeSourceSnapshotSection(source: DemoThemeSource) {
                 DiagnosticFact(roleCheckLabel, if (rolesDistinct) "DISTINCT" else "COLLISION"),
             ),
             valueTagsByLabel = mapOf(
-                sourceLabel to DemoTestTags.MATERIAL3_THEME_SOURCE,
-                metadataOriginLabel to DemoTestTags.MATERIAL3_THEME_ORIGIN,
-                tokenProducerLabel to DemoTestTags.MATERIAL3_TOKEN_PRODUCER,
-                primarySourceLabel to DemoTestTags.MATERIAL3_PRIMARY_ORIGIN,
-                shapeSourceLabel to DemoTestTags.MATERIAL3_SHAPE_ORIGIN,
-                designSystemLabel to DemoTestTags.MATERIAL3_DESIGN_SYSTEM,
-                recipeSetLabel to DemoTestTags.MATERIAL3_RECIPE_SET,
-                componentBackendsLabel to DemoTestTags.MATERIAL3_COMPONENT_BACKENDS,
-                overlayTransportLabel to DemoTestTags.MATERIAL3_OVERLAY_TRANSPORT,
-                overlayPresentersLabel to DemoTestTags.MATERIAL3_OVERLAY_PRESENTERS,
-                modeLabel to DemoTestTags.MATERIAL3_THEME_MODE,
-                secondaryLabel to DemoTestTags.MATERIAL3_THEME_SECONDARY,
-                secondaryContainerLabel to DemoTestTags.MATERIAL3_THEME_SECONDARY_CONTAINER,
-                roleCheckLabel to DemoTestTags.MATERIAL3_THEME_ROLE_COLLISION,
+                sourceLabel to DemoMaterial3TestTags.MATERIAL3_THEME_SOURCE,
+                metadataOriginLabel to DemoMaterial3TestTags.MATERIAL3_THEME_ORIGIN,
+                tokenProducerLabel to DemoMaterial3TestTags.MATERIAL3_TOKEN_PRODUCER,
+                primarySourceLabel to DemoMaterial3TestTags.MATERIAL3_PRIMARY_ORIGIN,
+                shapeSourceLabel to DemoMaterial3TestTags.MATERIAL3_SHAPE_ORIGIN,
+                designSystemLabel to DemoMaterial3TestTags.MATERIAL3_DESIGN_SYSTEM,
+                recipeSetLabel to DemoMaterial3TestTags.MATERIAL3_RECIPE_SET,
+                componentBackendsLabel to DemoMaterial3TestTags.MATERIAL3_COMPONENT_BACKENDS,
+                overlayTransportLabel to DemoMaterial3TestTags.MATERIAL3_OVERLAY_TRANSPORT,
+                overlayPresentersLabel to DemoMaterial3TestTags.MATERIAL3_OVERLAY_PRESENTERS,
+                modeLabel to DemoMaterial3TestTags.MATERIAL3_THEME_MODE,
+                secondaryLabel to DemoMaterial3TestTags.MATERIAL3_THEME_SECONDARY,
+                secondaryContainerLabel to DemoMaterial3TestTags.MATERIAL3_THEME_SECONDARY_CONTAINER,
+                roleCheckLabel to DemoMaterial3TestTags.MATERIAL3_THEME_ROLE_COLLISION,
             ),
         )
         ThemeSwatchRow(
@@ -606,37 +606,37 @@ private fun UiTreeBuilder.Material3NamedPressureSlice(
         Material3Surface(
             variant = Material3SurfaceVariant.Container,
             modifier = Modifier.fillMaxWidth().padding(12.dp)
-                .testTag(DemoTestTags.MATERIAL3_NAMED_SURFACE),
+                .testTag(DemoMaterial3TestTags.MATERIAL3_NAMED_SURFACE),
         ) {
             Text(text = stringResource(R.string.demo_material3_named_surface))
         }
         Material3Card(
             modifier = Modifier.fillMaxWidth().padding(12.dp)
-                .testTag(DemoTestTags.MATERIAL3_NAMED_CARD),
+                .testTag(DemoMaterial3TestTags.MATERIAL3_NAMED_CARD),
         ) {
             Text(text = stringResource(R.string.demo_material3_named_card))
         }
         Material3Button(
             text = stringResource(R.string.demo_material3_named_button),
             onClick = {},
-            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_NAMED_BUTTON),
+            modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_NAMED_BUTTON),
         )
         Material3Switch(
             text = stringResource(R.string.demo_material3_named_switch),
             checked = switchChecked,
             onCheckedChange = onSwitchCheckedChange,
-            modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.MATERIAL3_NAMED_SWITCH),
+            modifier = Modifier.fillMaxWidth().testTag(DemoMaterial3TestTags.MATERIAL3_NAMED_SWITCH),
         )
         Material3TextField(
             state = field,
             label = stringResource(R.string.demo_material3_named_text_field),
             supportingText = stringResource(R.string.demo_material3_named_text_field_support),
-            modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.MATERIAL3_NAMED_TEXT_FIELD),
+            modifier = Modifier.fillMaxWidth().testTag(DemoMaterial3TestTags.MATERIAL3_NAMED_TEXT_FIELD),
         )
         Material3NavigationBar(
             selectedIndex = selectedNavigationIndex,
             onItemSelected = onNavigationSelected,
-            modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.MATERIAL3_NAMED_NAVIGATION),
+            modifier = Modifier.fillMaxWidth().testTag(DemoMaterial3TestTags.MATERIAL3_NAMED_NAVIGATION),
         ) {
             Item(
                 key = "home",
@@ -673,13 +673,13 @@ private fun UiTreeBuilder.Material3TouchTargetProbes(source: DemoThemeSource) {
             text = stringResource(R.string.demo_material3_adjacent_first),
             checked = firstChecked.value,
             onCheckedChange = { firstChecked.value = it },
-            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_TARGET_ADJACENT_FIRST),
+            modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_TARGET_ADJACENT_FIRST),
         )
         Checkbox(
             text = stringResource(R.string.demo_material3_adjacent_second),
             checked = secondChecked.value,
             onCheckedChange = { secondChecked.value = it },
-            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_TARGET_ADJACENT_SECOND),
+            modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_TARGET_ADJACENT_SECOND),
         )
         Text(
             text = stringResource(
@@ -688,7 +688,7 @@ private fun UiTreeBuilder.Material3TouchTargetProbes(source: DemoThemeSource) {
                 secondChecked.value.toString(),
             ),
             style = Theme.typography.bodySmall,
-            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_TARGET_ADJACENT_STATUS),
+            modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_TARGET_ADJACENT_STATUS),
         )
         Checkbox(
             text = stringResource(R.string.demo_material3_explicit_compact),
@@ -696,20 +696,20 @@ private fun UiTreeBuilder.Material3TouchTargetProbes(source: DemoThemeSource) {
             onCheckedChange = {},
             modifier = Modifier
                 .height(32.dp)
-                .testTag(DemoTestTags.MATERIAL3_TARGET_EXPLICIT_COMPACT),
+                .testTag(DemoMaterial3TestTags.MATERIAL3_TARGET_EXPLICIT_COMPACT),
         )
         Box(
             contentAlignment = BoxAlignment.CenterStart,
             modifier = Modifier
                 .height(32.dp)
                 .clip()
-                .testTag(DemoTestTags.MATERIAL3_TARGET_CLIPPED_PARENT),
+                .testTag(DemoMaterial3TestTags.MATERIAL3_TARGET_CLIPPED_PARENT),
         ) {
             Checkbox(
                 text = stringResource(R.string.demo_material3_clipped_parent),
                 checked = false,
                 onCheckedChange = {},
-                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_TARGET_CLIPPED_CHILD),
+                modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_TARGET_CLIPPED_CHILD),
             )
         }
     }
@@ -731,26 +731,26 @@ private fun UiTreeBuilder.Material3DefaultSelectionControls(source: DemoThemeSou
             text = stringResource(R.string.demo_material3_checkbox),
             checked = checked.value,
             onCheckedChange = { checked.value = it },
-            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_DEFAULT_CHECKBOX),
+            modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_DEFAULT_CHECKBOX),
         )
         RadioButton(
             text = stringResource(R.string.demo_material3_radio_button),
             checked = checked.value,
             onCheckedChange = { checked.value = it },
-            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_DEFAULT_RADIO),
+            modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_DEFAULT_RADIO),
         )
         Switch(
             text = stringResource(R.string.demo_material3_switch),
             checked = checked.value,
             onCheckedChange = { checked.value = it },
-            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_DEFAULT_SWITCH),
+            modifier = Modifier.testTag(DemoMaterial3TestTags.MATERIAL3_DEFAULT_SWITCH),
         )
         Slider(
             value = sliderValue.value,
             onValueChange = { sliderValue.value = it },
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag(DemoTestTags.MATERIAL3_DEFAULT_SLIDER),
+                .testTag(DemoMaterial3TestTags.MATERIAL3_DEFAULT_SLIDER),
         )
     }
 }

@@ -420,7 +420,9 @@ internal fun Activity.tapScenarioViewById(@IdRes id: Int) {
  */
 internal fun Activity.tapView(view: View) {
     val location = IntArray(2)
-    view.getLocationOnScreen(location)
+    // Activity.dispatchTouchEvent consumes window coordinates. Screen coordinates include the
+    // status-bar offset on pre-R edge-to-edge hosts and can move a narrow target outside its bounds.
+    view.getLocationInWindow(location)
     val x = location[0] + view.width * 0.5f
     val y = location[1] + view.height * 0.5f
     val downTime = SystemClock.uptimeMillis()

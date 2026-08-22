@@ -27,7 +27,7 @@ class ResourceConfigurationDeviceTest {
             scenario.onActivity { activity ->
                 activityIdentity = System.identityHashCode(activity)
                 rootIdentity = System.identityHashCode(
-                    activity.requireViewByTestTagVisible(DemoTestTags.RESOURCE_CONFIGURATION_ROOT),
+                    activity.requireViewByTestTagVisible(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_ROOT),
                 )
                 val facts = activity.resourceConfigurationFacts()
                 val values = activity.resourceConfigurationValues()
@@ -41,7 +41,7 @@ class ResourceConfigurationDeviceTest {
                 assertTrue(values.contains("bool=false"))
                 assertResourceConfigurationLayoutIntegrity(activity)
                 assertWindowAppearance(activity, expectLightSystemBars = true)
-                activity.clickByTestTag(DemoTestTags.RESOURCE_CONFIGURATION_LANGUAGE)
+                activity.clickByTestTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_LANGUAGE)
             }
 
             waitForUiIdle()
@@ -50,7 +50,7 @@ class ResourceConfigurationDeviceTest {
                 assertTrue(activity.resourceConfigurationFacts().contains("locale=zh"))
                 assertTrue(activity.resourceConfigurationValues().contains("你好，ViewCompose"))
                 assertResourceConfigurationLayoutIntegrity(activity)
-                activity.clickByTestTag(DemoTestTags.RESOURCE_CONFIGURATION_NIGHT)
+                activity.clickByTestTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_NIGHT)
             }
 
             waitForUiIdle()
@@ -59,7 +59,7 @@ class ResourceConfigurationDeviceTest {
                 assertTrue(activity.resourceConfigurationFacts().contains("night=dark"))
                 assertTrue(activity.resourceConfigurationValues().contains("bool=true"))
                 assertWindowAppearance(activity, expectLightSystemBars = false)
-                activity.clickByTestTag(DemoTestTags.RESOURCE_CONFIGURATION_FONT_SCALE)
+                activity.clickByTestTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_FONT_SCALE)
             }
 
             waitForUiIdle()
@@ -67,7 +67,7 @@ class ResourceConfigurationDeviceTest {
                 assertStableHost(activity, activityIdentity, rootIdentity)
                 assertTrue(activity.resourceConfigurationFacts().contains("fontScale=1.30"))
                 assertResourceConfigurationLayoutIntegrity(activity)
-                activity.clickByTestTag(DemoTestTags.RESOURCE_CONFIGURATION_DENSITY)
+                activity.clickByTestTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_DENSITY)
             }
 
             waitForUiIdle()
@@ -77,7 +77,7 @@ class ResourceConfigurationDeviceTest {
                 val values = activity.resourceConfigurationValues()
                 assertNotEquals(baselineDensityDpi, facts.factInt("densityDpi"))
                 assertTrue(values.dimensionPixels() > baselineDimensionPx)
-                activity.clickByTestTag(DemoTestTags.RESOURCE_CONFIGURATION_DIRECTION)
+                activity.clickByTestTag(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_DIRECTION)
             }
 
             waitForUiIdle()
@@ -99,7 +99,7 @@ class ResourceConfigurationDeviceTest {
         assertEquals(
             rootIdentity,
             System.identityHashCode(
-                activity.requireViewByTestTagVisible(DemoTestTags.RESOURCE_CONFIGURATION_ROOT),
+                activity.requireViewByTestTagVisible(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_ROOT),
             ),
         )
     }
@@ -108,10 +108,10 @@ class ResourceConfigurationDeviceTest {
         activity: ResourceConfigurationActivity,
     ) {
         val root = activity.requireViewByTestTagVisible(
-            DemoTestTags.RESOURCE_CONFIGURATION_ROOT,
+            DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_ROOT,
         ) as RecyclerView
         val title = activity.requireTextViewByTestTagVisible(
-            DemoTestTags.RESOURCE_CONFIGURATION_TITLE,
+            DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_TITLE,
         )
         val systemBars = ViewCompat.getRootWindowInsets(root)
             ?.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -149,11 +149,11 @@ class ResourceConfigurationDeviceTest {
     }
 
     private fun ResourceConfigurationActivity.resourceConfigurationFacts(): String {
-        return requireTextViewByTestTagVisible(DemoTestTags.RESOURCE_CONFIGURATION_FACTS).text.toString()
+        return requireTextViewByTestTagVisible(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_FACTS).text.toString()
     }
 
     private fun ResourceConfigurationActivity.resourceConfigurationValues(): String {
-        return requireTextViewByTestTagVisible(DemoTestTags.RESOURCE_CONFIGURATION_VALUES).text.toString()
+        return requireTextViewByTestTagVisible(DemoResourceConfigurationTestTags.RESOURCE_CONFIGURATION_VALUES).text.toString()
     }
 
     private fun String.factInt(name: String): Int {

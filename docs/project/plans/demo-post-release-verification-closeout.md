@@ -2,11 +2,11 @@
 
 ## Status
 
-Active. The coordinated Maven and ViewCompose Preview 1.1.0 release and the preempting focus
-visibility hard cut are complete. The release-bearing Demo rearchitecture and its renderer/overlay
-repairs are archived in `docs/archive/demo-benchmark-verification-harness-rearchitecture.md`. This
-plan now resumes ownership of the remaining internal harness baseline, broad visual matrix, golden
-coverage, and dead-infrastructure cleanup.
+Active. The coordinated Maven and ViewCompose Preview 1.1.0 release, the preempting focus
+visibility hard cut, the broad visual matrix, popup golden, and dead-infrastructure cleanup are
+complete. The release-bearing Demo rearchitecture and its renderer/overlay repairs are archived in
+`docs/archive/demo-benchmark-verification-harness-rearchitecture.md`. Only the unaccepted Phase 1
+scroll baseline keeps this plan active.
 
 Phase 1 is partially complete. The rooted Xiaomi run accepted the revision-3 eight-cycle mutation
 absolute baseline at run-P50 CV `0.025`. Scroll remains unaccepted after two complete v4 batches at
@@ -27,9 +27,21 @@ was completed by the higher-priority
 plan and was not closed by adding more tests to the rejected Boolean policy. This plan retains the
 popup, navigation, theme, segmented, rounded-grid, and nested-scroll slices.
 
-Next action: execute the remaining visual/configuration matrix and popup golden, then recapture
-revision-3 scroll on another root-controllable reference device. Do not remove production harness
-infrastructure or close Phase 1 until scroll passes the unchanged `0.15` gate.
+Phases 2 and 3 completed on 2026-08-22. The Xiaomi MI 6 / API 28 pairwise run passed all three
+instrumentation methods in `71.693 s` and produced 32 accepted screenshots plus 32 metadata files.
+Automated assertions and manual review accepted every frame. The rejected pre-hardening capture
+had 26 frames; four pressed-state frames and separate Grid first/last-row evidence increased
+focused coverage by `+6` (`+23.1%`). The popup retained native dismissal coverage and passed its
+four-edge pixel assertion. The monolithic 371-constant `DemoTestTags` registry was removed with no
+alias; 370 still-live fine-grained tags moved into 14 fixture-owned registries, while the redundant
+Collections label tag was deleted after its test adopted the scenario-owned resource ID. Two
+zero-caller chapter helpers were also deleted. Call-site and structural searches report no old
+tag-registry, chapter-wrapper, module-key, or page-index caller. The rebuilt APKs then passed the
+complete Demo instrumentation suite, 137/137 tests in `742.903 s`.
+
+Next action: recapture revision-3 scroll on another root-controllable reference device. Do not
+remove production harness infrastructure or close Phase 1 until scroll passes the unchanged `0.15`
+gate.
 
 ## Maven release changesets
 
@@ -111,7 +123,17 @@ BufferQueue attribution, limitations, and next action live in
    limitations, and next action in `docs/tooling/performance.md` and its Simplified Chinese mirror.
 5. Do not compare revision 3 against retired revision 2 as if the fixture were unchanged.
 
-### Phase 2: visual and configuration matrix
+### Phase 2: visual and configuration matrix — complete
+
+Accepted on 2026-08-22 on Xiaomi MI 6 / API 28. The executable pairwise matrix combines English,
+light, LTR, font `1.0`, and density `1.0` with Simplified Chinese, dark, RTL, font `1.3`, and density
+`1.25`. All three instrumentation methods passed in `71.693 s`; 32/32 automated evidence frames
+also passed manual review. The accepted set covers exact Grid state and both rounded ends, theme
+swatch geometry, segmented geometry, standard and One UI pressed/released feedback, popup
+anchoring/shadow/dismissal, and bidirectional nested handoff. The separately completed focus hard
+cut's five owner types also passed as regression coverage without returning focus ownership to this
+plan. The durable execution contract and limitations are interpreted in
+[`docs/project/capability-verification.md`](../capability-verification.md).
 
 1. Produce a deterministic checklist keyed by scenario ID, configuration, action, and expected
    invariant rather than by translated copy.
@@ -124,7 +146,20 @@ BufferQueue attribution, limitations, and next action live in
    inset geometry, rounded clipping, and reset/relaunch determinism.
 5. Record actual failures as framework, fixture, or harness defects before changing code.
 
-### Phase 3: popup golden and harness cleanup
+### Phase 3: popup golden and harness cleanup — complete
+
+The popup bitmap assertion samples transparent visual outset and non-background shadow pixels on
+all four rounded edges while the real-device path proves selection, semantic anchoring,
+outside-touch dismissal, and reopen behavior. Harness cleanup found no surviving old module-key or
+page-index route. The initial call-site audit found all 371 constants in the monolithic tag registry
+referenced, so the hard cut moved them into 14 fixture-owned registries and deleted the central
+object instead of retaining forwarding aliases. The final device suite then exposed one
+misclassified Collections scenario-role tag: its consumer now uses the owned Android resource ID,
+and the constant plus both producer modifiers were deleted. The remaining 370 fixture tags all have
+a production or test caller. Two zero-caller chapter helpers were also deleted. `rg` and Kotlin AST
+searches return no old object, helper call, module-key, or page-index reference. The first complete
+device run passed 135/137 tests and exposed the coordinate/IME and role-selector defects; after the
+hard cuts, the same rebuilt APKs passed 137/137 in `742.903 s`.
 
 1. Add an automated popup image assertion that samples transparent outset and non-background shadow
    pixels around every rounded edge at representative density and edge placement.
@@ -136,7 +171,14 @@ BufferQueue attribution, limitations, and next action live in
 5. Run the complete Demo unit, instrumentation, benchmark-compilation, documentation, and release
    quality gates affected by the cleanup.
 
-### Phase 4: documentation and archive
+### Phase 4: documentation and archive — partially complete
+
+The accepted visual result, normalized coverage change, conclusion, limitations, and next action
+are recorded in the current capability-verification document and reviewed Chinese mirror. Release
+intent remains publication-neutral because this batch changes only the Demo application, its
+instrumentation, and contributor documentation. Compilation, selector, documentation, release
+intent, `qaQuick`, and the complete 137-test device gate pass. Final archive remains blocked solely
+by the Phase 1 scroll baseline and its required performance-document interpretation.
 
 - Interpret every accepted benchmark or visual result in the owning current document with context,
   absolute observations, normalized direction where applicable, conclusion, limitations, and next
