@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-constraintlayout-androidx/README.md
-translation_source_hash: b9791148e41c8a2ab82f2b056d434ec7df4065ef2faf76c1daa29ac71947996c
+translation_source_hash: 138f9a00e5f290a505fbc74f52663c4cb9a2a9ce3c1289e546e56df946015d62
 translation_status: current
 ---
 
@@ -23,11 +23,10 @@ dependencies {
 - 稳定性：**Alpha**。当前源码已经包含首发 API 与 Renderer 硬切；Robolectric、真机、
   Demo、AndroidX `2.2.2`、性能安全、文档与仓库发版门禁均已通过，首发加固计划已经完成
   并归档为 `docs/archive/constraintlayout-native-engine-hardening.md`。
-  更广泛的能力对齐与优化由独立的
-  [发版后扩展计划](https://docs.viewcompose.com/project/plans/constraintlayout-parity-performance-expansion)负责；
-  Demo 固定频率基线、Phase 0 契约冻结与 Phase 1 分类协调均已合入。Phase 2 高价值能力对齐
-  已合入，并拥有不可变的多产物 Changeset；当前变更已完成 Phase 3 的 Demo、视觉、配置、
-  生命周期与兼容性验收。下一步是 Phase 4 受控基准测试与发版收尾。
+  更广泛的能力对齐与优化已经在归档的
+  [发版后扩展计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md)中完成。
+  Demo 固定频率基线、Phase 0 契约冻结、Phase 1 分类协调、Phase 2 高价值能力对齐、Phase 3
+  完整验收与 Phase 4 受控基准测试均已完成。该扩展线满足发版安全，但不宣称全帧性能胜利。
 - 平台：Android 7.0（API 24）及以上。
 - 可选：`viewcompose-ui-foundation` 不依赖该产物。
 - UI Contract 与 UI Foundation 会被传递暴露，因为它们的 Modifier、单位和 Builder 类型
@@ -310,11 +309,21 @@ AndroidX Escape Hatch。
 - 不需要约束求解时使用更简单 Container；ConstraintLayout 会引入 Solver Pass。
 - 避免由高频 State 重建大型 Helper Graph。
 
-已接受的 10/50/100 Node 首发矩阵证明：相对硬切前 ViewCompose 源码，所有稳定行均为
-**no material change**；它不构成性能领先结论。Direct Android Views 仍明显更快，尤其是 P95。
-不得把该 Adapter 描述为 ViewCompose 中最快的 Layout Path。Phase 1 已闭合分类路径的结构预算，
-但 50 Node 固定频率全帧预检为 **inconclusive**，因为四个纵向 Arm 中有三个超过 `0.15`
-Run-P50 CV 门槛。Phase 4 负责稳定的 Direct-native 复验与未来任何端到端性能领先声明。
+Revision 6 Phase 4 矩阵在 10/50/100 Node 上对比 Released、Candidate 与 Direct AndroidX，覆盖
+Stable、Scalar、Helper 与 Topology 更新。7 个 Longitudinal Pair 的两条 ViewCompose Arm 均稳定，
+并通过全部 Timing 与 Peak-heap Regression 门禁；另有 5 个在唯一允许的成对复测后仍为
+`inconclusive`。发版安全结论是 **no material change**，不是全帧优化胜利。12 个 Candidate
+Action 的 P95 全部由 Direct Android Views 更快；P50 则有 11 个由 Direct 更快。Helper-100 的
+Candidate P50 方向相反，但 P95 仍更慢，因此它是 Mixed，而不是性能领先证据。Phase 1 分类快速
+路径继续由精确的零工作与有界写入计数证明，而不是由 Frame-time 声明证明。不得把该 Adapter
+描述为 ViewCompose 中最快的 Layout Path，也不得通过重复运行选择有利样本。受控协议、绝对值、
+局限与下一步见 [ViewCompose 性能](../../tooling/performance.md#247-constraintlayout-phase-4-controlled-matrix)。
+
+Direct AndroidX Demo Fixture 会为每个 Benchmark Node 绘制可见填充。在 Xiaomi/API-28 参考设备上，
+人工复核确认 10 Node 为单行、50 Node 为 `5 x 10`、100 Node 为 `10 x 10`，之后才开始采集 Timing。
+每个 Fixture 都提供 Update、Reset 与 Node-count Control；如果页面只有 Control 可见或 Cell 透明，
+该结果不能作为 Benchmark 证据。聚焦 App Test 还要求每种 Workload 都存在 10 个可见且不是 Barrier
+的 Node。
 
 ## 相关文档
 
@@ -329,5 +338,5 @@ Run-P50 CV 门槛。Phase 4 负责稳定的 Direct-native 复验与未来任何�
 ## 兼容性说明
 
 首发硬切之前的源码快照使用基于 Warning 的局部恢复与分裂的 Helper 所有权。当前源码有意
-打破这些行为，不提供第二套 Constraint Solver 或 Compatibility Engine。首发计划仍负责验收
-与发布闭环；发版后扩展计划独立负责优化、更广泛的能力对齐和性能领先证据。
+打破这些行为，不提供第二套 Constraint Solver 或 Compatibility Engine。首发与发版后计划均已
+归档；当前契约与性能边界由本模块手册，以及所链接的有效架构、迁移和工具文档负责。

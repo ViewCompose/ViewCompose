@@ -16,7 +16,7 @@ intent gates passed before archival; the source is ready to enter the release wi
 
 Topology/scalar optimization, high-value AndroidX parity, the complete configuration/screenshot
 matrix, and performance-leadership evidence have been split into the active
-[ConstraintLayout parity and performance expansion plan](../project/plans/constraintlayout-parity-performance-expansion.md).
+[ConstraintLayout parity and performance expansion plan](./constraintlayout-parity-performance-expansion.md).
 That follow-up owns no Changeset and must not begin production implementation until this plan is
 archived and the ensuing release window has completed.
 
@@ -241,7 +241,7 @@ container.
 | Owner | Responsibility after the split | Release effect |
 | --- | --- | --- |
 | This plan | Existing-helper correctness, warning-free geometry, API hard cut, graph validation, atomic commit/rollback, focused device evidence, performance-safety checks, documentation, Changesets, and archive handoff | Blocks the first release once it owns a production Changeset; completion opens the release window |
-| [ConstraintLayout parity and performance expansion](../project/plans/constraintlayout-parity-performance-expansion.md) | No-op/content/scalar/environment/topology optimization, broader AndroidX parity, Grid, CircularFlow, full visual/configuration coverage, performance-leadership evidence, and a repository-wide structural DSL Scope consistency audit | Remains `- None.` during the first-release train and begins only after that train is tagged |
+| [ConstraintLayout parity and performance expansion](./constraintlayout-parity-performance-expansion.md) | No-op/content/scalar/environment/topology optimization, broader AndroidX parity, Grid, CircularFlow, full visual/configuration coverage, performance-leadership evidence, and a repository-wide structural DSL Scope consistency audit | Remains `- None.` during the first-release train and begins only after that train is tagged |
 | [Unified roadmap](../project/roadmap.md) | Current capability state and the two-stage next-focus statement | Must name both plans and keep first-release work separate from post-release expansion |
 | [ConstraintLayout module manual](../modules/viewcompose-constraintlayout-androidx/README.md) | Current public API, behavior, limitations, migration, and performance guidance | Must receive durable conclusions from each accepted phase rather than leaving them only in a plan |
 | [Animation Compose-capability expansion](../project/plans/animation-compose-capability-expansion.md) | Bounds animation and shared-motion decisions | Unchanged; neither ConstraintLayout plan introduces MotionScene or a competing animation engine |

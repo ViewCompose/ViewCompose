@@ -3,7 +3,9 @@ package com.viewcompose.benchmark
 import android.content.Intent
 import android.graphics.Rect
 import android.os.SystemClock
+import android.view.accessibility.AccessibilityNodeInfo
 import androidx.benchmark.macro.MacrobenchmarkScope
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Configurator
 import androidx.test.uiautomator.UiObject2
@@ -88,6 +90,42 @@ internal fun MacrobenchmarkScope.clickScenarioTarget(
     if (waitForIdle) {
         device.waitForIdle()
     }
+}
+
+/**
+ * Invokes one scenario action through accessibility without injecting pointer press/release frames.
+ *
+ * This is reserved for frame-timing protocols whose control-surface press frame would otherwise
+ * form a second timing population beside the content mutation frame. State-target assertions remain
+ * responsible for proving that the action reached the application.
+ */
+@Suppress("DEPRECATION")
+internal fun MacrobenchmarkScope.performScenarioTargetClick(
+    scenarioId: String,
+    role: DemoTargetRole,
+) {
+    waitForScenarioTarget(scenarioId, role)
+    val viewId = "$TARGET_PACKAGE:id/${scenarioTargetResourceName(scenarioId, role)}"
+    val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
+    val deadline = SystemClock.uptimeMillis() + UI_WAIT_TIMEOUT_MS
+    var performed = false
+    while (!performed && SystemClock.uptimeMillis() < deadline) {
+        val root = automation.rootInActiveWindow
+        val candidates = root?.findAccessibilityNodeInfosByViewId(viewId).orEmpty()
+        val target = candidates.firstOrNull { candidate ->
+            candidate.isVisibleToUser && candidate.isClickable
+        }
+        performed = target?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
+        candidates.forEach(AccessibilityNodeInfo::recycle)
+        root?.recycle()
+        if (!performed) {
+            SystemClock.sleep(16L)
+        }
+    }
+    assertTrue(
+        "Expected accessibility click for scenario target: $scenarioId/${role.wireValue}",
+        performed,
+    )
 }
 
 /** Returns the current machine-target text for change detection without using it as a selector. */

@@ -118,7 +118,7 @@ class ConstraintLayoutPerformanceComparisonBenchmark {
                 PerformanceComplexLayoutScenario,
                 DemoTargetRole.State,
             )
-            clickScenarioTarget(
+            performScenarioTargetClick(
                 PerformanceComplexLayoutScenario,
                 DemoTargetRole.PrimaryAction,
             )
@@ -127,7 +127,7 @@ class ConstraintLayoutPerformanceComparisonBenchmark {
                 DemoTargetRole.State,
                 initial,
             )
-            clickScenarioTarget(
+            performScenarioTargetClick(
                 PerformanceComplexLayoutScenario,
                 DemoTargetRole.Reset,
             )
@@ -142,4 +142,4 @@ class ConstraintLayoutPerformanceComparisonBenchmark {
 }
 
 private const val PerformanceComplexLayoutScenario = "performance.complex-layout"
-private const val ConstraintLayoutMutationCycles = 4
+private const val ConstraintLayoutMutationCycles = 16

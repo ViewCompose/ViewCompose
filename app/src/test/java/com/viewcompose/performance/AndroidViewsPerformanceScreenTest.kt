@@ -1,6 +1,7 @@
 package com.viewcompose.performance
 
 import android.content.Context
+import android.graphics.drawable.ColorDrawable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -161,6 +162,37 @@ class AndroidViewsPerformanceScreenTest {
 
         assertEquals("Revision 0", state.text.toString())
         assertTrue(target.childrenOfType<Barrier>().all { it.allowsGoneWidget })
+    }
+
+    @Test
+    fun `constraint layout control renders every requested node for every workload`() {
+        val scenario = DemoScenarioRegistry.require("performance.complex-layout")
+
+        ConstraintLayoutPerformanceWorkload.entries.forEach { workload ->
+            val root = createAndroidViewsConstraintLayoutPerformanceScreen(
+                context = context,
+                scenario = scenario,
+                profile = ConstraintLayoutPerformanceProfile(
+                    nodeCount = 10,
+                    workload = workload,
+                ),
+                copy = PerformanceCopy(context),
+            )
+            val target = root.findViewById<ConstraintLayout>(
+                scenario.automation.require(DemoAutomationRole.Target).androidViewId,
+            )
+            val nodes = (0 until target.childCount).mapNotNull { index ->
+                target.getChildAt(index).takeUnless { it is Barrier }
+            }
+
+            assertEquals(10, nodes.size)
+            assertTrue(
+                "$workload must render the same visible cells as ViewCompose",
+                nodes.all { node ->
+                    (node.background as? ColorDrawable)?.color == PERFORMANCE_BADGE_COLOR
+                },
+            )
+        }
     }
 
     private inline fun <reified T : View> ViewGroup.childrenOfType(): List<T> =

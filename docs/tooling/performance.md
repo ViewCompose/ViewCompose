@@ -1064,6 +1064,66 @@ limitation is a short 16--17-frame workload on one API 28 device with persistent
 The next action is the cooled Phase 4 direct-native/released/candidate matrix; no whole-frame
 optimization win is claimed before that stable replication.
 
+#### 2.4.7 ConstraintLayout Phase 4 controlled matrix
+
+The 2026-08-21 Phase 4 run compared frozen released framework source
+`143b09acf3bfcda81add008b4dcf09d06a09e2dc` with candidate base
+`b1aa64f206554a91443715e2a32f37864ab71432` on the rooted Xiaomi MI 6 / Android 9 reference
+device. Released, candidate, and shared benchmark APK SHA-256 values were respectively
+`bdf94fdc934780afd8e46298a7f5081a402838aa08cefc1deb46fe705335e179`,
+`3b4dcf71c9952c5650d11cb448a6c3281f901fa9936e269529ae36be8053d71c`, and
+`5c4b611fee97fa35faee7303ef3f7b073f5e34de1413f03b5783f6ffcfeb0b0e`.
+
+Revision 6 invokes each existing accessibility click action directly and validates the resulting
+state transition. Sixteen update/reset cycles therefore provide at least 32 content-update frames
+per run without pointer press/release animation. The direct AndroidX cells use the same visible fill
+as the ViewCompose cells; the 10-, 50-, and 100-node pages passed manual visual review before
+measurement. Revision 4 is rejected because its direct cells were transparent and its runs had only
+about 16 frames. Revision 5 is rejected because coordinate clicks produced an approximately
+`16 + 16` bimodal mixture of fast button frames and slower content-layout frames. Neither rejected
+revision is a baseline.
+
+Both final targets were R8/resource-shrunk and non-debuggable. Every method used five
+`run-from-apk` iterations, the v4 fixed CPU/GPU/interconnect policy, starts at or below 37 degrees
+Celsius, suspended charging, and stopped vendor performance services. Each primary matrix retained
+24 JSON results and 120 traces. Exactly one complete paired repeat replaced every unstable pair;
+the Candidate retained 12 repeat methods/60 traces and Released retained 16/80. No third attempt
+was selected. Values are ViewCompose frame CPU P50/P95/P99 in milliseconds; Direct is the paired
+Candidate AndroidX P50/P95. CV is final Released/Candidate run-P50 CV.
+
+| Action | Released ViewCompose | Candidate ViewCompose | Direct AndroidX | CV | Conclusion |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `stable-10` | `9.116/10.918/13.854` | `8.803/11.462/14.612` | `3.438/4.676` | `0.143/0.120` | `no material change` |
+| `stable-50` | `10.614/19.107/23.141` | `11.237/17.137/19.951` | `4.402/5.971` | `0.117/0.180` | `inconclusive` |
+| `stable-100` | `12.674/24.434/26.283` | `12.585/24.398/28.491` | `5.635/7.486` | `0.111/0.121` | `no material change` |
+| `scalar-10` | `10.478/13.931/14.977` | `9.776/13.316/14.977` | `4.828/6.421` | `0.179/0.171` | `inconclusive` |
+| `scalar-50` | `11.588/21.484/24.060` | `11.553/22.947/25.301` | `7.392/9.032` | `0.229/0.205` | `inconclusive` |
+| `scalar-100` | `15.597/36.150/41.827` | `16.100/34.624/38.874` | `11.538/14.207` | `0.021/0.125` | `no material change` |
+| `helper-10` | `7.955/10.926/13.923` | `8.320/11.380/13.513` | `4.558/6.126` | `0.128/0.124` | `no material change` |
+| `helper-50` | `7.678/12.484/14.134` | `7.346/12.243/14.959` | `6.301/8.201` | `0.227/0.140` | `inconclusive` |
+| `helper-100` | `8.303/15.280/19.498` | `7.826/14.579/16.399` | `9.373/10.830` | `0.109/0.082` | `no material change` |
+| `topology-10` | `9.774/12.489/14.589` | `10.390/14.101/19.010` | `4.811/6.366` | `0.124/0.137` | `no material change` |
+| `topology-50` | `13.570/22.272/27.262` | `12.367/21.920/25.432` | `7.312/8.683` | `0.201/0.140` | `inconclusive` |
+| `topology-100` | `15.719/32.688/34.876` | `15.390/34.778/38.771` | `11.409/12.850` | `0.110/0.098` | `no material change` |
+
+Seven longitudinal pairs are interpretable and every timing and memory regression row passes. The
+Direct-normalized Candidate P50 movement spans `-5.7%` to `+8.4%`; P95 spans `-4.0%` to `+14.3%`.
+Candidate peak heap changes span `-3.8%` to `+10.5%`; no row crosses the combined 15% and
+2,048 KiB memory gate. The other five actions are `inconclusive` because at least one final
+ViewCompose arm exceeds CV `0.15`. Direct AndroidX is faster at P95 in all twelve Candidate actions
+and at P50 in eleven. Candidate helper-100 is `16.5%` faster than Direct at P50 but `34.6%` slower
+at P95, so it is mixed rather than a leadership result. The required 50-node stable/scalar 25% gap
+closure is not established.
+
+The Phase 4 release-safety conclusion is **no material change**: there is no stable regression and
+no whole-frame optimization win. Phase 1 structural fast paths remain justified by their exact
+zero-work and bounded-write counters, not by a frame-time claim. Environment-only updates remain a
+structural benchmark because direct AndroidX has no equivalent declarative environment-resolution
+action. Limits are one OEM/API-28 point, `run-from-apk` JIT/code-placement sensitivity, five
+unresolved CV rows, peak rather than post-GC retained memory, and no isolated adapter-only timing
+probe in the physical matrix. Further whole-frame work requires a new attributed optimization plan;
+rerunning this matrix until favorable samples appear is not an accepted next action.
+
 ### 2.5 Debug tooling regression gate
 
 Release macrobenchmarks cannot detect costs that exist only in debuggable builds. Any tooling that

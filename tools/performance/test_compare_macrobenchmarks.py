@@ -210,7 +210,7 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
             and item.statistic == "P50"
         )
         self.assertEqual(comparison.ANDROID_VIEWS_ENGINE, constraint_control.control_engine)
-        self.assertEqual(4, constraint_control.workload_revision)
+        self.assertEqual(6, constraint_control.workload_revision)
 
     def test_builds_partial_shadow_report_when_pairs_are_complete(self) -> None:
         partial = result()

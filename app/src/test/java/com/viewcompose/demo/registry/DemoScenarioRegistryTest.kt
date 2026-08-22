@@ -95,7 +95,7 @@ class DemoScenarioRegistryTest {
             DemoScenarioIds.DesignBundleContrast to 3,
             DemoScenarioIds.CollectionStress to 3,
             DemoScenarioIds.PerformanceList to 5,
-            DemoScenarioIds.PerformanceComplexLayout to 4,
+            DemoScenarioIds.PerformanceComplexLayout to 6,
             DemoScenarioIds.PerformanceShadowList to 3,
             DemoScenarioIds.PerformanceShadowComplexLayout to 3,
         )

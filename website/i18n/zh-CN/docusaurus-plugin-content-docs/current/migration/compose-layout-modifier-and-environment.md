@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-layout-modifier-and-environment.md
-translation_source_hash: 7b96e9db0dd02896229caa5cc07caf999e970d9b02b64f147e9a74966c15be26
+translation_source_hash: 7064ad61e322cb5a625e24a0eb1be4065249a876d9491214e69a684ecdb26ea9
 translation_status: current
 ---
 
@@ -241,6 +241,12 @@ Reusable Set 同样维持类型化声明 Identity。先创建 Reference，再把
 `WrapContent`、`ConstrainedWrapContent`、`Fixed` 与 `MatchConstraints` 代数，而不是独立
 min/max/percent 字段或 `MatchParent`。
 
+发版后能力线新增类型化 Chain Endpoint 与 Margin、四种 Parent-wrap Contribution Mode、逻辑与
+物理 Horizontal Anchor/Guideline/Barrier、支持 Weight/Span/Skip 的类型化 Grid，以及会编译为普通
+Circle Constraint 的声明式 CircularFlow。它有意不暴露 AndroidX Grid String Grammar、进程级
+CircularFlow Default、命令式 Helper Mutation、原始优化 Bitmask、Compose `linkTo` 或匿名 Reference。
+这些省略用于维持单一类型化 Graph Owner 与 XML-friendly 迁移函数族，不是尚未补齐的 Alias。
+
 契约元素定义在固定 revision 的
 [`ModifierElementsLayout.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierElementsLayout.kt)
 第 117–150 行。感知父级的转换实现在
@@ -248,10 +254,12 @@ min/max/percent 字段或 `MatchParent`。
 第 91–98 行和第 247–255 行。
 
 这是可行迁移路径，不是 Compose ConstraintLayout 对等性的证明。应根据 ViewCompose 模块契约
-重新检查 ConstraintSet 合并、baseline 连接、逻辑 start/end 锚点、循环依赖、Helper 能力和
-dimension 默认值。Compose 风格 `linkTo` 与匿名 Reference 不是当前兼容性要求；发版后
-ConstraintLayout 计划只会把它们当作增量易用性方案评估，并要求保留类型化 Target Plane 与
-XML-friendly 函数族。
+重新检查 ConstraintSet 合并、Baseline 连接、逻辑 Start/End Anchor、循环依赖、Helper 能力和
+Dimension 默认值。已完成的 Revision 6 Released/Candidate/Direct 矩阵对发版安全给出
+**no material change**，而不是性能领先结论：12 个 Candidate Action 的 P95 全部由 Direct
+AndroidX 更快，另有 5 个 Longitudinal Action 保持 `inconclusive`。选择该模块的原因应是类型化
+声明契约、原生 Solver 行为与事务安全，而不是期望迁移后每一帧都更快。详见
+[ViewCompose 性能](../tooling/performance.md#247-constraintlayout-phase-4-controlled-matrix)。
 
 ## Modifier 顺序、折叠与相等性 {/* #modifier-ordering-folding-and-equality */}
 

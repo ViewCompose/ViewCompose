@@ -125,6 +125,7 @@ test('rewrites historical manuals to immutable API and public document routes', 
     '[API](https://docs.viewcompose.com/api/viewcompose-runtime/current/) ' +
       '[Architecture](../../architecture/overview.md) ' +
       '[ADR](../../architecture/decisions/0009-development-tooling-isolation.md#activation) ' +
+      '[Plan](../../project/plans/runtime-convergence.md#status) ' +
       '[Widget](../viewcompose-widget-core/README.md) ' +
       '[Sample](../../../viewcompose-runtime/src/test/samples/RuntimeSamples.kt#example)',
     {
@@ -141,6 +142,8 @@ test('rewrites historical manuals to immutable API and public document routes', 
       '[Architecture](/architecture/overview/) ' +
       '[ADR](https://docs.viewcompose.com/architecture/decisions/' +
       'development-tooling-isolation/#activation) ' +
+      `[Plan](https://github.com/ViewCompose/ViewCompose/blob/${revision}/` +
+      'docs/project/plans/runtime-convergence.md#status) ' +
       '[Widget](/modules/viewcompose-widget-core/0.1.0-alpha01/) ' +
       `[Sample](https://github.com/ViewCompose/ViewCompose/blob/${revision}/` +
       'viewcompose-runtime/src/test/samples/RuntimeSamples.kt#example)',

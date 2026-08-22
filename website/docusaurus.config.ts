@@ -145,8 +145,8 @@ const config: Config = {
         explicitSearchResultPath: true,
         searchResultLimits: 8,
         ignoreFiles: [
-          /^project\/plans\/(?:animation-compose-capability-expansion|constraintlayout-parity-performance-expansion|diagnostics-correlation-inspection-observability|paging3-integration|third-party-android-view-integrations)$/,
-          /^archive\/constraintlayout-native-engine-hardening$/,
+          /^project\/plans\/(?:animation-compose-capability-expansion|diagnostics-correlation-inspection-observability|paging3-integration|third-party-android-view-integrations)$/,
+          /^archive\/(?:constraintlayout-native-engine-hardening|constraintlayout-parity-performance-expansion)$/,
         ],
         ignoreCssSelectors: ['.benchmark-evidence', '.search-partition-detail'],
       },
