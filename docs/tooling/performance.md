@@ -1212,6 +1212,52 @@ memory, no Compose control, and no direct power measurement. The critical-spring
 check subsequently passed; the accepted next action is the full device gate. Rerunning this passing
 batch for a more favorable sample is not accepted evidence.
 
+#### 2.4.10 Animation revision-2 AnimatedContent comparison
+
+The 2026-08-22 Phase 2 batch compared true keyed `AnimatedContent` with the retained alpha-only
+`Crossfade` on the same Xiaomi MI 6 / Android 9 reference device. Both methods used the same
+`animation.content@2` page, R8/resource-shrunk nondebuggable target, five `run-from-apk`
+iterations, five-second unmeasured launch settle, accessibility actions, four forward/reverse round
+trips, and the Section 2.4.8 fixed CPU/GPU/interconnect policy. The AnimatedContent method drove the
+primary action and exercised simultaneous fade, logical slide, scale, clipping, and unequal-height
+size transformation; the Crossfade control drove the secondary action on the same page. The source
+worktree was based on `a8196f0b82b45830e3c5167060a7b99faab12927`; the target APK SHA-256 was
+`71d54ea4bfaf2ffccb32e5e76a8a353319ab04fd738bd83b2419dbeae0492880`.
+
+The original and Magisk-adapted benchmark APK SHA-256 values were respectively
+`ce6cb4619ff72d6a2a8d31f9393d5d139809125a538fa80290a1c38f6fe5f735` and
+`6b41612237103e1ca308349ec04dcf2169dce80039fa5d79ca4ce6e7031e4204`. The adaptation changed only
+AndroidX's unsupported `su root` transport to the equal-length `su 0 -c` form and repaired the DEX
+checksum and APK signatures. Both accepted methods reported `cpuLocked=true`, exact revision-2
+payloads, and zero thermal-throttle sleep. Battery temperature was 32--34 degrees Celsius; CPU,
+GPU, and interconnect frequency checks matched before and after each method, and all controls and
+charging state were restored after the batch. A 33-degree start was not required because ambient
+conditions vary; the accepted controls are the same-batch temperature range, stable fixed clocks,
+and absence of thermal throttling.
+
+| Workload | Frames per run | Frame CPU P50/P90/P95/P99, ms | Median peak heap, KiB | Run-P50 CV | Acceptance |
+| --- | --- | ---: | ---: | ---: | --- |
+| `animation.content@2` AnimatedContent | `176/176/176/176/176` | `5.589/7.639/9.329/10.996` | 8334 | 0.008 | Pass |
+| `animation.content@2` Crossfade control | `160/159/160/160/158` | `5.680/7.484/8.678/10.785` | 8022 | 0.004 | Pass |
+
+Relative to Crossfade, AnimatedContent changes P50/P90/P95/P99 by
+`-1.6%/+2.1%/+7.5%/+2.0%`; the largest absolute timing increase is P95 at `+0.651 ms`. Median peak
+heap changes by `+312 KiB` (`+3.9%`). No timing or memory value crosses the ADR-0019 combined
+regression gate, both run-P50 CV values are far below `0.15`, and all AnimatedContent runs retain an
+identical frame count. The frame and peak-memory conclusion is therefore **no material change**.
+The 10% higher frame count is expected workload coverage rather than a duration or energy result:
+AnimatedContent animates two unequal-size keyed subtrees across five channels, while Crossfade
+animates alpha only.
+
+Allocation evidence is bounded but accepted: the peak-heap comparison remains inside the process
+memory budget, while deterministic composition and renderer tests enforce at most two retained
+content subtrees, release the displaced owner exactly once during A-to-B-to-C retargeting, and
+remove the outgoing subtree after every participating channel settles. The Android 9 macrobenchmark
+does not expose per-object allocation events, so the evidence does not claim lower allocation churn
+or post-GC retained memory. Other limits are one OEM/API-28 device, `run-from-apk` JIT/code-placement
+sensitivity, no Compose control, and no direct power measurement. The scoped Phase 2 performance
+decision is accepted; the next action is the full project and device gate, not repeated sampling.
+
 ### 2.5 Debug tooling regression gate
 
 Release macrobenchmarks cannot detect costs that exist only in debuggable builds. Any tooling that

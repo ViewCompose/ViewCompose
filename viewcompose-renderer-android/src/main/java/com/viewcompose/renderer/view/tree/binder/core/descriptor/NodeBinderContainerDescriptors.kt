@@ -4,6 +4,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
+import com.viewcompose.ui.node.spec.AnimatedContentHostNodeProps
+import com.viewcompose.ui.node.spec.AnimatedContentItemNodeProps
 import com.viewcompose.ui.node.spec.LayoutConstraintHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedVisibilityHostNodeProps
 import com.viewcompose.ui.node.spec.BoxNodeProps
@@ -18,6 +20,8 @@ import com.viewcompose.ui.node.spec.ScrollableRowNodeProps
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentItemLayout
 import com.viewcompose.renderer.view.container.DeclarativeLayoutConstraintHost
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
@@ -74,6 +78,24 @@ internal fun MutableList<NodeBinderDescriptor>.addContainerNodeBinderDescriptors
         apply = { view, patch ->
             ContainerNodePatchApplier.applyAnimatedVisibilityHostPatch(
                 view = view as DeclarativeAnimatedVisibilityHostLayout,
+                patch = patch,
+            )
+        },
+    )
+    val animatedContentHostPatch = patchDescriptor<AnimatedContentHostNodeProps, AnimatedContentHostNodePatch>(
+        factory = { previous, next -> AnimatedContentHostNodePatch(previous, next) },
+        apply = { view, patch ->
+            ContainerNodePatchApplier.applyAnimatedContentHostPatch(
+                view = view as DeclarativeAnimatedContentHostLayout,
+                patch = patch,
+            )
+        },
+    )
+    val animatedContentItemPatch = patchDescriptor<AnimatedContentItemNodeProps, AnimatedContentItemNodePatch>(
+        factory = { previous, next -> AnimatedContentItemNodePatch(previous, next) },
+        apply = { view, patch ->
+            ContainerNodePatchApplier.applyAnimatedContentItemPatch(
+                view = view as DeclarativeAnimatedContentItemLayout,
                 patch = patch,
             )
         },
@@ -211,6 +233,33 @@ internal fun MutableList<NodeBinderDescriptor>.addContainerNodeBinderDescriptors
                 )
             },
             patch = animatedVisibilityHostPatch,
+        ),
+    )
+    add(
+        descriptor(
+            nodeType = NodeType.AnimatedContentHost,
+            bind = { view, node ->
+                require(node.children.size <= 2) {
+                    "AnimatedContentHost accepts at most two content items, but received ${node.children.size}."
+                }
+                ContainerViewBinder.bindAnimatedContentHost(
+                    view = view as DeclarativeAnimatedContentHostLayout,
+                    spec = ContainerViewBinder.readAnimatedContentHostSpec(node),
+                )
+            },
+            patch = animatedContentHostPatch,
+        ),
+    )
+    add(
+        descriptor(
+            nodeType = NodeType.AnimatedContentItemHost,
+            bind = { view, node ->
+                ContainerViewBinder.bindAnimatedContentItem(
+                    view = view as DeclarativeAnimatedContentItemLayout,
+                    spec = ContainerViewBinder.readAnimatedContentItemSpec(node),
+                )
+            },
+            patch = animatedContentItemPatch,
         ),
     )
     add(

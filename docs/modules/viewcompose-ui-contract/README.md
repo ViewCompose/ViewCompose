@@ -53,6 +53,12 @@ created for the node.
   constructors leave it `null`, and it does not replace semantic keys or affect ordinary content.
 - [`NodeSpec`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node.spec/-node-spec/)
   and its concrete property snapshots define the supported renderer inputs.
+- Q3 `AnimatedContentHostNodeProps` and `AnimatedContentItemNodeProps` are the renderer-neutral
+  bounded-pair transport for full content replacement. The host carries segment identity, finite
+  size progress, clipping, and logical alignment; each item carries measured-size transform
+  fractions and explicit active interaction ownership. A compatible renderer must accept at most
+  two item roots and hide every inactive root from input, focus traversal, and accessibility. The
+  compiled `animatedContentNodeContractSample` demonstrates the complete pair.
 - `TextNodeProps` carries one authoritative `TextDocument`; `ButtonNodeProps` and
   `ToggleNodeProps` carry nullable plain `String` labels. Mutable or platform-specific
   `CharSequence` implementations are converted only at a platform renderer boundary.

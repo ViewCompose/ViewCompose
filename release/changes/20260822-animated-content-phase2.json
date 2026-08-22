@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add keyed AnimatedContent replacement with pair-specific fade, slide, scale, size, drawing-order, interaction-ownership, retargeting, and rollback contracts while retaining Crossfade as the alpha-only API.",
+  "changes": [
+    { "artifact": "viewcompose-animation", "impact": "feature" },
+    { "artifact": "viewcompose-ui-contract", "impact": "feature" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "The repository DSL verification now permits the new full keyed AnimatedContent API while Crossfade remains the alpha-only API."
+    }
+  ]
+}

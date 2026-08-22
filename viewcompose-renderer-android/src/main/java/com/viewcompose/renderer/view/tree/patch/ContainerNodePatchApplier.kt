@@ -4,6 +4,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentItemLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
@@ -23,6 +25,8 @@ import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.tree.AnimatedSizeHostNodePatch
+import com.viewcompose.renderer.view.tree.AnimatedContentHostNodePatch
+import com.viewcompose.renderer.view.tree.AnimatedContentItemNodePatch
 import com.viewcompose.renderer.view.tree.AnimatedVisibilityHostNodePatch
 import com.viewcompose.renderer.view.tree.BoxNodePatch
 import com.viewcompose.renderer.view.tree.CollectionViewBinder
@@ -131,6 +135,46 @@ internal object ContainerNodePatchApplier {
                 widthScale = patch.next.widthScale,
                 heightScale = patch.next.heightScale,
                 clipToBounds = patch.next.clipToBounds,
+            ),
+        )
+    }
+
+    fun applyAnimatedContentHostPatch(
+        view: DeclarativeAnimatedContentHostLayout,
+        patch: AnimatedContentHostNodePatch,
+    ) {
+        ContainerViewBinder.bindAnimatedContentHost(
+            view = view,
+            spec = ContainerViewBinder.AnimatedContentHostSpec(
+                segmentId = patch.next.segmentId,
+                sizeProgress = patch.next.sizeProgress,
+                sizeTransformEnabled = patch.next.sizeTransformEnabled,
+                clipToBounds = patch.next.clipToBounds,
+                contentGravity = with(ContainerViewSpecReader) {
+                    patch.next.contentAlignment.toGravity()
+                },
+            ),
+        )
+    }
+
+    fun applyAnimatedContentItemPatch(
+        view: DeclarativeAnimatedContentItemLayout,
+        patch: AnimatedContentItemNodePatch,
+    ) {
+        val next = patch.next
+        ContainerViewBinder.bindAnimatedContentItem(
+            view = view,
+            spec = ContainerViewBinder.AnimatedContentItemSpec(
+                alpha = next.alpha,
+                scaleX = next.scaleX,
+                scaleY = next.scaleY,
+                translationXFraction = next.translationXFraction,
+                translationYFraction = next.translationYFraction,
+                revealWidthFraction = next.revealWidthFraction,
+                revealHeightFraction = next.revealHeightFraction,
+                pivotFractionX = next.transformOrigin.pivotFractionX,
+                pivotFractionY = next.transformOrigin.pivotFractionY,
+                active = next.active,
             ),
         )
     }

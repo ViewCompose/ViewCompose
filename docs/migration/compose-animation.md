@@ -51,7 +51,7 @@ implemented, documented in the owning module, and released.
 | Target-as-state animation | State-driven typed animation | **Supported** for generic values, Float, Int, encoded ARGB, and `UiDp` | Color interpolation is encoded-channel, not color-space aware |
 | `Transition` | Shared state segment, generic channels, seeking | **Partially supported**; one autonomous timeline and four built-in channel types exist | Phase 4 adds public generic, segment-aware, and seekable control |
 | `AnimatedVisibility` | Enter/exit algebra, slide, scale, descendant choreography | **Partially supported**; fade and measured-size behavior exist | Phase 3 adds slide, scale, transform origin, scope, and descendant enter/exit |
-| `AnimatedContent` | Keyed outgoing/incoming replacement and content transforms | **Unsupported**; ViewCompose intentionally renamed its old alpha-only surface to `Crossfade` | Use `Crossfade` only when alpha replacement is sufficient; Phase 2 owns full replacement |
+| `AnimatedContent` | Keyed outgoing/incoming replacement and content transforms | **Supported** for keyed replacement, pair-specific fade/slide/scale, z-order, alignment, and optional size transforms | Keep `Crossfade` for alpha-only replacement; full-size callback offsets and descendant choreography remain unsupported |
 | Content-size animation | Layout size changes | **Supported**, using an Android renderer wrapper and the shared physical spring solver | Revalidate parent constraints and wrapper placement; infinite specifications are rejected |
 | Bounds animation | Position and size across layout-coordinate changes | **Unsupported** | Phase 5 adds real layout geometry; do not simulate interactive bounds with draw translation |
 | Shared element/bounds | Scoped pairing and overlay motion | **Unsupported** | Phase 6 adds one-session pairing and navigation integration; cross-window motion remains excluded |
@@ -129,6 +129,13 @@ Compose migration should preserve the following ownership rather than merely ren
   origins; and
 - renderer apply failure cannot publish candidate identity, focus, geometry, effects, or release.
 
+ViewCompose slide distances are finite non-negative fractions of the participating item's measured
+axis rather than full-size callback results. Start/end resolve from the segment's captured layout
+direction. A changed target is admitted after one candidate tree commits successfully, adding one
+commit boundary before the replacement segment so renderer failure cannot mutate content identity.
+Arbitrary size-dependent offset callbacks and descendant enter/exit composition remain Phase 3
+work; do not port them as draw-only translation on interactive content.
+
 Seekable transitions have one writer. `seekTo` cancels and joins autonomous animation before it
 publishes a finite `0f..1f` fraction. Seeking does not manufacture velocity. `animateTo` can resume
 from the sampled values with explicit gesture velocity. Seek state is not saveable, and navigation
@@ -174,6 +181,15 @@ than both 5% and 0.3 ms, P95 by more than both 10% and 0.8 ms, and peak process 
 both 10% and 1,024 KiB. Engine vectors and scratch buffers allocate once per run; content retention,
 extra measurement, overlay release, and inactive tooling also have structural counters. Raw output
 without an interpreted same-device comparison does not close a phase.
+
+Phase 2 advances only the content fixture to `animation.content@2`. Its primary action measures
+keyed AnimatedContent with fade, slide, scale, clipping, and unequal-height size transformation;
+the secondary action keeps Crossfade as an alpha-only same-page control. On the fixed-frequency
+Xiaomi batch, AnimatedContent changed P50/P95/peak heap by `-1.6%/+7.5%/+3.9%` relative to
+Crossfade, with a `+0.651 ms` absolute P95 delta and `+312 KiB` heap delta. Neither crosses the
+regression budget, both run-P50 CV values are below `0.01`, and the interpreted conclusion is
+`no material change`. Exact values and limitations are recorded in
+[performance Section 2.4.10](../tooling/performance.md#2410-animation-revision-2-animatedcontent-comparison).
 
 ## Migration sequence
 

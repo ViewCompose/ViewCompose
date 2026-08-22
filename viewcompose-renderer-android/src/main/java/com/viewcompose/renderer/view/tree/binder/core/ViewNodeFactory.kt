@@ -17,6 +17,8 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentItemLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeLayoutConstraintHost
 import com.viewcompose.renderer.view.container.DeclarativeNestedScrollHostLayout
@@ -83,6 +85,8 @@ internal object ViewNodeFactory {
             NodeType.Box, NodeType.Surface -> DeclarativeBoxLayout(context)
             NodeType.ConstraintLayout -> DeclarativeConstraintLayout(context)
             NodeType.AnimatedVisibilityHost -> DeclarativeAnimatedVisibilityHostLayout(context)
+            NodeType.AnimatedContentHost -> DeclarativeAnimatedContentHostLayout(context)
+            NodeType.AnimatedContentItemHost -> DeclarativeAnimatedContentItemLayout(context)
             NodeType.AnimatedSizeHost -> DeclarativeAnimatedSizeHostLayout(context)
             NodeType.LayoutConstraintHost -> DeclarativeLayoutConstraintHost(context)
             NodeType.NestedScrollHost -> DeclarativeNestedScrollHostLayout(context)

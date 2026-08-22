@@ -649,28 +649,28 @@ private fun UiTreeBuilder.animatedVisibilityCore(
     }
 }
 
-private fun EnterTransition.findExpandForWidthAxis(): EnterTransitionElement.Expand? {
+internal fun EnterTransition.findExpandForWidthAxis(): EnterTransitionElement.Expand? {
     return elements
         .asReversed()
         .filterIsInstance<EnterTransitionElement.Expand>()
         .firstOrNull { it.axis == SizeTransformAxis.Both || it.axis == SizeTransformAxis.Horizontal }
 }
 
-private fun EnterTransition.findExpandForHeightAxis(): EnterTransitionElement.Expand? {
+internal fun EnterTransition.findExpandForHeightAxis(): EnterTransitionElement.Expand? {
     return elements
         .asReversed()
         .filterIsInstance<EnterTransitionElement.Expand>()
         .firstOrNull { it.axis == SizeTransformAxis.Both || it.axis == SizeTransformAxis.Vertical }
 }
 
-private fun ExitTransition.findShrinkForWidthAxis(): ExitTransitionElement.Shrink? {
+internal fun ExitTransition.findShrinkForWidthAxis(): ExitTransitionElement.Shrink? {
     return elements
         .asReversed()
         .filterIsInstance<ExitTransitionElement.Shrink>()
         .firstOrNull { it.axis == SizeTransformAxis.Both || it.axis == SizeTransformAxis.Horizontal }
 }
 
-private fun ExitTransition.findShrinkForHeightAxis(): ExitTransitionElement.Shrink? {
+internal fun ExitTransition.findShrinkForHeightAxis(): ExitTransitionElement.Shrink? {
     return elements
         .asReversed()
         .filterIsInstance<ExitTransitionElement.Shrink>()

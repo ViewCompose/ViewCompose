@@ -7,6 +7,8 @@ import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.AndroidViewNodeProps
 import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
+import com.viewcompose.ui.node.spec.AnimatedContentHostNodeProps
+import com.viewcompose.ui.node.spec.AnimatedContentItemNodeProps
 import com.viewcompose.ui.node.spec.LayoutConstraintHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedVisibilityHostNodeProps
 import com.viewcompose.ui.node.spec.BoxNodeProps
@@ -101,6 +103,33 @@ internal object ContainerViewSpecReader {
             widthScale = spec.widthScale,
             heightScale = spec.heightScale,
             clipToBounds = spec.clipToBounds,
+        )
+    }
+
+    fun readAnimatedContentHostSpec(node: VNode): ContainerViewBinder.AnimatedContentHostSpec {
+        val spec = node.requireSpec<AnimatedContentHostNodeProps>()
+        return ContainerViewBinder.AnimatedContentHostSpec(
+            segmentId = spec.segmentId,
+            sizeProgress = spec.sizeProgress,
+            sizeTransformEnabled = spec.sizeTransformEnabled,
+            clipToBounds = spec.clipToBounds,
+            contentGravity = spec.contentAlignment.toGravity(),
+        )
+    }
+
+    fun readAnimatedContentItemSpec(node: VNode): ContainerViewBinder.AnimatedContentItemSpec {
+        val spec = node.requireSpec<AnimatedContentItemNodeProps>()
+        return ContainerViewBinder.AnimatedContentItemSpec(
+            alpha = spec.alpha,
+            scaleX = spec.scaleX,
+            scaleY = spec.scaleY,
+            translationXFraction = spec.translationXFraction,
+            translationYFraction = spec.translationYFraction,
+            revealWidthFraction = spec.revealWidthFraction,
+            revealHeightFraction = spec.revealHeightFraction,
+            pivotFractionX = spec.transformOrigin.pivotFractionX,
+            pivotFractionY = spec.transformOrigin.pivotFractionY,
+            active = spec.active,
         )
     }
 

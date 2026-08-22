@@ -479,8 +479,11 @@ internal object DemoScenarioRegistry {
             reset = R.id.demo_animation_content_reset,
             state = R.id.demo_animation_content_state,
             target = R.id.demo_animation_content_target,
-            benchmarkRevision = 1,
-            benchmarkActions = listOf(DemoAutomationRole.PrimaryAction),
+            benchmarkRevision = 2,
+            benchmarkActions = listOf(
+                DemoAutomationRole.PrimaryAction,
+                DemoAutomationRole.SecondaryAction,
+            ),
         ),
         animationScenario(
             id = DemoScenarioIds.AnimationListMotion,

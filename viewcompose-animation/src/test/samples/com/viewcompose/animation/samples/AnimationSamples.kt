@@ -2,10 +2,14 @@ package com.viewcompose.animation.samples
 
 import com.viewcompose.animation.Animatable
 import com.viewcompose.animation.AnimatedVisibility
+import com.viewcompose.animation.AnimatedContent
+import com.viewcompose.animation.ContentSlideDirection
+import com.viewcompose.animation.ContentTransform
 import com.viewcompose.animation.Crossfade
 import com.viewcompose.animation.EnterTransition
 import com.viewcompose.animation.ExitTransition
 import com.viewcompose.animation.MutableTransitionState
+import com.viewcompose.animation.SizeTransform
 import com.viewcompose.animation.animateContentSize
 import com.viewcompose.animation.animateFloat
 import com.viewcompose.animation.animateFloatAsState
@@ -16,7 +20,9 @@ import com.viewcompose.animation.fadeOut
 import com.viewcompose.animation.rememberAnimatable
 import com.viewcompose.animation.rememberInfiniteTransition
 import com.viewcompose.animation.shrinkVertically
+import com.viewcompose.animation.togetherWith
 import com.viewcompose.animation.updateTransition
+import com.viewcompose.animation.using
 import com.viewcompose.animation.interpolateUiShape
 import com.viewcompose.animation.core.AnimationConverter
 import com.viewcompose.animation.core.AnimationConverters
@@ -149,6 +155,51 @@ fun UiTreeBuilder.crossfadeSample(selection: String) {
     }
     Crossfade(targetState = selection, animationSpec = tween(durationMillis = 160)) { state ->
         Text("Summary: $state")
+    }
+}
+
+/** Replaces keyed content with pair-specific slide, scale, fade, and size policies. */
+fun UiTreeBuilder.animatedContentSample(page: Int) {
+    AnimatedContent(
+        targetState = page,
+        contentKey = { it },
+        transitionSpec = {
+            val forward = when {
+                isTransitioningTo(0, 1) -> true
+                isTransitioningTo(1, 0) -> false
+                else -> targetState > initialState
+            }
+            val incomingEdge = if (forward) ContentSlideDirection.End else ContentSlideDirection.Start
+            val outgoingEdge = if (forward) ContentSlideDirection.Start else ContentSlideDirection.End
+            val enter = fadeIn(tween(durationMillis = 180)) +
+                slideIntoContainer(
+                    from = incomingEdge,
+                    animationSpec = tween(durationMillis = 240),
+                    distanceFraction = 0.35f,
+                ) +
+                scaleIn(
+                    initialScale = 0.96f,
+                    animationSpec = tween(durationMillis = 240),
+                )
+            val exit = fadeOut(tween(durationMillis = 140)) +
+                slideOutOfContainer(
+                    towards = outgoingEdge,
+                    animationSpec = tween(durationMillis = 220),
+                    distanceFraction = 0.2f,
+                ) +
+                scaleOut(
+                    targetScale = 0.98f,
+                    animationSpec = tween(durationMillis = 220),
+                )
+            (enter togetherWith exit).copy(
+                targetContentZIndex = 1f,
+            ) using SizeTransform(
+                animationSpec = tween(durationMillis = 240),
+                clip = true,
+            )
+        },
+    ) { value ->
+        Text("Page $value")
     }
 }
 

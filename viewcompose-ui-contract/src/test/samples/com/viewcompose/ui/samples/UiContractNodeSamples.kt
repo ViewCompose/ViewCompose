@@ -1,6 +1,7 @@
 package com.viewcompose.ui.samples
 
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.TransformOrigin
 import com.viewcompose.ui.modifier.imeInsetsPaddingRelative
 import com.viewcompose.ui.modifier.marginRelative
 import com.viewcompose.ui.modifier.offsetRelative
@@ -32,10 +33,13 @@ import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
+import com.viewcompose.ui.node.spec.AnimatedContentHostNodeProps
+import com.viewcompose.ui.node.spec.AnimatedContentItemNodeProps
 import com.viewcompose.ui.node.spec.ConstraintDimension
 import com.viewcompose.ui.node.spec.ConstraintMatchMode
 import com.viewcompose.ui.node.spec.ConstraintRatio
 import com.viewcompose.ui.node.spec.ConstraintRatioSide
+import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.tooling.UiNodeTooling
 import com.viewcompose.ui.tooling.UiSourceCallSite
 import com.viewcompose.ui.tooling.UiSourceSessionContainerHandle
@@ -172,6 +176,48 @@ fun vNodeModelSample() {
     check(spacer.type == NodeType.Spacer)
     check(spacer.key == "content-gap")
     check(spacer.children.isEmpty())
+}
+
+/** Builds the bounded renderer pair used by a keyed content replacement frame. */
+fun animatedContentNodeContractSample() {
+    val outgoing = VNode(
+        type = NodeType.AnimatedContentItemHost,
+        key = "details",
+        spec = AnimatedContentItemNodeProps(
+            alpha = 0.4f,
+            scaleX = 1f,
+            scaleY = 1f,
+            translationXFraction = -0.25f,
+            translationYFraction = 0f,
+            revealWidthFraction = 1f,
+            revealHeightFraction = 1f,
+            transformOrigin = TransformOrigin.Center,
+            active = false,
+        ),
+    )
+    val incoming = VNode(
+        type = NodeType.AnimatedContentItemHost,
+        key = "confirmation",
+        spec = (outgoing.spec as AnimatedContentItemNodeProps).copy(
+            alpha = 0.6f,
+            translationXFraction = 0.25f,
+            active = true,
+        ),
+    )
+    val host = VNode(
+        type = NodeType.AnimatedContentHost,
+        spec = AnimatedContentHostNodeProps(
+            segmentId = 7L,
+            sizeProgress = 0.6f,
+            sizeTransformEnabled = true,
+            clipToBounds = true,
+            contentAlignment = BoxAlignment.Center,
+        ),
+        children = listOf(outgoing, incoming),
+    )
+
+    check(host.children.size == 2)
+    check((host.children.last().spec as AnimatedContentItemNodeProps).active)
 }
 
 /** Captures one source chain for session-level tooling without annotating every node. */

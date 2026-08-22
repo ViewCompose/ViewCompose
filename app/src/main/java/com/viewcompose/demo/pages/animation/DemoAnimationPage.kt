@@ -7,8 +7,12 @@ import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.demo.registry.DemoScenarioIds
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.animation.AnimatedVisibility
+import com.viewcompose.animation.AnimatedContent
+import com.viewcompose.animation.ContentSlideDirection
+import com.viewcompose.animation.ContentTransform
 import com.viewcompose.animation.Crossfade
 import com.viewcompose.animation.MutableTransitionState
+import com.viewcompose.animation.SizeTransform
 import com.viewcompose.animation.animateColorAsState
 import com.viewcompose.animation.animateContentSize
 import com.viewcompose.animation.animateFloat
@@ -43,6 +47,7 @@ import com.viewcompose.animation.core.tween
 import com.viewcompose.animation.updateTransition
 import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.TransformOrigin
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.graphicsLayer
@@ -496,30 +501,92 @@ internal fun UiTreeBuilder.AnimationPage(
                         .margin(bottom = 8.dp)
                         .animationScenarioTarget(scenario, DemoAutomationRole.Reset),
                 )
-                Crossfade(
+                AnimatedContent(
                     targetState = contentState.value,
-                    animationSpec = tween(260),
+                    contentKey = { it },
+                    transitionSpec = {
+                        val forward = targetState && !initialState
+                        val incomingEdge = if (forward) {
+                            ContentSlideDirection.End
+                        } else {
+                            ContentSlideDirection.Start
+                        }
+                        val outgoingEdge = if (forward) {
+                            ContentSlideDirection.Start
+                        } else {
+                            ContentSlideDirection.End
+                        }
+                        ContentTransform(
+                            targetContentEnter = fadeIn(
+                                animationSpec = tween(180),
+                                initialAlpha = 0.18f,
+                            ) + slideIntoContainer(
+                                from = incomingEdge,
+                                animationSpec = tween(280),
+                                distanceFraction = 0.42f,
+                            ) + scaleIn(
+                                initialScale = 0.94f,
+                                transformOrigin = TransformOrigin(0.5f, 0f),
+                                animationSpec = tween(280),
+                            ),
+                            initialContentExit = fadeOut(
+                                animationSpec = tween(160),
+                                targetAlpha = 0.1f,
+                            ) + slideOutOfContainer(
+                                towards = outgoingEdge,
+                                animationSpec = tween(240),
+                                distanceFraction = 0.24f,
+                            ),
+                            sizeTransform = SizeTransform(
+                                animationSpec = tween(300),
+                                clip = true,
+                            ),
+                        )
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(bottom = 10.dp)
                         .animationScenarioTarget(scenario, DemoAutomationRole.Target),
                 ) { alt ->
                     Surface(
-                        variant = SurfaceVariant.Variant,
+                        variant = if (alt) SurfaceVariant.Default else SurfaceVariant.Variant,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .height(if (alt) 132.dp else 84.dp)
                             .padding(12.dp),
                     ) {
-                        Text(
-                            text = stringResource(
-                                if (alt) {
-                                    R.string.demo_animation_content_alternative
-                                } else {
-                                    R.string.demo_animation_content_primary
-                                },
-                            ),
-                            modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_CONTENT_LABEL),
-                        )
+                        Row(modifier = Modifier.fillMaxSize()) {
+                            Text(
+                                text = stringResource(
+                                    if (alt) {
+                                        R.string.demo_animation_content_alternative
+                                    } else {
+                                        R.string.demo_animation_content_primary
+                                    },
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag(DemoAnimationTestTags.ANIMATION_CONTENT_LABEL),
+                            )
+                            Button(
+                                text = stringResource(
+                                    if (alt) {
+                                        R.string.demo_animation_content_alternative_action
+                                    } else {
+                                        R.string.demo_animation_content_primary_action
+                                    },
+                                ),
+                                variant = ButtonVariant.Outlined,
+                                onClick = {},
+                                modifier = Modifier.testTag(
+                                    if (alt) {
+                                        DemoAnimationTestTags.ANIMATION_CONTENT_ALTERNATIVE_ITEM_ACTION
+                                    } else {
+                                        DemoAnimationTestTags.ANIMATION_CONTENT_PRIMARY_ITEM_ACTION
+                                    },
+                                ),
+                            )
+                        }
                     }
                 }
                 Crossfade(

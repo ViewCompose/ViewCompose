@@ -10,6 +10,8 @@ internal object DemoAnimationTestTags {
     const val ANIMATION_TASK_ACTIONS = "animation_task_actions"
     const val ANIMATION_CONTENT_TOGGLE = "animation_content_toggle"
     const val ANIMATION_CONTENT_LABEL = "animation_content_label"
+    const val ANIMATION_CONTENT_PRIMARY_ITEM_ACTION = "animation_content_primary_item_action"
+    const val ANIMATION_CONTENT_ALTERNATIVE_ITEM_ACTION = "animation_content_alternative_item_action"
     const val ANIMATION_CROSSFADE_TOGGLE = "animation_crossfade_toggle"
     const val ANIMATION_CROSSFADE_LABEL = "animation_crossfade_label"
     const val ANIMATION_LIST_ADD = "animation_list_add"
