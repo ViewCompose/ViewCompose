@@ -2,8 +2,8 @@
 
 ## Status
 
-Active. Phase 0 is complete. Phase 1 production and acceptance are complete as a hard cut on the
-candidate branch and await pull-request merge; Phase 2 has not started.
+Active. Phases 0 and 1 are complete and merged. Phase 2 implementation and acceptance are complete
+on the candidate branch; pull-request delivery remains before Phase 3 begins.
 This plan was split out on 2026-08-18 from the Animation follow-up in the unified roadmap and the
 framework-wide physical-spring candidate recorded by the multi-design-system plan. Those documents
 now point here; this file is the only active plan that owns the seven animation expansions defined
@@ -21,13 +21,15 @@ architecture, guide, reference, and owning-module documentation before this plan
 
 Last verified: 2026-08-22.
 
-Next action: submit and merge the Phase 1 pull request, then begin Phase 2 animated-content contract
-review without reopening the accepted physical foundation.
+Next action: submit and merge the Phase 2 pull request, then begin Phase 3 without reopening the
+accepted physical or content-ownership contracts.
 
 ## Maven release changesets
 
 - `release/changes/20260822-animation-physical-foundation.json` — Phase 1 hard cut and shared
-  physical engine; pending final validation and merge.
+  physical engine; accepted and merged.
+- `release/changes/20260822-animated-content-phase2.json` — Phase 2 keyed content replacement,
+  renderer ownership, and rollback contracts; accepted on the candidate branch and pending merge.
 
 ## Objective
 
@@ -336,6 +338,30 @@ fade/size motion, interruption at multiple fractions, key collision behavior, nu
 focus/accessibility transfer, nested content transitions, failed candidate apply, host detach,
 reduced motion, screenshots, and frame/allocation comparison with current `Crossfade`.
 
+Implementation status on 2026-08-22: the Q3 surface is implemented with nullable-safe keyed
+identity, pair-specific `ContentTransform`, logical measured-item slide, scale origins, target
+z-order, optional `SizeTransform`, and a typed content scope. The renderer owns one dedicated size
+host and at most two item hosts; the incoming item exclusively owns input, focus traversal, and
+accessibility, while the outgoing item is draw-only. Admission occurs after successful candidate
+commit, renderer rollback restores the previous visuals and owner, A-to-B-to-C interruption keeps
+B's keyed composition scope and releases A once, and Crossfade remains on its original alpha-only
+engine. Twelve deterministic animation tests, five renderer layout tests, two renderer transaction
+tests, compiled samples in both public owner modules, and the focused Xiaomi device regression
+cover the implemented contract. Manual primary/midpoint/alternative screenshots accept unequal
+height, clipping, simultaneous channels, and settled geometry. The same-device fixed-frequency
+comparison in [performance Section 2.4.10](../../tooling/performance.md#2410-animation-revision-2-animatedcontent-comparison)
+reports run-P50 CV `0.004..0.008`; relative to Crossfade, AnimatedContent changes P50/P95/peak heap
+by `-1.6%/+7.5%/+3.9%`, with no budget crossing, so frame and peak memory are
+`no material change`. Android 9 exposes no per-object allocation events; retained-tree and exact
+release counters therefore bound the structural allocation evidence without claiming lower churn.
+The full repository, documentation, API-sample, Preview, and tooling-isolation gate passed through
+`./gradlew qaQuick qaPreview verifyDevelopmentToolingIsolation` in 4 minutes with 1,624 actionable
+tasks (254 executed and 1,370 up-to-date). MIUI rejected Gradle's ordinary connected-test install
+and produced a zero-test report, which is excluded from evidence. Installing the same six generated
+application/test APKs through the authorized root channel and invoking the same AndroidJUnitRunner
+suites passed Demo 137/137, Counter 1/1, and Tutorials 2/2, with no skipped or failed tests. Phase 2
+is accepted on the candidate branch; merge is the only remaining delivery step.
+
 ## Phase 3: Rich AnimatedVisibility transitions
 
 Extend the existing fade/expand/shrink algebra with:
@@ -565,10 +591,12 @@ This plan is complete only when:
 
 1. **Complete — Phase 0:** Compose `1.12.0` semantics, ADR-0019 contracts/Q3 inventory, migration
    limits, budgets, revision-1 scenarios, and the stable Xiaomi fixed-clock baseline are frozen.
-2. **Next — Phase 1:** hard-cut the duration spring/converter/result surface and implement physical
-   spring, velocity continuity, decay, bounds, and results.
-3. **Pending — Phase 2:** implement keyed `AnimatedContent`, content transforms, and size transforms.
-4. **Pending — Phase 3:** implement slide/scale visibility primitives and descendant enter/exit
+2. **Complete — Phase 1:** hard-cut the duration spring/converter/result surface and implement
+   physical spring, velocity continuity, decay, bounds, and results.
+3. **Complete on candidate branch — Phase 2:** keyed `AnimatedContent`, content transforms, size
+   transforms, renderer ownership, repository/Preview/full-device validation, and performance
+   comparison are accepted; pull-request merge remains.
+4. **Next — Phase 3:** implement slide/scale visibility primitives and descendant enter/exit
    choreography.
 5. **Pending — Phase 4:** implement public generic/segment-aware channels and seekable transition
    state.
@@ -603,3 +631,5 @@ This plan is complete only when:
 | 2026-08-22 | Complete Phase 0 through ADR-0019: hard-cut the duration spring without a compatibility layer, freeze one physical/transition/layout/tooling ownership model, and assign every planned public family Q3. |
 | 2026-08-22 | Freeze Compose Animation `1.12.0` as the semantic baseline and retain local Compose `1.7.8` only as the executable comparison because the stable upstream release requires compile SDK 37 and AGP 9.2. |
 | 2026-08-22 | Accept four revision-1 absolute animation baselines on the root-controlled Xiaomi reference device; normalized direction remains `inconclusive` until Phase 1 supplies a same-device candidate. |
+| 2026-08-22 | Accept the Phase 2 keyed-content architecture and focused Xiaomi evidence: incoming content owns interaction, failed candidate apply cannot publish replacement identity, at most two keyed subtrees are retained, and fixed-frequency AnimatedContent versus Crossfade is `no material change`. |
+| 2026-08-22 | Accept the Phase 2 final gates: repository, documentation, Preview, and tooling checks pass; MIUI's zero-test ordinary-install result is rejected, while root installation of the same APKs passes Demo 137/137, Counter 1/1, and Tutorials 2/2. |

@@ -26,6 +26,8 @@
     <string name="demo_animation_crossfade_to_alternative">Crossfade to alternative copy</string>
     <string name="demo_animation_content_primary">Primary copy: ready to transition</string>
     <string name="demo_animation_content_alternative">Alternative copy: transition applied</string>
+    <string name="demo_animation_content_primary_action">Primary action</string>
+    <string name="demo_animation_content_alternative_action">Alternative action</string>
     <string name="demo_animation_crossfade_primary">Crossfade primary copy is visible</string>
     <string name="demo_animation_crossfade_alternative">Crossfade alternative copy is visible</string>
 

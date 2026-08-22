@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 313430e5aa6fa1feac9000bcd5ea5beea4d2d8f078939da33a1ba9a48e71cde6
+translation_source_hash: d41bdd8b28b5ca4f8388a45d38a8eada9141d2a9a8891d267349f27b8d9fc221
 translation_status: current
 ---
 
@@ -1035,6 +1035,45 @@ Transition 则从 168 变为 160。Workload Action 没有变化，但物理终�
 对 JIT/代码布局敏感、只有 Peak 而非 Post-GC Retained Memory、没有 Compose Control，以及没有
 直接功耗测量。Critical-spring 与 Decay Demo 检查随后已通过；已接受的下一步是完整设备门禁。
 不能为了获取更有利样本而重跑这批已通过的数据。
+
+#### 2.4.10 Animation revision-2 AnimatedContent 对照 {/* #2410-animation-revision-2-animatedcontent-comparison */}
+
+2026-08-22 的 Phase 2 批次在同一台 Xiaomi MI 6 / Android 9 参考设备上，对比了真正的 Keyed
+`AnimatedContent` 与保留的纯 Alpha `Crossfade`。两个方法共用 `animation.content@2` 页面、经过
+R8/资源压缩且不可调试的 Target、5 次 `run-from-apk` 迭代、测量外 5 秒启动等待、Accessibility
+Action、4 个正反向 Round Trip，以及 2.4.8 节固定 CPU/GPU/Interconnect 的 Clock Policy。
+AnimatedContent 方法驱动 Primary Action，同时覆盖 Fade、逻辑 Slide、Scale、Clipping 与不等高
+Size Transform；Crossfade Control 驱动同页 Secondary Action。源码 Worktree 基于
+`a8196f0b82b45830e3c5167060a7b99faab12927`；Target APK SHA-256 为
+`71d54ea4bfaf2ffccb32e5e76a8a353319ab04fd738bd83b2419dbeae0492880`。
+
+原始和适配 Magisk 后的 Benchmark APK SHA-256 分别为
+`ce6cb4619ff72d6a2a8d31f9393d5d139809125a538fa80290a1c38f6fe5f735` 与
+`6b41612237103e1ca308349ec04dcf2169dce80039fa5d79ca4ce6e7031e4204`。适配只把 AndroidX
+不受支持的 `su root` 传输形式替换为等长 `su 0 -c`，并修复 DEX Checksum 与 APK Signature。
+两个已接收方法均报告 `cpuLocked=true`、精确的 Revision-2 Payload，且 Thermal-throttle Sleep
+为 0。电池温度范围为 32～34 摄氏度；每个方法前后的 CPU、GPU 与 Interconnect 频率检查都一致，
+批次结束后也恢复了全部控制项和充电状态。由于环境温度会变化，不要求 33 摄氏度起跑；已接收的
+控制条件是同批温度范围、稳定的固定频率，以及没有 Thermal Throttling。
+
+| Workload | 每轮帧数 | Frame CPU P50/P90/P95/P99，ms | Peak Heap 中位数，KiB | Run-P50 CV | 验收 |
+| --- | --- | ---: | ---: | ---: | --- |
+| `animation.content@2` AnimatedContent | `176/176/176/176/176` | `5.589/7.639/9.329/10.996` | 8334 | 0.008 | 通过 |
+| `animation.content@2` Crossfade Control | `160/159/160/160/158` | `5.680/7.484/8.678/10.785` | 8022 | 0.004 | 通过 |
+
+相对 Crossfade，AnimatedContent 的 P50/P90/P95/P99 变化为
+`-1.6%/+2.1%/+7.5%/+2.0%`；最大的绝对 Timing 增量是 P95 的 `+0.651 ms`。Peak Heap 中位数
+增加 `312 KiB`（`+3.9%`）。Timing 和 Memory 都没有越过 ADR-0019 的组合回退门禁，两组
+Run-P50 CV 都远低于 `0.15`，且 AnimatedContent 的 5 轮帧数完全一致。因此 Frame 与 Peak Memory
+结论为 **no material change**。帧数增加 10% 是预期的 Workload 覆盖差异，不是时长或能耗结论：
+AnimatedContent 对两个不等尺寸的 Keyed Subtree 同时执行 5 个 Channel，Crossfade 只执行 Alpha。
+
+Allocation 证据有边界但可接收：Peak Heap 对照仍在进程内存预算内；确定性的 Composition 与
+Renderer 测试同时强制最多保留两个 Content Subtree，在 A-to-B-to-C Retarget 时只释放一次被替代
+Owner，并在全部参与 Channel Settled 后移除 Outgoing Subtree。Android 9 Macrobenchmark 不暴露
+逐对象 Allocation Event，因此该证据不宣称更低的 Allocation Churn 或 Post-GC Retained Memory。
+其他局限包括仅一台 OEM/API-28 设备、`run-from-apk` 对 JIT/代码布局敏感、没有 Compose Control，
+以及没有直接功耗测量。Phase 2 的限定性能决策已接收；下一步是完整项目和设备门禁，而不是重复采样。
 
 ### 2.5 Debug Tooling 回归门禁
 

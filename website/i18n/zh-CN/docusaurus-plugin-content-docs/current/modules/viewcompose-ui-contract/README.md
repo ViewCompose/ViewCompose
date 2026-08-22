@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 1575d86c982495f599349b0e3eb994a09dd97274d0c4e2ab7c7ebc9ba396708d
+translation_source_hash: ad63f94e8cc6706c37d84ce622c8a7fa36bf38aa57ad9c095bc5c8c67528c4b9
 translation_status: current
 ---
 
@@ -55,6 +55,11 @@ val gap = VNode(
   参与普通内容语义。
 - [`NodeSpec`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node.spec/-node-spec/)
   及其具体属性快照定义渲染器支持的输入。
+- Q3 `AnimatedContentHostNodeProps` 与 `AnimatedContentItemNodeProps` 是完整 Content
+  Replacement 使用的 Renderer 中立有界 Pair Transport。Host 携带 Segment Identity、有限尺寸
+  Progress、裁剪与逻辑 Alignment；每个 Item 携带基于实测尺寸的 Transform Fraction 和显式活动
+  交互所有权。兼容 Renderer 最多接受两个 Item Root，并必须让每个非活动 Root 对 Input、焦点
+  遍历和无障碍隐藏。编译样例 `animatedContentNodeContractSample` 展示完整 Pair。
 - `TextNodeProps` 只携带一份权威 `TextDocument`；`ButtonNodeProps` 与 `ToggleNodeProps`
   携带可空的纯文本 `String` 标签。可变或平台特有的 `CharSequence` 实现只在平台 Renderer
   边界转换。

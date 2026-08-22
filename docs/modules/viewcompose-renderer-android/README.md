@@ -93,6 +93,16 @@ View lifecycle callbacks and deferred disposal run after structural commit; thei
 isolated in `RenderTreeResult.commitFailures` because the new visible tree can no longer be rolled
 back safely.
 
+Full animated-content replacement uses one dedicated measurement host and at most two dedicated
+item hosts. Both items receive the same parent constraints. The measurement host interpolates from
+the last committed dimensions to the incoming dimensions, captures the current size when a segment
+retargets, applies logical alignment, and optionally clips animated bounds. Item hosts apply
+measured-size translation, scale origin, alpha, and reveal clipping. The inactive outgoing host is
+draw-only: it rejects pointer and key dispatch, contributes no focusables, clears retained focus,
+and uses `IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS`. All of these bindings participate in the
+normal renderer rollback transaction, so a later failing node restores the prior size, visuals,
+and interaction owner together.
+
 ConstraintLayout reconciliation first compiles a complete immutable candidate and rejects invalid
 IDs, references, anchor planes, helper dependencies, ownership conflicts, dimensions, and ranges
 before touching native Views. One registry owns stable IDs, instances, type changes, references,

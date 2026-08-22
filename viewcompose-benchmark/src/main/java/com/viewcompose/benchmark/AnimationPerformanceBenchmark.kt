@@ -13,11 +13,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Frozen pre-physics baselines for the Animation Compose-capability expansion.
+ * Revisioned physical-device workloads for the Animation Compose-capability expansion.
  *
- * Each method measures complete forward and reverse animations after an unmeasured launch settle.
- * Accessibility actions avoid mixing pointer press frames into the animation distribution, while
- * state assertions prove that every requested transition reached the application.
+ * Historical methods preserve the Phase 0/1 baselines. The revision-2 methods compare keyed
+ * AnimatedContent with the same-page alpha-only Crossfade control. Each method measures complete
+ * forward and reverse animations after an unmeasured launch settle. Accessibility actions avoid
+ * mixing pointer press frames into the animation distribution, while state assertions prove that
+ * every requested transition reached the application.
  */
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalMetricApi::class)
@@ -48,12 +50,22 @@ class AnimationPerformanceBenchmark {
     }
 
     @Test
-    fun crossfadeContentRevision1() {
+    fun animatedContentRevision2() {
         benchmarkRoundTrips(
             scenarioId = ANIMATION_CONTENT_SCENARIO,
             forwardRole = DemoTargetRole.PrimaryAction,
             reverseRole = DemoTargetRole.PrimaryAction,
-            settleMillis = CROSSFADE_SETTLE_MILLIS,
+            settleMillis = CONTENT_REPLACEMENT_SETTLE_MILLIS,
+        )
+    }
+
+    @Test
+    fun crossfadeComparisonRevision2() {
+        benchmarkRoundTrips(
+            scenarioId = ANIMATION_CONTENT_SCENARIO,
+            forwardRole = DemoTargetRole.SecondaryAction,
+            reverseRole = DemoTargetRole.SecondaryAction,
+            settleMillis = CONTENT_REPLACEMENT_SETTLE_MILLIS,
         )
     }
 
@@ -125,7 +137,7 @@ class AnimationPerformanceBenchmark {
         const val ANIMATION_TRANSITION_SCENARIO = "animation.transition"
         const val ROUND_TRIPS_PER_ITERATION = 4
         const val VALUE_CHANNEL_SETTLE_MILLIS = 600L
-        const val CROSSFADE_SETTLE_MILLIS = 380L
+        const val CONTENT_REPLACEMENT_SETTLE_MILLIS = 380L
         const val CONTENT_SIZE_SETTLE_MILLIS = 650L
         const val TRANSITION_SETTLE_MILLIS = 540L
     }

@@ -1410,21 +1410,75 @@ class DemoVisualUiTest {
             themeMode = DemoThemeMode.Light,
         ).use { scenario ->
             waitForUiIdle()
+            var primaryHeight = 0
             scenario.onActivity { activity ->
                 val label = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_CONTENT_LABEL)
                 assertEquals(activity.getString(R.string.demo_animation_content_primary), label.text.toString())
+                val primaryAction = activity.requireViewByTestTagVisible(
+                    DemoAnimationTestTags.ANIMATION_CONTENT_PRIMARY_ITEM_ACTION,
+                )
+                primaryAction.isFocusableInTouchMode = true
+                assertTrue("Expected primary content action to accept focus", primaryAction.requestFocus())
+                primaryHeight = activity.requireScenarioViewById<View>(
+                    R.id.demo_animation_content_target,
+                ).height
+                assertTrue("Expected the primary AnimatedContent panel to be measured", primaryHeight > 0)
                 activity.clickScenarioViewByIdVisible(R.id.demo_animation_content_primary_action)
             }
-            waitForUiIdle()
+            val ownershipTransferred = waitUntilActivityCondition(
+                scenario = scenario,
+                timeoutMs = 250L,
+                intervalMs = 8L,
+            ) { activity ->
+                val root = activity.findViewById<View>(android.R.id.content)
+                val outgoingAction = findViewByTestTag(
+                    root,
+                    DemoAnimationTestTags.ANIMATION_CONTENT_PRIMARY_ITEM_ACTION,
+                ) ?: return@waitUntilActivityCondition false
+                val incomingAction = findViewByTestTag(
+                    root,
+                    DemoAnimationTestTags.ANIMATION_CONTENT_ALTERNATIVE_ITEM_ACTION,
+                ) ?: return@waitUntilActivityCondition false
+                val outgoingItem = outgoingAction.ancestorNamed(
+                    "DeclarativeAnimatedContentItemLayout",
+                ) ?: return@waitUntilActivityCondition false
+                val incomingItem = incomingAction.ancestorNamed(
+                    "DeclarativeAnimatedContentItemLayout",
+                ) ?: return@waitUntilActivityCondition false
+                val outgoingFocusables = arrayListOf<View>()
+                outgoingItem.addFocusables(
+                    outgoingFocusables,
+                    View.FOCUS_FORWARD,
+                    View.FOCUSABLES_ALL,
+                )
+                val now = SystemClock.uptimeMillis()
+                val down = MotionEvent.obtain(now, now, MotionEvent.ACTION_DOWN, 1f, 1f, 0)
+                val outgoingAcceptedTouch = outgoingItem.dispatchTouchEvent(down)
+                down.recycle()
+                !outgoingAction.hasFocus() &&
+                    outgoingFocusables.isEmpty() &&
+                    !outgoingAcceptedTouch &&
+                    outgoingItem.importantForAccessibility ==
+                    View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS &&
+                    incomingItem.importantForAccessibility == View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+            }
+            assertTrue(
+                "Expected outgoing AnimatedContent to relinquish focus, input, and accessibility",
+                ownershipTransferred,
+            )
             val switchedToAlt = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val toggle = activity.requireScenarioViewById<TextView>(
                     R.id.demo_animation_content_primary_action,
                 )
                 val label = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_CONTENT_LABEL)
+                val targetHeight = activity.requireScenarioViewById<View>(
+                    R.id.demo_animation_content_target,
+                ).height
                 toggle.text.toString() == activity.getString(R.string.demo_animation_content_to_primary) &&
-                    label.text.toString() == activity.getString(R.string.demo_animation_content_alternative)
+                    label.text.toString() == activity.getString(R.string.demo_animation_content_alternative) &&
+                    targetHeight > primaryHeight
             }
-            assertTrue("Expected animated content label to switch to alternative copy", switchedToAlt)
+            assertTrue("Expected AnimatedContent to switch copy and expand the target", switchedToAlt)
             scenario.onActivity { activity ->
                 activity.clickScenarioViewByIdVisible(R.id.demo_animation_content_primary_action)
             }
@@ -1434,10 +1488,14 @@ class DemoVisualUiTest {
                     R.id.demo_animation_content_primary_action,
                 )
                 val label = activity.requireTextViewByTestTag(DemoAnimationTestTags.ANIMATION_CONTENT_LABEL)
+                val targetHeight = activity.requireScenarioViewById<View>(
+                    R.id.demo_animation_content_target,
+                ).height
                 toggle.text.toString() == activity.getString(R.string.demo_animation_content_to_alternative) &&
-                    label.text.toString() == activity.getString(R.string.demo_animation_content_primary)
+                    label.text.toString() == activity.getString(R.string.demo_animation_content_primary) &&
+                    targetHeight == primaryHeight
             }
-            assertTrue("Expected animated content label to switch back to primary copy", switchedBackToMain)
+            assertTrue("Expected AnimatedContent to restore primary copy and size", switchedBackToMain)
         }
     }
 
@@ -2316,6 +2374,15 @@ class DemoVisualUiTest {
 
     private fun View.readBooleanProperty(getterName: String): Boolean {
         return javaClass.getMethod(getterName).invoke(this) as Boolean
+    }
+
+    private fun View.ancestorNamed(simpleName: String): View? {
+        var current: View? = this
+        while (current != null) {
+            if (current.javaClass.simpleName == simpleName) return current
+            current = current.parent as? View
+        }
+        return null
     }
 
     private fun <T : Activity> waitUntilActivityCondition(

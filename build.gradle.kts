@@ -2117,9 +2117,6 @@ tasks.register("verifyDslApiContracts") {
         val forbiddenDeclaration = Regex(
             """fun\s+(?:<[^>]+>\s+)?(?:UiTreeBuilder\.)?(${forbiddenAliases.joinToString("|")})\s*\(""",
         )
-        val animatedContentDeclaration = Regex(
-            """(?:public\s+)?fun\s+(?:<[^>]+>\s+)?UiTreeBuilder\.AnimatedContent\s*\(""",
-        )
         val builderDeclaration = Regex(
             """fun\s+(?:<[^>]+>\s+)?UiTreeBuilder\.([A-Za-z_][A-Za-z0-9_]*)\s*\(""",
         )
@@ -2156,10 +2153,6 @@ tasks.register("verifyDslApiContracts") {
                 forbiddenDeclaration.findAll(source).forEach { match ->
                     violations +=
                         "${file.relativeTo(rootDir)} -> redundant DSL alias ${match.groupValues[1]}"
-                }
-                animatedContentDeclaration.findAll(source).forEach {
-                    violations +=
-                        "${file.relativeTo(rootDir)} -> alpha-only animation must be named Crossfade"
                 }
             }
 

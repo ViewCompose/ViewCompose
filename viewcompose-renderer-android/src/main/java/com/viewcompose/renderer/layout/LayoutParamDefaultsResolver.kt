@@ -42,6 +42,7 @@ internal object LayoutParamDefaultsResolver {
             NodeType.IconButton,
             NodeType.Image,
             NodeType.SegmentedControl,
+            NodeType.AnimatedContentItemHost,
             -> ViewGroup.LayoutParams.WRAP_CONTENT
 
             NodeType.Spacer -> 0
@@ -75,6 +76,7 @@ internal object LayoutParamDefaultsResolver {
         return when (nodeType) {
             NodeType.Spacer -> 0
             NodeType.Divider -> ViewGroup.LayoutParams.WRAP_CONTENT
+            NodeType.AnimatedContentItemHost -> ViewGroup.LayoutParams.WRAP_CONTENT
             else -> ViewGroup.LayoutParams.WRAP_CONTENT
         }
     }

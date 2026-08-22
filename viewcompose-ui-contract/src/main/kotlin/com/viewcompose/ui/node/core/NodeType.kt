@@ -56,6 +56,12 @@ sealed interface NodeType {
     /** Host that animates child visibility changes. */
     data object AnimatedVisibilityHost : NodeType
 
+    /** Host that measures and places the bounded pair participating in content replacement. */
+    data object AnimatedContentHost : NodeType
+
+    /** Host for one renderable content-replacement subtree and its interaction ownership. */
+    data object AnimatedContentItemHost : NodeType
+
     /** Host that animates measured content-size changes. */
     data object AnimatedSizeHost : NodeType
 

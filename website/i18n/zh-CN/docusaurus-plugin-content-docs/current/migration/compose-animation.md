@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-animation.md
-translation_source_hash: 7d3133986a3f032aa837df66fcaa575d21600902b96224dc140903e319665736
+translation_source_hash: 658e05b635951bea88d688ad10a02496f51342633e4992a7d1bc60b2a738f07c
 translation_status: current
 ---
 
@@ -53,7 +53,7 @@ AGP 9.2，而本仓库当前使用 compile SDK 36 与 AGP 8.13.2。因此：
 | Target-as-state 动画 | 状态驱动的类型化动画 | **Supported（支持）**泛型值、Float、Int、编码 ARGB 与 `UiDp` | 颜色按编码 Channel 插值，不感知色彩空间 |
 | `Transition` | 共享状态 Segment、泛型 Channel 与 Seek | **Partially supported（部分支持）**；已有一个自主 Timeline 与四种内置 Channel | Phase 4 增加公开泛型、Segment-aware 与 Seekable 控制 |
 | `AnimatedVisibility` | Enter/Exit 代数、Slide、Scale 与后代编排 | **Partially supported（部分支持）**；已有 Fade 与测量尺寸行为 | Phase 3 增加 Slide、Scale、Transform Origin、Scope 与后代 Enter/Exit |
-| `AnimatedContent` | Keyed 出入内容替换与 Content Transform | **Unsupported（不支持）**；ViewCompose 已把旧的纯 Alpha Surface 明确改名为 `Crossfade` | 仅需 Alpha 替换时使用 `Crossfade`；Phase 2 负责完整替换 |
+| `AnimatedContent` | Keyed 出入内容替换与 Content Transform | **Supported（支持）** Keyed 替换、逐状态对 Fade/Slide/Scale、Z-order、Alignment 与可选尺寸变换 | 纯 Alpha 替换继续使用 `Crossfade`；Full-size Callback Offset 与后代 Choreography 尚不支持 |
 | 内容尺寸动画 | Layout 尺寸变化 | **Supported（支持）**，使用 Android Renderer Wrapper 与共享物理 Spring Solver | 重新验证父级 Constraint 与 Wrapper 位置；无限 Spec 会被拒绝 |
 | Bounds 动画 | 跨 Layout 坐标变化的位置与尺寸 | **Unsupported（不支持）** | Phase 5 增加真实 Layout 几何；不要用 Draw Translation 模拟可交互 Bounds |
 | 共享元素/Bounds | Scope 内配对与 Overlay 运动 | **Unsupported（不支持）** | Phase 6 增加单 Session 配对及 Navigation 集成；跨 Window 仍排除 |
@@ -123,6 +123,12 @@ Compose 迁移应保留以下所有权，而不是只替换调用名：
   RTL 解析后相加，Scale 围绕各自声明 Origin 相乘；
 - Renderer Apply 失败不能发布候选 Identity、Focus、Geometry、Effect 或 Release。
 
+ViewCompose 的 Slide 距离是参与 Item 实测轴尺寸的非负有限比例，不接收 Full-size Callback
+结果。Start/End 根据该 Segment 捕获的布局方向解析。变化 Target 会在一棵候选树成功 Commit 后
+才被接受，因此替换 Segment 前多一个 Commit Boundary，Renderer 失败也无法改变 Content
+Identity。任意依赖尺寸的 Offset Callback 与后代 Enter/Exit 组合仍属于 Phase 3；不要在可交互
+内容上用仅绘制 Translation 模拟。
+
 Seekable Transition 只有一个 Writer。`seekTo` 在发布有限 `0f..1f` Fraction 前取消并 Join
 自主动画。Seek 不制造速度；`animateTo` 可从已采样值以显式 Gesture 速度继续。
 Seek State 不可保存，Predictive Back 的 Commit/Rollback 仍由 Navigation 所有。
@@ -163,6 +169,14 @@ Phase 0 的 Xiaomi MI 6 / API 28 运行接收了全部四项绝对基线；各�
 超过 10% 与 0.8 ms 时失败；Peak Process Memory 仅在同时超过 10% 与 1,024 KiB 时失败。
 引擎 Vector 与 Scratch Buffer 每次 Run 只分配一次；内容保留、额外 Measure、Overlay 释放与
 非活跃工具也有结构 Counter。没有解释过的同设备对比，Raw Output 不能关闭阶段。
+
+Phase 2 只把 Content Fixture 推进到 `animation.content@2`。Primary Action 测量包含 Fade、
+Slide、Scale、Clipping 与不等高 Size Transform 的 Keyed AnimatedContent；Secondary Action
+在同页保留纯 Alpha Crossfade Control。Xiaomi 固定频率批次中，AnimatedContent 相对 Crossfade
+的 P50/P95/Peak Heap 变化为 `-1.6%/+7.5%/+3.9%`，P95 绝对增量为 `+0.651 ms`，Heap 增量为
+`+312 KiB`。两者均未越过回退预算，两个 Run-P50 CV 都低于 `0.01`，解释后的结论为
+`no material change`。精确数值与局限记录在
+[性能文档第 2.4.10 节](../tooling/performance.md#2410-animation-revision-2-animatedcontent-comparison)。
 
 ## 迁移顺序
 

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: f9ef9e39916df54685721eb92826d80557989c57c25cdea06fc2a577bff6c68e
+translation_source_hash: 5b280c0ec35ba98e98661fd31d8fb8b6306e3013ee7e071ce4ad4015bab029af
 translation_status: current
 ---
 
@@ -196,17 +196,50 @@ Tree-builder 默认影响双轴；`RowScope` 默认影响宽度；`ColumnScope` 
 `MutableTransitionState<Boolean>`。一个对象只能绑定一个活动 Host。本版本中，在 Host 首次组合
 前改变目标不会播放首次 Enter；需要该动效时，应先组合隐藏态，再改变目标。
 
-## Crossfade 转场
+## AnimatedContent 与 Crossfade
 
-`Crossfade` 实现仅 Alpha 的转场。转场时，它会分别以最后提交状态和最新目标调用
-Content，把两个 Fill-size 子树叠放，并在旧内容透明后通过组合后 Side Effect 移除旧内容。
-不同内容 Identity 需要独立后代 State 时，应以逻辑状态加 Key。
+`AnimatedContent` 是按 Key 完整替换内容的 API。它的类型化 Transition Scope 会为已接受的
+Initial/Target 状态对选择一份 `ContentTransform`，并可组合 Fade、按实测 Item 尺寸计算的
+Slide、Scale Origin、绘制顺序与可选 `SizeTransform`：
 
-Fade 中途到达新目标时，Incoming Content 会在现有进度上替换，而不是从零重启；最后提交状态
-仍为 Outgoing。nullable 状态通过显式 Displayed State Wrapper 保留，生命周期与非空状态一致。
+```kotlin
+AnimatedContent(
+    targetState = page,
+    contentKey = { it.id },
+    transitionSpec = {
+        val forward = targetState.index > initialState.index
+        val enter = fadeIn() + slideIntoContainer(
+            from = if (forward) ContentSlideDirection.End else ContentSlideDirection.Start,
+            distanceFraction = 0.35f,
+        ) + scaleIn(initialScale = 0.96f)
+        val exit = fadeOut() + slideOutOfContainer(
+            towards = if (forward) ContentSlideDirection.Start else ContentSlideDirection.End,
+            distanceFraction = 0.2f,
+        )
+        (enter togetherWith exit) using SizeTransform(clip = true)
+    },
+) { state ->
+    Page(state)
+}
+```
 
-原 `AnimatedContent` 名称会承诺比实现更广的转场语义，因此已移除。`Crossfade` 不提供 Content
-Key、Transition Scope、尺寸变换、Slide 动效或逐状态对规格。
+`contentKey` 是子树 Identity。相同 Key 只 Patch 一棵保留树，不选择替换 Transition。不同 Key
+最多保留一棵 Outgoing 与一棵 Incoming 完整树；A→B→C 中断会从 B 最后提交的视觉样本提升 B，
+只释放一次 A，并保留 B 的 Keyed 后代 State。nullable Key 与 State 遵守同一规则。
+
+两棵树使用同一组 Incoming 父约束测量。非空 `SizeTransform` 从最后提交的 Host 尺寸插值到
+Incoming 尺寸并控制裁剪；`null` 使用当前 Child 最大尺寸。Slide 距离是参与 Item 实测轴尺寸的
+非负有限比例，Start/End 根据该 Segment 捕获的布局方向解析。接收 Full-size Callback 的 Offset
+以及通用 Visibility Slide/Scale 仍属于 Phase 3。
+
+替换事务提交后，只有 Incoming Content 拥有 Pointer Input、焦点遍历和无障碍能力。Outgoing
+Content 在全部 Channel 停稳前只参与绘制。变化请求只会在一棵候选树成功提交后接受，因此
+Renderer 失败不会发布候选 Identity、焦点所有权、后代 Effect 或几何。Host Dispose 会取消共享
+Frame Loop，并只释放一次全部保留树。
+
+`Crossfade` 保留为更小的纯 Alpha 契约。转场时它会以最后提交状态与最新目标调用 Content，叠放
+两棵 Fill-size 子树，并在旧内容透明后移除它。中途到达的新目标会在现有进度上替换 Incoming。
+不需要 Content Key、实测尺寸、逐状态对 Transform、Slide、Scale 或显式交互转移时使用它。
 
 ## animateContentSize 与原生布局成本
 
@@ -239,6 +272,8 @@ Layout，Wrapper 还会增加一层 View；不要无差别应用到大型列表�
 - 验证完成前 Retarget，确保过期 Job 无法发布；
 - Transition 在同一组合 Pass 声明所有 Channel，并断言最长时长控制逻辑完成；
 - 验证可见性内容保留到 Exit 终帧；
+- 验证 Animated Content 的相同/不同 Key、nullable Target、RTL Slide、中点中断、移除 Effect、
+  Input/Focus/Accessibility 转移、Rollback 与 Host Dispose；
 - 分开测试兼容与不兼容 Shape 转场，包括降级归因；
 - Wrapper 位置、约束或 Modifier 路由相关的尺寸动画应在 Android Renderer 测试；Animation 模块
   单元测试只验证契约序列化。

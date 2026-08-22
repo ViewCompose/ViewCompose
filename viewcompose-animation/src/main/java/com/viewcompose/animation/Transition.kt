@@ -121,6 +121,12 @@ class Transition<S> internal constructor(
         var segmentVersion: Long,
         var velocity: AnimationVelocity<V>,
         var animation: TargetAnimation<T, V>?,
+        var liveValue: T,
+    )
+
+    private data class ChannelSample<T>(
+        val state: State<T>,
+        val liveValue: T,
     )
 
     private fun <T, V> animateValueInternal(
@@ -128,7 +134,7 @@ class Transition<S> internal constructor(
         transitionSpec: (initialState: S, targetState: S) -> FiniteAnimationSpec,
         segmentEndpoints: (initialState: S, targetState: S, currentValue: T) -> Pair<T, T>,
         valueForSettledState: (S) -> T,
-    ): State<T> {
+    ): ChannelSample<T> {
         val outputState = remember(this, converter) {
             mutableStateOf(valueForSettledState(currentState))
         }
@@ -137,6 +143,7 @@ class Transition<S> internal constructor(
                 segmentVersion = -1L,
                 velocity = AnimationVelocity(converter.zeroVelocity),
                 animation = null,
+                liveValue = outputState.value,
             )
         }
         val running = core.isRunning
@@ -171,12 +178,18 @@ class Transition<S> internal constructor(
             playTimeNanosHolder.value
             val state = animation.stateAt(core.playTimeNanos)
             outputState.value = state.value
+            channelState.liveValue = state.value
             channelState.velocity = state.velocity
         } else {
-            outputState.value = valueForSettledState(core.targetState)
+            val settledValue = valueForSettledState(core.targetState)
+            outputState.value = settledValue
+            channelState.liveValue = settledValue
             channelState.velocity = AnimationVelocity(converter.zeroVelocity)
         }
-        return outputState
+        return ChannelSample(
+            state = outputState,
+            liveValue = channelState.liveValue,
+        )
     }
 
     /**
@@ -202,7 +215,7 @@ class Transition<S> internal constructor(
                 current to targetValueByState(target)
             },
             valueForSettledState = targetValueByState,
-        )
+        ).state
     }
 
     internal fun animateFloatBySegment(
@@ -215,7 +228,20 @@ class Transition<S> internal constructor(
             transitionSpec = transitionSpec,
             segmentEndpoints = segmentEndpoints,
             valueForSettledState = valueForSettledState,
-        )
+        ).state
+    }
+
+    internal fun sampleFloatBySegment(
+        transitionSpec: (initialState: S, targetState: S) -> FiniteAnimationSpec,
+        segmentEndpoints: (initialState: S, targetState: S, currentValue: Float) -> Pair<Float, Float>,
+        valueForSettledState: (S) -> Float,
+    ): Float {
+        return animateValueInternal(
+            converter = AnimationConverters.Float,
+            transitionSpec = transitionSpec,
+            segmentEndpoints = segmentEndpoints,
+            valueForSettledState = valueForSettledState,
+        ).liveValue
     }
 
     /**
@@ -236,7 +262,7 @@ class Transition<S> internal constructor(
                 current to targetValueByState(target)
             },
             valueForSettledState = targetValueByState,
-        )
+        ).state
     }
 
     /**
@@ -259,7 +285,7 @@ class Transition<S> internal constructor(
                 current to targetValueByState(target)
             },
             valueForSettledState = targetValueByState,
-        )
+        ).state
     }
 
     /**
@@ -282,7 +308,7 @@ class Transition<S> internal constructor(
                 current to targetValueByState(target)
             },
             valueForSettledState = targetValueByState,
-        )
+        ).state
     }
 }
 

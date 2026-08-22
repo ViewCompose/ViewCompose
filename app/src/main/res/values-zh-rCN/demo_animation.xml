@@ -26,6 +26,8 @@
     <string name="demo_animation_crossfade_to_alternative">淡入替代文案</string>
     <string name="demo_animation_content_primary">主文案：等待内容过渡</string>
     <string name="demo_animation_content_alternative">替代文案：内容过渡已生效</string>
+    <string name="demo_animation_content_primary_action">主内容操作</string>
+    <string name="demo_animation_content_alternative_action">替代内容操作</string>
     <string name="demo_animation_crossfade_primary">淡入淡出主文案展示中</string>
     <string name="demo_animation_crossfade_alternative">淡入淡出替代文案已生效</string>
 

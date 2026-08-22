@@ -214,20 +214,55 @@ observe `currentState` or `isIdle`. One object should be bound to one active hos
 changing its target before the host's first composition does not play an initial enter; first compose
 the hidden state, then change the target if that motion is required.
 
-## Crossfade
+## AnimatedContent and Crossfade
 
-`Crossfade` implements an alpha-only transition. During a transition it invokes content
-for the last committed state and latest target, stacks both fill-size subtrees, and removes outgoing
-content in a post-composition side effect after it becomes transparent. Descendant state should be
-keyed by the logical state when each content identity needs independent retention.
+`AnimatedContent` is the keyed full-content replacement API. Its typed transition scope selects one
+`ContentTransform` for the accepted initial/target pair and can combine fade, measured-item slide,
+scale origin, drawing order, and an optional `SizeTransform`:
 
-A new target arriving mid-fade replaces incoming content at the existing progress rather than
-restarting from zero. The last committed state remains outgoing. Nullable states are retained
-through an explicit displayed-state wrapper and follow the same lifecycle as non-null states.
+```kotlin
+AnimatedContent(
+    targetState = page,
+    contentKey = { it.id },
+    transitionSpec = {
+        val forward = targetState.index > initialState.index
+        val enter = fadeIn() + slideIntoContainer(
+            from = if (forward) ContentSlideDirection.End else ContentSlideDirection.Start,
+            distanceFraction = 0.35f,
+        ) + scaleIn(initialScale = 0.96f)
+        val exit = fadeOut() + slideOutOfContainer(
+            towards = if (forward) ContentSlideDirection.Start else ContentSlideDirection.End,
+            distanceFraction = 0.2f,
+        )
+        (enter togetherWith exit) using SizeTransform(clip = true)
+    },
+) { state ->
+    Page(state)
+}
+```
 
-The former `AnimatedContent` name was removed because it promised broader transition semantics than
-the implementation supplied. `Crossfade` does not provide content keys, transition scopes, size
-transforms, slide motion, or per-state pair specifications.
+`contentKey` is subtree identity. Equal keys patch one retained tree without selecting a replacement
+transition. Unequal keys retain at most one outgoing and one incoming full tree; an A-to-B-to-C
+interruption promotes B from its last committed visual sample, releases A once, and preserves B's
+keyed descendant state. Nullable keys and states follow the same rule.
+
+Both trees are measured under the same incoming parent constraints. A non-null `SizeTransform`
+interpolates from the last committed host size to the incoming size and controls clipping; `null`
+uses the maximum current child size. Slide distances are non-negative finite fractions of the
+participating item's measured axis, with start/end resolved from the layout direction captured for
+that segment. Full-size callback offsets and general visibility slide/scale remain Phase 3 work.
+
+Incoming content exclusively owns pointer input, focus traversal, and accessibility after the
+replacement transaction commits. Outgoing content remains draw-only until every channel settles.
+A changed request is admitted only after one successful candidate commit, so a renderer failure
+cannot publish candidate identity, focus ownership, descendant effects, or geometry. Host disposal
+cancels the shared frame loop and releases every retained tree once.
+
+`Crossfade` remains the smaller alpha-only contract. During a transition it invokes content for the
+last committed state and latest target, stacks two fill-size subtrees, and removes outgoing content
+after it becomes transparent. A new target replaces incoming content at the existing progress.
+Choose it when content keys, measured size, pair-specific transforms, slide, scale, and explicit
+interaction transfer are unnecessary.
 
 ## animateContentSize and native layout cost
 
@@ -265,6 +300,8 @@ modifier chain, the last specification wins.
 - For transitions, declare every channel in the same composition pass and assert the longest
   duration controls logical completion.
 - Test visibility content retention through the terminal exit frame.
+- Test animated-content equal and unequal keys, nullable targets, RTL slide resolution, midpoint
+  interruption, removed effects, input/focus/accessibility transfer, rollback, and host disposal.
 - Test compatible and incompatible shape transitions separately, including fallback attribution.
 - Test size animation on the Android renderer when wrapper placement, constraints, or modifier
   routing matters; the animation module's unit tests verify only contract serialization.

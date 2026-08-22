@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: d1cbcfe274515791231cc266ee85585f3b69d7fd3cc33b37519cc7237022e40a
+translation_source_hash: 95faaeb57b64e4546e8bb3691690663064aab6d86dd3f561a89222e48992c8f3
 translation_status: current
 ---
 
@@ -81,6 +81,14 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 渲染在结构变更阶段具有事务性。差分、View 创建或绑定失败时，流水线恢复上一棵 View 树并
 重新抛出错误。Android View 生命周期回调和延迟释放在结构提交后执行；由于新的可见树此时
 不能安全回滚，其失败会被隔离在 `RenderTreeResult.commitFailures` 中。
+
+完整 Animated Content Replacement 使用一个专用测量 Host 和最多两个专用 Item Host。两个
+Item 接收同一组父 Constraint。测量 Host 从最后提交尺寸插值到 Incoming 尺寸，Segment Retarget
+时捕获当前尺寸，应用逻辑 Alignment，并可选择裁剪动态 Bounds。Item Host 应用基于实测尺寸的
+Translation、Scale Origin、Alpha 与 Reveal Clip。非活动 Outgoing Host 只参与绘制：它拒绝
+Pointer 与 Key Dispatch，不提供 Focusable，清除保留 Focus，并使用
+`IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS`。这些绑定全部进入普通 Renderer Rollback
+事务，因此后续 Node 失败会一起恢复之前的尺寸、视觉与交互 Owner。
 
 ConstraintLayout 协调会先编译完整不可变候选，并在接触原生 View 前拒绝无效 ID、Reference、
 Anchor Plane、Helper 依赖、所有权冲突、尺寸与范围。一个注册表拥有 Guideline、Barrier、Flow、

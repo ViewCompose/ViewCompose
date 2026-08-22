@@ -90,7 +90,7 @@ class DemoScenarioRegistryTest {
     @Test
     fun `benchmark workload revisions match the accepted contracts`() {
         val expected = mapOf(
-            DemoScenarioIds.AnimationContent to 1,
+            DemoScenarioIds.AnimationContent to 2,
             DemoScenarioIds.AnimationSpecs to 1,
             DemoScenarioIds.AnimationContentSize to 1,
             DemoScenarioIds.AnimationTransition to 1,

@@ -6,6 +6,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.R
 import com.viewcompose.renderer.view.PaddingPx
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentItemLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.ConstraintRebuildReason
@@ -51,6 +53,27 @@ internal object ContainerViewBinder {
         val widthScale: Float,
         val heightScale: Float,
         val clipToBounds: Boolean,
+    )
+
+    data class AnimatedContentHostSpec(
+        val segmentId: Long,
+        val sizeProgress: Float,
+        val sizeTransformEnabled: Boolean,
+        val clipToBounds: Boolean,
+        val contentGravity: Int,
+    )
+
+    data class AnimatedContentItemSpec(
+        val alpha: Float,
+        val scaleX: Float,
+        val scaleY: Float,
+        val translationXFraction: Float,
+        val translationYFraction: Float,
+        val revealWidthFraction: Float,
+        val revealHeightFraction: Float,
+        val pivotFractionX: Float,
+        val pivotFractionY: Float,
+        val active: Boolean,
     )
 
     data class AnimatedSizeHostSpec(
@@ -130,6 +153,33 @@ internal object ContainerViewBinder {
         view.clipToBounds = spec.clipToBounds
     }
 
+    fun bindAnimatedContentHost(
+        view: DeclarativeAnimatedContentHostLayout,
+        spec: AnimatedContentHostSpec,
+    ) {
+        view.segmentId = spec.segmentId
+        view.sizeProgress = spec.sizeProgress
+        view.sizeTransformEnabled = spec.sizeTransformEnabled
+        view.clipToBounds = spec.clipToBounds
+        view.contentGravity = spec.contentGravity
+    }
+
+    fun bindAnimatedContentItem(
+        view: DeclarativeAnimatedContentItemLayout,
+        spec: AnimatedContentItemSpec,
+    ) {
+        view.alpha = spec.alpha.coerceIn(0f, 1f)
+        view.scaleX = spec.scaleX
+        view.scaleY = spec.scaleY
+        view.translationXFraction = spec.translationXFraction
+        view.translationYFraction = spec.translationYFraction
+        view.revealWidthFraction = spec.revealWidthFraction
+        view.revealHeightFraction = spec.revealHeightFraction
+        view.pivotFractionX = spec.pivotFractionX
+        view.pivotFractionY = spec.pivotFractionY
+        view.contentActive = spec.active
+    }
+
     fun bindAnimatedSizeHost(
         view: DeclarativeAnimatedSizeHostLayout,
         spec: AnimatedSizeHostSpec,
@@ -203,6 +253,14 @@ internal object ContainerViewBinder {
 
     fun readAnimatedVisibilityHostSpec(node: VNode): AnimatedVisibilityHostSpec {
         return ContainerViewSpecReader.readAnimatedVisibilityHostSpec(node)
+    }
+
+    fun readAnimatedContentHostSpec(node: VNode): AnimatedContentHostSpec {
+        return ContainerViewSpecReader.readAnimatedContentHostSpec(node)
+    }
+
+    fun readAnimatedContentItemSpec(node: VNode): AnimatedContentItemSpec {
+        return ContainerViewSpecReader.readAnimatedContentItemSpec(node)
     }
 
     fun readAnimatedSizeHostSpec(node: VNode): AnimatedSizeHostSpec {

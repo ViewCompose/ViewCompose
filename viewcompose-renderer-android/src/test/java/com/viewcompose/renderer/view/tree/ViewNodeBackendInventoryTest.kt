@@ -16,6 +16,8 @@ import android.widget.Switch
 import android.widget.TextView
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentItemLayout
 import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.DeclarativeCanvasLayout
 import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
@@ -129,6 +131,14 @@ class ViewNodeBackendInventoryTest {
             NodeType.AnimatedVisibilityHost to neutral(
                 DeclarativeAnimatedVisibilityHostLayout::class.java,
                 "visibility transition clipping and measurement",
+            ),
+            NodeType.AnimatedContentHost to neutral(
+                DeclarativeAnimatedContentHostLayout::class.java,
+                "bounded replacement-pair measurement and placement",
+            ),
+            NodeType.AnimatedContentItemHost to neutral(
+                DeclarativeAnimatedContentItemLayout::class.java,
+                "replacement-item transforms and interaction ownership",
             ),
             NodeType.AnimatedSizeHost to neutral(
                 DeclarativeAnimatedSizeHostLayout::class.java,
