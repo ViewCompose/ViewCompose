@@ -1,76 +1,339 @@
 package com.viewcompose.animation.core
 
+import com.viewcompose.runtime.MutableState
+import com.viewcompose.runtime.Snapshot
+import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.runtime.frame.MonotonicFrameClock
+import java.util.concurrent.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.job
 
 /**
- * Owns one mutable animated value without depending on composition.
+ * Owns one observable animated value with last-mutation-wins coroutine semantics.
  *
- * [AnimatableCore] publishes samples directly into [value] on the coroutine and frame context used
- * by [animateTo]. It deliberately provides no mutex or last-writer arbitration: concurrent calls to
- * [animateTo] or [snapTo] can overwrite each other. Higher-level owners must serialize mutations or
- * cancel and join the previous animation before starting another one.
+ * [animateTo], [animateDecay], [snapTo], and [stop] are mutually exclusive mutations. A newer
+ * mutation cancels the older coroutine job, and a cancelled call returns no normal result. Value
+ * and velocity are published atomically, stale frames are rejected by mutation identity, and
+ * cancellation retains the last accepted state.
  *
- * Cancellation leaves [value] at the most recently published sample. The instance does not own a
- * coroutine scope or frame clock and therefore has no independent disposal step.
+ * Bounds are inclusive converter-domain values. [updateBounds] converts and validates them once.
+ * While idle it clamps immediately; while running the active mutation observes the replacement on
+ * its next frame. No crossing sample is published outside the bounds.
+ *
+ * The instance owns no coroutine scope or frame clock. Callers supply structured ownership and a
+ * [MonotonicFrameClock] to each animation.
  *
  * @sample com.viewcompose.animation.core.samples.animatableCoreSample
  *
- * @param T domain value converted into interpolated dimensions
+ * @param T immutable animated-value domain
+ * @param V immutable velocity domain
  * @param initialValue value exposed before the first mutation
- * @param converter stable converter used for every animation on this instance
+ * @param converter stable converter used for the lifetime of this instance
+ * @throws IllegalArgumentException when [initialValue] or [converter] violates the finite vector
+ * contract
  */
-class AnimatableCore<T>(
+class AnimatableCore<T, V>(
     initialValue: T,
-    private val converter: AnimationConverter<T>,
+    private val converter: AnimationConverter<T, V>,
 ) {
-    /**
-     * Returns the live value most recently assigned or published by an animation frame.
-     *
-     * Only this instance writes the property, but it provides no cross-thread synchronization.
-     */
-    var value: T = initialValue
-        private set
+    private val internalState: MutableState<T> = mutableStateOf(validateInitialValue(initialValue))
+    private val velocityState: MutableState<AnimationVelocity<V>> =
+        mutableStateOf(AnimationVelocity(converter.zeroVelocity))
+    private val targetState: MutableState<T> = mutableStateOf(internalState.value)
+    private val runningState: MutableState<Boolean> = mutableStateOf(false)
+    private val mutationLock = Any()
+
+    private var bounds: AnimationVectorBounds? = null
+    private var nextMutationId: Long = 0L
+    private var activeMutation: Mutation<T>? = null
+
+    private fun validateInitialValue(value: T): T {
+        val converterVectorSize = converter.validatedVectorSize()
+        converter.valueVector(value, converterVectorSize, "initialValue")
+        converter.validateZeroVelocity(converterVectorSize)
+        converter.velocityVector(
+            converter.visibilityThreshold,
+            converterVectorSize,
+            "visibilityThreshold",
+        )
+        return value
+    }
+
+    /** Returns the live value from the latest accepted sample. */
+    val value: T
+        get() = internalState.value
+
+    /** Returns the live typed velocity from the same atomic sample as [value]. */
+    val velocity: AnimationVelocity<V>
+        get() = velocityState.value
+
+    /** Returns the active target, or [value] while idle. */
+    val targetValue: T
+        get() = targetState.value
+
+    /** Returns whether the newest mutation is still active. */
+    val isRunning: Boolean
+        get() = runningState.value
 
     /**
-     * Assigns [targetValue] synchronously without interpolation.
+     * Publishes [targetValue] immediately and resets retained velocity to zero.
      *
-     * This function does not suspend in its current implementation and does not cancel a concurrent
-     * [animateTo]; that animation may publish another value after this call.
+     * A concurrent older mutation is cancelled. The call requires no frame clock.
      *
-     * @param targetValue value to expose immediately
+     * @param targetValue value to retain after the mutation
+     * @throws IllegalArgumentException when converter output is invalid; the currently active
+     * mutation remains authoritative
      */
     suspend fun snapTo(targetValue: T) {
-        value = targetValue
+        commitInstantMutation {
+            clampAnimationState(
+                converter = converter,
+                value = targetValue,
+                velocity = AnimationVelocity(converter.zeroVelocity),
+                bounds = bounds,
+                playTimeNanos = 0L,
+            )
+        }
     }
 
     /**
-     * Animates from the current [value] to [targetValue] using [frameClock].
+     * Cancels an older mutation, preserves its latest value, and resets velocity to zero.
      *
-     * The start value is captured when this function begins. Samples are published on each frame;
-     * successful finite completion publishes the exact terminal value. Coroutine cancellation or a
-     * frame-clock/callback failure propagates and leaves the last published value in place. Infinite
-     * specifications do not return normally.
+     * The call is idempotent while idle and publishes no intermediate running state.
+     */
+    suspend fun stop() {
+        commitInstantMutation {
+            AnimationState(
+                value = internalState.value,
+                velocity = AnimationVelocity(converter.zeroVelocity),
+                playTimeNanos = 0L,
+            )
+        }
+    }
+
+    /**
+     * Animates from the latest accepted value to [targetValue].
      *
-     * This low-level type does not arbitrate overlapping mutations. Callers that need retargeting or
-     * last-writer-wins behavior must provide structured cancellation around this function.
+     * Physical springs consume [initialVelocity]. Duration-based specifications ignore it. The
+     * default `null` captures this owner's retained velocity atomically with the start value,
+     * including after an interrupted physical mutation. Successful target completion publishes the
+     * exact target and zero velocity.
      *
-     * @param targetValue value reached by a successfully completed finite animation
-     * @param animationSpec sampling and timing policy; defaults to [spring]
-     * @param frameClock monotonic source that paces samples and controls their execution context
+     * @param targetValue requested target value
+     * @param animationSpec finite timing or physical specification
+     * @param initialVelocity optional typed velocity supplied at mutation start; `null` captures
+     * the retained velocity in the same mutation snapshot as the start value
+     * @param frameClock monotonic frame source that paces samples
+     * @return final retained state and normal terminal reason
+     * @throws IllegalArgumentException when the specification, converter output, or target is
+     * invalid; the currently active mutation remains authoritative
+     * @throws java.util.concurrent.CancellationException when replaced or externally cancelled
      */
     suspend fun animateTo(
         targetValue: T,
-        animationSpec: AnimationSpec = spring(),
+        animationSpec: FiniteAnimationSpec = spring(),
+        initialVelocity: AnimationVelocity<V>? = null,
         frameClock: MonotonicFrameClock,
-    ) {
-        runAnimation(
-            frameClock = frameClock,
-            startValue = value,
-            endValue = targetValue,
-            animationSpec = animationSpec,
-            converter = converter,
-        ) { next ->
-            value = next
+    ): AnimationResult<T, V> {
+        lateinit var animation: TargetAnimation<T, V>
+        val mutation = beginMutation { startValue, retainedVelocity ->
+            animation = TargetAnimation(
+                initialValue = startValue,
+                targetValue = targetValue,
+                animationSpec = animationSpec,
+                converter = converter,
+                initialVelocity = initialVelocity ?: retainedVelocity,
+            )
+            targetValue
+        }
+        try {
+            currentCoroutineContext().ensureActive()
+            val result = runTargetAnimation(
+                frameClock = frameClock,
+                animation = animation,
+                boundsProvider = ::currentBounds,
+            ) { state ->
+                publishState(mutation.id, state)
+            }
+            currentCoroutineContext().ensureActive()
+            return result
+        } finally {
+            endMutation(mutation.id)
         }
     }
+
+    /**
+     * Continues from [value] with [initialVelocity] under [animationSpec].
+     *
+     * The unbounded asymptotic value becomes [targetValue] while running. Threshold completion,
+     * bounds, safety-guard termination, replacement, and external cancellation follow [animateTo].
+     *
+     * @param initialVelocity typed velocity supplied by a gesture or preceding animation
+     * @param animationSpec target-free decay policy
+     * @param frameClock monotonic frame source that paces samples
+     * @return final retained state and normal terminal reason
+     * @throws IllegalArgumentException when the specification, converter output, or initial
+     * velocity is invalid; the currently active mutation remains authoritative
+     * @throws java.util.concurrent.CancellationException when replaced or externally cancelled
+     */
+    suspend fun animateDecay(
+        initialVelocity: AnimationVelocity<V>,
+        animationSpec: DecayAnimationSpec = exponentialDecay(),
+        frameClock: MonotonicFrameClock,
+    ): AnimationResult<T, V> {
+        lateinit var animation: DecayAnimation<T, V>
+        val mutation = beginMutation { startValue, _ ->
+            animation = DecayAnimation(
+                initialValue = startValue,
+                initialVelocity = initialVelocity,
+                animationSpec = animationSpec,
+                converter = converter,
+            )
+            animation.targetValue
+        }
+        try {
+            currentCoroutineContext().ensureActive()
+            val result = runDecay(
+                frameClock = frameClock,
+                animation = animation,
+                boundsProvider = ::currentBounds,
+            ) { state ->
+                publishState(mutation.id, state)
+            }
+            currentCoroutineContext().ensureActive()
+            return result
+        } finally {
+            endMutation(mutation.id)
+        }
+    }
+
+    /**
+     * Replaces the inclusive component-wise bounds for subsequent accepted samples.
+     *
+     * Either side may be unbounded with `null`. Validation is atomic: an inverted component throws
+     * without changing existing bounds or state. While idle, an out-of-bounds value is clamped
+     * immediately with zero velocity. While running, the active mutation observes the new bounds
+     * on its next sample.
+     *
+     * @param lowerBound optional inclusive lower value
+     * @param upperBound optional inclusive upper value
+     * @throws IllegalArgumentException if converter output is invalid or a lower component exceeds
+     * its upper component
+     */
+    fun updateBounds(
+        lowerBound: T? = null,
+        upperBound: T? = null,
+    ) {
+        val replacement = createAnimationVectorBounds(converter, lowerBound, upperBound)
+        synchronized(mutationLock) {
+            bounds = replacement
+            if (activeMutation == null) {
+                val clamped = clampAnimationState(
+                    converter = converter,
+                    value = internalState.value,
+                    velocity = velocityState.value,
+                    bounds = replacement,
+                    playTimeNanos = 0L,
+                )
+                Snapshot.withMutableSnapshot {
+                    internalState.value = clamped.value
+                    velocityState.value = clamped.velocity
+                    targetState.value = clamped.value
+                }
+            }
+        }
+    }
+
+    private suspend fun beginMutation(
+        targetValue: (T, AnimationVelocity<V>) -> T,
+    ): Mutation<T> {
+        val mutationContext = currentCoroutineContext()
+        mutationContext.ensureActive()
+        val mutationJob = mutationContext.job
+        val previous: Mutation<T>?
+        val mutation: Mutation<T>
+        synchronized(mutationLock) {
+            val startValue = internalState.value
+            val startVelocity = velocityState.value
+            val resolvedTarget = targetValue(startValue, startVelocity)
+            mutation = Mutation(
+                id = ++nextMutationId,
+                job = mutationJob,
+                startValue = startValue,
+            )
+            previous = activeMutation
+            activeMutation = mutation
+            Snapshot.withMutableSnapshot {
+                targetState.value = resolvedTarget
+                runningState.value = true
+            }
+        }
+        if (previous != null && previous.job !== mutationJob) {
+            previous.job.cancel(
+                CancellationException("AnimatableCore mutation was interrupted by a newer mutation."),
+            )
+        }
+        return mutation
+    }
+
+    private suspend fun commitInstantMutation(
+        state: () -> AnimationState<T, V>,
+    ) {
+        val mutationContext = currentCoroutineContext()
+        mutationContext.ensureActive()
+        val mutationJob = mutationContext.job
+        val previous: Mutation<T>?
+        synchronized(mutationLock) {
+            val committedState = state()
+            previous = activeMutation
+            activeMutation = null
+            Snapshot.withMutableSnapshot {
+                internalState.value = committedState.value
+                velocityState.value = committedState.velocity
+                targetState.value = committedState.value
+                runningState.value = false
+            }
+        }
+        if (previous != null && previous.job !== mutationJob) {
+            previous.job.cancel(
+                CancellationException("AnimatableCore mutation was interrupted by a newer mutation."),
+            )
+        }
+    }
+
+    private fun publishState(
+        mutationId: Long,
+        state: AnimationState<T, V>,
+    ) {
+        synchronized(mutationLock) {
+            if (activeMutation?.id != mutationId) return
+            Snapshot.withMutableSnapshot {
+                internalState.value = state.value
+                velocityState.value = state.velocity
+            }
+        }
+    }
+
+    private fun endMutation(mutationId: Long) {
+        synchronized(mutationLock) {
+            if (activeMutation?.id != mutationId) return
+            activeMutation = null
+            Snapshot.withMutableSnapshot {
+                targetState.value = internalState.value
+                runningState.value = false
+            }
+        }
+    }
+
+    private fun currentBounds(): AnimationVectorBounds? {
+        return synchronized(mutationLock) { bounds }
+    }
+
+    private data class Mutation<T>(
+        val id: Long,
+        val job: Job,
+        val startValue: T,
+    )
 }

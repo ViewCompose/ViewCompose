@@ -1,6 +1,6 @@
 package com.viewcompose.animation
 
-import com.viewcompose.animation.core.AnimationSpec
+import com.viewcompose.animation.core.FiniteAnimationSpec
 import com.viewcompose.animation.core.snap
 import com.viewcompose.animation.core.tween
 import com.viewcompose.ui.modifier.Modifier
@@ -41,7 +41,7 @@ sealed interface EnterTransitionElement {
      * clamped to `0f..1f`
      */
     data class Fade(
-        val animationSpec: AnimationSpec = tween(),
+        val animationSpec: FiniteAnimationSpec = tween(),
         val initialAlpha: Float = 0f,
     ) : EnterTransitionElement
 
@@ -55,7 +55,7 @@ sealed interface EnterTransitionElement {
      * @property axis measured axes affected by the element
      */
     data class Expand(
-        val animationSpec: AnimationSpec = tween(),
+        val animationSpec: FiniteAnimationSpec = tween(),
         val initialScale: Float = 0f,
         val axis: SizeTransformAxis = SizeTransformAxis.Both,
     ) : EnterTransitionElement
@@ -75,7 +75,7 @@ sealed interface ExitTransitionElement {
      * @property targetAlpha requested hidden alpha; rendered alpha is clamped to `0f..1f`
      */
     data class Fade(
-        val animationSpec: AnimationSpec = tween(),
+        val animationSpec: FiniteAnimationSpec = tween(),
         val targetAlpha: Float = 0f,
     ) : ExitTransitionElement
 
@@ -89,7 +89,7 @@ sealed interface ExitTransitionElement {
      * @property axis measured axes affected by the element
      */
     data class Shrink(
-        val animationSpec: AnimationSpec = tween(),
+        val animationSpec: FiniteAnimationSpec = tween(),
         val targetScale: Float = 0f,
         val axis: SizeTransformAxis = SizeTransformAxis.Both,
     ) : ExitTransitionElement
@@ -153,7 +153,7 @@ data class ExitTransition(
  * @return a one-element enter transition
  */
 fun fadeIn(
-    animationSpec: AnimationSpec = tween(),
+    animationSpec: FiniteAnimationSpec = tween(),
     initialAlpha: Float = 0f,
 ): EnterTransition = EnterTransition(
     elements = listOf(
@@ -174,7 +174,7 @@ fun fadeIn(
  * @return a one-element enter transition
  */
 fun expandIn(
-    animationSpec: AnimationSpec = tween(),
+    animationSpec: FiniteAnimationSpec = tween(),
     initialScale: Float = 0f,
 ): EnterTransition = EnterTransition(
     elements = listOf(
@@ -194,7 +194,7 @@ fun expandIn(
  * @return a one-element horizontal enter transition
  */
 fun expandHorizontally(
-    animationSpec: AnimationSpec = tween(),
+    animationSpec: FiniteAnimationSpec = tween(),
     initialScale: Float = 0f,
 ): EnterTransition = EnterTransition(
     elements = listOf(
@@ -214,7 +214,7 @@ fun expandHorizontally(
  * @return a one-element vertical enter transition
  */
 fun expandVertically(
-    animationSpec: AnimationSpec = tween(),
+    animationSpec: FiniteAnimationSpec = tween(),
     initialScale: Float = 0f,
 ): EnterTransition = EnterTransition(
     elements = listOf(
@@ -236,7 +236,7 @@ fun expandVertically(
  * @return a one-element exit transition
  */
 fun fadeOut(
-    animationSpec: AnimationSpec = tween(),
+    animationSpec: FiniteAnimationSpec = tween(),
     targetAlpha: Float = 0f,
 ): ExitTransition = ExitTransition(
     elements = listOf(
@@ -257,7 +257,7 @@ fun fadeOut(
  * @return a one-element exit transition
  */
 fun shrinkOut(
-    animationSpec: AnimationSpec = tween(),
+    animationSpec: FiniteAnimationSpec = tween(),
     targetScale: Float = 0f,
 ): ExitTransition = ExitTransition(
     elements = listOf(
@@ -277,7 +277,7 @@ fun shrinkOut(
  * @return a one-element horizontal exit transition
  */
 fun shrinkHorizontally(
-    animationSpec: AnimationSpec = tween(),
+    animationSpec: FiniteAnimationSpec = tween(),
     targetScale: Float = 0f,
 ): ExitTransition = ExitTransition(
     elements = listOf(
@@ -297,7 +297,7 @@ fun shrinkHorizontally(
  * @return a one-element vertical exit transition
  */
 fun shrinkVertically(
-    animationSpec: AnimationSpec = tween(),
+    animationSpec: FiniteAnimationSpec = tween(),
     targetScale: Float = 0f,
 ): ExitTransition = ExitTransition(
     elements = listOf(

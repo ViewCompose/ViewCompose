@@ -1,9 +1,10 @@
 # Animation Core
 
-`viewcompose-animation-core` is the platform-neutral timing and sampling engine for ViewCompose
-motion. It defines immutable animation specifications, easing and value conversion, deterministic
-timeline sampling, coroutine-driven frame loops, a low-level mutable animated value, and shared
-transition-segment coordination. It contains no Android UI or composition dependency.
+`viewcompose-animation-core` is the platform-neutral timing and physical-motion engine for
+ViewCompose. It defines immutable animation specifications, easing, value/velocity conversion,
+deterministic explicit-time sampling, coroutine-driven frame loops, a low-level last-writer
+animated value, and shared transition-segment coordination. It contains no Android UI or
+composition dependency.
 
 ## Artifact and stability
 
@@ -13,26 +14,29 @@ dependencies {
 }
 ```
 
-- Stability: **Alpha**. Timing normalization, repetition, cancellation, and transition-segment
-  behavior are reviewed and tested; names and higher-level composition integration may still evolve
-  between alphas.
+- Stability: **Alpha**. Physical units, cancellation, bounds, results, timing normalization,
+  repetition, and transition-segment behavior are reviewed and tested; names and higher-level
+  composition integration may still evolve between alphas.
 - Platform: Kotlin/JVM with no Android framework dependency.
 - `viewcompose-runtime` is exposed transitively because `MonotonicFrameClock` is part of public
   clock and animation APIs. Kotlin coroutines provide structured cancellation.
-- Applications normally receive it transitively from `viewcompose-animation`; depend on it directly
-  for custom runtimes, deterministic sampling, preview tooling, or platform-neutral tests.
+- Applications normally receive it transitively from `viewcompose-animation`; depend on it
+  directly for custom runtimes, deterministic sampling, preview tooling, or platform-neutral tests.
 
-## Specifications and easing
+## Specifications, physics, and easing
 
-`AnimationSpec` is an immutable time-to-progress description. It does not own a clock, coroutine, or
-value. The built-in families are:
+`AnimationSpec` is an immutable motion description. It owns no clock, coroutine, or value.
+`FiniteAnimationSpec` separates converging target motion from `InfiniteRepeatableSpec`, while
+`DurationBasedAnimationSpec` identifies specifications legal inside finite or infinite repetition.
 
 - `tween`: fixed duration, optional delay, and an `Easing` curve;
-- `spring`: a deterministic bounded damped-oscillation approximation over a fixed duration;
-- `keyframes`: timestamped progress checkpoints with linear interpolation between them;
+- `spring`: normalized-mass physical motion with damping, stiffness, typed initial velocity,
+  equilibrium termination, and a safety guard rather than a nominal duration;
+- `keyframes`: timestamped progress checkpoints with linear interpolation;
 - `snap`: immediate target selection;
-- `repeatable`: a finite number of restart or alternating cycles;
-- `infiniteRepeatable`: cycles until its driving coroutine is cancelled.
+- `repeatable`: a finite number of restart or alternating duration-based cycles;
+- `infiniteRepeatable`: duration-based cycles until cancellation; and
+- `exponentialDecay`: target-free velocity decay with a friction multiplier and safety guard.
 
 ```kotlin
 val motion = repeatable(
@@ -43,146 +47,180 @@ val motion = repeatable(
     ),
     repeatMode = RepeatMode.Reverse,
 )
-```
 
-The engine normalizes negative delays to zero and non-positive finite durations to one millisecond.
-A zero-iteration repeat is the exception: it has zero duration and remains at the start value.
-Factories preserve requested values in the immutable object; normalization occurs during duration
-queries and sampling.
-
-`EasingDefaults` provides allocation-stable polynomial curves. `CubicBezierEasing` supports custom
-control points and performs a bounded inversion of the x axis. Keep Bézier x coordinates in
-`0f..1f`; the constructor does not reject non-monotonic curves. The engine clamps final visual
-progress to `0f..1f`, including spring and easing output, so animation-core does not expose visual
-overshoot in this release.
-
-## Semantic motion schemes and reduced motion
-
-`MotionScheme` groups five semantic timing roles without naming a component or design system:
-fast/default effects, fast/default spatial movement, and expressive spatial movement. A component
-selects a `MotionRole`; it does not copy raw durations into its structural recipe. The immutable
-scheme owns neither a clock nor animation state and resolves to the existing `AnimationSpec`
-families.
-
-`ReducedMotionPolicy` resolves the same target state while replacing non-essential movement with
-`SnapSpec` or a shortened specification. Essential state communication is duration-scaled rather
-than hidden. Scaling applies recursively to tween delay, bounded spring duration, keyframe duration
-and checkpoints, and repeating child specifications. Applications or integration roots supply the
-host's reduced-motion decision explicitly; animation-core performs no platform settings lookup.
-
-`MotionInterruptionPolicy.RetargetFromCurrent` matches the last-writer behavior in
-`viewcompose-animation`. `SnapToTarget` is a component-owner policy: the owner must select the
-target immediately instead of starting a runner. A scheme never launches competing loops.
-
-## Deterministic sampling
-
-`sampleAnimationValue` evaluates one specification at an explicit nanosecond play time. It has no
-clock, coroutine, or state ownership, making it the preferred primitive for seeking, tests,
-transition channels, and preview tooling:
-
-```kotlin
-val halfway = sampleAnimationValue(
-    startValue = 20f,
-    endValue = 100f,
-    animationSpec = tween(durationMillis = 400, easing = EasingDefaults.Linear),
-    converter = AnimationConverters.Float,
-    playTimeNanos = 200_000_000L,
+val physical = spring(
+    dampingRatio = 0.72f,
+    stiffness = 240f,
 )
 ```
 
-`animationDurationNanos` includes tween delay, multiplies repeat cycles with saturation instead of
-overflow, and returns `Long.MAX_VALUE` for an infinite repeat. `isAnimationFinished` always returns
-false for infinite repeats.
+The engine normalizes negative delays to zero and non-positive duration-based intervals to one
+millisecond. A zero-iteration repeat has zero duration and remains at its start. Factories retain
+requested values; evaluator construction owns normalization and one-time keyframe ordering.
 
-Sampling allocates start, end, and result vectors through the converter on each call. Frame-sensitive
-custom runtimes should avoid unnecessary wrapper allocation and should not use converters for
-blocking or I/O-bound work.
+`SpringSpec` solves `x'' + 2ζω₀x' + ω₀²(x - target) = 0` with normalized mass `1` and
+`ω₀ = sqrt(stiffness)`. Under-, critical-, and over-damped branches use `Double` intermediates and
+sample from the segment start rather than integrating previous frames. A settled spring publishes
+the exact target and zero velocity. A solve that reaches `maxDurationMillis` retains its physical
+sample and reports `DurationLimitReached`; `durationMillis` no longer exists. Springs cannot be
+repeated because equilibrium time depends on endpoints, velocity, and thresholds.
 
-## Value conversion
+`ExponentialDecaySpec` uses `λ = 4.2 × frictionMultiplier s⁻¹`. It stops at its converter-derived
+velocity threshold, a bound, or its safety guard. It is deliberately platform-neutral and is not
+an Android spline fling.
 
-`AnimationConverter<T>` decomposes a domain value into independently interpolated `Float`
-dimensions, then reconstructs it. Implementations must keep a stable dimension count, return an
-independent vector, and never retain the result vector passed to `fromVector`.
+`EasingDefaults` provides allocation-stable polynomial curves. `CubicBezierEasing` performs a
+bounded inversion of the x axis for custom control points. Duration-spec progress is clamped to
+`0f..1f`; physical spring values are not progress-clamped and can overshoot.
 
-Built-in converters cover `Float`, `Int`, and packed ARGB `Int`. Integer reconstruction truncates
-toward zero. ARGB conversion interpolates encoded channels independently; it is not gamma-correct or
-color-space aware.
+## Semantic motion schemes and reduced motion
+
+`MotionScheme` groups fast/default effect and spatial roles plus expressive spatial motion without
+naming a component or design system. A component selects a `MotionRole`; it does not copy raw
+parameters into its structural recipe.
+
+`ReducedMotionPolicy` resolves the same logical target while replacing non-essential movement with
+`SnapSpec` or a shortened specification. Scaling applies recursively to tween delay, keyframe
+duration/checkpoints, and repeating children. For a physical spring, time scale `s` resolves
+stiffness to `stiffness / s²` and scales the safety guard; it does not invent a nominal duration.
+Applications supply the host's reduced-motion decision explicitly; animation-core does not read a
+platform setting.
+
+`MotionInterruptionPolicy.RetargetFromCurrent` matches `AnimatableCore` last-writer behavior.
+`SnapToTarget` remains a component-owner instruction, not a second engine loop.
+
+## Deterministic sampling and physical state
+
+`TargetAnimation<T, V>` converts endpoints, velocity, threshold, and scratch storage once, then
+evaluates immutable `AnimationState<T, V>` values at explicit nanosecond play times. It has no
+clock or mutable ownership and is the preferred primitive for seeking, tests, transition channels,
+renderer adapters, and preview tooling:
+
+```kotlin
+val animation = TargetAnimation(
+    initialValue = 20f,
+    targetValue = 100f,
+    animationSpec = tween(durationMillis = 400, easing = EasingDefaults.Linear),
+    converter = AnimationConverters.Float,
+)
+val halfway = animation.stateAt(200_000_000L)
+```
+
+`durationNanos` includes delay and saturated repeat multiplication for duration specifications, or
+resolves a spring's first one-millisecond equilibrium sample. `DecayAnimation<T, V>` offers the
+same explicit-time model for target-free motion and exposes its unbounded asymptotic target.
+Evaluators reuse their arrays and are not thread-safe; one owner serializes sampling.
+
+`AnimationState` carries value, typed velocity, and segment-relative play time. `AnimationResult`
+carries a terminal state plus `Finished`, `BoundReached`, or `DurationLimitReached`. Coroutine
+interruption is deliberately not a normal end reason.
+
+## Separate value and velocity domains
+
+`AnimationConverter<T, V>` keeps the animated value domain separate from its tangent/velocity
+domain and writes into caller-owned buffers. Implementations declare one stable positive
+`vectorSize`, `zeroVelocity`, and positive finite `visibilityThreshold`; every conversion uses that
+dimension and may not retain supplied arrays.
+
+Built-in mappings are `Float`/`Float`, `Int`/`Float`, and packed ARGB `Int`/`ArgbChannels`.
+Separating domains preserves fractional integer velocity and signed alpha/red/green/blue rates.
+Integer reconstruction truncates toward zero. ARGB values interpolate encoded channels and are not
+gamma-correct or color-space aware.
 
 ```kotlin
 data class Point(val x: Float, val y: Float)
 
-val converter = object : AnimationConverter<Point> {
-    override fun toVector(value: Point) = floatArrayOf(value.x, value.y)
+val converter = object : AnimationConverter<Point, Point> {
+    override val vectorSize = 2
+    override val zeroVelocity = Point(0f, 0f)
+    override val visibilityThreshold = Point(0.01f, 0.01f)
 
-    override fun fromVector(vector: FloatArray) = Point(vector[0], vector[1])
+    override fun convertToVector(value: Point, destination: FloatArray) {
+        destination[0] = value.x
+        destination[1] = value.y
+    }
+
+    override fun convertFromVector(vector: FloatArray) = Point(vector[0], vector[1])
+
+    override fun convertVelocityToVector(velocity: Point, destination: FloatArray) =
+        convertToVector(velocity, destination)
+
+    override fun convertVelocityFromVector(vector: FloatArray) = convertFromVector(vector)
 }
 ```
 
-When endpoint converter dimensions differ, sampling uses the start vector's size. Missing end
-dimensions retain their corresponding start dimensions; extra end dimensions are ignored. Treat a
-dimension mismatch as a converter defect rather than relying on this recovery behavior.
+Incomplete, non-finite, non-positive-threshold, incompatible-dimension, and invalid-zero conversion
+fail before publication. Endpoint, position, velocity, threshold, and scratch vectors allocate once
+per evaluator and are reused. A custom converter may allocate the immutable domain value returned
+for a sample, but it must remain deterministic, non-blocking, and allocation-conscious. A derived
+spring sample or decay target that cannot remain finite in the converter's vector domain also fails
+before publication; it is never interpreted as equilibrium.
 
-## Frame-driven execution and cancellation
+## Frame execution, mutation, and bounds
 
-`runAnimation` awaits a `MonotonicFrameClock` and calls `onValue` for each sample on the caller's
-coroutine. A finite completion publishes the exact terminal sample after the frame loop, so the
-terminal value can be observed twice. Infinite specifications return only through cancellation.
+`runAnimation` awaits a `MonotonicFrameClock`, publishes `AnimationState` samples on the caller's
+coroutine, and returns `AnimationResult`. `runDecayAnimation` follows the same contract. A
+non-monotonic timestamp fails before its candidate sample publishes. Cancellation always
+propagates and never forces the target. Clock, callback, and converter failures propagate unchanged.
 
-Cancellation does not force the target value. Depending on the frame clock, cancellation either
-propagates as the coroutine's cancellation exception or is observed between callbacks and reported
-as `AnimationRunResult.Cancelled`. Frame-clock and callback exceptions propagate unchanged. Keep
-callbacks short because they execute in the frame path.
+`AnimatableCore<T, V>` is the single last-mutation-wins owner. `animateTo`, `animateDecay`,
+`snapTo`, and `stop` cancel an older caller, reject stale samples, and atomically publish value and
+velocity. Omitting `animateTo`'s initial velocity captures the retained value and velocity in one
+mutation snapshot; duration specifications ignore that velocity. A candidate target or decay
+animation is validated before ownership changes, so an invalid replacement leaves the active
+mutation authoritative. Owner construction validates the initial value, vector dimension, zero
+velocity, and visibility threshold before exposing state. `snapTo` and `stop` each replace an older
+mutation with one atomic idle-state commit, retain zero velocity, and expose no transient running
+state; an invalid snap leaves the active mutation unchanged.
 
-`AnimatableCore` stores the latest sample but intentionally does not provide a mutex, mutation
-priority, or coroutine scope. Concurrent `animateTo` and `snapTo` calls can overwrite each other.
-Higher-level code must serialize mutations or cancel and join the previous job before retargeting.
-Cancellation leaves the last published value available.
+`updateBounds` installs inclusive converter-domain lower and upper values. A crossing sample clamps
+before publication, terminates the whole mutation with `BoundReached`, and publishes zero velocity.
+Idle bound updates and later `snapTo` clamp immediately. Inverted component bounds fail without
+changing the accepted state.
 
-`viewcompose-animation` provides the composition-aware, last-writer-oriented APIs most application
-code should use. Use `AnimatableCore` directly only when the caller already owns structured
-concurrency and a frame clock.
+`viewcompose-animation` supplies composition clock binding and the facade most application code
+should use. The core owner deliberately owns no scope or frame clock.
 
 ## Multi-channel transition coordination
 
-`TransitionCore<S>` coordinates logical endpoints and one timeline across multiple animation
-channels. A transition owner follows this order:
+`TransitionCore<S>` coordinates logical endpoints and one timeline across multiple channels. A
+transition owner updates the target, registers each channel duration, advances the shared play time,
+and commits the target when the longest channel finishes. Shorter channels settle in their own
+evaluators. Retargeting preserves visual continuity in the higher-level channel owners.
 
-1. call `updateTarget` when the desired state changes;
-2. register every channel's normalized duration with `registerDuration`;
-3. advance the shared segment using `updatePlayTime`;
-4. let time reaching the maximum duration commit the target, or call `finishRunningSegment`.
-
-The longest registered channel defines segment duration. Shorter channels settle in their own
-samplers. During a running retarget, the next logical segment starts from the previous target rather
-than each channel's current sampled value; higher-level channel owners preserve visual continuity.
-`TransitionCore` is not thread-safe and does not launch or cancel work.
+`TransitionCore` is not thread-safe and does not launch or cancel work. Physical channels register
+their resolved equilibrium duration, so transition state still commits only after every channel
+settles.
 
 ## Testing custom animation code
 
-- Use `sampleAnimationValue` for exact boundary, delay, repeat, and reverse-cycle assertions.
-- Supply a deterministic fake `MonotonicFrameClock` when testing `runAnimation` or `AnimatableCore`.
-- Verify cancellation before the target and ensure no terminal sample is forced.
-- Verify custom converter round trips, stable dimensions, missing-data policy, and numeric precision.
-- For transitions, register channels before advancing time and test mid-segment retargeting
-  explicitly.
+- Use `TargetAnimation.stateAt` for exact boundary, delay, repeat, spring, velocity, and reverse
+  assertions.
+- Supply a deterministic `MonotonicFrameClock` for `runAnimation`, decay, and `AnimatableCore`.
+- Verify cancellation before target completion and ensure no terminal state is forced.
+- Verify custom value/velocity round trips, stable dimensions, thresholds, zero velocity, and
+  numeric precision.
+- Test under-, critical-, and over-damped springs, safety guards, bounds, rapid retarget, and decay.
+- Register every transition channel before advancing the shared segment.
 
-The module test suite covers tween completion and delay, reverse-repeat terminal state, infinite
-frame pacing, cancellation, ARGB round trips, maximum channel duration, transition retargeting,
-semantic role resolution, and deterministic reduced-motion substitution.
+The module suite covers these physical branches, overshoot, structured results, signed ARGB
+velocity, converter failures, reduced motion, transition retargeting, and duration behavior.
 
 ## Related documentation
 
+- [ADR-0019: animation physics and ownership](../../architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md)
+- [ADR-0020: separate animation value and velocity domains](../../architecture/decisions/0020-separate-animation-value-and-velocity-domains.md)
+- [Animation module](../viewcompose-animation/README.md)
 - [Runtime module](../viewcompose-runtime/README.md)
-- [Architecture overview](../../architecture/overview.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
-- [Project roadmap](../../project/roadmap.md)
 
 The complete generated reference is available in the
 [`viewcompose-animation-core` API tree](https://docs.viewcompose.com/api/viewcompose-animation-core/current/).
 
 ## Compatibility notes
 
-The `0.1.0-alpha03` line establishes normalized finite timing, restart and reverse repetition,
-frame-clock-driven cancellation, per-dimension converters, and shared transition-segment timing.
-These contracts are intentionally platform-neutral; Android interop belongs to host modules and
-composition ownership belongs to `viewcompose-animation`.
+The Phase 1 alpha hard-cuts the old duration-bearing spring and single-domain converter/result
+surface. Use duration specifications for exact intervals, physical `spring` for equilibrium motion,
+and `AnimationConverter<T, V>` when value and velocity types differ. There are no deprecated
+duration-spring, one-parameter converter, or same-domain `Animatable` adapters. Android interop
+belongs to host modules and composition ownership belongs to `viewcompose-animation`.

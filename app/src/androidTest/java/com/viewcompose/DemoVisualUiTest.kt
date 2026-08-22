@@ -1664,6 +1664,50 @@ class DemoVisualUiTest {
                 extractFirstFloat(text)?.let { it <= 0.01f } == true
             }
             assertTrue("Expected animatable value to reach ~0.0 after snap low", snapLowApplied)
+
+            scenario.onActivity { activity ->
+                activity.clickByTestTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_TO_HIGH)
+            }
+            val springHighFinished = waitUntilActivityCondition(scenario, timeoutMs = 3_000L) { activity ->
+                val text = activity.requireTextViewByTestTag(
+                    DemoAnimationTestTags.ANIMATION_ANIMATABLE_VALUE,
+                ).text.toString()
+                extractFirstFloat(text)?.let { it >= 0.99f } == true && "Finished" in text
+            }
+            assertTrue("Expected critical spring to finish exactly at the upper target", springHighFinished)
+
+            scenario.onActivity { activity ->
+                activity.clickByTestTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_TO_LOW)
+            }
+            val springLowFinished = waitUntilActivityCondition(scenario, timeoutMs = 3_000L) { activity ->
+                val text = activity.requireTextViewByTestTag(
+                    DemoAnimationTestTags.ANIMATION_ANIMATABLE_VALUE,
+                ).text.toString()
+                extractFirstFloat(text)?.let { it <= 0.01f } == true && "Finished" in text
+            }
+            assertTrue("Expected critical spring to finish exactly at the lower target", springLowFinished)
+
+            scenario.onActivity { activity ->
+                activity.clickByTestTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_DECAY_POSITIVE)
+            }
+            val positiveDecayReachedBound = waitUntilActivityCondition(scenario, timeoutMs = 3_000L) { activity ->
+                val text = activity.requireTextViewByTestTag(
+                    DemoAnimationTestTags.ANIMATION_ANIMATABLE_VALUE,
+                ).text.toString()
+                extractFirstFloat(text)?.let { it >= 0.99f } == true && "BoundReached" in text
+            }
+            assertTrue("Expected positive decay to terminate at the upper bound", positiveDecayReachedBound)
+
+            scenario.onActivity { activity ->
+                activity.clickByTestTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_DECAY_NEGATIVE)
+            }
+            val negativeDecayReachedBound = waitUntilActivityCondition(scenario, timeoutMs = 3_000L) { activity ->
+                val text = activity.requireTextViewByTestTag(
+                    DemoAnimationTestTags.ANIMATION_ANIMATABLE_VALUE,
+                ).text.toString()
+                extractFirstFloat(text)?.let { it <= 0.01f } == true && "BoundReached" in text
+            }
+            assertTrue("Expected negative decay to terminate at the lower bound", negativeDecayReachedBound)
         }
     }
 
@@ -1694,6 +1738,26 @@ class DemoVisualUiTest {
                 )
             }
             waitForUiIdle()
+            var handoffSnapshot = ""
+            val physicalHandoffCompleted = waitUntilActivityCondition(
+                scenario,
+                timeoutMs = 1_500L,
+            ) { activity ->
+                handoffSnapshot = activity.requireTextViewByTestTagVisible(
+                    DemoGestureTestTags.GESTURE_DRAG_HANDOFF_STATE,
+                ).text.toString()
+                val gestureVelocity = extractFirstFloat(handoffSnapshot) ?: 0f
+                abs(gestureVelocity) >= 100f &&
+                    (
+                        handoffSnapshot.contains("BoundReached") ||
+                            handoffSnapshot.contains("Finished")
+                    )
+            }
+            assertTrue(
+                "Expected terminal drag velocity to finish through physical decay; " +
+                    "after=[$handoffSnapshot]",
+                physicalHandoffCompleted,
+            )
             scenario.onActivity { activity ->
                 activity.dragScenarioViewById(
                     id = R.id.demo_gesture_drag_swipe_secondary_target,

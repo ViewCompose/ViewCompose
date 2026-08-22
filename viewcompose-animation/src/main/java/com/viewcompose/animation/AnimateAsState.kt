@@ -2,11 +2,9 @@ package com.viewcompose.animation
 
 import com.viewcompose.animation.core.AnimationConverter
 import com.viewcompose.animation.core.AnimationConverters
-import com.viewcompose.animation.core.AnimationSpec
-import com.viewcompose.animation.core.runAnimation
+import com.viewcompose.animation.core.FiniteAnimationSpec
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.State
-import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.foundation.LocalAnimationCoroutineContext
@@ -37,33 +35,33 @@ import kotlinx.coroutines.withContext
  * @return stable observable state owned by this composition call position
  * @throws IllegalArgumentException if [LocalAnimationCoroutineContext] contains a [Job]
  */
-fun <T> animateValueAsState(
+fun <T, V> animateValueAsState(
     targetValue: T,
-    converter: AnimationConverter<T>,
-    animationSpec: AnimationSpec = tween(),
+    converter: AnimationConverter<T, V>,
+    animationSpec: FiniteAnimationSpec = tween(),
 ): State<T> {
-    val state = remember {
-        mutableStateOf(targetValue)
-    }
     val frameClock = LocalMonotonicFrameClock.current
+    val animatable = remember(converter) {
+        Animatable(
+            initialValue = targetValue,
+            converter = converter,
+            defaultFrameClock = frameClock,
+        )
+    }
+    animatable.bindFrameClock(frameClock)
     val animationCoroutineContext = LocalAnimationCoroutineContext.current
     require(animationCoroutineContext[Job] == null) {
         "Animation coroutine context must not contain a Job."
     }
     LaunchedEffect(targetValue, animationSpec, converter, frameClock, animationCoroutineContext) {
         withContext(animationCoroutineContext) {
-            runAnimation(
-                frameClock = frameClock,
-                startValue = state.value,
-                endValue = targetValue,
+            animatable.animateTo(
+                targetValue = targetValue,
                 animationSpec = animationSpec,
-                converter = converter,
-            ) { next ->
-                state.value = next
-            }
+            )
         }
     }
-    return state
+    return animatable.asState
 }
 
 /**
@@ -77,7 +75,7 @@ fun <T> animateValueAsState(
  */
 fun animateFloatAsState(
     targetValue: Float,
-    animationSpec: AnimationSpec = tween(),
+    animationSpec: FiniteAnimationSpec = tween(),
 ): State<Float> {
     return animateValueAsState(
         targetValue = targetValue,
@@ -95,7 +93,7 @@ fun animateFloatAsState(
  */
 fun animateIntAsState(
     targetValue: Int,
-    animationSpec: AnimationSpec = tween(),
+    animationSpec: FiniteAnimationSpec = tween(),
 ): State<Int> {
     return animateValueAsState(
         targetValue = targetValue,
@@ -115,7 +113,7 @@ fun animateIntAsState(
  */
 fun animateColorAsState(
     targetValue: Int,
-    animationSpec: AnimationSpec = tween(),
+    animationSpec: FiniteAnimationSpec = tween(),
 ): State<Int> {
     return animateValueAsState(
         targetValue = targetValue,
@@ -136,7 +134,7 @@ fun animateColorAsState(
  */
 fun animateDpAsState(
     targetValue: UiDp,
-    animationSpec: AnimationSpec = tween(),
+    animationSpec: FiniteAnimationSpec = tween(),
 ): State<UiDp> {
     return animateValueAsState(
         targetValue = targetValue,

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut the fixed-duration spring and single-domain converter model, add typed physical spring/decay/bounds/results, enforce strongly atomic mutation validation, and share the solver with animated content size.",
+  "changes": [
+    { "artifact": "viewcompose-animation-core", "impact": "breaking" },
+    { "artifact": "viewcompose-animation", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

@@ -69,6 +69,8 @@ or context changes cancel the previous effect and restart from the latest publis
 have no imperative cancellation handle or completion callback; use `Animatable` when commands,
 stopping, or mutation arbitration are required.
 
+All target-as-state APIs accept `FiniteAnimationSpec`; infinite specifications fail at compile time.
+They share `AnimatableCore` mutation and physical sampling rather than owning a second runner.
 Integer animation truncates samples toward zero. Color animation interpolates encoded ARGB channels
 and is not gamma-correct. `UiDp` animation interpolates the density-independent number rather than
 resolved pixels, so density changes do not restart it by themselves. A custom converter must keep a
@@ -76,8 +78,8 @@ stable dimension count and should itself remain stable across composition.
 
 ## Imperative Animatable
 
-`Animatable<T>` exposes `value`, `targetValue`, `isRunning`, and the stable observable `asState` while
-accepting suspending commands:
+`Animatable<T, V>` exposes `value`, typed `velocity`, `targetValue`, `isRunning`, and the stable
+observable `asState` while accepting suspending commands:
 
 ```kotlin
 val progress = rememberAnimatable(
@@ -87,19 +89,34 @@ val progress = rememberAnimatable(
 
 LaunchedEffect(command) {
     when (command) {
-        Command.Open -> progress.animateTo(1f, tween(durationMillis = 240))
-        Command.Close -> progress.animateTo(0f, spring())
+        Command.Open -> progress.animateTo(
+            targetValue = 1f,
+            animationSpec = spring(dampingRatio = 0.7f, stiffness = 220f),
+        )
+        Command.Close -> progress.animateDecay(AnimationVelocity(-2.4f))
         Command.Stop -> progress.stop()
     }
 }
 ```
 
-Every `animateTo`, `snapTo`, and `stop` call is a mutation. A newer mutation from another coroutine
-job cancels the old job, and stale frames are rejected by mutation identity. `animateTo` retargets
-from the last accepted value. `snapTo` publishes immediately; `stop` preserves the current value.
-Cancellation and failures leave the latest sample and reset the target to it. The Q3 `Animatable`
-contract publishes target/running mutation start together, and publishes the retained target/idle
-completion together; frame samples remain independent value commits.
+Every `animateTo`, `animateDecay`, `snapTo`, and `stop` call is a mutation. A newer mutation from
+another coroutine job cancels the old job, and stale frames are rejected by mutation identity.
+Physical `animateTo` retargets from one atomic value/velocity snapshot when its nullable
+`initialVelocity` is omitted; an explicit `AnimationVelocity<V>` replaces only that captured
+velocity. An invalid replacement is rejected before mutation ownership changes and therefore does
+not cancel the active animation. `snapTo` publishes immediately; `stop` preserves the current value.
+Both reset velocity to zero. Cancellation and failures leave the latest sample and reset the target
+to it. Normal completion returns `AnimationResult<T, V>` with `Finished`,
+`BoundReached`, or `DurationLimitReached`; cancellation still throws. The Q3 `Animatable`
+contract publishes target/running mutation start together for frame-driven animation, and publishes
+the retained target/idle completion together; frame samples remain independent value commits.
+`snapTo` and `stop` instead publish one atomic final idle snapshot without a transient running
+state. Invalid construction or snap input fails before any state or mutation ownership changes.
+
+`updateBounds(lowerBound, upperBound)` installs inclusive component-wise value bounds. A running
+spring or decay clamps its crossing sample before publication, zeros velocity, and returns
+`BoundReached`. An idle update or later `snapTo` clamps immediately. Density, RTL, and gesture-axis
+conversion remain responsibilities of the caller that constructs `V`.
 
 `rememberAnimatable` uses `initialValue` only when an instance is first created. Changing the
 converter creates a new instance; changing only `initialValue` does not reset it. The current frame
@@ -120,7 +137,7 @@ val alpha = transition.animateFloat { state ->
     if (state == PanelState.Expanded) 1f else 0.6f
 }
 val height = transition.animateDp(
-    animationSpec = { spring(durationMillis = 320) },
+    animationSpec = { spring(dampingRatio = 0.8f, stiffness = 240f) },
 ) { state ->
     if (state == PanelState.Expanded) 240.dp else 80.dp
 }
@@ -214,13 +231,16 @@ transforms, slide motion, or per-state pair specifications.
 
 ## animateContentSize and native layout cost
 
-`Modifier.animateContentSize` serializes the selected core specification into the renderer contract.
-The renderer inserts a synthetic native host around the modified node, moves parent layout elements
-to that host, and animates measured width and height with Android `ValueAnimator`:
+`Modifier.animateContentSize` serializes a finite core specification into the renderer contract.
+The renderer inserts a synthetic native host around the modified node and moves parent layout
+elements to that host. Duration specifications use Android `ValueAnimator`; physical springs use
+the shared animation-core solver and retain width/height velocity across retargeting:
 
 ```kotlin
 Column(
-    modifier = Modifier.animateContentSize(spring(durationMillis = 320)),
+    modifier = Modifier.animateContentSize(
+        spring(dampingRatio = 0.75f, stiffness = 240f),
+    ),
 ) {
     // Content whose measured size changes.
 }
@@ -228,8 +248,8 @@ Column(
 
 The first measurement snaps. Later changes retarget from the in-flight size, and parent constraints
 continue to cap the result. Each frame requests Android layout, and the wrapper adds one View level;
-avoid applying it indiscriminately to large lists. Infinite size repeats continuously request layout
-until detach and are rarely appropriate.
+avoid applying it indiscriminately to large lists. Infinite size specifications are rejected at
+compile time because a layout animation must converge.
 
 Built-in easing and cubic Bézier control points cross the renderer boundary. Unknown custom easing
 implementations fall back to `FastOutSlowIn`. When several `animateContentSize` elements occur in one
@@ -238,6 +258,8 @@ modifier chain, the last specification wins.
 ## Testing
 
 - Provide deterministic frame clocks for imperative animation and cancellation tests.
+- Assert physical end reason, terminal velocity, bounds, decay direction, and rapid-retarget
+  velocity continuity separately from duration behavior.
 - Verify first composition separately from subsequent target changes.
 - Test retargeting before completion and ensure stale jobs cannot publish.
 - For transitions, declare every channel in the same composition pass and assert the longest
@@ -261,8 +283,10 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha03` line establishes composition-owned target animation, explicit last-mutation-wins
-`Animatable`, shared-duration transitions, continuous channels, exit-aware visibility lifetime,
-alpha-only content replacement, and renderer-hosted measured-size motion. Similar API names do not
-imply complete Jetpack Compose Animation parity; the behavioral differences above are part of this
-release's public contract.
+The Phase 1 alpha hard-cuts the fixed-duration spring and single-domain `Animatable<T>` surface.
+Callers use physical `spring`, `Animatable<T, V>`, typed velocity, decay, bounds, and structured
+results. `animateContentSize` shares that physical solver and no longer accepts infinite
+specifications. There are no deprecated compatibility overloads. Shared-duration transitions,
+continuous channels, exit-aware visibility lifetime, and alpha-only content replacement retain
+their documented ownership. Similar API names do not imply complete Jetpack Compose Animation
+parity; the behavioral differences above remain part of the public contract.

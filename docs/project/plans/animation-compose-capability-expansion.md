@@ -2,8 +2,8 @@
 
 ## Status
 
-Active. Phase 0 contract and pre-physics performance baseline are complete; no production
-implementation or publication input has started.
+Active. Phase 0 is complete. Phase 1 production and acceptance are complete as a hard cut on the
+candidate branch and await pull-request merge; Phase 2 has not started.
 This plan was split out on 2026-08-18 from the Animation follow-up in the unified roadmap and the
 framework-wide physical-spring candidate recorded by the multi-design-system plan. Those documents
 now point here; this file is the only active plan that owns the seven animation expansions defined
@@ -21,13 +21,13 @@ architecture, guide, reference, and owning-module documentation before this plan
 
 Last verified: 2026-08-22.
 
-Next action: execute Phase 1 as one hard cut of the fixed-duration spring and converter/result
-contracts, then add the shared physical spring, velocity, decay, bounds, and structured-result
-engine against the frozen revision-1 benchmark.
+Next action: submit and merge the Phase 1 pull request, then begin Phase 2 animated-content contract
+review without reopening the accepted physical foundation.
 
 ## Maven release changesets
 
-- None.
+- `release/changes/20260822-animation-physical-foundation.json` — Phase 1 hard cut and shared
+  physical engine; pending final validation and merge.
 
 ## Objective
 
@@ -206,7 +206,9 @@ Replace the fixed-duration approximation only through the compatibility decision
 add one vector-aware physical execution model shared by deterministic sampling, `AnimatableCore`,
 composition `Animatable`, gestures, and transition channels.
 
-ADR-0019 freezes the Phase 1 result vocabulary as:
+ADR-0019 freezes the Phase 1 behavior, while ADR-0020 supersedes its provisional single-type
+generic vocabulary because packed values such as ARGB cannot represent signed multi-channel
+velocity. The accepted Phase 1 result vocabulary is:
 
 ```kotlin
 enum class AnimationEndReason {
@@ -215,56 +217,87 @@ enum class AnimationEndReason {
     DurationLimitReached,
 }
 
-data class AnimationVelocity<T>(val valuePerSecond: T)
+data class AnimationVelocity<V>(val valuePerSecond: V)
 
-data class AnimationState<T>(
+data class AnimationState<T, V>(
     val value: T,
-    val velocity: AnimationVelocity<T>,
+    val velocity: AnimationVelocity<V>,
     val playTimeNanos: Long,
 )
 
-data class AnimationResult<T>(
-    val endState: AnimationState<T>,
+data class AnimationResult<T, V>(
+    val endState: AnimationState<T, V>,
     val endReason: AnimationEndReason,
 )
 
-suspend fun Animatable<T>.animateTo(
+suspend fun Animatable<T, V>.animateTo(
     targetValue: T,
-    animationSpec: AnimationSpec,
-    initialVelocity: AnimationVelocity<T> = velocity,
-): AnimationResult<T>
+    animationSpec: FiniteAnimationSpec,
+    initialVelocity: AnimationVelocity<V>? = null,
+): AnimationResult<T, V>
 
-suspend fun Animatable<T>.animateDecay(
-    initialVelocity: AnimationVelocity<T>,
+suspend fun Animatable<T, V>.animateDecay(
+    initialVelocity: AnimationVelocity<V>,
     animationSpec: DecayAnimationSpec,
-): AnimationResult<T>
+): AnimationResult<T, V>
 
-fun Animatable<T>.updateBounds(
+fun Animatable<T, V>.updateBounds(
     lowerBound: T? = null,
     upperBound: T? = null,
 )
 ```
 
-The exact overload set may be refined during implementation only within the accepted ADR contract;
+The exact overload set may be refined during implementation only within the accepted ADR contracts;
 it cannot restore a duration spring, return interruption as a normal result, or weaken typed
 velocity. The retained contract must:
 
-1. continue velocity from an interrupted physical animation unless the caller supplies a new
-   initial velocity or selects a non-physical spec;
+1. capture the retained value and velocity atomically when `initialVelocity` is `null`, while an
+   explicit initial velocity replaces only the captured velocity and a non-physical spec ignores it;
 2. propagate interruption as coroutine cancellation while preserving last-mutation-wins
    ownership and the last committed value/velocity;
-3. stop at bounds without publishing a sample outside accepted bounds;
-4. expose an exact target at successful target completion while retaining physically meaningful
+3. validate a candidate target animation before it replaces or cancels the active mutation;
+4. validate construction before exposing state, and commit `snapTo`/`stop` as one atomic idle
+   snapshot without cancelling active work when snap validation fails;
+5. stop at bounds without publishing a sample outside accepted bounds;
+6. expose an exact target at successful target completion while retaining physically meaningful
    terminal velocity rules;
-5. keep deterministic explicit-time sampling for tests, Preview, transition seeking, and tooling;
-6. resolve reduced-motion and `MotionScheme` roles without inventing a duration for an unbounded
+7. keep deterministic explicit-time sampling for tests, Preview, transition seeking, and tooling;
+8. resolve reduced-motion and `MotionScheme` roles without inventing a duration for an unbounded
    physical solve; and
-7. allocate no avoidable objects per frame beyond the accepted converter/vector strategy.
+9. allocate no avoidable objects per frame beyond the accepted converter/vector strategy.
 
 Required evidence includes under-, critical-, and over-damped cases; overshoot; threshold and
 maximum-duration termination; velocity continuation; decay; bounds; rapid retarget; external
 cancellation; reduced motion; zero-distance motion; invalid configuration; float/vector numeric
 stability; gesture handoff; and same-device performance against the duration-based baseline.
+
+Implementation status on 2026-08-22: the production hard cut is implemented for separate value and
+velocity domains, destination-buffer converters, analytic physical springs, exponential decay,
+bounds, structured results, last-writer velocity continuation, finite target-as-state/visibility/
+content-size contracts, transition channels, motion scaling, and the Android animated-size host.
+ADR-0020 supersedes only ADR-0019's invalid single-type generic detail; all physical and ownership
+decisions remain in force. Focused core, composition, renderer, and Demo tests accept analytic
+damping and terminal reasons, velocity continuation, cancellation, bounds, converter-buffer
+reuse, renderer physical sizing, and one-snapshot instant mutations. Invalid construction, target
+replacement, and snap input are also accepted as fail-before-publication contracts: they neither
+publish a partial state nor take ownership from the active mutation. A rooted-device gesture
+handoff accepted a measured `2222 px/s` swipe and reached the bound with `BoundReached`, confirming
+the Demo path uses physical decay rather than a separate gesture approximation. The final
+`qaQuick qaPreview` gate passed together with 1,624 actionable tasks (156 executed and 1,468
+up-to-date), so compilation, unit, API-sample, documentation-structure, and Preview coverage show
+no local regression. This evidence supports the conclusion `no material change` for the covered
+deterministic and visual-test contracts. The same-device fixed-frequency comparison is accepted in
+[performance Section 2.4.9](../../tooling/performance.md#249-animation-revision-1-phase-1-physical-candidate):
+all four rows pass, run-P50 CV is `0.002..0.012`, frame CPU is `improved`, and peak heap is
+`no material change`. The warmer 36--38 degree environment, changed physical-settling frame counts,
+and absence of direct energy measurement remain explicit limitations. Manual Xiaomi validation
+then accepted critical Spring at exact targets with `Finished` and corrected the Demo's insufficient
+decay velocity from `2.4/s` to `4.8/s`; positive and negative decay now visibly clamp with
+`BoundReached`. The exact four-direction device regression passed 1/1. The final `qaFull` gate then
+passed in 22 minutes 9 seconds with 1,763 actionable tasks (168 executed and 1,595 up-to-date): the
+main Demo passed 137/137 device tests, Counter passed 1/1, and Tutorials passed 2/2, with no skipped
+or failed tests. Phase 1 is accepted on the candidate branch; merge is the only remaining delivery
+step before Phase 2 begins.
 
 ## Phase 2: Full animated content replacement
 
@@ -326,7 +359,7 @@ reduced motion, renderer rollback, and no leaked empty hosts or effects after di
 
 ## Phase 4: Generic, segment-aware, and seekable transitions
 
-Publish a generic channel using `AnimationConverter<T>`, expose a stable segment object to
+Publish a generic channel using `AnimationConverter<T, V>`, expose a stable segment object to
 transition-spec selection, and add a controlled seek state that cannot race an autonomous frame
 loop. The provisional model is:
 
@@ -337,8 +370,8 @@ interface TransitionSegment<S> {
     fun isTransitioningTo(initial: S, target: S): Boolean
 }
 
-fun <S, T> Transition<S>.animateValue(
-    converter: AnimationConverter<T>,
+fun <S, T, V> Transition<S>.animateValue(
+    converter: AnimationConverter<T, V>,
     transitionSpec: TransitionSegment<S>.() -> AnimationSpec,
     targetValueByState: (S) -> T,
 ): State<T>

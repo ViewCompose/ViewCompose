@@ -12,8 +12,19 @@ class AnimationConvertersTest {
     @Test
     fun `color converter round-trips argb channels`() {
         val color = 0xCC3366AA.toInt()
-        val vector = AnimationConverters.ColorInt.toVector(color)
-        val restored = AnimationConverters.ColorInt.fromVector(vector)
+        val vector = FloatArray(AnimationConverters.ColorInt.vectorSize)
+        AnimationConverters.ColorInt.convertToVector(color, vector)
+        val restored = AnimationConverters.ColorInt.convertFromVector(vector)
         assertEquals(color, restored)
+    }
+
+    @Test
+    fun `color converter preserves signed channel velocity independently of packed value`() {
+        val velocity = ArgbChannels(alpha = -4f, red = 80f, green = -120f, blue = 16f)
+        val vector = FloatArray(AnimationConverters.ColorInt.vectorSize)
+
+        AnimationConverters.ColorInt.convertVelocityToVector(velocity, vector)
+
+        assertEquals(velocity, AnimationConverters.ColorInt.convertVelocityFromVector(vector))
     }
 }

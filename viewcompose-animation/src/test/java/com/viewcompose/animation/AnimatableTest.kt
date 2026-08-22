@@ -6,6 +6,10 @@ package com.viewcompose.animation
  */
 
 import com.viewcompose.animation.core.AnimationConverters
+import com.viewcompose.animation.core.AnimationEndReason
+import com.viewcompose.animation.core.AnimationVelocity
+import com.viewcompose.animation.core.exponentialDecay
+import com.viewcompose.animation.core.spring
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.frame.MonotonicFrameClock
 import com.viewcompose.runtime.observation.RuntimeObservation
@@ -22,7 +26,7 @@ import org.junit.Test
 
 class AnimatableTest {
     @Test
-    fun `snap publishes complete begin value and end states`() = runBlocking {
+    fun `snap publishes one atomic final state`() = runBlocking {
         val animatable = Animatable(
             initialValue = 0f,
             converter = AnimationConverters.Float,
@@ -38,8 +42,6 @@ class AnimatableTest {
 
         assertEquals(
             listOf(
-                AnimatableSnapshot(value = 0f, target = 10f, running = true),
-                AnimatableSnapshot(value = 10f, target = 10f, running = true),
                 AnimatableSnapshot(value = 10f, target = 10f, running = false),
             ),
             published,
@@ -114,6 +116,32 @@ class AnimatableTest {
             animationSpec = tween(durationMillis = 64),
         )
         assertTrue(abs(animatable.value - 1f) < 0.0001f)
+    }
+
+    @Test
+    fun `physical facade exposes velocity bounds and structured decay result`() = runBlocking {
+        val animatable = Animatable(
+            initialValue = 0f,
+            converter = AnimationConverters.Float,
+            defaultFrameClock = FakeClock(),
+        )
+        animatable.updateBounds(lowerBound = -20f, upperBound = 20f)
+
+        val springResult = animatable.animateTo(
+            targetValue = 10f,
+            animationSpec = spring(dampingRatio = 0.7f, stiffness = 220f),
+            initialVelocity = AnimationVelocity(120f),
+        )
+        val decayResult = animatable.animateDecay(
+            initialVelocity = AnimationVelocity(400f),
+            animationSpec = exponentialDecay(),
+        )
+
+        assertEquals(AnimationEndReason.Finished, springResult.endReason)
+        assertEquals(10f, springResult.endState.value, 0f)
+        assertEquals(AnimationEndReason.BoundReached, decayResult.endReason)
+        assertEquals(20f, animatable.value, 0f)
+        assertEquals(0f, animatable.velocity.valuePerSecond, 0f)
     }
 
     @Test
@@ -253,7 +281,7 @@ class AnimatableTest {
         }
     }
 
-    private fun Animatable<Float>.snapshot(): AnimatableSnapshot {
+    private fun Animatable<Float, Float>.snapshot(): AnimatableSnapshot {
         return AnimatableSnapshot(
             value = value,
             target = targetValue,

@@ -10,7 +10,7 @@ class MotionSchemeTest {
         defaultEffects = tween(durationMillis = 200),
         fastSpatial = tween(durationMillis = 160),
         defaultSpatial = tween(durationMillis = 320),
-        expressiveSpatial = spring(durationMillis = 600),
+        expressiveSpatial = spring(maxDurationMillis = 600),
         reducedMotion = ReducedMotionPolicy(
             nonEssentialBehavior = ReducedMotionBehavior.Snap,
             nonEssentialDurationScale = 0.25f,
@@ -39,9 +39,9 @@ class MotionSchemeTest {
     }
 
     @Test
-    fun `reduced essential motion scales bounded spring duration`() {
+    fun `reduced essential motion scales physical stiffness and safety guard`() {
         assertEquals(
-            SpringSpec(durationMillis = 300),
+            SpringSpec(stiffness = 1_000f, maxDurationMillis = 300),
             scheme.resolve(
                 role = MotionRole.ExpressiveSpatial,
                 reducedMotionEnabled = true,

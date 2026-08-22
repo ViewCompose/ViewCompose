@@ -26,6 +26,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":viewcompose-animation-core"))
     implementation(project(":viewcompose-runtime"))
     implementation(project(":viewcompose-text-core"))
     api(project(":viewcompose-ui-contract"))

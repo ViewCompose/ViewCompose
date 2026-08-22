@@ -15,11 +15,13 @@
     <string name="demo_gesture_consumed_pointer_event">Consumed pointer: %1$s</string>
 
     <string name="demo_gesture_drag_swipe_title">Drag / Swipe</string>
-    <string name="demo_gesture_drag_swipe_summary">draggable and anchoredDraggable share one fixture with direction lock, slop, and three anchors.</string>
+    <string name="demo_gesture_drag_swipe_summary">draggable hands terminal px/s velocity to bounded physical decay; anchoredDraggable verifies three-anchor settling.</string>
     <string name="demo_gesture_drag_state">Drag=%1$d · current=%2$s · target=%3$s · offset=%4$d</string>
     <string name="demo_gesture_drag_action">Move to right anchor</string>
     <string name="demo_gesture_drag_target">Drag horizontally</string>
     <string name="demo_gesture_drag_value">Drag x = %1$d</string>
+    <string name="demo_gesture_drag_handoff_state">Gesture=%1$d px/s · animation=%2$d px/s · result=%3$s</string>
+    <string name="demo_gesture_drag_handoff_running">Running / idle</string>
     <string name="demo_gesture_swipe_target">Swipe horizontally · %1$s</string>
     <string name="demo_gesture_swipe_current">Swipe current = %1$s</string>
     <string name="demo_gesture_swipe_target_value">Swipe target = %1$s</string>

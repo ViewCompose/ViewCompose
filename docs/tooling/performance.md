@@ -1167,6 +1167,51 @@ scenario revisions and clock policy, compare the physical engine against the rel
 absolute and normalized deltas, and pass the ADR-0019 allocation and terminal-state counters before
 claiming completion.
 
+#### 2.4.9 Animation revision-1 Phase 1 physical candidate
+
+The 2026-08-22 Phase 1 batch compared the hard-cut physical engine with the Section 2.4.8 baseline
+on the same Xiaomi MI 6 / Android 9 device. It retained all four workload revisions, the adapted
+benchmark APK, five `run-from-apk` iterations, action counts, build mode, and fixed clock policy.
+The candidate worktree was based on `6d6bdbe4`; its R8/resource-shrunk target APK SHA-256 was
+`45e17659c2cfdeb0c643584c81e39cafdcfd3a47849d37504238fc20e61045fb`. The unchanged adapted
+benchmark APK SHA-256 was
+`c70f1fc3190949d030975fcc9025d90246fe70e88cf70ebe42adbd0effe54a5e`.
+
+The ambient environment could not reproduce the baseline's 31--33 degrees Celsius battery range.
+Charging was therefore suspended before cooling, every method waited for at most 36 degrees before
+frequency locking, and the recorded pre/post-control range was 36--38 degrees. Every JSON still
+reported `cpuLocked=true`, the exact clock/scenario/revision payload, `run-from-apk`, and zero
+thermal-throttle sleep; pre/post checks also retained the requested CPU, GPU, and interconnect
+frequencies. Charging, governors, bounds, and vendor performance services were restored after the
+batch. The warmer environment is an explicit comparison limitation, not a relaxed timing or clock
+gate.
+
+| Workload | Candidate frames per run | Candidate frame CPU P50/P90/P95/P99, ms | Candidate median peak heap, KiB | Run-P50 CV | P50 / P95 / heap change from Phase 0 | Acceptance |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| `animation.specs@1` physical spring/value channels | `224/224/224/224/224` | `6.114/7.588/8.303/11.210` | 8123 | 0.002 | `-30.9% / -36.5% / +0.1%` | Pass; materially lower P50 and P95 |
+| `animation.content@1` Crossfade | `144/144/144/144/144` | `5.291/7.502/8.444/11.196` | 7776 | 0.012 | `-25.5% / -19.2% / +5.9%` | Pass; materially lower P50 and P95 |
+| `animation.content-size@1` physical measured-size motion | `214/214/216/215/214` | `2.835/4.511/6.727/14.442` | 6383 | 0.003 | `-41.5% / -7.3% / -2.0%` | Pass; materially lower P50 and no P95 regression |
+| `animation.transition@1` synchronized channels | `160/160/160/160/160` | `6.322/7.768/8.408/10.590` | 8387 | 0.007 | `-23.2% / -32.1% / +1.3%` | Pass; materially lower P50 and P95 |
+
+All four rows pass the ADR-0019 frame and memory regression budgets, and every run-P50 CV is below
+`0.15`. The scoped frame-CPU conclusion is **improved**: all P50 values are materially lower, three
+P95 values are materially lower, and measured-size P95 is lower without crossing the absolute
+materiality floor. Peak heap is **no material change** because all changes remain inside the
+combined 10% and 1,024 KiB gate. Deterministic tests additionally prove that physical evaluators
+reuse their position and velocity buffers and that `Finished`, `BoundReached`, and
+`DurationLimitReached` remain distinct terminal outcomes, so the allocation and terminal-state
+counters required by ADR-0019 also pass.
+
+This is not a whole-animation duration or energy claim. Physical settling increased the median
+frame count from 152 to 224 for `animation.specs@1` and from 184 to 214 for
+`animation.content-size@1`; Crossfade remained at 144, while synchronized transition changed from
+168 to 160. The workload actions are unchanged, but physical termination intentionally changes how
+many frames those actions occupy. Limits are the warmer 36--38 degree environment, one
+OEM/API-28 device, `run-from-apk` JIT/code-placement sensitivity, peak rather than post-GC retained
+memory, no Compose control, and no direct power measurement. The critical-spring and decay Demo
+check subsequently passed; the accepted next action is the full device gate. Rerunning this passing
+batch for a more favorable sample is not accepted evidence.
+
 ### 2.5 Debug tooling regression gate
 
 Release macrobenchmarks cannot detect costs that exist only in debuggable builds. Any tooling that

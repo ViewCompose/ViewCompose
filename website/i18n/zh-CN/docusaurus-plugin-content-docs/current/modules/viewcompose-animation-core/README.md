@@ -1,14 +1,14 @@
 ---
 translation_source: modules/viewcompose-animation-core/README.md
-translation_source_hash: c81c33866a8c9845b33047fee857f976bd5c5744c7d2806e57c18edb45bee02e
+translation_source_hash: fbf24cda85f66cd3843874876d45204b9bcb121a9f69c65030986db49a776c4e
 translation_status: current
 ---
 
-# Animation Core 模块
+# 动画核心
 
-`viewcompose-animation-core` 是 ViewCompose 动效的平台无关计时与采样引擎。它定义不可变动画
-规格、Easing 与值转换、确定性时间线采样、协程驱动的帧循环、低层可变动画值，以及共享的
-Transition Segment 协调。它不依赖 Android UI 或组合系统。
+`viewcompose-animation-core` 是 ViewCompose 的平台中立计时与物理运动引擎。它定义不可变动画
+Spec、Easing、值/速度转换、显式时间确定性采样、协程驱动 Frame Loop、底层 Last-writer 动画值
+和共享 Transition Segment 协调。它不依赖 Android UI 或 Composition。
 
 ## 产物与稳定性
 
@@ -18,24 +18,28 @@ dependencies {
 }
 ```
 
-- 稳定性：**Alpha**。时间归一化、重复、取消和 Transition Segment 行为已审查并测试；命名和
-  高层组合集成在 Alpha 版本间仍可能演进。
+- 稳定性：**Alpha**。物理单位、取消、Bounds、结果、计时归一化、重复和 Transition Segment
+  行为已经评审和测试；名称与上层 Composition 集成仍可能在 Alpha 版本之间演进。
 - 平台：Kotlin/JVM，不依赖 Android Framework。
-- `viewcompose-runtime` 会被传递暴露，因为 `MonotonicFrameClock` 出现在公开 Clock 与动画
-  API 中。Kotlin 协程用于结构化取消。
-- 应用通常通过 `viewcompose-animation` 间接获得它；自定义 Runtime、确定性采样、预览工具或
-  平台无关测试可以直接依赖。
+- `viewcompose-runtime` 以传递方式公开，因为公开 Clock 与动画 API 使用
+  `MonotonicFrameClock`。Kotlin Coroutine 提供结构化取消。
+- 应用通常通过 `viewcompose-animation` 传递获得本模块；自定义 Runtime、确定性采样、Preview
+  工具或平台中立测试可以直接依赖它。
 
-## 规格与 Easing
+## Spec、物理与 Easing
 
-`AnimationSpec` 是不可变的“时间到进度”描述，不拥有 Clock、Coroutine 或值。内置系列包括：
+`AnimationSpec` 是不持有 Clock、Coroutine 或值的不可变运动描述。`FiniteAnimationSpec` 把会
+收敛的 Target Motion 与 `InfiniteRepeatableSpec` 分开；`DurationBasedAnimationSpec` 标识可以
+放进有限或无限 Repeat 的 Spec。
 
-- `tween`：固定时长、可选延迟与 `Easing` 曲线；
-- `spring`：固定时长内确定且有界的阻尼振荡近似；
-- `keyframes`：带时间戳的进度检查点，检查点间线性插值；
-- `snap`：立即选择目标值；
-- `repeatable`：有限次数的重启或交替循环；
-- `infiniteRepeatable`：循环到驱动协程被取消。
+- `tween`：固定时长、可选 Delay 与 `Easing` 曲线；
+- `spring`：带 Damping、Stiffness、类型化初速度、平衡终止与安全上限的归一化质量物理运动，
+  不拥有名义时长；
+- `keyframes`：时间戳 Progress Checkpoint 之间的线性插值；
+- `snap`：立即选择 Target；
+- `repeatable`：有限次 Restart 或交替的时长型 Cycle；
+- `infiniteRepeatable`：时长型 Cycle 持续到取消；
+- `exponentialDecay`：带 Friction Multiplier 与安全上限的无 Target 速度衰减。
 
 ```kotlin
 val motion = repeatable(
@@ -46,126 +50,159 @@ val motion = repeatable(
     ),
     repeatMode = RepeatMode.Reverse,
 )
-```
 
-引擎把负延迟归一化为零，把非正有限时长归一化为一毫秒。零轮重复是例外：它的时长为零，
-并保持起点值。Factory 会在不可变对象中保留调用方请求值；归一化发生在查询时长和采样时。
-
-`EasingDefaults` 提供分配稳定的多项式曲线。`CubicBezierEasing` 支持自定义控制点，并对 x 轴
-执行有界反解。Bézier x 坐标应保持在 `0f..1f`；构造函数不会拒绝非单调曲线。引擎会把最终
-视觉进度限制在 `0f..1f`，包括 Spring 与 Easing 输出，因此当前 animation-core 不暴露视觉
-过冲。
-
-## 语义动效方案与减少动效
-
-`MotionScheme` 提供五种不绑定组件或设计系统的语义时序角色：快速/默认效果、快速/默认空间
-移动，以及强调空间移动。组件选择 `MotionRole`，不在结构 Recipe 中复制原始时长。这个不可变
-方案不拥有 Clock 或动画 State，而是解析为已有 `AnimationSpec` 系列。
-
-`ReducedMotionPolicy` 保持相同目标状态，同时把非必要移动替换为 `SnapSpec` 或缩短后的规格。
-传达状态所必需的转场会缩短时长，而不会被隐藏。缩放会递归应用到 Tween 延迟、有界 Spring
-时长、Keyframe 时长与检查点，以及 Repeat 的子规格。应用或集成根显式传入宿主的减少动效决定；
-animation-core 不读取平台设置。
-
-`MotionInterruptionPolicy.RetargetFromCurrent` 与 `viewcompose-animation` 的 Last-writer 行为一致。
-`SnapToTarget` 是组件 Owner 策略：Owner 应立即选择目标，而不是启动 Runner。一个 Scheme 不会
-启动相互竞争的循环。
-
-## 确定性采样
-
-`sampleAnimationValue` 在显式纳秒播放时间上求值，不拥有 Clock、Coroutine 或 State，因此是
-Seek、测试、Transition Channel 与预览工具的首选原语：
-
-```kotlin
-val halfway = sampleAnimationValue(
-    startValue = 20f,
-    endValue = 100f,
-    animationSpec = tween(durationMillis = 400, easing = EasingDefaults.Linear),
-    converter = AnimationConverters.Float,
-    playTimeNanos = 200_000_000L,
+val physical = spring(
+    dampingRatio = 0.72f,
+    stiffness = 240f,
 )
 ```
 
-`animationDurationNanos` 会包含 Tween 延迟，Repeat 乘法会饱和而不是溢出，无限重复返回
-`Long.MAX_VALUE`。`isAnimationFinished` 对无限重复始终返回 false。
+引擎把负 Delay 归一化为零，把非正的时长型 Interval 归一化为一毫秒。零次 Repeat 的时长为零
+并停在 Start。Factory 保留请求值；Evaluator 构造负责归一化和一次性 Keyframe 排序。
 
-每次采样都会通过 Converter 分配起点、终点和结果 Vector。对帧敏感的自定义 Runtime 应避免
-不必要的包装分配，也不能把 Converter 用于阻塞或 I/O 工作。
+`SpringSpec` 使用归一化质量 `1` 与 `ω₀ = sqrt(stiffness)` 求解
+`x'' + 2ζω₀x' + ω₀²(x - target) = 0`。欠阻尼、临界阻尼与过阻尼分支使用 `Double` 中间值，
+每帧从 Segment Start 采样，不从上一帧积分。成功稳定后发布精确 Target 与零速度。达到
+`maxDurationMillis` 时保留物理采样并报告 `DurationLimitReached`；`durationMillis` 已移除。
+Spring 的平衡时间依赖端点、速度与阈值，因此不能放进 Repeat。
 
-## 值转换
+`ExponentialDecaySpec` 使用 `λ = 4.2 × frictionMultiplier s⁻¹`。它在达到 Converter 派生速度
+阈值、Bound 或安全上限时停止。它是平台中立模型，不会静默替换成 Android Spline Fling。
 
-`AnimationConverter<T>` 把领域值拆成独立插值的 `Float` 维度，再重建领域值。实现必须保持
-稳定维度数、返回独立 Vector，并且不能保留传入 `fromVector` 的结果 Vector。
+`EasingDefaults` 提供分配稳定的多项式曲线；`CubicBezierEasing` 对自定义控制点执行有界 x 轴
+反解。时长型 Spec 的 Progress 会 Clamp 到 `0f..1f`；物理 Spring 值不会被 Progress Clamp，
+因此可以 Overshoot。
 
-内置 Converter 覆盖 `Float`、`Int` 和打包 ARGB `Int`。整数重建向零截断。ARGB 按编码通道
-独立插值，不执行 Gamma 校正，也不感知色彩空间。
+## 语义 Motion Scheme 与 Reduced Motion
+
+`MotionScheme` 组合 Fast/Default Effect、Spatial 和 Expressive Spatial Role，不命名组件或设计
+系统。组件选择 `MotionRole`，不把原始参数复制进结构 Recipe。
+
+`ReducedMotionPolicy` 保持相同逻辑 Target，同时把非必要运动替换成 `SnapSpec` 或缩短后的
+Spec。缩放递归应用到 Tween Delay、Keyframe 时长/Checkpoint 和 Repeat Child。物理 Spring 的
+时间比例 `s` 会把 Stiffness 解析为 `stiffness / s²` 并缩放安全上限，不会发明名义时长。
+应用显式提供 Host Reduced-motion 决策；Animation Core 不读取平台设置。
+
+`MotionInterruptionPolicy.RetargetFromCurrent` 对应 `AnimatableCore` Last-writer 行为；
+`SnapToTarget` 仍是组件 Owner 指令，不会创建第二条引擎 Loop。
+
+## 确定性采样与物理状态
+
+`TargetAnimation<T, V>` 一次转换端点、速度、阈值和 Scratch Storage，之后按显式纳秒时间返回
+不可变 `AnimationState<T, V>`。它不持有 Clock 或可变所有权，适用于 Seek、测试、Transition
+Channel、Renderer Adapter 与 Preview 工具：
+
+```kotlin
+val animation = TargetAnimation(
+    initialValue = 20f,
+    targetValue = 100f,
+    animationSpec = tween(durationMillis = 400, easing = EasingDefaults.Linear),
+    converter = AnimationConverters.Float,
+)
+val halfway = animation.stateAt(200_000_000L)
+```
+
+对时长型 Spec，`durationNanos` 包含 Delay 与饱和的 Repeat 乘法；对 Spring，它解析第一个满足
+平衡条件的一毫秒采样。`DecayAnimation<T, V>` 为无 Target Motion 提供相同显式时间模型，并
+公开其无界渐近 Target。Evaluator 复用 Array 且非线程安全，一个 Owner 必须串行采样。
+
+`AnimationState` 携带值、类型化速度和 Segment 相对 Play Time。`AnimationResult` 携带终止状态
+以及 `Finished`、`BoundReached` 或 `DurationLimitReached`。协程中断不是正常结束原因。
+
+## 分离值域与速度域
+
+`AnimationConverter<T, V>` 把动画值域与切向/速度域分开，并写入调用方持有的 Buffer。
+实现必须声明一个稳定正数 `vectorSize`、`zeroVelocity` 和有限正数
+`visibilityThreshold`；所有转换使用同一维度，且不能保留传入 Array。
+
+内置映射是 `Float`/`Float`、`Int`/`Float` 和打包 ARGB `Int`/`ArgbChannels`。分离值域可以
+保留整数小数速度，以及有符号 Alpha/Red/Green/Blue 变化率。整数重建向零截断。ARGB 值按编码
+Channel 插值，不执行 Gamma 或色彩空间校正。
 
 ```kotlin
 data class Point(val x: Float, val y: Float)
 
-val converter = object : AnimationConverter<Point> {
-    override fun toVector(value: Point) = floatArrayOf(value.x, value.y)
+val converter = object : AnimationConverter<Point, Point> {
+    override val vectorSize = 2
+    override val zeroVelocity = Point(0f, 0f)
+    override val visibilityThreshold = Point(0.01f, 0.01f)
 
-    override fun fromVector(vector: FloatArray) = Point(vector[0], vector[1])
+    override fun convertToVector(value: Point, destination: FloatArray) {
+        destination[0] = value.x
+        destination[1] = value.y
+    }
+
+    override fun convertFromVector(vector: FloatArray) = Point(vector[0], vector[1])
+
+    override fun convertVelocityToVector(velocity: Point, destination: FloatArray) =
+        convertToVector(velocity, destination)
+
+    override fun convertVelocityFromVector(vector: FloatArray) = convertFromVector(vector)
 }
 ```
 
-端点 Converter 维度不一致时，采样使用起点 Vector 的大小。缺少的终点维度保持对应起点维度，
-额外终点维度被忽略。这只是恢复行为，维度不一致仍应视为 Converter 缺陷。
+转换不完整、值非有限、阈值非正、维度不兼容或零速度无效时，会在发布前失败。端点、位置、
+速度、阈值和 Scratch Vector 每个 Evaluator 只分配一次并复用。自定义 Converter 可以为 Sample
+返回不可变 Domain Value，但必须保持确定性、非阻塞和分配审慎。若推导出的 Spring Sample 或
+Decay Target 无法在 Converter 的 Vector Domain 中保持有限，也会在发布前失败，绝不会被解释为
+已经平衡。
 
-## 帧驱动执行与取消
+## Frame 执行、Mutation 与 Bounds
 
-`runAnimation` 等待 `MonotonicFrameClock`，并在调用方协程中把每个样本传给 `onValue`。有限
-动画完成后会在帧循环外再发布一次精确终点，因此终点可能被观察两次。无限规格只通过取消退出。
+`runAnimation` 等待 `MonotonicFrameClock`，在调用方协程上发布 `AnimationState`，并返回
+`AnimationResult`。`runDecayAnimation` 使用相同契约。非单调时间戳会在候选 Sample 发布前失败。
+取消始终向外传播，绝不强制 Target；Clock、Callback 与 Converter 失败保持原样传播。
 
-取消不会强制写入目标值。根据 Frame Clock 行为，取消可能以协程取消异常传播，也可能在回调间
-被观察并报告为 `AnimationRunResult.Cancelled`。Frame Clock 与回调异常原样传播。回调位于帧
-路径中，必须保持短小。
+`AnimatableCore<T, V>` 是唯一 Last-mutation-wins Owner。`animateTo`、`animateDecay`、
+`snapTo` 与 `stop` 会取消旧调用方、拒绝过期 Sample，并原子发布值和速度。省略 `animateTo`
+的初速度时，会在同一个 Mutation Snapshot 中捕获保留值和速度；时长型 Spec 忽略该速度。
+候选目标动画和候选 Decay 都会在所有权改变前完成校验，因此无效替代请求不会影响当前有效
+Mutation。Owner 构造会在公开状态前验证初始值、Vector 维度、零速度与可见阈值。
+`snapTo` 与 `stop` 都以一次原子 Idle State Commit 替代旧 Mutation、保留零速度，且不公开
+瞬时 Running State；无效 Snap 不会改变当前有效 Mutation。
 
-`AnimatableCore` 保存最新样本，但有意不提供 Mutex、Mutation Priority 或 Coroutine Scope。
-并发 `animateTo` 与 `snapTo` 会互相覆盖。高层代码必须串行化 Mutation，或在 Retarget 前取消并
-等待旧 Job。取消后保留最后已发布的值。
+`updateBounds` 安装 Converter Domain 的闭区间上下界。Crossing Sample 在发布前 Clamp，整个
+Mutation 以 `BoundReached` 终止并发布零速度。Idle Bound Update 与之后的 `snapTo` 立即 Clamp。
+任一分量上下界反转时失败，且不修改已接受状态。
 
-`viewcompose-animation` 提供多数应用应使用的组合感知、Last-writer 语义 API。只有调用方已经
-拥有结构化并发和 Frame Clock 时，才应直接使用 `AnimatableCore`。
+`viewcompose-animation` 提供 Composition Clock 绑定和大多数应用应使用的 Facade。Core Owner
+刻意不持有 Scope 或 Frame Clock。
 
-## 多通道 Transition 协调
+## 多 Channel Transition 协调
 
-`TransitionCore<S>` 在多个动画 Channel 间协调逻辑端点和一条时间线。Transition Owner 按以下
-顺序调用：
+`TransitionCore<S>` 在多个 Channel 之间协调逻辑端点和一条 Timeline。Transition Owner 更新
+Target、注册各 Channel Duration、推进共享 Play Time，并在最长 Channel 完成时提交 Target。
+较短 Channel 在自身 Evaluator 中稳定。上层 Channel Owner 在 Retarget 时保留视觉连续性。
 
-1. 目标状态变化时调用 `updateTarget`；
-2. 每个 Channel 通过 `registerDuration` 注册归一化时长；
-3. 使用 `updatePlayTime` 推进共享 Segment；
-4. 时间达到最大时长时提交目标，或调用 `finishRunningSegment`。
-
-最长 Channel 决定 Segment 时长，短 Channel 在自己的 Sampler 中提前稳定。运行中 Retarget 时，
-下一逻辑 Segment 从旧目标开始，而不是从各 Channel 当前采样值开始；视觉连续性由高层 Channel
-Owner 保证。`TransitionCore` 非线程安全，也不会启动或取消工作。
+`TransitionCore` 非线程安全，也不启动或取消任务。物理 Channel 注册解析后的平衡时长，因此
+Transition State 仍会等全部 Channel 稳定后提交。
 
 ## 测试自定义动画代码
 
-- 用 `sampleAnimationValue` 精确断言边界、延迟、重复和 Reverse Cycle；
-- 测试 `runAnimation` 或 `AnimatableCore` 时提供确定性假 `MonotonicFrameClock`；
-- 验证到达目标前取消，且终点不会被强制发布；
-- 验证自定义 Converter 往返、稳定维度、缺失数据策略与数值精度；
-- Transition 应先注册 Channel 再推进时间，并显式测试 Segment 中途 Retarget。
+- 使用 `TargetAnimation.stateAt` 断言精确 Boundary、Delay、Repeat、Spring、速度与 Reverse。
+- 为 `runAnimation`、Decay 与 `AnimatableCore` 提供确定性 `MonotonicFrameClock`。
+- 验证 Target 完成前的取消，确保不会强制终止状态。
+- 验证自定义值/速度往返、稳定维度、阈值、零速度与数值精度。
+- 覆盖欠阻尼、临界阻尼、过阻尼、安全上限、Bounds、快速 Retarget 与 Decay。
+- 推进共享 Segment 前注册全部 Transition Channel。
 
-模块测试覆盖 Tween 完成与延迟、Reverse Repeat 终态、无限动画帧节拍、取消、ARGB 往返、最大
-Channel 时长、Transition Retarget、语义角色解析与确定性减少动效替换。
+模块测试覆盖这些物理分支、Overshoot、结构化结果、有符号 ARGB 速度、Converter 失败、
+Reduced Motion、Transition Retarget 与时长行为。
 
 ## 相关文档
 
-- [Runtime 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-runtime)
-- [架构概览](https://docs.viewcompose.com/zh-CN/architecture/overview)
-- [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
-- [项目路线图](https://docs.viewcompose.com/zh-CN/project/roadmap)
+- [ADR-0019：动画物理与所有权](../../architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md)
+- [ADR-0020：分离动画值域与速度域](../../architecture/decisions/0020-separate-animation-value-and-velocity-domains.md)
+- [动画模块](../viewcompose-animation/README.md)
+- [Runtime 模块](../viewcompose-runtime/README.md)
+- [源码文档与 API 注释标准](https://docs.viewcompose.com/project/api-documentation-quality)
 
-完整生成式参考位于
-[`viewcompose-animation-core` API 目录](https://docs.viewcompose.com/api/viewcompose-animation-core/current/)。
+完整生成参考位于
+[`viewcompose-animation-core` API Tree](https://docs.viewcompose.com/api/viewcompose-animation-core/current/)。
 
 ## 兼容性说明
 
-`0.1.0-alpha03` 建立了有限时间归一化、Restart 与 Reverse Repeat、Frame Clock 驱动取消、逐维
-Converter 和共享 Transition Segment 计时契约。这些契约有意保持平台无关；Android Interop
-属于宿主模块，组合 Ownership 属于 `viewcompose-animation`。
+Phase 1 Alpha 硬切旧的带时长 Spring 和单值域 Converter/Result Surface。精确 Interval 使用时长
+Spec，平衡 Motion 使用物理 `spring`，值与速度类型不同时使用 `AnimationConverter<T, V>`。
+不存在 Deprecated Duration-Spring、单参数 Converter 或同域 `Animatable` Adapter。Android
+Interop 属于 Host 模块，Composition 所有权属于 `viewcompose-animation`。

@@ -3,6 +3,8 @@
 - Status: Accepted
 - Date: 2026-08-22
 - Supersedes: the fixed-duration meaning of `SpringSpec` and `spring` in the alpha animation line
+- Amended by: [ADR-0020](0020-separate-animation-value-and-velocity-domains.md), which replaces the
+  provisional single-type value/velocity generic vocabulary below
 
 ## Context
 
@@ -90,10 +92,14 @@ data class AnimationResult<T>(
 
 `Interrupted` is deliberately not an end reason. A newer last-writer mutation or external
 coroutine cancellation throws `CancellationException`, retains the last atomically published value
-and velocity, and returns no result from the cancelled call. A replacement physical animation
-starts with that velocity unless the caller supplies an explicit initial velocity. `snapTo` and
-`stop` publish zero retained velocity. Callback, converter, or clock failures propagate after
-leaving the last committed sample authoritative.
+and velocity, and returns no result from the cancelled call. A replacement physical animation with
+`initialVelocity = null` captures its retained value and velocity in one mutation snapshot; an
+explicit initial velocity overrides only the captured velocity. Candidate validation completes
+before mutation ownership changes, so an invalid replacement leaves the active mutation
+authoritative. Construction validates the initial value and converter contract before exposing
+state. `snapTo` and `stop` publish one atomic final idle state with zero retained velocity and no
+transient running state; invalid snap input changes no state or ownership. Callback, converter, or
+clock failures propagate after leaving the last committed sample authoritative.
 
 Bounds are converter-domain lower and upper values. They are converted once for each mutation.
 Every lower component must be no greater than its upper component. A crossing sample is clamped

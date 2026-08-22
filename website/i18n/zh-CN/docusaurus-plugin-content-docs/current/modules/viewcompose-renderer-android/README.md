@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 3c1c18345219b7f4294ab435c55d238c11cdc3db09fd197931680d251ab72142
+translation_source_hash: d1cbcfe274515791231cc266ee85585f3b69d7fd3cc33b37519cc7237022e40a
 translation_status: current
 ---
 
@@ -28,7 +28,8 @@ dependencies {
 - 稳定性：**Alpha**。渲染扩展契约和诊断模型在 alpha 版本间可能变化。
 - 平台：Android library，`minSdk 24`、`compileSdk 36`，Java 11 字节码。
 - UI Contract 会被传递暴露，因为 Renderer 入口会接收并返回其 Node 与 Modifier 类型。
-  Runtime、Text Core、Graphics Core 和 Gesture Core 保持为实现依赖。
+  Runtime、Text Core、Graphics Core、Gesture Core 与 Animation Core 保持为实现依赖。
+  Animation Core 提供唯一物理尺寸 Solver；Renderer API 不公开这项依赖。
 - Android 运行时依赖：AndroidX Core、AppCompat、RecyclerView、ConstraintLayout 与
   SwipeRefreshLayout；不依赖 Material Components 或 ViewPager2。
 - 通用 Surface、圆角/切角/连续圆角和进度指示器使用引擎自有 Android 绘制实现，并只消费节点解析值。
@@ -197,6 +198,9 @@ Matrix。Phase 4 负责该基准与最终指导。
   或 Keyed Session。Span Lookup 按当前列数解析 `FullLine`，并安全限制固定 Span。
 - 最大尺寸与宽高比 Modifier 会在完整映射节点外安装一个合成测量 Host。该 Host 是 Renderer
   所有的基础设施，不是语义 Child，也不会产生第二个逻辑 Session。
+- Animated Content Size Node 会安装一个合成测量 Host。时长契约使用保留的 Android
+  `ValueAnimator`；物理 Spring 契约使用 Animation Core 解析式 Solver，在 Retarget 时保留宽高
+  速度，并仍在每个接受的平台 Frame 请求一次 Layout。Keyframe 只在创建 Animator 时排序一次。
 - `RenderTreeResult`、`RenderStats`、`RenderStructureStats`、patch 记录和布局过程采样提供不可变
   诊断数据，供 demo、预览工具和性能测试使用。
 - [`AndroidViewDecorationBackend`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.decoration/-android-view-decoration-backend/)
@@ -357,6 +361,9 @@ Insets；若尚不可用，则先清除旧物理边贡献直至 Android 分发�
   的间距仍会保留。
 - 可见性进入稳定隐藏态后，空 Host 仍会作为零尺寸的调和身份锚点挂载。其内容子树已经移除，
   但稳定的 Host 会让后续无 Key 同级元素在可见性切换间保留原生 View 身份与交互状态。
+- Animated Size Host 会在 Detach 时取消活动 Animator。首次测量直接应用；后续 Target 从当前显示
+  尺寸开始。物理 Retarget 携带最后采样的每秒像素速度；时长 Spec Retarget 会重置速度。父级测量
+  Constraint 在每帧保持权威。
 
 ## 相关文档
 
@@ -395,3 +402,8 @@ Renderer 的多状态路径实现通用 UI Contract，并非 Material 功能。�
 `userScrollEnabled`，实现 Slider 交互阶段与步长，在禁用刷新时保留后代输入，并映射新的 Keyed
 选择 Item 语义。Grid Policy 与 Layout Constraint Host 同样要求升级注册和测量；不得把它们当作
 可忽略 Hint。
+
+Animation Phase 1 Alpha 新增 `viewcompose-animation-core` 实现依赖，并把 Animated Size Transport
+硬切为有限 Spec。自定义 Renderer 分支必须通过同一或等价 Solver 消费物理
+Damping/Stiffness/Safety Guard，在 Spring Retarget 时保留速度，并拒绝无限 Layout Motion。
+继续在 `spring` 名称下使用旧固定时长阻尼 Interpolator 不兼容。

@@ -38,12 +38,15 @@ data class DrawWithCacheModifierElement(
 ) : ModifierElement
 
 /**
- * Platform-neutral renderer model for content-size animation timing.
+ * Platform-neutral finite renderer model for content-size animation timing or physical motion.
  *
  * This sealed hierarchy is an inter-module transport contract. Applications normally create the
  * corresponding animation-core specification through `Modifier.animateContentSize`.
  */
 sealed interface ContentSizeAnimationSpecModel
+
+/** Identifies a fixed-duration content-size model that may be repeated. */
+sealed interface ContentSizeDurationBasedAnimationSpecModel : ContentSizeAnimationSpecModel
 
 /** Defines easing curves that an Android content-size renderer can reproduce. */
 sealed interface ContentSizeEasingModel {
@@ -105,19 +108,19 @@ data class ContentSizeTweenSpecModel(
     val durationMillis: Int,
     val delayMillis: Int,
     val easing: ContentSizeEasingModel,
-) : ContentSizeAnimationSpecModel
+) : ContentSizeDurationBasedAnimationSpecModel
 
 /**
- * Describes an approximated spring content-size transition.
+ * Describes a normalized-mass physical spring content-size transition.
  *
- * @property durationMillis requested approximation duration in milliseconds
  * @property dampingRatio dimensionless damping ratio
- * @property stiffness dimensionless stiffness used by the renderer approximation
+ * @property stiffness normalized-mass stiffness in `s⁻²`
+ * @property maxDurationMillis safety guard in milliseconds rather than a nominal duration
  */
 data class ContentSizeSpringSpecModel(
-    val durationMillis: Int,
     val dampingRatio: Float,
     val stiffness: Float,
+    val maxDurationMillis: Int,
 ) : ContentSizeAnimationSpecModel
 
 /**
@@ -129,10 +132,10 @@ data class ContentSizeSpringSpecModel(
 data class ContentSizeKeyframesSpecModel(
     val durationMillis: Int,
     val keyframes: List<ContentSizeKeyframeModel>,
-) : ContentSizeAnimationSpecModel
+) : ContentSizeDurationBasedAnimationSpecModel
 
 /** Applies a content-size change without an animated interval. */
-data object ContentSizeSnapSpecModel : ContentSizeAnimationSpecModel
+data object ContentSizeSnapSpecModel : ContentSizeDurationBasedAnimationSpecModel
 
 /**
  * Repeats a finite content-size [animation].
@@ -146,20 +149,9 @@ data object ContentSizeSnapSpecModel : ContentSizeAnimationSpecModel
  */
 data class ContentSizeRepeatableSpecModel(
     val iterations: Int,
-    val animation: ContentSizeAnimationSpecModel,
+    val animation: ContentSizeDurationBasedAnimationSpecModel,
     val repeatMode: ContentSizeRepeatModeModel,
-) : ContentSizeAnimationSpecModel
-
-/**
- * Repeats a content-size [animation] until the renderer cancels or replaces it.
- *
- * @property animation inner timing model
- * @property repeatMode restart or reverse behavior between iterations
- */
-data class ContentSizeInfiniteRepeatableSpecModel(
-    val animation: ContentSizeAnimationSpecModel,
-    val repeatMode: ContentSizeRepeatModeModel,
-) : ContentSizeAnimationSpecModel
+) : ContentSizeDurationBasedAnimationSpecModel
 
 /**
  * Requests animation when a node's measured content size changes.
