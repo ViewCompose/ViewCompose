@@ -53,6 +53,12 @@ created for the node.
   constructors leave it `null`, and it does not replace semantic keys or affect ordinary content.
 - [`NodeSpec`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node.spec/-node-spec/)
   and its concrete property snapshots define the supported renderer inputs.
+- Q3 `AnimatedVisibilityHostNodeProps` is the renderer-neutral frame transport for parent and
+  descendant visibility hosts. It carries alpha, measured reveal fractions, visual scale,
+  full-measured-size translation fractions, transform origin, reveal alignment, clipping, and
+  active interaction ownership. All sampled transform values must be finite; renderers keep the
+  full content measurement while reporting the reveal size to the parent, and an inactive host is
+  draw-only. The compiled `animatedVisibilityHostNodeContractSample` covers the complete snapshot.
 - Q3 `AnimatedContentHostNodeProps` and `AnimatedContentItemNodeProps` are the renderer-neutral
   bounded-pair transport for full content replacement. The host carries segment identity, finite
   size progress, clipping, and logical alignment; each item carries measured-size transform

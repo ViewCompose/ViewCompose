@@ -446,6 +446,16 @@ new snapshot; it never renders one frame with the prior side selected.
 - `Row` and `Column` treat a direct animated-visibility host as a progressive spacing participant.
   Its main-axis item gap expands and collapses with the host's measured-size channel, while stable
   siblings retain their existing gap across a fully collapsed intermediate host.
+- `DeclarativeAnimatedVisibilityHostLayout` measures every direct child at full size, reports the
+  animated reveal size to its parent, and computes logical slide fractions and transform pivots from
+  the complete full host measurement rather than the first child. It applies reveal alignment and
+  clipping before native visual scale/translation. Parent and descendant hosts are ordinary nested
+  native layers, so descendant-local transforms compose before the parent layer without another
+  renderer frame owner.
+- Accepting an exit marks the visibility host inactive before its retained drawing content is
+  removed. The host blocks pointer, hover, key, focus traversal, and accessibility event ownership,
+  clears descendant focus, and restores participation on reversal. A failed renderer patch restores
+  alpha, reveal, slide, scale, pivot, alignment, clipping, and active ownership together.
 - A settled hidden visibility host stays mounted as an empty, zero-size reconciliation anchor. Its
   content subtree is absent, but keeping the host stable preserves following unkeyed siblings'
   native View identity and interaction state across visibility changes.

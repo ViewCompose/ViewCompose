@@ -134,7 +134,17 @@ internal object ContainerNodePatchApplier {
                 alpha = patch.next.alpha,
                 widthScale = patch.next.widthScale,
                 heightScale = patch.next.heightScale,
+                scaleX = patch.next.scaleX,
+                scaleY = patch.next.scaleY,
+                translationXFraction = patch.next.translationXFraction,
+                translationYFraction = patch.next.translationYFraction,
+                pivotFractionX = patch.next.transformOrigin.pivotFractionX,
+                pivotFractionY = patch.next.transformOrigin.pivotFractionY,
+                contentGravity = with(ContainerViewSpecReader) {
+                    patch.next.contentAlignment.toGravity()
+                },
                 clipToBounds = patch.next.clipToBounds,
+                active = patch.next.active,
             ),
         )
     }

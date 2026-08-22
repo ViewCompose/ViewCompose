@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: ad63f94e8cc6706c37d84ce622c8a7fa36bf38aa57ad9c095bc5c8c67528c4b9
+translation_source_hash: cdb6f96d21d5afd96755ba1ee8f1789f77116c378ce647e593aee36c1e81f27d
 translation_status: current
 ---
 
@@ -55,6 +55,11 @@ val gap = VNode(
   参与普通内容语义。
 - [`NodeSpec`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node.spec/-node-spec/)
   及其具体属性快照定义渲染器支持的输入。
+- Q3 `AnimatedVisibilityHostNodeProps` 是父级与后代 Visibility Host 共用的 Renderer-neutral
+  Frame Transport。它携带 Alpha、实测 Reveal 比例、视觉 Scale、按完整实测尺寸计算的 Translation
+  比例、Transform Origin、Reveal Alignment、裁剪与活动交互所有权。全部采样 Transform 值必须
+  有限；Renderer 在向父级报告 Reveal 尺寸的同时保留完整 Content 测量，Inactive Host 只参与
+  绘制。已编译 `animatedVisibilityHostNodeContractSample` 覆盖完整 Snapshot。
 - Q3 `AnimatedContentHostNodeProps` 与 `AnimatedContentItemNodeProps` 是完整 Content
   Replacement 使用的 Renderer 中立有界 Pair Transport。Host 携带 Segment Identity、有限尺寸
   Progress、裁剪与逻辑 Alignment；每个 Item 携带基于实测尺寸的 Transform Fraction 和显式活动

@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-animation.md
-translation_source_hash: 658e05b635951bea88d688ad10a02496f51342633e4992a7d1bc60b2a738f07c
+translation_source_hash: 758ba048e4fdb5c8b5d090fda264813f6805e9a90c1e382e71d1460c6faf7e35
 translation_status: current
 ---
 
@@ -52,7 +52,7 @@ AGP 9.2，而本仓库当前使用 compile SDK 36 与 AGP 8.13.2。因此：
 | Decay 与 Fling 接力 | Decay Spec 和速度延续 | **Supported（支持）**平台中立指数 Decay | Gesture Owner 仍需在接力前转换 Density、Direction、Axis 与 Nested-scroll 速度 |
 | Target-as-state 动画 | 状态驱动的类型化动画 | **Supported（支持）**泛型值、Float、Int、编码 ARGB 与 `UiDp` | 颜色按编码 Channel 插值，不感知色彩空间 |
 | `Transition` | 共享状态 Segment、泛型 Channel 与 Seek | **Partially supported（部分支持）**；已有一个自主 Timeline 与四种内置 Channel | Phase 4 增加公开泛型、Segment-aware 与 Seekable 控制 |
-| `AnimatedVisibility` | Enter/Exit 代数、Slide、Scale 与后代编排 | **Partially supported（部分支持）**；已有 Fade 与测量尺寸行为 | Phase 3 增加 Slide、Scale、Transform Origin、Scope 与后代 Enter/Exit |
+| `AnimatedVisibility` | Enter/Exit 代数、Slide、Scale 与后代编排 | **Supported（支持）** Fade、带 Alignment 的实测 Reveal、按实测比例 Slide、带轴心 Scale、所属 Scope 与共享时钟的后代 Enter/Exit | 使用 `AnimatedVisibilityScope.AnimatedEnterExit`，而不是 Compose 的 Modifier 形式；按 Callback 计算 Offset 仍未支持 |
 | `AnimatedContent` | Keyed 出入内容替换与 Content Transform | **Supported（支持）** Keyed 替换、逐状态对 Fade/Slide/Scale、Z-order、Alignment 与可选尺寸变换 | 纯 Alpha 替换继续使用 `Crossfade`；Full-size Callback Offset 与后代 Choreography 尚不支持 |
 | 内容尺寸动画 | Layout 尺寸变化 | **Supported（支持）**，使用 Android Renderer Wrapper 与共享物理 Spring Solver | 重新验证父级 Constraint 与 Wrapper 位置；无限 Spec 会被拒绝 |
 | Bounds 动画 | 跨 Layout 坐标变化的位置与尺寸 | **Unsupported（不支持）** | Phase 5 增加真实 Layout 几何；不要用 Draw Translation 模拟可交互 Bounds |
@@ -123,11 +123,22 @@ Compose 迁移应保留以下所有权，而不是只替换调用名：
   RTL 解析后相加，Scale 围绕各自声明 Origin 相乘；
 - Renderer Apply 失败不能发布候选 Identity、Focus、Geometry、Effect 或 Release。
 
-ViewCompose 的 Slide 距离是参与 Item 实测轴尺寸的非负有限比例，不接收 Full-size Callback
-结果。Start/End 根据该 Segment 捕获的布局方向解析。变化 Target 会在一棵候选树成功 Commit 后
-才被接受，因此替换 Segment 前多一个 Commit Boundary，Renderer 失败也无法改变 Content
-Identity。任意依赖尺寸的 Offset Callback 与后代 Enter/Exit 组合仍属于 Phase 3；不要在可交互
-内容上用仅绘制 Translation 模拟。
+ViewCompose Visibility 与 Content 的 Slide 距离是参与内容完整实测轴尺寸的非负有限比例，不接收
+Full-size Callback 结果。Start/End 根据该 Segment 捕获的布局方向解析。
+`AnimatedVisibilityScope.transition` 暴露所属 Boolean 协调器，`AnimatedEnterExit` 把后代
+Channel 加入同一条 Frame Loop，并延长共享移除生命周期。接受 Exit 会立即移除 Pointer、焦点与
+无障碍所有权，同时保留绘制到最后一个 Channel 完成。父级与后代原生 Host 会保持已记录的
+Transform 顺序与事务化 Renderer Rollback。
+
+Phase 3 有意把 `AnimatedVisibility` Content Receiver 从 `BoxScope` 硬切为
+`AnimatedVisibilityScope`。普通 Builder 调用仍能编译；依赖旧 Receiver 中 `Modifier.align` 的
+调用方必须增加显式 `Box`，并在 Box 内应用 Alignment。ViewCompose 使用作用域
+`AnimatedEnterExit` Host，而不是 Compose 的后代 Modifier 形式，因为实测 Bounds、裁剪、交互
+所有权与 Rollback 都跨越原生 View 边界。不要在可交互内容上用仅绘制 Translation 模拟尚未支持
+的 Callback-calculated Offset。
+
+对于 Keyed `AnimatedContent`，变化 Target 只会在一棵候选树成功 Commit 后接受，因此替换
+Segment 前多一个 Commit Boundary，Renderer 失败也无法改变 Content Identity。
 
 Seekable Transition 只有一个 Writer。`seekTo` 在发布有限 `0f..1f` Fraction 前取消并 Join
 自主动画。Seek 不制造速度；`animateTo` 可从已采样值以显式 Gesture 速度继续。
@@ -177,6 +188,15 @@ Slide、Scale、Clipping 与不等高 Size Transform 的 Keyed AnimatedContent�
 `+312 KiB`。两者均未越过回退预算，两个 Run-P50 CV 都低于 `0.01`，解释后的结论为
 `no material change`。精确数值与局限记录在
 [性能文档第 2.4.10 节](../tooling/performance.md#2410-animation-revision-2-animatedcontent-comparison)。
+
+Phase 3 把 `animation.core` 推进到 Revision 3，并有意提高 Visibility Demo 复杂度：父级 Fade、
+逻辑 Slide、Pivot Scale 与对齐 Reveal 和反向后代 Transition 共用一个时钟。在同一次 Xiaomi
+固定频率批次中，相对已合并的 Pre-Phase-3 发版安全 Control，Candidate 的 P50/P95/Peak Heap
+变化为 `+2.4%/+3.3%/+3.9%`，即 `+0.197 ms/+0.355 ms/+303 KiB`，均未越过冻结门禁。P99
+增加 `3.380 ms` 至 `15.723 ms`，并作为 Tail Watch Item 明确保留。由于可见 Workload 与时长并不
+相同，这属于 `no material change` 发版安全证据，不是严格同负载的 Throughput 或功耗声明。
+精确数据、控制条件与局限记录在
+[性能文档第 2.4.11 节](../tooling/performance.md#2411-animation-revision-3-rich-visibility-release-safety-comparison)。
 
 ## 迁移顺序
 

@@ -105,6 +105,10 @@ class Transition<S> internal constructor(
 
     internal fun runtimeSegmentVersion(): Long = core.segmentVersion
 
+    internal fun runtimeCurrentState(): S = core.currentState
+
+    internal fun runtimeTargetState(): S = core.targetState
+
     private fun syncFromCore() {
         Snapshot.withMutableSnapshot {
             currentStateHolder.value = core.currentState

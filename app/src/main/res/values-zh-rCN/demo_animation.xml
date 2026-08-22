@@ -2,13 +2,14 @@
 <resources>
     <string name="demo_animation_reset">重置场景</string>
     <string name="demo_animation_core_title">基础动画</string>
-    <string name="demo_animation_core_summary">组合 animateFloatAsState 与 AnimatedVisibility，验证显隐和缩放更新。</string>
+    <string name="demo_animation_core_summary">验证父级位移、轴心缩放与展开，以及加入同一显隐时钟的子级动画。</string>
     <string name="demo_animation_core_state">显示=%1$b · 脉冲=%2$b · 已完成=%3$b</string>
     <string name="demo_animation_core_hide">隐藏块</string>
     <string name="demo_animation_core_show">显示块</string>
     <string name="demo_animation_core_scale_low">缩放到 0.92x</string>
     <string name="demo_animation_core_scale_high">缩放到 1.08x</string>
-    <string name="demo_animation_core_surface">动画核心表面</string>
+    <string name="demo_animation_core_surface">父级：逻辑位移 + 左下展开 + 轴心缩放</string>
+    <string name="demo_animation_core_child">子级：共享时钟 · 反向垂直运动</string>
     <string name="demo_animation_core_footer">显隐底部锚点</string>
     <string name="demo_animation_task_title">阅读教程</string>
     <string name="demo_animation_task_completed">已完成</string>

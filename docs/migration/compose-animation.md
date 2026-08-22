@@ -50,7 +50,7 @@ implemented, documented in the owning module, and released.
 | Decay and fling handoff | Decay specs and velocity continuation | **Supported** with platform-neutral exponential decay | Gesture owners still convert density, direction, axis, and nested-scroll velocity before handoff |
 | Target-as-state animation | State-driven typed animation | **Supported** for generic values, Float, Int, encoded ARGB, and `UiDp` | Color interpolation is encoded-channel, not color-space aware |
 | `Transition` | Shared state segment, generic channels, seeking | **Partially supported**; one autonomous timeline and four built-in channel types exist | Phase 4 adds public generic, segment-aware, and seekable control |
-| `AnimatedVisibility` | Enter/exit algebra, slide, scale, descendant choreography | **Partially supported**; fade and measured-size behavior exist | Phase 3 adds slide, scale, transform origin, scope, and descendant enter/exit |
+| `AnimatedVisibility` | Enter/exit algebra, slide, scale, descendant choreography | **Supported** for fade, aligned measured reveal, measured-fraction slide, pivoted scale, owning scope, and shared-clock descendant enter/exit | Use `AnimatedVisibilityScope.AnimatedEnterExit` rather than Compose's modifier form; callback-calculated offsets remain unsupported |
 | `AnimatedContent` | Keyed outgoing/incoming replacement and content transforms | **Supported** for keyed replacement, pair-specific fade/slide/scale, z-order, alignment, and optional size transforms | Keep `Crossfade` for alpha-only replacement; full-size callback offsets and descendant choreography remain unsupported |
 | Content-size animation | Layout size changes | **Supported**, using an Android renderer wrapper and the shared physical spring solver | Revalidate parent constraints and wrapper placement; infinite specifications are rejected |
 | Bounds animation | Position and size across layout-coordinate changes | **Unsupported** | Phase 5 adds real layout geometry; do not simulate interactive bounds with draw translation |
@@ -129,12 +129,25 @@ Compose migration should preserve the following ownership rather than merely ren
   origins; and
 - renderer apply failure cannot publish candidate identity, focus, geometry, effects, or release.
 
-ViewCompose slide distances are finite non-negative fractions of the participating item's measured
-axis rather than full-size callback results. Start/end resolve from the segment's captured layout
-direction. A changed target is admitted after one candidate tree commits successfully, adding one
-commit boundary before the replacement segment so renderer failure cannot mutate content identity.
-Arbitrary size-dependent offset callbacks and descendant enter/exit composition remain Phase 3
-work; do not port them as draw-only translation on interactive content.
+ViewCompose visibility and content slide distances are finite non-negative fractions of the
+participating full measured axis rather than full-size callback results. Start/end resolve from the
+segment's captured layout direction. `AnimatedVisibilityScope.transition` exposes the owning
+Boolean coordinator, while `AnimatedEnterExit` contributes descendant channels to the same frame
+loop and extends the shared removal lifetime. Accepting an exit immediately removes pointer, focus,
+and accessibility ownership while retaining drawing through the last channel. Parent and descendant
+native hosts preserve the documented transform order and transactional renderer rollback.
+
+Phase 3 intentionally hard-cuts the `AnimatedVisibility` content receiver from `BoxScope` to
+`AnimatedVisibilityScope`. Ordinary builder calls continue to compile. A caller that used
+`Modifier.align` from the former receiver must add an explicit `Box` and apply alignment in that
+box. ViewCompose uses the scoped `AnimatedEnterExit` host instead of Compose's descendant Modifier
+because measured bounds, clipping, interaction ownership, and rollback cross a native View boundary.
+Do not replace unsupported callback-calculated offsets with draw-only translation on interactive
+content.
+
+For keyed `AnimatedContent`, a changed target is admitted only after one candidate tree commits
+successfully, adding one commit boundary before the replacement segment so renderer failure cannot
+mutate content identity.
 
 Seekable transitions have one writer. `seekTo` cancels and joins autonomous animation before it
 publishes a finite `0f..1f` fraction. Seeking does not manufacture velocity. `animateTo` can resume
@@ -190,6 +203,16 @@ Crossfade, with a `+0.651 ms` absolute P95 delta and `+312 KiB` heap delta. Neit
 regression budget, both run-P50 CV values are below `0.01`, and the interpreted conclusion is
 `no material change`. Exact values and limitations are recorded in
 [performance Section 2.4.10](../tooling/performance.md#2410-animation-revision-2-animatedcontent-comparison).
+
+Phase 3 advances `animation.core` to revision 3 and makes the visibility Demo deliberately more
+complex: parent fade, logical slide, pivoted scale, and aligned reveal share one clock with an
+opposing descendant transition. Against the merged pre-Phase-3 release-safety control on the same
+fixed-frequency Xiaomi batch, candidate P50/P95/peak heap changed by `+2.4%/+3.3%/+3.9%`, or
+`+0.197 ms/+0.355 ms/+303 KiB`; none crosses the frozen regression gate. P99 rose by `3.380 ms` to
+`15.723 ms` and remains a recorded tail watch item. Because the visible workload and duration are
+not identical, this is `no material change` release-safety evidence rather than a like-for-like
+throughput or power claim. Exact values, controls, and limitations are recorded in
+[performance Section 2.4.11](../tooling/performance.md#2411-animation-revision-3-rich-visibility-release-safety-comparison).
 
 ## Migration sequence
 

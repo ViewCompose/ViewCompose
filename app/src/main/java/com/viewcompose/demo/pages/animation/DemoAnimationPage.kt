@@ -13,6 +13,7 @@ import com.viewcompose.animation.ContentTransform
 import com.viewcompose.animation.Crossfade
 import com.viewcompose.animation.MutableTransitionState
 import com.viewcompose.animation.SizeTransform
+import com.viewcompose.animation.SlideDirection
 import com.viewcompose.animation.animateColorAsState
 import com.viewcompose.animation.animateContentSize
 import com.viewcompose.animation.animateFloat
@@ -37,6 +38,12 @@ import com.viewcompose.animation.core.keyframe
 import com.viewcompose.animation.core.keyframes
 import com.viewcompose.animation.rememberInfiniteTransition
 import com.viewcompose.animation.rememberAnimatable
+import com.viewcompose.animation.scaleIn
+import com.viewcompose.animation.scaleOut
+import com.viewcompose.animation.slideInHorizontally
+import com.viewcompose.animation.slideInVertically
+import com.viewcompose.animation.slideOutHorizontally
+import com.viewcompose.animation.slideOutVertically
 import com.viewcompose.animation.core.repeatable
 import com.viewcompose.animation.shrinkHorizontally
 import com.viewcompose.animation.shrinkOut
@@ -71,6 +78,7 @@ import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.remember
 import com.viewcompose.ui.unit.sp
@@ -341,6 +349,38 @@ internal fun UiTreeBuilder.AnimationPage(
                 )
                 AnimatedVisibility(
                     visible = visibleState.value,
+                    enter = fadeIn(
+                        animationSpec = tween(520),
+                        initialAlpha = 0.12f,
+                    ) + slideInHorizontally(
+                        from = SlideDirection.Start,
+                        animationSpec = tween(620),
+                        distanceFraction = 0.42f,
+                    ) + scaleIn(
+                        animationSpec = tween(620),
+                        initialScale = 0.72f,
+                        transformOrigin = TransformOrigin(0f, 1f),
+                    ) + expandVertically(
+                        animationSpec = tween(620),
+                        initialScale = 0.12f,
+                        alignment = BoxAlignment.BottomStart,
+                    ),
+                    exit = fadeOut(
+                        animationSpec = tween(460),
+                        targetAlpha = 0.08f,
+                    ) + slideOutHorizontally(
+                        towards = SlideDirection.End,
+                        animationSpec = tween(560),
+                        distanceFraction = 0.52f,
+                    ) + scaleOut(
+                        animationSpec = tween(560),
+                        targetScale = 0.68f,
+                        transformOrigin = TransformOrigin(1f, 0f),
+                    ) + shrinkVertically(
+                        animationSpec = tween(560),
+                        targetScale = 0.08f,
+                        alignment = BoxAlignment.TopEnd,
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(DemoAnimationTestTags.ANIMATION_VISIBILITY_TARGET)
@@ -350,6 +390,7 @@ internal fun UiTreeBuilder.AnimationPage(
                         variant = SurfaceVariant.Variant,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .height(128.dp)
                             .graphicsLayer(
                                 scaleX = scale.value,
                                 scaleY = scale.value,
@@ -357,6 +398,42 @@ internal fun UiTreeBuilder.AnimationPage(
                             .padding(12.dp),
                     ) {
                         Text(text = stringResource(R.string.demo_animation_core_surface))
+                    }
+                    AnimatedEnterExit(
+                        enter = fadeIn(
+                            animationSpec = tween(360),
+                            initialAlpha = 0.05f,
+                        ) + slideInVertically(
+                            from = SlideDirection.Down,
+                            animationSpec = tween(760),
+                            distanceFraction = 1.35f,
+                        ) + scaleIn(
+                            animationSpec = tween(760),
+                            initialScale = 0.55f,
+                            transformOrigin = TransformOrigin(0.5f, 1f),
+                        ),
+                        exit = fadeOut(
+                            animationSpec = tween(360),
+                            targetAlpha = 0.05f,
+                        ) + slideOutVertically(
+                            towards = SlideDirection.Up,
+                            animationSpec = tween(760),
+                            distanceFraction = 1.2f,
+                        ) + scaleOut(
+                            animationSpec = tween(760),
+                            targetScale = 0.55f,
+                            transformOrigin = TransformOrigin(0.5f, 0f),
+                        ),
+                        modifier = Modifier
+                            .margin(left = 140.dp, top = 66.dp)
+                            .testTag(DemoAnimationTestTags.ANIMATION_VISIBILITY_CHILD),
+                    ) {
+                        Surface(
+                            variant = SurfaceVariant.Default,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        ) {
+                            Text(text = stringResource(R.string.demo_animation_core_child))
+                        }
                     }
                 }
                 Text(

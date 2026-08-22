@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 95faaeb57b64e4546e8bb3691690663064aab6d86dd3f561a89222e48992c8f3
+translation_source_hash: e348c1c4b1328d9a7f928a03a88b9b6748ac493f383252612bff3158bd4ee6d6
 translation_status: current
 ---
 
@@ -367,6 +367,13 @@ Insets；若尚不可用，则先清除旧物理边贡献直至 Android 分发�
 - `Row` 与 `Column` 会把直接子级的 Animated Visibility Host 视为渐进式间距参与者。主轴 Item
   间距随 Host 的测量尺寸 Channel 一起展开和收起；中间 Host 完全折叠时，稳定同级元素之间原有
   的间距仍会保留。
+- `DeclarativeAnimatedVisibilityHostLayout` 会以完整尺寸测量每个直接 Child，向父级报告动画
+  Reveal 尺寸，并根据完整 Host 测量而不是第一个 Child 计算逻辑 Slide 比例与 Transform Pivot。
+  它先应用 Reveal Alignment 与裁剪，再应用原生视觉 Scale/Translation。父级和后代 Host 是普通
+  嵌套原生 Layer，因此后代局部 Transform 会先于父级 Layer 组合，不增加 Renderer Frame Owner。
+- 接受 Exit 时，Visibility Host 会在移除保留绘制内容之前先变为 Inactive。Host 会阻止 Pointer、
+  Hover、Key、焦点遍历与无障碍事件所有权，清除后代焦点，并在反向时恢复参与。Renderer Patch
+  失败会一起恢复 Alpha、Reveal、Slide、Scale、Pivot、Alignment、裁剪与 Active 所有权。
 - 可见性进入稳定隐藏态后，空 Host 仍会作为零尺寸的调和身份锚点挂载。其内容子树已经移除，
   但稳定的 Host 会让后续无 Key 同级元素在可见性切换间保留原生 View 身份与交互状态。
 - Animated Size Host 会在 Detach 时取消活动 Animator。首次测量直接应用；后续 Target 从当前显示

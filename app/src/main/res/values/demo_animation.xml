@@ -2,13 +2,14 @@
 <resources>
     <string name="demo_animation_reset">Reset fixture</string>
     <string name="demo_animation_core_title">Core animation</string>
-    <string name="demo_animation_core_summary">Combine animateFloatAsState and AnimatedVisibility to verify visibility and scale updates.</string>
+    <string name="demo_animation_core_summary">Verify parent slide, pivoted scale and reveal together with a descendant that joins the same visibility clock.</string>
     <string name="demo_animation_core_state">visible=%1$b · pulse=%2$b · completed=%3$b</string>
     <string name="demo_animation_core_hide">Hide block</string>
     <string name="demo_animation_core_show">Show block</string>
     <string name="demo_animation_core_scale_low">Scale to 0.92x</string>
     <string name="demo_animation_core_scale_high">Scale to 1.08x</string>
-    <string name="demo_animation_core_surface">Animation core surface</string>
+    <string name="demo_animation_core_surface">Parent: logical slide + bottom-start reveal + pivoted scale</string>
+    <string name="demo_animation_core_child">Child: shared clock · opposite vertical motion</string>
     <string name="demo_animation_core_footer">Visibility footer anchor</string>
     <string name="demo_animation_task_title">Read the tutorial</string>
     <string name="demo_animation_task_completed">Completed</string>

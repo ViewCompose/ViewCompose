@@ -102,7 +102,15 @@ internal object ContainerViewSpecReader {
             alpha = spec.alpha,
             widthScale = spec.widthScale,
             heightScale = spec.heightScale,
+            scaleX = spec.scaleX,
+            scaleY = spec.scaleY,
+            translationXFraction = spec.translationXFraction,
+            translationYFraction = spec.translationYFraction,
+            pivotFractionX = spec.transformOrigin.pivotFractionX,
+            pivotFractionY = spec.transformOrigin.pivotFractionY,
+            contentGravity = spec.contentAlignment.toGravity(),
             clipToBounds = spec.clipToBounds,
+            active = spec.active,
         )
     }
 

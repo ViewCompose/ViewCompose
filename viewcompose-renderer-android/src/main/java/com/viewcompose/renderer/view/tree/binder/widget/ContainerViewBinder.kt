@@ -52,7 +52,15 @@ internal object ContainerViewBinder {
         val alpha: Float,
         val widthScale: Float,
         val heightScale: Float,
+        val scaleX: Float,
+        val scaleY: Float,
+        val translationXFraction: Float,
+        val translationYFraction: Float,
+        val pivotFractionX: Float,
+        val pivotFractionY: Float,
+        val contentGravity: Int,
         val clipToBounds: Boolean,
+        val active: Boolean,
     )
 
     data class AnimatedContentHostSpec(
@@ -150,7 +158,15 @@ internal object ContainerViewBinder {
         view.alpha = spec.alpha
         view.widthScale = spec.widthScale
         view.heightScale = spec.heightScale
+        view.visualScaleX = spec.scaleX
+        view.visualScaleY = spec.scaleY
+        view.translationXFraction = spec.translationXFraction
+        view.translationYFraction = spec.translationYFraction
+        view.pivotFractionX = spec.pivotFractionX
+        view.pivotFractionY = spec.pivotFractionY
+        view.contentGravity = spec.contentGravity
         view.clipToBounds = spec.clipToBounds
+        view.contentActive = spec.active
     }
 
     fun bindAnimatedContentHost(
