@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: f314ae5abe7381ce3748d4a09c5434b9fdd0c0362f18b4dbeeaeb73e3cd19d5f
+translation_source_hash: 3c1c18345219b7f4294ab435c55d238c11cdc3db09fd197931680d251ab72142
 translation_status: current
 ---
 
@@ -29,8 +29,8 @@ dependencies {
 - 平台：Android library，`minSdk 24`、`compileSdk 36`，Java 11 字节码。
 - UI Contract 会被传递暴露，因为 Renderer 入口会接收并返回其 Node 与 Modifier 类型。
   Runtime、Text Core、Graphics Core 和 Gesture Core 保持为实现依赖。
-- Android 运行时依赖：AndroidX Core、AppCompat、RecyclerView、ViewPager2、
-  ConstraintLayout 与 SwipeRefreshLayout；不依赖 Material Components。
+- Android 运行时依赖：AndroidX Core、AppCompat、RecyclerView、ConstraintLayout 与
+  SwipeRefreshLayout；不依赖 Material Components 或 ViewPager2。
 - 通用 Surface、圆角/切角/连续圆角和进度指示器使用引擎自有 Android 绘制实现，并只消费节点解析值。
 - `SurfaceNodeProps` 使用缓存的 `UiShapeDrawable` 几何完成纯色或渐变 Fill、可选 Border 与 Ripple
   Mask。View Outline 与可选裁剪几何由一个无 Paint 且缓存 Bounds 的 Provider 提供，不再保留第二个
@@ -187,8 +187,10 @@ Matrix。Phase 4 负责该基准与最终指导。
 - [`LazyListDiff`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.reconcile/-lazy-list-diff/)
   把稳定 Lazy item key 转换成有序 RecyclerView 更新；身份缺失或有歧义时会主动退化为全量刷新。
 - Eager Scroll Container 使用一个 Renderer Connector 发布逻辑偏移、范围、Viewport、方向与运动，
-  并在布局前保留 Pending Command。Pager Container 使用一个停稳状态协调器，同时处理 ViewPager2
-  观察与 Callback 去重。纵向 Eager Container 嵌套在同轴且不支持 Nested Scrolling 的 Parent 中时，
+  并在布局前保留 Pending Command。Pager Container 使用框架自有 RecyclerView、
+  LinearLayoutManager、PagerSnapHelper 和一个停稳状态协调器完成观察与 Callback 去重。空闲
+  重布局不是页面选择，也不会清除当前页焦点。纵向 Eager Container 嵌套在同轴且不支持
+  Nested Scrolling 的 Parent 中时，
   只在自身仍能消费当前方向期间保留 Pointer Stream，并在对应滚动边界把 Stream 交还 Parent；禁用
   用户滚动时绝不会保留 Parent Stream。
 - Adaptive Grid 会根据可用内部宽度与密度重新计算 `GridLayoutManager.spanCount`，不替换 Adapter
@@ -263,7 +265,8 @@ Matrix。Phase 4 负责该基准与最终指导。
   移除 Callback Wrapper 分配，不会合并物理与逻辑身份。
 - Pager 稳定 ID 使用 Renderer 分配值而不是 key hash。Pager View Type 按不兼容的
   `contentType`/kind 组合划分；带 key 的移动只刷新归属唯一且已变化的 Holder，每个公开 Page 声明
-  都必须提供唯一稳定 Key。除非调用方显式指定 Limit，否则由 ViewPager2 原生默认策略管理离屏驻留。
+  都必须提供唯一稳定 Key。除非调用方显式指定正数 Limit，否则由 RecyclerView 默认缓存策略管理
+  离屏驻留。
   已接受的 Pager Submission 即使 Page Snapshot 不变也必须应用 `currentPage`；页面内容 Diff 绝不能
   阻断目标页面选择。
 - 定向 patch 和子树跳过只是优化。只有每个直接 child 都是组合所复用的完全相同 VNode 实例时，

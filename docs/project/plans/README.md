@@ -4,6 +4,11 @@ This directory contains multi-step work that is currently active and must surviv
 
 ## Active plans
 
+- [Focus visibility and scroll ownership hard cut](./focus-visibility-scroll-ownership-hard-cut.md) —
+  remove the unstable `focusFollowKeyboard` policy and its callback-driven renderer reconstruction,
+  restore Android's native child-rectangle protocol for real vertical scroll owners, replace the
+  ViewPager2 backend, require page-local ownership for IME-sensitive pager content, and reject
+  ambiguous zero- or multi-root delayed item/page content before native rendering.
 - [Demo post-release verification closeout](./demo-post-release-verification-closeout.md) — finish
   the intentionally deferred collection-stress revision-3 fixed-clock baseline, broad bilingual and
   configuration visual matrix, popup pixel golden, and zero-caller hard deletion of obsolete Demo

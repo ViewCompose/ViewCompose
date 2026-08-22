@@ -204,6 +204,7 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotPaletteSection() {
                 ThemeSwatch("SC", Theme.colors.secondaryContainer),
                 ThemeSwatch("OnS", Theme.colors.onSecondaryContainer),
             ),
+            rowModifier = Modifier.testTag(DemoTestTags.DIAGNOSTICS_THEME_SWATCH_ROW),
         )
         ThemeSwatchRow(
             label = stringResource(R.string.demo_diagnostics_theme_error_outline),

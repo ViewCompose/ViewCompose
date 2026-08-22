@@ -13,9 +13,11 @@ import android.widget.TextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.NestedScrollView
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.viewcompose.demo.contract.EXTRA_DEMO_SCENARIO_ID
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -608,6 +610,21 @@ class DemoVisualUiTest {
             assertFocusActionRevealsInput(
                 scenario = scenario,
                 resourceId = R.id.demo_input_focus_follow_lazy_column_target,
+            )
+        }
+    }
+
+    @Test
+    fun inputFocusFollowLazyGrid_scrollsOnlyEnoughToRevealInput() {
+        launchDemoScenarioActivity(
+            InputActivity::class.java,
+            "input.focus-follow-lazy-grid",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
+            waitForUiIdle()
+            assertFocusActionRevealsInput(
+                scenario = scenario,
+                resourceId = R.id.demo_input_focus_follow_lazy_grid_target,
             )
         }
     }
@@ -1315,6 +1332,16 @@ class DemoVisualUiTest {
     }
 
     @Test
+    fun statePatchStress_pagerGesturesSettleOnlyOnTheAdjacentPage() {
+        verifyPagerGestures(rtl = false)
+    }
+
+    @Test
+    fun statePatchStress_rtlPagerGesturesSettleOnlyOnTheAdjacentPage() {
+        verifyPagerGestures(rtl = true)
+    }
+
+    @Test
     fun animationPage_visibilityToggle_showRestoresTargetContent() {
         launchDemoScenarioActivity(
             AnimationActivity::class.java,
@@ -1989,6 +2016,81 @@ class DemoVisualUiTest {
         }.toList()
     }
 
+    private fun verifyPagerGestures(rtl: Boolean) {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val intent = Intent(context, StateActivity::class.java)
+            .putExtra(EXTRA_DEMO_SCENARIO_ID, "runtime.view-patch")
+            .withDemoVerificationEnvironment(
+                localeTag = if (rtl) "ar" else "en",
+                rtl = rtl,
+                fontScale = 1f,
+                densityScale = 1f,
+            )
+        launchDemoActivity<StateActivity>(intent).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val summary = activity.requireTextViewByTestTagVisible(
+                    DemoTestTags.STATE_HORIZONTAL_PAGER_SUMMARY,
+                )
+                var pagerAncestor: View? = summary
+                while (pagerAncestor != null && pagerAncestor !is RecyclerView) {
+                    pagerAncestor = pagerAncestor.parent as? View
+                }
+                assertNotNull("Expected a RecyclerView pager ancestor.", pagerAncestor)
+                assertEquals(
+                    if (rtl) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR,
+                    pagerAncestor?.layoutDirection,
+                )
+                activity.dragByTestTag(
+                    tag = DemoTestTags.STATE_HORIZONTAL_PAGER_SUMMARY,
+                    deltaX = if (rtl) 700f else -700f,
+                    steps = 12,
+                )
+            }
+            val horizontalSettled = waitUntilActivityCondition(scenario, timeoutMs = 2_000L) { activity ->
+                val target = findViewByTestTag(
+                    activity.findViewById(android.R.id.content),
+                    DemoTestTags.STATE_HORIZONTAL_PAGER_DETAILS,
+                ) ?: return@waitUntilActivityCondition false
+                val bounds = Rect()
+                target.isShown && target.getGlobalVisibleRect(bounds) && !bounds.isEmpty
+            }
+            assertTrue("Expected the horizontal pager to settle on its adjacent page.", horizontalSettled)
+            scenario.onActivity { activity ->
+                assertViewFullyVisible(
+                    activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.STATE_HORIZONTAL_PAGER_DETAILS,
+                    ),
+                )
+                activity.requireTextViewByTestTagVisible(
+                    DemoTestTags.STATE_VERTICAL_PAGER_SUMMARY,
+                )
+                activity.dragByTestTag(
+                    tag = DemoTestTags.STATE_VERTICAL_PAGER_SUMMARY,
+                    deltaX = 0f,
+                    deltaY = -420f,
+                    steps = 12,
+                )
+            }
+            val verticalSettled = waitUntilActivityCondition(scenario, timeoutMs = 2_000L) { activity ->
+                val target = findViewByTestTag(
+                    activity.findViewById(android.R.id.content),
+                    DemoTestTags.STATE_VERTICAL_PAGER_DETAILS,
+                ) ?: return@waitUntilActivityCondition false
+                val bounds = Rect()
+                target.isShown && target.getGlobalVisibleRect(bounds) && !bounds.isEmpty
+            }
+            assertTrue("Expected the vertical pager to settle on its adjacent page.", verticalSettled)
+            scenario.onActivity { activity ->
+                assertViewFullyVisible(
+                    activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.STATE_VERTICAL_PAGER_DETAILS,
+                    ),
+                )
+            }
+        }
+    }
+
     private fun extractTransformMetrics(text: String): TransformMetrics? {
         val values = "-?\\d+(?:\\.\\d+)?".toRegex()
             .findAll(text)
@@ -2040,12 +2142,19 @@ class DemoVisualUiTest {
         resolveHost: InputActivity.() -> View,
         requestFocus: InputActivity.() -> Unit,
     ) {
+        assertTrue(
+            "Expected scenario window focus before requesting editor focus: $targetDescription",
+            waitUntilActivityCondition(scenario, timeoutMs = 3_000L) { activity ->
+                activity.hasWindowFocus()
+            },
+        )
         var beforeVisibleHeight = 0
         scenario.onActivity { activity ->
             val inputHost = activity.resolveHost()
             beforeVisibleHeight = Rect().also(inputHost::getGlobalVisibleRect).height()
             activity.requestFocus()
         }
+        var focusVisibilityDiagnostics = "IME visibility was not observed."
         val revealedAboveKeyboard = waitUntilActivityCondition(scenario, timeoutMs = 3_000L) { activity ->
             val focusedHost = activity.resolveHost()
             val root = activity.window.decorView
@@ -2058,12 +2167,43 @@ class DemoVisualUiTest {
             val imeTop = rootLocation[1] + root.height -
                 rootInsets.getInsets(WindowInsetsCompat.Type.ime()).bottom
             val visibleBounds = Rect()
-            focusedHost.getGlobalVisibleRect(visibleBounds) &&
+            val hasVisibleBounds = focusedHost.getGlobalVisibleRect(visibleBounds)
+            focusVisibilityDiagnostics = buildString {
+                append("host=")
+                append(focusedHost.javaClass.simpleName)
+                append(" size=")
+                append(focusedHost.width)
+                append('x')
+                append(focusedHost.height)
+                append(" visible=")
+                append(visibleBounds)
+                append(" imeTop=")
+                append(imeTop)
+                var child: View = focusedHost
+                var ancestor = focusedHost.parent
+                while (ancestor is View) {
+                    append(" <- ")
+                    append(ancestor.javaClass.simpleName)
+                    append("(top=")
+                    append(ancestor.top)
+                    append(",height=")
+                    append(ancestor.height)
+                    append(",scrollY=")
+                    append(ancestor.scrollY)
+                    append(",childTop=")
+                    append(child.top)
+                    append(')')
+                    child = ancestor
+                    ancestor = ancestor.parent
+                }
+            }
+            hasVisibleBounds &&
                 visibleBounds.height() == focusedHost.height &&
                 visibleBounds.bottom <= imeTop
         }
         assertTrue(
-            "Expected complete focused host above the visible IME: $targetDescription",
+            "Expected complete focused host above the visible IME: $targetDescription; " +
+                focusVisibilityDiagnostics,
             revealedAboveKeyboard,
         )
         scenario.onActivity { activity ->

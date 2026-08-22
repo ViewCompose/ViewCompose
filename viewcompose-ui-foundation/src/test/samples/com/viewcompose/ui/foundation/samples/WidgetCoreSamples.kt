@@ -126,6 +126,7 @@ import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiThemeDefaults
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.UiDslMarker
+import com.viewcompose.ui.foundation.VerticalPager
 import com.viewcompose.ui.foundation.buildVNodeTree
 import com.viewcompose.ui.foundation.createSaveableStateRegistry
 import com.viewcompose.ui.foundation.produceState
@@ -485,6 +486,54 @@ fun pagerAndTabIdentitySample() {
     check(page.key == "account")
     check(page.contentRevision == 4)
     check(tree.last().children.single().key == "overview")
+}
+
+fun delayedContentSingleRootSample() {
+    buildVNodeTree {
+        LazyColumn {
+            item("account", StaticContentRevision) {
+                Column {
+                    Text("Account")
+                    Text("Signed in")
+                }
+            }
+        }
+        HorizontalPager(currentPage = 0, onPageChanged = {}) {
+            Page("details", StaticContentRevision) {
+                Column {
+                    Text("Details")
+                    Button("Continue", onClick = {})
+                }
+            }
+        }
+    }
+}
+
+fun focusVisibilityOwnershipSample() {
+    buildVNodeTree {
+        LazyColumn {
+            item("lazy-editor", StaticContentRevision) {
+                TextField(state = TextFieldState(), placeholder = "Search messages")
+            }
+        }
+        LazyVerticalGrid {
+            item("grid-editor", StaticContentRevision) {
+                TextField(state = TextFieldState(), placeholder = "Search products")
+            }
+        }
+        ScrollableColumn {
+            Text("Account settings")
+            TextField(state = TextFieldState(), placeholder = "Account name")
+        }
+        VerticalPager(currentPage = 0, onPageChanged = {}) {
+            Page("form", StaticContentRevision) {
+                ScrollableColumn {
+                    Text("Page-local form")
+                    TextField(state = TextFieldState(), placeholder = "Page value")
+                }
+            }
+        }
+    }
 }
 
 fun themeStateColorSample() {

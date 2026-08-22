@@ -64,11 +64,13 @@ class OneUi7VerificationActivity : DemoRenderActivity() {
     override fun UiTreeBuilder.buildRootScaffold(root: ViewGroup) {
         val rtl = intent?.getBooleanExtra(EXTRA_RTL, false) ?: false
         val fontScale = intent?.getFloatExtra(EXTRA_FONT_SCALE, 1f) ?: 1f
+        val densityScale = intent?.getFloatExtra(EXTRA_DENSITY_SCALE, 1f) ?: 1f
+        val localeTag = intent?.getStringExtra(EXTRA_LOCALE_TAG) ?: if (rtl) "ar" else "en"
         val platform = Environment.values
         UiEnvironment(
             UiEnvironmentValues(
-                density = UiDensity(platform.density.density, fontScale),
-                locales = UiLocaleList.of(if (rtl) "ar" else "en"),
+                density = UiDensity(platform.density.density * densityScale, fontScale),
+                locales = UiLocaleList.of(localeTag),
                 layoutDirection = if (rtl) UiLayoutDirection.Rtl else UiLayoutDirection.Ltr,
             ),
         ) {
@@ -87,12 +89,16 @@ class OneUi7VerificationActivity : DemoRenderActivity() {
         private const val EXTRA_DARK = "one_ui_7_dark"
         private const val EXTRA_RTL = "one_ui_7_rtl"
         private const val EXTRA_FONT_SCALE = "one_ui_7_font_scale"
+        private const val EXTRA_DENSITY_SCALE = "one_ui_7_density_scale"
+        private const val EXTRA_LOCALE_TAG = "one_ui_7_locale_tag"
 
         internal fun newIntent(
             context: Context,
             dark: Boolean = false,
             rtl: Boolean = false,
             fontScale: Float = 1f,
+            densityScale: Float = 1f,
+            localeTag: String = if (rtl) "ar" else "en",
         ): Intent = DemoScenarioRegistry.createLaunchIntent(
             context,
             DemoScenarioRegistry.require(DemoScenarioIds.DesignOneUi7.value),
@@ -100,5 +106,7 @@ class OneUi7VerificationActivity : DemoRenderActivity() {
             .putExtra(EXTRA_DARK, dark)
             .putExtra(EXTRA_RTL, rtl)
             .putExtra(EXTRA_FONT_SCALE, fontScale)
+            .putExtra(EXTRA_DENSITY_SCALE, densityScale)
+            .putExtra(EXTRA_LOCALE_TAG, localeTag)
     }
 }

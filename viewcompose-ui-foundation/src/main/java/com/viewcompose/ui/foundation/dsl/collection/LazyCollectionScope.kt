@@ -17,6 +17,7 @@ import com.viewcompose.ui.node.policy.GridItemSpan
  * reuse rule.
  *
  * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
+ * @sample com.viewcompose.ui.foundation.samples.delayedContentSingleRootSample
  */
 @UiDslMarker
 class LazyListScope internal constructor(
@@ -32,8 +33,10 @@ class LazyListScope internal constructor(
      * @param key unique logical identity that owns remember, saveable state, and effects
      * @param contentRevision semantic version of every non-State value captured by [content]
      * @param contentType physical-tree compatibility class; equal values promise reset-safe structure
-     * @param content declaration evaluated when this logical item session renders
+     * @param content declaration evaluated when this logical item session renders; it must emit
+     * exactly one root node, wrapping siblings in an explicit layout container
      * @throws IllegalArgumentException when [key] duplicates another declaration in this scope
+     * @throws IllegalStateException when [content] emits zero or multiple root nodes
      */
     fun item(
         key: Any,
@@ -66,8 +69,10 @@ class LazyListScope internal constructor(
      * @param key unique logical identity selector
      * @param contentType physical-tree compatibility selector
      * @param contentRevision semantic revision selector; immutable value models default to themselves
-     * @param itemContent declaration evaluated for the item when its logical session renders
+     * @param itemContent declaration evaluated for the item when its logical session renders; each
+     * invocation must emit exactly one root node
      * @throws IllegalArgumentException when selected keys are not unique
+     * @throws IllegalStateException when [itemContent] emits zero or multiple root nodes
      */
     fun <T> items(
         items: List<T>,
@@ -96,8 +101,10 @@ class LazyListScope internal constructor(
      * @param key unique logical identity that owns header state and effects
      * @param contentRevision semantic version of every non-State value captured by [content]
      * @param contentType physical-tree compatibility class for renderer reuse
-     * @param content declaration evaluated when the header session renders
+     * @param content declaration evaluated when the header session renders; it must emit exactly
+     * one root node
      * @throws IllegalArgumentException when used by `LazyRow` or when [key] is duplicated
+     * @throws IllegalStateException when [content] emits zero or multiple root nodes
      */
     fun stickyHeader(
         key: Any,
@@ -126,6 +133,7 @@ class LazyListScope internal constructor(
  * identity and revisions still reuse canonical logical items and their sessions.
  *
  * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
+ * @sample com.viewcompose.ui.foundation.samples.delayedContentSingleRootSample
  */
 @UiDslMarker
 class LazyGridScope internal constructor(
@@ -141,8 +149,10 @@ class LazyGridScope internal constructor(
      * @param contentRevision semantic version of every non-State value captured by [content]
      * @param contentType physical-tree compatibility class for renderer reuse
      * @param span renderer-neutral cell-span policy
-     * @param content declaration evaluated when this logical item session renders
+     * @param content declaration evaluated when this logical item session renders; it must emit
+     * exactly one root node, wrapping siblings in an explicit layout container
      * @throws IllegalArgumentException when [key] is duplicated
+     * @throws IllegalStateException when [content] emits zero or multiple root nodes
      */
     fun item(
         key: Any,
@@ -175,8 +185,10 @@ class LazyGridScope internal constructor(
      * @param contentType physical-tree compatibility selector
      * @param contentRevision semantic revision selector; immutable value models default to themselves
      * @param span renderer-neutral cell-span selector
-     * @param itemContent declaration evaluated for the item when its logical session renders
+     * @param itemContent declaration evaluated for the item when its logical session renders; each
+     * invocation must emit exactly one root node
      * @throws IllegalArgumentException when keys are duplicated
+     * @throws IllegalStateException when [itemContent] emits zero or multiple root nodes
      */
     fun <T> items(
         items: List<T>,
@@ -206,8 +218,10 @@ class LazyGridScope internal constructor(
      * @param key unique logical identity that owns header state and effects
      * @param contentRevision semantic version of every non-State value captured by [content]
      * @param contentType physical-tree compatibility class for renderer reuse
-     * @param content declaration evaluated when the header session renders
+     * @param content declaration evaluated when the header session renders; it must emit exactly
+     * one root node
      * @throws IllegalArgumentException when [key] duplicates another declaration in this scope
+     * @throws IllegalStateException when [content] emits zero or multiple root nodes
      */
     fun stickyHeader(
         key: Any,

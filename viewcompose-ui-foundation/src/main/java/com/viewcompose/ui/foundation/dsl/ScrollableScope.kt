@@ -37,7 +37,6 @@ class ScrollableScope internal constructor() {
      * @param contentType groups structurally compatible items for view reuse
      * @param contentRevision semantic version of every non-State value captured by item content
      * @param state optional externally owned scroll state
-     * @param focusFollowKeyboard whether keyboard focus should request the focused item into view
      * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
      */
     fun <T> LazyColumn(
@@ -53,7 +52,6 @@ class ScrollableScope internal constructor() {
         prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
         reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
         motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-        focusFollowKeyboard: Boolean = false,
         modifier: Modifier = Modifier,
         itemContent: UiTreeBuilder.(T) -> Unit,
     ) {
@@ -71,7 +69,6 @@ class ScrollableScope internal constructor() {
                 prefetchPolicy = prefetchPolicy,
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
-                focusFollowKeyboard = focusFollowKeyboard,
                 modifier = modifier,
                 itemContent = itemContent,
             )
@@ -106,7 +103,6 @@ class ScrollableScope internal constructor() {
      * @param prefetchPolicy ahead-of-viewport session preparation policy
      * @param reusePolicy mounted-tree capacity and reuse policy
      * @param motionPolicy item placement and change animation policy
-     * @param focusFollowKeyboard whether keyboard focus may bring an item into view
      * @param modifier ordered configuration applied to the lazy-list host
      * @param itemContent content factory invoked only while an item session is active
      * @throws IllegalArgumentException when [key] selects duplicate values on a cache miss
@@ -125,7 +121,6 @@ class ScrollableScope internal constructor() {
         prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
         reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
         motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-        focusFollowKeyboard: Boolean = false,
         modifier: Modifier = Modifier,
         itemContent: UiTreeBuilder.(T) -> Unit,
     ) {
@@ -143,7 +138,6 @@ class ScrollableScope internal constructor() {
                 prefetchPolicy = prefetchPolicy,
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
-                focusFollowKeyboard = focusFollowKeyboard,
                 modifier = modifier,
                 itemContent = itemContent,
             )
@@ -154,7 +148,6 @@ class ScrollableScope internal constructor() {
      * Adds a lazy column whose items are declared through [LazyListScope].
      *
      * @param state optional externally owned scroll state
-     * @param focusFollowKeyboard whether keyboard focus should request the focused item into view
      * @param content declares keyed lazy items and item groups
      */
     fun LazyColumn(
@@ -166,7 +159,6 @@ class ScrollableScope internal constructor() {
         prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
         reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
         motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-        focusFollowKeyboard: Boolean = false,
         modifier: Modifier = Modifier,
         content: LazyListScope.() -> Unit,
     ) {
@@ -180,7 +172,6 @@ class ScrollableScope internal constructor() {
                 prefetchPolicy = prefetchPolicy,
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
-                focusFollowKeyboard = focusFollowKeyboard,
                 modifier = modifier,
                 content = content,
             )
@@ -202,7 +193,6 @@ class ScrollableScope internal constructor() {
         horizontalAlignment: HorizontalAlignment = HorizontalAlignment.Start,
         state: ScrollState? = null,
         userScrollEnabled: Boolean = true,
-        focusFollowKeyboard: Boolean = false,
         modifier: Modifier = Modifier,
         content: ColumnScope.() -> Unit,
     ) {
@@ -214,7 +204,6 @@ class ScrollableScope internal constructor() {
                 horizontalAlignment = horizontalAlignment,
                 state = state,
                 userScrollEnabled = userScrollEnabled,
-                focusFollowKeyboard = focusFollowKeyboard,
                 modifier = modifier,
                 content = content,
             )
@@ -417,7 +406,6 @@ class ScrollableScope internal constructor() {
      * @param contentRevision semantic version of every non-State value captured by item content
      * @param state optional externally owned scroll state
      * @param userScrollEnabled whether direct user scrolling is accepted
-     * @param focusFollowKeyboard whether keyboard focus should request the focused item into view
      * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
      */
     fun <T> LazyVerticalGrid(
@@ -436,7 +424,6 @@ class ScrollableScope internal constructor() {
         prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
         reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
         motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-        focusFollowKeyboard: Boolean = false,
         modifier: Modifier = Modifier,
         itemContent: UiTreeBuilder.(T) -> Unit,
     ) {
@@ -457,7 +444,6 @@ class ScrollableScope internal constructor() {
                 prefetchPolicy = prefetchPolicy,
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
-                focusFollowKeyboard = focusFollowKeyboard,
                 modifier = modifier,
                 itemContent = itemContent,
             )
@@ -495,7 +481,6 @@ class ScrollableScope internal constructor() {
      * @param prefetchPolicy ahead-of-viewport session preparation policy
      * @param reusePolicy mounted-tree capacity and reuse policy
      * @param motionPolicy item placement and change animation policy
-     * @param focusFollowKeyboard whether keyboard focus may bring an item into view
      * @param modifier ordered configuration applied to the grid root
      * @param itemContent content factory invoked only while an item session is active
      * @throws IllegalArgumentException for invalid spacing, or duplicate keys on a cache miss
@@ -517,7 +502,6 @@ class ScrollableScope internal constructor() {
         prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
         reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
         motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-        focusFollowKeyboard: Boolean = false,
         modifier: Modifier = Modifier,
         itemContent: UiTreeBuilder.(T) -> Unit,
     ) {
@@ -538,7 +522,6 @@ class ScrollableScope internal constructor() {
                 prefetchPolicy = prefetchPolicy,
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
-                focusFollowKeyboard = focusFollowKeyboard,
                 modifier = modifier,
                 itemContent = itemContent,
             )
@@ -567,7 +550,6 @@ class ScrollableScope internal constructor() {
         prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
         reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
         motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-        focusFollowKeyboard: Boolean = false,
         modifier: Modifier = Modifier,
         content: LazyGridScope.() -> Unit,
     ) {
@@ -583,7 +565,6 @@ class ScrollableScope internal constructor() {
                 prefetchPolicy = prefetchPolicy,
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
-                focusFollowKeyboard = focusFollowKeyboard,
                 modifier = modifier,
                 content = content,
             )
@@ -597,8 +578,8 @@ class ScrollableScope internal constructor() {
      * the caller-owned source of truth and should be updated in response.
      *
      * @param pagerState optional externally owned pager state
-     * @param offscreenPageLimit number of adjacent pages retained on each side
-     * @param userScrollEnabled whether direct user paging is accepted
+     * @param offscreenPageLimit adjacent-page residency limit, or `-1` for RecyclerView's default
+     * @param userScrollEnabled whether direct pointer and accessibility paging is accepted
      */
     fun HorizontalPager(
         currentPage: Int,
@@ -635,8 +616,8 @@ class ScrollableScope internal constructor() {
      * the caller-owned source of truth and should be updated in response.
      *
      * @param pagerState optional externally owned pager state
-     * @param offscreenPageLimit number of adjacent pages retained on each side
-     * @param userScrollEnabled whether direct user paging is accepted
+     * @param offscreenPageLimit adjacent-page residency limit, or `-1` for RecyclerView's default
+     * @param userScrollEnabled whether direct pointer and accessibility paging is accepted
      */
     fun VerticalPager(
         currentPage: Int,
@@ -646,7 +627,6 @@ class ScrollableScope internal constructor() {
         userScrollEnabled: Boolean = true,
         reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
         motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-        focusFollowKeyboard: Boolean = false,
         key: Any? = null,
         modifier: Modifier = Modifier,
         pages: HorizontalPagerScope.() -> Unit,
@@ -660,7 +640,6 @@ class ScrollableScope internal constructor() {
                 userScrollEnabled = userScrollEnabled,
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
-                focusFollowKeyboard = focusFollowKeyboard,
                 key = key,
                 modifier = modifier,
                 pages = pages,

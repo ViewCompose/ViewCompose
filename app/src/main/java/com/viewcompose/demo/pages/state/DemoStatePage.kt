@@ -499,7 +499,10 @@ private fun UiTreeBuilder.ViewPatchFixture(
                                     .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                                     .padding(12.dp),
                             ) {
-                                Text(text = stringResource(R.string.demo_state_patch_page_summary, step))
+                                Text(
+                                    text = stringResource(R.string.demo_state_patch_page_summary, step),
+                                    modifier = Modifier.testTag(DemoTestTags.STATE_HORIZONTAL_PAGER_SUMMARY),
+                                )
                                 Text(
                                     text = stringResource(R.string.demo_state_patch_page_summary_note),
                                     color = TextDefaults.secondaryColor(),
@@ -514,7 +517,10 @@ private fun UiTreeBuilder.ViewPatchFixture(
                                     .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                                     .padding(12.dp),
                             ) {
-                                Text(text = stringResource(R.string.demo_state_patch_page_details, step))
+                                Text(
+                                    text = stringResource(R.string.demo_state_patch_page_details, step),
+                                    modifier = Modifier.testTag(DemoTestTags.STATE_HORIZONTAL_PAGER_DETAILS),
+                                )
                                 Text(
                                     text = stringResource(R.string.demo_state_patch_page_details_note),
                                     color = TextDefaults.secondaryColor(),
@@ -626,7 +632,10 @@ private fun UiTreeBuilder.ViewPatchFixture(
                                 .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                                 .padding(12.dp),
                         ) {
-                            Text(text = stringResource(R.string.demo_state_vertical_details, step))
+                            Text(
+                                text = stringResource(R.string.demo_state_vertical_details, step),
+                                modifier = Modifier.testTag(DemoTestTags.STATE_VERTICAL_PAGER_DETAILS),
+                            )
                             Text(
                                 text = stringResource(R.string.demo_state_vertical_details_note),
                                 color = TextDefaults.secondaryColor(),

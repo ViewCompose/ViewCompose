@@ -55,7 +55,9 @@ class DemoDesignSystemVerificationActivity : DemoRenderActivity() {
 
     override fun UiTreeBuilder.buildRootScaffold(root: ViewGroup) {
         val requestedFontScale = intent?.getFloatExtra(EXTRA_FONT_SCALE, 1f) ?: 1f
+        val requestedDensityScale = intent?.getFloatExtra(EXTRA_DENSITY_SCALE, 1f) ?: 1f
         val rtl = intent?.getBooleanExtra(EXTRA_RTL, false) ?: false
+        val localeTag = intent?.getStringExtra(EXTRA_LOCALE_TAG) ?: if (rtl) "ar" else "en"
         val bundle = DemoDesignSystemBundles.resolve(
             kind = requestedKind,
             dark = intent?.getBooleanExtra(EXTRA_DARK, false) ?: false,
@@ -64,10 +66,10 @@ class DemoDesignSystemVerificationActivity : DemoRenderActivity() {
         val platformEnvironment = Environment.values
         val fixtureEnvironment = UiEnvironmentValues(
             density = UiDensity(
-                density = platformEnvironment.density.density,
+                density = platformEnvironment.density.density * requestedDensityScale,
                 fontScale = requestedFontScale,
             ),
-            locales = UiLocaleList.of(if (rtl) "ar" else "en"),
+            locales = UiLocaleList.of(localeTag),
             layoutDirection = if (rtl) UiLayoutDirection.Rtl else UiLayoutDirection.Ltr,
         )
         UiEnvironment(fixtureEnvironment) {
@@ -97,6 +99,8 @@ class DemoDesignSystemVerificationActivity : DemoRenderActivity() {
         private const val EXTRA_DARK = "demo_design_system_dark"
         private const val EXTRA_RTL = "demo_design_system_rtl"
         private const val EXTRA_FONT_SCALE = "demo_design_system_font_scale"
+        private const val EXTRA_DENSITY_SCALE = "demo_design_system_density_scale"
+        private const val EXTRA_LOCALE_TAG = "demo_design_system_locale_tag"
         private const val EXTRA_REDUCED_MOTION = "demo_design_system_reduced_motion"
 
         internal fun newIntent(
@@ -105,6 +109,8 @@ class DemoDesignSystemVerificationActivity : DemoRenderActivity() {
             dark: Boolean = false,
             rtl: Boolean = false,
             fontScale: Float = 1f,
+            densityScale: Float = 1f,
+            localeTag: String = if (rtl) "ar" else "en",
             reducedMotionEnabled: Boolean = false,
         ): Intent {
             val fixture = DemoDesignSystemFixture.from(kind)
@@ -114,6 +120,8 @@ class DemoDesignSystemVerificationActivity : DemoRenderActivity() {
                 .putExtra(EXTRA_DARK, dark)
                 .putExtra(EXTRA_RTL, rtl)
                 .putExtra(EXTRA_FONT_SCALE, fontScale)
+                .putExtra(EXTRA_DENSITY_SCALE, densityScale)
+                .putExtra(EXTRA_LOCALE_TAG, localeTag)
                 .putExtra(EXTRA_REDUCED_MOTION, reducedMotionEnabled)
         }
     }

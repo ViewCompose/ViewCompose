@@ -87,11 +87,11 @@
     <string name="demo_input_search_clear_description">Clear</string>
     <string name="demo_input_search_disabled">Disabled search bar</string>
     <string name="demo_input_search_unavailable_placeholder">Search unavailable</string>
-    <string name="demo_input_search_scrollable_title">ScrollableColumn + focusFollowKeyboard</string>
+    <string name="demo_input_search_scrollable_title">ScrollableColumn + automatic focus visibility</string>
     <string name="demo_input_search_scrollable_note">Focusing an input inside the scroll container affects only the current vertical container.</string>
     <string name="demo_input_search_scrollable_placeholder">Search inside ScrollableColumn…</string>
     <string name="demo_input_search_placeholder_row">Scrollable placeholder row %1$d</string>
-    <string name="demo_input_search_pager_title">VerticalPager + focusFollowKeyboard</string>
+    <string name="demo_input_search_pager_title">VerticalPager + page-local focus visibility</string>
     <string name="demo_input_search_pager_first_note">The first page verifies input focus following.</string>
     <string name="demo_input_search_pager_placeholder">Search inside VerticalPager…</string>
     <string name="demo_input_search_pager_second_title">Second page for manual switching</string>

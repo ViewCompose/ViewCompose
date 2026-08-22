@@ -166,6 +166,37 @@ Creating the snapshot on every composition remains correct but forfeits the iden
 Scoped `LazyColumn { items(...) }` and `LazyVerticalGrid { items(...) }` deliberately have no
 `LazyItemsSnapshot` overload and continue evaluating selectors on every declaration pass.
 
+## Wrap delayed siblings in one explicit root
+
+Each lazy `item`, `stickyHeader`, typed item-content invocation, and pager `Page` owns one native
+holder and must now emit exactly one root node. The former multi-root behavior silently placed
+siblings in the same neutral holder without defining vertical, horizontal, or overlay geometry.
+The hard cut rejects both zero and multiple roots during composition preparation, before any native
+candidate is committed. Use `Spacer` when an entry intentionally has no visible content.
+
+Replace implicit siblings:
+
+```kotlin
+item(key = "account", contentRevision = account.version) {
+    Text(account.name)
+    Text(account.status)
+}
+```
+
+with an explicit layout owner:
+
+```kotlin
+item(key = "account", contentRevision = account.version) {
+    Column {
+        Text(account.name)
+        Text(account.status)
+    }
+}
+```
+
+The same rule applies to `HorizontalPagerScope.Page` and `VerticalPager` pages. `TabRow` remains
+eager parent content and is not part of this delayed-holder restriction.
+
 ## Update native interop reuse
 
 A lazy mounted tree containing `AndroidView` does not cross keys unless every interop node declares
@@ -188,8 +219,14 @@ shells. Omit `onReset` when a View cannot safely support this lifecycle.
 
 ## Update container assumptions
 
-- Pager `offscreenPageLimit` now defaults to ViewPager2's native `-1` policy. Pass a value of at
-  least `1` only when the application intentionally requires extra resident pages.
+- Pager `offscreenPageLimit` defaults to the renderer's RecyclerView caching policy at `-1`. Pass a
+  value of at least `1` only when the application intentionally requires that many adjacent
+  page-sized layout spaces on each side.
+- Remove every `focusFollowKeyboard` argument. Focused editors in LazyColumn, LazyVerticalGrid, and
+  ScrollableColumn now use Android's native rectangle-request chain automatically. A
+  VerticalPager page that can be obscured by the IME must place its form inside a page-local
+  ScrollableColumn, LazyColumn, or another real vertical scroll owner; the pager owns page
+  selection only.
 - `TabRow` content is eager keyed parent content. It no longer owns lazy child sessions. Stable tab
   keys retain remember/saveable identity across reorder, and selection changes invalidate only the
   old and new selected children.

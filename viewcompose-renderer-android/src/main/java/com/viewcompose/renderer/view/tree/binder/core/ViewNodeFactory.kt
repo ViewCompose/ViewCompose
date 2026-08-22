@@ -35,7 +35,6 @@ import com.viewcompose.renderer.view.container.DeclarativeScrollableRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeSegmentedControlLayout
 import com.viewcompose.renderer.view.container.DeclarativeTabRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeVerticalPagerLayout
-import com.viewcompose.renderer.view.lazy.focus.LazyLinearLayoutManager
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 
@@ -103,17 +102,17 @@ internal object ViewNodeFactory {
                 created
             }
             NodeType.LazyColumn -> DeclarativeLazyListView(context).apply {
-                layoutManager = LazyLinearLayoutManager(context)
+                layoutManager = LinearLayoutManager(context)
                 adapter = LazyListAdapter()
                 // Framework defaults centralize RecyclerView item animation and pooling instead of repeating them in binders.
                 // RecyclerView default animation/reuse-pool policy is centralized here to avoid repeated binder setup.
                 FrameworkRecyclerViewDefaults.applyLazyColumnDefaults(this)
             }
             NodeType.LazyRow -> DeclarativeLazyListView(context).apply {
-                layoutManager = LazyLinearLayoutManager(
-                    context = context,
-                    orientation = LinearLayoutManager.HORIZONTAL,
-                    reverseLayout = false,
+                layoutManager = LinearLayoutManager(
+                    context,
+                    LinearLayoutManager.HORIZONTAL,
+                    false,
                 )
                 adapter = LazyListAdapter(LinearLayoutManager.HORIZONTAL)
                 FrameworkRecyclerViewDefaults.applyLazyRowDefaults(this)

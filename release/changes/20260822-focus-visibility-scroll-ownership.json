@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "summary": "Remove focusFollowKeyboard, restore native focus visibility, replace ViewPager2 with a focus-stable RecyclerView pager, and reject zero- or multi-root delayed content before native commit.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" }
+  ],
+  "ignored": [],
+  "shared": [
+    {
+      "path": "gradle/libs.versions.toml",
+      "reason": "The publication dependency catalog removes ViewPager2 from the classified Android renderer artifact after the pager backend hard cut."
+    }
+  ]
+}

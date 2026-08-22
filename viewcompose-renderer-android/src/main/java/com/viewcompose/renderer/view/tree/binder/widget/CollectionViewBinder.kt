@@ -9,7 +9,6 @@ import com.viewcompose.renderer.view.container.DeclarativeNavigationBarLayout
 import com.viewcompose.renderer.view.container.LazyGridCellsPx
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
-import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.resolvePadding
 import com.viewcompose.renderer.view.roundToPx
@@ -45,7 +44,6 @@ internal object CollectionViewBinder {
         val prefetchPolicy: LazyLayoutPrefetchPolicy,
         val reusePolicy: CollectionReusePolicy,
         val motionPolicy: CollectionMotionPolicy,
-        val focusFollowKeyboard: Boolean,
     )
 
     data class NavigationBarSpec(
@@ -83,7 +81,6 @@ internal object CollectionViewBinder {
         val prefetchPolicy: LazyLayoutPrefetchPolicy,
         val reusePolicy: CollectionReusePolicy,
         val motionPolicy: CollectionMotionPolicy,
-        val focusFollowKeyboard: Boolean,
     )
 
     fun bindLazyColumn(
@@ -99,10 +96,6 @@ internal object CollectionViewBinder {
             animateRemove = spec.motionPolicy.animateRemove,
             animateMove = spec.motionPolicy.animateMove,
             animateChange = spec.motionPolicy.animateChange,
-        )
-        LazyFocusFollowLayoutMonitor.apply(
-            recyclerView = view,
-            enabled = spec.focusFollowKeyboard,
         )
         configureLazyListLayout(
             view = view,
@@ -146,10 +139,6 @@ internal object CollectionViewBinder {
             animateRemove = spec.motionPolicy.animateRemove,
             animateMove = spec.motionPolicy.animateMove,
             animateChange = spec.motionPolicy.animateChange,
-        )
-        LazyFocusFollowLayoutMonitor.apply(
-            recyclerView = view,
-            enabled = false,
         )
         configureLazyListLayout(
             view = view,
@@ -222,7 +211,6 @@ internal object CollectionViewBinder {
             animateMove = spec.motionPolicy.animateMove,
             animateChange = spec.motionPolicy.animateChange,
         )
-        view.setFocusFollowKeyboardEnabled(spec.focusFollowKeyboard)
         view.bind(
             cells = spec.cells,
             contentPadding = spec.contentPadding,
@@ -250,7 +238,6 @@ internal object CollectionViewBinder {
             prefetchPolicy = spec.prefetchPolicy,
             reusePolicy = spec.reusePolicy,
             motionPolicy = spec.motionPolicy,
-            focusFollowKeyboard = spec.focusFollowKeyboard,
         )
     }
 
@@ -266,7 +253,6 @@ internal object CollectionViewBinder {
             prefetchPolicy = spec.prefetchPolicy,
             reusePolicy = spec.reusePolicy,
             motionPolicy = spec.motionPolicy,
-            focusFollowKeyboard = false,
         )
     }
 
@@ -310,7 +296,6 @@ internal object CollectionViewBinder {
             prefetchPolicy = spec.prefetchPolicy,
             reusePolicy = spec.reusePolicy,
             motionPolicy = spec.motionPolicy,
-            focusFollowKeyboard = spec.focusFollowKeyboard,
         )
     }
 

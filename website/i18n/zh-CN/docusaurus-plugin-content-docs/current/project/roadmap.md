@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: 911ead83b694c51897c51acd20afbdbf2c9d68a940a8db8b97a27a599d1a2914
+translation_source_hash: 7a6f3454ec0ebd3cf2142592ddd514b2b7392860e9a63c7f9d9d231bae0126d9
 translation_status: current
 ---
 
@@ -303,7 +303,7 @@ translation_status: current
 
 新增下列能力时，必须补延迟 session 容器专项：
 
-1. 基于 `RecyclerView/ViewPager2` 的复用型容器
+1. 基于 RecyclerView 的 Lazy 与 Pager 复用型容器
 2. 结构 diff 与可见内容刷新可能解耦的容器
 3. overlay surface 的独立 session 容器
 

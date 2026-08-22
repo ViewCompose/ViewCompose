@@ -338,6 +338,25 @@ open class UiTreeBuilder {
 
     internal fun build(): List<VNode> = children.toList()
 
+    /**
+     * Builds and appends one delayed-content root after enforcing its physical-host contract.
+     *
+     * Lazy items and pager pages each own one native item host. Accepting zero or multiple roots
+     * would leave that host without a defined measurement and placement policy, so the declaration
+     * must express any sibling layout explicitly through a single container node.
+     */
+    internal fun emitDelayedContentRoot(
+        owner: String,
+        content: UiTreeBuilder.() -> Unit,
+    ) {
+        val roots = UiTreeBuilder().apply(content).build()
+        check(roots.size == 1) {
+            "$owner content must emit exactly one root node, but emitted ${roots.size}. " +
+                "Wrap sibling content in Column, Row, or Box; use Spacer for an empty item or page."
+        }
+        children += roots.single()
+    }
+
     private data class EmitGroupSignature(
         val type: NodeType,
         val key: Any?,

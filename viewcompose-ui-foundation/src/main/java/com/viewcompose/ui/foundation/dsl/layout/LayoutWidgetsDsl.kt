@@ -336,11 +336,12 @@ fun UiTreeBuilder.Column(
  * Emits a vertically scrolling container whose complete child tree remains mounted.
  *
  * [state] observes pixel offsets in the first-party Android renderer and accepts immediate or
- * animated commands. Setting [userScrollEnabled] to `false` disables direct pointer scrolling but
- * does not disable descendants, focus-follow behavior, or [state] commands. Prefer [LazyColumn]
- * for large or unbounded collections.
+ * animated commands. Focused descendants use the platform child-rectangle request chain to remain
+ * visible; this programmatic movement remains available when [userScrollEnabled] is `false`.
+ * Prefer [LazyColumn] for large or unbounded collections.
  *
  * @sample com.viewcompose.ui.foundation.samples.eagerScrollStateSample
+ * @sample com.viewcompose.ui.foundation.samples.focusVisibilityOwnershipSample
  * @receiver active tree builder receiving the scroll container
  * @param key optional stable sibling identity used during reconciliation
  * @param spacing fixed gap between adjacent eager children
@@ -348,7 +349,6 @@ fun UiTreeBuilder.Column(
  * @param horizontalAlignment default cross-axis child alignment
  * @param state optional caller-owned observable position and command state
  * @param userScrollEnabled whether direct user scrolling is accepted
- * @param focusFollowKeyboard whether keyboard focus may bring a descendant into view
  * @param modifier ordered configuration applied to the scroll container root
  * @param content eager column content retained while the node is mounted
  */
@@ -359,7 +359,6 @@ fun UiTreeBuilder.ScrollableColumn(
     horizontalAlignment: HorizontalAlignment = HorizontalAlignment.Start,
     state: ScrollState? = null,
     userScrollEnabled: Boolean = true,
-    focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
     content: ColumnScope.() -> Unit,
 ) {
@@ -372,7 +371,6 @@ fun UiTreeBuilder.ScrollableColumn(
             horizontalAlignment = horizontalAlignment,
             state = state,
             userScrollEnabled = userScrollEnabled,
-            focusFollowKeyboard = focusFollowKeyboard,
         ),
         modifier = modifier,
         children = ColumnScope().apply(content).build(),

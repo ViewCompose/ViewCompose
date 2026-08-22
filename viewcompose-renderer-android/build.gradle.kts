@@ -34,7 +34,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.recyclerview)
-    implementation(libs.androidx.viewpager2)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.swiperefreshlayout)
     testImplementation(libs.junit)

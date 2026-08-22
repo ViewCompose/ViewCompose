@@ -181,7 +181,11 @@ first-party image loaders; its zero default preserves deterministic non-Android/
   disposal. Eager horizontal offsets and all page indexes use logical order in RTL.
 - `PagerStateSnapshot` publishes current, settled, and target pages separately. A pager's controlled
   `currentPage` remains authoritative across recreation; `onPageChanged` is a settled-idle event,
-  not an `onPageSelected` echo during declarative binding.
+  not an `onPageSelected` echo during declarative binding. Page indexes stay logical in RTL;
+  `offscreenPageLimit` accepts `-1` or a positive value, and disabled user scrolling blocks pointer
+  and accessibility paging without blocking renderer commands.
+- Vertical collection NodeSpecs contain no focus-follow policy. Focused-descendant visibility is a
+  renderer invariant of a real scroll owner, while a pager remains a discrete selection owner.
 - `GridCells.Adaptive` recomputes physical columns from current inner width, spacing, density, and
   configuration while keeping keyed logical sessions intact. `GridItemSpan.FullLine` resolves
   against that current count; `Fixed(1)` is canonicalized to `Single` by Foundation.

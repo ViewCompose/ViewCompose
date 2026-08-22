@@ -1,10 +1,12 @@
 package com.viewcompose.renderer.view.tree
 
 import android.content.Context
+import android.graphics.Rect
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.KeyEvent
+import android.view.View
 import android.view.inputmethod.CompletionInfo
 import android.view.inputmethod.CorrectionInfo
 import android.view.inputmethod.InputConnection
@@ -22,9 +24,9 @@ import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.text.TextRange
 import com.viewcompose.ui.node.TextFieldImeAction
+import com.viewcompose.renderer.view.container.PagerPageHostLayout
 
 /**
- * Android EditText host for ViewCompose text input that observes selection, IME, read-only, and receive-content events.
  * Android EditText host for ViewCompose text input, intercepting selection, IME, read-only, and
  * receive-content events.
  */
@@ -34,6 +36,7 @@ internal class ViewComposeEditText @JvmOverloads constructor(
 ) : AppCompatEditText(context, attrs) {
     private var initializedController: AndroidTextFieldController? = null
     private var readOnlyMode: Boolean = false
+    private var visibilityCoordinator: FocusedEditorVisibilityCoordinator? = null
 
     internal val textController: AndroidTextFieldController
         get() = checkNotNull(initializedController) {
@@ -106,7 +109,38 @@ internal class ViewComposeEditText @JvmOverloads constructor(
         previouslyFocusedRect: android.graphics.Rect?,
     ) {
         super.onFocusChanged(focused, direction, previouslyFocusedRect)
+        if (focused) {
+            visibilityCoordinator = FocusedEditorVisibilityCoordinator.activate(this)
+        } else {
+            visibilityCoordinator?.deactivate(this)
+            visibilityCoordinator = null
+        }
         initializedController?.onFocusChanged(focused)
+    }
+
+    override fun requestRectangleOnScreen(rectangle: Rect, immediate: Boolean): Boolean {
+        val pageBoundary = nearestPagerPageBoundary()
+            ?: return super.requestRectangleOnScreen(rectangle, immediate)
+        return pageBoundary.requestDescendantRectangleOnScreen(
+            descendant = this,
+            rectangle = rectangle,
+            immediate = immediate,
+        )
+    }
+
+    private fun nearestPagerPageBoundary(): PagerPageHostLayout? {
+        var ancestor = parent
+        while (ancestor is View) {
+            if (ancestor is PagerPageHostLayout) return ancestor
+            ancestor = ancestor.parent
+        }
+        return null
+    }
+
+    override fun onDetachedFromWindow() {
+        visibilityCoordinator?.deactivate(this)
+        visibilityCoordinator = null
+        super.onDetachedFromWindow()
     }
 
     internal fun setReadOnlyMode(readOnly: Boolean) {
@@ -115,7 +149,6 @@ internal class ViewComposeEditText @JvmOverloads constructor(
 }
 
 /**
- * Coordinates bidirectional TextFieldState and EditText synchronization while isolating callback-driven recursion.
  * Coordinates bidirectional synchronization between TextFieldState and EditText while isolating
  * recursive updates caused by framework callbacks.
  */

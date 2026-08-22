@@ -17,6 +17,17 @@ group, one Demo page, or one instrumentation regression.
 Do not combine unrelated bug fixes or leave planning, broad implementation, and multiple test
 groups uncommitted in the worktree for an extended period.
 
+### 2.1 Foundational-instability preemption
+
+An unstable foundational contract, ownership model, or core implementation takes the highest
+priority over release-window convenience, the current plan phase, and additive roadmap work. Once
+evidence confirms that the design itself is unsound, stop dependent expansion, replace it at the
+owning layer, migrate callers, and remove the old API, transport, fallback, and compatibility
+branches in one hard cut. Do not defer a confirmed foundational correction to a later phase. A
+timing guard, deprecated no-op field, caller-specific wrapper, or parallel legacy path is not an
+acceptable substitute for correcting the model. Record the evidence, migration, and release impact
+explicitly.
+
 ## 3. Documentation synchronization
 
 Before implementation, classify documentation impact with the
@@ -324,9 +335,13 @@ Development tooling that can execute inside an application process follows
 
 1. ui-contract Modifier contains globally stable semantics, never a policy meaningful to only one
    container.
-2. `reusePolicy/motionPolicy/focusFollowKeyboard` are container DSL and NodeSpec fields read directly
-   by the renderer.
-3. A new policy includes DSL-to-NodeSpec and renderer bind/patch tests.
+2. `reusePolicy` and `motionPolicy` are container DSL and NodeSpec fields read directly by the
+   renderer. A behavior that is required for correctness, such as native focused-descendant
+   visibility, is an invariant rather than an opt-in policy.
+3. Pager residency and direct-input controls remain explicit container fields. Disabling direct
+   input does not disable state commands or programmatic focus visibility.
+4. A new policy includes DSL-to-NodeSpec and renderer bind/patch tests. Before adding a Boolean,
+   verify that the behavior is genuinely optional and has one stable owner.
 
 ### 5.17 Developer Preview
 

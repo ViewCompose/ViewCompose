@@ -274,6 +274,7 @@ internal fun UiTreeBuilder.DeclareMenuFeedbackOverlays(
         anchorId = anchors.menu,
         onDismissRequest = { state.expanded.value = false },
         requestKey = "feedback_dropdown_menu",
+        modifier = Modifier.feedbackScenarioTarget(scenario, DemoAutomationRole.Target),
     ) {
         DropdownMenuItem(
             text = stringResource(R.string.demo_feedback_menu_edit),
@@ -282,7 +283,6 @@ internal fun UiTreeBuilder.DeclareMenuFeedbackOverlays(
                 state.expanded.value = false
             },
             leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
-            modifier = Modifier.feedbackScenarioTarget(scenario, DemoAutomationRole.Target),
         )
         DropdownMenuItem(
             text = stringResource(R.string.demo_feedback_menu_copy),

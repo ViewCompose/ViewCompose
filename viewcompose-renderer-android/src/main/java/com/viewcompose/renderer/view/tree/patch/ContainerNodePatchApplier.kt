@@ -21,8 +21,6 @@ import com.viewcompose.renderer.view.container.DeclarativeTabRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeVerticalPagerLayout
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
-import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
-import com.viewcompose.renderer.view.lazy.focus.ScrollableFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.tree.AnimatedSizeHostNodePatch
 import com.viewcompose.renderer.view.tree.AnimatedVisibilityHostNodePatch
@@ -187,12 +185,6 @@ internal object ContainerNodePatchApplier {
                 animateChange = next.motionPolicy.animateChange,
             )
         }
-        if (previous.focusFollowKeyboard != next.focusFollowKeyboard) {
-            LazyFocusFollowLayoutMonitor.apply(
-                recyclerView = view,
-                enabled = next.focusFollowKeyboard,
-            )
-        }
         if (
             previous.reverseLayout != next.reverseLayout ||
             previous.userScrollEnabled != next.userScrollEnabled ||
@@ -260,10 +252,6 @@ internal object ContainerNodePatchApplier {
                 animateChange = next.motionPolicy.animateChange,
             )
         }
-        LazyFocusFollowLayoutMonitor.apply(
-            recyclerView = view,
-            enabled = false,
-        )
         if (
             previous.reverseLayout != next.reverseLayout ||
             previous.userScrollEnabled != next.userScrollEnabled ||
@@ -362,12 +350,6 @@ internal object ContainerNodePatchApplier {
             with(ContainerViewSpecReader) {
                 view.innerLayout.gravity = next.horizontalAlignment.toGravity()
             }
-        }
-        if (previous.focusFollowKeyboard != next.focusFollowKeyboard) {
-            ScrollableFocusFollowLayoutMonitor.apply(
-                scrollView = view,
-                enabled = next.focusFollowKeyboard,
-            )
         }
         if (previous.state !== next.state || previous.userScrollEnabled != next.userScrollEnabled) {
             view.bindScrollState(next.state, next.userScrollEnabled)
@@ -530,7 +512,6 @@ internal object ContainerNodePatchApplier {
                 userScrollEnabled = patch.next.userScrollEnabled,
                 reusePolicy = patch.next.reusePolicy,
                 motionPolicy = patch.next.motionPolicy,
-                focusFollowKeyboard = patch.next.focusFollowKeyboard,
             ),
             submission = submission,
         )
@@ -558,7 +539,6 @@ internal object ContainerNodePatchApplier {
                 prefetchPolicy = patch.next.prefetchPolicy,
                 reusePolicy = patch.next.reusePolicy,
                 motionPolicy = patch.next.motionPolicy,
-                focusFollowKeyboard = patch.next.focusFollowKeyboard,
             ),
             submission = submission,
         )

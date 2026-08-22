@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: b528e412f549abcc585f34b1ac204ac9d4bbc1d637704d93fe84a2ba65aa392c
+translation_source_hash: b4e14a6e0a15d1e16a63128a22eb34d8cf6e9abf3f5cb21ab33e43b0bd5d4a18
 translation_status: current
 ---
 
@@ -28,6 +28,7 @@ translation_status: current
 - [ADR-0015：可观察属性事务](./0015-observed-property-transactions.md)
 - [ADR-0016：ConstraintLayout 图与 Helper 所有权](./0016-constraintlayout-graph-and-helper-ownership.md)
 - [ADR-0017：类型化 ConstraintLayout Helper 展开](./0017-typed-constraint-helper-expansion.md)
+- [ADR-0018：焦点可见性与 Pager 选择权归属](./0018-focus-visibility-and-pager-selection-ownership.md)
 
 ## 规则
 

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 99075a4c79ad72370cb7c71f320045995205731b99e015eadf593173d17b0739
+translation_source_hash: d20c71016232f910eff09781d1d22e004050cc3a18cdc46c5ac5afac64a3d7a2
 translation_status: current
 ---
 
@@ -136,8 +136,11 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   输入时，才能使用 `StaticContentRevision`。批量 Overload 有意保留可空
   `contentRevision: (T) -> Any? = { it }` Selector，但仅适用于 Equality 覆盖 Item Content 所读取
   全部普通输入的不可变值模型。其他 Item Content 输入必须在 Active Session 内作为可观察 State
-  读取，或进入显式 Revision。Pager Page 还声明 `contentType`，`TabRow` 则使用 Eager Keyed Child，
-  而非 Lazy Item Session。
+  读取，或进入显式 Revision。Pager Page 还声明 `contentType`。每个独立组合的 Lazy Item、Sticky
+  Header 或 Pager Page 必须只发射一个根节点，因为其原生 Holder 只拥有一个测量和放置边界。零个或
+  多个根节点会在原生渲染前回滚候选；Sibling 应显式包装在 `Column`、`Row` 或 `Box` 中，有意为空的
+  Entry 使用 `Spacer`。`TabRow` 使用 Eager Keyed Child，而非 Lazy Item Session。编译样例
+  `delayedContentSingleRootSample` 展示该延迟根节点契约。
 - 每个普通 Typed `List` Declaration（包括 Scoped `items` 与 Typed `ScrollableScope` Wrapper）都会
   在父 Composition 的每一轮执行中求值顺序、成员与 Item Selector；随后只有 Key、Content
   Revision、框架 Environment、Content Type、Kind 与 Span 都相等时，才能复用已提交的逻辑 Item
@@ -152,7 +155,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   `List` 校验。
 - `ScrollableColumn` 与 `ScrollableRow` 接受 Q3 `ScrollState` 和 `userScrollEnabled`，不需要
   卸载 Eager Child。`HorizontalPager` 与 `VerticalPager` 接受 Q3 `PagerState`；只有不同页面停稳后
-  才触发变化回调。编译样例 `eagerScrollStateSample` 展示调用方持有的 Eager 滚动状态。
+  才触发变化回调。真实垂直滚动所有者中的焦点编辑器会自动使用原生矩形传播，即使直接用户滚动
+  已禁用仍然有效。页面内容可能被 IME 遮挡时，Pager Page 必须声明自己的垂直滚动所有者。
+  编译样例 `eagerScrollStateSample` 与 `focusVisibilityOwnershipSample` 分别展示状态控制和所有权。
 - `LazyVerticalGrid` 接受 `GridCells.Fixed` 或 `GridCells.Adaptive`，网格 Item 使用
   `GridItemSpan.Single`、`Fixed` 或 `FullLine`。自适应尺寸变化只改变原生列数，不改变逻辑 Item
   身份。编译样例 `adaptiveGridSample` 覆盖整行内容。

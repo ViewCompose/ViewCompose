@@ -407,6 +407,7 @@ class RenderSessionFailureTest {
                 DisposableEffect(Unit) {
                     onDispose { events += "effect-dispose" }
                 }
+                Text(value)
             },
         )
 
@@ -564,6 +565,7 @@ class RenderSessionFailureTest {
             saveableStateKey = "item",
             content = {
                 if (failComposition) error("composition failed")
+                Text("item")
             },
         )
 
@@ -589,11 +591,77 @@ class RenderSessionFailureTest {
             saveableStateKey = "nullable-item",
             content = {
                 observed = UiLocals.current(nullable)
+                Text(observed.orEmpty())
             },
         )
 
         assertTrue(itemSession.render())
         assertNull(observed)
+        itemSession.dispose()
+    }
+
+    @Test
+    fun `delayed item rejects empty content before native render`() {
+        var nativeRenderCount = 0
+        engine.renderBlock = { previous, _ ->
+            nativeRenderCount += 1
+            CoreRenderFrame(mountedNodes = previous)
+        }
+        val itemSession = WidgetLazyListItemSession(
+            container = childContainer(),
+            localSnapshot = LocalContext.snapshot(),
+            saveableStateHolder = null,
+            saveableStateKey = "empty-item",
+            content = {},
+        )
+
+        assertFalse(itemSession.render())
+        assertEquals(0, nativeRenderCount)
+        assertTrue(
+            NoOpRenderSessionDiagnostics.errors.single().second?.message.orEmpty()
+                .contains("must emit exactly one root node, but emitted 0"),
+        )
+
+        itemSession.dispose()
+    }
+
+    @Test
+    fun `delayed item rejects sibling roots and can retry with one explicit root`() {
+        var nativeRenderCount = 0
+        engine.renderBlock = { previous, _ ->
+            nativeRenderCount += 1
+            CoreRenderFrame(mountedNodes = previous)
+        }
+        val itemSession = WidgetLazyListItemSession(
+            container = childContainer(),
+            localSnapshot = LocalContext.snapshot(),
+            saveableStateHolder = null,
+            saveableStateKey = "multiple-roots-item",
+            content = {
+                Text("first")
+                Text("second")
+            },
+        )
+
+        assertFalse(itemSession.render())
+        assertEquals(0, nativeRenderCount)
+        assertTrue(
+            NoOpRenderSessionDiagnostics.errors.single().second?.message.orEmpty()
+                .contains("must emit exactly one root node, but emitted 2"),
+        )
+
+        itemSession.updateContent(
+            localSnapshot = LocalContext.snapshot(),
+            content = {
+                Column {
+                    Text("first")
+                    Text("second")
+                }
+            },
+        )
+        assertTrue(itemSession.render())
+        assertEquals(1, nativeRenderCount)
+
         itemSession.dispose()
     }
 

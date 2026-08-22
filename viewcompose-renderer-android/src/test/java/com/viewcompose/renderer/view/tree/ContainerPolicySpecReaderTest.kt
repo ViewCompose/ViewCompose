@@ -44,7 +44,6 @@ class ContainerPolicySpecReaderTest {
         assertTrue(spec.motionPolicy.animateRemove)
         assertTrue(spec.motionPolicy.animateMove)
         assertTrue(spec.motionPolicy.animateChange)
-        assertFalse(spec.focusFollowKeyboard)
     }
 
     @Test
@@ -67,13 +66,11 @@ class ContainerPolicySpecReaderTest {
                     items = emptyList(),
                     reusePolicy = reuse,
                     motionPolicy = motion,
-                    focusFollowKeyboard = true,
                 ),
             ),
         )
         assertEquals(reuse, lazyColumnSpec.reusePolicy)
         assertEquals(motion, lazyColumnSpec.motionPolicy)
-        assertTrue(lazyColumnSpec.focusFollowKeyboard)
 
         val lazyGridSpec = CollectionViewBinder.readLazyVerticalGridSpec(
             node = VNode(
@@ -87,13 +84,11 @@ class ContainerPolicySpecReaderTest {
                     state = null,
                     reusePolicy = reuse,
                     motionPolicy = motion,
-                    focusFollowKeyboard = true,
                 ),
             ),
         )
         assertEquals(reuse, lazyGridSpec.reusePolicy)
         assertEquals(motion, lazyGridSpec.motionPolicy)
-        assertTrue(lazyGridSpec.focusFollowKeyboard)
 
         val horizontalPagerSpec = PagerViewBinder.readHorizontalPagerSpec(
             node = VNode(
@@ -125,17 +120,15 @@ class ContainerPolicySpecReaderTest {
                     userScrollEnabled = true,
                     reusePolicy = reuse,
                     motionPolicy = motion,
-                    focusFollowKeyboard = true,
                 ),
             ),
         )
         assertEquals(reuse, verticalPagerSpec.reusePolicy)
         assertEquals(motion, verticalPagerSpec.motionPolicy)
-        assertTrue(verticalPagerSpec.focusFollowKeyboard)
     }
 
     @Test
-    fun `scrollable column spec exposes focus follow flag`() {
+    fun `scrollable column spec exposes layout and state policy`() {
         val spec = ScrollableViewBinder.readScrollableColumnSpec(
             node = VNode(
                 type = NodeType.ScrollableColumn,
@@ -143,12 +136,10 @@ class ContainerPolicySpecReaderTest {
                     spacing = 12.dp,
                     arrangement = com.viewcompose.ui.layout.MainAxisArrangement.SpaceBetween,
                     horizontalAlignment = com.viewcompose.ui.layout.HorizontalAlignment.Center,
-                    focusFollowKeyboard = true,
                 ),
             ),
         )
 
-        assertTrue(spec.focusFollowKeyboard)
         assertEquals(12, spec.linearSpec.spacing)
     }
 }

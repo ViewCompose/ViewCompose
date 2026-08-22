@@ -46,6 +46,7 @@ import com.viewcompose.ui.unit.UiDp
  * non-State value read by item content.
  *
  * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
+ * @sample com.viewcompose.ui.foundation.samples.delayedContentSingleRootSample
  * @param T item model type
  * @receiver active tree builder receiving the lazy list
  * @param items ordered data snapshot represented by the list
@@ -60,10 +61,11 @@ import com.viewcompose.ui.unit.UiDp
  * @param prefetchPolicy ahead-of-viewport session preparation policy
  * @param reusePolicy mounted-tree capacity and reuse policy
  * @param motionPolicy item placement and change animation policy
- * @param focusFollowKeyboard whether keyboard focus may bring a descendant into view
  * @param modifier ordered configuration applied to the lazy-list host
- * @param itemContent content factory invoked only while an item session is active
+ * @param itemContent content factory invoked only while an item session is active; each invocation
+ * must emit exactly one root node
  * @throws IllegalArgumentException when [key] selects duplicate values
+ * @throws IllegalStateException when [itemContent] emits zero or multiple root nodes
  */
 fun <T> UiTreeBuilder.LazyColumn(
     items: List<T>,
@@ -78,7 +80,6 @@ fun <T> UiTreeBuilder.LazyColumn(
     prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-    focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
@@ -105,7 +106,6 @@ fun <T> UiTreeBuilder.LazyColumn(
             prefetchPolicy = prefetchPolicy,
             reusePolicy = reusePolicy,
             motionPolicy = motionPolicy,
-            focusFollowKeyboard = focusFollowKeyboard,
         ),
         modifier = modifier,
     )
@@ -143,10 +143,11 @@ fun <T> UiTreeBuilder.LazyColumn(
  * @param prefetchPolicy ahead-of-viewport session preparation policy
  * @param reusePolicy mounted-tree capacity and reuse policy
  * @param motionPolicy item placement and change animation policy
- * @param focusFollowKeyboard whether keyboard focus may bring a descendant into view
  * @param modifier ordered configuration applied to the lazy-list host
- * @param itemContent content factory invoked only while an item session is active
+ * @param itemContent content factory invoked only while an item session is active; each invocation
+ * must emit exactly one root node
  * @throws IllegalArgumentException when [key] selects duplicate values on a cache miss
+ * @throws IllegalStateException when [itemContent] emits zero or multiple root nodes
  * @throws Throwable when a selector fails on a cache miss
  */
 fun <T> UiTreeBuilder.LazyColumn(
@@ -162,7 +163,6 @@ fun <T> UiTreeBuilder.LazyColumn(
     prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-    focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
@@ -189,7 +189,6 @@ fun <T> UiTreeBuilder.LazyColumn(
             prefetchPolicy = prefetchPolicy,
             reusePolicy = reusePolicy,
             motionPolicy = motionPolicy,
-            focusFollowKeyboard = focusFollowKeyboard,
         ),
         modifier = modifier,
     )
@@ -199,9 +198,12 @@ fun <T> UiTreeBuilder.LazyColumn(
  * Virtualizes scoped vertical items while preserving captured locals per active item session.
  *
  * Item declarations must provide stable keys and accurate revisions through [LazyListScope]. Sticky
- * headers are supported. Sessions outside the active and reuse windows may be disposed.
+ * headers are supported. Sessions outside the active and reuse windows may be disposed. Focused
+ * editors use the platform child-rectangle chain and remain visible without a container opt-in;
+ * this programmatic movement remains active when [userScrollEnabled] is `false`.
  *
  * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
+ * @sample com.viewcompose.ui.foundation.samples.focusVisibilityOwnershipSample
  * @receiver active tree builder receiving the lazy list
  * @param contentPadding independent start, top, end, and bottom viewport padding
  * @param spacing fixed gap in dp between adjacent items
@@ -211,7 +213,6 @@ fun <T> UiTreeBuilder.LazyColumn(
  * @param prefetchPolicy ahead-of-viewport session preparation policy
  * @param reusePolicy mounted-tree capacity and reuse policy
  * @param motionPolicy item placement and change animation policy
- * @param focusFollowKeyboard whether keyboard focus may bring a descendant into view
  * @param modifier ordered configuration applied to the lazy-list host
  * @param content scoped item declarations evaluated synchronously for the list snapshot
  */
@@ -224,7 +225,6 @@ fun UiTreeBuilder.LazyColumn(
     prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-    focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
     content: LazyListScope.() -> Unit,
 ) {
@@ -245,7 +245,6 @@ fun UiTreeBuilder.LazyColumn(
             prefetchPolicy = prefetchPolicy,
             reusePolicy = reusePolicy,
             motionPolicy = motionPolicy,
-            focusFollowKeyboard = focusFollowKeyboard,
         ),
         modifier = modifier,
     )
@@ -278,8 +277,10 @@ fun UiTreeBuilder.LazyColumn(
  * @param reusePolicy mounted-tree capacity and reuse policy
  * @param motionPolicy item placement and change animation policy
  * @param modifier ordered configuration applied to the lazy-list host
- * @param itemContent content factory invoked only while an item session is active
+ * @param itemContent content factory invoked only while an item session is active; each invocation
+ * must emit exactly one root node
  * @throws IllegalArgumentException when [key] selects duplicate values
+ * @throws IllegalStateException when [itemContent] emits zero or multiple root nodes
  */
 fun <T> UiTreeBuilder.LazyRow(
     items: List<T>,
@@ -358,8 +359,10 @@ fun <T> UiTreeBuilder.LazyRow(
  * @param reusePolicy mounted-tree capacity and reuse policy
  * @param motionPolicy item placement and change animation policy
  * @param modifier ordered configuration applied to the lazy-list host
- * @param itemContent content factory invoked only while an item session is active
+ * @param itemContent content factory invoked only while an item session is active; each invocation
+ * must emit exactly one root node
  * @throws IllegalArgumentException when [key] selects duplicate values on a cache miss
+ * @throws IllegalStateException when [itemContent] emits zero or multiple root nodes
  * @throws Throwable when a selector fails on a cache miss
  */
 fun <T> UiTreeBuilder.LazyRow(
@@ -488,10 +491,11 @@ fun UiTreeBuilder.LazyRow(
  * @param prefetchPolicy item preparation and native cache hints
  * @param reusePolicy native presentation reuse hints
  * @param motionPolicy native item-mutation animation hints
- * @param focusFollowKeyboard whether keyboard focus may bring an item into view
  * @param modifier ordered configuration applied to the grid root
- * @param itemContent delayed item content evaluated in its keyed session
+ * @param itemContent delayed item content evaluated in its keyed session; each invocation must emit
+ * exactly one root node
  * @throws IllegalArgumentException for duplicate keys or invalid spacing
+ * @throws IllegalStateException when [itemContent] emits zero or multiple root nodes
  */
 fun <T> UiTreeBuilder.LazyVerticalGrid(
     items: List<T>,
@@ -509,7 +513,6 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
     prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-    focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
@@ -538,7 +541,6 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
             prefetchPolicy = prefetchPolicy,
             reusePolicy = reusePolicy,
             motionPolicy = motionPolicy,
-            focusFollowKeyboard = focusFollowKeyboard,
         ),
         modifier = modifier,
     )
@@ -579,10 +581,11 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
  * @param prefetchPolicy ahead-of-viewport session preparation policy
  * @param reusePolicy mounted-tree capacity and reuse policy
  * @param motionPolicy item placement and change animation policy
- * @param focusFollowKeyboard whether keyboard focus may bring an item into view
  * @param modifier ordered configuration applied to the grid root
- * @param itemContent content factory invoked only while an item session is active
+ * @param itemContent content factory invoked only while an item session is active; each invocation
+ * must emit exactly one root node
  * @throws IllegalArgumentException for invalid spacing, or duplicate keys on a cache miss
+ * @throws IllegalStateException when [itemContent] emits zero or multiple root nodes
  * @throws Throwable when a selector fails on a cache miss
  */
 fun <T> UiTreeBuilder.LazyVerticalGrid(
@@ -601,7 +604,6 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
     prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-    focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
@@ -630,7 +632,6 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
             prefetchPolicy = prefetchPolicy,
             reusePolicy = reusePolicy,
             motionPolicy = motionPolicy,
-            focusFollowKeyboard = focusFollowKeyboard,
         ),
         modifier = modifier,
     )
@@ -641,9 +642,11 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
  *
  * Adaptive columns are recomputed from available inner width without rebuilding keyed logical
  * sessions. Sticky headers and [GridItemSpan.FullLine] resolve against the current physical column
- * count.
+ * count. Focused editors use the platform child-rectangle chain and remain visible without a
+ * container opt-in; this programmatic movement remains active when [userScrollEnabled] is `false`.
  *
  * @sample com.viewcompose.ui.foundation.samples.adaptiveGridSample
+ * @sample com.viewcompose.ui.foundation.samples.focusVisibilityOwnershipSample
  * @receiver active tree builder receiving the grid node
  * @param cells fixed or adaptive horizontal cell policy
  * @param contentPadding logical per-edge padding inside the scrollable content
@@ -655,7 +658,6 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
  * @param prefetchPolicy item preparation and native cache hints
  * @param reusePolicy native presentation reuse hints
  * @param motionPolicy native item-mutation animation hints
- * @param focusFollowKeyboard whether keyboard focus may bring an item into view
  * @param modifier ordered configuration applied to the grid root
  * @param content keyed grid-item declarations captured for delayed sessions
  * @throws IllegalArgumentException for duplicate keys or invalid spacing
@@ -671,7 +673,6 @@ fun UiTreeBuilder.LazyVerticalGrid(
     prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-    focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
     content: LazyGridScope.() -> Unit,
 ) {
@@ -691,7 +692,6 @@ fun UiTreeBuilder.LazyVerticalGrid(
             prefetchPolicy = prefetchPolicy,
             reusePolicy = reusePolicy,
             motionPolicy = motionPolicy,
-            focusFollowKeyboard = focusFollowKeyboard,
         ),
         modifier = modifier,
     )
@@ -723,6 +723,7 @@ private fun rememberLazyItemCollector(hostType: NodeType): LazyItemCollector {
  * identity.
  *
  * @sample com.viewcompose.ui.foundation.samples.pagerAndTabIdentitySample
+ * @sample com.viewcompose.ui.foundation.samples.delayedContentSingleRootSample
  */
 @UiDslMarker
 class HorizontalPagerScope internal constructor() {
@@ -740,8 +741,10 @@ class HorizontalPagerScope internal constructor() {
      * @param key unique logical page identity across reorder and native recycling
      * @param contentRevision semantic version of every non-State value captured by [content]
      * @param contentType physical-tree compatibility class for reset and rebind
-     * @param content page declaration evaluated when the page session renders
+     * @param content page declaration evaluated when the page session renders; it must emit exactly
+     * one root node, wrapping siblings in an explicit layout container
      * @throws IllegalArgumentException when [key] duplicates another page in this scope
+     * @throws IllegalStateException when [content] emits zero or multiple root nodes
      */
     fun Page(
         key: Any,
@@ -776,8 +779,8 @@ class HorizontalPagerScope internal constructor() {
  * @param currentPage controlled page selected for this render
  * @param onPageChanged callback receiving a newly settled page index
  * @param pagerState optional caller-owned observation and command state
- * @param offscreenPageLimit native adjacent-page residency limit, or `-1` for the platform default
- * @param userScrollEnabled whether direct user paging is accepted
+ * @param offscreenPageLimit adjacent-page residency limit, or `-1` for RecyclerView's default
+ * @param userScrollEnabled whether direct pointer and accessibility paging is accepted
  * @param reusePolicy native page-presentation reuse hints
  * @param motionPolicy native page-mutation animation hints
  * @param key optional stable sibling identity used during reconciliation
@@ -898,19 +901,20 @@ private data object PagerWidgetLazyItemContent : WidgetLazyItemContent {
 /**
  * Emits a vertical pager with one keyed lazy session per page.
  *
- * Settled callback and [pagerState] semantics match [HorizontalPager]. Keyboard focus-follow may
- * request the focused descendant page into view without transferring page-session identity.
+ * Settled callback and [pagerState] semantics match [HorizontalPager]. The pager owns discrete page
+ * selection only; a page whose focused content can be occluded must declare its own vertical scroll
+ * owner.
  *
  * @sample com.viewcompose.ui.foundation.samples.pagerAndTabIdentitySample
+ * @sample com.viewcompose.ui.foundation.samples.focusVisibilityOwnershipSample
  * @receiver active tree builder receiving the pager node
  * @param currentPage controlled page selected for this render
  * @param onPageChanged callback receiving a newly settled page index
  * @param pagerState optional caller-owned observation and command state
- * @param offscreenPageLimit native adjacent-page residency limit, or `-1` for the platform default
- * @param userScrollEnabled whether direct user paging is accepted
+ * @param offscreenPageLimit adjacent-page residency limit, or `-1` for RecyclerView's default
+ * @param userScrollEnabled whether direct pointer and accessibility paging is accepted
  * @param reusePolicy native page-presentation reuse hints
  * @param motionPolicy native page-mutation animation hints
- * @param focusFollowKeyboard whether keyboard focus may bring a descendant page into view
  * @param key optional stable sibling identity used during reconciliation
  * @param modifier ordered configuration applied to the pager root
  * @param pages explicitly keyed delayed page declarations
@@ -924,7 +928,6 @@ fun UiTreeBuilder.VerticalPager(
     userScrollEnabled: Boolean = true,
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-    focusFollowKeyboard: Boolean = false,
     key: Any? = null,
     modifier: Modifier = Modifier,
     pages: HorizontalPagerScope.() -> Unit,
@@ -965,7 +968,6 @@ fun UiTreeBuilder.VerticalPager(
             userScrollEnabled = userScrollEnabled,
             reusePolicy = reusePolicy,
             motionPolicy = motionPolicy,
-            focusFollowKeyboard = focusFollowKeyboard,
         ),
         modifier = modifier,
     )

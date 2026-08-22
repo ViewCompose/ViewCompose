@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 27ddbacbf563ac857ed2f00fdb25d0922fecaa65cd247d4740fd55480af7f8f4
+translation_source_hash: 029e123a7ae971c26772cf62897b346184948c4dedd96e8a7fe2cb8e1affc4ed
 translation_status: current
 ---
 
@@ -163,6 +163,10 @@ val gap = VNode(
   在 RTL 中仍使用逻辑顺序。
 - `PagerStateSnapshot` 分别发布当前页、已停稳页与目标页。受控 `currentPage` 在重建后仍是唯一
   权威来源；`onPageChanged` 是停稳到 Idle 后的事件，不是声明绑定期间的 `onPageSelected` 回显。
+  页面索引在 RTL 下仍保持逻辑顺序；`offscreenPageLimit` 只接受 `-1` 或正数，禁用用户滚动会
+  同时阻止指针和无障碍翻页，但不会阻止 Renderer 命令。
+- 垂直集合 NodeSpec 不包含焦点跟随策略。焦点后代可见性是真实滚动所有者的 Renderer 不变量，
+  Pager 则始终只是离散选择所有者。
 - `GridCells.Adaptive` 根据当前内部宽度、间距、密度与配置重新计算物理列数，同时保留 Keyed
   逻辑 Session。`GridItemSpan.FullLine` 按当前列数解析；Foundation 会把 `Fixed(1)` 规范化为
   `Single`。

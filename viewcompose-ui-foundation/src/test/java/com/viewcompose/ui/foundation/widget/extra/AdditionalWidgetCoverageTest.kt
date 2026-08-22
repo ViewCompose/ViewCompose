@@ -299,7 +299,6 @@ class AdditionalWidgetCoverageTest {
                 spacing = 9.dp,
                 arrangement = MainAxisArrangement.SpaceBetween,
                 horizontalAlignment = HorizontalAlignment.Center,
-                focusFollowKeyboard = true,
             ) {
                 Text("A")
             }
@@ -312,11 +311,10 @@ class AdditionalWidgetCoverageTest {
         assertEquals(9.dp, spec.spacing)
         assertEquals(MainAxisArrangement.SpaceBetween, spec.arrangement)
         assertEquals(HorizontalAlignment.Center, spec.horizontalAlignment)
-        assertTrue(spec.focusFollowKeyboard)
     }
 
     @Test
-    fun `lazy grid and pagers emit reuse motion and focus policies`() {
+    fun `lazy grid and pagers emit reuse and motion policies`() {
         val reusePolicy = CollectionReusePolicy(sharePool = true)
         val motionPolicy = CollectionMotionPolicy(
             disableItemAnimator = true,
@@ -330,7 +328,6 @@ class AdditionalWidgetCoverageTest {
                 cells = com.viewcompose.ui.node.policy.GridCells.Fixed(2),
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
-                focusFollowKeyboard = true,
             ) {
                 items(
                     items = listOf("A", "B"),
@@ -343,7 +340,6 @@ class AdditionalWidgetCoverageTest {
         val gridSpec = gridTree.single().spec as LazyVerticalGridNodeProps
         assertEquals(reusePolicy, gridSpec.reusePolicy)
         assertEquals(motionPolicy, gridSpec.motionPolicy)
-        assertTrue(gridSpec.focusFollowKeyboard)
 
         val spannedGridTree = buildVNodeTree {
             LazyVerticalGrid(cells = com.viewcompose.ui.node.policy.GridCells.Fixed(3)) {
@@ -413,7 +409,6 @@ class AdditionalWidgetCoverageTest {
                 onPageChanged = {},
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
-                focusFollowKeyboard = true,
             ) {
                 Page(key = "p1", contentRevision = StaticContentRevision) { Text("P1") }
                 Page(key = "p2", contentRevision = StaticContentRevision) { Text("P2") }
@@ -422,7 +417,6 @@ class AdditionalWidgetCoverageTest {
         val verticalSpec = verticalPagerTree.single().spec as VerticalPagerNodeProps
         assertEquals(reusePolicy, verticalSpec.reusePolicy)
         assertEquals(motionPolicy, verticalSpec.motionPolicy)
-        assertTrue(verticalSpec.focusFollowKeyboard)
     }
 
     @Test

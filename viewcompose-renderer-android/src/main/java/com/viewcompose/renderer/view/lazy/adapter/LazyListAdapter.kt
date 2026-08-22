@@ -17,7 +17,6 @@ import com.viewcompose.renderer.reconcile.LazyListAdapterUpdatePlan
 import com.viewcompose.renderer.reconcile.LazyListDiff
 import com.viewcompose.renderer.reconcile.LazyListIdentityAnalysis
 import com.viewcompose.renderer.reconcile.LazyListRotationDirection
-import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.reuse.MountedTreeReuseCache
 import com.viewcompose.renderer.view.lazy.reuse.LazyPreparationCostTracker
 import com.viewcompose.renderer.view.lazy.session.LazyHolderRegistry
@@ -34,7 +33,7 @@ internal class LazyListAdapter(
     private val preparationCosts: LazyPreparationCostTracker = LazyPreparationCostTracker(),
 ) : RecyclerView.Adapter<LazyListViewHolder>() {
     private companion object {
-        private const val FOCUS_TAG = "UIFocusFollow"
+        private const val ANCHOR_TAG = "UILazyAnchor"
         private const val DUPLICATE_KEY_POSITION = -1
         private const val INITIAL_STICKY_POSITION_CAPACITY = 4
         private const val MAX_DISTINCT_VIEW_TYPES = 1_024
@@ -766,17 +765,14 @@ internal class LazyListAdapter(
         if (!layoutManager.canScrollVertically()) {
             return false
         }
-        if (!LazyFocusFollowLayoutMonitor.isEnabled(recyclerView)) {
-            return false
-        }
         return recyclerView.findFocus() != null
     }
 
     private inline fun debugFocusLog(message: () -> String) {
-        if (!Log.isLoggable(FOCUS_TAG, Log.DEBUG)) {
+        if (!Log.isLoggable(ANCHOR_TAG, Log.DEBUG)) {
             return
         }
-        Log.d(FOCUS_TAG, message())
+        Log.d(ANCHOR_TAG, message())
     }
 }
 

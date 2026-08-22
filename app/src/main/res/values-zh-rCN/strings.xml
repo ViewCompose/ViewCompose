@@ -56,6 +56,8 @@
     <string name="demo_scenario_input_search_summary">在不混入无关嵌套容器的情况下验证搜索输入、清除与提交及禁用状态。</string>
     <string name="demo_scenario_input_focus_follow_lazy_column_title">焦点跟随 · LazyColumn</string>
     <string name="demo_scenario_input_focus_follow_lazy_column_summary">由单个 LazyColumn 持有滚动，并在键盘打开时将下方搜索框带入可视区域。</string>
+    <string name="demo_scenario_input_focus_follow_lazy_grid_title">焦点跟随 · LazyVerticalGrid</string>
+    <string name="demo_scenario_input_focus_follow_lazy_grid_summary">使用双列懒加载网格验证整行输入框遵循同一套窗口可见性协议。</string>
     <string name="demo_scenario_input_focus_follow_scrollable_column_title">焦点跟随 · ScrollableColumn</string>
     <string name="demo_scenario_input_focus_follow_scrollable_column_summary">使用单个即时滚动容器验证键盘焦点跟随，不再嵌套外层滚动。</string>
     <string name="demo_scenario_input_focus_follow_vertical_pager_title">焦点跟随 · VerticalPager</string>

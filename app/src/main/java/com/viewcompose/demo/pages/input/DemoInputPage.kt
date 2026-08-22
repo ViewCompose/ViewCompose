@@ -21,6 +21,8 @@ import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.TextFieldImeAction
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
+import com.viewcompose.ui.node.policy.GridCells
+import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.runtime.derivedStateOf
 import com.viewcompose.runtime.mutableStateOf
@@ -33,6 +35,7 @@ import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.LazyVerticalGrid
 import com.viewcompose.ui.foundation.LocalFocusManager
 import com.viewcompose.ui.foundation.ProvideCheckboxOverrides
 import com.viewcompose.ui.foundation.ProvideRadioButtonOverrides
@@ -91,6 +94,11 @@ internal fun UiTreeBuilder.PreviewInputFocusFollowLazyColumn() {
     InputPage(InputFixture.FocusFollowLazyColumn)
 }
 
+@ViewComposePreview(name = "Input · Focus follow · Lazy grid", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewInputFocusFollowLazyGrid() {
+    InputPage(InputFixture.FocusFollowLazyGrid)
+}
+
 @ViewComposePreview(name = "Input · Focus follow · Scrollable column", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewInputFocusFollowScrollableColumn() {
     InputPage(InputFixture.FocusFollowScrollableColumn)
@@ -119,6 +127,7 @@ internal enum class InputFixture(
     Stress(DemoScenarioIds.InputStress),
     Search(DemoScenarioIds.InputSearch),
     FocusFollowLazyColumn(DemoScenarioIds.InputFocusFollowLazyColumn),
+    FocusFollowLazyGrid(DemoScenarioIds.InputFocusFollowLazyGrid),
     FocusFollowScrollableColumn(DemoScenarioIds.InputFocusFollowScrollableColumn),
     FocusFollowVerticalPager(DemoScenarioIds.InputFocusFollowVerticalPager),
     FocusFollowPullRefresh(DemoScenarioIds.InputFocusFollowPullRefresh),
@@ -139,6 +148,11 @@ internal fun UiTreeBuilder.InputPage(
     when (fixture) {
         InputFixture.FocusFollowLazyColumn -> {
             InputFocusFollowLazyColumnPage(scenario)
+            return
+        }
+
+        InputFixture.FocusFollowLazyGrid -> {
+            InputFocusFollowLazyGridPage(scenario)
             return
         }
 
@@ -250,6 +264,7 @@ internal fun UiTreeBuilder.InputPage(
         InputFixture.Stress -> listOf("stress")
         InputFixture.Search -> listOf("search")
         InputFixture.FocusFollowLazyColumn,
+        InputFixture.FocusFollowLazyGrid,
         InputFixture.FocusFollowScrollableColumn,
         InputFixture.FocusFollowVerticalPager,
         InputFixture.FocusFollowPullRefresh,
@@ -260,7 +275,6 @@ internal fun UiTreeBuilder.InputPage(
     LazyColumn(
         items = pageItems,
         key = { it },
-        focusFollowKeyboard = fixture == InputFixture.Search,
         modifier = Modifier
             .fillMaxSize(),
     ) { section ->
@@ -942,7 +956,6 @@ private fun UiTreeBuilder.InputFocusFollowLazyColumnPage(scenario: DemoScenarioS
     LazyColumn(
         spacing = 8.dp,
         contentPadding = LazyContentPadding.all(12.dp),
-        focusFollowKeyboard = true,
         modifier = Modifier.fillMaxSize(),
     ) {
         item(key = "header", contentRevision = "header") {
@@ -951,6 +964,8 @@ private fun UiTreeBuilder.InputFocusFollowLazyColumnPage(scenario: DemoScenarioS
                 fallbackTitle = R.string.demo_scenario_input_focus_follow_lazy_column_title,
                 fallbackSummary = R.string.demo_scenario_input_focus_follow_lazy_column_summary,
             )
+        }
+        item(key = "controls", contentRevision = focusRequestCount.value) {
             FocusFollowControls(
                 scenario = scenario,
                 focusRequestCount = focusRequestCount.value,
@@ -984,6 +999,70 @@ private fun UiTreeBuilder.InputFocusFollowLazyColumnPage(scenario: DemoScenarioS
     }
 }
 
+private fun UiTreeBuilder.InputFocusFollowLazyGridPage(scenario: DemoScenarioSpec?) {
+    val queryState = rememberTextFieldState()
+    val focusRequester = remember { FocusRequester() }
+    val focusRequestCount = remember { mutableStateOf(0) }
+    val focusManager = LocalFocusManager.current
+    LazyVerticalGrid(
+        cells = GridCells.Fixed(2),
+        horizontalSpacing = 8.dp,
+        verticalSpacing = 8.dp,
+        contentPadding = LazyContentPadding.all(12.dp),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        item(
+            key = "header",
+            contentRevision = "header",
+            span = GridItemSpan.FullLine,
+        ) {
+            FocusFollowHeader(
+                scenario = scenario,
+                fallbackTitle = R.string.demo_scenario_input_focus_follow_lazy_grid_title,
+                fallbackSummary = R.string.demo_scenario_input_focus_follow_lazy_grid_summary,
+            )
+        }
+        item(
+            key = "controls",
+            contentRevision = focusRequestCount.value,
+            span = GridItemSpan.FullLine,
+        ) {
+            FocusFollowControls(
+                scenario = scenario,
+                focusRequestCount = focusRequestCount.value,
+                onFocus = {
+                    if (focusRequester.requestFocus()) focusRequestCount.value += 1
+                },
+                onReset = {
+                    focusManager.clearFocus(force = true)
+                    queryState.clearText()
+                    focusRequestCount.value = 0
+                },
+            )
+        }
+        items((1..8).toList(), key = { "before-$it" }) { index ->
+            FocusFollowPlaceholder(index)
+        }
+        item(
+            key = "search",
+            contentRevision = "search",
+            span = GridItemSpan.FullLine,
+        ) {
+            SearchBar(
+                state = queryState,
+                placeholder = stringResource(R.string.demo_input_search_products_placeholder),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .inputScenarioTarget(scenario, DemoAutomationRole.Target),
+            )
+        }
+        items((9..20).toList(), key = { "after-$it" }) { index ->
+            FocusFollowPlaceholder(index)
+        }
+    }
+}
+
 private fun UiTreeBuilder.InputFocusFollowScrollableColumnPage(scenario: DemoScenarioSpec?) {
     val queryState = rememberTextFieldState()
     val focusRequester = remember { FocusRequester() }
@@ -991,7 +1070,6 @@ private fun UiTreeBuilder.InputFocusFollowScrollableColumnPage(scenario: DemoSce
     val focusManager = LocalFocusManager.current
     ScrollableColumn(
         spacing = 8.dp,
-        focusFollowKeyboard = true,
         modifier = Modifier
             .fillMaxSize()
             .padding(12.dp),
@@ -1036,11 +1114,10 @@ private fun UiTreeBuilder.InputFocusFollowVerticalPagerPage(scenario: DemoScenar
     VerticalPager(
         currentPage = pageState.value,
         onPageChanged = { pageState.value = it },
-        focusFollowKeyboard = true,
         modifier = Modifier.fillMaxSize(),
     ) {
         Page(key = "search", contentRevision = "search") {
-            Column(
+            ScrollableColumn(
                 spacing = 8.dp,
                 modifier = Modifier
                     .fillMaxSize()
@@ -1068,8 +1145,8 @@ private fun UiTreeBuilder.InputFocusFollowVerticalPagerPage(scenario: DemoScenar
                     text = stringResource(R.string.demo_input_search_pager_first_note),
                     style = UiTextStyle(fontSizeSp = 13.sp),
                     color = TextDefaults.secondaryColor(),
-                    modifier = Modifier.weight(1f),
                 )
+                (1..4).forEach { index -> FocusFollowPlaceholder(index) }
                 SearchBar(
                     state = queryState,
                     placeholder = stringResource(R.string.demo_input_search_pager_placeholder),
@@ -1079,6 +1156,7 @@ private fun UiTreeBuilder.InputFocusFollowVerticalPagerPage(scenario: DemoScenar
                         .testTag(DemoTestTags.INPUT_FOCUS_VERTICAL_PAGER_SEARCH)
                         .inputScenarioTarget(scenario, DemoAutomationRole.Target),
                 )
+                (5..12).forEach { index -> FocusFollowPlaceholder(index) }
             }
         }
         Page(key = "instructions", contentRevision = "instructions") {
@@ -1112,7 +1190,6 @@ private fun UiTreeBuilder.InputFocusFollowPullRefreshPage(scenario: DemoScenario
     ) {
         ScrollableColumn(
             spacing = 8.dp,
-            focusFollowKeyboard = true,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(12.dp),
@@ -1169,7 +1246,9 @@ private fun UiTreeBuilder.FocusFollowHeader(
 ) {
     Column(
         spacing = 6.dp,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag(DemoTestTags.INPUT_FOCUS_FOLLOW_HEADER),
     ) {
         Text(
             text = stringResource(scenario?.titleRes ?: fallbackTitle),
@@ -1189,27 +1268,29 @@ private fun UiTreeBuilder.FocusFollowControls(
     onFocus: () -> Unit,
     onReset: () -> Unit,
 ) {
-    Text(
-        text = stringResource(R.string.demo_input_focus_follow_state, focusRequestCount),
-        color = TextDefaults.secondaryColor(),
-        modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.State),
-    )
-    Row(spacing = 8.dp, modifier = Modifier.fillMaxWidth()) {
-        Button(
-            text = stringResource(R.string.demo_input_focus_follow_action),
-            onClick = onFocus,
-            modifier = Modifier
-                .weight(1f)
-                .inputScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+    Column(spacing = 8.dp, modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.demo_input_focus_follow_state, focusRequestCount),
+            color = TextDefaults.secondaryColor(),
+            modifier = Modifier.inputScenarioTarget(scenario, DemoAutomationRole.State),
         )
-        Button(
-            text = stringResource(R.string.demo_input_focus_follow_reset),
-            variant = ButtonVariant.Outlined,
-            onClick = onReset,
-            modifier = Modifier
-                .weight(1f)
-                .inputScenarioTarget(scenario, DemoAutomationRole.Reset),
-        )
+        Row(spacing = 8.dp, modifier = Modifier.fillMaxWidth()) {
+            Button(
+                text = stringResource(R.string.demo_input_focus_follow_action),
+                onClick = onFocus,
+                modifier = Modifier
+                    .weight(1f)
+                    .inputScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+            )
+            Button(
+                text = stringResource(R.string.demo_input_focus_follow_reset),
+                variant = ButtonVariant.Outlined,
+                onClick = onReset,
+                modifier = Modifier
+                    .weight(1f)
+                    .inputScenarioTarget(scenario, DemoAutomationRole.Reset),
+            )
+        }
     }
 }
 

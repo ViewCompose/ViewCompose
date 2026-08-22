@@ -23,6 +23,7 @@ architecture pages describe how the system works now.
 - [ADR-0015: Observed property transactions](./0015-observed-property-transactions.md)
 - [ADR-0016: ConstraintLayout graph and helper ownership](./0016-constraintlayout-graph-and-helper-ownership.md)
 - [ADR-0017: Typed ConstraintLayout helper expansion](./0017-typed-constraint-helper-expansion.md)
+- [ADR-0018: Focus visibility and pager selection ownership](./0018-focus-visibility-and-pager-selection-ownership.md)
 
 ## Rules
 

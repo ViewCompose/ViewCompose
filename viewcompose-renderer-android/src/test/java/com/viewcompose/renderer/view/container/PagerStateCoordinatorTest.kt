@@ -1,42 +1,39 @@
 package com.viewcompose.renderer.view.container
 
-import android.view.View
-import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
-import androidx.viewpager2.widget.ViewPager2
 import com.viewcompose.ui.state.PagerStateSnapshot
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
-@RunWith(RobolectricTestRunner::class)
 class PagerStateCoordinatorTest {
     @Test
     fun `drag publishes motion and callback only after settled idle`() {
         var pageCount = 4
-        val pager = pager(pageCount)
+        var viewportPage = 0
         val settledCallbacks = mutableListOf<Int>()
         val snapshots = mutableListOf<PagerStateSnapshot>()
-        val coordinator = PagerStateCoordinator(pager, { pageCount }, { settledCallbacks::add })
+        val coordinator = coordinator(
+            pageCount = { pageCount },
+            currentViewportPage = { viewportPage },
+            moveViewportToPage = { page, _ -> viewportPage = page },
+            settledCallbacks = settledCallbacks,
+        )
         coordinator.setOnSnapshotChangedListener(snapshots::add)
         coordinator.applyControlledPage(1)
 
-        coordinator.pageChangeCallback.onPageScrollStateChanged(ViewPager2.SCROLL_STATE_DRAGGING)
-        coordinator.pageChangeCallback.onPageScrolled(1, 0.5f, 50)
-        coordinator.pageChangeCallback.onPageSelected(2)
+        coordinator.onScrollStateChanged(PagerScrollState.Dragging)
+        coordinator.onPageScrolled(1, 0.5f)
+        coordinator.onPageSelected(2)
 
         assertTrue(coordinator.currentSnapshot().isScrollInProgress)
         assertEquals(1, coordinator.currentSnapshot().currentPage)
         assertEquals(2, coordinator.currentSnapshot().targetPage)
         assertEquals(emptyList<Int>(), settledCallbacks)
 
-        pager.setCurrentItem(2, false)
-        coordinator.pageChangeCallback.onPageScrollStateChanged(ViewPager2.SCROLL_STATE_IDLE)
-        coordinator.pageChangeCallback.onPageScrollStateChanged(ViewPager2.SCROLL_STATE_IDLE)
+        viewportPage = 2
+        coordinator.onScrollStateChanged(PagerScrollState.Idle)
+        coordinator.onScrollStateChanged(PagerScrollState.Idle)
 
         assertEquals(listOf(2), settledCallbacks)
         assertEquals(2, coordinator.currentSnapshot().settledPage)
@@ -46,23 +43,67 @@ class PagerStateCoordinatorTest {
 
     @Test
     fun `controlled rebinding never feeds page callback back to caller`() {
-        val pager = pager(3)
+        var viewportPage = 0
         val settledCallbacks = mutableListOf<Int>()
-        val coordinator = PagerStateCoordinator(pager, { 3 }, { settledCallbacks::add })
+        val coordinator = coordinator(
+            pageCount = { 3 },
+            currentViewportPage = { viewportPage },
+            moveViewportToPage = { page, _ -> viewportPage = page },
+            settledCallbacks = settledCallbacks,
+        )
 
         coordinator.applyControlledPage(2)
-        coordinator.pageChangeCallback.onPageSelected(2)
-        coordinator.pageChangeCallback.onPageScrollStateChanged(ViewPager2.SCROLL_STATE_IDLE)
+        coordinator.onPageSelected(2)
+        coordinator.onScrollStateChanged(PagerScrollState.Idle)
 
         assertEquals(emptyList<Int>(), settledCallbacks)
         assertEquals(2, coordinator.currentSnapshot().settledPage)
     }
 
     @Test
+    fun `backward drag reports the lower logical page as its target`() {
+        var viewportPage = 2
+        val coordinator = coordinator(
+            pageCount = { 4 },
+            currentViewportPage = { viewportPage },
+            moveViewportToPage = { page, _ -> viewportPage = page },
+        )
+        coordinator.applyControlledPage(2)
+
+        coordinator.onScrollStateChanged(PagerScrollState.Dragging)
+        coordinator.onPageScrolled(position = 1, offset = 0.8f)
+
+        assertEquals(1, coordinator.currentSnapshot().currentPage)
+        assertEquals(1, coordinator.currentSnapshot().targetPage)
+        assertEquals(0.8f, coordinator.currentSnapshot().pageOffset)
+    }
+
+    @Test
+    fun `animated command retains its final target across intermediate pages`() {
+        var viewportPage = 0
+        val coordinator = coordinator(
+            pageCount = { 5 },
+            currentViewportPage = { viewportPage },
+            moveViewportToPage = { _, _ -> Unit },
+        )
+        coordinator.applyControlledPage(0)
+
+        coordinator.scrollToPage(page = 4, animated = true)
+        coordinator.onScrollStateChanged(PagerScrollState.Settling)
+        coordinator.onPageScrolled(position = 1, offset = 0.25f)
+
+        assertEquals(4, coordinator.currentSnapshot().targetPage)
+    }
+
+    @Test
     fun `page count changes clamp every published index`() {
         var pageCount = 4
-        val pager = pager(pageCount)
-        val coordinator = PagerStateCoordinator(pager, { pageCount }, { null })
+        var viewportPage = 0
+        val coordinator = coordinator(
+            pageCount = { pageCount },
+            currentViewportPage = { viewportPage },
+            moveViewportToPage = { page, _ -> viewportPage = page },
+        )
         coordinator.applyControlledPage(3)
 
         pageCount = 2
@@ -73,17 +114,15 @@ class PagerStateCoordinatorTest {
         assertEquals(2, coordinator.currentSnapshot().pageCount)
     }
 
-    private fun pager(count: Int): ViewPager2 {
-        val context = RuntimeEnvironment.getApplication()
-        return ViewPager2(context).apply {
-            adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-                override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
-                    object : RecyclerView.ViewHolder(View(parent.context)) {}
-
-                override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) = Unit
-
-                override fun getItemCount(): Int = count
-            }
-        }
-    }
+    private fun coordinator(
+        pageCount: () -> Int,
+        currentViewportPage: () -> Int,
+        moveViewportToPage: (Int, Boolean) -> Unit,
+        settledCallbacks: MutableList<Int> = mutableListOf(),
+    ): PagerStateCoordinator = PagerStateCoordinator(
+        currentViewportPage = currentViewportPage,
+        moveViewportToPage = moveViewportToPage,
+        pageCount = pageCount,
+        onSettledPageChanged = { settledCallbacks::add },
+    )
 }
