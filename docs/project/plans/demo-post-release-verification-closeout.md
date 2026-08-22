@@ -23,7 +23,7 @@ Last verified: 2026-08-22.
 
 The configuration matrix exposed an unstable framework-level focus-visibility design. That slice
 was completed by the higher-priority
-[`focus-visibility-scroll-ownership-hard-cut.md`](../../archive/focus-visibility-scroll-ownership-hard-cut.md)
+[archived focus visibility and scroll ownership hard-cut plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/focus-visibility-scroll-ownership-hard-cut.md)
 plan and was not closed by adding more tests to the rejected Boolean policy. This plan retains the
 popup, navigation, theme, segmented, rounded-grid, and nested-scroll slices.
 
