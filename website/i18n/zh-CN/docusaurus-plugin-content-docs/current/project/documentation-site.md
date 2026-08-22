@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: b3778b8005f93fbfced20b5159e8bffabe00179f6bd56e391196eac56008da69
+translation_source_hash: 8b419bd58eb7079da9393c3efef21a12f33eed2e7176fbd5de14e9d3fac6789a
 translation_status: current
 ---
 
@@ -224,6 +224,17 @@ identity token。
 ## 最近验证
 
 <div className="search-partition-detail">
+
+2026-08-23：成对 Locale 构建复用同一套完整的 100 版本生成 API 语料，对比 `main` 的
+`2a21db65` 与动画 Phase 4 候选。`main` 的非 API 产物为 47,667,169 字节，英文/中文搜索
+分别为 5,338,242/5,806,681 字节。合并记录前，候选非 API 产物为 47,810,162 字节，超过
+45.5 MiB 上限 99,954 字节。把已完成 Phase 0～4 的执行流水账收敛为一张有效状态表，同时
+保留 Phase 5～7 的全部未解决要求，并把长期契约链接回所属手册后，最终记录的候选降至
+47,678,361 字节。它比未收敛候选减少 131,801 字节，仅比 `main` 增加 11,192 字节
+（0.02%），未调整任何预算并保留 31,847 字节非 API 余量。最终英文/中文搜索索引为
+5,369,073/5,841,187 字节，分别增加 30,831/34,506 字节，仍低于不变的 6.25 MiB 上限。
+结论是表示方式**改进**且阈值不变。成对构建复用同一 API 语料是一项限制，但非 API 统计
+排除了该语料，两个 Locale 的渲染树和搜索树均完整重建。
 
 2026-08-18：在同一 checkout 依赖集合上，对 `main` 的 `a9d1a092` 与 PR #105 的
 `28abaea7` 执行成对 Docusaurus 双 Locale 构建。`main` 的非 API、英文搜索和中文搜索分别为
