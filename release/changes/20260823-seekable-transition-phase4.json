@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut transition channels to segment-aware specifications and add generic values, dynamic duration ownership, normalized seeking, single-writer autonomous handoff, and atomic snap semantics.",
+  "changes": [
+    { "artifact": "viewcompose-animation-core", "impact": "feature" },
+    { "artifact": "viewcompose-animation", "impact": "breaking" },
+    { "artifact": "viewcompose-preview", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

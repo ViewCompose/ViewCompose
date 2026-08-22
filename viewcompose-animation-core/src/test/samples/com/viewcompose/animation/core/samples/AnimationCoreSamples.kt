@@ -206,7 +206,12 @@ fun transitionCoreSample(): TransitionCore<PanelState> {
     transition.updateTarget(PanelState.Expanded)
     transition.registerDuration(180_000_000L)
     transition.registerDuration(240_000_000L)
+    transition.replaceDuration(240_000_000L)
+    transition.seekToPlayTime(120_000_000L)
+    transition.restartRunningSegment()
+    transition.replaceDuration(240_000_000L)
     transition.updatePlayTime(120_000_000L)
+    transition.snapTo(PanelState.Collapsed)
     return transition
 }
 

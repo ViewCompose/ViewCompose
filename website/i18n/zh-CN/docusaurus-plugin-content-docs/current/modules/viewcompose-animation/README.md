@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: 261ef24afa9cb08d18ab786b49cba1b7d872189c803b805d18c21f0f9250a1b4
+translation_source_hash: cfd9dc04efffa97d2bc434cf0b118a1a2cdf4840ac868f92e14e39d926328a35
 translation_status: current
 ---
 
@@ -117,7 +117,9 @@ Mutation 所有权改变前失败。
 
 ## 共享状态 Transition
 
-`updateTransition(targetState)` 为多个派生 Channel 创建一个逻辑 Segment 和一条帧时间线：
+`updateTransition(targetState)` 为多个派生 Channel 创建一个逻辑 Segment 和一条自主帧时间线。
+每个 Channel 都会接收该 Segment 选定的稳定 `TransitionSegment<S>`，因此可以用类型安全方式选择
+方向相关的 Timing，且每个 Segment 只求值一次：
 
 ```kotlin
 val transition = updateTransition(
@@ -128,21 +130,67 @@ val alpha = transition.animateFloat { state ->
     if (state == PanelState.Expanded) 1f else 0.6f
 }
 val height = transition.animateDp(
-    animationSpec = { spring(dampingRatio = 0.8f, stiffness = 240f) },
+    transitionSpec = {
+        if (isTransitioningTo(PanelState.Collapsed, PanelState.Expanded)) {
+            spring(dampingRatio = 0.8f, stiffness = 240f)
+        } else {
+            tween(durationMillis = 180)
+        }
+    },
 ) { state ->
     if (state == PanelState.Expanded) 240.dp else 80.dp
 }
 ```
 
 首次组合停在初始目标。后续 Segment 开始时，每个 Channel 固定当前样本与新目标并注册时长。
-最长 Channel 决定 `currentState` 何时提交 `targetState`；短 Channel 会停在自己的终点。
-Retarget 会取消旧帧 Effect，并让已有 Channel 从最新样本开始。Q3 `Transition` 在每次 Target
-或 Frame 更新时，通过一次 Snapshot Transaction 发布逻辑 State、Target、Running Flag、
-Segment Identity、Endpoint 与 Play Time。`MutableTransitionState` 也通过同一原子边界镜像
-框架持有的 Current/Target/Idle 元组。
+完整已提交 Channel 集合中的最长时长决定 `currentState` 何时提交 `targetState`；较短 Channel
+会 Clamp 在自己的终点。新增或移除调用位置都会重新计算该最大值，包括缩短总时长。Retarget
+会取消旧自主 Effect，并让已有 Channel 从最新样本与保留的物理速度开始。Q3 `Transition`
+通过原子 Snapshot 发布逻辑 State、Target、Running Flag、稳定 `segment` 与 Play Time。
+`MutableTransitionState` 也通过同一边界镜像框架持有的 Current/Target/Idle 元组。
 
-Channel Factory 当前不接收 Segment 对象；它为 Channel 提供一个规格，并把逻辑状态映射为
-`Float`、`Int`、打包 ARGB 或 `UiDp`。Label 为未来诊断保留，不改变 Identity。
+`animateValue(converter, transitionSpec, targetValueByState)` 是泛型 Q3 Channel。内置
+`animateFloat`、`animateInt`、`animateColor` 与 `animateDp` 都委托给同一路径。类型化 Channel
+的命名参数现已硬切为 `transitionSpec`；旧 `animationSpec` 名称没有兼容 Overload。无限 Spec
+仍会在编译期被排除。
+
+Gesture、Scrubber、Preview 或 Predictive Progress 需要持有控制权时，应绑定一个
+`SeekableTransitionState<S>`，而不是调用 `updateTransition`：
+
+```kotlin
+val seekState = remember { SeekableTransitionState(PanelState.Collapsed) }
+val transition = rememberTransition(seekState, label = "seekable panel")
+val position = transition.animateValue(
+    converter = pointConverter,
+    transitionSpec = { tween(durationMillis = 600) },
+) { state ->
+    if (state == PanelState.Expanded) Point(96f, 32f) else Point(0f, 0f)
+}
+
+LaunchedEffect(command) {
+    when (command) {
+        Command.Preview -> seekState.seekTo(0.7f, PanelState.Expanded)
+        Command.Commit -> seekState.animateTo(PanelState.Expanded)
+        Command.Reset -> seekState.snapTo(PanelState.Collapsed)
+    }
+}
+```
+
+该 State 只接受一个活动 `rememberTransition` Binding 和一个 Mutation Writer。`seekTo` 会在
+接管所有权前校验有限 `0f..1f` Fraction，取消并 Join 旧命令，把 Fraction 映射到最长已提交
+Channel 时长，并以零物理速度采样全部 Channel。Seek Target 变化时，当前 Channel 样本会冻结为
+新起点。Channel 新增或移除时会保留归一化 Fraction，并按新的最大时长重新采样。命令会为已
+接受 Segment 的 Channel 提供两次 Frame 提交机会；若仍为零 Channel，则使用协调器的一纳秒
+Fallback，不会无限等待。
+
+`animateTo` 会退出 Seeking，并从样本值启动唯一一条自主 Frame Loop；Seeking 不推导物理速度，
+因此交接时初速度为零。新的 Seek、Animation 或 Snap 会先取消并 Join 旧调用方，再发布状态。
+`snapTo` 不使用 Frame，而是把 Current State、Target State 与两个 Segment Endpoint 原子折叠到
+同一个 Idle 值。移除 Binding 会取消活动 Writer，并把未完成视觉样本保留为 Seeking State。
+
+Seek State 不持有 Coroutine Scope，不会自动 Save，也不负责提交或回滚 Navigation。Navigation
+Owner 可以把 Predictive Back Progress 交给 `seekTo`，但 Back Stack Transaction 以及提交或
+取消后的 `animateTo`/`snapTo` 选择仍由它负责。Label 仍是诊断元数据，不改变 Identity。
 
 ## InfiniteTransition 无限动画
 

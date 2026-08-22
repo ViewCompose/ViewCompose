@@ -9,6 +9,7 @@ import com.viewcompose.animation.Crossfade
 import com.viewcompose.animation.EnterTransition
 import com.viewcompose.animation.ExitTransition
 import com.viewcompose.animation.MutableTransitionState
+import com.viewcompose.animation.SeekableTransitionState
 import com.viewcompose.animation.SizeTransform
 import com.viewcompose.animation.SlideDirection
 import com.viewcompose.animation.animateContentSize
@@ -21,6 +22,7 @@ import com.viewcompose.animation.fadeIn
 import com.viewcompose.animation.fadeOut
 import com.viewcompose.animation.rememberAnimatable
 import com.viewcompose.animation.rememberInfiniteTransition
+import com.viewcompose.animation.rememberTransition
 import com.viewcompose.animation.shrinkVertically
 import com.viewcompose.animation.shrinkOut
 import com.viewcompose.animation.slideInHorizontally
@@ -118,14 +120,57 @@ fun UiTreeBuilder.transitionSample(expanded: Boolean): TransitionValues {
         label = "panel",
     )
     val alpha = transition.animateFloat(
-        animationSpec = { tween(durationMillis = 180) },
+        transitionSpec = { tween(durationMillis = 180) },
         targetValueByState = { state -> if (state == PanelState.Expanded) 1f else 0.6f },
     )
     val height = transition.animateDp(
-        animationSpec = { spring(dampingRatio = 0.82f, stiffness = 230f) },
+        transitionSpec = { spring(dampingRatio = 0.82f, stiffness = 230f) },
         targetValueByState = { state -> if (state == PanelState.Expanded) 240.dp else 80.dp },
     )
     return TransitionValues(alpha = alpha, height = height)
+}
+
+/** Declares generic and segment-aware channels owned by an externally seekable transition. */
+fun UiTreeBuilder.seekableTransitionSample(
+    state: SeekableTransitionState<PanelState>,
+): SeekableTransitionValues {
+    val transition = rememberTransition(
+        transitionState = state,
+        label = "seekable panel",
+    )
+    val point = transition.animateValue(
+        converter = PointConverter,
+        transitionSpec = {
+            if (isTransitioningTo(PanelState.Collapsed, PanelState.Expanded)) {
+                tween(durationMillis = 420)
+            } else {
+                tween(durationMillis = 280)
+            }
+        },
+        targetValueByState = { panelState ->
+            if (panelState == PanelState.Expanded) Point(96f, 48f) else Point(0f, 0f)
+        },
+    )
+    val alpha = transition.animateFloat(
+        transitionSpec = { tween(durationMillis = 180) },
+        targetValueByState = { panelState ->
+            if (panelState == PanelState.Expanded) 1f else 0.5f
+        },
+    )
+    return SeekableTransitionValues(
+        point = point,
+        alpha = alpha,
+    )
+}
+
+/** Transfers one seekable transition between explicit progress, autonomous, and snapped modes. */
+suspend fun driveSeekableTransitionSample(state: SeekableTransitionState<PanelState>) {
+    state.seekTo(
+        fraction = 0.5f,
+        targetState = PanelState.Expanded,
+    )
+    state.animateTo(PanelState.Expanded)
+    state.snapTo(PanelState.Collapsed)
 }
 
 /** Combines alpha and vertical size primitives into enter and exit policies. */
@@ -286,6 +331,11 @@ data class Point(
 data class TransitionValues(
     val alpha: State<Float>,
     val height: State<UiDp>,
+)
+
+data class SeekableTransitionValues(
+    val point: State<Point>,
+    val alpha: State<Float>,
 )
 
 enum class PanelState {

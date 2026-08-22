@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-animation.md
-translation_source_hash: 758ba048e4fdb5c8b5d090fda264813f6805e9a90c1e382e71d1460c6faf7e35
+translation_source_hash: 4879c91953c44512714248ed0997157200507c58dd0fa967fd86b51709fb603c
 translation_status: current
 ---
 
@@ -9,7 +9,7 @@ translation_status: current
 本文对比 Jetpack Compose Animation、当前 ViewCompose 动画版本和已经接受的扩展契约。
 它不是源码兼容承诺。只有生命周期、计时、几何与中断规则一致时，相似名称才表示同一概念。
 
-最后验证日期：**2026-08-22**
+最后验证日期：**2026-08-23**
 
 复核责任人：**`viewcompose-animation-core`、`viewcompose-animation`、Android Renderer、
 Navigation、Preview 与 Studio 工具的维护者**
@@ -20,8 +20,8 @@ Navigation、Preview 与 Studio 工具的维护者**
 
 | 产物 | 版本 | 当前职责 |
 | --- | --- | --- |
-| `viewcompose-animation-core` | `0.1.0-alpha04` | 平台中立的时长/物理采样、类型化速度、Mutation、运动策略与 Transition 协调 |
-| `viewcompose-animation` | `0.1.0-alpha04` | 组合所有的物理/状态动画、Transition、可见性、Crossfade 与内容尺寸动画 |
+| `viewcompose-animation-core` | `0.1.0-alpha04` | 平台中立的时长/物理采样、类型化速度、Mutation、运动策略与显式 Transition 协调 |
+| `viewcompose-animation` | `0.1.0-alpha04` | 组合所有的物理/状态动画、泛型与 Seekable Transition、可见性、Crossfade 与内容尺寸动画 |
 
 上游稳定语义基线是 2026-08-12 发布的 Compose Animation `1.12.0`。验证依据为官方
 [Compose Animation 发布说明](https://developer.android.com/jetpack/androidx/releases/compose-animation)、
@@ -51,7 +51,7 @@ AGP 9.2，而本仓库当前使用 compile SDK 36 与 AGP 8.13.2。因此：
 | `Animatable` 变更所有权 | 后一个变更取消前一调用；完成返回结果状态 | **Supported（支持）** `Animatable<T, V>`、保留速度、结构化结果、Bounds 与 Last-writer 取消 | 保留结构化所有权；取消会抛出异常，不返回 Interrupted 结果 |
 | Decay 与 Fling 接力 | Decay Spec 和速度延续 | **Supported（支持）**平台中立指数 Decay | Gesture Owner 仍需在接力前转换 Density、Direction、Axis 与 Nested-scroll 速度 |
 | Target-as-state 动画 | 状态驱动的类型化动画 | **Supported（支持）**泛型值、Float、Int、编码 ARGB 与 `UiDp` | 颜色按编码 Channel 插值，不感知色彩空间 |
-| `Transition` | 共享状态 Segment、泛型 Channel 与 Seek | **Partially supported（部分支持）**；已有一个自主 Timeline 与四种内置 Channel | Phase 4 增加公开泛型、Segment-aware 与 Seekable 控制 |
+| `Transition` | 共享状态 Segment、泛型 Channel 与 Seek | **Supported（支持）**泛型 `AnimationConverter<T, V>` Channel、稳定的 Segment-aware Spec、唯一自主或 Seeking Writer 与归一化 Seek Progress | 组合所有目标使用 `updateTransition`；外部控制则通过 `rememberTransition` 绑定一个 `SeekableTransitionState`；公开 Play-time Seek 与 Seek 初速度有意不提供 |
 | `AnimatedVisibility` | Enter/Exit 代数、Slide、Scale 与后代编排 | **Supported（支持）** Fade、带 Alignment 的实测 Reveal、按实测比例 Slide、带轴心 Scale、所属 Scope 与共享时钟的后代 Enter/Exit | 使用 `AnimatedVisibilityScope.AnimatedEnterExit`，而不是 Compose 的 Modifier 形式；按 Callback 计算 Offset 仍未支持 |
 | `AnimatedContent` | Keyed 出入内容替换与 Content Transform | **Supported（支持）** Keyed 替换、逐状态对 Fade/Slide/Scale、Z-order、Alignment 与可选尺寸变换 | 纯 Alpha 替换继续使用 `Crossfade`；Full-size Callback Offset 与后代 Choreography 尚不支持 |
 | 内容尺寸动画 | Layout 尺寸变化 | **Supported（支持）**，使用 Android Renderer Wrapper 与共享物理 Spring Solver | 重新验证父级 Constraint 与 Wrapper 位置；无限 Spec 会被拒绝 |
@@ -140,9 +140,19 @@ Phase 3 有意把 `AnimatedVisibility` Content Receiver 从 `BoxScope` 硬切为
 对于 Keyed `AnimatedContent`，变化 Target 只会在一棵候选树成功 Commit 后接受，因此替换
 Segment 前多一个 Commit Boundary，Renderer 失败也无法改变 Content Identity。
 
-Seekable Transition 只有一个 Writer。`seekTo` 在发布有限 `0f..1f` Fraction 前取消并 Join
-自主动画。Seek 不制造速度；`animateTo` 可从已采样值以显式 Gesture 速度继续。
-Seek State 不可保存，Predictive Back 的 Commit/Rollback 仍由 Navigation 所有。
+Seekable Transition 只有一个 Writer 和一个活动 Composition Binding。`seekTo` 会在所有权变化
+前校验有限 `0f..1f` Fraction，取消并 Join 旧命令，再把 Fraction 映射到最长已提交 Channel
+时长；较短 Channel 会 Clamp 到自身终点。动态新增或移除 Channel 时会保留归一化 Fraction，
+并按新的最大值重新采样。Target 变化会把各 Channel 的样本冻结成新起点，Seeking 始终保留零
+物理速度。
+
+`animateTo` 从 Seek Sample 通过唯一自主 Frame Loop 继续，初速度为零；本阶段没有公开初速度
+参数。`snapTo` 不发布 Frame，而是把 Current State、Target State 与两个 Segment Endpoint
+折叠为一个 Idle 值。Binding 被移除时会取消活动 Writer，并把未完成 Progress 保留为 Seeking
+State。该 State 不持有 Scope，不会自动 Save；Predictive Back 的 Commit/Rollback 仍由
+Navigation 所有。ViewCompose 暴露归一化 Fraction，而不是公开纳秒 Play-time 控制；
+Predictive Progress 结束后还必须显式选择 `animateTo` 或 `snapTo`，不会反向修改 Navigation
+Transaction。
 
 ## Layout 与共享运动映射
 
@@ -197,6 +207,14 @@ Phase 3 把 `animation.core` 推进到 Revision 3，并有意提高 Visibility D
 相同，这属于 `no material change` 发版安全证据，不是严格同负载的 Throughput 或功耗声明。
 精确数据、控制条件与局限记录在
 [性能文档第 2.4.11 节](../tooling/performance.md#2411-animation-revision-3-rich-visibility-release-safety-comparison)。
+
+Phase 4 只把 Transition Fixture 推进到 `animation.transition@2`。它测量一个泛型二维 Channel
+和四个不同时长的类型化 Channel 从归一化 Seek 接力到自主完成。小米 Root 固定频率批次的帧数
+均为 `200/200/200/200/200`，Frame CPU P50/P95/P99 为 `7.775/10.493/11.718 ms`，Peak Heap
+中位数为 `8,474 KiB`，run-P50 CV 为 `0.011`，Thermal Throttle Sleep 为零。这是新 Workload
+已接受的**绝对基线**。它不会与控制、Action Path、Channel Set 和 Revision 均不同的
+`animation.transition@1` 做纵向比较。精确 APK Identity、温度、Clock 校验、局限与下一步记录在
+[性能文档第 2.4.12 节](../tooling/performance.md#2412-animation-revision-2-seekable-transition-baseline)。
 
 ## 迁移顺序
 

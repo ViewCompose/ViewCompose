@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 87dd3455be4176b20ff8ef64877001028b3450c287edc4e985fe03a907f33c3c
+translation_source_hash: 4dcfb9c3832780d4f57365229dd4189de4cbd7caf8c7080f3c5dd8b39ea82283
 translation_status: current
 ---
 
@@ -1117,6 +1117,44 @@ Slide/Scale/Fade。从 164 帧增加到 384 帧是预期的编舞时长与覆盖
 Allocation Event、没有 Compose Control，以及没有直接功耗测量。确定性测试另外证明单一共享
 Frame Owner、子树仅释放一次、非活跃交互移除与 Renderer Rollback。Phase 3 性能已接收；下一步是
 完整项目与 Root 真机门禁；这些门禁随后已经通过，因此下一步是提交 Pull Request，而不是重复采样。
+
+#### 2.4.12 Animation revision-2 Seekable Transition 基线 {/* #2412-animation-revision-2-seekable-transition-baseline */}
+
+2026-08-23 的 Phase 4 批次建立了 `animation.transition@2` 的第一份绝对基线。Workload 会先对
+一个泛型二维 Channel，以及 Float、Int、编码 Color 和 `UiDp` 四个不同时长 Channel 执行显式
+Seek，再把保留样本接力给唯一自主完成 Loop。5 次 `run-from-apk` 迭代都在测量外等待启动 5 秒，
+每次执行 4 个完整 Seek/Animate Round Trip。Target 是基于
+`2a21db658f3214afef1436a25c3463b7f78e53d0` 的 R8/资源压缩非 Debuggable Candidate；其 APK
+SHA-256 为 `15531449d09609dd3423b693cd86a65a0b88145df7dc6b939ab168e0704001b1`。
+
+原始 Benchmark APK SHA-256 为
+`6ded3f48d2e1a4eb9d31f470b31c97e8a95bb4ad1efbbd064b186ab1a1cffd2f`，Magisk 适配 APK 为
+`2c3af42007f65e505d37fca0e3496d192dc51095fbc7e89d44f2e98987391e52`。与已接收的此前动画批次
+一致，该适配只把 AndroidX 不支持的 `su root` 传输命令改为等长 `su 0 -c`，修复 DEX Checksum
+与 APK Signature，不改变 Target、Workload、Metric 或 Result JSON。
+
+2.4.8 节固定 CPU/GPU/Interconnect Policy 把 CPU Policy 0/4 固定为 1.4016/1.8048 GHz、GPU
+固定为 515 MHz、已暴露 Interconnect 最小 Vote 固定为 13,763；厂商 Performance Service
+停止，充电暂停。前后校验的所有请求值完全相同，电池温度仅从 32 升至 33 摄氏度，AndroidX
+报告 `cpuLocked=true`，Thermal-throttle Sleep 为零。不要求 33 摄氏度起跑；验收条件是同一
+运行温区、固定频率与无 Thermal Throttling。
+
+| Workload | 每轮帧数 | Frame CPU P50/P90/P95/P99，ms | Peak Heap 中位数，KiB | Run-P50 CV | 验收 |
+| --- | --- | ---: | ---: | ---: | --- |
+| `animation.transition@2` 泛型 Seek 与自主完成 | `200/200/200/200/200` | `7.775/9.813/10.493/11.718` | 8474 | 0.011 | 已接收绝对基线 |
+
+所有帧数完全一致，Run-P50 CV 远低于 `0.15` 稳定性上限。P99 低于 60 Hz 单帧预算，该新路径
+没有暴露不稳定信号。归一化变化的解释结论仍为 **inconclusive**：
+`animation.transition@1` 使用自主类型化 Channel Toggle，Channel Set、Action Sequence、
+Settle Contract 与 Workload Revision 都不同，因此不是有效纵向基线；不能用旧 Percentile
+制造回退或改进结论。
+
+Frame Metric 无法证明的结构契约由确定性测试单独覆盖：一个活动 Binding、一个 Mutation/Frame
+Writer、Cancel-and-join 接管、稳定 Segment Identity、零速度 Seeking、动态最长时长重算、零
+Channel 终止与原子 Snap 折叠。局限包括仅一台 OEM/API-28 设备、`run-from-apk` 对 JIT/代码布局
+敏感、只有 Peak 而非 Post-GC Retained Memory、没有逐对象 Allocation Event、没有 Compose
+Control，以及没有直接功耗测量。这一稳定行成为可复用的 Phase 4 绝对基线；下一步是完整仓库与
+设备门禁，而不是重复采样。
 
 ### 2.5 Debug Tooling 回归门禁
 

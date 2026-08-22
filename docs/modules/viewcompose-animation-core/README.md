@@ -186,11 +186,20 @@ should use. The core owner deliberately owns no scope or frame clock.
 `TransitionCore<S>` coordinates logical endpoints and one timeline across multiple channels. A
 transition owner updates the target, registers each channel duration, advances the shared play time,
 and commits the target when the longest channel finishes. Shorter channels settle in their own
-evaluators. Retargeting preserves visual continuity in the higher-level channel owners.
+evaluators. A dynamic owner uses `replaceDuration` after recomputing the complete committed channel
+set, so adding or removing a channel can grow or shrink the shared duration.
+
+`seekToPlayTime` explicitly samples forward or backward on the current segment and can reactivate a
+segment after a terminal seek. `restartRunningSegment` creates a new timing identity for autonomous
+continuation from an unfinished higher-level sample. `snapTo` atomically collapses current state,
+target state, and both segment endpoints into one idle snapshot. These are coordination primitives,
+not competing owners: the higher layer must serialize them against its frame loop and preserve
+channel values and velocity.
 
 `TransitionCore` is not thread-safe and does not launch or cancel work. Physical channels register
 their resolved equilibrium duration, so transition state still commits only after every channel
-settles.
+settles. `viewcompose-animation` supplies the Q3 generic channels, stable segment API, normalized
+seek ownership, cancellation/join policy, composition binding, and atomic observable publication.
 
 ## Testing custom animation code
 
@@ -201,10 +210,14 @@ settles.
 - Verify custom value/velocity round trips, stable dimensions, thresholds, zero velocity, and
   numeric precision.
 - Test under-, critical-, and over-damped springs, safety guards, bounds, rapid retarget, and decay.
-- Register every transition channel before advancing the shared segment.
+- Register every transition channel before advancing the shared segment; test complete-set duration
+  replacement when dynamic channels are removed.
+- Test explicit seek endpoints, backward seek, restart identity, snap collapse, and single-writer
+  serialization in the higher-level owner.
 
 The module suite covers these physical branches, overshoot, structured results, signed ARGB
-velocity, converter failures, reduced motion, transition retargeting, and duration behavior.
+velocity, converter failures, reduced motion, transition retargeting, dynamic duration, explicit
+seek/restart, and snap behavior.
 
 ## Related documentation
 

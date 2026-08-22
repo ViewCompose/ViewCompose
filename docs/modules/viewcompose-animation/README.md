@@ -125,8 +125,9 @@ clock; without one, only `snapTo` and `stop` are usable and `animateTo` reports 
 
 ## Shared-state Transition
 
-`updateTransition(targetState)` creates one logical segment and one frame timeline for multiple
-derived channels:
+`updateTransition(targetState)` creates one logical segment and one autonomous frame timeline for
+multiple derived channels. Every channel receives the stable `TransitionSegment<S>` selected for
+that segment, so direction-specific timing is type-safe and evaluated once:
 
 ```kotlin
 val transition = updateTransition(
@@ -137,23 +138,73 @@ val alpha = transition.animateFloat { state ->
     if (state == PanelState.Expanded) 1f else 0.6f
 }
 val height = transition.animateDp(
-    animationSpec = { spring(dampingRatio = 0.8f, stiffness = 240f) },
+    transitionSpec = {
+        if (isTransitioningTo(PanelState.Collapsed, PanelState.Expanded)) {
+            spring(dampingRatio = 0.8f, stiffness = 240f)
+        } else {
+            tween(durationMillis = 180)
+        }
+    },
 ) { state ->
     if (state == PanelState.Expanded) 240.dp else 80.dp
 }
 ```
 
 The first composition is settled at the initial target. Each channel freezes its current sample and
-new target when a later segment begins and registers its duration. The longest channel decides when
-`currentState` commits `targetState`; shorter channels remain at their endpoint. Retargeting cancels
-the old frame effect and starts each existing channel from its latest sampled value. The Q3
-`Transition` publishes its logical state, target, running flag, segment identity, endpoints, and
-play time in one snapshot transaction per target or frame update. `MutableTransitionState` mirrors
-its framework-owned current/target/idle tuple through the same atomic boundary.
+new target when a later segment begins. The longest duration in the complete committed channel set
+decides when `currentState` commits `targetState`; shorter channels clamp at their own endpoints.
+Adding or removing a call position recomputes that maximum, including duration shrink. Retargeting
+cancels the old autonomous effect and starts each existing channel from its latest sampled value
+and retained physical velocity. The Q3 `Transition` publishes its logical state, target, running
+flag, stable `segment`, and play time through atomic snapshots. `MutableTransitionState` mirrors its
+framework-owned current/target/idle tuple through the same boundary.
 
-Channel factories currently receive no segment object; they provide one specification per channel
-and map logical state to `Float`, `Int`, packed ARGB, or `UiDp`. The label is captured for future
-diagnostics and does not alter identity.
+`animateValue(converter, transitionSpec, targetValueByState)` is the generic Q3 channel. Built-in
+`animateFloat`, `animateInt`, `animateColor`, and `animateDp` delegate to the same path. The typed
+channel named argument is now `transitionSpec`; the former `animationSpec` name has no compatibility
+overload. Infinite specifications remain excluded at compile time.
+
+For gesture, scrubber, Preview, or predictive-progress ownership, bind one
+`SeekableTransitionState<S>` instead of calling `updateTransition`:
+
+```kotlin
+val seekState = remember { SeekableTransitionState(PanelState.Collapsed) }
+val transition = rememberTransition(seekState, label = "seekable panel")
+val position = transition.animateValue(
+    converter = pointConverter,
+    transitionSpec = { tween(durationMillis = 600) },
+) { state ->
+    if (state == PanelState.Expanded) Point(96f, 32f) else Point(0f, 0f)
+}
+
+LaunchedEffect(command) {
+    when (command) {
+        Command.Preview -> seekState.seekTo(0.7f, PanelState.Expanded)
+        Command.Commit -> seekState.animateTo(PanelState.Expanded)
+        Command.Reset -> seekState.snapTo(PanelState.Collapsed)
+    }
+}
+```
+
+The state accepts exactly one active `rememberTransition` binding and one mutation writer.
+`seekTo` validates a finite `0f..1f` fraction before taking ownership, cancels and joins an older
+command, maps the fraction to the longest committed channel duration, and samples every channel
+with zero physical velocity. A changed seek target freezes current channel samples as new starts.
+Channel additions and removals retain the normalized fraction and resample against the new maximum.
+Commands allow two frame opportunities for channels in the accepted segment to commit; a
+zero-channel segment then uses the coordinator's one-nanosecond fallback rather than waiting
+without bound.
+
+`animateTo` leaves seeking and runs exactly one frame loop from the sampled values; because seeking
+does not infer physical velocity, that handoff starts with zero velocity. A newer seek, animation,
+or snap cancels and joins the old caller before publishing. `snapTo` uses no frame and atomically
+collapses current state, target state, and both segment endpoints onto one idle value. Removing the
+binding cancels its active writer and retains an unfinished visual sample as seeking state.
+
+The seek state owns no coroutine scope, is not automatically saveable, and does not commit or roll
+back navigation. A navigation owner may pass predictive-Back progress to `seekTo`, but it remains
+responsible for the back-stack transaction and for choosing `animateTo` or `snapTo` after commit or
+cancel. The label remains diagnostic metadata and does not alter identity.
 
 ## InfiniteTransition
 

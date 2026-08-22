@@ -2,12 +2,15 @@ package com.viewcompose.preview.catalog.domain
 
 import com.viewcompose.animation.Crossfade
 import com.viewcompose.animation.AnimatedVisibility
+import com.viewcompose.animation.SeekableTransitionState
 import com.viewcompose.animation.SlideDirection
 import com.viewcompose.animation.animateFloatAsState
+import com.viewcompose.animation.core.AnimationConverter
 import com.viewcompose.animation.core.tween
 import com.viewcompose.animation.expandVertically
 import com.viewcompose.animation.fadeIn
 import com.viewcompose.animation.fadeOut
+import com.viewcompose.animation.rememberTransition
 import com.viewcompose.animation.scaleIn
 import com.viewcompose.animation.scaleOut
 import com.viewcompose.animation.shrinkVertically
@@ -27,6 +30,8 @@ import com.viewcompose.ui.modifier.TransformOrigin
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.LaunchedEffect
+import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.Surface
 import com.viewcompose.ui.foundation.SurfaceVariant
 import com.viewcompose.ui.foundation.Text
@@ -141,5 +146,123 @@ internal object AnimationPreviewSpecs {
                 }
             },
         ),
+        PreviewSpec(
+            id = "animation-seekable-transition",
+            title = "Seekable Transition",
+            domain = PreviewDomain.Animation,
+            content = {
+                val state = remember { SeekableTransitionState(false) }
+                val command = remember { mutableStateOf<PreviewSeekCommand>(PreviewSeekCommand.None) }
+                val commandNonce = remember { mutableStateOf(0) }
+                val transition = rememberTransition(state, label = "preview seekable transition")
+                val position = transition.animateValue(
+                    converter = PreviewPointConverter,
+                    transitionSpec = {
+                        if (isTransitioningTo(false, true)) tween(720) else tween(520)
+                    },
+                    targetValueByState = { expanded ->
+                        if (expanded) PreviewPoint(96f, 28f) else PreviewPoint(0f, 0f)
+                    },
+                )
+                val alpha = transition.animateFloat(
+                    transitionSpec = { tween(180) },
+                    targetValueByState = { expanded -> if (expanded) 1f else 0.35f },
+                )
+                LaunchedEffect(command.value, commandNonce.value, state) {
+                    when (val request = command.value) {
+                        PreviewSeekCommand.None -> Unit
+                        is PreviewSeekCommand.Seek -> state.seekTo(request.fraction, request.target)
+                        is PreviewSeekCommand.Animate -> state.animateTo(request.target)
+                        is PreviewSeekCommand.Snap -> state.snapTo(request.target)
+                    }
+                }
+                Column(spacing = 8.dp, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "current=${state.currentState} · target=${state.targetState} · " +
+                            "fraction=${String.format("%.2f", state.fraction)}",
+                    )
+                    Row(spacing = 8.dp, modifier = Modifier.fillMaxWidth()) {
+                        Button(
+                            text = "Seek 70%",
+                            onClick = {
+                                command.value = PreviewSeekCommand.Seek(0.7f, true)
+                                commandNonce.value += 1
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                        Button(
+                            text = "Animate",
+                            onClick = {
+                                command.value = PreviewSeekCommand.Animate(state.targetState)
+                                commandNonce.value += 1
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    Surface(
+                        variant = SurfaceVariant.Variant,
+                        modifier = Modifier.fillMaxWidth().height(112.dp).padding(10.dp),
+                    ) {
+                        Surface(
+                            variant = SurfaceVariant.Default,
+                            modifier = Modifier
+                                .graphicsLayer(
+                                    translationX = position.value.x,
+                                    translationY = position.value.y,
+                                    alpha = alpha.value,
+                                )
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                        ) {
+                            Text(text = "Generic 2D channel")
+                        }
+                    }
+                    Button(
+                        text = "Reset",
+                        onClick = {
+                            command.value = PreviewSeekCommand.Snap(false)
+                            commandNonce.value += 1
+                        },
+                    )
+                }
+            },
+        ),
     )
+}
+
+private sealed interface PreviewSeekCommand {
+    data object None : PreviewSeekCommand
+
+    data class Seek(val fraction: Float, val target: Boolean) : PreviewSeekCommand
+
+    data class Animate(val target: Boolean) : PreviewSeekCommand
+
+    data class Snap(val target: Boolean) : PreviewSeekCommand
+}
+
+private data class PreviewPoint(
+    val x: Float,
+    val y: Float,
+)
+
+private object PreviewPointConverter : AnimationConverter<PreviewPoint, PreviewPoint> {
+    override val vectorSize: Int = 2
+    override val zeroVelocity: PreviewPoint = PreviewPoint(0f, 0f)
+    override val visibilityThreshold: PreviewPoint = PreviewPoint(0.01f, 0.01f)
+
+    override fun convertToVector(value: PreviewPoint, destination: FloatArray) {
+        destination[0] = value.x
+        destination[1] = value.y
+    }
+
+    override fun convertFromVector(vector: FloatArray): PreviewPoint {
+        return PreviewPoint(vector[0], vector[1])
+    }
+
+    override fun convertVelocityToVector(velocity: PreviewPoint, destination: FloatArray) {
+        convertToVector(velocity, destination)
+    }
+
+    override fun convertVelocityFromVector(vector: FloatArray): PreviewPoint {
+        return convertFromVector(vector)
+    }
 }

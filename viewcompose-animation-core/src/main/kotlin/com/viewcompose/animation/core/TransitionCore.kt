@@ -5,8 +5,10 @@ package com.viewcompose.animation.core
  *
  * The coordinator does not sample values, own a clock, launch coroutines, or synchronize access.
  * A higher layer calls [updateTarget], lets every channel contribute its duration through
- * [registerDuration], then advances the common time with [updatePlayTime]. All calls must be
- * serialized by the owning transition runtime.
+ * [registerDuration] or replaces the complete dynamic-channel maximum through [replaceDuration],
+ * then advances the common time with [updatePlayTime]. Explicit control may instead use
+ * [seekToPlayTime], [restartRunningSegment], and [snapTo]. All calls must be serialized by the
+ * owning transition runtime.
  *
  * During retargeting, a new conceptual segment starts from the previous segment's target rather
  * than from each channel's sampled value. Channel samplers are responsible for preserving visual
@@ -46,9 +48,10 @@ class TransitionCore<S>(
         private set
 
     /**
-     * Returns a monotonically increasing identity for target-changing segments.
+     * Returns a monotonically increasing identity for accepted segment snapshots.
      *
-     * Repeating the existing segment target does not increment this value.
+     * A changed target, unfinished restart, or changed snap increments this value. Repeating the
+     * existing target or an identical settled snap does not.
      */
     var segmentVersion: Long = 0L
         private set
@@ -56,7 +59,8 @@ class TransitionCore<S>(
     /**
      * Returns the normalized play time of the active or most recently completed segment.
      *
-     * A new segment resets it to zero. Completion pins it to [segmentDurationNanos].
+     * A new segment resets it to zero. Completion pins it to [segmentDurationNanos], while [snapTo]
+     * publishes an idle zero-time snapshot.
      */
     var playTimeNanos: Long = 0L
         private set
@@ -124,6 +128,26 @@ class TransitionCore<S>(
     }
 
     /**
+     * Replaces the duration of the active or most recently completed segment.
+     *
+     * This is the dynamic-channel counterpart to [registerDuration]. A composition owner calls it
+     * after recomputing the longest duration from its complete committed channel set, including
+     * after a channel is removed. Non-positive input normalizes to one nanosecond. Shrinking an
+     * active duration to or below [playTimeNanos] commits the target immediately; changing the
+     * duration of an idle segment does not restart it.
+     *
+     * @sample com.viewcompose.animation.core.samples.transitionCoreSample
+     *
+     * @param durationNanos replacement segment duration in nanoseconds
+     */
+    fun replaceDuration(durationNanos: Long) {
+        segmentDurationNanos = durationNanos.coerceAtLeast(1L)
+        if (isRunning && playTimeNanos >= segmentDurationNanos) {
+            finishRunningSegment()
+        }
+    }
+
+    /**
      * Replaces the active segment's shared play time.
      *
      * Negative values normalize to zero. Reaching or exceeding [segmentDurationNanos] commits the
@@ -138,6 +162,84 @@ class TransitionCore<S>(
         if (this.playTimeNanos >= segmentDurationNanos) {
             finishRunningSegment()
         }
+    }
+
+    /**
+     * Samples the current segment at an explicit time without owning an autonomous clock.
+     *
+     * Time clamps to `0..segmentDurationNanos`. Sampling the terminal time commits the target;
+     * seeking backward from that endpoint reactivates the same segment and restores its logical
+     * initial state until the endpoint is reached again. Calls are ignored before any unequal
+     * segment exists. The higher layer remains responsible for excluding a simultaneous frame-loop
+     * writer.
+     *
+     * @sample com.viewcompose.animation.core.samples.transitionCoreSample
+     *
+     * @param playTimeNanos requested segment-relative time in nanoseconds
+     */
+    fun seekToPlayTime(playTimeNanos: Long) {
+        if (segmentInitialState == segmentTargetState) return
+        this.playTimeNanos = playTimeNanos.coerceIn(0L, segmentDurationNanos)
+        if (this.playTimeNanos >= segmentDurationNanos) {
+            finishRunningSegment()
+        } else {
+            currentState = segmentInitialState
+            targetState = segmentTargetState
+            isRunning = true
+        }
+    }
+
+    /**
+     * Starts a fresh timing segment toward the current target when an unfinished sample resumes.
+     *
+     * The current logical state becomes the new segment initial state, play time resets to zero,
+     * duration resets to one nanosecond for channel registration, and [segmentVersion] advances.
+     * A settled transition is unchanged. Channel owners freeze their latest sampled values when
+     * they observe the new version; this coordinator does not own channel values or velocities.
+     *
+     * @sample com.viewcompose.animation.core.samples.transitionCoreSample
+     */
+    fun restartRunningSegment() {
+        if (currentState == targetState) return
+        segmentInitialState = currentState
+        segmentTargetState = targetState
+        playTimeNanos = 0L
+        segmentDurationNanos = 1L
+        segmentVersion += 1L
+        isRunning = true
+    }
+
+    /**
+     * Atomically collapses the coordinator onto [target] without creating a running segment.
+     *
+     * Current, target, and both segment endpoints become [target], play time resets to zero, and
+     * duration resets to one nanosecond. A changed snapshot advances [segmentVersion] so channel
+     * owners discard the previous segment; an already identical idle snapshot is unchanged.
+     *
+     * @sample com.viewcompose.animation.core.samples.transitionCoreSample
+     *
+     * @param target logical endpoint to publish as the complete idle snapshot
+     */
+    fun snapTo(target: S) {
+        if (
+            !isRunning &&
+            currentState == target &&
+            targetState == target &&
+            segmentInitialState == target &&
+            segmentTargetState == target &&
+            playTimeNanos == 0L &&
+            segmentDurationNanos == 1L
+        ) {
+            return
+        }
+        currentState = target
+        targetState = target
+        segmentInitialState = target
+        segmentTargetState = target
+        playTimeNanos = 0L
+        segmentDurationNanos = 1L
+        segmentVersion += 1L
+        isRunning = false
     }
 
     /**

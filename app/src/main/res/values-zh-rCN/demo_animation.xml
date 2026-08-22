@@ -74,11 +74,18 @@
     <string name="demo_animation_content_size_state_collapsed">状态：已收起</string>
     <string name="demo_animation_content_size_state_expanded">状态：已展开</string>
 
-    <string name="demo_animation_transition_title">Transition 与显隐状态</string>
-    <string name="demo_animation_transition_summary">验证 updateTransition、MutableTransitionState 及横向和纵向显隐。</string>
-    <string name="demo_animation_transition_state">过渡=%1$b · 显隐=%2$b · 横向=%3$b · 纵向=%4$b</string>
+    <string name="demo_animation_transition_title">可定位的 Transition 时间线</string>
+    <string name="demo_animation_transition_summary">定位二维泛型通道，对比不等时长通道，再把同一时间线交给唯一的自动播放写入者。</string>
+    <string name="demo_animation_transition_state">当前=%1$b · 目标=%2$b · 进度=%3$s · %4$s · 分段=%5$s</string>
     <string name="demo_animation_transition_to_primary">切换到主状态</string>
     <string name="demo_animation_transition_to_alternative">切换到替代状态</string>
+    <string name="demo_animation_transition_seek_early">定位 35%</string>
+    <string name="demo_animation_transition_seek_late">定位 70%</string>
+    <string name="demo_animation_transition_animate">自动播放到终点</string>
+    <string name="demo_animation_transition_mode_idle">已就绪</string>
+    <string name="demo_animation_transition_mode_seeking">外部定位中</string>
+    <string name="demo_animation_transition_mode_animating">自动播放中</string>
+    <string name="demo_animation_transition_position">泛型坐标=(%1$s, %2$s)</string>
     <string name="demo_animation_transition_alpha">透明度=%1$s</string>
     <string name="demo_animation_transition_int">整数=%1$d</string>
     <string name="demo_animation_transition_dp">dp(px)=%1$s</string>

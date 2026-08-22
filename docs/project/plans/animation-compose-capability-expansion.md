@@ -456,6 +456,38 @@ seek-to-animate handoff, animate-to-seek takeover, cancellation, rapid target re
 predictive-Back progress adaptation, deterministic explicit-time sampling, and no duplicate frame
 owners.
 
+Implementation status on 2026-08-23: the Q3 surface is implemented with a stable
+`TransitionSegment<S>`, generic `animateValue<T, V>`, segment-aware finite specifications on every
+typed channel, and `SeekableTransitionState<S>` bound through `rememberTransition`. The typed
+channel named argument is hard-cut from `animationSpec` to `transitionSpec`; no compatibility
+overload or second runner remains. The complete committed channel set owns duration, including
+growth and shrink after call-position changes. Normalized seeking maps to that maximum, clamps
+shorter channels, uses zero velocity, and resamples dynamic sets without changing the retained
+fraction.
+
+The controller accepts one post-commit composition binding and one mutation writer. A new command
+cancels and joins its predecessor; invalid fractions fail before ownership changes. Retargeting
+freezes every current channel sample, seek-to-animate creates one autonomous loop with zero initial
+velocity, snap atomically collapses both logical endpoints and the segment, and disposal retains an
+unfinished sample only as seeking state. The state owns no scope, is not saveable, and does not own
+predictive-Back commit or rollback.
+
+Focused core/composition tests cover custom two-dimensional conversion, stable segment identity,
+direction-specific selection, dynamic duration removal, unequal and zero channels, finite-range
+validation, seek/animate takeover in both directions, rapid replacement, disposal, unique binding,
+and snap collapse. The revision-2 Demo and Preview expose normalized Seek, autonomous completion,
+generic position, four typed unequal-duration channels, segment status, and deterministic Reset.
+Manual Xiaomi review accepted the 70% sample and autonomous continuation; targeted device tests and
+the English/Chinese action-reset matrix pass. The fixed-frequency absolute baseline in
+[performance Section 2.4.12](../../tooling/performance.md#2412-animation-revision-2-seekable-transition-baseline)
+records identical 200-frame runs, P50/P95/P99 `7.775/10.493/11.718 ms`, median peak heap
+`8,474 KiB`, run-P50 CV `0.011`, and zero thermal sleep. It is not compared to the incompatible
+revision-1 workload. The immutable release record is
+`release/changes/20260823-seekable-transition-phase4.json`. Final gates pass: the combined
+`qaQuick`, `qaPreview`, and development-tooling-isolation run completes 1,624 tasks; `qaFull`
+completes 1,763 tasks and the physical-device suites pass Demo 137/137, Counter 1/1, and Tutorials
+2/2 with no skipped or failed tests. Pull-request delivery remains.
+
 ## Phase 5: Layout-coordinate and bounds animation
 
 Add a layout-participating `Modifier.animateBounds` or equivalently named Q3 contract that animates
@@ -631,12 +663,13 @@ This plan is complete only when:
 3. **Complete — Phase 2:** keyed `AnimatedContent`, content transforms, size transforms, renderer
    ownership, repository/Preview/full-device validation, and performance comparison are accepted
    and merged.
-4. **Complete on candidate branch — Phase 3:** slide/scale/aligned visibility primitives,
-   type-safe scope, shared-clock descendant choreography, focused/full tests, manual-device review,
-   Preview Golden, fixed-frequency performance, and root-installed device suites are accepted;
-   pull-request merge remains.
-5. **Pending — Phase 4:** implement public generic/segment-aware channels and seekable transition
-   state.
+4. **Complete and merged — Phase 3:** slide/scale/aligned visibility primitives, type-safe scope,
+   shared-clock descendant choreography, focused/full tests, manual-device review, Preview Golden,
+   fixed-frequency performance, and root-installed device suites were merged in `2a21db65`.
+5. **Complete on candidate branch — Phase 4:** public generic/segment-aware channels, normalized
+   seekable ownership, focused tests, Demo/Preview/manual review, the stable fixed-frequency
+   absolute baseline, repository gates, and full physical-device suites are accepted; pull-request
+   delivery remains.
 6. **Pending — Phase 5:** implement transactional layout-coordinate and bounds animation.
 7. **Pending — Phase 6:** implement bounded shared-element/shared-bounds coordination and navigation
    integration.
@@ -674,3 +707,7 @@ This plan is complete only when:
 | 2026-08-23 | Accept the Phase 3 hard-cut design and focused evidence: `AnimatedVisibilityScope` replaces `BoxScope`, descendants share one transition/removal lifetime, inactive native content relinquishes interaction immediately, and renderer transforms use complete host geometry. |
 | 2026-08-23 | Accept the Phase 3 Xiaomi fixed-frequency release-safety comparison as `no material change`; P50/P95/heap remain inside frozen gates, while P99 at `15.723 ms` is retained as a Phase 4 tail watch item rather than hidden or converted into an unfrozen blocker. |
 | 2026-08-23 | Accept the Phase 3 final gates: repository, documentation, compiled samples, Preview, and tooling isolation pass in the 1,624-task gate; the reviewed rich-visibility Golden passes; root-installed device suites pass Demo 137/137, Counter 1/1, and Tutorials 2/2. |
+| 2026-08-23 | Record Phase 3 merged at `2a21db658f3214afef1436a25c3463b7f78e53d0` and begin Phase 4 without reopening its visibility ownership or performance conclusions. |
+| 2026-08-23 | Freeze the Phase 4 hard cut: one stable segment-aware finite channel surface, one explicit seek/animate/snap writer, normalized longest-duration progress, zero seek velocity, cancel-and-join takeover, one post-commit binding, and no save/navigation ownership. |
+| 2026-08-23 | Accept the `animation.transition@2` Xiaomi fixed-frequency absolute baseline: five identical 200-frame runs, run-P50 CV `0.011`, P50/P95/P99 `7.775/10.493/11.718 ms`, median peak heap `8,474 KiB`, and zero thermal sleep; reject longitudinal comparison with revision 1. |
+| 2026-08-23 | Accept the Phase 4 final gates: the 1,624-task quick/Preview/tooling-isolation gate and 1,763-task `qaFull` gate pass; physical-device suites pass Demo 137/137, Counter 1/1, and Tutorials 2/2 with no skips or failures. |

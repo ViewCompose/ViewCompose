@@ -1306,6 +1306,51 @@ release, inactive interaction removal, and renderer rollback. Phase 3 performanc
 complete project and rooted-device gates subsequently passed, so the next action is pull-request
 delivery rather than repeated sampling.
 
+#### 2.4.12 Animation revision-2 seekable-transition baseline
+
+The 2026-08-23 Phase 4 batch establishes the first absolute baseline for
+`animation.transition@2`. The workload explicitly seeks a generic two-dimensional channel plus
+Float, Int, encoded-color, and `UiDp` channels with unequal durations, then hands the retained
+sample to one autonomous completion loop. Each of five `run-from-apk` iterations performs four
+complete seek/animate round trips after a five-second unmeasured launch settle. The target is the
+R8/resource-shrunk nondebuggable candidate based on
+`2a21db658f3214afef1436a25c3463b7f78e53d0`; its APK SHA-256 is
+`15531449d09609dd3423b693cd86a65a0b88145df7dc6b939ab168e0704001b1`.
+
+The original benchmark APK SHA-256 is
+`6ded3f48d2e1a4eb9d31f470b31c97e8a95bb4ad1efbbd064b186ab1a1cffd2f`; the Magisk-adapted APK is
+`2c3af42007f65e505d37fca0e3496d192dc51095fbc7e89d44f2e98987391e52`. As in the accepted earlier
+animation batches, the adaptation changes AndroidX's unsupported `su root` command transport to
+the equal-length `su 0 -c` form, repairs the DEX checksum and APK signatures, and leaves the target,
+workload, metrics, and result JSON unchanged.
+
+The Section 2.4.8 fixed CPU/GPU/interconnect policy held CPU policies 0/4 at
+1.4016/1.8048 GHz, GPU at 515 MHz, and exposed interconnect minimum votes at 13,763. Vendor
+performance services were stopped and charging was suspended. Pre/post verification matched every
+requested value, the battery moved only from 32 to 33 degrees Celsius, AndroidX reported
+`cpuLocked=true`, and thermal-throttle sleep was zero. A 33-degree start was not required; the
+accepted controls are the same-run temperature band, fixed clocks, and no thermal throttling.
+
+| Workload | Frames per run | Frame CPU P50/P90/P95/P99, ms | Median peak heap, KiB | Run-P50 CV | Acceptance |
+| --- | --- | ---: | ---: | ---: | --- |
+| `animation.transition@2` generic seek and autonomous completion | `200/200/200/200/200` | `7.775/9.813/10.493/11.718` | 8474 | 0.011 | Accepted absolute baseline |
+
+All frame counts are identical and run-P50 CV is far below the `0.15` stability ceiling. P99 is
+below one 60 Hz frame budget, and the physical result establishes no instability signal for this
+new path. The interpreted conclusion remains **inconclusive** for normalized change because
+`animation.transition@1` used an autonomous typed-channel toggle with a different channel set,
+action sequence, settle contract, and workload revision. It is therefore not a valid longitudinal
+baseline, and its older percentile values are not used to manufacture a regression or improvement
+claim.
+
+Deterministic tests separately establish the structural contracts that frame metrics cannot:
+one active binding, one mutation/frame writer, cancel-and-join takeover, stable segment identity,
+zero-velocity seeking, dynamic longest-duration recomputation, zero-channel termination, and
+atomic snap collapse. Limits are one OEM/API-28 device, `run-from-apk` JIT/code-placement
+sensitivity, peak rather than post-GC retained memory, no per-object allocation events, no Compose
+control, and no direct power measurement. This stable row becomes the reusable Phase 4 absolute
+baseline; the next action is the full repository and device gate, not repeated sampling.
+
 ### 2.5 Debug tooling regression gate
 
 Release macrobenchmarks cannot detect costs that exist only in debuggable builds. Any tooling that

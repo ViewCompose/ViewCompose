@@ -544,8 +544,11 @@ internal object DemoScenarioRegistry {
             reset = R.id.demo_animation_transition_reset,
             state = R.id.demo_animation_transition_state,
             target = R.id.demo_animation_transition_target,
-            benchmarkRevision = 1,
-            benchmarkActions = listOf(DemoAutomationRole.PrimaryAction),
+            benchmarkRevision = 2,
+            benchmarkActions = listOf(
+                DemoAutomationRole.PrimaryAction,
+                DemoAutomationRole.SecondaryAction,
+            ),
         ),
         animationScenario(
             id = DemoScenarioIds.AnimationInfinite,

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md
-translation_source_hash: d61030d091379f011152aa3d9c9d504e3c657c0c5a99a1d58bbea512c102da0a
+translation_source_hash: 67412668bfd09a1a2b51b6bd158fc2e473a10cd41557fea85e67ab25a4c5893b
 translation_status: current
 ---
 
@@ -11,6 +11,8 @@ translation_status: current
 - 替代：Alpha 动画版本中 `SpringSpec` 与 `spring` 的固定时长语义
 - 修订：[ADR-0020](0020-separate-animation-value-and-velocity-domains.md) 替代了下文临时的单类型
   值域/速度域泛型词汇
+- Phase 4 澄清：2026-08-23，固定已提交 Channel 时长、零速度续播、Snap Endpoint 与类型化
+  Channel 命名参数语义
 
 ## 背景
 
@@ -165,12 +167,15 @@ Writer。
 
 - `fraction` 必须有限且位于 `0f..1f`；非法输入抛出 `IllegalArgumentException`，不 Coerce
   也不发布；
-- Normalized Fraction 映射到最长 Registered Channel Duration，较短 Channel Clamp 到自身
-  Terminal Sample；
+- Normalized Fraction 映射到完整已提交 Channel 集合中的最长时长，较短 Channel Clamp 到自身
+  Terminal Sample；已提交 Channel 新增或移除时重新计算该时长，并以保留 Fraction 重采样
+  所有仍存在的 Channel；
 - Seek 中 Retarget 会冻结当前 Sample Channel Value 为新 Start，并把 Fraction 重置为零；
-- Seek 不代表真实时间输入速度，因此物理速度为零；有 Gesture 速度的调用方必须显式交给
-  Autonomous Continuation；
-- `snapTo` 原子提交 Current/Target State，并令 Fraction 为零且没有 Frame Loop；
+- Seek 与 Phase 4 的 Seek-to-autonomous Continuation 都使用零物理速度，因为位置 Sample
+  不代表真实时间输入速度；接收显式 Gesture Velocity 需要另行设计 Overload 并修订本决策，
+  不能隐式估算；
+- `snapTo` 把 Current State、Target State 与 Segment 两端原子收敛到请求 Target，并令
+  Fraction 为零且没有 Frame Loop；
 - Seek State 不可保存；恢复逻辑 Application/Navigation State，并在 Endpoint 重建视觉；
 - Predictive Back 仍由 Navigation 所有。Adapter 可驱动 Seek State，但动画对象不能提交或
   回滚 Navigation Stack。
@@ -235,7 +240,7 @@ Codec 为 Q0，不能出现在可编译 Sample 中。
 | 1 | 变更后的 `Animatable.animateTo`、`animateDecay`、`updateBounds`、`velocity` | `viewcompose-animation` | Composition Sample；Last Writer、Lifecycle、Snapshot 测试 | 硬切 |
 | 2 | `ContentTransform`、`SizeTransform`、`AnimatedContentTransitionScope`、`AnimatedContentScope`、`AnimatedContent` | `viewcompose-animation` | Keyed Replacement Sample；Identity、Measure、Focus、Rollback、设备测试 | 新增 |
 | 3 | Slide/Scale Transition Factory、`AnimatedVisibilityScope`、`animateEnterExit` | `viewcompose-animation` | 组合 Visibility Sample；代数、RTL、释放、设备测试 | 新增 |
-| 4 | `TransitionSegment`、泛型 `Transition.animateValue`、Segment-aware Channel Overload、`SeekableTransitionState`、Seekable `rememberTransition` | `viewcompose-animation` | Segment/Seek Sample；Ownership、Range、Retarget、Predictive Back Adapter 测试 | 新增；删除内部 Segment Helper |
+| 4 | `TransitionSegment`、泛型 `Transition.animateValue`、Segment-aware Channel Overload、`SeekableTransitionState`、Seekable `rememberTransition` | `viewcompose-animation` | Segment/Seek Sample；Ownership、Range、Retarget、Predictive Back Adapter 测试 | 除类型化 Channel 命名参数从 `animationSpec` 硬切为 `transitionSpec` 外为新增；删除内部 Segment Helper |
 | 5 | `Modifier.animateBounds`、Bounds Scope/Configuration | `viewcompose-animation` | Bounds Sample；坐标、Remeasure、Input、Accessibility、Rollback 设备测试 | 新增 |
 | 6 | `SharedTransitionLayout`、Shared Key/State/Scope、`sharedElement`、`sharedBounds`、Resize/Bounds Transform | `viewcompose-animation`，Navigation Adapter 位于 `viewcompose-navigation-android` | Navigation Shared-motion Sample；Pairing、Overlay、Lifecycle、Rollback、Accessibility 设备测试 | 新增 |
 | 7 | 不可变 Animation Inspection Request/Response 与 Snapshot Type | `viewcompose-preview-core` | Protocol Sample；Codec、Limit、Stale Request、Privacy 测试 | 可选新增 |
