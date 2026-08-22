@@ -997,7 +997,7 @@ Metric 与 Result JSON 均未改写。
 Compose 对照。Phase 1 必须保持 Scenario Revision 与 Clock Policy 不变，将物理引擎与对应行对比，
 报告绝对值与归一化变化，并通过 ADR-0019 的 Allocation 与 Terminal-state Counter 后才能完成。
 
-#### 2.4.9 Animation revision-1 Phase 1 物理动画候选版本
+#### 2.4.9 Animation revision-1 Phase 1 物理动画候选版本 {/* #249-animation-revision-1-phase-1-physical-candidate */}
 
 2026-08-22 的 Phase 1 批次在同一台 Xiaomi MI 6 / Android 9 设备上，将硬切后的物理引擎与
 2.4.8 节基线进行对比。4 个 Workload Revision、适配后的 Benchmark APK、每个方法 5 次
