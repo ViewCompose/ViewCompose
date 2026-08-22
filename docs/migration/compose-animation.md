@@ -15,8 +15,8 @@ The current ViewCompose target is:
 
 | Artifact | Version | Current role |
 | --- | --- | --- |
-| `viewcompose-animation-core` | `0.1.0-alpha04` | Platform-neutral duration sampling, converters, motion policy, and transition coordination |
-| `viewcompose-animation` | `0.1.0-alpha04` | Composition-owned state animation, transitions, visibility, Crossfade, and content-size animation |
+| `viewcompose-animation-core` | `0.1.0-alpha04` | Platform-neutral duration/physical sampling, typed velocity, mutation, motion policy, and transition coordination |
+| `viewcompose-animation` | `0.1.0-alpha04` | Composition-owned physical/state animation, transitions, visibility, Crossfade, and content-size animation |
 
 The upstream stable semantic baseline is Compose Animation `1.12.0`, released on 2026-08-12. It was
 verified against the official [Compose Animation release notes](https://developer.android.com/jetpack/androidx/releases/compose-animation),
@@ -35,7 +35,8 @@ Consequently:
 3. a local Compose `1.7.8` fixture cannot prove `1.12.0` parity.
 
 [ADR-0019](../architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md)
-freezes the target architecture and API quality levels. Rows marked **Planned** below are accepted
+freezes the target architecture and API quality levels. [ADR-0020](../architecture/decisions/0020-separate-animation-value-and-velocity-domains.md)
+separates animated value and velocity domains. Rows marked **Planned** below are accepted
 design, not available APIs. They remain unsupported for application migration until their phase is
 implemented, documented in the owning module, and released.
 
@@ -44,21 +45,21 @@ implemented, documented in the owning module, and released.
 | Concern | Compose `1.12.0` semantic | Current ViewCompose status | Migration decision |
 | --- | --- | --- | --- |
 | Tween, keyframes, snap, repeat | Duration and repeat specifications | **Supported**, with a narrower keyframe/repeat surface | Revalidate unsupported start offsets, spline keyframes, and path easing before porting |
-| Physical spring | Threshold-based solve with value and velocity | **Unsupported**; current `SpringSpec` is a clamped fixed-duration approximation | Do not translate Compose spring tuning into the current API; Phase 1 hard-cuts the approximation |
-| `Animatable` mutation ownership | Last mutation cancels the previous call; completion returns result state | **Partially supported**; last writer and cancellation exist, velocity/results/decay/bounds do not | Preserve structured coroutine ownership, but wait for Phase 1 when gesture velocity or terminal reason matters |
-| Decay and fling handoff | Decay specs and velocity continuation | **Unsupported** | Keep fling ownership in the existing gesture/platform owner until Phase 1 |
+| Physical spring | Threshold-based solve with value and velocity | **Supported** with normalized mass, typed initial velocity, analytic damping branches, threshold termination, and a safety guard | Retune Compose parameters against ViewCompose units; an exact interval still uses tween/keyframes |
+| `Animatable` mutation ownership | Last mutation cancels the previous call; completion returns result state | **Supported** with `Animatable<T, V>`, retained velocity, structured results, bounds, and last-writer cancellation | Preserve structured ownership; cancellation throws rather than returning an interrupted result |
+| Decay and fling handoff | Decay specs and velocity continuation | **Supported** with platform-neutral exponential decay | Gesture owners still convert density, direction, axis, and nested-scroll velocity before handoff |
 | Target-as-state animation | State-driven typed animation | **Supported** for generic values, Float, Int, encoded ARGB, and `UiDp` | Color interpolation is encoded-channel, not color-space aware |
 | `Transition` | Shared state segment, generic channels, seeking | **Partially supported**; one autonomous timeline and four built-in channel types exist | Phase 4 adds public generic, segment-aware, and seekable control |
 | `AnimatedVisibility` | Enter/exit algebra, slide, scale, descendant choreography | **Partially supported**; fade and measured-size behavior exist | Phase 3 adds slide, scale, transform origin, scope, and descendant enter/exit |
 | `AnimatedContent` | Keyed outgoing/incoming replacement and content transforms | **Unsupported**; ViewCompose intentionally renamed its old alpha-only surface to `Crossfade` | Use `Crossfade` only when alpha replacement is sufficient; Phase 2 owns full replacement |
-| Content-size animation | Layout size changes | **Supported**, using an Android renderer wrapper | Revalidate parent constraints and wrapper placement; Phase 5 does not replace this small API |
+| Content-size animation | Layout size changes | **Supported**, using an Android renderer wrapper and the shared physical spring solver | Revalidate parent constraints and wrapper placement; infinite specifications are rejected |
 | Bounds animation | Position and size across layout-coordinate changes | **Unsupported** | Phase 5 adds real layout geometry; do not simulate interactive bounds with draw translation |
 | Shared element/bounds | Scoped pairing and overlay motion | **Unsupported** | Phase 6 adds one-session pairing and navigation integration; cross-window motion remains excluded |
 | Timeline inspection and seeking | Tooling can observe and control eligible animation state | **Unsupported** | Phase 7 adds request-driven Preview tooling; production artifacts remain inactive and dependency-free |
 
 ## The spring hard cut
 
-The current API accepts a nominal duration:
+The pre-Phase-1 API accepted a nominal duration:
 
 ```kotlin
 spring(
@@ -68,11 +69,11 @@ spring(
 )
 ```
 
-This does not have Compose spring semantics. It maps normalized elapsed time through a damped
+That contract did not have Compose spring semantics. It mapped normalized elapsed time through a damped
 curve, clamps progress to `0f..1f`, and ends at the requested duration. It cannot communicate real
 overshoot, velocity, equilibrium, or gesture continuation.
 
-Phase 1 removes that signature without a deprecated overload or alias. Migration must choose one
+Phase 1 removes that signature without a deprecated overload or alias. Migration chooses one
 of two meanings:
 
 - use `tween(durationMillis = ..., easing = ...)` or `keyframes(...)` when product behavior owns an
@@ -80,27 +81,34 @@ of two meanings:
 - use the new `spring(dampingRatio = ..., stiffness = ...)` when physical equilibrium, overshoot,
   interruption velocity, and threshold-based completion are intended.
 
-Deleting only `durationMillis` is not a mechanical migration. Existing damping and stiffness were
-fed into a different equation, so visual tuning must be repeated against the Phase 1 physical
+Deleting only `durationMillis` is not a mechanical migration. Earlier damping and stiffness were
+fed into a different equation, so visual tuning must be repeated against the physical
 engine. Direct `SpringSpec` construction, `MotionScheme` roles, `animateContentSize`,
 `AnimatableCore`, `Animatable`, target-as-state calls, transition channels, Demo code, and custom
 design systems are all part of the hard-cut audit.
 
 ## Mutation and result mapping
 
-Current ViewCompose `Animatable` already uses last-mutation-wins ownership: a newer mutation from a
-different job cancels the older caller, stale frames cannot publish, and cancellation retains the
-latest accepted value. Phase 1 keeps that direction and adds velocity, decay, bounds, and
-structured successful terminal results.
+ViewCompose `Animatable<T, V>` uses last-mutation-wins ownership: a newer mutation from a different
+job cancels the older caller, stale frames cannot publish, and cancellation retains the latest
+accepted value and velocity. It exposes decay, bounds, and structured successful terminal results.
+
+`T` and `V` are deliberately separate. `Int` positions use `Float` velocity, while packed ARGB
+`Int` values use signed four-channel `ArgbChannels` inside `AnimationVelocity`. Custom converters implement
+`AnimationConverter<T, V>` with destination buffers, stable dimensions, zero velocity, and positive
+finite thresholds; the old one-parameter converter has no compatibility alias.
 
 The accepted differences from a simplistic result enum are important:
 
 - cancellation still throws `CancellationException`; it does not return an `Interrupted` result;
 - normal target completion, bound collision, and the physical safety-duration guard return
   `Finished`, `BoundReached`, or `DurationLimitReached` respectively;
-- a replacement physical animation continues the retained velocity unless the caller supplies
-  another initial velocity;
-- `snapTo` and `stop` leave zero retained velocity; and
+- `initialVelocity = null` captures the replacement's retained value and velocity atomically;
+  supplying an explicit velocity overrides only the captured velocity;
+- an invalid replacement fails before ownership changes and does not cancel the active mutation;
+- construction validates the initial value and complete converter contract before exposing state;
+- `snapTo` and `stop` publish one final idle snapshot with zero retained velocity and no transient
+  running state; an invalid snap leaves the active mutation authoritative; and
 - a successful target animation publishes the exact target and zero retained velocity.
 
 Gesture code hands off values in converter-domain units per second. The gesture owner, not the
@@ -174,10 +182,10 @@ without an interpreted same-device comparison does not close a phase.
 2. Classify each animation as exact-duration, physical, decay, keyed replacement, visibility,
    seek, bounds, or shared motion. Do not encode one category through another merely because it is
    currently available.
-3. Keep current alpha-only and duration APIs only where their documented semantics are sufficient.
-   Defer physical or shared-motion migration until the owning phase is released.
-4. When Phase 1 lands, hard-cut all duration-spring calls in one change and retune against the
-   physical equation, velocity, threshold, reduced-motion, and terminal-result contracts.
+3. Keep alpha-only and duration APIs only where their documented semantics are sufficient. Defer
+   shared-motion migration until its owning phase is released.
+4. Hard-cut all duration-spring and one-domain converter calls in one change, then retune against
+   the physical equation, value/velocity domains, thresholds, reduced motion, and terminal results.
 5. Verify cancellation, rapid retargeting, host detach, renderer failure, RTL, focus, input,
    accessibility, and reduced motion for every capability the screen uses.
 6. Run the matching revisioned physical-device benchmark before and after a frame, measurement,

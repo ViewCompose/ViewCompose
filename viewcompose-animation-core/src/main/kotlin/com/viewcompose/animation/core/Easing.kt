@@ -13,7 +13,7 @@ fun interface Easing {
      * Transforms [fraction] into visual progress.
      *
      * @param fraction linear time progress, normally in `0f..1f`
-     * @return transformed progress; [sampleAnimationValue] clamps it before interpolation
+     * @return transformed progress; [TargetAnimation] clamps it before interpolation
      */
     fun transform(fraction: Float): Float
 }

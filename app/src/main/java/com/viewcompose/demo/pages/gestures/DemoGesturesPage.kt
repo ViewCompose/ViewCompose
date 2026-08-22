@@ -3,6 +3,11 @@ package com.viewcompose
 import android.view.Choreographer
 import com.viewcompose.animation.animateColorAsState
 import com.viewcompose.animation.animateFloatAsState
+import com.viewcompose.animation.rememberAnimatable
+import com.viewcompose.animation.core.AnimationConverters
+import com.viewcompose.animation.core.AnimationEndReason
+import com.viewcompose.animation.core.AnimationVelocity
+import com.viewcompose.animation.core.exponentialDecay
 import com.viewcompose.animation.core.spring
 import com.viewcompose.animation.core.tween
 import com.viewcompose.demo.automation.demoAutomationTarget
@@ -26,7 +31,9 @@ import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.ButtonVariant
 import com.viewcompose.ui.foundation.DisposableEffect
+import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.LocalAnimationCoroutineContext
 import com.viewcompose.ui.foundation.Surface
 import com.viewcompose.ui.foundation.SurfaceVariant
 import com.viewcompose.ui.foundation.Text
@@ -51,6 +58,7 @@ import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 import kotlin.math.roundToInt
+import kotlinx.coroutines.withContext
 
 @ViewComposePreview(name = "Gestures · Tap", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewGesturesTap() {
@@ -223,13 +231,63 @@ private fun UiTreeBuilder.TapGestureFixture(scenario: DemoScenarioSpec?) {
 private fun UiTreeBuilder.DragSwipeGestureFixture(scenario: DemoScenarioSpec?) {
     val dragOffsetState = remember { mutableStateOf(0f) }
     val dragTextOffsetState = remember { mutableStateOf(0f) }
+    val dragActiveState = remember { mutableStateOf(false) }
+    val dragHandoffPendingState = remember { mutableStateOf(false) }
+    val dragHandoffCommandState = remember { mutableStateOf<DragHandoffCommand?>(null) }
+    val dragHandoffNonceState = remember { mutableStateOf(0) }
+    val dragHandoffVelocityState = remember { mutableStateOf(0f) }
+    val dragHandoffResultState = remember { mutableStateOf<AnimationEndReason?>(null) }
     val dragTextFrameUpdater = remember {
         FrameCoalescedFloatUpdater { value -> dragTextOffsetState.value = value }
     }
+    val dragAnimatable = rememberAnimatable(
+        initialValue = 0f,
+        converter = AnimationConverters.Float,
+    )
+    val animationCoroutineContext = LocalAnimationCoroutineContext.current
     val swipeState = rememberAnchoredDraggableState(GestureAnchor.Center)
+    remember(dragAnimatable) {
+        dragAnimatable.updateBounds(lowerBound = -240f, upperBound = 240f)
+    }
     DisposableEffect(dragTextFrameUpdater) {
         onDispose(dragTextFrameUpdater::dispose)
     }
+
+    fun issueDragHandoff(command: DragHandoffCommand) {
+        dragHandoffCommandState.value = command
+        dragHandoffNonceState.value += 1
+    }
+
+    LaunchedEffect(dragHandoffNonceState.value, animationCoroutineContext) {
+        val command = dragHandoffCommandState.value ?: return@LaunchedEffect
+        withContext(animationCoroutineContext) {
+            when (command) {
+                DragHandoffCommand.Stop -> {
+                    dragAnimatable.stop()
+                    dragHandoffPendingState.value = false
+                }
+
+                is DragHandoffCommand.Snap -> {
+                    dragAnimatable.snapTo(command.offsetPx)
+                    dragHandoffPendingState.value = false
+                    dragHandoffResultState.value = null
+                }
+
+                is DragHandoffCommand.Decay -> {
+                    dragAnimatable.snapTo(command.offsetPx)
+                    dragHandoffPendingState.value = false
+                    val result = dragAnimatable.animateDecay(
+                        initialVelocity = AnimationVelocity(command.velocityPxPerSecond),
+                        animationSpec = exponentialDecay(frictionMultiplier = 1.15f),
+                    )
+                    dragOffsetState.value = result.endState.value
+                    dragTextFrameUpdater.submit(result.endState.value)
+                    dragHandoffResultState.value = result.endReason
+                }
+            }
+        }
+    }
+
     val draggableState = rememberDraggableState { delta ->
         val nextOffset = (dragOffsetState.value + delta).coerceIn(-240f, 240f)
         dragOffsetState.value = nextOffset
@@ -242,6 +300,10 @@ private fun UiTreeBuilder.DragSwipeGestureFixture(scenario: DemoScenarioSpec?) {
     ) {
         dragOffsetState.value = dragOffset
         dragTextFrameUpdater.submit(dragOffset)
+        dragActiveState.value = false
+        dragHandoffPendingState.value = true
+        dragHandoffVelocityState.value = 0f
+        issueDragHandoff(DragHandoffCommand.Snap(dragOffset))
         swipeState.snapTo(anchor)
     }
 
@@ -255,6 +317,16 @@ private fun UiTreeBuilder.DragSwipeGestureFixture(scenario: DemoScenarioSpec?) {
             title = stringResource(R.string.demo_gesture_drag_swipe_title),
             subtitle = stringResource(R.string.demo_gesture_drag_swipe_summary),
         ) {
+            val dragVisualOffset = if (dragActiveState.value || dragHandoffPendingState.value) {
+                dragOffsetState.value
+            } else {
+                dragAnimatable.value
+            }
+            val dragTextOffset = if (dragActiveState.value || dragHandoffPendingState.value) {
+                dragTextOffsetState.value
+            } else {
+                dragAnimatable.value
+            }
             val swipeCurrentValue = swipeState.currentValue.value
             val swipeTargetValue = swipeState.targetValue.value
             val swipeOffsetValue = swipeState.currentOffsetPx.value ?: 0f
@@ -264,7 +336,7 @@ private fun UiTreeBuilder.DragSwipeGestureFixture(scenario: DemoScenarioSpec?) {
                     GestureAnchor.Right -> 112f
                     GestureAnchor.Center -> 0f
                 },
-                animationSpec = spring(durationMillis = 280),
+                animationSpec = spring(dampingRatio = 0.82f, stiffness = 300f),
             )
             val swipeVisualColor = animateColorAsState(
                 targetValue = when (swipeCurrentValue) {
@@ -310,8 +382,33 @@ private fun UiTreeBuilder.DragSwipeGestureFixture(scenario: DemoScenarioSpec?) {
                     .draggable(
                         state = draggableState,
                         orientation = GestureOrientation.Horizontal,
+                        onDragStarted = {
+                            dragOffsetState.value = dragVisualOffset
+                            dragTextFrameUpdater.submit(dragVisualOffset)
+                            dragActiveState.value = true
+                            dragHandoffPendingState.value = false
+                            dragHandoffResultState.value = null
+                            issueDragHandoff(DragHandoffCommand.Stop)
+                        },
+                        onDragStopped = { velocityPxPerSecond ->
+                            dragActiveState.value = false
+                            dragHandoffPendingState.value = true
+                            dragHandoffVelocityState.value = velocityPxPerSecond
+                            issueDragHandoff(
+                                DragHandoffCommand.Decay(
+                                    offsetPx = dragOffsetState.value,
+                                    velocityPxPerSecond = velocityPxPerSecond,
+                                ),
+                            )
+                        },
+                        onDragCancelled = {
+                            dragActiveState.value = false
+                            dragHandoffPendingState.value = true
+                            dragHandoffVelocityState.value = 0f
+                            issueDragHandoff(DragHandoffCommand.Snap(dragOffsetState.value))
+                        },
                     )
-                    .graphicsLayer(translationX = dragOffsetState.value)
+                    .graphicsLayer(translationX = dragVisualOffset)
                     .padding(12.dp)
                     .gestureScenarioTarget(scenario, DemoAutomationRole.Target),
             ) {
@@ -320,11 +417,23 @@ private fun UiTreeBuilder.DragSwipeGestureFixture(scenario: DemoScenarioSpec?) {
             Text(
                 text = stringResource(
                     R.string.demo_gesture_drag_value,
-                    dragTextOffsetState.value.roundToInt(),
+                    dragTextOffset.roundToInt(),
                 ),
                 modifier = Modifier
                     .margin(top = 6.dp)
                     .testTag(DemoGestureTestTags.GESTURE_DRAG_VALUE),
+            )
+            Text(
+                text = stringResource(
+                    R.string.demo_gesture_drag_handoff_state,
+                    dragHandoffVelocityState.value.roundToInt(),
+                    dragAnimatable.velocity.valuePerSecond.roundToInt(),
+                    dragHandoffResultState.value?.name
+                        ?: stringResource(R.string.demo_gesture_drag_handoff_running),
+                ),
+                color = TextDefaults.secondaryColor(),
+                style = UiTextStyle(fontSizeSp = 12.sp),
+                modifier = Modifier.testTag(DemoGestureTestTags.GESTURE_DRAG_HANDOFF_STATE),
             )
             Surface(
                 variant = SurfaceVariant.Variant,
@@ -567,6 +676,19 @@ private enum class GestureAnchor {
     Left,
     Center,
     Right,
+}
+
+private sealed interface DragHandoffCommand {
+    data object Stop : DragHandoffCommand
+
+    data class Snap(
+        val offsetPx: Float,
+    ) : DragHandoffCommand
+
+    data class Decay(
+        val offsetPx: Float,
+        val velocityPxPerSecond: Float,
+    ) : DragHandoffCommand
 }
 
 private fun UiTreeBuilder.gestureAnchorLabel(anchor: GestureAnchor): String = stringResource(

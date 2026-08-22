@@ -44,6 +44,8 @@ internal object DemoAnimationTestTags {
     const val ANIMATION_INFINITE_VALUE = "animation_infinite_value"
     const val ANIMATION_ANIMATABLE_TO_HIGH = "animation_animatable_to_high"
     const val ANIMATION_ANIMATABLE_TO_LOW = "animation_animatable_to_low"
+    const val ANIMATION_ANIMATABLE_DECAY_POSITIVE = "animation_animatable_decay_positive"
+    const val ANIMATION_ANIMATABLE_DECAY_NEGATIVE = "animation_animatable_decay_negative"
     const val ANIMATION_ANIMATABLE_SNAP_HIGH = "animation_animatable_snap_high"
     const val ANIMATION_ANIMATABLE_SNAP_LOW = "animation_animatable_snap_low"
     const val ANIMATION_ANIMATABLE_STOP = "animation_animatable_stop"

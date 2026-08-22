@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 029e123a7ae971c26772cf62897b346184948c4dedd96e8a7fe2cb8e1affc4ed
+translation_source_hash: 1575d86c982495f599349b0e3eb994a09dd97274d0c4e2ab7c7ebc9ba396708d
 translation_status: current
 ---
 
@@ -76,6 +76,9 @@ val gap = VNode(
 - `maxWidth`、`maxHeight` 与 `aspectRatio` 是通过 `NodeType.LayoutConstraintHost` 实现的可移植
   测量 Modifier。自定义 Renderer 必须用一个测量边界约束完整节点，遵守父级传入的精确约束，
   其余情况下应用声明的最大值，并在可行区间内保持请求的宽高比。
+- `AnimateContentSizeModifierElement` 携带有限 `ContentSizeAnimationSpecModel`。时长模型覆盖
+  Tween、Keyframes、Snap 与有限 Repeat；独立物理 Spring 模型携带 Damping Ratio、归一化质量
+  Stiffness 与 Safety Guard。Transport 不包含无限 Layout Motion，也不持有 Clock 或 Solver。
 - Q3 ConstraintLayout 传输契约为每个轴使用一个互斥的 `ConstraintDimension` 值，以
   `ConstraintMatchMode` 表达 spread/wrap/percent 行为，并使用正数类型化 `ConstraintRatio`
   与单一 Baseline Link。逻辑 Start/End 与物理 Left/Right Anchor 保持独立；
@@ -297,3 +300,8 @@ Renderer 必须重新构建。支持无障碍的 Renderer 应同时映射父集�
 让直接构造仍保持简洁，但预编译构造点、解构调用点与自定义 Renderer 必须随本次 Alpha 版本
 重新构建。支持 Observed Transaction 的自定义 Renderer 要为每个非空 Identity 发布唯一精确
 Target；不支持该能力的 Renderer 在其他路径可以忽略这项可空元数据。
+
+Animation Phase 1 硬切 Animated Size 模型层次。自定义 Renderer 必须用
+`ContentSizeSpringSpecModel(dampingRatio, stiffness, maxDurationMillis)` 替代旧带时长 Spring
+近似，在 Host 边界只接受 `ContentSizeAnimationSpecModel`，并重新构建预编译的 Exhaustive
+Consumer。不存在 Infinite-repeat Content-size Model 或 Duration-spring 兼容 Subtype。

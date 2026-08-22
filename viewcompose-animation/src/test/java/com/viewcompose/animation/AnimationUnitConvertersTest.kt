@@ -8,8 +8,9 @@ import org.junit.Test
 class AnimationUnitConvertersTest {
     @Test
     fun `dp converter preserves logical fractional values`() {
-        val vector = AnimationUnitConverters.Dp.toVector(12.5f.dp)
-        val restored = AnimationUnitConverters.Dp.fromVector(vector)
+        val vector = FloatArray(AnimationUnitConverters.Dp.vectorSize)
+        AnimationUnitConverters.Dp.convertToVector(12.5f.dp, vector)
+        val restored = AnimationUnitConverters.Dp.convertFromVector(vector)
 
         assertEquals(floatArrayOf(12.5f).toList(), vector.toList())
         assertEquals(UiDp(12.5f), restored)

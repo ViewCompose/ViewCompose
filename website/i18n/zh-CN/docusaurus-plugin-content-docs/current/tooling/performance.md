@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: bfc857e29f715f88fc94141f157229656c83b8ba1229451c6a1a55483ea1d170
+translation_source_hash: 313430e5aa6fa1feac9000bcd5ea5beea4d2d8f078939da33a1ba9a48e71cde6
 translation_status: current
 ---
 
@@ -996,6 +996,45 @@ Metric 与 Result JSON 均未改写。
 用电池温度代替平台 Thermal-status 数值、只有 Peak 而非 Post-GC Retained Memory，以及没有
 Compose 对照。Phase 1 必须保持 Scenario Revision 与 Clock Policy 不变，将物理引擎与对应行对比，
 报告绝对值与归一化变化，并通过 ADR-0019 的 Allocation 与 Terminal-state Counter 后才能完成。
+
+#### 2.4.9 Animation revision-1 Phase 1 物理动画候选版本
+
+2026-08-22 的 Phase 1 批次在同一台 Xiaomi MI 6 / Android 9 设备上，将硬切后的物理引擎与
+2.4.8 节基线进行对比。4 个 Workload Revision、适配后的 Benchmark APK、每个方法 5 次
+`run-from-apk` 迭代、Action 数量、构建模式与固定 Clock Policy 均保持不变。Candidate Worktree
+基于 `6d6bdbe4`；其经过 R8/资源压缩的 Target APK SHA-256 为
+`45e17659c2cfdeb0c643584c81e39cafdcfd3a47849d37504238fc20e61045fb`。未变化的适配版
+Benchmark APK SHA-256 为
+`c70f1fc3190949d030975fcc9025d90246fe70e88cf70ebe42adbd0effe54a5e`。
+
+当前环境无法复现基线的 31～33 摄氏度电池温度。测试因此在预冷前暂停充电，每个方法等待温度
+不高于 36 摄氏度后再锁频；控制项前后实际记录范围为 36～38 摄氏度。所有 JSON 仍报告
+`cpuLocked=true`、精确匹配的 Clock/Scenario/Revision Payload、`run-from-apk`，且
+Thermal-throttle Sleep 为 0；前后检查也保持了指定的 CPU、GPU 与 Interconnect 频率。批次结束后
+已恢复充电、Governor、频率边界和厂商 Performance Service。较高的环境温度是明确的对比局限，
+不代表放宽计时或锁频门禁。
+
+| Workload | Candidate 每轮帧数 | Candidate Frame CPU P50/P90/P95/P99，ms | Candidate Peak Heap 中位数，KiB | Run-P50 CV | 相对 Phase 0 的 P50 / P95 / Heap 变化 | 验收 |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| `animation.specs@1` Physical Spring/Value Channel | `224/224/224/224/224` | `6.114/7.588/8.303/11.210` | 8123 | 0.002 | `-30.9% / -36.5% / +0.1%` | 通过；P50 与 P95 均显著降低 |
+| `animation.content@1` Crossfade | `144/144/144/144/144` | `5.291/7.502/8.444/11.196` | 7776 | 0.012 | `-25.5% / -19.2% / +5.9%` | 通过；P50 与 P95 均显著降低 |
+| `animation.content-size@1` Physical Measured-size Motion | `214/214/216/215/214` | `2.835/4.511/6.727/14.442` | 6383 | 0.003 | `-41.5% / -7.3% / -2.0%` | 通过；P50 显著降低且 P95 未回退 |
+| `animation.transition@1` 同步 Channel | `160/160/160/160/160` | `6.322/7.768/8.408/10.590` | 8387 | 0.007 | `-23.2% / -32.1% / +1.3%` | 通过；P50 与 P95 均显著降低 |
+
+4 行都通过 ADR-0019 的 Frame 与 Memory 回退预算，全部 Run-P50 CV 均低于 `0.15`。限定在
+Frame CPU 的结论为 **improved**：全部 P50 都显著降低，3 行 P95 显著降低，Measured-size 的 P95
+也更低，但未超过绝对显著性门槛。Peak Heap 的结论为 **no material change**，因为全部变化都在
+10% 与 1,024 KiB 的组合门禁内。确定性测试还证明 Physical Evaluator 会复用 Position/Velocity
+Buffer，并且 `Finished`、`BoundReached`、`DurationLimitReached` 保持为不同终止结果，因此
+ADR-0019 要求的 Allocation 与 Terminal-state Counter 也通过。
+
+这不是整段动画时长或能耗结论。Physical Settling 使 `animation.specs@1` 的每轮帧数中位值从
+152 增至 224，使 `animation.content-size@1` 从 184 增至 214；Crossfade 保持 144，Synchronized
+Transition 则从 168 变为 160。Workload Action 没有变化，但物理终止会有意改变这些 Action
+持续的帧数。局限包括 36～38 摄氏度的更高环境温度、仅一台 OEM/API-28 设备、`run-from-apk`
+对 JIT/代码布局敏感、只有 Peak 而非 Post-GC Retained Memory、没有 Compose Control，以及没有
+直接功耗测量。Critical-spring 与 Decay Demo 检查随后已通过；已接受的下一步是完整设备门禁。
+不能为了获取更有利样本而重跑这批已通过的数据。
 
 ### 2.5 Debug Tooling 回归门禁
 

@@ -20,8 +20,10 @@ import com.viewcompose.animation.updateTransition
 import com.viewcompose.animation.interpolateUiShape
 import com.viewcompose.animation.core.AnimationConverter
 import com.viewcompose.animation.core.AnimationConverters
+import com.viewcompose.animation.core.AnimationVelocity
 import com.viewcompose.animation.core.RepeatMode
 import com.viewcompose.animation.core.infiniteRepeatable
+import com.viewcompose.animation.core.exponentialDecay
 import com.viewcompose.animation.core.spring
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.State
@@ -47,7 +49,7 @@ fun UiTreeBuilder.animateValueAsStateSample(target: Point): State<Point> {
     return animateValueAsState(
         targetValue = target,
         converter = PointConverter,
-        animationSpec = spring(durationMillis = 360),
+        animationSpec = spring(dampingRatio = 0.78f, stiffness = 240f),
     )
 }
 
@@ -58,12 +60,21 @@ suspend fun animatableSample(frameClock: MonotonicFrameClock): Float {
         converter = AnimationConverters.Float,
         defaultFrameClock = frameClock,
     )
-    value.animateTo(1f, tween(durationMillis = 180))
+    value.updateBounds(lowerBound = -0.5f, upperBound = 1.5f)
+    value.animateTo(
+        targetValue = 1f,
+        animationSpec = spring(dampingRatio = 0.7f, stiffness = 260f),
+        initialVelocity = AnimationVelocity(2f),
+    )
+    value.animateDecay(
+        initialVelocity = AnimationVelocity(-0.5f),
+        animationSpec = exponentialDecay(),
+    )
     return value.value
 }
 
 /** Remembers an imperative animated value bound to the current composition frame clock. */
-fun UiTreeBuilder.rememberAnimatableSample(): Animatable<Float> {
+fun UiTreeBuilder.rememberAnimatableSample(): Animatable<Float, Float> {
     return rememberAnimatable(
         initialValue = 0f,
         converter = AnimationConverters.Float,
@@ -94,7 +105,7 @@ fun UiTreeBuilder.transitionSample(expanded: Boolean): TransitionValues {
         targetValueByState = { state -> if (state == PanelState.Expanded) 1f else 0.6f },
     )
     val height = transition.animateDp(
-        animationSpec = { spring(durationMillis = 320) },
+        animationSpec = { spring(dampingRatio = 0.82f, stiffness = 230f) },
         targetValueByState = { state -> if (state == PanelState.Expanded) 240.dp else 80.dp },
     )
     return TransitionValues(alpha = alpha, height = height)
@@ -103,7 +114,7 @@ fun UiTreeBuilder.transitionSample(expanded: Boolean): TransitionValues {
 /** Combines alpha and vertical size primitives into enter and exit policies. */
 fun visibilityTransitionsSample(): Pair<EnterTransition, ExitTransition> {
     val enter = fadeIn(tween(durationMillis = 180)) +
-        expandVertically(spring(durationMillis = 260))
+        expandVertically(spring(dampingRatio = 0.86f, stiffness = 280f))
     val exit = shrinkVertically(tween(durationMillis = 160)) +
         fadeOut(tween(durationMillis = 120))
     return enter to exit
@@ -144,7 +155,7 @@ fun UiTreeBuilder.crossfadeSample(selection: String) {
 /** Adds measured-size animation to a node modifier. */
 fun animateContentSizeSample(): Modifier {
     return Modifier.animateContentSize(
-        animationSpec = spring(durationMillis = 320),
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 230f),
     )
 }
 
@@ -172,13 +183,26 @@ enum class PanelState {
     Expanded,
 }
 
-private object PointConverter : AnimationConverter<Point> {
-    override fun toVector(value: Point): FloatArray = floatArrayOf(value.x, value.y)
+private object PointConverter : AnimationConverter<Point, Point> {
+    override val vectorSize: Int = 2
+    override val zeroVelocity: Point = Point(0f, 0f)
+    override val visibilityThreshold: Point = Point(0.01f, 0.01f)
 
-    override fun fromVector(vector: FloatArray): Point {
+    override fun convertToVector(value: Point, destination: FloatArray) {
+        destination[0] = value.x
+        destination[1] = value.y
+    }
+
+    override fun convertFromVector(vector: FloatArray): Point {
         return Point(
-            x = vector.getOrElse(0) { 0f },
-            y = vector.getOrElse(1) { 0f },
+            x = vector[0],
+            y = vector[1],
         )
     }
+
+    override fun convertVelocityToVector(velocity: Point, destination: FloatArray) {
+        convertToVector(velocity, destination)
+    }
+
+    override fun convertVelocityFromVector(vector: FloatArray): Point = convertFromVector(vector)
 }

@@ -61,17 +61,17 @@ data class ReducedMotionPolicy(
  * @property defaultEffects standard opacity, color, or effect transition
  * @property fastSpatial short position, size, or shape transition
  * @property defaultSpatial standard position, size, or shape transition
- * @property expressiveSpatial emphasized spatial transition, commonly a bounded spring
+ * @property expressiveSpatial emphasized spatial transition, commonly a physical spring
  * @property interruptionPolicy default retargeting policy consumed by a component owner
  * @property reducedMotion deterministic substitution used when reduced motion is requested
  * @sample com.viewcompose.animation.core.samples.motionSchemeSample
  */
 data class MotionScheme(
-    val fastEffects: AnimationSpec,
-    val defaultEffects: AnimationSpec,
-    val fastSpatial: AnimationSpec,
-    val defaultSpatial: AnimationSpec,
-    val expressiveSpatial: AnimationSpec,
+    val fastEffects: FiniteAnimationSpec,
+    val defaultEffects: FiniteAnimationSpec,
+    val fastSpatial: FiniteAnimationSpec,
+    val defaultSpatial: FiniteAnimationSpec,
+    val expressiveSpatial: FiniteAnimationSpec,
     val interruptionPolicy: MotionInterruptionPolicy = MotionInterruptionPolicy.RetargetFromCurrent,
     val reducedMotion: ReducedMotionPolicy = ReducedMotionPolicy(),
 ) {
@@ -91,7 +91,7 @@ data class MotionScheme(
         role: MotionRole,
         reducedMotionEnabled: Boolean,
         essential: Boolean = false,
-    ): AnimationSpec {
+    ): FiniteAnimationSpec {
         val spec = when (role) {
             MotionRole.FastEffects -> fastEffects
             MotionRole.DefaultEffects -> defaultEffects
@@ -112,21 +112,46 @@ data class MotionScheme(
     }
 }
 
-private fun AnimationSpec.scaledDuration(scale: Float): AnimationSpec = when (this) {
-    is TweenSpec -> copy(
-        durationMillis = durationMillis.scaleMillis(scale),
-        delayMillis = delayMillis.scaleMillis(scale),
-    )
-    is SpringSpec -> copy(durationMillis = durationMillis.scaleMillis(scale))
-    is KeyframesSpec -> copy(
-        durationMillis = durationMillis.scaleMillis(scale),
-        keyframes = keyframes.map { frame ->
-            frame.copy(timeMillis = frame.timeMillis.scaleMillis(scale))
-        },
-    )
-    is RepeatableSpec -> copy(animation = animation.scaledDuration(scale))
-    is InfiniteRepeatableSpec -> copy(animation = animation.scaledDuration(scale))
-    SnapSpec -> SnapSpec
+private fun FiniteAnimationSpec.scaledDuration(scale: Float): FiniteAnimationSpec {
+    if (scale <= 0f) return SnapSpec
+    return when (this) {
+        is TweenSpec -> copy(
+            durationMillis = durationMillis.scaleMillis(scale),
+            delayMillis = delayMillis.scaleMillis(scale),
+        )
+        is SpringSpec -> copy(
+            stiffness = (stiffness.toDouble() / (scale.toDouble() * scale.toDouble()))
+                .coerceAtMost(Float.MAX_VALUE.toDouble())
+                .toFloat(),
+            maxDurationMillis = maxDurationMillis.scaleMillis(scale).coerceIn(1, 60_000),
+        )
+        is KeyframesSpec -> copy(
+            durationMillis = durationMillis.scaleMillis(scale),
+            keyframes = keyframes.map { frame ->
+                frame.copy(timeMillis = frame.timeMillis.scaleMillis(scale))
+            },
+        )
+        is RepeatableSpec -> copy(animation = animation.scaledDuration(scale))
+        SnapSpec -> SnapSpec
+    }
+}
+
+private fun DurationBasedAnimationSpec.scaledDuration(scale: Float): DurationBasedAnimationSpec {
+    if (scale <= 0f) return SnapSpec
+    return when (this) {
+        is TweenSpec -> copy(
+            durationMillis = durationMillis.scaleMillis(scale),
+            delayMillis = delayMillis.scaleMillis(scale),
+        )
+        is KeyframesSpec -> copy(
+            durationMillis = durationMillis.scaleMillis(scale),
+            keyframes = keyframes.map { frame ->
+                frame.copy(timeMillis = frame.timeMillis.scaleMillis(scale))
+            },
+        )
+        is RepeatableSpec -> copy(animation = animation.scaledDuration(scale))
+        SnapSpec -> SnapSpec
+    }
 }
 
 private fun Int.scaleMillis(scale: Float): Int {

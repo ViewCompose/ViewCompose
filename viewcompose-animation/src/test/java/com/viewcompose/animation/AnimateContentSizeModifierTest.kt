@@ -9,13 +9,11 @@ import com.viewcompose.animation.core.keyframes
 import com.viewcompose.animation.core.keyframe
 import com.viewcompose.animation.core.repeatable
 import com.viewcompose.animation.core.RepeatMode
-import com.viewcompose.animation.core.infiniteRepeatable
 import com.viewcompose.animation.core.snap
 import com.viewcompose.animation.core.spring
 import com.viewcompose.animation.core.tween
 import com.viewcompose.ui.modifier.AnimateContentSizeModifierElement
 import com.viewcompose.ui.modifier.ContentSizeEasingModel
-import com.viewcompose.ui.modifier.ContentSizeInfiniteRepeatableSpecModel
 import com.viewcompose.ui.modifier.ContentSizeKeyframeModel
 import com.viewcompose.ui.modifier.ContentSizeKeyframesSpecModel
 import com.viewcompose.ui.modifier.ContentSizeRepeatModeModel
@@ -51,7 +49,7 @@ class AnimateContentSizeModifierTest {
     fun `spring keyframes and snap map to expected models`() {
         val springModifier = Modifier.animateContentSize(
             animationSpec = spring(
-                durationMillis = 420,
+                maxDurationMillis = 420,
                 dampingRatio = 0.76f,
                 stiffness = 300f,
             ),
@@ -68,9 +66,9 @@ class AnimateContentSizeModifierTest {
         )
         assertEquals(
             ContentSizeSpringSpecModel(
-                durationMillis = 420,
                 dampingRatio = 0.76f,
                 stiffness = 300f,
+                maxDurationMillis = 420,
             ),
             (springModifier.elements.last() as AnimateContentSizeModifierElement).animationSpec,
         )
@@ -91,18 +89,12 @@ class AnimateContentSizeModifierTest {
     }
 
     @Test
-    fun `repeatable and infinite specs keep repeat metadata`() {
+    fun `repeatable spec keeps repeat metadata`() {
         val repeatableModifier = Modifier.animateContentSize(
             animationSpec = repeatable(
                 iterations = 3,
                 animation = tween(durationMillis = 280),
                 repeatMode = RepeatMode.Reverse,
-            ),
-        )
-        val infiniteModifier = Modifier.animateContentSize(
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 200),
-                repeatMode = RepeatMode.Restart,
             ),
         )
         assertEquals(
@@ -116,17 +108,6 @@ class AnimateContentSizeModifierTest {
                 repeatMode = ContentSizeRepeatModeModel.Reverse,
             ),
             (repeatableModifier.elements.last() as AnimateContentSizeModifierElement).animationSpec,
-        )
-        assertEquals(
-            ContentSizeInfiniteRepeatableSpecModel(
-                animation = ContentSizeTweenSpecModel(
-                    durationMillis = 200,
-                    delayMillis = 0,
-                    easing = ContentSizeEasingModel.FastOutSlowIn,
-                ),
-                repeatMode = ContentSizeRepeatModeModel.Restart,
-            ),
-            (infiniteModifier.elements.last() as AnimateContentSizeModifierElement).animationSpec,
         )
     }
 }

@@ -99,11 +99,17 @@
     <string name="demo_animation_infinite_repeat_reverse">Repeat: Reverse</string>
     <string name="demo_animation_infinite_repeat_restart">Repeat: Restart</string>
     <string name="demo_animation_infinite_scale">Infinite scale = %1$s</string>
-    <string name="demo_animation_animatable_panel">Animatable controls</string>
-    <string name="demo_animation_animatable_to_high">animateTo 1.0</string>
-    <string name="demo_animation_animatable_to_low">animateTo 0.0</string>
+    <string name="demo_animation_animatable_panel">Physical Animatable · critical spring finishes, decay reaches bounds</string>
+    <string name="demo_animation_animatable_to_high">Spring to 1.0</string>
+    <string name="demo_animation_animatable_to_low">Spring to 0.0</string>
+    <string name="demo_animation_animatable_decay_positive">Decay +4.8/s</string>
+    <string name="demo_animation_animatable_decay_negative">Decay -4.8/s</string>
     <string name="demo_animation_animatable_snap_high">snapTo 1.0</string>
     <string name="demo_animation_animatable_snap_low">snapTo 0.0</string>
     <string name="demo_animation_animatable_stop">Stop the current Animatable task</string>
-    <string name="demo_animation_animatable_value">Animatable value = %1$s</string>
+    <string name="demo_animation_animatable_state">Value %1$s · velocity %2$s/s · running %3$b\nResult %4$s · bounds [0.0, 1.0]</string>
+    <string name="demo_animation_animatable_result_none">none</string>
+    <string name="demo_animation_animatable_result_finished">Finished</string>
+    <string name="demo_animation_animatable_result_bound">BoundReached</string>
+    <string name="demo_animation_animatable_result_guard">DurationLimitReached</string>
 </resources>

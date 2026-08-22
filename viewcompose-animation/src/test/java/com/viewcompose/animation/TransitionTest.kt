@@ -8,6 +8,8 @@ package com.viewcompose.animation
  */
 
 import com.viewcompose.animation.core.EasingDefaults
+import com.viewcompose.animation.core.FiniteAnimationSpec
+import com.viewcompose.animation.core.spring
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.composition.ComposerLite
@@ -121,7 +123,31 @@ class TransitionTest {
         harness.dispose()
     }
 
-    private class FloatTransitionCompositionHarness {
+    @Test
+    fun `physical transition retarget keeps outgoing velocity before reversing`() {
+        val harness = FloatTransitionCompositionHarness(
+            animationSpec = spring(dampingRatio = 0.45f, stiffness = 140f),
+        )
+
+        harness.compose(target = false)
+        harness.compose(target = true)
+        harness.advanceTo(playTimeNanos = 80_000_000L)
+        harness.compose(target = true)
+        val retargetValue = harness.compose(target = false)
+        harness.advanceTo(playTimeNanos = 16_000_000L)
+        harness.compose(target = false)
+        val continuedValue = harness.compose(target = false)
+
+        assertEquals(true, continuedValue > retargetValue)
+        harness.dispose()
+    }
+
+    private class FloatTransitionCompositionHarness(
+        private val animationSpec: FiniteAnimationSpec = tween(
+            durationMillis = 300,
+            easing = EasingDefaults.Linear,
+        ),
+    ) {
         private val transition = Transition(
             initialState = false,
             label = "test",
@@ -136,12 +162,7 @@ class TransitionTest {
                     UiTreeBuilder().apply {
                         transition.updateTarget(target)
                         sample = transition.animateFloatBySegment(
-                            transitionSpec = { _, _ ->
-                                tween(
-                                    durationMillis = 300,
-                                    easing = EasingDefaults.Linear,
-                                )
-                            },
+                            transitionSpec = { _, _ -> animationSpec },
                             segmentEndpoints = { _, segmentTarget, current ->
                                 current to if (segmentTarget) 1f else 0f
                             },

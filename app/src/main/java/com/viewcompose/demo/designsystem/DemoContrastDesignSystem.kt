@@ -576,10 +576,10 @@ internal object DemoDesignSystemBundles {
         val spatial = when (kind) {
             DemoDesignSystemKind.CutContrast -> tween(durationMillis = 180)
             DemoDesignSystemKind.CupertinoPressure -> {
-                spring(durationMillis = 360, dampingRatio = 0.92f, stiffness = 300f)
+                spring(dampingRatio = 0.92f, stiffness = 300f)
             }
             DemoDesignSystemKind.RoundedReference -> {
-                spring(durationMillis = 320, dampingRatio = 0.85f, stiffness = 260f)
+                spring(dampingRatio = 0.85f, stiffness = 260f)
             }
         }
         return MotionScheme(
@@ -587,7 +587,7 @@ internal object DemoDesignSystemBundles {
             defaultEffects = tween(durationMillis = 180),
             fastSpatial = spatial,
             defaultSpatial = tween(durationMillis = 280),
-            expressiveSpatial = spring(durationMillis = 480),
+            expressiveSpatial = spring(dampingRatio = 0.82f, stiffness = 220f),
             reducedMotion = ReducedMotionPolicy(
                 nonEssentialBehavior = ReducedMotionBehavior.Snap,
                 essentialDurationScale = 0.4f,

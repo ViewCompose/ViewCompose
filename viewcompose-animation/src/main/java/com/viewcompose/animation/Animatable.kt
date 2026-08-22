@@ -1,219 +1,186 @@
 package com.viewcompose.animation
 
+import com.viewcompose.animation.core.AnimatableCore
 import com.viewcompose.animation.core.AnimationConverter
-import com.viewcompose.animation.core.AnimationSpec
-import com.viewcompose.animation.core.runAnimation
+import com.viewcompose.animation.core.AnimationResult
+import com.viewcompose.animation.core.AnimationVelocity
+import com.viewcompose.animation.core.DecayAnimationSpec
+import com.viewcompose.animation.core.FiniteAnimationSpec
+import com.viewcompose.animation.core.exponentialDecay
 import com.viewcompose.animation.core.spring
-import com.viewcompose.runtime.MutableState
-import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.State
-import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.runtime.frame.MonotonicFrameClock
 import com.viewcompose.ui.foundation.LocalMonotonicFrameClock
 import com.viewcompose.ui.foundation.remember
-import java.util.concurrent.CancellationException
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.job
 
 /**
- * Owns an observable animated value with last-mutation-wins coroutine semantics.
+ * Owns a composition-observable animated value with last-mutation-wins coroutine semantics.
  *
- * [animateTo], [snapTo], and [stop] are mutations. Starting a mutation from a different coroutine
- * job cancels the previous job, and only the newest mutation identifier may publish values. The
- * interrupted caller observes cancellation; stale frames cannot overwrite the new mutation.
- * External cancellation leaves [value] at its latest sample and resets [targetValue] to that value.
- * Mutation start publishes [targetValue] with [isRunning] in one snapshot transaction. Completion,
- * stop, and cancellation likewise publish the retained target with the idle state atomically;
- * individual animation samples remain separate value publications.
+ * The platform-neutral [AnimatableCore] is the single mutation, velocity, bounds, and cancellation
+ * owner. This facade binds that state to a composition frame clock without introducing another
+ * solver or mutation loop. A newer mutation cancels the previous caller, and cancellation retains
+ * the last atomically published value and velocity.
  *
- * The instance does not own a coroutine scope. [animateTo] requires the constructor's
- * [defaultFrameClock] or a clock installed later by [rememberAnimatable]. State reads are observable
- * by ViewCompose, while mutation arbitration is synchronized for cross-coroutine safety. Callers
- * should still perform UI-facing mutations from their structured UI scope.
+ * The instance owns no coroutine scope. UI-facing calls should run in a structured composition or
+ * lifecycle scope. [animateTo] and [animateDecay] require the constructor's [defaultFrameClock] or
+ * a clock installed by [rememberAnimatable].
  *
  * @sample com.viewcompose.animation.samples.animatableSample
  *
- * @param T domain value represented by [converter]
+ * @param T immutable animated-value domain
+ * @param V immutable velocity domain
  * @param initialValue value exposed before the first mutation
- * @param converter stable converter used for all interpolated samples
+ * @param converter stable converter used for the lifetime of this instance
  * @param defaultFrameClock optional clock for instances constructed outside composition
+ * @throws IllegalArgumentException when [initialValue] or [converter] violates the finite vector
+ * contract
  */
-class Animatable<T>(
+class Animatable<T, V>(
     initialValue: T,
-    private val converter: AnimationConverter<T>,
+    converter: AnimationConverter<T, V>,
     defaultFrameClock: MonotonicFrameClock? = null,
 ) {
-    private val internalState: MutableState<T> = mutableStateOf(initialValue)
-    private val targetState: MutableState<T> = mutableStateOf(initialValue)
-    private val runningState: MutableState<Boolean> = mutableStateOf(false)
-    private val mutationLock = Any()
-
+    private val core = AnimatableCore(
+        initialValue = initialValue,
+        converter = converter,
+    )
+    private val observableState = object : State<T> {
+        override val value: T
+            get() = core.value
+    }
     private var boundFrameClock: MonotonicFrameClock? = defaultFrameClock
-    private var nextMutationId: Long = 0L
-    private var activeMutation: Mutation? = null
 
-    /** Returns the live value most recently published by the active mutation. */
+    /** Returns the live value from the latest accepted state. */
     val value: T
-        get() = internalState.value
+        get() = core.value
 
-    /**
-     * Returns the active mutation target, or [value] while idle.
-     *
-     * Cancellation, stop, and successful completion reset this property to the final retained value.
-     */
+    /** Returns the live typed velocity from the same atomic state as [value]. */
+    val velocity: AnimationVelocity<V>
+        get() = core.velocity
+
+    /** Returns the active target, or [value] while idle. */
     val targetValue: T
-        get() = targetState.value
+        get() = core.targetValue
 
-    /** Returns `true` while the newest mutation has not completed its cleanup. */
+    /** Returns whether the newest mutation is still active. */
     val isRunning: Boolean
-        get() = runningState.value
+        get() = core.isRunning
 
     /** Returns the stable observable state object backing [value]. */
     val asState: State<T>
-        get() = internalState
+        get() = observableState
 
     /**
-     * Interrupts an older mutation and publishes [targetValue] without interpolation.
+     * Publishes [targetValue] immediately and resets retained velocity to zero.
      *
-     * The call does not require a frame clock. On return, [value] and this instance's
-     * [Animatable.targetValue] equal [targetValue], and [isRunning] is false unless a newer mutation
-     * has already replaced this one.
-     *
-     * @param targetValue value to publish immediately
+     * @param targetValue value to retain after the mutation
+     * @throws IllegalArgumentException when converter output is invalid; the currently active
+     * mutation remains authoritative
      */
     suspend fun snapTo(targetValue: T) {
-        val mutation = beginMutation(targetValue)
-        try {
-            publishValue(mutation.id, targetValue)
-        } finally {
-            endMutation(mutation.id)
-        }
+        core.snapTo(targetValue)
     }
 
-    /**
-     * Interrupts an older mutation and preserves its latest published value.
-     *
-     * The preserved [value] becomes [targetValue]. The call does not require a frame clock and is
-     * idempotent while idle apart from briefly claiming mutation ownership.
-     */
+    /** Cancels an older mutation, preserves its latest value, and resets velocity to zero. */
     suspend fun stop() {
-        val mutation = beginMutation(internalState.value)
-        endMutation(mutation.id)
+        core.stop()
     }
 
     /**
-     * Interrupts an older mutation and animates from the latest [value] to [targetValue].
+     * Animates from the latest accepted value to [targetValue].
      *
-     * The current coroutine owns the mutation. A newer mutation from another job cancels this
-     * caller. Successful finite completion publishes the exact target. Cancellation or failure
-     * propagates and retains the last accepted sample; infinite specifications run until replaced
-     * or cancelled.
+     * Physical springs continue [initialVelocity]; `null` captures the retained velocity atomically
+     * with the start value. Duration-based specifications ignore it.
      *
-     * @param targetValue requested terminal value
-     * @param animationSpec timing policy; defaults to a duration-based spring approximation
-     * @throws IllegalArgumentException if no frame clock was supplied or bound
+     * @param targetValue requested target value
+     * @param animationSpec finite timing or physical specification
+     * @param initialVelocity optional typed velocity supplied at mutation start; `null` continues
+     * the retained velocity from the same mutation snapshot as the start value
+     * @return final retained state and normal terminal reason
+     * @throws IllegalArgumentException if no frame clock is bound or an input contract is invalid;
+     * an invalid request does not cancel the currently active mutation
+     * @throws java.util.concurrent.CancellationException when replaced or externally cancelled
      */
     suspend fun animateTo(
         targetValue: T,
-        animationSpec: AnimationSpec = spring(),
+        animationSpec: FiniteAnimationSpec = spring(),
+        initialVelocity: AnimationVelocity<V>? = null,
+    ): AnimationResult<T, V> {
+        return core.animateTo(
+            targetValue = targetValue,
+            animationSpec = animationSpec,
+            initialVelocity = initialVelocity,
+            frameClock = requireFrameClock(),
+        )
+    }
+
+    /**
+     * Continues motion from [value] using [initialVelocity] and a target-free decay.
+     *
+     * @param initialVelocity typed velocity supplied by a gesture or preceding animation
+     * @param animationSpec target-free decay policy
+     * @return final retained state and normal terminal reason
+     * @throws IllegalArgumentException if no frame clock is bound or an input contract is invalid;
+     * an invalid request does not cancel the currently active mutation
+     * @throws java.util.concurrent.CancellationException when replaced or externally cancelled
+     */
+    suspend fun animateDecay(
+        initialVelocity: AnimationVelocity<V>,
+        animationSpec: DecayAnimationSpec = exponentialDecay(),
+    ): AnimationResult<T, V> {
+        return core.animateDecay(
+            initialVelocity = initialVelocity,
+            animationSpec = animationSpec,
+            frameClock = requireFrameClock(),
+        )
+    }
+
+    /**
+     * Replaces the inclusive component-wise bounds for subsequent accepted samples.
+     *
+     * @param lowerBound optional inclusive lower value
+     * @param upperBound optional inclusive upper value
+     * @throws IllegalArgumentException if converter output is invalid or a lower component exceeds
+     * its upper component
+     */
+    fun updateBounds(
+        lowerBound: T? = null,
+        upperBound: T? = null,
     ) {
-        val frameClock = requireNotNull(boundFrameClock) {
-            "Animatable has no frame clock. Use rememberAnimatable(...) or pass a clock in constructor."
-        }
-        val mutation = beginMutation(targetValue)
-        try {
-            runAnimation(
-                frameClock = frameClock,
-                startValue = internalState.value,
-                endValue = targetValue,
-                animationSpec = animationSpec,
-                converter = converter,
-            ) { next ->
-                publishValue(mutation.id, next)
-            }
-        } finally {
-            endMutation(mutation.id)
-        }
+        core.updateBounds(lowerBound = lowerBound, upperBound = upperBound)
     }
 
     internal fun bindFrameClock(frameClock: MonotonicFrameClock) {
         boundFrameClock = frameClock
     }
 
-    private suspend fun beginMutation(targetValue: T): Mutation {
-        val mutationJob = currentCoroutineContext().job
-        val mutation: Mutation
-        val previous: Mutation?
-        synchronized(mutationLock) {
-            mutation = Mutation(
-                id = ++nextMutationId,
-                job = mutationJob,
-            )
-            previous = activeMutation
-            activeMutation = mutation
-            Snapshot.withMutableSnapshot {
-                targetState.value = targetValue
-                runningState.value = true
-            }
-        }
-        if (previous != null && previous.job !== mutationJob) {
-            // Do not self-cancel when a mutation is replaced reentrantly from the same Job.
-            previous.job.cancel(
-                CancellationException("Animatable mutation was interrupted by a newer mutation."),
-            )
-        }
-        return mutation
-    }
-
-    private fun publishValue(
-        mutationId: Long,
-        value: T,
-    ) {
-        synchronized(mutationLock) {
-            if (activeMutation?.id == mutationId) {
-                internalState.value = value
-            }
+    private fun requireFrameClock(): MonotonicFrameClock {
+        return requireNotNull(boundFrameClock) {
+            "Animatable has no frame clock. Use rememberAnimatable(...) or pass a clock in constructor."
         }
     }
-
-    private fun endMutation(mutationId: Long) {
-        synchronized(mutationLock) {
-            if (activeMutation?.id == mutationId) {
-                activeMutation = null
-                Snapshot.withMutableSnapshot {
-                    targetState.value = internalState.value
-                    runningState.value = false
-                }
-            }
-        }
-    }
-
-    private data class Mutation(
-        val id: Long,
-        val job: Job,
-    )
 }
 
 /**
  * Remembers an [Animatable] and binds it to the current composition frame clock.
  *
  * [initialValue] is used only when this call position creates an instance. Changing [converter]
- * creates a new instance and uses the then-current initial value; changing only [initialValue] does
- * not reset existing state. The frame clock is rebound on every composition so host replacement is
- * observed without recreating the value holder.
+ * creates a new instance; changing only [initialValue] does not reset retained state.
  *
  * @sample com.viewcompose.animation.samples.rememberAnimatableSample
  *
- * @param T domain value represented by [converter]
+ * @param T immutable animated-value domain
+ * @param V immutable velocity domain
  * @param initialValue value for the first instance created at this call position
- * @param converter converter that also participates in remembered-instance identity
- * @return the composition-owned animated value holder
+ * @param converter converter that participates in remembered-instance identity
+ * @return composition-owned animated value holder
+ * @throws IllegalArgumentException when [initialValue] or [converter] violates the finite vector
+ * contract while creating an instance
  */
-fun <T> rememberAnimatable(
+fun <T, V> rememberAnimatable(
     initialValue: T,
-    converter: AnimationConverter<T>,
-): Animatable<T> {
+    converter: AnimationConverter<T, V>,
+): Animatable<T, V> {
     val frameClock = LocalMonotonicFrameClock.current
     val animatable = remember(converter) {
         Animatable(

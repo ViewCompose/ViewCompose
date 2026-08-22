@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-animation.md
-translation_source_hash: dc492d26b0db388d65727e42a71e3b802a5e2fc5bb00f71496cd9e70e24e575e
+translation_source_hash: 7d3133986a3f032aa837df66fcaa575d21600902b96224dc140903e319665736
 translation_status: current
 ---
 
@@ -20,8 +20,8 @@ Navigation、Preview 与 Studio 工具的维护者**
 
 | 产物 | 版本 | 当前职责 |
 | --- | --- | --- |
-| `viewcompose-animation-core` | `0.1.0-alpha04` | 平台中立的时长采样、Converter、运动策略与 Transition 协调 |
-| `viewcompose-animation` | `0.1.0-alpha04` | 组合所有的状态动画、Transition、可见性、Crossfade 与内容尺寸动画 |
+| `viewcompose-animation-core` | `0.1.0-alpha04` | 平台中立的时长/物理采样、类型化速度、Mutation、运动策略与 Transition 协调 |
+| `viewcompose-animation` | `0.1.0-alpha04` | 组合所有的物理/状态动画、Transition、可见性、Crossfade 与内容尺寸动画 |
 
 上游稳定语义基线是 2026-08-12 发布的 Compose Animation `1.12.0`。验证依据为官方
 [Compose Animation 发布说明](https://developer.android.com/jetpack/androidx/releases/compose-animation)、
@@ -38,7 +38,8 @@ AGP 9.2，而本仓库当前使用 compile SDK 36 与 AGP 8.13.2。因此：
 3. 本地 Compose `1.7.8` Fixture 不能证明 `1.12.0` 语义等价。
 
 [ADR-0019](../architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md)
-冻结了目标架构与 API 质量等级。下表标记为 **Planned（已规划）** 的内容是已接受设计，
+冻结了目标架构与 API 质量等级。[ADR-0020](../architecture/decisions/0020-separate-animation-value-and-velocity-domains.md)
+分离了动画值域与速度域。下表标记为 **Planned（已规划）** 的内容是已接受设计，
 不是可用 API；在对应阶段实现、写入所属模块文档并发布前，应用迁移仍应视其为不支持。
 
 ## 能力矩阵 {/* #capability-matrix */}
@@ -46,21 +47,21 @@ AGP 9.2，而本仓库当前使用 compile SDK 36 与 AGP 8.13.2。因此：
 | 关注点 | Compose `1.12.0` 语义 | 当前 ViewCompose 状态 | 迁移决策 |
 | --- | --- | --- | --- |
 | Tween、Keyframes、Snap、Repeat | 时长与重复 Spec | **Supported（支持）**，但 Keyframe/Repeat Surface 更窄 | 移植前复核尚不支持的 Start Offset、Spline Keyframe 与 Path Easing |
-| 物理 Spring | 基于阈值求解，并提供值与速度 | **Unsupported（不支持）**；当前 `SpringSpec` 是会 Clamp 的固定时长近似 | 不要把 Compose Spring 参数移入当前 API；Phase 1 会硬切近似模型 |
-| `Animatable` 变更所有权 | 后一个变更取消前一调用；完成返回结果状态 | **Partially supported（部分支持）**；已有 Last Writer 与取消，但没有速度、结果、Decay 与 Bounds | 保留结构化协程所有权；需要手势速度或结束原因时等待 Phase 1 |
-| Decay 与 Fling 接力 | Decay Spec 和速度延续 | **Unsupported（不支持）** | Phase 1 前继续让现有 Gesture/平台 Owner 持有 Fling |
+| 物理 Spring | 基于阈值求解，并提供值与速度 | **Supported（支持）**归一化质量、类型化初速度、解析式阻尼分支、阈值终止与安全上限 | 按 ViewCompose 单位重新调节 Compose 参数；精确时长仍使用 Tween/Keyframes |
+| `Animatable` 变更所有权 | 后一个变更取消前一调用；完成返回结果状态 | **Supported（支持）** `Animatable<T, V>`、保留速度、结构化结果、Bounds 与 Last-writer 取消 | 保留结构化所有权；取消会抛出异常，不返回 Interrupted 结果 |
+| Decay 与 Fling 接力 | Decay Spec 和速度延续 | **Supported（支持）**平台中立指数 Decay | Gesture Owner 仍需在接力前转换 Density、Direction、Axis 与 Nested-scroll 速度 |
 | Target-as-state 动画 | 状态驱动的类型化动画 | **Supported（支持）**泛型值、Float、Int、编码 ARGB 与 `UiDp` | 颜色按编码 Channel 插值，不感知色彩空间 |
 | `Transition` | 共享状态 Segment、泛型 Channel 与 Seek | **Partially supported（部分支持）**；已有一个自主 Timeline 与四种内置 Channel | Phase 4 增加公开泛型、Segment-aware 与 Seekable 控制 |
 | `AnimatedVisibility` | Enter/Exit 代数、Slide、Scale 与后代编排 | **Partially supported（部分支持）**；已有 Fade 与测量尺寸行为 | Phase 3 增加 Slide、Scale、Transform Origin、Scope 与后代 Enter/Exit |
 | `AnimatedContent` | Keyed 出入内容替换与 Content Transform | **Unsupported（不支持）**；ViewCompose 已把旧的纯 Alpha Surface 明确改名为 `Crossfade` | 仅需 Alpha 替换时使用 `Crossfade`；Phase 2 负责完整替换 |
-| 内容尺寸动画 | Layout 尺寸变化 | **Supported（支持）**，使用 Android Renderer Wrapper | 重新验证父级 Constraint 与 Wrapper 位置；Phase 5 不替代这个小 API |
+| 内容尺寸动画 | Layout 尺寸变化 | **Supported（支持）**，使用 Android Renderer Wrapper 与共享物理 Spring Solver | 重新验证父级 Constraint 与 Wrapper 位置；无限 Spec 会被拒绝 |
 | Bounds 动画 | 跨 Layout 坐标变化的位置与尺寸 | **Unsupported（不支持）** | Phase 5 增加真实 Layout 几何；不要用 Draw Translation 模拟可交互 Bounds |
 | 共享元素/Bounds | Scope 内配对与 Overlay 运动 | **Unsupported（不支持）** | Phase 6 增加单 Session 配对及 Navigation 集成；跨 Window 仍排除 |
 | Timeline 检查与 Seek | 工具可观察并控制合格动画状态 | **Unsupported（不支持）** | Phase 7 增加按请求 Preview 工具；生产产物保持不活跃且无依赖 |
 
 ## Spring 硬切 {/* #the-spring-hard-cut */}
 
-当前 API 接受名义时长：
+Phase 1 之前的 API 接受名义时长：
 
 ```kotlin
 spring(
@@ -70,10 +71,10 @@ spring(
 )
 ```
 
-它不具备 Compose Spring 语义。当前实现把规范化时间映射到阻尼曲线，把进度 Clamp 到
+该契约不具备 Compose Spring 语义。旧实现把规范化时间映射到阻尼曲线，把进度 Clamp 到
 `0f..1f`，并在指定时长结束；它无法表达真实 Overshoot、速度、平衡或手势延续。
 
-Phase 1 会删除该签名，不保留 Deprecated Overload 或 Alias。迁移必须二选一：
+Phase 1 已删除该签名，不保留 Deprecated Overload 或 Alias。迁移必须二选一：
 
 - 产品行为拥有精确时长时，使用 `tween(durationMillis = ..., easing = ...)` 或
   `keyframes(...)`；
@@ -87,17 +88,23 @@ Demo 与自定义 Design System。
 
 ## 变更与结果映射
 
-当前 ViewCompose `Animatable` 已采用 Last-mutation-wins：不同 Job 的新变更会取消旧调用，
-过期帧不能发布，取消后保留最后接受值。Phase 1 保持该方向，并增加速度、Decay、Bounds 与
-结构化成功结束结果。
+ViewCompose `Animatable<T, V>` 采用 Last-mutation-wins：不同 Job 的新变更会取消旧调用，
+过期帧不能发布，取消后保留最后接受值和速度。它公开 Decay、Bounds 与结构化成功结束结果。
+
+`T` 与 `V` 明确分离。`Int` 位置使用 `Float` 速度，打包 ARGB `Int` 值使用有符号四通道
+`AnimationVelocity` 内的 `ArgbChannels`。自定义 Converter 通过目标 Buffer、稳定维度、零速度与有限正阈值实现
+`AnimationConverter<T, V>`；旧单参数 Converter 没有兼容 Alias。
 
 与简单结果枚举不同的已接受规则包括：
 
 - 取消仍抛出 `CancellationException`，不会返回 `Interrupted` 结果；
 - 正常抵达 Target、碰到 Bound、触发物理安全时长分别返回 `Finished`、`BoundReached`
   或 `DurationLimitReached`；
-- 替代物理动画延续保留速度，除非调用方显式传入另一初速度；
-- `snapTo` 与 `stop` 最终保留零速度；
+- `initialVelocity = null` 会原子捕获替代请求的保留值与速度；显式速度只覆盖捕获的速度；
+- 无效替代请求在所有权变化前失败，不会取消当前 Mutation；
+- 构造会在公开状态前验证初始值与完整 Converter 契约；
+- `snapTo` 与 `stop` 只发布一次保留零速度的 Final Idle Snapshot，不产生瞬时 Running State；
+  无效 Snap 仍保留当前 Mutation 的权威性；
 - 成功抵达 Target 会发布精确 Target 与零保留速度。
 
 Gesture 代码以 Converter Domain 的单位/秒移交速度。Density 转换、RTL 符号、Axis 投影与
@@ -163,10 +170,9 @@ Phase 0 的 Xiaomi MI 6 / API 28 运行接收了全部四项绝对基线；各�
    Transition、Visibility、`Crossfade` 与 `animateContentSize` 使用。
 2. 把每项动画分类为精确时长、物理、Decay、Keyed Replacement、Visibility、Seek、Bounds
    或 Shared Motion。不要仅因某能力当前可用就用它编码另一类别。
-3. 只在现有 Alpha 与 Duration API 的文档语义足够时保留它们。物理与共享运动迁移等待
-   所属 Phase 发布。
-4. Phase 1 落地时，在同一个改动中硬切所有 Duration-Spring 调用，并按物理方程、速度、
-   阈值、Reduced Motion 与结束结果重新调参。
+3. 只在 Alpha 与 Duration API 的文档语义足够时保留它们。共享运动迁移等待所属 Phase 发布。
+4. 在同一个改动中硬切所有 Duration-Spring 与单值域 Converter 调用，并按物理方程、值/速度
+   Domain、阈值、Reduced Motion 与结束结果重新调参。
 5. 按页面所用能力验证 Cancellation、Rapid Retarget、Host Detach、Renderer Failure、RTL、
    Focus、Input、Accessibility 与 Reduced Motion。
 6. 修改 Frame、Measure、Retention、Overlay 或 Tooling 路径前后，运行匹配 Revision 的真机

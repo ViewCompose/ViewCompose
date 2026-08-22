@@ -1,6 +1,6 @@
 package com.viewcompose.animation
 
-import com.viewcompose.animation.core.AnimationSpec
+import com.viewcompose.animation.core.FiniteAnimationSpec
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
@@ -39,7 +39,7 @@ import com.viewcompose.ui.foundation.remember
 private fun <T> UiTreeBuilder.crossfadeContent(
     targetState: T,
     modifier: Modifier = Modifier,
-    animationSpec: AnimationSpec,
+    animationSpec: FiniteAnimationSpec,
     content: BoxScope.(T) -> Unit,
 ) {
     val displayedState = remember {
@@ -107,7 +107,7 @@ private data class DisplayedState<T>(val value: T)
 fun <T> UiTreeBuilder.Crossfade(
     targetState: T,
     modifier: Modifier = Modifier,
-    animationSpec: AnimationSpec = tween(),
+    animationSpec: FiniteAnimationSpec = tween(),
     content: BoxScope.(T) -> Unit,
 ) {
     crossfadeContent(

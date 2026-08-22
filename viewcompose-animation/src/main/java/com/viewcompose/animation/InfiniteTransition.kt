@@ -170,10 +170,10 @@ fun InfiniteTransition.animateDp(
  * @return stable composition-owned state containing the latest sample
  * @throws IllegalArgumentException if [LocalAnimationCoroutineContext] contains a [Job]
  */
-fun <T> InfiniteTransition.animateValue(
+fun <T, V> InfiniteTransition.animateValue(
     initialValue: T,
     targetValue: T,
-    converter: AnimationConverter<T>,
+    converter: AnimationConverter<T, V>,
     animationSpec: InfiniteRepeatableSpec = infiniteRepeatable(
         animation = tween(),
     ),
@@ -202,8 +202,8 @@ fun <T> InfiniteTransition.animateValue(
                     endValue = to,
                     animationSpec = animationSpec.animation,
                     converter = converter,
-                ) { next ->
-                    valueState.value = next
+                ) { state ->
+                    valueState.value = state.value
                 }
                 if (animationSpec.repeatMode == RepeatMode.Reverse) {
                     val swap = from

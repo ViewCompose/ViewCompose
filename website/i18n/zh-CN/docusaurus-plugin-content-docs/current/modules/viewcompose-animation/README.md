@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: c25be04b4c7e2e5ebc0f00e11c3cd974d755ddb8aed2b4b46a5b21ef2cae857c
+translation_source_hash: f9ef9e39916df54685721eb92826d80557989c57c25cdea06fc2a577bff6c68e
 translation_status: current
 ---
 
@@ -65,13 +65,16 @@ val alpha = animateFloatAsState(
 并从最后发布值重启。这组 API 没有命令式取消句柄或完成回调；需要命令、停止或 Mutation 仲裁时
 应使用 `Animatable`。
 
-整数样本向零截断。颜色按编码 ARGB Channel 插值，不执行 Gamma 校正。`UiDp` 插值密度无关
+所有 Target-as-state API 都接受 `FiniteAnimationSpec`；无限 Spec 会在编译期失败。它们共享
+`AnimatableCore` Mutation 与物理采样，不持有第二套 Runner。整数样本向零截断。颜色按编码
+ARGB Channel 插值，不执行 Gamma 校正。`UiDp` 插值密度无关
 数字而不是解析像素，因此仅 Density 变化不会重启动画。自定义 Converter 必须保持稳定维度，
 并应在组合间保持实例稳定。
 
 ## 命令式 Animatable
 
-`Animatable<T>` 暴露 `value`、`targetValue`、`isRunning` 和稳定可观察 `asState`，并接受挂起命令：
+`Animatable<T, V>` 暴露 `value`、类型化 `velocity`、`targetValue`、`isRunning` 和稳定可观察
+`asState`，并接受挂起命令：
 
 ```kotlin
 val progress = rememberAnimatable(
@@ -81,18 +84,32 @@ val progress = rememberAnimatable(
 
 LaunchedEffect(command) {
     when (command) {
-        Command.Open -> progress.animateTo(1f, tween(durationMillis = 240))
-        Command.Close -> progress.animateTo(0f, spring())
+        Command.Open -> progress.animateTo(
+            targetValue = 1f,
+            animationSpec = spring(dampingRatio = 0.7f, stiffness = 220f),
+        )
+        Command.Close -> progress.animateDecay(AnimationVelocity(-2.4f))
         Command.Stop -> progress.stop()
     }
 }
 ```
 
-每个 `animateTo`、`snapTo` 和 `stop` 都是一项 Mutation。来自其他 Coroutine Job 的新 Mutation
-会取消旧 Job，过期帧会被 Mutation Identity 拒绝。`animateTo` 从最后接受值 Retarget；
-`snapTo` 立即发布；`stop` 保留当前值。取消和失败保留最新样本，并把目标重置为该值。
-Q3 `Animatable` 契约会一起发布 Mutation 开始时的 Target/Running，并一起发布完成时保留的
-Target/Idle；逐帧 Sample 仍是独立的 Value Commit。
+每个 `animateTo`、`animateDecay`、`snapTo` 和 `stop` 都是一项 Mutation。来自其他 Coroutine
+Job 的新 Mutation 会取消旧 Job，过期帧会被 Mutation Identity 拒绝。省略可空的
+`initialVelocity` 时，物理 `animateTo` 从同一个原子值/速度 Snapshot Retarget；显式
+`AnimationVelocity<V>` 只替换其中捕获的速度。无效替代请求会在 Mutation 所有权变化前被拒绝，
+因此不会取消当前动画。`snapTo` 立即发布；`stop` 保留当前值；两者都把速度重置为零。取消和失败
+保留最新样本，并把目标重置为该值。正常结束返回 `AnimationResult<T, V>`，原因是
+`Finished`、`BoundReached` 或
+`DurationLimitReached`；取消仍抛出异常。
+Q3 `Animatable` 契约会一起发布 Frame-driven Animation 开始时的 Target/Running，并一起发布
+完成时保留的 Target/Idle；逐帧 Sample 仍是独立的 Value Commit。`snapTo` 与 `stop` 则只发布
+一次原子 Final Idle Snapshot，不产生瞬时 Running State。无效构造或 Snap 输入会在任何状态或
+Mutation 所有权改变前失败。
+
+`updateBounds(lowerBound, upperBound)` 安装各分量闭区间 Value Bound。运行中的 Spring 或 Decay
+会在发布前 Clamp Crossing Sample、把速度清零并返回 `BoundReached`。Idle Update 或之后的
+`snapTo` 会立即 Clamp。Density、RTL 与 Gesture Axis 转换仍由构造 `V` 的调用方负责。
 
 `rememberAnimatable` 只在首次创建时使用 `initialValue`。Converter 变化会创建新实例；只改变
 `initialValue` 不会重置。当前 Frame Clock 每轮组合都会重新绑定。直接构造可以传显式 Clock；
@@ -111,7 +128,7 @@ val alpha = transition.animateFloat { state ->
     if (state == PanelState.Expanded) 1f else 0.6f
 }
 val height = transition.animateDp(
-    animationSpec = { spring(durationMillis = 320) },
+    animationSpec = { spring(dampingRatio = 0.8f, stiffness = 240f) },
 ) { state ->
     if (state == PanelState.Expanded) 240.dp else 80.dp
 }
@@ -193,20 +210,23 @@ Key、Transition Scope、尺寸变换、Slide 动效或逐状态对规格。
 
 ## animateContentSize 与原生布局成本
 
-`Modifier.animateContentSize` 把 Core 规格序列化到 Renderer。Renderer 在目标 Node 外插入一个
-合成原生 Host，把父布局 Element 移到 Host，并使用 Android `ValueAnimator` 动画测量宽高：
+`Modifier.animateContentSize` 把有限 Core Spec 序列化到 Renderer。Renderer 在目标 Node 外
+插入一个合成原生 Host，并把父布局 Element 移到 Host。时长 Spec 使用 Android
+`ValueAnimator`；物理 Spring 使用共享 Animation Core Solver，并在 Retarget 时保留宽高速度：
 
 ```kotlin
 Column(
-    modifier = Modifier.animateContentSize(spring(durationMillis = 320)),
+    modifier = Modifier.animateContentSize(
+        spring(dampingRatio = 0.75f, stiffness = 240f),
+    ),
 ) {
     // 测量尺寸会变化的内容。
 }
 ```
 
 首次测量直接应用。后续变化从进行中尺寸 Retarget，父约束仍会限制结果。每帧都会请求 Android
-Layout，Wrapper 还会增加一层 View；不要无差别应用到大型列表。无限尺寸重复会持续请求布局到
-Detach，通常不应使用。
+Layout，Wrapper 还会增加一层 View；不要无差别应用到大型列表。无限尺寸 Spec 会在编译期被
+拒绝，因为 Layout Animation 必须收敛。
 
 内置 Easing 与 Cubic Bézier 控制点可以跨 Renderer 边界。未知自定义 Easing 会降级为
 `FastOutSlowIn`。一个 Modifier Chain 中存在多个 `animateContentSize` 时，最后一个规格生效。
@@ -214,6 +234,7 @@ Detach，通常不应使用。
 ## 测试
 
 - 命令式动画与取消测试使用确定性 Frame Clock；
+- 分别断言物理结束原因、终止速度、Bounds、Decay 方向与快速 Retarget 速度连续性；
 - 分开验证首次组合与后续目标变化；
 - 验证完成前 Retarget，确保过期 Job 无法发布；
 - Transition 在同一组合 Pass 声明所有 Channel，并断言最长时长控制逻辑完成；
@@ -236,7 +257,8 @@ Detach，通常不应使用。
 
 ## 兼容性说明
 
-`0.1.0-alpha03` 建立了组合所有目标动画、显式 Last-mutation-wins `Animatable`、共享时长
-Transition、持续 Channel、感知 Exit 的可见性生命周期、仅 Alpha 内容替换和 Renderer Host
-测量尺寸动效。相似 API 名称不代表完整 Jetpack Compose Animation 对齐；以上差异是本版本的
-公共契约。
+Phase 1 Alpha 硬切固定时长 Spring 与单值域 `Animatable<T>` Surface。调用方改用物理
+`spring`、`Animatable<T, V>`、类型化速度、Decay、Bounds 和结构化结果。
+`animateContentSize` 共享同一物理 Solver，也不再接受无限 Spec；不存在 Deprecated 兼容
+Overload。共享时长 Transition、持续 Channel、感知 Exit 的可见性生命周期和纯 Alpha 内容替换
+保留既有所有权。相似 API 名称不代表完整 Jetpack Compose Animation 对齐；以上差异仍是公开契约。

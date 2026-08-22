@@ -26,8 +26,9 @@ dependencies {
   releases.
 - Platform: Android library, `minSdk 24`, `compileSdk 36`, and Java 11 bytecode.
 - UI contract is exposed transitively because renderer entry points accept and return its node and
-  modifier types. Runtime, text core, graphics core, and gesture core remain implementation
-  dependencies.
+  modifier types. Runtime, text core, graphics core, gesture core, and animation core remain
+  implementation dependencies. Animation core supplies the single physical size solver; renderer
+  APIs do not expose that dependency.
 - Android runtime dependencies: AndroidX Core, AppCompat, RecyclerView, ConstraintLayout, and
   SwipeRefreshLayout. Material Components and ViewPager2 are not dependencies.
 - Generic surfaces, rounded/cut/continuous shapes, and progress indicators use engine-owned Android drawing
@@ -230,6 +231,10 @@ Phase 4 owns that benchmark and final guidance.
 - Maximum-size and aspect-ratio modifiers install one synthetic measurement host around the
   complete mapped node. The host is renderer-owned infrastructure, not a semantic child and not a
   second logical session.
+- Animated content-size nodes install one synthetic measurement host. Duration contracts use a
+  retained Android `ValueAnimator`; physical spring contracts use animation-core's analytic solver,
+  preserve width/height velocity across retargeting, and still request layout once per accepted
+  platform frame. Keyframes are ordered once when the animator is created, not on every frame.
 - `RenderTreeResult`, `RenderStats`, `RenderStructureStats`, patch records, and layout-pass sampling
   provide immutable diagnostics used by the demo, preview tooling, and performance tests.
 - [`AndroidViewDecorationBackend`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.decoration/-android-view-decoration-backend/)
@@ -434,6 +439,10 @@ new snapshot; it never renders one frame with the prior side selected.
 - A settled hidden visibility host stays mounted as an empty, zero-size reconciliation anchor. Its
   content subtree is absent, but keeping the host stable preserves following unkeyed siblings'
   native View identity and interaction state across visibility changes.
+- An animated-size host cancels its active animator on detach. Its first measurement snaps; later
+  targets start from the currently displayed dimensions. Physical retargeting carries the last
+  sampled pixel-per-second velocity, while a duration-spec retarget resets it. Parent measurement
+  constraints remain authoritative on every frame.
 
 ## Related documentation
 
@@ -479,3 +488,9 @@ disposal, deliver pager callbacks only after idle settlement, honor `userScrollE
 slider interaction phases and steps, preserve descendant input when refresh is disabled, and map
 the new keyed selection-item semantics. The grid policy and layout-constraint host also require a
 registry and measurement upgrade; treating them as optional hints is incorrect.
+
+The animation Phase 1 alpha adds an implementation dependency on `viewcompose-animation-core` and
+hard-cuts the animated-size transport to finite specifications. Custom renderer forks must consume
+the physical damping/stiffness/safety-guard model through one equivalent solver, retain velocity on
+spring retarget, and reject infinite layout motion. Reusing the old fixed-duration damped
+interpolator under the `spring` name is not compatible.

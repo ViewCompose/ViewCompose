@@ -99,11 +99,17 @@
     <string name="demo_animation_infinite_repeat_reverse">重复：反向</string>
     <string name="demo_animation_infinite_repeat_restart">重复：重新开始</string>
     <string name="demo_animation_infinite_scale">无限缩放 = %1$s</string>
-    <string name="demo_animation_animatable_panel">Animatable 控制</string>
-    <string name="demo_animation_animatable_to_high">animateTo 1.0</string>
-    <string name="demo_animation_animatable_to_low">animateTo 0.0</string>
+    <string name="demo_animation_animatable_panel">物理 Animatable · 临界阻尼正常结束，衰减触及边界</string>
+    <string name="demo_animation_animatable_to_high">Spring 到 1.0</string>
+    <string name="demo_animation_animatable_to_low">Spring 到 0.0</string>
+    <string name="demo_animation_animatable_decay_positive">Decay +4.8/秒</string>
+    <string name="demo_animation_animatable_decay_negative">Decay -4.8/秒</string>
     <string name="demo_animation_animatable_snap_high">snapTo 1.0</string>
     <string name="demo_animation_animatable_snap_low">snapTo 0.0</string>
     <string name="demo_animation_animatable_stop">停止当前 Animatable 任务</string>
-    <string name="demo_animation_animatable_value">Animatable 值 = %1$s</string>
+    <string name="demo_animation_animatable_state">值 %1$s · 速度 %2$s/秒 · 运行中 %3$b\n结果 %4$s · 边界 [0.0, 1.0]</string>
+    <string name="demo_animation_animatable_result_none">无</string>
+    <string name="demo_animation_animatable_result_finished">Finished</string>
+    <string name="demo_animation_animatable_result_bound">BoundReached</string>
+    <string name="demo_animation_animatable_result_guard">DurationLimitReached</string>
 </resources>

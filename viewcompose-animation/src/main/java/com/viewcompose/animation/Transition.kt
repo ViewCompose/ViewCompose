@@ -2,10 +2,10 @@ package com.viewcompose.animation
 
 import com.viewcompose.animation.core.AnimationConverter
 import com.viewcompose.animation.core.AnimationConverters
-import com.viewcompose.animation.core.AnimationSpec
+import com.viewcompose.animation.core.AnimationVelocity
+import com.viewcompose.animation.core.FiniteAnimationSpec
+import com.viewcompose.animation.core.TargetAnimation
 import com.viewcompose.animation.core.TransitionCore
-import com.viewcompose.animation.core.animationDurationNanos
-import com.viewcompose.animation.core.sampleAnimationValue
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.Snapshot
@@ -117,16 +117,15 @@ class Transition<S> internal constructor(
         }
     }
 
-    private class ChannelState<T>(
+    private class ChannelState<T, V>(
         var segmentVersion: Long,
-        var startValue: T,
-        var endValue: T,
-        var animationSpec: AnimationSpec,
+        var velocity: AnimationVelocity<V>,
+        var animation: TargetAnimation<T, V>?,
     )
 
-    private fun <T> animateValueInternal(
-        converter: AnimationConverter<T>,
-        transitionSpec: (initialState: S, targetState: S) -> AnimationSpec,
+    private fun <T, V> animateValueInternal(
+        converter: AnimationConverter<T, V>,
+        transitionSpec: (initialState: S, targetState: S) -> FiniteAnimationSpec,
         segmentEndpoints: (initialState: S, targetState: S, currentValue: T) -> Pair<T, T>,
         valueForSettledState: (S) -> T,
     ): State<T> {
@@ -134,11 +133,10 @@ class Transition<S> internal constructor(
             mutableStateOf(valueForSettledState(currentState))
         }
         val channelState = remember(this, converter) {
-            ChannelState(
+            ChannelState<T, V>(
                 segmentVersion = -1L,
-                startValue = outputState.value,
-                endValue = outputState.value,
-                animationSpec = tween(),
+                velocity = AnimationVelocity(converter.zeroVelocity),
+                animation = null,
             )
         }
         val running = core.isRunning
@@ -154,27 +152,29 @@ class Transition<S> internal constructor(
                 outputState.value,
             )
             channelState.segmentVersion = version
-            channelState.animationSpec = spec
-            channelState.startValue = start
-            channelState.endValue = end
+            channelState.animation = TargetAnimation(
+                initialValue = start,
+                targetValue = end,
+                animationSpec = spec,
+                converter = converter,
+                initialVelocity = channelState.velocity,
+            )
         }
         if (running) {
+            val animation = checkNotNull(channelState.animation)
             registerChannelDuration(
-                durationNanos = animationDurationNanos(channelState.animationSpec),
+                durationNanos = animation.durationNanos,
             )
             // Keep observing the mirror so frame updates invalidate composition, but sample the
             // live coordinator. A target can reset its time inside a composition whose pinned
             // snapshot still exposes the previous segment's terminal play time.
             playTimeNanosHolder.value
-            outputState.value = sampleAnimationValue(
-                startValue = channelState.startValue,
-                endValue = channelState.endValue,
-                animationSpec = channelState.animationSpec,
-                converter = converter,
-                playTimeNanos = core.playTimeNanos,
-            )
+            val state = animation.stateAt(core.playTimeNanos)
+            outputState.value = state.value
+            channelState.velocity = state.velocity
         } else {
             outputState.value = valueForSettledState(core.targetState)
+            channelState.velocity = AnimationVelocity(converter.zeroVelocity)
         }
         return outputState
     }
@@ -192,7 +192,7 @@ class Transition<S> internal constructor(
      * @return stable composition-owned state containing the latest channel sample
      */
     fun animateFloat(
-        animationSpec: () -> AnimationSpec = { tween() },
+        animationSpec: () -> FiniteAnimationSpec = { tween() },
         targetValueByState: (S) -> Float,
     ): State<Float> {
         return animateValueInternal(
@@ -206,7 +206,7 @@ class Transition<S> internal constructor(
     }
 
     internal fun animateFloatBySegment(
-        transitionSpec: (initialState: S, targetState: S) -> AnimationSpec,
+        transitionSpec: (initialState: S, targetState: S) -> FiniteAnimationSpec,
         segmentEndpoints: (initialState: S, targetState: S, currentValue: Float) -> Pair<Float, Float>,
         valueForSettledState: (S) -> Float,
     ): State<Float> {
@@ -226,7 +226,7 @@ class Transition<S> internal constructor(
      * @return stable state containing the latest integer sample
      */
     fun animateInt(
-        animationSpec: () -> AnimationSpec = { tween() },
+        animationSpec: () -> FiniteAnimationSpec = { tween() },
         targetValueByState: (S) -> Int,
     ): State<Int> {
         return animateValueInternal(
@@ -249,7 +249,7 @@ class Transition<S> internal constructor(
      * @return stable state containing the latest packed ARGB sample
      */
     fun animateColor(
-        animationSpec: () -> AnimationSpec = { tween() },
+        animationSpec: () -> FiniteAnimationSpec = { tween() },
         targetValueByState: (S) -> Int,
     ): State<Int> {
         return animateValueInternal(
@@ -272,7 +272,7 @@ class Transition<S> internal constructor(
      * @return stable state containing the latest density-independent sample
      */
     fun animateDp(
-        animationSpec: () -> AnimationSpec = { tween() },
+        animationSpec: () -> FiniteAnimationSpec = { tween() },
         targetValueByState: (S) -> UiDp,
     ): State<UiDp> {
         return animateValueInternal(

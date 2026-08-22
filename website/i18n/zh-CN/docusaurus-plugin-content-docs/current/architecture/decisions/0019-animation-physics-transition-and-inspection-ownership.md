@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md
-translation_source_hash: 5e24a7e7e6c4a601a68318f02916f446327a7deb78997a8f98734fd0fbdbcade
+translation_source_hash: d61030d091379f011152aa3d9c9d504e3c657c0c5a99a1d58bbea512c102da0a
 translation_status: current
 ---
 
@@ -9,6 +9,8 @@ translation_status: current
 - 状态：已接受
 - 日期：2026-08-22
 - 替代：Alpha 动画版本中 `SpringSpec` 与 `spring` 的固定时长语义
+- 修订：[ADR-0020](0020-separate-animation-value-and-velocity-domains.md) 替代了下文临时的单类型
+  值域/速度域泛型词汇
 
 ## 背景
 
@@ -89,9 +91,12 @@ data class AnimationResult<T>(
 
 `Interrupted` 刻意不作为 End Reason。新的 Last-writer Mutation 或外部协程取消会抛出
 `CancellationException`，保留最后原子发布的 Value/Velocity，且被取消调用不返回结果。
-替代物理动画默认以该速度开始，除非调用方提供显式 Initial Velocity。`snapTo` 与 `stop`
-发布零保留速度。Callback、Converter 或 Clock 失败在保留最后提交 Sample 权威性的同时向上
-传播。
+`initialVelocity = null` 的替代物理动画会在同一个 Mutation Snapshot 中捕获保留值与速度；
+显式 Initial Velocity 只覆盖捕获的速度。候选动画会在 Mutation 所有权变化前完成校验，因此
+无效替代请求仍保留当前 Mutation 的权威性。构造会在公开状态前验证初始值与 Converter 契约。
+`snapTo` 与 `stop` 只发布一次原子 Final Idle State，保留零速度且不产生瞬时 Running State；
+无效 Snap 不改变任何状态或所有权。Callback、Converter 或 Clock 失败在保留最后提交 Sample
+权威性的同时向上传播。
 
 Bounds 使用 Converter Domain 的 Lower/Upper Value，并在每次 Mutation 时转换一次。每个
 Lower Component 必须不大于 Upper Component。越界 Sample 在发布前 Clamp，整个 Run 以

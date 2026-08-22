@@ -18,6 +18,8 @@ import com.viewcompose.animation.animateDpAsState
 import com.viewcompose.animation.animateValueAsState
 import com.viewcompose.animation.core.AnimationConverter
 import com.viewcompose.animation.core.AnimationConverters
+import com.viewcompose.animation.core.AnimationEndReason
+import com.viewcompose.animation.core.AnimationVelocity
 import com.viewcompose.animation.core.EasingDefaults
 import com.viewcompose.animation.core.RepeatMode
 import com.viewcompose.animation.expandHorizontally
@@ -26,6 +28,7 @@ import com.viewcompose.animation.expandVertically
 import com.viewcompose.animation.fadeIn
 import com.viewcompose.animation.fadeOut
 import com.viewcompose.animation.core.infiniteRepeatable
+import com.viewcompose.animation.core.exponentialDecay
 import com.viewcompose.animation.core.keyframe
 import com.viewcompose.animation.core.keyframes
 import com.viewcompose.animation.rememberInfiniteTransition
@@ -171,6 +174,11 @@ internal fun UiTreeBuilder.AnimationPage(
     } else {
         null
     }
+    val animatableResultState = if (fixture == AnimationFixture.Infinite) {
+        remember { mutableStateOf<AnimationEndReason?>(null) }
+    } else {
+        null
+    }
     val animatable = if (fixture == AnimationFixture.Infinite) {
         rememberAnimatable(initialValue = 0f, converter = AnimationConverters.Float)
     } else {
@@ -181,11 +189,17 @@ internal fun UiTreeBuilder.AnimationPage(
     } else {
         null
     }
+    if (animatable != null) {
+        remember(animatable) {
+            animatable.updateBounds(lowerBound = 0f, upperBound = 1f)
+        }
+    }
 
     if (
         animatableCommandState != null &&
         animatableCommandNonceState != null &&
         animatable != null &&
+        animatableResultState != null &&
         animationCoroutineContext != null
     ) {
         LaunchedEffect(
@@ -198,28 +212,47 @@ internal fun UiTreeBuilder.AnimationPage(
                 when (command) {
                     AnimatableCommand.None -> Unit
 
-                    AnimatableCommand.Stop -> animatable.stop()
+                    AnimatableCommand.Stop -> {
+                        animatable.stop()
+                        animatableResultState.value = null
+                    }
 
                     AnimatableCommand.AnimateToHigh -> {
-                        animatable.animateTo(
+                        animatableResultState.value = animatable.animateTo(
                             targetValue = 1f,
-                            animationSpec = tween(durationMillis = 420),
-                        )
+                            animationSpec = spring(dampingRatio = 1f, stiffness = 180f),
+                        ).endReason
                     }
 
                     AnimatableCommand.AnimateToLow -> {
-                        animatable.animateTo(
+                        animatableResultState.value = animatable.animateTo(
                             targetValue = 0f,
-                            animationSpec = spring(durationMillis = 520),
-                        )
+                            animationSpec = spring(dampingRatio = 1f, stiffness = 220f),
+                        ).endReason
+                    }
+
+                    AnimatableCommand.DecayPositive -> {
+                        animatableResultState.value = animatable.animateDecay(
+                            initialVelocity = AnimationVelocity(4.8f),
+                            animationSpec = exponentialDecay(frictionMultiplier = 0.8f),
+                        ).endReason
+                    }
+
+                    AnimatableCommand.DecayNegative -> {
+                        animatableResultState.value = animatable.animateDecay(
+                            initialVelocity = AnimationVelocity(-4.8f),
+                            animationSpec = exponentialDecay(frictionMultiplier = 0.8f),
+                        ).endReason
                     }
 
                     AnimatableCommand.SnapToHigh -> {
                         animatable.snapTo(1f)
+                        animatableResultState.value = null
                     }
 
                     AnimatableCommand.SnapToLow -> {
                         animatable.snapTo(0f)
+                        animatableResultState.value = null
                     }
                 }
             }
@@ -641,7 +674,6 @@ internal fun UiTreeBuilder.AnimationPage(
                     AnimationSpecKind.Spring -> spring(
                         dampingRatio = 0.78f,
                         stiffness = 260f,
-                        durationMillis = 520,
                     )
 
                     AnimationSpecKind.Keyframes -> keyframes(
@@ -886,7 +918,7 @@ internal fun UiTreeBuilder.AnimationPage(
                     if (toggled) 1f else 0.35f
                 }
                 val transitionIntState = transition.animateInt(
-                    animationSpec = { spring(durationMillis = 460) },
+                    animationSpec = { spring(dampingRatio = 0.82f, stiffness = 230f) },
                 ) { toggled ->
                     if (toggled) 9 else 2
                 }
@@ -1109,6 +1141,7 @@ internal fun UiTreeBuilder.AnimationPage(
                 val infiniteReverseState = checkNotNull(infiniteReverseState)
                 val animatableCommandState = checkNotNull(animatableCommandState)
                 val animatableCommandNonceState = checkNotNull(animatableCommandNonceState)
+                val animatableResultState = checkNotNull(animatableResultState)
                 val animatable = checkNotNull(animatable)
                 ScenarioSection(
                 kind = ScenarioKind.Stress,
@@ -1244,6 +1277,35 @@ internal fun UiTreeBuilder.AnimationPage(
                         .margin(top = 8.dp),
                 ) {
                     Button(
+                        text = stringResource(R.string.demo_animation_animatable_decay_positive),
+                        variant = ButtonVariant.Outlined,
+                        onClick = {
+                            animatableCommandState.value = AnimatableCommand.DecayPositive
+                            animatableCommandNonceState.value += 1
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_DECAY_POSITIVE),
+                    )
+                    Button(
+                        text = stringResource(R.string.demo_animation_animatable_decay_negative),
+                        variant = ButtonVariant.Outlined,
+                        onClick = {
+                            animatableCommandState.value = AnimatableCommand.DecayNegative
+                            animatableCommandNonceState.value += 1
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_DECAY_NEGATIVE),
+                    )
+                }
+                Row(
+                    spacing = 8.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(top = 8.dp),
+                ) {
+                    Button(
                         text = stringResource(R.string.demo_animation_animatable_snap_high),
                         variant = ButtonVariant.Outlined,
                         onClick = {
@@ -1288,8 +1350,22 @@ internal fun UiTreeBuilder.AnimationPage(
                 ) {
                     Text(
                         text = stringResource(
-                            R.string.demo_animation_animatable_value,
+                            R.string.demo_animation_animatable_state,
                             animatable.asState.value.format2(),
+                            animatable.velocity.valuePerSecond.format2(),
+                            animatable.isRunning,
+                            when (animatableResultState.value) {
+                                AnimationEndReason.Finished -> stringResource(
+                                    R.string.demo_animation_animatable_result_finished,
+                                )
+                                AnimationEndReason.BoundReached -> stringResource(
+                                    R.string.demo_animation_animatable_result_bound,
+                                )
+                                AnimationEndReason.DurationLimitReached -> stringResource(
+                                    R.string.demo_animation_animatable_result_guard,
+                                )
+                                null -> stringResource(R.string.demo_animation_animatable_result_none)
+                            },
                         ),
                         modifier = Modifier.testTag(DemoAnimationTestTags.ANIMATION_ANIMATABLE_VALUE),
                     )
@@ -1429,6 +1505,8 @@ private enum class AnimatableCommand {
     None,
     AnimateToHigh,
     AnimateToLow,
+    DecayPositive,
+    DecayNegative,
     SnapToHigh,
     SnapToLow,
     Stop,
@@ -1445,17 +1523,28 @@ private data class DemoAnimationTask(
     val completed: Boolean,
 )
 
-private object DemoVector2Converter : AnimationConverter<DemoVector2> {
-    override fun toVector(value: DemoVector2): FloatArray {
-        return floatArrayOf(value.x, value.y)
+private object DemoVector2Converter : AnimationConverter<DemoVector2, DemoVector2> {
+    override val vectorSize: Int = 2
+    override val zeroVelocity: DemoVector2 = DemoVector2(0f, 0f)
+    override val visibilityThreshold: DemoVector2 = DemoVector2(0.01f, 0.01f)
+
+    override fun convertToVector(value: DemoVector2, destination: FloatArray) {
+        destination[0] = value.x
+        destination[1] = value.y
     }
 
-    override fun fromVector(vector: FloatArray): DemoVector2 {
+    override fun convertFromVector(vector: FloatArray): DemoVector2 {
         return DemoVector2(
-            x = vector.getOrElse(0) { 0f },
-            y = vector.getOrElse(1) { 0f },
+            x = vector[0],
+            y = vector[1],
         )
     }
+
+    override fun convertVelocityToVector(velocity: DemoVector2, destination: FloatArray) {
+        convertToVector(velocity, destination)
+    }
+
+    override fun convertVelocityFromVector(vector: FloatArray): DemoVector2 = convertFromVector(vector)
 }
 
 private fun Float.format2(): String {

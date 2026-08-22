@@ -15,11 +15,13 @@
     <string name="demo_gesture_consumed_pointer_event">已消费指针：%1$s</string>
 
     <string name="demo_gesture_drag_swipe_title">拖拽 / 滑动</string>
-    <string name="demo_gesture_drag_swipe_summary">draggable 和 anchoredDraggable 在同一场景内验证方向锁、slop 和三个锚点。</string>
+    <string name="demo_gesture_drag_swipe_summary">draggable 将终止速度（px/s）交给有界物理衰减；anchoredDraggable 验证三锚点结算。</string>
     <string name="demo_gesture_drag_state">拖拽=%1$d · 当前=%2$s · 目标=%3$s · 偏移=%4$d</string>
     <string name="demo_gesture_drag_action">移动到右侧锚点</string>
     <string name="demo_gesture_drag_target">水平拖拽</string>
     <string name="demo_gesture_drag_value">拖拽 x = %1$d</string>
+    <string name="demo_gesture_drag_handoff_state">手势=%1$d px/s · 动画=%2$d px/s · 结果=%3$s</string>
+    <string name="demo_gesture_drag_handoff_running">运行中 / 空闲</string>
     <string name="demo_gesture_swipe_target">水平滑动 · %1$s</string>
     <string name="demo_gesture_swipe_current">滑动当前值 = %1$s</string>
     <string name="demo_gesture_swipe_target_value">滑动目标值 = %1$s</string>

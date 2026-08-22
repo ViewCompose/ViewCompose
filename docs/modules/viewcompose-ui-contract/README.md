@@ -76,6 +76,10 @@ created for the node.
   `NodeType.LayoutConstraintHost`. Custom renderers must constrain the complete modified node in
   one measurement boundary, honor an incoming exact parent constraint, apply declared maxima
   otherwise, and preserve the requested ratio whenever the resulting interval is feasible.
+- `AnimateContentSizeModifierElement` carries a finite `ContentSizeAnimationSpecModel`. Duration
+  models cover tween, keyframes, snap, and finite repeat; the separate physical spring model carries
+  damping ratio, normalized-mass stiffness, and a safety guard. Infinite layout motion is not part
+  of the transport. The contract owns no clock or solver.
 - Q3 ConstraintLayout transport uses one mutually exclusive `ConstraintDimension` value per axis,
   `ConstraintMatchMode` for spread/wrap/percent behavior, a positive typed `ConstraintRatio`, and
   one baseline link. Logical start/end and physical left/right anchors remain distinct;
@@ -338,3 +342,9 @@ Its source default keeps direct construction concise, but precompiled constructo
 call sites, and custom renderers must rebuild for this alpha release. Custom renderers that support
 observed transactions publish one unique exact target for every non-null identity; renderers that
 do not support the capability may otherwise ignore the nullable metadata.
+
+Animation Phase 1 hard-cuts the animated-size model hierarchy. Custom renderers must replace the
+old duration-bearing spring approximation with `ContentSizeSpringSpecModel(dampingRatio,
+stiffness, maxDurationMillis)`, accept only `ContentSizeAnimationSpecModel` at the host
+boundary, and rebuild precompiled exhaustive consumers. There is no infinite-repeat content-size
+model or duration-spring compatibility subtype.
