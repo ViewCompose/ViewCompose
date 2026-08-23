@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut fragmented render callbacks and source-only ownership markers to one correlated diagnostics event tree spanning host, preview, navigation, lazy, pager, overlay, and Studio source inspection.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
+    { "artifact": "viewcompose-renderer-android", "impact": "breaking" },
+    { "artifact": "viewcompose-host-android", "impact": "breaking" },
+    { "artifact": "viewcompose-android", "impact": "breaking" },
+    { "artifact": "viewcompose-material3-android", "impact": "breaking" },
+    { "artifact": "viewcompose-navigation-android", "impact": "feature" },
+    { "artifact": "viewcompose-preview", "impact": "breaking" },
+    { "artifact": "viewcompose-preview-runner", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

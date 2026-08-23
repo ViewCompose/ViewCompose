@@ -40,8 +40,10 @@ The similarly named APIs live in different packages: the static annotation is in
 
 This optional artifact also owns the application-process half of Android Studio's **Locate Device
 DSL** action. In a debuggable process it supplies the neutral Host source-inspection service and
-retains bounded source candidates for eligible Host and Page sessions. It does not observe scroll,
-global layout, draw, touch, frames, or recomposition and does not continuously publish a report.
+retains bounded source candidates for eligible Host, navigation-destination, and pager-page
+sessions. Protocol v4 carries the same process-local trace ID, optional parent ID, and typed role
+used by runtime diagnostics. It does not observe scroll, global layout, draw, touch, frames, or
+recomposition and does not continuously publish a report.
 
 When the developer clicks the action, Android Studio sends one `DUMP`-permission-protected request
 with a 32-character nonce. The receiver samples current weakly held session Views once on the main
@@ -102,8 +104,9 @@ public no-argument class.
 `ViewComposePreviewHost` is the lower-level form that also accepts an overlay backend.
 
 The bridge remembers one Android root and render session. Content-only Compose recompositions reuse
-the session and request another ViewCompose render. Theme, debug configuration, overlay backend, or
-container changes recreate the session. Leaving the Compose composition disposes it. Content must
+the session and request another ViewCompose render. Theme, debug configuration, overlay backend,
+diagnostics configuration, or container changes recreate the session. Leaving the Compose
+composition disposes it. Content must
 not remove or retain the bridge-owned root.
 
 The bridge installs `AndroidResourceEnvironment` from the same container Context used to create
@@ -111,7 +114,8 @@ native Views. Android resource lookup functions therefore resolve the active Com
 configuration, and configuration callbacks advance the same revision used by ordinary Android
 hosts rather than a preview-only resolver.
 
-`ViewComposePreviewOptions` selects light or dark `UiThemeDefaults` and optional render diagnostics.
+`ViewComposePreviewOptions` selects light or dark `UiThemeDefaults` and an optional correlated
+`RenderDiagnostics` root. Interactive and static Preview sessions use the `Preview` role.
 These options are intentionally small; static-preview configuration matrices belong to preview-core.
 
 ## Catalog and snapshot coverage
@@ -167,3 +171,5 @@ bridge session, explicit root-access overload, and shared catalog/snapshot cover
 preview protocol compatibility remains owned by preview-core.
 The running-device DSL locator is now request-driven and owned entirely by this optional artifact;
 the Android Host retains only its neutral nullable inspection port.
+The device DSL protocol now uses the runtime correlation identity and typed role; protocol v3
+reports are intentionally rejected.

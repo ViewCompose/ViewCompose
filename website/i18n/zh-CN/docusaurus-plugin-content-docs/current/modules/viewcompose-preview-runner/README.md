@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-runner/README.md
-translation_source_hash: 7d0b9856968a9364a23ed567c2ec7e97ffe6fe3c51ce2d19b8e0e5dc3ce9b198
+translation_source_hash: 368b358b4305b7a73b3843a23dbe3481a757081d116950c56bbc66fe4ce0f110
 translation_status: current
 ---
 
@@ -61,6 +61,10 @@ Descriptor 负责替换，不会由运行时 Configuration Callback 修改。
 
 不可变快照包含渲染统计、VNode 与原生 View 树、Patch 记录、组合 Scope 与失效原因、源码调用点、
 捕获的 View 属性、裁剪状态和布局诊断。协议模型不会持有运行时 View。
+
+Runner 会安装一棵使用 `Preview` 角色、Tree 级别的 `RenderDiagnostics` 根。它消费权威的
+`RenderFrameCompleted.tree` 与 `RenderFailureObserved.failure` 事件；已移除的 Result 和
+Failure 回调不存在 Runner 专用兼容路径。
 
 预期内的发现、主题、渲染、布局、捕获与导出失败会转为带源码位置的 `RenderFailure` 响应。线程终止和
 内存溢出会继续抛出，让 Worker Host 退役进程。借用的应用 ClassLoader 不会被安装为线程上下文

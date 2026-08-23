@@ -17,11 +17,20 @@ import com.viewcompose.host.android.resources.pluralStringResource
 import com.viewcompose.host.android.resources.stringArrayResource
 import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.RenderDiagnosticCollection
+import com.viewcompose.ui.foundation.RenderDiagnostics
+import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
 fun renderIntoSample(container: ViewGroup) {
-    val session = renderInto(container) {
+    val diagnostics = RenderDiagnostics(
+        collection = RenderDiagnosticCollection(
+            frameLevel = RenderFrameDiagnosticLevel.Stats,
+        ),
+        sink = { event -> println(event) },
+    )
+    val session = renderInto(container, diagnostics = diagnostics) {
         Text("Custom host")
     }
     session.setRenderingActive(false)

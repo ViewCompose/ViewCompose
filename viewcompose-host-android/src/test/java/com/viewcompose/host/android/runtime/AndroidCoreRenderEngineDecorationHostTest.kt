@@ -21,6 +21,7 @@ import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
 import com.viewcompose.ui.node.spec.TextNodeProps
+import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 import com.viewcompose.text.TextDocument
 import com.viewcompose.ui.node.TextAlign
 import com.viewcompose.ui.node.TextOverflow
@@ -47,7 +48,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
                 },
                 previousMountedNodes = emptyList(),
                 nodes = emptyList(),
-                collectDiagnostics = false,
+                diagnosticLevel = RenderFrameDiagnosticLevel.None,
             )
         }.exceptionOrNull()
 
@@ -64,7 +65,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
             container = externalContainer.renderContainerHandle(),
             previousMountedNodes = emptyList(),
             nodes = listOf(spacerNode()),
-            collectDiagnostics = false,
+            diagnosticLevel = RenderFrameDiagnosticLevel.None,
         )
 
         assertEquals(1, externalContainer.childCount)
@@ -87,7 +88,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
             container = host.renderContainerHandle(),
             previousMountedNodes = emptyList(),
             nodes = listOf(spacerNode()),
-            collectDiagnostics = false,
+            diagnosticLevel = RenderFrameDiagnosticLevel.None,
         )
 
         assertEquals(1, host.childCount)
@@ -109,14 +110,14 @@ class AndroidCoreRenderEngineDecorationHostTest {
             container = externalContainer.renderContainerHandle(),
             previousMountedNodes = emptyList(),
             nodes = listOf(spacerNode()),
-            collectDiagnostics = false,
+            diagnosticLevel = RenderFrameDiagnosticLevel.None,
         )
 
         val orderedFrame = engine.renderInto(
             container = externalContainer.renderContainerHandle(),
             previousMountedNodes = plainFrame.mountedNodes,
             nodes = listOf(spacerNode(modifier = Modifier.zIndex(1f))),
-            collectDiagnostics = false,
+            diagnosticLevel = RenderFrameDiagnosticLevel.None,
         )
 
         assertEquals(1, externalContainer.childCount)
@@ -128,7 +129,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
             container = externalContainer.renderContainerHandle(),
             previousMountedNodes = orderedFrame.mountedNodes,
             nodes = listOf(spacerNode()),
-            collectDiagnostics = false,
+            diagnosticLevel = RenderFrameDiagnosticLevel.None,
         )
 
         assertEquals(1, externalContainer.childCount)
@@ -147,7 +148,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
             container = externalContainer.renderContainerHandle(),
             previousMountedNodes = emptyList(),
             nodes = listOf(spacerNode(modifier = Modifier.zIndex(0f))),
-            collectDiagnostics = false,
+            diagnosticLevel = RenderFrameDiagnosticLevel.None,
         )
 
         assertEquals(1, externalContainer.childCount)
@@ -170,7 +171,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
                     modifier = Modifier.dropShadow(UiShadow(blurRadius = 4.dp)),
                 ),
             ),
-            collectDiagnostics = false,
+            diagnosticLevel = RenderFrameDiagnosticLevel.None,
         )
 
         assertEquals(1, externalContainer.childCount)
@@ -189,7 +190,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
             container = firstContainer.renderContainerHandle(),
             previousMountedNodes = emptyList(),
             nodes = listOf(decoratedNode),
-            collectDiagnostics = false,
+            diagnosticLevel = RenderFrameDiagnosticLevel.None,
         )
         val firstHost = firstContainer.getChildAt(0) as ViewDecorationHostLayout
         val physicalView = firstHost.getChildAt(0)
@@ -213,7 +214,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
             container = secondContainer.renderContainerHandle(),
             previousMountedNodes = adopted,
             nodes = listOf(decoratedNode),
-            collectDiagnostics = false,
+            diagnosticLevel = RenderFrameDiagnosticLevel.None,
         )
 
         assertTrue(physicalView === secondHost.getChildAt(0))
@@ -230,7 +231,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
             container = firstContainer.renderContainerHandle(),
             previousMountedNodes = emptyList(),
             nodes = listOf(spacerNode()),
-            collectDiagnostics = false,
+            diagnosticLevel = RenderFrameDiagnosticLevel.None,
         )
         val physicalView = firstContainer.getChildAt(0)
         val reusable = requireNotNull(
@@ -266,7 +267,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
             container = container.renderContainerHandle(),
             previousMountedNodes = emptyList(),
             nodes = listOf(previousNode),
-            collectDiagnostics = false,
+            diagnosticLevel = RenderFrameDiagnosticLevel.None,
         )
         val target = requireNotNull(first.observedPropertyTargets[7L])
         val nextNode = target.node.copy(spec = textSpec("after"))
@@ -277,7 +278,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
             patches = listOf(
                 CoreObservedPropertyPatch(7L, target, target.node, nextNode),
             ),
-            collectDiagnostics = false,
+            diagnosticLevel = RenderFrameDiagnosticLevel.None,
         )
 
         assertEquals("after", (container.getChildAt(0) as TextView).text.toString())

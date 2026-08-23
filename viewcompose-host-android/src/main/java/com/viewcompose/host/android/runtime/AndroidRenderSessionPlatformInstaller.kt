@@ -1,6 +1,7 @@
 package com.viewcompose.host.android.runtime
 
 import android.os.Trace
+import android.os.SystemClock
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -73,6 +74,8 @@ private class AndroidSessionFocusManager(
 private object AndroidRenderSessionDiagnostics : RenderSessionPlatformDiagnostics {
     override val sourceTooling: RenderSessionSourceTooling?
         get() = AndroidRenderSessionSourceToolingDiscovery.sourceTooling
+
+    override fun monotonicTimeNanos(): Long = SystemClock.elapsedRealtimeNanos()
 
     override fun debug(tag: String, message: String) {
         Log.d(tag, message)

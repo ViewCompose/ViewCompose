@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: 7fb1f7a169589fb512677df36b961a6ddf4244e3a483b927a5ddfb867e535538
+translation_source_hash: aa2808f6883e2c1f304ae35925ebd1f71a45a1decf07e0ed50b07676b66e2eed
 translation_status: current
 ---
 
@@ -53,6 +53,10 @@ fun UiTreeBuilder.AppNavigation() {
 渲染。宿主会更新其捕获环境，但不会立即渲染所有保留页面。保留目的地通过 pop、stack
 选择或历史、预测性返回、自适应 pane 扩展而新进入可见 pane 集合前，同一个会话会先使用最新环境
 完成渲染；新准备的目的地不会重复渲染。
+
+每个目的地 Session 都会获得 `NavigationDestination` 诊断角色，以及随 `NavHost` Local 快照
+捕获的父 Session ID。保留期间逻辑身份不变；失败候选会发出自己的终止序列，重建目的地则获得
+新的 ID。恢复目的地 Local 时不能覆盖子 Session 所有者。
 
 目的地闭包依赖不可观察值时应修改 `contentKey`。可观察状态会直接使所属目的地会话失效。
 `key`、controller identity、lifecycle owner、调试 identity 或 overlay factory 的变化会重建

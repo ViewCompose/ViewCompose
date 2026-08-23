@@ -70,7 +70,7 @@ class ResourceConfigurationActivity : AppCompatActivity() {
             rootContext = configurationController.context,
             resourceRefreshController = configurationController.refreshController,
             overlayHostFactory = ::AndroidOverlayHost,
-            onRenderResult = DemoRenderDiagnosticsStore::record,
+            diagnostics = DemoRenderDiagnosticsStore.diagnostics(),
         ) { root ->
             ResourceConfigurationPage(
                 root = root,

@@ -2,6 +2,10 @@ package com.viewcompose
 
 import com.viewcompose.runtime.composition.CompositionDiagnostics
 import com.viewcompose.ui.foundation.RenderPatchRecord
+import com.viewcompose.ui.foundation.RenderDiagnosticCollection
+import com.viewcompose.ui.foundation.RenderDiagnostics
+import com.viewcompose.ui.foundation.RenderFrameCompleted
+import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 import com.viewcompose.ui.foundation.RenderStats
 import com.viewcompose.ui.foundation.RenderStructureStats
 import com.viewcompose.ui.foundation.RenderTreeNode
@@ -37,6 +41,21 @@ internal object DemoRenderDiagnosticsStore {
 
     @Volatile
     private var snapshotHistory: List<DemoRenderSnapshot> = listOf(latestSnapshot)
+
+    fun diagnostics(): RenderDiagnostics {
+        return RenderDiagnostics(
+            collection = RenderDiagnosticCollection(
+                lifecycle = false,
+                failures = false,
+                frameLevel = RenderFrameDiagnosticLevel.Tree,
+            ),
+            sink = { event ->
+                if (event is RenderFrameCompleted) {
+                    event.tree?.let(::record)
+                }
+            },
+        )
+    }
 
     fun record(
         result: RenderTreeResult,

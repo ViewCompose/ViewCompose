@@ -30,6 +30,7 @@ import com.viewcompose.ui.foundation.RenderTreeNode
 import com.viewcompose.ui.foundation.RenderPatchRecord
 import com.viewcompose.ui.foundation.RenderPatchOperation
 import com.viewcompose.ui.foundation.RenderFailureOperation
+import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 
 /**
  * Adapts the platform-neutral core render contract to the Android View renderer.
@@ -52,14 +53,14 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
      * @param container Android parent that owns the rendered tree
      * @param previousMountedNodes opaque nodes returned by the preceding successful frame
      * @param nodes immutable VNode roots for the next frame
-     * @param collectDiagnostics whether to materialize tree and patch diagnostics
+     * @param diagnosticLevel renderer detail required by the owning diagnostics collection
      * @return mounted nodes, statistics, diagnostics, and deferred commit work for the frame
      */
     override fun renderInto(
         container: RenderContainerHandle,
         previousMountedNodes: List<Any>,
         nodes: List<VNode>,
-        collectDiagnostics: Boolean,
+        diagnosticLevel: RenderFrameDiagnosticLevel,
     ): CoreRenderFrame {
         val androidContainer = container.requireAndroidViewGroup()
         val previous = previousMountedNodes.filterIsInstance<MountedNode>()
@@ -72,13 +73,18 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
             container = hostResolution.host,
             previous = if (hostResolution.remounted) emptyList() else previous,
             nodes = nodes,
-            collectDiagnostics = collectDiagnostics,
+            collectDiagnostics = diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
+            collectStatistics = diagnosticLevel != RenderFrameDiagnosticLevel.None,
         )
         return CoreRenderFrame(
             mountedNodes = result.mountedNodes,
             observedPropertyTargets = observedPropertyTargets(result.mountedNodes),
             renderStats = result.stats.toCoreStats(),
-            renderResult = if (collectDiagnostics) result.toCoreResult() else null,
+            renderResult = if (diagnosticLevel == RenderFrameDiagnosticLevel.Tree) {
+                result.toCoreResult()
+            } else {
+                null
+            },
             commitEffects = result.commitEffects.map { effect ->
                 CoreRenderCommitEffect(
                     operation = effect.operation.toCoreOperation(),
@@ -101,7 +107,7 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
         container: RenderContainerHandle,
         mountedNodes: List<Any>,
         patches: List<CoreObservedPropertyPatch>,
-        collectDiagnostics: Boolean,
+        diagnosticLevel: RenderFrameDiagnosticLevel,
     ): CoreObservedPropertyFrame {
         container.requireAndroidViewGroup()
         val androidMountedNodes = mountedNodes.filterIsInstance<MountedNode>()
@@ -123,11 +129,16 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
         }
         val result = ViewTreeRenderer.patchObservedProperties(
             patches = rendererPatches,
-            collectDiagnostics = collectDiagnostics,
+            collectDiagnostics = diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
+            collectStatistics = diagnosticLevel != RenderFrameDiagnosticLevel.None,
         )
         return CoreObservedPropertyFrame(
             renderStats = result.stats.toCoreStats(),
-            renderResult = if (collectDiagnostics) result.toCoreResult() else null,
+            renderResult = if (diagnosticLevel == RenderFrameDiagnosticLevel.Tree) {
+                result.toCoreResult()
+            } else {
+                null
+            },
             commitEffects = result.commitEffects.map { effect ->
                 CoreRenderCommitEffect(
                     operation = effect.operation.toCoreOperation(),

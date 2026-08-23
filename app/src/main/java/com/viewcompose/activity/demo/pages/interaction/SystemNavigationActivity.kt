@@ -48,8 +48,8 @@ class SystemNavigationActivity : AppCompatActivity() {
             debug = diagnosticsEnabled,
             debugTag = "SystemNavigationDemo",
             overlayHostFactory = ::AndroidOverlayHost,
-            onRenderResult = if (diagnosticsEnabled) {
-                DemoRenderDiagnosticsStore::record
+            diagnostics = if (diagnosticsEnabled) {
+                DemoRenderDiagnosticsStore.diagnostics()
             } else {
                 null
             },

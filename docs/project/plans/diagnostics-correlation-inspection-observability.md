@@ -2,7 +2,7 @@
 
 ## Status
 
-Active. Phase 0 is complete; no production implementation or publication input has started.
+Active. Phases 0 and 1 are complete; bounded production failure aggregation is next.
 This plan was split out on 2026-08-18 from the remaining diagnostics candidates in the unified
 roadmap, the Diagnostics guide, and Phase 3 of the Performance specification. Those documents now
 point here; this file is the only active plan that owns cross-session diagnostic correlation,
@@ -23,16 +23,13 @@ documents under `docs/archive/` remain evidence only and are not rewritten as cu
 
 Last verified: 2026-08-23.
 
-Next action: execute Phase 1 as one hard cut. Replace `onRenderStats`, `onRenderResult`, and
-`onRenderFailure` with the ADR-0021 `RenderDiagnostics` event sink; remove
-`LocalRenderResultListener`, `UiSourceSessionRole`, and `UiSourceSessionContainerHandle`; propagate
-the authoritative parent context through every current session creator; and land the Q3 samples,
-module/migration documentation, immutable Changesets, focused tests, and inactive-path proof in the
-same pull request.
+Next action: execute Phase 2 in the optional `viewcompose-diagnostics` artifact. Add the bounded,
+privacy-safe production failure aggregator and application-owned sink helpers without activating
+tree collection, debug inspection, recurring work, storage, transport, or a vendor SDK.
 
 ## Maven release changesets
 
-- None.
+- `release/changes/20260823-correlated-render-diagnostics-phase1.json`
 
 ## Objective
 
@@ -318,7 +315,7 @@ Verified from the worktree on 2026-08-18:
 | Phase | Status | Deliverable | Exit gate |
 | --- | --- | --- | --- |
 | 0. Contract, privacy, and budget freeze | Complete in ADR-0021 | Session-role graph; process-local ID and event envelope; hard callback removal; module/artifact names; failure fingerprint/redaction/capacity policy; highlight protocol; timing domains; inactive/request budgets; deterministic fixtures | The accepted ADR covers every current session creator and callback, assigns Q levels, proves dependency direction, records explicit non-applicable fields, and freezes absolute limits |
-| 1. Cross-session correlation | Not started | Session/context lifecycle, parent propagation, event ordering, legacy callback hard removal, navigation/lazy/pager/overlay/preview coverage, and bounded correlation fixtures | Every emitted frame/tree/patch/failure can be attributed to one live or terminal logical session; reuse and recreation cannot inherit stale identity |
+| 1. Cross-session correlation | Complete | Session/context lifecycle, parent propagation, event ordering, legacy callback hard removal, navigation/lazy/pager/overlay/preview coverage, and bounded correlation fixtures | Every emitted frame/tree/patch/failure can be attributed to one live or terminal logical session; reuse and recreation cannot inherit stale identity |
 | 2. Bounded production failure aggregation | Not started | Optional vendor-neutral aggregator, safe fingerprints, counts/windows/eviction/drop reporting, application sink sample, concurrency/failure isolation, and release-path tests | High-cardinality and recursive-failure tests remain bounded; raw application data and retained Throwables are absent; disabled aggregation has no recurring work |
 | 3. Request-driven node highlighting | Not started | Node token resolution, weak mounted-View lookup, bounds/clipping snapshot, debug overlay lifecycle, request/response states, Demo fixture, and Studio controls | Valid, stale, recycled, hidden, unsupported, timeout, replacement, and disposal cases pass with zero idle listeners and no release tooling classpath |
 | 4. Sampled per-node timing | Not started | Finite capture controller, composition/reconciliation/binding timing records, inclusive/exclusive semantics, caps/truncation, top-cost summaries, synthetic calibration, and Studio/Demo presentation | Inactive path performs zero node clock reads; requested samples stop automatically, remain bounded, report overhead, and reproduce known fixture ordering within the accepted tolerance |
@@ -421,6 +418,7 @@ This plan is complete only when:
 | --- | --- | --- | --- |
 | 2026-08-18 | Worktree, active-document, and current diagnostics-contract review | Planning baseline established | Structured single-session snapshots, failures, coarse traces, and weak View/source mapping exist. Cross-session identity, bounded production aggregation, real View highlighting, and per-node timing do not. Complete Phase 0 before adding source. |
 | 2026-08-23 | CodeGraph impact review, every production `RenderSession` creator, callback/Local propagation, ADR-0009 budgets, source-tooling limits, module dependency direction, and API documentation fields | Phase 0 accepted in ADR-0021 | The three callback paths are incomplete and the delayed result Local can retain an old observer. Hard-cut them to one correlated event sink in Phase 1; retain zero detailed collection below the selected level and no compatibility adapter. |
+| 2026-08-23 | Phase 1 implementation and same-worktree acceptance: 379 UI Foundation, 45 Host Android, 23 Preview, and 12 Preview Runner unit tests passed; Studio plugin ran 115 tests with 113 passed and 2 skipped; `qaQuick` passed all 1,622 tasks with 216 executed and 1,406 up-to-date; two Xiaomi MI 6 / Android 9 device tests passed for transactional failure isolation and diagnostics-page refresh; documentation, translation, release-intent, and development-tooling-isolation gates passed; the complete site passed at 48,217,723 non-API bytes after consolidating 131,925 bytes of repeated evidence and guidance without raising its 46 MiB budget | Phase 1 improved diagnostic ownership and completed the hard cut. All six frozen roles emit without aliasing; root and nested sessions carry process-local parent correlation; lifecycle, frame, and failure events have deterministic ordering; `None` performs zero platform clock reads; `Stats` builds zero diagnostic trees; and production Kotlin source has zero references to the three removed callbacks or two removed source-session markers | Comparison is the pre-cut callback/result-Local/source-marker implementation and the new implementation at the same source revision and toolchain. The accepted evidence proves semantics, bounded collection selection, inactive clock behavior, API/sample migration, and one-device Android integration; it does not claim frame-time improvement, production aggregation, highlighting, or per-node timing. Visual layout is intentionally unchanged, one Android 9 device is not a compatibility matrix, and full idle P50/P95, leak, release-classpath, and request-cost evidence remains owned by Phase 6. Start Phase 2 with the optional aggregator artifact. |
 
 ## Decision history
 
@@ -443,3 +441,7 @@ This plan is complete only when:
    tooling sessions, 512 recent request events, 128 failure fingerprints, one five-second
    highlight, one eight-frame/two-second timing capture, 512 timing records, and one 256 KiB
    response. Inactive timing performs zero per-node clock reads.
+9. 2026-08-23 — Complete Phase 1 as an alpha-line hard cut. One `RenderDiagnostics` sink now owns
+   lifecycle, frame, and failure publication; six typed roles and one Local-snapshot parent context
+   replace the callback-specific propagation and separate source marker. Keep production aggregation
+   out of UI Foundation and begin it only in the optional Phase 2 artifact.

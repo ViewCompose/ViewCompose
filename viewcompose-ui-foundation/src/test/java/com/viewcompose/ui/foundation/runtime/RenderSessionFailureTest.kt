@@ -54,8 +54,10 @@ class RenderSessionFailureTest {
         engine.detachBlock = { _, _ -> null }
         engine.patchBlock = { _, _ -> CoreObservedPropertyFrame() }
         engine.disposeFailures = emptyList()
+        engine.renderDiagnosticLevels.clear()
         NoOpRenderSessionDiagnostics.sourceTooling = null
         NoOpRenderSessionDiagnostics.errors.clear()
+        NoOpRenderSessionDiagnostics.monotonicReads = 0
     }
 
     @Test
@@ -94,6 +96,244 @@ class RenderSessionFailureTest {
 
         assertEquals(2, declarations)
         assertEquals(2, structuralFrames)
+    }
+
+    @Test
+    fun `diagnostics publish authoritative lifecycle and tree frame in session order`() {
+        val events = mutableListOf<RenderDiagnosticEvent>()
+        engine.renderBlock = { previous, _ ->
+            CoreRenderFrame(
+                mountedNodes = previous,
+                renderStats = RenderStats(inserts = 1),
+                renderResult = RenderTreeResult(
+                    structure = RenderStructureStats(vnodeCount = 1),
+                ),
+            )
+        }
+        lateinit var subject: RenderSession
+        subject = RenderSession(
+            container = childContainer(),
+            content = { Text("diagnostic") },
+            diagnostics = RenderDiagnostics(
+                collection = RenderDiagnosticCollection(
+                    frameLevel = RenderFrameDiagnosticLevel.Tree,
+                ),
+                sink = { event ->
+                    if (event is RenderFrameCompleted) {
+                        assertEquals(subject.lastFrameReport, event.report)
+                    }
+                    events += event
+                },
+            ),
+        )
+        session = subject
+
+        subject.render()
+        subject.setRenderingActive(false)
+        subject.dispose()
+
+        assertEquals(
+            listOf(
+                RenderSessionStarted::class,
+                RenderFrameCompleted::class,
+                RenderSessionActivityChanged::class,
+                RenderSessionEnded::class,
+            ),
+            events.map { event -> event::class },
+        )
+        val contexts = events.map(RenderDiagnosticEvent::context)
+        assertEquals(listOf(1L, 2L, 3L, 4L), contexts.map { it.eventSequence })
+        assertEquals(1, contexts.map { it.sessionId }.distinct().size)
+        assertTrue(contexts.all { it.parentSessionId == null && it.role == RenderSessionRole.Host })
+        val frame = events[1] as RenderFrameCompleted
+        assertEquals(1, frame.stats?.inserts)
+        assertEquals(1, frame.tree?.structure?.vnodeCount)
+        assertEquals(frame.report.frameId, frame.context.frameId)
+    }
+
+    @Test
+    fun `diagnostic levels request only selected renderer detail`() {
+        val completed = mutableListOf<RenderFrameCompleted>()
+        RenderFrameDiagnosticLevel.entries.forEach { level ->
+            session = RenderSession(
+                container = childContainer(),
+                content = { Text(level.name) },
+                diagnostics = RenderDiagnostics(
+                    collection = RenderDiagnosticCollection(
+                        lifecycle = false,
+                        failures = false,
+                        frameLevel = level,
+                    ),
+                    sink = { event ->
+                        if (event is RenderFrameCompleted) completed += event
+                    },
+                ),
+            )
+            engine.renderBlock = { previous, _ ->
+                CoreRenderFrame(
+                    mountedNodes = previous,
+                    renderStats = RenderStats(reuses = 2),
+                    renderResult = RenderTreeResult(
+                        structure = RenderStructureStats(vnodeCount = 3),
+                    ),
+                )
+            }
+            session.render()
+            session.dispose()
+        }
+
+        assertEquals(RenderFrameDiagnosticLevel.entries, engine.renderDiagnosticLevels)
+        assertNull(completed[0].stats)
+        assertNull(completed[0].tree)
+        assertEquals(2, completed[1].stats?.reuses)
+        assertNull(completed[1].tree)
+        assertEquals(2, completed[2].stats?.reuses)
+        assertEquals(3, completed[2].tree?.structure?.vnodeCount)
+    }
+
+    @Test
+    fun `inactive diagnostics performs no platform clock reads`() {
+        session = RenderSession(
+            container = childContainer(),
+            content = { Text("No diagnostics") },
+        )
+
+        session.render()
+        session.dispose()
+
+        assertEquals(0, NoOpRenderSessionDiagnostics.monotonicReads)
+    }
+
+    @Test
+    fun `every frozen session role is emitted without aliasing`() {
+        val observedRoles = mutableListOf<RenderSessionRole>()
+
+        RenderSessionRole.entries.forEach { role ->
+            val candidate = RenderSession(
+                container = childContainer(),
+                content = { Text(role.name) },
+                role = role,
+                diagnostics = RenderDiagnostics(
+                    collection = RenderDiagnosticCollection(
+                        lifecycle = true,
+                        failures = false,
+                        frameLevel = RenderFrameDiagnosticLevel.None,
+                    ),
+                    sink = { event ->
+                        if (event is RenderSessionStarted) {
+                            observedRoles += event.context.role
+                        }
+                    },
+                ),
+            )
+            candidate.render()
+            candidate.dispose()
+        }
+
+        assertEquals(RenderSessionRole.entries, observedRoles)
+    }
+
+    @Test
+    fun `captured parent correlates child while explicit diagnostics starts a new root`() {
+        val events = mutableListOf<RenderDiagnosticEvent>()
+        val diagnostics = RenderDiagnostics(
+            collection = RenderDiagnosticCollection(frameLevel = RenderFrameDiagnosticLevel.None),
+            sink = events::add,
+        )
+        var parentSnapshot: UiLocalSnapshot? = null
+        session = RenderSession(
+            container = childContainer(),
+            content = {
+                parentSnapshot = captureUiLocalSnapshot()
+                Text("host")
+            },
+            diagnostics = diagnostics,
+        )
+        session.render()
+        val hostStarted = events.filterIsInstance<RenderSessionStarted>().single()
+
+        val child = RenderSession(
+            container = childContainer(),
+            content = { Text("child") },
+            role = RenderSessionRole.LazyItem,
+            parentLocalSnapshot = checkNotNull(parentSnapshot),
+        )
+        child.render()
+        child.dispose()
+        val childStarted = events.filterIsInstance<RenderSessionStarted>()
+            .single { event -> event.context.role == RenderSessionRole.LazyItem }
+        assertEquals(hostStarted.context.sessionId, childStarted.context.parentSessionId)
+
+        val explicitChild = RenderSession(
+            container = childContainer(),
+            content = { Text("explicit") },
+            role = RenderSessionRole.OverlaySurface,
+            diagnostics = diagnostics,
+            parentLocalSnapshot = checkNotNull(parentSnapshot),
+        )
+        explicitChild.render()
+        explicitChild.dispose()
+        val explicitStarted = events.filterIsInstance<RenderSessionStarted>()
+            .single { event -> event.context.role == RenderSessionRole.OverlaySurface }
+        assertNull(explicitStarted.context.parentSessionId)
+    }
+
+    @Test
+    fun `sink reentry fails fast and disables only that session sink`() {
+        var sinkCalls = 0
+        lateinit var subject: RenderSession
+        subject = RenderSession(
+            container = childContainer(),
+            content = { Text("sink") },
+            diagnostics = RenderDiagnostics(
+                collection = RenderDiagnosticCollection(frameLevel = RenderFrameDiagnosticLevel.None),
+                sink = {
+                    sinkCalls += 1
+                    subject.render()
+                },
+            ),
+        )
+        session = subject
+
+        subject.render()
+        subject.dispose()
+
+        assertEquals(1, sinkCalls)
+        assertEquals(RenderFailurePhase.DiagnosticsSink, subject.lastRenderFailure?.phase)
+        assertEquals(RenderFrameStatus.Committed, subject.lastFrameReport?.status)
+        assertTrue(subject.lastFrameReport?.failures.orEmpty().isEmpty())
+    }
+
+    @Test
+    fun `failed preparation emits minimal terminal diagnostic sequence`() {
+        val events = mutableListOf<RenderDiagnosticEvent>()
+        engine.renderBlock = { _, _ -> error("prepare failed") }
+        session = RenderSession(
+            container = childContainer(),
+            content = { Text("candidate") },
+            role = RenderSessionRole.PagerPage,
+            diagnostics = RenderDiagnostics(
+                collection = RenderDiagnosticCollection(frameLevel = RenderFrameDiagnosticLevel.Tree),
+                sink = events::add,
+            ),
+        )
+
+        session.prepareForActivation()
+
+        assertEquals(
+            listOf(
+                RenderSessionStarted::class,
+                RenderFailureObserved::class,
+                RenderFrameCompleted::class,
+                RenderSessionEnded::class,
+            ),
+            events.map { event -> event::class },
+        )
+        val frame = events[2] as RenderFrameCompleted
+        assertEquals(RenderFrameStatus.RolledBack, frame.report.status)
+        assertNull(frame.stats)
+        assertNull(frame.tree)
+        assertTrue(events.all { event -> event.context.role == RenderSessionRole.PagerPage })
     }
 
     @Test
@@ -768,10 +1008,14 @@ class RenderSessionFailureTest {
     fun `source tooling follows a successfully rendered session lifecycle`() {
         val events = mutableListOf<String>()
         NoOpRenderSessionDiagnostics.sourceTooling = object : RenderSessionSourceTooling {
-            override fun shouldCapture(container: RenderContainerHandle): Boolean = true
+            override fun shouldCapture(
+                container: RenderContainerHandle,
+                context: RenderDiagnosticContext,
+            ): Boolean = true
 
             override fun register(
                 container: RenderContainerHandle,
+                context: RenderDiagnosticContext,
                 sourceCandidates: List<List<UiSourceCallSite>>,
             ): RenderSessionSourceRegistration {
                 assertTrue(sourceCandidates.isNotEmpty())
@@ -940,7 +1184,18 @@ class RenderSessionFailureTest {
                     RecomposeBoundary(key = "diagnostic") {}
                 }
             },
-            onRenderResult = results::add,
+            diagnostics = RenderDiagnostics(
+                collection = RenderDiagnosticCollection(
+                    lifecycle = false,
+                    failures = false,
+                    frameLevel = RenderFrameDiagnosticLevel.Tree,
+                ),
+                sink = { event ->
+                    if (event is RenderFrameCompleted) {
+                        event.tree?.let(results::add)
+                    }
+                },
+            ),
         )
 
         session.render()
@@ -1203,7 +1458,17 @@ class RenderSessionFailureTest {
             },
             content = content,
             overlayHost = overlayHost,
-            onRenderFailure = failures::add,
+            diagnostics = RenderDiagnostics(
+                collection = RenderDiagnosticCollection(
+                    lifecycle = false,
+                    frameLevel = RenderFrameDiagnosticLevel.None,
+                ),
+                sink = { event ->
+                    if (event is RenderFailureObserved) {
+                        failures += event.failure
+                    }
+                },
+            ),
         )
     }
 
@@ -1258,6 +1523,7 @@ class RenderSessionFailureTest {
         var disposeFailures: List<CoreRenderCommitFailure> = emptyList()
         var patchBlock: (List<Any>, List<CoreObservedPropertyPatch>) -> CoreObservedPropertyFrame =
             { _, _ -> CoreObservedPropertyFrame() }
+        val renderDiagnosticLevels = mutableListOf<RenderFrameDiagnosticLevel>()
         var detachBlock: (
             RenderContainerHandle,
             List<Any>,
@@ -1267,8 +1533,9 @@ class RenderSessionFailureTest {
             container: RenderContainerHandle,
             previousMountedNodes: List<Any>,
             nodes: List<VNode>,
-            collectDiagnostics: Boolean,
+            diagnosticLevel: RenderFrameDiagnosticLevel,
         ): CoreRenderFrame {
+            renderDiagnosticLevels += diagnosticLevel
             return renderBlock(previousMountedNodes, nodes)
         }
 
@@ -1276,7 +1543,7 @@ class RenderSessionFailureTest {
             container: RenderContainerHandle,
             mountedNodes: List<Any>,
             patches: List<CoreObservedPropertyPatch>,
-            collectDiagnostics: Boolean,
+            diagnosticLevel: RenderFrameDiagnosticLevel,
         ): CoreObservedPropertyFrame = patchBlock(mountedNodes, patches)
 
         override fun disposeMounted(
@@ -1299,6 +1566,12 @@ class RenderSessionFailureTest {
     private object NoOpRenderSessionDiagnostics : RenderSessionPlatformDiagnostics {
         override var sourceTooling: RenderSessionSourceTooling? = null
         val errors = mutableListOf<Pair<String, Throwable?>>()
+        var monotonicReads: Int = 0
+
+        override fun monotonicTimeNanos(): Long {
+            monotonicReads += 1
+            return monotonicReads.toLong()
+        }
 
         override fun debug(tag: String, message: String) = Unit
 

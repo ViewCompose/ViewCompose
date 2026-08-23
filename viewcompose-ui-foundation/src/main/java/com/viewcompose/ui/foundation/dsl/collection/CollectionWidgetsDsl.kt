@@ -872,6 +872,7 @@ private class PagerLazyItemSessionStrategy(
             saveableStateKey = payload.saveableStateKey,
             content = PagerWidgetLazyItemContent,
             contentPayload = payload,
+            role = RenderSessionRole.PagerPage,
         )
     }
 

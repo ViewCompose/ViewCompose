@@ -22,12 +22,12 @@ import java.util.concurrent.atomic.AtomicLong
  *
  * @param container exclusive native root owned by this session
  * @param content declarative root rebuilt for render attempts
- * @param debug enables detailed renderer diagnostics and logging
+ * @param debug enables render logging and slow synchronous-operation warnings
  * @param debugTag Android log tag used by this session
  * @param overlayHost host that reconciles overlays declared by [content]
- * @param onRenderStats invoked after a committed frame with aggregate renderer counters
- * @param onRenderResult invoked after a committed frame with detailed diagnostics
- * @param onRenderFailure invoked for synchronous, asynchronous, and disposal failures
+ * @param role logical ownership role used by diagnostics and source tooling
+ * @param diagnostics explicit diagnostics root, or `null` to inherit from [parentLocalSnapshot]
+ * @param parentLocalSnapshot optional captured parent used once for correlation and inheritance
  */
 class RenderSession(
     private val container: RenderContainerHandle,
@@ -35,13 +35,32 @@ class RenderSession(
     private val debug: Boolean = false,
     private val debugTag: String = "ViewCompose",
     private val overlayHost: OverlayHost = OverlayHostDefaults.noOp,
-    private val onRenderStats: ((RenderStats) -> Unit)? = null,
-    private val onRenderResult: ((RenderTreeResult) -> Unit)? = null,
-    private val onRenderFailure: ((RenderFailure) -> Unit)? = null,
+    private val role: RenderSessionRole = RenderSessionRole.Host,
+    diagnostics: RenderDiagnostics? = null,
+    parentLocalSnapshot: UiLocalSnapshot? = null,
 ) {
     private val platform = RenderSessionPlatformProvider.requirePlatform()
     private val sourceTooling = platform.diagnostics.sourceTooling
-    private val overlaySessionId = OverlaySessionId("render-session-${nextSessionId.incrementAndGet()}")
+    private val traceId = RenderSessionTraceId(nextSessionId.incrementAndGet())
+    private val inheritedDiagnosticParent = if (diagnostics == null) {
+        parentLocalSnapshot?.renderDiagnosticParentOrNull()
+    } else {
+        null
+    }
+    private val activeDiagnostics = diagnostics ?: inheritedDiagnosticParent?.diagnostics
+    private val parentSessionId = inheritedDiagnosticParent?.sessionId
+    private val diagnosticParent = RenderDiagnosticParent(traceId, activeDiagnostics)
+    private val sourceContext: RenderDiagnosticContext by lazy(LazyThreadSafetyMode.NONE) {
+        RenderDiagnosticContext(
+            sessionId = traceId,
+            parentSessionId = parentSessionId,
+            role = role,
+            frameId = null,
+            eventSequence = 0,
+            monotonicTimestampNanos = platform.diagnostics.monotonicTimeNanos(),
+        )
+    }
+    private val overlaySessionId = OverlaySessionId("render-session-${traceId.value}")
     private val focusManager = platform.focusManagerFactory.create(container)
     private var mountedNodes: List<Any> = emptyList()
     private var disposalRequested: Boolean = false
@@ -67,6 +86,12 @@ class RenderSession(
     private var detachedPresentation: CoreReusableItemPresentation? = null
     private var logicalOwnerRelease: (() -> Unit)? = null
     private var adoptedUncommittedTree: Boolean = false
+    private var renderingActive: Boolean = true
+    private var diagnosticsStarted: Boolean = false
+    private var diagnosticsEnded: Boolean = false
+    private var diagnosticsSinkDisabled: Boolean = false
+    private var deliveringDiagnostics: Boolean = false
+    private var nextDiagnosticEventSequence: Long = 0
 
     /** Most recently reported failure, including asynchronous and disposal failures. */
     @Volatile
@@ -133,6 +158,7 @@ class RenderSession(
      * @throws IllegalStateException after [dispose] has been requested
      */
     fun render() {
+        checkNotDeliveringDiagnostics()
         check(!disposalRequested) {
             "RenderSession is disposed and cannot render again."
         }
@@ -142,17 +168,22 @@ class RenderSession(
 
     /** Builds an initial native tree while retaining the composition commit boundary. */
     internal fun prepareForActivation() {
+        checkNotDeliveringDiagnostics()
         if (disposalRequested || disposed || committedFrameId != null || preparedFrame != null) return
         awaitingActivation = true
         structuralRenderRequested = false
         preparedFrame = prepareFrame()
         if (preparedFrame == null) {
             awaitingActivation = false
+            if (lastFrameReport?.status == RenderFrameStatus.RolledBack) {
+                dispose()
+            }
         }
     }
 
     /** Commits a valid prepared tree, or rebuilds when observed state changed before attachment. */
     internal fun activatePrepared() {
+        checkNotDeliveringDiagnostics()
         if (disposalRequested || disposed) return
         val pending = preparedFrame
         preparedFrame = null
@@ -182,13 +213,25 @@ class RenderSession(
      * @throws IllegalStateException after [dispose] has been requested
      */
     fun setRenderingActive(active: Boolean) {
+        checkNotDeliveringDiagnostics()
         check(!disposalRequested) {
             "RenderSession is disposed and cannot change rendering activity."
         }
+        if (renderingActive == active) return
         runtime.setRenderingActive(active)
         sourceRegistration?.let { registration ->
             runSourceToolingOperation("update source session") {
                 registration.setRenderingActive(active)
+            }
+        }
+        renderingActive = active
+        ensureDiagnosticsStarted()
+        if (activeDiagnostics?.collection?.lifecycle == true) {
+            emitDiagnosticEvent { context ->
+                RenderSessionActivityChanged(
+                    context = context,
+                    active = active,
+                )
             }
         }
     }
@@ -200,6 +243,7 @@ class RenderSession(
      * steps from running.
      */
     fun dispose() {
+        checkNotDeliveringDiagnostics()
         if (disposalRequested) return
         disposalRequested = true
         runtime.dispose()
@@ -207,6 +251,7 @@ class RenderSession(
 
     /** Disposes composition, invokes [releaseOwner], then releases the mounted native tree. */
     internal fun disposeWithLogicalOwnerRelease(releaseOwner: () -> Unit) {
+        checkNotDeliveringDiagnostics()
         if (disposalRequested || disposed) {
             releaseOwner()
             return
@@ -218,6 +263,7 @@ class RenderSession(
 
     /** Terminates logical ownership and returns a reset native tree when the renderer permits it. */
     internal fun disposeForReuse(releaseOwner: () -> Unit = {}): ReusableItemPresentation? {
+        checkNotDeliveringDiagnostics()
         if (disposalRequested || disposed) {
             releaseOwner()
             return null
@@ -295,7 +341,8 @@ class RenderSession(
         var tree: List<com.viewcompose.ui.node.VNode> = emptyList()
         var capturedSourceCandidates =
             emptyList<List<com.viewcompose.ui.tooling.UiSourceCallSite>>()
-        val collectDiagnostics = debug || onRenderStats != null || onRenderResult != null
+        val diagnosticLevel = activeDiagnostics?.collection?.frameLevel
+            ?: RenderFrameDiagnosticLevel.None
         val frame = try {
             if (!composer.hasPendingInvalidations()) {
                 // External render requests (e.g. lazy/pager sessionUpdater) must recompose root even without runtime state invalidation signals.
@@ -303,36 +350,39 @@ class RenderSession(
             }
             platform.diagnostics.trace("VC.Compose") {
                 FocusManagerContext.withFocusManager(focusManager) {
-                    LocalContext.provide(LocalOverlayHost.holder, overlayHost) {
-                        OverlayRequestContext.withStore(overlayRequestStore) {
-                            ObservedPropertyContext.withAttempt(observedPropertyAttempt) {
-                                ComposerContext.withComposer(
-                                    composer = composer,
-                                    coroutineContext = compositionCoroutineScope.coroutineContext,
-                                ) {
-                                    preparedComposition = composer.prepareRoot(
-                                        collectDiagnostics = collectDiagnostics,
+                    LocalContext.provide(LocalRenderDiagnosticParent, diagnosticParent) {
+                        LocalContext.provide(LocalOverlayHost.holder, overlayHost) {
+                            OverlayRequestContext.withStore(overlayRequestStore) {
+                                ObservedPropertyContext.withAttempt(observedPropertyAttempt) {
+                                    ComposerContext.withComposer(
+                                        composer = composer,
+                                        coroutineContext = compositionCoroutineScope.coroutineContext,
                                     ) {
-                                        if (
-                                            sourceRegistration == null &&
-                                            shouldCaptureSource()
+                                        preparedComposition = composer.prepareRoot(
+                                            collectDiagnostics =
+                                                diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
                                         ) {
-                                            UiNodeTooling.withSourceCandidateCapture(
-                                                onSourceCandidatesCaptured = { candidates ->
-                                                    capturedSourceCandidates = candidates
-                                                },
+                                            if (
+                                                sourceRegistration == null &&
+                                                shouldCaptureSource()
                                             ) {
+                                                UiNodeTooling.withSourceCandidateCapture(
+                                                    onSourceCandidatesCaptured = { candidates ->
+                                                        capturedSourceCandidates = candidates
+                                                    },
+                                                ) {
+                                                    observedPropertyAttempt.retainTree(
+                                                        buildVNodeTree(content),
+                                                    )
+                                                }
+                                            } else {
                                                 observedPropertyAttempt.retainTree(
                                                     buildVNodeTree(content),
                                                 )
                                             }
-                                        } else {
-                                            observedPropertyAttempt.retainTree(
-                                                buildVNodeTree(content),
-                                            )
                                         }
-                                    }
-                                    tree = checkNotNull(preparedComposition).value
+                                        tree = checkNotNull(preparedComposition).value
+                                        }
                                 }
                             }
                         }
@@ -345,7 +395,7 @@ class RenderSession(
                     container = container,
                     previousMountedNodes = mountedNodes,
                     nodes = tree,
-                    collectDiagnostics = collectDiagnostics,
+                    diagnosticLevel = diagnosticLevel,
                 )
             }
         } catch (error: Exception) {
@@ -368,10 +418,12 @@ class RenderSession(
                 error = error,
                 frameFailures = frameFailures,
             )
-            lastFrameReport = RenderFrameReport(
+            completeFrame(
+                report = RenderFrameReport(
                 frameId = frameId,
                 status = RenderFrameStatus.RolledBack,
                 failures = frameFailures.toList(),
+                ),
             )
             return null
         }
@@ -408,10 +460,12 @@ class RenderSession(
                 error = error,
                 frameFailures = frameFailures,
             )
-            lastFrameReport = RenderFrameReport(
-                frameId = frameId,
-                status = RenderFrameStatus.RolledBack,
-                failures = frameFailures.toList(),
+            completeFrame(
+                report = RenderFrameReport(
+                    frameId = frameId,
+                    status = RenderFrameStatus.RolledBack,
+                    failures = frameFailures.toList(),
+                ),
             )
             return
         } ?: return
@@ -430,13 +484,13 @@ class RenderSession(
                     frameFailures = frameFailures,
                 )
             }
-            invokeDiagnosticsCallback(frameId, frameFailures) {
-                onRenderStats?.invoke(RenderStats())
-            }
-            lastFrameReport = RenderFrameReport(
-                frameId = frameId,
-                status = RenderFrameStatus.Committed,
-                failures = frameFailures.toList(),
+            completeFrame(
+                report = RenderFrameReport(
+                    frameId = frameId,
+                    status = RenderFrameStatus.Committed,
+                    failures = frameFailures.toList(),
+                ),
+                stats = RenderStats(),
             )
             return
         }
@@ -471,22 +525,25 @@ class RenderSession(
                 error = error,
                 frameFailures = frameFailures,
             )
-            lastFrameReport = RenderFrameReport(
-                frameId = frameId,
-                status = RenderFrameStatus.RolledBack,
-                failures = frameFailures.toList(),
+            completeFrame(
+                report = RenderFrameReport(
+                    frameId = frameId,
+                    status = RenderFrameStatus.RolledBack,
+                    failures = frameFailures.toList(),
+                ),
             )
             return
         }
 
-        val collectDiagnostics = debug || onRenderStats != null || onRenderResult != null
+        val diagnosticLevel = activeDiagnostics?.collection?.frameLevel
+            ?: RenderFrameDiagnosticLevel.None
         val frame = try {
             platform.diagnostics.trace("VC.ObservedPropertyRender") {
                 platform.renderEngine.patchObservedProperties(
                     container = container,
                     mountedNodes = mountedNodes,
                     patches = corePatches,
-                    collectDiagnostics = collectDiagnostics,
+                    diagnosticLevel = diagnosticLevel,
                 )
             }
         } catch (error: Exception) {
@@ -498,10 +555,12 @@ class RenderSession(
                 error = error,
                 frameFailures = frameFailures,
             )
-            lastFrameReport = RenderFrameReport(
-                frameId = frameId,
-                status = RenderFrameStatus.RolledBack,
-                failures = frameFailures.toList(),
+            completeFrame(
+                report = RenderFrameReport(
+                    frameId = frameId,
+                    status = RenderFrameStatus.RolledBack,
+                    failures = frameFailures.toList(),
+                ),
             )
             return
         }
@@ -550,18 +609,14 @@ class RenderSession(
                 )
             }
         }
-        invokeDiagnosticsCallback(frameId, frameFailures) {
-            onRenderStats?.invoke(frame.renderStats)
-        }
-        frame.renderResult?.let { result ->
-            invokeDiagnosticsCallback(frameId, frameFailures) {
-                onRenderResult?.invoke(result)
-            }
-        }
-        lastFrameReport = RenderFrameReport(
-            frameId = frameId,
-            status = RenderFrameStatus.Committed,
-            failures = frameFailures.toList(),
+        completeFrame(
+            report = RenderFrameReport(
+                frameId = frameId,
+                status = RenderFrameStatus.Committed,
+                failures = frameFailures.toList(),
+            ),
+            stats = frame.renderStats,
+            tree = frame.renderResult,
         )
     }
 
@@ -572,6 +627,7 @@ class RenderSession(
         val composition = prepared.composition
         val tree = prepared.tree
         val frame = prepared.frame
+        ensureDiagnosticsStarted()
 
         // Once the renderer has produced the mounted tree, later failures report FrameCommitted and do not roll back the native tree.
         frame.commitFailures.forEach { failure ->
@@ -601,8 +657,12 @@ class RenderSession(
             runSourceToolingOperation("register source session") {
                 sourceRegistration = sourceTooling?.register(
                     container = container,
+                    context = sourceContext,
                     sourceCandidates = prepared.sourceCandidates,
                 )
+                if (!renderingActive) {
+                    sourceRegistration?.setRenderingActive(false)
+                }
             }
         }
         try {
@@ -659,28 +719,16 @@ class RenderSession(
         if (debug && frame.renderResult == null) {
             platform.diagnostics.debug(debugTag, "Rendered ${tree.size} root nodes")
         }
-        invokeDiagnosticsCallback(
-            frameId = frameId,
-            frameFailures = frameFailures,
-        ) {
-            onRenderStats?.invoke(frame.renderStats)
-        }
-        frame.renderResult?.let { result ->
-            invokeDiagnosticsCallback(
+        completeFrame(
+            report = RenderFrameReport(
                 frameId = frameId,
-                frameFailures = frameFailures,
-            ) {
-                onRenderResult?.invoke(
-                    result.copy(
-                        composition = composition.diagnostics,
-                    ),
-                )
-            }
-        }
-        lastFrameReport = RenderFrameReport(
-            frameId = frameId,
-            status = RenderFrameStatus.Committed,
-            failures = frameFailures.toList(),
+                status = RenderFrameStatus.Committed,
+                failures = frameFailures.toList(),
+            ),
+            stats = frame.renderStats,
+            tree = frame.renderResult?.copy(
+                composition = composition.diagnostics,
+            ),
         )
     }
 
@@ -781,6 +829,7 @@ class RenderSession(
         mountedNodes = emptyList()
         observedPropertyTargets.clear()
         adoptedUncommittedTree = false
+        endDiagnostics()
     }
 
     /**
@@ -822,7 +871,10 @@ class RenderSession(
 
     private fun shouldCaptureSource(): Boolean {
         return try {
-            sourceTooling?.shouldCapture(container) == true
+            sourceTooling?.shouldCapture(
+                container = container,
+                context = sourceContext,
+            ) == true
         } catch (error: Exception) {
             platform.diagnostics.error(
                 debugTag,
@@ -833,24 +885,93 @@ class RenderSession(
         }
     }
 
-    /**
-     * Invokes a diagnostics callback and folds callback failures into the current frame report.
-     */
-    private inline fun invokeDiagnosticsCallback(
-        frameId: Long,
-        frameFailures: MutableList<RenderFailure>,
-        callback: () -> Unit,
+    private fun ensureDiagnosticsStarted() {
+        if (
+            diagnosticsStarted || diagnosticsEnded ||
+            activeDiagnostics?.collection?.lifecycle != true
+        ) {
+            return
+        }
+        diagnosticsStarted = true
+        emitDiagnosticEvent { context -> RenderSessionStarted(context) }
+    }
+
+    private fun completeFrame(
+        report: RenderFrameReport,
+        stats: RenderStats? = null,
+        tree: RenderTreeResult? = null,
     ) {
-        try {
-            callback()
-        } catch (error: Exception) {
-            reportFailure(
-                frameId = frameId,
-                phase = RenderFailurePhase.DiagnosticsCallback,
-                recovery = RenderFailureRecovery.FrameCommitted,
-                error = error,
-                frameFailures = frameFailures,
+        lastFrameReport = report
+        ensureDiagnosticsStarted()
+        val level = activeDiagnostics?.collection?.frameLevel
+            ?: return
+        val committed = report.status == RenderFrameStatus.Committed
+        emitDiagnosticEvent(frameId = report.frameId) { context ->
+            RenderFrameCompleted(
+                context = context,
+                report = report,
+                stats = if (committed && level != RenderFrameDiagnosticLevel.None) stats else null,
+                tree = if (committed && level == RenderFrameDiagnosticLevel.Tree) tree else null,
             )
+        }
+    }
+
+    private fun endDiagnostics() {
+        if (
+            diagnosticsEnded || !diagnosticsStarted ||
+            activeDiagnostics?.collection?.lifecycle != true
+        ) {
+            return
+        }
+        diagnosticsEnded = true
+        emitDiagnosticEvent { context -> RenderSessionEnded(context) }
+    }
+
+    private inline fun emitDiagnosticEvent(
+        frameId: Long? = null,
+        event: (RenderDiagnosticContext) -> RenderDiagnosticEvent,
+    ) {
+        val configuredDiagnostics = activeDiagnostics ?: return
+        if (diagnosticsSinkDisabled) return
+        val context = RenderDiagnosticContext(
+            sessionId = traceId,
+            parentSessionId = parentSessionId,
+            role = role,
+            frameId = frameId,
+            eventSequence = ++nextDiagnosticEventSequence,
+            monotonicTimestampNanos = platform.diagnostics.monotonicTimeNanos(),
+        )
+        deliveringDiagnostics = true
+        try {
+            configuredDiagnostics.sink.onEvent(event(context))
+        } catch (error: Throwable) {
+            diagnosticsSinkDisabled = true
+            val failure = RenderFailure(
+                frameId = frameId,
+                phase = RenderFailurePhase.DiagnosticsSink,
+                recovery = when {
+                    disposed -> RenderFailureRecovery.SessionDisposed
+                    frameId != null && committedFrameId == frameId -> {
+                        RenderFailureRecovery.FrameCommitted
+                    }
+                    else -> RenderFailureRecovery.FrameUnchanged
+                },
+                cause = error,
+            )
+            lastRenderFailure = failure
+            platform.diagnostics.error(
+                debugTag,
+                "Render diagnostics sink failed and was disabled for session ${traceId.value}.",
+                error,
+            )
+        } finally {
+            deliveringDiagnostics = false
+        }
+    }
+
+    private fun checkNotDeliveringDiagnostics() {
+        check(!deliveringDiagnostics) {
+            "A RenderDiagnosticsSink cannot re-enter its emitting RenderSession."
         }
     }
 
@@ -871,7 +992,7 @@ class RenderSession(
     }
 
     /**
-     * Records a failure, updates the latest failure state, and notifies the listener.
+     * Records a failure, updates the latest failure state, and publishes it when selected.
      */
     private fun reportFailure(
         frameId: Long?,
@@ -899,10 +1020,14 @@ class RenderSession(
                 "operation=${failure.operation} nodeKey=${failure.nodeKey}",
             error,
         )
-        try {
-            onRenderFailure?.invoke(failure)
-        } catch (listenerError: Exception) {
-            platform.diagnostics.error(debugTag, "Render failure callback failed", listenerError)
+        ensureDiagnosticsStarted()
+        if (activeDiagnostics?.collection?.failures == true) {
+            emitDiagnosticEvent(frameId = frameId) { context ->
+                RenderFailureObserved(
+                    context = context,
+                    failure = failure,
+                )
+            }
         }
     }
 

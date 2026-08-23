@@ -52,6 +52,11 @@ values, and Material tokens then update from the same revision. Repeating
 when changing to a design system or constructor-sensitive Context rather than patching only tokens
 on existing Views.
 
+Activity and Fragment roots accept the neutral `RenderDiagnostics` configuration and propagate it
+through the same Host correlation tree as `viewcompose-android`. The alpha hard cut removes the
+three independent render callbacks; Material theme resolution does not alter diagnostics roles,
+collection levels, ordering, or sink-failure isolation.
+
 The default overlay factory explicitly constructs the Material adapter. Material behavior is not
 selected through `ServiceLoader`, so another design-system root cannot receive Material Snackbar or
 bottom-sheet behavior merely because this aggregate is present elsewhere in the application.
@@ -80,3 +85,6 @@ This artifact begins at `0.1.0-alpha01`. Existing alpha applications that used t
 `viewcompose-material3-android` and `setMaterial3UiContent`. Material policy parameters keep their
 previous defaults and behavior; the source-level rename is intentional so neutral hosts cannot
 silently select Material.
+
+The correlated-diagnostics hard cut replaces the three render callbacks with the neutral
+`diagnostics` parameter and retains no deprecated forwarding overloads.

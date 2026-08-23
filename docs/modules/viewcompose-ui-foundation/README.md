@@ -365,6 +365,20 @@ Building a VNode tree is thread-confined to its active composition context. Stan
 serialize rendering, state callbacks, effects, and platform operations on the main thread. Custom
 hosts must preserve the same ordering and ownership guarantees.
 
+## Correlated render diagnostics
+
+`RenderDiagnostics` is the Q3 root configuration for lifecycle, failure, and frame events.
+`RenderSessionTraceId`, `RenderSessionRole`, and `RenderDiagnosticContext` are Q2 correlation
+values; collection level is Q2. Six typed roles share one private Local-snapshot parent chain, and
+physical View reuse never transfers logical identity. `None`, `Stats`, and `Tree` respectively
+collect no renderer detail, counters, or the bounded detailed snapshot.
+
+Events are authoritative, synchronous, and session-serialized. Re-entry fails fast; a throwing
+sink is disabled without changing recovery. The alpha hard cut migrates frame data to
+`RenderFrameCompleted` and failures to `RenderFailureObserved`; see the
+[diagnostics guide](../../tooling/diagnostics.md) and
+[ADR-0021](../../architecture/decisions/0021-correlated-render-diagnostics-ownership.md).
+
 ## Related documentation
 
 - [Current architecture and module boundaries](../../architecture/overview.md)
@@ -409,7 +423,8 @@ segmented item keys. These changes intentionally keep one source of truth; no de
 signature is retained on the alpha line.
 
 `RenderSessionPlatformDiagnostics.sourceTooling`, `RenderSessionSourceTooling`, and
-`RenderSessionSourceRegistration` are additive Q3 tooling APIs. Existing platform diagnostics use
+`RenderSessionSourceRegistration` are Q3 tooling APIs. Source capture now receives the same
+`RenderDiagnosticContext` used by runtime events instead of a separate container-role marker. Existing platform diagnostics use
 the default `null` adapter and retain their previous behavior. Opted-in custom platforms must keep
 registration state bounded by its render session, consume the bounded candidate-chain list
 synchronously, and perform callbacks on the platform render thread. Registration is passive: it

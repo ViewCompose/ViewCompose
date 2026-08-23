@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import com.viewcompose.preview.host.ViewComposePreviewHost
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.RenderDiagnostics
 
 /**
  * Configures the Compose-to-ViewCompose preview bridge.
@@ -17,11 +18,13 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  * @property theme light or dark default ViewCompose token set installed around the DSL tree
  * @property debug whether the Android render session emits its debug diagnostics
  * @property debugTag log tag associated with debug output; ignored when [debug] is `false`
+ * @property diagnostics optional correlated lifecycle, failure, and frame event sink
  */
 data class ViewComposePreviewOptions(
     val theme: PreviewTheme = PreviewTheme.Light,
     val debug: Boolean = false,
     val debugTag: String = "ViewComposePreview",
+    val diagnostics: RenderDiagnostics? = null,
 )
 
 /**
@@ -52,6 +55,7 @@ fun ViewComposePreview(
         themeMode = options.theme,
         debug = options.debug,
         debugTag = options.debugTag,
+        diagnostics = options.diagnostics,
         content = { _ ->
             content.invoke(this)
         },
@@ -82,6 +86,7 @@ fun ViewComposePreviewWithRoot(
         themeMode = options.theme,
         debug = options.debug,
         debugTag = options.debugTag,
+        diagnostics = options.diagnostics,
         content = content,
     )
 }

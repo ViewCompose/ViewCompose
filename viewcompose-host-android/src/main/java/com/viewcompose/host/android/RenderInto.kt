@@ -3,14 +3,13 @@ package com.viewcompose.host.android
 import android.view.ViewGroup
 import com.viewcompose.host.android.runtime.ensureAndroidRenderSessionPlatformInstalled
 import com.viewcompose.ui.node.PlatformRenderContainerHandle
-import com.viewcompose.ui.tooling.UiSourceSessionContainerHandle
-import com.viewcompose.ui.tooling.UiSourceSessionRole
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.OverlayHostDefaults
-import com.viewcompose.ui.foundation.RenderStats
-import com.viewcompose.ui.foundation.RenderTreeResult
+import com.viewcompose.ui.foundation.RenderDiagnostics
 import com.viewcompose.ui.foundation.RenderFailure
 import com.viewcompose.ui.foundation.RenderFrameReport
+import com.viewcompose.ui.foundation.RenderSessionRole
+import com.viewcompose.ui.foundation.UiLocalSnapshot
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
@@ -66,20 +65,20 @@ class RenderSession internal constructor(
  * state, environment, theme, or frame-clock locals; custom hosts must provide and dispose those
  * services themselves, or use an Activity/Fragment `setUiContent` integration.
  *
- * In a debuggable application process, the first emitted node contributes one bounded source call
- * chain to an app-private device-locator report. The report contains source identifiers rather than
- * source text, follows [RenderSession.setRenderingActive] and [RenderSession.dispose], and is not
- * created for non-debuggable applications. Initial source capture allocates one stack trace per
- * session; normal frame rendering remains unchanged.
+ * When optional source tooling is installed in a debuggable application, eligible Host,
+ * navigation-destination, and pager-page sessions may contribute bounded source candidates to an
+ * app-private, request-driven device-locator report. The report uses the same process-local trace
+ * identity and role as [diagnostics], follows [RenderSession.setRenderingActive] and
+ * [RenderSession.dispose], and is not created by ordinary rendering.
  *
  * @sample com.viewcompose.host.android.samples.renderIntoSample
  * @param container Android parent that owns all Views mounted by the returned session
- * @param debug enables render logging and full render-result collection
+ * @param debug enables render logging and slow-operation warnings
  * @param debugTag log tag used by debug rendering
  * @param overlayHost overlay implementation available to emitted overlay nodes
- * @param onRenderStats optional callback after every attempted frame
- * @param onRenderResult optional callback for collected diagnostics
- * @param onRenderFailure optional callback when a frame fails
+ * @param role logical ownership role used by diagnostics and source tooling
+ * @param diagnostics explicit diagnostics root, or `null` to inherit from [parentLocalSnapshot]
+ * @param parentLocalSnapshot optional captured parent used once for correlation and inheritance
  * @param content retained declarative content evaluated for each render
  * @return the active session after its first synchronous frame
  */
@@ -88,24 +87,23 @@ fun renderInto(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
     overlayHost: OverlayHost = OverlayHostDefaults.noOp,
-    onRenderStats: ((RenderStats) -> Unit)? = null,
-    onRenderResult: ((RenderTreeResult) -> Unit)? = null,
-    onRenderFailure: ((RenderFailure) -> Unit)? = null,
+    role: RenderSessionRole = RenderSessionRole.Host,
+    diagnostics: RenderDiagnostics? = null,
+    parentLocalSnapshot: UiLocalSnapshot? = null,
     content: UiTreeBuilder.() -> Unit,
 ): RenderSession {
     ensureAndroidRenderSessionPlatformInstalled()
     val session = com.viewcompose.ui.foundation.RenderSession(
-        container = object : PlatformRenderContainerHandle, UiSourceSessionContainerHandle {
+        container = object : PlatformRenderContainerHandle {
             override val container: Any = container
-            override val sourceSessionRole: UiSourceSessionRole = UiSourceSessionRole.Host
         },
         content = content,
         debug = debug,
         debugTag = debugTag,
         overlayHost = overlayHost,
-        onRenderStats = onRenderStats,
-        onRenderResult = onRenderResult,
-        onRenderFailure = onRenderFailure,
+        role = role,
+        diagnostics = diagnostics,
+        parentLocalSnapshot = parentLocalSnapshot,
     )
     session.render()
     return RenderSession(delegate = session)

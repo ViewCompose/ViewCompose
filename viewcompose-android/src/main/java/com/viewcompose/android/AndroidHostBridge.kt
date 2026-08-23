@@ -22,11 +22,7 @@ import com.viewcompose.ui.foundation.ProvideAnimationCoroutineContext
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.ProvideMonotonicFrameClock
 import com.viewcompose.ui.foundation.ProvideSaveableStateRegistry
-import com.viewcompose.ui.foundation.ProvideLocal
-import com.viewcompose.ui.foundation.RenderStats
-import com.viewcompose.ui.foundation.RenderTreeResult
-import com.viewcompose.ui.foundation.RenderFailure
-import com.viewcompose.ui.foundation.LocalRenderResultListener
+import com.viewcompose.ui.foundation.RenderDiagnostics
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import java.util.WeakHashMap
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +44,7 @@ private val defaultAnimationCoroutineContext: CoroutineContext = Dispatchers.Mai
  * or use a named Android design-system integration.
  *
  * @sample com.viewcompose.android.samples.fragmentHostSample
- * @param debug enables render diagnostics and logging
+ * @param debug enables render logging and slow-operation warnings
  * @param debugTag log tag used by debug rendering
  * @param rootContext context used to create the root, native descendants, and default overlays;
  * changing the root design system requires another call with its newly resolved context
@@ -57,9 +53,7 @@ private val defaultAnimationCoroutineContext: CoroutineContext = Dispatchers.Mai
  * @param onBeforeResourceRefresh optional advanced callback that updates a stable themed Context
  * wrapper before the host rereads resources and environment values
  * @param overlayHostFactory creates the overlay host for the new root
- * @param onRenderStats optional callback after every attempted frame
- * @param onRenderResult optional callback for collected render diagnostics
- * @param onRenderFailure optional callback when a frame fails
+ * @param diagnostics optional correlated lifecycle, failure, and frame event sink
  * @param content declarative content; its ViewGroup argument is the returned root
  * @return the newly created full-size Fragment root
  * @throws IllegalStateException when the Fragment lifecycle is already destroyed
@@ -71,9 +65,7 @@ fun Fragment.setUiContent(
     resourceRefreshController: AndroidResourceRefreshController? = null,
     onBeforeResourceRefresh: (() -> Unit)? = null,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> AndroidOverlayHost(root) },
-    onRenderStats: ((RenderStats) -> Unit)? = null,
-    onRenderResult: ((RenderTreeResult) -> Unit)? = null,
-    onRenderFailure: ((RenderFailure) -> Unit)? = null,
+    diagnostics: RenderDiagnostics? = null,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
     requireActiveHost(
@@ -98,9 +90,7 @@ fun Fragment.setUiContent(
                 debug = debug,
                 debugTag = debugTag,
                 overlayHost = overlayHostFactory(root),
-                onRenderStats = onRenderStats,
-                onRenderResult = onRenderResult,
-                onRenderFailure = onRenderFailure,
+                diagnostics = diagnostics,
             ) {
                 withHostEnvironment(
                     root = root,
@@ -108,7 +98,6 @@ fun Fragment.setUiContent(
                     viewModelStoreOwner = this@setUiContent,
                     saveableStateRegistry = saveableStateRegistry,
                     platform = platform,
-                    onRenderResult = onRenderResult,
                     content = content,
                 )
             }
@@ -127,7 +116,7 @@ fun Fragment.setUiContent(
  * design-system integration.
  *
  * @sample com.viewcompose.android.samples.activityHostSample
- * @param debug enables render diagnostics and logging
+ * @param debug enables render logging and slow-operation warnings
  * @param debugTag log tag used by debug rendering
  * @param rootContext context used to create the root, native descendants, and default overlays;
  * changing the root design system requires another call with its newly resolved context
@@ -136,9 +125,7 @@ fun Fragment.setUiContent(
  * @param onBeforeResourceRefresh optional advanced callback that updates a stable themed Context
  * wrapper before the host rereads resources and environment values
  * @param overlayHostFactory creates the overlay host for the new root
- * @param onRenderStats optional callback after every attempted frame
- * @param onRenderResult optional callback for collected render diagnostics
- * @param onRenderFailure optional callback when a frame fails
+ * @param diagnostics optional correlated lifecycle, failure, and frame event sink
  * @param content declarative content; its ViewGroup argument is the installed root
  * @return the newly installed full-size Activity root
  * @throws IllegalStateException when the Activity lifecycle is already destroyed
@@ -150,9 +137,7 @@ fun ComponentActivity.setUiContent(
     resourceRefreshController: AndroidResourceRefreshController? = null,
     onBeforeResourceRefresh: (() -> Unit)? = null,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> AndroidOverlayHost(root) },
-    onRenderStats: ((RenderStats) -> Unit)? = null,
-    onRenderResult: ((RenderTreeResult) -> Unit)? = null,
-    onRenderFailure: ((RenderFailure) -> Unit)? = null,
+    diagnostics: RenderDiagnostics? = null,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
     requireActiveHost(
@@ -175,9 +160,7 @@ fun ComponentActivity.setUiContent(
         debug = debug,
         debugTag = debugTag,
         overlayHost = overlayHostFactory(root),
-        onRenderStats = onRenderStats,
-        onRenderResult = onRenderResult,
-        onRenderFailure = onRenderFailure,
+        diagnostics = diagnostics,
     ) {
         withHostEnvironment(
             root = root,
@@ -185,7 +168,6 @@ fun ComponentActivity.setUiContent(
             viewModelStoreOwner = this@setUiContent,
             saveableStateRegistry = saveableStateRegistry,
             platform = platform,
-            onRenderResult = onRenderResult,
             content = content,
         )
     }
@@ -233,7 +215,6 @@ private fun UiTreeBuilder.withHostEnvironment(
     viewModelStoreOwner: ViewModelStoreOwner,
     saveableStateRegistry: com.viewcompose.ui.foundation.SaveableStateRegistry,
     platform: ResolvedAndroidHostPlatform,
-    onRenderResult: ((RenderTreeResult) -> Unit)?,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ) {
     ProvideLifecycleOwner(lifecycleOwner) {
@@ -241,14 +222,12 @@ private fun UiTreeBuilder.withHostEnvironment(
             ProvideSaveableStateRegistry(saveableStateRegistry) {
                 ProvideAnimationCoroutineContext(defaultAnimationCoroutineContext) {
                     ProvideMonotonicFrameClock(defaultMonotonicFrameClock) {
-                        ProvideLocal(LocalRenderResultListener, onRenderResult) {
-                            AndroidResourceEnvironment(
-                                context = platform.rootContext,
-                                refreshController = platform.resourceRefreshController,
-                                onBeforeRefresh = platform.onBeforeResourceRefresh,
-                            ) {
-                                content(root)
-                            }
+                        AndroidResourceEnvironment(
+                            context = platform.rootContext,
+                            refreshController = platform.resourceRefreshController,
+                            onBeforeRefresh = platform.onBeforeResourceRefresh,
+                        ) {
+                            content(root)
                         }
                     }
                 }

@@ -69,7 +69,7 @@ class RenderSessionPlatformRegistryTest {
             container: RenderContainerHandle,
             previousMountedNodes: List<Any>,
             nodes: List<VNode>,
-            collectDiagnostics: Boolean,
+            diagnosticLevel: RenderFrameDiagnosticLevel,
         ): CoreRenderFrame {
             return CoreRenderFrame(mountedNodes = previousMountedNodes)
         }

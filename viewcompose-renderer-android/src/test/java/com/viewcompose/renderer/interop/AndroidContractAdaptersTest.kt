@@ -1,24 +1,15 @@
 package com.viewcompose.renderer.interop
 
-import com.viewcompose.ui.tooling.UiSourceSessionContainerHandle
-import com.viewcompose.ui.tooling.UiSourceSessionRole
-import org.junit.Assert.assertEquals
+import com.viewcompose.ui.node.nativeContainer
+import org.junit.Assert.assertSame
 import org.junit.Test
 
 class AndroidContractAdaptersTest {
     @Test
-    fun `ordinary child containers default to content source role`() {
-        val handle = Any().asRenderContainerHandle() as UiSourceSessionContainerHandle
+    fun `render container preserves the native owner`() {
+        val nativeContainer = Any()
+        val handle = nativeContainer.asRenderContainerHandle()
 
-        assertEquals(UiSourceSessionRole.Content, handle.sourceSessionRole)
-    }
-
-    @Test
-    fun `pager child containers retain page source role`() {
-        val handle = Any().asRenderContainerHandle(
-            UiSourceSessionRole.Page,
-        ) as UiSourceSessionContainerHandle
-
-        assertEquals(UiSourceSessionRole.Page, handle.sourceSessionRole)
+        assertSame(nativeContainer, handle.nativeContainer)
     }
 }

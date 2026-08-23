@@ -49,9 +49,6 @@ import com.viewcompose.ui.node.spec.ConstraintRatioSide
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.tooling.UiNodeTooling
 import com.viewcompose.ui.tooling.UiSourceCallSite
-import com.viewcompose.ui.tooling.UiSourceSessionContainerHandle
-import com.viewcompose.ui.tooling.UiSourceSessionRole
-import com.viewcompose.ui.node.PlatformRenderContainerHandle
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.dp
 import java.io.File
@@ -317,17 +314,6 @@ fun sourceCandidateCaptureSample() {
 
     check(sourceCandidates.isNotEmpty())
     check(sourceCandidates.all(List<UiSourceCallSite>::isNotEmpty))
-}
-
-fun sourceSessionContainerHandleSample() {
-    val pageContainer = object :
-        PlatformRenderContainerHandle,
-        UiSourceSessionContainerHandle {
-        override val container: Any = Any()
-        override val sourceSessionRole: UiSourceSessionRole = UiSourceSessionRole.Page
-    }
-
-    check(pageContainer.sourceSessionRole == UiSourceSessionRole.Page)
 }
 
 /** Demonstrates parent collection metadata and one selected logical child position. */

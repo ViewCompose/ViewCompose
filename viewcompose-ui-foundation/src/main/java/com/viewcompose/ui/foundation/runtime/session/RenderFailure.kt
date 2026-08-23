@@ -22,8 +22,8 @@ enum class RenderFailurePhase {
     NativeViewCommit,
     /** Declarative overlay requests could not be committed. */
     OverlayCommit,
-    /** A diagnostics listener threw while receiving a committed frame. */
-    DiagnosticsCallback,
+    /** A diagnostics sink threw while receiving an event and was disabled for this session. */
+    DiagnosticsSink,
     /** A composition-scoped coroutine failed. */
     CompositionCoroutine,
     /** A cleanup operation failed while disposing the session. */
@@ -86,7 +86,7 @@ enum class RenderFrameStatus {
 /**
  * Result of one completed synchronous render attempt.
  *
- * Asynchronous coroutine failures are delivered through [RenderFailure] callbacks and do not
+ * Asynchronous coroutine failures are available through [RenderFailureObserved] events and do not
  * rewrite an already completed frame report.
  *
  * @property frameId monotonically increasing identity within one [RenderSession]

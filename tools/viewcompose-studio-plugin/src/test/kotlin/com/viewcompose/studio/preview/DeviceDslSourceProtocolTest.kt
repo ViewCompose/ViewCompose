@@ -20,6 +20,8 @@ class DeviceDslSourceProtocolTest {
         assertEquals(REQUEST_ID, report.requestId)
         assertEquals(4242, report.processId)
         assertEquals(2, report.sessions.size)
+        assertEquals(StudioRenderSessionRole.NavigationDestination, report.sessions.last().role)
+        assertEquals(1L, report.sessions.last().parentSessionId)
         assertEquals(
             "Page2.kt",
             report.sessions.last().sourceCandidates.single().single().fileName,
@@ -96,6 +98,8 @@ class DeviceDslSourceProtocolTest {
         return """
             {
               "sessionId": $id,
+              "parentSessionId": ${if (id == 1) "null" else "1"},
+              "role": "${if (id == 1) "Host" else "NavigationDestination"}",
               "renderingActive": true,
               "attachedToWindow": $attached,
               "shown": $shown,

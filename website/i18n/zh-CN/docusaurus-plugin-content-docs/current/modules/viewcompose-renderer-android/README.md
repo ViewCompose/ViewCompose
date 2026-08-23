@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: e8a131881595645ae1ad6dc8b8af6ea35739bad40f2f5ea6b14855f9ab1956dc
+translation_source_hash: e9a3c4c9ee8a272b6fb0d52d497e1344c8da353575cebf4125884742d162053e
 translation_status: current
 ---
 
@@ -229,9 +229,8 @@ Matrix。Phase 4 负责该基准与最终指导。
   `zIndex`，无需为每个 child 再包一层 View。
 - `ViewNodeToolingRegistry` 仅在工具元数据存在时，以弱引用方式关联 View 与源码信息；普通
   渲染不会额外持有源码对象。
-- Renderer 自有子容器会携带纯工具用途的 `UiSourceSessionRole`：Pager 目标标为 `Page`，Lazy
-  行与 Tab Item 标为 `Content`。可调试 Android Host 因此能捕获页面源码 Session，而无需为每个
-  普通 Lazy Item 支付堆栈捕获成本。
+- Renderer 自有子容器不携带诊断身份。UI Foundation 在创建 Pager 或 Lazy 子项时分配新的逻辑
+  Session ID 与类型化角色，因此复用容器不会转移所有权。可选源码工具只捕获符合条件的运行时角色。
 - 图片节点在存在 loader 时，会把 `UiImageRequest` 绑定到注入的 `UiImageLoader`。渲染器把可
   释放句柄存放在挂载的 `ImageView` 上；等价 request 会保留已有句柄和已加载 drawable。Request
   变化时，渲染器先释放旧工作，再应用 placeholder 并启动替换工作；移除、回滚和 Session 释放
@@ -363,8 +362,9 @@ Insets；若尚不可用，则先清除旧物理边贡献直至 Android 分发�
 
 - 渲染、释放、View 绑定、Pager 更新和装饰回调都限制在 UI 线程。
 - 一个容器只有一个已挂载树所有者。不得在容器或 render session 之间共享 mounted node。
-- `collectDiagnostics = false` 会省略结构、patch、warning 和详细绑定快照；性能敏感且不消费
-  诊断的路径应关闭它。
+- `collectDiagnostics = false` 会省略结构、Patch 与 Warning 快照；
+  `collectStatistics = false` 还会省略聚合绑定计数。Host 渲染会从
+  `RenderFrameDiagnosticLevel` 独立映射这两个开关，因此 `Stats` 不会构建诊断树。
 - Lazy Prefetch 工作受 RecyclerView Deadline 控制。冷启动 Activate 同时包含 Commit 与 Effect
   工作，因此只提供保守的启动上界；首次 Detach Prepare 会用权威的准备成本替换该估计。估计会
   保留昂贵样本，并只在仍可执行 Prepare 时通过后续更便宜的样本缓慢衰减。一次超预算的权威样本

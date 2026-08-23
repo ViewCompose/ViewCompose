@@ -9,7 +9,6 @@ import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.renderer.interop.asRenderContainerHandle
-import com.viewcompose.ui.tooling.UiSourceSessionRole
 import com.viewcompose.renderer.reconcile.LazyListDiff
 import com.viewcompose.renderer.view.lazy.session.LazyHolderRegistry
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
@@ -391,7 +390,7 @@ internal class VerticalPagerViewHolder(
         private set
     val hasPendingPresentation: Boolean
         get() = controller.hasPendingPresentation
-    private val renderContainer = container.asRenderContainerHandle(UiSourceSessionRole.Page)
+    private val renderContainer = container.asRenderContainerHandle()
     private val controller = LazyItemSessionController(this)
 
     override fun createSession(item: LazyListItem): LazyListItemSession {

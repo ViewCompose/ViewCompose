@@ -5,6 +5,182 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.tooling.UiNodeToolingMetadata
 
 /**
+ * Process-local identity of one logical render session.
+ *
+ * Values are non-zero and monotonically allocated within one process. They are diagnostic
+ * correlation tokens only: do not persist them or use them as application, navigation, item,
+ * account, analytics, or accessibility identities.
+ *
+ * @property value process-local numeric token allocated by the render-session runtime
+ */
+@JvmInline
+value class RenderSessionTraceId internal constructor(val value: Long)
+
+/** Logical ownership role of one render session. */
+enum class RenderSessionRole {
+    /** Application root hosted directly by an Activity, Fragment, or low-level container. */
+    Host,
+
+    /** Static or interactive preview root. */
+    Preview,
+
+    /** Independently retained navigation destination. */
+    NavigationDestination,
+
+    /** Lazy-list or grid item with independent composition ownership. */
+    LazyItem,
+
+    /** Horizontal or vertical pager page with independent composition ownership. */
+    PagerPage,
+
+    /** Dialog, popup, or modal surface with independent composition ownership. */
+    OverlaySurface,
+}
+
+/**
+ * Correlation and ordering metadata attached to every [RenderDiagnosticEvent].
+ *
+ * [sessionId] and [eventSequence] are scoped to the current process. [frameId] is present only
+ * when the event can be attributed to one synchronous attempt. [monotonicTimestampNanos] is for
+ * elapsed-time comparison and has no wall-clock meaning.
+ *
+ * @property sessionId logical session that emitted the event
+ * @property parentSessionId owning session captured when this session was created, if any
+ * @property role logical ownership role of the emitting session
+ * @property frameId session-local synchronous frame identity, if proven
+ * @property eventSequence monotonically increasing sequence within [sessionId]
+ * @property monotonicTimestampNanos platform monotonic time at emission
+ */
+data class RenderDiagnosticContext(
+    val sessionId: RenderSessionTraceId,
+    val parentSessionId: RenderSessionTraceId?,
+    val role: RenderSessionRole,
+    val frameId: Long?,
+    val eventSequence: Long,
+    val monotonicTimestampNanos: Long,
+)
+
+/** Frame detail collected by a [RenderSession]. */
+enum class RenderFrameDiagnosticLevel {
+    /** Do not build renderer statistics or tree diagnostics. */
+    None,
+
+    /** Collect aggregate renderer counters only. */
+    Stats,
+
+    /** Collect counters plus bounded tree, patch, warning, and composition diagnostics. */
+    Tree,
+}
+
+/**
+ * Immutable event-selection policy for one diagnostics tree.
+ *
+ * @property lifecycle whether session start, activity, and end events are emitted
+ * @property failures whether structured render failures are emitted
+ * @property frameLevel renderer detail included with completed frames
+ */
+data class RenderDiagnosticCollection(
+    val lifecycle: Boolean = true,
+    val failures: Boolean = true,
+    val frameLevel: RenderFrameDiagnosticLevel = RenderFrameDiagnosticLevel.None,
+)
+
+/**
+ * Explicit diagnostics configuration installed at a root render session and inherited by children.
+ *
+ * Passing a new instance to a nested low-level session intentionally starts a new correlation tree.
+ * Sink delivery is synchronous and serialized per session. A sink must not re-enter its emitting
+ * session; a thrown sink is disabled for that session without changing render recovery.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.renderDiagnosticsEventSample
+ * @property collection immutable event and frame-detail selection
+ * @property sink event consumer for this diagnostics tree
+ */
+class RenderDiagnostics(
+    val collection: RenderDiagnosticCollection,
+    val sink: RenderDiagnosticsSink,
+)
+
+/**
+ * Synchronous consumer of correlated render diagnostics.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.renderDiagnosticsEventSample
+ */
+fun interface RenderDiagnosticsSink {
+    /** Receives one immutable event in session order. */
+    fun onEvent(event: RenderDiagnosticEvent)
+}
+
+/**
+ * One correlated lifecycle, failure, or frame event from a render session.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.renderDiagnosticsEventSample
+ */
+sealed interface RenderDiagnosticEvent {
+    /** Correlation and ordering metadata for this event. */
+    val context: RenderDiagnosticContext
+}
+
+/**
+ * First subscribed event emitted when a logical session becomes observable.
+ *
+ * @property context correlation metadata for the started session
+ */
+data class RenderSessionStarted(
+    override val context: RenderDiagnosticContext,
+) : RenderDiagnosticEvent
+
+/**
+ * Rendering-activity transition for a retained logical session.
+ *
+ * @property context correlation metadata for the retained session
+ * @property active whether frame-scheduled invalidation rendering is now active
+ */
+data class RenderSessionActivityChanged(
+    override val context: RenderDiagnosticContext,
+    val active: Boolean,
+) : RenderDiagnosticEvent
+
+/**
+ * Structured failure emitted after its recovery state is known.
+ *
+ * @property context correlation metadata attributed to [failure]
+ * @property failure immutable failure and recovery record
+ */
+data class RenderFailureObserved(
+    override val context: RenderDiagnosticContext,
+    val failure: RenderFailure,
+) : RenderDiagnosticEvent
+
+/**
+ * Authoritative result of one completed synchronous frame attempt.
+ *
+ * [stats] is present for [RenderFrameDiagnosticLevel.Stats] and
+ * [RenderFrameDiagnosticLevel.Tree]. [tree] is present only for Tree. Rolled-back frames expose
+ * neither because candidate diagnostics did not become authoritative.
+ *
+ * @property context correlation metadata attributed to [report]
+ * @property report authoritative synchronous frame result
+ * @property stats selected aggregate counters for a committed frame, or `null`
+ * @property tree selected bounded tree diagnostics for a committed frame, or `null`
+ */
+data class RenderFrameCompleted(
+    override val context: RenderDiagnosticContext,
+    val report: RenderFrameReport,
+    val stats: RenderStats?,
+    val tree: RenderTreeResult?,
+) : RenderDiagnosticEvent
+
+/**
+ * Terminal event emitted after logical session cleanup finishes.
+ *
+ * @property context correlation metadata for the disposed session
+ */
+data class RenderSessionEnded(
+    override val context: RenderDiagnosticContext,
+) : RenderDiagnosticEvent
+
+/**
  * Aggregate renderer binding statistics for one frame.
  *
  * @property inserts newly mounted nodes

@@ -237,7 +237,8 @@ The complete design-system ownership and onboarding rules are in the
 3. `AndroidOverlayHostDefaults.androidOrNoOp(...)` and `ServiceLoader` remain only for custom
    low-level hosts. Exactly one neutral provider is permitted; zero providers returns no-op and
    duplicates fail deterministically. The Material adapter registers no provider.
-4. Public host callbacks expose only UI Foundation diagnostic types; renderer diagnostic types remain internal adapters.
+4. Public hosts accept only UI Foundation's correlated `RenderDiagnostics` contract; renderer
+   diagnostic types remain internal adapters.
 5. System-bar insets use `Modifier.systemBarsInsetsPadding(...)`, not a global Activity option.
 6. host-android atomically installs the render engine, frame scheduler, composition coroutine context, focus adapter, and logging/tracing adapter through `installRenderSessionPlatform(...)`. UI Foundation coordinates composition against opaque `RenderContainerHandle` values; only Android Engine unwraps them as `ViewGroup`. A session captures one platform snapshot, and missing or duplicate installation fails immediately rather than degrading piecemeal.
 7. Android design-system installation has two distinct boundaries: a named adapter may resolve a

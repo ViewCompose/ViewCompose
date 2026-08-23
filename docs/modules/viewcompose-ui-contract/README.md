@@ -145,9 +145,6 @@ created for the node.
 - `UiNodeTooling.withSourceCandidateCapture` is the Q3 page-source counterpart. It retains bounded
   first and recent source chains across one successful tree build so tooling can distinguish shared
   scaffold chrome from content DSL without annotating the VNode tree.
-- `UiSourceSessionContainerHandle` is a Q2 tooling-only renderer-container marker. Its `Host`,
-  `Page`, and `Content` roles let source navigation treat pager destinations as page boundaries
-  without allowing a deeper ordinary lazy row to replace its enclosing page.
 - [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/),
   [`UiImageRequest`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-request/),
   and [`UiImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-loader/)
@@ -236,9 +233,6 @@ first-party image loaders; its zero default preserves deterministic non-Android/
 - `UiNodeTooling.withSourceCandidateCapture` samples at most 64 eligible emissions and retains at
   most 32 distinct chains. Its callback runs only after a successful block returns and after its
   capture state is restored; failed or empty builds do not report candidates.
-- `UiSourceSessionRole` has no rendering or application-state semantics. Hosts and renderers assign
-  it only to independently rendered containers; tooling may skip `Content` sessions to keep page
-  navigation precise and source-capture overhead bounded.
 - `AndroidViewNodeProps.update` and `onReset` are replay-safe transaction callbacks. External
   one-shot work belongs in `onCommit`; resource cleanup belongs in `onRelease`. Release is one-shot
   permanent-abandonment cleanup and also covers an uncommitted rollback candidate.
@@ -352,9 +346,10 @@ blocking, re-entrant rendering, or retaining a call chain as application state.
 VNode identity and metadata, but its nested candidate list and sampling bounds are tooling input,
 not an application persistence format.
 
-`UiSourceSessionContainerHandle` and `UiSourceSessionRole` are additive Q2 tooling contracts.
-Existing `RenderContainerHandle` implementations remain valid; without the marker, page-level
-source tooling must use its documented fallback or opt out of capture.
+The alpha diagnostics-correlation hard cut removes the tooling-only
+`UiSourceSessionContainerHandle` and `UiSourceSessionRole`. Session identity, parent ownership, and
+role now belong to UI Foundation's single `RenderDiagnosticContext`; a render container no longer
+carries a second logical-owner marker.
 
 The text-bearing NodeSpec family now enforces immutable, platform-neutral payloads. Direct
 `TextNodeProps` callers must replace `text = label` with

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 050004e78043263e2de1bfac53e5e20e87a1da630327aef8a7e1d0154633b834
+translation_source_hash: 933c30084b6545289d52915c4e504580bb7cd5e21f0efbdde83d857413196d21
 translation_status: current
 ---
 
@@ -133,8 +133,6 @@ val gap = VNode(
 - `UiNodeTooling.withSourceCandidateCapture` 是对应的 Q3 页面源码工具边界。它会在一次成功的树
   构建中保留有界的首批与最近源码链，让工具区分共享 Scaffold 外壳和 content DSL，同时不标注
   VNode 树。
-- `UiSourceSessionContainerHandle` 是 Q2 纯工具用途的 Renderer 容器标记。其 `Host`、`Page` 与
-  `Content` 角色让源码导航把 Pager 目标视为页面边界，又不会让更深的普通 Lazy 行替代所属页面。
 - [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/)、
   [`UiImageRequest`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-request/)
   与 [`UiImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-loader/)
@@ -207,8 +205,6 @@ val gap = VNode(
   ThreadLocal 状态后继续抛出。
 - `UiNodeTooling.withSourceCandidateCapture` 最多采样 64 次有效发射并保留 32 条不同调用链。只有
   代码块成功返回且捕获状态恢复后才会回调；构建失败或没有节点时不会报告候选。
-- `UiSourceSessionRole` 没有渲染或应用状态语义。Host 与 Renderer 只为独立渲染的容器分配它；
-  工具可以跳过 `Content` Session，让页面导航保持准确并限制源码捕获开销。
 - `AndroidViewNodeProps.update` 与 `onReset` 是可重放的事务回调。一次性外部动作应放在
   `onCommit`，资源清理应放在 `onRelease`。Release 是一次性的永久放弃清理，也覆盖未提交的
   回滚候选节点。
@@ -309,8 +305,9 @@ Renderer 必须重新构建。支持无障碍的 Renderer 应同时映射父集�
 `UiNodeTooling.withSourceCandidateCapture` 同样是新增的 Q3 工具 API。它不会改变普通 VNode
 身份或元数据；嵌套候选列表及采样边界仅供工具使用，不是应用持久化格式。
 
-`UiSourceSessionContainerHandle` 与 `UiSourceSessionRole` 是新增的 Q2 工具契约。现有
-`RenderContainerHandle` 实现继续有效；缺少该标记时，页面级源码工具必须采用文档化回退或不捕获。
+Alpha 关联诊断硬切移除了纯工具用途的 `UiSourceSessionContainerHandle` 与
+`UiSourceSessionRole`。Session 身份、父级所有权与角色现在统一属于 UI Foundation 的
+`RenderDiagnosticContext`；Render Container 不再携带第二套逻辑所有者标记。
 
 承载文本的 NodeSpec 系列现在强制使用不可变、平台无关的 payload。直接构造
 `TextNodeProps` 的调用方必须把 `text = label` 替换为
