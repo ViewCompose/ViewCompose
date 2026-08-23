@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 39019e0ea0dcffe50c1b91017780b612ab0d1eb6401145f422531b6c2322e8eb
+translation_source_hash: 7eb2b85c592c762d4f5dfaebc8a57b1b36e76a19b34465e63460acb1fcb2871d
 translation_status: current
 ---
 
@@ -21,6 +21,7 @@ translation_status: current
 | `viewcompose-navigation-core` | Kernel | 平台无关的导航状态与事务 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-navigation-core) |
 | `viewcompose-renderer-android` | Android Engine | Android View 渲染与协调引擎 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer-android) |
 | `viewcompose-ui-foundation` | UI Foundation | 核心 DSL、组件、token 与 Local 值 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-foundation) |
+| `viewcompose-diagnostics` | Integration | 有界且隐私安全的生产故障聚合 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-diagnostics) |
 | `viewcompose-host-android` | Android Engine | 底层 View 宿主、session、状态与互操作引擎 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-host-android) |
 | `viewcompose-material3` | Design System | Material 3 主题与动态色适配 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-material3) |
 | `viewcompose-material3-android` | Aggregate | 具名 Material 3 Android 应用集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-material3-android) |

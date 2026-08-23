@@ -76,17 +76,31 @@ The alpha API removes all three callbacks and the result-only Local without adap
 and trees from `RenderFrameCompleted`, failures from `RenderFailureObserved`, or poll
 `lastFrameReport` / `lastRenderFailure` when no stream is needed.
 
-## 6. Demo inspector
+## 6. Bounded production failure aggregation
+
+The optional `viewcompose-diagnostics` artifact now ships `BoundedRenderFailureAggregator`. Install
+it with lifecycle disabled, failures enabled, and frame level `None` to count recurring structured
+failures without activating frame trees or debug inspection. Its fixed privacy fingerprint excludes
+messages, application frames, file/line data, raw keys, View text, Local values, causes, and the
+original `Throwable`.
+
+Aggregation is application-owned, thread-safe, and bounded to 64 fingerprints by default with a
+hard maximum of 128. A 15-minute default monotonic window expires lazily on record or snapshot;
+least-recently-updated eviction and count saturation are visible in immutable snapshot counters.
+Storage, consent, scheduling, upload, vendor metadata, and downstream failure policy remain outside
+the framework. See the [module manual](../modules/viewcompose-diagnostics/README.md).
+
+## 7. Demo inspector
 
 `Diagnostics -> Renderer` provides the render tree, patch timeline, recomposition reasons,
-CompositionLocal browser, and aggregate metrics. Cross-session correlation is implemented; real
-View-boundary highlighting, per-node timing, and bounded production failure aggregation remain in
-the active
+CompositionLocal browser, and aggregate metrics. Cross-session correlation and the separate
+production aggregator are implemented; real View-boundary highlighting and per-node timing remain
+in the active
 [diagnostics correlation, inspection, and production observability plan](../project/plans/diagnostics-correlation-inspection-observability.md).
 
-## 7. Remaining expansion contract
+## 8. Remaining expansion contract
 
 [ADR-0021](../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes Phase 1.
-A failure-only sink activates no frame detail. The optional `viewcompose-diagnostics` artifact owns
-production aggregation; `viewcompose-preview` keeps highlighting and timing request-driven. The
-active plan owns their delivery and inspector closeout.
+A failure-only sink activates no frame detail. The optional `viewcompose-diagnostics` artifact now
+owns shipped production aggregation; `viewcompose-preview` keeps highlighting and timing
+request-driven. The active plan owns those later phases and inspector closeout.

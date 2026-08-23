@@ -2,7 +2,7 @@
 
 ## Status
 
-Active. Phases 0 and 1 are complete; bounded production failure aggregation is next.
+Active. Phases 0 through 2 are complete; request-driven node highlighting is next.
 This plan was split out on 2026-08-18 from the remaining diagnostics candidates in the unified
 roadmap, the Diagnostics guide, and Phase 3 of the Performance specification. Those documents now
 point here; this file is the only active plan that owns cross-session diagnostic correlation,
@@ -23,13 +23,15 @@ documents under `docs/archive/` remain evidence only and are not rewritten as cu
 
 Last verified: 2026-08-23.
 
-Next action: execute Phase 2 in the optional `viewcompose-diagnostics` artifact. Add the bounded,
-privacy-safe production failure aggregator and application-owned sink helpers without activating
-tree collection, debug inspection, recurring work, storage, transport, or a vendor SDK.
+Next action: execute Phase 3 in the debug-only Preview tooling path. Add request-driven node-token
+resolution, weak mounted-View lookup, bounds and clipping snapshots, bounded overlay lifecycle,
+Demo verification, and Studio controls without adding idle listeners or a release tooling
+classpath.
 
 ## Maven release changesets
 
 - `release/changes/20260823-correlated-render-diagnostics-phase1.json`
+- `release/changes/20260823-bounded-render-failure-aggregation.json`
 
 ## Objective
 
@@ -316,7 +318,7 @@ Verified from the worktree on 2026-08-18:
 | --- | --- | --- | --- |
 | 0. Contract, privacy, and budget freeze | Complete in ADR-0021 | Session-role graph; process-local ID and event envelope; hard callback removal; module/artifact names; failure fingerprint/redaction/capacity policy; highlight protocol; timing domains; inactive/request budgets; deterministic fixtures | The accepted ADR covers every current session creator and callback, assigns Q levels, proves dependency direction, records explicit non-applicable fields, and freezes absolute limits |
 | 1. Cross-session correlation | Complete | Session/context lifecycle, parent propagation, event ordering, legacy callback hard removal, navigation/lazy/pager/overlay/preview coverage, and bounded correlation fixtures | Every emitted frame/tree/patch/failure can be attributed to one live or terminal logical session; reuse and recreation cannot inherit stale identity |
-| 2. Bounded production failure aggregation | Not started | Optional vendor-neutral aggregator, safe fingerprints, counts/windows/eviction/drop reporting, application sink sample, concurrency/failure isolation, and release-path tests | High-cardinality and recursive-failure tests remain bounded; raw application data and retained Throwables are absent; disabled aggregation has no recurring work |
+| 2. Bounded production failure aggregation | Complete | Optional vendor-neutral aggregator, safe fingerprints, counts/windows/eviction/drop reporting, application sink sample, concurrency/failure isolation, and release-path tests | High-cardinality and recursive-failure tests remain bounded; raw application data and retained Throwables are absent; disabled aggregation has no recurring work |
 | 3. Request-driven node highlighting | Not started | Node token resolution, weak mounted-View lookup, bounds/clipping snapshot, debug overlay lifecycle, request/response states, Demo fixture, and Studio controls | Valid, stale, recycled, hidden, unsupported, timeout, replacement, and disposal cases pass with zero idle listeners and no release tooling classpath |
 | 4. Sampled per-node timing | Not started | Finite capture controller, composition/reconciliation/binding timing records, inclusive/exclusive semantics, caps/truncation, top-cost summaries, synthetic calibration, and Studio/Demo presentation | Inactive path performs zero node clock reads; requested samples stop automatically, remain bounded, report overhead, and reproduce known fixture ordering within the accepted tolerance |
 | 5. Inspector and documentation convergence | Not started | Correlated session/frame/failure/timing inspector, source navigation, stable automation roles, module manuals, API references, tutorials, troubleshooting and privacy guidance, Chinese mirrors, and migration notes | Demo and plugin tests, compiled samples, documentation/localization, API compatibility, and consumer-build gates pass |
@@ -361,7 +363,7 @@ ADR-0021 freezes the Phase 1 targeted module tasks. The completed plan must incl
 
 ```bash
 ./gradlew verifyDevelopmentToolingIsolation
-./gradlew verifyModuleArchitecture
+./gradlew verifyModuleDependencyBoundaries
 ./gradlew verifyDocumentationStructure
 ./gradlew qaQuick
 ./gradlew qaPreview
@@ -419,6 +421,8 @@ This plan is complete only when:
 | 2026-08-18 | Worktree, active-document, and current diagnostics-contract review | Planning baseline established | Structured single-session snapshots, failures, coarse traces, and weak View/source mapping exist. Cross-session identity, bounded production aggregation, real View highlighting, and per-node timing do not. Complete Phase 0 before adding source. |
 | 2026-08-23 | CodeGraph impact review, every production `RenderSession` creator, callback/Local propagation, ADR-0009 budgets, source-tooling limits, module dependency direction, and API documentation fields | Phase 0 accepted in ADR-0021 | The three callback paths are incomplete and the delayed result Local can retain an old observer. Hard-cut them to one correlated event sink in Phase 1; retain zero detailed collection below the selected level and no compatibility adapter. |
 | 2026-08-23 | Phase 1 implementation and same-worktree acceptance: 379 UI Foundation, 45 Host Android, 23 Preview, and 12 Preview Runner unit tests passed; Studio plugin ran 115 tests with 113 passed and 2 skipped; `qaQuick` passed all 1,622 tasks with 216 executed and 1,406 up-to-date; two Xiaomi MI 6 / Android 9 device tests passed for transactional failure isolation and diagnostics-page refresh; documentation, translation, release-intent, and development-tooling-isolation gates passed; the complete site passed at 48,217,723 non-API bytes after consolidating 131,925 bytes of repeated evidence and guidance without raising its 46 MiB budget | Phase 1 improved diagnostic ownership and completed the hard cut. All six frozen roles emit without aliasing; root and nested sessions carry process-local parent correlation; lifecycle, frame, and failure events have deterministic ordering; `None` performs zero platform clock reads; `Stats` builds zero diagnostic trees; and production Kotlin source has zero references to the three removed callbacks or two removed source-session markers | Comparison is the pre-cut callback/result-Local/source-marker implementation and the new implementation at the same source revision and toolchain. The accepted evidence proves semantics, bounded collection selection, inactive clock behavior, API/sample migration, and one-device Android integration; it does not claim frame-time improvement, production aggregation, highlighting, or per-node timing. Visual layout is intentionally unchanged, one Android 9 device is not a compatibility matrix, and full idle P50/P95, leak, release-classpath, and request-cost evidence remains owned by Phase 6. Start Phase 2 with the optional aggregator artifact. |
+| 2026-08-23 | Phase 2 same-worktree acceptance: the new Diagnostics module passed 14/14 focused tests in 0.069 seconds; the 1,000-fingerprint case retained exactly 128, reported 872 dropped observations and 872 evictions, and preserved deterministic update order; eight concurrent publishers retained all 8,000 same-fingerprint observations; ignored events performed zero clock reads. Strict Dokka, package/namespace/layer, development-tooling-isolation, dependency, publication, release-intent, documentation, and 109-page Chinese translation gates passed. Selective local Maven publication validated the new AAR, POM, sources, documentation, and public Foundation edge. Final `qaQuick` passed all 1,670 tasks with 158 executed and 1,512 up-to-date. | Functional observability improved: recurring failures can now be counted through an explicitly installed, vendor-neutral artifact while retained output contains no exception message, cause, application frame, file/line, key, or `Throwable`. Capacity, windows, count saturation, reset, concurrent publication, export failure, disposal, and process-local replacement remain bounded. The inactive application path has no new runtime dependency or recurring work; an installed aggregator also ignores non-failure events before a clock read. | Comparison is the Phase 1 tree with no production aggregator and the Phase 2 optional artifact under the same source toolchain. Absolute unit, cardinality, concurrency, API, documentation, and Maven results substantiate behavior but not frame-time or power; the performance conclusion is therefore inconclusive rather than an improvement claim. The module owns no Android UI, so no visual Demo or device geometry case applies in this phase. Application queue/backpressure, storage, consent, upload, and vendor behavior remain deliberately untested application responsibilities. Begin Phase 3 request-driven highlighting; Phase 6 still owns same-device idle/request cost and release-classpath measurements. |
+| 2026-08-23 | Phase 2 documentation-site closeout on the complete 100-version corpus plus one unpublished current tree: Phase 1 baseline 48,217,723 bytes; initial candidate 48,480,209 bytes; consolidated candidate 47,801,356 bytes; English/Chinese search 5,432,660/5,916,011 bytes; 432-page accessibility, compatibility anchors, API routing, and all budgets passed in 28.7 seconds. | Representation improved. Consolidation removed 678,853 bytes from the failed candidate and leaves 433,140 bytes below the unchanged 46 MiB ceiling while retaining current decision metrics and archived execution links. | The initial candidate was 262,486 bytes (+0.544%) above Phase 1 and 245,713 bytes over budget; final output is 416,367 bytes (-0.863%) below Phase 1. The comparison reused one generated API corpus on local macOS and does not cover deployment or another host. Keep the compact decision ledger as Phase 3 adds highlighting guidance. |
 
 ## Decision history
 
@@ -445,3 +449,9 @@ This plan is complete only when:
    lifecycle, frame, and failure publication; six typed roles and one Local-snapshot parent context
    replace the callback-specific propagation and separate source marker. Keep production aggregation
    out of UI Foundation and begin it only in the optional Phase 2 artifact.
+10. 2026-08-23 — Complete Phase 2 in the optional `viewcompose-diagnostics` artifact. Retain only
+    immutable safe fingerprints and process-local contexts; use lazy monotonic windows,
+    deterministic least-recently-updated eviction, saturated counters, and synchronized
+    snapshot/reset. Keep export scheduling, persistence, consent, upload, and vendors outside the
+    framework, and proceed to request-driven highlighting without adding a Demo visual surface for
+    this non-UI phase.

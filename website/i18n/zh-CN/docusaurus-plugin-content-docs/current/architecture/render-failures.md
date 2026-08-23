@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/render-failures.md
-translation_source_hash: 929b0b2be49daa07998ce0ee04d8e8cd0893c52df28655ea7bf4170395f99b8e
+translation_source_hash: 74ed46211167b96c55a2201f1d68e7b0298f25eba67deb6f9868b72c00056e15
 translation_status: current
 ---
 
@@ -52,6 +52,22 @@ val session = renderInto(
 
 `RenderFailureOperation` 和 `nodeKey` 可以识别 `AndroidView` 的 factory、update、reset、
 commit 与 release 失败，无需解析异常消息。
+
+## 可选的有界生产聚合
+
+需要统计重复故障的应用，可以把可选 `viewcompose-diagnostics` 产物中的
+`BoundedRenderFailureAggregator` 安装为仅故障根 Sink。默认指纹只保留 Phase、Recovery、
+可选 Android View Operation、直接异常二进制类型，以及最多三个仅含类名和方法名的
+`com.viewcompose.*` 栈帧。它不会保留消息、Cause 链、应用栈帧、文件与行号、`nodeKey` 或原始
+`Throwable`。
+
+聚合器默认在 15 分钟单调时间窗口中保留 64 个不同指纹；有效硬范围分别为 `1..128` 和 1 分钟至
+24 小时。容量已满时淘汰最久未更新的指纹，并同时报告丢失观察数和被淘汰条目数。窗口只会在记录或
+Snapshot 时过期，不存在定时器、存储、传输、厂商 SDK 或进程全局 Sink。Snapshot 是由应用持有的
+不可变值。应在同步 Sink 投递之外导出，避免网络或持久化阻塞 Render Session。
+
+精确的脱敏、同步、重置和计数器契约见
+[诊断模块手册](https://docs.viewcompose.com/zh-CN/modules/viewcompose-diagnostics)。
 
 ## AndroidView 副作用边界
 

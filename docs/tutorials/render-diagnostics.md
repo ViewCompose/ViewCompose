@@ -97,6 +97,38 @@ snapshot outside composition and read it only from an explicit UI event. Writing
 `RenderFrameCompleted` event directly into observed UI state would create a render-observe-render
 loop and distort the counters being measured.
 
+## Count production failures without frame trees
+
+Add the optional artifact when the application needs bounded recurring-failure counts:
+
+```kotlin title="build.gradle.kts"
+dependencies {
+    implementation("com.viewcompose:viewcompose-diagnostics:0.1.0-alpha01")
+}
+```
+
+Use one application-owned aggregator as a failure-only sink:
+
+```kotlin
+val aggregator = BoundedRenderFailureAggregator()
+val failureDiagnostics = RenderDiagnostics(
+    collection = RenderDiagnosticCollection(
+        lifecycle = false,
+        failures = true,
+        frameLevel = RenderFrameDiagnosticLevel.None,
+    ),
+    sink = aggregator,
+)
+
+val completedWindow = aggregator.snapshotAndReset()
+exportQueue.trySend(completedWindow)
+```
+
+Schedule snapshot/export outside sink delivery. The snapshot contains only bounded redacted
+fingerprints and safe framework context; it contains no original `Throwable`, message, raw node
+key, application stack, file, or line. The framework does not choose a scheduler, storage system,
+consent model, upload endpoint, or telemetry vendor.
+
 ## Verify the result
 
 Press `Sample render stats` and confirm that a stable counter summary appears. Debug diagnostics
@@ -106,5 +138,6 @@ can add work, so use release benchmarks for performance conclusions. Compile wit
 ./gradlew :samples:tutorials:assembleDebug
 ```
 
-See the [Diagnostics guide](../tooling/diagnostics.md) for failure hooks, render traces, and logging
-policy.
+See the [Diagnostics guide](../tooling/diagnostics.md) and
+[Diagnostics module manual](../modules/viewcompose-diagnostics/README.md) for failure hooks,
+redaction, render traces, and logging policy.

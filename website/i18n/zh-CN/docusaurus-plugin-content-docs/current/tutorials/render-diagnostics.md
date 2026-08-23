@@ -2,7 +2,7 @@
 title: 读取渲染诊断
 sidebar_position: 14
 translation_source: tutorials/render-diagnostics.md
-translation_source_hash: 15dd09ecdf9f7536b4334c0f754050bd79e0250a0f5cc6b83a4f239a4e0c2339
+translation_source_hash: 291490d831540125e7e093a104053b416e66bc7f12874e5ebf8c737aebf5c325
 translation_status: current
 ---
 
@@ -98,6 +98,37 @@ class RenderDiagnosticsTutorialActivity : ComponentActivity() {
 UI 事件读取。如果每个 `RenderFrameCompleted` 事件都直接写入界面观察的状态，会产生渲染—观察—
 再渲染循环，并污染正在测量的计数器。
 
+## 不构建 Frame Tree 地统计生产故障
+
+应用需要有界的重复故障计数时，添加可选产物：
+
+```kotlin title="build.gradle.kts"
+dependencies {
+    implementation("com.viewcompose:viewcompose-diagnostics:0.1.0-alpha01")
+}
+```
+
+使用一个由应用持有的聚合器作为仅故障 Sink：
+
+```kotlin
+val aggregator = BoundedRenderFailureAggregator()
+val failureDiagnostics = RenderDiagnostics(
+    collection = RenderDiagnosticCollection(
+        lifecycle = false,
+        failures = true,
+        frameLevel = RenderFrameDiagnosticLevel.None,
+    ),
+    sink = aggregator,
+)
+
+val completedWindow = aggregator.snapshotAndReset()
+exportQueue.trySend(completedWindow)
+```
+
+应在 Sink 投递之外调度 Snapshot 与导出。Snapshot 只包含有界脱敏指纹和安全框架上下文，不包含
+原始 `Throwable`、消息、原始 Node Key、应用栈帧、文件或行号。框架不选择调度器、存储系统、
+用户同意模型、上传端点或遥测厂商。
+
 ## 验证结果
 
 点击 `Sample render stats`，确认出现稳定的计数器摘要。debug 诊断本身可能增加工作量，性能结论
@@ -107,4 +138,5 @@ UI 事件读取。如果每个 `RenderFrameCompleted` 事件都直接写入界�
 ./gradlew :samples:tutorials:assembleDebug
 ```
 
-失败 hook、渲染 trace 和日志策略请查看[诊断指南](../tooling/diagnostics.md)。
+失败 Hook、脱敏、渲染 Trace 和日志策略请查看[诊断指南](../tooling/diagnostics.md)与
+[诊断模块手册](https://docs.viewcompose.com/zh-CN/modules/viewcompose-diagnostics)。
