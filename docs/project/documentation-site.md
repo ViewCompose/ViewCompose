@@ -120,7 +120,7 @@ locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to t
 tree, so those copies add storage but no localized content or supported route.
 
 The budget model separates expected release-history growth from regressions. Non-API output is
-limited to 45.5 MiB. Before the Demo verification-harness plan was added, a clean `main` build already
+limited to 46 MiB. Before the Demo verification-harness plan was added, a clean `main` build already
 measured 39.999791 MiB. Publishing that searchable English plan, its `zh-CN` fallback route, and
 both locale search entries measured 40.427350 MiB, so the reviewed ceiling moved from 40 MiB to
 41 MiB instead of removing reader-value planning evidence. The native-widget contract convergence
@@ -165,6 +165,13 @@ execution plans remain rendered and directly linkable, while their routes no lon
 internal planning detail into either locale search index; the active-plan index keeps their purpose
 and scope discoverable. After that representation change, the reviewed non-API ceiling moves to
 45.5 MiB, while the 6.25 MiB per-locale search ceiling remains unchanged.
+
+The Animation Phase 5 branch performed the next required representation review before moving the
+non-API ceiling to 46 MiB. The directly linkable Animation plan was already excluded from full-text
+indexing, both builds retained 430 audited pages, no localized API copy or duplicate route was
+introduced, and CSS output was unchanged. The remaining measured growth belongs to the new Q3
+`animateBounds` contract and its bilingual architecture, migration, module, Preview, and performance
+documentation. The exact paired evidence and next stop condition are retained below.
 
 The accessibility audit covers the site-owned English and localized pages and checks document
 language, title and main landmarks, heading order, accessible names, image alternatives, table
@@ -281,6 +288,23 @@ identity token.
 ## Last verified
 
 <div className="search-partition-detail">
+
+2026-08-23: paired locale builds on the same dependency set and complete 100-version API corpus
+compared `main` at `984ac9bd` with the Animation Phase 5 candidate at `d3910b67`. `main` measured
+47,678,608 non-API bytes and 5,369,073/5,841,187 English/Chinese search bytes; the candidate measured
+47,827,249 and 5,400,738/5,876,861 bytes. The absolute increase is 148,641 non-API bytes (0.31%),
+31,665 English-search bytes (0.59%), and 35,674 Chinese-search bytes (0.61%). Both builds retained
+430 audited pages, the existing Animation plan route was already excluded from full-text indexing,
+no localized API copies or duplicate routes appeared, and CSS output was unchanged. The remaining
+growth split into 38,109 HTML bytes, 37,714 page-JavaScript bytes, 67,339 search bytes, and 5,479
+other static bytes, with no anomalous route, bundle, or search amplification. The conclusion is
+**regressed** in absolute size but accepted for the Q3 `animateBounds` contract and its bilingual
+durable reader documentation. The reviewed non-API ceiling moves from 45.5 to 46 MiB; the final
+evidence-inclusive build passes at 47,840,947 bytes and leaves 393,549 bytes of headroom. The
+6.25 MiB per-locale search ceilings do not move. Reusing one API corpus is a limitation of the pair,
+but non-API accounting excludes that corpus and both locale render/search trees were rebuilt
+completely. Before another ceiling increase, the next action is to consolidate completed execution
+evidence or change site representation rather than remove owning public contracts.
 
 2026-08-23: paired locale builds reused the same complete 100-version generated API corpus and
 compared `main` at `2a21db65` with the Phase 4 animation candidate. `main` measured 47,667,169
