@@ -38,5 +38,10 @@ class PluginCompatibilityContractTest {
                 """group-id="Android\.MainToolbarRight"""",
             ).containsMatchIn(pluginXml),
         )
+        assertTrue(
+            Regex(
+                """id="com\.viewcompose\.studio\.preview\.InspectDeviceAnimationTimeline"[\s\S]*?group-id="ToolsMenu"""",
+            ).containsMatchIn(pluginXml),
+        )
     }
 }

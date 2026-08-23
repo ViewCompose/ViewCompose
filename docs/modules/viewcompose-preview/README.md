@@ -56,6 +56,30 @@ artifact-presence gate required in addition to a debuggable process and an expli
 See [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md) for the zero-pay
 runtime and performance contract.
 
+## Running-device animation timeline inspector
+
+The same debug-scoped artifact is the only application-process implementation of
+`AnimationTimelineTooling`. Its provider may weakly register committed transition sources before
+the first request so already composed transitions remain discoverable, without retaining
+application values, installing a listener, or taking a snapshot. The receiver rejects
+non-debuggable processes. Android Studio's **Inspect Device Animation Timeline** action first sends one discovery
+request, lets the developer select a transition, and then opens one 500 ms capture capped at 64
+distinct samples, 32 channels per sample, and a 256 KiB response.
+
+The report exposes bounded transition labels, privacy-safe logical state summaries, segment time,
+unequal channel durations, specification families, safe numeric values and velocities, physical
+terminal conditions, and interruption/retarget samples. Custom application values are shown as
+unsupported/private; the implementation never calls their `toString`. Every response must match
+the request nonce, foreground package, live process, request mode, and selected identity. Missing,
+busy, stale, malformed, oversized, disposed, and writer-failure paths fail closed without changing
+the application.
+
+Running-device inspection is strictly read-only. The Studio dialog states that control is limited
+to synthetic or interactive Preview content that already owns a `SeekableTransitionState` and
+calls its public `seekTo` API. The device receiver has no mutation command and cannot write private
+transition fields. With no valid request, transition publication performs only the provider's
+bounded selected-identity check and produces no sample or report.
+
 ## Application theme provider
 
 Implement `PreviewThemeProvider` and mark exactly one implementation in a previewed module with

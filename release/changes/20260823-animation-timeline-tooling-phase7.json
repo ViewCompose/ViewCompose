@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add a neutral bounded animation timeline projection, optional request-driven Android capture, privacy-safe reporting, and a read-only Android Studio inspector.",
+  "changes": [
+    { "artifact": "viewcompose-animation", "impact": "feature" },
+    { "artifact": "viewcompose-preview", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "The repository isolation verifier adds concrete animation-tooling markers; published effects are classified on their owning artifacts."
+    }
+  ]
+}

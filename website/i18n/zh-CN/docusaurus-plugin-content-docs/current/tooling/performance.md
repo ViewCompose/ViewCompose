@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 88e1b5ba3e2c54231bbba78015078e4457c54177a09b4dfa8f094945fe34855c
+translation_source_hash: 746e1594d205a403cb8ebce2313e9f843541f978969d151ec9e55a3179b8a7fb
 translation_status: current
 ---
 
@@ -1251,6 +1251,39 @@ Commit、Workload、刷新率、电源模式与温度状态必须保持一致，
 60 Hz 时，持续滚动/布局报告进入 `viewcompose-host-android` 后，Demo 首页列表 Frame CPU P50 从约
 5--7 ms 上升到 11--12 ms；仅移除滚动发布即可恢复到约 7 ms。架构修正把实现移入可选
 `viewcompose-preview` 制品，并把发布改为按请求触发。
+
+### 2.5.1 动画时间线工具对比
+
+Phase 7 于 2026-08-23 在已 Root 的 Xiaomi MI 6 / Android 9、60 Hz 环境完成验收。CPU 小核与
+大核 Policy 分别固定为 `1,401,600` 与 `1,804,800 kHz`，GPU 固定为 `515 MHz`，Qualcomm CPU
+最低频率投票清零；整批测试暂停充电并停止厂商性能服务。测试运行中回读确认三个频率都保持
+固定。电池温度从 `36` 升至 `37°C`，AndroidX Thermal-throttle Sleep 为零。两组使用同一份
+Debuggable Target APK `56b94faf26f5dc0f94b976343e3d3a1c868953027cf696d8c704a8122a605fad`
+与 Benchmark APK `1ccd78d371ee5ed5890714511fe79c9464cc7be4cf9baf5f03cdb8669506f687`；
+`CompilationMode.None` 报告为 `run-from-apk`。
+
+每组都对 `animation.transition` 执行 5 个计量 Iteration；每个 Iteration 完成 4 次完整正向/反向
+Round Trip，每轮恰好 200 帧。Inactive 组在 Setup 前删除报告并产生零次 Report Write。
+Requested 组执行 40 次计量内的 500 ms Capture；AndroidX 未计量的 Validation Workload 另产生
+8 个响应。每个响应都匹配 Nonce、Selected Identity、Success Status 与 `1..64` Sample 边界。
+
+| 分组 | P50/P90/P95/P99，ms | Peak Heap 中位数（Run 范围），KiB | Run-P50 CV |
+| --- | --- | --- | --- |
+| Inactive | `12.236 / 14.113 / 15.311 / 18.265` | `9,493`（`9,462--9,537`） | `0.039` |
+| Requested Capture | `12.398 / 14.482 / 15.464 / 20.422` | `9,823`（`9,411--10,951`） | `0.036` |
+
+Requested Capture 的 P50 变化为 `+0.162 ms`（`+1.32%`），P95 为 `+0.153 ms`（`+1.00%`），
+Peak Heap 中位数为 `+330 KiB`（`+3.48%`）。三项都没有同时跨过冻结门槛的两部分，因此局部
+结论是 **no material change**。P99 为 `+2.157 ms`（`+11.81%`），继续作为冻结 P50/P95
+决策门槛之外明确记录的 Debug Tooling Tail Watch Item。
+
+验收前诊断发现两个分配缺陷：同一逻辑帧的多个 Channel Commit 被保留成不完整 Sample；每次
+JSON 边界检查都会重新编码不断增长的前缀。验收实现会合并相同 Segment Version/Play Time 的
+Commit，并以一个有界 Builder 配合增量 UTF-8 计数直接编码。这样在不缩减冻结的 500 ms、
+64 Sample、32 Channel 与 256 KiB 上限的前提下，把最终 Requested Heap 增量降到 `330 KiB`。
+局限包括仅一台 OEM/API-28 设备、Debuggable/JIT Target、Peak 而非 Post-GC Retained Memory、
+没有逐对象 Allocation Trace，也没有直接能耗测量。下一步是完成仓库与真机验收，不为取得更
+有利 P99 而继续重复采样。
 
 ## 3. 性能门禁指标
 

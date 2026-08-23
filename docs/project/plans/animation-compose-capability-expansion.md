@@ -2,10 +2,10 @@
 
 ## Status
 
-Active. Phases 0 through 5 are complete and merged. Phase 6 shared-element and shared-bounds
-implementation, focused acceptance, Demo/Preview review, rooted-device validation,
-fixed-frequency evidence, and repository gates are complete on the candidate branch; pull-request
-delivery remains.
+Active. Phases 0 through 6 are complete and merged. Phase 7 neutral projection, optional Android
+capture, and read-only Studio client are complete on the candidate branch. Focused, repository,
+Preview, Studio-plugin, rooted-device, and fixed-frequency acceptance gates pass; pull-request
+delivery and post-merge archival remain.
 This plan was split out on 2026-08-18 from the Animation follow-up in the unified roadmap and the
 framework-wide physical-spring candidate recorded by the multi-design-system plan. Those documents
 now point here; this file is the only active plan that owns the seven animation expansions defined
@@ -23,8 +23,8 @@ architecture, guide, reference, and owning-module documentation before this plan
 
 Last verified: 2026-08-23.
 
-Next action: deliver and merge the Phase 6 pull request before beginning Phase 7 request-driven
-timeline tooling.
+Next action: deliver the Phase 7 pull request, record its merge revision, and archive this completed
+seven-phase plan.
 
 ## Maven release changesets
 
@@ -41,8 +41,10 @@ timeline tooling.
   renderer ownership, lifecycle-safe reuse, and Preview coverage; accepted and merged.
 - `release/changes/20260823-shared-navigation-motion-phase6.json` — Phase 6 typed endpoint markers,
   renderer tag transport, bounded NavHost snapshots, predictive-Back integration, and
-  Demo/Preview coverage; candidate acceptance and repository verification complete, with delivery
-  pending.
+  Demo/Preview coverage; accepted and merged in `4a45f7b3`.
+- `release/changes/20260823-animation-timeline-tooling-phase7.json` — Phase 7 neutral timeline
+  projection, request-scoped Android capture, privacy-safe protocol, and read-only Studio client;
+  candidate acceptance complete; pull-request delivery pending.
 
 ## Objective
 
@@ -180,7 +182,8 @@ in the linked performance sections instead of being duplicated here.
 | 3 | Slide/scale/aligned visibility, hard-cut typed scope, shared parent/descendant timeline, complete-host geometry, and immediate inactive interaction removal | Complete and merged in `2a21db65` | [Rich-visibility comparison](../../tooling/performance.md#2411-animation-revision-3-rich-visibility-release-safety-comparison); frozen gates passed and P99 remains a recorded watch item |
 | 4 | Stable `TransitionSegment`, generic `animateValue<T, V>`, hard-cut `transitionSpec` name, dynamic committed-channel duration, and one seek/animate/snap writer | Complete and merged in `984ac9bd` | [Seekable-transition absolute baseline](../../tooling/performance.md#2412-animation-revision-2-seekable-transition-baseline): five 200-frame runs, P50/P95/P99 `7.775/10.493/11.718 ms`, heap `8,474 KiB`, CV `0.011`, zero thermal sleep |
 | 5 | Additive `Modifier.animateBounds`, one complete synthetic layout owner, real parent-local geometry, physical/duration retargeting, hard rejection of dual size ownership, explicit reuse reset, and transactional rollback | Complete and merged in `bb57fcd0` | [Bounds versus immediate-layout comparison](../../tooling/performance.md#2413-animation-revision-1-real-bounds-comparison): stable `464` versus `16` frames/run, animation P50/P95/P99 `5.124/6.438/18.503 ms`, snap P50/P95/P99 `8.727/25.762/28.556 ms`, heap `6,714` versus `6,868 KiB`, CV `0.055` versus `0.083`, zero thermal sleep |
-| 6 | Typed shared endpoint markers, stable renderer transport, bounded one-window snapshots, per-pair fallback, and committed/predictive navigation progress ownership | Complete on candidate branch; PR delivery remains | [Shared-content versus ordinary navigation](../../tooling/performance.md): identical `124` frames/run, shared P50/P95 `4.073/8.096 ms` versus control `3.989/8.487 ms`, heap `6,971` versus `6,651 KiB`, CV `0.059` versus `0.072`, zero thermal sleep; `no material change` |
+| 6 | Typed shared endpoint markers, stable renderer transport, bounded one-window snapshots, per-pair fallback, and committed/predictive navigation progress ownership | Complete and merged in `4a45f7b3` | [Shared-content versus ordinary navigation](../../tooling/performance.md): identical `124` frames/run, shared P50/P95 `4.073/8.096 ms` versus control `3.989/8.487 ms`, heap `6,971` versus `6,651 KiB`, CV `0.059` versus `0.072`, zero thermal sleep; `no material change` |
+| 7 | Neutral Q3 timeline projection, optional request-scoped Android capture, one bounded read-only protocol, and Studio inspection UI | Complete on candidate branch; pull-request delivery and post-merge archival remain | [Animation timeline tooling comparison](../../tooling/performance.md): requested versus inactive P50/P95 `12.398/15.464 ms` versus `12.236/15.311 ms`, heap `9,823` versus `9,493 KiB`, CV `0.036` versus `0.039`, zero thermal sleep; `no material change`; repository, plugin, and root-installed device gates pass |
 
 The cumulative accepted contract through Phase 5 is:
 
@@ -203,7 +206,7 @@ The cumulative accepted contract through Phase 5 is:
 Phase 5 final gates pass: the quick/Preview/tooling-isolation gate completed 1,624 tasks, the
 non-device `qaFull` path completed 1,622 tasks, and root-installed Xiaomi suites passed Demo
 138/138, Counter 1/1, and Tutorials 2/2 with no skips or failures. Phases 6–7 below retain their
-full unresolved requirements.
+accepted execution records and durable scope.
 
 ## Phase 5: Layout-coordinate and bounds animation
 
@@ -297,19 +300,21 @@ terminal status, velocity where applicable, and running/idle/interrupted state. 
 protocol, report storage, Studio UI, and developer lifecycle remain downstream in optional Preview
 and Studio tooling.
 
-Activation must follow
+Active snapshot/capture must follow
 [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md):
 
 1. the optional tooling artifact is packaged;
 2. the application is debuggable; and
 3. a valid explicit IDE request selects a bounded inspection lifetime.
 
-With no valid request, animation execution may pay only an approved nullable-port check or bounded
-metadata already justified by a neutral contract. It performs no tooling-owned frame callback,
-serialization, file I/O, View traversal, listener registration, or report publication. A finite
-request may capture a bounded timeline. Continuously observing or remotely seeking a live
-application animation requires an ADR amendment with activation lifetime, mutation authority,
-failure isolation, and benchmark evidence.
+With no valid request, animation execution may pay only an approved nullable-port/selected-identity
+check and the bounded weak neutral-source registration needed to discover an already composed
+transition. It constructs no timeline snapshot and performs no tooling-owned frame callback,
+serialization, file I/O, View traversal, listener registration, or report publication. Discovery
+samples once; a selected request captures for 500 ms with at most 64 distinct samples, 32 channels
+per sample, and 256 KiB output. Continuously observing or remotely seeking a live application
+animation requires an ADR amendment with activation lifetime, mutation authority, failure
+isolation, and benchmark evidence.
 
 The Studio experience must distinguish observation from control, show unequal channel durations,
 physical terminal conditions, interruption and retarget history, and unsupported/unbounded data.
@@ -415,14 +420,16 @@ This plan is complete only when:
    correctness and reuse tests, Demo automation, manual device review, Preview Golden,
    fixed-frequency animated-versus-snap comparison, repository gates, and root-installed physical
    suites were merged in `bb57fcd0`.
-7. **Complete on candidate branch — Phase 6:** typed endpoint transport, bounded one-window
-   snapshots, committed and predictive navigation integration, fallback/release coverage,
-   Demo/Preview/manual review, rooted-device suites, and fixed-frequency comparison are accepted;
-   repository gates pass and PR delivery remains.
-8. **Pending — Phase 7:** implement isolated request-driven timeline inspection and approved
-   Preview control.
-9. **Pending — Closeout:** update durable documentation, migration matrix, Demo/Preview/Studio
-   evidence, release records, and archive this plan.
+7. **Complete and merged — Phase 6:** typed endpoint transport, bounded one-window snapshots,
+   committed and predictive navigation integration, fallback/release coverage, Demo/Preview/manual
+   review, rooted-device suites, and fixed-frequency comparison were merged in `4a45f7b3`.
+8. **Complete on candidate branch — Phase 7:** the isolated neutral port, request-driven Android
+   capture, privacy-safe bounded protocol, read-only Studio client, focused tests, rooted-device
+   capture, tooling-isolation verification, fixed-frequency inactive/requested comparison,
+   repository gates, and exact-artifact physical-device suites pass. Pull-request delivery remains.
+9. **Complete on candidate branch — Closeout:** durable documentation, migration matrix,
+   Demo/Preview/Studio evidence, and the immutable release record are current. Record the merge
+   revision and archive this plan after the pull request merges.
 
 ## Risks and stop conditions
 
@@ -467,3 +474,7 @@ This plan is complete only when:
 | 2026-08-23 | Accept Phase 6 focused and rooted-device evidence: unique/missing/duplicate/mismatched/over-budget/surface-backed pairs, Push/Pop/Replace, predictive Back cancel/commit, redirect, disabled motion, focus transfer, host destruction, endpoint reuse, process recreation, adaptive stacks, and strict deep links pass; reviewed slow-motion frames show the bounds surface resizing/moving and the element chip moving independently without changing input ownership. |
 | 2026-08-23 | Accept `navigation.shared-motion@1` as `no material change`: shared P50/P90/P95/P99 are `4.073/5.526/8.096/36.099 ms` versus ordinary motion `3.989/5.466/8.487/30.020 ms`, median heap is `6,971` versus `6,651 KiB`, run-P50 CV is `0.059` versus `0.072`, both arms hold exactly `124` frames in all five runs, and thermal sleep is zero. The `+6.079 ms` P99 remains an explicit tail watch item outside the frozen P50/P95 gate. |
 | 2026-08-23 | Accept the Phase 6 final gates: documentation, translation, quick, Preview, and tooling-isolation checks pass in the 1,624-task gate. MIUI rejects ordinary APK installation, so the exact rebuilt APKs were root-installed; Demo passes 138/138, Counter 1/1, and Tutorials 2/2 with no skips or failures. The final Demo suite completes in `784.863 s`; its shared-endpoint geometry cycles through three bounded states so repeated navigation cannot move the automation target outside the lazy viewport, and assertions tolerate the intentionally overlapping outgoing and incoming snapshot hosts. |
+| 2026-08-23 | Record Phase 6 merged at `4a45f7b3` and begin Phase 7 without reopening shared-motion ownership or allowing live-device mutation. |
+| 2026-08-23 | Freeze and implement the Phase 7 split: `viewcompose-animation` owns the Q3 neutral read-only projection; optional `viewcompose-preview` owns debuggable request/capture and bounded encoding; the Studio plugin owns ADB transport, parsing, selection, and presentation. Optional-artifact weak registration may precede the first request so existing transitions remain discoverable, but snapshot, serialization, and report work remain behind receiver debug and explicit-request gates. |
+| 2026-08-23 | Accept Phase 7 rooted-device inspection and `animation.transition` fixed-frequency evidence. Discovery finds the already composed seekable transition; one selected 500 ms capture reports unequal channel durations, physical and unsupported data without mutating the device UI. Requested versus inactive P50/P95 is `12.398/15.464 ms` versus `12.236/15.311 ms`, heap is `9,823` versus `9,493 KiB`, run-P50 CV is `0.036` versus `0.039`, and thermal sleep is zero, so the frozen classification is `no material change`; P99 `+2.157 ms` remains a watch item. |
+| 2026-08-23 | Accept the Phase 7 final gates on the candidate branch. The 1,624-task quick/Preview/tooling-isolation gate, animation API documentation audit, Studio-plugin test/build/compatibility verification, and documentation structure/translation checks pass. MIUI rejects ordinary APK installation, so the exact rebuilt APKs are root-installed; Demo passes 138/138 in `785.954 s`, Counter 1/1, and Tutorials 2/2 with no skips or failures. Pull-request delivery and post-merge archival remain. |

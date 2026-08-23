@@ -38,7 +38,7 @@ internal class AndroidDeviceDslSourceTooling : RenderSessionSourceTooling {
         val role = (container as? UiSourceSessionContainerHandle)?.sourceSessionRole
         if (role != UiSourceSessionRole.Host && role != UiSourceSessionRole.Page) return false
         val viewGroup = container.nativeContainer as? ViewGroup ?: return false
-        return viewGroup.context.isDebuggableApplication()
+        return AndroidDeviceToolingDebugGate.markAndGet(viewGroup.context)
     }
 
     override fun register(
@@ -46,7 +46,7 @@ internal class AndroidDeviceDslSourceTooling : RenderSessionSourceTooling {
         sourceCandidates: List<List<UiSourceCallSite>>,
     ): RenderSessionSourceRegistration? {
         val viewGroup = container.nativeContainer as? ViewGroup ?: return null
-        if (!viewGroup.context.isDebuggableApplication()) return null
+        if (!AndroidDeviceToolingDebugGate.markAndGet(viewGroup.context)) return null
         return AndroidDeviceDslSourceRuntime.registry.register(
             container = viewGroup,
             sourceCandidates = sourceCandidates,
@@ -62,6 +62,7 @@ internal class DeviceDslSourceRequestReceiver : BroadcastReceiver() {
     ) {
         if (intent.action != DEVICE_DSL_SOURCE_REQUEST_ACTION) return
         if (!context.isDebuggableApplication()) return
+        AndroidDeviceToolingDebugGate.markAndGet(context)
         val requestId = intent.getStringExtra(DEVICE_DSL_SOURCE_REQUEST_ID_EXTRA)
             ?.takeIf(::isValidDeviceDslSourceRequestId)
             ?: return
@@ -406,7 +407,7 @@ private fun List<List<UiSourceCallSite>>.boundedSourceCandidates(): List<List<Ui
         .toList()
 }
 
-private fun StringBuilder.appendJsonString(value: String) {
+internal fun StringBuilder.appendJsonString(value: String) {
     append('"')
     value.forEach { character ->
         when (character) {
@@ -430,7 +431,33 @@ private fun StringBuilder.appendJsonString(value: String) {
     append('"')
 }
 
-private fun CharSequence.utf8Size(): Int = toString().toByteArray(Charsets.UTF_8).size
+internal fun CharSequence.utf8Size(): Int = utf8Size(0, length)
+
+internal fun CharSequence.utf8Size(
+    startIndex: Int,
+    endIndex: Int,
+): Int {
+    require(startIndex in 0..endIndex && endIndex <= length)
+    var byteCount = 0
+    var index = startIndex
+    while (index < endIndex) {
+        val character = this[index]
+        byteCount += when {
+            character.code <= 0x7f -> 1
+            character.code <= 0x7ff -> 2
+            character.isHighSurrogate() &&
+                index + 1 < endIndex &&
+                this[index + 1].isLowSurrogate() -> {
+                index += 1
+                4
+            }
+            character.isSurrogate() -> 1
+            else -> 3
+        }
+        index += 1
+    }
+    return byteCount
+}
 
 private fun View.depthInHierarchy(): Int {
     var depth = 0
@@ -450,7 +477,7 @@ private fun View.isVisibleToUser(): Boolean {
         visibleBounds.height() > 0
 }
 
-private fun Context.isDebuggableApplication(): Boolean {
+internal fun Context.isDebuggableApplication(): Boolean {
     return runCatching {
         applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     }.getOrDefault(false)
@@ -461,7 +488,7 @@ internal fun isValidDeviceDslSourceRequestId(requestId: String): Boolean {
         requestId.all { character -> character in 'a'..'f' || character in '0'..'9' }
 }
 
-private object DeviceDslSourceResponseWriter {
+internal object DeviceDslSourceResponseWriter {
     val executor: Executor by lazy {
         Executors.newSingleThreadExecutor { runnable ->
             Thread(runnable, "ViewCompose-DeviceDslResponse").apply { isDaemon = true }
@@ -492,6 +519,23 @@ private object DeviceDslSourceResponseWriter {
         } finally {
             temporary.delete()
         }
+    }
+}
+
+internal object AndroidDeviceToolingDebugGate {
+    private val debuggable = AtomicBoolean(false)
+
+    fun markAndGet(context: Context): Boolean {
+        if (debuggable.get()) return true
+        val permitted = context.isDebuggableApplication()
+        if (permitted) debuggable.set(true)
+        return permitted
+    }
+
+    fun isDebuggable(): Boolean = debuggable.get()
+
+    internal fun resetForTest() {
+        debuggable.set(false)
     }
 }
 

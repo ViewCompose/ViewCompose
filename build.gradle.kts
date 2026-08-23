@@ -432,6 +432,9 @@ tasks.register("verifyDevelopmentToolingIsolation") {
             "DeviceDslSource",
             "device-dsl-source",
             "ViewCompose-DeviceDslSource",
+            "AndroidAnimationTimeline",
+            "animation-timeline-v1",
+            "REQUEST_ANIMATION_TIMELINE",
         )
         val prohibitedToolingHotPathMarkers = listOf(
             "ViewTreeObserver.OnScrollChangedListener",

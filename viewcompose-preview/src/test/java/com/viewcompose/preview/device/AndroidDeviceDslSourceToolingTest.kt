@@ -192,6 +192,27 @@ class AndroidDeviceDslSourceToolingTest {
     }
 
     @Test
+    fun `utf8 size matches platform encoding without allocating encoded bytes`() {
+        val inputs = listOf(
+            "plain ASCII",
+            "Grüße",
+            "时间线",
+            "timeline 🚀",
+            "broken-high-\uD800",
+            "broken-low-\uDC00",
+        )
+
+        inputs.forEach { input ->
+            assertEquals(input.toByteArray(Charsets.UTF_8).size, input.utf8Size())
+            val wrapped = "prefix-$input-suffix"
+            assertEquals(
+                input.toByteArray(Charsets.UTF_8).size,
+                wrapped.utf8Size("prefix-".length, wrapped.length - "-suffix".length),
+            )
+        }
+    }
+
+    @Test
     fun `registry bounds retained sessions and source strings`() {
         val context = applicationContext()
         val registry = AndroidDeviceDslSourceRegistry()

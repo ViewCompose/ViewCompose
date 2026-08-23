@@ -44,6 +44,17 @@ import com.viewcompose.animation.core.infiniteRepeatable
 import com.viewcompose.animation.core.exponentialDecay
 import com.viewcompose.animation.core.spring
 import com.viewcompose.animation.core.tween
+import com.viewcompose.animation.tooling.AnimationTimelineChannelSnapshot
+import com.viewcompose.animation.tooling.AnimationTimelineRegistration
+import com.viewcompose.animation.tooling.AnimationTimelineRunState
+import com.viewcompose.animation.tooling.AnimationTimelineSnapshot
+import com.viewcompose.animation.tooling.AnimationTimelineSource
+import com.viewcompose.animation.tooling.AnimationTimelineSpecFamily
+import com.viewcompose.animation.tooling.AnimationTimelineStateSummary
+import com.viewcompose.animation.tooling.AnimationTimelineTerminalCondition
+import com.viewcompose.animation.tooling.AnimationTimelineTooling
+import com.viewcompose.animation.tooling.AnimationTimelineValue
+import com.viewcompose.animation.tooling.AnimationTimelineValueKind
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.frame.MonotonicFrameClock
 import com.viewcompose.ui.modifier.Modifier
@@ -55,6 +66,55 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.remember
+import java.lang.ref.WeakReference
+
+/** Implements the neutral request-time projection without retaining application state. */
+fun animationTimelineToolingSample(): AnimationTimelineTooling {
+    return object : AnimationTimelineTooling {
+        override fun register(source: AnimationTimelineSource): AnimationTimelineRegistration {
+            val sourceReference = WeakReference(source)
+            return object : AnimationTimelineRegistration {
+                override fun captureRequested(): Boolean = false
+
+                override fun record(snapshot: AnimationTimelineSnapshot) {
+                    check(snapshot.identity == sourceReference.get()?.identity)
+                }
+
+                override fun dispose() {
+                    sourceReference.clear()
+                }
+            }
+        }
+    }.also {
+        // A downstream test provider can construct the same bounded, numeric-only wire model.
+        AnimationTimelineSnapshot(
+            identity = "transition-1",
+            label = "panel",
+            currentState = AnimationTimelineStateSummary("boolean", "false"),
+            targetState = AnimationTimelineStateSummary("boolean", "true"),
+            segmentInitialState = AnimationTimelineStateSummary("boolean", "false"),
+            segmentTargetState = AnimationTimelineStateSummary("boolean", "true"),
+            segmentVersion = 1L,
+            playTimeNanos = 80_000_000L,
+            durationNanos = 240_000_000L,
+            runState = AnimationTimelineRunState.Running,
+            channels = listOf(
+                AnimationTimelineChannelSnapshot(
+                    identity = "channel-1",
+                    name = "Float 1",
+                    specFamily = AnimationTimelineSpecFamily.Tween,
+                    startValue = AnimationTimelineValue(AnimationTimelineValueKind.Float, listOf(0f)),
+                    currentValue = AnimationTimelineValue(AnimationTimelineValueKind.Float, listOf(0.33f)),
+                    targetValue = AnimationTimelineValue(AnimationTimelineValueKind.Float, listOf(1f)),
+                    velocity = AnimationTimelineValue(AnimationTimelineValueKind.Float, listOf(4.1f)),
+                    durationNanos = 240_000_000L,
+                    finished = false,
+                    terminalCondition = AnimationTimelineTerminalCondition.Finished,
+                ),
+            ),
+        )
+    }
+}
 
 /** Animates a scalar target owned by the current composition call position. */
 fun UiTreeBuilder.animateAsStateSample(target: Float): State<Float> {

@@ -198,6 +198,36 @@ storage, a network service, continuous View listeners, or source-text transfer. 
 builds reject requests. If no response is available, keep the intended app in the foreground and
 verify that its debug build includes the current `viewcompose-preview` artifact.
 
+## Inspect a running animation timeline
+
+Choose **Tools | Inspect Device Animation Timeline** while a debuggable application containing
+`viewcompose-preview` is in the foreground. The plugin discovers the currently committed
+ViewCompose transitions, asks you to select one when several are present, captures that identity
+for 500 ms, and opens a read-only report. No device control is performed.
+
+The report makes these distinctions explicit:
+
+- observation is a bounded live-device capture, not a continuous profiler;
+- control belongs only to static or interactive Preview content using the public
+  `SeekableTransitionState.seekTo` contract;
+- every channel retains its own duration, so shorter channels and the longest segment are visible;
+- spring safety-guard termination, interruption/retarget samples, and unsupported/private values
+  are shown rather than normalized away.
+
+The request uses the same least-privilege debug boundary as device source location: an ADB-shell
+`DUMP`-permission broadcast, a one-use 32-character nonce, foreground package and live-process
+validation, and an atomically replaced response in application-private cache. Discovery takes one
+snapshot. A selected capture lasts at most 500 ms, records at most 64 distinct samples with 32
+channels each, and emits at most 256 KiB. Closing the dialog leaves no active capture, callback,
+thread, or report publisher.
+
+The 2026-08-23 Xiaomi MI 6 acceptance found four already composed timelines, selected
+`demo_seekable_transition`, and captured distinct `180/420/600/720 ms` channel durations plus
+unsupported generic-vector and safe numeric values. The running page remained visually unchanged,
+which is the required read-only result; only the report advanced. Preview-owned control is covered
+separately by the `animation-seekable-transition` catalog spec calling the public `seekTo` API and
+by deterministic `SeekableTransitionState` ownership, range, retarget, and cancellation tests.
+
 ## Snapshot regression
 
 Run the module snapshot verification:

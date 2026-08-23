@@ -488,6 +488,10 @@ fun <S> rememberTransition(
     // position so committed command samples rebuild every declared channel exactly once.
     transition.segmentVersion
     transition.playTimeNanos
+    DisposableEffect(transition) {
+        transition.attachTimelineTooling()
+        onDispose(transition::detachTimelineTooling)
+    }
     DisposableEffect(transitionState, transition, frameClock, animationContext) {
         val bindingId = transitionState.bind(
             transition = transition,

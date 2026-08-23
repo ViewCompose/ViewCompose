@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- Add **Inspect Device Animation Timeline** as a read-only Tools-menu action with bounded discovery
+  and a selected 500 ms capture from a connected debuggable application.
+- Show unequal channel durations, physical terminal conditions, interruption/retarget samples, and
+  unsupported private values without enabling live remote seeking.
+
 ## 1.1.0 — 2026-08-20
 
 ### Added

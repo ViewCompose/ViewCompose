@@ -249,21 +249,28 @@ motion requires a separate architecture decision.
 
 ### Request-driven inspection and controlled Preview seeking
 
-The runtime-neutral inspection model lives in `viewcompose-preview-core`. Concrete app-process
-activation remains in the optional Preview artifact and follows ADR-0009: artifact presence,
-debuggable process, and a valid explicit request are all required. Core animation and production
-animation artifacts contain no socket, file watcher, polling loop, Studio class, or always-on
-registry.
+The Q3 runtime-neutral source/snapshot port lives in `viewcompose-animation`, because a runtime
+artifact cannot depend upward on `viewcompose-preview-core`. Concrete process protocol, bounded
+registry, response storage, and Studio presentation remain in the optional Preview artifact and
+plugin. Core animation and production animation artifacts contain no Android receiver, socket,
+file watcher, polling loop, Studio class, writer, or concrete provider.
 
-One nonce-bearing request produces one bounded immutable snapshot of transition labels, states,
-channel kinds, durations, play times, values, velocities, bounds, and terminal reasons. Limits are
-1,000 nodes, 256 channels, 1 MiB encoded output, and 100 ms request lifetime. Malformed, oversized,
-expired, duplicate, or stale requests fail closed and release request-owned state.
+Like ADR-0009's source-identity exception, optional-artifact presence may weakly register one
+bounded neutral source per committed transition so an already composed transition remains
+discoverable. Registration captures only a process-lifetime identity and diagnostic label,
+installs no listener or frame callback, and does not construct a snapshot. The concrete receiver
+rejects non-debuggable processes, and active capture additionally requires a valid nonce-bearing
+explicit request. Discovery takes one snapshot. A selected capture lasts 500 ms and retains at most
+64 distinct samples, 32 channels per sample, and 256 KiB encoded output. It reports safe logical
+state summaries, channel kinds, durations, play times, privacy-safe values and velocities, physical
+terminal reasons, and interruption history. Malformed, oversized, expired, busy, missing, or stale
+requests fail closed and release request-owned state.
 
-Controlled seeking is permitted only for a synthetic Preview session created for that request.
-Tooling cannot seize a live application-owned transition. Ending or replacing the request restores
-normal Preview ownership and releases the synthetic seek state. This ADR is the required follow-up
-to ADR-0009; no second tooling decision is needed unless live-process mutation is proposed later.
+Running-device tooling is read-only and has no seek command. Controlled seeking is permitted only
+inside static or interactive Preview content that owns a `SeekableTransitionState` and calls the
+public Phase 4 `seekTo` API. Tooling cannot seize a live application-owned transition or write its
+private fields. A new live-process mutation or continuous-profiling proposal requires another ADR
+with explicit authority, lifetime, isolation, and benchmark evidence.
 
 ### Public API quality and ownership
 
@@ -281,8 +288,8 @@ request codecs are Q0 and cannot appear in compiled samples.
 | 4 | `TransitionSegment`, generic `Transition.animateValue`, segment-aware channel overloads, `SeekableTransitionState`, seekable `rememberTransition` | `viewcompose-animation` | segment/seek sample; ownership, range, retarget, predictive-Back adapter tests | additive except the typed-channel named argument hard-cut from `animationSpec` to `transitionSpec`; internal segment helpers removed |
 | 5 | `Modifier.animateBounds` | `viewcompose-animation` | bounds sample; coordinate, remeasure, input, accessibility, rollback device tests | additive |
 | 6 | `SharedContentKey`, `sharedElement`, `sharedBounds` | neutral marker in `viewcompose-ui-contract`; renderer tag transport in `viewcompose-renderer-android`; coordinator in `viewcompose-navigation-android` | UI declaration and navigation shared-motion samples; pairing, overlay, lifecycle, redirect, rollback, accessibility device tests | additive; provisional `SharedTransitionLayout`/scope design rejected before publication |
-| 7 | immutable animation inspection request/response and snapshot types | `viewcompose-preview-core` | protocol sample; codec, limit, stale-request, privacy tests | additive and optional |
-| 7 | Preview animation inspection/seek client surface | `viewcompose-preview` and Studio plugin | Preview-only sample; activation, isolation, request-lifetime, plugin UI tests | additive and optional |
+| 7 | immutable neutral animation source/snapshot port | `viewcompose-animation` | port sample; absence, ambiguity, bounds, privacy, interruption, lifecycle tests | additive; concrete tooling remains optional |
+| 7 | Android request/capture implementation and read-only Studio client | `viewcompose-preview` and Studio plugin | Preview-only seek sample; activation, isolation, nonce, request-lifetime, codec, plugin UI tests | additive and optional |
 
 Every implementation pull request supplies canonical English API documentation, compiled Q3
 samples, owning-module documentation, compatibility notes, and the production-artifact Changeset
@@ -313,8 +320,8 @@ debug tooling.
 | Engine allocation | position, velocity, threshold, and scratch vectors allocate once per run; built-in scalar sampling adds zero engine-owned per-frame objects |
 | Retained content | at most two full `AnimatedContent` subtrees and one overlay representation per matched shared pair |
 | Measurement | at most one extra target measurement per affected node and target invalidation; zero extra measurement on property-only frames |
-| Inactive tooling | zero registrations, polls, report writes, request-owned objects, or recurring hot-path work |
-| Requested tooling | at most the declared 1,000-node/256-channel/1-MiB/100-ms request bounds; never amortized into the inactive result |
+| Inactive tooling | only optional-artifact bounded weak neutral-source registration and one selected-identity check; the receiver enforces debug/request gates before any snapshot, with zero polls, report writes, request-owned objects, or recurring callbacks |
+| Requested tooling | at most 64 timeline samples, 32 channels per sample, 256 KiB, and 500 ms; never amortized into the inactive result |
 
 An unstable run, changed workload, mismatched clock policy, or missing counter is `inconclusive`,
 not a pass. A regression that crosses a budget blocks the phase or narrows the feature; rerunning

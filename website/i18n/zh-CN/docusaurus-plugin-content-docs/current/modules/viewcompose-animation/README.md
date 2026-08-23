@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: 7fd2488ac386d384b646b61d9b3451117eaba3e4b48387344d3704517d0da835
+translation_source_hash: 16c3152f7dc62ef7ad229a8d80c9118958205d345461276ea05f5acfbdf53e39
 translation_status: current
 ---
 
@@ -191,6 +191,28 @@ Fallback，不会无限等待。
 Seek State 不持有 Coroutine Scope，不会自动 Save，也不负责提交或回滚 Navigation。Navigation
 Owner 可以把 Predictive Back Progress 交给 `seekTo`，但 Back Stack Transaction 以及提交或
 取消后的 `animateTo`/`snapTo` 选择仍由它负责。Label 仍是诊断元数据，不改变 Identity。
+
+## 可选动画时间线检查 Port
+
+`viewcompose-animation` 提供 Q3 `com.viewcompose.animation.tooling` 契约，供可选下游开发工具
+使用。`AnimationTimelineSource` 提供已提交 `Transition` 的一份不可变有界 Snapshot；
+`AnimationTimelineTooling` 及其 Lifecycle Registration 决定当前显式请求是否选中了该
+Transition。运行时最多发现一个 Provider；缺失、歧义、Provider 失败与 Disposal 失败都作为
+诊断 No-op 处理。
+
+Snapshot 包含进程生命周期 Transition Identity、有界 Label、安全逻辑 State Summary、Segment
+Version/Time、Running/Idle/Interrupted 状态，以及最多 32 个已提交 Channel。内置 Float、可被
+Float 精确表示的 Int、`UiDp` 与编码 ARGB Channel 会公开有界数值 Component。自定义 Value
+Domain 会有意返回 `null`，不会保留应用对象或调用应用 Formatter。每个 Channel 会报告确定性
+Runtime Name、有限 Spec Family、自身 Duration、安全 Velocity、Completion 与物理
+`DurationLimitReached` Terminal Condition。
+
+Animation 产物不含具体 Provider、Android Receiver、文件格式、Studio API、Thread、Poll 或
+Frame Callback。没有可选 Provider 时不会创建 Source Projection，只承担不可变诊断 Identity
+元数据，以及已接受 Transition Publication 上的 Nullable Registration Check。可选产物存在时
+可以在首次请求前弱持有中立 Source，使已经组合的 Transition 仍可发现。具体 Receiver 会拒绝
+不可调试进程；只有带 Nonce 的有界请求选中该 Identity 时才会 Snapshot、Serialize 或写入报告。
+该 Port 严格只读，不支持远程 Seek 真机应用。
 
 ## InfiniteTransition 无限动画
 

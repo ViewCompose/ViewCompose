@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: 8e674e65ea11c30d116ba2fb00656f59a59814bcde1121b01539f0789c4a56fd
+translation_source_hash: cc89764e00f48f9b557fdb1bb8b6af1fb9aefbb7dc88d0dfb0aeca6187273557
 translation_status: current
 ---
 
@@ -53,6 +53,27 @@ Receiver 在主线程对当前弱引用持有的 Session View 采样一次，随
 本制品应只放在 `debugImplementation`、测试或专用 Tooling 配置中。除可调试进程与显式 IDE 请求
 外，制品存在是启用功能所需的第三道门。零运行时持续开销与性能契约见
 [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md)。
+
+## 真机动画时间线检查器
+
+同一个 Debug-scoped 制品也是 `AnimationTimelineTooling` 唯一的应用进程实现。Provider 可以在
+首次请求前弱注册已提交 Transition Source，使已经组合的 Transition 仍可发现，但不会保留应用
+Value、安装 Listener 或读取 Snapshot。Receiver 会拒绝不可调试进程。Android Studio 的
+**Inspect Device Animation Timeline** 动作会先发送一次
+Discovery Request，让开发者选择 Transition，再开启一次 500 ms Capture；最多保留 64 个不同
+Sample、每个 Sample 32 个 Channel，响应最多 256 KiB。
+
+报告包含有界 Transition Label、隐私安全的逻辑 State Summary、Segment Time、不一致的 Channel
+Duration、Spec Family、安全数值与 Velocity、物理 Terminal Condition，以及 Interruption/
+Retarget Sample。自定义应用 Value 显示为 Unsupported/Private；实现不会调用它们的 `toString`。
+每个响应都必须匹配 Request Nonce、前台 Package、存活 Process、Request Mode 与所选 Identity。
+Missing、Busy、Stale、Malformed、Oversized、Disposed 与 Writer Failure 都会 Fail Closed，且不
+改变应用状态。
+
+真机检查严格只读。Studio Dialog 会明确说明：控制只允许 Synthetic/Interactive Preview Content
+持有 `SeekableTransitionState` 并调用公开 `seekTo` API。设备 Receiver 没有 Mutation Command，
+也不能写入 Transition 私有字段。没有有效请求时，Transition Publication 只执行 Provider 的有界
+Selected-identity Check，不生成 Sample 或报告。
 
 ## 应用主题 Provider
 
