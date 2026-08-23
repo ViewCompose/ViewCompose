@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 746e1594d205a403cb8ebce2313e9f843541f978969d151ec9e55a3179b8a7fb
+translation_source_hash: 2d0aafc8c6eb3cda18e200fc3e9814d635f9815d27c299f623662108e419c805
 translation_status: current
 ---
 
@@ -439,497 +439,94 @@ Frame CPU duration 越低越好。归一化变化采用
 作为设备能力证据保留，不能静默挑选偶然通过的样本。原始数据、绿色任务或单个有利指标都不等于
 结论。
 
-### 2.4 当前对照结论
+### 2.4 当前已接受证据
 
-上文已验收的 2026-08-15 Samsung SM-G991B / Android 13 数据，与同轮 Compose control 形成以下
-长期结论：
+本节只保留可持续执行的决策，以及应用这些决策所需的绝对值。设备准备、APK 身份、被拒绝
+的运行、Trace 和逐候选排查过程保存在
+[Android Views 对照](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/android-views-performance-control.md)、
+[Observed Property](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/observed-property-transactions.md)、
+[Lazy 集合](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/lazy-collection-three-layer-hard-cut.md)、
+[ConstraintLayout](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md)
+和[动画](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md)
+归档中。归档负责解释历史，下面的分类才是当前规范。
 
-| 工作负载 | P50 变化 | P95 变化 | 分类 | 解释 |
-| --- | ---: | ---: | --- | --- |
-| `performance.list@3` 滚动 | 降低 9.4% | 升高 5.8% | `mixed` | 中位数方向更低、尾部方向更高；两者都没有跨过组合对照门禁。 |
-| `performance.list@3` 变更 | 降低 49.2% | 降低 62.7% | `improved` | Keyed 变更和 payload 更新是明确的相对优势。 |
-| `performance.complex-layout@3` 滚动 | 升高 7.2% | 升高 1.7% | `no material change` | 两项指标方向都更慢，但均未跨过组合对照门禁。 |
-| `performance.complex-layout@3` 更新 | 降低 36.4% | 降低 15.5% | `improved` | 整树更新快于 control，但 42.505 ms 的绝对 P95 仍有尾延迟风险。 |
-| `performance.shadow-list@2` 滚动 | 降低 8.1% | 升高 10.8% | `mixed` | 中位数与尾部方向相反。P95 的 0.942 ms 绝对差超过噪声下限，但 10.8% 增幅仍低于 15% 失败阈值。 |
-| `performance.shadow-list@2` 变更 | 降低 46.2% | 降低 60.7% | `improved` | 带阴影的 keyed 变更延续了无阴影场景的变更优势。 |
-| `performance.shadow-complex-layout@2` 滚动 | 升高 4.5% | 升高 0.3% | `no material change` | 两项绝对变化都在噪声下限内；方向略慢，但不足以支持回归结论。 |
-| `performance.shadow-complex-layout@2` 更新 | 降低 39.7% | 降低 11.4% | `improved` | 相对更新成本改善，但 41.506 ms 的绝对 P95 仍有尾延迟风险。 |
+除非表格另有说明，已接受的物理证据都使用 Root 小米 6 / Android 9 参考设备、R8 与资源
+收缩后的非 Debuggable 目标、5 次 `run-from-apk` 迭代、固定在 1.4016/1.8048 GHz 的
+CPU Policy、515 MHz GPU、固定的可用 Interconnect Vote、暂停充电和停止厂商性能服务；
+AndroidX 未报告热节流等待。每批结束后均恢复所有设备状态。
 
-因此，2026-08-15 已验收批次的结论有明确边界，不能概括为“整体比 Compose 更快”：
+#### 2.4.1 Renderer、集合与内存结论
 
-1. 在这批已验收数据中，变更与整树更新工作负载持续快于 Compose control；
-2. 滚动并非普遍占优。Samsung revision-2 阴影列表 P95 仍是历史方向性目标；Pixel 5
-   revision-3 阴影列表对照方向有利，但不能跨设备、跨工作负载 revision 关闭该目标；非 Lazy
-   复杂布局 P50 与普通列表 P95 也仍是需要监测的缺口；
-3. 两个复杂布局更新场景即使相对结果有利，仍是绝对尾延迟优化目标；
-4. 诊断与集合 fixture 只有已验收的 ViewCompose 稳定性基线，不构成 Compose 排名；
-5. 导航 revision 6 和设计系统 bundle revision 3 已在第 2.4.2 节形成稳定的 root 固定频率绝对
-   基线；设计系统因缺少同口径历史基线而继续保持方向性 `inconclusive`，Android 9 也无法提供
-   non-debuggable 自定义 Trace 归因；
-6. 已验收同轮内存方向混合，因此不声明通用内存赢家。
-7. 该局部 Android Views 批次只证明 3 个 steady-state action，不代表完整场景：列表变更存在原生
-   尾部回退，复杂布局滚动存在原生中位数回退，复杂布局更新则中位数更好但尾部明显更差；列表
-   滚动保持 `inconclusive`。
-相对同轮 Android Views control，已验收的局部批次结论为：
+##### 2.4.1 复杂布局更新尾延迟排查 {/* #241-complex-layout-update-tail-latency-investigation */}
 
-| 工作负载 | P50 变化 | P95 变化 | 分类 | 解释 |
-| --- | ---: | ---: | --- | --- |
-| `performance.list@3` 变更 | 升高 7.5% | 升高 15.3% | `regressed` | P50 仍在组合门禁内，但 `+1.323 ms` P95 差距同时跨过两个尾部阈值。 |
-| `performance.complex-layout@3` 滚动 | 升高 16.1% | 升高 6.5% | `regressed` | `+0.750 ms` 中位数差距同时跨过两个 P50 阈值，P95 仍在门禁内。 |
-| `performance.complex-layout@3` 更新 | 降低 16.4% | 升高 130.7% | `mixed` | 中位数改善 `1.132 ms`，但 P95 恶化 `20.921 ms`；patch 吞吐与尾延迟方向相反。 |
+##### 2.4.2 Root 固定频率的 Revision 4 验收与剩余尾延迟 {/* #242-root-controlled-revision-4-acceptance-and-remaining-tails */}
 
-正确复用、组级失效与跳过无效工作、稳定的容器刷新语义仍是优化方向。`SlotTable Lite` 和子树级
-重组已进入主链路且 `qaQuick` 通过，但这些实现事实不能覆盖已测得的混合滚动结果。设备门禁状态
-继续记录在 [roadmap](../project/roadmap.md)。
+##### 2.4.3 Lazy 集合与 RecyclerView 尾延迟硬切 {/* #243-lazy-collection-and-recyclerview-tail-latency-hard-cut */}
 
-#### 2.4.1 复杂布局更新尾延迟排查
+下表帧数据为 P50/P95 毫秒，Heap 为峰值中位数 KiB。
 
-2026-08-16 在同一台 Samsung SM-G991B / Android 13 设备上继续排查原生尾部差距，但不替换已
-验收的 revision 3 基线。新鲜 ViewCompose control 基于 DSL 收敛分支，使用 R8 benchmark 构建、
-`CompilationMode.None`、5 次迭代、5 秒非测量稳定窗口、`NONE`/`LIGHT` 起始热状态和
-`unlocked-dvfs-preflight-v1`，Frame CPU P50/P95 为 `6.023/41.187 ms`。单独冷却后运行的 Android
-Views control 为 `7.253/16.222 ms`。两轮都出现 Runtime Image 警告，而且该设备无法锁定 CPU
-频率，因此它们是相邻诊断对照，不是新的纵向基线。
+| 证据 | 绝对结果 | 归一化结果 | 分类 |
+| --- | --- | --- | --- |
+| `performance.list@5` 滚动 | ViewCompose `5.328/9.538`、Heap `7650`；Compose `4.743/7.616`、`7398`；Android Views `4.991/7.188`、`4049` | 相对 Compose `+12.3%/+25.2%`；相对 Android Views `+6.8%/+32.7%` | 相对两个对照均为 `regressed`，因为 P95 同时跨过两部分门槛。 |
+| `performance.list@5` 更新 | ViewCompose `4.247/12.698`、Heap `8128`；Compose `5.207/18.568`、`8597`；Android Views `4.287/7.849`、`5864` | 相对 Compose `-18.4%/-31.6%`，Heap `-5.5%`；相对 Android Views `-0.9%/+61.8%`，Heap `+38.6%` | 相对 Compose 为 `improved`；相对 Android Views 为 `regressed`，原生尾部仍显著更低。 |
+| `performance.complex-layout@4` 属性更新 | ViewCompose `5.709/33.050`；Compose `7.663/46.852`；Android Views `6.137/19.270` | 相对 Compose `-25.5%/-29.5%`；相对 Android Views `-7.0%/+71.5%` | 相对 Compose 为 `improved`；相对 Android Views 的 P95 为 `regressed`。 |
+| `performance.complex-layout@4` 结构更新 | ViewCompose `5.590/46.009`；Compose `7.255/26.844`；Android Views `5.444/15.051` | 相对 Compose `-22.9%/+71.4%`；相对 Android Views `+2.7%/+205.7%` | 相对 Compose 为 `mixed`，相对 Android Views 为 `regressed`。 |
+| 强 `LazyItemsSnapshot` 权衡 | 普通候选 `5.022/26.428`、Heap `8254`；两次已接受 Snapshot 运行 `6.432/17.268`、`8419` 与 `6.133/17.638`、`8533` | 相对普通路径，Snapshot P50 `+28.1%/+22.1%`，P95 `-34.7%/-33.3%`，峰值 Heap `+2.0%/+3.4%` | 整体为 `mixed`；对显式选择的事务尾延迟目标为 `improved`。 |
+| Lazy 分配硬切 | 对照 P50/P95/P99 `5.218/9.248/11.004`、Heap `7709`；候选 `5.342/9.304/10.523`、`7591` | `+2.37%/+0.60%/-4.37%`；Heap `-118 KiB`（`-1.53%`）。GC 后归因减少 `129,518` 个浅层字节和 `6,276` 个对象 | 时序为 `no material change`；分配结果为 `improved`。 |
 
-Perfetto 证明慢样本来自实际 update/reset 帧，而不是自动化轮询帧。代表性最差帧在
-`VC.Compose` 消耗 `16.985-17.166 ms`、在 `VC.RenderTree` 消耗 `42.555-55.960 ms`，随后 Android
-View traversal 还需要 `36-38 ms`。这些区间内应用线程始终可运行，没有阻塞 I/O、锁等待或前台
-GC。最差样本中 OEM 调度器把长时间声明式工作放到了 LITTLE CPU，使通常 `4-6 ms` 的 composition
-和 `12-20 ms` 的 render 阶段被成倍放大。原生 control 通过保留的 View 引用执行相同字段更新，
-通常能在这种调度敏感性被放大前完成。
+列表矩阵只证明 Ready 之后、预构建 Snapshot 的稳态行为，不覆盖启动、Snapshot 构造、
+单调数据流、总能耗或干净的未编译 ART。不同引擎可能产生不同帧数，所以跨引擎结论使用已
+接受的逐帧分布，不虚构跨引擎事务。下一步集合目标是 ViewCompose 滚动 P95/Heap、相对
+Android Views 的更新尾部差距、冷构造和单调数据流。
 
-下面的相邻实验都保持 `performance.complex-layout@3`；所有被否决的源码候选都在测试后移除：
+Observed Property 事务显著减少完整树工作，并优于同批 Compose 属性对照，但原生属性失效
+与 Traversal 仍拥有更低的尾延迟。已接受的 API 33 Trace 证明属性帧进入
+`VC.ObservedPropertyRead` 和 `VC.ObservedPropertyRender`，且不返回根
+`VC.Compose`/`VC.RenderTree`；未锁定 DVFS 将该 Trace 的结论限制为阶段存在性，固定
+频率的小米矩阵才负责时序。
 
-| 候选 | ViewCompose P50/P95 | 相对新鲜 control | 结论 |
+#### 2.4.2 导航与设计系统基线
+
+##### 2.4.4 导航与设计系统诊断 {/* #244-navigation-and-design-system-diagnostics */}
+
+| 导航动作 | P50/P95/P99，毫秒 | Run-P50 CV | 结论 |
 | --- | ---: | ---: | --- |
-| 纯文本 `TextDocument` 绑定直接返回原始 `String` | 6.197 / 40.785 ms | P50 升高 2.9%；P95 降低 1.0% | `no material change`；无分配纯文本转换具有确定性且保留富文本 span，因此保留，但它不能解决尾部问题。 |
-| 删除约 90 个冗余 Demo `Surface` 包装 | 6.042 / 40.330 ms | P50 升高 0.3%；P95 降低 2.1% | `no material change`；物理 View 深度不是主因，workload fixture 保持不变。 |
-| 递归证明值相同的重建子树稳定 | 6.254 / 44.171 ms | P50 升高 3.8%；P95 升高 7.2% | `no material change` 且方向不利；递归证明成本超过 skip 收益，已回退。 |
-| 不构造通用 keyed plan 中间对象，流式处理同位置复用 | 6.137 / 41.163 ms | P50 升高 1.9%；P95 降低 0.1% | `no material change`；reconcile/preflight 容器分配不是尾部根因，该路径已回退。 |
+| Push，不做预编译 | `5.552/12.598/41.929` | `0.039` | 已接受的绝对基线。 |
+| Push，请求 Profile Guided 编译 | `5.601/11.173/42.148` | `0.070` | `no material change`；P95 降低 11.3%，P99 不变。 |
+| System Back，不做预编译 | `5.558/15.618/40.089` | `0.039` | 已接受的绝对基线。 |
+| System Back，请求 Profile Guided 编译 | `5.409/13.864/41.685` | `0.064` | `no material change`；P95 降低 11.2%，P99 仍约为 42 毫秒。 |
 
-完整 ART 编译得到 `6.261/38.589 ms`，P95 相对新鲜 control 也只降低 6.3%；其他 checkpoint、分组
-和精确引用快路要么没有实质收益，要么让 P95 更差。综合证据把当前结果归类为 `mixed`：一行纯
-文本分配优化有效，但绝对尾延迟仍未解决。根边界是顶层 State 读取：一次 revision 会让包含 18
-张卡片的声明同步重建并整树 diff，而原生 control 直接更新保留字段。完整树事务内部的常量级优化
-无法消除这一区别。
+Android 9 把两种请求编译的变体都报告为 `run-from-apk`，因此不能证明不同的 ART 编译
+状态；但它们足以排除普通预热可以解释导航 P99。API 28 的非 Debuggable 目标无法提供应用
+Trace Section。
 
-Q3 Observed-property Transaction 架构现已完成这次算法硬切。显式选择该能力的 State Read 由
-`RenderSession` Property Registry 持有，全部 Dirty Reader 使用同一个 Snapshot；Android
-Renderer 接收一次精确 Target Batch，跳过 Root Composition、Tree Wrapping 与 Child
-Reconciliation。候选依赖通过带失效 Guard 的 Prepared Replacement 管理；Renderer 会先校验完整
-Batch，任一 Patch 失败时恢复此前全部原生值。`performance.complex-layout@4` 因此把 Primary
-Property Action 与 Secondary Structural Add/Remove Action 分开，不再让两类成本互相掩盖。
+设计系统 revision 3 矩阵是绝对基线，不是对不同视觉系统的排名：
 
-同一设备上的三轮最终构建 Property 结果分别为 `6.261/25.087 ms`、`5.601/20.436 ms` 和
-`5.436/20.206 ms` Frame CPU P50/P95。第一轮 P95 比新鲜 revision 3 整树 Control 低 39.1%；
-其配对的 revision 4 Compose 与 Android Views Control 分别为 `9.066/42.353 ms` 和
-`7.922/16.006 ms`。相对这些 Control，ViewCompose 的 P50/P95 比 Compose 低 30.9%/40.8%；
-相对直接 Android Views，P50 低 21.0%，但 P95 高 56.7%。第一轮最终 Trace 共包含 16 个 Property
-Frame：`VC.FrameRender` 平均/最大 `5.895/13.469 ms`，`VC.ObservedPropertyRead` 为
-`1.572/4.216 ms`，`VC.ObservedPropertyRender` 为 `3.640/8.391 ms`；剩余 Android Traversal
-最大值还包括 `10.334 ms` Measure 与 `17.048 ms` Draw。
-
-尽管方向显著且可重复，这组三星设备证据作为正式 Baseline 仍归类为 `inconclusive`。三轮最终运行的
-run-P50 CV 分别是 `0.201`、`0.208` 和 `0.215`，均超过 `0.15` 验收上限。该非 Root 设备还会
-输出 Runtime Image 警告，并因 Macrobenchmark 无法清理应用 Profile 而在连续重跑中变快。
-第 2.4.2 节给出了随后完成的 root 固定频率六方法验收矩阵。剩余 ViewCompose 相对原生的 P95
-差距来自 Android 属性失效及 Measure/Draw 尾部，而非整树协调。
-这组 Timing 分布不能作为正式基线，但其 API 33 R8 Trace 可以作为阶段归因证据：属性帧进入了
-`VC.ObservedPropertyRead` 与 `VC.ObservedPropertyRender`，没有重新进入根级 `VC.Compose`
-与完整树 `VC.RenderTree` 路径。未锁定 DVFS 会改变阶段时长，却不会改变是否进入这些 Section。
-因此这份功能性 Trace 与下方固定频率 Timing 矩阵配对使用，而不是取代后者。
-
-#### 2.4.2 Root 固定频率的 revision 4 验收与剩余尾延迟
-
-2026-08-16 验收批次使用已 Root 的 Xiaomi MI 6 / Android 9、R8 benchmark target、
-`CompilationMode.None`、5 次迭代、8 核全部在线、暂停充电，并将 policy 0/4 的
-`performance` governor 分别固定在 1.4016 GHz 和 1.8048 GHz。所有当前核心方法均记录
-`run-from-apk`、`cpuLocked=true` 和 `root-fixed-1401600-1804800-v1`。电池温度保持在
-30--39 摄氏度，AndroidX 未触发温控等待。所有接受样本的 run-P50 CV 均不高于 `0.111`；
-一份 CV 为 `0.159` 的 Compose 滚动样本被保留为拒绝证据，并由 CV `0.060` 的重跑替代。
-
-第一轮列表测试暴露了工作负载缺陷：ViewCompose 保留了 RecyclerView 条目动画，而 Compose
-没有请求 `animateItem`，Android Views 对照也明确关闭了 animator。结果是 ViewCompose
-mutation 约产生 217 个测量帧，对照只有 41/48 帧，并稀释了真实尾延迟。fixture 现已关闭
-这项不对等动画，工作负载升级为 `performance.list@4`；修正后的 ViewCompose mutation
-记录 48 帧。revision 3 列表结果仅保留为历史证据，不能与 revision 4 直接比较。
-
-| 工作负载 | ViewCompose P50/P95，ms | Compose P50/P95，ms | Android Views P50/P95，ms | Run-P50 CV，VC/C/Android | 相对 Compose | 相对 Android Views |
-| --- | ---: | ---: | ---: | ---: | --- | --- |
-| `performance.list@4` 滚动 | 5.294 / 10.825 | 5.651 / 9.790 | 4.110 / 8.679 | 0.070 / 0.076 / 0.019 | `mixed`：P50 低 6.3%，P95 高 10.6%，两个方向都未同时跨过门禁。 | `regressed`：P50/P95 高 28.8%/24.7%。 |
-| `performance.list@4` 变更 | 4.558 / 40.332 | 7.147 / 23.978 | 5.648 / 9.583 | 0.099 / 0.096 / 0.051 | `mixed`：P50 低 36.2%，但 P95 高 68.2%。 | `mixed`：P50 低 19.3%，但 P95 高 320.9%。 |
-| `performance.complex-layout@4` 滚动 | 5.798 / 13.935 | 6.023 / 11.192 | 4.636 / 10.422 | 0.065 / 0.060 / 0.013 | `regressed`：P50 中性，P95 高 24.5%。 | `regressed`：P50/P95 高 25.1%/33.7%。 |
-| `performance.complex-layout@4` 属性更新 | 5.709 / 33.050 | 7.663 / 46.852 | 6.137 / 19.270 | 0.067 / 0.076 / 0.059 | `improved`：P50/P95 低 25.5%/29.5%。 | `regressed`：P50 中性，P95 高 71.5%。 |
-| `performance.complex-layout@4` 结构更新 | 5.590 / 46.009 | 7.255 / 26.844 | 5.444 / 15.051 | 0.028 / 0.111 / 0.082 | `mixed`：P50 低 22.9%，但 P95 高 71.4%。 | `regressed`：P50 中性，P95 高 205.7%。 |
-
-同批次各行 ViewCompose/Compose/Android Views 的最大 heap 中位数依次为
-`8541/7531/4904`、`10443/9374/6007`、`7052/9421/7014`、`11757/14102/7670` 和
-`12925/13642/9048 KiB`，因此不能得出通用内存赢家。
-
-属性事务使 P95 从新鲜的 revision 3 ViewCompose 诊断对照 `41.187 ms` 降至
-`33.050 ms`，改善 19.8%，并明确优于同轮 Compose 对照；但它没有消除 Android View
-遍历和属性失效成本，与原生 P95 的差距仍然显著。正确性测试还覆盖同一个 State 同时被
-observed property 和结构 `RecomposeBoundary` 读取的情况：完整结构帧现在会在同一个
-Snapshot 内刷新脏 observed value，不会提交新旧状态混合帧。Android 9 的非 debuggable
-APK 无法公开应用 trace section，因为 manifest `profileable` 从 API 29 才受支持；因此六方法
-耗时矩阵由这台 Root 固定频率设备验收，而上方 API 33 R8 Trace 独立闭环
-`VC.ObservedProperty*` 阶段归因。两份证据都不外推：Xiaomi 负责稳定 Timing，Samsung 负责阶段
-是否存在。
-
-修正后的列表 mutation trace 将剩余尾部定位在帧对齐框架事务，而不是 Android traversal。
-代表性最慢帧在 Choreographer `animation` 阶段消耗 27.7--41.3 ms，traversal 最大 9.5 ms；
-ART 同时会 JIT 编译较大的 `LazyListAdapter.submitItems` 路径。该路径会为 1000 项同步执行
-keyed identity 分析、`DiffUtil`、key/sticky 索引、changed-key 发现、通知和已挂载 Holder
-刷新。下一步列表优化应减少这次事务中的重复整表工作，或拆小其编译表面，同时不能重新引入
-不对等动画，也不能削弱 key、revision、Session、reset 和 release 语义。
-
-随后在 2026-08-16 使用相同设备、固定频率、构建、工作负载和 48 帧协议验收了该优化。
-ViewCompose 列表变更达到 `4.392/26.862 ms` P50/P95，run-P50 CV 为 `0.083`，最大 heap
-中位数为 `8507 KiB`。相对上一份 ViewCompose 结果，纵向结论为 `improved`：P50 降低
-3.7%，P95 降低 33.4%，最大 heap 中位数降低 18.5%。实现将 key/sticky/identity 索引合并为
-一次遍历，避免 Adapter 构造不会消费的公开更新序列，只检查已挂载 Holder 的同步刷新，并移除
-Lazy Item 收集器的重复副本和回调对象。复测 trace 中 Adapter JIT 热点已消失。跨引擎结论仍为
-`mixed`：该 P50 分别比 Compose 和 Android Views 低 38.6% 和 22.2%，但 P95 仍分别高
-12.0% 和 180.3%。因此下一目标是更上层的帧事务和原生 traversal，而不是放松逻辑 Session
-正确性。
-
-2026-08-16 的第二阶段诊断通过临时阶段计时拆分了该事务。重复 mutation 帧在
-`VC.Compose` 中约消耗 `2.1--15.5 ms`，`VC.RenderTree` 通常为 `1.0--3.8 ms`；reset
-composition 仅约 `0.5--1.3 ms`。差异来自 fixture 在每次 mutation 中重复构造同一份 1000 行
-revision-1 模型。测试基座现在保留最近一次非零 revision 的不可变快照：每个进程仍保留一次冷
-构造，其余七轮专注测量提交和 reconciliation。帧调度器与 Lazy Holder 热路径也改用专用内部
-host，避免通用捕获回调。renderer lowering 预检候选得到 `4.859/27.755 ms` P50/P95，额外树
-扫描未降低事务尾部，因此已拒绝并回退。
-
-最终固定频率五轮结果为 P50/P95/P99 `4.514/25.677/29.374 ms`，run-P50 CV `0.100`，
-最大 heap 中位数 `8391 KiB`，每轮均为 48 帧。相对紧邻的上一份 ViewCompose 结果，P50 上升
-2.8%（`+0.122 ms`，无实质变化），P95 降低 4.4%（`-1.185 ms`），P99 降低 21.7%，heap
-降低 1.4%。纵向结论为 `improved`：上尾收敛且中位数没有实质回退。由于快照复用改变了三个
-引擎共享的 fixture 准备方式，旧 Compose 与 Android Views 数字不能作为本 revision 的跨引擎
-对照；形成新的相对结论前需重跑三引擎矩阵。下一框架目标是冷 composition/JIT 表面，而不是
-再次增加 renderer 预检或削弱 Item Session 语义。
-
-#### 2.4.3 Lazy 集合与 RecyclerView 尾延迟硬切
-
-该测量阶段没有继续增加 Renderer 预检，而是同时纳入 Keyed 逻辑 Item 复用与 RecyclerView 提交
-优化。其 Benchmark APK 还包含一项调用方聚合 Revision 试验，可以绕过 Typed List 的全部 Selector
-求值；后续 API 审计已删除该公开 Token：它重复逐 Item Revision 契约，调用方推进错误时会产生
-过期顺序、成员或 Selector 结果，而且 Benchmark 反复切换两份更新/重置 Snapshot 的 Fixture 会
-异常放大其收益。普通 `List` DSL 会在父 Composition 的每一轮执行中求值顺序、成员与 Selector，
-再按相等的 Key、`contentRevision`、Environment、Content Type、Kind 与 Span 复用已提交的逻辑
-Item 和 Session Binding。后续新增的 `LazyItemsSnapshot` 显式快路只会浅冻结有序元素引用，并向
-框架提供一个不透明身份，用于有界的已求值 Snapshot Cache。只有该身份成功提交后才能跳过
-Selector 求值；它不会削弱逐 Item 或 Environment Revision 契约。
-
-Android Adapter 现在以线性复杂度规划同顺序变更和循环位移，为循环位移发送最少 move，只把其他
-结构变更交给 `DiffUtil`。精确的 submission 与 item 实例确认会消除冗余的排队 payload bind；
-关闭条目动画时，纯语义变更不再通知 RecyclerView，但同步 Session 提交失败会得到一次定点重试。
-预取计费会分离冷激活与权威的 detached prepare 成本，并在一次超预算样本后保守熔断。以上路径都
-保留 key 身份、逻辑 Item Session 所有权、原生 Holder 复用和 reset/release 边界。
-
-历史 revision 4 诊断首先在 Xiaomi MI 6 / API 28 上建立了下文继续使用的 Root 控制协议。
-`2695fbfb` 的两组对照都因 run-P50 CV `0.192/0.157` 被拒绝，第二组还遗漏了策略 Payload。
-硬切候选的 P50/P95/P99 为 `5.505/16.534/30.841 ms`，最大 heap `8212 KiB`，CV `0.075`；
-但它同时包含后来删除的聚合跳过与保留的 Item/Adapter 改动，所以纵向结论仍为 `inconclusive`，
-只作为 APK `020582a9` 的绝对结果。Material Host JIT 实验也使冷尾部回退并已撤销。下方
-revision 5 A/B 提供有效的同策略 ViewCompose 对照，2026-08-17 的矩阵则完成跨引擎跟进。
-
-<div className="benchmark-evidence">
-
-2026-08-17 在与 `9ac164af` 相同的 Xiaomi 设备、五轮 `run-from-apk` 和 v3 固定时钟策略下重建
-`2695fbfb`。Revision 4 滚动 P50/P90/P95/P99 为 `5.356/8.914/9.603/11.523 ms`（heap
-`7833 KiB`、CV `0.016`），mutation 为 `4.244/15.852/22.681/24.947 ms`（`8593 KiB`、
-`0.079`）。Revision 5 的对应变化为 `-0.5%/+0.6%/-0.7%/-7.1%` 和
-`+0.1%/-31.2%/-44.0%/-39.3%`，heap 低 2.3%/5.4%。两项均通过协议与稳定性门禁，未复现回退；
-但 Workload 已从 `performance.list@4` 变为 `@5`，正式结论仍为 `inconclusive`。若体感持续，下一步
-应测量诊断 Tab 切换后立即 Fling 的精确路径。
-
-</div>
-
-2026-08-16 的 revision 5 A/B 使用同一台 Xiaomi MI 6 / API 28 设备、R8 benchmark target、
-五轮与 48 帧协议、`run-from-apk` 编译身份，以及
-`root-fixed-cpu-1401600-1804800-gpu-515000000-perf-hal-off-v3` 策略。工作负载包含 1,000 行，
-每轮执行八个更新/重置周期。所有分支都会在 Ready 标记之前准备 revision 0 和 1 的不可变行
-List。候选 B0/B1 Fixture 还会在 Ready 之前构造并常驻两份强类型 Snapshot Wrapper；B0 仍提交
-原始 List，因此对于定时 mutation 之外的额外 Wrapper 常驻成本，它是偏保守的普通路径对照。
-被测 steady path 始终只在两份预构建输入之间交替。A1 和 A2 是 `bb542f00` 的两次独立普通
-`List` 参考重复；B0 通过候选实现的普通 `List` Overload 运行；B1 通过同一候选实现的
-`LazyItemsSnapshot` 运行。
-
-| 运行 | 路径 | Frame P50/P90/P95/P99，ms | 三帧总和 P50/P95，ms | 三帧最大值 P50/P95，ms | 最大 heap 中位数，KiB | Run-P50 CV | 验收 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| A1 | `bb542f00`，普通 `List` | 4.437 / 25.468 / 26.364 / 30.505 | 29.910 / 37.459 | 24.383 / 27.705 | 8313 | 0.127 | 接受的参考重复。 |
-| A2 | `bb542f00`，普通 `List` | 4.825 / 25.580 / 26.293 / 28.353 | 30.165 / 36.434 | 24.899 / 27.175 | 8667 | 0.111 | 接受的参考重复。 |
-| B0 | 候选，普通 `List` | 5.022 / 25.750 / 26.428 / 29.727 | 30.963 / 38.229 | 24.955 / 28.198 | 8254 | 0.047 | 接受的普通路径对照。 |
-| B1 | 候选，`LazyItemsSnapshot` | 6.432 / 14.723 / 17.268 / 25.068 | 23.694 / 33.306 | 13.160 / 24.549 | 8419 | 0.096 | 接受的 Snapshot 运行。 |
-| B1 重复 | 候选，`LazyItemsSnapshot` | 6.175 / 15.098 / 19.683 / 23.989 | 22.918 / 32.346 | 13.408 / 22.855 | 8872 | 0.193 | 拒绝：run-P50 CV 超过 0.15；只作方向性证据。 |
-| B1 第三次 | 候选，`LazyItemsSnapshot` | 6.133 / 14.610 / 17.638 / 26.508 | 23.500 / 34.097 | 13.386 / 23.994 | 8533 | 0.131 | 接受的 Snapshot 复现。 |
-
-汇总两次已接受的 A 参考重复后，Frame P50/P95/P99 为 `4.589/26.322/29.134 ms`。B0 分别
-高 9.5%（`+0.434 ms`）、0.4%（`+0.107 ms`）和 2.0%（`+0.593 ms`）。其三帧总和
-P50/P95 高 3.4%/2.7%，三帧最大值 P50/P95 高 1.1%/1.9%，最大 heap 中位数则低 2.8%。
-没有决策指标同时跨过绝对值和归一化门槛，因此普通 `List` 的纵向分类是
-`no material change`：新的 Collector 与 Cache 机制没有在普通路径上形成实质回退证据。
-
-相对 B0，两次已接受的 Snapshot 运行 B1 与 B1-third 让 Frame P50 分别高 28.1%
-（`+1.409 ms`）和 22.1%（`+1.111 ms`），但 Frame P95 分别降低 34.7%
-（`-9.160 ms`）和 33.3%（`-8.790 ms`），P99 分别降低 15.7%（`-4.659 ms`）和
-10.8%（`-3.219 ms`）。两者的三帧事务总和 P50/P95 分别降低 23.5%/12.9% 和
-24.1%/10.8%，事务最大值 P50/P95 分别降低 47.3%/12.9% 和 46.4%/14.9%。排除每轮第一次
-冷事务后，事务最大值 P95 从 `27.237 ms` 降至 `20.517/19.972 ms`，降低 24.7%/26.7%；
-最大 heap 仅高 2.0%/3.4%。B1-repeat 的尾部方向一致，但其 CV 为 `0.193`，不能进入任何
-归一化决策。因此 Snapshot 的主要分类是 `mixed`：Frame 中位数发生实质回退，P95/P99 和三帧
-事务尾部则有实质改善。更窄的尾延迟结论为 `improved`；这不代表所有 Frame Time 都得到改善。
-
-已验收的 2026-08-17 三引擎矩阵在同一台 Xiaomi MI 6 / API 28 设备上运行 commit
-`3e0cc43a` 与 `performance.list@5`。Target APK SHA-256 为
-`88eeacc3e4add75551088a9fdab7c0514414be747909223a22ec266b858ca55d`。AndroidX Benchmark
-1.4.1 使用 AOSP 专属的 `su root` 命令形式，Magisk 30.6 无法在该设备上执行它，因此只在该命令
-传输边界适配了 Test APK：原始 SHA-256 为
-`d36f6a138c949fddd334c2c1b55f65b6ba02b2d296a2a45efa79439c53701c9c`，适配后 SHA-256 为
-`cc9cce7c00de8c6f530c713257f91ecc2012473b644384cec971c3f2ef73d562`，通过等长命令别名转发至
-`magisk su -c`。Target APK、Benchmark Workload、指标采集和结果 JSON 均未改写。采集结束后已
-删除该别名、安装的 Benchmark 包和临时 APK。
-
-六个方法均使用五轮、`run-from-apk`、精确 v3 策略、锁定 CPU/GPU、停止 Performance HAL、零
-温控等待，并分别熄屏冷却至 34--37 摄氏度。MIUI 熄屏后会重置 CPU Policy，因此唤醒后重新应用；
-UiAutomation 要求屏幕可交互，失败的熄屏预检未产生样本。
-
-| 动作 | 引擎 | 每轮帧数 | P50/P90/P95/P99，ms | 最大 heap 中位数，KiB | Run-P50 CV |
-| --- | --- | --- | ---: | ---: | ---: |
-| 滚动 | ViewCompose | `160/163/166/162/163` | 5.328 / 8.964 / 9.538 / 10.702 | 7650 | 0.107 |
-| 滚动 | Compose | `163/163/163/162/162` | 4.743 / 7.063 / 7.616 / 8.495 | 7398 | 0.091 |
-| 滚动 | Android Views | `112/114/112/112/113` | 4.991 / 6.425 / 7.188 / 8.826 | 4049 | 0.045 |
-| 变更 | ViewCompose | `48/48/48/48/48` | 4.247 / 10.907 / 12.698 / 15.155 | 8128 | 0.082 |
-| 变更 | Compose | `41/41/41/41/41` | 5.207 / 15.040 / 18.568 / 26.250 | 8597 | 0.141 |
-| 变更 | Android Views | `48/48/48/48/48` | 4.287 / 6.658 / 7.849 / 9.076 | 5864 | 0.125 |
-
-所有引擎都通过 `0.15` 稳定性门禁。滚动场景中，ViewCompose 的 P50 比 Compose 高 12.3%
-（`+0.585 ms`），P95 高 25.2%（`+1.922 ms`）；其 P50 比 Android Views 高 6.8%
-（`+0.337 ms`），P95 高 32.7%（`+2.350 ms`）。相应 P99 分别高 26.0% 与 21.3%。两组
-滚动对比均归类为 `regressed`：即使对 Android Views 的 P50 增量未过门禁，P95 也同时跨过了
-归一化与绝对值门槛。ViewCompose 滚动 heap 比 Compose 高 3.4%，比 Android Views 高 88.9%。
-
-变更场景中，ViewCompose 的 P50、P95 与 P99 分别比 Compose 低 18.4%（`-0.960 ms`）、
-31.6%（`-5.870 ms`）和 42.3%（`-11.095 ms`），heap 低 5.5%，该对比归类为
-`improved`。相对 Android Views，ViewCompose P50 仅低 0.9%（`-0.040 ms`），可视为持平；
-但 P95 高 61.8%（`+4.849 ms`），P99 高 67.0%（`+6.079 ms`），heap 高 38.6%，该对比归类
-为 `regressed`。因此矩阵整体结论是 `mixed`：强 Snapshot 变更路径优于 Compose，并达到原生
-中位成本，但原生 RecyclerView 仍拥有更好的变更尾部，而且两个对照的滚动都优于 ViewCompose。
-
-动作协议完全相同，但不同引擎可能合并或产生不同数量的测量帧；Compose 变更每轮稳定产生 41 帧，
-另两个引擎则为 48 帧。因此该矩阵比较已验收的逐帧分布，不人为构造跨引擎三帧事务。它也是
-`run-from-apk` 下两份预构建 Snapshot 的 Ready 后稳态证据，不代表启动、Snapshot 构造、单调
-数据流或洁净的未编译 ART。下一步是分析 ViewCompose 滚动 P95/heap 差距与相对 Android Views
-剩余的变更尾部差距，再增加冷构造和单调数据流 Workload。
-
-第一轮内存效率跟进在 Samsung SM-G991B / Android 13 上比较了精确对照 `ea33297b` 与候选
-`06a411e7`。每组使用相同的 Benchmark APK 模式、五轮 `run-from-apk`、不变的 Fixture 与动作、
-无温控限频，并记录 `unlocked-dvfs-preflight-v1` 策略。该设备没有 Root 固定频率，因此以下结果
-只作为同设备诊断，不能替代 Xiaomi 固定频率基线：
-
-<div className="search-partition-detail">
-
-| 场景 | 分组 | 每轮帧数 | P50/P90/P95/P99，ms | 最大 heap/RSS anon 中位数，KiB | Run-P50 CV |
-| --- | --- | --- | ---: | ---: | ---: |
-| `performance.list@5` 滚动 | 对照 | `195/193/197/194/188` | 4.356 / 6.362 / 6.996 / 8.155 | 10518 / 55900 | 0.032 |
-| `performance.list@5` 滚动 | 候选 | `198/197/195/192/195` | 4.370 / 6.619 / 6.963 / 9.144 | 10638 / 56436 | 0.032 |
-| `performance.shadow-list@3` 滚动 | 对照 | `192/192/182/196/190` | 4.673 / 8.622 / 9.210 / 14.019 | 11079 / 60504 | 0.038 |
-| `performance.shadow-list@3` 滚动 | 候选 | `191/179/193/190/179` | 4.548 / 8.359 / 8.865 / 13.246 | 11040 / 61176 | 0.038 |
-
-普通列表候选的 P50/P90/P95/P99 变化为 `+0.3%/+4.0%/-0.5%/+12.1%`，最大 heap/RSS 变化为
-`+1.1%/+1.0%`。P99 的 `+0.989 ms` 方向仍需固定频率复查，但没有 Timing 指标跨过组合门禁，
-因此 Timing 结论为 `no material change`。进程内存方向为 `inconclusive`：逐轮 heap 波动较大，
-五组配对中有四组候选值更低，但中位数排序反转。阴影列表的对应 Timing 百分位变化为
-`-2.7%/-3.0%/-3.7%/-5.5%`，heap 为 `-0.4%`，RSS 为 `+1.1%`。这一有利 Timing 方向也未跨过
-实质性门禁，因此结论仍是 `no material change`，不能宣称已显著改善。两个方法都出现 Runtime
-Image 清理警告；它不影响 Ready 后交互，但排除了启动或 ART 状态结论。
-
-post-GC 归因解释了进程峰值指标无法回答的问题。两个精确分支的 Debug Build 都从冷启动进入同一
-普通列表路径，执行 12 次完整快速上划与 12 次完整快速下划，稳定后通过 `am dumpheap` 导出。
-被索引的实例与数组从 387,380 个对象、18,276,640 字节浅堆降至 381,104 个对象、18,147,122
-字节浅堆，即减少 6,276 个对象和 129,518 字节。候选完全移除了 1,000 个
-`WidgetLazyItemSessionBinding`（`-24,000` 字节）、1,000 个捕获 Item 的 Collector Lambda
-（`-16,000` 字节）、1,000 个 `HashMap.Node`（`-24,000` 字节）和 608 个
-`LinkedHashMap.Entry`（`-19,456` 字节）。延迟创建绘制状态还减少了 136 个 `Paint`、184 个
-`Path`、184 个 `RectF` 和 320 个原生分配 Cleaner Wrapper。两组都保留 124 个
-`UiEnvironmentValues`、共 3,968 字节浅堆，因此继续池化小 Value 不具备实质收益。这个结构化
-Live Set 结果归类为 `improved`，并与已实施的分配削减严格对应；它不量化原生资源字节，也不能
-替代正式的固定频率峰值内存运行。下一步是在 Root 固定频率下再跑一组普通列表对照/候选，P99 与
-最大 heap 是剩余的验收决策。
-
-固定频率闭环于 2026-08-20 在同一台已 Root 的 Xiaomi MI 6 / Android 9 参考设备上执行。精确
-对照 `ea33297b` 与候选 `06a411e7` 都重新构建为 R8 Benchmark Target；Target APK 的 SHA-256
-分别为 `ecd201dd3f3843b9abac7cb42011ad2a398612b7a31053a30e2036114a61aa99` 与
-`f2fc39ab7add472d3627382672e5eaa7a81ce2cef77ebb704b3e064eb2ae67d5`。两组共用同一个
-Benchmark APK（`0580ce4e8a6b6f93a369fccff2acf23fcc7e0d8519cf869a421e10f2816070fd`）、
-`performance.list@5`、五轮 `run-from-apk`、CPU Policy 1.4016/1.8048 GHz 固定频率、Adreno
-515 MHz 固定频率、暂停充电、停止厂商性能服务和 35--36 摄氏度起始温度。每组结束后都恢复了
-临时 Magisk 兼容 Wrapper 与全部设备控制项。
-
-| 分组 | 每轮帧数 | P50/P90/P95/P99，ms | 最大 heap 中位数，KiB | Run-P50 CV |
-| --- | --- | ---: | ---: | ---: |
-| 对照 | `162/162/164/162/161` | 5.218 / 8.517 / 9.248 / 11.004 | 7709 | 0.089 |
-| 候选 | `162/161/161/164/163` | 5.342 / 8.506 / 9.304 / 10.523 | 7591 | 0.068 |
-
-候选 P50/P90/P95/P99 分别变化 `+2.37%/-0.13%/+0.60%/-4.37%`；没有 Frame 指标跨过组合
-门禁，全部稳定性值都通过 `0.15`，解锁环境中不利的 P99 方向也消失。因此 Timing 结论为
-`no material change`。最大 heap 中位数下降 `118 KiB`（`1.53%`）。峰值样本本身仍不足以宣称
-普遍的进程内存胜出，但固定频率方向和量级与独立归因的 `129,518` 字节、6,276 个对象 Live Set
-减少一致。因此限定范围的内存结论为 `improved`：保留分配削减，而且没有把工作移入滚动热路径。
-限制也明确保留：这组对照不测 RSS、原生资源字节、启动、单调 Feed 或跨引擎排名；这些属于未来
-Workload 问题，不再阻塞已完成的分配计划。
-
-</div>
-
-可搜索结论为：普通列表和阴影列表帧耗时属于 `no material change`，噪声较大的进程峰值内存属于
-`inconclusive`，而固定频率最大 heap 方向所佐证的已归因分配结果属于 `improved`。该分配计划的
-P99 与内存验收决策已经完成。
-
-前述 A/B 证据只覆盖 revision 5 两份已构建 Snapshot 的 steady 交替，直接有利于有界的两代身份
-Cache。它没有测量 `toLazyItemsSnapshot()` 构造、首次求值、从不复用身份的单调数据流或 List
-滚动，因此不能外推到这些成本。应把强 Snapshot 路径作为显式尾延迟取舍接受，同时保留普通
-`List` 路径处理一般数据流；上方三引擎矩阵是独立的跨引擎结论。
-
-#### 2.4.4 导航与设计系统诊断
-
-导航 revision 6 也形成稳定的固定频率诊断数据：
-
-| 导航动作 | P50/P95/P99，ms | Run-P50 CV | 结论 |
-| --- | ---: | ---: | --- |
-| Push，无预编译 | 5.552 / 12.598 / 41.929 | 0.039 | 接受的绝对基线。 |
-| Push，请求 profile-guided 编译 | 5.601 / 11.173 / 42.148 | 0.070 | `no material change`；P95 改善 11.3%，未达到组合 15% 门槛，P99 不变。 |
-| 系统 Back，无预编译 | 5.558 / 15.618 / 40.089 | 0.039 | 接受的绝对基线。 |
-| 系统 Back，请求 profile-guided 编译 | 5.409 / 13.864 / 41.685 | 0.064 | `no material change`；P95 改善 11.2%，未达到组合门槛，P99 仍约 42 ms。 |
-
-Android 9 将两种请求的编译变体都记录为 `run-from-apk`，所以 profile-guided 行只能作为诊断，
-不能证明 ART 编译状态确实不同；但这些结果仍否定了“普通预热足以解释约 42 ms 导航 P99”这一
-推测。API 29 以下会主动省略导航自定义 `TraceSectionMetric`，而不是报告误导性的零值。
-
-设计系统 revision 3 矩阵建立了第一份 Root 固定频率绝对基线；不同视觉系统不是等价工作量，
-因此在出现同口径历史或未来基线前，方向性比较仍为 `inconclusive`：
-
-| 场景 | Cut Contrast | Rounded Reference | Cupertino Pressure | Run-P50 CV 范围 | 结论 |
-| --- | ---: | ---: | ---: | ---: | --- |
-| 首次显示中位数，ms | 531.254 | 558.753 | 561.880 | 0.039--0.088 | 稳定绝对基线；方向结论 `inconclusive`。 |
-| Patch P50/P95/P99，ms | 7.934 / 23.008 / 25.716 | 7.959 / 23.855 / 26.222 | 7.842 / 15.907 / 24.841 | 0.056--0.079 | 稳定绝对基线；方向结论 `inconclusive`。 |
-| 滚动 P50/P95/P99，ms | 3.798 / 7.582 / 9.000 | 3.731 / 8.071 / 9.124 | 3.730 / 7.572 / 8.905 | 0.009--0.034 | P99 稳定处于一个 60-Hz 帧内；方向结论 `inconclusive`。 |
-| 活跃动画 P50/P95/P99，ms | 7.661 / 17.285 / 20.884 | 7.617 / 15.146 / 21.664 | 8.045 / 15.736 / 18.455 | 0.077--0.110 | 稳定绝对基线；各自 P95/P99 尾部继续监控。 |
-| Cut Contrast 浮层生命周期 P50/P95/P99，ms | 4.535 / 27.499 / 39.833 | — | — | 0.055 | 稳定基线；浮层 P95/P99 是下一个 design-bundle 尾部目标。 |
-
-#### 2.4.5 ConstraintLayout 首发性能安全
-
-2026-08-19 的首发矩阵使用已 Root 的 Xiaomi MI 6 / Android 9、R8 与资源压缩 benchmark target、
-每方法 5 次迭代，以及 AndroidX Benchmark 实际报告的 `run-from-apk` 编译身份。CPU Policy 0/4
-固定为 1.4016/1.8048 GHz，Adreno GPU 固定为 515 MHz，全部 CPU Online，暂停充电并停止厂商
-性能服务；每个方法都在不高于 37 摄氏度时开始。硬切前 ViewCompose APK SHA-256 为
-`2b32ca7539be121615fb3e7b61953101be7b9a2e4ac55215690d88a480b25161`，最终 Candidate 为
-`a7d681b90941a8d318108d709b3a7b77147b614180a8d2124840416d07148fac`。Instrumentation 运行期间
-仅用临时 Root Shell 兼容 Wrapper 把 AndroidX 的 AOSP `su root` 形式适配到 Magisk；Target、
-Workload、Metric 与结果 JSON 没有改写，每个完整方法批次结束后都恢复原 Magisk 入口。
-
-下表每格都是 Frame CPU P50/P95（毫秒）。Delta 为 Candidate 相对硬切前 ViewCompose Baseline
-的变化；CV 为 Baseline/Candidate 的迭代 P50 变异系数。只有原始运行超过 0.15 时才用一次相邻
-复测替换；scalar-100 因跨 APK 中位数改变方向也复测一次。被替换的原始运行仍保留为证据。
-只有 Baseline、Candidate 与 Direct-native Control 都稳定时，场景才形成方向性结论。
-
-| 动作 | Baseline ViewCompose | Candidate ViewCompose | Direct Android Views | Candidate 变化 | CV | 结论 |
-| --- | ---: | ---: | ---: | ---: | ---: | --- |
-| `stable-10` | `5.270/11.178` | `4.778/12.009` | `3.643/5.279` | `-9.3%/+7.4%` | `0.094/0.131` | `no material change` |
-| `stable-50` | `6.705/20.751` | `5.105/19.603` | `3.774/5.788` | `-23.9%/-5.5%` | `0.074/0.130` | 中位数 `improved`，尾部无回退 |
-| `stable-100` | `7.632/25.856` | `5.642/25.353` | `3.873/7.141` | `-26.1%/-1.9%` | `0.089/0.146` | 中位数 `improved`，尾部无回退 |
-| `scalar-10` | `5.495/14.622` | `5.093/13.574` | `4.190/6.327` | `-7.3%/-7.2%` | `0.143/0.185` | `inconclusive` |
-| `scalar-50` | `5.675/23.466` | `5.796/23.724` | `4.400/6.871` | `+2.1%/+1.1%` | `0.128/0.091` | `no material change` |
-| `scalar-100` | `6.411/32.187` | `6.051/35.986` | `5.009/8.973` | `-5.6%/+11.8%` | `0.141/0.202` | `inconclusive` |
-| `helper-10` | `5.158/10.878` | `5.033/11.617` | `4.014/6.327` | `-2.4%/+6.8%` | `0.077/0.074` | `no material change` |
-| `helper-50` | `5.221/12.193` | `5.280/11.730` | `3.968/6.657` | `+1.1%/-3.8%` | `0.105/0.123` | `no material change` |
-| `helper-100` | `5.868/11.977` | `6.169/13.773` | `4.598/8.284` | `+5.1%/+15.0%` | `0.129/0.068` | `no material change`；精确变化仍低于 15% 门禁 |
-| `topology-10` | `5.130/15.123` | `5.251/14.080` | `4.099/6.471` | `+2.4%/-6.9%` | `0.095/0.217` | `inconclusive` |
-| `topology-50` | `6.304/23.003` | `6.162/23.609` | `4.780/6.850` | `-2.3%/+2.6%` | `0.147/0.148` | `no material change` |
-| `topology-100` | `6.296/30.919` | `9.222/32.056` | `4.923/10.525` | `+46.5%/+3.7%` | `0.231/0.043` | `inconclusive`；Baseline 不稳定 |
-
-最初 Candidate 暴露了稳定的 topology-50 P50 回退：12.3%（`+0.772 ms`）。Renderer 随后从
-回滚快照捕获中移除 O(n²) 的 Child Index 查询，并在没有已接受 Group、Layer 或 Placeholder
-内容覆盖被释放时跳过完全相同的第二份快照。这个因果范围明确的修复把 topology-50 从
-`7.076/22.001 ms` 改为 `6.162/23.609 ms`；相对硬切前 Baseline，P50 低 2.3%、P95 高 2.6%，
-所以接受结论为 `no material change`。修正后的报告门禁优先使用 Compose，但在这批双引擎场景
-使用 Android Views，并把不稳定行标为 `INCONCLUSIVE`；`--enforce` 以 0 个稳定 Timing 或 Memory
-回归通过。
-
-12 个动作的 Candidate Median Peak Heap 变化范围为 -14.4% 到 +5.3%，没有任何一行同时跨过
-15% 与 2048 KiB 的 Memory 门禁。矩阵级首发性能安全结论为 `no material change`：8 个动作的
-两侧 ViewCompose 稳定，4 个为 `inconclusive`，稳定动作均无回退。这不是性能领先声明。
-Direct Android Views 仍明显更快，尤其是 P95；该差距属于发版后优化目标。
-
-局限包括仅一台 API 28 设备、`run-from-apk` JIT/代码布局敏感性、4 个未解决的 CV 行、只有 Peak
-而非 Post-GC Retained Memory，以及该 Workload 没有 P99。下一步是源码冻结的首发窗口。Central
-发布并完成 Tag 后，ConstraintLayout 扩展计划可以用稳定的多设备协议研究分类 Scalar/Topology
-快速路径；首发列车不宣称这些收益。
-
-#### 2.4.6 ConstraintLayout Phase 1 协调预检
-
-2026-08-21 的 Phase 1 预检在同一台已 Root 的 Xiaomi MI 6 / Android 9 上比较精确的已发布源码
-Control `143b09acf3bfcda81add008b4dcf09d06a09e2dc` 与 Candidate `360670d4`。两侧均为 R8/资源
-压缩 Benchmark Target。Control 与 Candidate APK SHA-256 分别是
-`3b0510810f64de6881ec844337179b2337f92ce03700231abc00be5c66422c62` 和
-`83766f3c5aff66bd13e3593cf2c8c614d514e5a7231807795dde7a06c2280fe2`。共享 Benchmark APK 是
-`1616fe2d5ea7aab5d8496be5b2dd3521ebf798cbbed0f9377bc3f0594d953de1`；只修改 Instrumentation
-Magisk 传输边界后的 APK 是
-`5a8ed54feea46ec80f210d4d967c975bcfe97ebc7ec0f04480ab9eae91fdc05e`。该等长改写只把 AndroidX
-Benchmark 的 AOSP `su root` 命令形式换为 Magisk `su -c`；Target APK、Workload、Metric Capture
-与结果 JSON 均未改变。
-
-预检使用 5 次 `run-from-apk` 迭代、4 个 Update/Reset Cycle，CPU Policy 固定为
-1.4016/1.8048 GHz，Adreno 固定为 515 MHz，CPU/GPU 带宽固定为 `13763`，暂停充电、停止厂商
-性能服务、保持屏幕可交互，并在不高于 37 摄氏度时开始每个方法。每行依次记录聚合 Frame CPU
-P50/P95/P99（毫秒）、Median Peak Heap（KiB）以及各次迭代 P50 的变异系数。
-
-| Arm | Frame P50/P95/P99，ms | Median Peak Heap，KiB | Run-P50 CV | 验收 |
+| 动作 | Cut Contrast | Rounded Reference | Cupertino Pressure | 结论 |
 | --- | ---: | ---: | ---: | --- |
-| Released stable-50 | `6.035/23.179/25.138` | 7703 | `0.181` | 拒绝：CV 高于 `0.15`。 |
-| Candidate stable-50 | `5.791/23.638/25.332` | 7762 | `0.212` | 拒绝：CV 高于 `0.15`。 |
-| Released scalar-50 | `7.490/23.716/24.849` | 8282 | `0.261` | 拒绝：CV 高于 `0.15`。 |
-| Released scalar-50 repeat | `6.399/24.112/27.994` | 9267 | `0.244` | 拒绝：相邻复测仍不稳定。 |
-| Candidate scalar-50 | `6.948/24.760/26.756` | 8917 | `0.143` | 单 Arm 稳定；Pair 仍拒绝。 |
+| 首次展示中位数，毫秒 | `531.254` | `558.753` | `561.880` | 稳定；归一化方向为 `inconclusive`。 |
+| Patch P50/P95/P99，毫秒 | `7.934/23.008/25.716` | `7.959/23.855/26.222` | `7.842/15.907/24.841` | 稳定的绝对基线。 |
+| 滚动 P50/P95/P99，毫秒 | `3.798/7.582/9.000` | `3.731/8.071/9.124` | `3.730/7.572/8.905` | 稳定，所有 P99 均低于一个 60 Hz 帧。 |
+| 活跃动画 P50/P95/P99，毫秒 | `7.661/17.285/20.884` | `7.617/15.146/21.664` | `8.045/15.736/18.455` | 稳定，各自尾部继续监控。 |
+| Cut Contrast Overlay P50/P95/P99，毫秒 | `4.535/27.499/39.833` | — | — | 稳定；Overlay 尾部是下一个设计包目标。 |
 
-Stable-50 的 Candidate 聚合 P50/P95/P99 变化为 `-4.0%/+2.0%/+0.8%`，Peak Heap 为 `+0.8%`，
-但两侧都没有通过稳定性门槛。Scalar-50 的 Candidate 相对第一次 Released 运行是
-`-7.2%/+4.4%/+7.7%`；相对相邻 Released 复测则变为 `+8.6%/+2.7%/-4.4%`。Peak Heap 也从
-相对第一次运行的 `+7.7%` 变为相对复测的 `-3.8%`。这些依赖 Reference 且方向相反的结果不能
-作为归一化证据。
+Run-P50 CV 范围为 `0.009..0.110`。在出现匹配的历史或未来基线前，不作设计系统方向性
+结论。
 
-全帧结论为 **inconclusive**。Longitudinal Control/Candidate 前置条件失败，无法形成 Three-arm
-声明，因此没有把 Direct-native 结果提升为对照结论。该预检不否定已经独立通过的 Phase 1 结构预算：
-1,000 次 Equal 更新的 Adapter Graph/Compiler/Native/Helper/Layout/Allocation 工作均为 0；Scalar
-更新不创建/删除 Helper、不克隆 Live LayoutParams，并且最多提交和请求一次 Layout。局限是只有
-一台 API 28 设备、Workload 仅 16～17 个 Frame，且每次运行的变动持续存在。下一步是充分降温的
-Phase 4 Direct-native/Released/Candidate 矩阵；稳定复验之前不宣称全帧优化收益。
+#### 2.4.3 ConstraintLayout 发版安全结论
 
-#### 2.4.7 ConstraintLayout Phase 4 受控矩阵 {/* #247-constraintlayout-phase-4-controlled-matrix */}
+##### 2.4.5 ConstraintLayout 首发安全 {/* #245-constraintlayout-first-release-safety */}
 
-2026-08-21 的 Phase 4 在已 Root 的 Xiaomi MI 6 / Android 9 参考设备上，对比冻结的已发布框架
-源码 `143b09acf3bfcda81add008b4dcf09d06a09e2dc` 与 Candidate 基线
-`b1aa64f206554a91443715e2a32f37864ab71432`。Released、Candidate 与共享 Benchmark APK 的
-SHA-256 分别是
-`bdf94fdc934780afd8e46298a7f5081a402838aa08cefc1deb46fe705335e179`、
-`3b4dcf71c9952c5650d11cb448a6c3281f901fa9936e269529ae36be8053d71c` 与
-`5c4b611fee97fa35faee7303ef3f7b073f5e34de1413f03b5783f6ffcfeb0b0e`。
+##### 2.4.5 ConstraintLayout 首发性能安全
 
-Revision 6 直接调用已有 Accessibility Click Action，并校验每次动作后的状态变化。16 个
-Update/Reset Cycle 因而为每次运行提供至少 32 个 Content-update Frame，不再混入 Pointer
-Press/Release 动画。Direct AndroidX Cell 与 ViewCompose Cell 使用相同的可见填充；10、50、100
-节点页面在测量前都通过人工视觉检查。Revision 4 因 Direct Cell 透明且每次运行只有约 16 帧而
-作废；Revision 5 因坐标点击形成约 `16 + 16` 个快速按钮帧与较慢内容布局帧的双峰混合而作废。
-两个被拒绝的 Revision 都不是 Baseline。
+##### 2.4.6 ConstraintLayout 第一阶段协调预检 {/* #246-constraintlayout-phase-1-reconciliation-preflight */}
 
-两份最终 Target 均经过 R8/资源压缩且不可调试。每个方法使用 5 次 `run-from-apk` 迭代、v4 固定
-CPU/GPU/互连策略，在不高于 37 摄氏度时开始，暂停充电并停止厂商性能服务。两份主矩阵各保留
-24 份 JSON 和 120 份 Trace。每个不稳定 Pair 只用一次完整成对复测替换；Candidate 保留 12 个
-复测方法/60 份 Trace，Released 保留 16/80，没有选择第三次运行。表中是 ViewCompose Frame CPU
-P50/P95/P99（毫秒）；Direct 是配对 Candidate AndroidX P50/P95；CV 是最终 Released/Candidate
-Run-P50 CV。
+##### 2.4.7 ConstraintLayout 第四阶段受控矩阵 {/* #247-constraintlayout-phase-4-controlled-matrix */}
 
-| Action | Released ViewCompose | Candidate ViewCompose | Direct AndroidX | CV | 结论 |
+Revision 6 矩阵每次迭代直接执行 16 轮 Accessibility 更新/重置。Released/Candidate 有
+7 对稳定，另 5 对因至少一侧超过 `0.15` Run-P50 CV 上限而保持 `inconclusive`。
+
+| 动作 | Released P50/P95/P99，毫秒 | Candidate P50/P95/P99，毫秒 | Direct AndroidX P50/P95，毫秒 | 最终 CV Released/Candidate | 结论 |
 | --- | ---: | ---: | ---: | ---: | --- |
 | `stable-10` | `9.116/10.918/13.854` | `8.803/11.462/14.612` | `3.438/4.676` | `0.143/0.120` | `no material change` |
 | `stable-50` | `10.614/19.107/23.141` | `11.237/17.137/19.951` | `4.402/5.971` | `0.117/0.180` | `inconclusive` |
@@ -944,297 +541,68 @@ Run-P50 CV。
 | `topology-50` | `13.570/22.272/27.262` | `12.367/21.920/25.432` | `7.312/8.683` | `0.201/0.140` | `inconclusive` |
 | `topology-100` | `15.719/32.688/34.876` | `15.390/34.778/38.771` | `11.409/12.850` | `0.110/0.098` | `no material change` |
 
-7 个 Longitudinal Pair 可解释，全部 Timing 与 Memory Regression 行通过。Direct-normalized
-Candidate P50 变化范围是 `-5.7%` 到 `+8.4%`，P95 为 `-4.0%` 到 `+14.3%`。Candidate Peak Heap
-变化范围是 `-3.8%` 到 `+10.5%`，没有任何行跨过 15% 与 2,048 KiB 的组合 Memory 门禁。其余
-5 个 Action 因至少一条最终 ViewCompose Arm 的 CV 高于 `0.15` 而为 `inconclusive`。12 个
-Candidate Action 的 P95 全部由 Direct AndroidX 更快；P50 则有 11 个由 Direct 更快。Candidate
-helper-100 的 P50 比 Direct 快 `16.5%`，但 P95 慢 `34.6%`，因此它是 Mixed，而不是性能领先结果。
-要求的 50 节点 Stable/Scalar 25% Gap Closure 没有成立。
+稳定行中，Candidate 相对 Direct 的 P50 变化范围为 `-5.7%..+8.4%`，P95 为
+`-4.0%..+14.3%`。Candidate 峰值 Heap 变化范围为 `-3.8%..+10.5%`，没有一行跨过 15%
+与 2,048 KiB 的组合门槛。Direct AndroidX 在全部 12 个动作的 P95 和其中 11 个动作的 P50
+更快。发版安全结论是 `no material change`：结构快速路径保留精确零工作和有界写入证据，
+但不宣称整帧性能领先。后续整帧工作必须建立新的可归因计划，不能反复采样。
 
-Phase 4 的发版安全结论是 **no material change**：没有稳定回退，也没有全帧优化胜利。Phase 1
-结构快速路径仍由精确的零工作与有界写入计数证明，而不是由 Frame-time 声明证明。Environment-only
-更新继续使用结构 Benchmark，因为 Direct AndroidX 没有等价的声明式环境解析动作。局限包括仅一台
-OEM/API-28 设备、`run-from-apk` JIT/代码布局敏感性、5 个未解决 CV 行、只有 Peak 而非 Post-GC
-Retained Memory，以及物理矩阵没有独立 Adapter-only Timing Probe。后续全帧工作必须建立新的归因
-优化计划；反复运行当前矩阵直到出现有利样本不是可接受的下一步。
+#### 2.4.4 动画与共享运动结论
 
-#### 2.4.8 Animation revision-1 物理动画改造前基线 {/* #248-animation-revision-1-pre-physics-baseline */}
+##### 2.4.8 动画 Revision 1 的物理改造前基线 {/* #248-animation-revision-1-pre-physics-baseline */}
 
-2026-08-22 的 Phase 0 批次在物理 Spring 硬切前冻结了基于 Duration 的 Animation 基线。测试使用
-已 Root 的 Xiaomi MI 6 / Android 9 参考设备并固定为 60 Hz；Target 经过 R8/资源压缩且不可调试。
-每个方法运行 5 次 `run-from-apk` 迭代，在测量外等待 5 秒，通过 Accessibility Click Action
-驱动，每次迭代执行 4 个完整的正向/反向 Round Trip。Target 源码基于
-`3cf6668f516ace95fabfb80dac049a6e83e1fbd5`，Target APK SHA-256 为
-`3a5ca305815ca3ba3d60841376b72a46f9f79e3cb943aca8dc706d8e845a42b1`。
+##### 2.4.9 动画 Revision 1 第一阶段物理候选 {/* #249-animation-revision-1-phase-1-physical-candidate */}
 
-Clock Policy 为
-`root-fixed-cpu-1401600-1804800-gpu-515000000-interconnect-13763-perf-hal-off-animation-v1`：
-CPU Policy 0/4 固定为 1.4016/1.8048 GHz，GPU 固定为 515 MHz，已暴露的 CPU/GPU Interconnect
-最小 Vote 固定为 13,763，停止厂商 Performance Service，并暂停充电。所有 JSON 都报告
-`cpuLocked=true` 且 Thermal-throttle Sleep 为 0。该设备上的 Android 9 没有暴露平台
-Thermal-status Service，因此以每个方法开始时 31～33 摄氏度的电池温度作为温度证据，并逐次确认
-当前频率。每个方法结束后都恢复了所有修改过的 Governor、频率边界、服务和充电状态。
+##### 2.4.10 动画 Revision 2 的 AnimatedContent 对照 {/* #2410-animation-revision-2-animatedcontent-comparison */}
 
-AndroidX Benchmark 1.4.1 会发出仅适用于 AOSP 的 `su root` 命令，而 Magisk 30.6 无法在该设备
-执行它。Instrumentation APK 只在命令传输边界用等长 `su 0 -c` 替换并修复 Checksum/Signature。
-原始与适配后的 Benchmark APK SHA-256 分别为
-`a2524805d77da2dc7bad578f697c2051bc8615e8bcbb2b43554178c48c37ff96` 和
-`c70f1fc3190949d030975fcc9025d90246fe70e88cf70ebe42adbd0effe54a5e`；Target APK、Workload、
-Metric 与 Result JSON 均未改写。
+##### 2.4.11 动画 Revision 3 的丰富可见性发版安全对照 {/* #2411-animation-revision-3-rich-visibility-release-safety-comparison */}
 
-| Workload | 每轮帧数 | Frame CPU P50/P90/P95/P99，ms | Peak Heap 中位数，KiB | Run-P50 CV | 验收 |
-| --- | --- | ---: | ---: | ---: | --- |
-| `animation.specs@1` Duration Spring/Value Channel | `152/152/152/152/152` | `8.854/12.350/13.067/14.641` | 8113 | 0.075 | 已接收绝对基线 |
-| `animation.content@1` Crossfade | `144/144/144/144/144` | `7.102/9.791/10.454/16.038` | 7341 | 0.029 | 已接收绝对基线 |
-| `animation.content-size@1` 实测尺寸动画 | `184/184/184/184/184` | `4.850/6.165/7.258/23.159` | 6514 | 0.010 | 已接收绝对基线 |
-| `animation.transition@1` 同步 Channel | `168/168/168/168/168` | `8.231/12.094/12.388/14.248` | 8283 | 0.028 | 已接收绝对基线 |
+##### 2.4.12 动画 Revision 2 的可寻址 Transition 基线 {/* #2412-animation-revision-2-seekable-transition-baseline */}
 
-4 个 Workload 在 5 次运行中的帧数都完全一致，并通过 `0.15` 稳定性上限。这是一份已接收的绝对
-基线，但归一化结论为 **inconclusive**：Phase 0 没有 Candidate 或同轮 Compose Control，因此
-不能证明性能改善或回退。局限包括只有一台 OEM/API-28 设备、`run-from-apk` 对 JIT/代码布局敏感、
-用电池温度代替平台 Thermal-status 数值、只有 Peak 而非 Post-GC Retained Memory，以及没有
-Compose 对照。Phase 1 必须保持 Scenario Revision 与 Clock Policy 不变，将物理引擎与对应行对比，
-报告绝对值与归一化变化，并通过 ADR-0019 的 Allocation 与 Terminal-state Counter 后才能完成。
+##### 2.4.13 动画 Revision 1 的真实 Bounds 对照 {/* #2413-animation-revision-1-real-bounds-comparison */}
 
-#### 2.4.9 Animation revision-1 Phase 1 物理动画候选版本 {/* #249-animation-revision-1-phase-1-physical-candidate */}
+##### 2.4.14 导航 Revision 1 的共享内容对照 {/* #2414-navigation-revision-1-shared-content-comparison */}
 
-2026-08-22 的 Phase 1 批次在同一台 Xiaomi MI 6 / Android 9 设备上，将硬切后的物理引擎与
-2.4.8 节基线进行对比。4 个 Workload Revision、适配后的 Benchmark APK、每个方法 5 次
-`run-from-apk` 迭代、Action 数量、构建模式与固定 Clock Policy 均保持不变。Candidate Worktree
-基于 `6d6bdbe4`；其经过 R8/资源压缩的 Target APK SHA-256 为
-`45e17659c2cfdeb0c643584c81e39cafdcfd3a47849d37504238fc20e61045fb`。未变化的适配版
-Benchmark APK SHA-256 为
-`c70f1fc3190949d030975fcc9025d90246fe70e88cf70ebe42adbd0effe54a5e`。
+物理动画硬切保留 revision 1 的动作和固定频率策略：
 
-当前环境无法复现基线的 31～33 摄氏度电池温度。测试因此在预冷前暂停充电，每个方法等待温度
-不高于 36 摄氏度后再锁频；控制项前后实际记录范围为 36～38 摄氏度。所有 JSON 仍报告
-`cpuLocked=true`、精确匹配的 Clock/Scenario/Revision Payload、`run-from-apk`，且
-Thermal-throttle Sleep 为 0；前后检查也保持了指定的 CPU、GPU 与 Interconnect 频率。批次结束后
-已恢复充电、Governor、频率边界和厂商 Performance Service。较高的环境温度是明确的对比局限，
-不代表放宽计时或锁频门禁。
+| 工作负载 | Duration 基线 P50/P95，毫秒；Heap KiB | Physical 候选 P50/P95，毫秒；Heap KiB | P50/P95/Heap 变化 | 结论 |
+| --- | --- | --- | --- | --- |
+| `animation.specs@1` | `8.854/13.067; 8113` | `6.114/8.303; 8123` | `-30.9%/-36.5%/+0.1%` | 帧 CPU 为 `improved`。 |
+| `animation.content@1` | `7.102/10.454; 7341` | `5.291/8.444; 7776` | `-25.5%/-19.2%/+5.9%` | 帧 CPU 为 `improved`。 |
+| `animation.content-size@1` | `4.850/7.258; 6514` | `2.835/6.727; 6383` | `-41.5%/-7.3%/-2.0%` | P50 为 `improved`，P95 未回退。 |
+| `animation.transition@1` | `8.231/12.388; 8283` | `6.322/8.408; 8387` | `-23.2%/-32.1%/+1.3%` | 帧 CPU 为 `improved`。 |
 
-| Workload | Candidate 每轮帧数 | Candidate Frame CPU P50/P90/P95/P99，ms | Candidate Peak Heap 中位数，KiB | Run-P50 CV | 相对 Phase 0 的 P50 / P95 / Heap 变化 | 验收 |
-| --- | --- | ---: | ---: | ---: | ---: | --- |
-| `animation.specs@1` Physical Spring/Value Channel | `224/224/224/224/224` | `6.114/7.588/8.303/11.210` | 8123 | 0.002 | `-30.9% / -36.5% / +0.1%` | 通过；P50 与 P95 均显著降低 |
-| `animation.content@1` Crossfade | `144/144/144/144/144` | `5.291/7.502/8.444/11.196` | 7776 | 0.012 | `-25.5% / -19.2% / +5.9%` | 通过；P50 与 P95 均显著降低 |
-| `animation.content-size@1` Physical Measured-size Motion | `214/214/216/215/214` | `2.835/4.511/6.727/14.442` | 6383 | 0.003 | `-41.5% / -7.3% / -2.0%` | 通过；P50 显著降低且 P95 未回退 |
-| `animation.transition@1` 同步 Channel | `160/160/160/160/160` | `6.322/7.768/8.408/10.590` | 8387 | 0.007 | `-23.2% / -32.1% / +1.3%` | 通过；P50 与 P95 均显著降低 |
+所有 Run-P50 CV 都不高于 `0.012`，Heap 为 `no material change`。物理收敛会改变帧数，
+所以这些是逐帧 CPU 证据，不是总时长或能耗证据。
 
-4 行都通过 ADR-0019 的 Frame 与 Memory 回退预算，全部 Run-P50 CV 均低于 `0.15`。限定在
-Frame CPU 的结论为 **improved**：全部 P50 都显著降低，3 行 P95 显著降低，Measured-size 的 P95
-也更低，但未超过绝对显著性门槛。Peak Heap 的结论为 **no material change**，因为全部变化都在
-10% 与 1,024 KiB 的组合门禁内。确定性测试还证明 Physical Evaluator 会复用 Position/Velocity
-Buffer，并且 `Finished`、`BoundReached`、`DurationLimitReached` 保持为不同终止结果，因此
-ADR-0019 要求的 Allocation 与 Terminal-state Counter 也通过。
+| 能力 | 对照或基线 | 候选 | 归一化结果 | 分类 |
+| --- | --- | --- | --- | --- |
+| `animation.content@2` AnimatedContent | Crossfade P50/P95/P99 `5.680/8.678/10.785`、Heap `8022` | `5.589/9.329/10.996`、Heap `8334` | `-1.6%/+7.5%/+2.0%`；Heap `+3.9%` | 帧与 Heap 为 `no material change`。 |
+| 丰富 Visibility revision 3 | Phase 3 前 `8.138/10.760/12.343`、Heap `7846` | `8.334/11.115/15.723`、Heap `8149` | `+2.4%/+3.3%/+27.4%`；Heap `+3.9%` | P50/P95/Heap 为 `no material change`；P99 是低于一个 60 Hz 帧的监控项。 |
+| `animation.transition@2` Seek | 无 | `7.775/10.493/11.718`、Heap `8474`、CV `0.011` | 没有兼容的旧工作负载 | 稳定绝对基线；归一化方向为 `inconclusive`。 |
+| `animation.bounds@1` | Snap `8.727/25.762/28.556`、Heap `6868` | Bounds `5.124/6.438/18.503`、Heap `6714` | `-41.3%/-75.0%/-35.2%`；Heap `-2.2%` | 活跃逐帧 CPU 为 `improved`；Heap 为 `no material change`。 |
+| `navigation.shared-motion@1` | 普通运动 `3.989/8.487/30.020`、Heap `6651` | 两个共享对 `4.073/8.096/36.099`、Heap `6971` | `+2.1%/-4.6%/+20.3%`；Heap `+4.8%` | P50/P95/Heap 为 `no material change`；P99 继续作为导航尾部监控项。 |
 
-这不是整段动画时长或能耗结论。Physical Settling 使 `animation.specs@1` 的每轮帧数中位值从
-152 增至 224，使 `animation.content-size@1` 从 184 增至 214；Crossfade 保持 144，Synchronized
-Transition 则从 168 变为 160。Workload Action 没有变化，但物理终止会有意改变这些 Action
-持续的帧数。局限包括 36～38 摄氏度的更高环境温度、仅一台 OEM/API-28 设备、`run-from-apk`
-对 JIT/代码布局敏感、只有 Peak 而非 Post-GC Retained Memory、没有 Compose Control，以及没有
-直接功耗测量。Critical-spring 与 Decay Demo 检查随后已通过；已接受的下一步是完整设备门禁。
-不能为了获取更有利样本而重跑这批已通过的数据。
+Bounds 两侧有意产生 16 与 464 帧，因此不能推导总 CPU 工作或能耗。丰富 Visibility 也增加
+编排覆盖面和帧数。共享运动覆盖已提交 Push 的 Snapshot 准备和释放，不覆盖单独的 Predictive
+Back 帧基准。这些行只覆盖一台 OEM/API 28 设备、峰值而非 GC 后保留内存，不包含逐对象分配
+事件或直接能耗测量。Retarget、一写入者、有界保留、回滚、清理和生命周期正确性由确定性测试
+负责。
 
-#### 2.4.10 Animation revision-2 AnimatedContent 对照 {/* #2410-animation-revision-2-animatedcontent-comparison */}
+#### 2.4.5 当前决策边界
 
-2026-08-22 的 Phase 2 批次在同一台 Xiaomi MI 6 / Android 9 参考设备上，对比了真正的 Keyed
-`AnimatedContent` 与保留的纯 Alpha `Crossfade`。两个方法共用 `animation.content@2` 页面、经过
-R8/资源压缩且不可调试的 Target、5 次 `run-from-apk` 迭代、测量外 5 秒启动等待、Accessibility
-Action、4 个正反向 Round Trip，以及 2.4.8 节固定 CPU/GPU/Interconnect 的 Clock Policy。
-AnimatedContent 方法驱动 Primary Action，同时覆盖 Fade、逻辑 Slide、Scale、Clipping 与不等高
-Size Transform；Crossfade Control 驱动同页 Secondary Action。源码 Worktree 基于
-`a8196f0b82b45830e3c5167060a7b99faab12927`；Target APK SHA-256 为
-`71d54ea4bfaf2ffccb32e5e76a8a353319ab04fd738bd83b2419dbeae0492880`。
+当前证据只支持有范围的结论：
 
-原始和适配 Magisk 后的 Benchmark APK SHA-256 分别为
-`ce6cb4619ff72d6a2a8d31f9393d5d139809125a538fa80290a1c38f6fe5f735` 与
-`6b41612237103e1ca308349ec04dcf2169dce80039fa5d79ca4ce6e7031e4204`。适配只把 AndroidX
-不受支持的 `su root` 传输形式替换为等长 `su 0 -c`，并修复 DEX Checksum 与 APK Signature。
-两个已接收方法均报告 `cpuLocked=true`、精确的 Revision-2 Payload，且 Thermal-throttle Sleep
-为 0。电池温度范围为 32～34 摄氏度；每个方法前后的 CPU、GPU 与 Interconnect 频率检查都一致，
-批次结束后也恢复了全部控制项和充电状态。由于环境温度会变化，不要求 33 摄氏度起跑；已接收的
-控制条件是同批温度范围、稳定的固定频率，以及没有 Thermal Throttling。
+1. 已接受行中，ViewCompose 更新与属性工作可与 Compose 竞争或更快，但 Android Views 仍在
+   重要滚动、Traversal 和更新尾部占优。
+2. 强 Lazy Snapshot 是显式的中位数换尾部权衡；普通 `List` 路径仍是通用数据流默认值。
+3. ConstraintLayout 结构快速路径因确定性的零工作边界而保留，不宣称整帧领先。
+4. 动画与共享运动切片通过各自发版安全门槛；帧数变化阻止总工作量或能耗结论。
+5. 没有任何矩阵证明通用的帧时或内存胜者。
 
-| Workload | 每轮帧数 | Frame CPU P50/P90/P95/P99，ms | Peak Heap 中位数，KiB | Run-P50 CV | 验收 |
-| --- | --- | ---: | ---: | ---: | --- |
-| `animation.content@2` AnimatedContent | `176/176/176/176/176` | `5.589/7.639/9.329/10.996` | 8334 | 0.008 | 通过 |
-| `animation.content@2` Crossfade Control | `160/159/160/160/158` | `5.680/7.484/8.678/10.785` | 8022 | 0.004 | 通过 |
-
-相对 Crossfade，AnimatedContent 的 P50/P90/P95/P99 变化为
-`-1.6%/+2.1%/+7.5%/+2.0%`；最大的绝对 Timing 增量是 P95 的 `+0.651 ms`。Peak Heap 中位数
-增加 `312 KiB`（`+3.9%`）。Timing 和 Memory 都没有越过 ADR-0019 的组合回退门禁，两组
-Run-P50 CV 都远低于 `0.15`，且 AnimatedContent 的 5 轮帧数完全一致。因此 Frame 与 Peak Memory
-结论为 **no material change**。帧数增加 10% 是预期的 Workload 覆盖差异，不是时长或能耗结论：
-AnimatedContent 对两个不等尺寸的 Keyed Subtree 同时执行 5 个 Channel，Crossfade 只执行 Alpha。
-
-Allocation 证据有边界但可接收：Peak Heap 对照仍在进程内存预算内；确定性的 Composition 与
-Renderer 测试同时强制最多保留两个 Content Subtree，在 A-to-B-to-C Retarget 时只释放一次被替代
-Owner，并在全部参与 Channel Settled 后移除 Outgoing Subtree。Android 9 Macrobenchmark 不暴露
-逐对象 Allocation Event，因此该证据不宣称更低的 Allocation Churn 或 Post-GC Retained Memory。
-其他局限包括仅一台 OEM/API-28 设备、`run-from-apk` 对 JIT/代码布局敏感、没有 Compose Control，
-以及没有直接功耗测量。Phase 2 的限定性能决策已接收；下一步是完整项目和设备门禁，而不是重复采样。
-
-#### 2.4.11 Animation revision-3 丰富 Visibility 发版安全对照 {/* #2411-animation-revision-3-rich-visibility-release-safety-comparison */}
-
-2026-08-23 的 Phase 3 批次在同一台 Xiaomi MI 6 / Android 9 参考设备上，对比了合并后的
-Pre-Phase-3 Target `84dce0ae6220517b5488070fa285ccc9226235f7` 与 Rich Visibility Candidate。
-同一个 Revision-3 Benchmark 方法驱动 `animation.core` Primary Action，在测量外等待启动 5 秒后
-执行 4 个 Hide/Show Round Trip；两组均采用 5 次 `run-from-apk` 迭代和 2.4.8 节固定
-CPU/GPU/Interconnect Policy。Baseline Target APK SHA-256 为
-`f47db32116f93158176d217c4630c4a56c44b8b6d33a29da8d598a09495dca86`，Candidate Target APK
-SHA-256 为 `531d620917439cd565b5e4e1986fc0ecca865d7c9747459d57b4238f28d69e23`。
-
-原始与 Magisk 适配后的 Benchmark APK SHA-256 分别为
-`59179c56ac34166091f4285efb6937f9148dad8a31187f8dbfd231d3e591c86e` 和
-`3f7f605c97c9fbd2223eb5a34dea9160d9f13d409c0a95f9c355a1f2a039a6d4`。等长的
-`su root` 到 `su 0 -c` 传输适配及 Checksum/Signature 修复没有改变 Target、Workload、Metric 或
-Result JSON。两组运行均报告 `cpuLocked=true`、Revision-3 Payload，且 Thermal-throttle Sleep
-为 0。前后控制把 CPU Policy 0/4 固定在 1.4016/1.8048 GHz、GPU 固定在 515 MHz、已暴露的
-Interconnect Vote 固定在 13,763，并停止厂商 Performance Service、暂停充电。电池温度保持在
-32～33 摄氏度，批次后恢复全部控制。不设置 33 摄氏度起跑门禁；同批次温度、固定频率和无
-Benchmark Thermal Sleep 是接收条件。
-
-| Target | 每轮帧数 | Frame CPU P50/P90/P95/P99，ms | Peak Heap 中位数，KiB | Run-P50 CV | 验收 |
-| --- | --- | ---: | ---: | ---: | --- |
-| Pre-Phase-3 Visibility Baseline | `164/164/164/164/164` | `8.138/10.014/10.760/12.343` | 7846 | 0.068 | 已接收发版安全 Control |
-| Phase 3 父级与后代 Visibility | `384/384/384/384/384` | `8.334/10.760/11.115/15.723` | 8149 | 0.041 | 通过 |
-
-相对 Pre-Phase-3 Target，Candidate 的 P50/P90/P95/P99 变化为
-`+2.4%/+7.4%/+3.3%/+27.4%`；P50 与 P95 的绝对变化只有 `+0.197 ms` 与 `+0.355 ms`。
-Peak Heap 中位数增加 `303 KiB`（`+3.9%`）。P50、P95 与内存仍在 ADR-0019 组合回退门禁内，
-两组 Run-P50 CV 均低于 `0.15`，且各 Target 的 5 轮帧数完全一致。P99 增加 `3.380 ms`，但
-`15.723 ms` 仍低于 60 Hz 的单帧预算；P99 被明确记录为后续 Tail Watch Item，不会隐藏，也不会
-临时提升为尚未冻结的阻断门禁。因此限定在 Frame 与 Peak Memory 的结论为
-**no material change**。
-
-这项对照有意改变可见 Workload 的复杂度。Baseline 只执行旧的父级 Fade/Size；Candidate 则在
-同一时钟上执行父级 Fade、逻辑 Slide、Pivot Scale、对齐 Reveal，以及后代反向
-Slide/Scale/Fade。从 164 帧增加到 384 帧是预期的编舞时长与覆盖变化，不是 Throughput、能耗或
-严格同负载的纵向结论。因此 Baseline 只是变更前发版安全 Control，不能作为可复用的
-`animation.core@3` 基线；Candidate 行才成为该绝对基线。其他局限包括仅一台 OEM/API-28 设备、
-`run-from-apk` 对 JIT/代码布局敏感、只有 Peak 而非 Post-GC Retained Memory、没有逐对象
-Allocation Event、没有 Compose Control，以及没有直接功耗测量。确定性测试另外证明单一共享
-Frame Owner、子树仅释放一次、非活跃交互移除与 Renderer Rollback。Phase 3 性能已接收；下一步是
-完整项目与 Root 真机门禁；这些门禁随后已经通过，因此下一步是提交 Pull Request，而不是重复采样。
-
-#### 2.4.12 Animation revision-2 Seekable Transition 基线 {/* #2412-animation-revision-2-seekable-transition-baseline */}
-
-2026-08-23 的 Phase 4 批次建立了 `animation.transition@2` 的第一份绝对基线。Workload 会先对
-一个泛型二维 Channel，以及 Float、Int、编码 Color 和 `UiDp` 四个不同时长 Channel 执行显式
-Seek，再把保留样本接力给唯一自主完成 Loop。5 次 `run-from-apk` 迭代都在测量外等待启动 5 秒，
-每次执行 4 个完整 Seek/Animate Round Trip。Target 是基于
-`2a21db658f3214afef1436a25c3463b7f78e53d0` 的 R8/资源压缩非 Debuggable Candidate；其 APK
-SHA-256 为 `15531449d09609dd3423b693cd86a65a0b88145df7dc6b939ab168e0704001b1`。
-
-原始 Benchmark APK SHA-256 为
-`6ded3f48d2e1a4eb9d31f470b31c97e8a95bb4ad1efbbd064b186ab1a1cffd2f`，Magisk 适配 APK 为
-`2c3af42007f65e505d37fca0e3496d192dc51095fbc7e89d44f2e98987391e52`。与已接收的此前动画批次
-一致，该适配只把 AndroidX 不支持的 `su root` 传输命令改为等长 `su 0 -c`，修复 DEX Checksum
-与 APK Signature，不改变 Target、Workload、Metric 或 Result JSON。
-
-2.4.8 节固定 CPU/GPU/Interconnect Policy 把 CPU Policy 0/4 固定为 1.4016/1.8048 GHz、GPU
-固定为 515 MHz、已暴露 Interconnect 最小 Vote 固定为 13,763；厂商 Performance Service
-停止，充电暂停。前后校验的所有请求值完全相同，电池温度仅从 32 升至 33 摄氏度，AndroidX
-报告 `cpuLocked=true`，Thermal-throttle Sleep 为零。不要求 33 摄氏度起跑；验收条件是同一
-运行温区、固定频率与无 Thermal Throttling。
-
-| Workload | 每轮帧数 | Frame CPU P50/P90/P95/P99，ms | Peak Heap 中位数，KiB | Run-P50 CV | 验收 |
-| --- | --- | ---: | ---: | ---: | --- |
-| `animation.transition@2` 泛型 Seek 与自主完成 | `200/200/200/200/200` | `7.775/9.813/10.493/11.718` | 8474 | 0.011 | 已接收绝对基线 |
-
-所有帧数完全一致，Run-P50 CV 远低于 `0.15` 稳定性上限。P99 低于 60 Hz 单帧预算，该新路径
-没有暴露不稳定信号。归一化变化的解释结论仍为 **inconclusive**：
-`animation.transition@1` 使用自主类型化 Channel Toggle，Channel Set、Action Sequence、
-Settle Contract 与 Workload Revision 都不同，因此不是有效纵向基线；不能用旧 Percentile
-制造回退或改进结论。
-
-Frame Metric 无法证明的结构契约由确定性测试单独覆盖：一个活动 Binding、一个 Mutation/Frame
-Writer、Cancel-and-join 接管、稳定 Segment Identity、零速度 Seeking、动态最长时长重算、零
-Channel 终止与原子 Snap 折叠。局限包括仅一台 OEM/API-28 设备、`run-from-apk` 对 JIT/代码布局
-敏感、只有 Peak 而非 Post-GC Retained Memory、没有逐对象 Allocation Event、没有 Compose
-Control，以及没有直接功耗测量。这一稳定行成为可复用的 Phase 4 绝对基线；下一步是完整仓库与
-设备门禁，而不是重复采样。
-
-#### 2.4.13 Animation revision-1 真实 Bounds 对照 {/* #2413-animation-revision-1-real-bounds-comparison */}
-
-2026-08-23 的 Phase 5 批次在同一个 `animation.bounds@1` Fixture 上，对比真实
-`Modifier.animateBounds` 运动与立即布局 Snap Control。两组都切换相同的位置、尺寸和组合 Target；
-每次 `run-from-apk` 迭代执行 4 个完整 Forward/Reverse Round Trip，共 5 次迭代。两组都在测量外
-等待启动 5 秒，并在每个动作后等待 1,050 ms；Control 只通过显式
-`animation_bounds_animated=false` Intent Input 形成差异。R8/资源压缩且不可调试的 Target APK
-SHA-256 为 `01633c109f44f9e6a79000cf22dc90593a72875caa883c175548312045d3d9b8`。
-
-原始 Benchmark APK SHA-256 为
-`b27073bb450c673284e550edb0aac98237da0042c98bffcc020fa587b1481df9`，Magisk 适配 APK 为
-`45360987794a2b824c676d2129d978748b271309cab852dbd53ff13c6e2cd58a`。等长的
-`su root` 到 `su 0 -c` 传输适配、DEX Checksum 修复、Zip Alignment 与 Debug Signing 不改变
-Target、Workload、Metric 或 Result JSON。
-
-已 Root 的 Xiaomi MI 6 / Android 9 把 CPU Policy 0/4 固定为 1.4016/1.8048 GHz、GPU 固定为
-515 MHz，并把已暴露的 Interconnect 最小 Vote 固定为 13,763；停止厂商 Performance Service，
-暂停充电。前后控制均匹配请求值，AndroidX 报告 `cpuLocked=true`，Thermal-throttle Sleep 为零，
-并在批次结束后恢复全部设备控制。Control Arm 温度从 33 升至 34 摄氏度，Animated Arm 从 34
-升至 35 摄氏度；不要求达到高环境温度下无法实现的更低起跑温度。
-
-| Arm | 每轮帧数 | Frame CPU P50/P90/P95/P99，ms | Peak Heap 中位数，KiB | Run-P50 CV | 验收 |
-| --- | --- | ---: | ---: | ---: | --- |
-| 立即布局 Snap Control | `16/16/16/16/16` | `8.727/23.297/25.762/28.556` | 6868 | 0.083 | 已接收 Control |
-| 真实 Bounds 动画 | `464/464/464/464/464` | `5.124/6.138/6.438/18.503` | 6714 | 0.055 | 通过 |
-
-相对 Snap，Animated Frame Distribution 的 P50/P90/P95/P99 变化为
-`-41.3%/-73.7%/-75.0%/-35.2%`。Peak Heap 中位数降低 `154 KiB`（`-2.2%`），低于组合 Memory
-实质变化门禁。两组 Run-P50 CV 都低于 `0.15`，各 Arm 内帧数完全一致，且没有 Thermal Sleep。
-因此限定结论为：活跃单帧 CPU Latency **improved**，Peak Heap **no material change**。
-
-两组有意产生不同帧数：Snap 暴露 Action/Layout Frame，而 900 ms Bounds 编舞会为真实位置和尺寸
-产生 Property Frame。464 帧与 16 帧意味着本对照不能宣称动画的 Total CPU Work、Energy Use 或
-Transaction Duration 更低。它也不测 Post-GC Retained Memory、逐对象 Allocation Event、Compose
-或直接功耗，并且只有一台 OEM/API-28 设备和 `run-from-apk` JIT/代码布局条件。确定性 Renderer
-测试另外证明一次 Target Measure、Property Frame 零次 Child Measure、Scratch-vector 复用、
-Retarget、Rollback、Detach 与跨 Owner Reusable-tree Reset。Phase 5 性能门禁已接收。随后仓库、
-文档与 Preview 门禁通过，Root 安装的 Demo 138/138、Counter 1/1 与 Tutorials 2/2 套件也通过；
-下一步是提交 Pull Request，而不是重复采样。
-
-#### 2.4.14 导航 revision-1 共享内容对照
-
-2026-08-23 的 Phase 6 批次在同一个 `navigation.shared-motion@1` 系统导航 fixture 上，对比普通
-目标页转场与共享内容快照。两组都渲染完全相同的目标页，在相同的 5 秒测量外启动稳定等待后，
-每次 `run-from-apk` 迭代执行 4 次 Push，共 5 次迭代。Control 只通过内部
-`system_navigation_shared_content_enabled=false` intent 输入省略两个共享端点标记，不改变页面
-几何、文案、导航状态或目标页转场。R8/资源收缩的 nondebuggable 目标基于
-`bb57fcd049e3b1d359d18ea271d0505fc08eb033`，APK SHA-256 为
-`b7f4c8219022c6f5e9c5e90388c05e8430142450034888b72c50965730ba463b`。
-
-原始 benchmark APK SHA-256 为
-`91e050e89ae6b285f2f4cfe4295d50accf244087b72085675ceef214c4437579`，Magisk 适配后 APK 为
-`86144fb5bd300f231bf3e8dbecd4452a35fafab24d939e6be25db0baa5aa4146`。等长的 `su root` 到
-`su 0 -c` 传输适配、DEX 校验修复、对齐和 debug 签名不改变目标、工作负载、指标或结果 JSON。
-
-已 root 的 Xiaomi MI 6 / Android 9 将 CPU policy 0/4 固定在 1.4016/1.8048 GHz，将 GPU
-devfreq 与 KGSL power-level 边界固定在 515 MHz，并将可见 CPU/GPU interconnect vote 固定在
-13,763。8 个 CPU 全部在线，厂商性能服务停止，充电暂停。测量前后所有控制值均与请求一致，
-AndroidX 报告 `cpuLocked=true`，thermal-throttle sleep 为 0。Control 温度为 34--35°C，共享组
-为 35°C；不要求环境无法达到的更低起始温度。批次结束后所有 governor、边界、服务和充电状态
-均已恢复。
-
-| 分组 | 每轮帧数 | 帧 CPU P50/P90/P95/P99，ms | 峰值堆中位数，KiB | run-P50 CV | 验收 |
-| --- | --- | ---: | ---: | ---: | --- |
-| 普通目标页转场 | `124/124/124/124/124` | `3.989/5.466/8.487/30.020` | 6651 | 0.072 | Control 验收 |
-| 两个共享配对（`sharedBounds` + `sharedElement`） | `124/124/124/124/124` | `4.073/5.526/8.096/36.099` | 6971 | 0.059 | 通过 |
-
-相对普通转场，共享内容的 P50/P90/P95/P99 变化为 `+2.1%/+1.1%/-4.6%/+20.3%`。P50 只增加
-`0.084 ms`，P95 减少 `0.390 ms`，峰值堆中位数增加 `320 KiB`（`+4.8%`）。这些结果都在
-ADR-0019 的帧与内存组合预算内，两组 run-P50 CV 都低于 `0.15`，帧数完全一致，也没有 thermal
-sleep。因此限定到帧耗时和峰值内存的结论是 **无实质变化**。`+6.079 ms` 的 P99 增量保留为
-导航尾延迟观察项；不会隐藏 P99，也不会在测量后用它替换已经冻结的 P50/P95 门禁。
-
-本对照覆盖已提交 Push 中的快照准备、两个软件位图配对、overlay 绘制和终态释放。确定性测试
-另外证明普通无配对 fallback、有界像素预算、重复/模式不匹配拒绝、Push/Pop/Replace、预测 Back
-完成/取消、redirect、关闭动画、焦点转移、surface-backed fallback 与 host 销毁清理。局限包括
-单一 OEM/API-28 设备、`run-from-apk` JIT/代码放置敏感性、峰值而非 GC 后保留内存、没有逐对象
-分配事件、没有直接功耗测量，也没有单独的预测 Back 帧基准。已接受的下一步是完成仓库和真机
-门禁，而不是为了更有利的 P99 重复采样。
+后续工作必须从明确的剩余差距开始，保持相同工作负载身份和控制条件，并记录新的绝对值、
+归一化值、稳定性、限制和下一步。来自不同设备或工作负载 Revision 的结果可以建立绝对基线，
+但不能静默替换纵向对照。
 
 ### 2.5 Debug Tooling 回归门禁
 

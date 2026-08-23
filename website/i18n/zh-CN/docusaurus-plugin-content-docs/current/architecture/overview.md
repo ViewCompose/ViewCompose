@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: 34ecd6184b26d6a1b4d65802b432383991de263f7a883212e9b59f0ecd4a442e
+translation_source_hash: 319f4cd92e14a3d1a6818d127622ebdced5fe2919ae938d2b4cba9a89aa6a0b6
 translation_status: current
 ---
 
@@ -48,6 +48,7 @@ translation_status: current
 | `viewcompose-graphics` | 图形 DSL 集成层（`Canvas`、`drawBehind`、`drawWithContent`、`drawWithCache`） | 仅定义业务 API 与契约映射；不直接依赖 Android Canvas 实现 |
 | `viewcompose-shadow-android` | 可选高级阴影后端、缓存与 Android 绘制实现 | 依赖 renderer 的最小 Decoration SPI；renderer/host 不依赖该模块；通过 ServiceLoader 或显式安装接入 |
 | `viewcompose-ui-foundation` | 渲染器无关 DSL、框架 Theme/Defaults、Local、组合协调器与 overlay 声明契约 | 独占 `com.viewcompose.ui.foundation`；不依赖 AndroidX、Material、Renderer 或 Android 宿主入口，并通过宿主安装的契约委托原生容器、焦点、日志与 Trace |
+| `viewcompose-diagnostics` | 可选的有界生产故障聚合 | 依赖 UI Foundation 的中立事件契约；只保留脱敏不可变摘要，不包含厂商 SDK、持久化、传输、Worker、View 遍历或进程全局 Sink |
 | `viewcompose-constraintlayout-androidx` | ConstraintLayout 组件 DSL（`ConstraintLayout/createRef(s)/constrainAs/constrain/constraintSet`） | 仅承载约束布局 DSL 与 scope；平台渲染实现仍在 `viewcompose-renderer-android` |
 | `viewcompose-renderer-android` | Android View 渲染实现（reconcile、binder、patch、container、框架 shape/progress 绘制） | 只消费可移植契约，不承载业务 DSL 或 Material 控件 |
 | `viewcompose-host-android` | 底层 Android Engine 宿主（`renderInto/RenderSession`、`AndroidView/nativeView`、渲染平台安装） | 不提供 Activity/Fragment 便捷入口，不依赖 Material |
@@ -76,7 +77,10 @@ translation_status: current
 2. **UI Foundation**：ui-foundation、animation、gesture、graphics 等渲染器无关公开 UI 面。由于框架以 Android View 为目标，它可以描述 Android-only 声明值，但原生容器访问、宿主适配、日志、Trace 与调度必须由 Android Engine 安装；禁止依赖 Android Engine、Design System 或 Integrations。
 3. **Android Engine**：renderer-android 与 host-android，只负责把契约映射为 Android View，不承载 Material 设计策略或 AndroidX 功能集成。
 4. **Design System**：material3 与 oneui7。Design System 模块提供具体 Token Profile、解析后的 Recipe 与自有组合组件，但其身份不得泄漏到 UI Foundation 或 Android Engine。只有 material3 读取 Material/AppCompat Theme；oneui7 使用 ViewCompose 自有静态值且不依赖 Material。
-5. **Integrations**：navigation-android、lifecycle-androidx、viewmodel-androidx、constraintlayout-androidx、overlay-android、overlay-material3-android、图片适配器与 shadow-android。外部平台或设计系统会影响依赖时，模块名必须用后缀明确归属。
+5. **Integrations**：diagnostics、navigation-android、lifecycle-androidx、viewmodel-androidx、
+   constraintlayout-androidx、overlay-android、overlay-material3-android、图片适配器与
+   shadow-android。Diagnostics 是 UI Foundation 之上的中立可选策略；其余模块在外部平台或
+   设计系统会影响依赖时，通过模块名后缀明确归属。
 6. `viewcompose-android` 与 `viewcompose-material3-android` 是应用聚合包，不是第六层。前者保持
    中立；后者是单依赖 Material 应用路径，可以依赖中立聚合模块与 Material 适配器。
 7. preview、preview worker/runner/Gradle plugin 与 benchmark 属于工具层；运行时模块禁止依赖工具层，所有框架模块禁止依赖 `app`。

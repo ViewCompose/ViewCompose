@@ -207,6 +207,17 @@ identity token.
 
 Completed checkpoints are condensed here; Git history retains their execution detail.
 
+- **2026-08-23, Diagnostics Phase 2:** on the complete 100-version corpus plus one unpublished
+  current API tree, the Phase 1 baseline, initial Phase 2 output, and consolidated output measured
+  48,217,723, 48,480,209, and 47,801,356 non-API bytes. The initial +262,486-byte (+0.544%)
+  growth exceeded 46 MiB by 245,713 bytes. Consolidating repeated closed performance narratives
+  into current decision tables removed 678,853 bytes (-1.400%) without deleting contracts or
+  raising the ceiling; final output is 416,367 bytes (-0.863%) below the baseline and leaves
+  433,140 bytes of headroom. English/Chinese search is 5,432,660/5,916,011 bytes. Representation
+  **improved**; 432 pages, both locales, compatibility anchors, accessibility, API routing, and the
+  28.7-second build passed. This local macOS comparison reused one generated API corpus and does
+  not measure network deployment or another host; the next action is to keep the compact decision
+  ledger while Phase 3 adds highlighting guidance.
 - **2026-08-23, Diagnostics Phase 1:** with complete 100-version output, main, the initial
   candidate, and the consolidated candidate measured 48,209,136, 48,349,648, and 48,217,723
   non-API bytes. The initial +140,512-byte (0.29%) regression exceeded 46 MiB by 115,152 bytes;

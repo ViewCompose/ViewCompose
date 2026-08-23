@@ -42,6 +42,7 @@ The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.
 | `viewcompose-graphics` | Graphics DSL integration: `Canvas`, `drawBehind`, `drawWithContent`, and `drawWithCache` | Defines business-facing APIs and contract mappings without depending directly on Android Canvas. |
 | `viewcompose-shadow-android` | Optional advanced-shadow backend, cache, and Android drawing implementation | Depends only on the renderer's minimal decoration SPI; renderer and host do not depend on it; installation uses `ServiceLoader` or an explicit call. |
 | `viewcompose-ui-foundation` | Renderer-independent DSL, framework theme/defaults, locals, composition coordinator, and overlay declaration contracts | Owns `com.viewcompose.ui.foundation`; does not depend on AndroidX, Material, renderer, or Android host entry points, and delegates native containers, focus, logging, and tracing through host-installed contracts. |
+| `viewcompose-diagnostics` | Optional bounded production failure aggregation | Depends on UI Foundation's neutral event contract; retains only redacted immutable summaries and owns no vendor SDK, persistence, transport, worker, View traversal, or process-global sink. |
 | `viewcompose-constraintlayout-androidx` | ConstraintLayout component DSL | Contains only the DSL and scopes; platform rendering remains in renderer. |
 | `viewcompose-renderer-android` | Android View rendering: reconciliation, binders, patches, containers, framework shape drawing, and progress drawing | Consumes portable contracts and contains neither business DSL nor Material widgets. |
 | `viewcompose-host-android` | Low-level Android engine host: `renderInto`, `RenderSession`, native View interop, and render-platform installation | Does not expose Activity/Fragment convenience entry points and does not depend on Material. |
@@ -80,10 +81,11 @@ layer when the dependency contract permits it; lower layers never depend on a hi
    profiles, resolved recipes, and owned composites without leaking its identity into UI Foundation
    or Android Engine. Only material3 interprets Material/AppCompat themes; oneui7 uses static,
    ViewCompose-owned values and has no Material dependency.
-5. **Integrations** contains navigation-android, lifecycle-androidx, viewmodel-androidx,
-   constraintlayout-androidx, overlay-android, overlay-material3-android, image adapters, and shadow-android. A name
-   suffix identifies the external platform or design-system ownership when that distinction affects
-   dependencies.
+5. **Integrations** contains diagnostics, navigation-android, lifecycle-androidx,
+   viewmodel-androidx, constraintlayout-androidx, overlay-android, overlay-material3-android, image
+   adapters, and shadow-android. Diagnostics is a vendor-neutral optional policy over UI Foundation;
+   the remaining integration names identify external platform or design-system ownership when that
+   distinction affects dependencies.
 6. `viewcompose-android` and `viewcompose-material3-android` are application aggregates, not a
    sixth architectural layer. The former is neutral; the latter is the one-dependency Material
    application path and may depend on the neutral aggregate plus the Material adapter.

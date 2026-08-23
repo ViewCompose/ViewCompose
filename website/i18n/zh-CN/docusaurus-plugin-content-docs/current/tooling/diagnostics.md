@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: 87501ce4c5dbd1e1f8b7df526895604cbea797d087562e5b1cc9d8c7db774c10
+translation_source_hash: 9b03c1d319af2a283e6b564931b6f9472b934605f78d5ca2bc58665d257e3c5c
 translation_status: current
 ---
 
@@ -73,14 +73,27 @@ Alpha API 无适配层地移除了三个 Callback 与仅 Result Local。Stats/Tr
 `RenderFrameCompleted` 读取，Failure 从 `RenderFailureObserved` 读取；不需要事件流时直接查询
 `lastFrameReport` / `lastRenderFailure`。
 
-## 6. Demo 检查器
+## 6. 有界生产故障聚合
+
+可选 `viewcompose-diagnostics` 产物现已提供 `BoundedRenderFailureAggregator`。把 Lifecycle
+关闭、Failure 打开并把 Frame Level 设为 `None`，即可统计重复结构化故障，而不会激活 Frame Tree
+或调试检查。固定隐私指纹会排除消息、应用栈帧、文件与行号、原始 Key、View 文本、Local 值、Cause
+和原始 `Throwable`。
+
+聚合由应用持有且线程安全，默认容量为 64 个指纹，硬上限 128。默认 15 分钟单调时间窗口只在记录
+或 Snapshot 时惰性过期；不可变 Snapshot 的计数器会报告最久未更新淘汰和计数饱和。存储、用户同意、
+调度、上传、厂商元数据和下游失败策略都保留给应用。详见
+[模块手册](https://docs.viewcompose.com/zh-CN/modules/viewcompose-diagnostics)。
+
+## 7. Demo 检查器
 
 `Diagnostics -> 渲染器` 提供 Render Tree、Patch 时间线、重组原因、CompositionLocal 浏览器与
-聚合指标。跨 Session 关联已实现；真实 View 边界高亮、逐节点耗时和有界生产失败聚合仍由有效的
+聚合指标。跨 Session 关联与独立生产聚合器已实现；真实 View 边界高亮和逐节点耗时仍由有效的
 [诊断关联、检查与生产可观测性计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)。
 
-## 7. 剩余扩展契约
+## 8. 剩余扩展契约
 
 [ADR-0021](https://docs.viewcompose.com/architecture/decisions/0021-correlated-render-diagnostics-ownership)
 冻结 Phase 1；只关心 Failure 的 Sink 不激活 Frame 明细。可选 `viewcompose-diagnostics`
-负责生产聚合，`viewcompose-preview` 让高亮与耗时保持按请求激活。有效计划负责交付与 Inspector 收尾。
+现已负责已交付的生产聚合，`viewcompose-preview` 让高亮与耗时保持按请求激活。有效计划负责后续阶段与
+Inspector 收尾。

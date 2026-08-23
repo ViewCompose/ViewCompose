@@ -16,6 +16,7 @@ this table. Architecture and guide pages remain the source of truth for cross-mo
 | `viewcompose-navigation-core` | Kernel | Platform-neutral navigation state and transactions | [Available](./viewcompose-navigation-core/README.md) |
 | `viewcompose-renderer-android` | Android Engine | Android View renderer and reconciliation engine | [Available](./viewcompose-renderer-android/README.md) |
 | `viewcompose-ui-foundation` | UI Foundation | Core DSL, components, tokens, and local values | [Available](./viewcompose-ui-foundation/README.md) |
+| `viewcompose-diagnostics` | Integration | Bounded, privacy-safe production failure aggregation | [Available](./viewcompose-diagnostics/README.md) |
 | `viewcompose-host-android` | Android Engine | Low-level View host, session, state, and interop engine | [Available](./viewcompose-host-android/README.md) |
 | `viewcompose-material3` | Design System | Material 3 theme and dynamic-color adapter | [Available](./viewcompose-material3/README.md) |
 | `viewcompose-material3-android` | Aggregate | Named Material 3 Android application integration | [Available](./viewcompose-material3-android/README.md) |

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add the optional vendor-neutral diagnostics artifact with bounded, privacy-safe render-failure fingerprinting, deterministic eviction, immutable window snapshots, and concurrent application-owned aggregation.",
+  "changes": [
+    { "artifact": "viewcompose-diagnostics", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "The new published runtime module is registered in package, dependency-layer, and qaQuick ownership gates."
+    }
+  ]
+}

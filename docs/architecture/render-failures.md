@@ -50,6 +50,24 @@ completed frame report.
 `RenderFailureOperation` and `nodeKey` identify `AndroidView` factory, update, reset, commit, and
 release failures without parsing exception messages.
 
+## Optional bounded production aggregation
+
+Applications that need recurring-failure counts can install `BoundedRenderFailureAggregator` from
+the optional `viewcompose-diagnostics` artifact as the failure-only root sink. The default
+fingerprint retains phase, recovery, optional Android View operation, direct exception binary type,
+and at most three class/method-only `com.viewcompose.*` frames. It never retains the message,
+cause chain, application frames, file/line data, `nodeKey`, or original `Throwable`.
+
+The aggregator defaults to 64 distinct fingerprints in a 15-minute monotonic window, with hard
+valid ranges of `1..128` and one minute through 24 hours. Capacity evicts the least recently
+updated fingerprint and reports both lost observations and evicted entries. Expiration occurs only
+on record or snapshot; there is no timer, storage, transport, vendor SDK, or process-global sink.
+Snapshots are immutable application-owned values. Export them outside synchronous sink delivery so
+network or persistence work cannot block a render session.
+
+See the [Diagnostics module manual](../modules/viewcompose-diagnostics/README.md) for exact
+redaction, synchronization, reset, and counter contracts.
+
 ## AndroidView side-effect boundary
 
 `AndroidView` has two deliberately different update paths:
