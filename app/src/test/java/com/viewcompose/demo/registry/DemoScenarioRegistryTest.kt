@@ -95,6 +95,7 @@ class DemoScenarioRegistryTest {
             DemoScenarioIds.AnimationSpecs to 1,
             DemoScenarioIds.AnimationContentSize to 1,
             DemoScenarioIds.AnimationTransition to 2,
+            DemoScenarioIds.AnimationBounds to 1,
             DemoScenarioIds.NavigationSystem to 6,
             DemoScenarioIds.DesignBundleMaterial3 to 3,
             DemoScenarioIds.DesignBundleContrast to 3,

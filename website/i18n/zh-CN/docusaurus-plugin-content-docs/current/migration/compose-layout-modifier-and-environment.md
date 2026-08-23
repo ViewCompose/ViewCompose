@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-layout-modifier-and-environment.md
-translation_source_hash: 7064ad61e322cb5a625e24a0eb1be4065249a876d9491214e69a684ecdb26ea9
+translation_source_hash: f80dc68d5ff8ebbf2a5a3d7e2eaaf3b9d3f544de7804b938bbad12068731957d
 translation_status: current
 ---
 
@@ -110,6 +110,7 @@ ViewCompose 渲染 Android View、按 renderer 规则折叠 Modifier 元素，�
 | Padding 与 margin | 每个布局 Modifier 都在 Modifier 链中的当前位置参与处理。Compose 通常通过布局结构或 padding 表达外部空间，而不是 margin 属性。 | Padding 是原生 View 内容内边距。Margin 是显式的原生父级 LayoutParams 数据。重复 padding 或 margin 元素会解析为该类型的最后一个元素。 | Intentionally different | 将重复 padding 规范化为单个预期值，并明确判断原外层 padding 应属于父级结构、View padding 还是 ViewCompose margin。 |
 | 作用域父数据 | `RowScope.weight`、`ColumnScope.weight`、对齐和 `BoxScope.matchParentSize` 等作用域安全 Modifier 向兼容的直接父级提供数据。 | `RowScope` 和 `ColumnScope` 提供 weight 与交叉轴对齐；`BoxScope` 提供对齐。错误使用父数据会产生警告。没有已验证的 `matchParentSize` 等价能力。 | Partially supported | 仅在匹配容器的直接子项上使用作用域 Modifier。重新设计 `matchParentSize`；不要直接替换为 `fillMaxSize`。 |
 | Constraint 父数据 | Compose ConstraintLayout 在自己的测量模型中消费 layout ID 和 constraint 父数据。 | 可选 ConstraintLayout 模块把 layout ID 和 constraint spec 映射为 AndroidX ConstraintLayout LayoutParams 与 ConstraintSet 操作。 | Partially supported | 针对 AndroidX View 实现重新验证尺寸、baseline、RTL 锚点和依赖环。 |
+| 布局坐标动画 | Compose 基于 Lookahead 的 Bounds Motion 参与 Compose 布局坐标，并可协调更广泛的视觉转场。 | `Modifier.animateBounds` 在直接 ViewCompose Parent 的物理像素中动画一个真实的位置与尺寸矩形。该 API 不包含 Reparent、Shared Element 或跨 Owner 视觉连续性。 | Partially supported | 保持节点位于一个稳定 Parent 下，迁移最终尺寸、对齐或 Constraint 状态，拒绝同时使用 `animateContentSize`，并在 Ownership 变化时使用普通目的地 Enter 行为。 |
 | Modifier 顺序 | Modifier 元素形成有序包装链；顺序可以改变测量、绘制、输入、焦点和语义。 | 源码链有序，但 renderer 会将其折叠为分阶段值。许多重复值采用后者覆盖前者，部分冲突使用固定优先级，z-index 会相加，draw 或 shadow 分组保留顺序。 | Intentionally different | 迁移前，按照 ViewCompose 解析规则为每条非平凡 Modifier 链分类。 |
 | Modifier 相等性与更新 | `ModifierNodeElement` 通过相等性决定是否更新已有 `Modifier.Node`。 | Modifier 链按有序元素序列进行结构比较。相等的链可使 renderer diff 跳过子树。`NativeViewElement` 的相等性只使用稳定 key，忽略回调身份。 | Supported | 当原生配置的语义发生变化时使用会变化的 key，不要依赖新的 lambda 实例强制更新。 |
 | 自定义 `Modifier.Node` 生命周期 | 公开节点 API 提供 create/update、attach/detach、失效、local 读取，以及专门的布局、绘制、输入或语义节点接口。 | `ModifierElement` 是 renderer 标记，不是应用生命周期节点。内置元素由已知 renderer 分支解释。不存在自定义节点 attach/detach 或能力接口的公开等价物。 | Unsupported | 使用受支持 Modifier、可重放的 `nativeView`、具备事务语义的 `AndroidView`，或经过评审的 renderer 功能。不要从应用代码发布 renderer 无法识别的元素。 |

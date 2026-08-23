@@ -211,6 +211,14 @@ ownership in one candidate transaction. Apply failure leaves the previous rectan
 authoritative. Visual-only translation is not an accepted fallback for a node that owns input or
 accessibility.
 
+Phase 5 implements this with one transparent synthetic host per local owner. Same-chain layout and
+parent data move to that host, while drawing, content, input, focus, and semantics remain on the
+child. Multiple bounds elements are last-wins; simultaneous bounds and content-size animation is a
+pre-mutation ownership error. Duration retargets restart from the sampled rectangle with zero
+velocity, physical retargets retain four-edge velocity, and repeated accepted-target layouts keep
+the existing writer. Detach and reusable-tree ownership transfer explicitly clear both bounds and
+content-size animation state rather than depending on a platform detach callback.
+
 ### Shared visual motion
 
 `SharedTransitionLayout` creates one key namespace scoped to its composition owner and, when used
@@ -260,7 +268,7 @@ request codecs are Q0 and cannot appear in compiled samples.
 | 2 | `ContentTransform`, `SizeTransform`, `AnimatedContentTransitionScope`, `AnimatedContentScope`, `AnimatedContent` | `viewcompose-animation` | keyed replacement sample; identity, measure, focus, rollback, device tests | additive |
 | 3 | slide/scale transition factories, `AnimatedVisibilityScope`, `animateEnterExit` | `viewcompose-animation` | combined visibility sample; algebra, RTL, release, device tests | additive |
 | 4 | `TransitionSegment`, generic `Transition.animateValue`, segment-aware channel overloads, `SeekableTransitionState`, seekable `rememberTransition` | `viewcompose-animation` | segment/seek sample; ownership, range, retarget, predictive-Back adapter tests | additive except the typed-channel named argument hard-cut from `animationSpec` to `transitionSpec`; internal segment helpers removed |
-| 5 | `Modifier.animateBounds`, bounds scope/configuration | `viewcompose-animation` | bounds sample; coordinate, remeasure, input, accessibility, rollback device tests | additive |
+| 5 | `Modifier.animateBounds` | `viewcompose-animation` | bounds sample; coordinate, remeasure, input, accessibility, rollback device tests | additive |
 | 6 | `SharedTransitionLayout`, shared key/state/scope, `sharedElement`, `sharedBounds`, resize and bounds transforms | `viewcompose-animation` plus navigation adapter in `viewcompose-navigation-android` | navigation shared-motion sample; pairing, overlay, lifecycle, rollback, accessibility device tests | additive |
 | 7 | immutable animation inspection request/response and snapshot types | `viewcompose-preview-core` | protocol sample; codec, limit, stale-request, privacy tests | additive and optional |
 | 7 | Preview animation inspection/seek client surface | `viewcompose-preview` and Studio plugin | Preview-only sample; activation, isolation, request-lifetime, plugin UI tests | additive and optional |
@@ -351,3 +359,10 @@ Q3 inventory to remain implementation-free. Each later phase must meet its row i
 the relevant deterministic and device matrix, same-device performance budgets, transactional
 rollback, lifecycle release, reduced-motion behavior, and Changeset requirements before the next
 phase begins.
+
+Phase 5 acceptance records real Row/Column/Box/ConstraintLayout and RTL placement, environment
+rebinding, nested ownership, focus/clipping, detach and lazy reuse, rollback, endpoint input and
+accessibility geometry, zero additional child measurements on property frames, one reviewed Demo
+path and Preview Golden, and a fixed-frequency animated-versus-snap comparison. The scoped result
+is improved frame latency with no material peak-heap change; total energy and per-object allocation
+events remain unmeasured and are not inferred from frame percentiles.

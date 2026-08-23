@@ -41,9 +41,18 @@ data class DrawWithCacheModifierElement(
  * Platform-neutral finite renderer model for content-size animation timing or physical motion.
  *
  * This sealed hierarchy is an inter-module transport contract. Applications normally create the
- * corresponding animation-core specification through `Modifier.animateContentSize`.
+ * corresponding animation-core specification through `Modifier.animateContentSize` or
+ * `Modifier.animateBounds`.
  */
-sealed interface ContentSizeAnimationSpecModel
+sealed interface LayoutAnimationSpecModel
+
+/**
+ * Platform-neutral finite renderer model retained by `animateContentSize`.
+ *
+ * This compatibility subtype is also a [LayoutAnimationSpecModel], so renderers can share one
+ * timing and physical-motion transport with real bounds animation.
+ */
+sealed interface ContentSizeAnimationSpecModel : LayoutAnimationSpecModel
 
 /** Identifies a fixed-duration content-size model that may be repeated. */
 sealed interface ContentSizeDurationBasedAnimationSpecModel : ContentSizeAnimationSpecModel
@@ -160,6 +169,18 @@ data class ContentSizeRepeatableSpecModel(
  */
 data class AnimateContentSizeModifierElement(
     val animationSpec: ContentSizeAnimationSpecModel,
+) : ModifierElement
+
+/**
+ * Requests animation of a node's real parent-local layout rectangle.
+ *
+ * Renderers must commit measured size, placement, hit testing, and accessibility geometry as one
+ * physical rectangle. A draw-only translation or scale does not satisfy this contract.
+ *
+ * @property animationSpec finite timing or physical model for all four rectangle edges
+ */
+data class AnimateBoundsModifierElement(
+    val animationSpec: LayoutAnimationSpecModel,
 ) : ModifierElement
 
 /** Maps declarative visibility to visible, layout-retaining invisible, or layout-removing gone. */

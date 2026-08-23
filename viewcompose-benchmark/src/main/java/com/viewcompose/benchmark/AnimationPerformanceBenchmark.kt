@@ -1,5 +1,6 @@
 package com.viewcompose.benchmark
 
+import android.content.Intent
 import android.os.SystemClock
 import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.ExperimentalMetricApi
@@ -18,10 +19,11 @@ import org.junit.runner.RunWith
  * Historical methods preserve the Phase 0/1 baselines. Revision 2 compares keyed AnimatedContent
  * with the same-page alpha-only Crossfade control. Revision 3 measures rich parent-plus-descendant
  * visibility choreography. Transition revision 2 measures explicit normalized seeking followed by
- * autonomous completion on the same generic, unequal-duration channel set. Each method measures
- * complete forward and reverse interactions after an unmeasured launch settle. Accessibility
- * actions avoid mixing pointer press frames into the animation distribution, while state assertions
- * prove every request reached the application.
+ * autonomous completion on the same generic, unequal-duration channel set. Bounds revision 1
+ * compares real position-and-size animation with the same fixture hard-switched to snap. Each
+ * method measures complete forward and reverse interactions after an unmeasured launch settle.
+ * Accessibility actions avoid mixing pointer press frames into the animation distribution, while
+ * state assertions prove every request reached the application.
  */
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalMetricApi::class)
@@ -101,11 +103,33 @@ class AnimationPerformanceBenchmark {
         )
     }
 
+    @Test
+    fun animatedBoundsRevision1() {
+        benchmarkRoundTrips(
+            scenarioId = ANIMATION_BOUNDS_SCENARIO,
+            forwardRole = DemoTargetRole.PrimaryAction,
+            reverseRole = DemoTargetRole.SecondaryAction,
+            settleMillis = BOUNDS_SETTLE_MILLIS,
+        )
+    }
+
+    @Test
+    fun boundsLayoutControlRevision1() {
+        benchmarkRoundTrips(
+            scenarioId = ANIMATION_BOUNDS_SCENARIO,
+            forwardRole = DemoTargetRole.PrimaryAction,
+            reverseRole = DemoTargetRole.SecondaryAction,
+            settleMillis = BOUNDS_SETTLE_MILLIS,
+            configure = { putExtra(EXTRA_ANIMATION_BOUNDS_ANIMATED, false) },
+        )
+    }
+
     private fun benchmarkRoundTrips(
         scenarioId: String,
         forwardRole: DemoTargetRole,
         reverseRole: DemoTargetRole,
         settleMillis: Long,
+        configure: Intent.() -> Unit = {},
         prepare: (androidx.benchmark.macro.MacrobenchmarkScope.() -> Unit)? = null,
     ) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
@@ -117,7 +141,7 @@ class AnimationPerformanceBenchmark {
         iterations = FORMAL_INTERACTION_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoScenarioAndWait(scenarioId)
+            startDemoScenarioAndWait(scenarioId, configure)
             prepare?.invoke(this)
             waitForPerformanceMeasurementSettle()
         },
@@ -148,11 +172,14 @@ class AnimationPerformanceBenchmark {
         const val ANIMATION_CONTENT_SCENARIO = "animation.content"
         const val ANIMATION_CONTENT_SIZE_SCENARIO = "animation.content-size"
         const val ANIMATION_TRANSITION_SCENARIO = "animation.transition"
+        const val ANIMATION_BOUNDS_SCENARIO = "animation.bounds"
+        const val EXTRA_ANIMATION_BOUNDS_ANIMATED = "animation_bounds_animated"
         const val ROUND_TRIPS_PER_ITERATION = 4
         const val VALUE_CHANNEL_SETTLE_MILLIS = 600L
         const val CONTENT_REPLACEMENT_SETTLE_MILLIS = 380L
         const val RICH_VISIBILITY_SETTLE_MILLIS = 900L
         const val CONTENT_SIZE_SETTLE_MILLIS = 650L
         const val TRANSITION_SETTLE_MILLIS = 850L
+        const val BOUNDS_SETTLE_MILLIS = 1_050L
     }
 }

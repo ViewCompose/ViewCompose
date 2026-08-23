@@ -14,6 +14,10 @@ class AnimationActivity : DemoRenderActivity() {
         val scenario = checkNotNull(currentScenario()) {
             "AnimationActivity requires a registered animation scenario"
         }
-        builder.AnimationPage(AnimationFixture.from(scenario.id), scenario)
+        builder.AnimationPage(
+            fixture = AnimationFixture.from(scenario.id),
+            scenario = scenario,
+            boundsAnimated = intent.getBooleanExtra(EXTRA_ANIMATION_BOUNDS_ANIMATED, true),
+        )
     }
 }

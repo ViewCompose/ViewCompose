@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: cfd9dc04efffa97d2bc434cf0b118a1a2cdf4840ac868f92e14e39d926328a35
+translation_source_hash: 7fd2488ac386d384b646b61d9b3451117eaba3e4b48387344d3704517d0da835
 translation_status: current
 ---
 
@@ -8,7 +8,7 @@ translation_status: current
 
 `viewcompose-animation` 把平台无关动画引擎集成到 ViewCompose State、组合 Effect、`Modifier`、
 UI Node 发射与 Android View Renderer。它提供状态驱动值动画、命令式 Last-writer Mutation、
-同步 Transition、无限 Channel、可见性/内容转场和测量尺寸动画。
+同步 Transition、无限 Channel、可见性/内容转场、测量尺寸动画和真实布局边界运动。
 
 ## 产物与稳定性
 
@@ -350,6 +350,35 @@ Layout，Wrapper 还会增加一层 View；不要无差别应用到大型列表�
 内置 Easing 与 Cubic Bézier 控制点可以跨 Renderer 边界。未知自定义 Easing 会降级为
 `FastOutSlowIn`。一个 Modifier Chain 中存在多个 `animateContentSize` 时，最后一个规格生效。
 
+## animateBounds 与真实布局几何
+
+`Modifier.animateBounds` 会在节点的直接 ViewCompose 布局父级中，对逻辑 Start/End 与 RTL
+解析后的真实位置和尺寸进行动画。每一帧都会提交真实 Android 矩形，而不是只应用绘制平移或缩放，
+因此可见区域、Pointer、Focus 与 Accessibility 几何保持一致：
+
+```kotlin
+Button(
+    text = "Move and resize",
+    onClick = onTargetClick,
+    modifier = Modifier
+        .width(if (expanded) 204.dp else 152.dp)
+        .height(if (expanded) 58.dp else 48.dp)
+        .align(if (expanded) BoxAlignment.BottomEnd else BoxAlignment.BottomStart)
+        .animateBounds(tween(durationMillis = 900)),
+)
+```
+
+首次接受的布局直接稳定在端点。目标变化只执行一次目标测量；Duration Spec 从当前矩形以零速度
+Retarget，物理 Spring 则保留四条边的采样速度。属性帧会复用目标测量。父级滚动移动完整局部坐标系；
+Reparent 会结束旧 Owner 的运动，并让目标 Owner 从稳定布局开始。Detach 和 Lazy Item 跨 Owner
+复用也会在下一次布局前取消并清空旧运动。
+
+Renderer 会把同一 Chain 上的尺寸、Margin、Parent Data、Alignment、Offset、Visibility 与
+z-index 提升到一个透明外层 Host；Drawing、Content、Input、Focus 与 Semantics 仍留在 Child。
+重复 `animateBounds` 采用最后一个规格。同时在一个节点使用 `animateBounds` 与
+`animateContentSize` 会在原生 Mutation 前被拒绝，因为二者都会拥有尺寸。Host 会按采样矩形裁剪
+内容，并增加一层原生 View。需要禁用布局运动时，应使用 `snap()` 或解析为 Snap 的 Motion Policy。
+
 ## 测试
 
 - 命令式动画与取消测试使用确定性 Frame Clock；
@@ -363,6 +392,8 @@ Layout，Wrapper 还会增加一层 View；不要无差别应用到大型列表�
 - 分开测试兼容与不兼容 Shape 转场，包括降级归因；
 - Wrapper 位置、约束或 Modifier 路由相关的尺寸动画应在 Android Renderer 测试；Animation 模块
   单元测试只验证契约序列化。
+- Bounds 动画需验证真实父级放置、RTL、运行中 Retarget、Detach/Reuse、Input 与 Accessibility
+  几何、Rollback 和目标测量次数；仅做视觉平移不是可接受的替代方案。
 
 ## 相关文档
 
@@ -380,6 +411,7 @@ Layout，Wrapper 还会增加一层 View；不要无差别应用到大型列表�
 
 Phase 1 Alpha 硬切固定时长 Spring 与单值域 `Animatable<T>` Surface。调用方改用物理
 `spring`、`Animatable<T, V>`、类型化速度、Decay、Bounds 和结构化结果。
-`animateContentSize` 共享同一物理 Solver，也不再接受无限 Spec；不存在 Deprecated 兼容
-Overload。共享时长 Transition、持续 Channel、感知 Exit 的可见性生命周期和纯 Alpha 内容替换
-保留既有所有权。相似 API 名称不代表完整 Jetpack Compose Animation 对齐；以上差异仍是公开契约。
+`animateContentSize` 共享同一物理 Solver，也不再接受无限 Spec。新增的 `animateBounds` 只作用于
+直接父级局部坐标，暂不提供 Shared 或跨 Owner 视觉转场。不存在 Deprecated 兼容 Overload。
+共享时长 Transition、持续 Channel、感知 Exit 的可见性生命周期和纯 Alpha 内容替换保留既有
+所有权。相似 API 名称不代表完整 Jetpack Compose Animation 对齐；以上差异仍是公开契约。

@@ -7,6 +7,7 @@ import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.AndroidViewNodeProps
 import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
+import com.viewcompose.ui.node.spec.AnimatedBoundsHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedContentHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedContentItemNodeProps
 import com.viewcompose.ui.node.spec.LayoutConstraintHostNodeProps
@@ -144,6 +145,13 @@ internal object ContainerViewSpecReader {
     fun readAnimatedSizeHostSpec(node: VNode): ContainerViewBinder.AnimatedSizeHostSpec {
         val spec = node.requireSpec<AnimatedSizeHostNodeProps>()
         return ContainerViewBinder.AnimatedSizeHostSpec(
+            animationSpec = spec.animationSpec,
+        )
+    }
+
+    fun readAnimatedBoundsHostSpec(node: VNode): ContainerViewBinder.AnimatedBoundsHostSpec {
+        val spec = node.requireSpec<AnimatedBoundsHostNodeProps>()
+        return ContainerViewBinder.AnimatedBoundsHostSpec(
             animationSpec = spec.animationSpec,
         )
     }

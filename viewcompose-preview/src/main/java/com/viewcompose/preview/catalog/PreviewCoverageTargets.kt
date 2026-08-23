@@ -24,6 +24,7 @@ internal object PreviewCoverageTargets {
         "feedback-overlay-static",
         "modifier-style-anchor",
         "animation-core-transitions",
+        "animation-layout-bounds",
         "animation-seekable-transition",
         "gesture-tap-drag-swipe-transform",
         "graphics-canvas-draw-pipeline",

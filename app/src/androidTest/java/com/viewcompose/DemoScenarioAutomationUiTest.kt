@@ -77,6 +77,7 @@ class DemoScenarioAutomationUiTest {
             "animation.specs",
             "animation.content-size",
             "animation.transition",
+            "animation.bounds",
             "animation.infinite",
             "modifier.visual",
             "modifier.sizing",
@@ -331,6 +332,7 @@ class DemoScenarioAutomationUiTest {
                 "animation.specs",
                 "animation.content-size",
                 "animation.transition",
+                "animation.bounds",
                 "animation.infinite",
             ).forEach { scenarioId ->
                 launchScenario(scenarioId)

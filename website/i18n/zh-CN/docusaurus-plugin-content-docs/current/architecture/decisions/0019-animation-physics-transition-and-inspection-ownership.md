@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md
-translation_source_hash: 67412668bfd09a1a2b51b6bd158fc2e473a10cd41557fea85e67ab25a4c5893b
+translation_source_hash: 912b3f78f0625a17e9c300acab85beb1178daacb9b03a2f968b3470649138c15
 translation_status: current
 ---
 
@@ -195,6 +195,13 @@ Android Renderer 在一个 Candidate Transaction 中 Stage Measure、Layout、Hi
 Accessibility Geometry 与 Animation Ownership。Apply 失败时保留旧 Rectangle 与 Target。
 拥有 Input 或 Accessibility 的 Node 不允许用 Visual-only Translation 降级。
 
+Phase 5 使用每个本地 Owner 一个透明 Synthetic Host 实现该契约。同一 Chain 的 Layout 与
+Parent Data 提升到 Host，而 Drawing、Content、Input、Focus 与 Semantics 仍留在 Child。
+多个 Bounds Element 采用最后一个；Bounds 与 Content-size 同时出现是 Native Mutation 前的
+Ownership 错误。Duration Retarget 从采样矩形以零速度重启，物理 Retarget 保留四边速度，重复的
+已接受 Target Layout 则保留既有 Writer。Detach 与 Reusable-tree Ownership Transfer 会显式
+清理 Bounds 和 Content-size Animation State，而不依赖平台 Detach Callback。
+
 ### 共享视觉运动
 
 `SharedTransitionLayout` 创建一个限定于 Composition Owner 的 Key Namespace；与 Navigation
@@ -241,7 +248,7 @@ Codec 为 Q0，不能出现在可编译 Sample 中。
 | 2 | `ContentTransform`、`SizeTransform`、`AnimatedContentTransitionScope`、`AnimatedContentScope`、`AnimatedContent` | `viewcompose-animation` | Keyed Replacement Sample；Identity、Measure、Focus、Rollback、设备测试 | 新增 |
 | 3 | Slide/Scale Transition Factory、`AnimatedVisibilityScope`、`animateEnterExit` | `viewcompose-animation` | 组合 Visibility Sample；代数、RTL、释放、设备测试 | 新增 |
 | 4 | `TransitionSegment`、泛型 `Transition.animateValue`、Segment-aware Channel Overload、`SeekableTransitionState`、Seekable `rememberTransition` | `viewcompose-animation` | Segment/Seek Sample；Ownership、Range、Retarget、Predictive Back Adapter 测试 | 除类型化 Channel 命名参数从 `animationSpec` 硬切为 `transitionSpec` 外为新增；删除内部 Segment Helper |
-| 5 | `Modifier.animateBounds`、Bounds Scope/Configuration | `viewcompose-animation` | Bounds Sample；坐标、Remeasure、Input、Accessibility、Rollback 设备测试 | 新增 |
+| 5 | `Modifier.animateBounds` | `viewcompose-animation` | Bounds Sample；坐标、Remeasure、Input、Accessibility、Rollback 设备测试 | 新增 |
 | 6 | `SharedTransitionLayout`、Shared Key/State/Scope、`sharedElement`、`sharedBounds`、Resize/Bounds Transform | `viewcompose-animation`，Navigation Adapter 位于 `viewcompose-navigation-android` | Navigation Shared-motion Sample；Pairing、Overlay、Lifecycle、Rollback、Accessibility 设备测试 | 新增 |
 | 7 | 不可变 Animation Inspection Request/Response 与 Snapshot Type | `viewcompose-preview-core` | Protocol Sample；Codec、Limit、Stale Request、Privacy 测试 | 可选新增 |
 | 7 | Preview Animation Inspection/Seek Client Surface | `viewcompose-preview` 与 Studio Plugin | Preview-only Sample；Activation、Isolation、Request Lifetime、Plugin UI 测试 | 可选新增 |
@@ -322,3 +329,10 @@ Phase 0 的接受条件是：四项 Revision-1 Benchmark Method 可编译并生�
 Baseline；仓库文档与翻译门禁通过；拟议 Q3 清单保持无实现。之后每个 Phase 在进入下一阶段前，
 都必须满足其 API 表条目、相关确定性与设备矩阵、同设备性能预算、事务 Rollback、Lifecycle
 Release、Reduced Motion 行为和 Changeset 要求。
+
+Phase 5 的接受证据包含真实 Row/Column/Box/ConstraintLayout 与 RTL Placement、Environment
+Rebind、Nested Ownership、Focus/Clipping、Detach 与 Lazy Reuse、Rollback、端点 Input 与
+Accessibility Geometry、属性帧零次额外 Child Measure、一个已复核 Demo 路径与 Preview
+Golden，以及固定频率下 Animated 与 Snap 的比较。限定范围内的结论是 Frame Latency 改善且
+Peak Heap 无实质变化；Total Energy 与逐对象 Allocation Event 尚未测量，也不能由 Frame
+Percentile 推断。

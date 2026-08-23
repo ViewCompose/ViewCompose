@@ -1,6 +1,8 @@
 package com.viewcompose.renderer.view.tree
 
 import com.viewcompose.ui.modifier.AspectRatioModifierElement
+import com.viewcompose.ui.modifier.AnimateBoundsModifierElement
+import com.viewcompose.ui.modifier.AnimateContentSizeModifierElement
 import com.viewcompose.ui.modifier.BoxAlignModifierElement
 import com.viewcompose.ui.modifier.ConstraintModifierElement
 import com.viewcompose.ui.modifier.HeightModifierElement
@@ -90,6 +92,7 @@ internal object LayoutConstraintNodeWrapper {
                 ),
                 modifier = hostElements.toModifier(),
                 children = listOf(child),
+                environment = node.environment,
             ),
             source = node,
             discriminator = "layout-constraint",
@@ -169,7 +172,9 @@ internal object LayoutConstraintNodeWrapper {
     }
 
     private fun ModifierElement.isHostLayoutElement(): Boolean =
-        this is MarginModifierElement ||
+        this is AnimateBoundsModifierElement ||
+            this is AnimateContentSizeModifierElement ||
+            this is MarginModifierElement ||
             this is RelativeMarginModifierElement ||
             this is MinWidthModifierElement ||
             this is MinHeightModifierElement ||

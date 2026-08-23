@@ -56,13 +56,13 @@ fun Modifier.animateContentSize(
 ): Modifier {
     return then(
         AnimateContentSizeModifierElement(
-            animationSpec = animationSpec.toContentSizeSpecModel(),
+            animationSpec = animationSpec.toLayoutAnimationSpecModel(),
         ),
     )
 }
 
 /** Converts a public animation specification into the platform-neutral renderer contract. */
-private fun FiniteAnimationSpec.toContentSizeSpecModel(): ContentSizeAnimationSpecModel {
+internal fun FiniteAnimationSpec.toLayoutAnimationSpecModel(): ContentSizeAnimationSpecModel {
     return when (this) {
         is SpringSpec -> ContentSizeSpringSpecModel(
             dampingRatio = dampingRatio,
@@ -71,11 +71,11 @@ private fun FiniteAnimationSpec.toContentSizeSpecModel(): ContentSizeAnimationSp
         )
 
         is com.viewcompose.animation.core.DurationBasedAnimationSpec ->
-            toContentSizeDurationSpecModel()
+            toLayoutAnimationDurationSpecModel()
     }
 }
 
-private fun com.viewcompose.animation.core.DurationBasedAnimationSpec.toContentSizeDurationSpecModel():
+private fun com.viewcompose.animation.core.DurationBasedAnimationSpec.toLayoutAnimationDurationSpecModel():
     ContentSizeDurationBasedAnimationSpecModel {
     return when (this) {
         is TweenSpec -> ContentSizeTweenSpecModel(
@@ -96,7 +96,7 @@ private fun com.viewcompose.animation.core.DurationBasedAnimationSpec.toContentS
 
         is RepeatableSpec -> ContentSizeRepeatableSpecModel(
             iterations = iterations,
-            animation = animation.toContentSizeDurationSpecModel(),
+            animation = animation.toLayoutAnimationDurationSpecModel(),
             repeatMode = repeatMode.toContentSizeRepeatMode(),
         )
 

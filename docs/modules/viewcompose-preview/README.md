@@ -97,6 +97,11 @@ feedback, modifier, animation, gesture, and graphics scenes. Parameterized Compo
 Paparazzi snapshots share the same specifications, while guard tests enforce unique IDs, groups,
 titles, and the declared coverage target list.
 
+The `animation-layout-bounds` catalog entry fixes a settled start rectangle for position, size, and
+combined motion. Its reviewed light-theme Golden protects the initial geometry and styling; the
+interactive specification can then toggle the real bounds endpoint without introducing a separate
+preview-only renderer path.
+
 Catalog types are internal test infrastructure rather than a public component-gallery API. Extend
 them when a new module or visual contract needs regression coverage, but keep application examples
 in the demo and user-facing documentation.

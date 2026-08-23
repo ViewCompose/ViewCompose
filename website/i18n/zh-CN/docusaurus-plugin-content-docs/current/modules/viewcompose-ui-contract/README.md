@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: cdb6f96d21d5afd96755ba1ee8f1789f77116c378ce647e593aee36c1e81f27d
+translation_source_hash: 523abb3125b52af3e6c20b193b0a14ad041622282059a5fdad89aa3feda53ce7
 translation_status: current
 ---
 
@@ -89,6 +89,11 @@ val gap = VNode(
 - `AnimateContentSizeModifierElement` 携带有限 `ContentSizeAnimationSpecModel`。时长模型覆盖
   Tween、Keyframes、Snap 与有限 Repeat；独立物理 Spring 模型携带 Damping Ratio、归一化质量
   Stiffness 与 Safety Guard。Transport 不包含无限 Layout Motion，也不持有 Clock 或 Solver。
+- Q3 `AnimateBoundsModifierElement` 复用上述有限 Layout-animation Model；Q3
+  `AnimatedBoundsHostNodeProps` 与 `NodeType.AnimatedBoundsHost` 描述直接 Parent 物理像素坐标中
+  的一个真实矩形。Renderer 必须让 Layout、Hit、Focus 与 Accessibility 几何保持一致，在动画前
+  解析逻辑方向，拒绝 Bounds/Content-size 同时拥有尺寸，并在 Detach 或跨 Owner 复用时清理临时
+  Ownership。可编译的 `animatedBoundsHostNodeContractSample` 覆盖该 Transport。
 - Q3 ConstraintLayout 传输契约为每个轴使用一个互斥的 `ConstraintDimension` 值，以
   `ConstraintMatchMode` 表达 spread/wrap/percent 行为，并使用正数类型化 `ConstraintRatio`
   与单一 Baseline Link。逻辑 Start/End 与物理 Left/Right Anchor 保持独立；

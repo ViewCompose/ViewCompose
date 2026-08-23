@@ -2,8 +2,10 @@
 
 ## Status
 
-Active. Phases 0 through 3 are complete and merged. Phase 4 implementation and acceptance are
-complete on PR #124; pull-request delivery remains before Phase 5 begins.
+Active. Phases 0 through 4 are complete and merged. Phase 5 implementation, focused acceptance,
+manual-device review, Preview, fixed-frequency evidence, repository gates, and root-installed
+physical-device suites are complete on the candidate branch; pull-request delivery remains before
+Phase 6 begins.
 This plan was split out on 2026-08-18 from the Animation follow-up in the unified roadmap and the
 framework-wide physical-spring candidate recorded by the multi-design-system plan. Those documents
 now point here; this file is the only active plan that owns the seven animation expansions defined
@@ -21,8 +23,8 @@ architecture, guide, reference, and owning-module documentation before this plan
 
 Last verified: 2026-08-23.
 
-Next action: merge PR #124, then begin Phase 5 without reopening the accepted seek ownership,
-dynamic-duration, segment-identity, or zero-velocity continuation contracts.
+Next action: deliver and merge the Phase 5 pull request, then begin Phase 6 without reopening the
+accepted seek or real-layout ownership contracts.
 
 ## Maven release changesets
 
@@ -33,8 +35,10 @@ dynamic-duration, segment-identity, or zero-velocity continuation contracts.
 - `release/changes/20260823-animated-visibility-phase3.json` — Phase 3 rich visibility primitives,
   type-safe content scope, shared descendant clock, and native interaction ownership; accepted and
   merged.
-- `release/changes/20260823-seekable-transition-phase4.json` — Phase 4 generic, segment-aware, and
-  seekable transition hard cut; accepted on PR #124 pending merge.
+- `release/changes/20260823-seekable-transition-phase4.json` — Phase 4 generic transition channels,
+  normalized seeking, and one seek/animate/snap writer; accepted and merged.
+- `release/changes/20260823-animate-bounds-phase5.json` — Phase 5 real parent-local bounds motion,
+  renderer ownership, lifecycle-safe reuse, and Preview coverage; candidate delivery remains.
 
 ## Objective
 
@@ -152,7 +156,7 @@ The total planning range is approximately 19--31 engineering weeks. It is an ord
 aid, not a delivery commitment. A phase cannot trade away transaction safety, lifecycle release,
 inactive-path performance, or deterministic tests merely to meet the estimate.
 
-## Completed Phases 0–4
+## Accepted Phases 0–5
 
 The detailed execution ledger for completed phases was consolidated on 2026-08-23 after Phase 4
 acceptance. Durable semantics remain in
@@ -170,7 +174,8 @@ in the linked performance sections instead of being duplicated here.
 | 1 | Analytic physical spring, typed value/velocity domains, decay, bounds, structured results, fail-before-ownership validation, and one last-writer mutation model | Complete and merged in `a8196f0b` | [Physical candidate comparison](../../tooling/performance.md#249-animation-revision-1-phase-1-physical-candidate); fixed-frequency rows passed and rooted gesture handoff reached `BoundReached` |
 | 2 | Keyed `AnimatedContent`, pair-specific transforms, measured size, bounded two-subtree ownership, incoming-only interaction, rollback, and exact release | Complete and merged in `84dce0ae` | [AnimatedContent comparison](../../tooling/performance.md#2410-animation-revision-2-animatedcontent-comparison); frame and peak memory were `no material change` |
 | 3 | Slide/scale/aligned visibility, hard-cut typed scope, shared parent/descendant timeline, complete-host geometry, and immediate inactive interaction removal | Complete and merged in `2a21db65` | [Rich-visibility comparison](../../tooling/performance.md#2411-animation-revision-3-rich-visibility-release-safety-comparison); frozen gates passed and P99 remains a recorded watch item |
-| 4 | Stable `TransitionSegment`, generic `animateValue<T, V>`, hard-cut `transitionSpec` name, dynamic committed-channel duration, and one seek/animate/snap writer | Complete on PR #124; merge remains | [Seekable-transition absolute baseline](../../tooling/performance.md#2412-animation-revision-2-seekable-transition-baseline): five 200-frame runs, P50/P95/P99 `7.775/10.493/11.718 ms`, heap `8,474 KiB`, CV `0.011`, zero thermal sleep |
+| 4 | Stable `TransitionSegment`, generic `animateValue<T, V>`, hard-cut `transitionSpec` name, dynamic committed-channel duration, and one seek/animate/snap writer | Complete and merged in `984ac9bd` | [Seekable-transition absolute baseline](../../tooling/performance.md#2412-animation-revision-2-seekable-transition-baseline): five 200-frame runs, P50/P95/P99 `7.775/10.493/11.718 ms`, heap `8,474 KiB`, CV `0.011`, zero thermal sleep |
+| 5 | Additive `Modifier.animateBounds`, one complete synthetic layout owner, real parent-local geometry, physical/duration retargeting, hard rejection of dual size ownership, explicit reuse reset, and transactional rollback | Focused acceptance complete on candidate branch; repository gates and PR remain | [Bounds versus immediate-layout comparison](../../tooling/performance.md#2413-animation-revision-1-real-bounds-comparison): stable `464` versus `16` frames/run, animation P50/P95/P99 `5.636/6.520/19.777 ms`, heap `6,754 KiB`, CV `0.060`, zero thermal sleep |
 
 The cumulative accepted contract through Phase 4 is:
 
@@ -189,26 +194,31 @@ The cumulative accepted contract through Phase 4 is:
 
 Phase 4 final gates pass: the quick/Preview/tooling-isolation gate completed 1,624 tasks,
 `qaFull` completed 1,763 tasks, and Xiaomi suites passed Demo 137/137, Counter 1/1, and Tutorials
-2/2 with no skips or failures. Phases 5–7 below retain their full unresolved requirements.
+2/2 with no skips or failures. Phases 6–7 below retain their full unresolved requirements.
 
 ## Phase 5: Layout-coordinate and bounds animation
 
-Add a layout-participating `Modifier.animateBounds` or equivalently named Q3 contract that animates
-position and size between accepted layout states. It must not be implemented as visual scale alone
-or as a wrapper that permanently changes hit/accessibility bounds independently from what users
-see.
+The candidate adds the Q3 `Modifier.animateBounds` contract for position and size changes between
+accepted layout states. One transparent synthetic host owns the complete parent-data and layout
+chain while the child retains drawing, content, input, and semantics. `animateBounds` plus
+`animateContentSize` on the same node is rejected before native mutation; repeated bounds elements
+remain last-wins.
 
-ADR-0019 selects one lookahead-style candidate measurement when constraints or target topology
-change and stages measure, layout, hit geometry, accessibility geometry, and animation ownership
-transactionally. The implementation must preserve that immediate-parent physical-pixel contract
-through parent-local conversions, alignment, clipping, RTL, scroll, density and configuration
-changes, nested bounds animation, z-order, focus, detach/reattach, and active retargeting.
+The Android host accepts one target measurement, then lays out every sampled rectangle directly
+without per-frame child measurement. Logical anchors resolve before physical pixels; duration
+retargets restart from the current rectangle with zero velocity, while physical springs retain all
+four edge velocities. Detach and cross-owner lazy reuse cancel and clear animation state explicitly,
+so adoption settles under the new owner rather than replaying stale geometry.
 
-Required evidence includes position-only, size-only, and combined motion; parent constraint
-changes; Row/Column/Box/ConstraintLayout parents; nested scroll and lazy reuse; RTL; density/font
-scale; clipping; focus and touch at visible bounds; rapid retarget; failed renderer apply and
-rollback; stable endpoint layout; extra-measure counts; per-frame allocations; and same-device
-frame CPU against equivalent non-animated layout changes.
+Focused evidence now covers position-only, size-only, and combined motion; Row, Column, Box, and
+ConstraintLayout parents; logical RTL; nested host ownership; density/font-scale rebinding;
+clipping and retained focus; active retargeting; detach/reattach and cross-owner lazy reuse;
+failed renderer apply with geometry/spec rollback; stable endpoints; and zero additional child
+measurements during property frames. The Xiaomi device test proves real endpoint size, visible and
+accessibility bounds, and touch delivery. The reviewed Demo and Paparazzi fixtures expose the same
+three motion classes. The fixed-frequency same-fixture control records deterministic frame counts,
+shared engine-vector reuse, stable peak heap, and improved frame CPU; per-object allocation events
+and total energy remain explicit measurement limitations rather than inferred claims.
 
 ## Phase 6: Shared element and shared bounds transitions
 
@@ -369,11 +379,13 @@ This plan is complete only when:
 4. **Complete and merged — Phase 3:** slide/scale/aligned visibility primitives, type-safe scope,
    shared-clock descendant choreography, focused/full tests, manual-device review, Preview Golden,
    fixed-frequency performance, and root-installed device suites were merged in `2a21db65`.
-5. **Complete on candidate branch — Phase 4:** public generic/segment-aware channels, normalized
-   seekable ownership, focused tests, Demo/Preview/manual review, the stable fixed-frequency
-   absolute baseline, repository gates, and full physical-device suites are accepted; pull-request
-   delivery remains.
-6. **Pending — Phase 5:** implement transactional layout-coordinate and bounds animation.
+5. **Complete and merged — Phase 4:** public generic/segment-aware channels, normalized seekable
+   ownership, focused tests, Demo/Preview/manual review, the stable fixed-frequency absolute
+   baseline, repository gates, and full physical-device suites were merged in `984ac9bd`.
+6. **Complete on candidate branch — Phase 5:** transactional real-bounds ownership, focused
+   correctness and reuse tests, Demo automation, manual device review, Preview Golden,
+   fixed-frequency animated-versus-snap comparison, repository gates, and root-installed physical
+   suites are accepted; PR delivery remains.
 7. **Pending — Phase 6:** implement bounded shared-element/shared-bounds coordination and navigation
    integration.
 8. **Pending — Phase 7:** implement isolated request-driven timeline inspection and approved
@@ -414,3 +426,8 @@ This plan is complete only when:
 | 2026-08-23 | Freeze the Phase 4 hard cut: one stable segment-aware finite channel surface, one explicit seek/animate/snap writer, normalized longest-duration progress, zero seek velocity, cancel-and-join takeover, one post-commit binding, and no save/navigation ownership. |
 | 2026-08-23 | Accept the `animation.transition@2` Xiaomi fixed-frequency absolute baseline: five identical 200-frame runs, run-P50 CV `0.011`, P50/P95/P99 `7.775/10.493/11.718 ms`, median peak heap `8,474 KiB`, and zero thermal sleep; reject longitudinal comparison with revision 1. |
 | 2026-08-23 | Accept the Phase 4 final gates: the 1,624-task quick/Preview/tooling-isolation gate and 1,763-task `qaFull` gate pass; physical-device suites pass Demo 137/137, Counter 1/1, and Tutorials 2/2 with no skips or failures. |
+| 2026-08-23 | Record Phase 4 merged at `984ac9bdd3be9684ce60670a73481f052a2f6aea` and begin Phase 5 without reopening seek ownership. |
+| 2026-08-23 | Freeze the Phase 5 hard cut: one complete synthetic layout owner, real immediate-parent pixels, last bounds specification wins, dual `animateBounds`/`animateContentSize` ownership fails before mutation, duration retargets use zero velocity, physical retargets retain four-edge velocity, and detach or cross-owner reuse settles under the next owner. |
+| 2026-08-23 | Accept the focused Phase 5 matrix and Xiaomi manual/device evidence: Row/Column/Box/ConstraintLayout, RTL, density/font scale, nested ownership, clipping/focus, lazy reuse, rollback, measurement count, accessibility geometry, and endpoint touch pass. |
+| 2026-08-23 | Accept the final-candidate `animation.bounds@1` fixed-frequency comparison as improved active-frame latency with no material peak-heap change: animated P50/P95/P99 are `5.124/6.438/18.503 ms` versus snap `8.727/25.762/28.556 ms`, median heap is `6,714` versus `6,868 KiB`, run-P50 CV is `0.055` versus `0.083`, and thermal sleep is zero. The unequal `464` versus `16` frames prohibit a total-CPU or energy claim. |
+| 2026-08-23 | Accept the Phase 5 final gates: documentation, translation, quick, Preview, and tooling-isolation checks pass in the 1,624-task gate. The non-device `qaFull` path passes 1,622 tasks; the ordinary device-inclusive path executes 1,734 tasks before MIUI rejects Counter APK installation with zero tests. Root-installing the exact rebuilt APKs then passes Demo 138/138, Counter 1/1, and Tutorials 2/2 with no skips or failures. Final start/mid/end visual review confirms all three Bounds motion classes, and endpoint UI Automation reports the combined target at `[378,1332][990,1506]`. |

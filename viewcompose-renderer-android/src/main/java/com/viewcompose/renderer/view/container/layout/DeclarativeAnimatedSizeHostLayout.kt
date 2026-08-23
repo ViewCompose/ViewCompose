@@ -2,14 +2,12 @@ package com.viewcompose.renderer.view.container
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.animation.TimeInterpolator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.LinearInterpolator
-import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
 import com.viewcompose.animation.core.AnimationConverter
 import com.viewcompose.animation.core.AnimationVelocity
@@ -19,23 +17,17 @@ import com.viewcompose.renderer.view.tree.LayoutPassTracker
 import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
 import com.viewcompose.renderer.decoration.DecorationDrawingOrderContainer
 import com.viewcompose.renderer.decoration.ViewDecorationDrawing
-import com.viewcompose.ui.modifier.ContentSizeDurationBasedAnimationSpecModel
-import com.viewcompose.ui.modifier.ContentSizeEasingModel
 import com.viewcompose.ui.modifier.ContentSizeAnimationSpecModel
-import com.viewcompose.ui.modifier.ContentSizeKeyframeModel
-import com.viewcompose.ui.modifier.ContentSizeKeyframesSpecModel
-import com.viewcompose.ui.modifier.ContentSizeRepeatModeModel
-import com.viewcompose.ui.modifier.ContentSizeRepeatableSpecModel
+import com.viewcompose.ui.modifier.ContentSizeDurationBasedAnimationSpecModel
 import com.viewcompose.ui.modifier.ContentSizeSnapSpecModel
 import com.viewcompose.ui.modifier.ContentSizeSpringSpecModel
-import com.viewcompose.ui.modifier.ContentSizeTweenSpecModel
 import kotlin.math.roundToInt
 
 /** Platform host created from promoted animateContentSize modifiers. */
 internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-) : FrameLayout(context, attrs), DecorationDrawingOrderContainer {
+) : FrameLayout(context, attrs), DecorationDrawingOrderContainer, ReusableLayoutAnimationHost {
     private val decorationDrawing = ViewDecorationDrawing(this)
 
     var animationSpec: ContentSizeAnimationSpecModel = ContentSizeSnapSpecModel
@@ -100,7 +92,6 @@ internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
         val contentRight = (right - left - paddingRight).coerceAtLeast(contentLeft)
         val contentBottom = (bottom - top - paddingBottom).coerceAtLeast(contentTop)
         if (childCount == 1) {
-            // Lay out the single child at the host's animated size so it does not jump to the final size before collapse.
             // Layout the single child with the host's animated bounds to avoid snap-to-end during collapse.
             getChildAt(0).layout(contentLeft, contentTop, contentRight, contentBottom)
         } else {
@@ -111,8 +102,17 @@ internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
+        resetLayoutAnimationForReuse()
+    }
+
+    override fun resetLayoutAnimationForReuse() {
         sizeAnimator?.cancel()
         sizeAnimator = null
+        animatedWidthPx = -1f
+        animatedHeightPx = -1f
+        targetWidthPx = 0
+        targetHeightPx = 0
+        animatedVelocity = AnimatedSize(0f, 0f)
     }
 
     override fun drawChild(
@@ -175,7 +175,7 @@ internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
         end: AnimatedSize,
         spec: ContentSizeDurationBasedAnimationSpecModel,
     ) {
-        val config = spec.resolveConfig()
+        val config = spec.resolveLayoutAnimationConfig()
         if (config.durationMillis <= 0L) {
             animatedWidthPx = end.width
             animatedHeightPx = end.height
@@ -282,146 +282,12 @@ internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
         }
     }
 
-    private data class AnimationRuntimeConfig(
-        val durationMillis: Long,
-        val delayMillis: Long,
-        val interpolator: TimeInterpolator,
-        val repeatCount: Int,
-        val repeatMode: Int,
-        val terminalFraction: Float,
-    )
-
-    private fun ContentSizeDurationBasedAnimationSpecModel.resolveConfig(): AnimationRuntimeConfig {
-        return when (this) {
-            is ContentSizeTweenSpecModel -> AnimationRuntimeConfig(
-                durationMillis = durationMillis.toLong().coerceAtLeast(1L),
-                delayMillis = delayMillis.toLong().coerceAtLeast(0L),
-                interpolator = easing.toInterpolator(),
-                repeatCount = 0,
-                repeatMode = ValueAnimator.RESTART,
-                terminalFraction = 1f,
-            )
-
-            is ContentSizeKeyframesSpecModel -> AnimationRuntimeConfig(
-                durationMillis = durationMillis.toLong().coerceAtLeast(1L),
-                delayMillis = 0L,
-                interpolator = KeyframesInterpolator(
-                    durationMillis = durationMillis.coerceAtLeast(1),
-                    keyframes = keyframes,
-                ),
-                repeatCount = 0,
-                repeatMode = ValueAnimator.RESTART,
-                terminalFraction = 1f,
-            )
-
-            ContentSizeSnapSpecModel -> AnimationRuntimeConfig(
-                durationMillis = 0L,
-                delayMillis = 0L,
-                interpolator = LinearInterpolator(),
-                repeatCount = 0,
-                repeatMode = ValueAnimator.RESTART,
-                terminalFraction = 1f,
-            )
-
-            is ContentSizeRepeatableSpecModel -> {
-                val normalizedIterations = iterations.coerceAtLeast(0)
-                if (normalizedIterations == 0) {
-                    return AnimationRuntimeConfig(
-                        durationMillis = 0L,
-                        delayMillis = 0L,
-                        interpolator = LinearInterpolator(),
-                        repeatCount = 0,
-                        repeatMode = ValueAnimator.RESTART,
-                        terminalFraction = 0f,
-                    )
-                }
-                val inner = animation.resolveConfig()
-                inner.copy(
-                    repeatCount = (normalizedIterations - 1).coerceAtLeast(0),
-                    repeatMode = repeatMode.toAnimatorRepeatMode(),
-                    terminalFraction = repeatMode.terminalFraction(iterations = normalizedIterations),
-                )
-            }
-
-        }
-    }
-
     private fun lerp(
         start: Float,
         end: Float,
         fraction: Float,
     ): Float {
         return start + (end - start) * fraction
-    }
-
-    private fun ContentSizeRepeatModeModel.toAnimatorRepeatMode(): Int {
-        return when (this) {
-            ContentSizeRepeatModeModel.Restart -> ValueAnimator.RESTART
-            ContentSizeRepeatModeModel.Reverse -> ValueAnimator.REVERSE
-        }
-    }
-
-    private fun ContentSizeRepeatModeModel.terminalFraction(iterations: Int): Float {
-        return if (this == ContentSizeRepeatModeModel.Reverse && iterations % 2 == 0) {
-            0f
-        } else {
-            1f
-        }
-    }
-
-    private fun ContentSizeEasingModel.toInterpolator(): TimeInterpolator {
-        return when (this) {
-            ContentSizeEasingModel.Linear -> LinearInterpolator()
-            ContentSizeEasingModel.FastOutSlowIn -> TimeInterpolator { fraction ->
-                val t = fraction.coerceIn(0f, 1f)
-                (3f * t * t) - (2f * t * t * t)
-            }
-
-            ContentSizeEasingModel.LinearOutSlowIn -> TimeInterpolator { fraction ->
-                val t = fraction.coerceIn(0f, 1f)
-                1f - (1f - t) * (1f - t)
-            }
-
-            ContentSizeEasingModel.FastOutLinearIn -> TimeInterpolator { fraction ->
-                val t = fraction.coerceIn(0f, 1f)
-                t * t
-            }
-
-            is ContentSizeEasingModel.CubicBezier -> PathInterpolator(x1, y1, x2, y2)
-        }
-    }
-
-    private class KeyframesInterpolator(
-        private val durationMillis: Int,
-        keyframes: List<ContentSizeKeyframeModel>,
-    ) : TimeInterpolator {
-        private val sortedKeyframes = keyframes.sortedBy { it.timeMillis }
-
-        override fun getInterpolation(input: Float): Float {
-            if (sortedKeyframes.isEmpty()) {
-                return input.coerceIn(0f, 1f)
-            }
-            val clamped = input.coerceIn(0f, 1f)
-            val time = (durationMillis * clamped).toInt()
-            val before = sortedKeyframes.lastOrNull { it.timeMillis <= time }
-                ?: ContentSizeKeyframeModel(0, 0f)
-            val after = sortedKeyframes.firstOrNull { it.timeMillis >= time }
-                ?: ContentSizeKeyframeModel(durationMillis, 1f)
-            if (before.timeMillis == after.timeMillis) {
-                return before.valueFraction.coerceIn(0f, 1f)
-            }
-            val local = ((time - before.timeMillis).toFloat() / (after.timeMillis - before.timeMillis).toFloat())
-                .coerceIn(0f, 1f)
-            return localLerp(before.valueFraction, after.valueFraction, local).coerceIn(0f, 1f)
-        }
-
-        private fun localLerp(
-            start: Float,
-            end: Float,
-            fraction: Float,
-        ): Float {
-            return start + (end - start) * fraction
-        }
     }
 }
 

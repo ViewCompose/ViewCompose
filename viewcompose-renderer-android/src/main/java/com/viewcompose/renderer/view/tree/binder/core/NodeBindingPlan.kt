@@ -6,6 +6,7 @@ import com.viewcompose.ui.node.spec.ColumnNodeProps
 import com.viewcompose.ui.node.spec.ConstraintLayoutNodeProps
 import com.viewcompose.ui.node.spec.DividerNodeProps
 import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
+import com.viewcompose.ui.node.spec.AnimatedBoundsHostNodeProps
 import com.viewcompose.ui.node.spec.LayoutConstraintHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedVisibilityHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedContentHostNodeProps
@@ -154,6 +155,11 @@ internal data class AnimatedContentItemNodePatch(
 internal data class AnimatedSizeHostNodePatch(
     val previous: AnimatedSizeHostNodeProps,
     val next: AnimatedSizeHostNodeProps,
+) : NodeViewPatch
+
+internal data class AnimatedBoundsHostNodePatch(
+    val previous: AnimatedBoundsHostNodeProps,
+    val next: AnimatedBoundsHostNodeProps,
 ) : NodeViewPatch
 
 internal data class LayoutConstraintHostNodePatch(

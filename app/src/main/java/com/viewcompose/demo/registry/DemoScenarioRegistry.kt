@@ -66,6 +66,7 @@ internal object DemoScenarioIds {
     val AnimationSpecs = DemoScenarioId("animation.specs")
     val AnimationContentSize = DemoScenarioId("animation.content-size")
     val AnimationTransition = DemoScenarioId("animation.transition")
+    val AnimationBounds = DemoScenarioId("animation.bounds")
     val AnimationInfinite = DemoScenarioId("animation.infinite")
     val ModifierVisual = DemoScenarioId("modifier.visual")
     val ModifierSizing = DemoScenarioId("modifier.sizing")
@@ -545,6 +546,24 @@ internal object DemoScenarioRegistry {
             state = R.id.demo_animation_transition_state,
             target = R.id.demo_animation_transition_target,
             benchmarkRevision = 2,
+            benchmarkActions = listOf(
+                DemoAutomationRole.PrimaryAction,
+                DemoAutomationRole.SecondaryAction,
+            ),
+        ),
+        animationScenario(
+            id = DemoScenarioIds.AnimationBounds,
+            titleRes = R.string.demo_scenario_animation_bounds_title,
+            summaryRes = R.string.demo_scenario_animation_bounds_summary,
+            root = R.id.demo_animation_bounds_root,
+            ready = R.id.demo_animation_bounds_ready,
+            primaryAction = R.id.demo_animation_bounds_primary_action,
+            secondaryAction = R.id.demo_animation_bounds_secondary_action,
+            reset = R.id.demo_animation_bounds_reset,
+            state = R.id.demo_animation_bounds_state,
+            target = R.id.demo_animation_bounds_target,
+            secondaryTarget = R.id.demo_animation_bounds_secondary_target,
+            benchmarkRevision = 1,
             benchmarkActions = listOf(
                 DemoAutomationRole.PrimaryAction,
                 DemoAutomationRole.SecondaryAction,
@@ -1501,6 +1520,7 @@ internal object DemoScenarioRegistry {
         reset: Int,
         state: Int,
         target: Int,
+        secondaryTarget: Int? = null,
         benchmarkRevision: Int? = null,
         benchmarkActions: List<DemoAutomationRole>? = null,
     ): DemoScenarioSpec = scenario(
@@ -1524,6 +1544,7 @@ internal object DemoScenarioRegistry {
             reset = reset,
             state = state,
             target = target,
+            secondaryTarget = secondaryTarget,
         ),
         benchmarkRevision = benchmarkRevision,
         benchmarkActions = benchmarkActions,

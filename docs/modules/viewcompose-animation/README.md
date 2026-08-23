@@ -3,7 +3,7 @@
 `viewcompose-animation` integrates the platform-neutral animation engine with ViewCompose state,
 composition effects, `Modifier`, UI node emission, and the Android View renderer. It provides
 state-driven value animation, imperative last-writer mutations, synchronized transitions, infinite
-channels, visibility/content transitions, and measured-size animation.
+channels, visibility/content transitions, measured-size animation, and real layout-bounds motion.
 
 ## Artifact and stability
 
@@ -381,6 +381,39 @@ Built-in easing and cubic Bézier control points cross the renderer boundary. Un
 implementations fall back to `FastOutSlowIn`. When several `animateContentSize` elements occur in one
 modifier chain, the last specification wins.
 
+## animateBounds and real layout geometry
+
+`Modifier.animateBounds` animates a node's position and size in its immediate ViewCompose layout
+parent after logical start/end and RTL resolution. It commits a real Android rectangle on every
+frame rather than applying draw translation or scale, so visible, pointer, focus, and accessibility
+geometry remain aligned:
+
+```kotlin
+Button(
+    text = "Move and resize",
+    onClick = onTargetClick,
+    modifier = Modifier
+        .width(if (expanded) 204.dp else 152.dp)
+        .height(if (expanded) 58.dp else 48.dp)
+        .align(if (expanded) BoxAlignment.BottomEnd else BoxAlignment.BottomStart)
+        .animateBounds(tween(durationMillis = 900)),
+)
+```
+
+The first accepted layout is settled. A target change performs one target measurement; duration
+specifications retarget from the current rectangle with zero velocity, while physical springs
+retain all four sampled edge velocities. Property frames reuse the target measurement. Parent
+scrolling moves the complete local coordinate system; reparenting ends the old owner's motion and
+the destination starts settled. Detach and lazy-item cross-owner reuse also cancel and clear old
+motion before the next layout.
+
+The renderer promotes same-chain size, margin, parent data, alignment, offset, visibility, and
+z-index to one transparent outer host. Drawing, content, input, focus, and semantics remain on the
+child. Repeated `animateBounds` elements are last-wins. Combining `animateBounds` and
+`animateContentSize` on one node is rejected before native mutation because both would own size.
+The host clips content to its sampled rectangle and adds one native View level. Use `snap()` or a
+resolved snap motion policy when layout motion must be disabled.
+
 ## Testing
 
 - Provide deterministic frame clocks for imperative animation and cancellation tests.
@@ -396,6 +429,9 @@ modifier chain, the last specification wins.
 - Test compatible and incompatible shape transitions separately, including fallback attribution.
 - Test size animation on the Android renderer when wrapper placement, constraints, or modifier
   routing matters; the animation module's unit tests verify only contract serialization.
+- Test bounds animation with real parent placement, RTL, active retargeting, detach/reuse, input and
+  accessibility geometry, rollback, and target-measure counts; visual translation alone is not an
+  acceptable substitute.
 
 ## Related documentation
 
@@ -414,7 +450,9 @@ The complete generated reference is available in the
 The Phase 1 alpha hard-cuts the fixed-duration spring and single-domain `Animatable<T>` surface.
 Callers use physical `spring`, `Animatable<T, V>`, typed velocity, decay, bounds, and structured
 results. `animateContentSize` shares that physical solver and no longer accepts infinite
-specifications. There are no deprecated compatibility overloads. Shared-duration transitions,
-continuous channels, exit-aware visibility lifetime, and alpha-only content replacement retain
-their documented ownership. Similar API names do not imply complete Jetpack Compose Animation
-parity; the behavioral differences above remain part of the public contract.
+specifications. Additive `animateBounds` is immediate-parent-local and does not yet provide shared
+or cross-owner visual transitions. There are no deprecated compatibility overloads.
+Shared-duration transitions, continuous channels, exit-aware visibility lifetime, and alpha-only
+content replacement retain their documented ownership. Similar API names do not imply complete
+Jetpack Compose Animation parity; the behavioral differences above remain part of the public
+contract.

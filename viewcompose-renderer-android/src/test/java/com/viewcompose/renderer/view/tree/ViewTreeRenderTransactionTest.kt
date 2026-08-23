@@ -19,6 +19,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime
 import com.viewcompose.renderer.decoration.RecordingDecorationBackend
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedBoundsHostLayout
 import com.viewcompose.renderer.view.requireUiEnvironment
 import com.viewcompose.renderer.view.shape.UiShapeDrawable
 import com.viewcompose.text.TextDocument
@@ -32,6 +33,9 @@ import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.NativeViewElement
+import com.viewcompose.ui.modifier.AnimateBoundsModifierElement
+import com.viewcompose.ui.modifier.ContentSizeEasingModel
+import com.viewcompose.ui.modifier.ContentSizeTweenSpecModel
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.innerShadow
 import com.viewcompose.ui.modifier.marginRelative
@@ -64,6 +68,7 @@ import com.viewcompose.ui.unit.UiDensity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.After
@@ -875,6 +880,50 @@ class ViewTreeRenderTransactionTest {
     }
 
     @Test
+    fun `failed frame restores bounds animation spec and parent layout contract`() {
+        val container = FrameLayout(context)
+        val previousTiming = ContentSizeTweenSpecModel(
+            durationMillis = 180,
+            delayMillis = 0,
+            easing = ContentSizeEasingModel.Linear,
+        )
+        val previous = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                animatedBoundsTextNode(width = 120, timing = previousTiming),
+                androidNode(key = "failure", value = "stable"),
+            ),
+        ).mountedNodes
+        val host = container.getChildAt(0) as DeclarativeAnimatedBoundsHostLayout
+        assertEquals(120, host.layoutParams.width)
+        assertEquals(previousTiming, host.animationSpec)
+
+        val error = runCatching {
+            ViewTreeRenderer.renderInto(
+                container = container,
+                previous = previous,
+                nodes = listOf(
+                    animatedBoundsTextNode(
+                        width = 220,
+                        timing = ContentSizeTweenSpecModel(
+                            durationMillis = 720,
+                            delayMillis = 24,
+                            easing = ContentSizeEasingModel.FastOutSlowIn,
+                        ),
+                    ),
+                    androidNode(key = "failure", value = "broken", failUpdate = true),
+                ),
+            )
+        }.exceptionOrNull()
+
+        assertAndroidViewUpdateFailure(error)
+        assertSame(host, container.getChildAt(0))
+        assertEquals(120, host.layoutParams.width)
+        assertEquals(previousTiming, host.animationSpec)
+    }
+
+    @Test
     fun `android view commit and release failures keep structured operation context`() {
         val container = FrameLayout(context)
         val mounted = ViewTreeRenderer.renderInto(
@@ -957,6 +1006,48 @@ class ViewTreeRenderTransactionTest {
         assertEquals(0, releases)
         ViewTreeRenderer.releaseReusableMounted(rebound.mountedNodes)
         assertEquals(1, releases)
+    }
+
+    @Test
+    fun `cross owner reuse cancels bounds motion and settles the adopted layout`() {
+        val firstContainer = FrameLayout(context)
+        val secondContainer = FrameLayout(context)
+        val timing = ContentSizeTweenSpecModel(
+            durationMillis = 1_000,
+            delayMillis = 0,
+            easing = ContentSizeEasingModel.Linear,
+        )
+        val first = ViewTreeRenderer.renderInto(
+            container = firstContainer,
+            previous = emptyList(),
+            nodes = listOf(animatedBoundsTextNode(width = 80, timing = timing)),
+        )
+        firstContainer.measureAndLayoutForBoundsReuse()
+        val host = first.mountedNodes.single().view as DeclarativeAnimatedBoundsHostLayout
+        val moving = ViewTreeRenderer.renderInto(
+            container = firstContainer,
+            previous = first.mountedNodes,
+            nodes = listOf(animatedBoundsTextNode(width = 160, timing = timing)),
+        )
+        firstContainer.measureAndLayoutForBoundsReuse()
+        assertTrue(host.animatorForTest() != null)
+
+        assertTrue(ViewTreeRenderer.detachMountedForReuse(firstContainer, moving.mountedNodes))
+        assertNull(host.animatorForTest())
+        ViewTreeRenderer.attachReusableMounted(secondContainer, moving.mountedNodes)
+        val rebound = ViewTreeRenderer.renderInto(
+            container = secondContainer,
+            previous = moving.mountedNodes,
+            nodes = listOf(
+                animatedBoundsTextNode(width = 120, timing = timing).copy(key = "adopted-bounds"),
+            ),
+        )
+        secondContainer.measureAndLayoutForBoundsReuse()
+
+        assertSame(host, rebound.mountedNodes.single().view)
+        assertEquals(120, host.width)
+        assertNull(host.animatorForTest())
+        assertEquals(host.currentBoundsForTest(), host.targetBoundsForTest())
     }
 
     @Test
@@ -1273,6 +1364,25 @@ class ViewTreeRenderTransactionTest {
                 ),
             ),
         )
+    }
+
+    private fun animatedBoundsTextNode(
+        width: Int,
+        timing: ContentSizeTweenSpecModel,
+    ): VNode {
+        return environmentTextNode(density = 1f, fontScale = 1f).copy(
+            key = "animated-bounds-text",
+            modifier = Modifier
+                .width(width.dp)
+                .then(AnimateBoundsModifierElement(timing)),
+        )
+    }
+
+    private fun FrameLayout.measureAndLayoutForBoundsReuse() {
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(400, View.MeasureSpec.EXACTLY)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(400, View.MeasureSpec.EXACTLY)
+        measure(widthSpec, heightSpec)
+        layout(0, 0, 400, 400)
     }
 
     private fun relativeTextNode(

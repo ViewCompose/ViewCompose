@@ -92,6 +92,12 @@ created for the node.
   models cover tween, keyframes, snap, and finite repeat; the separate physical spring model carries
   damping ratio, normalized-mass stiffness, and a safety guard. Infinite layout motion is not part
   of the transport. The contract owns no clock or solver.
+- Q3 `AnimateBoundsModifierElement` reuses that finite layout-animation model, while Q3
+  `AnimatedBoundsHostNodeProps` and `NodeType.AnimatedBoundsHost` describe one real rectangle in the
+  immediate parent's physical-pixel coordinates. A renderer must keep layout, hit, focus, and
+  accessibility geometry aligned, resolve logical direction before animation, reject simultaneous
+  bounds/content-size ownership, and clear transient ownership on detach or cross-owner reuse. The
+  compiled `animatedBoundsHostNodeContractSample` covers the transport.
 - Q3 ConstraintLayout transport uses one mutually exclusive `ConstraintDimension` value per axis,
   `ConstraintMatchMode` for spread/wrap/percent behavior, a positive typed `ConstraintRatio`, and
   one baseline link. Logical start/end and physical left/right anchors remain distinct;

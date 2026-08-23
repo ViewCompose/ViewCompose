@@ -91,6 +91,8 @@
     <string name="demo_scenario_animation_content_size_summary">A non-scrolling, always-visible stage for verifying animateContentSize expansion and collapse.</string>
     <string name="demo_scenario_animation_transition_title">Seekable transition channels</string>
     <string name="demo_scenario_animation_transition_summary">Verify generic segment-aware channels, explicit seek, autonomous handoff, and axis-aware visibility.</string>
+    <string name="demo_scenario_animation_bounds_title">Real layout bounds</string>
+    <string name="demo_scenario_animation_bounds_summary">Verify position-only, size-only, and combined motion with touch geometry following every visible frame.</string>
     <string name="demo_scenario_animation_infinite_title">Infinite and animatable</string>
     <string name="demo_scenario_animation_infinite_summary">Verify infinite repetition and explicit Animatable commands in isolation.</string>
     <string name="demo_scenario_modifier_visual_title">Visual modifiers</string>

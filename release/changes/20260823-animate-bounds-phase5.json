@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add real parent-local animateBounds geometry with transactional renderer ownership, physical retargeting, lifecycle-safe reuse, Demo automation, Preview coverage, and fixed-frequency performance evidence.",
+  "changes": [
+    { "artifact": "viewcompose-animation", "impact": "feature" },
+    { "artifact": "viewcompose-ui-contract", "impact": "feature" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" },
+    { "artifact": "viewcompose-preview", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

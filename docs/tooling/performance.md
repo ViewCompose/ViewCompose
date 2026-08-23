@@ -1351,6 +1351,52 @@ sensitivity, peak rather than post-GC retained memory, no per-object allocation 
 control, and no direct power measurement. This stable row becomes the reusable Phase 4 absolute
 baseline; the next action is the full repository and device gate, not repeated sampling.
 
+#### 2.4.13 Animation revision-1 real-bounds comparison
+
+The 2026-08-23 Phase 5 batch compares real `Modifier.animateBounds` motion with an immediate-layout
+Snap control on the same `animation.bounds@1` fixture. Both arms toggle the same position-only,
+size-only, and combined targets through four forward/reverse round trips in each of five
+`run-from-apk` iterations. Both wait five seconds outside measurement after launch and 1,050 ms
+after every action; the control differs only through the explicit
+`animation_bounds_animated=false` intent input. The R8/resource-shrunk nondebuggable target APK
+SHA-256 is `01633c109f44f9e6a79000cf22dc90593a72875caa883c175548312045d3d9b8`.
+
+The original benchmark APK SHA-256 is
+`b27073bb450c673284e550edb0aac98237da0042c98bffcc020fa587b1481df9`; the Magisk-adapted APK is
+`45360987794a2b824c676d2129d978748b271309cab852dbd53ff13c6e2cd58a`. The equal-length
+`su root` to `su 0 -c` transport adaptation, DEX checksum repair, zip alignment, and debug signing
+do not change the target, workload, metrics, or result JSON.
+
+The rooted Xiaomi MI 6 / Android 9 device held CPU policies 0/4 at 1.4016/1.8048 GHz, GPU at
+515 MHz, and exposed interconnect minimum votes at 13,763. Vendor performance services were
+stopped and charging was suspended. Pre/post controls matched every requested value, AndroidX
+reported `cpuLocked=true`, thermal-throttle sleep was zero, and all device controls were restored.
+The control arm moved from 33 to 34 degrees Celsius and the animated arm from 34 to 35 degrees
+Celsius; no lower ambient-unreachable start temperature was required.
+
+| Arm | Frames per run | Frame CPU P50/P90/P95/P99, ms | Median peak heap, KiB | Run-P50 CV | Acceptance |
+| --- | --- | ---: | ---: | ---: | --- |
+| Immediate-layout Snap control | `16/16/16/16/16` | `8.727/23.297/25.762/28.556` | 6868 | 0.083 | Accepted control |
+| Real Bounds animation | `464/464/464/464/464` | `5.124/6.138/6.438/18.503` | 6714 | 0.055 | Pass |
+
+Relative to Snap, the animated frame distribution changes P50/P90/P95/P99 by
+`-41.3%/-73.7%/-75.0%/-35.2%`. Median peak heap changes by `-154 KiB` (`-2.2%`), below the
+combined memory materiality gate. Both run-P50 CV values are below `0.15`, frame counts are exact
+within each arm, and no thermal sleep occurred. The scoped result is therefore **improved** for
+active per-frame CPU latency and **no material change** for peak heap.
+
+The arms intentionally emit different frame counts: Snap exposes action/layout frames, while the
+900 ms Bounds choreography emits property frames for real position and size. This comparison does
+not claim lower total CPU work, energy use, or transaction duration for animation; 464 versus 16
+frames makes those inferences invalid. It also does not measure post-GC retained memory,
+per-object allocation events, Compose, or direct power, and covers only one OEM/API-28 device under
+`run-from-apk` JIT/code-placement conditions. Deterministic renderer tests separately establish
+one target measurement, zero child measurements on property frames, scratch-vector reuse,
+retargeting, rollback, detach, and cross-owner reusable-tree reset. The Phase 5 performance gate is
+accepted. Repository/documentation/Preview gates and the root-installed 138/138 Demo, 1/1 Counter,
+and 2/2 Tutorials suites subsequently passed; pull-request delivery is the next action rather than
+repeated sampling.
+
 ### 2.5 Debug tooling regression gate
 
 Release macrobenchmarks cannot detect costs that exist only in debuggable builds. Any tooling that

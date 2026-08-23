@@ -1,5 +1,6 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.modifier.AspectRatioModifierElement
 import com.viewcompose.ui.modifier.MaxWidthModifierElement
 import com.viewcompose.ui.modifier.Modifier
@@ -16,6 +17,7 @@ import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
 import com.viewcompose.ui.node.spec.LayoutConstraintHostNodeProps
 import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.unit.UiDensity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
@@ -25,17 +27,20 @@ import org.junit.Test
 class LayoutConstraintNodeWrapperTest {
     @Test
     fun `wraps all portable measurement constraints once`() {
+        val environment = UiEnvironmentValues.Default.copy(density = UiDensity(density = 3f, fontScale = 1f))
         val original = node(
             Modifier
                 .fillMaxWidth()
                 .maxWidth(320.dp)
                 .aspectRatio(2f),
+            environment,
         )
 
         val host = LayoutConstraintNodeWrapper.wrapTree(listOf(original)).single()
         val spec = host.spec as LayoutConstraintHostNodeProps
 
         assertEquals(NodeType.LayoutConstraintHost, host.type)
+        assertEquals(environment, host.environment)
         assertEquals(320.dp, spec.maxWidth)
         assertEquals(2f, spec.aspectRatio)
         assertTrue(spec.fillWidth)
@@ -82,9 +87,13 @@ class LayoutConstraintNodeWrapperTest {
         assertSame(tree, LayoutConstraintNodeWrapper.wrapTree(tree))
     }
 
-    private fun node(modifier: Modifier): VNode = VNode(
+    private fun node(
+        modifier: Modifier,
+        environment: UiEnvironmentValues = UiEnvironmentValues.Default,
+    ): VNode = VNode(
         type = NodeType.Spacer,
         spec = EmptyNodeSpec,
         modifier = modifier,
+        environment = environment,
     )
 }

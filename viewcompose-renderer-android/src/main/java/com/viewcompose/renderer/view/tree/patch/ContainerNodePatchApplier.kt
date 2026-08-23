@@ -4,6 +4,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedBoundsHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentItemLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
@@ -25,6 +26,7 @@ import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.tree.AnimatedSizeHostNodePatch
+import com.viewcompose.renderer.view.tree.AnimatedBoundsHostNodePatch
 import com.viewcompose.renderer.view.tree.AnimatedContentHostNodePatch
 import com.viewcompose.renderer.view.tree.AnimatedContentItemNodePatch
 import com.viewcompose.renderer.view.tree.AnimatedVisibilityHostNodePatch
@@ -196,6 +198,18 @@ internal object ContainerNodePatchApplier {
         ContainerViewBinder.bindAnimatedSizeHost(
             view = view,
             spec = ContainerViewBinder.AnimatedSizeHostSpec(
+                animationSpec = patch.next.animationSpec,
+            ),
+        )
+    }
+
+    fun applyAnimatedBoundsHostPatch(
+        view: DeclarativeAnimatedBoundsHostLayout,
+        patch: AnimatedBoundsHostNodePatch,
+    ) {
+        ContainerViewBinder.bindAnimatedBoundsHost(
+            view = view,
+            spec = ContainerViewBinder.AnimatedBoundsHostSpec(
                 animationSpec = patch.next.animationSpec,
             ),
         )

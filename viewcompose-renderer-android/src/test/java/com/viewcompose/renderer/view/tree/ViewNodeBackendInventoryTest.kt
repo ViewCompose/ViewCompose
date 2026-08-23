@@ -15,6 +15,7 @@ import android.widget.RadioButton
 import android.widget.Switch
 import android.widget.TextView
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedBoundsHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentItemLayout
@@ -143,6 +144,10 @@ class ViewNodeBackendInventoryTest {
             NodeType.AnimatedSizeHost to neutral(
                 DeclarativeAnimatedSizeHostLayout::class.java,
                 "animated measurement bounds",
+            ),
+            NodeType.AnimatedBoundsHost to neutral(
+                DeclarativeAnimatedBoundsHostLayout::class.java,
+                "real parent-local position and size animation",
             ),
             NodeType.LayoutConstraintHost to neutral(
                 DeclarativeLayoutConstraintHost::class.java,
