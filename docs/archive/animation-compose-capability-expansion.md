@@ -2,14 +2,14 @@
 
 ## Status
 
-Active. Phases 0 through 6 are complete and merged. Phase 7 neutral projection, optional Android
-capture, and read-only Studio client are complete on the candidate branch. Focused, repository,
-Preview, Studio-plugin, rooted-device, and fixed-frequency acceptance gates pass; pull-request
-delivery and post-merge archival remain.
+Complete and archived. Phases 0 through 7 are implemented, accepted, and merged. Phase 7 neutral
+projection, optional Android capture, and read-only Studio client merged in `d3885b5e`; focused,
+repository, Preview, Studio-plugin, rooted-device, fixed-frequency, and pull-request CI acceptance
+gates pass. Durable behavior now lives in the current architecture, migration, module, Preview,
+and performance documentation linked below.
 This plan was split out on 2026-08-18 from the Animation follow-up in the unified roadmap and the
 framework-wide physical-spring candidate recorded by the multi-design-system plan. Those documents
-now point here; this file is the only active plan that owns the seven animation expansions defined
-below.
+now point to this archived execution record; no active plan owns further animation expansion.
 
 The completed Animation and gesture milestone remains valid for its original baseline: timing and
 sampling, target-as-state animation, `Animatable`, synchronized `Transition`,
@@ -18,13 +18,13 @@ Android interop, Demo, Preview, and regression coverage. This plan extends that 
 not reopen the completed architecture-split work as unfinished.
 
 This plan is canonical English-only under the documentation-governance policy. Every durable API,
-behavior, migration, tooling, dependency, and compatibility contract must move into active
-architecture, guide, reference, and owning-module documentation before this plan is archived.
+behavior, migration, tooling, dependency, and compatibility contract moved into active
+architecture, guide, reference, and owning-module documentation before archival.
 
 Last verified: 2026-08-23.
 
-Next action: deliver the Phase 7 pull request, record its merge revision, and archive this completed
-seven-phase plan.
+Next action: none for this plan. Any further animation expansion requires a new attributed plan;
+MotionLayout, continuous profiling, and live-device mutation remain unscheduled.
 
 ## Maven release changesets
 
@@ -44,7 +44,7 @@ seven-phase plan.
   Demo/Preview coverage; accepted and merged in `4a45f7b3`.
 - `release/changes/20260823-animation-timeline-tooling-phase7.json` — Phase 7 neutral timeline
   projection, request-scoped Android capture, privacy-safe protocol, and read-only Studio client;
-  candidate acceptance complete; pull-request delivery pending.
+  accepted and merged in `d3885b5e`.
 
 ## Objective
 
@@ -95,8 +95,8 @@ criteria for this plan.
 
 | Previous active location | Previous responsibility | Status after this split |
 | --- | --- | --- |
-| [Unified roadmap](../roadmap.md), Animation and Milestone F | Recorded the completed first-round animation baseline and listed performance/examples as the next focus | Baseline remains completed. The seven capability expansions and their acceptance evidence move here; the roadmap retains a summary and link. |
-| [Unified roadmap](../roadmap.md), ConstraintLayout | Listed MotionLayout interop as a future focus | Superseded. Raw host interop already exists, and no typed MotionLayout expansion is active. A future requirement needs a separate plan. |
+| [Unified roadmap](../project/roadmap.md), Animation and Milestone F | Recorded the completed first-round animation baseline and listed performance/examples as the next focus | Baseline remains completed. The seven capability expansions and their acceptance evidence move here; the roadmap retains a summary and link. |
+| [Unified roadmap](../project/roadmap.md), ConstraintLayout | Listed MotionLayout interop as a future focus | Superseded. Raw host interop already exists, and no typed MotionLayout expansion is active. A future requirement needs a separate plan. |
 | [Archived multi-design-system and high-fidelity theme plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/multi-design-system-high-fidelity.md), Phase 3 | Considered a bounded physical spring only when needed for component fidelity, then retained the duration-based approximation | That completed design-system decision remains valid. Framework-wide physical spring, decay, and velocity contracts move here; the design-system implementation consumes the accepted engine instead of reopening Phase 3. |
 | [Archived Demo benchmark and verification harness plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/demo-benchmark-verification-harness-rearchitecture.md) | Established reusable Animation scenario and benchmark infrastructure | The infrastructure remains authoritative. This plan owns animation behavior, public APIs, domain fixtures, and acceptance interpretation added through it; remaining generic harness closure is tracked separately. |
 | `docs/archive/` | Contains completed animation architecture, visibility, gesture, and static-preview evidence | Unchanged. Archived pages remain historical evidence and are not rewritten as current status. |
@@ -107,9 +107,8 @@ integration with those authoritative navigation states. Preview and Studio tooli
 their process and IDE implementation boundaries; Phase 7 owns the animation inspection protocol
 and experience built through those boundaries.
 
-No other active plan owns these seven capabilities. A prerequisite discovered elsewhere may remain
-with its owning plan only when it is independently useful; this plan continues to own end-to-end
-animation semantics and acceptance.
+No other active plan owns further work on these seven capabilities. This archive preserves the
+end-to-end animation semantics and acceptance decisions made during execution.
 
 ## Baseline and comparison reference
 
@@ -118,7 +117,7 @@ The upstream semantic comparison is frozen at stable Compose Animation `1.12.0`,
 Compose-backed Preview and migration samples. Compose `1.12.0` requires compile SDK 37 and AGP 9.2,
 so the older local fixture is executable evidence only and cannot prove `1.12.0` parity. Exact
 official sources and evidence limits are recorded in the
-[animation migration comparison](../../migration/compose-animation.md).
+[animation migration comparison](../migration/compose-animation.md).
 
 The ViewCompose baseline is:
 
@@ -166,24 +165,24 @@ inactive-path performance, or deterministic tests merely to meet the estimate.
 
 The detailed execution ledger for completed phases was consolidated on 2026-08-23 after Phase 4
 acceptance. Durable semantics remain in
-[ADR-0019](../../architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md),
-[ADR-0020](../../architecture/decisions/0020-separate-animation-value-and-velocity-domains.md), the
-[animation manual](../../modules/viewcompose-animation/README.md), the
-[animation-core manual](../../modules/viewcompose-animation-core/README.md), and the
-[Compose migration guide](../../migration/compose-animation.md). This table remains the active
+[ADR-0019](../architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md),
+[ADR-0020](../architecture/decisions/0020-separate-animation-value-and-velocity-domains.md), the
+[animation manual](../modules/viewcompose-animation/README.md), the
+[animation-core manual](../modules/viewcompose-animation-core/README.md), and the
+[Compose migration guide](../migration/compose-animation.md). This table remains the historical
 plan-status authority; exact measurements, device controls, limitations, and interpretations stay
 in the linked performance sections instead of being duplicated here.
 
 | Phase | Accepted boundary | Delivery status | Performance and final evidence |
 | --- | --- | --- | --- |
-| 0 | Hard-cut compatibility, physical units and termination, content/visibility algebra, seek/layout/shared-motion ownership, Q3 inventory, and fixed budgets | Complete and merged in `6d6bdbe4` | [Revision-1 pre-physics baseline](../../tooling/performance.md#248-animation-revision-1-pre-physics-baseline); verification isolation was corrected before implementation |
-| 1 | Analytic physical spring, typed value/velocity domains, decay, bounds, structured results, fail-before-ownership validation, and one last-writer mutation model | Complete and merged in `a8196f0b` | [Physical candidate comparison](../../tooling/performance.md#249-animation-revision-1-phase-1-physical-candidate); fixed-frequency rows passed and rooted gesture handoff reached `BoundReached` |
-| 2 | Keyed `AnimatedContent`, pair-specific transforms, measured size, bounded two-subtree ownership, incoming-only interaction, rollback, and exact release | Complete and merged in `84dce0ae` | [AnimatedContent comparison](../../tooling/performance.md#2410-animation-revision-2-animatedcontent-comparison); frame and peak memory were `no material change` |
-| 3 | Slide/scale/aligned visibility, hard-cut typed scope, shared parent/descendant timeline, complete-host geometry, and immediate inactive interaction removal | Complete and merged in `2a21db65` | [Rich-visibility comparison](../../tooling/performance.md#2411-animation-revision-3-rich-visibility-release-safety-comparison); frozen gates passed and P99 remains a recorded watch item |
-| 4 | Stable `TransitionSegment`, generic `animateValue<T, V>`, hard-cut `transitionSpec` name, dynamic committed-channel duration, and one seek/animate/snap writer | Complete and merged in `984ac9bd` | [Seekable-transition absolute baseline](../../tooling/performance.md#2412-animation-revision-2-seekable-transition-baseline): five 200-frame runs, P50/P95/P99 `7.775/10.493/11.718 ms`, heap `8,474 KiB`, CV `0.011`, zero thermal sleep |
-| 5 | Additive `Modifier.animateBounds`, one complete synthetic layout owner, real parent-local geometry, physical/duration retargeting, hard rejection of dual size ownership, explicit reuse reset, and transactional rollback | Complete and merged in `bb57fcd0` | [Bounds versus immediate-layout comparison](../../tooling/performance.md#2413-animation-revision-1-real-bounds-comparison): stable `464` versus `16` frames/run, animation P50/P95/P99 `5.124/6.438/18.503 ms`, snap P50/P95/P99 `8.727/25.762/28.556 ms`, heap `6,714` versus `6,868 KiB`, CV `0.055` versus `0.083`, zero thermal sleep |
-| 6 | Typed shared endpoint markers, stable renderer transport, bounded one-window snapshots, per-pair fallback, and committed/predictive navigation progress ownership | Complete and merged in `4a45f7b3` | [Shared-content versus ordinary navigation](../../tooling/performance.md): identical `124` frames/run, shared P50/P95 `4.073/8.096 ms` versus control `3.989/8.487 ms`, heap `6,971` versus `6,651 KiB`, CV `0.059` versus `0.072`, zero thermal sleep; `no material change` |
-| 7 | Neutral Q3 timeline projection, optional request-scoped Android capture, one bounded read-only protocol, and Studio inspection UI | Complete on candidate branch; pull-request delivery and post-merge archival remain | [Animation timeline tooling comparison](../../tooling/performance.md): requested versus inactive P50/P95 `12.398/15.464 ms` versus `12.236/15.311 ms`, heap `9,823` versus `9,493 KiB`, CV `0.036` versus `0.039`, zero thermal sleep; `no material change`; repository, plugin, and root-installed device gates pass |
+| 0 | Hard-cut compatibility, physical units and termination, content/visibility algebra, seek/layout/shared-motion ownership, Q3 inventory, and fixed budgets | Complete and merged in `6d6bdbe4` | [Revision-1 pre-physics baseline](../tooling/performance.md#248-animation-revision-1-pre-physics-baseline); verification isolation was corrected before implementation |
+| 1 | Analytic physical spring, typed value/velocity domains, decay, bounds, structured results, fail-before-ownership validation, and one last-writer mutation model | Complete and merged in `a8196f0b` | [Physical candidate comparison](../tooling/performance.md#249-animation-revision-1-phase-1-physical-candidate); fixed-frequency rows passed and rooted gesture handoff reached `BoundReached` |
+| 2 | Keyed `AnimatedContent`, pair-specific transforms, measured size, bounded two-subtree ownership, incoming-only interaction, rollback, and exact release | Complete and merged in `84dce0ae` | [AnimatedContent comparison](../tooling/performance.md#2410-animation-revision-2-animatedcontent-comparison); frame and peak memory were `no material change` |
+| 3 | Slide/scale/aligned visibility, hard-cut typed scope, shared parent/descendant timeline, complete-host geometry, and immediate inactive interaction removal | Complete and merged in `2a21db65` | [Rich-visibility comparison](../tooling/performance.md#2411-animation-revision-3-rich-visibility-release-safety-comparison); frozen gates passed and P99 remains a recorded watch item |
+| 4 | Stable `TransitionSegment`, generic `animateValue<T, V>`, hard-cut `transitionSpec` name, dynamic committed-channel duration, and one seek/animate/snap writer | Complete and merged in `984ac9bd` | [Seekable-transition absolute baseline](../tooling/performance.md#2412-animation-revision-2-seekable-transition-baseline): five 200-frame runs, P50/P95/P99 `7.775/10.493/11.718 ms`, heap `8,474 KiB`, CV `0.011`, zero thermal sleep |
+| 5 | Additive `Modifier.animateBounds`, one complete synthetic layout owner, real parent-local geometry, physical/duration retargeting, hard rejection of dual size ownership, explicit reuse reset, and transactional rollback | Complete and merged in `bb57fcd0` | [Bounds versus immediate-layout comparison](../tooling/performance.md#2413-animation-revision-1-real-bounds-comparison): stable `464` versus `16` frames/run, animation P50/P95/P99 `5.124/6.438/18.503 ms`, snap P50/P95/P99 `8.727/25.762/28.556 ms`, heap `6,714` versus `6,868 KiB`, CV `0.055` versus `0.083`, zero thermal sleep |
+| 6 | Typed shared endpoint markers, stable renderer transport, bounded one-window snapshots, per-pair fallback, and committed/predictive navigation progress ownership | Complete and merged in `4a45f7b3` | [Shared-content versus ordinary navigation](../tooling/performance.md): identical `124` frames/run, shared P50/P95 `4.073/8.096 ms` versus control `3.989/8.487 ms`, heap `6,971` versus `6,651 KiB`, CV `0.059` versus `0.072`, zero thermal sleep; `no material change` |
+| 7 | Neutral Q3 timeline projection, optional request-scoped Android capture, one bounded read-only protocol, and Studio inspection UI | Complete and merged in `d3885b5e` | [Animation timeline tooling comparison](../tooling/performance.md): requested versus inactive P50/P95 `12.398/15.464 ms` versus `12.236/15.311 ms`, heap `9,823` versus `9,493 KiB`, CV `0.036` versus `0.039`, zero thermal sleep; `no material change`; repository, plugin, and root-installed device gates pass |
 
 The cumulative accepted contract through Phase 5 is:
 
@@ -301,7 +300,7 @@ protocol, report storage, Studio UI, and developer lifecycle remain downstream i
 and Studio tooling.
 
 Active snapshot/capture must follow
-[ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md):
+[ADR-0009](../architecture/decisions/0009-development-tooling-isolation.md):
 
 1. the optional tooling artifact is packaged;
 2. the application is debuggable; and
@@ -423,13 +422,13 @@ This plan is complete only when:
 7. **Complete and merged — Phase 6:** typed endpoint transport, bounded one-window snapshots,
    committed and predictive navigation integration, fallback/release coverage, Demo/Preview/manual
    review, rooted-device suites, and fixed-frequency comparison were merged in `4a45f7b3`.
-8. **Complete on candidate branch — Phase 7:** the isolated neutral port, request-driven Android
+8. **Complete and merged — Phase 7:** the isolated neutral port, request-driven Android
    capture, privacy-safe bounded protocol, read-only Studio client, focused tests, rooted-device
    capture, tooling-isolation verification, fixed-frequency inactive/requested comparison,
-   repository gates, and exact-artifact physical-device suites pass. Pull-request delivery remains.
-9. **Complete on candidate branch — Closeout:** durable documentation, migration matrix,
-   Demo/Preview/Studio evidence, and the immutable release record are current. Record the merge
-   revision and archive this plan after the pull request merges.
+   repository gates, and exact-artifact physical-device suites pass; the accepted change merged in
+   `d3885b5e`.
+9. **Complete — Closeout:** durable documentation, migration matrix, Demo/Preview/Studio evidence,
+   immutable release record, merge revision, plan indexes, and archival move are current.
 
 ## Risks and stop conditions
 
@@ -478,3 +477,4 @@ This plan is complete only when:
 | 2026-08-23 | Freeze and implement the Phase 7 split: `viewcompose-animation` owns the Q3 neutral read-only projection; optional `viewcompose-preview` owns debuggable request/capture and bounded encoding; the Studio plugin owns ADB transport, parsing, selection, and presentation. Optional-artifact weak registration may precede the first request so existing transitions remain discoverable, but snapshot, serialization, and report work remain behind receiver debug and explicit-request gates. |
 | 2026-08-23 | Accept Phase 7 rooted-device inspection and `animation.transition` fixed-frequency evidence. Discovery finds the already composed seekable transition; one selected 500 ms capture reports unequal channel durations, physical and unsupported data without mutating the device UI. Requested versus inactive P50/P95 is `12.398/15.464 ms` versus `12.236/15.311 ms`, heap is `9,823` versus `9,493 KiB`, run-P50 CV is `0.036` versus `0.039`, and thermal sleep is zero, so the frozen classification is `no material change`; P99 `+2.157 ms` remains a watch item. |
 | 2026-08-23 | Accept the Phase 7 final gates on the candidate branch. The 1,624-task quick/Preview/tooling-isolation gate, animation API documentation audit, Studio-plugin test/build/compatibility verification, and documentation structure/translation checks pass. MIUI rejects ordinary APK installation, so the exact rebuilt APKs are root-installed; Demo passes 138/138 in `785.954 s`, Counter 1/1, and Tutorials 2/2 with no skips or failures. Pull-request delivery and post-merge archival remain. |
+| 2026-08-23 | Record Phase 7 merged in `d3885b5e` through PR `#127`. All seven phases and their durable documentation are complete; archive this execution record and require a new attributed plan for any further animation expansion. |

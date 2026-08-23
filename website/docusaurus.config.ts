@@ -96,6 +96,7 @@ const config: Config = {
           },
           {
             from: [
+              '/project/plans/animation-compose-capability-expansion',
               '/project/plans/image-loading-pipeline-generalization',
               '/project/plans/maven-dependency-contract-convergence',
               '/project/plans/android-views-performance-control',
@@ -145,7 +146,7 @@ const config: Config = {
         explicitSearchResultPath: true,
         searchResultLimits: 8,
         ignoreFiles: [
-          /^project\/plans\/(?:animation-compose-capability-expansion|diagnostics-correlation-inspection-observability|paging3-integration|third-party-android-view-integrations)$/,
+          /^project\/plans\/(?:diagnostics-correlation-inspection-observability|paging3-integration|third-party-android-view-integrations)$/,
           /^archive\/(?:constraintlayout-native-engine-hardening|constraintlayout-parity-performance-expansion)$/,
         ],
         ignoreCssSelectors: ['.benchmark-evidence', '.search-partition-detail'],
