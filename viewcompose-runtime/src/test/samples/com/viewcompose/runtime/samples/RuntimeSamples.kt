@@ -4,6 +4,8 @@ import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.SnapshotApplyResult
 import com.viewcompose.runtime.SnapshotMutationPolicy
 import com.viewcompose.runtime.composition.ComposerLite
+import com.viewcompose.runtime.composition.CompositionTimingCollector
+import com.viewcompose.runtime.composition.CompositionTimingSpan
 import com.viewcompose.runtime.composition.RememberObserver
 import com.viewcompose.runtime.derivedStateOf
 import com.viewcompose.runtime.mutableStateOf
@@ -133,6 +135,23 @@ fun composerLiteSample() {
     check(committedValues == listOf("Count: 0", "Count: 1"))
 
     composer.dispose()
+}
+
+fun compositionTimingCollectorSample() {
+    val composer = ComposerLite()
+    val visitedPaths = mutableListOf<String>()
+    val prepared = composer.prepareRootWithTiming(
+        collector = CompositionTimingCollector { scope ->
+            visitedPaths += scope.path
+            CompositionTimingSpan { }
+        },
+    ) {
+        composer.runGroup(signature = "content") { "Hello" }
+    }
+
+    check(prepared.value == "Hello")
+    prepared.commit()
+    check(visitedPaths.isNotEmpty())
 }
 
 fun rememberObserverRetrySample() {

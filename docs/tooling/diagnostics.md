@@ -111,17 +111,46 @@ cannot recompose, invoke application callbacks, change focus or accessibility fo
 input, or mutate layout. The Diagnostics → Renderer page includes a unique AndroidView target and
 a replacement action for deterministic manual validation.
 
-## 8. Demo inspector
+## 8. Finite per-node timing
+
+Add `viewcompose-preview` through `debugImplementation`, keep the debuggable application in the
+foreground, and choose **Tools → Inspect Device Node Timing**. Studio selects one correlated visible
+Session, starts one explicit sample, and waits while the developer triggers the interaction under
+investigation. The Diagnostics → Renderer page provides **Run 8-frame timing workload**; its visible
+counter advances from `0/8` to `8/8` so manual acceptance does not depend on an invisible state
+change.
+
+Each capture stops after at most eight completed frame attempts or two monotonic seconds. It records
+only executed composition scopes, renderer reconciliation, and direct native binding. Composition
+and reconciliation report both inclusive and self duration; binding reports direct duration. One
+opaque capture-scoped node token connects phases without exposing application keys. Skipped scopes
+perform no timing callback or clock read.
+
+The response retains at most 64 nodes per frame, 512 aggregate records, depth 32, 128 distinct
+strings of at most 256 characters, and 256 KiB of JSON. It reports attempted and retained clock
+reads, an empty-pair overhead estimate, unsupported domains, drops, truncation, completion, and the
+terminal reason. Studio ranks additive self/direct records to avoid double-counting inclusive
+parents. The first contract deliberately excludes measure/layout/draw, GPU, RenderThread,
+SurfaceFlinger, image decode, network, database, and external-SDK work; use platform profilers for
+those domains.
+
+Only one process capture may be active. Ordinary rendering supplies no collector and performs zero
+per-node clock reads, timing-record allocation, report writes, polling, or recurring observation.
+The timing result is diagnostic evidence, not a frame-time benchmark: instrumentation overhead and
+the small finite sample remain visible limitations.
+
+## 9. Demo inspector
 
 `Diagnostics -> Renderer` provides the render tree, patch timeline, recomposition reasons,
-CompositionLocal browser, aggregate metrics, and the mounted-node highlight fixture. Cross-session
-correlation, production aggregation, and real View-boundary highlighting are implemented;
-per-node timing remains in the active
-[diagnostics correlation, inspection, and production observability plan](../project/plans/diagnostics-correlation-inspection-observability.md).
+CompositionLocal browser, aggregate metrics, the mounted-node highlight fixture, and the explicit
+eight-frame timing workload. Cross-session correlation, production aggregation, real View-boundary
+highlighting, and finite per-node timing are implemented. Final inspector and performance
+closeout remain in the active [diagnostics correlation, inspection, and production observability
+plan](../project/plans/diagnostics-correlation-inspection-observability.md).
 
-## 9. Remaining expansion contract
+## 10. Remaining expansion contract
 
 [ADR-0021](../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes Phase 1.
 A failure-only sink activates no frame detail. The optional `viewcompose-diagnostics` artifact owns
-production aggregation; `viewcompose-preview` owns shipped request-driven highlighting and will
-keep timing request-driven. The active plan owns timing and inspector closeout.
+production aggregation; `viewcompose-preview` owns shipped request-driven highlighting and finite
+timing. The active plan owns inspector, performance, device-matrix, and release closeout.

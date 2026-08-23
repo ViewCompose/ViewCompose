@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 933c30084b6545289d52915c4e504580bb7cd5e21f0efbdde83d857413196d21
+translation_source_hash: d151def5a6f917d266f93e64e4be0798d3f9395414304192dfd355cbb2fc89b2
 translation_status: current
 ---
 
@@ -133,6 +133,9 @@ val gap = VNode(
 - `UiNodeTooling.withSourceCandidateCapture` 是对应的 Q3 页面源码工具边界。它会在一次成功的树
   构建中保留有界的首批与最近源码链，让工具区分共享 Scaffold 外壳和 content DSL，同时不标注
   VNode 树。
+- `UiNodeTooling.attachTimingIdentity`、`ensureTimingIdentity` 与 `timingIdentityOf` 组成 Q3
+  进程内关联桥，把活动计时的组合 Scope 连接到下游 Renderer Phase。Composition Identity 为正，
+  仅 Renderer 的 Fallback 为负；二者都不是应用 Key、持久化 Identity、顺序契约或 Analytics 字段。
 - [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/)、
   [`UiImageRequest`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-request/)
   与 [`UiImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-loader/)
@@ -304,6 +307,10 @@ Renderer 必须重新构建。支持无障碍的 Renderer 应同时映射父集�
 
 `UiNodeTooling.withSourceCandidateCapture` 同样是新增的 Q3 工具 API。它不会改变普通 VNode
 身份或元数据；嵌套候选列表及采样边界仅供工具使用，不是应用持久化格式。
+
+Q3 Timing-identity Helper 只能在显式有限计时请求后调用。Copy 与 Wrapper Helper 会保留已有
+Identity，普通节点构建则让纯工具字段保持 `null`。该字段不参与 Equality 或 Hash 语义；调用方
+不得在触发它的 Capture 结束后继续序列化或保留该值。
 
 Alpha 关联诊断硬切移除了纯工具用途的 `UiSourceSessionContainerHandle` 与
 `UiSourceSessionRole`。Session 身份、父级所有权与角色现在统一属于 UI Foundation 的

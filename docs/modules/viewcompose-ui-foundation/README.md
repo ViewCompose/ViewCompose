@@ -211,6 +211,12 @@ by a later renderer or child render session.
   lifecycle/node tracking from bounded first-frame source capture, allowing high-churn lazy-item
   sessions to remain request-inspectable without source-stack work. The compiled
   `renderSessionInspectionToolingSample` demonstrates the adapter lifecycle.
+- `RenderSessionTimingInspection`, `RenderNodeTimingCaptureRequest`, and
+  `RenderNodeTimingCaptureResult` form the Q3 request-only finite timing control registered with the
+  same logical Session. One capture records executed composition, reconciliation, and direct
+  binding for at most eight completed frame attempts or two monotonic seconds. Results expose
+  inclusive/self or direct duration, clock reads, empty-pair overhead, caps, drops, truncation,
+  unsupported domains, and terminal reason.
 - Overlay specifications and hosts define platform-neutral dialog, popup, bottom-sheet, snackbar,
   and toast identity, placement, queueing, update, and dismissal contracts.
 
@@ -437,6 +443,23 @@ process-local request data, never application identity. `snapshot()` visits at m
 mounted nodes, retains at most 512 to depth 64, emits privacy-safe type/source metadata and weak
 platform targets, and reports unsupported, ended, dropped, and truncated states. A newer snapshot,
 node replacement, cross-owner reuse, session end, or process recreation invalidates prior tokens.
+
+Registration now also receives Q3 `RenderSessionTimingInspection`. This is an intentional alpha
+hard cut to the registration signature: custom tooling implementations must accept the timing
+control rather than discovering it through another callback or adapter. A request may select a
+non-empty subset of composition, reconciliation, and binding, but cannot exceed eight completed
+frame attempts or two seconds. Only one capture per Session is active, disposal ends it, and all
+calls stay on the owning render thread. Inactive Sessions perform zero per-node clock reads and keep
+no timing records.
+
+`CoreRenderEngine.renderIntoWithTiming`, `patchObservedPropertiesWithTiming`, and the Q3
+`CoreRenderTimingCollector` are the renderer-neutral synchronous bridge. The default implementation
+fails explicitly as unsupported so a custom renderer cannot silently return partial data.
+Composition and reconciliation aggregate inclusive plus self duration; binding is direct work.
+The shared capture caps each frame at 64 timed nodes, the result at 512 aggregates and depth 32,
+and distinct retained strings at 128 values of 256 characters. Measure/layout/draw, GPU,
+RenderThread, SurfaceFlinger, decoding, network, database, and external SDK timing remain explicit
+unsupported domains.
 
 `CoreRenderEngine.inspectMountedNodes` is the Q3 custom-renderer hook. Its default returns
 unsupported; implementations preserve parent-before-child order, exclude application keys and

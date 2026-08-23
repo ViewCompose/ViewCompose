@@ -126,6 +126,7 @@ interface RenderSessionInspectionTooling {
      * @param context stable session identity, parent, and role shared with runtime diagnostics
      * @param sourceCandidates emission-ordered candidates whose inner lists are nearest-first chains
      * @param nodeInspection request-only bounded mounted-node inspector for this logical session
+     * @param timingInspection request-only finite timing control for this logical session
      * @return a lifecycle handle, or `null` to decline this session permanently
      */
     fun register(
@@ -133,6 +134,7 @@ interface RenderSessionInspectionTooling {
         context: RenderDiagnosticContext,
         sourceCandidates: List<List<UiSourceCallSite>>,
         nodeInspection: RenderSessionNodeInspection,
+        timingInspection: RenderSessionTimingInspection,
     ): RenderSessionInspectionRegistration?
 }
 

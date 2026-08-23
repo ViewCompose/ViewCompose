@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 76f25ee182c9103a3104e3abeccef29b17464e91ae69e565067f39c7b37b490c
+translation_source_hash: 429ccd52f7827d03fe782ab6237beeb5943fad167155b3e3eba2fb096d5ea820
 translation_status: current
 ---
 
@@ -97,6 +97,13 @@ Report 使用 Runtime Trace ID、Parent ID 与 Role，不再生成第二套仅�
 Mounted Node 并写入私有报告。滚动、布局、Rendering Active 变化与 Session 释放都不会发布报告，
 Host 也不持有 Overlay 或 IDE 协议。此所有权遵循
 [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md)。
+
+同一 Registration 还会收到中立的 Q3 `RenderSessionTimingInspection` Control。下游显式请求可以启动
+一次有限的 Composition/Reconciliation/Binding Capture；Android Host 只负责把同步
+`CoreRenderTimingCollector` 映射到 Android Renderer，不拥有协议、Poller、Report 或 Studio UI。
+Engine 会让 Composition Node Identity 贯穿 Reconciliation 与 Binding；仅 Renderer 的节点则获得
+不透明、当前 Capture 内有效的 Fallback。没有可选 Tooling 制品和显式请求时，普通 Host 渲染执行
+零次逐节点时钟读取，也不保留 Timing History。
 
 ## 原生 View 事务契约
 

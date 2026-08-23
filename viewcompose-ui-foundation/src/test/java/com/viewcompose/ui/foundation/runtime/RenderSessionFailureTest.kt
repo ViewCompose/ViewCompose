@@ -23,6 +23,7 @@ import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AndroidViewOperationException
 import com.viewcompose.ui.tooling.UiSourceCallSite
+import com.viewcompose.ui.tooling.UiNodeTooling
 import kotlin.coroutines.EmptyCoroutineContext
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -1019,6 +1020,7 @@ class RenderSessionFailureTest {
                 context: RenderDiagnosticContext,
                 sourceCandidates: List<List<UiSourceCallSite>>,
                 nodeInspection: RenderSessionNodeInspection,
+                timingInspection: RenderSessionTimingInspection,
             ): RenderSessionInspectionRegistration {
                 assertTrue(sourceCandidates.isNotEmpty())
                 assertTrue(sourceCandidates.all(List<UiSourceCallSite>::isNotEmpty))
@@ -1064,6 +1066,7 @@ class RenderSessionFailureTest {
                 context: RenderDiagnosticContext,
                 sourceCandidates: List<List<UiSourceCallSite>>,
                 nodeInspection: RenderSessionNodeInspection,
+                timingInspection: RenderSessionTimingInspection,
             ): RenderSessionInspectionRegistration? {
                 registrationCalls += 1
                 assertTrue(sourceCandidates.isEmpty())
@@ -1081,6 +1084,68 @@ class RenderSessionFailureTest {
 
         assertEquals(1, policyCalls)
         assertEquals(1, registrationCalls)
+    }
+
+    @Test
+    fun `timing inspection captures one correlated composition and renderer frame on request`() {
+        var capturedTimingInspection: RenderSessionTimingInspection? = null
+        val value = mutableStateOf(0)
+        NoOpRenderSessionDiagnostics.inspectionTooling = object : RenderSessionInspectionTooling {
+            override fun inspectionPolicy(
+                container: RenderContainerHandle,
+                context: RenderDiagnosticContext,
+            ): RenderSessionInspectionPolicy = RenderSessionInspectionPolicy.TrackSession
+
+            override fun register(
+                container: RenderContainerHandle,
+                context: RenderDiagnosticContext,
+                sourceCandidates: List<List<UiSourceCallSite>>,
+                nodeInspection: RenderSessionNodeInspection,
+                timingInspection: RenderSessionTimingInspection,
+            ): RenderSessionInspectionRegistration? {
+                assertTrue(sourceCandidates.isEmpty())
+                capturedTimingInspection = timingInspection
+                return null
+            }
+        }
+        session = createSession(failures = mutableListOf()) {
+            Text("Timed node ${value.value}")
+        }
+        session.render()
+
+        val start = checkNotNull(capturedTimingInspection).startCapture(
+            RenderNodeTimingCaptureRequest(maxFrames = 2),
+        )
+        assertEquals(RenderNodeTimingStartStatus.Started, start.status)
+        value.value = 1
+        checkNotNull(latestRuntime).drainPending()
+        val result = checkNotNull(start.capture).snapshot()
+
+        assertTrue(result.complete)
+        assertEquals(RenderNodeTimingEndReason.FrameLimit, result.endReason)
+        assertEquals(2, result.completedFrames)
+        assertTrue(result.records.any { record ->
+            record.phase == RenderNodeTimingPhase.Composition
+        })
+        assertTrue(result.records.any { record ->
+            record.phase == RenderNodeTimingPhase.Reconciliation
+        })
+        assertTrue(result.records.any { record ->
+            record.phase == RenderNodeTimingPhase.Binding
+        })
+        val compositionTokens = result.records
+            .filter { record -> record.phase == RenderNodeTimingPhase.Composition }
+            .map(RenderNodeTimingRecord::nodeToken)
+            .toSet()
+        val rendererTokens = result.records
+            .filter { record -> record.phase != RenderNodeTimingPhase.Composition }
+            .map(RenderNodeTimingRecord::nodeToken)
+            .toSet()
+        assertTrue(
+            "Expected correlated timing tokens; composition=$compositionTokens renderer=$rendererTokens " +
+                "records=${result.records}",
+            compositionTokens.intersect(rendererTokens).isNotEmpty(),
+        )
     }
 
     @Test
@@ -1579,12 +1644,61 @@ class RenderSessionFailureTest {
             return renderBlock(previousMountedNodes, nodes)
         }
 
+        override fun renderIntoWithTiming(
+            container: RenderContainerHandle,
+            previousMountedNodes: List<Any>,
+            nodes: List<VNode>,
+            diagnosticLevel: RenderFrameDiagnosticLevel,
+            timingCollector: CoreRenderTimingCollector,
+        ): CoreRenderFrame {
+            renderDiagnosticLevels += diagnosticLevel
+            nodes.forEach { node ->
+                val subject = CoreRenderTimingSubject(
+                    nodeIdentity = UiNodeTooling.timingIdentityOf(node),
+                    nodeType = node.type,
+                    depth = 0,
+                    synthetic = false,
+                )
+                timingCollector.beginInterval(
+                    subject,
+                    CoreRenderTimingPhase.Reconciliation,
+                )?.close()
+                timingCollector.beginInterval(
+                    subject,
+                    CoreRenderTimingPhase.Binding,
+                )?.close()
+            }
+            return renderBlock(previousMountedNodes, nodes)
+        }
+
         override fun patchObservedProperties(
             container: RenderContainerHandle,
             mountedNodes: List<Any>,
             patches: List<CoreObservedPropertyPatch>,
             diagnosticLevel: RenderFrameDiagnosticLevel,
         ): CoreObservedPropertyFrame = patchBlock(mountedNodes, patches)
+
+        override fun patchObservedPropertiesWithTiming(
+            container: RenderContainerHandle,
+            mountedNodes: List<Any>,
+            patches: List<CoreObservedPropertyPatch>,
+            diagnosticLevel: RenderFrameDiagnosticLevel,
+            timingCollector: CoreRenderTimingCollector,
+        ): CoreObservedPropertyFrame {
+            patches.forEach { patch ->
+                val node = patch.next
+                timingCollector.beginInterval(
+                    CoreRenderTimingSubject(
+                        nodeIdentity = UiNodeTooling.timingIdentityOf(node),
+                        nodeType = node.type,
+                        depth = 0,
+                        synthetic = false,
+                    ),
+                    CoreRenderTimingPhase.Binding,
+                )?.close()
+            }
+            return patchBlock(mountedNodes, patches)
+        }
 
         override fun disposeMounted(
             container: RenderContainerHandle,

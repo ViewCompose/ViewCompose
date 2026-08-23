@@ -2098,6 +2098,36 @@ class DemoVisualUiTest {
     }
 
     @Test
+    fun diagnosticsPage_timingWorkload_runsEightVisibleFrames() {
+        val intent = DiagnosticsActivity.newIntent(
+            context = ApplicationProvider.getApplicationContext(),
+            page = DiagnosticsActivity.PAGE_RENDERER,
+        )
+        launchDemoActivity<DiagnosticsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            waitForUiIdle()
+            var beforeFixture = ""
+            scenario.onActivity { activity ->
+                beforeFixture = activity.requireTextViewByTestTag(
+                    DemoDiagnosticsTestTags.DIAGNOSTICS_TIMING_WORKLOAD_FIXTURE,
+                ).text.toString()
+                activity.clickByTestTag(DemoDiagnosticsTestTags.DIAGNOSTICS_TIMING_WORKLOAD)
+            }
+            val completed = waitUntilActivityCondition(scenario, timeoutMs = 2_000L) { activity ->
+                activity.requireTextViewByTestTag(
+                    DemoDiagnosticsTestTags.DIAGNOSTICS_TIMING_WORKLOAD_STATUS,
+                ).text.toString().contains("8/8")
+            }
+            assertTrue("Expected the timing workload to complete all eight frames.", completed)
+            scenario.onActivity { activity ->
+                val afterFixture = activity.requireTextViewByTestTag(
+                    DemoDiagnosticsTestTags.DIAGNOSTICS_TIMING_WORKLOAD_FIXTURE,
+                ).text.toString()
+                assertTrue("Expected the visible timing fixture to update.", afterFixture != beforeFixture)
+            }
+        }
+    }
+
+    @Test
     fun statePatchStress_openDiagnostics_showsPatchActiveSnapshotProbe() {
         DemoRenderDiagnosticsStore.reset()
         launchDemoScenarioActivity(

@@ -27,6 +27,10 @@
     <string name="demo_diagnostics_highlight_target">Highlight target · generation %1$d</string>
     <string name="demo_diagnostics_snapshot_revision">Snapshot refresh revision: %1$d</string>
     <string name="demo_diagnostics_refresh_renderer">Refresh renderer snapshot</string>
+    <string name="demo_diagnostics_run_timing_workload">Run 8-frame timing workload</string>
+    <string name="demo_diagnostics_timing_workload_status">Timing workload: %1$d/%2$d frames · completed runs %3$d</string>
+    <string name="demo_diagnostics_timing_workload_even_fixture">Even frame %1$d · stable-width binding payload</string>
+    <string name="demo_diagnostics_timing_workload_odd_fixture">Odd frame %1$d · alternate reconciliation branch with a longer binding payload</string>
     <string name="demo_diagnostics_capturing_renderer">Capturing renderer snapshot…</string>
     <string name="demo_diagnostics_reset_layout_counters">Reset layout counters</string>
     <string name="demo_diagnostics_renderer_probe_title">Renderer recomposition probe</string>

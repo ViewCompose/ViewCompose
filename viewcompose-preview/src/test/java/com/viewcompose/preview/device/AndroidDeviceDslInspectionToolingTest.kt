@@ -6,11 +6,24 @@ import android.view.View
 import android.widget.FrameLayout
 import com.viewcompose.ui.foundation.RenderInspectedNode
 import com.viewcompose.ui.foundation.RenderInspectedNodeKind
+import com.viewcompose.ui.foundation.RenderDiagnosticContext
+import com.viewcompose.ui.foundation.RenderNodeTimingCapture
+import com.viewcompose.ui.foundation.RenderNodeTimingCaptureRequest
+import com.viewcompose.ui.foundation.RenderNodeTimingCaptureResult
+import com.viewcompose.ui.foundation.RenderNodeTimingCaptureStart
+import com.viewcompose.ui.foundation.RenderNodeTimingEndReason
+import com.viewcompose.ui.foundation.RenderNodeTimingInclusion
+import com.viewcompose.ui.foundation.RenderNodeTimingPhase
+import com.viewcompose.ui.foundation.RenderNodeTimingRecord
+import com.viewcompose.ui.foundation.RenderNodeTimingStartStatus
+import com.viewcompose.ui.foundation.RenderNodeTimingUnsupportedDomain
 import com.viewcompose.ui.foundation.RenderNodePlatformTarget
 import com.viewcompose.ui.foundation.RenderNodeToken
 import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
 import com.viewcompose.ui.foundation.RenderSessionRole
 import com.viewcompose.ui.foundation.RenderSessionNodeInspection
+import com.viewcompose.ui.foundation.RenderSessionTimingInspection
+import com.viewcompose.ui.foundation.RenderSessionTraceId
 import com.viewcompose.ui.foundation.RenderNodeInspectionSnapshot
 import com.viewcompose.ui.tooling.UiSourceCallSite
 import com.viewcompose.ui.node.NodeType
@@ -182,6 +195,192 @@ class AndroidDeviceDslInspectionToolingTest {
         assertTrue(session.isNull("parentSessionId"))
         assertEquals(RenderSessionRole.Host.name, session.getString("role"))
         registration?.dispose()
+    }
+
+    @Test
+    fun `timing request writes one complete bounded v6 response`() {
+        val context = applicationContext()
+        val registry = AndroidDeviceDslSourceRegistry(
+            processId = { 42 },
+            currentTimeMillis = { 1234L },
+        )
+        var capturedRequest: RenderNodeTimingCaptureRequest? = null
+        val result = timingResult(
+            records = listOf(
+                RenderNodeTimingRecord(
+                    frameId = 3L,
+                    nodeToken = renderNodeToken(35L),
+                    parentNodeToken = null,
+                    nodeType = NodeType.Text,
+                    depth = 1,
+                    synthetic = false,
+                    sourceCallSites = sourceCandidates().single(),
+                    phase = RenderNodeTimingPhase.Binding,
+                    inclusion = RenderNodeTimingInclusion.Direct,
+                    durationNanos = 2_500L,
+                    repetitions = 1L,
+                    truncated = false,
+                ),
+            ),
+        )
+        registry.register(
+            container = FrameLayout(context),
+            sessionId = 21L,
+            parentSessionId = null,
+            role = RenderSessionRole.Host,
+            sourceCandidates = sourceCandidates(),
+            nodeInspection = emptyNodeInspection(),
+            timingInspection = object : RenderSessionTimingInspection {
+                override fun startCapture(
+                    request: RenderNodeTimingCaptureRequest,
+                ): RenderNodeTimingCaptureStart {
+                    capturedRequest = request
+                    return RenderNodeTimingCaptureStart(
+                        RenderNodeTimingStartStatus.Started,
+                        fixedTimingCapture(result),
+                    )
+                }
+            },
+        )
+        var writtenJson: String? = null
+        var finishedCount = 0
+        val handler = DeviceDslSourceRequestHandler(
+            registry = registry,
+            execute = { runnable -> runnable.run() },
+            writeResponse = { _, json -> writtenJson = json },
+            postDelayed = { _, _ -> error("Complete timing capture must not be polled again.") },
+        )
+
+        handler.handle(
+            context = context,
+            request = DeviceDslToolingRequest(
+                requestId = REQUEST_ID,
+                operation = DeviceDslToolingOperation.Timing,
+                sessionId = 21L,
+                timingPhases = setOf(
+                    RenderNodeTimingPhase.Composition,
+                    RenderNodeTimingPhase.Binding,
+                ),
+            ),
+            onFinished = { finishedCount += 1 },
+        )
+
+        val json = checkNotNull(writtenJson)
+        val report = JSONObject(json)
+        val timing = report.getJSONObject("timing")
+        val capture = timing.getJSONObject("result")
+        val record = capture.getJSONArray("records").getJSONObject(0)
+        assertEquals(DEVICE_DSL_SOURCE_PROTOCOL_VERSION, report.getInt("protocolVersion"))
+        assertEquals("timing", report.getString("operation"))
+        assertEquals("started", timing.getString("startStatus"))
+        assertTrue(capture.getBoolean("complete"))
+        assertEquals("frame_limit", capture.getString("endReason"))
+        assertEquals("z", record.getString("nodeToken"))
+        assertEquals("binding", record.getString("phase"))
+        assertEquals("direct", record.getString("inclusion"))
+        assertEquals(1, finishedCount)
+        assertEquals(
+            setOf(RenderNodeTimingPhase.Composition, RenderNodeTimingPhase.Binding),
+            checkNotNull(capturedRequest).phases,
+        )
+        assertTrue(json.toByteArray(Charsets.UTF_8).size <= 256 * 1024)
+    }
+
+    @Test
+    fun `only one process timing capture may remain active`() {
+        val context = applicationContext()
+        val registry = AndroidDeviceDslSourceRegistry()
+        val activeResult = timingResult(complete = false, endReason = null)
+        var secondSessionStarts = 0
+        registry.register(
+            container = FrameLayout(context),
+            sessionId = 21L,
+            parentSessionId = null,
+            role = RenderSessionRole.Host,
+            sourceCandidates = sourceCandidates(),
+            nodeInspection = emptyNodeInspection(),
+            timingInspection = fixedTimingInspection(activeResult),
+        )
+        registry.register(
+            container = FrameLayout(context),
+            sessionId = 22L,
+            parentSessionId = null,
+            role = RenderSessionRole.NavigationDestination,
+            sourceCandidates = sourceCandidates(),
+            nodeInspection = emptyNodeInspection(),
+            timingInspection = object : RenderSessionTimingInspection {
+                override fun startCapture(
+                    request: RenderNodeTimingCaptureRequest,
+                ): RenderNodeTimingCaptureStart {
+                    secondSessionStarts += 1
+                    return RenderNodeTimingCaptureStart(
+                        RenderNodeTimingStartStatus.Started,
+                        fixedTimingCapture(activeResult),
+                    )
+                }
+            },
+        )
+
+        val first = registry.startTiming(timingRequest(sessionId = 21L))
+        val second = registry.startTiming(timingRequest(sessionId = 22L))
+
+        assertEquals(RenderNodeTimingStartStatus.Started, first.status)
+        assertEquals(RenderNodeTimingStartStatus.AlreadyActive, second.status)
+        assertEquals(null, second.capture)
+        assertEquals(0, secondSessionStarts)
+        registry.finishTiming(checkNotNull(first.capture))
+    }
+
+    @Test
+    fun `oversized timing response keeps a valid bounded record prefix`() {
+        val context = applicationContext()
+        val registry = AndroidDeviceDslSourceRegistry()
+        val longText = "界".repeat(2_000)
+        val records = List(512) { index ->
+            RenderNodeTimingRecord(
+                frameId = index.toLong(),
+                nodeToken = renderNodeToken(index + 1L),
+                parentNodeToken = null,
+                nodeType = NodeType.Text,
+                depth = 1,
+                synthetic = false,
+                sourceCallSites = List(16) {
+                    UiSourceCallSite(longText, longText, longText, index + 1)
+                },
+                phase = RenderNodeTimingPhase.Composition,
+                inclusion = RenderNodeTimingInclusion.Self,
+                durationNanos = index + 1L,
+                repetitions = 1L,
+                truncated = false,
+            )
+        }
+        registry.register(
+            container = FrameLayout(context),
+            sessionId = 21L,
+            parentSessionId = null,
+            role = RenderSessionRole.Host,
+            sourceCandidates = sourceCandidates(),
+            nodeInspection = emptyNodeInspection(),
+            timingInspection = fixedTimingInspection(timingResult(records)),
+        )
+        var writtenJson: String? = null
+        val handler = DeviceDslSourceRequestHandler(
+            registry = registry,
+            execute = { runnable -> runnable.run() },
+            writeResponse = { _, json -> writtenJson = json },
+            postDelayed = { _, _ -> error("Complete timing capture must not be polled again.") },
+        )
+
+        handler.handle(context, timingRequest()) {}
+
+        val json = checkNotNull(writtenJson)
+        val encodedRecords = JSONObject(json)
+            .getJSONObject("timing")
+            .getJSONObject("result")
+        assertTrue(json.toByteArray(Charsets.UTF_8).size <= 256 * 1024)
+        assertTrue(encodedRecords.getBoolean("recordsTruncated"))
+        assertTrue(encodedRecords.getJSONArray("records").length() in 1 until records.size)
+        assertEquals("1", encodedRecords.getJSONArray("records").getJSONObject(0).getString("nodeToken"))
     }
 
     @Test
@@ -461,6 +660,15 @@ class AndroidDeviceDslInspectionToolingTest {
         return DeviceDslToolingRequest(REQUEST_ID, DeviceDslToolingOperation.Source)
     }
 
+    private fun timingRequest(sessionId: Long = 21L): DeviceDslToolingRequest {
+        return DeviceDslToolingRequest(
+            requestId = REQUEST_ID,
+            operation = DeviceDslToolingOperation.Timing,
+            sessionId = sessionId,
+            timingPhases = RenderNodeTimingPhase.entries.toSet(),
+        )
+    }
+
     private fun emptyNodeInspection(): RenderSessionNodeInspection {
         return object : RenderSessionNodeInspection {
             override fun snapshot(): RenderNodeInspectionSnapshot {
@@ -512,6 +720,64 @@ class AndroidDeviceDslInspectionToolingTest {
     private fun renderNodeToken(value: Long): RenderNodeToken {
         val method = RenderNodeToken::class.java.getDeclaredMethod("box-impl", Long::class.javaPrimitiveType)
         return method.invoke(null, value) as RenderNodeToken
+    }
+
+    private fun renderSessionTraceId(value: Long): RenderSessionTraceId {
+        val method = RenderSessionTraceId::class.java.getDeclaredMethod(
+            "box-impl",
+            Long::class.javaPrimitiveType,
+        )
+        return method.invoke(null, value) as RenderSessionTraceId
+    }
+
+    private fun timingResult(
+        records: List<RenderNodeTimingRecord> = emptyList(),
+        complete: Boolean = true,
+        endReason: RenderNodeTimingEndReason? = RenderNodeTimingEndReason.FrameLimit,
+    ): RenderNodeTimingCaptureResult {
+        return RenderNodeTimingCaptureResult(
+            context = RenderDiagnosticContext(
+                sessionId = renderSessionTraceId(21L),
+                parentSessionId = null,
+                role = RenderSessionRole.Host,
+                frameId = null,
+                eventSequence = 0L,
+                monotonicTimestampNanos = 100L,
+            ),
+            records = records,
+            completedFrames = 1,
+            startedAtNanos = 100L,
+            endedAtNanos = 200L,
+            attemptedClockReads = 2L,
+            retainedClockReads = 2L,
+            emptyPairOverheadNanos = 3L,
+            droppedTimedNodes = 0,
+            droppedRecords = 0,
+            droppedStrings = 0,
+            truncated = false,
+            unsupportedDomains = RenderNodeTimingUnsupportedDomain.entries.toSet(),
+            complete = complete,
+            endReason = endReason,
+        )
+    }
+
+    private fun fixedTimingInspection(
+        result: RenderNodeTimingCaptureResult,
+    ): RenderSessionTimingInspection = object : RenderSessionTimingInspection {
+        override fun startCapture(
+            request: RenderNodeTimingCaptureRequest,
+        ): RenderNodeTimingCaptureStart = RenderNodeTimingCaptureStart(
+            RenderNodeTimingStartStatus.Started,
+            fixedTimingCapture(result),
+        )
+    }
+
+    private fun fixedTimingCapture(
+        result: RenderNodeTimingCaptureResult,
+    ): RenderNodeTimingCapture = object : RenderNodeTimingCapture {
+        override fun snapshot(): RenderNodeTimingCaptureResult = result
+
+        override fun stop(): RenderNodeTimingCaptureResult = result
     }
 
     private companion object {

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: 6cabdbef83ac6a3e61f9098daf3c3ad266ab75a929f909ca3997f3b429c1927b
+translation_source_hash: da7834edd29ae5457bc967cad4aa47ae1dcc9ddfc61556c71da97f760884d674
 translation_status: current
 ---
 
@@ -38,13 +38,13 @@ ViewCompose 提供两条互补路径：
 两个同名 API 位于不同包：静态注解在 `com.viewcompose.preview.tooling`，Compose 桥接函数在
 `com.viewcompose.preview`。
 
-## 真机 DSL 定位与节点高亮
+## 真机 DSL 定位、节点高亮与耗时
 
-这个可选制品负责 Android Studio `Locate Device DSL`、`Highlight Device DSL Node` 与
-`Clear Device DSL Highlight` 动作的应用进程侧实现。在可调试进程中，它会为 Host、Navigation
+这个可选制品负责 Android Studio `Locate Device DSL`、`Highlight Device DSL Node`、
+`Clear Device DSL Highlight` 与 `Inspect Device Node Timing` 动作的应用进程侧实现。在可调试进程中，它会为 Host、Navigation
 Destination 与 Pager Page Session 保留有界源码候选，并为全部受支持的 Logical Session Role
 登记弱持有、仅按请求工作的 Mounted-node Inspector。Lazy Item、Overlay 与 Preview Session 因而
-无需组合期 Source Stack Capture 也能被选中。协议 v5 携带与运行时诊断相同的进程内 Trace ID、可选 Parent ID 和类型化
+无需组合期 Source Stack Capture 也能被选中。协议 v6 携带与运行时诊断相同的进程内 Trace ID、可选 Parent ID 和类型化
 角色。它不会持续发布报告，也不会观察滚动、全局布局、绘制、触摸、Frame 或重组。
 
 源码定位会发送一条受 `DUMP` 权限保护的源码请求。高亮会先选择可见 Session，再请求一份 Mounted
@@ -61,6 +61,18 @@ Focus 或 Accessibility Focus 变化，不拦截输入，也不修改 LayoutPara
 每份响应都会回显 1--128 字符的 ASCII Nonce，按需序列化至最多 256 KiB，并原子写入应用私有缓存。
 IDE 只接受 Operation、Nonce、前台包名与存活进程均匹配的响应。无效请求、服务缺失、Writer/Overlay
 失败和 Session 释放都不能导致应用渲染失败。
+
+Timing Action 会选择一个可见的关联 Session，并在开发者触发工作负载期间启动一次有限请求。协议
+v6 携带实际执行的 Composition、Reconciliation 与 Direct-binding Aggregate，包括不透明且仅当前
+Capture 有效的 Node Token、Inclusive/Self 或 Direct 语义、时钟读取数、空计时对开销、Drop、
+Truncation、Unsupported Domain 与结束原因。同一进程只接受一个活动 Capture；它最多在八个已完成
+Frame Attempt 或两秒后停止，每帧最多保留 64 个计时节点，总计 512 条 Aggregate、深度 32，并复用
+已有的有界 Source Metadata，而不会在计时路径抓取 Stack Trace。
+
+普通渲染不提供 Collector：显式请求前，制品不会执行逐节点时钟读取、分配计时记录、轮询或写报告。
+Measure/Layout/Draw、GPU、RenderThread、SurfaceFlinger、解码、网络、数据库与外部 SDK 不属于首版
+契约。`Diagnostics → Renderer` Demo Fixture 提供可见的八帧工作负载，使人工验收能同时确认 UI
+进度与终态报告。
 
 本制品应只放在 `debugImplementation`、测试或专用 Tooling 配置中。除可调试进程与显式 IDE 请求
 外，制品存在是启用功能所需的第三道门。零运行时持续开销与性能契约见
@@ -162,6 +174,6 @@ Preview-only Renderer 路径。
 
 `0.1.0-alpha03` 建立了原生/DSL 一致主题解析、可保留的 Compose 桥接会话、显式根节点访问重载，以及
 共享目录/快照覆盖模型。静态预览协议兼容性仍由 preview-core 统一管理。
-真机源码定位与节点高亮都按请求运行，并完全归属于这个可选制品；Android Host 只保留中立、可空的
-Session Inspection 端口。协议 v5 硬切 v4，新增 Operation 校验、Request-scoped 不透明节点
-Token、有界节点快照、结构化高亮状态、裁剪边界与显式清除。
+真机源码定位、节点高亮与耗时都按请求运行，并完全归属于这个可选制品；Android Host 只保留中立、
+可空的 Session Inspection 端口。协议 v6 硬切旧版报告，在 Operation 校验、Request-scoped 不透明
+Node Token、有界节点快照、结构化高亮状态、裁剪边界与显式清除之上新增 Timing Operation 与有限结果。

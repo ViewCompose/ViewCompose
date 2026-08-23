@@ -812,9 +812,11 @@ continues in Phases 3 and 4.
 
 ### Phase 3: Diagnostics
 
-Status: core visualization complete. Render tree, patches, CompositionLocal, and recomposition
-reasons are readable. Node highlighting, cross-session correlation, per-node timing, and their
-inactive-path performance proof have moved to the active
+Status: core visualization complete. Render tree, patches, CompositionLocal, recomposition reasons,
+cross-session correlation, bounded failure aggregation, node highlighting, and finite per-node
+timing are readable. A timing request is diagnostic sampling with measured clock overhead, not a
+replacement for Macrobenchmark. Its inactive/request-cost proof and final closeout remain in the
+active
 [diagnostics plan](../project/plans/diagnostics-correlation-inspection-observability.md).
 
 ### Phase 4: Containers and layout

@@ -145,6 +145,10 @@ created for the node.
 - `UiNodeTooling.withSourceCandidateCapture` is the Q3 page-source counterpart. It retains bounded
   first and recent source chains across one successful tree build so tooling can distinguish shared
   scaffold chrome from content DSL without annotating the VNode tree.
+- `UiNodeTooling.attachTimingIdentity`, `ensureTimingIdentity`, and `timingIdentityOf` form the Q3
+  process-local correlation bridge between an actively timed composition scope and downstream
+  renderer phases. Composition identities are positive, renderer-only fallbacks are negative, and
+  neither value is an application key, persistence identity, ordering contract, or analytics field.
 - [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/),
   [`UiImageRequest`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-request/),
   and [`UiImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-loader/)
@@ -345,6 +349,11 @@ blocking, re-entrant rendering, or retaining a call chain as application state.
 `UiNodeTooling.withSourceCandidateCapture` is also an additive Q3 tooling API. It preserves normal
 VNode identity and metadata, but its nested candidate list and sampling bounds are tooling input,
 not an application persistence format.
+
+The Q3 timing-identity helpers may run only behind an explicit finite timing request. Copy and
+wrapper helpers preserve an existing identity, while ordinary node construction leaves the
+tooling-only field `null`. The field is excluded from equality and hash semantics, and callers must
+not serialize or retain it after the capture that requested it.
 
 The alpha diagnostics-correlation hard cut removes the tooling-only
 `UiSourceSessionContainerHandle` and `UiSourceSessionRole`. Session identity, parent ownership, and

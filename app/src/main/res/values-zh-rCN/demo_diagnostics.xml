@@ -27,6 +27,10 @@
     <string name="demo_diagnostics_highlight_target">高亮目标 · 第 %1$d 代</string>
     <string name="demo_diagnostics_snapshot_revision">快照刷新修订：%1$d</string>
     <string name="demo_diagnostics_refresh_renderer">刷新渲染器快照</string>
+    <string name="demo_diagnostics_run_timing_workload">运行 8 帧耗时工作负载</string>
+    <string name="demo_diagnostics_timing_workload_status">耗时工作负载：%1$d/%2$d 帧 · 已完成 %3$d 轮</string>
+    <string name="demo_diagnostics_timing_workload_even_fixture">偶数帧 %1$d · 固定宽度绑定内容</string>
+    <string name="demo_diagnostics_timing_workload_odd_fixture">奇数帧 %1$d · 更长绑定内容的交替协调分支</string>
     <string name="demo_diagnostics_capturing_renderer">正在捕获渲染器快照…</string>
     <string name="demo_diagnostics_reset_layout_counters">重置布局计数器</string>
     <string name="demo_diagnostics_renderer_probe_title">渲染器重组探针</string>

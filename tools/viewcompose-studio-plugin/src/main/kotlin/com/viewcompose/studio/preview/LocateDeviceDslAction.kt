@@ -193,6 +193,7 @@ internal fun showDeviceDslFailure(
         DeviceDslLocateFailureReason.SourceMissing -> "deviceDsl.failure.sourceMissing"
         DeviceDslLocateFailureReason.NoInspectableNode -> "deviceDsl.failure.noInspectableNode"
         DeviceDslLocateFailureReason.HighlightRejected -> "deviceDsl.failure.highlightRejected"
+        DeviceDslLocateFailureReason.TimingRejected -> "deviceDsl.failure.timingRejected"
         null -> null
     }
     val details = messageKey?.let(messages::text) ?: messages.text(

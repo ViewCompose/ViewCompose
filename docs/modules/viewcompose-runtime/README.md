@@ -62,6 +62,11 @@ Snapshot.withMutableSnapshot {
 - [`ComposerLite`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.composition/-composer-lite/)
   provides transactional positional composition, remembered values, effects, and diagnostics without
   compiler-generated change flags.
+- `CompositionTimingCollector`, `CompositionTimingScope`, and
+  `ComposerLite.prepareRootWithTiming` form the Q3 request-scoped composition timing boundary.
+  Only executed scopes are offered; skipped scopes perform no callback or clock read. The collector
+  owns one monotonic clock, nesting accounting, caps, and overhead measurement, while the runtime
+  supplies a lazily allocated process-local identity and already retained bounded source hints.
 - [`MonotonicFrameClock`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.frame/-monotonic-frame-clock/)
   is the platform-neutral timing contract consumed by animation integrations.
 
@@ -90,6 +95,10 @@ alpha, the documentation site intentionally does not expose a stable `latest` al
   failure release it; the calculation is side-effect-free and may run more often than it emits.
 - `ComposerLite` and derived-state instances are intended for thread-confined use. Hosts serialize
   composition, prepared commit/abort, effect delivery, and disposal.
+- A composition timing collector is valid only for its synchronous `prepareRootWithTiming` call.
+  It cannot retain scopes, invoke application code, block, perform I/O, or re-enter the composer.
+  Collector failures are isolated from composition. The ordinary `prepareRoot` path allocates no
+  timing identity, performs no per-scope clock read, and keeps no timing history.
 - Remembered lifecycle objects remain pending until `onRemembered` returns successfully. A throwing
   activation is retried by a later successful composition commit without reactivating successful
   siblings. Removal before activation invokes `onAbandoned`; an active value terminates through

@@ -7,20 +7,22 @@ import java.io.StringReader
 import java.nio.charset.StandardCharsets
 
 internal const val DEVICE_DSL_SOURCE_REPORT_PATH =
-    "cache/viewcompose/device-dsl-source-v5.json"
+    "cache/viewcompose/device-dsl-source-v6.json"
 internal const val DEVICE_DSL_SOURCE_REQUEST_ACTION =
     "com.viewcompose.preview.action.REQUEST_DEVICE_DSL_SOURCE"
 internal const val DEVICE_DSL_SOURCE_REQUEST_ID_EXTRA = "request_id"
 internal const val DEVICE_DSL_SOURCE_REQUEST_OPERATION_EXTRA = "operation"
 internal const val DEVICE_DSL_SOURCE_REQUEST_SESSION_ID_EXTRA = "session_id"
 internal const val DEVICE_DSL_SOURCE_REQUEST_NODE_TOKEN_EXTRA = "node_token"
-internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 5
+internal const val DEVICE_DSL_TIMING_PHASES_EXTRA = "timing_phases"
+internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 6
 
 internal enum class StudioDeviceDslOperation(val wireValue: String) {
     Source("source"),
     Nodes("nodes"),
     Select("select"),
     Clear("clear"),
+    Timing("timing"),
     Rejected("rejected"),
 }
 
@@ -32,6 +34,66 @@ internal data class StudioDeviceDslSourceReport(
     val generatedAtEpochMillis: Long,
     val sessions: List<StudioDeviceDslSourceSession>,
     val highlight: StudioDeviceDslHighlightResult?,
+    val timing: StudioDeviceDslTimingSnapshot?,
+)
+
+internal enum class StudioDeviceDslTimingStartStatus(val wireValue: String) {
+    Started("started"),
+    AlreadyActive("already_active"),
+    EndedSession("ended_session"),
+}
+
+internal enum class StudioDeviceDslTimingPhase(val wireValue: String) {
+    Composition("composition"),
+    Reconciliation("reconciliation"),
+    Binding("binding"),
+}
+
+internal enum class StudioDeviceDslTimingInclusion(val wireValue: String) {
+    Inclusive("inclusive"),
+    Self("self"),
+    Direct("direct"),
+}
+
+internal data class StudioDeviceDslTimingRecord(
+    val frameId: Long,
+    val nodeToken: String,
+    val parentNodeToken: String?,
+    val nodeType: String?,
+    val depth: Int,
+    val synthetic: Boolean,
+    val phase: StudioDeviceDslTimingPhase,
+    val inclusion: StudioDeviceDslTimingInclusion,
+    val durationNanos: Long,
+    val repetitions: Long,
+    val truncated: Boolean,
+    val sourceCallSites: List<StudioPreviewSourceCallSite>,
+)
+
+internal data class StudioDeviceDslTimingResult(
+    val sessionId: Long,
+    val parentSessionId: Long?,
+    val role: StudioRenderSessionRole,
+    val completedFrames: Int,
+    val startedAtNanos: Long,
+    val endedAtNanos: Long?,
+    val attemptedClockReads: Long,
+    val retainedClockReads: Long,
+    val emptyPairOverheadNanos: Long,
+    val droppedTimedNodes: Int,
+    val droppedRecords: Int,
+    val droppedStrings: Int,
+    val truncated: Boolean,
+    val complete: Boolean,
+    val endReason: String?,
+    val unsupportedDomains: List<String>,
+    val records: List<StudioDeviceDslTimingRecord>,
+    val recordsTruncated: Boolean,
+)
+
+internal data class StudioDeviceDslTimingSnapshot(
+    val startStatus: StudioDeviceDslTimingStartStatus,
+    val result: StudioDeviceDslTimingResult?,
 )
 
 internal data class StudioDeviceDslSourceSession(
@@ -165,6 +227,7 @@ internal fun parseDeviceDslSourceReport(json: String): StudioDeviceDslSourceRepo
         generatedAtEpochMillis = root.requiredLong("generatedAtEpochMillis"),
         sessions = sessions,
         highlight = root.optionalObject("highlight")?.toDeviceDslHighlightResult(),
+        timing = root.optionalObject("timing")?.toDeviceDslTimingSnapshot(),
     ).also { report ->
         require(report.processId > 0) { "Device DSL source process ID must be positive." }
         require(report.generatedAtEpochMillis > 0) {
@@ -202,6 +265,19 @@ internal fun StudioDeviceDslSourceReport.visibleSourceSessions(): List<StudioDev
     return focused
         .filter { session -> session.viewDepth == deepest }
         .sortedByDescending(StudioDeviceDslSourceSession::sessionId)
+}
+
+internal fun StudioDeviceDslSourceReport.visibleTimingSessions(): List<StudioDeviceDslSourceSession> {
+    val active = sessions.filter(StudioDeviceDslSourceSession::renderingActive)
+    val visible = active.filter { session ->
+        session.attachedToWindow && session.shown && session.windowVisibility == ANDROID_VIEW_VISIBLE
+    }
+    return visible.ifEmpty { active }.ifEmpty { sessions }
+        .sortedWith(
+            compareByDescending<StudioDeviceDslSourceSession>(StudioDeviceDslSourceSession::hasWindowFocus)
+                .thenByDescending(StudioDeviceDslSourceSession::viewDepth)
+                .thenByDescending(StudioDeviceDslSourceSession::sessionId),
+        )
 }
 
 private fun JsonElement.requiredDeviceDslNode(): StudioDeviceDslNode {
@@ -256,6 +332,116 @@ private fun JsonObject.toDeviceDslHighlightResult(): StudioDeviceDslHighlightRes
         screenBounds = optionalObject("screenBounds")?.toDeviceDslBounds(),
         visibleBounds = optionalObject("visibleBounds")?.toDeviceDslBounds(),
     )
+}
+
+private fun JsonObject.toDeviceDslTimingSnapshot(): StudioDeviceDslTimingSnapshot {
+    val startStatusValue = requiredBoundedString("startStatus")
+    val startStatus = StudioDeviceDslTimingStartStatus.entries.firstOrNull { status ->
+        status.wireValue == startStatusValue
+    } ?: throw IllegalArgumentException("Unknown device DSL timing start status '$startStatusValue'.")
+    val result = optionalObject("result")?.let { capture ->
+        val clock = capture.requiredBoundedString("clock")
+        require(clock == "monotonic_nanoseconds") {
+            "Device DSL timing clock '$clock' is unsupported."
+        }
+        StudioDeviceDslTimingResult(
+            sessionId = capture.requiredLong("sessionId").also { value ->
+                require(value > 0L) { "Device DSL timing session ID must be positive." }
+            },
+            parentSessionId = capture.optionalLong("parentSessionId")?.also { value ->
+                require(value > 0L) { "Device DSL timing parent session ID must be positive." }
+            },
+            role = capture.requiredRenderSessionRole("role"),
+            completedFrames = capture.requiredInt("completedFrames").coerceIn(0, MAX_TIMING_FRAMES),
+            startedAtNanos = capture.requiredLong("startedAtNanos").coerceAtLeast(0L),
+            endedAtNanos = capture.optionalLong("endedAtNanos")?.coerceAtLeast(0L),
+            attemptedClockReads = capture.requiredLong("attemptedClockReads").coerceAtLeast(0L),
+            retainedClockReads = capture.requiredLong("retainedClockReads").coerceAtLeast(0L),
+            emptyPairOverheadNanos = capture.requiredLong("emptyPairOverheadNanos").coerceAtLeast(0L),
+            droppedTimedNodes = capture.requiredInt("droppedTimedNodes").coerceAtLeast(0),
+            droppedRecords = capture.requiredInt("droppedRecords").coerceAtLeast(0),
+            droppedStrings = capture.requiredInt("droppedStrings").coerceAtLeast(0),
+            truncated = capture.requiredBoolean("truncated"),
+            complete = capture.requiredBoolean("complete"),
+            endReason = capture.optionalBoundedString("endReason"),
+            unsupportedDomains = capture.optionalArray("unsupportedDomains")
+                .take(MAX_UNSUPPORTED_DOMAINS)
+                .map { domain -> domain.requiredBoundedStringPrimitive("unsupported timing domain") },
+            records = capture.optionalArray("records")
+                .take(MAX_TIMING_RECORDS)
+                .map { record -> record.requiredDeviceDslTimingRecord() },
+            recordsTruncated = capture.requiredBoolean("recordsTruncated"),
+        ).also { parsed ->
+            require(parsed.retainedClockReads <= parsed.attemptedClockReads) {
+                "Retained timing clock reads cannot exceed attempted reads."
+            }
+            require(!parsed.complete || parsed.endReason != null) {
+                "A complete timing capture must provide an end reason."
+            }
+        }
+    }
+    return StudioDeviceDslTimingSnapshot(startStatus, result)
+}
+
+private fun JsonElement.requiredDeviceDslTimingRecord(): StudioDeviceDslTimingRecord {
+    val record = requiredObject("timing record")
+    val phaseValue = record.requiredBoundedString("phase")
+    val phase = StudioDeviceDslTimingPhase.entries.firstOrNull { candidate ->
+        candidate.wireValue == phaseValue
+    } ?: throw IllegalArgumentException("Unknown device DSL timing phase '$phaseValue'.")
+    val inclusionValue = record.requiredBoundedString("inclusion")
+    val inclusion = StudioDeviceDslTimingInclusion.entries.firstOrNull { candidate ->
+        candidate.wireValue == inclusionValue
+    } ?: throw IllegalArgumentException("Unknown device DSL timing inclusion '$inclusionValue'.")
+    val token = record.requiredTimingToken("nodeToken")
+    val parentToken = record.optionalBoundedString("parentNodeToken")?.also(::requireTimingToken)
+    return StudioDeviceDslTimingRecord(
+        frameId = record.requiredLong("frameId").also { value ->
+            require(value > 0L) { "Device DSL timing frame ID must be positive." }
+        },
+        nodeToken = token,
+        parentNodeToken = parentToken,
+        nodeType = record.optionalBoundedString("nodeType"),
+        depth = record.requiredInt("depth").coerceIn(0, MAX_TIMING_DEPTH),
+        synthetic = record.requiredBoolean("synthetic"),
+        phase = phase,
+        inclusion = inclusion,
+        durationNanos = record.requiredLong("durationNanos").coerceAtLeast(0L),
+        repetitions = record.requiredLong("repetitions").also { value ->
+            require(value > 0L) { "Device DSL timing repetitions must be positive." }
+        },
+        truncated = record.requiredBoolean("truncated"),
+        sourceCallSites = record.optionalArray("callSites")
+            .take(MAX_SOURCE_CALL_SITES_PER_CANDIDATE)
+            .map { sourceElement ->
+                val source = sourceElement.requiredObject("timing source call site")
+                StudioPreviewSourceCallSite(
+                    className = source.requiredBoundedString("className"),
+                    methodName = source.requiredBoundedString("methodName"),
+                    fileName = source.requiredBoundedString("fileName"),
+                    lineNumber = source.requiredInt("lineNumber"),
+                )
+            }
+            .filter { source -> source.lineNumber > 0 },
+    )
+}
+
+private fun JsonObject.requiredTimingToken(name: String): String =
+    requiredBoundedString(name).also(::requireTimingToken)
+
+private fun requireTimingToken(value: String) {
+    require(value.length <= MAX_NODE_TOKEN_LENGTH && value.all { it in '0'..'9' || it in 'a'..'z' }) {
+        "Device DSL timing node token is invalid."
+    }
+}
+
+private fun JsonElement.requiredBoundedStringPrimitive(description: String): String {
+    require(isJsonPrimitive && asJsonPrimitive.isString) {
+        "Device DSL source $description must be a string."
+    }
+    return asString.also { value ->
+        require(value.isNotBlank() && value.length <= MAX_STRING_LENGTH)
+    }
 }
 
 private fun JsonObject.toDeviceDslBounds(): StudioDeviceDslBounds {
@@ -362,3 +548,7 @@ private const val MAX_NONCE_LENGTH = 128
 private const val MAX_NODE_TOKEN_LENGTH = 32
 private const val MAX_RETURNED_NODES = 512
 private const val MAX_NODE_DEPTH = 64
+private const val MAX_TIMING_DEPTH = 32
+private const val MAX_TIMING_FRAMES = 8
+private const val MAX_TIMING_RECORDS = 512
+private const val MAX_UNSUPPORTED_DOMAINS = 16

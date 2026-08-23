@@ -107,11 +107,29 @@ internal fun clearDeviceDslHighlight(device: StudioAndroidDevice): StudioDeviceD
         ?: throw DeviceDslLocateFailure(DeviceDslLocateFailureReason.HighlightRejected)
 }
 
+internal fun readDeviceDslTimingReport(
+    device: StudioAndroidDevice,
+    sessionId: Long,
+    phases: Set<StudioDeviceDslTimingPhase> = StudioDeviceDslTimingPhase.entries.toSet(),
+): StudioDeviceDslTimingSnapshot {
+    require(sessionId > 0L)
+    require(phases.isNotEmpty())
+    val report = requestDeviceDslReport(
+        device = device,
+        operation = StudioDeviceDslOperation.Timing,
+        sessionId = sessionId,
+        timingPhases = phases,
+    )
+    return report.timing
+        ?: throw DeviceDslLocateFailure(DeviceDslLocateFailureReason.TimingRejected)
+}
+
 private fun requestDeviceDslReport(
     device: StudioAndroidDevice,
     operation: StudioDeviceDslOperation,
     sessionId: Long? = null,
     nodeToken: String? = null,
+    timingPhases: Set<StudioDeviceDslTimingPhase>? = null,
     requestIdFactory: () -> String = ::newDeviceDslSourceRequestId,
     sleep: (Long) -> Unit = Thread::sleep,
     nanoTime: () -> Long = System::nanoTime,
@@ -143,6 +161,13 @@ private fun requestDeviceDslReport(
         nodeToken?.let { value ->
             require(value.matches(DEVICE_DSL_NODE_TOKEN))
             append(" --es $DEVICE_DSL_SOURCE_REQUEST_NODE_TOKEN_EXTRA $value")
+        }
+        timingPhases?.let { phases ->
+            require(phases.isNotEmpty())
+            append(" --es $DEVICE_DSL_TIMING_PHASES_EXTRA ")
+            append(phases.sortedBy(StudioDeviceDslTimingPhase::ordinal).joinToString(",") { phase ->
+                phase.wireValue
+            })
         }
     }
     device.shell(requestCommand)
@@ -236,6 +261,7 @@ internal enum class DeviceDslLocateFailureReason {
     SourceMissing,
     NoInspectableNode,
     HighlightRejected,
+    TimingRejected,
 }
 
 private val COMPONENT_PATTERN = Regex(

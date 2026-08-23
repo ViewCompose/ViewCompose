@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/preview.md
-translation_source_hash: 90742dee2bf9954a377e915f49550d681c5dad8ac0f4e7ab9ef7699c33e1e781
+translation_source_hash: c03c1737e6e7a55ecac967d13213ef6025764a75d5795715e2487656d216071e
 translation_status: current
 ---
 
@@ -206,8 +206,26 @@ Session 同样可选，但其被动登记不捕获 Source Stack；因此虚拟�
 
 Studio 会明确报告 Stale、Recycled、Hidden、Fully Clipped、Synthetic/Unsupported、Ended Session
 与 Rejected，不会猜测其他 View。Overlay 不能触发重组或应用代码，不能改变 Focus 或 Accessibility
-Focus，不拦截输入，也不修改布局。协议 v5 会分别校验 Source、Nodes、Select 与 Clear Operation 的
-Nonce、前台 Package 与存活 Process；v4 报告会被明确拒绝。
+Focus，不拦截输入，也不修改布局。协议 v6 会分别校验 Source、Nodes、Select、Clear 与 Timing
+Operation 的 Nonce、前台 Package 与存活 Process；旧版报告会被明确拒绝。
+
+## 检查真机逐节点耗时
+
+让可调试应用保持前台，然后选择 **Tools → Inspect Device Node Timing**。完成设备与可见 Session
+选择后，Studio 会提示在两秒内触发工作负载。在 Demo 的 `Diagnostics → Renderer` 页面点击
+**Run 8-frame timing workload**；可见计数器会到达 `8/8`，请求的 Capture 则在最多八个已完成
+Frame Attempt 或两秒后自动停止。
+
+报告包含实际执行的组合 Scope、Reconciliation 与 Direct Binding 聚合。组合和 Reconciliation
+区分 Inclusive 与 Self，Binding 采用 Direct 语义。Studio 按 Self/Direct 记录排序，避免嵌套的
+Inclusive 总量被重复累加。Node Token 不透明且只在当前 Capture 内有效；Source Hint 复用已有的
+有界组合元数据，不会在计时时抓取 Stack Trace。
+
+同一进程一次只接受一个活动 Capture。结果会报告时钟读取次数、空计时对开销估计、Drop、
+Truncation、Unsupported Domain 与结束原因；每帧最多 64 个计时节点，总计 512 条记录、深度 32、
+128 个有界字符串，响应最多 256 KiB。该能力不测量 Android Measure/Layout/Draw、GPU、
+RenderThread、SurfaceFlinger、解码、网络、数据库或外部 SDK。没有请求时不会安装持续 Observer，
+逐节点时钟读取和计时记录分配都为零。
 
 ## 检查真机动画时间线
 

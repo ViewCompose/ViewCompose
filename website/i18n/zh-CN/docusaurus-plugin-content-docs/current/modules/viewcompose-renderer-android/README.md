@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: e9a3c4c9ee8a272b6fb0d52d497e1344c8da353575cebf4125884742d162053e
+translation_source_hash: a420ac247110626072ad956a73ba1c6119da2e6d8af8e2f1080b5df874fabcc4
 translation_status: current
 ---
 
@@ -219,6 +219,10 @@ Matrix。Phase 4 负责该基准与最终指导。
   速度，并仍在每个接受的平台 Frame 请求一次 Layout。Keyframe 只在创建 Animator 时排序一次。
 - `RenderTreeResult`、`RenderStats`、`RenderStructureStats`、patch 记录和布局过程采样提供不可变
   诊断数据，供 demo、预览工具和性能测试使用。
+- Q3 `RenderTreeTimingCollector` 是一次有限请求使用的可选同步端口。整树 Reconciliation 会报告
+  嵌套节点区间，Binding 报告直接 Native-property Work；Observed-property Patch 使用同一 Binding
+  边界。Renderer 会保留已有 Composition Identity，只为活动请求中遇到的 Renderer-created Node
+  分配不透明负 Fallback。Collector 为 `null` 时，逐节点时钟读取、Identity 分配与计时记录工作都为零。
 - [`AndroidViewDecorationBackend`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.decoration/-android-view-decoration-backend/)
   是高级阴影等普通 View 状态无法表达的效果的可选 SPI。没有后端时，装饰请求走空操作路径，
   也不会加载阴影实现。

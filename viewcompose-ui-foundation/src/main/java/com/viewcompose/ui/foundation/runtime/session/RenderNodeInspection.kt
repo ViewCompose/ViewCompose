@@ -163,7 +163,7 @@ internal class DefaultRenderSessionNodeInspection(
         val nodes = ArrayList<RenderInspectedNode>(core.nodes.size)
         val tokensByIndex = HashMap<Int, RenderNodeToken>(core.nodes.size)
         core.nodes.forEachIndexed { index, node ->
-            val token = RenderNodeToken(nextRenderNodeToken())
+            val token = RenderNodeToken(nextRenderNodeTokenValue())
             tokensByIndex[index] = token
             nodes += RenderInspectedNode(
                 token = token,
@@ -201,7 +201,7 @@ private fun endedNodeInspectionSnapshot(): RenderNodeInspectionSnapshot {
     )
 }
 
-private fun nextRenderNodeToken(): Long {
+internal fun nextRenderNodeTokenValue(): Long {
     while (true) {
         val value = renderNodeTokens.getAndIncrement()
         if (value != 0L) return value

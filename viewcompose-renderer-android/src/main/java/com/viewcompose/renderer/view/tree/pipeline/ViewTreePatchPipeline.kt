@@ -48,53 +48,61 @@ internal object ViewTreePatchPipeline {
         defaultRippleColor: Int,
         transaction: RenderTransaction,
         collectStats: Boolean,
+        timingCollector: RenderTreeTimingCollector? = null,
+        nodeDepths: Map<MountedNode, Int> = emptyMap(),
     ): RenderStats {
         val ids = HashSet<Long>(patches.size)
         val targets = IdentityHashMap<MountedNode, Unit>(patches.size)
         val prepared = ArrayList<Pair<ViewTreeObservedPropertyPatch, NodeBindingPlan>>(patches.size)
         patches.forEach { patch ->
-            check(ids.add(patch.id)) {
-                "Observed-property patch ids must be unique within one batch."
-            }
-            check(targets.put(patch.mountedNode, Unit) == null) {
-                "A mounted node can be targeted only once in one observed-property batch."
-            }
-            check(!patch.mountedNode.disposed) {
-                "Observed property ${patch.id} targets a disposed mounted node."
-            }
-            check(patch.mountedNode.vnode === patch.previous) {
-                "Observed property ${patch.id} no longer targets the committed VNode."
-            }
-            check(patch.previous.type == patch.next.type && patch.previous.key == patch.next.key) {
-                "Observed property ${patch.id} cannot change node type or key."
-            }
-            check(patch.previous.modifier == patch.next.modifier) {
-                "Observed property ${patch.id} cannot change Modifier."
-            }
-            check(patch.previous.environment == patch.next.environment) {
-                "Observed property ${patch.id} cannot change environment."
-            }
-            check(
-                patch.previous.children.size == patch.next.children.size &&
-                    patch.previous.children.indices.all { index ->
-                        patch.previous.children[index] === patch.next.children[index]
-                    },
+            timingCollector.measureRenderInterval(
+                node = patch.next,
+                depth = nodeDepths[patch.mountedNode] ?: 0,
+                phase = RenderTreeTimingPhase.Reconciliation,
             ) {
-                "Observed property ${patch.id} cannot change children."
+                check(ids.add(patch.id)) {
+                    "Observed-property patch ids must be unique within one batch."
+                }
+                check(targets.put(patch.mountedNode, Unit) == null) {
+                    "A mounted node can be targeted only once in one observed-property batch."
+                }
+                check(!patch.mountedNode.disposed) {
+                    "Observed property ${patch.id} targets a disposed mounted node."
+                }
+                check(patch.mountedNode.vnode === patch.previous) {
+                    "Observed property ${patch.id} no longer targets the committed VNode."
+                }
+                check(patch.previous.type == patch.next.type && patch.previous.key == patch.next.key) {
+                    "Observed property ${patch.id} cannot change node type or key."
+                }
+                check(patch.previous.modifier == patch.next.modifier) {
+                    "Observed property ${patch.id} cannot change Modifier."
+                }
+                check(patch.previous.environment == patch.next.environment) {
+                    "Observed property ${patch.id} cannot change environment."
+                }
+                check(
+                    patch.previous.children.size == patch.next.children.size &&
+                        patch.previous.children.indices.all { index ->
+                            patch.previous.children[index] === patch.next.children[index]
+                        },
+                ) {
+                    "Observed property ${patch.id} cannot change children."
+                }
+                check(patch.previous.observedPropertyId == patch.next.observedPropertyId) {
+                    "Observed property ${patch.id} cannot change transaction identity."
+                }
+                check(
+                    UiNodeTooling.metadataOf(patch.previous) ===
+                        UiNodeTooling.metadataOf(patch.next),
+                ) {
+                    "Observed property ${patch.id} cannot change tooling identity."
+                }
+                check(patch.previous.spec::class == patch.next.spec::class) {
+                    "Observed property ${patch.id} cannot change NodeSpec type."
+                }
+                prepared += patch to NodeBindingDiffer.plan(patch.previous, patch.next)
             }
-            check(patch.previous.observedPropertyId == patch.next.observedPropertyId) {
-                "Observed property ${patch.id} cannot change transaction identity."
-            }
-            check(
-                UiNodeTooling.metadataOf(patch.previous) ===
-                    UiNodeTooling.metadataOf(patch.next),
-            ) {
-                "Observed property ${patch.id} cannot change tooling identity."
-            }
-            check(patch.previous.spec::class == patch.next.spec::class) {
-                "Observed property ${patch.id} cannot change NodeSpec type."
-            }
-            prepared += patch to NodeBindingDiffer.plan(patch.previous, patch.next)
         }
 
         var stats = emptyStats
@@ -103,45 +111,53 @@ internal object ViewTreePatchPipeline {
             // Even a native no-op advances MountedNode.vnode below. Checkpoint every target so a
             // later failure restores the renderer snapshot together with visible View state.
             captureNode(transaction, mountedNode)
-            if (
-                patch.next.type == NodeType.AndroidView &&
-                patch.previous.spec != patch.next.spec
-            ) {
-                patch.next.runAndroidViewOperation(AndroidViewOperation.Reset) {
-                    patch.next.requireSpec<AndroidViewNodeProps>().onReset?.invoke(mountedNode.view)
-                }
-            }
-            when (bindingPlan) {
-                NodeBindingPlan.Rebind -> {
-                    bindView(
-                        view = mountedNode.view,
-                        node = patch.next,
-                        defaultRippleColor = defaultRippleColor,
-                        resolved = patch.next.modifier.resolve(),
-                        bindingMode = NodeBindingMode.Deferred,
-                    )?.let(transaction.commitEffects::add)
-                    scheduleAndroidViewCommit(transaction, mountedNode.view, patch.next)
-                }
-
-                NodeBindingPlan.ModifierOnly -> error(
-                    "Observed property ${patch.id} produced a modifier-only binding plan.",
-                )
-
-                NodeBindingPlan.SkipSelfOnly -> error(
-                    "Observed property ${patch.id} produced a child-only binding plan.",
-                )
-
-                NodeBindingPlan.SkipSubtree -> Unit
-                is NodeBindingPlan.Patch -> {
-                    check(!bindingPlan.modifierChanged) {
-                        "Observed property ${patch.id} produced a modifier patch."
+            if (bindingPlan != NodeBindingPlan.SkipSubtree) {
+                timingCollector.measureRenderInterval(
+                    node = patch.next,
+                    depth = nodeDepths[mountedNode] ?: 0,
+                    phase = RenderTreeTimingPhase.Binding,
+                ) {
+                    if (
+                        patch.next.type == NodeType.AndroidView &&
+                        patch.previous.spec != patch.next.spec
+                    ) {
+                        patch.next.runAndroidViewOperation(AndroidViewOperation.Reset) {
+                            patch.next.requireSpec<AndroidViewNodeProps>().onReset?.invoke(mountedNode.view)
+                        }
                     }
-                    NodeViewBinderRegistry.applyPatch(
-                        view = mountedNode.view,
-                        patch = bindingPlan.patch,
-                        mode = NodeBindingMode.Deferred,
-                        nodeKey = patch.next.key,
-                    )?.let(transaction.commitEffects::add)
+                    when (bindingPlan) {
+                        NodeBindingPlan.Rebind -> {
+                            bindView(
+                                view = mountedNode.view,
+                                node = patch.next,
+                                defaultRippleColor = defaultRippleColor,
+                                resolved = patch.next.modifier.resolve(),
+                                bindingMode = NodeBindingMode.Deferred,
+                            )?.let(transaction.commitEffects::add)
+                            scheduleAndroidViewCommit(transaction, mountedNode.view, patch.next)
+                        }
+
+                        NodeBindingPlan.ModifierOnly -> error(
+                            "Observed property ${patch.id} produced a modifier-only binding plan.",
+                        )
+
+                        NodeBindingPlan.SkipSelfOnly -> error(
+                            "Observed property ${patch.id} produced a child-only binding plan.",
+                        )
+
+                        NodeBindingPlan.SkipSubtree -> Unit
+                        is NodeBindingPlan.Patch -> {
+                            check(!bindingPlan.modifierChanged) {
+                                "Observed property ${patch.id} produced a modifier patch."
+                            }
+                            NodeViewBinderRegistry.applyPatch(
+                                view = mountedNode.view,
+                                patch = bindingPlan.patch,
+                                mode = NodeBindingMode.Deferred,
+                                nodeKey = patch.next.key,
+                            )?.let(transaction.commitEffects::add)
+                        }
+                    }
                 }
             }
             mountedNode.vnode = patch.next
@@ -410,7 +426,9 @@ internal object ViewTreePatchPipeline {
         transaction: RenderTransaction,
         collectStats: Boolean,
         parentNodeKey: Any?,
-        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?) -> RenderTreeResult,
+        timingCollector: RenderTreeTimingCollector?,
+        nodeDepth: Int,
+        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?, VNode) -> RenderTreeResult,
     ): ExecutionResult {
         val mountContainer = resolveChildHost(container)
         // Preflight completes all potentially throwing resolution before structural mutation, reducing rollback complexity.
@@ -420,19 +438,29 @@ internal object ViewTreePatchPipeline {
             reconcileResult = reconcileResult,
             warningTag = warningTag,
             emittedModifierWarnings = emittedModifierWarnings,
+            timingCollector = timingCollector,
+            nodeDepth = nodeDepth,
         )
         var stats = emptyStats
         val nextMounted = mutableListOf<MountedNode>()
         preparedPatches.forEach { preparedPatch ->
-            val patchResult = applyPatch(
-                container = mountContainer,
-                preparedPatch = preparedPatch,
-                defaultRippleColor = defaultRippleColor,
-                transaction = transaction,
-                collectStats = collectStats,
-                parentNodeKey = parentNodeKey,
-                renderChildren = renderChildren,
-            )
+            val patchResult = timingCollector.measureRenderInterval(
+                node = preparedPatch.patch.timingNode(),
+                depth = nodeDepth,
+                phase = RenderTreeTimingPhase.Reconciliation,
+            ) {
+                applyPatch(
+                    container = mountContainer,
+                    preparedPatch = preparedPatch,
+                    defaultRippleColor = defaultRippleColor,
+                    transaction = transaction,
+                    collectStats = collectStats,
+                    parentNodeKey = parentNodeKey,
+                    timingCollector = timingCollector,
+                    nodeDepth = nodeDepth,
+                    renderChildren = renderChildren,
+                )
+            }
             if (collectStats) {
                 stats = stats.mergeWith(patchResult.stats)
             }
@@ -441,11 +469,17 @@ internal object ViewTreePatchPipeline {
         reconcileResult.removals.forEach { removal ->
             // Detach removals immediately but defer disposal until commit so rollback can restore the old tree.
             // remove detaches from the parent immediately but defers disposal until commit so rollback can restore the old tree.
-            applyRemoval(
-                container = mountContainer,
-                removal = removal,
-                transaction = transaction,
-            )
+            timingCollector.measureRenderInterval(
+                node = removal.payload.vnode,
+                depth = nodeDepth,
+                phase = RenderTreeTimingPhase.Reconciliation,
+            ) {
+                applyRemoval(
+                    container = mountContainer,
+                    removal = removal,
+                    transaction = transaction,
+                )
+            }
             if (collectStats) {
                 stats = stats.withRemoval()
                 transaction.recordPatch(RenderPatchRecord(
@@ -471,7 +505,9 @@ internal object ViewTreePatchPipeline {
         transaction: RenderTransaction,
         collectStats: Boolean,
         parentNodeKey: Any?,
-        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?) -> RenderTreeResult,
+        timingCollector: RenderTreeTimingCollector?,
+        nodeDepth: Int,
+        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?, VNode) -> RenderTreeResult,
     ): PatchApplicationResult {
         val patch = preparedPatch.patch
         return when (patch) {
@@ -483,6 +519,8 @@ internal object ViewTreePatchPipeline {
                     defaultRippleColor = defaultRippleColor,
                     resolved = resolved,
                     transaction = transaction,
+                    timingCollector = timingCollector,
+                    nodeDepth = nodeDepth,
                     renderChildren = renderChildren,
                 )
                 if (collectStats) {
@@ -550,81 +588,88 @@ internal object ViewTreePatchPipeline {
                         mountedNode = mountedNode,
                     )
                 }
-                if (patch.nextVNode.type == NodeType.AndroidView &&
-                    mountedNode.vnode.spec != patch.nextVNode.spec &&
-                    !mountedNode.requiresCrossOwnerRebind
+                if (
+                    bindingPlan != NodeBindingPlan.SkipSelfOnly &&
+                    bindingPlan != NodeBindingPlan.SkipSubtree
+                ) timingCollector.measureRenderInterval(
+                    node = patch.nextVNode,
+                    depth = nodeDepth,
+                    phase = RenderTreeTimingPhase.Binding,
                 ) {
-                    // AndroidView spec changes trigger Reset before rebind or patch and the later commit effect.
-                    // AndroidView spec changes trigger Reset before rebind/patch and the later commit effect.
-                    patch.nextVNode.runAndroidViewOperation(AndroidViewOperation.Reset) {
-                        patch.nextVNode
-                            .requireSpec<AndroidViewNodeProps>()
-                            .onReset
-                            ?.invoke(mountedNode.view)
+                    if (patch.nextVNode.type == NodeType.AndroidView &&
+                        mountedNode.vnode.spec != patch.nextVNode.spec &&
+                        !mountedNode.requiresCrossOwnerRebind
+                    ) {
+                        // AndroidView spec changes trigger Reset before rebind/patch and the later commit effect.
+                        patch.nextVNode.runAndroidViewOperation(AndroidViewOperation.Reset) {
+                            patch.nextVNode
+                                .requireSpec<AndroidViewNodeProps>()
+                                .onReset
+                                ?.invoke(mountedNode.view)
+                        }
                     }
-                }
-                when (bindingPlan) {
-                    NodeBindingPlan.Rebind -> {
-                        bindView(
-                            view = mountedNode.view,
-                            node = patch.nextVNode,
-                            defaultRippleColor = defaultRippleColor,
-                            resolved = checkNotNull(preparedPatch.nextResolved),
-                            bindingMode = NodeBindingMode.Deferred,
-                        )?.let(transaction.commitEffects::add)
-                        scheduleAndroidViewCommit(
-                            transaction = transaction,
-                            view = mountedNode.view,
-                            node = patch.nextVNode,
-                        )
-                    }
+                    when (bindingPlan) {
+                        NodeBindingPlan.Rebind -> {
+                            bindView(
+                                view = mountedNode.view,
+                                node = patch.nextVNode,
+                                defaultRippleColor = defaultRippleColor,
+                                resolved = checkNotNull(preparedPatch.nextResolved),
+                                bindingMode = NodeBindingMode.Deferred,
+                            )?.let(transaction.commitEffects::add)
+                            scheduleAndroidViewCommit(
+                                transaction = transaction,
+                                view = mountedNode.view,
+                                node = patch.nextVNode,
+                            )
+                        }
 
-                    NodeBindingPlan.ModifierOnly -> {
-                        ViewModifierApplier.applyModifier(
-                            view = mountedNode.view,
-                            node = patch.nextVNode,
-                            defaultRippleColor = defaultRippleColor,
-                            resolved = checkNotNull(preparedPatch.nextResolved),
-                        )
-                        ModifierInteractionApplier.applyNativeViewConfigs(
-                            view = mountedNode.view,
-                            node = patch.nextVNode,
-                        )
-                    }
-
-                    NodeBindingPlan.SkipSelfOnly,
-                    NodeBindingPlan.SkipSubtree,
-                    -> Unit
-                    is NodeBindingPlan.Patch -> {
-                        if (bindingPlan.modifierChanged) {
+                        NodeBindingPlan.ModifierOnly -> {
                             ViewModifierApplier.applyModifier(
                                 view = mountedNode.view,
                                 node = patch.nextVNode,
                                 defaultRippleColor = defaultRippleColor,
                                 resolved = checkNotNull(preparedPatch.nextResolved),
                             )
-                        }
-                        NodeViewBinderRegistry.applyPatch(
-                            view = mountedNode.view,
-                            patch = bindingPlan.patch,
-                            mode = NodeBindingMode.Deferred,
-                            nodeKey = patch.nextVNode.key,
-                        )?.let(transaction.commitEffects::add)
-                        if (bindingPlan.modifierChanged) {
                             ModifierInteractionApplier.applyNativeViewConfigs(
                                 view = mountedNode.view,
                                 node = patch.nextVNode,
                             )
                         }
+
+                        NodeBindingPlan.SkipSelfOnly,
+                        NodeBindingPlan.SkipSubtree,
+                        -> Unit
+                        is NodeBindingPlan.Patch -> {
+                            if (bindingPlan.modifierChanged) {
+                                ViewModifierApplier.applyModifier(
+                                    view = mountedNode.view,
+                                    node = patch.nextVNode,
+                                    defaultRippleColor = defaultRippleColor,
+                                    resolved = checkNotNull(preparedPatch.nextResolved),
+                                )
+                            }
+                            NodeViewBinderRegistry.applyPatch(
+                                view = mountedNode.view,
+                                patch = bindingPlan.patch,
+                                mode = NodeBindingMode.Deferred,
+                                nodeKey = patch.nextVNode.key,
+                            )?.let(transaction.commitEffects::add)
+                            if (bindingPlan.modifierChanged) {
+                                ModifierInteractionApplier.applyNativeViewConfigs(
+                                    view = mountedNode.view,
+                                    node = patch.nextVNode,
+                                )
+                            }
+                        }
                     }
-                }
-                if (preparedPatch.updatesLayoutParams) {
-                    // Layout-modifier changes rebuild LayoutParams and ask ConstraintLayout to regenerate constraints.
-                    // Layout modifier changes rebuild LayoutParams and ask ConstraintLayout to rebuild constraints.
-                    mountedNode.view.layoutParams = checkNotNull(preparedPatch.layoutParams)
-                    (container as? DeclarativeConstraintLayout)?.requestConstraintRebuild(
-                        ConstraintRebuildReason.ScalarInput,
-                    )
+                    if (preparedPatch.updatesLayoutParams) {
+                        // Layout modifier changes rebuild LayoutParams and request constraint regeneration.
+                        mountedNode.view.layoutParams = checkNotNull(preparedPatch.layoutParams)
+                        (container as? DeclarativeConstraintLayout)?.requestConstraintRebuild(
+                            ConstraintRebuildReason.ScalarInput,
+                        )
+                    }
                 }
                 val childResult = if (shouldReconcileChildren(bindingPlan)) {
                     reconcileChildren(
@@ -712,7 +757,7 @@ internal object ViewTreePatchPipeline {
         view: View,
         previousChildren: List<MountedNode>,
         node: VNode,
-        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?) -> RenderTreeResult,
+        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?, VNode) -> RenderTreeResult,
     ): RenderTreeResult {
         val viewGroup = view as? ViewGroup ?: return RenderTreeResult(
             mountedNodes = emptyList(),
@@ -727,6 +772,7 @@ internal object ViewTreePatchPipeline {
             previousChildren,
             node.children,
             node.key,
+            node,
         )
     }
 
@@ -751,52 +797,62 @@ internal object ViewTreePatchPipeline {
         defaultRippleColor: Int,
         resolved: ResolvedModifiers,
         transaction: RenderTransaction,
-        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?) -> RenderTreeResult,
+        timingCollector: RenderTreeTimingCollector?,
+        nodeDepth: Int,
+        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?, VNode) -> RenderTreeResult,
     ): MountedNode {
-        val view = ViewNodeFactory.createView(
-            context = context,
+        val mountedNode = timingCollector.measureRenderInterval(
             node = node,
-            createAndroidView = when (node.type) {
-                NodeType.AndroidView -> {
-                    val factory = node.requireSpec<AndroidViewNodeProps>().factory
-                    { rawContext ->
-                        node.runAndroidViewOperation(AndroidViewOperation.Factory) {
-                            factory(rawContext)
+            depth = nodeDepth,
+            phase = RenderTreeTimingPhase.Binding,
+        ) {
+            val view = ViewNodeFactory.createView(
+                context = context,
+                node = node,
+                createAndroidView = when (node.type) {
+                    NodeType.AndroidView -> {
+                        val factory = node.requireSpec<AndroidViewNodeProps>().factory
+                        { rawContext ->
+                            node.runAndroidViewOperation(AndroidViewOperation.Factory) {
+                                factory(rawContext)
+                            }
                         }
                     }
-                }
-                else -> null
-            },
-        )
-        val mountedNode = MountedNode(
-            vnode = node,
-            view = view,
-        )
-        ViewNodeToolingRegistry.bind(
-            view = view,
-            node = node,
-        )
-        transaction.insertedNodes += mountedNode
-        ViewModifierApplier.cacheOriginalBackground(view)
-        ViewModifierApplier.cacheOriginalForeground(view)
-        bindView(
-            view = view,
-            node = node,
-            defaultRippleColor = defaultRippleColor,
-            resolved = resolved,
-            bindingMode = NodeBindingMode.Deferred,
-        )?.let(transaction.commitEffects::add)
-        scheduleAndroidViewCommit(
-            transaction = transaction,
-            view = view,
-            node = node,
-        )
-        val children = if (view is ViewGroup) {
+                    else -> null
+                },
+            )
+            val mounted = MountedNode(
+                vnode = node,
+                view = view,
+            )
+            ViewNodeToolingRegistry.bind(
+                view = view,
+                node = node,
+            )
+            transaction.insertedNodes += mounted
+            ViewModifierApplier.cacheOriginalBackground(view)
+            ViewModifierApplier.cacheOriginalForeground(view)
+            bindView(
+                view = view,
+                node = node,
+                defaultRippleColor = defaultRippleColor,
+                resolved = resolved,
+                bindingMode = NodeBindingMode.Deferred,
+            )?.let(transaction.commitEffects::add)
+            scheduleAndroidViewCommit(
+                transaction = transaction,
+                view = view,
+                node = node,
+            )
+            mounted
+        }
+        val children = if (mountedNode.view is ViewGroup) {
             renderChildren(
-                resolveChildHost(view),
+                resolveChildHost(mountedNode.view as ViewGroup),
                 emptyList(),
                 node.children,
                 node.key,
+                node,
             ).mountedNodes
         } else {
             emptyList()
@@ -810,88 +866,94 @@ internal object ViewTreePatchPipeline {
         reconcileResult: ReconcileResult<MountedNode>,
         warningTag: String,
         emittedModifierWarnings: MutableSet<String>,
+        timingCollector: RenderTreeTimingCollector?,
+        nodeDepth: Int,
     ): List<PreparedPatch> {
         return reconcileResult.patches.map { patch ->
-            when (patch) {
-                is InsertPatch -> {
-                    val nextNode = patch.nextVNode
-                    val resolved = nextNode.modifier.resolve()
-                    if (nextNode.type == NodeType.AndroidView) {
-                        nextNode.requireSpec<AndroidViewNodeProps>()
-                    }
-                    PreparedPatch(
-                        patch = patch,
-                        nextResolved = resolved,
-                        layoutParams = ViewLayoutParamsFactory.createLayoutParams(
-                            parent = container,
-                            node = nextNode,
-                            warningTag = warningTag,
-                            emittedModifierWarnings = emittedModifierWarnings,
-                            resolved = resolved,
-                        ),
-                        updatesLayoutParams = true,
-                    )
-                }
-
-                is ReusePatch -> {
-                    val nextNode = patch.nextVNode
-                    val previousNode = patch.payload.vnode
-                    val bindingPlan = if (patch.payload.requiresCrossOwnerRebind) {
-                        NodeBindingPlan.Rebind
-                    } else {
-                        NodeBindingDiffer.plan(
-                            previous = previousNode,
-                            next = nextNode,
-                        )
-                    }
-                    if (nextNode.type == NodeType.AndroidView) {
-                        nextNode.requireSpec<AndroidViewNodeProps>()
-                    }
-                    val nextResolved = when {
-                        bindingPlan == NodeBindingPlan.Rebind -> nextNode.modifier.resolve()
-                        bindingPlan == NodeBindingPlan.ModifierOnly -> nextNode.modifier.resolve()
-                        bindingPlan is NodeBindingPlan.Patch && bindingPlan.modifierChanged -> {
-                            nextNode.modifier.resolve()
+            timingCollector.measureRenderInterval(
+                node = patch.timingNode(),
+                depth = nodeDepth,
+                phase = RenderTreeTimingPhase.Reconciliation,
+            ) {
+                when (patch) {
+                    is InsertPatch -> {
+                        val nextNode = patch.nextVNode
+                        val resolved = nextNode.modifier.resolve()
+                        if (nextNode.type == NodeType.AndroidView) {
+                            nextNode.requireSpec<AndroidViewNodeProps>()
                         }
-
-                        else -> null
-                    }
-                    // Only rebinds and modifier patches re-resolve modifiers; spec-only patches skip that work.
-                    // Only rebind or modifier patches need modifier resolution; spec-only patches can skip it.
-                    val updatesLayoutParams = when {
-                        bindingPlan == NodeBindingPlan.Rebind -> true
-                        bindingPlan == NodeBindingPlan.ModifierOnly -> {
-                            layoutModifiersChanged(
-                                previous = previousNode.modifier.resolve(),
-                                next = checkNotNull(nextResolved),
-                            )
-                        }
-                        bindingPlan is NodeBindingPlan.Patch && bindingPlan.modifierChanged -> {
-                            layoutModifiersChanged(
-                                previous = previousNode.modifier.resolve(),
-                                next = checkNotNull(nextResolved),
-                            )
-                        }
-
-                        else -> false
-                    }
-                    PreparedPatch(
-                        patch = patch,
-                        bindingPlan = bindingPlan,
-                        nextResolved = nextResolved,
-                        layoutParams = if (updatesLayoutParams) {
-                            ViewLayoutParamsFactory.createLayoutParams(
+                        PreparedPatch(
+                            patch = patch,
+                            nextResolved = resolved,
+                            layoutParams = ViewLayoutParamsFactory.createLayoutParams(
                                 parent = container,
                                 node = nextNode,
                                 warningTag = warningTag,
                                 emittedModifierWarnings = emittedModifierWarnings,
-                                resolved = checkNotNull(nextResolved),
-                            )
+                                resolved = resolved,
+                            ),
+                            updatesLayoutParams = true,
+                        )
+                    }
+
+                    is ReusePatch -> {
+                        val nextNode = patch.nextVNode
+                        val previousNode = patch.payload.vnode
+                        val bindingPlan = if (patch.payload.requiresCrossOwnerRebind) {
+                            NodeBindingPlan.Rebind
                         } else {
-                            null
-                        },
-                        updatesLayoutParams = updatesLayoutParams,
-                    )
+                            NodeBindingDiffer.plan(
+                                previous = previousNode,
+                                next = nextNode,
+                            )
+                        }
+                        if (nextNode.type == NodeType.AndroidView) {
+                            nextNode.requireSpec<AndroidViewNodeProps>()
+                        }
+                        val nextResolved = when {
+                            bindingPlan == NodeBindingPlan.Rebind -> nextNode.modifier.resolve()
+                            bindingPlan == NodeBindingPlan.ModifierOnly -> nextNode.modifier.resolve()
+                            bindingPlan is NodeBindingPlan.Patch && bindingPlan.modifierChanged -> {
+                                nextNode.modifier.resolve()
+                            }
+
+                            else -> null
+                        }
+                        val updatesLayoutParams = when {
+                            bindingPlan == NodeBindingPlan.Rebind -> true
+                            bindingPlan == NodeBindingPlan.ModifierOnly -> {
+                                layoutModifiersChanged(
+                                    previous = previousNode.modifier.resolve(),
+                                    next = checkNotNull(nextResolved),
+                                )
+                            }
+                            bindingPlan is NodeBindingPlan.Patch && bindingPlan.modifierChanged -> {
+                                layoutModifiersChanged(
+                                    previous = previousNode.modifier.resolve(),
+                                    next = checkNotNull(nextResolved),
+                                )
+                            }
+
+                            else -> false
+                        }
+                        PreparedPatch(
+                            patch = patch,
+                            bindingPlan = bindingPlan,
+                            nextResolved = nextResolved,
+                            layoutParams = if (updatesLayoutParams) {
+                                ViewLayoutParamsFactory.createLayoutParams(
+                                    parent = container,
+                                    node = nextNode,
+                                    warningTag = warningTag,
+                                    emittedModifierWarnings = emittedModifierWarnings,
+                                    resolved = checkNotNull(nextResolved),
+                                )
+                            } else {
+                                null
+                            },
+                            updatesLayoutParams = updatesLayoutParams,
+                        )
+                    }
                 }
             }
         }
@@ -911,6 +973,11 @@ internal object ViewTreePatchPipeline {
             resolved = resolved,
             bindingMode = bindingMode,
         )
+    }
+
+    private fun RenderPatch<MountedNode>.timingNode(): VNode = when (this) {
+        is InsertPatch -> nextVNode
+        is ReusePatch -> nextVNode
     }
 
     private fun scheduleAndroidViewCommit(

@@ -7,6 +7,9 @@ import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 import com.viewcompose.renderer.view.tree.MountedNode
 import com.viewcompose.renderer.view.tree.ViewTreeRenderer
 import com.viewcompose.renderer.view.tree.ViewTreeObservedPropertyPatch
+import com.viewcompose.renderer.view.tree.RenderTreeTimingCollector
+import com.viewcompose.renderer.view.tree.RenderTreeTimingPhase
+import com.viewcompose.renderer.view.tree.RenderTreeTimingSpan
 import com.viewcompose.ui.modifier.DropShadowModifierElement
 import com.viewcompose.ui.modifier.InnerShadowModifierElement
 import com.viewcompose.ui.modifier.ZIndexModifierElement
@@ -20,6 +23,10 @@ import com.viewcompose.ui.foundation.CoreMountedNodeInspection
 import com.viewcompose.ui.foundation.CoreRenderCommitEffect
 import com.viewcompose.ui.foundation.CoreRenderCommitFailure
 import com.viewcompose.ui.foundation.CoreRenderFrame
+import com.viewcompose.ui.foundation.CoreRenderTimingCollector
+import com.viewcompose.ui.foundation.CoreRenderTimingPhase
+import com.viewcompose.ui.foundation.CoreRenderTimingSpan
+import com.viewcompose.ui.foundation.CoreRenderTimingSubject
 import com.viewcompose.ui.foundation.CoreObservedPropertyPatch
 import com.viewcompose.ui.foundation.CoreObservedPropertyFrame
 import com.viewcompose.ui.foundation.CoreObservedPropertyTarget
@@ -67,6 +74,41 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
         previousMountedNodes: List<Any>,
         nodes: List<VNode>,
         diagnosticLevel: RenderFrameDiagnosticLevel,
+    ): CoreRenderFrame = renderIntoInternal(
+        container = container,
+        previousMountedNodes = previousMountedNodes,
+        nodes = nodes,
+        diagnosticLevel = diagnosticLevel,
+        timingCollector = null,
+    )
+
+    /**
+     * Reconciles one Android tree while forwarding finite renderer intervals to [timingCollector].
+     *
+     * The collector is translated to the renderer-neutral timing port for this synchronous frame
+     * only. Transaction, rollback, diagnostic-level, and deferred-commit behavior is identical to
+     * [renderInto]; the collector is never retained by the host engine.
+     */
+    override fun renderIntoWithTiming(
+        container: RenderContainerHandle,
+        previousMountedNodes: List<Any>,
+        nodes: List<VNode>,
+        diagnosticLevel: RenderFrameDiagnosticLevel,
+        timingCollector: CoreRenderTimingCollector,
+    ): CoreRenderFrame = renderIntoInternal(
+        container = container,
+        previousMountedNodes = previousMountedNodes,
+        nodes = nodes,
+        diagnosticLevel = diagnosticLevel,
+        timingCollector = timingCollector,
+    )
+
+    private fun renderIntoInternal(
+        container: RenderContainerHandle,
+        previousMountedNodes: List<Any>,
+        nodes: List<VNode>,
+        diagnosticLevel: RenderFrameDiagnosticLevel,
+        timingCollector: CoreRenderTimingCollector?,
     ): CoreRenderFrame {
         val androidContainer = container.requireAndroidViewGroup()
         val previous = previousMountedNodes.filterIsInstance<MountedNode>()
@@ -75,13 +117,25 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
             previousMountedNodes = previous,
             nodes = nodes,
         )
-        val result = ViewTreeRenderer.renderInto(
-            container = hostResolution.host,
-            previous = if (hostResolution.remounted) emptyList() else previous,
-            nodes = nodes,
-            collectDiagnostics = diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
-            collectStatistics = diagnosticLevel != RenderFrameDiagnosticLevel.None,
-        )
+        val rendererCollector = timingCollector?.toRendererTimingCollector()
+        val result = if (rendererCollector == null) {
+            ViewTreeRenderer.renderInto(
+                container = hostResolution.host,
+                previous = if (hostResolution.remounted) emptyList() else previous,
+                nodes = nodes,
+                collectDiagnostics = diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
+                collectStatistics = diagnosticLevel != RenderFrameDiagnosticLevel.None,
+            )
+        } else {
+            ViewTreeRenderer.renderIntoWithTiming(
+                container = hostResolution.host,
+                previous = if (hostResolution.remounted) emptyList() else previous,
+                nodes = nodes,
+                timingCollector = rendererCollector,
+                collectDiagnostics = diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
+                collectStatistics = diagnosticLevel != RenderFrameDiagnosticLevel.None,
+            )
+        }
         return CoreRenderFrame(
             mountedNodes = result.mountedNodes,
             observedPropertyTargets = observedPropertyTargets(result.mountedNodes),
@@ -205,6 +259,40 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
         mountedNodes: List<Any>,
         patches: List<CoreObservedPropertyPatch>,
         diagnosticLevel: RenderFrameDiagnosticLevel,
+    ): CoreObservedPropertyFrame = patchObservedPropertiesInternal(
+        container = container,
+        mountedNodes = mountedNodes,
+        patches = patches,
+        diagnosticLevel = diagnosticLevel,
+        timingCollector = null,
+    )
+
+    /**
+     * Applies one exact-target Android property batch while reporting its direct binding intervals.
+     *
+     * The collector is scoped to this transaction and does not change validation, rollback,
+     * diagnostic-level, or commit-effect behavior from [patchObservedProperties].
+     */
+    override fun patchObservedPropertiesWithTiming(
+        container: RenderContainerHandle,
+        mountedNodes: List<Any>,
+        patches: List<CoreObservedPropertyPatch>,
+        diagnosticLevel: RenderFrameDiagnosticLevel,
+        timingCollector: CoreRenderTimingCollector,
+    ): CoreObservedPropertyFrame = patchObservedPropertiesInternal(
+        container = container,
+        mountedNodes = mountedNodes,
+        patches = patches,
+        diagnosticLevel = diagnosticLevel,
+        timingCollector = timingCollector,
+    )
+
+    private fun patchObservedPropertiesInternal(
+        container: RenderContainerHandle,
+        mountedNodes: List<Any>,
+        patches: List<CoreObservedPropertyPatch>,
+        diagnosticLevel: RenderFrameDiagnosticLevel,
+        timingCollector: CoreRenderTimingCollector?,
     ): CoreObservedPropertyFrame {
         container.requireAndroidViewGroup()
         val androidMountedNodes = mountedNodes.filterIsInstance<MountedNode>()
@@ -224,11 +312,22 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
                 next = patch.next,
             )
         }
-        val result = ViewTreeRenderer.patchObservedProperties(
-            patches = rendererPatches,
-            collectDiagnostics = diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
-            collectStatistics = diagnosticLevel != RenderFrameDiagnosticLevel.None,
-        )
+        val rendererCollector = timingCollector?.toRendererTimingCollector()
+        val result = if (rendererCollector == null) {
+            ViewTreeRenderer.patchObservedProperties(
+                patches = rendererPatches,
+                collectDiagnostics = diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
+                collectStatistics = diagnosticLevel != RenderFrameDiagnosticLevel.None,
+            )
+        } else {
+            ViewTreeRenderer.patchObservedPropertiesWithTiming(
+                mountedRoots = androidMountedNodes,
+                patches = rendererPatches,
+                timingCollector = rendererCollector,
+                collectDiagnostics = diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
+                collectStatistics = diagnosticLevel != RenderFrameDiagnosticLevel.None,
+            )
+        }
         return CoreObservedPropertyFrame(
             renderStats = result.stats.toCoreStats(),
             renderResult = if (diagnosticLevel == RenderFrameDiagnosticLevel.Tree) {
@@ -581,6 +680,23 @@ private val SYNTHETIC_NODE_TYPES = setOf(
     NodeType.LayoutConstraintHost,
     NodeType.NestedScrollHost,
 )
+
+private fun CoreRenderTimingCollector.toRendererTimingCollector(): RenderTreeTimingCollector {
+    return RenderTreeTimingCollector { subject, phase ->
+        beginInterval(
+            subject = CoreRenderTimingSubject(
+                nodeIdentity = subject.nodeIdentity,
+                nodeType = subject.nodeType,
+                depth = subject.depth,
+                synthetic = subject.synthetic,
+            ),
+            phase = when (phase) {
+                RenderTreeTimingPhase.Reconciliation -> CoreRenderTimingPhase.Reconciliation
+                RenderTreeTimingPhase.Binding -> CoreRenderTimingPhase.Binding
+            },
+        )?.let { coreSpan -> RenderTreeTimingSpan(coreSpan::close) }
+    }
+}
 
 private class AndroidReusableRenderTree(
     nodes: List<MountedNode>,
