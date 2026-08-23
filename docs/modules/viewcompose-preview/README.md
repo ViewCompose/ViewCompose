@@ -102,6 +102,11 @@ combined motion. Its reviewed light-theme Golden protects the initial geometry a
 interactive specification can then toggle the real bounds endpoint without introducing a separate
 preview-only renderer path.
 
+The `navigation-shared-content-endpoints` entry renders the compact/expanded bounds endpoints and
+the source/target element markers with the production modifier transport. Its static Golden checks
+endpoint geometry and styling; real cross-session progress, cancellation, and cleanup remain owned
+by the Demo/device navigation fixtures rather than a preview-only coordinator.
+
 Catalog types are internal test infrastructure rather than a public component-gallery API. Extend
 them when a new module or visual contract needs regression coverage, but keep application examples
 in the demo and user-facing documentation.

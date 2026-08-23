@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="demo_system_nav_shared_route">Shared bounds · %1$s</string>
+    <string name="demo_system_nav_shared_bounds_hint">Push, pop, replace, switch stacks, or use predictive Back to inspect continuity.</string>
     <string name="demo_system_nav_window_title">System navigation · %1$s</string>
     <string name="demo_system_nav_toolbar_title">System navigation · %1$s</string>
     <string name="demo_system_nav_exit_description">Exit system navigation Demo</string>

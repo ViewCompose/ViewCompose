@@ -11,6 +11,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiScrollable
+import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -693,10 +695,17 @@ class DemoScenarioAutomationUiTest {
     ): androidx.test.uiautomator.UiObject2 {
         val normalized = scenarioId.replace('.', '_').replace('-', '_')
         val resourceName = "demo_${normalized}_$role"
-        val target = device.wait(
-            Until.findObject(By.res(TARGET_PACKAGE, resourceName)),
-            TARGET_TIMEOUT_MS,
-        )
+        val byResource = By.res(TARGET_PACKAGE, resourceName)
+        val target = device.findObject(byResource) ?: run {
+            val scrollable = UiScrollable(UiSelector().scrollable(true))
+            if (scrollable.exists()) {
+                scrollable.setAsVerticalList()
+                scrollable.scrollIntoView(
+                    UiSelector().resourceId("$TARGET_PACKAGE:id/$resourceName"),
+                )
+            }
+            device.wait(Until.findObject(byResource), TARGET_TIMEOUT_MS)
+        }
         assertNotNull("Missing $scenarioId/$role", target)
         return requireNotNull(target)
     }

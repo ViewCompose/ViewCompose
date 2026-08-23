@@ -376,6 +376,14 @@ internal fun Activity.requireViewByTestTagVisible(
     return view
 }
 
+/** Returns every currently visible View matching [tag], including overlapping transition hosts. */
+internal fun Activity.requireViewsByTestTagVisible(tag: String): List<View> {
+    val root = findViewById<ViewGroup>(android.R.id.content)
+    val views = findViewsByTestTag(root, tag).filter(::isViewVisible)
+    assertTrue("Expected at least one visible view with testTag: $tag", views.isNotEmpty())
+    return views
+}
+
 /**
  * 查找可见 testTag 并断言它对应 TextView。
  * Finds a visible testTag and asserts that it maps to a TextView.

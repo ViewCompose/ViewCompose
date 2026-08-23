@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 59a941d454cf347435278172fcb499bf2fd865f76e67f60f92e309cd5e118841
+translation_source_hash: 4d459a2ba4590416d8b296631f71267db4cc89bee973fbe692e39c1a4cb382a3
 translation_status: current
 ---
 
@@ -325,6 +325,13 @@ stack commit 前失败保留旧 stack、可见页和 lifecycle owner。commit �
 失败时，coordinator 进入 `Failed` 并拒绝新命令。视觉转场只在页面与 stack 事务 commit 后开始；
 取消不回滚应用状态，所有终态都收敛到 committed target。移除资源在转场终态按 top-first 清理，
 只有 active transition ID 可完成。
+
+类型化 Shared-content Marker 不增加新的事务阶段。Commit 后，原生 Driver 在 Pre-draw 时只扫描
+一次已经归属 Host 的 Outgoing/Incoming Destination Root，按 `SharedContentKey` 与 Mode 各配对
+唯一端点，并用同一 Destination Motion 或 Predictive-Back Fraction 驱动有界 Snapshot。无效或
+不支持的 Pair 会独立回退。Overlay 不接收 Input 或 Accessibility Event，不拥有页面/Session
+Retention，并在完成、取消、重定向、销毁或 Capture 失败时释放。因此共享视觉连续性绝不能促使
+失败 Candidate Commit，也不能让已移除 Destination 继续存活。
 
 ## 5. 生命周期不变量
 

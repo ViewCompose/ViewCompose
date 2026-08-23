@@ -3,6 +3,8 @@ package com.viewcompose
 /** In-process tags owned by the system-navigation demo fixtures. */
 internal object DemoSystemNavigationTestTags {
     const val SYSTEM_NAV_DESTINATION = "system_nav_destination"
+    const val SYSTEM_NAV_SHARED_BOUNDS = "system_nav_shared_bounds"
+    const val SYSTEM_NAV_SHARED_ELEMENT = "system_nav_shared_element"
     const val SYSTEM_NAV_STATUS = "system_nav_status"
     const val SYSTEM_NAV_EXTERNAL_DEEP_LINK = "system_nav_external_deep_link"
     const val SYSTEM_NAV_COUNTER_STATUS = "system_nav_counter_status"

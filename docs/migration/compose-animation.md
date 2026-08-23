@@ -171,11 +171,15 @@ Phase 5 bounds animation uses the immediate ViewCompose layout parent's physical
 system after RTL resolution. The renderer lays out the current animated rectangle so drawing, hit
 testing, and accessibility bounds agree. A draw-only offset is not equivalent.
 
-Phase 6 shared motion scopes keys to one `SharedTransitionLayout` and one navigation session.
-Exactly one source and one target form a pair. Duplicate or missing peers, detached coordinates,
-or an unplaced root fall back to ordinary local enter/exit. The target destination owns input,
-focus, and accessibility while a non-interactive overlay renders the shared visual. Keys do not
-pair across windows, Activities, processes, or sessions.
+Phase 6 intentionally does not port Compose's `SharedTransitionLayout`, `SharedTransitionScope`, or
+`AnimatedVisibilityScope` parameter. ViewCompose declares typed endpoints directly with
+`Modifier.sharedElement(SharedContentKey(...))` or `Modifier.sharedBounds(...)`; the surrounding
+`NavHost` already owns cross-destination coordination and consumes its existing committed or
+predictive-Back progress. Exactly one source and one target with the same key and mode form a pair.
+Duplicate, missing, mismatched, detached, zero-sized, surface-backed, or over-budget peers fall back
+per key to ordinary destination motion. The target destination owns input, accessibility, and final
+focus while a non-interactive snapshot overlay renders the shared visual. Keys do not pair across
+windows, Activities, or processes; live-content reparenting and shape morphing remain unsupported.
 
 ## Performance and verification baseline
 

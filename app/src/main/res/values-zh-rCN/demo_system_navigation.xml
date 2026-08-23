@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="demo_system_nav_shared_route">共享边界 · %1$s</string>
+    <string name="demo_system_nav_shared_bounds_hint">执行压栈、出栈、替换、切换栈或预测返回，检查视觉连续性。</string>
     <string name="demo_system_nav_window_title">系统导航 · %1$s</string>
     <string name="demo_system_nav_toolbar_title">系统导航 · %1$s</string>
     <string name="demo_system_nav_exit_description">退出系统导航 Demo</string>

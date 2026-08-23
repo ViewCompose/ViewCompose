@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md
-translation_source_hash: 912b3f78f0625a17e9c300acab85beb1178daacb9b03a2f968b3470649138c15
+translation_source_hash: 6aea49614caa2fa7dfbda87daa2a9fa0369c1f99666527229c0756c3ac3da3af
 translation_status: current
 ---
 
@@ -204,18 +204,28 @@ Ownership 错误。Duration Retarget 从采样矩形以零速度重启，物理 
 
 ### 共享视觉运动
 
-`SharedTransitionLayout` 创建一个限定于 Composition Owner 的 Key Namespace；与 Navigation
-一起使用时还限定于一个 Navigation Session。相同 Key 的一个 Source 和一个 Target 才形成
-Pair。多个 Source/Target、缺少 Peer、Root 未 Place 或坐标已 Detach 时使用普通本地
-Enter/Exit，不猜测 Winner，也不保留 Overlay。
+Phase 6 拒绝此前暂定的 `SharedTransitionLayout` 与 Scope API。`NavHost` 已经是跨 Session
+Coordinator；再增加 Layout/Scope Owner 会拆分 Lifecycle 与 Progress 权限。因此 Q3
+`SharedContentKey`、`Modifier.sharedElement` 和 `Modifier.sharedBounds` 只发布类型化、
+Renderer-neutral 的端点元数据。Renderer 把完整 Element 复制到一个稳定 Keyed View Tag，
+并在复用时清除；它不执行 Pairing 或 Animation。
 
-匹配内容在 Root-owned Overlay 中渲染并插值 Bounds。Shared Element 渲染 Target 表示；
-Shared Bounds 可分别保留 Outgoing/Incoming 表示。逻辑 Target Destination 独占 Pointer、
-Focus 与 Accessibility，Overlay 不可交互并对 Accessibility 隐藏。
+一次原生 `NavHost` Transition 内，相同非空 Key 与 Mode 的一个 Outgoing 和一个 Incoming 端点
+形成 Pair。多个 Source/Target、缺少 Peer、Mode 不匹配、Root 未 Place 或已 Detach、零尺寸、
+Surface-backed Content、Capture 失败或单次转场 Pixel Budget 耗尽时，只对该 Key 回退到普通
+Destination Motion；任何路径都不猜测 Winner，也不改变导航事务。
 
-Destination/Session Disposal、Cancellation、Navigation Rollback、Configuration Change 或
-Renderer Transaction 失败都只释放 Overlay 与 Pair Record 一次。Key 不跨 Window、Activity、
-Process 或 Navigation Session 配对；跨 Session 共享过渡需要新的 ADR。
+匹配内容使用不可变 Software Snapshot，在不可交互 Host Overlay 中消费现有 Committed-motion 或
+Predictive-Back Geometry Fraction。`sharedElement` 把一个 Source Snapshot 移到 Target Bounds；
+`sharedBounds` 沿同一路径交叉淡化 Source/Target Snapshot。Outgoing Tree 的稳定顺序定义 Z-order。
+Outgoing 端点变为 Invisible；Incoming Live 端点在透明 Alpha 后继续拥有 Input 与 Accessibility。
+Commit 可把此前焦点转给可聚焦 Target，Cancel 则恢复 Source Focus。不尝试任意 Shape Morph 或
+Live-content Reparent。
+
+完成、取消、重定向、Host 销毁、Session Disposal、Configuration Change、Capture 失败或 Renderer
+Transaction 失败都会且只会释放一次全部 Bitmap、Drawable、Listener 与端点 Record。Redirect 会
+先恢复端点，再让下一转场扫描自己的 Session。Key 不跨 Window、Activity 或 Process 配对；跨
+Window/Process 的共享动效需要新的架构决策。
 
 ### 按请求检查与受控 Preview Seek
 
@@ -249,7 +259,7 @@ Codec 为 Q0，不能出现在可编译 Sample 中。
 | 3 | Slide/Scale Transition Factory、`AnimatedVisibilityScope`、`animateEnterExit` | `viewcompose-animation` | 组合 Visibility Sample；代数、RTL、释放、设备测试 | 新增 |
 | 4 | `TransitionSegment`、泛型 `Transition.animateValue`、Segment-aware Channel Overload、`SeekableTransitionState`、Seekable `rememberTransition` | `viewcompose-animation` | Segment/Seek Sample；Ownership、Range、Retarget、Predictive Back Adapter 测试 | 除类型化 Channel 命名参数从 `animationSpec` 硬切为 `transitionSpec` 外为新增；删除内部 Segment Helper |
 | 5 | `Modifier.animateBounds` | `viewcompose-animation` | Bounds Sample；坐标、Remeasure、Input、Accessibility、Rollback 设备测试 | 新增 |
-| 6 | `SharedTransitionLayout`、Shared Key/State/Scope、`sharedElement`、`sharedBounds`、Resize/Bounds Transform | `viewcompose-animation`，Navigation Adapter 位于 `viewcompose-navigation-android` | Navigation Shared-motion Sample；Pairing、Overlay、Lifecycle、Rollback、Accessibility 设备测试 | 新增 |
+| 6 | `SharedContentKey`、`sharedElement`、`sharedBounds` | `viewcompose-ui-contract` 的中立 Marker；`viewcompose-renderer-android` 的 Tag Transport；`viewcompose-navigation-android` 的 Coordinator | UI 声明与 Navigation Shared-motion Sample；Pairing、Overlay、Lifecycle、Redirect、Rollback、Accessibility 设备测试 | 新增；暂定 `SharedTransitionLayout`/Scope 设计在发布前被拒绝 |
 | 7 | 不可变 Animation Inspection Request/Response 与 Snapshot Type | `viewcompose-preview-core` | Protocol Sample；Codec、Limit、Stale Request、Privacy 测试 | 可选新增 |
 | 7 | Preview Animation Inspection/Seek Client Surface | `viewcompose-preview` 与 Studio Plugin | Preview-only Sample；Activation、Isolation、Request Lifetime、Plugin UI 测试 | 可选新增 |
 
@@ -336,3 +346,11 @@ Accessibility Geometry、属性帧零次额外 Child Measure、一个已复核 D
 Golden，以及固定频率下 Animated 与 Snap 的比较。限定范围内的结论是 Frame Latency 改善且
 Peak Heap 无实质变化；Total Energy 与逐对象 Allocation Event 尚未测量，也不能由 Frame
 Percentile 推断。
+
+Phase 6 的接受证据包含类型化 Marker 传输与复用清理；唯一、缺失、重复、模式不匹配、超预算、
+Detach 和 Surface-backed 端点行为；已提交 Push/Pop/Replace；预测 Back 取消/提交；Redirect
+与 Host 销毁释放；Incoming 输入/无障碍 Ownership 与终态 Focus 转移；一个已复核 Demo 路径
+和 Preview Golden；Root 安装的导航/进程重建套件；以及固定频率 Shared 与 Ordinary Push
+对照。两组每轮都严格保持 124 帧。Shared P50/P95 为 `4.073/8.096 ms`，Control 为
+`3.989/8.487 ms`；Peak Heap 中位数为 `6,971` 对 `6,651 KiB`，因此冻结门禁结论为无实质
+变化。Shared P99 `36.099 ms` 对 `30.020 ms` 保留为明确尾延迟观察项，而不是测量后修改门禁。

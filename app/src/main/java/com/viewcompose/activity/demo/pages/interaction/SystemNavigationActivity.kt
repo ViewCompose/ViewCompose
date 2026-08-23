@@ -31,6 +31,10 @@ class SystemNavigationActivity : AppCompatActivity() {
             EXTRA_RENDER_DIAGNOSTICS,
             false,
         )
+        val sharedContentEnabled = intent.getBooleanExtra(
+            EXTRA_SHARED_CONTENT_ENABLED,
+            true,
+        )
         val scenario = DemoScenarioRegistry.fromIntent(intent)
             ?: if (intent.action == Intent.ACTION_VIEW) {
                 DemoScenarioRegistry.require(DemoScenarioIds.NavigationSystem.value)
@@ -54,6 +58,7 @@ class SystemNavigationActivity : AppCompatActivity() {
                 root = root,
                 externalDeepLinkOutcome = externalDeepLinkOutcome,
                 diagnosticsEnabled = diagnosticsEnabled,
+                sharedContentEnabled = sharedContentEnabled,
                 scenario = scenario,
                 onControllerReady = { controller -> navController = controller },
                 onExit = ::finish,
@@ -104,5 +109,6 @@ class SystemNavigationActivity : AppCompatActivity() {
     private companion object {
         const val MAX_CONTROLLER_WAIT_ATTEMPTS = 10
         const val EXTRA_RENDER_DIAGNOSTICS = "system_navigation_render_diagnostics"
+        const val EXTRA_SHARED_CONTENT_ENABLED = "system_navigation_shared_content_enabled"
     }
 }

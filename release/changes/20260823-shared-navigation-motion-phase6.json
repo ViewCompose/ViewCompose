@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add typed shared-element and shared-bounds endpoints with renderer tag transport, bounded one-window NavHost snapshots, predictive-Back progress, deterministic fallback, Demo and Preview coverage.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "feature" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" },
+    { "artifact": "viewcompose-navigation-android", "impact": "feature" },
+    { "artifact": "viewcompose-preview", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

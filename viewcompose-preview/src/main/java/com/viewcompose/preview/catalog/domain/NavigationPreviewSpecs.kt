@@ -5,15 +5,22 @@ import com.viewcompose.preview.catalog.model.PreviewSpec
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
+import com.viewcompose.ui.modifier.height
+import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.sharedBounds
+import com.viewcompose.ui.modifier.sharedElement
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.BottomAppBar
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.NavigationBar
 import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.SurfaceVariant
 import com.viewcompose.ui.foundation.TopAppBar
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.remember
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.shared.SharedContentKey
 
 internal object NavigationPreviewSpecs {
     val all: List<PreviewSpec> = listOf(
@@ -58,6 +65,57 @@ internal object NavigationPreviewSpecs {
                         onClick = {},
                     )
                     Text(text = "BottomAppBar")
+                }
+            },
+        ),
+        PreviewSpec(
+            id = "navigation-shared-content-endpoints",
+            title = "Shared element / bounds endpoints",
+            domain = PreviewDomain.Navigation,
+            content = {
+                val boundsKey = SharedContentKey("preview-card")
+                val elementKey = SharedContentKey("preview-chip")
+                Text(text = "Source destination")
+                Surface(
+                    variant = SurfaceVariant.Variant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(72.dp)
+                        .margin(vertical = 6.dp)
+                        .padding(12.dp)
+                        .sharedBounds(boundsKey),
+                ) {
+                    Text(text = "Compact shared bounds")
+                }
+                Surface(
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .sharedElement(elementKey),
+                ) {
+                    Text(text = "Shared chip")
+                }
+                Text(
+                    text = "Target destination",
+                    modifier = Modifier.margin(top = 18.dp),
+                )
+                Surface(
+                    variant = SurfaceVariant.Variant,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(112.dp)
+                        .margin(horizontal = 24.dp, vertical = 6.dp)
+                        .padding(12.dp)
+                        .sharedBounds(boundsKey),
+                ) {
+                    Text(text = "Expanded shared bounds")
+                }
+                Surface(
+                    modifier = Modifier
+                        .margin(left = 48.dp)
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .sharedElement(elementKey),
+                ) {
+                    Text(text = "Shared chip")
                 }
             },
         ),

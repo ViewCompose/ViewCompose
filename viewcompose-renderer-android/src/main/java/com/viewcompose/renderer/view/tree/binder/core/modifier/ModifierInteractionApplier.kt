@@ -9,6 +9,7 @@ import com.viewcompose.ui.modifier.Visibility
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.overlay.OVERLAY_ANCHOR_TAG_KEY
+import com.viewcompose.ui.shared.SHARED_CONTENT_TAG_KEY
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.view.requireUiEnvironment
 import com.viewcompose.renderer.view.toPx
@@ -35,6 +36,7 @@ internal object ModifierInteractionApplier {
         // Anchor metadata comes only from explicit modifiers so NodeSpec defaults cannot register overlay anchors accidentally.
         // Anchor metadata is sourced only from resolved modifier elements.
         applyAnchorId(view, resolved.overlayAnchor?.anchorId)
+        applySharedContent(view, resolved.sharedContent)
         applyTestTag(view, resolved.testTag?.tag)
         view.alpha = layer?.alpha ?: resolved.alpha?.alpha ?: 1f
         view.visibility = when (resolved.visibility?.visibility ?: Visibility.Visible) {
@@ -169,6 +171,13 @@ internal object ModifierInteractionApplier {
         anchorId: String?,
     ) {
         view.setTag(OVERLAY_ANCHOR_TAG_KEY, anchorId)
+    }
+
+    private fun applySharedContent(
+        view: View,
+        sharedContent: com.viewcompose.ui.modifier.SharedContentModifierElement?,
+    ) {
+        view.setTag(SHARED_CONTENT_TAG_KEY, sharedContent)
     }
 
     private fun applyTestTag(

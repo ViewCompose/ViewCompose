@@ -6,6 +6,7 @@ import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.ExperimentalMetricApi
 import androidx.benchmark.macro.FrameTimingMetric
 import androidx.benchmark.macro.MacrobenchmarkScope
+import androidx.benchmark.macro.MemoryUsageMetric
 import androidx.benchmark.macro.Metric
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.TraceSectionMetric
@@ -39,6 +40,24 @@ class NavigationMotionBenchmark {
         startupMode = StartupMode.WARM,
         setupBlock = {
             startSystemNavigationAndWait()
+            scrollUntilScenarioTarget(NAVIGATION_SCENARIO, DemoTargetRole.PrimaryAction)
+            waitForPerformanceMeasurementSettle()
+        },
+    ) {
+        repeat(NAVIGATION_TRANSITIONS_PER_ITERATION) {
+            pushDestinationAndWait()
+        }
+    }
+
+    @Test
+    fun pushDestinationWithoutSharedContent() = benchmarkRule.measureRepeated(
+        packageName = TARGET_PACKAGE,
+        metrics = navigationMetrics(),
+        compilationMode = CompilationMode.None(),
+        iterations = navigationMotionIterations(),
+        startupMode = StartupMode.WARM,
+        setupBlock = {
+            startSystemNavigationAndWait(sharedContentEnabled = false)
             scrollUntilScenarioTarget(NAVIGATION_SCENARIO, DemoTargetRole.PrimaryAction)
             waitForPerformanceMeasurementSettle()
         },
@@ -141,6 +160,7 @@ class NavigationMotionBenchmark {
 
         fun navigationMetrics(): List<Metric> = buildList {
             add(FrameTimingMetric())
+            add(MemoryUsageMetric(MemoryUsageMetric.Mode.Max))
             // A non-debuggable benchmark APK exposes app trace sections through <profileable>,
             // which the platform only supports from Android 10. Reporting zero-valued sections on
             // older releases is misleading; frame timing remains valid there.

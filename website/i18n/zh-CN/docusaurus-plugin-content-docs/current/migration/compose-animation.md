@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-animation.md
-translation_source_hash: 4879c91953c44512714248ed0997157200507c58dd0fa967fd86b51709fb603c
+translation_source_hash: 89a7f6c931ba0291cc44dd5112720d0685eb09e5b3504a435286dfec0bc114b4
 translation_status: current
 ---
 
@@ -160,10 +160,14 @@ Phase 5 Bounds 动画使用完成 RTL 解析后的直接 ViewCompose Layout Pare
 Renderer 会真正 Layout 当前动画矩形，使 Drawing、Hit Test 与 Accessibility Bounds 一致；
 纯 Draw Offset 不等价。
 
-Phase 6 把 Shared Key 限定在一个 `SharedTransitionLayout` 与一个 Navigation Session 中。
-恰好一个 Source 与一个 Target 才能配对。重复/缺失 Peer、坐标已 Detach 或 Root 未 Place 时，
-回退到普通本地 Enter/Exit。Target Destination 独占 Input、Focus 与 Accessibility，
-非交互 Overlay 只负责渲染共享视觉。Key 不跨 Window、Activity、Process 或 Session 配对。
+Phase 6 有意不移植 Compose 的 `SharedTransitionLayout`、`SharedTransitionScope` 或
+`AnimatedVisibilityScope` 参数。ViewCompose 直接通过
+`Modifier.sharedElement(SharedContentKey(...))` 或 `Modifier.sharedBounds(...)` 声明类型化端点；
+外围 `NavHost` 已拥有跨 Destination 协调，并消费现有 Committed 或 Predictive-Back Progress。
+相同 Key 和 Mode 的一个 Source 与一个 Target 才能配对。重复、缺失、不匹配、Detach、零尺寸、
+Surface-backed 或超过预算的 Peer 会按 Key 回退到普通 Destination Motion。Target Destination
+拥有 Input、Accessibility 与最终 Focus；不可交互 Snapshot Overlay 只负责共享视觉。Key 不跨
+Window、Activity 或 Process 配对；Live-content Reparent 与 Shape Morph 仍不支持。
 
 ## 性能与验证基线
 

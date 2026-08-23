@@ -339,8 +339,12 @@ internal fun waitForPerformanceMeasurementSettle() {
  * 从冷入口启动系统导航验收页并等待首页锚点。
  * Starts the system-navigation acceptance page from the cold entry and waits for its home anchor.
  */
-internal fun MacrobenchmarkScope.startSystemNavigationAndWait() {
-    startDemoScenarioAndWait("navigation.system")
+internal fun MacrobenchmarkScope.startSystemNavigationAndWait(
+    sharedContentEnabled: Boolean = true,
+) {
+    startDemoScenarioAndWait("navigation.system") {
+        putExtra(SYSTEM_NAVIGATION_SHARED_CONTENT_ENABLED, sharedContentEnabled)
+    }
 }
 
 /**
@@ -366,6 +370,9 @@ private fun MacrobenchmarkScope.swipePageUpForTargetSearch() {
     )
     SystemClock.sleep(TARGET_SEARCH_SCROLL_SETTLE_MILLIS)
 }
+
+private const val SYSTEM_NAVIGATION_SHARED_CONTENT_ENABLED =
+    "system_navigation_shared_content_enabled"
 
 /** Clicks the visible checkable control without waiting for UiAutomator idle. */
 internal fun MacrobenchmarkScope.clickVisibleCheckableControlWithoutIdle() {

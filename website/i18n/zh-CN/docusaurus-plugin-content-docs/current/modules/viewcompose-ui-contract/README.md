@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 523abb3125b52af3e6c20b193b0a14ad041622282059a5fdad89aa3feda53ce7
+translation_source_hash: 050004e78043263e2de1bfac53e5e20e87a1da630327aef8a7e1d0154633b834
 translation_status: current
 ---
 
@@ -94,6 +94,11 @@ val gap = VNode(
   的一个真实矩形。Renderer 必须让 Layout、Hit、Focus 与 Accessibility 几何保持一致，在动画前
   解析逻辑方向，拒绝 Bounds/Content-size 同时拥有尺寸，并在 Detach 或跨 Owner 复用时清理临时
   Ownership。可编译的 `animatedBoundsHostNodeContractSample` 覆盖该 Transport。
+- Q3 `SharedContentKey`、`sharedElement` 与 `sharedBounds` 发布 Renderer-neutral 端点 Identity
+  和 Element/Bounds Mode。Key 不得为空，并由消费 Host 划定 Scope，不进入全局 Registry；同一
+  Modifier Chain 后声明者生效。稳定 Android Tag Slot 只是跨 Artifact Transport；UI Contract
+  不拥有 Pairing Registry、View、Overlay、Snapshot、Clock 或导航事务。可编译的
+  `sharedContentModifierSample` 覆盖类型化声明 API。
 - Q3 ConstraintLayout 传输契约为每个轴使用一个互斥的 `ConstraintDimension` 值，以
   `ConstraintMatchMode` 表达 spread/wrap/percent 行为，并使用正数类型化 `ConstraintRatio`
   与单一 Baseline Link。逻辑 Start/End 与物理 Left/Right Anchor 保持独立；
@@ -245,6 +250,10 @@ val gap = VNode(
 五个相对布局 Modifier 元素是新增的 Q3 契约，但自定义 Renderer 必须识别它们，应用代码才能
 安全使用对应 DSL。Renderer 必须只根据 VNode 环境解析 start/end，保留旧元素的物理语义，并在
 每一族的物理与相对形式之间执行“后声明者覆盖”规则。
+
+Shared-content Marker Element 是新增 Q3 契约。自定义 Renderer 可以让它保持无效；但若声明支持
+Shared Host，就必须在复用时发布并清除完整类型化 Element，不得持久化 Tag、猜测重复 Key 的
+Winner，也不得创建全局 Key Registry。
 
 原生控件契约收敛属于 Alpha 硬切。旧命令式 Pager State 与固定整数网格契约已删除：调用方改用
 不可变 `PagerStateSnapshot`、`GridCells` 与 `GridItemSpan`。`ScrollableColumnNodeProps` 与

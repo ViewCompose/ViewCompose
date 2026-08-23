@@ -20,6 +20,7 @@ internal object PreviewCoverageTargets {
         "collection-lazy-column",
         "collection-grid-pagers-tabs",
         "navigation-app-bars",
+        "navigation-shared-content-endpoints",
         "feedback-progress",
         "feedback-overlay-static",
         "modifier-style-anchor",
