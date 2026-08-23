@@ -68,6 +68,10 @@ The immutable snapshot contains render statistics, VNode and native View trees, 
 composition scopes and invalidation reasons, source call sites, captured View properties, clipping
 state, and layout diagnostics. Runtime Views are not retained in the protocol model.
 
+The runner installs a Tree-level `RenderDiagnostics` root with the `Preview` role. It consumes the
+authoritative `RenderFrameCompleted.tree` and `RenderFailureObserved.failure` events; the removed
+result and failure callbacks have no runner-only compatibility path.
+
 Expected discovery, theme, render, layout, capture, and export failures become source-aware
 `RenderFailure` responses. Thread death and out-of-memory errors escape so the worker host can retire
 the process. A borrowed application class loader is neither installed as the thread context loader

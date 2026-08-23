@@ -3,6 +3,7 @@ package com.viewcompose.preview.device
 import android.content.Context
 import android.widget.FrameLayout
 import com.viewcompose.ui.foundation.RenderSessionSourceTooling
+import com.viewcompose.ui.foundation.RenderSessionRole
 import com.viewcompose.ui.tooling.UiSourceCallSite
 import java.io.File
 import java.util.ServiceLoader
@@ -47,6 +48,9 @@ class AndroidDeviceDslSourceToolingTest {
         val container = FrameLayout(context)
         val registration = registry.register(
             container = container,
+            sessionId = 1,
+            parentSessionId = null,
+            role = RenderSessionRole.Host,
             sourceCandidates = sourceCandidates(),
         )
 
@@ -96,6 +100,9 @@ class AndroidDeviceDslSourceToolingTest {
         )
         val registration = registry.register(
             container = FrameLayout(context),
+            sessionId = 1,
+            parentSessionId = null,
+            role = RenderSessionRole.Host,
             sourceCandidates = sourceCandidates(),
         )
         var executeCount = 0
@@ -131,6 +138,10 @@ class AndroidDeviceDslSourceToolingTest {
         assertEquals(REQUEST_ID, report.getString("requestId"))
         assertEquals(42, report.getInt("processId"))
         assertEquals(1, report.getJSONArray("sessions").length())
+        val session = report.getJSONArray("sessions").getJSONObject(0)
+        assertEquals(1L, session.getLong("sessionId"))
+        assertTrue(session.isNull("parentSessionId"))
+        assertEquals(RenderSessionRole.Host.name, session.getString("role"))
         registration?.dispose()
     }
 
@@ -138,7 +149,13 @@ class AndroidDeviceDslSourceToolingTest {
     fun `response completion survives writer failure`() {
         val context = applicationContext()
         val registry = AndroidDeviceDslSourceRegistry()
-        registry.register(FrameLayout(context), sourceCandidates())
+        registry.register(
+            container = FrameLayout(context),
+            sessionId = 1,
+            parentSessionId = null,
+            role = RenderSessionRole.Host,
+            sourceCandidates = sourceCandidates(),
+        )
         var finishedCount = 0
         val handler = DeviceDslSourceRequestHandler(
             registry = registry,
@@ -164,7 +181,9 @@ class AndroidDeviceDslSourceToolingTest {
         val longText = "界".repeat(2_000)
         val sessions = List(64) { sessionIndex ->
             DeviceDslSourceSessionSnapshot(
-                sessionId = sessionIndex.toLong(),
+                sessionId = sessionIndex + 1L,
+                parentSessionId = null,
+                role = RenderSessionRole.Host,
                 renderingActive = true,
                 attachedToWindow = true,
                 shown = true,
@@ -218,9 +237,12 @@ class AndroidDeviceDslSourceToolingTest {
         val registry = AndroidDeviceDslSourceRegistry()
         val containers = List(80) { FrameLayout(context) }
         val longText = "x".repeat(2_000)
-        containers.forEach { container ->
+        containers.forEachIndexed { index, container ->
             registry.register(
                 container = container,
+                sessionId = index + 1L,
+                parentSessionId = null,
+                role = RenderSessionRole.Host,
                 sourceCandidates = listOf(
                     listOf(UiSourceCallSite(longText, longText, longText, 1)),
                 ),

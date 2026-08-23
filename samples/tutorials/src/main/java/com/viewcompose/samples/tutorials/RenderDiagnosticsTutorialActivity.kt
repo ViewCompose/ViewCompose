@@ -11,6 +11,10 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.RenderDiagnosticCollection
+import com.viewcompose.ui.foundation.RenderDiagnostics
+import com.viewcompose.ui.foundation.RenderFrameCompleted
+import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 import com.viewcompose.ui.foundation.RenderStats
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.remember
@@ -21,10 +25,22 @@ class RenderDiagnosticsTutorialActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val latestStats = AtomicReference(RenderStats())
+        val diagnostics = RenderDiagnostics(
+            collection = RenderDiagnosticCollection(
+                lifecycle = false,
+                failures = false,
+                frameLevel = RenderFrameDiagnosticLevel.Stats,
+            ),
+            sink = { event ->
+                if (event is RenderFrameCompleted) {
+                    event.stats?.let(latestStats::set)
+                }
+            },
+        )
         setMaterial3UiContent(
             debug = true,
             debugTag = "RenderTutorial",
-            onRenderStats = latestStats::set,
+            diagnostics = diagnostics,
         ) {
             val summary = remember { mutableStateOf("No sample yet") }
 

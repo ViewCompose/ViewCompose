@@ -1,14 +1,38 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: e199ccaa8fb688c6844beb3c97e8f88457cbbe000c7f3b337bcdbc8db5d6053f
+translation_source_hash: d7393da019c93d432fde2fce4a9c4dfcdb03aaf860c2854b100a2be68037fc5f
 translation_status: current
 ---
 
 # ViewCompose 诊断
 
-## 1. 数据入口
+## 1. 关联事件入口
 
-宿主通过 `onRenderResult` 获取结构化 `RenderTreeResult`。诊断只在 `debug = true`、注册 `onRenderStats` 或注册 `onRenderResult` 时收集，普通发布路径不构造树快照和逐节点 patch 明细。
+在 Host 或 Preview 根节点安装一个不可变 `RenderDiagnostics`。Navigation、Lazy、Pager 与
+Overlay 子 Session 会继承该 Sink，并获得进程内 Session ID 与 Parent ID。底层嵌套 Session
+若显式传入新的 Diagnostics，则会有意开启一棵新的关联树。
+
+```kotlin
+val diagnostics = RenderDiagnostics(
+    collection = RenderDiagnosticCollection(
+        lifecycle = true,
+        failures = true,
+        frameLevel = RenderFrameDiagnosticLevel.Tree,
+    ),
+    sink = { event ->
+        when (event) {
+            is RenderFrameCompleted -> inspect(event.context, event.report, event.tree)
+            is RenderFailureObserved -> report(event.context, event.failure)
+            else -> recordLifecycle(event)
+        }
+    },
+)
+
+val session = renderInto(container = root, diagnostics = diagnostics) { App() }
+```
+
+`None` 不构建 Renderer 计数或树明细；`Stats` 只构建聚合计数；`Tree` 还会构建有界的树、
+Patch、Warning 与 Composition 诊断。`debug` 只控制日志与慢操作告警，不选择事件收集等级。
 
 `RenderTreeResult` 当前包含：
 
@@ -36,7 +60,25 @@ scope 诊断上限为 500 条，签名会截断，避免诊断本身随页面规
 
 默认摘要规则只直接展示字符串、数值、布尔、字符和枚举；其他对象只展示类型名，不调用任意业务对象的 `toString()`。敏感业务值应通过自定义 formatter 主动裁剪，或不提供 formatter。
 
-## 4. Demo 检查器
+## 4. 顺序与失败隔离
+
+订阅 Lifecycle 时，Start 一定是首个事件。Failure 在恢复结论明确后发布；每次同步尝试都会在
+`lastFrameReport` 成为权威结果后发布一个 `RenderFrameCompleted`。Activity 事件只表示真实
+状态切换；End 在清理完成后发布并且是终态。成功的候选准备在激活前保持静默；准备失败只发布
+Start、Failure、回滚 Frame 与 End。
+
+Sink 调用是同步的，并在单个 Session 内串行。重入当前 Session 会立即失败。Sink 抛错时，框架
+会记录平台日志，把错误保存为本 Session 的 `DiagnosticsSink` Failure，并禁用该 Sink；它不能
+改变 Frame Report、替换原始恢复结论或递归发布事件。
+
+## 5. 从旧 Callback 迁移
+
+Alpha API 一次性移除了 `onRenderStats`、`onRenderResult` 与 `onRenderFailure`。Stats 改从
+`RenderFrameCompleted.stats` 读取，Tree 改从 `RenderFrameCompleted.tree` 读取，Failure 改从
+`RenderFailureObserved.failure` 读取。没有 Deprecated Overload 或仅 Result Local 适配层。
+不需要事件流时仍可直接查询 `lastFrameReport` 与 `lastRenderFailure`。
+
+## 6. Demo 检查器
 
 `Diagnostics -> 渲染器` 当前提供：
 
@@ -46,18 +88,16 @@ scope 诊断上限为 500 条，签名会截断，避免诊断本身随页面规
 4. CompositionLocal 浏览器
 5. 原有 render/layout 聚合指标
 
-当前仍不包含真实 View 边界高亮、跨 RenderSession 关联图和逐节点耗时。这些能力以及有界的
-生产失败聚合已经拆分到有效的
+跨 RenderSession 关联已经实现。当前仍不包含真实 View 边界高亮和逐节点耗时。这些能力以及
+有界的生产失败聚合已经拆分到有效的
 [诊断关联、检查与生产可观测性计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)。
 
-## 5. 已接受的扩展契约
+## 7. 剩余扩展契约
 
 [ADR-0021](https://docs.viewcompose.com/architecture/decisions/0021-correlated-render-diagnostics-ownership)
-冻结了下一步实现边界。当前三个 Callback 将一起硬切删除，并由一套进程内、可关联 Parent 的
-`RenderDiagnostics` Event Sink 替代。Host、Preview、Navigation、Lazy、Pager 与 Overlay Session
-将共享一套身份模型；只关心 Failure 的 Sink 不会激活 Stats 或 Tree Collection。生产聚合位于可选
+冻结了已经实现的 Phase 1 边界。Host、Preview、Navigation、Lazy、Pager 与 Overlay Session
+现已共享一套身份模型；只关心 Failure 的 Sink 不会激活 Stats 或 Tree Collection。生产聚合位于可选
 `viewcompose-diagnostics` Artifact；高亮与耗时继续按照 ADR-0009 保持在
 `viewcompose-preview` 中，并且只按请求激活。
 
-本节记录已接受的设计，不代表已经发布的行为。在有效计划的 Phase 1 合并前，第 1 节描述的 Callback
-与 Collection Trigger 仍是当前 API。
+有效计划继续负责生产聚合、高亮、耗时与 Inspector 收尾。

@@ -1,26 +1,27 @@
 ---
 translation_source: architecture/render-failures.md
-translation_source_hash: f8ed98e5b4eb28064dcb8c20a3e0a935a1a17930a9d570792c9ef418f3cf4e5d
+translation_source_hash: 929b0b2be49daa07998ce0ee04d8e8cd0893c52df28655ea7bf4170395f99b8e
 translation_status: current
 ---
 
 # 渲染失败与 Android 互操作副作用
 
-`RenderSession` 让渲染失败保持可观测，同时不会把可恢复的帧失败变成进程崩溃。`renderInto`
-和 `setUiContent` 都接受 `onRenderFailure`：
+`RenderSession` 让渲染失败保持可观测，同时不会把可恢复的帧失败变成进程崩溃。根 Host 接受一套
+关联的 `RenderDiagnostics` Sink：
 
 ```kotlin
 val session = renderInto(
     container = root,
-    onRenderFailure = { failure ->
-        report(
-            phase = failure.phase,
-            recovery = failure.recovery,
-            frameId = failure.frameId,
-            operation = failure.operation,
-            cause = failure.cause,
-        )
-    },
+    diagnostics = RenderDiagnostics(
+        collection = RenderDiagnosticCollection(
+            lifecycle = false,
+            failures = true,
+            frameLevel = RenderFrameDiagnosticLevel.None,
+        ),
+        sink = { event ->
+            if (event is RenderFailureObserved) report(event.context, event.failure)
+        },
+    ),
 ) {
     App()
 }
@@ -40,12 +41,14 @@ val session = renderInto(
   Target Batch，任一 Patch 失败时把此前所有 Target 重新绑定到已提交 VNode。
   `ObservedPropertyCommit` 报告 `FrameCommitted`，因为原生属性此时已经成为权威结果；依赖提交
   失败保持可观测，不会静默退化成整树渲染。
-- commit、副作用、overlay、诊断和原生 commit 失败报告 `FrameCommitted`。这些失败发生在
-  新 View 树已经成为权威结果之后；各回调相互隔离，一个失败不会阻止其余回调执行。Remembered
+- commit、副作用、overlay 和原生 commit 失败报告 `FrameCommitted`。这些失败发生在
+  新 View 树已经成为权威结果之后；一个失败不会阻止其余操作执行。Remembered
   激活抛错后保持 Pending，并由后续成功的 Composition Commit 重试；成功的兄弟不会重复激活，
   而成功前移除会 Abandon 该 Pending 值。
 - 组合协程失败报告 `FrameUnchanged`。
 - dispose 失败报告 `SessionDisposed`，其余节点和宿主仍继续清理。
+- Diagnostics Sink 抛错时，本 Session 会保存 `DiagnosticsSink` Failure 并禁用该 Sink；它不会
+  改写权威 Frame Report，也不会递归发布 Failure Event。
 
 `RenderFailureOperation` 和 `nodeKey` 可以识别 `AndroidView` 的 factory、update、reset、
 commit 与 release 失败，无需解析异常消息。

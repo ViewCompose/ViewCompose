@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3-android/README.md
-translation_source_hash: 63103951eee55df40bd1a369f6cc24473dace9e9d8f10c7e2d0ac8056d636d4f
+translation_source_hash: d2ed78ae4445d89a2bad1e143f106a02ad7dab7f581943126e108e582d49c57b
 translation_status: current
 ---
 
@@ -53,6 +53,10 @@ Locale/主题 Wrapper 修改没有重建 Activity 或触发 Configuration Callba
 版本更新。重复调用 `setMaterial3UiContent` 会释放旧 Render Session 并重建根节点；切换设计系统或
 构造期敏感 Context 时必须走该路径，不能只在旧 View 上替换 Token。
 
+Activity 与 Fragment Root 接受中立的 `RenderDiagnostics` 配置，并通过与
+`viewcompose-android` 相同的 Host 关联树向下传播。Alpha 硬切移除了三个独立渲染回调；Material
+主题解析不会改变诊断角色、采集级别、事件顺序或 Sink 失败隔离。
+
 默认 Overlay Factory 会显式构造 Material Adapter。Material 行为不通过 `ServiceLoader` 选择，
 因此应用其他位置存在本聚合包时，另一个设计系统 Root 也不会意外获得 Material Snackbar 或
 Bottom Sheet 行为。
@@ -79,3 +83,5 @@ NodeSpec 与 Foundation 契约；具名集成不会在 Renderer 中注册 Materi
 `com.viewcompose.android.setUiContent` 的 Alpha 应用，应把坐标与导入分别替换为
 `viewcompose-material3-android` 和 `setMaterial3UiContent`。Material 策略参数保留原有默认值与
 行为；源码级改名是为了防止中立 Host 静默选择 Material。
+
+关联诊断硬切用中立的 `diagnostics` 参数替换三个渲染回调，不保留弃用转发重载。

@@ -55,6 +55,11 @@ enters the visible pane set through pop, stack selection/history, predictive Bac
 expansion, that same session renders against the latest environment. Newly prepared destinations
 are not rendered twice.
 
+Each destination session receives the `NavigationDestination` diagnostics role and the parent
+session ID captured with the `NavHost` Local snapshot. Retention preserves that logical identity;
+failed candidates emit their own terminal sequence, while recreated destinations receive a fresh
+ID. Restoring destination Locals cannot overwrite the child session owner.
+
 Change `contentKey` when destination content closes over non-observable values. Observable state
 invalidates its owning destination session directly. Changing `key`, controller identity, lifecycle
 owner, debug identity, or overlay factory recreates the native host because those inputs change

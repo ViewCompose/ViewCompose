@@ -14,6 +14,7 @@ internal class WidgetLazyListItemSession(
     saveableStateKey: Any,
     content: WidgetLazyItemContent,
     contentPayload: Any?,
+    role: RenderSessionRole = RenderSessionRole.LazyItem,
 ) : LazyListItemSession {
     constructor(
         container: RenderContainerHandle,
@@ -28,13 +29,13 @@ internal class WidgetLazyListItemSession(
         saveableStateKey = saveableStateKey,
         content = DirectWidgetLazyItemContent,
         contentPayload = content,
+        role = RenderSessionRole.LazyItem,
     )
 
     private val saveableStateLease = saveableStateHolder?.acquire(saveableStateKey)
     private var capturedLocals = localSnapshot.withChildSaveableStateRegistry()
     private var renderContent = content
     private var renderContentPayload = contentPayload
-    private var diagnosticsListener = resolveDiagnosticsListener(localSnapshot)
     private val session = RenderSession(
         container = container,
         content = {
@@ -44,9 +45,8 @@ internal class WidgetLazyListItemSession(
                 }
             }
         },
-        onRenderResult = { result ->
-            diagnosticsListener?.invoke(result)
-        },
+        role = role,
+        parentLocalSnapshot = UiLocalSnapshot(localSnapshot),
     )
 
     override fun prepare() {
@@ -88,9 +88,6 @@ internal class WidgetLazyListItemSession(
         capturedLocals = localSnapshot.withChildSaveableStateRegistry()
         renderContent = content
         renderContentPayload = contentPayload
-        // Keep the previously resolved listener if this snapshot does not carry it.
-        // This avoids accidentally dropping diagnostics callbacks during partial recomposition paths.
-        diagnosticsListener = resolveDiagnosticsListener(localSnapshot) ?: diagnosticsListener
     }
 
     fun updateContent(
@@ -102,13 +99,6 @@ internal class WidgetLazyListItemSession(
             content = DirectWidgetLazyItemContent,
             contentPayload = content,
         )
-    }
-
-    private fun resolveDiagnosticsListener(
-        snapshot: LocalSnapshot,
-    ): ((RenderTreeResult) -> Unit)? {
-        @Suppress("UNCHECKED_CAST")
-        return snapshot.values[LocalRenderResultListener.holder] as? ((RenderTreeResult) -> Unit)
     }
 
     private fun LocalSnapshot.withChildSaveableStateRegistry(): LocalSnapshot {

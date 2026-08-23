@@ -21,8 +21,12 @@ import com.viewcompose.ui.modifier.focusable
 import com.viewcompose.ui.modifier.onKeyEvent
 import com.viewcompose.ui.modifier.onPreviewKeyEvent
 import com.viewcompose.ui.foundation.RenderFailure
+import com.viewcompose.ui.foundation.RenderFailureObserved
+import com.viewcompose.ui.foundation.RenderDiagnosticCollection
+import com.viewcompose.ui.foundation.RenderDiagnostics
 import com.viewcompose.ui.foundation.RenderFailureOperation
 import com.viewcompose.ui.foundation.RenderFailurePhase
+import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 import com.viewcompose.ui.foundation.RenderFrameStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -156,7 +160,12 @@ class P1CoreCapabilitiesUiTest {
                 var commits = 0
                 val session = renderInto(
                     container = container,
-                    onRenderFailure = failures::add,
+                    diagnostics = RenderDiagnostics(
+                        collection = RenderDiagnosticCollection(frameLevel = RenderFrameDiagnosticLevel.None),
+                        sink = { event ->
+                            if (event is RenderFailureObserved) failures += event.failure
+                        },
+                    ),
                 ) {
                     val frameValue = value
                     AndroidView(

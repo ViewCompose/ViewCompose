@@ -91,6 +91,13 @@ internal object LocalContext {
         }
     }
 
+    fun <T> valueOrNull(local: LocalValue<T>): T? {
+        val values = installedSnapshot().values
+        if (!values.containsKey(local)) return null
+        @Suppress("UNCHECKED_CAST")
+        return values[local] as T
+    }
+
     fun <T> provide(
         local: LocalValue<T>,
         value: T,
@@ -135,8 +142,14 @@ internal object LocalContext {
         snapshot: LocalSnapshot,
         block: () -> T,
     ): T {
+        val diagnosticParent = valueOrNull(LocalRenderDiagnosticParent)
+        val effectiveSnapshot = if (diagnosticParent == null) {
+            snapshot
+        } else {
+            LocalSnapshot(snapshot.values + (LocalRenderDiagnosticParent to diagnosticParent))
+        }
         return withInstalledSnapshot(
-            snapshot = snapshot,
+            snapshot = effectiveSnapshot,
             previous = installedSnapshot(),
             block = block,
         )

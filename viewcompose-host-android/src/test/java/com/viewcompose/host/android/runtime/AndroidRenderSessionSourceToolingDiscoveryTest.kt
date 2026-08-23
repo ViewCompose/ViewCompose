@@ -2,6 +2,7 @@ package com.viewcompose.host.android.runtime
 
 import com.viewcompose.ui.foundation.RenderSessionSourceRegistration
 import com.viewcompose.ui.foundation.RenderSessionSourceTooling
+import com.viewcompose.ui.foundation.RenderDiagnosticContext
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.tooling.UiSourceCallSite
 import org.junit.Assert.assertNull
@@ -30,10 +31,14 @@ class AndroidRenderSessionSourceToolingDiscoveryTest {
     }
 
     private class TestSourceTooling : RenderSessionSourceTooling {
-        override fun shouldCapture(container: RenderContainerHandle): Boolean = false
+        override fun shouldCapture(
+            container: RenderContainerHandle,
+            context: RenderDiagnosticContext,
+        ): Boolean = false
 
         override fun register(
             container: RenderContainerHandle,
+            context: RenderDiagnosticContext,
             sourceCandidates: List<List<UiSourceCallSite>>,
         ): RenderSessionSourceRegistration? = null
     }

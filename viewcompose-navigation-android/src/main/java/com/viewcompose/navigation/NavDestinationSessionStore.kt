@@ -9,8 +9,8 @@ import com.viewcompose.navigation.core.NavEntryLifecycleState
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.OverlayHostDefaults
-import com.viewcompose.ui.foundation.RenderFailure
 import com.viewcompose.ui.foundation.RenderFrameStatus
+import com.viewcompose.ui.foundation.RenderSessionRole
 import com.viewcompose.ui.foundation.UiLocalSnapshot
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.withUiLocalSnapshot
@@ -26,7 +26,6 @@ internal class NavDestinationSessionStore(
     private val overlayHost: OverlayHost = OverlayHostDefaults.noOp,
     private val debug: Boolean = false,
     private val debugTag: String = "ViewComposeNavigation",
-    private val onRenderFailure: ((RenderFailure) -> Unit)? = null,
 ) {
     private val sessions = linkedMapOf<NavEntryId, NavDestinationSession>()
     private var pendingEntryId: NavEntryId? = null
@@ -93,7 +92,8 @@ internal class NavDestinationSessionStore(
                 debug = debug,
                 debugTag = "$debugTag:${entry.route.name}:${entry.id}",
                 overlayHost = overlayHost,
-                onRenderFailure = onRenderFailure,
+                role = RenderSessionRole.NavigationDestination,
+                parentLocalSnapshot = renderEnvironment.localSnapshot,
             ) {
                 withUiLocalSnapshot(renderEnvironment.localSnapshot) {
                     ProvideNavGraphOwnerScope(

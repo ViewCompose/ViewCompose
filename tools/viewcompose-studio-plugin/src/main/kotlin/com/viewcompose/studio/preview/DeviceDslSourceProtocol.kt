@@ -7,11 +7,11 @@ import java.io.StringReader
 import java.nio.charset.StandardCharsets
 
 internal const val DEVICE_DSL_SOURCE_REPORT_PATH =
-    "cache/viewcompose/device-dsl-source-v3.json"
+    "cache/viewcompose/device-dsl-source-v4.json"
 internal const val DEVICE_DSL_SOURCE_REQUEST_ACTION =
     "com.viewcompose.preview.action.REQUEST_DEVICE_DSL_SOURCE"
 internal const val DEVICE_DSL_SOURCE_REQUEST_ID_EXTRA = "request_id"
-internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 3
+internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 4
 
 internal data class StudioDeviceDslSourceReport(
     val requestId: String,
@@ -23,6 +23,8 @@ internal data class StudioDeviceDslSourceReport(
 
 internal data class StudioDeviceDslSourceSession(
     val sessionId: Long,
+    val parentSessionId: Long?,
+    val role: StudioRenderSessionRole,
     val renderingActive: Boolean,
     val attachedToWindow: Boolean,
     val shown: Boolean,
@@ -31,6 +33,15 @@ internal data class StudioDeviceDslSourceSession(
     val viewDepth: Int,
     val sourceCandidates: List<List<StudioPreviewSourceCallSite>>,
 )
+
+internal enum class StudioRenderSessionRole {
+    Host,
+    Preview,
+    NavigationDestination,
+    LazyItem,
+    PagerPage,
+    OverlaySurface,
+}
 
 internal fun parseDeviceDslSourceReport(json: String): StudioDeviceDslSourceReport {
     require(json.toByteArray(StandardCharsets.UTF_8).size <= MAX_REPORT_BYTES) {
@@ -49,6 +60,8 @@ internal fun parseDeviceDslSourceReport(json: String): StudioDeviceDslSourceRepo
             val session = element.requiredObject("session")
             StudioDeviceDslSourceSession(
                 sessionId = session.requiredLong("sessionId"),
+                parentSessionId = session.optionalLong("parentSessionId"),
+                role = session.requiredRenderSessionRole("role"),
                 renderingActive = session.requiredBoolean("renderingActive"),
                 attachedToWindow = session.requiredBoolean("attachedToWindow"),
                 shown = session.requiredBoolean("shown"),
@@ -135,6 +148,21 @@ private fun JsonObject.requiredLong(name: String): Long {
         "Device DSL source field '$name' must be a long."
     }
     return value.asLong
+}
+
+private fun JsonObject.optionalLong(name: String): Long? {
+    val value = get(name) ?: return null
+    if (value.isJsonNull) return null
+    require(value.isJsonPrimitive && value.asJsonPrimitive.isNumber) {
+        "Device DSL source field '$name' must be a long or null."
+    }
+    return value.asLong
+}
+
+private fun JsonObject.requiredRenderSessionRole(name: String): StudioRenderSessionRole {
+    val value = requiredBoundedString(name)
+    return runCatching { StudioRenderSessionRole.valueOf(value) }
+        .getOrElse { throw IllegalArgumentException("Unknown render session role '$value'.") }
 }
 
 private fun JsonObject.requiredBoolean(name: String): Boolean {

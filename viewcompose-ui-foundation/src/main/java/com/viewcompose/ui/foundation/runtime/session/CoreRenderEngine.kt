@@ -18,7 +18,7 @@ interface CoreRenderEngine {
         container: RenderContainerHandle,
         previousMountedNodes: List<Any>,
         nodes: List<VNode>,
-        collectDiagnostics: Boolean,
+        diagnosticLevel: RenderFrameDiagnosticLevel,
     ): CoreRenderFrame
 
     /**
@@ -34,7 +34,7 @@ interface CoreRenderEngine {
      * @param container unchanged render container that owns [mountedNodes]
      * @param mountedNodes exact roots returned by the preceding successful full frame
      * @param patches non-empty, declaration-ordered, unique exact-target property replacements
-     * @param collectDiagnostics whether to collect patch statistics and diagnostic records
+     * @param diagnosticLevel renderer detail required by the owning diagnostics collection
      * @return property-only commit work and diagnostics; mounted roots and targets remain unchanged
      * @throws IllegalStateException when this engine does not support observed transactions or a
      * target no longer belongs to the committed frame
@@ -45,7 +45,7 @@ interface CoreRenderEngine {
         container: RenderContainerHandle,
         mountedNodes: List<Any>,
         patches: List<CoreObservedPropertyPatch>,
-        collectDiagnostics: Boolean,
+        diagnosticLevel: RenderFrameDiagnosticLevel,
     ): CoreObservedPropertyFrame {
         error("${this::class.qualifiedName} does not support observed-property transactions.")
     }

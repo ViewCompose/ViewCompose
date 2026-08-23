@@ -1,20 +1,21 @@
 # Render failures and Android interop effects
 
 `RenderSession` keeps render failures observable without turning recoverable frame failures into
-process crashes. Both `renderInto` and `setUiContent` accept `onRenderFailure`.
+process crashes. Root hosts accept one correlated `RenderDiagnostics` sink.
 
 ```kotlin
 val session = renderInto(
     container = root,
-    onRenderFailure = { failure ->
-        report(
-            phase = failure.phase,
-            recovery = failure.recovery,
-            frameId = failure.frameId,
-            operation = failure.operation,
-            cause = failure.cause,
-        )
-    },
+    diagnostics = RenderDiagnostics(
+        collection = RenderDiagnosticCollection(
+            lifecycle = false,
+            failures = true,
+            frameLevel = RenderFrameDiagnosticLevel.None,
+        ),
+        sink = { event ->
+            if (event is RenderFailureObserved) report(event.context, event.failure)
+        },
+    ),
 ) {
     App()
 }
@@ -36,13 +37,15 @@ completed frame report.
   earlier target to its committed VNode when one patch fails. `ObservedPropertyCommit` reports
   `FrameCommitted` because native values are already authoritative; dependency commit failures are
   observable and do not silently trigger a whole-tree fallback.
-- commit, side-effect, overlay, diagnostics, and native commit failures report `FrameCommitted`.
+- commit, side-effect, overlay, and native commit failures report `FrameCommitted`.
   These happen after the new View tree has become authoritative and are isolated so that one
-  callback does not prevent the remaining callbacks from running. A throwing remembered activation
+  failure does not prevent the remaining operations from running. A throwing remembered activation
   stays pending and is retried by a later successful composition commit; successful siblings are
   not activated twice, and removal before success abandons the pending value.
 - composition-coroutine failures report `FrameUnchanged`.
 - disposal failures report `SessionDisposed`; cleanup continues across remaining nodes and hosts.
+- a throwing diagnostics sink is stored locally as `DiagnosticsSink`, disabled for that session,
+  and never changes the authoritative frame report or recursively emits a failure event.
 
 `RenderFailureOperation` and `nodeKey` identify `AndroidView` factory, update, reset, commit, and
 release failures without parsing exception messages.

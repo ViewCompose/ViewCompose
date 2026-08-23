@@ -13,43 +13,56 @@ import android.view.View
 import android.view.ViewGroup
 import com.viewcompose.ui.foundation.RenderSessionSourceRegistration
 import com.viewcompose.ui.foundation.RenderSessionSourceTooling
+import com.viewcompose.ui.foundation.RenderDiagnosticContext
+import com.viewcompose.ui.foundation.RenderSessionRole
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.nativeContainer
 import com.viewcompose.ui.tooling.UiSourceCallSite
-import com.viewcompose.ui.tooling.UiSourceSessionContainerHandle
-import com.viewcompose.ui.tooling.UiSourceSessionRole
 import java.io.File
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicLong
 
 internal const val DEVICE_DSL_SOURCE_REQUEST_ACTION =
     "com.viewcompose.preview.action.REQUEST_DEVICE_DSL_SOURCE"
 internal const val DEVICE_DSL_SOURCE_REQUEST_ID_EXTRA = "request_id"
 internal const val DEVICE_DSL_SOURCE_REPORT_RELATIVE_PATH =
-    "viewcompose/device-dsl-source-v3.json"
-internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 3
+    "viewcompose/device-dsl-source-v4.json"
+internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 4
 
 /** Optional debug-scoped source-session service discovered by the Android Host. */
 internal class AndroidDeviceDslSourceTooling : RenderSessionSourceTooling {
-    override fun shouldCapture(container: RenderContainerHandle): Boolean {
-        val role = (container as? UiSourceSessionContainerHandle)?.sourceSessionRole
-        if (role != UiSourceSessionRole.Host && role != UiSourceSessionRole.Page) return false
+    override fun shouldCapture(
+        container: RenderContainerHandle,
+        context: RenderDiagnosticContext,
+    ): Boolean {
+        if (context.role !in SOURCE_CAPTURE_ROLES) return false
         val viewGroup = container.nativeContainer as? ViewGroup ?: return false
         return AndroidDeviceToolingDebugGate.markAndGet(viewGroup.context)
     }
 
     override fun register(
         container: RenderContainerHandle,
+        context: RenderDiagnosticContext,
         sourceCandidates: List<List<UiSourceCallSite>>,
     ): RenderSessionSourceRegistration? {
         val viewGroup = container.nativeContainer as? ViewGroup ?: return null
         if (!AndroidDeviceToolingDebugGate.markAndGet(viewGroup.context)) return null
         return AndroidDeviceDslSourceRuntime.registry.register(
             container = viewGroup,
+            sessionId = context.sessionId.value,
+            parentSessionId = context.parentSessionId?.value,
+            role = context.role,
             sourceCandidates = sourceCandidates,
+        )
+    }
+
+    private companion object {
+        val SOURCE_CAPTURE_ROLES = setOf(
+            RenderSessionRole.Host,
+            RenderSessionRole.NavigationDestination,
+            RenderSessionRole.PagerPage,
         )
     }
 }
@@ -96,16 +109,17 @@ internal class AndroidDeviceDslSourceRegistry(
     private val processId: () -> Int = Process::myPid,
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
 ) {
-    private val nextSessionId = AtomicLong(0L)
     private val sessions = linkedMapOf<Long, DeviceDslSourceSession>()
 
     fun register(
         container: ViewGroup,
+        sessionId: Long,
+        parentSessionId: Long?,
+        role: RenderSessionRole,
         sourceCandidates: List<List<UiSourceCallSite>>,
     ): RenderSessionSourceRegistration? {
         val boundedCandidates = sourceCandidates.boundedSourceCandidates()
         if (boundedCandidates.isEmpty()) return null
-        val sessionId = nextSessionId.incrementAndGet()
         synchronized(this) {
             sessions.entries.removeAll { (_, session) -> session.container.get() == null }
             while (sessions.size >= MAX_TRACKED_SESSIONS) {
@@ -113,6 +127,8 @@ internal class AndroidDeviceDslSourceRegistry(
             }
             sessions[sessionId] = DeviceDslSourceSession(
                 id = sessionId,
+                parentId = parentSessionId,
+                role = role,
                 container = WeakReference(container),
                 sourceCandidates = boundedCandidates,
             )
@@ -226,6 +242,8 @@ private class RegistrySourceRegistration(
 
 private class DeviceDslSourceSession(
     val id: Long,
+    val parentId: Long?,
+    val role: RenderSessionRole,
     val container: WeakReference<ViewGroup>,
     val sourceCandidates: List<List<UiSourceCallSite>>,
     var renderingActive: Boolean = true,
@@ -234,6 +252,8 @@ private class DeviceDslSourceSession(
         val view = container.get() ?: return null
         return DeviceDslSourceSessionSnapshot(
             sessionId = id,
+            parentSessionId = parentId,
+            role = role,
             renderingActive = renderingActive,
             attachedToWindow = view.isAttachedToWindow,
             shown = view.isVisibleToUser(),
@@ -247,6 +267,8 @@ private class DeviceDslSourceSession(
 
 internal data class DeviceDslSourceSessionSnapshot(
     val sessionId: Long,
+    val parentSessionId: Long?,
+    val role: RenderSessionRole,
     val renderingActive: Boolean,
     val attachedToWindow: Boolean,
     val shown: Boolean,
@@ -315,6 +337,10 @@ private fun DeviceDslSourceSessionSnapshot.toBoundedJson(): String = buildString
     append('{')
     append("\"sessionId\":")
     append(sessionId)
+    append(",\"parentSessionId\":")
+    append(parentSessionId ?: "null")
+    append(",\"role\":")
+    appendJsonString(role.name)
     append(",\"renderingActive\":")
     append(renderingActive)
     append(",\"attachedToWindow\":")

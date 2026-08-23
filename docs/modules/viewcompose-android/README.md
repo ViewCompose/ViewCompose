@@ -63,6 +63,12 @@ returns the root first, then starts rendering as soon as Android publishes that 
 Fragment-scoped ViewModel and saved-state ownership remain stable across View recreation. Activity
 sessions render synchronously and end when the Activity is destroyed.
 
+Both entry points accept `diagnostics = RenderDiagnostics(...)`. The configuration starts one
+Host diagnostics tree and is inherited by navigation, lazy, pager, and overlay child sessions.
+The alpha hard cut removes `onRenderStats`, `onRenderResult`, and `onRenderFailure`; use
+`RenderFrameCompleted` and `RenderFailureObserved` instead. `debug` remains logging and
+slow-operation policy only.
+
 The standard roots automatically install `AndroidResourceEnvironment`, so content may use the
 lookup functions from `com.viewcompose.host.android.resources` without a page-owned invalidation
 state. Configuration callbacks refresh ordinary resources and environment values. For an
@@ -97,3 +103,6 @@ The alpha API makes a source-level hard cut: the generally named `setUiContent` 
 dependency with `viewcompose-material3-android`, import `setMaterial3UiContent`, and keep the same
 content body. No all-default deprecated forwarding overload is retained because it would be
 ambiguous with the neutral zero-argument entry point.
+
+The correlated-diagnostics hard cut removes the three independent render callbacks from both
+Activity and Fragment entry points. No deprecated forwarding overload or result-only Local remains.

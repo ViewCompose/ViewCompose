@@ -74,7 +74,7 @@ abstract class DemoRenderActivity : AppCompatActivity() {
             // on the same stable application theme instead of adding a wallpaper-derived overlay.
             dynamicColorPolicy = Material3DynamicColorPolicy.Disabled,
             overlayHostFactory = ::AndroidOverlayHost,
-            onRenderResult = DemoRenderDiagnosticsStore::record,
+            diagnostics = DemoRenderDiagnosticsStore.diagnostics(),
         ) { root ->
             buildRootScaffold(root)
         }

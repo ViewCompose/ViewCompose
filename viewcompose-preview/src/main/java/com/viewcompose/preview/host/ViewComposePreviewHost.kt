@@ -14,6 +14,8 @@ import com.viewcompose.host.android.resources.AndroidResourceEnvironment
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.OverlayHostDefaults
+import com.viewcompose.ui.foundation.RenderDiagnostics
+import com.viewcompose.ui.foundation.RenderSessionRole
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiThemeDefaults
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -23,7 +25,7 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  *
  * One controller and native root are remembered for the lifetime of this call site. Content-only
  * recompositions request another ViewCompose render; changing [themeMode], [debug], [debugTag],
- * [overlayHost], or the Android container disposes and recreates the session. Disposal of the
+ * [overlayHost], [diagnostics], or the Android container disposes and recreates the session. Disposal of the
  * Compose effect always disposes the active session.
  *
  * [themeMode] installs `UiThemeDefaults` and [AndroidResourceEnvironment] derives Android values
@@ -37,6 +39,7 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  * @param debugTag tag associated with renderer debug output
  * @param overlayHost overlay backend used by DSL content; the default intentionally presents no
  * platform surfaces
+ * @param diagnostics optional correlated lifecycle, failure, and frame event sink
  * @param content ViewCompose DSL body receiving the bridge-owned native root
  */
 @Composable
@@ -46,6 +49,7 @@ fun ViewComposePreviewHost(
     debug: Boolean = false,
     debugTag: String = "ViewComposePreview",
     overlayHost: OverlayHost = OverlayHostDefaults.noOp,
+    diagnostics: RenderDiagnostics? = null,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ) {
     val renderController = remember { PreviewRenderController() }
@@ -67,6 +71,7 @@ fun ViewComposePreviewHost(
                     debug = debug,
                     debugTag = debugTag,
                     overlayHost = overlayHost,
+                    diagnostics = diagnostics,
                     themeMode = themeMode,
                 ),
                 content = {
@@ -95,6 +100,7 @@ private data class PreviewRenderConfig(
     val debug: Boolean,
     val debugTag: String,
     val overlayHost: OverlayHost,
+    val diagnostics: RenderDiagnostics?,
     val themeMode: PreviewTheme,
 )
 
@@ -123,6 +129,8 @@ private class PreviewRenderController {
                 debug = config.debug,
                 debugTag = config.debugTag,
                 overlayHost = config.overlayHost,
+                role = RenderSessionRole.Preview,
+                diagnostics = config.diagnostics,
             ) {
                 requireNotNull(latestContent).invoke(this)
             }

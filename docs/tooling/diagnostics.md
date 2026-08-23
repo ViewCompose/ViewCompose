@@ -1,10 +1,33 @@
 # ViewCompose Diagnostics
 
-## 1. Data entry point
+## 1. Correlated event entry point
 
-The host receives a structured `RenderTreeResult` through `onRenderResult`. Diagnostics are
-collected only when `debug = true`, `onRenderStats` is registered, or `onRenderResult` is
-registered. Normal release paths do not build tree snapshots or per-node patch details.
+Install one immutable `RenderDiagnostics` at a Host or Preview root. Child navigation, lazy, pager,
+and overlay sessions inherit that sink and receive process-local session and parent IDs. Passing a
+new diagnostics instance to a low-level nested session deliberately starts a new tree.
+
+```kotlin
+val diagnostics = RenderDiagnostics(
+    collection = RenderDiagnosticCollection(
+        lifecycle = true,
+        failures = true,
+        frameLevel = RenderFrameDiagnosticLevel.Tree,
+    ),
+    sink = { event ->
+        when (event) {
+            is RenderFrameCompleted -> inspect(event.context, event.report, event.tree)
+            is RenderFailureObserved -> report(event.context, event.failure)
+            else -> recordLifecycle(event)
+        }
+    },
+)
+
+val session = renderInto(container = root, diagnostics = diagnostics) { App() }
+```
+
+`None` builds no renderer counters or tree details, `Stats` builds aggregate counters, and `Tree`
+also builds the bounded tree, patches, warnings, and composition diagnostics. `debug` controls
+logging and slow-operation warnings only; it does not select event collection.
 
 `RenderTreeResult` currently contains:
 
@@ -39,7 +62,28 @@ The default summary displays only Strings, numbers, Booleans, Chars, and enums d
 objects display only their type and do not invoke an arbitrary application `toString()`. Crop a
 sensitive application value deliberately through a custom formatter, or omit the formatter.
 
-## 4. Demo inspector
+## 4. Ordering and failure isolation
+
+Subscribed lifecycle starts first. Failures are emitted after recovery is known, and one
+`RenderFrameCompleted` follows every synchronous attempt after `lastFrameReport` is authoritative.
+Activity events represent actual transitions only; session end follows cleanup and is terminal.
+Successful candidate preparation is silent until activation, while a failed preparation emits the
+minimal start, failure, rolled-back frame, and end sequence.
+
+Sink calls are synchronous and serialized per session. Re-entry into the emitting session fails
+fast. A throwing sink is platform-logged, stored as a local `DiagnosticsSink` failure, and disabled
+for that session; it cannot change the frame report, replace the original recovery, or recursively
+publish another event.
+
+## 5. Alpha migration from callbacks
+
+The alpha API removes `onRenderStats`, `onRenderResult`, and `onRenderFailure` together. Replace a
+stats callback with `RenderFrameCompleted.stats`, a tree callback with
+`RenderFrameCompleted.tree`, and a failure callback with `RenderFailureObserved.failure`. There are
+no deprecated overloads or result-only Local adapters. `lastRenderFailure` and `lastFrameReport`
+remain available for direct session queries.
+
+## 6. Demo inspector
 
 `Diagnostics -> Renderer` currently provides:
 
@@ -49,20 +93,18 @@ sensitive application value deliberately through a custom formatter, or omit the
 4. a CompositionLocal browser;
 5. existing aggregate render/layout metrics.
 
-It does not yet provide real View-boundary highlighting, cross-RenderSession correlation, or
-per-node timing. Delivery of those capabilities, together with bounded production failure
+Cross-session correlation is now implemented. The inspector does not yet provide real
+View-boundary highlighting or per-node timing. Delivery of those capabilities, together with bounded production failure
 aggregation, has moved to the active
 [diagnostics correlation, inspection, and production observability plan](../project/plans/diagnostics-correlation-inspection-observability.md).
 
-## 5. Accepted expansion contract
+## 7. Remaining expansion contract
 
 [ADR-0021](../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes the
-next implementation boundary. The three current callbacks will be hard-removed together and
-replaced by one process-local, parent-correlated `RenderDiagnostics` event sink. Host, Preview,
-navigation, lazy, pager, and overlay sessions will share one identity model; a failure-only sink
-will not activate stats or tree collection. Production aggregation will live in the optional
+implemented Phase 1 boundary. Host, Preview, navigation, lazy, pager, and overlay sessions now
+share one identity model; a failure-only sink does not activate stats or tree collection.
+Production aggregation will live in the optional
 `viewcompose-diagnostics` artifact, while highlighting and timing remain request-driven in
 `viewcompose-preview` under ADR-0009.
 
-This section records an accepted design, not shipped behavior. Until Phase 1 of the active plan
-merges, the callbacks and collection triggers described in section 1 remain the current API.
+The active plan owns production aggregation, highlighting, timing, and inspector closeout.

@@ -268,9 +268,9 @@ Phase 4 owns that benchmark and final guidance.
   declarative `zIndex` without wrapping every child in another View.
 - `ViewNodeToolingRegistry` weakly associates mounted Views with source metadata only when tooling
   metadata exists; ordinary rendering retains no extra source objects.
-- Renderer-owned child containers carry a tooling-only `UiSourceSessionRole`: pager destinations
-  are `Page`, while lazy rows and tab items are `Content`. A debuggable Android host can therefore
-  capture page source sessions without paying stack-capture cost for every ordinary lazy item.
+- Renderer-owned child containers carry no diagnostic identity. UI Foundation assigns a fresh
+  logical session ID and typed role when it creates a pager or lazy child, so recycled containers
+  cannot transfer ownership. Optional source tooling captures only eligible runtime roles.
 - Image nodes bind `UiImageRequest` to an injected `UiImageLoader` when one is present. The renderer
   stores the disposable handle on the mounted `ImageView`, leaves an equivalent request and its
   loaded drawable untouched, and disposes a changed request before applying its placeholder and
@@ -439,8 +439,9 @@ new snapshot; it never renders one frame with the prior side selected.
 - Render, disposal, View binding, pager updates, and decoration callbacks are UI-thread confined.
 - One container has one mounted-tree owner. Do not share mounted nodes between containers or render
   sessions.
-- `collectDiagnostics = false` omits structure, patch, warning, and detailed binding snapshots; use
-  it on performance-sensitive paths that do not consume diagnostics.
+- `collectDiagnostics = false` omits structure, patch, and warning snapshots;
+  `collectStatistics = false` also omits aggregate binding counters. Host rendering maps these
+  independently from `RenderFrameDiagnosticLevel`, so `Stats` does not build a tree.
 - Lazy prefetch work is deadline-controlled by RecyclerView. Cold activation supplies only a
   conservative bootstrap ceiling because it also includes commit and effect work; the first
   detached preparation replaces that estimate with an authoritative preparation cost. Estimates

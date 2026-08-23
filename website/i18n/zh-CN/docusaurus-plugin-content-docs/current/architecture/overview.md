@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: fb8897bca0af19ecd2b8af7d703440ef5fc6415719585027c7996ac22e5460f6
+translation_source_hash: 34ecd6184b26d6a1b4d65802b432383991de263f7a883212e9b59f0ecd4a442e
 translation_status: current
 ---
 
@@ -230,7 +230,8 @@ flowchart TD
    Material Root 显式构造 Material Adapter。Runtime Classpath 顺序不选择设计系统。
 4. `AndroidOverlayHostDefaults.androidOrNoOp(...)` 与 `ServiceLoader` 只保留给自定义底层 Host。
    只允许一个中立 Provider；零个时回退 no-op，多个时确定性失败。Material Adapter 不注册 Provider。
-5. host 对外回调 `onRenderStats/onRenderResult` 只能暴露 core 自有诊断类型（`com.viewcompose.ui.foundation.RenderStats/RenderTreeResult`），renderer 诊断类型仅允许出现在 host 内部适配层。
+5. Public Host 只接受 UI Foundation 的关联 `RenderDiagnostics` 契约；Renderer 诊断类型只能
+   留在 Host 内部适配层。
 6. system bars insets 走组件侧 `Modifier.systemBarsInsetsPadding(...)`，不绑死 Activity 全局参数。
 7. `viewcompose-host-android` 必须通过 `installRenderSessionPlatform(...)` 一次性原子注册渲染引擎、帧调度 runtime、组合协程上下文、焦点适配以及日志/Trace 适配；UI Foundation 只面向不透明 `RenderContainerHandle` 协调组合，只有 Android Engine 能把它解包为 `ViewGroup`。`RenderSession` 创建时固定使用同一平台快照，缺失或重复安装立即失败。
 8. Android 设计系统安装有两个独立边界：具名 Adapter 可以在 View 创建前解析 Themed `Context`

@@ -39,6 +39,12 @@ import com.viewcompose.material3.Material3DynamicColorPolicy
 import com.viewcompose.material3.Material3ThemeBridge
 import com.viewcompose.ui.foundation.ProvideSaveableStateRegistry
 import com.viewcompose.ui.foundation.RenderFailure
+import com.viewcompose.ui.foundation.RenderFailureObserved
+import com.viewcompose.ui.foundation.RenderDiagnosticCollection
+import com.viewcompose.ui.foundation.RenderDiagnostics
+import com.viewcompose.ui.foundation.RenderFrameCompleted
+import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
+import com.viewcompose.ui.foundation.RenderSessionRole
 import com.viewcompose.ui.foundation.RenderTreeResult
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
@@ -145,8 +151,19 @@ object StaticPreviewRenderer {
                 container = root,
                 debug = false,
                 debugTag = "ViewComposePreview",
-                onRenderResult = { result -> renderResult = result },
-                onRenderFailure = { failure -> renderFailure = failure },
+                role = RenderSessionRole.Preview,
+                diagnostics = RenderDiagnostics(
+                    collection = RenderDiagnosticCollection(
+                        frameLevel = RenderFrameDiagnosticLevel.Tree,
+                    ),
+                    sink = { event ->
+                        when (event) {
+                            is RenderFrameCompleted -> renderResult = event.tree
+                            is RenderFailureObserved -> renderFailure = event.failure
+                            else -> Unit
+                        }
+                    },
+                ),
             ) {
                 ProvideLifecycleOwner(previewOwner) {
                     ProvideViewModelStoreOwner(previewOwner) {

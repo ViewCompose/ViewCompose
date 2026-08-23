@@ -60,6 +60,9 @@ interface RenderSessionPlatformDiagnostics {
     val sourceTooling: RenderSessionSourceTooling?
         get() = null
 
+    /** Returns platform monotonic time for event ordering and elapsed-time diagnostics. */
+    fun monotonicTimeNanos(): Long = System.nanoTime()
+
     /** Records optional frame detail enabled by a debug render session. */
     fun debug(tag: String, message: String)
 
@@ -82,8 +85,9 @@ interface RenderSessionPlatformDiagnostics {
  * [shouldCapture] runs before a session's initial tree build. When it returns `true`, the session
  * captures bounded candidate chains from eligible VNodes and calls [register] only after the frame
  * establishes a native tree. Candidate chains let tooling distinguish reusable page chrome from
- * content DSL without retaining node metadata. Lazy-list and pager item sessions use the same path,
- * allowing platform tooling to prefer the deepest container that is actually visible.
+ * content DSL without retaining node metadata. Child sessions use the same path, allowing platform
+ * tooling to select eligible roles such as navigation destinations and pager pages while skipping
+ * high-churn roles such as lazy-list items.
  *
  * Implementations must be optional, fast, and thread-confined to the platform render thread. They
  * may retain a weak container reference until the returned [RenderSessionSourceRegistration] is
@@ -96,22 +100,28 @@ interface RenderSessionPlatformDiagnostics {
  */
 interface RenderSessionSourceTooling {
     /**
-     * Returns whether [container] belongs to a process where source capture is permitted.
+     * Returns whether [container] and [context] are eligible for source capture.
      *
      * @param container opaque renderer container owned by the candidate session
+     * @param context stable session identity, parent, and role; frame and event sequence are absent
      * @return `true` to capture bounded source candidates during the session's initial tree build
      */
-    fun shouldCapture(container: RenderContainerHandle): Boolean
+    fun shouldCapture(
+        container: RenderContainerHandle,
+        context: RenderDiagnosticContext,
+    ): Boolean
 
     /**
      * Registers one successfully rendered session and its bounded [sourceCandidates].
      *
      * @param container opaque renderer container owned by the committed session
+     * @param context stable session identity, parent, and role shared with runtime diagnostics
      * @param sourceCandidates emission-ordered candidates whose inner lists are nearest-first chains
      * @return a lifecycle handle, or `null` when the session should not be reported
      */
     fun register(
         container: RenderContainerHandle,
+        context: RenderDiagnosticContext,
         sourceCandidates: List<List<UiSourceCallSite>>,
     ): RenderSessionSourceRegistration?
 }

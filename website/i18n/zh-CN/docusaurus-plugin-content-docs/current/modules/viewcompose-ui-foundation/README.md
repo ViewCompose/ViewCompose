@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: d20c71016232f910eff09781d1d22e004050cc3a18cdc46c5ac5afac64a3d7a2
+translation_source_hash: d481c68d9a73647db839e82d60289c447f8db7184caeae9fc945bbc0794441d5
 translation_status: current
 ---
 
@@ -311,6 +311,24 @@ Local Binding 是否存在与值是否可空相互独立。只有当前 Snapshot
 构建 VNode 树时，线程由活跃组合上下文封闭。标准 Android Host 会在主线程串行化渲染、状态
 回调、Effect 与平台操作。自定义 Host 必须保持相同的顺序与所有权保证。
 
+## 关联渲染诊断
+
+`RenderDiagnostics` 是 Lifecycle、Failure 与 Frame Event 的 Q3 根配置。
+`RenderSessionTraceId`、`RenderSessionRole` 与 `RenderDiagnosticContext` 是 Q2 关联值；
+`RenderDiagnosticCollection` 与 `RenderFrameDiagnosticLevel` 是 Q2 选择值。Host 与 Preview
+开启关联树；Navigation Destination、Lazy Item、Pager Page 与 Overlay Surface 继承不可变 Local
+Snapshot 中的私有 Parent Context。物理 View 复用不会转移逻辑 Session ID。
+
+`RenderFrameDiagnosticLevel.None` 不构建 Renderer 诊断，`Stats` 只请求计数，`Tree` 还请求有界
+Tree、Patch、Warning 与 Composition Snapshot。只有在 `lastFrameReport` 成为权威结果后才发布
+Frame Event。Sink 同步并按 Session 串行投递；重入立即失败，Sink 抛错会记录为
+`DiagnosticsSink` 并禁用该 Sink，但不改变渲染恢复结果。
+
+Alpha 硬切移除了三个独立 Render Callback 与仅 Result Local。Stats/Tree 迁移到
+`RenderFrameCompleted`，Failure 迁移到 `RenderFailureObserved`；不需要事件流时仍可直接查询
+`lastFrameReport` 或 `lastRenderFailure`。参见[诊断指南](../../tooling/diagnostics.md)与
+[ADR-0021](../../architecture/decisions/0021-correlated-render-diagnostics-ownership.md)。
+
 ## 相关文档
 
 - [当前架构与模块边界](https://docs.viewcompose.com/zh-CN/architecture/overview)
@@ -351,7 +369,8 @@ Scroll Container 新增 `state` 和 `userScrollEnabled`，为 Slider 新增 Step
 权威来源；Alpha 版本线不保留并行的 Deprecated 签名。
 
 `RenderSessionPlatformDiagnostics.sourceTooling`、`RenderSessionSourceTooling` 与
-`RenderSessionSourceRegistration` 是新增的 Q3 工具 API。现有平台诊断使用默认空 Adapter，行为
+`RenderSessionSourceRegistration` 是 Q3 工具 API。Source Capture 现在接收 Runtime Event 使用的
+同一个 `RenderDiagnosticContext`，不再依赖独立 Container Role Marker。现有平台诊断使用默认空 Adapter，行为
 不变。主动启用的自定义平台必须让注册状态受所属 Render Session 约束，同步消费有界候选调用链
 列表，并在平台渲染线程调用。注册必须保持被动：可以弱引用容器，但不能安装持续的滚动、全局布局、
 绘制、触摸、Frame 或重组观察器。实时检查必须由

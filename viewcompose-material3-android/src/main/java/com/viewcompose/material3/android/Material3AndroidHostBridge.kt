@@ -11,9 +11,7 @@ import com.viewcompose.material3.Material3ThemeBridge
 import com.viewcompose.host.android.resources.AndroidResourceRefreshController
 import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost as Material3AndroidOverlayHost
 import com.viewcompose.ui.foundation.OverlayHost
-import com.viewcompose.ui.foundation.RenderFailure
-import com.viewcompose.ui.foundation.RenderStats
-import com.viewcompose.ui.foundation.RenderTreeResult
+import com.viewcompose.ui.foundation.RenderDiagnostics
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
@@ -24,16 +22,14 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  * `onCreateView`. Repeating the call reconstructs the root and disposes the previous session.
  *
  * @sample com.viewcompose.material3.android.samples.material3FragmentHostSample
- * @param debug enables render diagnostics and logging
+ * @param debug enables render logging and slow-operation warnings
  * @param debugTag log tag used by debug rendering
  * @param dynamicColorPolicy policy selecting Android dynamic-color context resolution
  * @param rootContext source Context used to resolve the stable Material root Context
  * @param resourceRefreshController optional unified controller for imperative resource or theme
  * mutations that do not dispatch a configuration change
  * @param overlayHostFactory creates the overlay host for the resolved Material root
- * @param onRenderStats optional callback after every attempted frame
- * @param onRenderResult optional callback for collected render diagnostics
- * @param onRenderFailure optional callback when a frame fails
+ * @param diagnostics optional correlated lifecycle, failure, and frame event sink
  * @param content declarative content; its ViewGroup argument is the returned root
  * @return the newly created full-size Fragment root
  * @throws IllegalStateException when the Fragment lifecycle is already destroyed
@@ -45,9 +41,7 @@ fun Fragment.setMaterial3UiContent(
     rootContext: Context = requireContext(),
     resourceRefreshController: AndroidResourceRefreshController? = null,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> Material3AndroidOverlayHost(root) },
-    onRenderStats: ((RenderStats) -> Unit)? = null,
-    onRenderResult: ((RenderTreeResult) -> Unit)? = null,
-    onRenderFailure: ((RenderFailure) -> Unit)? = null,
+    diagnostics: RenderDiagnostics? = null,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
     val resolvedTheme = Material3ThemeBridge.resolveContext(
@@ -61,9 +55,7 @@ fun Fragment.setMaterial3UiContent(
         debug = debug,
         debugTag = debugTag,
         overlayHostFactory = overlayHostFactory,
-        onRenderStats = onRenderStats,
-        onRenderResult = onRenderResult,
-        onRenderFailure = onRenderFailure,
+        diagnostics = diagnostics,
     ) { root ->
         Material3Theme(
             resolvedTheme = resolvedTheme,
@@ -81,16 +73,14 @@ fun Fragment.setMaterial3UiContent(
  * root and disposes the previous session.
  *
  * @sample com.viewcompose.material3.android.samples.material3ActivityHostSample
- * @param debug enables render diagnostics and logging
+ * @param debug enables render logging and slow-operation warnings
  * @param debugTag log tag used by debug rendering
  * @param dynamicColorPolicy policy selecting Android dynamic-color context resolution
  * @param rootContext source Context used to resolve the stable Material root Context
  * @param resourceRefreshController optional unified controller for imperative resource or theme
  * mutations that do not dispatch a configuration change
  * @param overlayHostFactory creates the overlay host for the resolved Material root
- * @param onRenderStats optional callback after every attempted frame
- * @param onRenderResult optional callback for collected render diagnostics
- * @param onRenderFailure optional callback when a frame fails
+ * @param diagnostics optional correlated lifecycle, failure, and frame event sink
  * @param content declarative content; its ViewGroup argument is the installed root
  * @return the newly installed full-size Activity root
  * @throws IllegalStateException when the Activity lifecycle is already destroyed
@@ -102,9 +92,7 @@ fun ComponentActivity.setMaterial3UiContent(
     rootContext: Context = this,
     resourceRefreshController: AndroidResourceRefreshController? = null,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> Material3AndroidOverlayHost(root) },
-    onRenderStats: ((RenderStats) -> Unit)? = null,
-    onRenderResult: ((RenderTreeResult) -> Unit)? = null,
-    onRenderFailure: ((RenderFailure) -> Unit)? = null,
+    diagnostics: RenderDiagnostics? = null,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
     val resolvedTheme = Material3ThemeBridge.resolveContext(
@@ -118,9 +106,7 @@ fun ComponentActivity.setMaterial3UiContent(
         debug = debug,
         debugTag = debugTag,
         overlayHostFactory = overlayHostFactory,
-        onRenderStats = onRenderStats,
-        onRenderResult = onRenderResult,
-        onRenderFailure = onRenderFailure,
+        diagnostics = diagnostics,
     ) { root ->
         Material3Theme(
             resolvedTheme = resolvedTheme,

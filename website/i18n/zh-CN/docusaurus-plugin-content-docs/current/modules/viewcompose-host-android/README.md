@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 31aac1e69840833dba751ce742d5b9759a68c94b31a92e98109971c4991f3c1c
+translation_source_hash: cc317121b0e971850ee9dfa1def4707065400da7a65e90caab800afdcf4cae71
 translation_status: current
 ---
 
@@ -46,6 +46,10 @@ session.render()
 session.dispose()
 ```
 
+传入 `diagnostics = RenderDiagnostics(...)` 会开启一棵关联诊断树。底层 `role` 与
+`parentLocalSnapshot` 是独立渲染子 Session 的 Q3 集成控制；普通自定义 Root 保持默认 `Host`
+角色且不传 Parent Snapshot。`debug` 只控制日志与慢操作告警，不控制诊断收集。
+
 该底层入口不会自动提供 Lifecycle、ViewModel、saved state、environment、theme 或 frame-clock
 Local。自定义宿主必须自行管理这些 Provider，并在放弃容器前释放会话。一个容器只能有一个
 mounted-tree 所有者。
@@ -81,7 +85,8 @@ Listener 或持续检查生命周期。
 
 真机 DSL 导航由下游可选制品 `viewcompose-preview` 实现。要启用该功能，应通过
 `debugImplementation` 引入它。该制品存在于可调试进程时，可以通过中立端口保留首次成功
-Host/Page Frame 中的有界源码候选。只有 Android Studio 发出显式请求后，才会检查实时可见性并写入
+Host、Navigation Destination 或 Pager Page Frame 中的有界源码候选。Report 使用 Runtime Trace
+ID、Parent ID 与 Role，不再生成第二套仅源码身份。只有 Android Studio 发出显式请求后，才会检查实时可见性并写入
 私有报告。滚动、布局、Rendering Active 变化与 Session 释放都不会发布报告。此所有权遵循
 [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md)。
 
@@ -135,6 +140,7 @@ Target 会直接失败，不会触发整树渲染。
 模块不保留兼容 facade。
 `0.1.0-alpha04` 把 Overlay Service Discovery 收窄为单个中立 Provider；标准 Root 显式选择
 Backend，重复 Provider 属于配置错误。
-设备源码检查已移出本制品。`renderInto` 签名不变；自定义平台可以继续使用默认 `null` 端口。
+设备源码检查已移出本制品。Alpha `renderInto` 硬切用一个 `RenderDiagnostics` 配置替代三个
+Render Callback，并增加类型化 Role/Parent 集成输入；自定义平台可以继续使用默认 `null` 端口。
 需要 `Locate Device DSL` 的应用应在 Debug 配置中保留 `viewcompose-preview`，Release 构建不会
 携带定位实现。

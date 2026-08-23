@@ -35,6 +35,8 @@ class OverlaySurfaceContent internal constructor(
 
     internal fun overlayHost(): OverlayHost = overlayHost
 
+    internal fun parentLocalSnapshot(): UiLocalSnapshot = UiLocalSnapshot(localSnapshot)
+
     internal fun acquireSaveableState(): SaveableStateRegistryLease? {
         val holder = saveableStateHolder ?: return null
         return holder.acquire(requireNotNull(saveableStateKey))
@@ -65,6 +67,8 @@ class OverlaySurfaceSession internal constructor(
             )
         },
         overlayHost = overlayHostDelegate,
+        role = RenderSessionRole.OverlaySurface,
+        parentLocalSnapshot = initialContent.parentLocalSnapshot(),
     )
 
     init {

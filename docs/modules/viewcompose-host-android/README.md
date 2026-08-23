@@ -44,6 +44,11 @@ session.render()
 session.dispose()
 ```
 
+Pass `diagnostics = RenderDiagnostics(...)` to start a correlated diagnostics tree. The low-level
+`role` and `parentLocalSnapshot` parameters are Q3 integration controls for independently rendered
+children; ordinary custom roots keep the `Host` default and no parent snapshot. `debug` controls
+logging and slow-operation warnings, not diagnostics collection.
+
 This low-level entry does not automatically provide Lifecycle, ViewModel, saved state,
 environment, theme, or frame-clock locals. A custom host owns those providers and must dispose the
 session before abandoning its container. One container must have only one mounted-tree owner.
@@ -84,8 +89,9 @@ writer, View-tree listener, or recurring inspection lifecycle.
 
 Running-device DSL navigation is implemented downstream by the optional `viewcompose-preview`
 artifact. Add it with `debugImplementation` to enable the feature. When present in a debuggable
-process, it may retain bounded source candidates from the first successful Host/Page frame through
-the neutral port. Live visibility is inspected and a private report is written only after Android
+process, it may retain bounded source candidates from the first successful Host, navigation
+destination, or pager-page frame through the neutral port. The report uses the runtime trace ID,
+parent ID, and role rather than a second source-only identity. Live visibility is inspected and a private report is written only after Android
 Studio sends an explicit request. Scroll, layout, rendering-active changes, and session disposal do
 not publish reports. This ownership follows
 [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md).
@@ -143,7 +149,8 @@ The Activity and Fragment `setUiContent` extensions moved to `viewcompose-androi
 five-layer architecture. No compatibility facade remains in this low-level artifact.
 Version `0.1.0-alpha04` restricts overlay service discovery to one neutral provider; standard roots
 choose their backend explicitly, and duplicate providers are a configuration error.
-Device source inspection moved out of this artifact. `renderInto` signatures are unchanged; custom
-platforms may keep the default `null` port. Applications that use **Locate Device DSL** retain
+Device source inspection moved out of this artifact. The alpha `renderInto` hard cut replaces the
+three render callbacks with one `RenderDiagnostics` configuration and adds typed role/parent
+integration inputs. Custom platforms may keep the default `null` port. Applications that use **Locate Device DSL** retain
 `viewcompose-preview` in a debug configuration, while release builds carry no locator
 implementation.

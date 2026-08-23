@@ -2,7 +2,7 @@
 title: 读取渲染诊断
 sidebar_position: 14
 translation_source: tutorials/render-diagnostics.md
-translation_source_hash: c689b5271ba4d66f1e704d5026ee169c1c4b693475ba325f31d1c08d92e72a05
+translation_source_hash: 15dd09ecdf9f7536b4334c0f754050bd79e0250a0f5cc6b83a4f239a4e0c2339
 translation_status: current
 ---
 
@@ -40,6 +40,10 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.RenderDiagnosticCollection
+import com.viewcompose.ui.foundation.RenderDiagnostics
+import com.viewcompose.ui.foundation.RenderFrameCompleted
+import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 import com.viewcompose.ui.foundation.RenderStats
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.remember
@@ -50,10 +54,22 @@ class RenderDiagnosticsTutorialActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val latestStats = AtomicReference(RenderStats())
+        val diagnostics = RenderDiagnostics(
+            collection = RenderDiagnosticCollection(
+                lifecycle = false,
+                failures = false,
+                frameLevel = RenderFrameDiagnosticLevel.Stats,
+            ),
+            sink = { event ->
+                if (event is RenderFrameCompleted) {
+                    event.stats?.let(latestStats::set)
+                }
+            },
+        )
         setMaterial3UiContent(
             debug = true,
             debugTag = "RenderTutorial",
-            onRenderStats = latestStats::set,
+            diagnostics = diagnostics,
         ) {
             val summary = remember { mutableStateOf("No sample yet") }
 
@@ -78,8 +94,9 @@ class RenderDiagnosticsTutorialActivity : ComponentActivity() {
 ```
 {/* tutorial-sample-end */}
 
-`onRenderStats` 在 frame 后运行，因此应在 composition 外保存不可变快照，只从显式事件读取。
-如果每次回调都直接写入界面观察的状态，会产生渲染—观察—再渲染循环，并污染正在测量的计数器。
+诊断 Sink 会在权威 Frame 完成后同步运行，因此应在 Composition 外保存不可变 Stats 快照，只从显式
+UI 事件读取。如果每个 `RenderFrameCompleted` 事件都直接写入界面观察的状态，会产生渲染—观察—
+再渲染循环，并污染正在测量的计数器。
 
 ## 验证结果
 

@@ -365,6 +365,27 @@ Building a VNode tree is thread-confined to its active composition context. Stan
 serialize rendering, state callbacks, effects, and platform operations on the main thread. Custom
 hosts must preserve the same ordering and ownership guarantees.
 
+## Correlated render diagnostics
+
+`RenderDiagnostics` is the Q3 root configuration for lifecycle, failure, and frame events.
+`RenderSessionTraceId`, `RenderSessionRole`, and `RenderDiagnosticContext` are Q2 correlation
+values; `RenderDiagnosticCollection` and `RenderFrameDiagnosticLevel` are Q2 selection values.
+Host and Preview roots begin a tree, while navigation destinations, lazy items, pager pages, and
+overlay surfaces inherit the private parent context captured in their immutable Local snapshot.
+Physical View reuse never transfers a logical session ID.
+
+`RenderFrameDiagnosticLevel.None` builds no renderer diagnostics, `Stats` requests counters only,
+and `Tree` also requests the bounded tree, patch, warning, and composition snapshots. Frame events
+are published only after `lastFrameReport` is authoritative. Sink delivery is synchronous and
+session-serialized; re-entry fails fast, and a throwing sink is recorded as `DiagnosticsSink` and
+disabled without changing render recovery.
+
+The alpha hard cut removes the three independent render callbacks and the result-only Local.
+Migrate stats and trees to `RenderFrameCompleted`, failures to `RenderFailureObserved`, and keep
+direct polling on `lastFrameReport` or `lastRenderFailure` only when an event stream is unnecessary.
+See the [diagnostics guide](../../tooling/diagnostics.md) and
+[ADR-0021](../../architecture/decisions/0021-correlated-render-diagnostics-ownership.md).
+
 ## Related documentation
 
 - [Current architecture and module boundaries](../../architecture/overview.md)
@@ -409,7 +430,8 @@ segmented item keys. These changes intentionally keep one source of truth; no de
 signature is retained on the alpha line.
 
 `RenderSessionPlatformDiagnostics.sourceTooling`, `RenderSessionSourceTooling`, and
-`RenderSessionSourceRegistration` are additive Q3 tooling APIs. Existing platform diagnostics use
+`RenderSessionSourceRegistration` are Q3 tooling APIs. Source capture now receives the same
+`RenderDiagnosticContext` used by runtime events instead of a separate container-role marker. Existing platform diagnostics use
 the default `null` adapter and retain their previous behavior. Opted-in custom platforms must keep
 registration state bounded by its render session, consume the bounded candidate-chain list
 synchronously, and perform callbacks on the platform render thread. Registration is passive: it

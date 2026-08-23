@@ -79,7 +79,8 @@ object ViewTreeRenderer {
      * @param container exclusive ViewGroup host for this mounted tree
      * @param previous exact roots returned by the previous successful call, or an empty list initially
      * @param nodes next immutable declarative root snapshot
-     * @param collectDiagnostics whether to collect statistics, structure, patch, and warning snapshots
+     * @param collectDiagnostics whether to collect structure, patch, and warning snapshots
+     * @param collectStatistics whether to collect aggregate binding statistics
      * @param onReconcile optional callback invoked on the UI thread after commit and cleanup
      * @return committed mounted roots, reconciliation plan, diagnostics, deferred effects, and isolated failures
      * @throws Throwable when reconciliation or platform mutation fails before structural commit
@@ -89,6 +90,7 @@ object ViewTreeRenderer {
         previous: List<MountedNode>,
         nodes: List<VNode>,
         collectDiagnostics: Boolean = true,
+        collectStatistics: Boolean = collectDiagnostics,
         onReconcile: ((RenderTreeResult) -> Unit)? = null,
     ): RenderTreeResult {
         // Wrappers insert platform host nodes before reconciliation, turning modifier semantics into normal tree structure.
@@ -105,7 +107,7 @@ object ViewTreeRenderer {
                 previous = previous,
                 nodes = renderNodes,
                 transaction = transaction,
-                collectStats = collectDiagnostics,
+                collectStats = collectStatistics,
                 collectStructure = collectDiagnostics,
                 collectWarnings = collectDiagnostics && onReconcile != null,
                 parentNodeKey = null,
@@ -153,7 +155,8 @@ object ViewTreeRenderer {
      *
      * @sample com.viewcompose.renderer.samples.patchObservedPropertySample
      * @param patches non-empty declaration-ordered batch with unique mounted targets and ids
-     * @param collectDiagnostics whether to collect patch records and aggregate binding statistics
+     * @param collectDiagnostics whether to collect patch records
+     * @param collectStatistics whether to collect aggregate binding statistics
      * @return property-only commit work and diagnostics; mounted roots remain unchanged
      * @throws IllegalArgumentException when [patches] is empty
      * @throws IllegalStateException when a patch violates exact-target or property-only invariants
@@ -163,6 +166,7 @@ object ViewTreeRenderer {
     fun patchObservedProperties(
         patches: List<ViewTreeObservedPropertyPatch>,
         collectDiagnostics: Boolean = true,
+        collectStatistics: Boolean = collectDiagnostics,
     ): ObservedPropertyRenderResult {
         require(patches.isNotEmpty()) { "Observed-property patch batches cannot be empty." }
         val transaction = ViewTreePatchPipeline.beginTransaction()
@@ -171,7 +175,7 @@ object ViewTreeRenderer {
                 patches = patches,
                 defaultRippleColor = DEFAULT_RIPPLE_COLOR,
                 transaction = transaction,
-                collectStats = collectDiagnostics,
+                collectStats = collectStatistics,
             )
         } catch (error: Throwable) {
             ViewTreePatchPipeline.rollbackTransaction(

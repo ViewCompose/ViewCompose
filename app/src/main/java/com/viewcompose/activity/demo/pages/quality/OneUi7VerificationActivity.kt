@@ -55,7 +55,7 @@ class OneUi7VerificationActivity : DemoRenderActivity() {
                     overlayIntegrations = host.integrationAttribution
                 }
             },
-            onRenderResult = DemoRenderDiagnosticsStore::record,
+            diagnostics = DemoRenderDiagnosticsStore.diagnostics(),
         ) { root ->
             buildRootScaffold(root)
         }

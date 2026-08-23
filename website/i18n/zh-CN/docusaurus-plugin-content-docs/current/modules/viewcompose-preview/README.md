@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: cc89764e00f48f9b557fdb1bb8b6af1fb9aefbb7dc88d0dfb0aeca6187273557
+translation_source_hash: 14416cfa2d282bc9ff1464b26cbfb2c5d216d59f9d63c9987f4e7566d4556cec
 translation_status: current
 ---
 
@@ -41,8 +41,9 @@ ViewCompose 提供两条互补路径：
 ## 真机 DSL 定位
 
 这个可选制品还负责 Android Studio `Locate Device DSL` 动作的应用进程侧实现。在可调试进程中，
-它提供中立的 Host 源码检查服务，并为符合条件的 Host/Page Session 保留有界源码候选。它不会观察
-滚动、全局布局、绘制、触摸、Frame 或重组，也不会持续发布报告。
+它提供中立的 Host 源码检查服务，并为符合条件的 Host、Navigation Destination 与 Pager Page
+Session 保留有界源码候选。协议 v4 携带与运行时诊断相同的进程内 Trace ID、可选 Parent ID 和
+类型化角色。它不会观察滚动、全局布局、绘制、触摸、Frame 或重组，也不会持续发布报告。
 
 开发者点击该动作时，Android Studio 会发出一条受 `DUMP` 权限保护且带 32 字符 Nonce 的请求。
 Receiver 在主线程对当前弱引用持有的 Session View 采样一次，随后按需在后台序列化，并将一份有界
@@ -94,15 +95,16 @@ Selected-identity Check，不生成 Sample 或报告。
 持有的 Android `ViewGroup`；`ViewComposePreviewHost` 是还可传入 Overlay 后端的底层形式。
 
 桥接会记住一个 Android 根节点和渲染会话。仅内容发生 Compose 重组时复用会话并请求一次新的
-ViewCompose 渲染；主题、调试配置、Overlay 后端或容器变化时重建会话；离开 Compose 组合时释放。
-内容不能移除根节点，也不能在组合之外持有它。
+ViewCompose 渲染；主题、调试配置、Overlay 后端、诊断配置或容器变化时重建会话；离开 Compose
+组合时释放。内容不能移除根节点，也不能在组合之外持有它。
 
 桥接会从创建原生 View 的同一个 Container Context 安装 `AndroidResourceEnvironment`。Android 资源
 查询函数因此会解析当前 Compose Preview 配置，Configuration Callback 也会推进普通 Android Host
 使用的同一资源版本，而不是进入 Preview 专用解析器。
 
-`ViewComposePreviewOptions` 只选择亮/暗 `UiThemeDefaults` 和可选渲染诊断。它刻意保持精简；静态
-预览配置矩阵由 preview-core 负责。
+`ViewComposePreviewOptions` 只选择亮/暗 `UiThemeDefaults` 和可选的关联式
+`RenderDiagnostics` 根。交互式与静态 Preview Session 都使用 `Preview` 角色。该选项刻意保持
+精简；静态预览配置矩阵由 preview-core 负责。
 
 ## 目录与快照覆盖
 
@@ -151,3 +153,4 @@ Preview-only Renderer 路径。
 共享目录/快照覆盖模型。静态预览协议兼容性仍由 preview-core 统一管理。
 真机 DSL 定位器现在改为按请求运行，并完全归属于这个可选制品；Android Host 只保留中立的可空
 检查端口。
+真机 DSL 协议现在使用运行时关联身份和类型化角色；协议 v3 报告会被明确拒绝。

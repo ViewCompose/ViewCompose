@@ -1,6 +1,7 @@
 package com.viewcompose.ui.foundation.samples
 
 import com.viewcompose.ui.foundation.CoreObservedPropertyPatch
+import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 import com.viewcompose.ui.foundation.CoreRenderEngine
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.tooling.UiNodeTooling
@@ -30,6 +31,6 @@ fun observedPropertyEngineSample(
                 next = nextNode,
             ),
         ),
-        collectDiagnostics = false,
+        diagnosticLevel = RenderFrameDiagnosticLevel.None,
     )
 }
