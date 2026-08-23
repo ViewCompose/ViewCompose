@@ -43,6 +43,7 @@ import java.util.Date
 import java.util.Locale
 
 private const val SNAPSHOT_STABLE_FRAME_THRESHOLD = 2
+private const val TIMING_WORKLOAD_FRAME_COUNT = 8
 internal val DIAGNOSTICS_RENDERER_PAGE_ITEMS = listOf(
     "renderer_actions",
     "renderer_highlight",
@@ -105,6 +106,9 @@ internal fun UiTreeBuilder.DiagnosticsPage(
     val layoutSnapshotState = remember { mutableStateOf(LayoutPassTracker.snapshot()) }
     val snapshotHistorySummaryState = remember { mutableStateOf(buildRenderHistorySummary()) }
     val highlightFixtureGenerationState = remember { mutableStateOf(1) }
+    val timingWorkloadFrameState = remember { mutableStateOf(0) }
+    val timingWorkloadRunState = remember { mutableStateOf(0) }
+    val timingWorkloadRunningState = remember { mutableStateOf(false) }
     if (pendingSnapshotRefreshState.value) {
         val refreshToken = snapshotRefreshRequestTokenState.value
         SideEffect {
@@ -318,6 +322,64 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                         .padding(bottom = 8.dp)
                         .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_RENDERER_REFRESH)
                         .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+                )
+                Button(
+                    text = stringResource(R.string.demo_diagnostics_run_timing_workload),
+                    enabled = !timingWorkloadRunningState.value,
+                    onClick = {
+                        if (!timingWorkloadRunningState.value) {
+                            timingWorkloadRunningState.value = true
+                            timingWorkloadFrameState.value = 0
+                            val choreographer = Choreographer.getInstance()
+                            lateinit var requestFrame: () -> Unit
+                            requestFrame = {
+                                choreographer.postFrameCallback {
+                                    val nextFrame = timingWorkloadFrameState.value + 1
+                                    val completed = nextFrame >= TIMING_WORKLOAD_FRAME_COUNT
+                                    applyStateMutationWithRetry {
+                                        timingWorkloadFrameState.value = nextFrame
+                                        if (completed) {
+                                            timingWorkloadRunState.value += 1
+                                            timingWorkloadRunningState.value = false
+                                        }
+                                    }
+                                    if (!completed) requestFrame()
+                                }
+                            }
+                            requestFrame()
+                        }
+                    },
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_TIMING_WORKLOAD),
+                )
+                Text(
+                    text = stringResource(
+                        R.string.demo_diagnostics_timing_workload_status,
+                        timingWorkloadFrameState.value,
+                        TIMING_WORKLOAD_FRAME_COUNT,
+                        timingWorkloadRunState.value,
+                    ),
+                    color = TextDefaults.secondaryColor(),
+                    modifier = Modifier
+                        .padding(bottom = 4.dp)
+                        .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_TIMING_WORKLOAD_STATUS),
+                )
+                Text(
+                    text = if (timingWorkloadFrameState.value % 2 == 0) {
+                        stringResource(
+                            R.string.demo_diagnostics_timing_workload_even_fixture,
+                            timingWorkloadFrameState.value,
+                        )
+                    } else {
+                        stringResource(
+                            R.string.demo_diagnostics_timing_workload_odd_fixture,
+                            timingWorkloadFrameState.value,
+                        )
+                    },
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_TIMING_WORKLOAD_FIXTURE),
                 )
                 if (pendingSnapshotRefreshState.value) {
                     Text(

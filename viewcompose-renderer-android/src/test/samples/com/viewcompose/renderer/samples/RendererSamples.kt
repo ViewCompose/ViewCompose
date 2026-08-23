@@ -14,6 +14,8 @@ import com.viewcompose.renderer.reconcile.LazyListUpdate
 import com.viewcompose.renderer.reconcile.ReconcileNode
 import com.viewcompose.renderer.reconcile.ReusePatch
 import com.viewcompose.renderer.view.tree.ViewTreeRenderer
+import com.viewcompose.renderer.view.tree.RenderTreeTimingCollector
+import com.viewcompose.renderer.view.tree.RenderTreeTimingSpan
 import com.viewcompose.renderer.view.tree.ViewTreeObservedPropertyPatch
 import com.viewcompose.renderer.view.tree.MountedNode
 import com.viewcompose.ui.node.LazyListItem
@@ -99,6 +101,24 @@ fun renderIntoViewGroupSample(
     mounted = updated.mountedNodes
 
     ViewTreeRenderer.disposeMounted(container, mounted)
+}
+
+fun renderTreeTimingCollectorSample(
+    container: ViewGroup,
+    nextNodes: List<VNode>,
+) {
+    val visitedPhases = mutableListOf<String>()
+    val result = ViewTreeRenderer.renderIntoWithTiming(
+        container = container,
+        previous = emptyList(),
+        nodes = nextNodes,
+        timingCollector = RenderTreeTimingCollector { _, phase ->
+            visitedPhases += phase.name
+            RenderTreeTimingSpan { }
+        },
+    )
+    result.commitEffects.forEach { effect -> effect.commit() }
+    check(visitedPhases.isNotEmpty())
 }
 
 fun patchObservedPropertySample(

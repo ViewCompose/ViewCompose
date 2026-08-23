@@ -4,6 +4,11 @@ import com.viewcompose.ui.foundation.CoreObservedPropertyPatch
 import com.viewcompose.ui.foundation.CoreMountedNodeInspection
 import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 import com.viewcompose.ui.foundation.CoreRenderEngine
+import com.viewcompose.ui.foundation.CoreRenderFrame
+import com.viewcompose.ui.foundation.CoreRenderTimingCollector
+import com.viewcompose.ui.foundation.CoreRenderTimingPhase
+import com.viewcompose.ui.foundation.CoreRenderTimingSpan
+import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.tooling.UiNodeTooling
 import com.viewcompose.ui.node.spec.NodeSpec
@@ -52,4 +57,25 @@ fun observedPropertyEngineSample(
         ),
         diagnosticLevel = RenderFrameDiagnosticLevel.None,
     )
+}
+
+fun coreRenderTimingEngineSample(
+    engine: CoreRenderEngine,
+    container: RenderContainerHandle,
+    previousMountedNodes: List<Any>,
+    nodes: List<VNode>,
+): CoreRenderFrame {
+    val phases = mutableListOf<CoreRenderTimingPhase>()
+    return engine.renderIntoWithTiming(
+        container = container,
+        previousMountedNodes = previousMountedNodes,
+        nodes = nodes,
+        diagnosticLevel = RenderFrameDiagnosticLevel.None,
+        timingCollector = CoreRenderTimingCollector { _, phase ->
+            phases += phase
+            CoreRenderTimingSpan { }
+        },
+    ).also {
+        check(phases.isNotEmpty())
+    }
 }

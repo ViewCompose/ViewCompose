@@ -48,6 +48,7 @@ class ComposerLite(
     private var composing: Boolean = false
     private var activeAttempt: CompositionAttempt? = null
     private var explicitRootRequestPending: Boolean = false
+    private var requestedTimingCollector: CompositionTimingCollector? = null
     private var dispatchingCallbacks: Boolean = false
     private var disposed: Boolean = false
     @Volatile
@@ -158,6 +159,7 @@ class ComposerLite(
             drainedInvalidations = drainedInvalidations,
             collectDiagnostics = collectDiagnostics,
             explicitRootRequest = explicitRootRequestPending,
+            timingCollector = requestedTimingCollector,
         )
         explicitRootRequestPending = false
         if (collectDiagnostics) {
@@ -209,6 +211,45 @@ class ComposerLite(
             snapshot.dispose()
             currentScope = previous
             composing = false
+        }
+    }
+
+    /**
+     * Prepares one composition attempt with an explicit finite scope-timing collector.
+     *
+     * This method has the same transactional, threading, callback, and failure behavior as
+     * [prepareRoot]. Only scope bodies that execute during this call are offered to [collector];
+     * skipped scopes produce no timing callback. The collector is removed in `finally`, including
+     * when composition throws, and does not remain active for later attempts.
+     *
+     * Collector failures are diagnostic-only: a failed begin declines that scope, and a failed
+     * close is ignored after the application scope result or exception is already known. This API
+     * performs no scheduling, persistence, I/O, Android work, or cross-thread delivery.
+     *
+     * @sample com.viewcompose.runtime.samples.compositionTimingCollectorSample
+     * @param T candidate root value type
+     * @param collector request-owned nested timing collector used only for this attempt
+     * @param collectDiagnostics whether to also build ordinary recomposition diagnostics
+     * @param block root composition body evaluated transactionally
+     * @return prepared candidate that the caller must commit or abort
+     * @throws IllegalStateException under the same owner-thread, re-entry, disposal, or outstanding-attempt conditions as [prepareRoot]
+     */
+    fun <T> prepareRootWithTiming(
+        collector: CompositionTimingCollector,
+        collectDiagnostics: Boolean = false,
+        block: () -> T,
+    ): PreparedComposition<T> {
+        check(requestedTimingCollector == null) {
+            "A composition timing collector is already active for this composer."
+        }
+        requestedTimingCollector = collector
+        return try {
+            prepareRoot(
+                collectDiagnostics = collectDiagnostics,
+                block = block,
+            )
+        } finally {
+            requestedTimingCollector = null
         }
     }
 
@@ -658,6 +699,19 @@ class ComposerLite(
         checkpointScope(scope)
         val invalidationVersion = scope.currentInvalidationVersion()
         scope.beginCompose()
+        val timingCollector = currentAttempt().timingCollector
+        val timingSpan = timingCollector?.let { collector ->
+            val identity = scope.ensureTimingNodeIdentity()
+            val timingScope = CompositionTimingScope(
+                identity = identity,
+                parentIdentity = scope.parent?.ensureTimingNodeIdentity(),
+                path = scope.saveablePath,
+                depth = scope.depth(),
+                sourceCallSites = scope.sourceCallSites,
+            )
+            runCatching { collector.beginScope(timingScope) }.getOrNull()
+        }
+        scope.setTimingScopeActive(timingSpan != null)
         return try {
             val (result, nextObservation) = RuntimeObservation.observeReads(
                 onInvalidated = {
@@ -694,6 +748,8 @@ class ComposerLite(
             scope.trimAfterCompose()
             finalResult
         } finally {
+            scope.setTimingScopeActive(false)
+            timingSpan?.let { span -> runCatching(span::close) }
             scope.endCompose()
         }
     }
@@ -1080,6 +1136,7 @@ class ComposerLite(
         val drainedInvalidations: List<RecomposeScope>,
         val collectDiagnostics: Boolean,
         val explicitRootRequest: Boolean,
+        val timingCollector: CompositionTimingCollector?,
         val checkpoints: LinkedHashMap<RecomposeScope, RecomposeScope.Checkpoint> = LinkedHashMap(),
         val newScopes: LinkedHashSet<RecomposeScope> = LinkedHashSet(),
         val pendingStateUpdates: LinkedHashSet<CommitAwareState<*>> = LinkedHashSet(),

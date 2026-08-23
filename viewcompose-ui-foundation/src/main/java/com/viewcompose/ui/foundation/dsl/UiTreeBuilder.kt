@@ -138,6 +138,12 @@ open class UiTreeBuilder {
                         environment = Environment.values,
                     ),
                 )
+                scope.timingNodeIdentityOrNull()?.let { identity ->
+                    UiNodeTooling.attachTimingIdentity(
+                        node = checkNotNull(nextNode),
+                        identity = identity.value,
+                    )
+                }
                 scope.updateLocalSnapshot(LocalContext.snapshot())
             }
             checkNotNull(nextNode)
@@ -220,6 +226,12 @@ open class UiTreeBuilder {
                         environment = Environment.values,
                     ),
                 )
+                scope.timingNodeIdentityOrNull()?.let { identity ->
+                    UiNodeTooling.attachTimingIdentity(
+                        node = checkNotNull(nextNode),
+                        identity = identity.value,
+                    )
+                }
                 scope.updateLocalSnapshot(LocalContext.snapshot())
             }
             checkNotNull(nextNode)
@@ -305,6 +317,12 @@ open class UiTreeBuilder {
                         observedPropertyId = resolution.id,
                     ),
                 )
+                scope.timingNodeIdentityOrNull()?.let { identity ->
+                    UiNodeTooling.attachTimingIdentity(
+                        node = checkNotNull(nextNode),
+                        identity = identity.value,
+                    )
+                }
                 scope.updateLocalSnapshot(LocalContext.snapshot())
             }
             checkNotNull(nextNode)

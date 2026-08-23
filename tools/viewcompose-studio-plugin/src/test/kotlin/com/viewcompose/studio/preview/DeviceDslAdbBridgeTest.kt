@@ -245,6 +245,46 @@ class DeviceDslAdbBridgeTest {
         assertTrue(commands.any { it.contains("--es node_token abc") })
     }
 
+    @Test
+    fun `timing request carries sorted phases and reads a terminal result`() {
+        var broadcastRequestId: String? = null
+        val commands = mutableListOf<String>()
+        val device = fakeDevice { command ->
+            commands += command
+            when {
+                command.startsWith("dumpsys activity") ->
+                    "topResumedActivity=ActivityRecord{a u0 com.example.app/.MainActivity t3}"
+                command == "pidof com.example.app" -> "4242"
+                command.startsWith("am broadcast") -> {
+                    broadcastRequestId = Regex("--es request_id ([a-f0-9]{32})")
+                        .find(command)?.groupValues?.get(1)
+                    "Broadcast completed: result=0"
+                }
+                command.startsWith("run-as com.example.app") -> timingReportJson(
+                    checkNotNull(broadcastRequestId),
+                )
+                else -> error("Unexpected command: $command")
+            }
+        }
+
+        val result = readDeviceDslTimingReport(
+            device = device,
+            sessionId = 9L,
+            phases = setOf(
+                StudioDeviceDslTimingPhase.Binding,
+                StudioDeviceDslTimingPhase.Composition,
+            ),
+        )
+
+        assertEquals(StudioDeviceDslTimingStartStatus.Started, result.startStatus)
+        assertTrue(checkNotNull(result.result).complete)
+        assertTrue(commands.any { it.contains("--es operation timing") })
+        assertTrue(commands.any { it.contains("--el session_id 9") })
+        assertTrue(commands.any {
+            it.contains("--es timing_phases composition,binding")
+        })
+    }
+
     private fun validReportJson(requestId: String): String {
         return """
             {
@@ -258,6 +298,42 @@ class DeviceDslAdbBridgeTest {
             }
         """.trimIndent()
     }
+
+    private fun timingReportJson(requestId: String): String = """
+        {
+          "protocolVersion": $DEVICE_DSL_SOURCE_PROTOCOL_VERSION,
+          "requestId": "$requestId",
+          "operation": "timing",
+          "packageName": "com.example.app",
+          "processId": 4242,
+          "generatedAtEpochMillis": 123456,
+          "sessions": [],
+          "timing": {
+            "startStatus": "started",
+            "result": {
+              "sessionId": 9,
+              "parentSessionId": null,
+              "role": "Host",
+              "clock": "monotonic_nanoseconds",
+              "completedFrames": 1,
+              "startedAtNanos": 100,
+              "endedAtNanos": 200,
+              "attemptedClockReads": 2,
+              "retainedClockReads": 2,
+              "emptyPairOverheadNanos": 1,
+              "droppedTimedNodes": 0,
+              "droppedRecords": 0,
+              "droppedStrings": 0,
+              "truncated": false,
+              "complete": true,
+              "endReason": "frame_limit",
+              "unsupportedDomains": ["gpu"],
+              "records": [],
+              "recordsTruncated": false
+            }
+          }
+        }
+    """.trimIndent()
 
     private companion object {
         const val REQUEST_ID = "0123456789abcdef0123456789abcdef"

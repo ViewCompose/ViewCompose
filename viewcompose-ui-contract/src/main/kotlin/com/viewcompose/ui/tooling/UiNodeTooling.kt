@@ -217,6 +217,7 @@ object UiNodeTooling {
         source: VNode,
     ): VNode {
         target.toolingMetadata = source.toolingMetadata
+        target.timingNodeIdentity = source.timingNodeIdentity
         return target
     }
 
@@ -236,13 +237,70 @@ object UiNodeTooling {
         source: VNode,
         discriminator: String,
     ): VNode {
-        val sourceMetadata = source.toolingMetadata ?: return target
-        target.toolingMetadata = sourceMetadata.copy(
-            nodeId = "${sourceMetadata.nodeId}/$discriminator",
-            synthetic = true,
-        )
+        source.toolingMetadata?.let { sourceMetadata ->
+            target.toolingMetadata = sourceMetadata.copy(
+                nodeId = "${sourceMetadata.nodeId}/$discriminator",
+                synthetic = true,
+            )
+        }
+        target.timingNodeIdentity = source.timingNodeIdentity
         return target
     }
+
+    /**
+     * Associates one emitted node with an active composition-timing scope.
+     *
+     * This non-semantic identity does not affect equality, hashing, reconciliation, application
+     * keys, saveable state, accessibility, or rendering. Callers invoke this method only inside a
+     * finite timing capture. Source attribution remains owned by the capture collector, so this
+     * boundary does not capture a stack trace or allocate tooling metadata.
+     *
+     * @sample com.viewcompose.ui.samples.uiNodeTimingIdentitySample
+     * @param node emitted declarative node to correlate with downstream renderer timing
+     * @param identity positive process-local identity supplied by the active composition scope
+     * @return the same [node] instance
+     * @throws IllegalArgumentException when [identity] is not positive
+     */
+    fun attachTimingIdentity(
+        node: VNode,
+        identity: Long,
+    ): VNode {
+        require(identity > 0L) { "Timing node identity must be positive." }
+        node.timingNodeIdentity = identity
+        return node
+    }
+
+    /**
+     * Returns or lazily allocates a renderer-fallback timing identity for [node].
+     *
+     * Callers invoke this method only after an explicit finite timing request. A previously
+     * attached composition identity is preserved; otherwise a negative process-local identity is
+     * allocated so it cannot collide with the runtime's positive composition identities. The
+     * value remains non-semantic and cannot be used as an application key or persistent identity.
+     *
+     * @sample com.viewcompose.ui.samples.uiNodeTimingIdentitySample
+     * @param node node reached by an active renderer timing request
+     * @return non-zero opaque process-local timing identity
+     */
+    fun ensureTimingIdentity(node: VNode): Long {
+        node.timingNodeIdentity?.let { identity -> return identity }
+        return nextFallbackTimingIdentity().also { identity ->
+            node.timingNodeIdentity = identity
+        }
+    }
+
+    /**
+     * Returns the process-local timing identity attached to [node].
+     *
+     * The value is a live non-semantic field used only by a finite renderer timing capture. It may
+     * be absent, may outlive the request on a cached VNode, and must be remapped to a fresh
+     * capture-scoped public token before presentation or serialization.
+     *
+     * @sample com.viewcompose.ui.samples.uiNodeTimingIdentitySample
+     * @param node declarative or synthetic node to inspect
+     * @return positive process-local identity, or `null` when timing never annotated this node
+     */
+    fun timingIdentityOf(node: VNode): Long? = node.timingNodeIdentity
 
     /**
      * Returns non-semantic metadata currently attached to [node].
@@ -326,6 +384,15 @@ object UiNodeTooling {
     private const val RENDER_SESSION_CLASS =
         "com.viewcompose.ui.foundation.RenderSession"
 }
+
+private fun nextFallbackTimingIdentity(): Long {
+    while (true) {
+        val candidate = fallbackTimingIdentities.getAndDecrement()
+        if (candidate < 0L) return candidate
+    }
+}
+
+private val fallbackTimingIdentities = AtomicLong(-1L)
 
 private class FirstSourceCaptureScope(
     val onSourceCaptured: (List<UiSourceCallSite>) -> Unit,

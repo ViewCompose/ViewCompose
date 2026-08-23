@@ -36,14 +36,15 @@ ViewCompose supports two complementary paths:
 The similarly named APIs live in different packages: the static annotation is in
 `com.viewcompose.preview.tooling`; the Compose bridge function is in `com.viewcompose.preview`.
 
-## Running-device DSL location and node highlighting
+## Running-device DSL location, highlighting, and timing
 
 This optional artifact owns the application-process half of Android Studio's **Locate Device DSL**,
-**Highlight Device DSL Node**, and **Clear Device DSL Highlight** actions. In a debuggable process
+**Highlight Device DSL Node**, **Clear Device DSL Highlight**, and **Inspect Device Node Timing**
+actions. In a debuggable process
 it retains bounded source candidates for Host, navigation-destination, and pager-page sessions and
 registers a weak, request-only mounted-node inspector for every supported logical session role.
 Lazy-item, overlay, and preview sessions therefore remain selectable without composition-time source
-stack capture. Protocol v5 carries the same process-local
+stack capture. Protocol v6 carries the same process-local
 trace ID, optional parent ID, and typed role used by runtime diagnostics. It does not continuously
 publish a report or observe scroll, global layout, draw, touch, frames, or recomposition.
 
@@ -64,6 +65,20 @@ Every response echoes a 1--128 character ASCII nonce and is lazily serialized to
 then atomically written in application-private cache. The IDE accepts only a response with the
 matching operation, nonce, foreground package, and live process. Invalid requests, missing
 services, writer or overlay failures, and session disposal cannot fail application rendering.
+
+The timing action selects one visible correlated Session and starts one finite request while the
+developer triggers the workload. Protocol v6 carries executed composition, reconciliation, and
+direct-binding aggregates with opaque capture-scoped node tokens, inclusive/self or direct
+semantics, clock-read counts, empty-pair overhead, drops, truncation, unsupported domains, and
+terminal reason. A process accepts only one active capture. It stops after at most eight completed
+frame attempts or two monotonic seconds, retains at most 64 timed nodes per frame and 512 aggregates
+to depth 32, and reuses bounded source metadata rather than taking a timing-path stack trace.
+
+Ordinary rendering supplies no collector: the artifact performs no per-node clock reads, timing
+record allocation, polling, or report write until the explicit request. Measure/layout/draw, GPU,
+RenderThread, SurfaceFlinger, decode, network, database, and external-SDK work are outside this first
+contract. The Diagnostics → Renderer Demo fixture exposes a visible eight-frame workload so manual
+acceptance can confirm both UI progression and the terminal report.
 
 Keep this artifact in `debugImplementation`, test, or a dedicated tooling configuration. It is the
 artifact-presence gate required in addition to a debuggable process and an explicit IDE request.
@@ -181,7 +196,8 @@ The complete generated reference is available in the
 The `0.1.0-alpha03` line establishes the coherent native/DSL theme resolution, retained Compose
 bridge session, explicit root-access overload, and shared catalog/snapshot coverage model. Static
 preview protocol compatibility remains owned by preview-core.
-Running-device source location and node highlighting are request-driven and owned entirely by this
-optional artifact; Android Host retains only a neutral nullable session-inspection port. Protocol v5
-hard-cuts v4 by adding operation validation, request-scoped opaque node tokens,
-bounded node snapshots, structured highlight states, clipping bounds, and explicit clear.
+Running-device source location, node highlighting, and timing are request-driven and owned entirely
+by this optional artifact; Android Host retains only a neutral nullable session-inspection port.
+Protocol v6 hard-cuts older reports by adding the timing operation and finite result to operation
+validation, request-scoped opaque node tokens, bounded node snapshots, structured highlight states,
+clipping bounds, and explicit clear.

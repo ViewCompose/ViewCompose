@@ -92,6 +92,63 @@ object ViewTreeRenderer {
         collectDiagnostics: Boolean = true,
         collectStatistics: Boolean = collectDiagnostics,
         onReconcile: ((RenderTreeResult) -> Unit)? = null,
+    ): RenderTreeResult = renderIntoInternal(
+        container = container,
+        previous = previous,
+        nodes = nodes,
+        collectDiagnostics = collectDiagnostics,
+        collectStatistics = collectStatistics,
+        onReconcile = onReconcile,
+        timingCollector = null,
+    )
+
+    /**
+     * Reconciles one tree while exposing bounded renderer intervals to [timingCollector].
+     *
+     * Rendering, rollback, commit-effect, diagnostics, and callback behavior are identical to
+     * [renderInto]. The collector is used only for this synchronous call and is never installed as
+     * process or renderer state. Collector failures are isolated from rendering.
+     *
+     * This is a Q3 host-integration API. It times reconciliation and direct native binding only;
+     * measure/layout/draw, GPU, decoding, network, database, and external SDK work are unsupported.
+     *
+     * @sample com.viewcompose.renderer.samples.renderTreeTimingCollectorSample
+     * @param container exclusive ViewGroup host for this mounted tree
+     * @param previous exact roots returned by the previous successful call, or an empty list initially
+     * @param nodes next immutable declarative root snapshot
+     * @param timingCollector request-owned collector used only for this synchronous render
+     * @param collectDiagnostics whether to collect structure, patch, and warning snapshots
+     * @param collectStatistics whether to collect aggregate binding statistics
+     * @param onReconcile optional callback invoked on the UI thread after commit and cleanup
+     * @return the same committed result family as [renderInto]
+     * @throws Throwable under the same renderer and platform failure conditions as [renderInto]
+     */
+    fun renderIntoWithTiming(
+        container: ViewGroup,
+        previous: List<MountedNode>,
+        nodes: List<VNode>,
+        timingCollector: RenderTreeTimingCollector,
+        collectDiagnostics: Boolean = true,
+        collectStatistics: Boolean = collectDiagnostics,
+        onReconcile: ((RenderTreeResult) -> Unit)? = null,
+    ): RenderTreeResult = renderIntoInternal(
+        container = container,
+        previous = previous,
+        nodes = nodes,
+        collectDiagnostics = collectDiagnostics,
+        collectStatistics = collectStatistics,
+        onReconcile = onReconcile,
+        timingCollector = timingCollector,
+    )
+
+    private fun renderIntoInternal(
+        container: ViewGroup,
+        previous: List<MountedNode>,
+        nodes: List<VNode>,
+        collectDiagnostics: Boolean,
+        collectStatistics: Boolean,
+        onReconcile: ((RenderTreeResult) -> Unit)?,
+        timingCollector: RenderTreeTimingCollector?,
     ): RenderTreeResult {
         // Wrappers insert platform host nodes before reconciliation, turning modifier semantics into normal tree structure.
         val renderNodes = LayoutAnimationNodeWrapper.wrapTree(
@@ -112,6 +169,9 @@ object ViewTreeRenderer {
                 collectWarnings = collectDiagnostics && onReconcile != null,
                 parentNodeKey = null,
                 crossOwnerReuse = crossOwnerReuse,
+                timingCollector = timingCollector,
+                timingParentNode = null,
+                timingParentDepth = 0,
             )
         } catch (error: Throwable) {
             if (crossOwnerReuse) {
@@ -167,6 +227,49 @@ object ViewTreeRenderer {
         patches: List<ViewTreeObservedPropertyPatch>,
         collectDiagnostics: Boolean = true,
         collectStatistics: Boolean = collectDiagnostics,
+    ): ObservedPropertyRenderResult = patchObservedPropertiesInternal(
+        patches = patches,
+        collectDiagnostics = collectDiagnostics,
+        collectStatistics = collectStatistics,
+        timingCollector = null,
+        nodeDepths = emptyMap(),
+    )
+
+    /**
+     * Applies one property-only batch while exposing finite reconciliation-decision and binding timing.
+     *
+     * [mountedRoots] must be the committed roots that own every patch target and is traversed once
+     * only for this explicit request to recover structural depth. All mutation and rollback behavior
+     * is identical to [patchObservedProperties].
+     *
+     * @sample com.viewcompose.renderer.samples.renderTreeTimingCollectorSample
+     * @param mountedRoots exact committed roots that own [patches]
+     * @param patches non-empty exact-target batch
+     * @param timingCollector request-owned collector used only for this synchronous call
+     * @param collectDiagnostics whether to collect patch records
+     * @param collectStatistics whether to collect aggregate binding statistics
+     * @return property-only renderer result
+     */
+    fun patchObservedPropertiesWithTiming(
+        mountedRoots: List<MountedNode>,
+        patches: List<ViewTreeObservedPropertyPatch>,
+        timingCollector: RenderTreeTimingCollector,
+        collectDiagnostics: Boolean = true,
+        collectStatistics: Boolean = collectDiagnostics,
+    ): ObservedPropertyRenderResult = patchObservedPropertiesInternal(
+        patches = patches,
+        collectDiagnostics = collectDiagnostics,
+        collectStatistics = collectStatistics,
+        timingCollector = timingCollector,
+        nodeDepths = mountedNodeDepths(mountedRoots),
+    )
+
+    private fun patchObservedPropertiesInternal(
+        patches: List<ViewTreeObservedPropertyPatch>,
+        collectDiagnostics: Boolean,
+        collectStatistics: Boolean,
+        timingCollector: RenderTreeTimingCollector?,
+        nodeDepths: Map<MountedNode, Int>,
     ): ObservedPropertyRenderResult {
         require(patches.isNotEmpty()) { "Observed-property patch batches cannot be empty." }
         val transaction = ViewTreePatchPipeline.beginTransaction()
@@ -176,6 +279,8 @@ object ViewTreeRenderer {
                 defaultRippleColor = DEFAULT_RIPPLE_COLOR,
                 transaction = transaction,
                 collectStats = collectStatistics,
+                timingCollector = timingCollector,
+                nodeDepths = nodeDepths,
             )
         } catch (error: Throwable) {
             ViewTreePatchPipeline.rollbackTransaction(
@@ -198,6 +303,16 @@ object ViewTreeRenderer {
         )
     }
 
+    private fun mountedNodeDepths(roots: List<MountedNode>): Map<MountedNode, Int> {
+        val depths = java.util.IdentityHashMap<MountedNode, Int>()
+        fun visit(node: MountedNode, depth: Int) {
+            depths[node] = depth
+            node.children.forEach { child -> visit(child, depth + 1) }
+        }
+        roots.forEach { root -> visit(root, depth = 0) }
+        return depths
+    }
+
     private fun renderIntoTransaction(
         container: ViewGroup,
         previous: List<MountedNode>,
@@ -208,6 +323,9 @@ object ViewTreeRenderer {
         collectWarnings: Boolean,
         parentNodeKey: Any?,
         crossOwnerReuse: Boolean,
+        timingCollector: RenderTreeTimingCollector?,
+        timingParentNode: VNode?,
+        timingParentDepth: Int,
     ): RenderTreeResult {
         val previousReconcileNodes = previous.map { mountedNode ->
             ReconcileNode(
@@ -215,16 +333,22 @@ object ViewTreeRenderer {
                 payload = mountedNode,
             )
         }
-        val reconcileResult = if (crossOwnerReuse) {
-            ChildReconciler.reconcileForCrossOwnerReuse(
-                previous = previousReconcileNodes,
-                nodes = nodes,
-            )
-        } else {
-            ChildReconciler.reconcile(
-                previous = previousReconcileNodes,
-                nodes = nodes,
-            )
+        val reconcileResult = timingCollector.measureRenderInterval(
+            node = timingParentNode,
+            depth = timingParentDepth,
+            phase = RenderTreeTimingPhase.Reconciliation,
+        ) {
+            if (crossOwnerReuse) {
+                ChildReconciler.reconcileForCrossOwnerReuse(
+                    previous = previousReconcileNodes,
+                    nodes = nodes,
+                )
+            } else {
+                ChildReconciler.reconcile(
+                    previous = previousReconcileNodes,
+                    nodes = nodes,
+                )
+            }
         }
         val pipelineResult = ViewTreePatchPipeline.execute(
             container = container,
@@ -235,7 +359,9 @@ object ViewTreeRenderer {
             transaction = transaction,
             collectStats = collectStats,
             parentNodeKey = parentNodeKey,
-            renderChildren = { childContainer, childPrevious, childNodes, childParentKey ->
+            timingCollector = timingCollector,
+            nodeDepth = timingParentDepth + 1,
+            renderChildren = { childContainer, childPrevious, childNodes, childParentKey, parentNode ->
                 renderIntoTransaction(
                     container = childContainer,
                     previous = childPrevious,
@@ -246,6 +372,9 @@ object ViewTreeRenderer {
                     collectWarnings = false,
                     parentNodeKey = childParentKey,
                     crossOwnerReuse = childPrevious.any(MountedNode::requiresCrossOwnerRebind),
+                    timingCollector = timingCollector,
+                    timingParentNode = parentNode,
+                    timingParentDepth = timingParentDepth + 1,
                 )
             },
         )

@@ -40,4 +40,9 @@ data class VNode(
      */
     @Volatile
     internal var toolingMetadata: UiNodeToolingMetadata? = null
+
+    /** Process-local correlation identity present only on nodes emitted by a finite timing capture. */
+    @Volatile
+    internal var timingNodeIdentity: Long? = null
+
 }

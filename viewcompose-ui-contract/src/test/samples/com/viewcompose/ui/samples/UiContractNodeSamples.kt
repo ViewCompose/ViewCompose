@@ -193,6 +193,23 @@ fun vNodeModelSample() {
     check(spacer.children.isEmpty())
 }
 
+/** Correlates a declarative node with one finite composition and renderer timing request. */
+fun uiNodeTimingIdentitySample() {
+    val composedNode = VNode(
+        type = NodeType.Text,
+        spec = EmptyNodeSpec,
+    )
+    UiNodeTooling.attachTimingIdentity(composedNode, identity = 7L)
+    check(UiNodeTooling.ensureTimingIdentity(composedNode) == 7L)
+    check(UiNodeTooling.timingIdentityOf(composedNode) == 7L)
+
+    val rendererOnlyNode = VNode(
+        type = NodeType.Spacer,
+        spec = EmptyNodeSpec,
+    )
+    check(UiNodeTooling.ensureTimingIdentity(rendererOnlyNode) < 0L)
+}
+
 /** Builds one interactive visibility frame with measured reveal and visual transforms. */
 fun animatedVisibilityHostNodeContractSample() {
     val host = VNode(

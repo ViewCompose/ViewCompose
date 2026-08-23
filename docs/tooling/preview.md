@@ -221,8 +221,29 @@ remove it.
 Studio reports stale, recycled, hidden, fully clipped, synthetic/unsupported, ended-session, and
 rejected selections instead of guessing another View. The overlay cannot recompose, call
 application code, change focus or accessibility focus, intercept input, or alter layout. Protocol
-v5 validates the source, nodes, select, and clear operation independently with the nonce, foreground
-package, and live process; v4 reports are intentionally rejected.
+v6 validates the source, nodes, select, clear, and timing operations independently with the nonce,
+foreground package, and live process; older reports are intentionally rejected.
+
+## Inspect running-device node timing
+
+Choose **Tools → Inspect Device Node Timing** with the debuggable application in the foreground.
+After device and visible-Session selection, Studio prompts you to trigger the workload within two
+seconds. On the Demo Diagnostics → Renderer page, tap **Run 8-frame timing workload**. Its visible
+counter reaches `8/8`, while the requested capture stops automatically after at most eight completed
+frame attempts or two seconds.
+
+The report contains executed composition-scope, reconciliation, and direct-binding aggregates.
+Composition and reconciliation distinguish inclusive from self time; binding is direct time. Studio
+ranks self/direct records so nested inclusive totals are not added twice. Node tokens are opaque and
+capture-scoped, and source hints reuse already bounded composition metadata rather than taking a
+stack trace while timing.
+
+One process accepts only one active capture. A result reports clock-read counts, an empty-pair
+overhead estimate, drops, truncation, unsupported domains, and its terminal reason. It is capped at
+64 timed nodes per frame, 512 records, depth 32, 128 bounded strings, and 256 KiB. The feature does
+not measure Android measure/layout/draw, GPU, RenderThread, SurfaceFlinger, decoding, network,
+database, or external-SDK work. With no request, it installs no recurring observer and performs zero
+per-node clock reads or timing-record allocation.
 
 ## Inspect a running animation timeline
 

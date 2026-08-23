@@ -127,6 +127,68 @@ class DeviceDslSourceProtocolTest {
         assertEquals(10, report.highlight?.visibleBounds?.top)
     }
 
+    @Test
+    fun `parses a complete node timing result`() {
+        val report = parseDeviceDslSourceReport(timingReportJson())
+
+        val timing = checkNotNull(report.timing)
+        val result = checkNotNull(timing.result)
+        assertEquals(StudioDeviceDslOperation.Timing, report.operation)
+        assertEquals(StudioDeviceDslTimingStartStatus.Started, timing.startStatus)
+        assertEquals(2, result.completedFrames)
+        assertEquals(16L, result.attemptedClockReads)
+        assertEquals(12L, result.retainedClockReads)
+        assertEquals("duration_limit", result.endReason)
+        assertTrue(result.complete)
+        assertEquals(StudioDeviceDslTimingPhase.Binding, result.records.single().phase)
+        assertEquals(StudioDeviceDslTimingInclusion.Direct, result.records.single().inclusion)
+        assertEquals("z", result.records.single().nodeToken)
+    }
+
+    @Test
+    fun `timing summary exposes terminal scope and instrumentation overhead`() {
+        val result = checkNotNull(parseDeviceDslSourceReport(timingReportJson()).timing?.result)
+
+        val summary = result.toTopCostText(
+            PreviewUiMessages.forLanguage(PreviewUiLanguage.English),
+        )
+
+        assertTrue(summary.contains("2 completed frames · 1 retained records"))
+        assertTrue(summary.contains("Empty clock-pair overhead: 3 ns"))
+        assertTrue(summary.contains("End reason: duration_limit"))
+        assertTrue(summary.contains("unsupported domains: gpu, render_thread"))
+        assertTrue(summary.contains("0.003 ms · binding/direct · Text · frame 2"))
+    }
+
+    @Test
+    fun `rejects timing output with impossible retained clock reads`() {
+        val invalid = timingReportJson().replace(
+            "\"retainedClockReads\": 12",
+            "\"retainedClockReads\": 17",
+        )
+
+        val failure = runCatching { parseDeviceDslSourceReport(invalid) }.exceptionOrNull()
+
+        assertTrue(failure is IllegalArgumentException)
+    }
+
+    @Test
+    fun `timing session selection includes source-less lazy sessions`() {
+        val report = parseDeviceDslSourceReport(
+            reportJson(
+                sessions = sessionJson(
+                    id = 7,
+                    depth = 5,
+                    focused = true,
+                    includeSources = false,
+                ),
+            ),
+        )
+
+        assertEquals(7L, report.visibleTimingSessions().single().sessionId)
+        assertTrue(report.visibleTimingSessions().single().sourceCandidates.isEmpty())
+    }
+
     private fun reportJson(
         sessions: String,
         protocolVersion: Int = DEVICE_DSL_SOURCE_PROTOCOL_VERSION,
@@ -150,7 +212,22 @@ class DeviceDslSourceProtocolTest {
         focused: Boolean,
         attached: Boolean = true,
         shown: Boolean = true,
+        includeSources: Boolean = true,
     ): String {
+        val sourceCandidates = if (includeSources) {
+            """
+                [{
+                  "callSites": [{
+                    "className": "com.example.Page${id}Kt",
+                    "methodName": "Page$id",
+                    "fileName": "Page$id.kt",
+                    "lineNumber": ${20 + id}
+                  }]
+                }]
+            """.trimIndent()
+        } else {
+            "[]"
+        }
         return """
             {
               "sessionId": $id,
@@ -168,18 +245,65 @@ class DeviceDslSourceProtocolTest {
               "visitedNodes": 0,
               "droppedNodes": 0,
               "nodesTruncated": false,
-              "sourceCandidates": [{
-                "callSites": [{
-                  "className": "com.example.Page${id}Kt",
-                  "methodName": "Page$id",
-                  "fileName": "Page$id.kt",
-                  "lineNumber": ${20 + id}
-                }]
-              }],
+              "sourceCandidates": $sourceCandidates,
               "nodes": []
             }
         """.trimIndent()
     }
+
+    private fun timingReportJson(): String = """
+        {
+          "protocolVersion": $DEVICE_DSL_SOURCE_PROTOCOL_VERSION,
+          "requestId": "$REQUEST_ID",
+          "operation": "timing",
+          "packageName": "com.example.app",
+          "processId": 4242,
+          "generatedAtEpochMillis": 123456,
+          "sessions": [],
+          "timing": {
+            "startStatus": "started",
+            "result": {
+              "sessionId": 7,
+              "parentSessionId": null,
+              "role": "Host",
+              "clock": "monotonic_nanoseconds",
+              "completedFrames": 2,
+              "startedAtNanos": 100,
+              "endedAtNanos": 500,
+              "attemptedClockReads": 16,
+              "retainedClockReads": 12,
+              "emptyPairOverheadNanos": 3,
+              "droppedTimedNodes": 0,
+              "droppedRecords": 0,
+              "droppedStrings": 0,
+              "truncated": false,
+              "complete": true,
+              "endReason": "duration_limit",
+              "unsupportedDomains": ["gpu", "render_thread"],
+              "records": [{
+                "frameId": 2,
+                "nodeToken": "z",
+                "parentNodeToken": null,
+                "nodeType": "Text",
+                "depth": 1,
+                "synthetic": false,
+                "phase": "binding",
+                "inclusion": "direct",
+                "durationNanos": 2500,
+                "repetitions": 1,
+                "truncated": false,
+                "callSites": [{
+                  "className": "com.example.PageKt",
+                  "methodName": "Page",
+                  "fileName": "Page.kt",
+                  "lineNumber": 27
+                }]
+              }],
+              "recordsTruncated": false
+            }
+          }
+        }
+    """.trimIndent()
 
     private companion object {
         const val REQUEST_ID = "0123456789abcdef0123456789abcdef"

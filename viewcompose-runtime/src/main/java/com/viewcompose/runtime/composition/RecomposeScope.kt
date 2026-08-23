@@ -34,6 +34,32 @@ class RecomposeScope internal constructor(
     internal var sideEffectCursor: Int = 0
     internal var saveableCursor: Int = 0
     private val invalidationVersion = AtomicLong(0L)
+    private var timingNodeIdentity: CompositionTimingNodeIdentity? = null
+    private var timingScopeActive: Boolean = false
+
+    /**
+     * Returns the timing identity exposed while this scope body is actively being measured.
+     *
+     * The result is non-null only inside a finite [ComposerLite.prepareRootWithTiming] scope body
+     * accepted by its collector. Callers may copy [CompositionTimingNodeIdentity.value] into
+     * non-semantic tooling metadata for downstream correlation, but must not persist it or use it as
+     * application identity.
+     *
+     * @return active process-local timing identity, or `null` outside a measured scope body
+     */
+    fun timingNodeIdentityOrNull(): CompositionTimingNodeIdentity? =
+        timingNodeIdentity.takeIf { timingScopeActive }
+
+    internal fun ensureTimingNodeIdentity(): CompositionTimingNodeIdentity {
+        timingNodeIdentity?.let { identity -> return identity }
+        return CompositionTimingNodeIdentity(nextCompositionTimingNodeIdentity()).also { identity ->
+            timingNodeIdentity = identity
+        }
+    }
+
+    internal fun setTimingScopeActive(active: Boolean) {
+        timingScopeActive = active
+    }
 
     /** Starts a scope pass and resets each positional slot cursor. */
     internal fun beginCompose() {
@@ -88,6 +114,7 @@ class RecomposeScope internal constructor(
         composed = false
         localSnapshot = null
         latestInputs = NoInputs
+        timingScopeActive = false
         failures.firstOrNull()?.let { first ->
             failures.drop(1).forEach(first::addSuppressed)
             throw first
@@ -123,6 +150,7 @@ class RecomposeScope internal constructor(
         composed = false
         localSnapshot = null
         latestInputs = NoInputs
+        timingScopeActive = false
         failures.firstOrNull()?.let { first ->
             failures.drop(1).forEach(first::addSuppressed)
             throw first
@@ -325,3 +353,12 @@ class RecomposeScope internal constructor(
 
     internal object NoInputs
 }
+
+private fun nextCompositionTimingNodeIdentity(): Long {
+    while (true) {
+        val candidate = compositionTimingNodeIdentities.getAndIncrement()
+        if (candidate != 0L) return candidate
+    }
+}
+
+private val compositionTimingNodeIdentities = AtomicLong(1L)

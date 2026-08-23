@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 2d0aafc8c6eb3cda18e200fc3e9814d635f9815d27c299f623662108e419c805
+translation_source_hash: 1ce90fb638df928e8bb032dc453193f709df7c17a90c3f2b36c2a294705189d1
 translation_status: current
 ---
 
@@ -712,8 +712,9 @@ Commit，并以一个有界 Builder 配合增量 UTF-8 计数直接编码。这�
 
 ### Phase 3：诊断增强
 
-状态：核心可视化已完成。render tree、patch、CompositionLocal 与重组原因已可直接读取。
-节点高亮、跨 session 关联、逐节点耗时及其非激活路径性能证明已经拆分到有效的
+状态：核心可视化已完成。Render Tree、Patch、CompositionLocal、重组原因、跨 Session 关联、
+有界故障聚合、节点高亮和有限逐节点耗时都已可读。耗时请求是带时钟开销度量的诊断采样，不能替代
+Macrobenchmark；其非激活/请求成本证明与最终收尾仍由有效的
 [诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)。
 
 ### Phase 4：容器与布局收口

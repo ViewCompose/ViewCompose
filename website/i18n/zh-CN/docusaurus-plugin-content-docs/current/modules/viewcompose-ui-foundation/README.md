@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 66bd48533a9dd3bf50acc9739347c506e9e09abbc5249e90d3515d409b679f72
+translation_source_hash: 2704744f14905f9b77b9c7757cd3f82759e2bb834b662a4235966a328d4ceecb
 translation_status: current
 ---
 
@@ -182,6 +182,11 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   `RenderSessionInspectionRegistration` 组成 Q3 可选平台契约。Policy 将 Lifecycle/Node Tracking
   与有界的首次 Frame Source Capture 分离，使高频 Lazy Item Session 不执行 Source Stack 工作也能
   按请求检查。编译样例 `renderSessionInspectionToolingSample` 展示其 Adapter 生命周期。
+- `RenderSessionTimingInspection`、`RenderNodeTimingCaptureRequest` 与
+  `RenderNodeTimingCaptureResult` 组成 Q3、仅按请求激活的有限计时控制，并与同一 Logical Session
+  一起注册。一次 Capture 最多在八个已完成 Frame Attempt 或两秒单调时间内记录实际执行的组合、
+  Reconciliation 与 Direct Binding。结果公开 Inclusive/Self 或 Direct Duration、时钟读取、空计时
+  对开销、上限、Drop、Truncation、Unsupported Domain 与结束原因。
 - 浮层规格与 Host 定义平台无关的 Dialog、Popup、Bottom Sheet、Snackbar 和 Toast 标识、定位、
   排队、更新与关闭契约。
 
@@ -374,6 +379,19 @@ Adapter，行为不变。主动启用的自定义平台必须让注册状态受�
 `snapshot()` 最多访问 2,048 个当前 Mounted Node，保留 512 个、深度不超过 64；输出只包含隐私安全的
 Type/Source Metadata 与弱 Platform Target，并明确报告 Unsupported、Ended、Dropped 和 Truncated。
 新快照、节点替换、跨 Owner 复用、Session 结束或进程重建都会让旧 Token 失效。
+
+Registration 现在还会收到 Q3 `RenderSessionTimingInspection`。这是对注册签名的有意 Alpha
+硬切：自定义 Tooling 实现必须接收 Timing Control，不能再通过另一个 Callback 或 Adapter 发现它。
+请求可以选择 Composition、Reconciliation 与 Binding 的非空子集，但不得超过八个已完成 Frame
+Attempt 或两秒；每个 Session 同时只有一个 Capture，Dispose 会结束它，所有调用都留在所属 Render
+Thread。未激活的 Session 执行零次逐节点时钟读取，也不保留计时记录。
+
+`CoreRenderEngine.renderIntoWithTiming`、`patchObservedPropertiesWithTiming` 与 Q3
+`CoreRenderTimingCollector` 是 Renderer-neutral 同步桥。默认实现会明确报 Unsupported，因此自定义
+Renderer 不能静默返回残缺数据。Composition 与 Reconciliation 聚合 Inclusive 加 Self Duration，
+Binding 表示 Direct Work。共享 Capture 每帧最多计时 64 个节点，总计 512 条 Aggregate、深度 32；
+最多保留 128 个不同字符串，每个 256 字符。Measure/Layout/Draw、GPU、RenderThread、
+SurfaceFlinger、解码、网络、数据库和外部 SDK Timing 均是明确的 Unsupported Domain。
 
 `CoreRenderEngine.inspectMountedNodes` 是 Q3 自定义 Renderer Hook。默认实现返回 Unsupported；自定义
 实现必须维持 Parent-before-child 顺序、排除应用 Key 与内容，并只返回弱 Platform Target。其余注册

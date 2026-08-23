@@ -22,6 +22,33 @@ interface CoreRenderEngine {
     ): CoreRenderFrame
 
     /**
+     * Renders one frame while exposing finite reconciliation and binding intervals.
+     *
+     * This Q3 host-integration API has the same transactional contract as [renderInto]. The
+     * default reports an unsupported timing engine rather than silently producing incomplete
+     * data. Implementations use [timingCollector] only during this synchronous call and must not
+     * retain it or install recurring work.
+     *
+     * @sample com.viewcompose.ui.foundation.samples.coreRenderTimingEngineSample
+     * @param container unchanged renderer container
+     * @param previousMountedNodes exact roots from the preceding successful frame
+     * @param nodes next immutable VNode roots
+     * @param diagnosticLevel ordinary renderer diagnostics requested for this frame
+     * @param timingCollector request-owned finite timing collector
+     * @return the same frame family as [renderInto]
+     * @throws IllegalStateException when the engine does not support requested timing
+     */
+    fun renderIntoWithTiming(
+        container: RenderContainerHandle,
+        previousMountedNodes: List<Any>,
+        nodes: List<VNode>,
+        diagnosticLevel: RenderFrameDiagnosticLevel,
+        timingCollector: CoreRenderTimingCollector,
+    ): CoreRenderFrame {
+        error("${this::class.qualifiedName} does not support renderer timing.")
+    }
+
+    /**
      * Performs one explicitly requested, bounded inspection of [mountedNodes].
      *
      * The default reports an unsupported renderer. Implementations must traverse only for this
@@ -73,6 +100,32 @@ interface CoreRenderEngine {
     }
 
     /**
+     * Applies one observed-property batch while exposing direct binding intervals.
+     *
+     * The default reports unsupported timing. Implementations preserve every validation,
+     * transaction, rollback, and commit-effect guarantee of [patchObservedProperties] and use the
+     * collector only for this synchronous call.
+     *
+     * @sample com.viewcompose.ui.foundation.samples.coreRenderTimingEngineSample
+     * @param container unchanged renderer container
+     * @param mountedNodes exact roots owning every patch target
+     * @param patches declaration-ordered exact-target replacements
+     * @param diagnosticLevel ordinary renderer diagnostics requested for this frame
+     * @param timingCollector request-owned finite timing collector
+     * @return the same property-frame family as [patchObservedProperties]
+     * @throws IllegalStateException when the engine does not support requested timing
+     */
+    fun patchObservedPropertiesWithTiming(
+        container: RenderContainerHandle,
+        mountedNodes: List<Any>,
+        patches: List<CoreObservedPropertyPatch>,
+        diagnosticLevel: RenderFrameDiagnosticLevel,
+        timingCollector: CoreRenderTimingCollector,
+    ): CoreObservedPropertyFrame {
+        error("${this::class.qualifiedName} does not support renderer timing.")
+    }
+
+    /**
      * Disposes renderer nodes that are already mounted.
      */
     fun disposeMounted(
@@ -99,6 +152,53 @@ interface CoreRenderEngine {
 
     /** Permanently releases a detached tree after cache eviction. */
     fun releaseReusableMounted(tree: CoreReusableRenderTree): List<CoreRenderCommitFailure> = emptyList()
+}
+
+/** Renderer phases exposed by the platform-neutral host bridge. */
+enum class CoreRenderTimingPhase {
+    /** Child matching, patch planning, and structural reconciliation. */
+    Reconciliation,
+
+    /** Direct native creation, modifier application, full binding, or fine-grained patching. */
+    Binding,
+}
+
+/**
+ * Privacy-safe subject offered by a renderer timing engine.
+ *
+ * @property nodeIdentity non-zero process-local identity, or `null` for a virtual renderer root
+ * @property nodeType renderer dispatch type, or `null` for a virtual renderer root
+ * @property depth zero-based depth where a virtual root is zero
+ * @property synthetic whether renderer infrastructure introduced this subject
+ */
+data class CoreRenderTimingSubject(
+    val nodeIdentity: Long?,
+    val nodeType: com.viewcompose.ui.node.NodeType?,
+    val depth: Int,
+    val synthetic: Boolean,
+)
+
+/** Closes one renderer interval on the owning platform render thread. */
+fun interface CoreRenderTimingSpan {
+    /** Finishes the interval; failures must remain isolated from application rendering. */
+    fun close()
+}
+
+/**
+ * Q3 request-scoped bridge for finite renderer timing.
+ *
+ * The collector owns the capture's monotonic clock, caps, inclusion accounting, and records. Calls
+ * are serialized and may nest. Implementations cannot retain native Views, invoke application
+ * code, block, perform I/O, or re-enter the renderer.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.coreRenderTimingEngineSample
+ */
+fun interface CoreRenderTimingCollector {
+    /** Starts one interval or returns `null` to omit it without changing rendering. */
+    fun beginInterval(
+        subject: CoreRenderTimingSubject,
+        phase: CoreRenderTimingPhase,
+    ): CoreRenderTimingSpan?
 }
 
 /**

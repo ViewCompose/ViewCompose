@@ -257,6 +257,12 @@ Phase 4 owns that benchmark and final guidance.
   platform frame. Keyframes are ordered once when the animator is created, not on every frame.
 - `RenderTreeResult`, `RenderStats`, `RenderStructureStats`, patch records, and layout-pass sampling
   provide immutable diagnostics used by the demo, preview tooling, and performance tests.
+- Q3 `RenderTreeTimingCollector` is an optional synchronous port for one finite request. Full-tree
+  reconciliation reports nested node intervals and binding reports direct native-property work;
+  observed-property patches use the same binding boundary. The renderer preserves a composition
+  identity when present and allocates an opaque negative fallback only for renderer-created nodes
+  reached during an active request. A `null` collector performs zero per-node clock reads, identity
+  allocation, or timing-record work.
 - [`AndroidViewDecorationBackend`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.decoration/-android-view-decoration-backend/)
   is the optional SPI for effects such as advanced shadows. Without a backend, decoration requests
   stay on a no-op path and no shadow implementation is loaded.

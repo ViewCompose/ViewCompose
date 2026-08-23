@@ -4,6 +4,11 @@ import com.viewcompose.ui.foundation.RenderSessionInspectionPolicy
 import com.viewcompose.ui.foundation.RenderSessionInspectionRegistration
 import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
 import com.viewcompose.ui.foundation.RenderSessionNodeInspection
+import com.viewcompose.ui.foundation.RenderSessionTimingInspection
+import com.viewcompose.ui.foundation.RenderNodeTimingCapture
+import com.viewcompose.ui.foundation.RenderNodeTimingCaptureRequest
+import com.viewcompose.ui.foundation.RenderNodeTimingPhase
+import com.viewcompose.ui.foundation.RenderNodeTimingStartStatus
 import com.viewcompose.ui.foundation.RenderDiagnosticContext
 import com.viewcompose.ui.foundation.RenderDiagnosticCollection
 import com.viewcompose.ui.foundation.RenderDiagnostics
@@ -54,6 +59,7 @@ fun renderSessionInspectionToolingSample(): RenderSessionInspectionTooling {
             context: RenderDiagnosticContext,
             sourceCandidates: List<List<UiSourceCallSite>>,
             nodeInspection: RenderSessionNodeInspection,
+            timingInspection: RenderSessionTimingInspection,
         ): RenderSessionInspectionRegistration {
             check(context.eventSequence == 0L)
             check(sourceCandidates.flatten().all { source -> source.lineNumber > 0 })
@@ -82,4 +88,21 @@ fun renderSessionNodeInspectionSample(nodeInspection: RenderSessionNodeInspectio
         val nativeTarget = node.platformTarget.resolve()
         println("${node.token.value}:${node.type}:${nativeTarget?.javaClass?.name}")
     }
+}
+
+fun renderSessionTimingInspectionSample(
+    timingInspection: RenderSessionTimingInspection,
+): RenderNodeTimingCapture? {
+    val start = timingInspection.startCapture(
+        RenderNodeTimingCaptureRequest(
+            phases = setOf(
+                RenderNodeTimingPhase.Composition,
+                RenderNodeTimingPhase.Reconciliation,
+                RenderNodeTimingPhase.Binding,
+            ),
+            maxFrames = 8,
+        ),
+    )
+    if (start.status != RenderNodeTimingStartStatus.Started) return null
+    return start.capture
 }

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-runtime/README.md
-translation_source_hash: 6c36dc1d7241e0fb4c6711d086c79c7df00241b72c9e4696507ce0d7f3060cc4
+translation_source_hash: 2a9d75df38bc3f3018135657b67612cf2174274ae35358d6d15b92242c52caca
 translation_status: current
 ---
 
@@ -64,6 +64,11 @@ Snapshot.withMutableSnapshot {
   结构不相等的计算结果。
 - [`ComposerLite`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.composition/-composer-lite/)
   在不依赖编译器生成变更标记的前提下，提供事务式位置组合、remember 值、effect 与诊断。
+- `CompositionTimingCollector`、`CompositionTimingScope` 与
+  `ComposerLite.prepareRootWithTiming` 组成 Q3、仅请求期有效的组合计时边界。只有实际执行的 Scope
+  会被提交给 Collector；跳过的 Scope 不调用接口，也不读取时钟。Collector 负责单一 Monotonic
+  Clock、嵌套核算、上限与开销测量；Runtime 提供惰性分配的进程内 Identity 和已经保留的有界
+  Source Hint。
 - [`MonotonicFrameClock`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.frame/-monotonic-frame-clock/)
   是动画集成所消费的平台无关计时契约。
 
@@ -88,6 +93,9 @@ Snapshot.withMutableSnapshot {
   副作用，并且运行次数可能多于发出值的次数。
 - `ComposerLite` 与派生状态实例按线程封闭设计。宿主负责串行化组合、prepared
   commit/abort、effect 投递和释放。
+- Composition Timing Collector 只在一次同步 `prepareRootWithTiming` 调用期间有效。它不得保留
+  Scope、调用应用代码、阻塞、执行 I/O 或重入 Composer；Collector 失败与组合隔离。普通
+  `prepareRoot` 路径不分配 Timing Identity、不执行逐 Scope 时钟读取，也不保留 Timing History。
 - Remembered 生命周期对象会保持 Pending，直到 `onRemembered` 成功返回。激活抛错后，后续
   成功的 Composition Commit 会重试它，但不会再次激活已成功的兄弟对象。激活前移除会调用
   `onAbandoned`；Active 值则通过恰好一次 `onForgotten` 终止。Abort 不会终止已提交对象，也

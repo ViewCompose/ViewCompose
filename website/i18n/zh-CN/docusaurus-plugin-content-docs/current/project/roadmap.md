@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: 177bf465aebd34bf3337874916345eccf64f0cdfd8b3ea09e410ce328b9eb15e
+translation_source_hash: c7ce52ea66ef5e5ee188779a813aabf0ab545c28668acdf110c02f1d4f1b7834
 translation_status: current
 ---
 
@@ -120,7 +120,7 @@ translation_status: current
 | Overlay | Popup 精确锚点、滚动跟随、RTL、翻转/夹取，以及 Snackbar/Toast 统一队列与结构化结束原因已落地 | 扩展多窗口、IME 与自由窗真实设备矩阵 |
 | Theming | 已完成 token 收口、Android 动态色策略、完整 shape 桥接与配置变化 token 生命周期，并提供 `Diagnostics -> 主题诊断` 权威人工验证入口 | 扩展多窗口、厂商主题和动态色设备矩阵 |
 | Interop | `AndroidView` 支持 replay-safe update/reset/nativeView、提交期 onCommit 与一次性 release | 强化复杂原生 View、第三方控件与主题协同 |
-| Diagnostics | 已关联的渲染 Session、受限的生产故障聚合、render/layout tree、逐节点 patch、CompositionLocal、重组原因，以及按请求触发的真实 View 高亮 | 采样式逐节点耗时与最终 Inspector/性能收口仍由有效的[诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)负责 |
+| Diagnostics | 已关联的渲染 Session、受限的生产故障聚合、render/layout tree、逐节点 patch、CompositionLocal、重组原因、按请求触发的真实 View 高亮，以及有限采样的组合/Reconciliation/Binding 逐节点耗时 | 最终 Inspector、性能、设备矩阵与发布收口仍由有效的[诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)负责 |
 | UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |
 | Developer Preview | Compose Preview、Paparazzi 与独立 Studio 插件链路已建立；插件支持静态渲染、源码双向联动、布局/View/组合诊断、全部预览、有界缓存和增量刷新 | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |
 | ConstraintLayout | Alpha DSL 加分类协调、类型化 Chain/Wrap/物理方向 API、类型化 Grid、声明式 CircularFlow、精确 Helper/回滚/Lifecycle 覆盖、Pairwise 视觉验收、API 24/33/36 设备覆盖，以及稳定行发版安全的 Released/Candidate/Direct 矩阵 | [已归档的能力与性能扩展计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md)完成了 Phase 0～4，发版安全为 **no material change**，没有全帧优化胜利。保持 MotionScene/MotionLayout 范围外；多 OEM 性能或新增能力必须新建归因计划 |

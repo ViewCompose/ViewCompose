@@ -20,6 +20,13 @@ import com.viewcompose.ui.foundation.RenderSessionInspectionPolicy
 import com.viewcompose.ui.foundation.RenderSessionInspectionRegistration
 import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
 import com.viewcompose.ui.foundation.RenderSessionNodeInspection
+import com.viewcompose.ui.foundation.RenderSessionTimingInspection
+import com.viewcompose.ui.foundation.RenderNodeTimingCapture
+import com.viewcompose.ui.foundation.RenderNodeTimingCaptureRequest
+import com.viewcompose.ui.foundation.RenderNodeTimingCaptureResult
+import com.viewcompose.ui.foundation.RenderNodeTimingCaptureStart
+import com.viewcompose.ui.foundation.RenderNodeTimingPhase
+import com.viewcompose.ui.foundation.RenderNodeTimingStartStatus
 import com.viewcompose.ui.foundation.RenderInspectedNodeKind
 import com.viewcompose.ui.foundation.RenderNodePlatformTarget
 import com.viewcompose.ui.foundation.RenderDiagnosticContext
@@ -40,9 +47,10 @@ internal const val DEVICE_DSL_SOURCE_REQUEST_ID_EXTRA = "request_id"
 internal const val DEVICE_DSL_SOURCE_REQUEST_OPERATION_EXTRA = "operation"
 internal const val DEVICE_DSL_SOURCE_REQUEST_SESSION_ID_EXTRA = "session_id"
 internal const val DEVICE_DSL_SOURCE_REQUEST_NODE_TOKEN_EXTRA = "node_token"
+internal const val DEVICE_DSL_TIMING_PHASES_EXTRA = "timing_phases"
 internal const val DEVICE_DSL_SOURCE_REPORT_RELATIVE_PATH =
-    "viewcompose/device-dsl-source-v5.json"
-internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 5
+    "viewcompose/device-dsl-source-v6.json"
+internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 6
 
 /** Optional debug-scoped session-inspection service discovered by the Android Host. */
 internal class AndroidDeviceDslInspectionTooling : RenderSessionInspectionTooling {
@@ -67,6 +75,7 @@ internal class AndroidDeviceDslInspectionTooling : RenderSessionInspectionToolin
         context: RenderDiagnosticContext,
         sourceCandidates: List<List<UiSourceCallSite>>,
         nodeInspection: RenderSessionNodeInspection,
+        timingInspection: RenderSessionTimingInspection,
     ): RenderSessionInspectionRegistration? {
         val viewGroup = container.nativeContainer as? ViewGroup ?: return null
         if (!AndroidDeviceToolingDebugGate.markAndGet(viewGroup.context)) return null
@@ -77,6 +86,7 @@ internal class AndroidDeviceDslInspectionTooling : RenderSessionInspectionToolin
             role = context.role,
             sourceCandidates = sourceCandidates,
             nodeInspection = nodeInspection,
+            timingInspection = timingInspection,
         )
     }
 
@@ -128,6 +138,7 @@ internal enum class DeviceDslToolingOperation(val wireValue: String) {
     Nodes("nodes"),
     Select("select"),
     Clear("clear"),
+    Timing("timing"),
     Rejected("rejected"),
     ;
 
@@ -144,13 +155,16 @@ internal data class DeviceDslToolingRequest(
     val operation: DeviceDslToolingOperation,
     val sessionId: Long? = null,
     val nodeToken: String? = null,
+    val timingPhases: Set<RenderNodeTimingPhase> = RenderNodeTimingPhase.entries.toSet(),
 ) {
     val valid: Boolean
         get() = when (operation) {
             DeviceDslToolingOperation.Source,
             DeviceDslToolingOperation.Clear,
             -> sessionId == null && nodeToken == null
-            DeviceDslToolingOperation.Nodes -> sessionId != null && sessionId > 0L && nodeToken == null
+            DeviceDslToolingOperation.Nodes,
+            DeviceDslToolingOperation.Timing,
+            -> sessionId != null && sessionId > 0L && nodeToken == null
             DeviceDslToolingOperation.Select -> {
                 sessionId != null && sessionId > 0L && nodeToken?.let(::isValidNodeToken) == true
             }
@@ -171,11 +185,22 @@ internal data class DeviceDslToolingRequest(
                 null
             }
             val nodeToken = intent.getStringExtra(DEVICE_DSL_SOURCE_REQUEST_NODE_TOKEN_EXTRA)
+            val timingPhases = intent.getStringExtra(DEVICE_DSL_TIMING_PHASES_EXTRA)
+                ?.split(',')
+                ?.mapNotNull { value ->
+                    RenderNodeTimingPhase.entries.firstOrNull { phase ->
+                        phase.name.equals(value.trim(), ignoreCase = true)
+                    }
+                }
+                ?.toSet()
+                ?.takeIf(Set<RenderNodeTimingPhase>::isNotEmpty)
+                ?: RenderNodeTimingPhase.entries.toSet()
             return DeviceDslToolingRequest(
                 requestId = requestId,
                 operation = operation,
                 sessionId = sessionId,
                 nodeToken = nodeToken,
+                timingPhases = timingPhases,
             )
         }
     }
@@ -191,6 +216,7 @@ internal class AndroidDeviceDslSourceRegistry(
     private val currentTimeMillis: () -> Long = System::currentTimeMillis,
 ) {
     private val sessions = linkedMapOf<Long, DeviceDslSourceSession>()
+    private var activeTiming: ActiveDeviceDslTiming? = null
 
     fun register(
         container: ViewGroup,
@@ -199,6 +225,7 @@ internal class AndroidDeviceDslSourceRegistry(
         role: RenderSessionRole,
         sourceCandidates: List<List<UiSourceCallSite>>,
         nodeInspection: RenderSessionNodeInspection,
+        timingInspection: RenderSessionTimingInspection = endedTimingInspection,
     ): RenderSessionInspectionRegistration? {
         val boundedCandidates = sourceCandidates.boundedSourceCandidates()
         synchronized(this) {
@@ -219,6 +246,7 @@ internal class AndroidDeviceDslSourceRegistry(
                 container = WeakReference(container),
                 sourceCandidates = boundedCandidates,
                 nodeInspection = nodeInspection,
+                timingInspection = timingInspection,
             )
         }
         return RegistryInspectionRegistration(this, sessionId)
@@ -324,17 +352,98 @@ internal class AndroidDeviceDslSourceRegistry(
     fun unregister(sessionId: Long) {
         synchronized(this) {
             sessions.remove(sessionId)
+            if (activeTiming?.sessionId == sessionId) activeTiming = null
             AndroidDeviceHighlightOverlay.clear(sessionId)
         }
     }
 
+    fun startTiming(request: DeviceDslToolingRequest): DeviceDslTimingStart {
+        check(Looper.myLooper() == Looper.getMainLooper()) {
+            "Device DSL timing must start on the Android main thread."
+        }
+        if (!request.valid || request.operation != DeviceDslToolingOperation.Timing) {
+            return DeviceDslTimingStart(RenderNodeTimingStartStatus.EndedSession, null)
+        }
+        val sessionId = checkNotNull(request.sessionId)
+        val previousTiming = synchronized(this) { activeTiming }
+        previousTiming?.let { active ->
+            val snapshot = active.capture.snapshot()
+            synchronized(this) {
+                if (activeTiming === active) {
+                    if (!snapshot.complete) {
+                        return DeviceDslTimingStart(
+                            status = RenderNodeTimingStartStatus.AlreadyActive,
+                            capture = null,
+                        )
+                    }
+                    activeTiming = null
+                }
+            }
+        }
+        val session = synchronized(this) { sessions[sessionId] }
+            ?: return DeviceDslTimingStart(RenderNodeTimingStartStatus.EndedSession, null)
+        val start = session.timingInspection.startCapture(
+            RenderNodeTimingCaptureRequest(phases = request.timingPhases),
+        )
+        val capture = start.capture
+        synchronized(this) {
+            if (start.status == RenderNodeTimingStartStatus.Started && capture != null) {
+                activeTiming = ActiveDeviceDslTiming(sessionId, capture)
+            }
+        }
+        return DeviceDslTimingStart(start.status, capture)
+    }
+
+    fun finishTiming(capture: RenderNodeTimingCapture) {
+        synchronized(this) {
+            if (activeTiming?.capture === capture) activeTiming = null
+        }
+    }
+
+    fun timingReport(
+        packageName: String,
+        request: DeviceDslToolingRequest,
+        status: RenderNodeTimingStartStatus,
+        result: RenderNodeTimingCaptureResult?,
+    ): DeviceDslSourceReport = DeviceDslSourceReport(
+        requestId = request.requestId,
+        operation = DeviceDslToolingOperation.Timing,
+        packageName = packageName,
+        processId = processId(),
+        generatedAtEpochMillis = currentTimeMillis(),
+        sessions = emptyList(),
+        timing = DeviceDslTimingSnapshot(status, result),
+    )
+
     internal fun sessionCountForTest(): Int = synchronized(this) { sessions.size }
+}
+
+private data class ActiveDeviceDslTiming(
+    val sessionId: Long,
+    val capture: RenderNodeTimingCapture,
+)
+
+internal data class DeviceDslTimingStart(
+    val status: RenderNodeTimingStartStatus,
+    val capture: RenderNodeTimingCapture?,
+)
+
+private val endedTimingInspection = object : RenderSessionTimingInspection {
+    override fun startCapture(
+        request: RenderNodeTimingCaptureRequest,
+    ): RenderNodeTimingCaptureStart = RenderNodeTimingCaptureStart(
+        status = RenderNodeTimingStartStatus.EndedSession,
+        capture = null,
+    )
 }
 
 internal class DeviceDslSourceRequestHandler(
     private val registry: AndroidDeviceDslSourceRegistry,
     private val execute: (Runnable) -> Unit = DeviceDslSourceResponseWriter::execute,
     private val writeResponse: (File, String) -> Unit = DeviceDslSourceResponseWriter::write,
+    private val postDelayed: (Long, Runnable) -> Unit = { delayMillis, action ->
+        Handler(Looper.getMainLooper()).postDelayed(action, delayMillis)
+    },
 ) {
     fun handle(
         context: Context,
@@ -346,11 +455,62 @@ internal class DeviceDslSourceRequestHandler(
         }
         val appContext = context.applicationContext ?: context
         val packageName = appContext.packageName
+        if (request.operation == DeviceDslToolingOperation.Timing) {
+            handleTiming(
+                appContext = appContext,
+                packageName = packageName,
+                request = request,
+                onFinished = onFinished,
+            )
+            return
+        }
         val report = registry.snapshot(
             packageName = packageName,
             request = request,
         )
         val target = File(appContext.cacheDir, DEVICE_DSL_SOURCE_REPORT_RELATIVE_PATH)
+        writeReport(target, report, onFinished)
+    }
+
+    private fun handleTiming(
+        appContext: Context,
+        packageName: String,
+        request: DeviceDslToolingRequest,
+        onFinished: () -> Unit,
+    ) {
+        val start = registry.startTiming(request)
+        val target = File(appContext.cacheDir, DEVICE_DSL_SOURCE_REPORT_RELATIVE_PATH)
+        val capture = start.capture
+        if (capture == null) {
+            writeReport(
+                target = target,
+                report = registry.timingReport(packageName, request, start.status, null),
+                onFinished = onFinished,
+            )
+            return
+        }
+        lateinit var poll: Runnable
+        poll = Runnable {
+            val snapshot = capture.snapshot()
+            if (snapshot.complete) {
+                registry.finishTiming(capture)
+                writeReport(
+                    target = target,
+                    report = registry.timingReport(packageName, request, start.status, snapshot),
+                    onFinished = onFinished,
+                )
+            } else {
+                postDelayed(TIMING_POLL_INTERVAL_MILLIS, poll)
+            }
+        }
+        poll.run()
+    }
+
+    private fun writeReport(
+        target: File,
+        report: DeviceDslSourceReport,
+        onFinished: () -> Unit,
+    ) {
         execute(
             Runnable {
                 try {
@@ -396,6 +556,7 @@ private class DeviceDslSourceSession(
     val container: WeakReference<ViewGroup>,
     val sourceCandidates: List<List<UiSourceCallSite>>,
     val nodeInspection: RenderSessionNodeInspection,
+    val timingInspection: RenderSessionTimingInspection,
     var renderingActive: Boolean = true,
 ) {
     private val currentTargets = LinkedHashMap<String, CapturedNodeTarget>()
@@ -645,6 +806,12 @@ internal data class DeviceDslSourceReport(
     val generatedAtEpochMillis: Long,
     val sessions: List<DeviceDslSourceSessionSnapshot>,
     val highlight: DeviceDslHighlightResult? = null,
+    val timing: DeviceDslTimingSnapshot? = null,
+)
+
+internal data class DeviceDslTimingSnapshot(
+    val startStatus: RenderNodeTimingStartStatus,
+    val result: RenderNodeTimingCaptureResult?,
 )
 
 internal fun deviceDslSourceReportJson(
@@ -698,6 +865,11 @@ private fun DeviceDslSourceReport.toJson(): String = buildString {
     highlight?.let { result ->
         append(",\"highlight\":")
         append(result.toBoundedJson())
+    }
+    timing?.let { timingSnapshot ->
+        append(",\"timing\":")
+        val remainingBytes = (MAX_REPORT_BYTES - utf8Size() - 1).coerceAtLeast(0)
+        append(timingSnapshot.toBoundedJson(remainingBytes))
     }
     append('}')
 }
@@ -786,6 +958,112 @@ private fun DeviceDslNodeSnapshot.toBoundedJson(): String = buildString {
         append(source.toNodeBoundedJson())
     }
     append("]}")
+}
+
+private fun DeviceDslTimingSnapshot.toBoundedJson(maxBytes: Int): String = buildString {
+    append('{')
+    append("\"startStatus\":")
+    appendJsonString(startStatus.name.toSnakeCase())
+    val capture = result
+    if (capture == null) {
+        append(",\"result\":null}")
+        return@buildString
+    }
+    append(",\"result\":{\"sessionId\":")
+    append(capture.context.sessionId.value)
+    append(",\"parentSessionId\":")
+    append(capture.context.parentSessionId?.value ?: "null")
+    append(",\"role\":")
+    appendJsonString(capture.context.role.name)
+    append(",\"clock\":\"monotonic_nanoseconds\"")
+    append(",\"completedFrames\":")
+    append(capture.completedFrames)
+    append(",\"startedAtNanos\":")
+    append(capture.startedAtNanos)
+    append(",\"endedAtNanos\":")
+    append(capture.endedAtNanos ?: "null")
+    append(",\"attemptedClockReads\":")
+    append(capture.attemptedClockReads)
+    append(",\"retainedClockReads\":")
+    append(capture.retainedClockReads)
+    append(",\"emptyPairOverheadNanos\":")
+    append(capture.emptyPairOverheadNanos)
+    append(",\"droppedTimedNodes\":")
+    append(capture.droppedTimedNodes)
+    append(",\"droppedRecords\":")
+    append(capture.droppedRecords)
+    append(",\"droppedStrings\":")
+    append(capture.droppedStrings)
+    append(",\"truncated\":")
+    append(capture.truncated)
+    append(",\"complete\":")
+    append(capture.complete)
+    append(",\"endReason\":")
+    capture.endReason?.let { reason -> appendJsonString(reason.name.toSnakeCase()) } ?: append("null")
+    append(",\"unsupportedDomains\":[")
+    capture.unsupportedDomains.forEachIndexed { index, domain ->
+        if (index > 0) append(',')
+        appendJsonString(domain.name.toSnakeCase())
+    }
+    append(']')
+    append(",\"records\":[")
+    var emittedRecords = 0
+    for (record in capture.records) {
+        val encodedRecord = buildString {
+            append('{')
+            append("\"frameId\":")
+            append(record.frameId)
+            append(",\"nodeToken\":")
+            appendJsonString(record.nodeToken.value.toString(radix = 36))
+            append(",\"parentNodeToken\":")
+            record.parentNodeToken?.let { token ->
+                appendJsonString(token.value.toString(radix = 36))
+            } ?: append("null")
+            append(",\"nodeType\":")
+            record.nodeType?.let { type -> appendJsonString(type.toWireName()) } ?: append("null")
+            append(",\"depth\":")
+            append(record.depth)
+            append(",\"synthetic\":")
+            append(record.synthetic)
+            append(",\"phase\":")
+            appendJsonString(record.phase.name.toSnakeCase())
+            append(",\"inclusion\":")
+            appendJsonString(record.inclusion.name.toSnakeCase())
+            append(",\"durationNanos\":")
+            append(record.durationNanos)
+            append(",\"repetitions\":")
+            append(record.repetitions)
+            append(",\"truncated\":")
+            append(record.truncated)
+            append(",\"callSites\":[")
+            record.sourceCallSites.forEachIndexed { index, source ->
+                if (index > 0) append(',')
+                append(source.toNodeBoundedJson())
+            }
+            append("]}")
+        }
+        val separatorBytes = if (emittedRecords == 0) 0 else 1
+        val reservedTailBytes = 32
+        if (
+            utf8Size() + separatorBytes + encodedRecord.utf8Size() + reservedTailBytes > maxBytes
+        ) {
+            break
+        }
+        if (emittedRecords > 0) append(',')
+        append(encodedRecord)
+        emittedRecords += 1
+    }
+    append(']')
+    append(",\"recordsTruncated\":")
+    append(capture.truncated || emittedRecords < capture.records.size)
+    append("}}")
+}
+
+private fun String.toSnakeCase(): String = buildString(length + 4) {
+    this@toSnakeCase.forEachIndexed { index, character ->
+        if (character.isUpperCase() && index > 0) append('_')
+        append(character.lowercaseChar())
+    }
 }
 
 private fun DeviceDslHighlightResult.toBoundedJson(): String = buildString {
@@ -1273,3 +1551,4 @@ private const val MAX_NONCE_LENGTH = 128
 private const val RESPONSE_FIRST_CANDIDATES = 16
 private const val RESPONSE_RECENT_CANDIDATES = 16
 private const val HIGHLIGHT_DURATION_MILLIS = 5_000L
+private const val TIMING_POLL_INTERVAL_MILLIS = 32L

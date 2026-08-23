@@ -44,6 +44,10 @@ class RenderSession(
     private var resolvedInspectionPolicy: RenderSessionInspectionPolicy? = null
     private var mountedNodeInspectionState: RenderSessionMountedNodeState? = null
     private var nodeInspection: RenderSessionNodeInspection? = null
+    private val timingInspectionState = RenderSessionTimingState()
+    private val timingInspection: RenderSessionTimingInspection =
+        DefaultRenderSessionTimingInspection(timingInspectionState)
+    private var activeTimingCapture: ActiveRenderNodeTimingCapture? = null
     private val traceId = RenderSessionTraceId(nextSessionId.incrementAndGet())
     private val inheritedDiagnosticParent = if (diagnostics == null) {
         parentLocalSnapshot?.renderDiagnosticParentOrNull()
@@ -154,6 +158,10 @@ class RenderSession(
             requestRender = installedRuntime::requestRender
         }
 
+    init {
+        timingInspectionState.startCapture = ::startTimingCapture
+    }
+
     /**
      * Requests rendering according to the installed runtime policy.
      *
@@ -168,6 +176,41 @@ class RenderSession(
         }
         structuralRenderRequested = true
         runtime.render()
+    }
+
+    private fun startTimingCapture(
+        request: RenderNodeTimingCaptureRequest,
+    ): RenderNodeTimingCaptureStart {
+        if (disposalRequested || disposed) {
+            return RenderNodeTimingCaptureStart(
+                status = RenderNodeTimingStartStatus.EndedSession,
+                capture = null,
+            )
+        }
+        activeTimingCapture?.let { active ->
+            if (!active.isComplete) {
+                return RenderNodeTimingCaptureStart(
+                    status = RenderNodeTimingStartStatus.AlreadyActive,
+                    capture = active,
+                )
+            }
+        }
+        lateinit var capture: ActiveRenderNodeTimingCapture
+        capture = ActiveRenderNodeTimingCapture(
+            request = request,
+            context = sourceContext,
+            clock = platform.diagnostics::monotonicTimeNanos,
+            onFinished = {
+                if (activeTimingCapture === capture) activeTimingCapture = null
+            },
+        )
+        activeTimingCapture = capture
+        structuralRenderRequested = true
+        runtime.render()
+        return RenderNodeTimingCaptureStart(
+            status = RenderNodeTimingStartStatus.Started,
+            capture = capture,
+        )
     }
 
     /** Builds an initial native tree while retaining the composition commit boundary. */
@@ -335,9 +378,32 @@ class RenderSession(
     }
 
     /** Prepares composition and the native tree without crossing the commit boundary. */
+    private fun <T> prepareRootForFrame(
+        timingCapture: ActiveRenderNodeTimingCapture?,
+        collectDiagnostics: Boolean,
+        block: () -> T,
+    ): ComposerLite.PreparedComposition<T> {
+        return if (timingCapture == null) {
+            composer.prepareRoot(
+                collectDiagnostics = collectDiagnostics,
+                block = block,
+            )
+        } else {
+            composer.prepareRootWithTiming(
+                collector = timingCapture,
+                collectDiagnostics = collectDiagnostics,
+                block = block,
+            )
+        }
+    }
+
+    /** Prepares composition and the native tree without crossing the commit boundary. */
     private fun prepareFrame(): PreparedRenderFrame? {
         if (disposalRequested || disposed) return null
         val frameId = nextFrameId.incrementAndGet()
+        val timingCapture = activeTimingCapture?.takeIf { capture ->
+            capture.beginFrame(frameId)
+        }
         val frameFailures = mutableListOf<RenderFailure>()
         var failurePhase = RenderFailurePhase.CompositionPrepare
         var preparedComposition:
@@ -363,7 +429,8 @@ class RenderSession(
                                         composer = composer,
                                         coroutineContext = compositionCoroutineScope.coroutineContext,
                                     ) {
-                                        preparedComposition = composer.prepareRoot(
+                                        preparedComposition = prepareRootForFrame(
+                                            timingCapture = timingCapture,
                                             collectDiagnostics =
                                                 diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
                                         ) {
@@ -397,12 +464,22 @@ class RenderSession(
             }
             failurePhase = RenderFailurePhase.ViewTreeRender
             platform.diagnostics.trace("VC.RenderTree") {
-                platform.renderEngine.renderInto(
-                    container = container,
-                    previousMountedNodes = mountedNodes,
-                    nodes = tree,
-                    diagnosticLevel = diagnosticLevel,
-                )
+                if (timingCapture?.capturesRendererTiming == true) {
+                    platform.renderEngine.renderIntoWithTiming(
+                        container = container,
+                        previousMountedNodes = mountedNodes,
+                        nodes = tree,
+                        diagnosticLevel = diagnosticLevel,
+                        timingCollector = timingCapture,
+                    )
+                } else {
+                    platform.renderEngine.renderInto(
+                        container = container,
+                        previousMountedNodes = mountedNodes,
+                        nodes = tree,
+                        diagnosticLevel = diagnosticLevel,
+                    )
+                }
             }
         } catch (error: Exception) {
             observedPropertyAttempt.abort()
@@ -432,6 +509,8 @@ class RenderSession(
                 ),
             )
             return null
+        } finally {
+            timingCapture?.completeFrame()
         }
 
         mountedNodes = frame.mountedNodes
@@ -454,6 +533,23 @@ class RenderSession(
     private fun renderObservedProperties() {
         if (disposalRequested || disposed) return
         val frameId = nextFrameId.incrementAndGet()
+        val timingCapture = activeTimingCapture?.takeIf { capture ->
+            capture.beginFrame(frameId)
+        }
+        try {
+            renderObservedPropertiesFrame(
+                frameId = frameId,
+                timingCapture = timingCapture,
+            )
+        } finally {
+            timingCapture?.completeFrame()
+        }
+    }
+
+    private fun renderObservedPropertiesFrame(
+        frameId: Long,
+        timingCapture: ActiveRenderNodeTimingCapture?,
+    ) {
         val frameFailures = mutableListOf<RenderFailure>()
         val transaction = try {
             platform.diagnostics.trace("VC.ObservedPropertyRead") {
@@ -546,12 +642,22 @@ class RenderSession(
             ?: RenderFrameDiagnosticLevel.None
         val frame = try {
             platform.diagnostics.trace("VC.ObservedPropertyRender") {
-                platform.renderEngine.patchObservedProperties(
-                    container = container,
-                    mountedNodes = mountedNodes,
-                    patches = corePatches,
-                    diagnosticLevel = diagnosticLevel,
-                )
+                if (timingCapture?.capturesRendererTiming == true) {
+                    platform.renderEngine.patchObservedPropertiesWithTiming(
+                        container = container,
+                        mountedNodes = mountedNodes,
+                        patches = corePatches,
+                        diagnosticLevel = diagnosticLevel,
+                        timingCollector = timingCapture,
+                    )
+                } else {
+                    platform.renderEngine.patchObservedProperties(
+                        container = container,
+                        mountedNodes = mountedNodes,
+                        patches = corePatches,
+                        diagnosticLevel = diagnosticLevel,
+                    )
+                }
             }
         } catch (error: Exception) {
             transaction.abort()
@@ -671,6 +777,7 @@ class RenderSession(
                     context = sourceContext,
                     sourceCandidates = prepared.sourceCandidates,
                     nodeInspection = checkNotNull(nodeInspection),
+                    timingInspection = timingInspection,
                 )
                 if (!renderingActive) {
                     inspectionRegistration?.setRenderingActive(false)
@@ -767,6 +874,10 @@ class RenderSession(
         disposed = true
         mountedNodeInspectionState?.ended = true
         mountedNodeInspectionState?.mountedNodes = emptyList()
+        timingInspectionState.ended = true
+        timingInspectionState.startCapture = null
+        activeTimingCapture?.endSession()
+        activeTimingCapture = null
         requestRender = null
         preparedFrame = null
         awaitingActivation = false

@@ -105,6 +105,14 @@ layout, rendering-active changes, and session disposal do not publish reports, a
 overlay or IDE protocol. This ownership follows
 [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md).
 
+The registration also receives the neutral Q3 `RenderSessionTimingInspection` control. An explicit
+downstream request may start one finite composition/reconciliation/binding capture; Android Host
+only maps the synchronous `CoreRenderTimingCollector` to the Android renderer and owns no protocol,
+poller, report, or Studio UI. The engine preserves composition node identity across reconciliation
+and binding, while renderer-only nodes receive an opaque capture-local fallback. Without the
+optional tooling artifact and request, normal Host rendering performs zero per-node clock reads and
+keeps no timing history.
+
 ## Native View transaction contract
 
 `AndroidView` mounts a platform View without weakening renderer rollback semantics:

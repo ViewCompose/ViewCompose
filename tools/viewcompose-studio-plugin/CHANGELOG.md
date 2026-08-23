@@ -4,6 +4,11 @@
 
 ### Added
 
+- Add **Inspect Device Node Timing** as an explicit finite capture for one active correlated render
+  session, with an eight-frame/two-second bound and a top-cost summary.
+- Distinguish composition inclusive/self time, reconciliation inclusive/self time, and direct
+  binding time while reporting capture overhead, truncation, terminal reason, and unsupported
+  domains.
 - Add **Inspect Device Animation Timeline** as a read-only Tools-menu action with bounded discovery
   and a selected 500 ms capture from a connected debuggable application.
 - Show unequal channel durations, physical terminal conditions, interruption/retarget samples, and
