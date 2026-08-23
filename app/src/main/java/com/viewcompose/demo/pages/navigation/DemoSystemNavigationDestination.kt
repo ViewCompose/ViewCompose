@@ -26,6 +26,8 @@ import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.ButtonVariant
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.SurfaceVariant
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.UiTextStyle
@@ -35,8 +37,13 @@ import com.viewcompose.ui.foundation.rememberSaveable
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
+import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.margin
+import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.sharedBounds
+import com.viewcompose.ui.modifier.sharedElement
 import com.viewcompose.ui.modifier.testTag
+import com.viewcompose.ui.shared.SharedContentKey
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 import com.viewcompose.viewmodel.savedStateHandle
@@ -51,6 +58,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
     motionEnabled: MutableState<Boolean>,
     lastEvent: MutableState<SystemNavigationEvent>,
     externalDeepLinkOutcome: MutableState<SystemNavigationDeepLinkOutcome>,
+    sharedContentEnabled: Boolean,
     scenario: DemoScenarioSpec? = null,
     onReset: () -> Unit,
 ) {
@@ -82,6 +90,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
     }
     val stackState = controller.navigationState.value
     val sections = listOf(
+        "shared-motion",
         "automation",
         "status",
         "state",
@@ -92,6 +101,73 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
 
     val sectionContent: UiTreeBuilder.(String) -> Unit = { section ->
         when (section) {
+            "shared-motion" -> {
+                val entryDepth = stackState.activeStack.entries
+                    .indexOfFirst { candidate -> candidate.id == entry.id }
+                    .coerceAtLeast(0)
+                val geometryStep = entryDepth % 3
+                Column(
+                    spacing = 8.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                ) {
+                    Surface(
+                        variant = SurfaceVariant.Variant,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height((112 + geometryStep * 16).dp)
+                            .margin(horizontal = (geometryStep * 8).dp)
+                            .let { modifier ->
+                                if (sharedContentEnabled) {
+                                    modifier.sharedBounds(SystemNavigationSharedContent.HeroBounds)
+                                } else {
+                                    modifier
+                                }
+                            }
+                            .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_SHARED_BOUNDS),
+                    ) {
+                        Column(
+                            spacing = 4.dp,
+                            modifier = Modifier.padding(14.dp),
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    R.string.demo_system_nav_shared_route,
+                                    stringResource(
+                                        SystemNavigationDemoModel.routeLabelRes(entry.route.name),
+                                    ),
+                                ),
+                                style = UiTextStyle(fontSizeSp = 18.sp),
+                            )
+                            Text(
+                                text = stringResource(R.string.demo_system_nav_shared_bounds_hint),
+                                color = TextDefaults.secondaryColor(),
+                                style = UiTextStyle(fontSizeSp = 12.sp),
+                            )
+                        }
+                    }
+                    Surface(
+                        modifier = Modifier
+                            .margin(left = (geometryStep * 20).dp)
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .let { modifier ->
+                                if (sharedContentEnabled) {
+                                    modifier.sharedElement(SystemNavigationSharedContent.RouteChip)
+                                } else {
+                                    modifier
+                                }
+                            }
+                            .testTag(DemoSystemNavigationTestTags.SYSTEM_NAV_SHARED_ELEMENT),
+                    ) {
+                        Text(
+                            text = entry.route.name,
+                            style = UiTextStyle(fontSizeSp = 13.sp),
+                        )
+                    }
+                }
+            }
+
             "automation" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
                 title = stringResource(R.string.demo_system_nav_fixture_title),
@@ -392,6 +468,11 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
             }
         }
     }
+}
+
+private object SystemNavigationSharedContent {
+    val HeroBounds = SharedContentKey("system-navigation-hero-bounds")
+    val RouteChip = SharedContentKey("system-navigation-route-chip")
 }
 
 private fun Modifier.scenarioTarget(

@@ -29,11 +29,14 @@ import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.innerShadow
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.zIndex
+import com.viewcompose.ui.modifier.sharedElement
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.shared.SHARED_CONTENT_TAG_KEY
+import com.viewcompose.ui.shared.SharedContentKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
@@ -55,6 +58,28 @@ class ModifierInteractionApplierTest {
     fun installDecorationBackend() {
         decorationBackend = RecordingDecorationBackend()
         AndroidViewDecorationRuntime.install(decorationBackend)
+    }
+
+    @Test
+    fun `shared content metadata updates and clears on a reused view`() {
+        val view = View(RuntimeEnvironment.getApplication())
+        val key = SharedContentKey("hero")
+
+        ViewModifierApplier.applyModifier(
+            view,
+            vnode(Modifier.sharedElement(key)),
+            defaultRippleColor = 0,
+        )
+
+        assertEquals(
+            key,
+            (view.getTag(SHARED_CONTENT_TAG_KEY)
+                as com.viewcompose.ui.modifier.SharedContentModifierElement).key,
+        )
+
+        ViewModifierApplier.applyModifier(view, vnode(Modifier), defaultRippleColor = 0)
+
+        assertNull(view.getTag(SHARED_CONTENT_TAG_KEY))
     }
 
     @After

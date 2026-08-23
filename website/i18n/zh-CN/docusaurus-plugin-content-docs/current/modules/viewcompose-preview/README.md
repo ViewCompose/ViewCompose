@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: b623ec4cb152b3f6485a75d5ba1124fe0f0a5c9ba5f1b0eebdf951f4b982ee01
+translation_source_hash: 8e674e65ea11c30d116ba2fb00656f59a59814bcde1121b01539f0789c4a56fd
 translation_status: current
 ---
 
@@ -92,6 +92,10 @@ ViewCompose 渲染；主题、调试配置、Overlay 后端或容器变化时重
 `animation-layout-bounds` 目录项固定了位置、尺寸和组合运动的稳定起点矩形。经过人工复核的
 浅色主题 Golden 保护初始几何与样式；交互式 Spec 随后可以切换真实 Bounds 端点，而无需引入独立的
 Preview-only Renderer 路径。
+
+`navigation-shared-content-endpoints` 目录项使用生产 Modifier Transport 渲染紧凑/展开 Bounds
+端点和 Source/Target Element Marker。静态 Golden 检查端点几何与样式；真实跨 Session Progress、
+取消和清理由 Demo/设备 Navigation Fixture 拥有，不创建 Preview-only Coordinator。
 
 目录类型是内部测试设施，不是公开组件图库 API。新模块或视觉契约需要回归覆盖时应扩展目录，但应用
 示例仍应放在 Demo 和用户文档中。

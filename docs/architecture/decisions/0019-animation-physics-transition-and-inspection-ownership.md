@@ -221,20 +221,31 @@ content-size animation state rather than depending on a platform detach callback
 
 ### Shared visual motion
 
-`SharedTransitionLayout` creates one key namespace scoped to its composition owner and, when used
-with navigation, one navigation session. One source and one target with the same key form a pair.
-Multiple sources, multiple targets, a missing peer, an unplaced root, or detached coordinates use
-the ordinary local enter/exit fallback; they do not guess a winner or retain an overlay.
+Phase 6 rejects the provisional `SharedTransitionLayout` and scope API. `NavHost` is already the
+cross-session coordinator; adding another layout/scope owner would split lifecycle and progress
+authority. Q3 `SharedContentKey`, `Modifier.sharedElement`, and `Modifier.sharedBounds` therefore
+publish only typed renderer-neutral endpoint metadata. The renderer copies the complete element to
+one stable keyed View tag and clears it on reuse. It performs no pairing or animation work.
 
-Matched shared content renders in a root-owned overlay while its bounds interpolate. Shared
-elements render the target representation; shared bounds may retain the separate outgoing and
-incoming representations. The logical target destination exclusively owns pointer, focus, and
-accessibility behavior while the overlay is non-interactive and hidden from accessibility.
+One outgoing and one incoming endpoint with the same non-blank key and mode form a pair inside one
+native `NavHost` transition. Multiple sources or targets, a missing peer, mode mismatch, an unplaced
+or detached root, zero size, surface-backed content, capture failure, or exhausted per-transition
+pixel budget falls back for that key to ordinary destination motion; no path guesses a winner or
+changes the navigation transaction.
 
-Destination/session disposal, cancellation, navigation rollback, configuration change, or a
-failed renderer transaction releases the overlay and pairing record exactly once. Keys never pair
-across windows, Activities, processes, or navigation sessions. A cross-session shared transition
-requires a separate architecture decision.
+Matched content uses immutable software snapshots in a non-interactive host overlay and consumes
+the existing committed-motion or predictive-Back geometry fraction. `sharedElement` moves one
+source snapshot to target bounds; `sharedBounds` crossfades source and target snapshots along the
+same bounds path. Stable outgoing-tree order defines z-order. The outgoing endpoint becomes
+invisible while the incoming live endpoint remains the input and accessibility owner behind a
+transparent alpha. Commit can transfer prior focus to a focusable target; cancel restores source
+focus. No arbitrary shape morph or live-content reparenting is attempted.
+
+Completion, cancellation, redirect, host destruction, session disposal, configuration change,
+capture failure, or a failed renderer transaction releases every bitmap, drawable, listener, and
+endpoint record exactly once. Redirect restores endpoints before the next transition rescans its
+own sessions. Keys never pair across windows, Activities, or processes. Cross-window/shared-process
+motion requires a separate architecture decision.
 
 ### Request-driven inspection and controlled Preview seeking
 
@@ -269,7 +280,7 @@ request codecs are Q0 and cannot appear in compiled samples.
 | 3 | slide/scale transition factories, `AnimatedVisibilityScope`, `animateEnterExit` | `viewcompose-animation` | combined visibility sample; algebra, RTL, release, device tests | additive |
 | 4 | `TransitionSegment`, generic `Transition.animateValue`, segment-aware channel overloads, `SeekableTransitionState`, seekable `rememberTransition` | `viewcompose-animation` | segment/seek sample; ownership, range, retarget, predictive-Back adapter tests | additive except the typed-channel named argument hard-cut from `animationSpec` to `transitionSpec`; internal segment helpers removed |
 | 5 | `Modifier.animateBounds` | `viewcompose-animation` | bounds sample; coordinate, remeasure, input, accessibility, rollback device tests | additive |
-| 6 | `SharedTransitionLayout`, shared key/state/scope, `sharedElement`, `sharedBounds`, resize and bounds transforms | `viewcompose-animation` plus navigation adapter in `viewcompose-navigation-android` | navigation shared-motion sample; pairing, overlay, lifecycle, rollback, accessibility device tests | additive |
+| 6 | `SharedContentKey`, `sharedElement`, `sharedBounds` | neutral marker in `viewcompose-ui-contract`; renderer tag transport in `viewcompose-renderer-android`; coordinator in `viewcompose-navigation-android` | UI declaration and navigation shared-motion samples; pairing, overlay, lifecycle, redirect, rollback, accessibility device tests | additive; provisional `SharedTransitionLayout`/scope design rejected before publication |
 | 7 | immutable animation inspection request/response and snapshot types | `viewcompose-preview-core` | protocol sample; codec, limit, stale-request, privacy tests | additive and optional |
 | 7 | Preview animation inspection/seek client surface | `viewcompose-preview` and Studio plugin | Preview-only sample; activation, isolation, request-lifetime, plugin UI tests | additive and optional |
 
@@ -366,3 +377,13 @@ accessibility geometry, zero additional child measurements on property frames, o
 path and Preview Golden, and a fixed-frequency animated-versus-snap comparison. The scoped result
 is improved frame latency with no material peak-heap change; total energy and per-object allocation
 events remain unmeasured and are not inferred from frame percentiles.
+
+Phase 6 acceptance records typed marker transport and reuse clearing; unique, missing, duplicate,
+mismatched, over-budget, detached, and surface-backed endpoint behavior; committed Push/Pop/Replace;
+predictive-Back cancel/commit; redirect and host-destruction release; incoming input/accessibility
+ownership and terminal focus transfer; one reviewed Demo path and Preview Golden; root-installed
+navigation/process-recreation suites; and a fixed-frequency shared-versus-ordinary Push comparison.
+Both arms hold exactly 124 frames in every run. Shared P50/P95 are `4.073/8.096 ms` versus control
+`3.989/8.487 ms`, and median peak heap is `6,971` versus `6,651 KiB`, so the frozen gates conclude
+no material change. The shared P99 of `36.099 ms` versus `30.020 ms` remains a recorded tail watch
+item rather than a post-measurement gate change.

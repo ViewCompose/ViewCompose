@@ -300,6 +300,7 @@ internal object ViewModifierApplier {
         val previousResolved = previous.resolved
         val nextResolved = next.resolved
         return previousResolved.overlayAnchor != nextResolved.overlayAnchor ||
+            previousResolved.sharedContent != nextResolved.sharedContent ||
             previousResolved.testTag != nextResolved.testTag ||
             previousResolved.alpha != nextResolved.alpha ||
             previousResolved.visibility != nextResolved.visibility ||

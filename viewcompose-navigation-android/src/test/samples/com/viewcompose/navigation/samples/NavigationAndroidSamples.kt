@@ -15,6 +15,9 @@ import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import com.viewcompose.viewmodel.viewModel
 import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.sharedBounds
+import com.viewcompose.ui.shared.SharedContentKey
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiThemeTokens
@@ -40,6 +43,17 @@ fun UiTreeBuilder.rememberedNavHostSample() {
             "details" -> Text("Details")
             else -> error("Unknown route ${entry.route.name}")
         }
+    }
+}
+
+/** Pairs one typed visual endpoint across destination sessions owned by the same NavHost. */
+fun UiTreeBuilder.sharedNavigationContentSample(controller: NavHostController) {
+    val titleKey = SharedContentKey("article-title")
+    NavHost(controller = controller) { entry ->
+        Text(
+            text = entry.route.name,
+            modifier = Modifier.sharedBounds(titleKey),
+        )
     }
 }
 

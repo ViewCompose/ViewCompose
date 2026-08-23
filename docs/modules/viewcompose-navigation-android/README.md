@@ -175,6 +175,25 @@ expensive destination hierarchies to hardware layers while only transform/alpha 
 motion retains current visual properties so a subsequent command does not jump back to an identity
 frame.
 
+## Shared content motion
+
+`Modifier.sharedElement(SharedContentKey(...))` and `Modifier.sharedBounds(...)` are Q3 endpoint
+markers consumed automatically by `NavHost`; no `SharedTransitionLayout` or animation scope is
+required. Keys are local to one outgoing/incoming destination pair. A pair exists only when each
+tree declares the same key and mode exactly once. Missing, duplicate, mismatched, detached,
+zero-sized, surface-backed, or over-budget endpoints fall back per key to ordinary destination
+motion and never change the navigation transaction.
+
+The first release is one-window snapshot motion. `sharedElement` moves the source snapshot to the
+target bounds. `sharedBounds` uses the same bounds path while crossfading source and target
+snapshots. Snapshots draw in stable outgoing-tree order in a non-interactive host overlay and are
+bounded to at most two host areas of pixels for one transition. The incoming destination remains
+the input and accessibility owner. Successful commit may transfer focus from a focused source to a
+focusable target; cancellation restores the source. Completion, cancellation, redirect, host
+destruction, capture failure, and session release all remove snapshots and restore endpoint state
+exactly once. Predictive Back drives the same overlay from gesture progress and continues from that
+fraction on commit; it does not acquire stack commit authority.
+
 ## Adaptive panes
 
 `NavPanePolicy.Single` preserves one full-host destination at every width. `Adaptive` admits up to
@@ -213,3 +232,9 @@ The `0.1.0-alpha01` line establishes one-controller/one-host attachment, main-th
 commands, destination and graph ownership, defensive process-death restore, predictive-Back
 preview, Android-aligned native View motion, and up to three adaptive panes. Persist controller state
 through `rememberNavHostController`; do not retain Android owner or session objects outside the host.
+
+Typed shared-content markers are additive Q3 UI Contract APIs, but they require a renderer that
+publishes the stable endpoint tag and this navigation-host implementation to produce motion. Older
+or custom renderers may treat the marker as inert. Cross-window, cross-Activity, cross-process,
+live-content, shape-morphing, and arbitrary surface-backed capture are intentionally unsupported in
+this alpha and use ordinary destination motion.

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 552f3949e01ba98a113048466fd98e9a4d82e477742c8506c754d6c9852b2d6f
+translation_source_hash: e8a131881595645ae1ad6dc8b8af6ea35739bad40f2f5ea6b14855f9ab1956dc
 translation_status: current
 ---
 
@@ -297,6 +297,10 @@ Matrix。Phase 4 负责该基准与最终指导。
   保留现有 LayoutParams；布局或 Parent Data 变化才会替换参数。`NativeViewElement.stableKey`
   变化时会重新执行其配置，而 AndroidView 的 Update、Reset、Commit 与 Release Callback 均不
   会被触发。诊断会把该路径记为定向 Patch，Detail 为 `ModifierOnly`。
+- Shared-content Modifier 解析会把完整类型化端点 Element 写入一个稳定 Keyed View Tag，并在
+  Modifier 消失或 View 复用时清除。Renderer 不执行 Tree Scan、Bitmap Capture、Overlay
+  Allocation、Animation Scheduling 或 Navigation；这些有界的转场期操作由消费它的 Android
+  Navigation Host 拥有。
 - 物理 Padding、Margin、Offset 与 Inset 选择器保持 left/right 语义。对应 `Relative` API 会在
   每次 Bind 或环境重绑时根据 VNode 捕获的布局方向映射逻辑 start/end。同一族中后声明的物理或
   相对值会整体替换先声明值。正 `offsetRelative.horizontal` 朝逻辑 end 平移且不改变测量。
@@ -404,6 +408,10 @@ Insets；若尚不可用，则先清除旧物理边贡献直至 Android 分发�
 原生绑定、诊断、工具关联和装饰后端契约。不要把
 mounted node、patch 记录、诊断树对象、不透明 Lazy content token 或 View tag 作为外部长久
 数据持久化。即使应用 DSL 源码仍能编译，自定义 host 和装饰后端也必须随渲染器契约变化升级。
+
+发布 Shared-content 端点 Tag 是新增 Q3 UI Contract Marker 对应的 Renderer 内部行为。独立版本
+的自定义 Host 必须同时使用文档化的稳定 Tag Key 与类型化 Element；只解释 String Value 或在复用
+后继续保留 Tag 都违反契约。
 
 为 Renderer 自有子容器 Handle 增加纯工具用途的页面/内容角色，是基于新增 UI Contract 标记的
 内部行为变化。渲染输出与公开 Renderer 签名不变；自定义 Renderer 可以在其子 Session 表示页面

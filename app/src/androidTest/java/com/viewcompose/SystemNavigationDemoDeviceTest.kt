@@ -27,12 +27,30 @@ class SystemNavigationDemoDeviceTest {
         ).use { scenario ->
             awaitNavigation()
 
+            var initialSharedBoundsHeight = 0
+            var initialSharedElementX = 0f
             scenario.onActivity { activity ->
+                initialSharedBoundsHeight = activity.requireViewsByTestTagVisible(
+                    DemoSystemNavigationTestTags.SYSTEM_NAV_SHARED_BOUNDS,
+                ).maxOf { view -> view.height }
+                initialSharedElementX = activity.requireViewsByTestTagVisible(
+                    DemoSystemNavigationTestTags.SYSTEM_NAV_SHARED_ELEMENT,
+                ).maxOf { view -> view.x }
                 activity.clickScenarioViewById(R.id.demo_navigation_system_primary_action)
             }
             awaitNavigation()
 
             scenario.onActivity { activity ->
+                assertTrue(
+                    activity.requireViewsByTestTagVisible(
+                        DemoSystemNavigationTestTags.SYSTEM_NAV_SHARED_BOUNDS,
+                    ).maxOf { view -> view.height } > initialSharedBoundsHeight,
+                )
+                assertTrue(
+                    activity.requireViewsByTestTagVisible(
+                        DemoSystemNavigationTestTags.SYSTEM_NAV_SHARED_ELEMENT,
+                    ).maxOf { view -> view.x } > initialSharedElementX,
+                )
                 val controller = activity.controllerForTest()
                 controller.selectStack(
                     stackId = SystemNavigationDemoModel.DiscoverStack,

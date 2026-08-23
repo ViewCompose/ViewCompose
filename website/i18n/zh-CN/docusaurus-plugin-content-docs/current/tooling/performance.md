@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 434b618d88914a79886408375eb1b477012bc8440d3b5c0f3eb4ceec3f3dd2c4
+translation_source_hash: 88e1b5ba3e2c54231bbba78015078e4457c54177a09b4dfa8f094945fe34855c
 translation_status: current
 ---
 
@@ -1195,6 +1195,46 @@ Transaction Duration 更低。它也不测 Post-GC Retained Memory、逐对象 A
 Retarget、Rollback、Detach 与跨 Owner Reusable-tree Reset。Phase 5 性能门禁已接收。随后仓库、
 文档与 Preview 门禁通过，Root 安装的 Demo 138/138、Counter 1/1 与 Tutorials 2/2 套件也通过；
 下一步是提交 Pull Request，而不是重复采样。
+
+#### 2.4.14 导航 revision-1 共享内容对照
+
+2026-08-23 的 Phase 6 批次在同一个 `navigation.shared-motion@1` 系统导航 fixture 上，对比普通
+目标页转场与共享内容快照。两组都渲染完全相同的目标页，在相同的 5 秒测量外启动稳定等待后，
+每次 `run-from-apk` 迭代执行 4 次 Push，共 5 次迭代。Control 只通过内部
+`system_navigation_shared_content_enabled=false` intent 输入省略两个共享端点标记，不改变页面
+几何、文案、导航状态或目标页转场。R8/资源收缩的 nondebuggable 目标基于
+`bb57fcd049e3b1d359d18ea271d0505fc08eb033`，APK SHA-256 为
+`b7f4c8219022c6f5e9c5e90388c05e8430142450034888b72c50965730ba463b`。
+
+原始 benchmark APK SHA-256 为
+`91e050e89ae6b285f2f4cfe4295d50accf244087b72085675ceef214c4437579`，Magisk 适配后 APK 为
+`86144fb5bd300f231bf3e8dbecd4452a35fafab24d939e6be25db0baa5aa4146`。等长的 `su root` 到
+`su 0 -c` 传输适配、DEX 校验修复、对齐和 debug 签名不改变目标、工作负载、指标或结果 JSON。
+
+已 root 的 Xiaomi MI 6 / Android 9 将 CPU policy 0/4 固定在 1.4016/1.8048 GHz，将 GPU
+devfreq 与 KGSL power-level 边界固定在 515 MHz，并将可见 CPU/GPU interconnect vote 固定在
+13,763。8 个 CPU 全部在线，厂商性能服务停止，充电暂停。测量前后所有控制值均与请求一致，
+AndroidX 报告 `cpuLocked=true`，thermal-throttle sleep 为 0。Control 温度为 34--35°C，共享组
+为 35°C；不要求环境无法达到的更低起始温度。批次结束后所有 governor、边界、服务和充电状态
+均已恢复。
+
+| 分组 | 每轮帧数 | 帧 CPU P50/P90/P95/P99，ms | 峰值堆中位数，KiB | run-P50 CV | 验收 |
+| --- | --- | ---: | ---: | ---: | --- |
+| 普通目标页转场 | `124/124/124/124/124` | `3.989/5.466/8.487/30.020` | 6651 | 0.072 | Control 验收 |
+| 两个共享配对（`sharedBounds` + `sharedElement`） | `124/124/124/124/124` | `4.073/5.526/8.096/36.099` | 6971 | 0.059 | 通过 |
+
+相对普通转场，共享内容的 P50/P90/P95/P99 变化为 `+2.1%/+1.1%/-4.6%/+20.3%`。P50 只增加
+`0.084 ms`，P95 减少 `0.390 ms`，峰值堆中位数增加 `320 KiB`（`+4.8%`）。这些结果都在
+ADR-0019 的帧与内存组合预算内，两组 run-P50 CV 都低于 `0.15`，帧数完全一致，也没有 thermal
+sleep。因此限定到帧耗时和峰值内存的结论是 **无实质变化**。`+6.079 ms` 的 P99 增量保留为
+导航尾延迟观察项；不会隐藏 P99，也不会在测量后用它替换已经冻结的 P50/P95 门禁。
+
+本对照覆盖已提交 Push 中的快照准备、两个软件位图配对、overlay 绘制和终态释放。确定性测试
+另外证明普通无配对 fallback、有界像素预算、重复/模式不匹配拒绝、Push/Pop/Replace、预测 Back
+完成/取消、redirect、关闭动画、焦点转移、surface-backed fallback 与 host 销毁清理。局限包括
+单一 OEM/API-28 设备、`run-from-apk` JIT/代码放置敏感性、峰值而非 GC 后保留内存、没有逐对象
+分配事件、没有直接功耗测量，也没有单独的预测 Back 帧基准。已接受的下一步是完成仓库和真机
+门禁，而不是为了更有利的 P99 重复采样。
 
 ### 2.5 Debug Tooling 回归门禁
 

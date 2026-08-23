@@ -98,6 +98,12 @@ created for the node.
   accessibility geometry aligned, resolve logical direction before animation, reject simultaneous
   bounds/content-size ownership, and clear transient ownership on detach or cross-owner reuse. The
   compiled `animatedBoundsHostNodeContractSample` covers the transport.
+- Q3 `SharedContentKey`, `sharedElement`, and `sharedBounds` publish renderer-neutral endpoint
+  identity and element/bounds mode. Keys are non-blank and scoped by the consuming host rather than
+  registered globally. Later declarations on one modifier chain win. The stable Android tag slot
+  is cross-artifact transport only; the UI Contract owns no pairing registry, View, overlay,
+  snapshot, clock, or navigation transaction. The compiled `sharedContentModifierSample` covers
+  the typed declaration surface.
 - Q3 ConstraintLayout transport uses one mutually exclusive `ConstraintDimension` value per axis,
   `ConstraintMatchMode` for spread/wrap/percent behavior, a positive typed `ConstraintRatio`, and
   one baseline link. Logical start/end and physical left/right anchors remain distinct;
@@ -280,6 +286,10 @@ The five relative layout modifier elements are additive Q3 contracts, but a cust
 recognize them before application code can use their DSL functions. Resolve start/end only from the
 VNode environment, keep the existing element types physical, and apply last-declaration-wins
 across the physical and relative form of each family.
+
+Shared-content marker elements are additive Q3 contracts. Custom renderers may leave them inert,
+but a renderer claiming shared-host support must publish and clear the complete typed element on
+reuse; it cannot persist tag values, guess duplicate winners, or create a global key registry.
 
 The native-widget convergence is an alpha hard cut. The old command-only pager state and
 fixed-integer grid contracts are removed: callers use immutable `PagerStateSnapshot`,

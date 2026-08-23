@@ -571,6 +571,14 @@ snapshot. Removed entry resources remain addressable during the transition and a
 top-first order at its terminal boundary. Only the active transition ID may complete; callbacks from
 redirected or destroyed transitions have no effect.
 
+Typed shared-content markers do not add another transaction phase. After commit, the native driver
+scans the already-owned outgoing and incoming destination roots once at pre-draw, pairs exactly one
+endpoint per `SharedContentKey` and mode, and drives bounded snapshots from the same destination
+motion or predictive-Back fraction. Invalid or unsupported pairs fall back independently. The
+overlay cannot receive input or accessibility events, owns no page/session retention, and is
+released on completion, cancellation, redirect, destruction, or capture failure. Therefore shared
+visual continuity can never make a failed candidate commit or keep a removed destination alive.
+
 ## 5. Lifecycle invariants
 
 The destination lifecycle is framework-owned but capped by the root host lifecycle:

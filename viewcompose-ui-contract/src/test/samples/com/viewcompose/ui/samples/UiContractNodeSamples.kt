@@ -15,6 +15,9 @@ import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.modifier.systemBarsInsetsPaddingRelative
+import com.viewcompose.ui.modifier.sharedBounds
+import com.viewcompose.ui.modifier.sharedElement
+import com.viewcompose.ui.shared.SharedContentKey
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.LazyListItem
@@ -52,6 +55,17 @@ import com.viewcompose.ui.node.PlatformRenderContainerHandle
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.dp
 import java.io.File
+
+/** Declares typed shared endpoints for two destination-specific modifier chains. */
+fun sharedContentModifierSample() {
+    val heroKey = SharedContentKey("article-42-hero")
+    val listEndpoint = Modifier.sharedElement(heroKey)
+    val detailEndpoint = Modifier.sharedElement(heroKey)
+    val cardBounds = Modifier.sharedBounds(SharedContentKey("article-42-card"))
+
+    check(listEndpoint == detailEndpoint)
+    check(cardBounds != listEndpoint)
+}
 
 /** Builds mutually exclusive ConstraintLayout dimensions and a typed ratio. */
 fun constraintDimensionsSample() {

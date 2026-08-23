@@ -84,6 +84,12 @@ internal class AndroidViewNavHostTransitionDriver(
             .filterNot(redirectedViews::contains)
             .forEach(::resetProperties)
 
+        val sharedTransition = AndroidSharedTransitionOverlay(
+            host = sessionStore.hostView,
+            outgoingRoots = outgoing,
+            incomingRoots = incoming,
+        )
+
         val direction = navTransitionDirection(
             command = transition.command,
             layoutDirection = sessionStore.hostView.layoutDirection,
@@ -115,6 +121,8 @@ internal class AndroidViewNavHostTransitionDriver(
                 resetProperties(view)
             },
             preserveView = ::preserveForNextTransition,
+            onGeometryFrame = sharedTransition::update,
+            onTerminated = sharedTransition::finish,
             onCompleted = onCompleted,
         ).start()
     }
@@ -153,6 +161,7 @@ internal class AndroidViewNavHostTransitionDriver(
             canAnimate = sessionStore.hostView.isLaidOut &&
                 sessionStore.hostView.isAttachedToWindow &&
                 sessionStore.hostView.width > 0,
+            host = sessionStore.hostView,
             interruptedViews = interruptedViews,
             preserveForNextTransition = { views ->
                 views.forEach(::preserveForNextTransition)
@@ -246,11 +255,21 @@ private class AndroidBackPreviewHandle(
     private val density: Float,
     private val layoutDirection: Int,
     private val canAnimate: Boolean,
+    host: NavHostView,
     private val interruptedViews: MutableSet<View>,
     private val preserveForNextTransition: (List<View>) -> Unit,
     private val resetView: (View) -> Unit,
     private val settleController: BackProgressSpringController,
 ) : NavHostBackPreviewHandle {
+    private val sharedTransition = if (canAnimate && !spec.isDisabled) {
+        AndroidSharedTransitionOverlay(
+            host = host,
+            outgoingRoots = outgoing,
+            incomingRoots = incoming,
+        )
+    } else {
+        null
+    }
     private val progressInterpolator = spec.progressEasing.toInterpolator()
     private val velocityTracker = NavProgressVelocityTracker(
         sampleWindowMillis = spec.velocitySampleWindowMillis,
@@ -300,6 +319,7 @@ private class AndroidBackPreviewHandle(
             event = event,
             visualProgress = latestVisualProgress,
         )
+        sharedTransition?.update(latestVisualProgress)
     }
 
     override fun cancel() {
@@ -334,11 +354,15 @@ private class AndroidBackPreviewHandle(
                     event = latestEvent,
                     visualProgress = visualProgress,
                 )
+                sharedTransition?.update(visualProgress)
             },
             onCompleted = {
                 outgoing.forEach(resetView)
             },
-            onTerminated = layerLease::release,
+            onTerminated = {
+                layerLease.release()
+                sharedTransition?.finish(committed = false)
+            },
         )
     }
 
@@ -350,6 +374,7 @@ private class AndroidBackPreviewHandle(
         val animatedViews = outgoing + incoming
         animatedViews.forEach { view -> view.animate().cancel() }
         scrim.clear()
+        sharedTransition?.finish(committed = false)
         // When interrupted by a new command, preserve visual state for the following transition.
         preserveForNextTransition(animatedViews)
         layerLease.release()
@@ -388,7 +413,7 @@ private class AndroidBackPreviewHandle(
             spec.commitMotion.isDisabled
         ) {
             terminal = true
-            reset()
+            reset(committed = true)
             onCompleted()
             return NavHostTransitionHandle {}
         }
@@ -396,7 +421,7 @@ private class AndroidBackPreviewHandle(
         val animatedViews = outgoing + incoming
         if (animatedViews.isEmpty()) {
             terminal = true
-            reset()
+            reset(committed = true)
             onCompleted()
             return NavHostTransitionHandle {}
         }
@@ -421,8 +446,16 @@ private class AndroidBackPreviewHandle(
                 preserveView = { view ->
                     preserveForNextTransition(listOf(view))
                 },
+                onGeometryFrame = { commitProgress ->
+                    sharedTransition?.update(
+                        lerp(latestVisualProgress, 1f, commitProgress),
+                    )
+                },
                 onFrame = scrim::applyCommitProgress,
-                onTerminated = scrim::clear,
+                onTerminated = { committed ->
+                    scrim.clear()
+                    sharedTransition?.finish(committed)
+                },
                 onCompleted = {
                     if (!terminal) {
                         terminal = true
@@ -526,8 +559,9 @@ private class AndroidBackPreviewHandle(
         return availableShift * deceleratedRatio * if (rawDelta < 0f) -1f else 1f
     }
 
-    private fun reset() {
+    private fun reset(committed: Boolean = false) {
         scrim.clear()
+        sharedTransition?.finish(committed)
         (outgoing + incoming).forEach { view ->
             interruptedViews -= view
             resetView(view)
@@ -549,7 +583,8 @@ private class CommittedViewTransitionRun(
     private val resetView: (View) -> Unit,
     private val preserveView: (View) -> Unit,
     private val onFrame: (Float) -> Unit = {},
-    private val onTerminated: () -> Unit = {},
+    private val onGeometryFrame: (Float) -> Unit = {},
+    private val onTerminated: (Boolean) -> Unit = {},
     private val onCompleted: () -> Unit,
 ) : NavHostTransitionHandle {
     private val outgoingViews = outgoing.distinct()
@@ -626,6 +661,7 @@ private class CommittedViewTransitionRun(
             cancelScheduledStart()
             animatedViews.forEach(resetView)
             layerLease.release()
+            onTerminated(false)
             throw throwable
         }
         return this
@@ -645,6 +681,7 @@ private class CommittedViewTransitionRun(
     ) {
         onFrame(linearProgress)
         val geometryProgress = motion.easing.transform(linearProgress)
+        onGeometryFrame(geometryProgress)
         val outgoingAlphaProgress = motion.outgoingAlphaTiming.progressAt(playTimeMillis)
         val incomingAlphaProgress = motion.incomingAlphaTiming.progressAt(playTimeMillis)
         outgoingViews.forEach { view ->
@@ -673,7 +710,7 @@ private class CommittedViewTransitionRun(
         cancelScheduledStart()
         animatedViews.forEach(resetView)
         layerLease.release()
-        onTerminated()
+        onTerminated(true)
         onCompleted()
     }
 
@@ -684,7 +721,7 @@ private class CommittedViewTransitionRun(
         terminal = true
         cancelScheduledStart()
         animator.cancel()
-        onTerminated()
+        onTerminated(false)
         if (preserveVisualState) {
             animatedViews.forEach(preserveView)
         } else {

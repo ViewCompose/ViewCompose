@@ -21,6 +21,7 @@ internal class ResolvedModifiers(
     var semantics: SemanticsConfiguration = SemanticsConfiguration.Empty,
     var testTag: TestTagModifierElement? = null,
     var overlayAnchor: OverlayAnchorModifierElement? = null,
+    var sharedContent: SharedContentModifierElement? = null,
     var layoutId: LayoutIdModifierElement? = null,
     var constraint: ConstraintModifierElement? = null,
     var border: BorderModifierElement? = null,
@@ -105,6 +106,7 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             }
             is TestTagModifierElement -> result.testTag = element
             is OverlayAnchorModifierElement -> result.overlayAnchor = element
+            is SharedContentModifierElement -> result.sharedContent = element
             is LayoutIdModifierElement -> result.layoutId = element
             is ConstraintModifierElement -> result.constraint = element
             is BorderModifierElement -> result.border = element

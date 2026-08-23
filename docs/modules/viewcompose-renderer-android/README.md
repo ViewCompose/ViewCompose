@@ -351,6 +351,10 @@ Because the current line is alpha, the documentation site intentionally does not
   layout or parent-data changes replace them. A changed `NativeViewElement.stableKey` replays its
   configuration, while AndroidView update, reset, commit, and release callbacks remain untouched.
   Diagnostics classify this path as a targeted patch with detail `ModifierOnly`.
+- Shared-content modifier resolution writes the complete typed endpoint element to one stable keyed
+  View tag and clears it when the modifier disappears or a View is reused. The renderer performs no
+  tree scan, bitmap capture, overlay allocation, animation scheduling, or navigation work; the
+  consuming Android navigation host owns those bounded transition-time operations.
 - Physical padding, margin, offset, and inset selectors retain left/right semantics. Their
   `Relative` counterparts map logical start/end from the VNode's captured layout direction during
   every bind or environment rebind. A later physical or relative declaration replaces the earlier
@@ -491,6 +495,11 @@ diagnostics, tooling association, and decoration-backend contracts. Do not persi
 patch records, diagnostic tree objects, opaque lazy content tokens, or View tags as external data.
 Custom hosts and decoration backends must be upgraded with renderer contract changes even when an
 application's DSL source still compiles.
+
+Publishing the shared-content endpoint tag is an internal renderer behavior for additive Q3 UI
+Contract markers. Independently versioned custom hosts must use the documented stable tag key and
+typed element together; interpreting only the string value or retaining it after reuse violates the
+contract.
 
 Adding tooling-only page/content roles to renderer-owned child container handles is an internal
 behavior change over the additive UI Contract marker. Rendering output and public renderer

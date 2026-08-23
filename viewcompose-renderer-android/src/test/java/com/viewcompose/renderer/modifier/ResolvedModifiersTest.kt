@@ -28,6 +28,7 @@ import com.viewcompose.ui.modifier.paddingRelative
 import com.viewcompose.ui.modifier.systemBarsInsetsPadding
 import com.viewcompose.ui.modifier.systemBarsInsetsPaddingRelative
 import com.viewcompose.ui.modifier.zIndex
+import com.viewcompose.ui.modifier.sharedBounds
 import com.viewcompose.ui.modifier.CombinedClickableModifierElement
 import com.viewcompose.ui.modifier.ConstraintModifierElement
 import com.viewcompose.ui.modifier.GesturePriorityModifierElement
@@ -39,11 +40,24 @@ import com.viewcompose.ui.node.spec.ConstraintAnchor
 import com.viewcompose.ui.node.spec.ConstraintAnchorLink
 import com.viewcompose.ui.node.spec.ConstraintAnchorTarget
 import com.viewcompose.ui.node.spec.ConstraintItemSpec
+import com.viewcompose.ui.shared.SharedContentKey
+import com.viewcompose.ui.shared.SharedContentMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class ResolvedModifiersTest {
+    @Test
+    fun `resolve keeps only the last shared content declaration`() {
+        val resolved = Modifier
+            .sharedBounds(SharedContentKey("first"))
+            .sharedBounds(SharedContentKey("last"))
+            .resolve()
+
+        assertEquals(SharedContentKey("last"), resolved.sharedContent?.key)
+        assertEquals(SharedContentMode.Bounds, resolved.sharedContent?.mode)
+    }
+
     @Test
     fun `last physical or relative declaration wins each layout category`() {
         val logicalWins = Modifier

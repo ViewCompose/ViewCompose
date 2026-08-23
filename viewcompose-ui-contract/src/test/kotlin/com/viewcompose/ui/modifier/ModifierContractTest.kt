@@ -12,6 +12,8 @@ import com.viewcompose.ui.node.spec.ConstraintAnchorLink
 import com.viewcompose.ui.node.spec.ConstraintAnchorTarget
 import com.viewcompose.ui.node.spec.ConstraintItemSpec
 import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.shared.SharedContentKey
+import com.viewcompose.ui.shared.SharedContentMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertThrows
@@ -47,6 +49,27 @@ class ModifierContractTest {
         assertTrue(modifier.elements[0] is PaddingModifierElement)
         assertTrue(modifier.elements[1] is MarginModifierElement)
         assertEquals("anchor-1", (modifier.elements[2] as OverlayAnchorModifierElement).anchorId)
+    }
+
+    @Test
+    fun `shared content is typed and the last declaration remains authoritative`() {
+        val firstKey = SharedContentKey("first")
+        val lastKey = SharedContentKey("last")
+        val resolvedChain = Modifier
+            .sharedElement(firstKey)
+            .sharedBounds(lastKey)
+
+        assertEquals(
+            SharedContentModifierElement(firstKey, SharedContentMode.Element),
+            resolvedChain.elements[0],
+        )
+        assertEquals(
+            SharedContentModifierElement(lastKey, SharedContentMode.Bounds),
+            resolvedChain.elements[1],
+        )
+        assertThrows(IllegalArgumentException::class.java) {
+            SharedContentKey("  ")
+        }
     }
 
     @Test

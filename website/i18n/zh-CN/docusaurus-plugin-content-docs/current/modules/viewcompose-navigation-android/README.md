@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: a5a316ff156903dd43c2184c59b7c979f9d687b2bd6fff8dcb4eecd65a47e0ed
+translation_source_hash: 7fb1f7a169589fb512677df36b961a6ddf4244e3a483b927a5ddfb867e535538
 translation_status: current
 ---
 
@@ -155,6 +155,22 @@ reset、stack selection、deep link 和 predictive Back motion。
 View driver 会先绘制完整起始布局，再开始 motion；只变化 transform/alpha 时会临时把昂贵页面
 层级提升到硬件 layer。被重定向的 motion 会保留当前视觉属性，后续命令不会跳回 identity 帧。
 
+## 共享内容动效
+
+`Modifier.sharedElement(SharedContentKey(...))` 与 `Modifier.sharedBounds(...)` 是由 `NavHost`
+自动消费的 Q3 端点标记，不需要 `SharedTransitionLayout` 或动画 Scope。Key 只在一对
+Outgoing/Incoming Destination 内有效；两棵树都必须对同一 Key 和 Mode 各声明一次才能配对。
+缺失、重复、Mode 不匹配、Detach、零尺寸、Surface-backed 或超过预算的端点会按 Key 回退到普通
+Destination Motion，绝不改变导航事务。
+
+首版仅支持单 Window Snapshot Motion。`sharedElement` 把 Source Snapshot 移动到 Target Bounds；
+`sharedBounds` 沿同一路径移动 Bounds，并交叉淡化 Source/Target Snapshot。Snapshot 按 Outgoing
+Tree 的稳定顺序绘制在不可交互的 Host Overlay 中，单次转场最多使用两个 Host Area 的像素。
+Incoming Destination 始终拥有 Input 与 Accessibility。成功 Commit 时，已聚焦 Source 可把焦点
+转给可聚焦 Target；取消则恢复 Source。完成、取消、重定向、Host 销毁、捕获失败与 Session 释放
+都会且只会清除一次 Snapshot 并恢复端点状态。Predictive Back 让同一 Overlay 跟随手势进度，
+Commit 时从该 Fraction 继续，但 Overlay 不获得 Stack Commit 权限。
+
 ## 自适应 pane
 
 `NavPanePolicy.Single` 在所有宽度下保持单页面全屏宿主。`Adaptive` 会在每个 pane 都满足最小宽度
@@ -189,3 +205,8 @@ String、Android `Uri` 和 `ACTION_VIEW Intent` 入口都使用同一个严格�
 防御式进程死亡恢复、预测性返回 preview、对齐 Android 的原生 View motion，以及最多三个自适应
 pane。请通过 `rememberNavHostController` 持久化 controller 状态，不要在宿主之外保留 Android
 owner 或 session 对象。
+
+类型化 Shared-content Marker 是新增 Q3 UI Contract API，但只有发布稳定端点 Tag 的 Renderer 与
+本 Navigation Host 实现组合时才产生动效；旧版或自定义 Renderer 可以把 Marker 视为无效。
+跨 Window、跨 Activity、跨 Process、Live Content、Shape Morph 与任意 Surface-backed Capture
+在本 Alpha 中有意不支持，并回退到普通 Destination Motion。

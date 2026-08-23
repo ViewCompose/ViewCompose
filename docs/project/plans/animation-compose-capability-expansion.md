@@ -2,10 +2,10 @@
 
 ## Status
 
-Active. Phases 0 through 4 are complete and merged. Phase 5 implementation, focused acceptance,
-manual-device review, Preview, fixed-frequency evidence, repository gates, and root-installed
-physical-device suites are complete on the candidate branch; pull-request delivery remains before
-Phase 6 begins.
+Active. Phases 0 through 5 are complete and merged. Phase 6 shared-element and shared-bounds
+implementation, focused acceptance, Demo/Preview review, rooted-device validation,
+fixed-frequency evidence, and repository gates are complete on the candidate branch; pull-request
+delivery remains.
 This plan was split out on 2026-08-18 from the Animation follow-up in the unified roadmap and the
 framework-wide physical-spring candidate recorded by the multi-design-system plan. Those documents
 now point here; this file is the only active plan that owns the seven animation expansions defined
@@ -23,8 +23,8 @@ architecture, guide, reference, and owning-module documentation before this plan
 
 Last verified: 2026-08-23.
 
-Next action: deliver and merge the Phase 5 pull request, then begin Phase 6 without reopening the
-accepted seek or real-layout ownership contracts.
+Next action: deliver and merge the Phase 6 pull request before beginning Phase 7 request-driven
+timeline tooling.
 
 ## Maven release changesets
 
@@ -38,7 +38,11 @@ accepted seek or real-layout ownership contracts.
 - `release/changes/20260823-seekable-transition-phase4.json` — Phase 4 generic transition channels,
   normalized seeking, and one seek/animate/snap writer; accepted and merged.
 - `release/changes/20260823-animate-bounds-phase5.json` — Phase 5 real parent-local bounds motion,
-  renderer ownership, lifecycle-safe reuse, and Preview coverage; candidate delivery remains.
+  renderer ownership, lifecycle-safe reuse, and Preview coverage; accepted and merged.
+- `release/changes/20260823-shared-navigation-motion-phase6.json` — Phase 6 typed endpoint markers,
+  renderer tag transport, bounded NavHost snapshots, predictive-Back integration, and
+  Demo/Preview coverage; candidate acceptance and repository verification complete, with delivery
+  pending.
 
 ## Objective
 
@@ -175,9 +179,10 @@ in the linked performance sections instead of being duplicated here.
 | 2 | Keyed `AnimatedContent`, pair-specific transforms, measured size, bounded two-subtree ownership, incoming-only interaction, rollback, and exact release | Complete and merged in `84dce0ae` | [AnimatedContent comparison](../../tooling/performance.md#2410-animation-revision-2-animatedcontent-comparison); frame and peak memory were `no material change` |
 | 3 | Slide/scale/aligned visibility, hard-cut typed scope, shared parent/descendant timeline, complete-host geometry, and immediate inactive interaction removal | Complete and merged in `2a21db65` | [Rich-visibility comparison](../../tooling/performance.md#2411-animation-revision-3-rich-visibility-release-safety-comparison); frozen gates passed and P99 remains a recorded watch item |
 | 4 | Stable `TransitionSegment`, generic `animateValue<T, V>`, hard-cut `transitionSpec` name, dynamic committed-channel duration, and one seek/animate/snap writer | Complete and merged in `984ac9bd` | [Seekable-transition absolute baseline](../../tooling/performance.md#2412-animation-revision-2-seekable-transition-baseline): five 200-frame runs, P50/P95/P99 `7.775/10.493/11.718 ms`, heap `8,474 KiB`, CV `0.011`, zero thermal sleep |
-| 5 | Additive `Modifier.animateBounds`, one complete synthetic layout owner, real parent-local geometry, physical/duration retargeting, hard rejection of dual size ownership, explicit reuse reset, and transactional rollback | Focused acceptance complete on candidate branch; repository gates and PR remain | [Bounds versus immediate-layout comparison](../../tooling/performance.md#2413-animation-revision-1-real-bounds-comparison): stable `464` versus `16` frames/run, animation P50/P95/P99 `5.636/6.520/19.777 ms`, heap `6,754 KiB`, CV `0.060`, zero thermal sleep |
+| 5 | Additive `Modifier.animateBounds`, one complete synthetic layout owner, real parent-local geometry, physical/duration retargeting, hard rejection of dual size ownership, explicit reuse reset, and transactional rollback | Complete and merged in `bb57fcd0` | [Bounds versus immediate-layout comparison](../../tooling/performance.md#2413-animation-revision-1-real-bounds-comparison): stable `464` versus `16` frames/run, animation P50/P95/P99 `5.124/6.438/18.503 ms`, snap P50/P95/P99 `8.727/25.762/28.556 ms`, heap `6,714` versus `6,868 KiB`, CV `0.055` versus `0.083`, zero thermal sleep |
+| 6 | Typed shared endpoint markers, stable renderer transport, bounded one-window snapshots, per-pair fallback, and committed/predictive navigation progress ownership | Complete on candidate branch; PR delivery remains | [Shared-content versus ordinary navigation](../../tooling/performance.md): identical `124` frames/run, shared P50/P95 `4.073/8.096 ms` versus control `3.989/8.487 ms`, heap `6,971` versus `6,651 KiB`, CV `0.059` versus `0.072`, zero thermal sleep; `no material change` |
 
-The cumulative accepted contract through Phase 4 is:
+The cumulative accepted contract through Phase 5 is:
 
 - physical and finite specifications share one vector-aware sampling engine; invalid replacement
   input cannot take mutation ownership or publish a partial snapshot;
@@ -188,17 +193,21 @@ The cumulative accepted contract through Phase 4 is:
   explicit seek to autonomous continuation;
 - `snapTo` atomically collapses current state, target state, and segment endpoints; the controller
   owns no scope, saved state, or navigation commit/rollback; and
+- real-bounds animation owns one complete synthetic layout host, lays out sampled parent-local
+  geometry without per-frame child measurement, rejects dual size ownership before mutation, and
+  clears sampled state on detach or cross-owner reuse; and
 - every Q3 surface landed with canonical KDoc, compiled samples, owning-module documentation,
   Demo/Preview coverage, reviewed Chinese mirrors, immutable Changesets, and interpreted
   performance evidence.
 
-Phase 4 final gates pass: the quick/Preview/tooling-isolation gate completed 1,624 tasks,
-`qaFull` completed 1,763 tasks, and Xiaomi suites passed Demo 137/137, Counter 1/1, and Tutorials
-2/2 with no skips or failures. Phases 6–7 below retain their full unresolved requirements.
+Phase 5 final gates pass: the quick/Preview/tooling-isolation gate completed 1,624 tasks, the
+non-device `qaFull` path completed 1,622 tasks, and root-installed Xiaomi suites passed Demo
+138/138, Counter 1/1, and Tutorials 2/2 with no skips or failures. Phases 6–7 below retain their
+full unresolved requirements.
 
 ## Phase 5: Layout-coordinate and bounds animation
 
-The candidate adds the Q3 `Modifier.animateBounds` contract for position and size changes between
+Phase 5 added the Q3 `Modifier.animateBounds` contract for position and size changes between
 accepted layout states. One transparent synthetic host owns the complete parent-data and layout
 chain while the child retains drawing, content, input, and semantics. `animateBounds` plus
 `animateContentSize` on the same node is rejected before native mutation; repeated bounds elements
@@ -224,30 +233,50 @@ and total energy remain explicit measurement limitations rather than inferred cl
 
 Build a bounded coordinator on Phase 4 seeking and Phase 5 bounds instead of introducing a second
 motion engine. The first release is limited to one Android window and reviewed ViewCompose session
-relationships. Its provisional vocabulary may resemble:
+relationships. Phase 6 hard-cuts the provisional Compose-shaped scope: `NavHost` is already the
+cross-session coordinator, so adding `SharedTransitionLayout`, `SharedTransitionScope`, or an
+`AnimatedVisibilityScope` parameter would create competing ownership without improving safety.
+The Q3 declaration surface is instead:
 
 ```kotlin
-fun UiTreeBuilder.SharedTransitionLayout(
-    modifier: Modifier = Modifier,
-    content: SharedTransitionScope.() -> Unit,
-)
+@JvmInline
+value class SharedContentKey(val value: String)
 
 fun Modifier.sharedElement(
-    state: SharedContentState,
-    animatedVisibilityScope: AnimatedVisibilityScope,
+    key: SharedContentKey,
 ): Modifier
 
 fun Modifier.sharedBounds(
-    state: SharedContentState,
-    animatedVisibilityScope: AnimatedVisibilityScope,
+    key: SharedContentKey,
 ): Modifier
 ```
 
-The contract must define key namespace, source/target pairing, missing and duplicate keys,
-snapshot/live-content choice, overlay and clipping, shape/alpha/bounds participation, z-order,
-content scaling, input and accessibility owner, focus, destination/session retention, navigation
-commit/cancel, predictive-Back progress, interruption by another navigation command, process
-recreation, and deterministic cleanup.
+Keys are local to one outgoing/incoming destination pair and pair only when both endpoints declare
+the same key and the same element/bounds mode exactly once. A missing endpoint, duplicate key,
+mode mismatch, detached or zero-sized View, unsupported surface-backed View, or exceeded snapshot
+budget disables only that pair and leaves normal destination motion intact. Later shared-content
+elements on one modifier chain replace earlier ones.
+
+The first release uses immutable renderer snapshots in a non-interactive `NavHost` overlay. It does
+not keep live content, morph arbitrary shapes, or move native input targets between sessions.
+`sharedElement` moves one source snapshot and reveals the committed target at the terminal state;
+`sharedBounds` interpolates the same bounds while crossfading source and target snapshots. Snapshot
+pixels preserve each endpoint's rendered alpha and local clipping; host clipping remains the final
+boundary. Pairs draw in stable outgoing-tree traversal order above destination surfaces. Bounds use
+host-local physical pixels and scale snapshots into the sampled rectangle. The committed incoming
+destination owns navigation, lifecycle, input, accessibility, and final focus; overlay snapshots
+never receive events or expose semantics. If focus was inside the outgoing endpoint, the matched
+incoming endpoint receives focus only after a successful commit and only when it is focusable.
+
+The coordinator retains no destination beyond the transition already owned by navigation. Push,
+pop, replace, retained-stack selection, and predictive-Back completion consume the existing native
+transition progress. Predictive-Back cancellation restores the outgoing endpoint and never commits
+the stack. A redirect disposes the old shared snapshots, restores both endpoint properties, and
+lets the next committed command rescan from its own sessions; it does not attempt visual continuity
+through stale keys. Configuration change, process recreation, released sessions, cross-window
+content, capture failure, and reduced or disabled motion settle directly to the committed scene.
+Every complete, cancel, redirect, destroy, preparation failure, and renderer failure path removes
+overlay drawables, releases bitmap storage, and restores only coordinator-owned endpoint state.
 
 The navigation adapter may consume committed and predictive progress but cannot mutate the
 back-stack transaction to satisfy a visual effect. Unsupported cross-window or released-source
@@ -382,12 +411,14 @@ This plan is complete only when:
 5. **Complete and merged — Phase 4:** public generic/segment-aware channels, normalized seekable
    ownership, focused tests, Demo/Preview/manual review, the stable fixed-frequency absolute
    baseline, repository gates, and full physical-device suites were merged in `984ac9bd`.
-6. **Complete on candidate branch — Phase 5:** transactional real-bounds ownership, focused
+6. **Complete and merged — Phase 5:** transactional real-bounds ownership, focused
    correctness and reuse tests, Demo automation, manual device review, Preview Golden,
    fixed-frequency animated-versus-snap comparison, repository gates, and root-installed physical
-   suites are accepted; PR delivery remains.
-7. **Pending — Phase 6:** implement bounded shared-element/shared-bounds coordination and navigation
-   integration.
+   suites were merged in `bb57fcd0`.
+7. **Complete on candidate branch — Phase 6:** typed endpoint transport, bounded one-window
+   snapshots, committed and predictive navigation integration, fallback/release coverage,
+   Demo/Preview/manual review, rooted-device suites, and fixed-frequency comparison are accepted;
+   repository gates pass and PR delivery remains.
 8. **Pending — Phase 7:** implement isolated request-driven timeline inspection and approved
    Preview control.
 9. **Pending — Closeout:** update durable documentation, migration matrix, Demo/Preview/Studio
@@ -431,3 +462,8 @@ This plan is complete only when:
 | 2026-08-23 | Accept the focused Phase 5 matrix and Xiaomi manual/device evidence: Row/Column/Box/ConstraintLayout, RTL, density/font scale, nested ownership, clipping/focus, lazy reuse, rollback, measurement count, accessibility geometry, and endpoint touch pass. |
 | 2026-08-23 | Accept the final-candidate `animation.bounds@1` fixed-frequency comparison as improved active-frame latency with no material peak-heap change: animated P50/P95/P99 are `5.124/6.438/18.503 ms` versus snap `8.727/25.762/28.556 ms`, median heap is `6,714` versus `6,868 KiB`, run-P50 CV is `0.055` versus `0.083`, and thermal sleep is zero. The unequal `464` versus `16` frames prohibit a total-CPU or energy claim. |
 | 2026-08-23 | Accept the Phase 5 final gates: documentation, translation, quick, Preview, and tooling-isolation checks pass in the 1,624-task gate. The non-device `qaFull` path passes 1,622 tasks; the ordinary device-inclusive path executes 1,734 tasks before MIUI rejects Counter APK installation with zero tests. Root-installing the exact rebuilt APKs then passes Demo 138/138, Counter 1/1, and Tutorials 2/2 with no skips or failures. Final start/mid/end visual review confirms all three Bounds motion classes, and endpoint UI Automation reports the combined target at `[378,1332][990,1506]`. |
+| 2026-08-23 | Record Phase 5 merged at `bb57fcd049e3b1d359d18ea271d0505fc08eb033` and begin Phase 6 without reopening seek ownership or real parent-local bounds ownership. |
+| 2026-08-23 | Freeze the Phase 6 hard cut: reject the provisional `SharedTransitionLayout`/scope owner, publish only typed `SharedContentKey` endpoint markers, let `NavHost` pair one key/mode per destination side, reuse committed or predictive-Back progress, render bounded immutable one-window snapshots, fall back per invalid key, and release old overlays before redirected commands rescan. |
+| 2026-08-23 | Accept Phase 6 focused and rooted-device evidence: unique/missing/duplicate/mismatched/over-budget/surface-backed pairs, Push/Pop/Replace, predictive Back cancel/commit, redirect, disabled motion, focus transfer, host destruction, endpoint reuse, process recreation, adaptive stacks, and strict deep links pass; reviewed slow-motion frames show the bounds surface resizing/moving and the element chip moving independently without changing input ownership. |
+| 2026-08-23 | Accept `navigation.shared-motion@1` as `no material change`: shared P50/P90/P95/P99 are `4.073/5.526/8.096/36.099 ms` versus ordinary motion `3.989/5.466/8.487/30.020 ms`, median heap is `6,971` versus `6,651 KiB`, run-P50 CV is `0.059` versus `0.072`, both arms hold exactly `124` frames in all five runs, and thermal sleep is zero. The `+6.079 ms` P99 remains an explicit tail watch item outside the frozen P50/P95 gate. |
+| 2026-08-23 | Accept the Phase 6 final gates: documentation, translation, quick, Preview, and tooling-isolation checks pass in the 1,624-task gate. MIUI rejects ordinary APK installation, so the exact rebuilt APKs were root-installed; Demo passes 138/138, Counter 1/1, and Tutorials 2/2 with no skips or failures. The final Demo suite completes in `784.863 s`; its shared-endpoint geometry cycles through three bounded states so repeated navigation cannot move the automation target outside the lazy viewport, and assertions tolerate the intentionally overlapping outgoing and incoming snapshot hosts. |

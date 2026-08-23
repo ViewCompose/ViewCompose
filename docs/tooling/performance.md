@@ -1397,6 +1397,54 @@ accepted. Repository/documentation/Preview gates and the root-installed 138/138 
 and 2/2 Tutorials suites subsequently passed; pull-request delivery is the next action rather than
 repeated sampling.
 
+#### 2.4.14 Navigation revision-1 shared-content comparison
+
+The 2026-08-23 Phase 6 batch compares ordinary destination motion with shared-content snapshots
+on the same `navigation.shared-motion@1` System Navigation fixture. Both arms render identical
+destinations and execute four Push operations in each of five `run-from-apk` iterations after the
+same five-second unmeasured launch settle. The control differs only through the internal
+`system_navigation_shared_content_enabled=false` intent input, which omits the two shared endpoint
+markers without changing page geometry, copy, navigation state, or destination motion. The
+R8/resource-shrunk nondebuggable target is based on
+`bb57fcd049e3b1d359d18ea271d0505fc08eb033`; its APK SHA-256 is
+`b7f4c8219022c6f5e9c5e90388c05e8430142450034888b72c50965730ba463b`.
+
+The original benchmark APK SHA-256 is
+`91e050e89ae6b285f2f4cfe4295d50accf244087b72085675ceef214c4437579`; the Magisk-adapted APK is
+`86144fb5bd300f231bf3e8dbecd4452a35fafab24d939e6be25db0baa5aa4146`. The equal-length
+`su root` to `su 0 -c` transport adaptation, DEX checksum repair, alignment, and debug signing do
+not change the target, workload, metrics, or result JSON.
+
+The rooted Xiaomi MI 6 / Android 9 device held CPU policies 0/4 at 1.4016/1.8048 GHz, GPU devfreq
+and KGSL power-level bounds at 515 MHz, and exposed CPU/GPU interconnect votes at 13,763. All eight
+CPUs remained online, vendor performance services were stopped, and charging was suspended.
+Pre/post controls matched every requested value, AndroidX reported `cpuLocked=true`, and
+thermal-throttle sleep was zero. The control ran at 34--35 degrees Celsius and the shared arm at
+35 degrees Celsius; no lower ambient-unreachable start temperature was required. All governors,
+bounds, services, and charging state were restored after the batch.
+
+| Arm | Frames per run | Frame CPU P50/P90/P95/P99, ms | Median peak heap, KiB | Run-P50 CV | Acceptance |
+| --- | --- | ---: | ---: | ---: | --- |
+| Ordinary destination motion | `124/124/124/124/124` | `3.989/5.466/8.487/30.020` | 6651 | 0.072 | Accepted control |
+| Two shared pairs (`sharedBounds` + `sharedElement`) | `124/124/124/124/124` | `4.073/5.526/8.096/36.099` | 6971 | 0.059 | Pass |
+
+Relative to ordinary motion, shared content changes P50/P90/P95/P99 by
+`+2.1%/+1.1%/-4.6%/+20.3%`. The P50 increase is only `0.084 ms`, P95 decreases by `0.390 ms`, and
+median peak heap increases by `320 KiB` (`+4.8%`). These remain inside the ADR-0019 combined frame
+and memory budgets, both run-P50 CV values are below `0.15`, frame counts are exact, and no thermal
+sleep occurred. The scoped frame and peak-memory conclusion is therefore **no material change**.
+The `+6.079 ms` P99 delta is retained as a navigation-tail watch item; P99 is not hidden or used to
+replace the frozen P50/P95 gate after measurement.
+
+This comparison covers snapshot preparation, two software bitmap pairs, overlay drawing, and
+terminal release during committed Push. Deterministic tests separately prove ordinary no-pair
+fallback, bounded pixels, duplicate/mismatch rejection, Push/Pop/Replace, predictive-Back
+complete/cancel, redirect, disabled motion, focus transfer, surface-backed fallback, and host
+destruction cleanup. Limits are one OEM/API-28 device, `run-from-apk` JIT/code-placement
+sensitivity, peak rather than post-GC retained memory, no per-object allocation events, no direct
+power measurement, and no separate predictive-Back frame benchmark. The accepted next action is
+repository and device-gate completion, not repeated sampling for a more favorable P99.
+
 ### 2.5 Debug tooling regression gate
 
 Release macrobenchmarks cannot detect costs that exist only in debuggable builds. Any tooling that
