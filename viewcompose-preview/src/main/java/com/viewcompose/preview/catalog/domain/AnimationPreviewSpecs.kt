@@ -4,6 +4,7 @@ import com.viewcompose.animation.Crossfade
 import com.viewcompose.animation.AnimatedVisibility
 import com.viewcompose.animation.SeekableTransitionState
 import com.viewcompose.animation.SlideDirection
+import com.viewcompose.animation.animateBounds
 import com.viewcompose.animation.animateFloatAsState
 import com.viewcompose.animation.core.AnimationConverter
 import com.viewcompose.animation.core.tween
@@ -26,9 +27,11 @@ import com.viewcompose.ui.modifier.graphicsLayer
 import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.modifier.TransformOrigin
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.foundation.Row
@@ -223,6 +226,45 @@ internal object AnimationPreviewSpecs {
                             commandNonce.value += 1
                         },
                     )
+                }
+            },
+        ),
+        PreviewSpec(
+            id = "animation-layout-bounds",
+            title = "Layout Bounds",
+            domain = PreviewDomain.Animation,
+            content = {
+                val endState = remember { mutableStateOf(false) }
+                Column(spacing = 8.dp, modifier = Modifier.fillMaxWidth()) {
+                    Text(text = "Real layout, input, and accessibility bounds move together")
+                    Button(
+                        text = if (endState.value) "Return to start" else "Move and resize",
+                        onClick = { endState.value = !endState.value },
+                    )
+                    Surface(
+                        variant = SurfaceVariant.Variant,
+                        modifier = Modifier.fillMaxWidth().padding(10.dp),
+                    ) {
+                        Box(modifier = Modifier.fillMaxWidth().height(148.dp)) {
+                            Surface(
+                                variant = SurfaceVariant.Default,
+                                modifier = Modifier
+                                    .width(if (endState.value) 212.dp else 132.dp)
+                                    .height(if (endState.value) 58.dp else 44.dp)
+                                    .align(
+                                        if (endState.value) {
+                                            BoxAlignment.BottomEnd
+                                        } else {
+                                            BoxAlignment.TopStart
+                                        },
+                                    )
+                                    .animateBounds(tween(durationMillis = 720))
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                            ) {
+                                Text(text = "Position + size")
+                            }
+                        }
+                    }
                 }
             },
         ),

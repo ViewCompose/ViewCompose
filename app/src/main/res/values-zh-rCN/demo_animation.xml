@@ -73,6 +73,16 @@
     <string name="demo_animation_specs_size_content_c">展开内容 C</string>
     <string name="demo_animation_content_size_state_collapsed">状态：已收起</string>
     <string name="demo_animation_content_size_state_expanded">状态：已展开</string>
+    <string name="demo_animation_bounds_state_start">端点：起点 · 目标点击：%1$d</string>
+    <string name="demo_animation_bounds_state_end">端点：终点 · 目标点击：%1$d</string>
+    <string name="demo_animation_bounds_to_end">移动并放大</string>
+    <string name="demo_animation_bounds_to_start">返回起点</string>
+    <string name="demo_animation_bounds_position_only">仅位置 · 固定 92 × 44 dp</string>
+    <string name="demo_animation_bounds_position_marker">位置 · 固定</string>
+    <string name="demo_animation_bounds_size_only">仅尺寸 · 固定左上</string>
+    <string name="demo_animation_bounds_size_marker">尺寸 · 左侧固定</string>
+    <string name="demo_animation_bounds_combined">组合运动 · 真实可交互边界</string>
+    <string name="demo_animation_bounds_tappable">组合 · 点击我</string>
 
     <string name="demo_animation_transition_title">可定位的 Transition 时间线</string>
     <string name="demo_animation_transition_summary">定位二维泛型通道，对比不等时长通道，再把同一时间线交给唯一的自动播放写入者。</string>

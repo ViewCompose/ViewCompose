@@ -73,6 +73,16 @@
     <string name="demo_animation_specs_size_content_c">Expanded content C</string>
     <string name="demo_animation_content_size_state_collapsed">State: collapsed</string>
     <string name="demo_animation_content_size_state_expanded">State: expanded</string>
+    <string name="demo_animation_bounds_state_start">Endpoint: start · target taps: %1$d</string>
+    <string name="demo_animation_bounds_state_end">Endpoint: end · target taps: %1$d</string>
+    <string name="demo_animation_bounds_to_end">Move and resize</string>
+    <string name="demo_animation_bounds_to_start">Return to start</string>
+    <string name="demo_animation_bounds_position_only">Position only · fixed 92 × 44 dp</string>
+    <string name="demo_animation_bounds_position_marker">Position · fixed</string>
+    <string name="demo_animation_bounds_size_only">Size only · fixed top-start</string>
+    <string name="demo_animation_bounds_size_marker">Size · fixed start</string>
+    <string name="demo_animation_bounds_combined">Combined · interactive real bounds</string>
+    <string name="demo_animation_bounds_tappable">Combined · tap me</string>
 
     <string name="demo_animation_transition_title">Seekable transition timeline</string>
     <string name="demo_animation_transition_summary">Seek a generic two-dimensional channel, compare unequal channel durations, then hand the same timeline to one autonomous writer.</string>

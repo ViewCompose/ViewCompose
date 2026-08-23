@@ -92,6 +92,8 @@
     <string name="demo_scenario_animation_content_size_summary">使用无滚动且始终可见的舞台验证 animateContentSize 展开与收起。</string>
     <string name="demo_scenario_animation_transition_title">可定位过渡通道</string>
     <string name="demo_scenario_animation_transition_summary">验证泛型分段通道、显式定位、自动播放交接与按轴显隐。</string>
+    <string name="demo_scenario_animation_bounds_title">真实布局边界</string>
+    <string name="demo_scenario_animation_bounds_summary">验证仅位置、仅尺寸与组合运动，并确认触摸区域逐帧跟随可见边界。</string>
     <string name="demo_scenario_animation_infinite_title">无限动画与 Animatable</string>
     <string name="demo_scenario_animation_infinite_summary">隔离验证无限重复与显式 Animatable 命令。</string>
     <string name="demo_scenario_modifier_visual_title">视觉 Modifier</string>

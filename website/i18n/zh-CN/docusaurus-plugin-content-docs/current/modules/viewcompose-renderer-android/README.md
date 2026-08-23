@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: e348c1c4b1328d9a7f928a03a88b9b6748ac493f383252612bff3158bd4ee6d6
+translation_source_hash: 552f3949e01ba98a113048466fd98e9a4d82e477742c8506c754d6c9852b2d6f
 translation_status: current
 ---
 
@@ -89,6 +89,14 @@ Translation、Scale Origin、Alpha 与 Reveal Clip。非活动 Outgoing Host 只
 Pointer 与 Key Dispatch，不提供 Focusable，清除保留 Focus，并使用
 `IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS`。这些绑定全部进入普通 Renderer Rollback
 事务，因此后续 Node 失败会一起恢复之前的尺寸、视觉与交互 Owner。
+
+真实 Bounds 动画会用一个透明 `DeclarativeAnimatedBoundsHostLayout` 包住完整的 Parent Data 与
+布局链。Parent 只布局一次已接受 Target；Host 保留此前物理矩形，并在属性帧提交采样后的
+left/top/right/bottom，不重新测量 Child。Child 仍是 Drawing、Input、Focus 与 Accessibility
+Owner，因此平台几何会跟随可见矩形。Duration Retarget 从当前采样值以零速度重新开始；物理
+Retarget 保留四条边的速度；重复 Target Layout 不会重启 Writer。Renderer Rollback 会同时
+恢复此前的 Host Spec 与 Parent Layout Input。Detach 和跨 Owner 的 Reusable-tree Reset 会在
+Adoption 前显式清理 Bounds 与 Content-size Animation State，即使平台没有回调 Detach 也是如此。
 
 ConstraintLayout 协调会先编译完整不可变候选，并在接触原生 View 前拒绝无效 ID、Reference、
 Anchor Plane、Helper 依赖、所有权冲突、尺寸与范围。一个注册表拥有 Guideline、Barrier、Flow、

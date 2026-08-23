@@ -14,6 +14,7 @@ import com.viewcompose.ui.node.spec.ColumnNodeProps
 import com.viewcompose.ui.node.spec.ConstraintLayoutNodeProps
 import com.viewcompose.ui.node.spec.DividerNodeProps
 import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
+import com.viewcompose.ui.node.spec.AnimatedBoundsHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedContentHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedContentItemNodeProps
 import com.viewcompose.ui.node.spec.LayoutConstraintHostNodeProps
@@ -69,6 +70,7 @@ class NodeBinderDescriptorGuardTest {
             NodeType.AnimatedContentHost,
             NodeType.AnimatedContentItemHost,
             NodeType.AnimatedSizeHost,
+            NodeType.AnimatedBoundsHost,
             NodeType.LayoutConstraintHost,
             NodeType.NestedScrollHost,
             NodeType.Spacer,
@@ -136,6 +138,7 @@ class NodeBinderDescriptorGuardTest {
         AnimatedContentHostNodePatch::class,
         AnimatedContentItemNodePatch::class,
         AnimatedSizeHostNodePatch::class,
+        AnimatedBoundsHostNodePatch::class,
         LayoutConstraintHostNodePatch::class,
         ImageNodePatch::class,
         IconButtonNodePatch::class,
@@ -174,6 +177,7 @@ class NodeBinderDescriptorGuardTest {
         NodeType.AnimatedContentHost -> "AnimatedContentHost"
         NodeType.AnimatedContentItemHost -> "AnimatedContentItemHost"
         NodeType.AnimatedSizeHost -> "AnimatedSizeHost"
+        NodeType.AnimatedBoundsHost -> "AnimatedBoundsHost"
         NodeType.LayoutConstraintHost -> "LayoutConstraintHost"
         NodeType.NestedScrollHost -> "NestedScrollHost"
         NodeType.Spacer -> "Spacer"
@@ -215,6 +219,7 @@ class NodeBinderDescriptorGuardTest {
         is AnimatedContentHostNodePatch -> "AnimatedContentHostNodePatch"
         is AnimatedContentItemNodePatch -> "AnimatedContentItemNodePatch"
         is AnimatedSizeHostNodePatch -> "AnimatedSizeHostNodePatch"
+        is AnimatedBoundsHostNodePatch -> "AnimatedBoundsHostNodePatch"
         is LayoutConstraintHostNodePatch -> "LayoutConstraintHostNodePatch"
         is ImageNodePatch -> "ImageNodePatch"
         is IconButtonNodePatch -> "IconButtonNodePatch"
@@ -251,6 +256,7 @@ class NodeBinderDescriptorGuardTest {
         is AnimatedContentHostNodeProps -> "AnimatedContentHostNodeProps"
         is AnimatedContentItemNodeProps -> "AnimatedContentItemNodeProps"
         is AnimatedSizeHostNodeProps -> "AnimatedSizeHostNodeProps"
+        is AnimatedBoundsHostNodeProps -> "AnimatedBoundsHostNodeProps"
         is LayoutConstraintHostNodeProps -> "LayoutConstraintHostNodeProps"
         is ImageNodeProps -> "ImageNodeProps"
         is IconButtonNodeProps -> "IconButtonNodeProps"

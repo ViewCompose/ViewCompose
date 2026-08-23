@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 4dcfb9c3832780d4f57365229dd4189de4cbd7caf8c7080f3c5dd8b39ea82283
+translation_source_hash: 434b618d88914a79886408375eb1b477012bc8440d3b5c0f3eb4ceec3f3dd2c4
 translation_status: current
 ---
 
@@ -1155,6 +1155,46 @@ Channel 终止与原子 Snap 折叠。局限包括仅一台 OEM/API-28 设备、
 敏感、只有 Peak 而非 Post-GC Retained Memory、没有逐对象 Allocation Event、没有 Compose
 Control，以及没有直接功耗测量。这一稳定行成为可复用的 Phase 4 绝对基线；下一步是完整仓库与
 设备门禁，而不是重复采样。
+
+#### 2.4.13 Animation revision-1 真实 Bounds 对照 {/* #2413-animation-revision-1-real-bounds-comparison */}
+
+2026-08-23 的 Phase 5 批次在同一个 `animation.bounds@1` Fixture 上，对比真实
+`Modifier.animateBounds` 运动与立即布局 Snap Control。两组都切换相同的位置、尺寸和组合 Target；
+每次 `run-from-apk` 迭代执行 4 个完整 Forward/Reverse Round Trip，共 5 次迭代。两组都在测量外
+等待启动 5 秒，并在每个动作后等待 1,050 ms；Control 只通过显式
+`animation_bounds_animated=false` Intent Input 形成差异。R8/资源压缩且不可调试的 Target APK
+SHA-256 为 `01633c109f44f9e6a79000cf22dc90593a72875caa883c175548312045d3d9b8`。
+
+原始 Benchmark APK SHA-256 为
+`b27073bb450c673284e550edb0aac98237da0042c98bffcc020fa587b1481df9`，Magisk 适配 APK 为
+`45360987794a2b824c676d2129d978748b271309cab852dbd53ff13c6e2cd58a`。等长的
+`su root` 到 `su 0 -c` 传输适配、DEX Checksum 修复、Zip Alignment 与 Debug Signing 不改变
+Target、Workload、Metric 或 Result JSON。
+
+已 Root 的 Xiaomi MI 6 / Android 9 把 CPU Policy 0/4 固定为 1.4016/1.8048 GHz、GPU 固定为
+515 MHz，并把已暴露的 Interconnect 最小 Vote 固定为 13,763；停止厂商 Performance Service，
+暂停充电。前后控制均匹配请求值，AndroidX 报告 `cpuLocked=true`，Thermal-throttle Sleep 为零，
+并在批次结束后恢复全部设备控制。Control Arm 温度从 33 升至 34 摄氏度，Animated Arm 从 34
+升至 35 摄氏度；不要求达到高环境温度下无法实现的更低起跑温度。
+
+| Arm | 每轮帧数 | Frame CPU P50/P90/P95/P99，ms | Peak Heap 中位数，KiB | Run-P50 CV | 验收 |
+| --- | --- | ---: | ---: | ---: | --- |
+| 立即布局 Snap Control | `16/16/16/16/16` | `8.727/23.297/25.762/28.556` | 6868 | 0.083 | 已接收 Control |
+| 真实 Bounds 动画 | `464/464/464/464/464` | `5.124/6.138/6.438/18.503` | 6714 | 0.055 | 通过 |
+
+相对 Snap，Animated Frame Distribution 的 P50/P90/P95/P99 变化为
+`-41.3%/-73.7%/-75.0%/-35.2%`。Peak Heap 中位数降低 `154 KiB`（`-2.2%`），低于组合 Memory
+实质变化门禁。两组 Run-P50 CV 都低于 `0.15`，各 Arm 内帧数完全一致，且没有 Thermal Sleep。
+因此限定结论为：活跃单帧 CPU Latency **improved**，Peak Heap **no material change**。
+
+两组有意产生不同帧数：Snap 暴露 Action/Layout Frame，而 900 ms Bounds 编舞会为真实位置和尺寸
+产生 Property Frame。464 帧与 16 帧意味着本对照不能宣称动画的 Total CPU Work、Energy Use 或
+Transaction Duration 更低。它也不测 Post-GC Retained Memory、逐对象 Allocation Event、Compose
+或直接功耗，并且只有一台 OEM/API-28 设备和 `run-from-apk` JIT/代码布局条件。确定性 Renderer
+测试另外证明一次 Target Measure、Property Frame 零次 Child Measure、Scratch-vector 复用、
+Retarget、Rollback、Detach 与跨 Owner Reusable-tree Reset。Phase 5 性能门禁已接收。随后仓库、
+文档与 Preview 门禁通过，Root 安装的 Demo 138/138、Counter 1/1 与 Tutorials 2/2 套件也通过；
+下一步是提交 Pull Request，而不是重复采样。
 
 ### 2.5 Debug Tooling 回归门禁
 

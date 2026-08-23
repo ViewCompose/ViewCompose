@@ -10,6 +10,7 @@ import android.view.View
 import com.viewcompose.ui.modifier.ContentSizeSpringSpecModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -67,6 +68,30 @@ class AnimatedSizePhysicalAnimationTest {
         assertEquals(0f to 0f, fixture.host.readAnimatedVelocity())
     }
 
+    @Test
+    fun `reuse reset drops old size ownership and settles the next measurement`() {
+        val fixture = fixture(width = 80, height = 60)
+        fixture.host.animationSpec = ContentSizeSpringSpecModel(
+            dampingRatio = 0.8f,
+            stiffness = 180f,
+            maxDurationMillis = 2_000,
+        )
+        fixture.measure()
+        fixture.child.desiredWidth = 240
+        fixture.child.desiredHeight = 160
+        fixture.measure()
+
+        fixture.host.resetLayoutAnimationForReuse()
+        fixture.child.desiredWidth = 140
+        fixture.child.desiredHeight = 100
+        fixture.measure()
+
+        assertEquals(140, fixture.host.measuredWidth)
+        assertEquals(100, fixture.host.measuredHeight)
+        assertEquals(0f to 0f, fixture.host.readAnimatedVelocity())
+        assertNull(fixture.host.readSizeAnimatorOrNull())
+    }
+
     private fun fixture(width: Int, height: Int): Fixture {
         val context = RuntimeEnvironment.getApplication()
         val child = MutableSizeView(width, height)
@@ -93,9 +118,13 @@ class AnimatedSizePhysicalAnimationTest {
     }
 
     private fun DeclarativeAnimatedSizeHostLayout.readSizeAnimator(): ValueAnimator {
+        return checkNotNull(readSizeAnimatorOrNull())
+    }
+
+    private fun DeclarativeAnimatedSizeHostLayout.readSizeAnimatorOrNull(): ValueAnimator? {
         return javaClass.getDeclaredField("sizeAnimator").run {
             isAccessible = true
-            get(this@readSizeAnimator) as ValueAnimator
+            get(this@readSizeAnimatorOrNull) as? ValueAnimator
         }
     }
 

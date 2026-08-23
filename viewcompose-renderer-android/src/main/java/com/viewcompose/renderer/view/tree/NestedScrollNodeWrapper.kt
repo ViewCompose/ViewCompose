@@ -1,6 +1,8 @@
 package com.viewcompose.renderer.view.tree
 
 import com.viewcompose.ui.modifier.BoxAlignModifierElement
+import com.viewcompose.ui.modifier.AnimateBoundsModifierElement
+import com.viewcompose.ui.modifier.AnimateContentSizeModifierElement
 import com.viewcompose.ui.modifier.HeightModifierElement
 import com.viewcompose.ui.modifier.AspectRatioModifierElement
 import com.viewcompose.ui.modifier.MaxHeightModifierElement
@@ -109,6 +111,7 @@ internal object NestedScrollNodeWrapper {
                     spec = EmptyNodeSpec,
                     modifier = hostElements.toModifier(),
                     children = listOf(wrapped),
+                    environment = node.environment,
                 ),
                 source = node,
                 discriminator = "nested-scroll-$sourceIndex",
@@ -134,6 +137,8 @@ internal object NestedScrollNodeWrapper {
 
     private fun ModifierElement.isHostLayoutElement(): Boolean {
         return this is MarginModifierElement ||
+            this is AnimateBoundsModifierElement ||
+            this is AnimateContentSizeModifierElement ||
             this is RelativeMarginModifierElement ||
             this is SizeModifierElement ||
             this is WidthModifierElement ||

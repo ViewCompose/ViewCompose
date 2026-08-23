@@ -13,6 +13,7 @@ import com.viewcompose.animation.SeekableTransitionState
 import com.viewcompose.animation.SizeTransform
 import com.viewcompose.animation.SlideDirection
 import com.viewcompose.animation.animateContentSize
+import com.viewcompose.animation.animateBounds
 import com.viewcompose.animation.animateFloat
 import com.viewcompose.animation.animateFloatAsState
 import com.viewcompose.animation.animateValueAsState
@@ -310,6 +311,13 @@ fun UiTreeBuilder.animatedContentSample(page: Int) {
 /** Adds measured-size animation to a node modifier. */
 fun animateContentSizeSample(): Modifier {
     return Modifier.animateContentSize(
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = 230f),
+    )
+}
+
+/** Adds real parent-local position-and-size animation to a node modifier. */
+fun animateBoundsSample(): Modifier {
+    return Modifier.animateBounds(
         animationSpec = spring(dampingRatio = 0.82f, stiffness = 230f),
     )
 }

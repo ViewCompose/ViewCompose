@@ -65,6 +65,9 @@ sealed interface NodeType {
     /** Host that animates measured content-size changes. */
     data object AnimatedSizeHost : NodeType
 
+    /** Host that animates one child's real parent-local position and size. */
+    data object AnimatedBoundsHost : NodeType
+
     /** Transparent host enforcing portable maximum-size and aspect-ratio constraints. */
     data object LayoutConstraintHost : NodeType
 

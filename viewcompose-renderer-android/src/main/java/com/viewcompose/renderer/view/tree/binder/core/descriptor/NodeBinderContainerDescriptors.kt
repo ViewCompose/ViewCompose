@@ -4,6 +4,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
+import com.viewcompose.ui.node.spec.AnimatedBoundsHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedContentHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedContentItemNodeProps
 import com.viewcompose.ui.node.spec.LayoutConstraintHostNodeProps
@@ -20,6 +21,7 @@ import com.viewcompose.ui.node.spec.ScrollableRowNodeProps
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeAnimatedBoundsHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedContentItemLayout
 import com.viewcompose.renderer.view.container.DeclarativeLayoutConstraintHost
@@ -105,6 +107,15 @@ internal fun MutableList<NodeBinderDescriptor>.addContainerNodeBinderDescriptors
         apply = { view, patch ->
             ContainerNodePatchApplier.applyAnimatedSizeHostPatch(
                 view = view as DeclarativeAnimatedSizeHostLayout,
+                patch = patch,
+            )
+        },
+    )
+    val animatedBoundsHostPatch = patchDescriptor<AnimatedBoundsHostNodeProps, AnimatedBoundsHostNodePatch>(
+        factory = { previous, next -> AnimatedBoundsHostNodePatch(previous, next) },
+        apply = { view, patch ->
+            ContainerNodePatchApplier.applyAnimatedBoundsHostPatch(
+                view = view as DeclarativeAnimatedBoundsHostLayout,
                 patch = patch,
             )
         },
@@ -272,6 +283,21 @@ internal fun MutableList<NodeBinderDescriptor>.addContainerNodeBinderDescriptors
                 )
             },
             patch = animatedSizeHostPatch,
+        ),
+    )
+    add(
+        descriptor(
+            nodeType = NodeType.AnimatedBoundsHost,
+            bind = { view, node ->
+                require(node.children.size == 1) {
+                    "AnimatedBoundsHost requires exactly one child, but received ${node.children.size}."
+                }
+                ContainerViewBinder.bindAnimatedBoundsHost(
+                    view = view as DeclarativeAnimatedBoundsHostLayout,
+                    spec = ContainerViewBinder.readAnimatedBoundsHostSpec(node),
+                )
+            },
+            patch = animatedBoundsHostPatch,
         ),
     )
     add(

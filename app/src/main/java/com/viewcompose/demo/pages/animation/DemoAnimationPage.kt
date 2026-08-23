@@ -17,6 +17,7 @@ import com.viewcompose.animation.SizeTransform
 import com.viewcompose.animation.SlideDirection
 import com.viewcompose.animation.animateColorAsState
 import com.viewcompose.animation.animateContentSize
+import com.viewcompose.animation.animateBounds
 import com.viewcompose.animation.animateFloat
 import com.viewcompose.animation.animateFloatAsState
 import com.viewcompose.animation.animateIntAsState
@@ -61,6 +62,7 @@ import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.graphicsLayer
 import com.viewcompose.ui.modifier.height
+import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.testTag
@@ -68,6 +70,7 @@ import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.ButtonVariant
+import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.foundation.LocalAnimationCoroutineContext
@@ -85,6 +88,8 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.remember
 import com.viewcompose.ui.unit.sp
 import kotlinx.coroutines.withContext
+
+internal const val EXTRA_ANIMATION_BOUNDS_ANIMATED = "animation_bounds_animated"
 
 @ViewComposePreview(name = "Animation · Core", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewAnimationCore() {
@@ -116,6 +121,11 @@ internal fun UiTreeBuilder.PreviewAnimationTransition() {
     AnimationPage(AnimationFixture.Transition)
 }
 
+@ViewComposePreview(name = "Animation · Bounds", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewAnimationBounds() {
+    AnimationPage(AnimationFixture.Bounds)
+}
+
 @ViewComposePreview(name = "Animation · Infinite", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewAnimationInfinite() {
     AnimationPage(AnimationFixture.Infinite)
@@ -131,6 +141,7 @@ internal enum class AnimationFixture(
     Specs(DemoScenarioIds.AnimationSpecs, "specs"),
     ContentSize(DemoScenarioIds.AnimationContentSize, "content_size"),
     Transition(DemoScenarioIds.AnimationTransition, "transition_matrix"),
+    Bounds(DemoScenarioIds.AnimationBounds, "bounds"),
     Infinite(DemoScenarioIds.AnimationInfinite, "infinite_animatable"),
     ;
 
@@ -144,9 +155,14 @@ internal enum class AnimationFixture(
 internal fun UiTreeBuilder.AnimationPage(
     fixture: AnimationFixture,
     scenario: DemoScenarioSpec? = null,
+    boundsAnimated: Boolean = true,
 ) {
     if (fixture == AnimationFixture.ContentSize) {
         AnimationContentSizePage(scenario)
+        return
+    }
+    if (fixture == AnimationFixture.Bounds) {
+        AnimationBoundsPage(scenario, animated = boundsAnimated)
         return
     }
     val visibleState = if (fixture == AnimationFixture.Core) remember { mutableStateOf(true) } else null
@@ -1717,6 +1733,116 @@ private fun UiTreeBuilder.AnimationContentSizePage(scenario: DemoScenarioSpec?) 
                 }
             }
         }
+    }
+}
+
+private fun UiTreeBuilder.AnimationBoundsPage(
+    scenario: DemoScenarioSpec?,
+    animated: Boolean,
+) {
+    val endState = remember { mutableStateOf(false) }
+    val targetTapCount = remember { mutableStateOf(0) }
+    val animationSpec = if (animated) {
+        tween(durationMillis = 900, easing = EasingDefaults.Linear)
+    } else {
+        snap()
+    }
+    Column(
+        spacing = 10.dp,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(12.dp),
+    ) {
+        Text(
+            text = stringResource(scenario?.titleRes ?: R.string.demo_scenario_animation_bounds_title),
+            style = Theme.typography.titleLarge,
+        )
+        Text(
+            text = stringResource(scenario?.summaryRes ?: R.string.demo_scenario_animation_bounds_summary),
+            color = TextDefaults.secondaryColor(),
+        )
+        Text(
+            text = stringResource(
+                if (endState.value) {
+                    R.string.demo_animation_bounds_state_end
+                } else {
+                    R.string.demo_animation_bounds_state_start
+                },
+                targetTapCount.value,
+            ),
+            modifier = Modifier.animationScenarioTarget(scenario, DemoAutomationRole.State),
+        )
+        Row(spacing = 8.dp, modifier = Modifier.fillMaxWidth()) {
+            Button(
+                text = stringResource(R.string.demo_animation_bounds_to_end),
+                enabled = !endState.value,
+                onClick = { endState.value = true },
+                modifier = Modifier
+                    .weight(1f)
+                    .animationScenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+            )
+            Button(
+                text = stringResource(R.string.demo_animation_bounds_to_start),
+                enabled = endState.value,
+                variant = ButtonVariant.Outlined,
+                onClick = { endState.value = false },
+                modifier = Modifier
+                    .weight(1f)
+                    .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
+            )
+        }
+        Surface(
+            variant = SurfaceVariant.Variant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+        ) {
+            Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
+                Surface(
+                    modifier = Modifier
+                        .width(124.dp)
+                        .height(42.dp)
+                        .align(if (endState.value) BoxAlignment.TopEnd else BoxAlignment.TopStart)
+                        .animateBounds(animationSpec)
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                ) {
+                    Text(text = stringResource(R.string.demo_animation_bounds_position_marker))
+                }
+                Surface(
+                    modifier = Modifier
+                        .width(if (endState.value) 216.dp else 132.dp)
+                        .height(if (endState.value) 52.dp else 42.dp)
+                        .align(BoxAlignment.CenterStart)
+                        .animateBounds(animationSpec)
+                        .padding(horizontal = 10.dp, vertical = 8.dp)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.SecondaryTarget),
+                ) {
+                    Text(text = stringResource(R.string.demo_animation_bounds_size_marker))
+                }
+                Button(
+                    text = stringResource(R.string.demo_animation_bounds_tappable),
+                    onClick = { targetTapCount.value += 1 },
+                    modifier = Modifier
+                        .width(if (endState.value) 204.dp else 152.dp)
+                        .height(if (endState.value) 58.dp else 48.dp)
+                        .align(if (endState.value) BoxAlignment.BottomEnd else BoxAlignment.BottomStart)
+                        .animateBounds(animationSpec)
+                        .testTag(DemoAnimationTestTags.ANIMATION_BOUNDS_TARGET)
+                        .animationScenarioTarget(scenario, DemoAutomationRole.Target),
+                )
+            }
+        }
+        Button(
+            text = stringResource(R.string.demo_animation_reset),
+            variant = ButtonVariant.Outlined,
+            onClick = {
+                endState.value = false
+                targetTapCount.value = 0
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .animationScenarioTarget(scenario, DemoAutomationRole.Reset),
+        )
     }
 }
 

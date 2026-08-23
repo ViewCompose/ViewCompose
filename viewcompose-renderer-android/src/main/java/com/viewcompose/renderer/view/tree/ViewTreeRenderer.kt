@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
+import com.viewcompose.renderer.view.container.ReusableLayoutAnimationHost
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.renderer.reconcile.ChildReconciler
 import com.viewcompose.renderer.reconcile.ReconcileResult
@@ -91,8 +92,8 @@ object ViewTreeRenderer {
         onReconcile: ((RenderTreeResult) -> Unit)? = null,
     ): RenderTreeResult {
         // Wrappers insert platform host nodes before reconciliation, turning modifier semantics into normal tree structure.
-        val renderNodes = LayoutConstraintNodeWrapper.wrapTree(
-            AnimatedSizeNodeWrapper.wrapTree(
+        val renderNodes = LayoutAnimationNodeWrapper.wrapTree(
+            LayoutConstraintNodeWrapper.wrapTree(
                 NestedScrollNodeWrapper.wrapTree(nodes),
             ),
         )
@@ -331,6 +332,7 @@ object ViewTreeRenderer {
 
     private fun resetMountedNode(node: MountedNode) {
         node.children.forEach(::resetMountedNode)
+        (node.view as? ReusableLayoutAnimationHost)?.resetLayoutAnimationForReuse()
         if (node.vnode.type == com.viewcompose.ui.node.NodeType.AndroidView) {
             val reset = checkNotNull(
                 node.vnode.requireSpec<com.viewcompose.ui.node.spec.AndroidViewNodeProps>().onReset,

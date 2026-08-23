@@ -103,6 +103,16 @@ and uses `IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS`. All of these binding
 normal renderer rollback transaction, so a later failing node restores the prior size, visuals,
 and interaction owner together.
 
+Real bounds animation uses one transparent `DeclarativeAnimatedBoundsHostLayout` around the
+complete parent-data and layout chain. A parent lays out its accepted target once; the host retains
+the previous physical rectangle and commits sampled left/top/right/bottom values without measuring
+the child on property frames. The child remains the drawing, input, focus, and accessibility owner,
+so platform geometry follows the visible rectangle. Duration retargets restart from the current
+sample, physical retargets retain four-edge velocity, and repeated target layouts do not restart the
+writer. Renderer rollback restores both the prior host specification and parent layout input.
+Detach and cross-owner reusable-tree reset explicitly clear bounds and content-size animation state
+before adoption, including when no platform detach callback is delivered.
+
 ConstraintLayout reconciliation first compiles a complete immutable candidate and rejects invalid
 IDs, references, anchor planes, helper dependencies, ownership conflicts, dimensions, and ranges
 before touching native Views. One registry owns stable IDs, instances, type changes, references,

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: f1298d5426e9f9b9899e2cb6a6e5ff2e0debc76fdfece5e6a014be348d264e31
+translation_source_hash: b623ec4cb152b3f6485a75d5ba1124fe0f0a5c9ba5f1b0eebdf951f4b982ee01
 translation_status: current
 ---
 
@@ -88,6 +88,10 @@ ViewCompose 渲染；主题、调试配置、Overlay 后端或容器变化时重
 内部目录按组件、输入、容器、集合、导航、反馈、Modifier、动画、手势和图形组织代表性场景。
 参数化 Compose Preview 和 Paparazzi 快照共享同一套 Spec，守卫测试保证 ID、分组、标题唯一，并和
 声明的覆盖目标列表一致。
+
+`animation-layout-bounds` 目录项固定了位置、尺寸和组合运动的稳定起点矩形。经过人工复核的
+浅色主题 Golden 保护初始几何与样式；交互式 Spec 随后可以切换真实 Bounds 端点，而无需引入独立的
+Preview-only Renderer 路径。
 
 目录类型是内部测试设施，不是公开组件图库 API。新模块或视觉契约需要回归覆盖时应扩展目录，但应用
 示例仍应放在 Demo 和用户文档中。

@@ -2,6 +2,8 @@ package com.viewcompose.ui.samples
 
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.TransformOrigin
+import com.viewcompose.ui.modifier.ContentSizeEasingModel
+import com.viewcompose.ui.modifier.ContentSizeTweenSpecModel
 import com.viewcompose.ui.modifier.imeInsetsPaddingRelative
 import com.viewcompose.ui.modifier.marginRelative
 import com.viewcompose.ui.modifier.offsetRelative
@@ -36,6 +38,7 @@ import com.viewcompose.ui.node.spec.EmptyNodeSpec
 import com.viewcompose.ui.node.spec.AnimatedVisibilityHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedContentHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedContentItemNodeProps
+import com.viewcompose.ui.node.spec.AnimatedBoundsHostNodeProps
 import com.viewcompose.ui.node.spec.ConstraintDimension
 import com.viewcompose.ui.node.spec.ConstraintMatchMode
 import com.viewcompose.ui.node.spec.ConstraintRatio
@@ -199,6 +202,22 @@ fun animatedVisibilityHostNodeContractSample() {
     )
 
     check(host.type == NodeType.AnimatedVisibilityHost)
+}
+
+/** Builds the renderer-neutral transport for one real parent-local bounds animation. */
+fun animatedBoundsHostNodeContractSample() {
+    val host = VNode(
+        type = NodeType.AnimatedBoundsHost,
+        spec = AnimatedBoundsHostNodeProps(
+            animationSpec = ContentSizeTweenSpecModel(
+                durationMillis = 240,
+                delayMillis = 0,
+                easing = ContentSizeEasingModel.FastOutSlowIn,
+            ),
+        ),
+    )
+
+    check(host.type == NodeType.AnimatedBoundsHost)
 }
 
 /** Builds the bounded renderer pair used by a keyed content replacement frame. */

@@ -12,6 +12,7 @@ class UiContractStateSamplesTest {
         lazyListStateSample()
         pagerStateSample()
         vNodeModelSample()
+        animatedBoundsHostNodeContractSample()
         uiImageLoaderSample()
         uiImageRequestSample()
     }
