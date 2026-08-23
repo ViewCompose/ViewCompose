@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: 9b6b8093454ff6a32f016755646c727345ebec1eb37ec48ebb4ada6ae6702e81
+translation_source_hash: e199ccaa8fb688c6844beb3c97e8f88457cbbe000c7f3b337bcdbc8db5d6053f
 translation_status: current
 ---
 
@@ -49,3 +49,15 @@ scope 诊断上限为 500 条，签名会截断，避免诊断本身随页面规
 当前仍不包含真实 View 边界高亮、跨 RenderSession 关联图和逐节点耗时。这些能力以及有界的
 生产失败聚合已经拆分到有效的
 [诊断关联、检查与生产可观测性计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)。
+
+## 5. 已接受的扩展契约
+
+[ADR-0021](https://docs.viewcompose.com/architecture/decisions/0021-correlated-render-diagnostics-ownership)
+冻结了下一步实现边界。当前三个 Callback 将一起硬切删除，并由一套进程内、可关联 Parent 的
+`RenderDiagnostics` Event Sink 替代。Host、Preview、Navigation、Lazy、Pager 与 Overlay Session
+将共享一套身份模型；只关心 Failure 的 Sink 不会激活 Stats 或 Tree Collection。生产聚合位于可选
+`viewcompose-diagnostics` Artifact；高亮与耗时继续按照 ADR-0009 保持在
+`viewcompose-preview` 中，并且只按请求激活。
+
+本节记录已接受的设计，不代表已经发布的行为。在有效计划的 Phase 1 合并前，第 1 节描述的 Callback
+与 Collection Trigger 仍是当前 API。

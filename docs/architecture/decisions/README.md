@@ -26,6 +26,7 @@ architecture pages describe how the system works now.
 - [ADR-0018: Focus visibility and pager selection ownership](./0018-focus-visibility-and-pager-selection-ownership.md)
 - [ADR-0019: Animation physics, transition, and inspection ownership](./0019-animation-physics-transition-and-inspection-ownership.md)
 - [ADR-0020: Separate animation value and velocity domains](./0020-separate-animation-value-and-velocity-domains.md)
+- [ADR-0021: Correlated render diagnostics ownership](./0021-correlated-render-diagnostics-ownership.md)
 
 ## Rules
 

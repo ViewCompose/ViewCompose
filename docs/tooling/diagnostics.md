@@ -53,3 +53,16 @@ It does not yet provide real View-boundary highlighting, cross-RenderSession cor
 per-node timing. Delivery of those capabilities, together with bounded production failure
 aggregation, has moved to the active
 [diagnostics correlation, inspection, and production observability plan](../project/plans/diagnostics-correlation-inspection-observability.md).
+
+## 5. Accepted expansion contract
+
+[ADR-0021](../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes the
+next implementation boundary. The three current callbacks will be hard-removed together and
+replaced by one process-local, parent-correlated `RenderDiagnostics` event sink. Host, Preview,
+navigation, lazy, pager, and overlay sessions will share one identity model; a failure-only sink
+will not activate stats or tree collection. Production aggregation will live in the optional
+`viewcompose-diagnostics` artifact, while highlighting and timing remain request-driven in
+`viewcompose-preview` under ADR-0009.
+
+This section records an accepted design, not shipped behavior. Until Phase 1 of the active plan
+merges, the callbacks and collection triggers described in section 1 remain the current API.
