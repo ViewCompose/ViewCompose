@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/preview.md
-translation_source_hash: 19a5be079dd4b69e11325a54bd7ca1d6739d364195f98f6e946ad9a55f19f1a7
+translation_source_hash: 796d83fdf2073c737cb290abb95bb91eed062bb19c50770c9883cdba48163ab4
 translation_status: current
 ---
 
@@ -187,6 +187,33 @@ Receiver 要求 ADB Shell 持有的 Android `DUMP` 权限，进程还会独立�
 预览面板、外部存储、网络服务、持续 View Listener，也不会传输源码文本。非调试构建会拒绝请求。
 如果没有可用响应，请让目标应用保持在前台，并确认 Debug 构建包含当前 `viewcompose-preview`
 制品。
+
+## 检查真机动画时间线
+
+当包含 `viewcompose-preview` 的可调试应用位于前台时，选择 **Tools | Inspect Device Animation
+Timeline**。插件会发现当前已提交的 ViewCompose Transition；如有多个则要求选择一个，随后针对
+该 Identity 采集 500 ms，并打开只读报告。该操作不会控制设备动画。
+
+报告会明确区分以下语义：
+
+- Observation 是有界真机 Capture，不是持续 Profiler；
+- Control 仅属于使用公开 `SeekableTransitionState.seekTo` 的 Static/Interactive Preview；
+- 每个 Channel 保留自身 Duration，因此短 Channel 与最长 Segment 都可见；
+- Spring Safety Guard Terminal、Interruption/Retarget Sample 与 Unsupported/Private Value 都会
+  明确展示，不会被归一化隐藏。
+
+请求沿用真机源码定位的最小权限 Debug Boundary：ADB Shell `DUMP` Permission Broadcast、一次性
+32 字符 Nonce、前台 Package 与存活 Process 校验，以及应用私有 Cache 中的原子替换响应。
+Discovery 只读取一次 Snapshot；选中后的 Capture 最长 500 ms，最多记录 64 个不同 Sample、每个
+Sample 32 个 Channel，总输出不超过 256 KiB。Dialog 关闭后不会留下活动 Capture、Callback、
+Thread 或 Report Publisher。
+
+2026-08-23 的 Xiaomi MI 6 验收发现 4 个已经组合的 Timeline，并选中
+`demo_seekable_transition`；报告成功捕获 `180/420/600/720 ms` 的不同 Channel Duration、
+Unsupported Generic-vector 与安全数值。运行页面保持视觉不变，这是只读能力的预期结果；只有
+报告随采样推进。Preview-owned Control 由调用公开 `seekTo` API 的
+`animation-seekable-transition` Catalog Spec，以及确定性的 `SeekableTransitionState`
+Ownership、Range、Retarget 与 Cancellation 测试单独覆盖。
 
 ## 快照回归
 

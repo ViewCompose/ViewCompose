@@ -206,6 +206,32 @@ back navigation. A navigation owner may pass predictive-Back progress to `seekTo
 responsible for the back-stack transaction and for choosing `animateTo` or `snapTo` after commit or
 cancel. The label remains diagnostic metadata and does not alter identity.
 
+## Optional animation timeline inspection port
+
+`viewcompose-animation` exposes the Q3 `com.viewcompose.animation.tooling` contracts used by
+optional downstream development tooling. `AnimationTimelineSource` supplies one immutable,
+bounded snapshot of a committed `Transition`; `AnimationTimelineTooling` and its lifecycle
+registration decide whether one explicit request currently selects that transition. The runtime
+discovers at most one provider and treats absence, ambiguity, provider failure, and disposal
+failure as diagnostic no-ops.
+
+Snapshots contain a process-lifetime transition identity, bounded label, safe logical-state
+summaries, segment version/time, running/idle/interrupted state, and at most 32 committed channels.
+Built-in Float, exactly representable Int, `UiDp`, and encoded ARGB channels expose bounded numeric
+components. Custom value domains deliberately expose `null` values rather than retaining
+application objects or calling application formatting. Each channel reports its deterministic
+runtime name, finite specification family, own duration, velocity where safe, completion, and
+physical `DurationLimitReached` terminal condition.
+
+The animation artifact contains no concrete provider, Android receiver, file format, Studio API,
+thread, poll, or frame callback. With no optional provider it creates no source projection and pays
+only the immutable diagnostic identity metadata plus the nullable registration check already on an
+accepted transition publication. Optional-artifact presence may weakly retain the neutral source
+before the first request so an already composed transition remains discoverable. The concrete
+receiver rejects non-debuggable processes and performs no snapshot, serialization, or report I/O
+until a nonce-bearing bounded request selects that identity. The port is read-only: live
+application seeking is not part of the contract.
+
 ## InfiniteTransition
 
 `rememberInfiniteTransition` scopes continuously repeating channels declared with `animateFloat`,

@@ -12,6 +12,13 @@ import com.viewcompose.animation.core.AnimationConverter
 import com.viewcompose.animation.core.FiniteAnimationSpec
 import com.viewcompose.animation.core.spring
 import com.viewcompose.animation.core.tween
+import com.viewcompose.animation.tooling.AnimationTimelineRegistration
+import com.viewcompose.animation.tooling.AnimationTimelineRunState
+import com.viewcompose.animation.tooling.AnimationTimelineSnapshot
+import com.viewcompose.animation.tooling.AnimationTimelineSource
+import com.viewcompose.animation.tooling.AnimationTimelineSpecFamily
+import com.viewcompose.animation.tooling.AnimationTimelineTooling
+import com.viewcompose.animation.tooling.AnimationTimelineValueKind
 import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.runtime.observation.RuntimeObservation
 import com.viewcompose.ui.foundation.ComposerContext
@@ -251,6 +258,78 @@ class TransitionTest {
         harness.dispose()
     }
 
+    @Test
+    fun `timeline projection is bounded numeric and preserves unequal channel duration`() {
+        val tooling = RecordingTimelineTooling()
+        val transition = Transition(initialState = false, label = "inspect")
+        val composer = ComposerLite()
+        transition.attachTimelineTooling(tooling)
+
+        fun compose(target: Boolean) {
+            ComposerContext.withComposer(composer) {
+                composer.requestRootRecompose()
+                composer.composeRoot {
+                    UiTreeBuilder().apply {
+                        transition.updateTarget(target)
+                        transition.animateFloat(
+                            transitionSpec = { tween(durationMillis = 300) },
+                            targetValueByState = { if (it) 1f else 0f },
+                        )
+                        transition.animateInt(
+                            transitionSpec = { tween(durationMillis = 100) },
+                            targetValueByState = { if (it) 10 else 0 },
+                        )
+                        transition.animateValue(
+                            converter = TestPointConverter,
+                            transitionSpec = { tween(durationMillis = 200) },
+                            targetValueByState = { if (it) TestPoint(1f, 2f) else TestPoint(0f, 0f) },
+                        )
+                    }
+                }
+            }
+            composer.commitSideEffects()
+        }
+
+        compose(false)
+        compose(true)
+        val snapshot = checkNotNull(tooling.source).snapshot()
+
+        assertEquals("inspect", snapshot.label)
+        assertEquals(AnimationTimelineRunState.Running, snapshot.runState)
+        assertEquals(300_000_000L, snapshot.durationNanos)
+        assertEquals(listOf(300_000_000L, 100_000_000L, 200_000_000L), snapshot.channels.map { it.durationNanos })
+        assertEquals(AnimationTimelineValueKind.Float, snapshot.channels[0].currentValue?.kind)
+        assertEquals(AnimationTimelineValueKind.Int, snapshot.channels[1].currentValue?.kind)
+        assertEquals(AnimationTimelineSpecFamily.Tween, snapshot.channels[2].specFamily)
+        assertEquals(null, snapshot.channels[2].currentValue)
+
+        composer.dispose()
+        transition.detachTimelineTooling()
+        assertTrue(tooling.registration.disposed)
+    }
+
+    @Test
+    fun `timeline records only selected changes and marks a retarget interruption`() {
+        val tooling = RecordingTimelineTooling()
+        val transition = Transition(initialState = false, label = "retarget")
+        transition.attachTimelineTooling(tooling)
+
+        transition.updateTarget(true)
+        assertTrue(tooling.registration.snapshots.isEmpty())
+
+        tooling.registration.requested = true
+        transition.updateTarget(false)
+        assertEquals(1, tooling.registration.snapshots.size)
+        assertEquals(
+            AnimationTimelineRunState.Interrupted,
+            tooling.registration.snapshots.single().runState,
+        )
+
+        val version = transition.runtimeSegmentVersion()
+        transition.advanceFrame(version, 16_000_000L)
+        assertEquals(AnimationTimelineRunState.Idle, tooling.registration.snapshots.last().runState)
+    }
+
     private class FloatTransitionCompositionHarness(
         private val transitionSpec: TransitionSegment<Boolean>.() -> FiniteAnimationSpec = {
             tween(
@@ -303,6 +382,32 @@ class TransitionTest {
 
         fun dispose() {
             composer.dispose()
+        }
+    }
+
+    private class RecordingTimelineTooling : AnimationTimelineTooling {
+        val registration = RecordingTimelineRegistration()
+        var source: AnimationTimelineSource? = null
+
+        override fun register(source: AnimationTimelineSource): AnimationTimelineRegistration {
+            this.source = source
+            return registration
+        }
+    }
+
+    private class RecordingTimelineRegistration : AnimationTimelineRegistration {
+        var requested: Boolean = false
+        var disposed: Boolean = false
+        val snapshots = mutableListOf<AnimationTimelineSnapshot>()
+
+        override fun captureRequested(): Boolean = requested
+
+        override fun record(snapshot: AnimationTimelineSnapshot) {
+            snapshots += snapshot
+        }
+
+        override fun dispose() {
+            disposed = true
         }
     }
 

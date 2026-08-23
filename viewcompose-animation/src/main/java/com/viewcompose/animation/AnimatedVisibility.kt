@@ -234,6 +234,7 @@ sealed interface ExitTransitionElement {
 data class EnterTransition(
     val elements: List<EnterTransitionElement>,
 ) {
+    /** Factory namespace for predefined enter-transition values. */
     companion object {
         /** Transition with no parent-owned enter channel. */
         val None: EnterTransition = EnterTransition(emptyList())
@@ -265,6 +266,7 @@ data class EnterTransition(
 data class ExitTransition(
     val elements: List<ExitTransitionElement>,
 ) {
+    /** Factory namespace for predefined exit-transition values. */
     companion object {
         /** Transition with no parent-owned exit channel. */
         val None: ExitTransition = ExitTransition(emptyList())

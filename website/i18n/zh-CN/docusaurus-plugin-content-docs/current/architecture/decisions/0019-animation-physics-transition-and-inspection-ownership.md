@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md
-translation_source_hash: 6aea49614caa2fa7dfbda87daa2a9fa0369c1f99666527229c0756c3ac3da3af
+translation_source_hash: 5fe846c1c738b31df715d454840ee679894ce13c6bc141adb6541d9f89ee71cb
 translation_status: current
 ---
 
@@ -229,20 +229,24 @@ Window/Process 的共享动效需要新的架构决策。
 
 ### 按请求检查与受控 Preview Seek
 
-Runtime-neutral Inspection Model 位于 `viewcompose-preview-core`。具体 App-process 激活仍在
-可选 Preview 产物中并遵守 ADR-0009：必须同时存在产物、可调试进程与有效显式请求。
-Core Animation 与生产 Animation 产物不含 Socket、File Watcher、Polling Loop、Studio Class
-或 Always-on Registry。
+Q3 运行时中立 Source/Snapshot Port 位于 `viewcompose-animation`，因为运行时产物不能向上依赖
+`viewcompose-preview-core`。具体进程协议、有界 Registry、响应存储与 Studio 展示保留在可选
+Preview 产物与插件中。Core Animation 和生产 Animation 产物不包含 Android Receiver、Socket、
+File Watcher、Polling Loop、Studio Class、Writer 或具体 Provider。
 
-一个带 Nonce 的请求只生成一份有界不可变 Snapshot，包含 Transition Label、State、Channel
-Kind、Duration、Play Time、Value、Velocity、Bounds 与 Terminal Reason。限制为 1,000 Node、
-256 Channel、1 MiB 编码输出和 100 ms 请求生命周期。Malformed、Oversized、Expired、
-Duplicate 或 Stale Request Fail Closed，并释放请求所有状态。
+与 ADR-0009 的源码标识例外相同，可选产物存在时即可为每个已提交 Transition 弱注册一个有界
+中立 Source，使首次请求前已经组合的 Transition 仍可发现。注册只捕获进程生命周期 Identity 与
+诊断 Label，不安装 Listener 或 Frame Callback，也不构造 Snapshot。具体 Receiver 会拒绝不可
+调试进程；主动采集还需要带有效 Nonce 的显式请求。Discovery 只取一个 Snapshot；选中后的
+Capture 持续 500 ms，最多保留 64 个不同
+Sample、每个 Sample 32 个 Channel，编码输出最多 256 KiB。报告包含安全的逻辑 State Summary、
+Channel Kind、Duration、Play Time、隐私安全 Value/Velocity、物理 Terminal Reason 与中断历史。
+Malformed、Oversized、Expired、Busy、Missing 或 Stale Request 都会 Fail Closed，并释放请求状态。
 
-仅请求创建的 Synthetic Preview Session 允许受控 Seek。工具不能接管 Live App-owned
-Transition。请求结束或替代时恢复普通 Preview Ownership 并释放 Synthetic Seek State。
-本 ADR 就是 ADR-0009 要求的后续决策；除非未来提出 Live-process Mutation，否则无需另一份
-工具 ADR。
+真机工具严格只读，不提供 Seek Command。只有 Static/Interactive Preview Content 可以受控 Seek，
+且必须自己持有 `SeekableTransitionState` 并调用 Phase 4 公开 `seekTo` API。工具不能接管 Live
+Application-owned Transition，也不能写入其私有字段。未来如要增加 Live-process Mutation 或
+Continuous Profiling，必须新增 ADR，明确权限、生命周期、隔离与 Benchmark 证据。
 
 ### 公开 API 质量与归属
 
@@ -260,8 +264,8 @@ Codec 为 Q0，不能出现在可编译 Sample 中。
 | 4 | `TransitionSegment`、泛型 `Transition.animateValue`、Segment-aware Channel Overload、`SeekableTransitionState`、Seekable `rememberTransition` | `viewcompose-animation` | Segment/Seek Sample；Ownership、Range、Retarget、Predictive Back Adapter 测试 | 除类型化 Channel 命名参数从 `animationSpec` 硬切为 `transitionSpec` 外为新增；删除内部 Segment Helper |
 | 5 | `Modifier.animateBounds` | `viewcompose-animation` | Bounds Sample；坐标、Remeasure、Input、Accessibility、Rollback 设备测试 | 新增 |
 | 6 | `SharedContentKey`、`sharedElement`、`sharedBounds` | `viewcompose-ui-contract` 的中立 Marker；`viewcompose-renderer-android` 的 Tag Transport；`viewcompose-navigation-android` 的 Coordinator | UI 声明与 Navigation Shared-motion Sample；Pairing、Overlay、Lifecycle、Redirect、Rollback、Accessibility 设备测试 | 新增；暂定 `SharedTransitionLayout`/Scope 设计在发布前被拒绝 |
-| 7 | 不可变 Animation Inspection Request/Response 与 Snapshot Type | `viewcompose-preview-core` | Protocol Sample；Codec、Limit、Stale Request、Privacy 测试 | 可选新增 |
-| 7 | Preview Animation Inspection/Seek Client Surface | `viewcompose-preview` 与 Studio Plugin | Preview-only Sample；Activation、Isolation、Request Lifetime、Plugin UI 测试 | 可选新增 |
+| 7 | 不可变中立 Animation Source/Snapshot Port | `viewcompose-animation` | Port Sample；缺失、歧义、边界、隐私、中断、Lifecycle 测试 | 新增；具体工具仍为可选 |
+| 7 | Android Request/Capture 实现与只读 Studio Client | `viewcompose-preview` 与 Studio Plugin | Preview-only Seek Sample；Activation、Isolation、Nonce、Request Lifetime、Codec、Plugin UI 测试 | 可选新增 |
 
 每个实现 PR 都要同时提供规范英文 API 文档、可编译 Q3 Sample、所属模块文档、兼容说明，
 以及仓库策略要求的生产产物 Changeset。
@@ -289,8 +293,8 @@ Requested Fixture，因为 Release Benchmark 无法观察可选 Debug Tooling。
 | Engine Allocation | Position、Velocity、Threshold 与 Scratch Vector 每次 Run 分配一次；内置 Scalar Sampling 每帧新增零个引擎所有对象 |
 | Retained Content | 最多两棵完整 `AnimatedContent` 子树，每个匹配 Shared Pair 最多一个 Overlay 表示 |
 | Measurement | 每个受影响 Node/Target Invalidation 最多一次额外 Target Measure；纯 Property Frame 额外 Measure 为零 |
-| Inactive Tooling | Registration、Poll、Report Write、Request-owned Object 与 Recurring Hot-path Work 全为零 |
-| Requested Tooling | 不超过 1,000 Node/256 Channel/1 MiB/100 ms 请求边界；不得摊销进 Inactive Result |
+| Inactive Tooling | 仅允许可选产物提供有界 Weak Neutral-source Registration 与一次 Selected-identity Check；Receiver 在任何 Snapshot 前强制 Debug/Request Gate，Poll、Report Write、Request-owned Object 和 Recurring Callback 全为零 |
+| Requested Tooling | 最多 64 个 Timeline Sample、每个 Sample 32 个 Channel、256 KiB 与 500 ms；不得摊销进 Inactive Result |
 
 不稳定 Run、Workload 改变、Clock Policy 不匹配或缺少 Counter 都是 `inconclusive`，不是通过。
 跨过预算的 Regression 会阻止或收窄该 Phase；不允许重复运行直至得到有利 Sample。

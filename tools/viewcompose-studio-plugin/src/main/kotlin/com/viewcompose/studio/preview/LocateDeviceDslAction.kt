@@ -62,7 +62,7 @@ class LocateDeviceDslAction : DumbAwareAction() {
     }
 }
 
-private fun chooseDevice(
+internal fun chooseDevice(
     project: Project,
     messages: PreviewUiMessages,
     devices: List<StudioAndroidDevice>,
@@ -213,14 +213,14 @@ private data class ResolvedDeviceDslSource(
     val location: StudioPreviewSourceLocation,
 )
 
-private data class DeviceDslChoice<T>(
+internal data class DeviceDslChoice<T>(
     val value: T,
     val label: String,
 ) {
     override fun toString(): String = label
 }
 
-private class DeviceDslChoiceDialog<T>(
+internal class DeviceDslChoiceDialog<T>(
     project: Project,
     dialogTitle: String,
     private val description: String,

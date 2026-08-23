@@ -1464,6 +1464,43 @@ removing the scroll publication restored approximately 7 ms. The architectural c
 the implementation to the optional `viewcompose-preview` artifact and made publication
 request-driven.
 
+### 2.5.1 Animation timeline tooling comparison
+
+The Phase 7 acceptance run on 2026-08-23 used a rooted Xiaomi MI 6 / Android 9 at 60 Hz with the
+little and big CPU policies fixed at `1,401,600` and `1,804,800 kHz`, GPU fixed at `515 MHz`, and
+Qualcomm CPU minimum-frequency votes cleared. Charging was suspended and the vendor performance
+services remained stopped for the batch. In-run reads confirmed that all three clocks stayed
+fixed. Battery temperature moved from `36` to `37°C`; AndroidX reported zero thermal-throttle
+sleep. Both arms used the same debuggable target APK
+`56b94faf26f5dc0f94b976343e3d3a1c868953027cf696d8c704a8122a605fad` and benchmark APK
+`1ccd78d371ee5ed5890714511fe79c9464cc7be4cf9baf5f03cdb8669506f687`, with
+`CompilationMode.None` reported as `run-from-apk`.
+
+Each arm ran five measured iterations of `animation.transition`, four complete forward/reverse
+round trips per iteration, and exactly 200 frames per run. The inactive arm deleted the report
+before setup and produced zero report writes. The requested arm performed 40 measured 500 ms
+captures; AndroidX's unmeasured validation workload added eight more responses, and every response
+matched its nonce, selected identity, success status, and `1..64` sample bound.
+
+| Arm | P50/P90/P95/P99, ms | Median peak heap (run range), KiB | Run-P50 CV |
+| --- | --- | --- | --- |
+| Inactive | `12.236 / 14.113 / 15.311 / 18.265` | `9,493` (`9,462--9,537`) | `0.039` |
+| Requested capture | `12.398 / 14.482 / 15.464 / 20.422` | `9,823` (`9,411--10,951`) | `0.036` |
+
+Requested capture changes P50 by `+0.162 ms` (`+1.32%`), P95 by `+0.153 ms` (`+1.00%`), and
+median peak heap by `+330 KiB` (`+3.48%`). None crosses both parts of its frozen gate, so the scoped
+classification is **no material change**. P99 is `+2.157 ms` (`+11.81%`) and remains an explicit
+debug-tooling tail watch item outside the frozen P50/P95 decision gate.
+
+Pre-acceptance diagnostics exposed two allocation defects: multiple channel commits at one logical
+frame were retained as partial samples, and every JSON boundary check re-encoded a growing prefix.
+The accepted implementation coalesces equal segment-version/play-time commits and encodes directly
+into one bounded builder with incremental UTF-8 accounting. This reduced the accepted requested
+heap delta to `330 KiB` without reducing the frozen 500 ms, 64-sample, 32-channel, or 256 KiB
+limits. Limits are one OEM/API-28 device, a debuggable/JIT target, peak rather than post-GC retained
+memory, no per-object allocation trace, and no direct energy measurement. The next action is full
+repository/device acceptance, not additional sampling for a more favorable P99.
+
 ## 3. Performance gate metrics
 
 Every performance change evaluates at least:

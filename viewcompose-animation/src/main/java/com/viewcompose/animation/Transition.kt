@@ -2,21 +2,43 @@ package com.viewcompose.animation
 
 import com.viewcompose.animation.core.AnimationConverter
 import com.viewcompose.animation.core.AnimationConverters
+import com.viewcompose.animation.core.AnimationEndReason
 import com.viewcompose.animation.core.AnimationVelocity
+import com.viewcompose.animation.core.ArgbChannels
 import com.viewcompose.animation.core.FiniteAnimationSpec
+import com.viewcompose.animation.core.KeyframesSpec
+import com.viewcompose.animation.core.RepeatableSpec
+import com.viewcompose.animation.core.SnapSpec
+import com.viewcompose.animation.core.SpringSpec
 import com.viewcompose.animation.core.TargetAnimation
 import com.viewcompose.animation.core.TransitionCore
+import com.viewcompose.animation.core.TweenSpec
 import com.viewcompose.animation.core.tween
+import com.viewcompose.animation.tooling.AnimationTimelineChannelSnapshot
+import com.viewcompose.animation.tooling.AnimationTimelineRegistration
+import com.viewcompose.animation.tooling.AnimationTimelineRunState
+import com.viewcompose.animation.tooling.AnimationTimelineSnapshot
+import com.viewcompose.animation.tooling.AnimationTimelineSource
+import com.viewcompose.animation.tooling.AnimationTimelineSpecFamily
+import com.viewcompose.animation.tooling.AnimationTimelineStateSummary
+import com.viewcompose.animation.tooling.AnimationTimelineTerminalCondition
+import com.viewcompose.animation.tooling.AnimationTimelineToolingDiscovery
+import com.viewcompose.animation.tooling.AnimationTimelineValue
+import com.viewcompose.animation.tooling.AnimationTimelineValueKind
+import com.viewcompose.animation.tooling.MAX_TIMELINE_CHANNELS
+import com.viewcompose.animation.tooling.MAX_TIMELINE_TEXT_LENGTH
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.composition.RememberObserver
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.foundation.DisposableEffect
 import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.foundation.LocalAnimationCoroutineContext
 import com.viewcompose.ui.foundation.LocalMonotonicFrameClock
 import com.viewcompose.ui.foundation.SideEffect
 import com.viewcompose.ui.foundation.remember
+import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
@@ -80,6 +102,8 @@ class Transition<S> internal constructor(
 ) {
     @Suppress("unused")
     private val transitionLabel: String = label
+    private val timelineIdentity = nextTimelineIdentity.incrementAndGet()
+    private val timelineLabel = label.take(MAX_TIMELINE_TEXT_LENGTH)
     private val core = TransitionCore(initialState)
     private val currentStateHolder = mutableStateOf(initialState)
     private val targetStateHolder = mutableStateOf(initialState)
@@ -92,8 +116,12 @@ class Transition<S> internal constructor(
     private var liveSegmentVersion: Long = 0L
     private val segmentHolder = mutableStateOf(liveSegment)
     private val committedChannels = LinkedHashSet<ChannelState<*, *>>()
+    private var nextChannelIdentity: Long = 0L
+    private var timelineRegistration: AnimationTimelineRegistration? = null
     private var controlledSeekFraction: Float? = null
     private var zeroVelocitySegmentVersion: Long = -1L
+    private var interruptedSegmentVersion: Long = -1L
+    private var timelineSource: AnimationTimelineSource? = null
 
     /**
      * Returns the last logical state committed after every registered channel finished.
@@ -137,12 +165,20 @@ class Transition<S> internal constructor(
         get() = effectiveSegmentDurationNanos()
 
     internal fun updateTarget(target: S) {
+        val interrupted = core.isRunning && target != core.targetState
+        val previousVersion = core.segmentVersion
         core.updateTarget(target)
+        if (interrupted && core.segmentVersion != previousVersion) {
+            interruptedSegmentVersion = core.segmentVersion
+        }
         syncFromCore()
     }
 
     internal fun advanceFrame(version: Long, playTimeNanos: Long) {
         if (core.segmentVersion != version || !core.isRunning) return
+        if (playTimeNanos > 0L && interruptedSegmentVersion == version) {
+            interruptedSegmentVersion = -1L
+        }
         val duration = effectiveSegmentDurationNanos()
         core.replaceDuration(duration)
         core.updatePlayTime(playTimeNanos.coerceAtMost(duration))
@@ -177,28 +213,37 @@ class Transition<S> internal constructor(
         resumeFromSeek: Boolean,
     ): Long {
         controlledSeekFraction = null
+        val wasRunning = core.isRunning
+        val previousTarget = core.targetState
+        val previousVersion = core.segmentVersion
         if (target == core.targetState && core.currentState != core.targetState) {
             core.restartRunningSegment()
             if (resumeFromSeek) {
                 zeroVelocitySegmentVersion = core.segmentVersion
             }
         } else {
-            val previousVersion = core.segmentVersion
             core.updateTarget(target)
             if (resumeFromSeek && core.segmentVersion != previousVersion) {
                 zeroVelocitySegmentVersion = core.segmentVersion
             }
+        }
+        if (wasRunning && target != previousTarget && core.segmentVersion != previousVersion) {
+            interruptedSegmentVersion = core.segmentVersion
         }
         syncFromCore()
         return core.segmentVersion
     }
 
     internal fun beginControlledSeek(target: S): Long {
+        val interrupted = core.isRunning && target != core.targetState
         val previousVersion = core.segmentVersion
         core.updateTarget(target)
         controlledSeekFraction = 0f
         if (core.segmentVersion != previousVersion) {
             zeroVelocitySegmentVersion = core.segmentVersion
+            if (interrupted) {
+                interruptedSegmentVersion = core.segmentVersion
+            }
         }
         syncFromCore()
         return core.segmentVersion
@@ -209,11 +254,15 @@ class Transition<S> internal constructor(
         val duration = effectiveSegmentDurationNanos()
         core.replaceDuration(duration)
         core.seekToPlayTime(playTimeForFraction(duration, fraction))
+        if (fraction > 0f && interruptedSegmentVersion == core.segmentVersion) {
+            interruptedSegmentVersion = -1L
+        }
         syncFromCore()
     }
 
     internal fun snapControlled(target: S) {
         controlledSeekFraction = null
+        interruptedSegmentVersion = -1L
         core.snapTo(target)
         syncFromCore()
     }
@@ -252,6 +301,7 @@ class Transition<S> internal constructor(
             segmentTargetStateHolder.value = core.segmentTargetState
             segmentHolder.value = liveSegment
         }
+        recordTimelineIfRequested()
     }
 
     private fun onChannelRemembered(channel: ChannelState<*, *>) {
@@ -296,8 +346,82 @@ class Transition<S> internal constructor(
             .coerceIn(0L, durationNanos)
     }
 
+    internal fun attachTimelineTooling(
+        tooling: com.viewcompose.animation.tooling.AnimationTimelineTooling? =
+            AnimationTimelineToolingDiscovery.tooling,
+    ) {
+        if (timelineRegistration != null) return
+        tooling ?: return
+        timelineRegistration = try {
+            tooling.register(timelineSource())
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    internal fun detachTimelineTooling() {
+        val registration = timelineRegistration ?: return
+        timelineRegistration = null
+        try {
+            registration.dispose()
+        } catch (_: Exception) {
+            // Optional tooling cannot become a transition lifecycle dependency.
+        }
+    }
+
+    private fun recordTimelineIfRequested() {
+        val registration = timelineRegistration ?: return
+        try {
+            if (registration.captureRequested()) {
+                registration.record(timelineSnapshot())
+            }
+        } catch (_: Exception) {
+            // Request-time diagnostics are isolated from animation publication.
+        }
+    }
+
+    private fun timelineSource(): AnimationTimelineSource {
+        timelineSource?.let { source -> return source }
+        return object : AnimationTimelineSource {
+            override val identity: String = "transition-$timelineIdentity"
+
+            override val label: String
+                get() = timelineLabel
+
+            override fun snapshot(): AnimationTimelineSnapshot = timelineSnapshot()
+        }.also { source -> timelineSource = source }
+    }
+
+    private fun timelineSnapshot(): AnimationTimelineSnapshot {
+        val playTime = core.playTimeNanos.coerceAtLeast(0L)
+        return AnimationTimelineSnapshot(
+            identity = "transition-$timelineIdentity",
+            label = timelineLabel,
+            currentState = core.currentState.toTimelineStateSummary(),
+            targetState = core.targetState.toTimelineStateSummary(),
+            segmentInitialState = core.segmentInitialState.toTimelineStateSummary(),
+            segmentTargetState = core.segmentTargetState.toTimelineStateSummary(),
+            segmentVersion = core.segmentVersion.coerceAtLeast(0L),
+            playTimeNanos = playTime,
+            durationNanos = effectiveSegmentDurationNanos().coerceAtLeast(0L),
+            runState = when {
+                !core.isRunning -> AnimationTimelineRunState.Idle
+                interruptedSegmentVersion == core.segmentVersion ->
+                    AnimationTimelineRunState.Interrupted
+                else -> AnimationTimelineRunState.Running
+            },
+            channels = committedChannels
+                .asSequence()
+                .take(MAX_TIMELINE_CHANNELS)
+                .map { channel -> channel.timelineSnapshot(playTime) }
+                .toList(),
+        )
+    }
+
     private class ChannelState<T, V>(
         private val owner: Transition<*>,
+        val timelineIdentity: Long,
+        val timelineKind: ChannelTimelineKind,
         var segmentVersion: Long,
         var velocity: AnimationVelocity<V>,
         var animation: TargetAnimation<T, V>?,
@@ -307,6 +431,8 @@ class Transition<S> internal constructor(
             private set
         var durationNanos: Long = 1L
             private set
+        var timelineSpecFamily: AnimationTimelineSpecFamily = AnimationTimelineSpecFamily.Unsupported
+            private set
         private var remembered: Boolean = false
 
         fun commit(
@@ -315,6 +441,7 @@ class Transition<S> internal constructor(
             animation: TargetAnimation<T, V>?,
             liveValue: T,
             durationNanos: Long?,
+            timelineSpecFamily: AnimationTimelineSpecFamily,
         ) {
             this.segmentVersion = segmentVersion
             this.velocity = velocity
@@ -324,7 +451,29 @@ class Transition<S> internal constructor(
                 durationVersion = segmentVersion
                 this.durationNanos = durationNanos.coerceAtLeast(1L)
             }
+            this.timelineSpecFamily = timelineSpecFamily
             owner.onChannelCommitted(this)
+        }
+
+        fun timelineSnapshot(playTimeNanos: Long): AnimationTimelineChannelSnapshot {
+            val evaluator = animation
+            val startValue = evaluator
+                ?.let { active -> runCatching { active.stateAt(0L).value }.getOrNull() }
+                ?: liveValue
+            val targetValue = evaluator?.targetValue ?: liveValue
+            return AnimationTimelineChannelSnapshot(
+                identity = "channel-$timelineIdentity",
+                name = "${timelineKind.displayName} $timelineIdentity",
+                specFamily = timelineSpecFamily,
+                startValue = timelineKind.projectValue(startValue),
+                currentValue = timelineKind.projectValue(liveValue),
+                targetValue = timelineKind.projectValue(targetValue),
+                velocity = timelineKind.projectVelocity(velocity.valuePerSecond),
+                durationNanos = evaluator?.durationNanos?.coerceAtLeast(0L) ?: 0L,
+                finished = evaluator?.isFinished(playTimeNanos) ?: true,
+                terminalCondition = evaluator?.terminalEndReason?.timelineCondition()
+                    ?: AnimationTimelineTerminalCondition.Finished,
+            )
         }
 
         override fun onRemembered() {
@@ -342,6 +491,53 @@ class Transition<S> internal constructor(
         override fun onAbandoned() = Unit
     }
 
+    private enum class ChannelTimelineKind(
+        val displayName: String,
+    ) {
+        FloatValue("Float"),
+        IntValue("Int"),
+        DpValue("Dp"),
+        ArgbValue("ARGB"),
+        Unsupported("Value"),
+        ;
+
+        fun projectValue(value: Any?): AnimationTimelineValue? {
+            return when (this) {
+                FloatValue -> (value as? Float)?.timelineScalar(AnimationTimelineValueKind.Float)
+                IntValue -> (value as? Int)
+                    ?.takeIf { integer -> integer in -MAX_EXACT_FLOAT_INT..MAX_EXACT_FLOAT_INT }
+                    ?.toFloat()
+                    ?.timelineScalar(AnimationTimelineValueKind.Int)
+                DpValue -> (value as? UiDp)?.value
+                    ?.timelineScalar(AnimationTimelineValueKind.Dp)
+                ArgbValue -> (value as? Int)?.timelineArgb()
+                Unsupported -> null
+            }
+        }
+
+        fun projectVelocity(value: Any?): AnimationTimelineValue? {
+            return when (this) {
+                FloatValue,
+                IntValue,
+                -> (value as? Float)?.timelineScalar(AnimationTimelineValueKind.Float)
+                DpValue -> (value as? UiDp)?.value
+                    ?.timelineScalar(AnimationTimelineValueKind.Dp)
+                ArgbValue -> (value as? ArgbChannels)?.let { channels ->
+                    AnimationTimelineValue(
+                        kind = AnimationTimelineValueKind.Argb,
+                        components = listOf(
+                            channels.alpha,
+                            channels.red,
+                            channels.green,
+                            channels.blue,
+                        ),
+                    )
+                }
+                Unsupported -> null
+            }
+        }
+    }
+
     private data class ChannelSample<T>(
         val state: State<T>,
         val liveValue: T,
@@ -352,6 +548,7 @@ class Transition<S> internal constructor(
         transitionSpec: TransitionSegment<S>.() -> FiniteAnimationSpec,
         segmentEndpoints: (segment: TransitionSegment<S>, currentValue: T) -> Pair<T, T>,
         valueForSettledState: (S) -> T,
+        timelineKind: ChannelTimelineKind = ChannelTimelineKind.Unsupported,
     ): ChannelSample<T> {
         val outputState = remember(this, converter) {
             mutableStateOf(valueForSettledState(currentState))
@@ -359,6 +556,8 @@ class Transition<S> internal constructor(
         val channelState = remember(this, converter) {
             ChannelState<T, V>(
                 owner = this,
+                timelineIdentity = ++nextChannelIdentity,
+                timelineKind = timelineKind,
                 segmentVersion = -1L,
                 velocity = AnimationVelocity(converter.zeroVelocity),
                 animation = null,
@@ -367,11 +566,13 @@ class Transition<S> internal constructor(
         }
         val version = core.segmentVersion
         val unequalSegment = core.segmentInitialState != core.segmentTargetState
+        var candidateSpecFamily = channelState.timelineSpecFamily
         val candidateAnimation = if (channelState.segmentVersion != version && unequalSegment) {
             // Freeze channel endpoints once per segment; subsequent samples share the common time.
             val segment = liveSegment
             val spec = segment.transitionSpec()
             val (start, end) = segmentEndpoints(segment, outputState.value)
+            candidateSpecFamily = spec.timelineFamily()
             TargetAnimation(
                 initialValue = start,
                 targetValue = end,
@@ -403,6 +604,9 @@ class Transition<S> internal constructor(
         } else {
             sampledState?.velocity ?: AnimationVelocity(converter.zeroVelocity)
         }
+        if (candidateAnimation == null) {
+            candidateSpecFamily = AnimationTimelineSpecFamily.Unsupported
+        }
         outputState.value = candidateValue
         SideEffect {
             channelState.commit(
@@ -411,6 +615,7 @@ class Transition<S> internal constructor(
                 animation = candidateAnimation,
                 liveValue = candidateValue,
                 durationNanos = candidateAnimation?.durationNanos,
+                timelineSpecFamily = candidateSpecFamily,
             )
         }
         return ChannelSample(
@@ -473,11 +678,15 @@ class Transition<S> internal constructor(
         transitionSpec: TransitionSegment<S>.() -> FiniteAnimationSpec = { tween() },
         targetValueByState: (S) -> Float,
     ): State<Float> {
-        return animateValue(
+        return animateValueInternal(
             converter = AnimationConverters.Float,
             transitionSpec = transitionSpec,
-            targetValueByState = targetValueByState,
-        )
+            segmentEndpoints = { segment, current ->
+                current to targetValueByState(segment.targetState)
+            },
+            valueForSettledState = targetValueByState,
+            timelineKind = ChannelTimelineKind.FloatValue,
+        ).state
     }
 
     internal fun sampleFloat(
@@ -490,6 +699,7 @@ class Transition<S> internal constructor(
             transitionSpec = transitionSpec,
             segmentEndpoints = segmentEndpoints,
             valueForSettledState = valueForSettledState,
+            timelineKind = ChannelTimelineKind.FloatValue,
         ).liveValue
     }
 
@@ -504,11 +714,15 @@ class Transition<S> internal constructor(
         transitionSpec: TransitionSegment<S>.() -> FiniteAnimationSpec = { tween() },
         targetValueByState: (S) -> Int,
     ): State<Int> {
-        return animateValue(
+        return animateValueInternal(
             converter = AnimationConverters.Int,
             transitionSpec = transitionSpec,
-            targetValueByState = targetValueByState,
-        )
+            segmentEndpoints = { segment, current ->
+                current to targetValueByState(segment.targetState)
+            },
+            valueForSettledState = targetValueByState,
+            timelineKind = ChannelTimelineKind.IntValue,
+        ).state
     }
 
     /**
@@ -524,11 +738,15 @@ class Transition<S> internal constructor(
         transitionSpec: TransitionSegment<S>.() -> FiniteAnimationSpec = { tween() },
         targetValueByState: (S) -> Int,
     ): State<Int> {
-        return animateValue(
+        return animateValueInternal(
             converter = AnimationConverters.ColorInt,
             transitionSpec = transitionSpec,
-            targetValueByState = targetValueByState,
-        )
+            segmentEndpoints = { segment, current ->
+                current to targetValueByState(segment.targetState)
+            },
+            valueForSettledState = targetValueByState,
+            timelineKind = ChannelTimelineKind.ArgbValue,
+        ).state
     }
 
     /**
@@ -544,12 +762,82 @@ class Transition<S> internal constructor(
         transitionSpec: TransitionSegment<S>.() -> FiniteAnimationSpec = { tween() },
         targetValueByState: (S) -> UiDp,
     ): State<UiDp> {
-        return animateValue(
+        return animateValueInternal(
             converter = AnimationUnitConverters.Dp,
             transitionSpec = transitionSpec,
-            targetValueByState = targetValueByState,
-        )
+            segmentEndpoints = { segment, current ->
+                current to targetValueByState(segment.targetState)
+            },
+            valueForSettledState = targetValueByState,
+            timelineKind = ChannelTimelineKind.DpValue,
+        ).state
     }
+
+    private companion object {
+        val nextTimelineIdentity = AtomicLong(0L)
+    }
+}
+
+private fun Float.timelineScalar(kind: AnimationTimelineValueKind): AnimationTimelineValue? {
+    return takeIf(Float::isFinite)?.let { value ->
+        AnimationTimelineValue(kind = kind, components = listOf(value))
+    }
+}
+
+private const val MAX_EXACT_FLOAT_INT = 16_777_216
+
+private fun Int.timelineArgb(): AnimationTimelineValue {
+    return AnimationTimelineValue(
+        kind = AnimationTimelineValueKind.Argb,
+        components = listOf(
+            ((this ushr 24) and 0xff).toFloat(),
+            ((this ushr 16) and 0xff).toFloat(),
+            ((this ushr 8) and 0xff).toFloat(),
+            (this and 0xff).toFloat(),
+        ),
+    )
+}
+
+private fun FiniteAnimationSpec.timelineFamily(): AnimationTimelineSpecFamily {
+    return when (this) {
+        is TweenSpec -> AnimationTimelineSpecFamily.Tween
+        is SpringSpec -> AnimationTimelineSpecFamily.Spring
+        is KeyframesSpec -> AnimationTimelineSpecFamily.Keyframes
+        is SnapSpec -> AnimationTimelineSpecFamily.Snap
+        is RepeatableSpec -> AnimationTimelineSpecFamily.Repeatable
+    }
+}
+
+private fun AnimationEndReason.timelineCondition(): AnimationTimelineTerminalCondition {
+    return when (this) {
+        AnimationEndReason.Finished,
+        AnimationEndReason.BoundReached,
+        -> AnimationTimelineTerminalCondition.Finished
+        AnimationEndReason.DurationLimitReached ->
+            AnimationTimelineTerminalCondition.DurationLimitReached
+    }
+}
+
+private fun Any?.toTimelineStateSummary(): AnimationTimelineStateSummary {
+    if (this == null) {
+        return AnimationTimelineStateSummary(typeName = "null", displayValue = null)
+    }
+    val safeValue = when (this) {
+        is Boolean -> if (this) "true" else "false"
+        is Byte -> toString()
+        is Short -> toString()
+        is Int -> toString()
+        is Long -> toString()
+        is Float -> toString()
+        is Double -> toString()
+        is Char -> toString()
+        is Enum<*> -> name
+        else -> null
+    }
+    return AnimationTimelineStateSummary(
+        typeName = javaClass.name.take(MAX_TIMELINE_TEXT_LENGTH),
+        displayValue = safeValue?.take(MAX_TIMELINE_TEXT_LENGTH),
+    )
 }
 
 /**
@@ -590,6 +878,10 @@ fun <S> updateTransition(
     val segmentVersion = transition.runtimeSegmentVersion()
     require(animationCoroutineContext[Job] == null) {
         "Animation coroutine context must not contain a Job."
+    }
+    DisposableEffect(transition) {
+        transition.attachTimelineTooling()
+        onDispose(transition::detachTimelineTooling)
     }
     LaunchedEffect(transition, running, segmentVersion, frameClock, animationCoroutineContext) {
         if (!running) {

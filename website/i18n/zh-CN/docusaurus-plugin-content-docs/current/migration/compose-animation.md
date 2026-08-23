@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-animation.md
-translation_source_hash: 89a7f6c931ba0291cc44dd5112720d0685eb09e5b3504a435286dfec0bc114b4
+translation_source_hash: 5de538b2cefbf940c0a48af7fe6311c21a575824de3e44d27ba70a7db25a07b0
 translation_status: current
 ---
 
@@ -55,9 +55,9 @@ AGP 9.2，而本仓库当前使用 compile SDK 36 与 AGP 8.13.2。因此：
 | `AnimatedVisibility` | Enter/Exit 代数、Slide、Scale 与后代编排 | **Supported（支持）** Fade、带 Alignment 的实测 Reveal、按实测比例 Slide、带轴心 Scale、所属 Scope 与共享时钟的后代 Enter/Exit | 使用 `AnimatedVisibilityScope.AnimatedEnterExit`，而不是 Compose 的 Modifier 形式；按 Callback 计算 Offset 仍未支持 |
 | `AnimatedContent` | Keyed 出入内容替换与 Content Transform | **Supported（支持）** Keyed 替换、逐状态对 Fade/Slide/Scale、Z-order、Alignment 与可选尺寸变换 | 纯 Alpha 替换继续使用 `Crossfade`；Full-size Callback Offset 与后代 Choreography 尚不支持 |
 | 内容尺寸动画 | Layout 尺寸变化 | **Supported（支持）**，使用 Android Renderer Wrapper 与共享物理 Spring Solver | 重新验证父级 Constraint 与 Wrapper 位置；无限 Spec 会被拒绝 |
-| Bounds 动画 | 跨 Layout 坐标变化的位置与尺寸 | **Unsupported（不支持）** | Phase 5 增加真实 Layout 几何；不要用 Draw Translation 模拟可交互 Bounds |
-| 共享元素/Bounds | Scope 内配对与 Overlay 运动 | **Unsupported（不支持）** | Phase 6 增加单 Session 配对及 Navigation 集成；跨 Window 仍排除 |
-| Timeline 检查与 Seek | 工具可观察并控制合格动画状态 | **Unsupported（不支持）** | Phase 7 增加按请求 Preview 工具；生产产物保持不活跃且无依赖 |
+| Bounds 动画 | 跨 Layout 坐标变化的位置与尺寸 | **Supported（支持）** `Modifier.animateBounds`，使用真实 Parent-local Geometry、事务回滚，并保持 Drawing/Input/Accessibility Bounds 一致 | Bounds Ownership 留在 Renderer；Callback-calculated Lookahead Coordinate 与跨 Window Bounds 仍未支持 |
+| 共享元素/Bounds | Scope 内配对与 Overlay 运动 | **Supported（支持）**类型安全的单 Window Navigation Endpoint、有界 Snapshot、Push/Pop/Replace 与 Predictive Back Complete/Cancel | 在 `NavHost` 中使用 `Modifier.sharedElement`/`sharedBounds`；跨 Window Pairing、Live Reparenting 与 Shape Morphing 仍未支持 |
+| Timeline 检查与 Seek | 工具可观察并控制合格动画状态 | **Partially supported（部分支持）**：可选 Preview/Studio 工具执行 Nonce-bound 只读真机 Discovery 与 500 ms Selected Capture；Preview-owned `SeekableTransitionState` 是唯一 Control Path | `viewcompose-preview` 只放在 Debug Scope；持续 Profiling 与远程 Seek 真机应用有意不支持 |
 
 ## Spring 硬切 {/* #the-spring-hard-cut */}
 
