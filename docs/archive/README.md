@@ -26,6 +26,7 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `animation-compose-capability-expansion.md` | 动画 Phase 0～7 已全部合并：物理 spring/decay/result、完整 AnimatedContent、丰富显隐变换、可 seek Transition、真实 Bounds、导航共享运动，以及请求驱动的只读时间线工具均完成；固定频率结果保持 `no material change` 的精确边界，后续能力必须重新立项，MotionLayout、持续 profiler 与真机远程修改仍未排期 |
 | `focus-visibility-scroll-ownership-hard-cut.md` | 不稳定的 `focusFollowKeyboard` 策略与四套合成滚动实现已硬切删除；真实滚动所有者恢复 Android 原生子矩形协议，Pager 改为保持焦点的框架自有 RecyclerView 后端，延迟 Item/Page 收紧为单根契约；双语文档、Q3 样例、全仓 CI 以及小米 Android 9 双配置人工真机矩阵均已闭环 |
 | `constraintlayout-parity-performance-expansion.md` | ConstraintLayout 发版后 Phase 0～4 已闭环：分类协调快速路径、类型化 Chain/Wrap/物理方向/Grid/CircularFlow、完整 Demo/视觉/配置/生命周期矩阵，以及 Revision 6 Released/Candidate/Direct 受控性能矩阵均已完成；发版安全结论为 `no material change`，不宣称全帧性能领先，后续工作必须重新立项并独立归因 |
 | `demo-benchmark-verification-harness-rearchitecture.md` | Demo 的场景化路由、稳定 Selector、基准宿主、双语内容、人工评审修复以及发布相关 Renderer/Overlay 修复均已闭环；collection-stress revision 3、扩大配置矩阵、Popup Golden 与遗留清理由独立的发版后计划继续承接 |

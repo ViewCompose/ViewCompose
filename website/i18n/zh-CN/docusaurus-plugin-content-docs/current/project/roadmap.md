@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: 7a6f3454ec0ebd3cf2142592ddd514b2b7392860e9a63c7f9d9d231bae0126d9
+translation_source_hash: 901725ca0f0642023567c2e4ce756324b5a6613be1651e0aab575d7818dcdc67
 translation_status: current
 ---
 
@@ -95,7 +95,7 @@ translation_status: current
 | C：Input 与表单态增强 | In Progress | C:✅ U:✅ D:✅ UI:⚠ | `TextFieldState` 硬切、selection/composition、IME batch、撤销历史、输入变换、键盘动作、autofill 与保存恢复已落地；仍需真实设备 IME/无障碍矩阵 |
 | D：Diagnostics + Performance 联动 | In Progress | C:✅ U:✅ D:✅ UI:✅ | 诊断可视化与 R8 release 基准已经落地；剩余可观测性工作由有效的[诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)负责，baseline profile 收益仍待量化 |
 | E：开发预览与截图回归 | In Progress | C:✅ U:✅ D:✅ UI:✅ | Compose Preview/Paparazzi 与独立 Android Studio 预览插件 1.0 已落地，覆盖源码联动、全部预览、缓存、增量刷新、缩放平移和诊断；下一步扩展 Dark/Tablet 快照矩阵 |
-| F：动画与手势首轮覆盖 | Completed | C:✅ U:✅ D:✅ UI:✅ | 首轮 Core/DSL、Transition、显隐/尺寸、Animatable、interop、Demo、Preview 与回归范围已经完成；后续七项动画增强由有效的[动画能力计划](https://docs.viewcompose.com/project/plans/animation-compose-capability-expansion)负责，不会重新打开该基线 |
+| F：动画与手势 | Completed | C:✅ U:✅ D:✅ UI:✅ | 首轮 Core/DSL 基线与后续七项增强均已完成；[已归档的动画能力计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md)记录了物理运动、内容与显隐、seek、bounds、导航共享运动、时间线工具及验收证据 |
 | G：Graphics 2D 主链能力 | In Progress | C:✅ U:✅ D:✅ UI:⚠ | 已完成 `viewcompose-graphics-core` + `viewcompose-graphics` 分层、Canvas/draw modifiers/drawWithCache、renderer 渲染管线与 `AndroidGraphicsInterop`，并完成 v2 P0 语义收口（RoundRect/Drawable/ImageFilter Chain）；在当前设备矩阵重新取得稳定 UI 证据前不标记 Completed |
 | H：高级阴影装饰层 | Completed | C:✅ U:✅ D:✅ UI:✅ | 多层外阴影、内阴影、shape/spread/offset、Lazy 缓存、后端诊断与 Compose 成对基准已闭环；Samsung SM-G991B 定向设备回归通过，Auto 保持 ExactBitmap |
 
@@ -124,7 +124,7 @@ translation_status: current
 | UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |
 | Developer Preview | Compose Preview、Paparazzi 与独立 Studio 插件链路已建立；插件支持静态渲染、源码双向联动、布局/View/组合诊断、全部预览、有界缓存和增量刷新 | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |
 | ConstraintLayout | Alpha DSL 加分类协调、类型化 Chain/Wrap/物理方向 API、类型化 Grid、声明式 CircularFlow、精确 Helper/回滚/Lifecycle 覆盖、Pairwise 视觉验收、API 24/33/36 设备覆盖，以及稳定行发版安全的 Released/Candidate/Direct 矩阵 | [已归档的能力与性能扩展计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md)完成了 Phase 0～4，发版安全为 **no material change**，没有全帧优化胜利。保持 MotionScene/MotionLayout 范围外；多 OEM 性能或新增能力必须新建归因计划 |
-| Animation | 已具备动画 Core/DSL 分层、Transition 共享 timeline、Animatable last-mutation-wins、AnimatedVisibility、Crossfade、animateContentSize 与原始 Android interop | 物理运动与结果、完整内容/显隐变换、seek、bounds、共享运动和时间线工具已经拆分到有效的[动画能力计划](https://docs.viewcompose.com/project/plans/animation-compose-capability-expansion) |
+| Animation | 已具备动画 Core/DSL 分层、物理 spring/decay/result、共享的通用与可 seek Transition、完整 AnimatedContent 与丰富显隐变换、animateContentSize/animateBounds、导航共享运动、原始 Android interop，以及请求驱动的只读时间线工具 | [已归档的动画能力扩展计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md)完成了 Phase 0～7，保持有界所有权与 `no material change` 的发版安全结论。MotionLayout、持续 profiler 和真机远程修改继续不排期，直到新的归因需求获批 |
 | Gesture | `viewcompose-gesture-core` + `viewcompose-gesture` + renderer dispatcher 已支持 tap/drag/anchoredDraggable/transform、统一 nested scroll 和结构化并发取消；双指接管与系统 CANCEL 不会触发旧拖动 settle | 扩展原生三方滚动控件与真实设备多指回归 |
 | Graphics | 2D draw 主链与独立 `viewcompose-shadow-android` 装饰层已落地，支持 Canvas、draw modifiers、不可变 `DrawScene`、有序多层外/内阴影、静态栅格缓存和后端诊断 | 扩展 dark/tablet 快照；在明确预算下研究动态 RenderEffect/转场阴影 |
 | Performance | 已有 R8 release Macrobenchmark 基线，且 `DiffUtil + payload + SlotTable Lite + subtree skip` 主路径已落地；列表/复杂布局已建立同 target Compose 对照、内存指标、自动报告和归一化回归门禁 | 在真实设备持续积累配对基线并量化 baseline profile 收益 |
@@ -260,10 +260,10 @@ translation_status: current
 2. 手势消费回落策略稳定（`gesture consumed -> no clickable fallback`）
 3. `qaQuick` 与 `qaPreview` 通过，设备可用时 `qaFull` 通过
 
-上述首轮里程碑保持 Completed。物理 spring/decay/results、完整 AnimatedContent、丰富显隐
-变换、可 seek Transition、bounds 动画、导航感知的共享运动与请求驱动时间线工具，改由
-[动画 Compose 能力扩展计划](https://docs.viewcompose.com/project/plans/animation-compose-capability-expansion)
-单独跟踪。MotionLayout 扩展暂不安排，也不是任一范围的完成条件。
+上述首轮里程碑与后续七阶段扩展均已完成。物理 spring/decay/results、完整 AnimatedContent、
+丰富显隐变换、可 seek Transition、bounds 动画、导航感知的共享运动与请求驱动时间线工具记录在
+[已归档的动画 Compose 能力扩展计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md)
+中。MotionLayout 扩展、持续 profiler 与真机远程修改仍未排期，必须重新建立归因计划。
 
 ### Milestone G：Graphics 2D 主链能力
 

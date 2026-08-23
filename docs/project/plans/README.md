@@ -8,11 +8,6 @@ This directory contains multi-step work that is currently active and must surviv
   the intentionally deferred collection-stress revision-3 fixed-clock baseline, broad bilingual and
   configuration visual matrix, popup pixel golden, and zero-caller hard deletion of obsolete Demo
   harness infrastructure after the coordinated framework and Preview-plugin release.
-- [Animation Compose-capability expansion](./animation-compose-capability-expansion.md) — extend
-  the completed animation baseline with physical spring/decay/results, full animated content,
-  slide/scale visibility, seekable transitions, bounds animation, navigation-aware shared motion,
-  and request-driven timeline tooling; typed MotionLayout expansion remains explicitly out of
-  scope until a future concrete requirement receives its own plan.
 - [Diagnostics correlation, inspection, and production observability](./diagnostics-correlation-inspection-observability.md) —
   correlate frames and failures across render sessions, add bounded privacy-safe production failure
   aggregation, highlight real View boundaries only on explicit debug requests, and capture finite
@@ -24,9 +19,9 @@ This directory contains multi-step work that is currently active and must surviv
   transaction-aware Android View adapter foundation and independently removable integrations for
   AndroidX Media3, legacy ExoPlayer 2, Google Maps, and CameraX with explicit theme, lifecycle,
   saved-state, construction, ownership, Preview, and device-validation contracts.
-Completed architecture, design-system, theme-propagation, native-widget, component-appearance,
-tutorial, language-consistency, migration-sample, hosted-documentation, and version-retention plans
-are retained in the
+Completed architecture, animation-capability, design-system, theme-propagation, native-widget,
+component-appearance, tutorial, language-consistency, migration-sample, hosted-documentation, and
+version-retention plans are retained in the
 [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).
 
 Before adding a plan, read [Documentation governance](../documentation-governance.md). A plan must

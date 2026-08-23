@@ -141,7 +141,7 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 | C: Input and forms | In Progress | C:✅ U:✅ D:✅ UI:⚠ | TextFieldState, selection/composition, IME batch, undo, transformations, keyboard actions, autofill, and restoration are implemented; real-device IME/accessibility matrix remains |
 | D: Diagnostics and performance | In Progress | C:✅ U:✅ D:✅ UI:✅ | Diagnostics visualization and R8 release benchmark are implemented; remaining observability is owned by the active [diagnostics plan](./plans/diagnostics-correlation-inspection-observability.md), while baseline-profile benefit remains to be measured |
 | E: Preview and screenshots | In Progress | C:✅ U:✅ D:✅ UI:✅ | Compose Preview/Paparazzi and Studio Preview plugin 1.0 cover source linkage, all previews, cache, incremental refresh, zoom/pan, and diagnostics; Dark/Tablet matrix remains |
-| F: Animation and gestures | Completed | C:✅ U:✅ D:✅ UI:✅ | The first-round Core/DSL, Transition, visibility/size, Animatable, interop, Demo, Preview, and regression scope is complete; seven later animation expansions are owned by the active [Animation capability plan](./plans/animation-compose-capability-expansion.md) without reopening this baseline |
+| F: Animation and gestures | Completed | C:✅ U:✅ D:✅ UI:✅ | The first-round Core/DSL baseline and all seven later expansions are complete; the [archived Animation capability plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md) records physical motion, content/visibility, seeking, bounds, shared navigation motion, timeline tooling, and acceptance evidence |
 | G: Graphics 2D | In Progress | C:✅ U:✅ D:✅ UI:⚠ | Core/DSL layers, Canvas/draw modifiers/cache, renderer pipeline, Android interop, and v2 P0 fixes are implemented; stable current-device UI evidence remains |
 | H: Advanced shadows | Completed | C:✅ U:✅ D:✅ UI:✅ | Outer/inner layers, shape/spread/offset, Lazy cache, backend diagnostics, and paired Compose benchmark are complete; Samsung SM-G991B targeted regression passed and Auto remains ExactBitmap |
 
@@ -172,7 +172,7 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 | UI Testing | Core instrumentation plus P1 focus/keyboard, nested-scroll, and rollback cases | Multi-API, TV, ChromeOS, overlay host, and theme assertions |
 | Developer Preview | Compose Preview, Paparazzi, and Studio plugin with static render, source linkage, diagnostics, bounded cache, and incremental refresh | More domains and Dark/Tablet snapshots |
 | ConstraintLayout | Alpha DSL plus classified reconciliation, typed chain/wrap/physical-direction APIs, typed Grid, declarative CircularFlow, exact helper/rollback/lifecycle coverage, pairwise visual acceptance, API 24/33/36 device coverage, and a stable-row-safe released/candidate/direct matrix | The [archived parity/performance expansion](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md) completed Phases 0--4 with **no material change** release safety and no whole-frame optimization win. Keep MotionScene/MotionLayout out of scope; require a new attributed plan for multi-OEM performance or any additional parity work |
-| Animation | Core/DSL layers, shared Transition timeline, last-mutation-wins Animatable, AnimatedVisibility, Crossfade, animateContentSize, and raw Android interop | Physical motion/results, full content and visibility transforms, seeking, bounds, shared motion, and timeline tooling have moved to the active [Animation capability plan](./plans/animation-compose-capability-expansion.md) |
+| Animation | Core/DSL layers, physical spring/decay/results, shared generic and seekable Transition, full AnimatedContent and rich visibility transforms, animateContentSize/animateBounds, navigation-aware shared motion, raw Android interop, and request-driven read-only timeline tooling | The [archived Animation capability expansion](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md) completed Phases 0–7 with bounded ownership and `no material change` release-safety conclusions. Keep MotionLayout, continuous profiling, and live-device mutation unscheduled until a new attributed requirement is approved |
 | Gesture | Policy core, DSL, dispatcher, nested scroll, structured cancellation, and tap/drag/anchored/transform support | Third-party native scrollers and real-device multi-touch |
 | Graphics | 2D drawing and optional shadow decoration with DrawScene, ordered outer/inner layers, bounded cache, and backend diagnostics | Dark/Tablet snapshots and budgeted dynamic RenderEffect research |
 | Performance | R8 Macrobenchmark, DiffUtil/payload/SlotTable/subtree skip, paired Compose list/complex-layout controls, memory metrics, reports, and normalized gates | Accumulate same-device paired baselines and quantify baseline profile |
@@ -266,11 +266,12 @@ plus the six-tab Animation API index, instrumentation, PreviewCatalog, and Papar
 Completion requires opt-in behavior, stable consumed-gesture fallback, `qaQuick`/`qaPreview`, and
 `qaFull` when a device is available.
 
-That first-round milestone remains completed. Physical spring/decay/results, full animated content,
-rich visibility transforms, seekable transitions, bounds animation, navigation-aware shared motion,
-and request-driven timeline tooling are a separate active expansion tracked by the
-[Animation Compose-capability expansion plan](./plans/animation-compose-capability-expansion.md).
-MotionLayout expansion is not scheduled and is not a completion condition of either scope.
+That first-round milestone and the later seven-phase expansion are complete. Physical
+spring/decay/results, full animated content, rich visibility transforms, seekable transitions,
+bounds animation, navigation-aware shared motion, and request-driven timeline tooling are recorded
+in the [archived Animation Compose-capability expansion plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md).
+MotionLayout expansion, continuous profiling, and live-device mutation remain unscheduled and
+require a new attributed plan.
 
 ### Milestone G: Graphics 2D
 
