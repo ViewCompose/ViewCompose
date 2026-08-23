@@ -65,18 +65,19 @@ class RenderSession internal constructor(
  * state, environment, theme, or frame-clock locals; custom hosts must provide and dispose those
  * services themselves, or use an Activity/Fragment `setUiContent` integration.
  *
- * When optional source tooling is installed in a debuggable application, eligible Host,
- * navigation-destination, and pager-page sessions may contribute bounded source candidates to an
- * app-private, request-driven device-locator report. The report uses the same process-local trace
- * identity and role as [diagnostics], follows [RenderSession.setRenderingActive] and
- * [RenderSession.dispose], and is not created by ordinary rendering.
+ * When optional inspection tooling is installed in a debuggable application, tracked sessions can
+ * answer request-driven mounted-node inspection while eligible Host, navigation-destination, and
+ * pager-page sessions may also contribute bounded source candidates to an app-private device
+ * locator report. The report uses the same process-local trace identity and role as [diagnostics],
+ * follows [RenderSession.setRenderingActive] and [RenderSession.dispose], and is not created by
+ * ordinary rendering.
  *
  * @sample com.viewcompose.host.android.samples.renderIntoSample
  * @param container Android parent that owns all Views mounted by the returned session
  * @param debug enables render logging and slow-operation warnings
  * @param debugTag log tag used by debug rendering
  * @param overlayHost overlay implementation available to emitted overlay nodes
- * @param role logical ownership role used by diagnostics and source tooling
+ * @param role logical ownership role used by diagnostics and inspection tooling
  * @param diagnostics explicit diagnostics root, or `null` to inherit from [parentLocalSnapshot]
  * @param parentLocalSnapshot optional captured parent used once for correlation and inheritance
  * @param content retained declarative content evaluated for each render

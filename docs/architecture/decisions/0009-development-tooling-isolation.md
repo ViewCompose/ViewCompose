@@ -37,12 +37,14 @@ of the rendering engine or its hot paths.
    draw, touch, animation-frame, or recomposition hot path.
 4. The running-device DSL locator is owned by the optional `viewcompose-preview` artifact, which
    applications add with `debugImplementation`. `viewcompose-host-android` discovers only the
-   neutral `RenderSessionSourceTooling` service. Absence, ambiguity, or failure of the service is a
+   neutral `RenderSessionInspectionTooling` service. Absence, ambiguity, or failure of the service is a
    diagnostic no-op and cannot fail application rendering.
-5. Source identity may be captured once, with strict bounds, when an eligible Host or Page render
-   session first commits in a debuggable process with the optional artifact installed. This is the
-   only request-independent exception. It retains no node tree, installs no View listener, starts no
-   worker, and performs no report I/O. Lazy-item and Pager-item sessions are ineligible.
+5. `RenderSessionInspectionPolicy` separates passive session registration from source capture.
+   Source identity may be captured once, with strict bounds, when an eligible Host, navigation, or
+   pager-page session first commits in a debuggable process with the optional artifact installed.
+   This is the only request-independent exception. Lazy-item, overlay, and preview sessions may be
+   registered with weak mounted-node inspection but capture no source stack. Neither policy retains
+   a node tree, installs a View listener, starts a worker, or performs report I/O.
 6. Live View state is sampled only after an explicit IDE request. The locator uses a nonce-bearing
    request/response protocol: the IDE sends an explicit debug-only Android request, the process
    snapshots current weakly held sessions once, and the response includes the same nonce. A stale
@@ -68,9 +70,9 @@ of the rendering engine or its hot paths.
 
 ## Public API and module impact
 
-- `viewcompose-ui-foundation` continues to own the Q3 neutral
-  `RenderSessionSourceTooling`/`RenderSessionSourceRegistration` contract. Its absence remains a
-  no-op.
+- `viewcompose-ui-foundation` owns the Q3 neutral `RenderSessionInspectionTooling`,
+  `RenderSessionInspectionPolicy`, and `RenderSessionInspectionRegistration` contract. Its absence
+  remains a no-op. This alpha-line hard cut replaces the former source-only port.
 - `viewcompose-host-android` owns only Android platform installation and neutral service discovery;
   it no longer owns the device locator implementation or protocol.
 - `viewcompose-preview` owns the debuggable-process locator service, explicit request receiver,

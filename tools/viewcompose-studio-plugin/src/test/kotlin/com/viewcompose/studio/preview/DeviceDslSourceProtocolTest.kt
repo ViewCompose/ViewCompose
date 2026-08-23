@@ -18,6 +18,7 @@ class DeviceDslSourceProtocolTest {
 
         assertEquals("com.example.app", report.packageName)
         assertEquals(REQUEST_ID, report.requestId)
+        assertEquals(StudioDeviceDslOperation.Source, report.operation)
         assertEquals(4242, report.processId)
         assertEquals(2, report.sessions.size)
         assertEquals(StudioRenderSessionRole.NavigationDestination, report.sessions.last().role)
@@ -72,6 +73,60 @@ class DeviceDslSourceProtocolTest {
         assertTrue(failure is IllegalArgumentException)
     }
 
+    @Test
+    fun `parses bounded nodes and a clipped highlight result`() {
+        val json = """
+            {
+              "protocolVersion": $DEVICE_DSL_SOURCE_PROTOCOL_VERSION,
+              "requestId": "$REQUEST_ID",
+              "operation": "nodes",
+              "packageName": "com.example.app",
+              "processId": 4242,
+              "generatedAtEpochMillis": 123456,
+              "sessions": [{
+                "sessionId": 7,
+                "parentSessionId": null,
+                "role": "Host",
+                "renderingActive": true,
+                "attachedToWindow": true,
+                "shown": true,
+                "hasWindowFocus": true,
+                "windowVisibility": 0,
+                "viewDepth": 1,
+                "nodeGeneration": 2,
+                "nodeInspectionSupported": true,
+                "nodeInspectionEnded": false,
+                "visitedNodes": 1,
+                "droppedNodes": 0,
+                "nodesTruncated": false,
+                "sourceCandidates": [],
+                "nodes": [{
+                  "token": "a",
+                  "parentToken": null,
+                  "type": "AndroidView",
+                  "depth": 0,
+                  "synthetic": false,
+                  "callSites": []
+                }]
+              }],
+              "highlight": {
+                "state": "clipped",
+                "sessionId": 7,
+                "nodeToken": "a",
+                "screenBounds": {"left": 0, "top": 0, "right": 100, "bottom": 80},
+                "visibleBounds": {"left": 0, "top": 10, "right": 100, "bottom": 80}
+              }
+            }
+        """.trimIndent()
+
+        val report = parseDeviceDslSourceReport(json)
+
+        assertEquals(StudioDeviceDslOperation.Nodes, report.operation)
+        assertEquals("AndroidView", report.sessions.single().nodes.single().type)
+        assertEquals(StudioDeviceDslHighlightState.Clipped, report.highlight?.state)
+        assertEquals(10, report.highlight?.visibleBounds?.top)
+    }
+
     private fun reportJson(
         sessions: String,
         protocolVersion: Int = DEVICE_DSL_SOURCE_PROTOCOL_VERSION,
@@ -80,6 +135,7 @@ class DeviceDslSourceProtocolTest {
             {
               "protocolVersion": $protocolVersion,
               "requestId": "$REQUEST_ID",
+              "operation": "source",
               "packageName": "com.example.app",
               "processId": 4242,
               "generatedAtEpochMillis": 123456,
@@ -106,6 +162,12 @@ class DeviceDslSourceProtocolTest {
               "hasWindowFocus": $focused,
               "windowVisibility": 0,
               "viewDepth": $depth,
+              "nodeGeneration": 0,
+              "nodeInspectionSupported": true,
+              "nodeInspectionEnded": false,
+              "visitedNodes": 0,
+              "droppedNodes": 0,
+              "nodesTruncated": false,
               "sourceCandidates": [{
                 "callSites": [{
                   "className": "com.example.Page${id}Kt",
@@ -113,7 +175,8 @@ class DeviceDslSourceProtocolTest {
                   "fileName": "Page$id.kt",
                   "lineNumber": ${20 + id}
                 }]
-              }]
+              }],
+              "nodes": []
             }
         """.trimIndent()
     }

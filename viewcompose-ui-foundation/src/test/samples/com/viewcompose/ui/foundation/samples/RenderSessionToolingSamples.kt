@@ -1,7 +1,9 @@
 package com.viewcompose.ui.foundation.samples
 
-import com.viewcompose.ui.foundation.RenderSessionSourceRegistration
-import com.viewcompose.ui.foundation.RenderSessionSourceTooling
+import com.viewcompose.ui.foundation.RenderSessionInspectionPolicy
+import com.viewcompose.ui.foundation.RenderSessionInspectionRegistration
+import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
+import com.viewcompose.ui.foundation.RenderSessionNodeInspection
 import com.viewcompose.ui.foundation.RenderDiagnosticContext
 import com.viewcompose.ui.foundation.RenderDiagnosticCollection
 import com.viewcompose.ui.foundation.RenderDiagnostics
@@ -34,23 +36,30 @@ fun renderDiagnosticsEventSample(): RenderDiagnostics {
     )
 }
 
-fun renderSessionSourceToolingSample(): RenderSessionSourceTooling {
+fun renderSessionInspectionToolingSample(): RenderSessionInspectionTooling {
     var renderingActive = true
     var disposed = false
-    val tooling = object : RenderSessionSourceTooling {
-        override fun shouldCapture(
+    val tooling = object : RenderSessionInspectionTooling {
+        override fun inspectionPolicy(
             container: RenderContainerHandle,
             context: RenderDiagnosticContext,
-        ): Boolean = context.frameId == null
+        ): RenderSessionInspectionPolicy = if (context.frameId == null) {
+            RenderSessionInspectionPolicy.TrackSessionAndCaptureSources
+        } else {
+            RenderSessionInspectionPolicy.Ignore
+        }
 
         override fun register(
             container: RenderContainerHandle,
             context: RenderDiagnosticContext,
             sourceCandidates: List<List<UiSourceCallSite>>,
-        ): RenderSessionSourceRegistration {
+            nodeInspection: RenderSessionNodeInspection,
+        ): RenderSessionInspectionRegistration {
             check(context.eventSequence == 0L)
             check(sourceCandidates.flatten().all { source -> source.lineNumber > 0 })
-            return object : RenderSessionSourceRegistration {
+            // Only an explicit tooling request may traverse the mounted tree.
+            check(nodeInspection.snapshot().nodes.size <= 512)
+            return object : RenderSessionInspectionRegistration {
                 override fun setRenderingActive(active: Boolean) {
                     renderingActive = active
                 }
@@ -63,4 +72,14 @@ fun renderSessionSourceToolingSample(): RenderSessionSourceTooling {
     }
     check(renderingActive && !disposed)
     return tooling
+}
+
+fun renderSessionNodeInspectionSample(nodeInspection: RenderSessionNodeInspection) {
+    val snapshot = nodeInspection.snapshot()
+    if (!snapshot.supported || snapshot.ended) return
+    snapshot.nodes.firstOrNull()?.let { node ->
+        // Resolve only synchronously on the platform render thread; retain no native target.
+        val nativeTarget = node.platformTarget.resolve()
+        println("${node.token.value}:${node.type}:${nativeTarget?.javaClass?.name}")
+    }
 }

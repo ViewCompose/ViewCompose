@@ -55,7 +55,7 @@ class RenderSessionFailureTest {
         engine.patchBlock = { _, _ -> CoreObservedPropertyFrame() }
         engine.disposeFailures = emptyList()
         engine.renderDiagnosticLevels.clear()
-        NoOpRenderSessionDiagnostics.sourceTooling = null
+        NoOpRenderSessionDiagnostics.inspectionTooling = null
         NoOpRenderSessionDiagnostics.errors.clear()
         NoOpRenderSessionDiagnostics.monotonicReads = 0
     }
@@ -1007,21 +1007,24 @@ class RenderSessionFailureTest {
     @Test
     fun `source tooling follows a successfully rendered session lifecycle`() {
         val events = mutableListOf<String>()
-        NoOpRenderSessionDiagnostics.sourceTooling = object : RenderSessionSourceTooling {
-            override fun shouldCapture(
+        NoOpRenderSessionDiagnostics.inspectionTooling = object : RenderSessionInspectionTooling {
+            override fun inspectionPolicy(
                 container: RenderContainerHandle,
                 context: RenderDiagnosticContext,
-            ): Boolean = true
+            ): RenderSessionInspectionPolicy =
+                RenderSessionInspectionPolicy.TrackSessionAndCaptureSources
 
             override fun register(
                 container: RenderContainerHandle,
                 context: RenderDiagnosticContext,
                 sourceCandidates: List<List<UiSourceCallSite>>,
-            ): RenderSessionSourceRegistration {
+                nodeInspection: RenderSessionNodeInspection,
+            ): RenderSessionInspectionRegistration {
                 assertTrue(sourceCandidates.isNotEmpty())
                 assertTrue(sourceCandidates.all(List<UiSourceCallSite>::isNotEmpty))
+                assertFalse(nodeInspection.snapshot().ended)
                 events += "registered"
-                return object : RenderSessionSourceRegistration {
+                return object : RenderSessionInspectionRegistration {
                     override fun setRenderingActive(active: Boolean) {
                         events += "active=$active"
                     }
@@ -1041,6 +1044,43 @@ class RenderSessionFailureTest {
         session.dispose()
 
         assertEquals(listOf("registered", "active=false", "disposed"), events)
+    }
+
+    @Test
+    fun `inspection tooling tracks a session without source capture or repeated registration`() {
+        var policyCalls = 0
+        var registrationCalls = 0
+        NoOpRenderSessionDiagnostics.inspectionTooling = object : RenderSessionInspectionTooling {
+            override fun inspectionPolicy(
+                container: RenderContainerHandle,
+                context: RenderDiagnosticContext,
+            ): RenderSessionInspectionPolicy {
+                policyCalls += 1
+                return RenderSessionInspectionPolicy.TrackSession
+            }
+
+            override fun register(
+                container: RenderContainerHandle,
+                context: RenderDiagnosticContext,
+                sourceCandidates: List<List<UiSourceCallSite>>,
+                nodeInspection: RenderSessionNodeInspection,
+            ): RenderSessionInspectionRegistration? {
+                registrationCalls += 1
+                assertTrue(sourceCandidates.isEmpty())
+                assertFalse(nodeInspection.snapshot().ended)
+                return null
+            }
+        }
+        session = createSession(failures = mutableListOf()) {
+            Text("Inspection-only page")
+        }
+
+        session.render()
+        session.render()
+        session.dispose()
+
+        assertEquals(1, policyCalls)
+        assertEquals(1, registrationCalls)
     }
 
     @Test
@@ -1564,7 +1604,7 @@ class RenderSessionFailureTest {
     }
 
     private object NoOpRenderSessionDiagnostics : RenderSessionPlatformDiagnostics {
-        override var sourceTooling: RenderSessionSourceTooling? = null
+        override var inspectionTooling: RenderSessionInspectionTooling? = null
         val errors = mutableListOf<Pair<String, Throwable?>>()
         var monotonicReads: Int = 0
 

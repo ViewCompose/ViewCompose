@@ -15,6 +15,8 @@ import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.nativeContainer
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.foundation.CoreRenderEngine
+import com.viewcompose.ui.foundation.CoreInspectedMountedNode
+import com.viewcompose.ui.foundation.CoreMountedNodeInspection
 import com.viewcompose.ui.foundation.CoreRenderCommitEffect
 import com.viewcompose.ui.foundation.CoreRenderCommitFailure
 import com.viewcompose.ui.foundation.CoreRenderFrame
@@ -31,6 +33,10 @@ import com.viewcompose.ui.foundation.RenderPatchRecord
 import com.viewcompose.ui.foundation.RenderPatchOperation
 import com.viewcompose.ui.foundation.RenderFailureOperation
 import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
+import com.viewcompose.ui.foundation.RenderNodePlatformTarget
+import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.tooling.UiNodeTooling
+import java.lang.ref.WeakReference
 
 /**
  * Adapts the platform-neutral core render contract to the Android View renderer.
@@ -99,6 +105,97 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
                     cause = failure.cause,
                 )
             },
+        )
+    }
+
+    /**
+     * Captures a bounded, privacy-safe view of the current renderer-owned mounted tree.
+     *
+     * Traversal occurs only for the explicit caller request. Native targets are wrapped in weak
+     * resolvers; no application key, View text, semantics, listener, or layout mutation is read or
+     * retained. Entries are depth-first and parents precede their children.
+     */
+    override fun inspectMountedNodes(
+        mountedNodes: List<Any>,
+        maxVisitedNodes: Int,
+        maxReturnedNodes: Int,
+        maxDepth: Int,
+    ): CoreMountedNodeInspection {
+        require(maxVisitedNodes > 0)
+        require(maxReturnedNodes > 0)
+        require(maxDepth >= 0)
+        val roots = mountedNodes.filterIsInstance<MountedNode>()
+        if (roots.size != mountedNodes.size) return CoreMountedNodeInspection.Unsupported
+        val entries = ArrayList<CoreInspectedMountedNode>(
+            minOf(maxReturnedNodes, mountedNodes.size.coerceAtLeast(1)),
+        )
+        var visitedNodes = 0
+        var droppedNodes = 0
+        var truncated = false
+
+        fun visit(
+            node: MountedNode,
+            depth: Int,
+            parentIndex: Int?,
+        ) {
+            if (visitedNodes >= maxVisitedNodes) {
+                if (!truncated) droppedNodes += 1
+                truncated = true
+                return
+            }
+            visitedNodes += 1
+            if (depth > maxDepth) {
+                droppedNodes += 1
+                truncated = true
+                return
+            }
+            val metadata = UiNodeTooling.metadataOf(node.vnode)
+            val retainedIndex = if (entries.size < maxReturnedNodes) {
+                entries.size.also { index ->
+                    entries += CoreInspectedMountedNode(
+                        parentIndex = parentIndex,
+                        type = node.vnode.type,
+                        depth = depth,
+                        synthetic = metadata?.synthetic == true ||
+                            node.vnode.type in SYNTHETIC_NODE_TYPES,
+                        sourceCallSites = metadata?.callSites.orEmpty(),
+                        platformTarget = WeakMountedNodePlatformTarget(node),
+                    )
+                    check(index == entries.lastIndex)
+                }
+            } else {
+                droppedNodes += 1
+                truncated = true
+                null
+            }
+            for (child in node.children) {
+                if (visitedNodes >= maxVisitedNodes) {
+                    if (!truncated) droppedNodes += 1
+                    truncated = true
+                    break
+                }
+                visit(
+                    node = child,
+                    depth = depth + 1,
+                    parentIndex = retainedIndex,
+                )
+            }
+        }
+
+        for (root in roots) {
+            if (visitedNodes >= maxVisitedNodes) {
+                if (!truncated) droppedNodes += 1
+                truncated = true
+                break
+            }
+            visit(root, depth = 0, parentIndex = null)
+        }
+        return CoreMountedNodeInspection(
+            nodes = entries,
+            visitedNodes = visitedNodes,
+            droppedNodes = droppedNodes,
+            truncated = truncated,
+            supported = true,
         )
     }
 
@@ -469,6 +566,21 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
         }
     }
 }
+
+private class WeakMountedNodePlatformTarget(
+    node: MountedNode,
+) : RenderNodePlatformTarget {
+    private val node = WeakReference(node)
+
+    override fun resolve(): Any? = node.get()?.view
+}
+
+private val SYNTHETIC_NODE_TYPES = setOf(
+    NodeType.AnimatedSizeHost,
+    NodeType.AnimatedBoundsHost,
+    NodeType.LayoutConstraintHost,
+    NodeType.NestedScrollHost,
+)
 
 private class AndroidReusableRenderTree(
     nodes: List<MountedNode>,

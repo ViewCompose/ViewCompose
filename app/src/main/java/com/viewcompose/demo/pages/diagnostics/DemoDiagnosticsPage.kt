@@ -2,13 +2,17 @@ package com.viewcompose
 
 import android.view.Choreographer
 import android.view.ViewGroup
+import android.widget.TextView
 import com.viewcompose.demo.automation.demoAutomationTarget
 import com.viewcompose.demo.contract.DemoAutomationRole
 import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.host.android.resources.stringResource
+import com.viewcompose.host.android.AndroidView
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
+import com.viewcompose.ui.modifier.fillMaxWidth
+import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.runtime.mutableStateOf
@@ -41,6 +45,7 @@ import java.util.Locale
 private const val SNAPSHOT_STABLE_FRAME_THRESHOLD = 2
 internal val DIAGNOSTICS_RENDERER_PAGE_ITEMS = listOf(
     "renderer_actions",
+    "renderer_highlight",
     "renderer_probe",
     "renderer_snapshots",
     "renderer_tree",
@@ -99,6 +104,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
     val patchSnapshotState = remember { mutableStateOf(DemoRenderDiagnosticsStore.latestPatchActiveSnapshot()) }
     val layoutSnapshotState = remember { mutableStateOf(LayoutPassTracker.snapshot()) }
     val snapshotHistorySummaryState = remember { mutableStateOf(buildRenderHistorySummary()) }
+    val highlightFixtureGenerationState = remember { mutableStateOf(1) }
     if (pendingSnapshotRefreshState.value) {
         val refreshToken = snapshotRefreshRequestTokenState.value
         SideEffect {
@@ -331,6 +337,53 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     modifier = Modifier
                         .padding(bottom = 8.dp)
                         .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                )
+            }
+
+            "renderer_highlight" -> ScenarioSection(
+                kind = ScenarioKind.Core,
+                title = stringResource(R.string.demo_diagnostics_highlight_title),
+                subtitle = stringResource(R.string.demo_diagnostics_highlight_summary),
+            ) {
+                val targetLabel = stringResource(
+                    R.string.demo_diagnostics_highlight_target,
+                    highlightFixtureGenerationState.value,
+                )
+                Text(
+                    text = stringResource(R.string.demo_diagnostics_highlight_instructions),
+                    color = TextDefaults.secondaryColor(),
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+                Button(
+                    text = stringResource(R.string.demo_diagnostics_highlight_replace),
+                    onClick = {
+                        highlightFixtureGenerationState.value += 1
+                    },
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+                AndroidView(
+                    key = "diagnostics_highlight_${highlightFixtureGenerationState.value}",
+                    factory = { context ->
+                        TextView(context).apply {
+                            includeFontPadding = false
+                            textSize = 16f
+                            minimumHeight = (72f * resources.displayMetrics.density).toInt()
+                            val inset = (16f * resources.displayMetrics.density).toInt()
+                            setPadding(inset, inset, inset, inset)
+                            setBackgroundColor(0xFFDCEBFF.toInt())
+                            setTextColor(0xFF12345B.toInt())
+                        }
+                    },
+                    update = { nativeView ->
+                        (nativeView as TextView).apply {
+                            text = targetLabel
+                            contentDescription = targetLabel
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(88.dp)
+                        .testTag(DemoDiagnosticsTestTags.DIAGNOSTICS_HIGHLIGHT_TARGET),
                 )
             }
 

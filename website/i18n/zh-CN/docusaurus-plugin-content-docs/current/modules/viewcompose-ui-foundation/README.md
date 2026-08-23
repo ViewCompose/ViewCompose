@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: da034e61c58a50798c65ae90073e61d6f3e3aceb1f720563a27b706127445e85
+translation_source_hash: 66bd48533a9dd3bf50acc9739347c506e9e09abbc5249e90d3515d409b679f72
 translation_status: current
 ---
 
@@ -178,9 +178,10 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - Q3 `CoreObservedPropertyTarget`、`CoreObservedPropertyPatch`、`CoreObservedPropertyFrame` 与
   `CoreRenderEngine.patchObservedProperties` 组成 Renderer-neutral Host SPI。Engine 必须校验并
   回滚完整 Batch，或者拒绝该能力；不存在整树静默回退。
-- `RenderSessionSourceTooling` 与 `RenderSessionSourceRegistration` 组成 Q3 可选平台诊断契约。
-  只有平台主动启用时才捕获一条有限源码调用链，并跟踪 Root、Lazy Item 与 Pager Item Render
-  Session 的活动/释放生命周期。编译样例 `renderSessionSourceToolingSample` 展示其 Adapter 生命周期。
+- `RenderSessionInspectionTooling`、`RenderSessionInspectionPolicy` 与
+  `RenderSessionInspectionRegistration` 组成 Q3 可选平台契约。Policy 将 Lifecycle/Node Tracking
+  与有界的首次 Frame Source Capture 分离，使高频 Lazy Item Session 不执行 Source Stack 工作也能
+  按请求检查。编译样例 `renderSessionInspectionToolingSample` 展示其 Adapter 生命周期。
 - 浮层规格与 Host 定义平台无关的 Dialog、Popup、Bottom Sheet、Snackbar 和 Toast 标识、定位、
   排队、更新与关闭契约。
 
@@ -362,11 +363,21 @@ Scroll Container 新增 `state` 和 `userScrollEnabled`，为 Slider 新增 Step
 为下拉刷新新增 `enabled`，并要求稳定的 Navigation 与 Segmented Item Key。这些变更只保留一个
 权威来源；Alpha 版本线不保留并行的 Deprecated 签名。
 
-`RenderSessionPlatformDiagnostics.sourceTooling`、`RenderSessionSourceTooling` 与
-`RenderSessionSourceRegistration` 是 Q3 工具 API。Source Capture 现在接收 Runtime Event 使用的
-同一个 `RenderDiagnosticContext`，不再依赖独立 Container Role Marker。现有平台诊断使用默认空 Adapter，行为
-不变。主动启用的自定义平台必须让注册状态受所属 Render Session 约束，同步消费有界候选调用链
-列表，并在平台渲染线程调用。注册必须保持被动：可以弱引用容器，但不能安装持续的滚动、全局布局、
+`RenderSessionPlatformDiagnostics.inspectionTooling`、`RenderSessionInspectionTooling`、
+`RenderSessionInspectionPolicy` 与 `RenderSessionInspectionRegistration` 是 Q3 工具 API。Alpha
+版本线硬切掉旧的 Source-only Port：每个 Logical Session 只能被忽略、无 Source Capture 跟踪，或
+携带有界首次成功 Frame Source Capture 跟踪。成功 Native Frame 后最多尝试注册一次，即使候选列表
+为空；注册接收 Runtime Event 使用的同一个 `RenderDiagnosticContext`。现有平台诊断使用默认空
+Adapter，行为不变。主动启用的自定义平台必须让注册状态受所属 Render Session 约束，在平台渲染
+线程同步消费候选调用链列表。注册还会收到 Q3 `RenderSessionNodeInspection`。其 Q2
+`RenderNodeToken`、节点类型、Entry 与 Snapshot 都是进程内请求数据，不是应用 Identity。
+`snapshot()` 最多访问 2,048 个当前 Mounted Node，保留 512 个、深度不超过 64；输出只包含隐私安全的
+Type/Source Metadata 与弱 Platform Target，并明确报告 Unsupported、Ended、Dropped 和 Truncated。
+新快照、节点替换、跨 Owner 复用、Session 结束或进程重建都会让旧 Token 失效。
+
+`CoreRenderEngine.inspectMountedNodes` 是 Q3 自定义 Renderer Hook。默认实现返回 Unsupported；自定义
+实现必须维持 Parent-before-child 顺序、排除应用 Key 与内容，并只返回弱 Platform Target。其余注册
+仍必须保持被动：可以弱引用容器，但不能安装持续的滚动、全局布局、
 绘制、触摸、Frame 或重组观察器。实时检查必须由
 [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md)定义的显式工具请求触发。
 

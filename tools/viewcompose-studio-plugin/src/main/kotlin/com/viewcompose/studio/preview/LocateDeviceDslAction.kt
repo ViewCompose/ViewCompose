@@ -177,7 +177,7 @@ private fun StudioAndroidDevice.presentableChoice(messages: PreviewUiMessages): 
     }
 }
 
-private fun showDeviceDslFailure(
+internal fun showDeviceDslFailure(
     project: Project,
     messages: PreviewUiMessages,
     error: Throwable,
@@ -191,6 +191,8 @@ private fun showDeviceDslFailure(
         DeviceDslLocateFailureReason.StaleReport -> "deviceDsl.failure.staleReport"
         DeviceDslLocateFailureReason.NoVisibleDsl -> "deviceDsl.failure.noVisibleDsl"
         DeviceDslLocateFailureReason.SourceMissing -> "deviceDsl.failure.sourceMissing"
+        DeviceDslLocateFailureReason.NoInspectableNode -> "deviceDsl.failure.noInspectableNode"
+        DeviceDslLocateFailureReason.HighlightRejected -> "deviceDsl.failure.highlightRejected"
         null -> null
     }
     val details = messageKey?.let(messages::text) ?: messages.text(
@@ -204,7 +206,7 @@ private fun showDeviceDslFailure(
     )
 }
 
-private fun Project.deviceDslMessages(): PreviewUiMessages {
+internal fun Project.deviceDslMessages(): PreviewUiMessages {
     val language = ViewComposePreviewSettings.forProject(this).language
     return PreviewUiMessages.forLanguage(language)
 }

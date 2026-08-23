@@ -3,6 +3,7 @@ package com.viewcompose
 /** In-process tags owned by the Diagnostics demo fixtures. */
 internal object DemoDiagnosticsTestTags {
     const val DIAGNOSTICS_RENDERER_REFRESH = "diagnostics_renderer_refresh"
+    const val DIAGNOSTICS_HIGHLIGHT_TARGET = "diagnostics_highlight_target"
     const val DIAGNOSTICS_RENDER_REFRESH_SEQUENCE = "diagnostics_render_refresh_sequence"
     const val DIAGNOSTICS_RENDER_COUNT = "diagnostics_render_count"
     const val DIAGNOSTICS_RENDER_UPDATED_AT = "diagnostics_render_updated_at"

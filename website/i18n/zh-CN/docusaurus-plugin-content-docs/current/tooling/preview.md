@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/preview.md
-translation_source_hash: 796d83fdf2073c737cb290abb95bb91eed062bb19c50770c9883cdba48163ab4
+translation_source_hash: 90742dee2bf9954a377e915f49550d681c5dad8ac0f4e7ab9ef7699c33e1e781
 translation_status: current
 ---
 
@@ -187,6 +187,27 @@ Receiver 要求 ADB Shell 持有的 Android `DUMP` 权限，进程还会独立�
 预览面板、外部存储、网络服务、持续 View Listener，也不会传输源码文本。非调试构建会拒绝请求。
 如果没有可用响应，请让目标应用保持在前台，并确认 Debug 构建包含当前 `viewcompose-preview`
 制品。
+
+## 高亮真机节点
+
+让同一个可调试应用保持前台，然后选择 **Tools → Highlight Device DSL Node**。选择设备与可见 Session
+后，Studio 会请求一份当前 Mounted Tree 快照，并按深度优先顺序列出声明式节点类型。
+`Diagnostics → Renderer` Demo Fixture 提供唯一的 `AndroidView` 目标，便于确定性验收。
+**Tools → Clear Device DSL Highlight** 可以立即移除当前 Overlay。
+
+Host、Navigation 与 Pager Session 可以携带有界 Source Candidate。Lazy Item、Overlay 与 Preview
+Session 同样可选，但其被动登记不捕获 Source Stack；因此虚拟化 Child Session 中的 Target 仍然
+可达，又不会增加高频组合工作。
+
+节点请求最多访问 2,048 个 Mounted Node，返回 512 个、深度不超过 64，并为每个条目分配新的不透明
+进程内 Token。它不会公开应用 Key、View 文本、Semantics、State、Local 值或任意 `toString()` 输出。
+选择 Token 后会解析当前弱引用 View，返回其屏幕边界和全局可见裁剪边界，并安装一个最长五秒、进程内
+唯一且不可交互的 Overlay。目标替换、View Detach、Session 释放、显式清除和超时都会移除它。
+
+Studio 会明确报告 Stale、Recycled、Hidden、Fully Clipped、Synthetic/Unsupported、Ended Session
+与 Rejected，不会猜测其他 View。Overlay 不能触发重组或应用代码，不能改变 Focus 或 Accessibility
+Focus，不拦截输入，也不修改布局。协议 v5 会分别校验 Source、Nodes、Select 与 Clear Operation 的
+Nonce、前台 Package 与存活 Process；v4 报告会被明确拒绝。
 
 ## 检查真机动画时间线
 

@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import com.viewcompose.ui.focus.FocusDirection
 import com.viewcompose.ui.focus.FocusManager
 import com.viewcompose.ui.foundation.RenderSessionPlatformDiagnostics
-import com.viewcompose.ui.foundation.RenderSessionSourceTooling
+import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.nativeContainer
 import com.viewcompose.ui.foundation.installRenderSessionPlatform
@@ -72,8 +72,8 @@ private class AndroidSessionFocusManager(
 
 /** Android logging and tracing adapter for the platform-neutral session coordinator. */
 private object AndroidRenderSessionDiagnostics : RenderSessionPlatformDiagnostics {
-    override val sourceTooling: RenderSessionSourceTooling?
-        get() = AndroidRenderSessionSourceToolingDiscovery.sourceTooling
+    override val inspectionTooling: RenderSessionInspectionTooling?
+        get() = AndroidRenderSessionInspectionToolingDiscovery.inspectionTooling
 
     override fun monotonicTimeNanos(): Long = SystemClock.elapsedRealtimeNanos()
 
@@ -102,14 +102,14 @@ private object AndroidRenderSessionDiagnostics : RenderSessionPlatformDiagnostic
     }
 }
 
-private object AndroidRenderSessionSourceToolingDiscovery {
-    val sourceTooling: RenderSessionSourceTooling? by lazy {
+private object AndroidRenderSessionInspectionToolingDiscovery {
+    val inspectionTooling: RenderSessionInspectionTooling? by lazy {
         runCatching {
             val providers = ServiceLoader.load(
-                RenderSessionSourceTooling::class.java,
-                RenderSessionSourceTooling::class.java.classLoader,
+                RenderSessionInspectionTooling::class.java,
+                RenderSessionInspectionTooling::class.java.classLoader,
             ).toList()
-            selectSingleRenderSessionSourceTooling(providers)
+            selectSingleRenderSessionInspectionTooling(providers)
         }.getOrElse { error ->
             Log.w(
                 "ViewCompose",
@@ -121,9 +121,9 @@ private object AndroidRenderSessionSourceToolingDiscovery {
     }
 }
 
-internal fun selectSingleRenderSessionSourceTooling(
-    providers: List<RenderSessionSourceTooling>,
-): RenderSessionSourceTooling? {
+internal fun selectSingleRenderSessionInspectionTooling(
+    providers: List<RenderSessionInspectionTooling>,
+): RenderSessionInspectionTooling? {
     if (providers.size <= 1) return providers.singleOrNull()
     Log.w(
         "ViewCompose",

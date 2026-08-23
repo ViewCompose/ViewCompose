@@ -40,7 +40,10 @@ class RenderSession(
     parentLocalSnapshot: UiLocalSnapshot? = null,
 ) {
     private val platform = RenderSessionPlatformProvider.requirePlatform()
-    private val sourceTooling = platform.diagnostics.sourceTooling
+    private val inspectionTooling = platform.diagnostics.inspectionTooling
+    private var resolvedInspectionPolicy: RenderSessionInspectionPolicy? = null
+    private var mountedNodeInspectionState: RenderSessionMountedNodeState? = null
+    private var nodeInspection: RenderSessionNodeInspection? = null
     private val traceId = RenderSessionTraceId(nextSessionId.incrementAndGet())
     private val inheritedDiagnosticParent = if (diagnostics == null) {
         parentLocalSnapshot?.renderDiagnosticParentOrNull()
@@ -65,7 +68,8 @@ class RenderSession(
     private var mountedNodes: List<Any> = emptyList()
     private var disposalRequested: Boolean = false
     private var disposed: Boolean = false
-    private var sourceRegistration: RenderSessionSourceRegistration? = null
+    private var inspectionRegistration: RenderSessionInspectionRegistration? = null
+    private var inspectionRegistrationAttempted: Boolean = false
     private val overlayRequestStore = OverlayRequestStore()
     private var requestRender: (() -> Unit)? = null
     private val observedProperties = ObservedPropertyRegistry {
@@ -219,8 +223,8 @@ class RenderSession(
         }
         if (renderingActive == active) return
         runtime.setRenderingActive(active)
-        sourceRegistration?.let { registration ->
-            runSourceToolingOperation("update source session") {
+        inspectionRegistration?.let { registration ->
+            runInspectionToolingOperation("update inspection session") {
                 registration.setRenderingActive(active)
             }
         }
@@ -292,6 +296,7 @@ class RenderSession(
                 false
             } else {
                 mountedNodes = nodes
+                mountedNodeInspectionState?.mountedNodes = nodes
                 adoptedUncommittedTree = true
                 true
             }
@@ -363,8 +368,9 @@ class RenderSession(
                                                 diagnosticLevel == RenderFrameDiagnosticLevel.Tree,
                                         ) {
                                             if (
-                                                sourceRegistration == null &&
-                                                shouldCaptureSource()
+                                                !inspectionRegistrationAttempted &&
+                                                inspectionPolicy() ==
+                                                RenderSessionInspectionPolicy.TrackSessionAndCaptureSources
                                             ) {
                                                 UiNodeTooling.withSourceCandidateCapture(
                                                     onSourceCandidatesCaptured = { candidates ->
@@ -429,6 +435,7 @@ class RenderSession(
         }
 
         mountedNodes = frame.mountedNodes
+        mountedNodeInspectionState?.mountedNodes = frame.mountedNodes
         observedPropertyTargets.clear()
         observedPropertyTargets.putAll(frame.observedPropertyTargets)
         adoptedUncommittedTree = false
@@ -653,15 +660,20 @@ class RenderSession(
                 frameFailures = frameFailures,
             )
         }
-        if (sourceRegistration == null && prepared.sourceCandidates.isNotEmpty()) {
-            runSourceToolingOperation("register source session") {
-                sourceRegistration = sourceTooling?.register(
+        if (
+            !inspectionRegistrationAttempted &&
+            inspectionPolicy() != RenderSessionInspectionPolicy.Ignore
+        ) {
+            inspectionRegistrationAttempted = true
+            runInspectionToolingOperation("register inspection session") {
+                inspectionRegistration = inspectionTooling?.register(
                     container = container,
                     context = sourceContext,
                     sourceCandidates = prepared.sourceCandidates,
+                    nodeInspection = checkNotNull(nodeInspection),
                 )
                 if (!renderingActive) {
-                    sourceRegistration?.setRenderingActive(false)
+                    inspectionRegistration?.setRenderingActive(false)
                 }
             }
         }
@@ -753,6 +765,8 @@ class RenderSession(
     private fun disposeNow() {
         if (disposed) return
         disposed = true
+        mountedNodeInspectionState?.ended = true
+        mountedNodeInspectionState?.mountedNodes = emptyList()
         requestRender = null
         preparedFrame = null
         awaitingActivation = false
@@ -774,9 +788,9 @@ class RenderSession(
         releaseOwner?.let { operation ->
             disposeOperation(operation)
         }
-        sourceRegistration?.let { registration ->
+        inspectionRegistration?.let { registration ->
             disposeOperation { registration.dispose() }
-            sourceRegistration = null
+            inspectionRegistration = null
         }
         val disposeFailures = try {
             val reusableTree = if (disposalMode == DisposalMode.DetachForReuse) {
@@ -851,10 +865,11 @@ class RenderSession(
             primaryFailure.addSuppressed(failure.cause)
         }
         mountedNodes = emptyList()
+        mountedNodeInspectionState?.mountedNodes = emptyList()
         adoptedUncommittedTree = false
     }
 
-    private inline fun runSourceToolingOperation(
+    private inline fun runInspectionToolingOperation(
         operation: String,
         block: () -> Unit,
     ) {
@@ -869,20 +884,34 @@ class RenderSession(
         }
     }
 
-    private fun shouldCaptureSource(): Boolean {
-        return try {
-            sourceTooling?.shouldCapture(
+    private fun inspectionPolicy(): RenderSessionInspectionPolicy {
+        resolvedInspectionPolicy?.let { policy -> return policy }
+        val tooling = inspectionTooling
+        val policy = if (tooling == null) {
+            RenderSessionInspectionPolicy.Ignore
+        } else try {
+            tooling.inspectionPolicy(
                 container = container,
                 context = sourceContext,
-            ) == true
+            )
         } catch (error: Exception) {
             platform.diagnostics.error(
                 debugTag,
-                "Render-session tooling could not evaluate source capture.",
+                "Render-session tooling could not evaluate its inspection policy.",
                 error,
             )
-            false
+            RenderSessionInspectionPolicy.Ignore
         }
+        if (policy != RenderSessionInspectionPolicy.Ignore) {
+            val state = RenderSessionMountedNodeState()
+            mountedNodeInspectionState = state
+            nodeInspection = DefaultRenderSessionNodeInspection(
+                state = state,
+                renderEngine = platform.renderEngine,
+            )
+        }
+        resolvedInspectionPolicy = policy
+        return policy
     }
 
     private fun ensureDiagnosticsStarted() {
