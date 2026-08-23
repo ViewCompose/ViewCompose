@@ -369,21 +369,14 @@ hosts must preserve the same ordering and ownership guarantees.
 
 `RenderDiagnostics` is the Q3 root configuration for lifecycle, failure, and frame events.
 `RenderSessionTraceId`, `RenderSessionRole`, and `RenderDiagnosticContext` are Q2 correlation
-values; `RenderDiagnosticCollection` and `RenderFrameDiagnosticLevel` are Q2 selection values.
-Host and Preview roots begin a tree, while navigation destinations, lazy items, pager pages, and
-overlay surfaces inherit the private parent context captured in their immutable Local snapshot.
-Physical View reuse never transfers a logical session ID.
+values; collection level is Q2. Six typed roles share one private Local-snapshot parent chain, and
+physical View reuse never transfers logical identity. `None`, `Stats`, and `Tree` respectively
+collect no renderer detail, counters, or the bounded detailed snapshot.
 
-`RenderFrameDiagnosticLevel.None` builds no renderer diagnostics, `Stats` requests counters only,
-and `Tree` also requests the bounded tree, patch, warning, and composition snapshots. Frame events
-are published only after `lastFrameReport` is authoritative. Sink delivery is synchronous and
-session-serialized; re-entry fails fast, and a throwing sink is recorded as `DiagnosticsSink` and
-disabled without changing render recovery.
-
-The alpha hard cut removes the three independent render callbacks and the result-only Local.
-Migrate stats and trees to `RenderFrameCompleted`, failures to `RenderFailureObserved`, and keep
-direct polling on `lastFrameReport` or `lastRenderFailure` only when an event stream is unnecessary.
-See the [diagnostics guide](../../tooling/diagnostics.md) and
+Events are authoritative, synchronous, and session-serialized. Re-entry fails fast; a throwing
+sink is disabled without changing recovery. The alpha hard cut migrates frame data to
+`RenderFrameCompleted` and failures to `RenderFailureObserved`; see the
+[diagnostics guide](../../tooling/diagnostics.md) and
 [ADR-0021](../../architecture/decisions/0021-correlated-render-diagnostics-ownership.md).
 
 ## Related documentation

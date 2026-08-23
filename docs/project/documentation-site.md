@@ -19,17 +19,10 @@ The production artifact is assembled in seven explicit stages:
    explicit stale status, and stale-warning markers.
 4. `verifyCompleteViewComposeApiDocs` groups the immutable release registry by source revision,
    reconstructs each revision in a temporary workspace, runs the current maintained Dokka tooling,
-   copies every released artifact/version tree to ignored paths under `website/generated/api/`, and
-   verifies the complete manifest, immutable routes, aliases, and pinned source links. Artifacts in
-   `release.unpublishedModules` instead generate only a mutable `current` API tree from the working
-   source; they never receive a fabricated immutable version route.
-   Before reconstruction, the generator verifies each full source SHA locally. If a frozen commit
-   is absent after a squashed release PR's temporary branch has been deleted, it fetches exactly
-   that SHA from `origin` with depth one and verifies the fetched object as a commit. It never
-   substitutes a movable branch, tag, or newer revision; an unavailable SHA fails the build.
-   When a frozen revision predates the dependency-contract registry, the temporary documentation
-   workspace synthesizes empty registry rows only to configure current Dokka tooling; compilation
-   still follows that revision's Gradle build and the synthetic rows are never published.
+   and verifies every manifest, route, alias, and pinned source link. Missing frozen commits are
+   fetched by exact full SHA; movable references are never substituted. Unpublished artifacts get
+   only working-tree `current` output, while revisions predating current build contracts receive
+   temporary configuration shims that never enter published output.
 5. the website generators read publishing metadata, the immutable release registry, and
    `docs/modules/README.md`. They generate the catalog plus one module-manual snapshot per released
    artifact/version from the same frozen Git revision; they do not maintain a second registry.
@@ -84,30 +77,11 @@ and command remains in its searchable owning documentation, and the plan page re
 directly linkable. Each excluded route must be named explicitly in the site configuration and
 supported by paired size evidence in this page.
 
-The per-locale search-index budget is 6.25 MiB. It was first raised from 4 MiB after the searchable
-[multi-design-system architecture standard](../architecture/design-systems.md), ADR-0005, and its
-evidence-heavy [archived execution record](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/multi-design-system-high-fidelity.md) measured about
-4.1 MiB for English and 4.4 MiB for Chinese. After the complete One UI and overlay architecture
-record plus nine additional Chinese mirrors were indexed, the complete build measured 4.4 MiB for
-English and 4.7 MiB for Chinese, so the reviewed ceiling moved to 5 MiB. Adding the host-owned
-Android resource environment and transactional effect lifecycle contracts measured 4.7 MiB for
-English and 5.1 MiB for Chinese, so the reviewed ceiling moved to 5.5 MiB. The component-appearance
-convergence then added one searchable ADR plus expanded theming, overlay, and module contracts. A
-clean `main` build contained 103 canonical documents and measured 5,349,372 bytes for English and
-5,757,926 bytes for Chinese; the failing candidate contained 104 and measured 5,422,767 and
-5,838,085 bytes. That is an absolute increase of 73,395 bytes (1.37%) for English and 80,159 bytes
-(1.39%) for Chinese, while Chinese bytes per canonical document rose by about 0.42%. The conclusion
-is **regressed** in absolute payload but without anomalous index amplification: the new contracts have
-direct reader value, and `main` had only 9,242 bytes of headroom. The reviewed ceiling therefore
-moves to 6 MiB; that measured candidate leaves 453,371 bytes, or about 7.2% of the budget, as
-Chinese headroom. If either locale reaches 6 MiB, the next action is to review search partitioning
-or index representation before another increase; code and command content remains indexed because
-API and build-command search has direct reader value.
-
-The lazy-collection memory-efficiency candidate reached that trigger. Its required plan and
-benchmark partitions materially reduced both indexes before the reviewed ceiling moved to
-6.25 MiB. Reaching this ceiling requires structural index segmentation rather than another
-content-only partition or threshold increase; exact paired evidence is retained below.
+The per-locale search budget is 6.25 MiB. Reviewed bilingual architecture and contract additions
+moved it from 4 through 6 MiB; the lazy-collection branch then partitioned exhaustive plan and
+benchmark detail before the final 6.25 MiB ceiling. Exact transition evidence is consolidated
+below. Reaching this ceiling again requires structural index segmentation rather than another
+content-only partition or threshold increase; API and command guidance remains searchable.
 
 Compatibility redirects preserve `/docs`, `/getting-started`, `/compose-migration`,
 `/migrate-from-compose`, and previously published active-plan routes after those plans move to the
@@ -119,59 +93,21 @@ at `/api/**`; after Docusaurus finishes its locale builds, the supported build e
 locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to the canonical API
 tree, so those copies add storage but no localized content or supported route.
 
-The budget model separates expected release-history growth from regressions. Non-API output is
-limited to 46 MiB. Before the Demo verification-harness plan was added, a clean `main` build already
-measured 39.999791 MiB. Publishing that searchable English plan, its `zh-CN` fallback route, and
-both locale search entries measured 40.427350 MiB, so the reviewed ceiling moved from 40 MiB to
-41 MiB instead of removing reader-value planning evidence. The native-widget contract convergence
-then expanded required bilingual architecture, migration, guide, and module contracts. Before the
-budget evidence itself was added, the clean candidate increased non-API output from 42,829,400 to
-43,024,465 bytes: 195,065 bytes, or 0.46%, and exceeded the old ceiling by 32,849 bytes. The
-conclusion is **regressed** in absolute payload, but the growth is attributable to reviewed
-reader-facing contracts and no other site ceiling failed. The reviewed ceiling therefore moves to
-42 MiB, leaving approximately 1 MiB of measured headroom; the final build including this evidence
-passed at 41.1 MiB against that 42.0 MiB ceiling. Reaching 42 MiB requires a representation or
-content-partitioning review before another increase. The Android Views performance-control plan,
-its generated route, and the reviewed bilingual physical-result tables remained inside that 42 MiB
-ceiling; they provide the durable interpretation needed to distinguish accepted, rejected, and
-device-blocked benchmark evidence. The observed-property transaction branch then added searchable
-ADR-0015, an active implementation plan, benchmark interpretation, and bilingual public-contract
-updates. Paired builds on the same dependency set measured 43,622,588 non-API bytes for `main` and
-44,251,626 bytes for the candidate: an increase of 629,038 bytes, or 1.44%. English search grew from
-5,592,645 to 5,732,917 bytes and Chinese search from 6,015,718 to 6,165,632 bytes, while canonical
-documents increased from 107 to 109 and audited site pages from 356 to 360. The conclusion is
-**regressed** in absolute size but without anomalous index amplification; the new architecture and
-measured acceptance evidence are durable reader-facing contracts. After the required representation
-and content-partitioning review found no redundant API copies or generated-route expansion, the
-reviewed non-API ceiling therefore moves to 43 MiB, leaving 837,142 measured bytes of headroom. If
-that ceiling fails again, or either search index reaches 6 MiB, search partitioning or index
-representation must be changed before another increase. Immutable artifact/version trees and
-working-tree `current` Dokka for unpublished artifacts share the API-tree budget: they may average
-at most 4.5 MiB and no individual tree may exceed 24 MiB. Only manifests
-and redirect aliases use the separate 1 MiB routing allowance. The other ceilings remain 120
-seconds for the Docusaurus build, 8 MiB total and 768 KiB largest-file for JavaScript, 128 KiB for
-CSS, and 6.25 MiB for each locale's search index. The gate also rejects any locale-prefixed API copy.
-Raise a threshold only with a measured explanation of the reader or release value that requires the
-additional cost.
+The budget model separates expected release-history growth from regressions. Current ceilings are
+46 MiB for non-API output, 4.5 MiB average and 24 MiB maximum per API tree, 1 MiB for API routing
+overhead, 8 MiB total and 768 KiB largest-file JavaScript, 128 KiB CSS, 6.25 MiB per locale search
+index, and 120 seconds for the Docusaurus build. Locale-prefixed API copies remain forbidden.
 
-The memory-efficiency branch then completed the mandatory representation review before moving the
-non-API ceiling to 43.5 MiB. The remaining growth is the directly linkable active-plan route and
-reviewed public contracts. Before this ceiling or the 6.25 MiB locale-search ceiling moves again,
-the site must structurally segment internal plan detail or its search indexes; exact paired
-evidence and limitations are retained below.
+The non-API ceiling evolved from 41 MiB through 46 MiB only after paired builds attributed growth
+to durable bilingual contracts and representation reviews removed avoidable duplication. Completed
+measurements are consolidated below instead of repeating their execution narrative in this active
+contract. Raise any threshold only with same-corpus absolute and normalized results, reader or
+release value, a conclusion, limitations, and a next stop condition.
 
-The capability-planning branch performed that required structural review. Four large temporary
-execution plans remain rendered and directly linkable, while their routes no longer duplicate
-internal planning detail into either locale search index; the active-plan index keeps their purpose
-and scope discoverable. After that representation change, the reviewed non-API ceiling moves to
-45.5 MiB, while the 6.25 MiB per-locale search ceiling remains unchanged.
-
-The Animation Phase 5 branch performed the next required representation review before moving the
-non-API ceiling to 46 MiB. The directly linkable Animation plan was already excluded from full-text
-indexing, both builds retained 430 audited pages, no localized API copy or duplicate route was
-introduced, and CSS output was unchanged. The remaining measured growth belongs to the new Q3
-`animateBounds` contract and its bilingual architecture, migration, module, Preview, and performance
-documentation. The exact paired evidence and next stop condition are retained below.
+At the 46 MiB boundary, a failing branch must first consolidate completed evidence or change site
+representation. Current public API, architecture, migration, tutorial, and module contracts must
+not be deleted merely to recover budget, and valid immutable API history remains governed by its
+separate per-tree budgets.
 
 The accessibility audit covers the site-owned English and localized pages and checks document
 language, title and main landmarks, heading order, accessible names, image alternatives, table
@@ -200,35 +136,19 @@ Relative links from a historical manual to another released module are rewritten
 versioned route. Links to temporary execution plans are instead pinned to the manual source
 revision on GitHub, so completing or archiving a plan cannot break an immutable manual snapshot.
 
-Each `module.<artifact>.version` has a matching `module.<artifact>.sourceRevision` containing a full
-40-character Git commit SHA. The append-only
-`gradle/viewcompose-documentation-releases.properties` registry records every released
-artifact/version/revision triple. Dokka maps the module root to that immutable revision, and output
-verification rejects missing or movable source links. Because recording a commit changes the
-metadata commit, release preparation uses two steps: freeze module source and manual in one commit,
-then append the history entry and update version/revision metadata in a metadata-only release
-commit. The frozen commit must be pushed and remain reachable from Git history.
-The documentation generator can recover that exact full SHA after a temporary source branch is
-deleted, but release metadata must never replace it with the squash commit or another convenient
-revision.
+The append-only release registry pairs every version with a full immutable source SHA; missing or
+movable links fail. Freeze source and manuals first, then append registry/version metadata in a
+second commit. The frozen SHA must stay reachable and cannot be replaced by a squash commit.
 
-`release.retiredModules` keeps superseded coordinates valid in immutable documentation history
-without returning them to the active module catalog; the API landing lists them in a separate
-Retired history group. `release.unpublishedModules` is allowed only for active artifacts before
-their first release; the API landing links their working-tree `current` output and labels them
-unreleased. Remove an artifact from that list in the same release metadata change that appends its
-first immutable documentation entry.
+`release.retiredModules` preserves superseded history outside the active catalog.
+`release.unpublishedModules` permits only pre-release working-tree `current` output and must remove
+an artifact when its first immutable entry is appended.
 
-`verifyAssembledViewComposeApiDocs` validates an explicit local subset selected with
-`-PviewComposeDocsModules`. Deployment and complete-catalog CI must use
-`verifyCompleteViewComposeApiDocs`, which rejects a partial selection. The site build additionally
-verifies every recorded API and module-manual route for both locale trees. All current modules are
-prereleases, so no `latest` route is emitted yet.
+`verifyAssembledViewComposeApiDocs` accepts an explicit local subset; deployment uses the complete
+verifier and checks every API/manual route in both locales. Current prereleases emit no `latest`.
 
-Generated HTML, catalogs, and module-manual snapshots are never committed. A clean checkout restores
-the complete released documentation history from the immutable Git revisions in the registry; the
-documentation workflow checks out full advertised history and fetches only an otherwise-missing
-recorded SHA at depth one. It does not depend on retaining temporary release branches.
+Generated output is never committed. A clean checkout restores history from registered revisions
+and fetches only an otherwise-missing exact SHA, independent of temporary branches.
 
 For each module release:
 
@@ -244,13 +164,9 @@ For each module release:
 to `main`, or a manual run on `main`, produces the complete site and deploys it through the protected
 `github-pages` environment.
 
-The deployment job is not considered successful until a production-domain smoke test fetches both
-module catalogs and every current module manual in English and Simplified Chinese. It also exercises
-the no-trailing-slash form of both catalogs and a representative current manual to protect the
-GitHub Pages compatibility behavior. The test rejects HTTP failures, Docusaurus not-found content
-returned with HTTP 200, pages outside the primary docs plugin, and catalogs missing any current
-module link. It retries briefly for CDN propagation, then fails the protected Pages environment
-rather than reporting a broken publication as successful.
+Deployment succeeds only after production smoke tests fetch both catalogs and every current manual
+in both locales, including representative no-trailing-slash routes. HTTP, rendered not-found,
+wrong-plugin, or missing-catalog failures remain fatal after bounded CDN retries.
 
 GitHub repository settings must use **GitHub Actions** as the Pages source. The checked-in `CNAME`
 declares `docs.viewcompose.com`; DNS should point the `docs` CNAME to `viewcompose.github.io` and
@@ -289,122 +205,48 @@ identity token.
 
 <div className="search-partition-detail">
 
-2026-08-23: paired locale builds on the same dependency set and complete 100-version API corpus
-compared `main` at `984ac9bd` with the Animation Phase 5 candidate at `d3910b67`. `main` measured
-47,678,608 non-API bytes and 5,369,073/5,841,187 English/Chinese search bytes; the candidate measured
-47,827,249 and 5,400,738/5,876,861 bytes. The absolute increase is 148,641 non-API bytes (0.31%),
-31,665 English-search bytes (0.59%), and 35,674 Chinese-search bytes (0.61%). Both builds retained
-430 audited pages, the existing Animation plan route was already excluded from full-text indexing,
-no localized API copies or duplicate routes appeared, and CSS output was unchanged. The remaining
-growth split into 38,109 HTML bytes, 37,714 page-JavaScript bytes, 67,339 search bytes, and 5,479
-other static bytes, with no anomalous route, bundle, or search amplification. The conclusion is
-**regressed** in absolute size but accepted for the Q3 `animateBounds` contract and its bilingual
-durable reader documentation. The reviewed non-API ceiling moves from 45.5 to 46 MiB; the final
-evidence-inclusive build passes at 47,840,947 bytes and leaves 393,549 bytes of headroom. The
-6.25 MiB per-locale search ceilings do not move. Reusing one API corpus is a limitation of the pair,
-but non-API accounting excludes that corpus and both locale render/search trees were rebuilt
-completely. Before another ceiling increase, the next action is to consolidate completed execution
-evidence or change site representation rather than remove owning public contracts.
+Completed checkpoints are condensed here; Git history retains their execution detail.
 
-2026-08-23: paired locale builds reused the same complete 100-version generated API corpus and
-compared `main` at `2a21db65` with the Phase 4 animation candidate. `main` measured 47,667,169
-non-API bytes and 5,338,242/5,806,681 English/Chinese search bytes. Before consolidation, the
-candidate measured 47,810,162 non-API bytes and exceeded the 45.5 MiB ceiling by 99,954 bytes.
-Replacing the completed Phase 0--4 execution ledger with one active status table, while retaining
-all unresolved Phase 5--7 requirements and linking durable contracts to their owning manuals,
-reduced the final documented candidate to 47,678,361 bytes. That is 131,801 bytes below the
-unconsolidated candidate and only 11,192 bytes (0.02%) above `main`, leaving 31,847 bytes of
-non-API headroom without moving any
-budget. Final search indexes are 5,369,073/5,841,187 bytes, increases of 30,831/34,506 bytes that
-remain below the unchanged 6.25 MiB limits. The conclusion is **improved** representation with no
-threshold change. Reusing one API corpus is a limitation of the pair, but non-API accounting
-excludes that corpus and both locale render/search trees were rebuilt completely.
-
-2026-08-18: paired Docusaurus locale builds on the same checkout dependency set compared `main` at
-`a9d1a092` with PR #105 at `28abaea7`. `main` measured 45,313,029 non-API bytes and
-5,865,709/6,314,030 English/Chinese search bytes. Before route-level search segmentation, the
-candidate measured 48,070,239 and 6,575,126/7,037,032 bytes, failing all three ceilings. Excluding
-the five temporary execution-plan routes from full-text indexing, while retaining their rendered
-pages and searchable plan-index summaries, reduced the candidate to 46,680,423 and
-5,887,279/6,335,029 bytes. The representation change removed 1,389,816 non-API bytes (2.89%),
-687,847 English-search bytes (10.46%), and 702,003 Chinese-search bytes (9.98%). Relative to
-`main`, the accepted candidate remains 1,367,394 non-API bytes (3.02%) larger, while English and
-Chinese search grow only 21,570 (0.37%) and 20,999 bytes (0.33%). The conclusion is **mixed**:
-search representation improved materially, while five directly linkable planning records still
-increase rendered output. The reviewed non-API ceiling moves to 45.5 MiB with 1,029,785 measured
-bytes of headroom; the 6.25 MiB locale-search ceiling does not move and the Chinese index retains
-218,571 bytes of headroom. The paired builds did not reconstruct API history, but both locale
-render trees and search indexes were complete and non-API accounting excludes API bytes. The next
-action before another ceiling change is to consolidate or archive completed plans and keep durable
-contracts in searchable owning documentation.
-
-2026-08-18: paired Docusaurus locale builds on the same checkout dependency set compared current
-`main` with the lazy-collection memory-efficiency candidate. `main` measured 45,041,594 non-API
-bytes and 5,837,406/6,282,537 English/Chinese search bytes. Before partitioning the candidate's
-internal phase record and detailed benchmark ledger, it measured 45,443,163 and
-5,938,077/6,389,023 bytes. Keeping concise searchable conclusions while excluding exhaustive
-execution detail reduced the candidate to 45,298,674 and 5,863,273/6,311,901 bytes. The accepted
-candidate remains 257,080 non-API bytes (0.57%), 25,867 English-search bytes (0.44%), and 29,364
-Chinese-search bytes (0.47%) above `main`, while the representation change removed 144,489,
-74,804, and 77,122 bytes respectively. The conclusion is **mixed**: representation improved
-materially, while the directly linkable active plan and bilingual reader contracts still increase
-absolute output. The reviewed ceilings move to 43.5 MiB non-API and 6.25 MiB per locale. The
-baseline did not reconstruct API history, but both locale render trees and search indexes were
-complete and non-API accounting excludes API bytes. The next action is structural plan/index
-segmentation before either ceiling changes again.
-
-2026-08-17: paired Docusaurus locale builds on the same checkout dependency set compared `main`
-with the manual-review repair branch before and after the required search partition. `main`
-measured 44,793,209 non-API bytes, 5,847,241 English-search bytes, and 6,291,004 Chinese-search
-bytes. Before partitioning, the candidate measured 45,212,251, 5,955,601, and 6,402,818 bytes: an
-increase of 419,042 non-API bytes (0.94%), 108,360 English-search bytes (1.85%), and 111,814
-Chinese-search bytes (1.78%), failing both the 43 MiB non-API and 6 MiB Chinese-search ceilings.
-The added 11-row manual-review defect table accounted for approximately 98 KiB of the Chinese
-index growth, while `main` itself had only 452 bytes of Chinese-search headroom. The approved
-representation change keeps plan summaries and headings searchable while excluding exhaustive
-defect tables and dated evidence ledgers from full-text indexing. The remediated candidate measured
-44,941,342 non-API bytes, 5,829,508 English-search bytes, and 6,273,894 Chinese-search bytes. Against
-`main`, non-API output remains 148,133 bytes (0.33%) higher, while English and Chinese search are
-17,733 (0.30%) and 17,110 (0.27%) bytes smaller. The conclusion is **improved** index representation
-with no threshold increase. The baseline worktree did not reconstruct API history, but its rendered
-non-API and locale-search trees were complete; those are the only compared metrics. The next action
-is to keep exhaustive evidence behind an adjacent searchable summary and revisit index segmentation
-before either locale again reaches 6 MiB.
-
-2026-08-16: paired complete Docusaurus builds on the same checkout dependency set compared current
-`main` with the observed-property transaction branch. Non-API output measured 43,622,588 and
-44,251,626 bytes respectively, a 629,038-byte or 1.44% increase. English search measured 5,592,645
-and 5,732,917 bytes; Chinese search measured 6,015,718 and 6,165,632 bytes. Canonical documents rose
-from 107 to 109 and audited site pages from 356 to 360. The conclusion is **regressed** in absolute
-size but accepted after the required representation review found no anomalous duplication and
-confirmed that ADR-0015, the active plan, public contracts, and benchmark interpretation are
-reader-facing evidence. The non-API ceiling moved to 43 MiB, leaving 837,142 measured bytes; the
-next failure of that ceiling or either 6 MiB search-index ceiling requires partitioning or index
-representation work rather than another threshold-only change.
-
-2026-08-15: paired Docusaurus locale builds on the same macOS checkout and dependency set compared
-`main` at `ca3d7985` with PR #99 before its budget evidence was added. Non-API output measured
-42,829,400 and 43,024,465 bytes respectively, a 195,065-byte or 0.46% increase; the candidate was
-32,849 bytes above the 41 MiB ceiling. The conclusion is **regressed** in absolute size but accepted
-for the required bilingual public contracts, so only the non-API ceiling moved to 42 MiB. The final
-remediated build, including this evidence, passed at 41.1 MiB against 42.0 MiB. The baseline worktree
-did not reconstruct API history and stopped at API-route verification, which does not affect this
-metric because its rendered non-API tree was complete and API bytes are excluded. The next action
-at the new ceiling is to review representation or content partitioning before any further increase.
-
-2026-08-14: clean builds of current `main` and the documentation-planning branch measured non-API
-output at 39.999791 MiB and 40.427350 MiB respectively. The reviewed non-API ceiling moved to
-41 MiB so the directly linked Demo verification-harness plan remains searchable in English and
-through its Chinese fallback route. No JavaScript, CSS, search-index, API-tree, routing, or build-time
-threshold changed.
-
-2026-08-06: a clean complete-history build reconstructed 69 immutable artifact versions and built
-9 unpublished `current` API trees from the working source. It passed immutable source-link,
-manifest, retired-history, current/unreleased, and stable-only `latest` verification. The production
-site verified 69 English module-manual snapshots, 69 `zh-CN` English-fallback snapshot routes,
-language placement, 80 current Chinese mirrors, local search, compatibility redirects, and 310
-site-owned accessibility pages. Measured output was 316.3 MiB; non-API output was 32.9 MiB, the 78
-API trees averaged 3.6 MiB, routing overhead was below the displayed 0.1 MiB precision, the largest
-JavaScript asset was 650 KiB, and the full site build took 24.2 seconds.
+- **2026-08-23, Diagnostics Phase 1:** with complete 100-version output, main, the initial
+  candidate, and the consolidated candidate measured 48,209,136, 48,349,648, and 48,217,723
+  non-API bytes. The initial +140,512-byte (0.29%) regression exceeded 46 MiB by 115,152 bytes;
+  consolidating completed site evidence and repeated module guidance removed 131,925 bytes. The
+  final +8,587 bytes (0.02%) leaves 16,773 bytes of headroom, while English/Chinese search changed
+  from 5,552,901/6,041,625 to 5,551,470/6,039,478 bytes. Representation **improved** with no
+  threshold change. Main came from the Linux CI artifact and the candidate from the local macOS
+  complete build, which limits machine-level comparison; both used the same dependency set and
+  non-API accounting. Keep central contracts searchable and consolidate repetition before Phase 2.
+- **2026-08-23, Animation Phase 5:** on one complete 100-version API corpus, main/candidate
+  non-API output was 47,678,608/47,827,249 bytes (+148,641, 0.31%) and search was
+  5,369,073/5,841,187 versus 5,400,738/5,876,861 bytes. Final evidence-inclusive output was
+  47,840,947 bytes. The bilingual Q3-contract growth **regressed** but was accepted, moving only
+  non-API from 45.5 to 46 MiB. Reusing one API corpus is the limitation; another ceiling failure
+  requires consolidation or representation work.
+- **2026-08-23, Animation Phase 4:** main/unconsolidated/final output was
+  47,667,169/47,810,162/47,678,361 bytes; consolidation saved 131,801 bytes and final search was
+  5,369,073/5,841,187. Representation **improved** without moving a threshold. The corpus
+  limitation is unchanged; unresolved requirements remain in owning manuals.
+- **2026-08-18, plan search partition:** main was 45,313,029 bytes. Candidate output/search fell
+  from 48,070,239 and 6,575,126/7,037,032 to 46,680,423 and
+  5,887,279/6,335,029, a 2.89% output and about 10% search reduction. The result was **mixed**;
+  non-API moved to 45.5 MiB, search stayed at 6.25 MiB. API history was not rebuilt; the next action
+  was plan consolidation.
+- **2026-08-18 to 2026-08-17, ledger partitions:** lazy evidence changed
+  45,041,594 main to 45,298,674 accepted bytes after saving 144,489 bytes; manual-review evidence
+  changed 44,793,209 main and 45,212,251 initial candidate to 44,941,342 accepted bytes. Results
+  were **mixed** and **improved** respectively; compared non-API/search trees were complete but API
+  history was not rebuilt. The resulting action was structural plan/index segmentation.
+- **2026-08-16, observed-property contracts:** main/candidate was
+  43,622,588/44,251,626 bytes (+629,038, 1.44%), with search
+  5,592,645/6,015,718 versus 5,732,917/6,165,632. The result **regressed** but was accepted after
+  duplicate-route review; non-API moved to 43 MiB and the next failure required partitioning.
+- **2026-08-15 to 2026-08-14:** native contracts changed 42,829,400 to 43,024,465 bytes
+  (+195,065, 0.46%) and moved non-API to 42 MiB; the Demo-plan pair changed 39.999791 to
+  40.427350 MiB and moved it to 41 MiB. Both accepted durable-contract regressions, used complete
+  non-API trees without rebuilt API history, and required representation review at the next limit.
+- **2026-08-06, complete-history baseline:** 69 immutable and 9 unpublished current trees passed
+  source, route, locale, search, redirect, and 310-page accessibility checks. Total/non-API was
+  316.3/32.9 MiB, API trees averaged 3.6 MiB, largest JavaScript was 650 KiB, and build time was
+  24.2 seconds. Later checkpoints supersede its size thresholds, not its reconstruction proof.
 
 </div>

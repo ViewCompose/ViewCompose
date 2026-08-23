@@ -66,45 +66,27 @@ sensitive application value deliberately through a custom formatter, or omit the
 
 Subscribed lifecycle starts first. Failures are emitted after recovery is known, and one
 `RenderFrameCompleted` follows every synchronous attempt after `lastFrameReport` is authoritative.
-Activity events represent actual transitions only; session end follows cleanup and is terminal.
-Successful candidate preparation is silent until activation, while a failed preparation emits the
-minimal start, failure, rolled-back frame, and end sequence.
-
-Sink calls are synchronous and serialized per session. Re-entry into the emitting session fails
-fast. A throwing sink is platform-logged, stored as a local `DiagnosticsSink` failure, and disabled
-for that session; it cannot change the frame report, replace the original recovery, or recursively
-publish another event.
+Activity events represent real transitions; terminal end follows cleanup. Preparation stays silent
+until activation. Delivery is synchronous and session-serialized; re-entry fails fast, while a
+throwing sink is recorded and disabled without changing recovery or recursively publishing.
 
 ## 5. Alpha migration from callbacks
 
-The alpha API removes `onRenderStats`, `onRenderResult`, and `onRenderFailure` together. Replace a
-stats callback with `RenderFrameCompleted.stats`, a tree callback with
-`RenderFrameCompleted.tree`, and a failure callback with `RenderFailureObserved.failure`. There are
-no deprecated overloads or result-only Local adapters. `lastRenderFailure` and `lastFrameReport`
-remain available for direct session queries.
+The alpha API removes all three callbacks and the result-only Local without adapters. Read stats
+and trees from `RenderFrameCompleted`, failures from `RenderFailureObserved`, or poll
+`lastFrameReport` / `lastRenderFailure` when no stream is needed.
 
 ## 6. Demo inspector
 
-`Diagnostics -> Renderer` currently provides:
-
-1. a render-tree list;
-2. a patch timeline;
-3. recomposition reasons and scope counts;
-4. a CompositionLocal browser;
-5. existing aggregate render/layout metrics.
-
-Cross-session correlation is now implemented. The inspector does not yet provide real
-View-boundary highlighting or per-node timing. Delivery of those capabilities, together with bounded production failure
-aggregation, has moved to the active
+`Diagnostics -> Renderer` provides the render tree, patch timeline, recomposition reasons,
+CompositionLocal browser, and aggregate metrics. Cross-session correlation is implemented; real
+View-boundary highlighting, per-node timing, and bounded production failure aggregation remain in
+the active
 [diagnostics correlation, inspection, and production observability plan](../project/plans/diagnostics-correlation-inspection-observability.md).
 
 ## 7. Remaining expansion contract
 
-[ADR-0021](../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes the
-implemented Phase 1 boundary. Host, Preview, navigation, lazy, pager, and overlay sessions now
-share one identity model; a failure-only sink does not activate stats or tree collection.
-Production aggregation will live in the optional
-`viewcompose-diagnostics` artifact, while highlighting and timing remain request-driven in
-`viewcompose-preview` under ADR-0009.
-
-The active plan owns production aggregation, highlighting, timing, and inspector closeout.
+[ADR-0021](../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes Phase 1.
+A failure-only sink activates no frame detail. The optional `viewcompose-diagnostics` artifact owns
+production aggregation; `viewcompose-preview` keeps highlighting and timing request-driven. The
+active plan owns their delivery and inspector closeout.

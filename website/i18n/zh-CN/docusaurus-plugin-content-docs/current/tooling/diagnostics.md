@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: d7393da019c93d432fde2fce4a9c4dfcdb03aaf860c2854b100a2be68037fc5f
+translation_source_hash: 87501ce4c5dbd1e1f8b7df526895604cbea797d087562e5b1cc9d8c7db774c10
 translation_status: current
 ---
 
@@ -64,40 +64,23 @@ scope 诊断上限为 500 条，签名会截断，避免诊断本身随页面规
 
 订阅 Lifecycle 时，Start 一定是首个事件。Failure 在恢复结论明确后发布；每次同步尝试都会在
 `lastFrameReport` 成为权威结果后发布一个 `RenderFrameCompleted`。Activity 事件只表示真实
-状态切换；End 在清理完成后发布并且是终态。成功的候选准备在激活前保持静默；准备失败只发布
-Start、Failure、回滚 Frame 与 End。
-
-Sink 调用是同步的，并在单个 Session 内串行。重入当前 Session 会立即失败。Sink 抛错时，框架
-会记录平台日志，把错误保存为本 Session 的 `DiagnosticsSink` Failure，并禁用该 Sink；它不能
-改变 Frame Report、替换原始恢复结论或递归发布事件。
+状态切换，终态 End 在清理后发布；候选准备在激活前保持静默。投递按 Session 同步串行，重入立即
+失败；Sink 抛错会被记录并禁用，但不改变恢复结论，也不会递归发布。
 
 ## 5. 从旧 Callback 迁移
 
-Alpha API 一次性移除了 `onRenderStats`、`onRenderResult` 与 `onRenderFailure`。Stats 改从
-`RenderFrameCompleted.stats` 读取，Tree 改从 `RenderFrameCompleted.tree` 读取，Failure 改从
-`RenderFailureObserved.failure` 读取。没有 Deprecated Overload 或仅 Result Local 适配层。
-不需要事件流时仍可直接查询 `lastFrameReport` 与 `lastRenderFailure`。
+Alpha API 无适配层地移除了三个 Callback 与仅 Result Local。Stats/Tree 从
+`RenderFrameCompleted` 读取，Failure 从 `RenderFailureObserved` 读取；不需要事件流时直接查询
+`lastFrameReport` / `lastRenderFailure`。
 
 ## 6. Demo 检查器
 
-`Diagnostics -> 渲染器` 当前提供：
-
-1. Render Tree 列表
-2. Patch 时间线
-3. 重组原因与 scope 计数
-4. CompositionLocal 浏览器
-5. 原有 render/layout 聚合指标
-
-跨 RenderSession 关联已经实现。当前仍不包含真实 View 边界高亮和逐节点耗时。这些能力以及
-有界的生产失败聚合已经拆分到有效的
+`Diagnostics -> 渲染器` 提供 Render Tree、Patch 时间线、重组原因、CompositionLocal 浏览器与
+聚合指标。跨 Session 关联已实现；真实 View 边界高亮、逐节点耗时和有界生产失败聚合仍由有效的
 [诊断关联、检查与生产可观测性计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)。
 
 ## 7. 剩余扩展契约
 
 [ADR-0021](https://docs.viewcompose.com/architecture/decisions/0021-correlated-render-diagnostics-ownership)
-冻结了已经实现的 Phase 1 边界。Host、Preview、Navigation、Lazy、Pager 与 Overlay Session
-现已共享一套身份模型；只关心 Failure 的 Sink 不会激活 Stats 或 Tree Collection。生产聚合位于可选
-`viewcompose-diagnostics` Artifact；高亮与耗时继续按照 ADR-0009 保持在
-`viewcompose-preview` 中，并且只按请求激活。
-
-有效计划继续负责生产聚合、高亮、耗时与 Inspector 收尾。
+冻结 Phase 1；只关心 Failure 的 Sink 不激活 Frame 明细。可选 `viewcompose-diagnostics`
+负责生产聚合，`viewcompose-preview` 让高亮与耗时保持按请求激活。有效计划负责交付与 Inspector 收尾。

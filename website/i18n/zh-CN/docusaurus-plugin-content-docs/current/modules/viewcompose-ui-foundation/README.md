@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: d481c68d9a73647db839e82d60289c447f8db7184caeae9fc945bbc0794441d5
+translation_source_hash: da034e61c58a50798c65ae90073e61d6f3e3aceb1f720563a27b706127445e85
 translation_status: current
 ---
 
@@ -315,18 +315,12 @@ Local Binding 是否存在与值是否可空相互独立。只有当前 Snapshot
 
 `RenderDiagnostics` 是 Lifecycle、Failure 与 Frame Event 的 Q3 根配置。
 `RenderSessionTraceId`、`RenderSessionRole` 与 `RenderDiagnosticContext` 是 Q2 关联值；
-`RenderDiagnosticCollection` 与 `RenderFrameDiagnosticLevel` 是 Q2 选择值。Host 与 Preview
-开启关联树；Navigation Destination、Lazy Item、Pager Page 与 Overlay Surface 继承不可变 Local
-Snapshot 中的私有 Parent Context。物理 View 复用不会转移逻辑 Session ID。
+Collection Level 是 Q2。六种类型化 Role 共用一条私有 Local Snapshot Parent 链；物理 View
+复用不会转移逻辑身份。`None`、`Stats` 与 `Tree` 分别收集零 Renderer 明细、计数和有界详细快照。
 
-`RenderFrameDiagnosticLevel.None` 不构建 Renderer 诊断，`Stats` 只请求计数，`Tree` 还请求有界
-Tree、Patch、Warning 与 Composition Snapshot。只有在 `lastFrameReport` 成为权威结果后才发布
-Frame Event。Sink 同步并按 Session 串行投递；重入立即失败，Sink 抛错会记录为
-`DiagnosticsSink` 并禁用该 Sink，但不改变渲染恢复结果。
-
-Alpha 硬切移除了三个独立 Render Callback 与仅 Result Local。Stats/Tree 迁移到
-`RenderFrameCompleted`，Failure 迁移到 `RenderFailureObserved`；不需要事件流时仍可直接查询
-`lastFrameReport` 或 `lastRenderFailure`。参见[诊断指南](../../tooling/diagnostics.md)与
+事件具有权威性，按 Session 同步串行投递；重入立即失败，Sink 抛错会被禁用且不改变恢复结果。
+Alpha 硬切把 Frame 数据迁移到 `RenderFrameCompleted`，把 Failure 迁移到
+`RenderFailureObserved`。参见[诊断指南](../../tooling/diagnostics.md)与
 [ADR-0021](../../architecture/decisions/0021-correlated-render-diagnostics-ownership.md)。
 
 ## 相关文档
