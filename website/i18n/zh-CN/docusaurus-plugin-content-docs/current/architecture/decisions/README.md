@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: 16406308e213d54f5b911e674ee36d55989374f14972e0a0c8c7c8972403b94a
+translation_source_hash: f20beb1217219379e50f86493931104ee01811ae3a243930dc9c2c3153cda8e1
 translation_status: current
 ---
 
@@ -31,6 +31,7 @@ translation_status: current
 - [ADR-0018：焦点可见性与 Pager 选择权归属](./0018-focus-visibility-and-pager-selection-ownership.md)
 - [ADR-0019：动画物理、过渡与检查所有权](./0019-animation-physics-transition-and-inspection-ownership.md)
 - [ADR-0020：分离动画值域与速度域](./0020-separate-animation-value-and-velocity-domains.md)
+- [ADR-0021：关联式渲染诊断所有权](./0021-correlated-render-diagnostics-ownership.md)
 
 ## 规则
 

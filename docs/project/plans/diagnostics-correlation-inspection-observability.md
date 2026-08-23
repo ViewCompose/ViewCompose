@@ -2,21 +2,33 @@
 
 ## Status
 
-Active. Planning baseline only; no production implementation or publication input has started.
+Active. Phase 0 is complete; no production implementation or publication input has started.
 This plan was split out on 2026-08-18 from the remaining diagnostics candidates in the unified
 roadmap, the Diagnostics guide, and Phase 3 of the Performance specification. Those documents now
 point here; this file is the only active plan that owns cross-session diagnostic correlation,
 production failure aggregation, real View-boundary highlighting, and per-node timing.
 
+[ADR-0021](../../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes one
+process-local trace and parent graph for Host, Preview, navigation, lazy, pager, and overlay
+sessions; one event sink; the alpha-line hard removal of the three legacy callbacks and their
+result-only Local; the optional `viewcompose-diagnostics` artifact; privacy-safe production
+fingerprinting; request-driven highlighting; finite timing domains; and absolute request,
+cardinality, and response budgets. The worktree audit found the existing listener propagation
+semantically incomplete and capable of retaining an old result listener when a later delayed-child
+snapshot omits it, so Phase 1 must hard-cut the model rather than add another adapter.
+
 The Demo benchmark and verification harness plan continues to own its scenario and benchmark
 infrastructure. It does not own the diagnostics contracts or features defined here. Historical
 documents under `docs/archive/` remain evidence only and are not rewritten as current status.
 
-Last verified: 2026-08-18.
+Last verified: 2026-08-23.
 
-Next action: complete Phase 0 by freezing the process-local diagnostic identity model, event and
-sink boundary, session-role inventory, production aggregation privacy/cardinality policy,
-request-driven inspection protocol, timing definition, inactive-path budget, and module ownership.
+Next action: execute Phase 1 as one hard cut. Replace `onRenderStats`, `onRenderResult`, and
+`onRenderFailure` with the ADR-0021 `RenderDiagnostics` event sink; remove
+`LocalRenderResultListener`, `UiSourceSessionRole`, and `UiSourceSessionContainerHandle`; propagate
+the authoritative parent context through every current session creator; and land the Q3 samples,
+module/migration documentation, immutable Changesets, focused tests, and inactive-path proof in the
+same pull request.
 
 ## Maven release changesets
 
@@ -79,14 +91,13 @@ general-purpose live layout inspector.
 
 ### Diagnostic correlation envelope
 
-Phase 0 must freeze a process-local, opaque identity model capable of representing root and delayed
-child sessions without exposing internal object identity or a persistable compatibility key. The
-planning hypothesis is:
+ADR-0021 freezes a process-local, opaque identity model capable of representing root and delayed
+child sessions without exposing internal object identity or a persistable compatibility key:
 
 ```kotlin
 @JvmInline
 value class RenderSessionTraceId internal constructor(
-    val value: String,
+    val value: Long,
 )
 
 data class RenderDiagnosticContext(
@@ -94,6 +105,7 @@ data class RenderDiagnosticContext(
     val parentSessionId: RenderSessionTraceId?,
     val frameId: Long?,
     val role: RenderSessionRole,
+    val eventSequence: Long,
     val monotonicTimestampNanos: Long,
 )
 
@@ -106,12 +118,10 @@ fun interface RenderDiagnosticsSink {
 }
 ```
 
-This is a provisional shape, not an approved source contract. Phase 0 must decide whether the
-existing `onRenderStats`, `onRenderResult`, and `onRenderFailure` callbacks are adapted into one
-additive envelope or replaced through the repository's alpha-line hard-cut policy. It must also
-define every session role and parent edge for Activity/Fragment roots, navigation destinations,
-lazy items, pager pages, overlays, previews, reusable mounted trees, and independently hosted
-surfaces.
+This is the approved Phase 1 contract. The existing `onRenderStats`, `onRenderResult`, and
+`onRenderFailure` callbacks, the result-only Local, and the separate source-role marker are removed
+through the alpha-line hard-cut policy. Host, Preview, navigation destination, lazy item, pager
+page, and overlay surface have distinct roles and one Local-snapshot parent propagation model.
 
 The trace identifier is valid only for one process lifetime. It must not be saved, used as an
 application key, transmitted as stable user identity, or compared across process recreation. A
@@ -120,10 +130,11 @@ carries the previous logical session's trace identity across keys.
 
 ### Bounded production failure aggregation
 
-The production path consumes existing structured `RenderFailure` events plus the correlation
-context. It groups them through a privacy-safe fingerprint such as phase, recovery, operation,
-exception type, and a reviewed framework-owned stack-frame summary. The exact fingerprint,
-capacity, eviction, time window, and sampling policy are frozen in Phase 0.
+The production path consumes structured `RenderFailure` events plus the correlation context. It
+groups them through the ADR-0021 privacy-safe fingerprint: phase, recovery, optional operation,
+exception binary type, and at most three class/method-only `com.viewcompose.*` stack frames. The
+default capacity is 64, the hard maximum is 128, the default monotonic window is 15 minutes, and
+the valid window range is one minute through 24 hours.
 
 The aggregator must:
 
@@ -139,11 +150,10 @@ The aggregator must:
 7. delegate persistence, network upload, consent, account association, and vendor SDK behavior to an
    application or a separately approved optional adapter.
 
-A proposed optional `viewcompose-diagnostics` artifact may own the aggregator and neutral sink
-helpers. Phase 0 must confirm the artifact name and dependency direction against the five-layer
-module architecture. UI Foundation may own only the minimum neutral event/context contract needed
-by render sessions; it cannot gain storage, transport, vendor SDK, or process-global reporting
-policy.
+The accepted optional `viewcompose-diagnostics` artifact owns the aggregator and neutral sink
+helpers and depends on `viewcompose-ui-foundation`. UI Foundation owns only the minimum neutral
+event/context contract needed by render sessions; it cannot gain storage, transport, vendor SDK,
+or process-global reporting policy.
 
 ### Request-driven node highlighting
 
@@ -169,11 +179,11 @@ The implementation must:
 
 ### Sampled per-node timing
 
-Per-node timing is an explicitly requested, finite diagnostic capture. Phase 0 must define separate
-timing domains instead of publishing one ambiguous duration. The first supported domains are
-expected to include composition scopes, reconciliation decisions, and renderer binding/patch work.
-Android measure/layout timing is included only if a stable ownership boundary can attribute it
-without continuous listeners or double counting.
+Per-node timing is an explicitly requested, finite diagnostic capture. ADR-0021 separates
+composition-scope inclusive/self time, reconciliation-decision inclusive/self time, and direct
+renderer binding/patch time. Android measure/layout, draw, GPU, RenderThread, SurfaceFlinger,
+decode, network, database, and external SDK time are unsupported in the first release rather than
+being combined into one ambiguous duration.
 
 Each timing record must state whether it is inclusive or exclusive, its phase, clock, frame/session
 context, node token, repetition count, and truncation/dropped-record state. Parent time cannot be
@@ -194,15 +204,15 @@ Timing collection must:
 
 ## Module ownership
 
-The target below is subject to Phase 0 review.
+ADR-0021 accepts the following ownership:
 
 | Layer or artifact | Allowed ownership |
 | --- | --- |
 | `viewcompose-runtime` | Bounded composition-scope diagnostics and optional timing hooks only; no Android, session transport, storage, or inspector UI |
-| `viewcompose-ui-foundation` | Opaque process-local session context, neutral event/sink port, lifecycle publication, and compatibility adapters for existing callbacks |
+| `viewcompose-ui-foundation` | Opaque process-local session context, neutral event/sink port, lifecycle publication, and no compatibility adapters for the removed callbacks |
 | `viewcompose-renderer-android` | Opt-in node timing hooks and weak mounted-View lookup behind neutral renderer contracts; no IDE protocol or report writer |
 | `viewcompose-host-android` | Neutral installation/discovery and Android-thread handoff only; no concrete tooling lifecycle, history, or transport |
-| Proposed optional `viewcompose-diagnostics` | Bounded production failure aggregation and application-owned sink helpers, with no vendor dependency |
+| Optional `viewcompose-diagnostics` | Bounded production failure aggregation and application-owned sink helpers, with no vendor dependency |
 | `viewcompose-preview` | Debug-only request protocol, live-session snapshot, node resolution, highlight overlay, and bounded response serialization |
 | Android Studio plugin | Request creation, nonce validation, session/tree selection, highlight controls, timing visualization, source navigation, timeout, and stale-response handling |
 | Demo and benchmark modules | Deterministic fixtures, UI validation points, performance probes, and accepted evidence; no canonical public contract ownership |
@@ -307,8 +317,8 @@ Verified from the worktree on 2026-08-18:
 
 | Phase | Status | Deliverable | Exit gate |
 | --- | --- | --- | --- |
-| 0. Contract, privacy, and budget freeze | Not started | Session-role graph; process-local ID and event envelope; callback compatibility decision; module/artifact names; failure fingerprint/redaction/capacity policy; highlight protocol; timing domains; inactive/request budgets; deterministic fixtures | Written spike covers every current session creator and callback, assigns Q levels, proves dependency direction, and records explicit non-applicable contract fields |
-| 1. Cross-session correlation | Not started | Session/context lifecycle, parent propagation, event ordering, legacy callback adaptation, navigation/lazy/pager/overlay/preview coverage, and bounded correlation fixtures | Every emitted frame/tree/patch/failure can be attributed to one live or terminal logical session; reuse and recreation cannot inherit stale identity |
+| 0. Contract, privacy, and budget freeze | Complete in ADR-0021 | Session-role graph; process-local ID and event envelope; hard callback removal; module/artifact names; failure fingerprint/redaction/capacity policy; highlight protocol; timing domains; inactive/request budgets; deterministic fixtures | The accepted ADR covers every current session creator and callback, assigns Q levels, proves dependency direction, records explicit non-applicable fields, and freezes absolute limits |
+| 1. Cross-session correlation | Not started | Session/context lifecycle, parent propagation, event ordering, legacy callback hard removal, navigation/lazy/pager/overlay/preview coverage, and bounded correlation fixtures | Every emitted frame/tree/patch/failure can be attributed to one live or terminal logical session; reuse and recreation cannot inherit stale identity |
 | 2. Bounded production failure aggregation | Not started | Optional vendor-neutral aggregator, safe fingerprints, counts/windows/eviction/drop reporting, application sink sample, concurrency/failure isolation, and release-path tests | High-cardinality and recursive-failure tests remain bounded; raw application data and retained Throwables are absent; disabled aggregation has no recurring work |
 | 3. Request-driven node highlighting | Not started | Node token resolution, weak mounted-View lookup, bounds/clipping snapshot, debug overlay lifecycle, request/response states, Demo fixture, and Studio controls | Valid, stale, recycled, hidden, unsupported, timeout, replacement, and disposal cases pass with zero idle listeners and no release tooling classpath |
 | 4. Sampled per-node timing | Not started | Finite capture controller, composition/reconciliation/binding timing records, inclusive/exclusive semantics, caps/truncation, top-cost summaries, synthetic calibration, and Studio/Demo presentation | Inactive path performs zero node clock reads; requested samples stop automatically, remain bounded, report overhead, and reproduce known fixture ordering within the accepted tolerance |
@@ -343,14 +353,14 @@ refresh rate, power mode, and thermal state:
 - inactive per-node timing performs exactly zero per-node clock reads; and
 - one explicit request is measured separately and cannot be amortized into idle results.
 
-Phase 0 must add absolute limits for active sessions, event records, failure fingerprints, source
+ADR-0021 freezes absolute limits for active sessions, event records, failure fingerprints, source
 records, highlighted nodes, timing frames, timed nodes, strings, depth, serialized bytes, and
-request duration. A test must reach every limit and prove deterministic truncation or eviction.
+request duration. The owning implementation phase must reach every limit and prove deterministic
+truncation or eviction.
 
 ## Verification commands
 
-Exact targeted tasks are frozen with the owning modules in Phase 0. The completed plan must include
-at least:
+ADR-0021 freezes the Phase 1 targeted module tasks. The completed plan must include at least:
 
 ```bash
 ./gradlew verifyDevelopmentToolingIsolation
@@ -369,11 +379,12 @@ normalized change, conclusion, limitations, and next action.
 
 ## API and documentation impact
 
-The session identity/context, event envelope, sink lifecycle, production aggregator, highlight
-request, timing request, and result contracts are Q3 because they establish lifecycle, threading,
-privacy, boundedness, failure, compatibility, and ownership behavior. Immutable role, phase,
-fingerprint, aggregate, and timing values are at least Q2. Phase 0 must enumerate every applicable
-contract field before source is added.
+ADR-0021 assigns the configuration, sink/event family, host overloads, aggregator, highlight, and
+timing request/result families Q3 because they establish lifecycle, threading, privacy,
+boundedness, failure, compatibility, and ownership behavior. Immutable identity, role, context,
+collection level, fingerprint, aggregate, node token, and timing values are Q2. Its API table records
+every applicable contract field and explicitly non-applicable Android, I/O, persistence,
+restoration, cancellation, or attribution field before source is added.
 
 Production work must update the architecture overview, render-failure architecture, effects
 architecture where asynchronous failure context changes, ADR-0009 if its activation contract
@@ -409,6 +420,7 @@ This plan is complete only when:
 | Date | Evidence | Result | Interpretation / next action |
 | --- | --- | --- | --- |
 | 2026-08-18 | Worktree, active-document, and current diagnostics-contract review | Planning baseline established | Structured single-session snapshots, failures, coarse traces, and weak View/source mapping exist. Cross-session identity, bounded production aggregation, real View highlighting, and per-node timing do not. Complete Phase 0 before adding source. |
+| 2026-08-23 | CodeGraph impact review, every production `RenderSession` creator, callback/Local propagation, ADR-0009 budgets, source-tooling limits, module dependency direction, and API documentation fields | Phase 0 accepted in ADR-0021 | The three callback paths are incomplete and the delayed result Local can retain an old observer. Hard-cut them to one correlated event sink in Phase 1; retain zero detailed collection below the selected level and no compatibility adapter. |
 
 ## Decision history
 
@@ -423,3 +435,11 @@ This plan is complete only when:
    justify continuous callbacks or reports.
 6. 2026-08-18 — Transfer the remaining work from the roadmap, Diagnostics guide, and Performance
    Phase 3 into this single active plan while leaving archive evidence unchanged.
+7. 2026-08-23 — Accept ADR-0021 and complete Phase 0. Use one process-local trace identity and six
+   explicit session roles; hard-remove the three callbacks, result-only Local, and separate source
+   role marker; publish one synchronous failure-isolated event sink; add the optional vendor-neutral
+   `viewcompose-diagnostics` artifact only when Phase 2 begins.
+8. 2026-08-23 — Freeze the privacy and cardinality boundary before implementation: at most 64
+   tooling sessions, 512 recent request events, 128 failure fingerprints, one five-second
+   highlight, one eight-frame/two-second timing capture, 512 timing records, and one 256 KiB
+   response. Inactive timing performs zero per-node clock reads.
