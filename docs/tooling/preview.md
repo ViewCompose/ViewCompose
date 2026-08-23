@@ -198,6 +198,32 @@ storage, a network service, continuous View listeners, or source-text transfer. 
 builds reject requests. If no response is available, keep the intended app in the foreground and
 verify that its debug build includes the current `viewcompose-preview` artifact.
 
+## Highlight a running device node
+
+Choose **Tools → Highlight Device DSL Node** with the same debuggable application in the foreground.
+After device and visible-Session selection, Studio requests one current mounted-tree snapshot and
+lists declarative node types in depth-first order. The Diagnostics → Renderer Demo fixture exposes a
+unique `AndroidView` target for deterministic acceptance. **Tools → Clear Device DSL Highlight**
+removes the current overlay immediately.
+
+Host, navigation, and pager sessions may carry bounded source candidates. Lazy-item, overlay, and
+preview sessions are also selectable, but their passive registration captures no source stack; this
+keeps a target inside a virtualized child session reachable without adding high-churn composition
+work.
+
+The node request visits at most 2,048 mounted nodes, returns 512 to depth 64, and assigns fresh
+opaque process-local tokens. It exposes no application key, View text, semantics, state, Local
+value, or arbitrary `toString()` output. Selecting a token resolves a weak current View, returns its
+screen and globally visible clipped bounds, and installs one non-interactive process-wide overlay
+for at most five seconds. Replacement, View detach, Session disposal, explicit clear, and timeout
+remove it.
+
+Studio reports stale, recycled, hidden, fully clipped, synthetic/unsupported, ended-session, and
+rejected selections instead of guessing another View. The overlay cannot recompose, call
+application code, change focus or accessibility focus, intercept input, or alter layout. Protocol
+v5 validates the source, nodes, select, and clear operation independently with the nonce, foreground
+package, and live process; v4 reports are intentionally rejected.
+
 ## Inspect a running animation timeline
 
 Choose **Tools | Inspect Device Animation Timeline** while a debuggable application containing

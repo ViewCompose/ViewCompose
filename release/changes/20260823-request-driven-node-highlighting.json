@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut session inspection from source capture, then add request-driven mounted-node snapshots, weak Android View resolution, clipping-aware highlights, deterministic Demo validation, and Studio select/clear controls.",
+  "changes": [
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
+    { "artifact": "viewcompose-host-android", "impact": "feature" },
+    { "artifact": "viewcompose-preview", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

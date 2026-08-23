@@ -206,10 +206,11 @@ by a later renderer or child render session.
 - Q3 `CoreObservedPropertyTarget`, `CoreObservedPropertyPatch`, `CoreObservedPropertyFrame`, and
   `CoreRenderEngine.patchObservedProperties` form the renderer-neutral host SPI. Engines either
   validate and roll back a complete batch or reject the capability; no whole-tree fallback exists.
-- `RenderSessionSourceTooling` and `RenderSessionSourceRegistration` form a Q3 optional platform
-  diagnostics contract. They capture one bounded source chain only when the platform opts in and
-  track the active/disposed lifetime of root, lazy-item, and pager-item render sessions. The
-  compiled `renderSessionSourceToolingSample` demonstrates the adapter lifecycle.
+- `RenderSessionInspectionTooling`, `RenderSessionInspectionPolicy`, and
+  `RenderSessionInspectionRegistration` form a Q3 optional platform contract. The policy separates
+  lifecycle/node tracking from bounded first-frame source capture, allowing high-churn lazy-item
+  sessions to remain request-inspectable without source-stack work. The compiled
+  `renderSessionInspectionToolingSample` demonstrates the adapter lifecycle.
 - Overlay specifications and hosts define platform-neutral dialog, popup, bottom-sheet, snackbar,
   and toast identity, placement, queueing, update, and dismissal contracts.
 
@@ -422,12 +423,24 @@ interaction-boundary callbacks, adds pull-to-refresh `enabled`, and requires sta
 segmented item keys. These changes intentionally keep one source of truth; no deprecated parallel
 signature is retained on the alpha line.
 
-`RenderSessionPlatformDiagnostics.sourceTooling`, `RenderSessionSourceTooling`, and
-`RenderSessionSourceRegistration` are Q3 tooling APIs. Source capture now receives the same
-`RenderDiagnosticContext` used by runtime events instead of a separate container-role marker. Existing platform diagnostics use
-the default `null` adapter and retain their previous behavior. Opted-in custom platforms must keep
-registration state bounded by its render session, consume the bounded candidate-chain list
-synchronously, and perform callbacks on the platform render thread. Registration is passive: it
+`RenderSessionPlatformDiagnostics.inspectionTooling`, `RenderSessionInspectionTooling`,
+`RenderSessionInspectionPolicy`, and `RenderSessionInspectionRegistration` are Q3 tooling APIs.
+The alpha-line hard cut replaces the former source-only port: each logical session is ignored,
+tracked without source capture, or tracked with bounded first-successful-frame source capture.
+Registration is attempted at most once after a successful native frame, including for an empty
+candidate list, and receives the same `RenderDiagnosticContext` used by runtime events. Existing
+platform diagnostics use the default `null` adapter and retain their previous behavior. Opted-in
+custom platforms keep registration state bounded by its render session, consume any candidate-chain
+list synchronously, and perform callbacks on the platform render thread. Registration also receives
+Q3 `RenderSessionNodeInspection`. Its Q2 `RenderNodeToken`, node kind, entry, and snapshot values are
+process-local request data, never application identity. `snapshot()` visits at most 2,048 current
+mounted nodes, retains at most 512 to depth 64, emits privacy-safe type/source metadata and weak
+platform targets, and reports unsupported, ended, dropped, and truncated states. A newer snapshot,
+node replacement, cross-owner reuse, session end, or process recreation invalidates prior tokens.
+
+`CoreRenderEngine.inspectMountedNodes` is the Q3 custom-renderer hook. Its default returns
+unsupported; implementations preserve parent-before-child order, exclude application keys and
+content, and return only weak platform targets. Registration is otherwise passive: it
 may retain a weak container reference but cannot install recurring scroll, global-layout, draw,
 touch, frame, or recomposition observers. Live inspection requires an explicit tooling request as
 defined by [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md).

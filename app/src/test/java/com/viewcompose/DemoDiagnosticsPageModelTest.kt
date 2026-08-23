@@ -29,6 +29,7 @@ class DemoDiagnosticsPageModelTest {
         assertEquals(
             listOf(
                 "renderer_actions",
+                "renderer_highlight",
                 "renderer_probe",
                 "renderer_snapshots",
                 "renderer_tree",

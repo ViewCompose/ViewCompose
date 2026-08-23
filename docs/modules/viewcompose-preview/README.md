@@ -36,22 +36,34 @@ ViewCompose supports two complementary paths:
 The similarly named APIs live in different packages: the static annotation is in
 `com.viewcompose.preview.tooling`; the Compose bridge function is in `com.viewcompose.preview`.
 
-## Running-device DSL locator
+## Running-device DSL location and node highlighting
 
-This optional artifact also owns the application-process half of Android Studio's **Locate Device
-DSL** action. In a debuggable process it supplies the neutral Host source-inspection service and
-retains bounded source candidates for eligible Host, navigation-destination, and pager-page
-sessions. Protocol v4 carries the same process-local trace ID, optional parent ID, and typed role
-used by runtime diagnostics. It does not observe scroll, global layout, draw, touch, frames, or
-recomposition and does not continuously publish a report.
+This optional artifact owns the application-process half of Android Studio's **Locate Device DSL**,
+**Highlight Device DSL Node**, and **Clear Device DSL Highlight** actions. In a debuggable process
+it retains bounded source candidates for Host, navigation-destination, and pager-page sessions and
+registers a weak, request-only mounted-node inspector for every supported logical session role.
+Lazy-item, overlay, and preview sessions therefore remain selectable without composition-time source
+stack capture. Protocol v5 carries the same process-local
+trace ID, optional parent ID, and typed role used by runtime diagnostics. It does not continuously
+publish a report or observe scroll, global layout, draw, touch, frames, or recomposition.
 
-When the developer clicks the action, Android Studio sends one `DUMP`-permission-protected request
-with a 32-character nonce. The receiver samples current weakly held session Views once on the main
-thread, then lazily serializes and atomically writes one bounded response in the application's
-private cache. The IDE accepts only a response with the matching nonce, foreground package, and
-live process. The report contains JVM source identity and View eligibility only; it contains no
-source text, VNode tree, application state, or user data. Invalid requests, missing services,
-writer failures, and session disposal cannot fail application rendering.
+Source location sends one `DUMP`-permission-protected source request. Highlighting first selects a
+visible session, then requests one mounted-tree snapshot capped at 2,048 visited nodes, 512 returned
+nodes, and depth 64. A fresh opaque token identifies each retained node. The response excludes
+application keys, View text, semantics, state, Local values, and arbitrary `toString()` output.
+Synthetic renderer hosts are reported but cannot be selected as application content.
+
+Selection resolves the weak current Android View on the main thread, records full screen and
+clipped-visible bounds, and draws one non-interactive process-wide overlay. Partial clipping is
+explicit. Missing, stale, recycled, hidden, fully clipped, unsupported, ended-session, and rejected
+requests fail closed. Replacement, explicit clear, View detach, session disposal, or a five-second
+timeout removes the overlay. It does not recompose, invoke application callbacks, change focus or
+accessibility focus, intercept input, or mutate layout parameters.
+
+Every response echoes a 1--128 character ASCII nonce and is lazily serialized to at most 256 KiB,
+then atomically written in application-private cache. The IDE accepts only a response with the
+matching operation, nonce, foreground package, and live process. Invalid requests, missing
+services, writer or overlay failures, and session disposal cannot fail application rendering.
 
 Keep this artifact in `debugImplementation`, test, or a dedicated tooling configuration. It is the
 artifact-presence gate required in addition to a debuggable process and an explicit IDE request.
@@ -169,7 +181,7 @@ The complete generated reference is available in the
 The `0.1.0-alpha03` line establishes the coherent native/DSL theme resolution, retained Compose
 bridge session, explicit root-access overload, and shared catalog/snapshot coverage model. Static
 preview protocol compatibility remains owned by preview-core.
-The running-device DSL locator is now request-driven and owned entirely by this optional artifact;
-the Android Host retains only its neutral nullable inspection port.
-The device DSL protocol now uses the runtime correlation identity and typed role; protocol v3
-reports are intentionally rejected.
+Running-device source location and node highlighting are request-driven and owned entirely by this
+optional artifact; Android Host retains only a neutral nullable session-inspection port. Protocol v5
+hard-cuts v4 by adding operation validation, request-scoped opaque node tokens,
+bounded node snapshots, structured highlight states, clipping bounds, and explicit clear.

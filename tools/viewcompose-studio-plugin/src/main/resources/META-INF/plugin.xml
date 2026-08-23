@@ -37,6 +37,22 @@
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
         <action
+            id="com.viewcompose.studio.preview.HighlightDeviceDslNode"
+            class="com.viewcompose.studio.preview.HighlightDeviceDslNodeAction"
+            text="Highlight Device DSL Node"
+            description="Select and briefly highlight one mounted ViewCompose node on a connected Android device"
+            icon="/icons/viewcomposeLocateDeviceDsl.svg">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+        <action
+            id="com.viewcompose.studio.preview.ClearDeviceDslHighlight"
+            class="com.viewcompose.studio.preview.ClearDeviceDslHighlightAction"
+            text="Clear Device DSL Highlight"
+            description="Clear the current ViewCompose node highlight on a connected Android device"
+            icon="/icons/viewcomposeLocateDeviceDsl.svg">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+        <action
             id="com.viewcompose.studio.preview.InspectDeviceAnimationTimeline"
             class="com.viewcompose.studio.preview.InspectDeviceAnimationTimelineAction"
             text="Inspect Device Animation Timeline"

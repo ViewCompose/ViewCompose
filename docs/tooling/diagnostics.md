@@ -90,17 +90,38 @@ least-recently-updated eviction and count saturation are visible in immutable sn
 Storage, consent, scheduling, upload, vendor metadata, and downstream failure policy remain outside
 the framework. See the [module manual](../modules/viewcompose-diagnostics/README.md).
 
-## 7. Demo inspector
+## 7. Request-driven mounted-node highlighting
+
+Add `viewcompose-preview` through `debugImplementation`, keep the debuggable application in the
+foreground, and choose **Tools → Highlight Device DSL Node**. Studio first selects one correlated
+visible Session, requests a bounded current mounted-tree snapshot, and lists its declarative nodes.
+Choosing a node draws its clipped real Android View boundary for at most five seconds. **Tools →
+Clear Device DSL Highlight** clears it immediately.
+
+Tokens are opaque, process-local, and snapshot-scoped. They contain no application key. A newer
+snapshot, node replacement, View reuse by another logical owner, Session disposal, or process
+restart makes them stale. The response distinguishes selected, partially clipped, missing, stale,
+recycled, hidden, fully clipped, synthetic/unsupported, ended, rejected, and cleared outcomes.
+Bounds are screen coordinates plus the globally visible clipped rectangle.
+
+The request visits at most 2,048 mounted nodes, returns 512 to depth 64, retains only weak native
+targets, and serializes at most 256 KiB. Inactive tooling performs no traversal, geometry read,
+overlay mutation, report write, or listener installation. An active overlay is non-interactive and
+cannot recompose, invoke application callbacks, change focus or accessibility focus, intercept
+input, or mutate layout. The Diagnostics → Renderer page includes a unique AndroidView target and
+a replacement action for deterministic manual validation.
+
+## 8. Demo inspector
 
 `Diagnostics -> Renderer` provides the render tree, patch timeline, recomposition reasons,
-CompositionLocal browser, and aggregate metrics. Cross-session correlation and the separate
-production aggregator are implemented; real View-boundary highlighting and per-node timing remain
-in the active
+CompositionLocal browser, aggregate metrics, and the mounted-node highlight fixture. Cross-session
+correlation, production aggregation, and real View-boundary highlighting are implemented;
+per-node timing remains in the active
 [diagnostics correlation, inspection, and production observability plan](../project/plans/diagnostics-correlation-inspection-observability.md).
 
-## 8. Remaining expansion contract
+## 9. Remaining expansion contract
 
 [ADR-0021](../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes Phase 1.
-A failure-only sink activates no frame detail. The optional `viewcompose-diagnostics` artifact now
-owns shipped production aggregation; `viewcompose-preview` keeps highlighting and timing
-request-driven. The active plan owns those later phases and inspector closeout.
+A failure-only sink activates no frame detail. The optional `viewcompose-diagnostics` artifact owns
+production aggregation; `viewcompose-preview` owns shipped request-driven highlighting and will
+keep timing request-driven. The active plan owns timing and inspector closeout.

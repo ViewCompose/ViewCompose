@@ -22,6 +22,28 @@ interface CoreRenderEngine {
     ): CoreRenderFrame
 
     /**
+     * Performs one explicitly requested, bounded inspection of [mountedNodes].
+     *
+     * The default reports an unsupported renderer. Implementations must traverse only for this
+     * call, preserve depth-first parent-before-child order, avoid application keys and content,
+     * and return platform targets that retain native objects weakly. The method runs on the
+     * platform render thread and cannot mutate rendering or install recurring listeners.
+     *
+     * @sample com.viewcompose.ui.foundation.samples.mountedNodeInspectionEngineSample
+     * @param mountedNodes current opaque roots owned by this engine
+     * @param maxVisitedNodes hard visit limit before traversal stops
+     * @param maxReturnedNodes hard retained-entry limit
+     * @param maxDepth maximum zero-based node depth to visit
+     * @return bounded renderer-neutral node descriptors and truncation metadata
+     */
+    fun inspectMountedNodes(
+        mountedNodes: List<Any>,
+        maxVisitedNodes: Int,
+        maxReturnedNodes: Int,
+        maxDepth: Int,
+    ): CoreMountedNodeInspection = CoreMountedNodeInspection.Unsupported
+
+    /**
      * Applies one exact-target batch whose VNodes differ only by [VNode.spec].
      *
      * Implementations must validate every target before mutation and restore the complete previous
@@ -77,6 +99,74 @@ interface CoreRenderEngine {
 
     /** Permanently releases a detached tree after cache eviction. */
     fun releaseReusableMounted(tree: CoreReusableRenderTree): List<CoreRenderCommitFailure> = emptyList()
+}
+
+/**
+ * Renderer-neutral entry produced by one requested mounted-tree inspection.
+ *
+ * [parentIndex] refers to an earlier entry in the same depth-first list. [platformTarget] must own
+ * its native object weakly. This host-integration value contains no application key or content.
+ *
+ * This is a Q3 host-integration model. Callers receive instances from
+ * [CoreRenderEngine.inspectMountedNodes] and must not persist them beyond the explicit inspection
+ * request.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.mountedNodeInspectionEngineSample
+ * @property parentIndex index of the retained parent entry, or `null` for a root or omitted parent
+ * @property type renderer dispatch type of the mounted node
+ * @property depth zero-based depth within the inspected mounted tree
+ * @property synthetic whether the entry is renderer infrastructure rather than selectable content
+ * @property sourceCallSites bounded nearest-first source chain, when optional capture supplied it
+ * @property platformTarget weak resolver for the current native target on the render thread
+ */
+data class CoreInspectedMountedNode(
+    val parentIndex: Int?,
+    val type: com.viewcompose.ui.node.NodeType,
+    val depth: Int,
+    val synthetic: Boolean,
+    val sourceCallSites: List<com.viewcompose.ui.tooling.UiSourceCallSite>,
+    val platformTarget: RenderNodePlatformTarget,
+)
+
+/**
+ * Delivers bounded renderer output for one explicit mounted-node inspection request.
+ *
+ * [nodes] is a request-time snapshot in depth-first parent-before-child order. [truncated] is
+ * `true` when any renderer, depth, visit, or retained-entry limit prevented a complete result.
+ * Implementations return [Unsupported] without traversing when mounted-node inspection is not
+ * available. This value owns no mounted tree and must not be cached as application state.
+ *
+ * This is a Q3 host-integration model.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.mountedNodeInspectionEngineSample
+ * @property nodes retained request-time mounted-node descriptors
+ * @property visitedNodes number of mounted nodes visited before traversal stopped
+ * @property droppedNodes visited descriptors omitted from [nodes]
+ * @property truncated whether a traversal or output limit prevented a complete result
+ * @property supported whether the renderer performed mounted-node inspection
+ */
+data class CoreMountedNodeInspection(
+    val nodes: List<CoreInspectedMountedNode>,
+    val visitedNodes: Int,
+    val droppedNodes: Int,
+    val truncated: Boolean,
+    val supported: Boolean,
+) {
+    /** Provides renderer-independent inspection result constants. */
+    companion object {
+        /**
+         * Returns the immutable empty result used by engines that do not implement inspection.
+         *
+         * The value is process-stable and contains no renderer, session, or mounted-node reference.
+         */
+        val Unsupported = CoreMountedNodeInspection(
+            nodes = emptyList(),
+            visitedNodes = 0,
+            droppedNodes = 0,
+            truncated = false,
+            supported = false,
+        )
+    }
 }
 
 /** Opaque renderer-owned native tree detached from a render container and logical session. */

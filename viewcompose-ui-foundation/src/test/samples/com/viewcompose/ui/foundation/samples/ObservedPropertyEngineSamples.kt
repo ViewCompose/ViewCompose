@@ -1,11 +1,30 @@
 package com.viewcompose.ui.foundation.samples
 
 import com.viewcompose.ui.foundation.CoreObservedPropertyPatch
+import com.viewcompose.ui.foundation.CoreMountedNodeInspection
 import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 import com.viewcompose.ui.foundation.CoreRenderEngine
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.tooling.UiNodeTooling
 import com.viewcompose.ui.node.spec.NodeSpec
+
+fun mountedNodeInspectionEngineSample(
+    engine: CoreRenderEngine,
+    mountedNodes: List<Any>,
+): CoreMountedNodeInspection {
+    val snapshot = engine.inspectMountedNodes(
+        mountedNodes = mountedNodes,
+        maxVisitedNodes = 2_048,
+        maxReturnedNodes = 512,
+        maxDepth = 64,
+    )
+    if (!snapshot.supported) return snapshot
+    snapshot.nodes.firstOrNull { !it.synthetic }?.let { node ->
+        // Resolve only synchronously on the platform render thread; retain no native target.
+        println("${node.depth}:${node.type}:${node.platformTarget.resolve()?.javaClass?.name}")
+    }
+    return snapshot
+}
 
 fun observedPropertyEngineSample(
     engine: CoreRenderEngine,

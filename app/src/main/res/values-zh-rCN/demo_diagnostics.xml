@@ -20,6 +20,11 @@
 
     <string name="demo_diagnostics_renderer_actions_title">渲染器操作</string>
     <string name="demo_diagnostics_renderer_actions_summary">在渲染器直达 fixture 开头保留刷新与重置控件。</string>
+    <string name="demo_diagnostics_highlight_title">已挂载节点高亮 Fixture</string>
+    <string name="demo_diagnostics_highlight_summary">用于 Studio 按请求高亮器验收的确定性 AndroidView 边界。</string>
+    <string name="demo_diagnostics_highlight_instructions">打开“工具 → 高亮设备 DSL 节点”并选择 AndroidView 条目。高亮只读，并会在五秒后自动清除。</string>
+    <string name="demo_diagnostics_highlight_replace">替换已挂载目标</string>
+    <string name="demo_diagnostics_highlight_target">高亮目标 · 第 %1$d 代</string>
     <string name="demo_diagnostics_snapshot_revision">快照刷新修订：%1$d</string>
     <string name="demo_diagnostics_refresh_renderer">刷新渲染器快照</string>
     <string name="demo_diagnostics_capturing_renderer">正在捕获渲染器快照…</string>

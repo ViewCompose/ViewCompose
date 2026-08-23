@@ -79,21 +79,30 @@ imperative resource mutation that emits no callback. Calls, callbacks, and dispo
 work. Resource results are synchronous snapshots; do not retain provider-owned Context or Resources
 beyond the session.
 
-## Optional source-inspection boundary
+## Optional session-inspection boundary
 
 The Host performs one process-local `ServiceLoader` lookup for the neutral
-`RenderSessionSourceTooling` port. No provider is the normal production configuration and is a
-stable no-op. Ambiguous or failed discovery disables source inspection and logs a diagnostic rather
-than changing rendering. The Host contains no device-locator protocol, Android component, report
-writer, View-tree listener, or recurring inspection lifecycle.
+`RenderSessionInspectionTooling` port. No provider is the normal production configuration and is a
+stable no-op. Ambiguous or failed discovery disables inspection and logs a diagnostic rather than
+changing rendering. The Host contains no device-locator protocol, Android component, report writer,
+View-tree listener, or recurring inspection lifecycle.
 
 Running-device DSL navigation is implemented downstream by the optional `viewcompose-preview`
 artifact. Add it with `debugImplementation` to enable the feature. When present in a debuggable
 process, it may retain bounded source candidates from the first successful Host, navigation
-destination, or pager-page frame through the neutral port. The report uses the runtime trace ID,
-parent ID, and role rather than a second source-only identity. Live visibility is inspected and a private report is written only after Android
-Studio sends an explicit request. Scroll, layout, rendering-active changes, and session disposal do
-not publish reports. This ownership follows
+destination, or pager-page frame through the neutral port. `RenderSessionInspectionPolicy` tracks
+lazy-item, overlay, and preview sessions without enabling their composition-time source capture, so
+request-driven node inspection can reach the real child owner without adding high-churn stack
+capture. The report uses the runtime trace ID, parent ID, and role rather than a second source-only
+identity.
+
+The same registration receives a `RenderSessionNodeInspection` whose session state is weak outside
+the render owner. It calls `CoreRenderEngine.inspectMountedNodes` only after an explicit request;
+`AndroidCoreRenderEngine` then performs the bounded current-tree traversal and returns weak native
+targets. No provider means no inspection state or mounted-node assignment. Live visibility,
+mounted nodes, and a private response are read only after Android Studio requests them. Scroll,
+layout, rendering-active changes, and session disposal do not publish reports, and Host owns no
+overlay or IDE protocol. This ownership follows
 [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md).
 
 ## Native View transaction contract

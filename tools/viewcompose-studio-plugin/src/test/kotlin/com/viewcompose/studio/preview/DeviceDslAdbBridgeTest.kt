@@ -69,6 +69,7 @@ class DeviceDslAdbBridgeTest {
 
         assertEquals("com.example.app", report.packageName)
         assertTrue(commands.any { command -> command.contains("--es request_id $REQUEST_ID") })
+        assertTrue(commands.any { command -> command.contains("--es operation source") })
         assertTrue(commands.last().endsWith(DEVICE_DSL_SOURCE_REPORT_PATH))
     }
 
@@ -199,11 +200,57 @@ class DeviceDslAdbBridgeTest {
         )
     }
 
+    @Test
+    fun `select request carries session and token and validates matching operation`() {
+        var broadcastRequestId: String? = null
+        val commands = mutableListOf<String>()
+        val device = fakeDevice { command ->
+            commands += command
+            when {
+                command.startsWith("dumpsys activity") ->
+                    "topResumedActivity=ActivityRecord{a u0 com.example.app/.MainActivity t3}"
+                command == "pidof com.example.app" -> "4242"
+                command.startsWith("am broadcast") -> {
+                    broadcastRequestId = Regex("--es request_id ([a-f0-9]{32})")
+                        .find(command)?.groupValues?.get(1)
+                    "Broadcast completed: result=0"
+                }
+                command.startsWith("run-as com.example.app") -> """
+                    {
+                      "protocolVersion": $DEVICE_DSL_SOURCE_PROTOCOL_VERSION,
+                      "requestId": "${checkNotNull(broadcastRequestId)}",
+                      "operation": "select",
+                      "packageName": "com.example.app",
+                      "processId": 4242,
+                      "generatedAtEpochMillis": 123456,
+                      "sessions": [],
+                      "highlight": {
+                        "state": "selected",
+                        "sessionId": 9,
+                        "nodeToken": "abc",
+                        "screenBounds": null,
+                        "visibleBounds": null
+                      }
+                    }
+                """.trimIndent()
+                else -> error("Unexpected command: $command")
+            }
+        }
+
+        val result = selectDeviceDslNode(device, sessionId = 9L, nodeToken = "abc")
+
+        assertEquals(StudioDeviceDslHighlightState.Selected, result.state)
+        assertTrue(commands.any { it.contains("--es operation select") })
+        assertTrue(commands.any { it.contains("--el session_id 9") })
+        assertTrue(commands.any { it.contains("--es node_token abc") })
+    }
+
     private fun validReportJson(requestId: String): String {
         return """
             {
               "protocolVersion": $DEVICE_DSL_SOURCE_PROTOCOL_VERSION,
               "requestId": "$requestId",
+              "operation": "source",
               "packageName": "com.example.app",
               "processId": 4242,
               "generatedAtEpochMillis": 123456,

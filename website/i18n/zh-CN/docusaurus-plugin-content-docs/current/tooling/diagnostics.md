@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: 9b03c1d319af2a283e6b564931b6f9472b934605f78d5ca2bc58665d257e3c5c
+translation_source_hash: 58e245e7ba0bcb55dcd18b2ee4e26bdf07f2e8b003d1eb97a38f391f9b8772db
 translation_status: current
 ---
 
@@ -85,15 +85,33 @@ Alpha API 无适配层地移除了三个 Callback 与仅 Result Local。Stats/Tr
 调度、上传、厂商元数据和下游失败策略都保留给应用。详见
 [模块手册](https://docs.viewcompose.com/zh-CN/modules/viewcompose-diagnostics)。
 
-## 7. Demo 检查器
+## 7. 按请求高亮 Mounted Node
+
+通过 `debugImplementation` 引入 `viewcompose-preview`，让可调试应用保持前台，然后选择
+**Tools → Highlight Device DSL Node**。Studio 会先选择一个关联后的可见 Session，请求一份有界的
+当前 Mounted Tree 快照，再列出声明式节点。选中后会绘制该节点真实 Android View 的裁剪后边界，
+最长保留五秒；**Tools → Clear Device DSL Highlight** 可立即清除。
+
+Token 不透明、只在当前进程和快照内有效，不包含应用 Key。新快照、节点替换、View 被另一逻辑 Owner
+复用、Session 释放或进程重启都会使其失效。响应会区分 Selected、Partially Clipped、Missing、
+Stale、Recycled、Hidden、Fully Clipped、Synthetic/Unsupported、Ended、Rejected 与 Cleared。
+Bounds 同时提供屏幕坐标和全局可见裁剪矩形。
+
+请求最多访问 2,048 个 Mounted Node，返回 512 个、深度不超过 64；只保留弱 Native Target，序列化
+结果不超过 256 KiB。未激活时不会遍历、读取几何、修改 Overlay、写报告或安装 Listener。激活后的
+Overlay 不可交互，不能触发重组、应用 Callback、Focus 或 Accessibility Focus 变化，不拦截输入，
+也不修改布局。`Diagnostics → Renderer` 页面提供唯一 AndroidView 目标与替换动作，便于确定性人工验收。
+
+## 8. Demo 检查器
 
 `Diagnostics -> 渲染器` 提供 Render Tree、Patch 时间线、重组原因、CompositionLocal 浏览器与
-聚合指标。跨 Session 关联与独立生产聚合器已实现；真实 View 边界高亮和逐节点耗时仍由有效的
+聚合指标及 Mounted-node 高亮 Fixture。跨 Session 关联、生产聚合与真实 View 边界高亮已经实现；
+逐节点耗时仍由有效的
 [诊断关联、检查与生产可观测性计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)。
 
-## 8. 剩余扩展契约
+## 9. 剩余扩展契约
 
 [ADR-0021](https://docs.viewcompose.com/architecture/decisions/0021-correlated-render-diagnostics-ownership)
 冻结 Phase 1；只关心 Failure 的 Sink 不激活 Frame 明细。可选 `viewcompose-diagnostics`
-现已负责已交付的生产聚合，`viewcompose-preview` 让高亮与耗时保持按请求激活。有效计划负责后续阶段与
-Inspector 收尾。
+现已负责生产聚合，`viewcompose-preview` 已交付按请求高亮，并会让耗时继续按请求激活。有效计划负责
+耗时阶段与 Inspector 收尾。

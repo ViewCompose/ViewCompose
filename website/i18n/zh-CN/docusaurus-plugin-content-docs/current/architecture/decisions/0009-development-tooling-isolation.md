@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0009-development-tooling-isolation.md
-translation_source_hash: 82fcb0c0e9aa5befd05b3adec04c8bfabf7d77f5bd970d9c24ae39da9dce8571
+translation_source_hash: 1ffda4a57b2d4df7b4ba3c9e41e613cf88676b481c9efe8797500d81208934b5
 translation_status: current
 ---
 
@@ -35,11 +35,13 @@ ViewCompose 使用 Android View 作为渲染引擎，因此开发工具可能意
    Tooling 所有的 Thread、文件 I/O、序列化、Stack Capture、View Tree Traversal，或注册在滚动、
    布局、绘制、触摸、Animation Frame 或重组热路径上的 Listener。
 4. 真机 DSL 定位器由可选 `viewcompose-preview` 制品持有，应用通过 `debugImplementation` 引入。
-   `viewcompose-host-android` 只发现中立 `RenderSessionSourceTooling` Service。服务缺失、歧义或失败
+   `viewcompose-host-android` 只发现中立 `RenderSessionInspectionTooling` Service。服务缺失、歧义或失败
    均为诊断 no-op，不能导致应用渲染失败。
-5. 可选制品存在于可调试进程时，可以在符合条件的 Host/Page Render Session 首次提交时有界捕获
-   一次源码身份。这是唯一不依赖请求的例外。它不保留 Node Tree、不安装 View Listener、不启动
-   Worker、也不执行报告 I/O。Lazy Item 与 Pager Item Session 不符合条件。
+5. `RenderSessionInspectionPolicy` 将被动 Session Registration 与 Source Capture 分离。可选制品
+   存在于可调试进程时，可以在符合条件的 Host、Navigation 或 Pager Page Session 首次提交时有界
+   捕获一次源码身份；这是唯一不依赖请求的例外。Lazy Item、Overlay 与 Preview Session 可以登记
+   弱 Mounted-node Inspection，但不捕获 Source Stack。两种 Policy 都不保留 Node Tree、不安装
+   View Listener、不启动 Worker、也不执行报告 I/O。
 6. 实时 View 状态只在显式 IDE 请求后采样。定位器使用带 Nonce 的 Request/Response 协议：IDE
    发出显式 Debug Android 请求，进程只对当前弱引用 Session 做一次 Snapshot，响应包含相同
    Nonce。陈旧响应永远不能满足后续请求。
@@ -58,8 +60,9 @@ ViewCompose 使用 Android View 作为渲染引擎，因此开发工具可能意
 
 ## 公开 API 与模块影响
 
-- `viewcompose-ui-foundation` 继续持有 Q3 中立
-  `RenderSessionSourceTooling`/`RenderSessionSourceRegistration` 契约；缺失时继续 no-op。
+- `viewcompose-ui-foundation` 持有 Q3 中立 `RenderSessionInspectionTooling`、
+  `RenderSessionInspectionPolicy` 与 `RenderSessionInspectionRegistration` 契约；缺失时继续 no-op。
+  这次 Alpha 版本线硬切替换旧的 Source-only Port。
 - `viewcompose-host-android` 只持有 Android Platform 安装与中立 Service Discovery；不再持有设备
   定位实现或协议。
 - `viewcompose-preview` 持有可调试进程定位服务、显式 Request Receiver、实时 Session Snapshot、

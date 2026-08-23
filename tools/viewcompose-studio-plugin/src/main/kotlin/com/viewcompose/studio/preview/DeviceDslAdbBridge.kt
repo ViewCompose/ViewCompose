@@ -60,6 +60,62 @@ internal fun readDeviceDslSourceReport(
     sleep: (Long) -> Unit = Thread::sleep,
     nanoTime: () -> Long = System::nanoTime,
 ): StudioDeviceDslSourceReport {
+    return requestDeviceDslReport(
+        device = device,
+        operation = StudioDeviceDslOperation.Source,
+        requestIdFactory = requestIdFactory,
+        sleep = sleep,
+        nanoTime = nanoTime,
+    )
+}
+
+internal fun readDeviceDslNodeReport(
+    device: StudioAndroidDevice,
+    sessionId: Long,
+): StudioDeviceDslSourceReport {
+    require(sessionId > 0L)
+    return requestDeviceDslReport(
+        device = device,
+        operation = StudioDeviceDslOperation.Nodes,
+        sessionId = sessionId,
+    )
+}
+
+internal fun selectDeviceDslNode(
+    device: StudioAndroidDevice,
+    sessionId: Long,
+    nodeToken: String,
+): StudioDeviceDslHighlightResult {
+    require(sessionId > 0L)
+    require(nodeToken.matches(DEVICE_DSL_NODE_TOKEN))
+    val report = requestDeviceDslReport(
+        device = device,
+        operation = StudioDeviceDslOperation.Select,
+        sessionId = sessionId,
+        nodeToken = nodeToken,
+    )
+    return report.highlight
+        ?: throw DeviceDslLocateFailure(DeviceDslLocateFailureReason.HighlightRejected)
+}
+
+internal fun clearDeviceDslHighlight(device: StudioAndroidDevice): StudioDeviceDslHighlightResult {
+    val report = requestDeviceDslReport(
+        device = device,
+        operation = StudioDeviceDslOperation.Clear,
+    )
+    return report.highlight
+        ?: throw DeviceDslLocateFailure(DeviceDslLocateFailureReason.HighlightRejected)
+}
+
+private fun requestDeviceDslReport(
+    device: StudioAndroidDevice,
+    operation: StudioDeviceDslOperation,
+    sessionId: Long? = null,
+    nodeToken: String? = null,
+    requestIdFactory: () -> String = ::newDeviceDslSourceRequestId,
+    sleep: (Long) -> Unit = Thread::sleep,
+    nanoTime: () -> Long = System::nanoTime,
+): StudioDeviceDslSourceReport {
     val foregroundPackage = parseForegroundPackage(
         activityDump = device.shell("dumpsys activity activities"),
         windowDump = { device.shell("dumpsys window windows") },
@@ -76,10 +132,20 @@ internal fun readDeviceDslSourceReport(
         "Device DSL source request ID must be a 32-character lowercase hexadecimal nonce."
     }
     val requestStartedAtNanos = nanoTime()
-    device.shell(
-        "am broadcast --user current -a $DEVICE_DSL_SOURCE_REQUEST_ACTION " +
-            "-p $foregroundPackage --es $DEVICE_DSL_SOURCE_REQUEST_ID_EXTRA $requestId",
-    )
+    val requestCommand = buildString {
+        append("am broadcast --user current -a $DEVICE_DSL_SOURCE_REQUEST_ACTION ")
+        append("-p $foregroundPackage --es $DEVICE_DSL_SOURCE_REQUEST_ID_EXTRA $requestId ")
+        append("--es $DEVICE_DSL_SOURCE_REQUEST_OPERATION_EXTRA ${operation.wireValue}")
+        sessionId?.let { value ->
+            require(value > 0L)
+            append(" --el $DEVICE_DSL_SOURCE_REQUEST_SESSION_ID_EXTRA $value")
+        }
+        nodeToken?.let { value ->
+            require(value.matches(DEVICE_DSL_NODE_TOKEN))
+            append(" --es $DEVICE_DSL_SOURCE_REQUEST_NODE_TOKEN_EXTRA $value")
+        }
+    }
+    device.shell(requestCommand)
     var lastFailure: Throwable? = null
     var observedStaleResponse = false
     while (nanoTime() - requestStartedAtNanos < RESPONSE_POLL_TIMEOUT_NANOS) {
@@ -94,6 +160,9 @@ internal fun readDeviceDslSourceReport(
                 observedStaleResponse = true
             } else {
                 if (report.packageName != foregroundPackage || report.processId !in processIds) {
+                    throw DeviceDslLocateFailure(DeviceDslLocateFailureReason.StaleReport)
+                }
+                if (report.operation != operation) {
                     throw DeviceDslLocateFailure(DeviceDslLocateFailureReason.StaleReport)
                 }
                 return report
@@ -165,6 +234,8 @@ internal enum class DeviceDslLocateFailureReason {
     StaleReport,
     NoVisibleDsl,
     SourceMissing,
+    NoInspectableNode,
+    HighlightRejected,
 }
 
 private val COMPONENT_PATTERN = Regex(
@@ -174,6 +245,7 @@ private val ANDROID_PACKAGE_NAME = Regex(
     "[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z0-9_]+)+",
 )
 private val DEVICE_DSL_SOURCE_REQUEST_ID = Regex("[a-f0-9]{32}")
+private val DEVICE_DSL_NODE_TOKEN = Regex("[a-z0-9]{1,32}")
 private val ACTIVITY_FOREGROUND_MARKERS = listOf(
     "topResumedActivity=",
     "mResumedActivity:",

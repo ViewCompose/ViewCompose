@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: 14416cfa2d282bc9ff1464b26cbfb2c5d216d59f9d63c9987f4e7566d4556cec
+translation_source_hash: 6cabdbef83ac6a3e61f9098daf3c3ad266ab75a929f909ca3997f3b429c1927b
 translation_status: current
 ---
 
@@ -38,18 +38,29 @@ ViewCompose 提供两条互补路径：
 两个同名 API 位于不同包：静态注解在 `com.viewcompose.preview.tooling`，Compose 桥接函数在
 `com.viewcompose.preview`。
 
-## 真机 DSL 定位
+## 真机 DSL 定位与节点高亮
 
-这个可选制品还负责 Android Studio `Locate Device DSL` 动作的应用进程侧实现。在可调试进程中，
-它提供中立的 Host 源码检查服务，并为符合条件的 Host、Navigation Destination 与 Pager Page
-Session 保留有界源码候选。协议 v4 携带与运行时诊断相同的进程内 Trace ID、可选 Parent ID 和
-类型化角色。它不会观察滚动、全局布局、绘制、触摸、Frame 或重组，也不会持续发布报告。
+这个可选制品负责 Android Studio `Locate Device DSL`、`Highlight Device DSL Node` 与
+`Clear Device DSL Highlight` 动作的应用进程侧实现。在可调试进程中，它会为 Host、Navigation
+Destination 与 Pager Page Session 保留有界源码候选，并为全部受支持的 Logical Session Role
+登记弱持有、仅按请求工作的 Mounted-node Inspector。Lazy Item、Overlay 与 Preview Session 因而
+无需组合期 Source Stack Capture 也能被选中。协议 v5 携带与运行时诊断相同的进程内 Trace ID、可选 Parent ID 和类型化
+角色。它不会持续发布报告，也不会观察滚动、全局布局、绘制、触摸、Frame 或重组。
 
-开发者点击该动作时，Android Studio 会发出一条受 `DUMP` 权限保护且带 32 字符 Nonce 的请求。
-Receiver 在主线程对当前弱引用持有的 Session View 采样一次，随后按需在后台序列化，并将一份有界
-响应原子写入应用私有缓存。IDE 只接受 Nonce、前台包名与存活进程均匹配的响应。报告仅包含 JVM
-源码标识与 View 候选资格，不包含源码文本、VNode Tree、应用状态或用户数据。无效请求、服务缺失、
-写入失败和 Session 释放都不能导致应用渲染失败。
+源码定位会发送一条受 `DUMP` 权限保护的源码请求。高亮会先选择可见 Session，再请求一份 Mounted
+Tree 快照：最多访问 2,048 个节点、返回 512 个节点、深度不超过 64。每个保留节点都会获得新的不透明
+Token。响应会排除应用 Key、View 文本、Semantics、State、Local 值和任意 `toString()` 输出。
+Synthetic Renderer Host 会被明确报告，但不能作为应用内容选中。
+
+选中节点后，Receiver 在主线程解析其当前弱引用 Android View，记录完整屏幕边界与全局可见裁剪边界，
+并绘制一个进程内唯一、不可交互的 Overlay。部分裁剪会被明确报告；Missing、Stale、Recycled、
+Hidden、Fully Clipped、Unsupported、Ended Session 与 Rejected 请求都会 Fail Closed。目标替换、
+显式清除、View Detach、Session 释放或五秒超时都会移除 Overlay。它不会触发重组、应用 Callback、
+Focus 或 Accessibility Focus 变化，不拦截输入，也不修改 LayoutParams。
+
+每份响应都会回显 1--128 字符的 ASCII Nonce，按需序列化至最多 256 KiB，并原子写入应用私有缓存。
+IDE 只接受 Operation、Nonce、前台包名与存活进程均匹配的响应。无效请求、服务缺失、Writer/Overlay
+失败和 Session 释放都不能导致应用渲染失败。
 
 本制品应只放在 `debugImplementation`、测试或专用 Tooling 配置中。除可调试进程与显式 IDE 请求
 外，制品存在是启用功能所需的第三道门。零运行时持续开销与性能契约见
@@ -151,6 +162,6 @@ Preview-only Renderer 路径。
 
 `0.1.0-alpha03` 建立了原生/DSL 一致主题解析、可保留的 Compose 桥接会话、显式根节点访问重载，以及
 共享目录/快照覆盖模型。静态预览协议兼容性仍由 preview-core 统一管理。
-真机 DSL 定位器现在改为按请求运行，并完全归属于这个可选制品；Android Host 只保留中立的可空
-检查端口。
-真机 DSL 协议现在使用运行时关联身份和类型化角色；协议 v3 报告会被明确拒绝。
+真机源码定位与节点高亮都按请求运行，并完全归属于这个可选制品；Android Host 只保留中立、可空的
+Session Inspection 端口。协议 v5 硬切 v4，新增 Operation 校验、Request-scoped 不透明节点
+Token、有界节点快照、结构化高亮状态、裁剪边界与显式清除。

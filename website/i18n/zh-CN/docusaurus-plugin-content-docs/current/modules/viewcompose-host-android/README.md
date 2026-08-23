@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: cc317121b0e971850ee9dfa1def4707065400da7a65e90caab800afdcf4cae71
+translation_source_hash: 76f25ee182c9103a3104e3abeccef29b17464e91ae69e565067f39c7b37b490c
 translation_status: current
 ---
 
@@ -76,18 +76,26 @@ Provider 在挂载期间观察 Android Configuration Callback，重新发布密�
 Callback 时，每个 Host 使用一个 `AndroidResourceRefreshController`。调用、Callback 与释放都属于
 主线程；资源结果是同步快照，不得在 Session 之外持有 Provider 的 Context 或 Resources。
 
-## 可选源码检查边界
+## 可选 Session 检查边界
 
-Host 会对中立的 `RenderSessionSourceTooling` 端口执行一次进程级 `ServiceLoader` 查找。没有
-Provider 是正常的生产配置，并稳定表现为 no-op。发现多个 Provider 或查找失败时会禁用源码检查并
+Host 会对中立的 `RenderSessionInspectionTooling` 端口执行一次进程级 `ServiceLoader` 查找。没有
+Provider 是正常的生产配置，并稳定表现为 no-op。发现多个 Provider 或查找失败时会禁用检查并
 记录诊断，不会改变渲染。Host 不包含设备定位协议、Android Component、报告写入器、View Tree
 Listener 或持续检查生命周期。
 
 真机 DSL 导航由下游可选制品 `viewcompose-preview` 实现。要启用该功能，应通过
 `debugImplementation` 引入它。该制品存在于可调试进程时，可以通过中立端口保留首次成功
-Host、Navigation Destination 或 Pager Page Frame 中的有界源码候选。Report 使用 Runtime Trace
-ID、Parent ID 与 Role，不再生成第二套仅源码身份。只有 Android Studio 发出显式请求后，才会检查实时可见性并写入
-私有报告。滚动、布局、Rendering Active 变化与 Session 释放都不会发布报告。此所有权遵循
+Host、Navigation Destination 或 Pager Page Frame 中的有界源码候选。
+`RenderSessionInspectionPolicy` 会在不启用组合期源码捕获的前提下跟踪 Lazy Item、Overlay 与
+Preview Session，因此按请求的节点检查可以到达真实 Child Owner，又不会在高频路径捕获 Stack。
+Report 使用 Runtime Trace ID、Parent ID 与 Role，不再生成第二套仅源码身份。
+
+同一注册还会收到 `RenderSessionNodeInspection`；在 Render Owner 之外，它只弱引用 Session State。
+只有显式请求调用它时，才会进入 `CoreRenderEngine.inspectMountedNodes`；随后
+`AndroidCoreRenderEngine` 执行有界的当前树遍历并返回弱 Native Target。没有 Provider 时不会创建
+检查状态，也不会更新 Mounted-node 引用。只有 Android Studio 发出显式请求后，才会读取实时可见性、
+Mounted Node 并写入私有报告。滚动、布局、Rendering Active 变化与 Session 释放都不会发布报告，
+Host 也不持有 Overlay 或 IDE 协议。此所有权遵循
 [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md)。
 
 ## 原生 View 事务契约
