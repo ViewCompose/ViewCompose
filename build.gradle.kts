@@ -49,6 +49,7 @@ val modulePackageRoots = mapOf(
     "viewcompose-media3-androidx" to "com.viewcompose.media3",
     "viewcompose-exoplayer2-android" to "com.viewcompose.exoplayer2",
     "viewcompose-google-maps-android" to "com.viewcompose.maps.google",
+    "viewcompose-camerax-androidx" to "com.viewcompose.camerax",
 )
 
 val forbiddenLegacyPackageRoots = setOf(
@@ -97,6 +98,7 @@ val runtimeModuleLayers = mapOf(
     "viewcompose-media3-androidx" to "integration",
     "viewcompose-exoplayer2-android" to "integration",
     "viewcompose-google-maps-android" to "integration",
+    "viewcompose-camerax-androidx" to "integration",
     "viewcompose-overlay-android" to "integration",
     "viewcompose-overlay-material3-android" to "integration",
     "viewcompose-overlay-oneui7-android" to "integration",
@@ -163,6 +165,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-media3-androidx:compileDebugKotlin",
     ":viewcompose-exoplayer2-android:compileDebugKotlin",
     ":viewcompose-google-maps-android:compileDebugKotlin",
+    ":viewcompose-camerax-androidx:compileDebugKotlin",
     ":samples:counter:assembleDebug",
     ":samples:counter:compileDebugAndroidTestKotlin",
     ":samples:tutorials:assembleDebug",
@@ -204,6 +207,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-media3-androidx:testDebugUnitTest",
     ":viewcompose-exoplayer2-android:testDebugUnitTest",
     ":viewcompose-google-maps-android:testDebugUnitTest",
+    ":viewcompose-camerax-androidx:testDebugUnitTest",
     ":app:testDebugUnitTest",
 )
 

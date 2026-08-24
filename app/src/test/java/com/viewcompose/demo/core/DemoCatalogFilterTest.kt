@@ -53,6 +53,7 @@ class DemoCatalogFilterTest {
                 "media.media3-player-view",
                 "media.exoplayer2-player-view",
                 "maps.google-map-view",
+                "camera.camerax-preview-view",
                 "overlay.transient",
                 "overlay.dialog",
                 "overlay.menu",

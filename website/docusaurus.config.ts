@@ -100,6 +100,7 @@ const config: Config = {
               '/project/plans/image-loading-pipeline-generalization',
               '/project/plans/maven-dependency-contract-convergence',
               '/project/plans/android-views-performance-control',
+              '/project/plans/third-party-android-view-integrations',
             ],
             to: '/project/plans',
           },
@@ -147,7 +148,7 @@ const config: Config = {
         searchResultLimits: 8,
         ignoreFiles: [
           /^architecture\/decisions\/0021-correlated-render-diagnostics-ownership$/,
-          /^project\/plans\/(?:paging3-integration|third-party-android-view-integrations)$/,
+          /^project\/plans\/paging3-integration$/,
           /^archive\/(?:constraintlayout-native-engine-hardening|constraintlayout-parity-performance-expansion|diagnostics-correlation-inspection-observability)$/,
         ],
         ignoreCssSelectors: ['.benchmark-evidence', '.search-partition-detail'],

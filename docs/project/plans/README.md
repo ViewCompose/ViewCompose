@@ -11,10 +11,6 @@ This directory contains multi-step work that is currently active and must surviv
 - [Paging 3 integration](./paging3-integration.md) — integrate official AndroidX Paging through an
   optional custom-presenter bridge, preserving ViewCompose lazy identity and renderer ownership
   without moving paging types or loading policy into the core contract.
-- [Third-party Android View integrations](./third-party-android-view-integrations.md) — add a typed
-  transaction-aware Android View adapter foundation and independently removable integrations for
-  AndroidX Media3, legacy ExoPlayer 2, Google Maps, and CameraX with explicit theme, lifecycle,
-  saved-state, construction, ownership, Preview, and device-validation contracts.
 Completed architecture, animation-capability, design-system, theme-propagation, native-widget,
 component-appearance, tutorial, language-consistency, migration-sample, hosted-documentation, and
 version-retention plans are retained in the
