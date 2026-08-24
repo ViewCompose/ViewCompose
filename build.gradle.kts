@@ -46,6 +46,7 @@ val modulePackageRoots = mapOf(
     "viewcompose-graphics-core" to "com.viewcompose.graphics.core",
     "viewcompose-shadow-android" to "com.viewcompose.shadow.android",
     "viewcompose-constraintlayout-androidx" to "com.viewcompose.constraintlayout",
+    "viewcompose-media3-androidx" to "com.viewcompose.media3",
 )
 
 val forbiddenLegacyPackageRoots = setOf(
@@ -91,6 +92,7 @@ val runtimeModuleLayers = mapOf(
     "viewcompose-lifecycle-androidx" to "integration",
     "viewcompose-viewmodel-androidx" to "integration",
     "viewcompose-constraintlayout-androidx" to "integration",
+    "viewcompose-media3-androidx" to "integration",
     "viewcompose-overlay-android" to "integration",
     "viewcompose-overlay-material3-android" to "integration",
     "viewcompose-overlay-oneui7-android" to "integration",
@@ -154,6 +156,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-graphics-core:compileKotlin",
     ":viewcompose-shadow-android:compileDebugKotlin",
     ":viewcompose-constraintlayout-androidx:compileDebugKotlin",
+    ":viewcompose-media3-androidx:compileDebugKotlin",
     ":samples:counter:assembleDebug",
     ":samples:counter:compileDebugAndroidTestKotlin",
     ":samples:tutorials:assembleDebug",
@@ -192,6 +195,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-graphics-core:test",
     ":viewcompose-shadow-android:testDebugUnitTest",
     ":viewcompose-constraintlayout-androidx:testDebugUnitTest",
+    ":viewcompose-media3-androidx:testDebugUnitTest",
     ":app:testDebugUnitTest",
 )
 

@@ -68,4 +68,5 @@ include(":viewcompose-graphics")
 include(":viewcompose-graphics-core")
 include(":viewcompose-shadow-android")
 include(":viewcompose-constraintlayout-androidx")
+include(":viewcompose-media3-androidx")
  

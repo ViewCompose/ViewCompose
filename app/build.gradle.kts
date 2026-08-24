@@ -52,6 +52,7 @@ dependencies {
     implementation(project(":viewcompose-material3-android"))
     implementation(project(":viewcompose-shadow-android"))
     implementation(project(":viewcompose-constraintlayout-androidx"))
+    implementation(project(":viewcompose-media3-androidx"))
     implementation(project(":viewcompose-animation"))
     implementation(project(":viewcompose-gesture"))
     implementation(project(":viewcompose-graphics"))
@@ -77,6 +78,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.foundation)
@@ -87,4 +89,5 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.test.uiautomator)
+    androidTestImplementation(libs.androidx.media3.ui)
 }

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add an independently published lifecycle-aware AndroidX Media3 PlayerView integration with caller-owned players, replay-safe configuration, deterministic local-media Demo coverage, and exact Surface cleanup.",
+  "changes": [
+    { "artifact": "viewcompose-media3-androidx", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "Register the new Media3 artifact package, architectural layer, compile task, and unit-test task without changing an existing artifact's production source."
+    },
+    {
+      "path": "settings.gradle.kts",
+      "reason": "Include the independently published Media3 project in the repository build."
+    },
+    {
+      "path": "gradle/libs.versions.toml",
+      "reason": "Declare the exact AndroidX Media3 dependency line used only by the new integration and its Demo fixture."
+    }
+  ]
+}

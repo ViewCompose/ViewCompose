@@ -68,6 +68,7 @@
     "modules/viewcompose-lifecycle-androidx/README.md",
     "modules/viewcompose-material3-android/README.md",
     "modules/viewcompose-material3/README.md",
+    "modules/viewcompose-media3-androidx/README.md",
     "modules/viewcompose-navigation-android/README.md",
     "modules/viewcompose-navigation-core/README.md",
     "modules/viewcompose-oneui7/README.md",

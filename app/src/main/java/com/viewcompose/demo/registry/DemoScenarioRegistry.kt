@@ -16,6 +16,7 @@ import com.viewcompose.ModifiersActivity
 import com.viewcompose.NavigationActivity
 import com.viewcompose.InputActivity
 import com.viewcompose.InteropActivity
+import com.viewcompose.Media3Activity
 import com.viewcompose.R
 import com.viewcompose.ResourceConfigurationActivity
 import com.viewcompose.StateActivity
@@ -91,6 +92,7 @@ internal object DemoScenarioIds {
     val EnvironmentResources = DemoScenarioId("environment.resources")
     val EnvironmentCrossActivityTheme = DemoScenarioId("environment.cross-activity-theme")
     val InteropAndroidView = DemoScenarioId("interop.android-view")
+    val Media3PlayerView = DemoScenarioId("media.media3-player-view")
     val OverlayTransient = DemoScenarioId("overlay.transient")
     val OverlayDialog = DemoScenarioId("overlay.dialog")
     val OverlayMenu = DemoScenarioId("overlay.menu")
@@ -984,6 +986,25 @@ internal object DemoScenarioRegistry {
                 secondaryTarget = R.id.demo_interop_android_view_secondary_target,
             ),
             benchmarkRevision = 2,
+        ),
+        scenario(
+            id = DemoScenarioIds.Media3PlayerView,
+            category = DemoScenarioCategory.AndroidIntegration,
+            titleRes = R.string.demo_scenario_media3_player_view_title,
+            summaryRes = R.string.demo_scenario_media3_player_view_summary,
+            host = DemoHostPolicy.Dedicated,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(Media3Activity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_media_media3_player_view_root,
+                ready = R.id.demo_media_media3_player_view_ready,
+                primaryAction = R.id.demo_media_media3_player_view_primary_action,
+                secondaryAction = R.id.demo_media_media3_player_view_secondary_action,
+                reset = R.id.demo_media_media3_player_view_reset,
+                state = R.id.demo_media_media3_player_view_state,
+                target = R.id.demo_media_media3_player_view_target,
+            ),
         ),
         scenario(
             id = DemoScenarioIds.OverlayTransient,
