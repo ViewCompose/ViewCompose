@@ -2,21 +2,23 @@
 
 ## Status
 
-Active. Planning baseline only; no production implementation or publication input has started.
-The target integrations are AndroidX Media3, legacy `com.google.android.exoplayer2` ExoPlayer,
-Google Maps SDK for Android, and CameraX. Media3 and legacy ExoPlayer are separate compatibility
-lines because their public namespaces, dependency graphs, and consumer migration constraints are
-not interchangeable.
+Active. Phase 0 is complete; no production implementation or publication input has started. The
+dependency, repository, artifact, package, ownership, transaction, lifecycle, saved-state,
+fixture, license, and device baselines are frozen below. The target integrations are AndroidX
+Media3, legacy `com.google.android.exoplayer2` ExoPlayer, Google Maps SDK for Android, and CameraX.
+Media3 and legacy ExoPlayer remain separate compatibility lines because their public namespaces,
+dependency graphs, support status, and consumer migration constraints are not interchangeable.
 
 This plan is canonical English-only under the documentation-governance policy. Every durable API,
 theme, lifecycle, saved-state, and ownership contract must move into active architecture, guide,
 migration, and owning-module documentation before this plan is archived.
 
-Last verified: 2026-08-18.
+Last verified: 2026-08-24.
 
-Next action: complete Phase 0 by pinning one reviewed dependency/version baseline for each target,
-freezing the module and package names, and recording the exact lifecycle, saved-state, theme,
-ownership, test-fixture, and supported-device matrix before adding production source.
+Next action: implement Phase 1 as a hard cut in the common Android View transaction boundary. Add
+the typed adapter and construction identity, restrict reset to cross-logical-key mounted-tree
+reuse, preserve the callback overload through typed delegation, and prove replacement, rollback,
+commit, release, diagnostics, and zero-adapter inactive cost before any SDK module is created.
 
 ## Maven release changesets
 
@@ -44,13 +46,13 @@ integrations without teaching Android Renderer about SDK identities. The complet
 
 ## Target integration matrix
 
-The artifact and package names below are the planning target. Phase 0 must confirm them against the
-publication catalog and dependency baseline before production source is created.
+The artifact and package names below are the Phase 0 frozen baseline. They were checked against the
+publication catalog, dependency policy, and existing namespace layout before production source.
 
 | Integration line | Target SDK surface | Proposed artifact | Proposed package root | First-release ownership |
 | --- | --- | --- | --- | --- |
 | AndroidX Media3 | `androidx.media3.ui.PlayerView`, the Media3 `Player` contract, and Media3 ExoPlayer implementations supplied by callers | `viewcompose-media3-androidx` | `com.viewcompose.media3` | Caller owns the `Player`; the integration owns only View attachment, controller appearance, lifecycle policy, and listener cleanup |
-| Legacy ExoPlayer | `com.google.android.exoplayer2.ui.PlayerView` and legacy `Player`/`ExoPlayer` instances | `viewcompose-exoplayer2-android` | `com.viewcompose.exoplayer2` | Caller owns the player; the integration is an explicitly legacy, independently removable compatibility line |
+| Legacy ExoPlayer | `com.google.android.exoplayer2.ui.StyledPlayerView` and legacy `Player`/`ExoPlayer` instances | `viewcompose-exoplayer2-android` | `com.viewcompose.exoplayer2` | Caller owns the player; the integration is an explicitly legacy, independently removable compatibility line |
 | Google Maps | `com.google.android.gms.maps.MapView`, map-ready delivery, camera/UI state, and SDK-owned saved state | `viewcompose-google-maps-android` | `com.viewcompose.maps.google` | Integration owns the `MapView` lifecycle; the application owns credentials, map policy, remote style/data, and business state |
 | CameraX | `androidx.camera.view.PreviewView`, preview surface coordination, camera selection, and lifecycle-bound use cases | `viewcompose-camerax-androidx` | `com.viewcompose.camerax` | Application owns permissions and use-case policy; ownership of provider/use cases is explicit and never inferred from a View reference |
 
@@ -59,30 +61,141 @@ contract. The separate ExoPlayer 2 line exists only for consumers whose source s
 legacy `com.google.android.exoplayer2` namespace; it must not blur the two dependency families or
 silently adapt one into the other.
 
+## Frozen dependency and publication baseline
+
+All four integration artifacts use the existing `google()` repository. Repository probes on
+2026-08-24 resolved every POM below from Google Maven. The legacy ExoPlayer core and UI POMs were
+not present on Maven Central, so removing `google()` or claiming Maven-Central-only resolution is
+outside the support contract.
+
+| Integration | Frozen SDK line | Integration dependency exposure | Demo/sample-only dependency | Reason |
+| --- | --- | --- | --- | --- |
+| AndroidX Media3 | `androidx.media3:media3-*:1.11.0` stable | `api(media3-common)` for public `Player`; `implementation(media3-ui)` for `PlayerView` | `media3-exoplayer` constructs the caller-owned local-fixture player | Keeps the player contract public without making one player implementation part of the integration API |
+| Legacy ExoPlayer 2 | `com.google.android.exoplayer:exoplayer-*:2.19.1` final | `api(exoplayer-core)` for legacy `Player`; `implementation(exoplayer-ui)` for `StyledPlayerView` | None beyond the same frozen line | Publishes an explicit frozen compatibility artifact for the discontinued namespace without aliasing Media3 |
+| Google Maps | `com.google.android.gms:play-services-maps:20.0.0` | `api(play-services-maps)` because `GoogleMap`, camera, and geometry types are valid integration API | Credentialed smoke configuration only; no repository key plugin | One fixed current major avoids dynamic resolution and exposes the SDK types intentionally used by map callbacks and state |
+| CameraX | `androidx.camera:camera-*:1.6.1` stable | `api(camera-core)` and `api(camera-lifecycle)` for caller-owned `Preview`, selector, and provider types; `implementation(camera-view)` for `PreviewView` | `camera-camera2` supplies the Demo/device backend | The integration coordinates a caller-supplied provider and dedicated Preview use case without selecting the application's CameraX backend |
+
+The four artifact IDs and package roots in the target matrix are final for first implementation.
+Each starts at `0.1.0-alpha01`, enters the strict API-documentation registry, module catalog,
+dependency-contract registry, and unpublished-module registry independently, and owns a separate
+consumer fixture and immutable Changeset. None is added to `viewcompose-android`,
+`viewcompose-material3-android`, or another aggregate. Installing one integration must not install
+another target SDK.
+
+The common Phase 1 API remains in `viewcompose-host-android` under
+`com.viewcompose.host.android`. The SDK modules use `api(viewcompose-host-android)` as their
+supported Android interop entry point. Media, Maps, and CameraX lifecycle coordination additionally
+uses the existing `viewcompose-lifecycle-androidx` integration; SDK identities still cannot enter
+that module or lower layers.
+
+The frozen upstream constraints are:
+
+- Media3 1.11.0 and CameraX 1.6.1 require at least API 23; the ViewCompose modules retain the
+  repository-wide `minSdk 24`, `compileSdk 36`, and Java 11 contract.
+- ExoPlayer 2.19.1 is the final planned legacy release and is deprecated upstream. The ViewCompose
+  artifact receives compatibility fixes but never promises a newer legacy SDK line; migration to
+  the separate Media3 artifact is the supported long-term path.
+- Maps 20.0.0 requires API 23. The first integration never selects the deprecated legacy renderer.
+  It records the upstream Android 12+ `IncorrectContextUseViolation` as an SDK limitation and does
+  not globally weaken or replace an application's StrictMode policy. The credentialed API 31+
+  lane reports that upstream violation separately from ViewCompose failures.
+- All versions are exact. Dynamic versions, rich ranges, dependency substitution between Media3
+  and legacy ExoPlayer, and classpath-selected adapters are forbidden.
+
+The reviewed upstream contract sources are the official
+[Media3 release notes](https://developer.android.com/jetpack/androidx/releases/media3),
+[Media3 PlayerView reference](https://developer.android.com/reference/androidx/media3/ui/PlayerView),
+[Media3 Surface guidance](https://developer.android.com/media/media3/ui/surface),
+[legacy migration guide](https://developer.android.com/media/media3/exoplayer/migration-guide),
+[legacy ExoPlayer releases](https://github.com/google/ExoPlayer/releases),
+[Maps release notes](https://developers.google.com/maps/documentation/android-sdk/release-notes),
+[MapView lifecycle reference](https://developers.google.com/android/reference/com/google/android/gms/maps/MapView),
+[CameraX release notes](https://developer.android.com/jetpack/androidx/releases/camera), and
+[CameraX architecture guide](https://developer.android.com/media/camera/camerax/architecture).
+Future version changes reopen Phase 0 decisions in a new attributed Changeset; they are not routine
+dependency-bot merges.
+
+## Frozen support and validation matrix
+
+| Lane | Common adapter | Media3 / legacy ExoPlayer | Google Maps | CameraX |
+| --- | --- | --- | --- | --- |
+| JVM and deterministic fixture | Transaction order, replacement, rollback, reset, diagnostics, and leak ownership | Fake player/listener plus local-file state transitions | Fake lifecycle/map-ready port; no credentials or renderer claim | Fake provider/binding lease; no camera-frame claim |
+| API 24 minimum lane | Host, lazy reuse, configuration, focus/input, and release | Inflate/configure/detach without remote media | Credential-free unsupported/availability result | Permission-denied and unavailable-provider result |
+| Xiaomi MI 6 / API 28 physical lane | Real View lifecycle and leak checks | Repository-owned local clip, first frame, replacement, pause/resume surface, and cleanup | Optional credentialed smoke when a key is supplied externally | Permission, front/back lens, rotation, foreground/background, hidden destination, and final unbind |
+| API 31+ Google Play lane | StrictMode and modern Surface behavior | SurfaceView/TextureView replacement and navigation retention | Required credentialed renderer smoke plus separately attributed upstream StrictMode evidence | Permission and lifecycle behavior; virtual-camera evidence is never accepted as physical-camera parity |
+| API 36 latest lane | Compile, host, configuration, accessibility, and release regression | Controller/accessibility and Surface regression | Compile/lifecycle/state regression; credentialed when configured | Compile/permission/configuration regression |
+| Static Preview | Bounded adapter diagnostic | Deterministic placeholder | No-key placeholder | No-device placeholder |
+
+API 24, 31+, and 36 lanes may use managed devices where their behavior is deterministic. Codec,
+Google renderer, and physical-camera claims require the corresponding real capability. Phase 9
+cannot close from the Xiaomi API 28 device alone: it also requires one API 31+ Google Play target
+for Maps and one API 31+ physical camera target. A missing target is recorded as unexecuted, not
+converted into a pass or silently removed from the support matrix.
+
+The matrix is pairwise for locale, Light/Dark, LTR/RTL, font scale, and density, with targeted
+single-variable cases for constructor replacement and process restoration. It is not an
+unbounded Cartesian product. Every accepted device or performance batch records build identity,
+SDK line, OS/API, hardware capability, absolute result, conclusion, limitation, and next action in
+the owning active document.
+
+## License, notice, and deterministic-fixture baseline
+
+- Media3 and legacy ExoPlayer POMs declare Apache License 2.0. CameraX 1.6.1 POMs declare Apache
+  License 2.0 and BSD-3-Clause. Maps 20.0.0 declares the Android SDK License and remains subject to
+  Google Maps Platform terms and credential/billing policy.
+- No SDK source, native binary, map data, codec binary, API key, or third-party media is vendored.
+  Before the first SDK dependency lands, the owning pull request creates or updates the allowed
+  root `THIRD_PARTY_NOTICES.md` with the exact direct coordinates, license identifiers, and stable
+  upstream terms links. Each module manual repeats its consumer-relevant terms and support limits.
+- The media fixture is a repository-produced, two-second color/motion clip with silence, stored
+  locally with generation command, ownership statement, codec/container metadata, and SHA-256.
+  Tests never fetch a stream. Advertisements, DRM, downloads, casting, and background services are
+  not part of the first release.
+- Maps uses fake contract ports for ordinary CI and an externally supplied key only for the scoped
+  device smoke. CameraX uses a fake provider/binding port for ordinary CI and explicitly requested
+  runtime permission for physical evidence. A missing key, Play services, codec, permission, or
+  camera produces a structured unsupported/unexecuted result rather than a false renderer pass.
+
 ## Scope
 
 ### Common Android View adapter foundation
 
-The common foundation may add high-risk Q3 API in `viewcompose-host-android` for:
+The common foundation adds high-risk Q3 API in `viewcompose-host-android` for:
 
 - a typed `AndroidViewAdapter<V, S>` contract;
-- immutable Android resource/environment input visible to adapter creation and replay-safe update;
+- immutable `UiEnvironmentValues` visible to adapter creation, replay-safe update, reset, and
+  commit scopes, while creation also receives the renderer-owned Android `Context`;
 - a separate `constructionKey` whose change creates a new View without changing application
   content identity;
-- structured reset reasons that distinguish ordinary rebinding from cross-key mounted-tree reuse;
+- an explicit reuse policy and structured reset reason; reset is reserved for cross-logical-key
+  mounted-tree reuse and is never part of an ordinary same-identity update;
 - commit and release callbacks with the existing renderer transaction guarantees;
-- optional adapter diagnostics that identify the integration, lifecycle binding, construction
-  generation, and fallback without retaining the native View; and
-- compatibility delegation from the existing callback-based `AndroidView` API.
+- bounded adapter diagnostics that identify adapter class, construction generation, reuse policy,
+  lifecycle binding, and fallback without retaining the native View; and
+- typed delegation from the existing callback-based `AndroidView` API, whose `onReset` semantics
+  are hard-cut to the same cross-key-only contract rather than preserved as a second behavior.
 
-The target shape, subject to Phase 0 signature and dependency review, is:
+The Phase 1 target shape is frozen as follows. Scope constructors remain internal; their public
+properties and the adapter callbacks are Android-main-thread-only.
 
 ```kotlin
+enum class AndroidViewReusePolicy {
+    Never,
+    Resettable,
+}
+
+enum class AndroidViewResetReason {
+    MountedTreeReuse,
+}
+
 interface AndroidViewAdapter<V : View, S> {
+    val reusePolicy: AndroidViewReusePolicy
+        get() = AndroidViewReusePolicy.Never
+
     fun create(scope: AndroidViewCreateScope): V
     fun update(scope: AndroidViewUpdateScope<V>, state: S)
-    fun onReset(view: V, reason: AndroidViewResetReason) = Unit
-    fun onCommit(view: V, state: S) = Unit
+    fun onReset(scope: AndroidViewResetScope<V>, reason: AndroidViewResetReason) = Unit
+    fun onCommit(scope: AndroidViewCommitScope<V>, state: S) = Unit
     fun onRelease(view: V) = Unit
 }
 
@@ -96,13 +209,49 @@ fun <V : View, S> UiTreeBuilder.AndroidView(
 ```
 
 `key` owns logical content identity. `constructionKey` owns constructor-sensitive View identity.
-Runtime-restylable values belong in immutable adapter state; context identity, SDK options, or
-styles that are read only during construction belong in `constructionKey`. A resource revision
-must never force recreation by default when replay-safe update is sufficient.
+The renderer's actual construction identity is the adapter implementation class plus
+`constructionKey`; recreating an equivalent adapter object during composition does not replace the
+View, while changing adapter family always does. Runtime-restylable values belong in immutable
+adapter state. Context wrappers, SDK options, surface implementation, or styles read only during
+construction belong in `constructionKey`. A resource revision must never force recreation by
+default when replay-safe update is sufficient. Both keys must have stable equality and hash
+behavior for the lifetime of the VNode; mutating a key object in place is unsupported.
+
+`AndroidViewCreateScope` exposes the renderer-supplied `Context` and current immutable
+`UiEnvironmentValues`. Update, reset, and commit scopes expose the typed View and the current
+environment snapshot. They do not expose a mutable transaction, renderer, session, application
+scope, or SDK registry. Adapter state remains caller-owned; ViewCompose retains only the state
+captured by the current and rollback VNodes and never clones arbitrary mutable state.
+
+The exact reconciliation contract is:
+
+1. Same logical key, adapter class, and construction key reuse the View. `update` replaces complete
+   replay-safe configuration. `onReset` is not invoked.
+2. A later same-identity update failure replays the previously committed adapter and state through
+   `update`; it does not guess how to undo hidden SDK state.
+3. A changed adapter class or construction key creates and updates a candidate View without
+   releasing the committed View. Candidate failure releases only the candidate and preserves the
+   previous View. Success structurally commits the candidate and releases the displaced View
+   exactly once. The candidate's `onCommit` remains a later composition-commit effect; native
+   resource release cannot depend on whether a low-level Renderer caller executes returned effects.
+4. Cross-logical-key mounted-tree reuse is allowed only when `reusePolicy` is `Resettable`.
+   `onReset(..., MountedTreeReuse)` runs exactly once before the next key's `update`. `Never`
+   prevents the containing mounted tree from crossing keys.
+5. `onCommit` runs at most once for each successful insert or rebind, never for a skipped or
+   rolled-back binding, and may run again after later successful state. Implementations therefore
+   perform serial transition or publication work rather than assuming a one-call lifetime.
+6. `onRelease` runs exactly once for every created View after candidate rollback, committed
+   replacement/removal, reuse-cache eviction, or session disposal. It releases only resources
+   explicitly owned by the adapter.
+
+The callback-based overload remains a supported low-level escape hatch. Phase 1 appends a named
+`constructionKey` parameter without shifting the existing positional parameters and implements the
+overload with one internal typed adapter. There is no deprecated forwarding facade and no second
+renderer path.
 
 ### Lifecycle and saved state
 
-The plan may add downstream helpers in `viewcompose-lifecycle-androidx` or the SDK-specific
+Phase 2 may add downstream helpers in `viewcompose-lifecycle-androidx` or the SDK-specific
 integrations for:
 
 - registering a lifecycle observer only after the Android View transaction commits;
@@ -118,6 +267,21 @@ integrations for:
 The common Host contract must not depend upward on AndroidX Lifecycle or an individual SDK. A
 reusable lifecycle decorator belongs in an AndroidX integration layer; SDK-specific lifecycle and
 Bundle behavior stays with the SDK integration when it cannot be expressed generically.
+
+The first-release ownership is frozen as follows:
+
+| Integration | Commit/start behavior | Hidden, replaced, and released behavior | Saved-state owner |
+| --- | --- | --- | --- |
+| Media3 and legacy ExoPlayer | Configure the View replay-safely, then attach the caller-owned player only after commit and while the nearest destination owner is at least started | Detach the player, controller listeners, and Surface relationship when the destination stops, owner changes, reset occurs, or the View is released; never call `play`, `pause`, `stop`, or `release` on the player | Caller owns playlist, position, playback, service/session, and process restoration; the integration saves no player state |
+| Google Maps | After commit, call `MapView.onCreate(restoredBundle)`, register the map-ready generation, then catch up through `onStart`/`onResume` in Android order | Serialize owner replacement; forward pause/stop/destroy in reverse order, unregister low-memory forwarding before final cleanup, and ignore late map-ready callbacks from an obsolete generation | Integration owns one versioned SDK Bundle under an explicit stable `saveableStateKey`; absent key means no process restoration, and corrupt/incompatible state is dropped without affecting surrounding saveable state |
+| CameraX | After commit, set the dedicated caller-owned `Preview` surface provider and bind that exact Preview with the caller-owned provider/selector to the nearest owner | Lifecycle state controls camera activity; owner replacement, reset, release, or failure unbinds only the exact Preview owned by this component and clears its surface provider; `unbindAll` is forbidden | Caller owns permission, provider/backend, selector, Preview configuration, other use cases, and restoration; the integration saves no camera or permission state |
+
+Owner catch-up and replacement are serial on the main thread. A destroyed owner cannot be bound.
+Retained destinations use their capped destination owner, not the Activity owner. Player
+attachment, `MapView.onCreate`, map-ready publication, and CameraX binding are commit work because
+performing them during replay-safe update would publish a rolled-back candidate. Commit failure is
+reported as a post-commit integration failure and triggers bounded cleanup; it cannot pretend the
+whole Android View transaction was never committed.
 
 ### Theme and configuration coordination
 
@@ -170,7 +334,7 @@ This plan does not:
 
 ## Current baseline
 
-Verified from the worktree on 2026-08-18:
+Verified from the worktree at `54151a09f082518c7e49146caf6853b24ffc54ba` on 2026-08-24:
 
 1. The repository has no Media3, legacy ExoPlayer, Google Maps, or CameraX dependency declaration,
    source adapter, published artifact, Demo route, or module manual.
@@ -188,6 +352,13 @@ Verified from the worktree on 2026-08-18:
 7. Lazy mounted-tree reuse crosses logical keys only when every contained AndroidView declares a
    replay-safe reset contract; final abandonment invokes release exactly once.
 8. Direct `AndroidViewBinding` and Fragment-in-tree integration remain unsupported.
+9. The observed-property patch path currently invokes `onReset` when an AndroidView spec changes
+   under the same logical identity, even though the public Host manual defines reset as cross-key
+   reuse preparation. Phase 1 treats this implementation/documentation conflict as a rejected
+   foundation design and removes the same-identity reset call rather than documenting two meanings.
+10. Repository and coordinate searches still find no target SDK declaration, adapter, Demo route,
+    module manual, publication entry, or current Changeset. Google Maven already exists in the
+    centralized repository policy, so Phase 0 requires no repository mutation.
 
 ## Locked architectural rules
 
@@ -195,8 +366,9 @@ Verified from the worktree on 2026-08-18:
    integration-specific tests.
 2. The common adapter contract uses Android/ViewCompose types and resolved values, never Media3,
    Maps, CameraX, or legacy ExoPlayer types.
-3. Adapter `update` and `onReset` replace complete replay-safe View configuration and may be called
-   again during rollback.
+3. Adapter `update` replaces complete replay-safe View configuration and may be called again during
+   rollback. `onReset` runs only for opted-in cross-logical-key mounted-tree reuse; normal update and
+   rollback never call it.
 4. Network calls, playback publication, camera binding, map listener publication, analytics, and
    other irreversible effects begin only after commit or in composition-scoped work triggered by
    committed state.
@@ -205,8 +377,10 @@ Verified from the worktree on 2026-08-18:
    explicitly created and owns it.
 6. Theme/configuration changes prefer replay-safe state update. Recreation is explicit through a
    stable construction key and cannot be inferred from SDK class names.
-7. A hidden retained destination follows its destination lifecycle and cannot keep video playback,
-   map location work, or camera capture active merely because the Activity remains resumed.
+7. A hidden retained destination follows its destination lifecycle and cannot keep a player View
+   or Surface attachment, map lifecycle/location work, or camera capture active merely because the
+   Activity remains resumed. A caller-owned media player may continue background audio only through
+   explicit application playback/service policy; the integration never pauses or releases it.
 8. Preview and unit tests use deterministic stand-ins; missing hardware, credentials, Google Play
    services, codecs, or network connectivity yields a structured unsupported/skipped result rather
    than a false pass.
@@ -215,13 +389,19 @@ Verified from the worktree on 2026-08-18:
 10. No new public contract is retained without its Q level, applicable contract fields,
     canonical-English KDoc, compiled Q3 sample, module manual, Chinese public-document mirrors, and
     immutable release Changeset.
+11. Same-identity updates, construction replacement, and cross-key reuse are three distinct
+    renderer operations. No SDK adapter may overload `key`, resource revision, or reset callbacks
+    to simulate construction identity.
+12. Maps 20.0.0 upstream StrictMode and legacy-renderer limitations remain attributed to Maps. The
+    integration cannot modify process-global StrictMode, choose the legacy renderer, or label an
+    upstream violation as a ViewCompose regression.
 
 ## Execution plan
 
 | Phase | Status | Deliverable | Exit gate |
 | --- | --- | --- | --- |
-| 0. Dependency and contract freeze | Not started | Pin reviewed SDK versions and repositories; freeze module/package names, supported API/device matrix, license/notice impact, ownership table, deterministic fixtures, and rollback strategy | Written baseline agrees with settings, publication metadata, module architecture, and every target SDK contract |
-| 1. Typed AndroidView adapter | Not started | Q3 typed adapter, environment scopes, separate construction identity, reset reason, compatibility delegation, diagnostics, and renderer-neutral tests | Factory/update/reset/commit/release ordering, rollback, replacement, keyed reuse, and zero-adapter inactive cost pass |
+| 0. Dependency and contract freeze | Complete | Pinned reviewed SDK versions and repositories; froze module/package names, dependency exposure, supported API/device matrix, license/notice impact, ownership table, deterministic fixtures, lifecycle/saved-state behavior, and rollback strategy | Worktree, Google Maven, and official SDK contracts agree; no production/publication mutation was required |
+| 1. Typed AndroidView adapter | Not started | Q3 typed adapter, environment scopes, separate construction identity, explicit reuse policy/reset reason, callback delegation, same-identity reset hard cut, diagnostics, and renderer-neutral tests | Factory/update/reset/commit/release ordering, rollback, replacement, keyed reuse, raw-overload parity, and zero-adapter inactive cost pass |
 | 2. Lifecycle and saved-state coordination | Not started | AndroidX lifecycle decorator plus reusable saved-state boundary where evidence supports it | Owner catch-up/replacement, retained destination visibility, corrupt restore, process recreation, and one-shot cleanup pass |
 | 3. AndroidX Media3 | Not started | Optional Media3 module, caller-owned `Player` component, controller/appearance state, local-media Demo/sample, tests, docs, and release intent | Playback attachment/detachment, theme/configuration, navigation retention, Surface cleanup, accessibility, and leak gates pass |
 | 4. Legacy ExoPlayer 2 | Not started | Separate legacy namespace module and sample with no Media3 dependency or type aliasing | Dependency isolation, caller ownership, lifecycle parity, theme/configuration, release cleanup, and migration guidance pass |
@@ -237,19 +417,21 @@ Verified from the worktree on 2026-08-18:
 
 1. The first public component accepts a caller-owned Media3 `Player`; it does not construct or
    release the player implicitly.
-2. `PlayerView` attachment is replay-safe, old listeners and player references are cleared on reset,
-   and permanent release detaches the View without releasing caller state.
+2. `PlayerView` configuration is replay-safe, while player attachment happens only after commit.
+   Old listeners, player references, and Surface relationships are cleared on reset/stop/release,
+   and permanent release never releases caller state.
 3. Controller visibility, artwork/shutter/background appearance, content description, resize mode,
    and constructor-sensitive Surface choice have explicit state or construction ownership.
-4. Playback activation follows the scoped lifecycle and visible navigation owner. A hidden retained
-   page cannot remain active solely because its Activity is resumed.
+4. Player-to-View and Surface attachment follows the scoped lifecycle and visible navigation owner.
+   A hidden retained page cannot keep those View resources active solely because its Activity is
+   resumed; caller-owned playback and background audio policy remain untouched.
 5. A repository-owned local media fixture validates first frame, pause/resume, replacement, error,
    and cleanup without network variability.
 
 ### Legacy ExoPlayer 2
 
-1. The public artifact and package make the legacy namespace explicit and never expose Media3
-   types as aliases or transitive requirements.
+1. The public artifact and package make the legacy namespace explicit, mount
+   `StyledPlayerView`, and never expose Media3 types as aliases or transitive requirements.
 2. The initial component accepts a caller-owned legacy `Player`/`ExoPlayer` and preserves the same
    reset, commit, lifecycle, construction-key, and release semantics as the Media3 line where the
    SDK contract permits.
@@ -291,6 +473,7 @@ Verified from the worktree on 2026-08-18:
 
 ```bash
 ./gradlew :viewcompose-host-android:testDebugUnitTest --no-configuration-cache
+./gradlew :viewcompose-renderer-android:testDebugUnitTest --no-configuration-cache
 ./gradlew :viewcompose-lifecycle-androidx:testDebugUnitTest --no-configuration-cache
 ./gradlew verifyDocumentationStructure
 ./gradlew verifyDevelopmentToolingIsolation
@@ -299,10 +482,16 @@ Verified from the worktree on 2026-08-18:
 ./gradlew qaPreview
 ```
 
-Phase 0 must replace or extend this list with the exact module test and consumer tasks after module
-names are frozen. `qaFull` is required after the first integration mounts real device resources.
+After their corresponding phase creates them, the exact focused module tasks are
+`:viewcompose-media3-androidx:testDebugUnitTest`,
+`:viewcompose-exoplayer2-android:testDebugUnitTest`,
+`:viewcompose-google-maps-android:testDebugUnitTest`, and
+`:viewcompose-camerax-androidx:testDebugUnitTest`, plus each module's compiled sample and minimal
+published-consumer fixture. Phase 1 adds the Host and Renderer API/transaction tests before any of
+those tasks exist. `qaFull` is required after the first integration mounts real device resources.
 Credentialed Maps and physical CameraX evidence are additional scoped gates, not replacements for
-the complete repository device suite.
+the complete repository device suite. Phase 0 itself runs documentation structure, release intent,
+and repository cleanliness because it intentionally owns no production artifact.
 
 ### Required scenario dimensions
 
@@ -372,6 +561,9 @@ This plan is complete only when:
 | Date | Revision | Phase | Command or evidence | Result | Decision and next action |
 | --- | --- | --- | --- | --- | --- |
 | 2026-08-18 | Working tree | Planning baseline | Documentation governance, active roadmap/plan index, CodeGraph AndroidView impact analysis, dependency/source search | Existing transaction/resource/lifecycle foundation confirmed; no target SDK dependency or adapter exists | Land the independent plan, then freeze SDK dependency and module baselines in Phase 0 |
+| 2026-08-24 | `54151a09f082518c7e49146caf6853b24ffc54ba` | Phase 0 repository audit | CodeGraph AndroidView callback/renderer/reuse paths; `settings.gradle.kts`, publishing registry, dependency contracts, module catalog/manuals, and coordinate search | Existing Google Maven policy and module architecture can host all four independent integrations; same-identity observed-property binding incorrectly shares `onReset` with cross-key reuse | Hard-cut reset semantics and construction identity in Phase 1 before creating SDK modules |
+| 2026-08-24 | External fixed sources | Phase 0 SDK audit | Official release/API/lifecycle documentation plus direct fixed-POM probes in Google Maven and Maven Central | Media3 1.11.0, CameraX 1.6.1, Maps 20.0.0, and legacy ExoPlayer 2.19.1 resolve from Google Maven; legacy core/UI are absent from Maven Central; lifecycle, Surface, deprecation, minSdk, license, and Maps known-issue contracts recorded | Freeze exact lines, Google Maven, ownership, notices, and device lanes; begin common adapter implementation only |
+| 2026-08-24 | Working tree from `54151a09f082518c7e49146caf6853b24ffc54ba` | Phase 0 closeout | `./gradlew verifyDocumentationStructure verifyViewComposeReleaseIntent --console=plain`; `git diff --check` | Documentation structure passed for 113 canonical and 109 current Chinese pages; release intent reported 0 release artifacts, 0 ignored artifacts, and 0 shared-path classifications; diff check passed | Phase 0 is complete without production or publication changes; start the Phase 1 typed-adapter and reset-semantics hard cut |
 
 ## Decision history
 
@@ -383,3 +575,11 @@ This plan is complete only when:
 | 2026-08-18 | Default player ownership to the caller | Attaching a player to a View does not authorize the integration to release application-owned playback state |
 | 2026-08-18 | Keep Maps credentials and CameraX permissions in application policy | Repository integrations may coordinate committed Views and lifecycle but cannot own product credentials, consent, or permission UX |
 | 2026-08-18 | Use deterministic local/fake fixtures before credentialed or physical evidence | Network, credentials, codecs, and hardware availability must not make ordinary CI nondeterministic or produce false implementation claims |
+| 2026-08-24 | Freeze stable Media3 1.11.0, CameraX 1.6.1, Maps 20.0.0, and final legacy ExoPlayer 2.19.1 from Google Maven | Stable fixed lines match the repository's API 24 floor; the legacy line is intentionally frozen and cannot be substituted with Media3 |
+| 2026-08-24 | Use legacy `StyledPlayerView`, not legacy `PlayerView` | The final upstream migration path explicitly prepares `StyledPlayerView` for Media3 `PlayerView`; adding the older legacy widget would create avoidable migration debt |
+| 2026-08-24 | Make reset cross-key-only and add an explicit reuse policy | Same-identity state replacement already has replay-safe update and rollback; invoking reset there contradicts the public contract and lets incomplete update implementations survive |
+| 2026-08-24 | Include adapter implementation class in construction identity | Switching SDK adapter families with the same logical/construction key must replace the native View, while recreating an equivalent adapter object must not |
+| 2026-08-24 | Release a displaced View at structural commit and keep candidate `onCommit` after composition commit | Permanent native ownership cleanup cannot depend on a low-level Renderer caller executing returned commit effects; SDK publication/attachment work still cannot run for a rolled-back composition |
+| 2026-08-24 | Scope media lifecycle to View/player attachment, not playback commands | Caller ownership permits background audio or service playback; ViewCompose owns controller, listener, and Surface cleanup but cannot pause or release the supplied player |
+| 2026-08-24 | Require an explicit Maps saveable-state key and exact CameraX Preview ownership | Arbitrary logical keys cannot become durable process-state namespaces, and `unbindAll` would exceed authority over caller-owned unrelated camera use cases |
+| 2026-08-24 | Keep CameraX backend selection and Maps StrictMode policy application-owned | The supplied provider already represents backend policy, while a process-global StrictMode relaxation would hide an attributed upstream Maps 20.0.0 issue |
