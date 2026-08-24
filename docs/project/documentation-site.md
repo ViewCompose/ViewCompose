@@ -94,17 +94,17 @@ locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to t
 tree, so those copies add storage but no localized content or supported route.
 
 The budget model separates expected release-history growth from regressions. Current ceilings are
-46.7 MiB for non-API output, 4.5 MiB average and 24 MiB maximum per API tree, 1 MiB for API routing
+46.9 MiB for non-API output, 4.5 MiB average and 24 MiB maximum per API tree, 1 MiB for API routing
 overhead, 8 MiB total and 768 KiB largest-file JavaScript, 128 KiB CSS, 6.25 MiB per locale search
 index, and 120 seconds for the Docusaurus build. Locale-prefixed API copies remain forbidden.
 
-The non-API ceiling evolved from 41 MiB through 46.7 MiB only after paired builds attributed growth
+The non-API ceiling evolved from 41 MiB through 46.9 MiB only after paired builds attributed growth
 to durable bilingual contracts and representation reviews removed avoidable duplication. Completed
 measurements are consolidated below instead of repeating their execution narrative in this active
 contract. Raise any threshold only with same-corpus absolute and normalized results, reader or
 release value, a conclusion, limitations, and a next stop condition.
 
-At the 46.7 MiB boundary, a failing branch must first consolidate completed evidence or change site
+At the 46.9 MiB boundary, a failing branch must first consolidate completed evidence or change site
 representation. Current public API, architecture, migration, tutorial, and module contracts must
 not be deleted merely to recover budget, and valid immutable API history remains governed by its
 separate per-tree budgets.
@@ -205,22 +205,24 @@ identity token.
 
 <div className="search-partition-detail">
 
-- **2026-08-25, Paging Phase 2 published slice:** on the same local macOS lockfile, the Phase 0
-  candidate and the Phase 2 candidate measured 48,751,657 and 48,942,128 non-API bytes. The
-  +190,471-byte change (+0.391%) adds the bilingual current module manual plus catalog, guide, and
-  roadmap contracts; API output remains governed separately. The candidate exceeded the former
-  46.5 MiB ceiling by 183,344 bytes, so the smallest 0.1 MiB step raises the limit to 46.7 MiB and
-  leaves 26,371 bytes of measured headroom. The result is **mixed**: 440 site pages now expose the
-  optional Paging frontend and its lifecycle, identity, and non-placeholder limits in both locales,
-  while non-API storage increased. Language, translation, routing, accessibility, and all budgets
-  pass. This same-host comparison does not measure deployment transfer, CDN compression, or runtime
-  network behavior. Phase 3 must consolidate representation before any further non-API threshold
-  increase and continues to keep generated API history under its independent tree budgets.
+- **2026-08-25, Paging Phase 3 compact-table slice:** on the same local macOS lockfile, the Phase 2
+  and consolidated Phase 3 candidates measured 48,942,128 and 49,109,510 non-API bytes. The
+  +167,382-byte change (+0.342%) adds durable bilingual placeholder, bounded-update, migration,
+  and holder-lifecycle contracts; generated API output remains separately budgeted. Before the
+  measurement, the branch removed its redundant intermediate acceptance row and merged duplicated
+  device evidence across the plan and module manuals. The result still exceeded 46.8 MiB by 36,154
+  bytes, so the smallest 0.1 MiB step that contains the measured corpus raises the ceiling from 46.7
+  to 46.9 MiB and leaves 68,704 bytes of headroom. The result is **mixed**: compact-table users gain
+  current contracts and interpreted device evidence in both locales while non-API storage grows.
+  Language, translation, routing, and accessibility checks pass. This same-host comparison does not
+  measure deployment transfer, CDN compression, or runtime network behavior. Phase 4 must
+  consolidate representation before any further non-API increase; immutable API history continues
+  under independent per-tree budgets.
 
 Only the latest same-corpus decision remains expanded here. Git history preserves the superseded
 2026-08-06 through the Phase 0 checkpoint details. Those measurements established immutable API
 history reconstruction, bilingual search and accessibility gates, plan and evidence segmentation,
-and repeated consolidation before the non-API ceiling advanced from 41 to 46.7 MiB. They found both
+and repeated consolidation before the non-API ceiling advanced from 41 to 46.9 MiB. They found both
 accepted durable-contract growth and representation improvements; none authorizes deleting current
 contracts or bypassing the next stop condition.
 

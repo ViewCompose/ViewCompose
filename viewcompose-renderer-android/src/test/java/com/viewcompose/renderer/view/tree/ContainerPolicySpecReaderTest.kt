@@ -10,7 +10,9 @@ import com.viewcompose.ui.unit.dp
  */
 
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.VNode
+import com.viewcompose.ui.node.asLazyItemTable
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
 import com.viewcompose.ui.node.policy.LazyContentPadding
@@ -33,7 +35,7 @@ class ContainerPolicySpecReaderTest {
                 spec = LazyColumnNodeProps(
                     contentPadding = LazyContentPadding.None,
                     spacing = 0.dp,
-                    items = emptyList(),
+                    items = emptyList<LazyListItem>().asLazyItemTable(),
                 ),
             ),
         )
@@ -63,7 +65,7 @@ class ContainerPolicySpecReaderTest {
                 spec = LazyColumnNodeProps(
                     contentPadding = LazyContentPadding.all(8.dp),
                     spacing = 4.dp,
-                    items = emptyList(),
+                    items = emptyList<LazyListItem>().asLazyItemTable(),
                     reusePolicy = reuse,
                     motionPolicy = motion,
                 ),
@@ -80,7 +82,7 @@ class ContainerPolicySpecReaderTest {
                     contentPadding = LazyContentPadding.all(8.dp),
                     horizontalSpacing = 4.dp,
                     verticalSpacing = 4.dp,
-                    items = emptyList(),
+                    items = emptyList<LazyListItem>().asLazyItemTable(),
                     state = null,
                     reusePolicy = reuse,
                     motionPolicy = motion,

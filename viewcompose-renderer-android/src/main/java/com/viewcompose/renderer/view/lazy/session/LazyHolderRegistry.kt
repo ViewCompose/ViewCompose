@@ -26,6 +26,22 @@ internal class LazyHolderRegistry<T : Any>(
         }
     }
 
+    fun disposeDetachedWhere(predicate: (T) -> Boolean) {
+        val staleHolders = boundHolders.filter { holder ->
+            holder !in attachedHolders && predicate(holder)
+        }
+        var failure: Throwable? = null
+        staleHolders.forEach { holder ->
+            if (!boundHolders.remove(holder)) return@forEach
+            try {
+                onDispose(holder)
+            } catch (disposeError: Throwable) {
+                if (failure == null) failure = disposeError else failure.addSuppressed(disposeError)
+            }
+        }
+        failure?.let { throw it }
+    }
+
     fun disposeAll() {
         val ownedHolders = boundHolders.toList()
         boundHolders.clear()

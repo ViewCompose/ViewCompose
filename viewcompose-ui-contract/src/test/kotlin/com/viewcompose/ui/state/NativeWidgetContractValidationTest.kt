@@ -6,6 +6,8 @@ import com.viewcompose.ui.modifier.maxHeight
 import com.viewcompose.ui.modifier.maxWidth
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NavigationBarItem
+import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.asLazyItemTable
 import com.viewcompose.ui.node.policy.GridCells
 import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.policy.LazyContentPadding
@@ -60,7 +62,7 @@ class NativeWidgetContractValidationTest {
             contentPadding = LazyContentPadding.None,
             horizontalSpacing = (-1).dp,
             verticalSpacing = 0.dp,
-            items = emptyList(),
+            items = emptyList<LazyListItem>().asLazyItemTable(),
             state = null,
         )
     }

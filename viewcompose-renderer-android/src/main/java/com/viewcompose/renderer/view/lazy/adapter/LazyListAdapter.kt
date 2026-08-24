@@ -1,21 +1,24 @@
 package com.viewcompose.renderer.view.lazy.adapter
 
-import android.util.Log
 import android.graphics.Rect
+import android.util.Log
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.annotation.DoNotInline
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.LazyItemTable
+import com.viewcompose.ui.node.LazyItemTableStickyHeaders
+import com.viewcompose.ui.node.LazyItemTableUpdate
 import com.viewcompose.ui.node.LazyListItemSession
+import com.viewcompose.ui.node.asLazyItemTable
 import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.renderer.interop.asRenderContainerHandle
 import com.viewcompose.renderer.reconcile.LazyListAdapterChangedPayload
 import com.viewcompose.renderer.reconcile.LazyListAdapterUpdatePlan
 import com.viewcompose.renderer.reconcile.LazyListDiff
-import com.viewcompose.renderer.reconcile.LazyListIdentityAnalysis
 import com.viewcompose.renderer.reconcile.LazyListRotationDirection
 import com.viewcompose.renderer.view.lazy.reuse.MountedTreeReuseCache
 import com.viewcompose.renderer.view.lazy.reuse.LazyPreparationCostTracker
@@ -34,8 +37,6 @@ internal class LazyListAdapter(
 ) : RecyclerView.Adapter<LazyListViewHolder>() {
     private companion object {
         private const val ANCHOR_TAG = "UILazyAnchor"
-        private const val DUPLICATE_KEY_POSITION = -1
-        private const val INITIAL_STICKY_POSITION_CAPACITY = 4
         private const val MAX_DISTINCT_VIEW_TYPES = 1_024
     }
 
@@ -44,84 +45,34 @@ internal class LazyListAdapter(
         val offset: Int,
     )
 
-    private class KeyIndex(
-        private val keys: Array<Any?>,
-        private val positions: IntArray,
-        private val stableIds: LongArray,
-        val duplicateKeys: List<Any>,
-        val stickyHeaderPositions: IntArray,
-    ) {
-        val supportsKeyedDiff: Boolean
-            get() = duplicateKeys.isEmpty()
-
-        fun uniquePosition(key: Any): Int? {
-            val slot = findSlot(key)
-            if (slot < 0) return null
-            return positions[slot].takeIf { it >= 0 }
-        }
-
-        fun stableId(key: Any): Long? {
-            val slot = findSlot(key)
-            if (slot < 0 || positions[slot] < 0) return null
-            return stableIds[slot]
-        }
-
-        fun retainedStableId(key: Any): Long? {
-            val slot = findSlot(key)
-            return if (slot >= 0) stableIds[slot] else null
-        }
-
-        private fun findSlot(key: Any): Int {
-            if (keys.isEmpty()) return -1
-            val mask = keys.lastIndex
-            var slot = mixedHash(key) and mask
-            while (true) {
-                val candidate = keys[slot] ?: return -1
-                if (candidate == key) return slot
-                slot = (slot + 1) and mask
-            }
-        }
-
-        companion object {
-            val Empty = KeyIndex(
-                keys = emptyArray(),
-                positions = intArrayOf(),
-                stableIds = longArrayOf(),
-                duplicateKeys = emptyList(),
-                stickyHeaderPositions = intArrayOf(),
-            )
-
-            fun tableCapacity(itemCount: Int): Int {
-                if (itemCount == 0) return 0
-                require(itemCount <= (1 shl 29)) {
-                    "Lazy collection item count is too large: $itemCount"
-                }
-                val required = itemCount + (itemCount ushr 1) + 1
-                return Integer.highestOneBit(required - 1).shl(1).coerceAtLeast(2)
-            }
-
-            fun mixedHash(key: Any): Int {
-                val hash = key.hashCode()
-                return hash xor (hash ushr 16)
-            }
-        }
+    private object EmptyItemTable : LazyItemTable {
+        override val size: Int = 0
+        override fun get(index: Int): LazyListItem = throw IndexOutOfBoundsException(
+            "Lazy item index $index is outside an empty table.",
+        )
+        override fun indexOfKey(key: Any): Int = -1
+        override fun updatesFrom(previous: LazyItemTable): List<LazyItemTableUpdate>? =
+            if (previous.size == 0) emptyList() else null
     }
 
-    private var items: List<LazyListItem> = emptyList()
-    private var keyIndex = KeyIndex.Empty
+    private data class DeclaredTableUpdatePlan(
+        val updates: List<LazyItemTableUpdate>,
+        val reloadAll: Boolean,
+    )
+
+    private var items: LazyItemTable = EmptyItemTable
     // The registry centralizes holder lifecycle across attach, detach, recycle, and final disposal.
     private val mountedTreeCache = MountedTreeReuseCache()
     private val holderRegistry = LazyHolderRegistry<LazyListViewHolder>(::recycleHolder)
-    private var lastIdentityWarning: String? = null
     private var attachedRecyclerView: RecyclerView? = null
     private val viewTypes = ViewTypeRegistry(MAX_DISTINCT_VIEW_TYPES)
+    private val stableIdsByKey = HashMap<Any, Long>()
     private var nextStableId = 0L
     private var nextViewType = 1
     private var itemsVersion = 0L
     private var currentSubmissionRevision = 0L
     private var listState: LazyListState? = null
     private var stickyHeaderDisposer: (() -> Unit)? = null
-    private var stickyHeaderPositions: IntArray = intArrayOf()
 
     init {
         setHasStableIds(true)
@@ -214,38 +165,37 @@ internal class LazyListAdapter(
 
     override fun getItemId(position: Int): Long {
         val key = items[position].key
-        return keyIndex.stableId(key) ?: (Long.MIN_VALUE + position)
+        return stableIdsByKey.getOrPut(key) { nextStableId++ }
     }
 
-    fun itemKeyAt(position: Int): Any? = items.getOrNull(position)?.key
+    fun itemKeyAt(position: Int): Any? = itemAtOrNull(position)?.key
 
-    fun itemContentTypeAt(position: Int): Any? = items.getOrNull(position)?.contentType
+    fun itemContentTypeAt(position: Int): Any? = itemAtOrNull(position)?.contentType
 
     fun itemSpanAt(position: Int): GridItemSpan =
-        items.getOrNull(position)?.span ?: GridItemSpan.Single
+        itemAtOrNull(position)?.span ?: GridItemSpan.Single
 
     fun configureMountedTreeCache(size: Int) {
         mountedTreeCache.capacity = size
     }
 
     fun isStickyHeader(position: Int): Boolean {
-        return items.getOrNull(position)?.kind == LazyListItemKind.StickyHeader
+        return itemAtOrNull(position)?.kind == LazyListItemKind.StickyHeader
     }
 
-    fun hasStickyHeaders(): Boolean = stickyHeaderPositions.isNotEmpty()
+    fun hasStickyHeaders(): Boolean {
+        return (items as? LazyItemTableStickyHeaders)?.hasStickyHeaders == true
+    }
 
     fun findStickyHeaderPosition(itemPosition: Int): Int {
-        if (itemPosition < 0 || items.isEmpty()) {
+        if (itemPosition < 0 || items.size == 0) {
             return RecyclerView.NO_POSITION
         }
-        val target = itemPosition.coerceAtMost(items.lastIndex)
-        val insertion = stickyHeaderPositions.binarySearch(target)
-        if (insertion >= 0) return stickyHeaderPositions[insertion]
-        val preceding = -insertion - 2
-        if (preceding >= 0) {
-            return stickyHeaderPositions[preceding]
-        }
-        return RecyclerView.NO_POSITION
+        val stickyHeaders = items as? LazyItemTableStickyHeaders
+            ?: return RecyclerView.NO_POSITION
+        return stickyHeaders.findStickyHeaderIndex(itemPosition.coerceAtMost(items.size - 1))
+            .takeIf { it >= 0 }
+            ?: RecyclerView.NO_POSITION
     }
 
     fun currentItemsVersion(): Long = itemsVersion
@@ -287,48 +237,189 @@ internal class LazyListAdapter(
     fun submitItems(
         items: List<LazyListItem>,
         submissionRevision: Long? = null,
+    ): Boolean = submitItems(items.asLazyItemTable(), submissionRevision)
+
+    fun submitItems(
+        items: LazyItemTable,
+        submissionRevision: Long? = null,
     ): Boolean {
         val revision = submissionRevision ?: (currentSubmissionRevision + 1L)
         if (revision <= currentSubmissionRevision) return false
         val previousItems = this.items
-        // Equal submissions are common for retained grid/policy patches. Canonical item snapshots
-        // make this scan reference-cheap, and it avoids rebuilding indexes plus a second plan scan.
-        if (previousItems == items) return false
-        val previousKeyIndex = keyIndex
-        val nextKeyIndex = buildKeyIndex(items)
         val includeSemanticChanges = attachedRecyclerView?.itemAnimator != null
-        val updatePlan = LazyListDiff.calculateAdapterUpdatePlan(
-            previous = previousItems,
-            next = items,
-            supportsKeyedDiff = previousKeyIndex.supportsKeyedDiff &&
-                nextKeyIndex.supportsKeyedDiff,
-            // With motion disabled, attached sessions commit semantic revisions synchronously and
-            // detached holders reconcile on attach; only physical compatibility still needs RV.
-            includeSemanticChanges = includeSemanticChanges,
-        )
-        if (updatePlan === LazyListAdapterUpdatePlan.NoChange) return false
-        warnAboutIdentityIssues(nextKeyIndex)
-        // When incremental diff is unavailable, preserve the first visible item anchor to reduce jump after notifyDataSetChanged.
-        val reloadAnchor = if (updatePlan === LazyListAdapterUpdatePlan.ReloadAll) {
+        val declaredPlan = items.updatesFrom(previousItems)?.let { updates ->
+            validateDeclaredUpdates(
+                previousSize = previousItems.size,
+                nextSize = items.size,
+                updates = updates,
+            )
+        }
+        val genericPlan = if (declaredPlan == null) {
+            LazyListDiff.calculateAdapterUpdatePlan(
+                previous = previousItems.materialize(),
+                next = items.materialize(),
+                supportsKeyedDiff = true,
+                // With motion disabled, attached sessions commit semantic revisions synchronously
+                // and detached holders reconcile on attach; only physical compatibility needs RV.
+                includeSemanticChanges = includeSemanticChanges,
+            )
+        } else {
+            null
+        }
+        if (declaredPlan?.updates?.isEmpty() == true || genericPlan === LazyListAdapterUpdatePlan.NoChange) {
+            return false
+        }
+        val reloadAll = declaredPlan?.reloadAll == true ||
+            genericPlan === LazyListAdapterUpdatePlan.ReloadAll
+        // Full invalidation preserves the first visible item anchor to reduce viewport jumps.
+        val reloadAnchor = if (reloadAll) {
             captureScrollAnchor()
         } else {
             null
         }
         this.items = items
-        keyIndex = nextKeyIndex
-        stickyHeaderPositions = nextKeyIndex.stickyHeaderPositions
+        stableIdsByKey.keys.removeAll { key -> items.indexOfKey(key) < 0 }
         currentSubmissionRevision = revision
         itemsVersion += 1
-        dispatchUpdatePlan(updatePlan, reloadAnchor)
+        disposeStaleDetachedHolders(items)
+        if (declaredPlan != null) {
+            dispatchDeclaredUpdates(
+                plan = declaredPlan,
+                includeSemanticChanges = includeSemanticChanges,
+                reloadAnchor = reloadAnchor,
+            )
+        } else {
+            dispatchUpdatePlan(checkNotNull(genericPlan), reloadAnchor)
+        }
         refreshAttachedHolders(
             previousItems = previousItems,
-            previousKeyIndex = previousKeyIndex,
             submissionRevision = revision,
-            forceAll = updatePlan === LazyListAdapterUpdatePlan.ReloadAll,
+            forceAll = reloadAll,
             retrySuppressedSemanticFailures = !includeSemanticChanges &&
-                updatePlan !== LazyListAdapterUpdatePlan.ReloadAll,
+                !reloadAll,
         )
         return true
+    }
+
+    private fun disposeStaleDetachedHolders(nextItems: LazyItemTable) {
+        holderRegistry.disposeDetachedWhere { holder ->
+            val key = holder.boundItemKey ?: return@disposeDetachedWhere false
+            val nextPosition = nextItems.indexOfKey(key)
+            if (nextPosition < 0) {
+                true
+            } else {
+                val nextItem = nextItems[nextPosition]
+                holder.boundContentType != nextItem.contentType ||
+                    holder.boundItemKind != nextItem.kind
+            }
+        }
+    }
+
+    private fun validateDeclaredUpdates(
+        previousSize: Int,
+        nextSize: Int,
+        updates: List<LazyItemTableUpdate>,
+    ): DeclaredTableUpdatePlan {
+        var currentSize = previousSize
+        var reloadAll = false
+        updates.forEachIndexed { operationIndex, update ->
+            check(!reloadAll) {
+                "Lazy item table ReloadAll must be the final and only update."
+            }
+            when (update) {
+                is LazyItemTableUpdate.InsertRange -> {
+                    require(update.count > 0) {
+                        "Lazy item table insert count must be positive at operation $operationIndex."
+                    }
+                    require(update.index in 0..currentSize) {
+                        "Lazy item table insert index ${update.index} is outside 0..$currentSize."
+                    }
+                    currentSize = Math.addExact(currentSize, update.count)
+                }
+                is LazyItemTableUpdate.RemoveRange -> {
+                    require(update.count > 0) {
+                        "Lazy item table remove count must be positive at operation $operationIndex."
+                    }
+                    require(
+                        update.index >= 0 &&
+                            update.index.toLong() + update.count.toLong() <= currentSize.toLong(),
+                    ) {
+                        "Lazy item table remove range ${update.index}..${update.index + update.count} " +
+                            "exceeds current size $currentSize."
+                    }
+                    currentSize -= update.count
+                }
+                is LazyItemTableUpdate.Move -> {
+                    require(update.fromIndex in 0 until currentSize) {
+                        "Lazy item table move source ${update.fromIndex} is outside 0 until $currentSize."
+                    }
+                    require(update.toIndex in 0 until currentSize) {
+                        "Lazy item table move target ${update.toIndex} is outside 0 until $currentSize."
+                    }
+                }
+                is LazyItemTableUpdate.ChangeRange -> {
+                    require(update.count > 0) {
+                        "Lazy item table change count must be positive at operation $operationIndex."
+                    }
+                    require(
+                        update.index >= 0 &&
+                            update.index.toLong() + update.count.toLong() <= currentSize.toLong(),
+                    ) {
+                        "Lazy item table change range ${update.index}..${update.index + update.count} " +
+                            "exceeds current size $currentSize."
+                    }
+                }
+                LazyItemTableUpdate.ReloadAll -> {
+                    require(updates.size == 1) {
+                        "Lazy item table ReloadAll must be the only update."
+                    }
+                    reloadAll = true
+                    currentSize = nextSize
+                }
+            }
+        }
+        require(currentSize == nextSize) {
+            "Lazy item table updates produce size $currentSize but candidate size is $nextSize."
+        }
+        return DeclaredTableUpdatePlan(
+            updates = updates,
+            reloadAll = reloadAll,
+        )
+    }
+
+    @DoNotInline
+    private fun dispatchDeclaredUpdates(
+        plan: DeclaredTableUpdatePlan,
+        includeSemanticChanges: Boolean,
+        reloadAnchor: ScrollAnchor?,
+    ) {
+        plan.updates.forEach { update ->
+            when (update) {
+                is LazyItemTableUpdate.InsertRange -> notifyItemRangeInserted(
+                    update.index,
+                    update.count,
+                )
+                is LazyItemTableUpdate.RemoveRange -> notifyItemRangeRemoved(
+                    update.index,
+                    update.count,
+                )
+                is LazyItemTableUpdate.Move -> notifyItemMoved(
+                    update.fromIndex,
+                    update.toIndex,
+                )
+                is LazyItemTableUpdate.ChangeRange -> if (includeSemanticChanges) {
+                    notifyItemRangeChanged(
+                        update.index,
+                        update.count,
+                        LazyListAdapterChangedPayload,
+                    )
+                }
+                LazyItemTableUpdate.ReloadAll -> {
+                    notifyDataSetChanged()
+                    restoreScrollAnchor(reloadAnchor)
+                }
+            }
+        }
     }
 
     @DoNotInline
@@ -393,8 +484,7 @@ internal class LazyListAdapter(
     }
 
     private fun refreshAttachedHolders(
-        previousItems: List<LazyListItem>,
-        previousKeyIndex: KeyIndex,
+        previousItems: LazyItemTable,
         submissionRevision: Long,
         forceAll: Boolean,
         retrySuppressedSemanticFailures: Boolean,
@@ -405,9 +495,9 @@ internal class LazyListAdapter(
             val boundKey = holder.boundItemKey
             var previousItem: LazyListItem? = null
             val position = if (boundKey != null) {
-                val previousPosition = previousKeyIndex.uniquePosition(boundKey)
-                val nextPosition = keyIndex.uniquePosition(boundKey)
-                if (previousPosition != null && nextPosition != null) {
+                val previousPosition = previousItems.indexOfKey(boundKey)
+                val nextPosition = items.indexOfKey(boundKey)
+                if (previousPosition >= 0 && nextPosition >= 0) {
                     previousItem = previousItems[previousPosition]
                     if (!forceAll && previousItems[previousPosition] == items[nextPosition]) {
                         return@forEachAttached
@@ -421,7 +511,7 @@ internal class LazyListAdapter(
             } else {
                 holder.boundItemPosition
             }
-            if (position !in items.indices) return@forEachAttached
+            if (position !in 0 until items.size) return@forEachAttached
             val nextItem = items[position]
             if (
                 holder.boundContentType != nextItem.contentType ||
@@ -492,11 +582,12 @@ internal class LazyListAdapter(
     ): LazyItemBindOutcome {
         val boundKey = holder.boundItemKey
         val position = if (boundKey != null) {
-            keyIndex.uniquePosition(boundKey) ?: return LazyItemBindOutcome.NotCommitted
+            items.indexOfKey(boundKey).takeIf { it >= 0 }
+                ?: return LazyItemBindOutcome.NotCommitted
         } else {
             holder.boundItemPosition
         }
-        if (position !in items.indices) return LazyItemBindOutcome.NotCommitted
+        if (position !in 0 until items.size) return LazyItemBindOutcome.NotCommitted
         val nextItem = items[position]
         if (holder.boundContentType != nextItem.contentType || holder.boundItemKind != nextItem.kind) {
             return LazyItemBindOutcome.NotCommitted
@@ -507,24 +598,6 @@ internal class LazyListAdapter(
             position = position,
             active = true,
         )
-    }
-
-    private fun warnAboutIdentityIssues(index: KeyIndex) {
-        if (index.duplicateKeys.isEmpty()) {
-            lastIdentityWarning = null
-            return
-        }
-        val warning = LazyListIdentityAnalysis(index.duplicateKeys)
-            .warningMessage(listName = "items")
-        if (warning == null) {
-            lastIdentityWarning = null
-            return
-        }
-        if (warning == lastIdentityWarning) {
-            return
-        }
-        lastIdentityWarning = warning
-        Log.w("ViewCompose", warning)
     }
 
     fun disposeAll() {
@@ -553,57 +626,18 @@ internal class LazyListAdapter(
             if (failure == null) failure = detachError else failure.addSuppressed(detachError)
         }
         listState = null
-        items = emptyList()
-        keyIndex = KeyIndex.Empty
-        stickyHeaderPositions = intArrayOf()
+        items = EmptyItemTable
+        stableIdsByKey.clear()
         itemsVersion += 1
         failure?.let { throw it }
     }
 
-    private fun buildKeyIndex(items: List<LazyListItem>): KeyIndex {
-        val capacity = KeyIndex.tableCapacity(items.size)
-        val keys = arrayOfNulls<Any>(capacity)
-        val positions = IntArray(capacity)
-        val stableIds = LongArray(capacity)
-        val mask = capacity - 1
-        var duplicateKeys: ArrayList<Any>? = null
-        var stickyPositions: IntArray? = null
-        var stickyCount = 0
-        items.forEachIndexed { position, item ->
-            val key = item.key
-            var slot = KeyIndex.mixedHash(key) and mask
-            while (keys[slot] != null && keys[slot] != key) {
-                slot = (slot + 1) and mask
-            }
-            val previousPosition = if (keys[slot] == null) null else positions[slot]
-            if (previousPosition == null) {
-                keys[slot] = key
-                positions[slot] = position
-                stableIds[slot] = keyIndex.retainedStableId(key) ?: nextStableId++
-            } else if (previousPosition >= 0) {
-                positions[slot] = DUPLICATE_KEY_POSITION
-                if (duplicateKeys == null) duplicateKeys = ArrayList()
-                duplicateKeys?.add(key)
-            }
-            if (item.kind == LazyListItemKind.StickyHeader) {
-                var target = stickyPositions
-                if (target == null) {
-                    target = IntArray(minOf(items.size, INITIAL_STICKY_POSITION_CAPACITY))
-                    stickyPositions = target
-                } else if (stickyCount == target.size) {
-                    target = target.copyOf(minOf(items.size, target.size * 2))
-                    stickyPositions = target
-                }
-                target[stickyCount++] = position
-            }
-        }
-        return KeyIndex(
-            keys = keys,
-            positions = positions,
-            stableIds = stableIds,
-            duplicateKeys = duplicateKeys ?: emptyList(),
-            stickyHeaderPositions = stickyPositions?.copyOf(stickyCount) ?: intArrayOf(),
-        )
+    private fun itemAtOrNull(index: Int): LazyListItem? {
+        return if (index in 0 until items.size) items[index] else null
+    }
+
+    private fun LazyItemTable.materialize(): List<LazyListItem> {
+        return toList()
     }
 
     private fun bindHolder(

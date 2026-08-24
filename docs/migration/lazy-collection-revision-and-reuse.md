@@ -238,6 +238,31 @@ shells. Omit `onReset` when a View cannot safely support this lifecycle.
 
 ## Update custom sessions and renderers
 
+Direct NodeSpec producers must also migrate the alpha collection boundary from
+`List<LazyListItem>` to `LazyItemTable`:
+
+```kotlin
+LazyColumnNodeProps(
+    contentPadding = LazyContentPadding.None,
+    spacing = UiDp.Zero,
+    items = itemModels.asLazyItemTable(),
+)
+```
+
+Foundation `LazyColumn`, `LazyRow`, and `LazyVerticalGrid` DSL call sites do not change. The finite
+adapter validates unique keys and preserves ordinary keyed diff behavior. A custom compact source
+may implement `LazyItemTable` directly, but its snapshot must be immutable; `get` and `indexOfKey`
+must be synchronous and side-effect-free; and every declared `LazyItemTableUpdate` must exactly
+transform the recognized predecessor. Return `null` to request the finite generic diff or
+`ReloadAll` for an explicit conservative replacement. Invalid operations reject the complete
+candidate rather than partially updating RecyclerView.
+
+Custom renderers must not enumerate a compact table to prebuild all keys or stable IDs. Resolve
+positions through `indexOfKey`, allocate collision-safe physical IDs independently of application
+hashes, and consume optional `LazyItemTableStickyHeaders` metadata. A table that omits that metadata
+promises it has no sticky entries. Iterating a table is a finite compatibility scan and may be
+prohibitively expensive for virtual positions.
+
 Custom `LazyListItemSession` implementations must preserve the full lifecycle:
 
 1. optional externally silent `prepare`;

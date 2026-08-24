@@ -105,6 +105,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.test.uiautomator)
+    androidTestImplementation(project(":viewcompose-paging-androidx"))
     androidTestImplementation(libs.androidx.media3.ui)
     androidTestImplementation(libs.exoplayer2.ui)
     androidTestImplementation(libs.androidx.camera.view)

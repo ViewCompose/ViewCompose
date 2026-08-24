@@ -4,7 +4,9 @@ import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionStrategy
+import com.viewcompose.ui.node.LazyItemTable
 import com.viewcompose.ui.node.RenderContainerHandle
+import com.viewcompose.ui.node.asLazyItemTable
 import com.viewcompose.ui.node.policy.GridItemSpan
 
 /**
@@ -438,7 +440,7 @@ internal class LazyItemCollector(
         items.add(lazyItem)
     }
 
-    fun build(): List<LazyListItem> {
+    fun build(): LazyItemTable {
         val evaluatedSnapshot = matchedEvaluatedSnapshot
         val committedItemsByKey = evaluatedSnapshot?.itemsByKey ?: mutableItemsByKey.orEmpty()
         val candidateItems = evaluatedSnapshot?.items ?: mutableItems.orEmpty()
@@ -448,6 +450,11 @@ internal class LazyItemCollector(
             reuseCache.committedItems
         } else {
             candidateItems
+        }
+        val committedItemTable = evaluatedSnapshot?.itemTable ?: if (matchesCommittedSubmission) {
+            reuseCache.committedItemTable
+        } else {
+            committedItems.asLazyItemTable()
         }
         if (ComposerContext.currentComposer() != null) {
             val keyMembershipChanged = evaluatedSnapshot?.keyMembershipChangedWhenRestored
@@ -479,6 +486,7 @@ internal class LazyItemCollector(
                 reuseCache.commit(
                     baselineGeneration = baselineGeneration,
                     items = committedItems,
+                    itemTable = committedItemTable,
                     itemsByKey = committedItemsByKey,
                     displacedCommittedItemsByKey = displacedCommittedItems,
                     snapshotPreviousVariantsByKey = snapshotPreviousVariants,
@@ -490,9 +498,7 @@ internal class LazyItemCollector(
                 )
             }
         }
-        // The collector is frame-local and receives no writes after build, so the read-only view is
-        // already an immutable submission without copying every item and key a second time.
-        return committedItems
+        return committedItemTable
     }
 
     private fun mutableItemsByKey(): HashMap<Any, LazyListItem> {
@@ -511,6 +517,8 @@ internal class LazyItemCollector(
 /** Retains two evaluated whole snapshots and at most one previous semantic variant per current key. */
 internal class LazyItemCanonicalReuseCache {
     var committedItems: List<LazyListItem> = emptyList()
+        private set
+    var committedItemTable: LazyItemTable = emptyList<LazyListItem>().asLazyItemTable()
         private set
     private var committedItemsByKey: Map<Any, LazyListItem> = emptyMap()
     private var previousVariantsByKey = HashMap<Any, LazyListItem>()
@@ -603,6 +611,7 @@ internal class LazyItemCanonicalReuseCache {
     fun commit(
         baselineGeneration: Long,
         items: List<LazyListItem>,
+        itemTable: LazyItemTable,
         itemsByKey: Map<Any, LazyListItem>,
         displacedCommittedItemsByKey: Map<Any, LazyListItem>,
         snapshotPreviousVariantsByKey: HashMap<Any, LazyListItem>?,
@@ -632,6 +641,7 @@ internal class LazyItemCanonicalReuseCache {
                 previousVariantsByKey = rebuildPreviousVariants(itemsByKey)
             }
             committedItems = items
+            committedItemTable = itemTable
             committedItemsByKey = itemsByKey
             currentEvaluatedSnapshot = null
             previousEvaluatedSnapshot = null
@@ -652,6 +662,7 @@ internal class LazyItemCanonicalReuseCache {
         val priorEvaluatedSnapshot = currentEvaluatedSnapshot
         previousVariantsByKey = candidatePreviousVariants
         committedItems = items
+        committedItemTable = itemTable
         committedItemsByKey = itemsByKey
         previousEvaluatedSnapshot = priorEvaluatedSnapshot?.asPrevious(
             previousVariantsWhenRestored = restoredCommittedPreviousVariants,
@@ -661,6 +672,7 @@ internal class LazyItemCanonicalReuseCache {
             source = sourceSnapshot,
             environmentRevision = environmentRevision,
             items = items,
+            itemTable = itemTable,
             itemsByKey = itemsByKey,
             previousVariantsWhenRestored = HashMap(),
             keyMembershipChangedWhenRestored = false,
@@ -691,6 +703,7 @@ internal class LazyItemCanonicalReuseCache {
         )
         previousVariantsByKey = snapshot.previousVariantsWhenRestored
         committedItems = snapshot.items
+        committedItemTable = snapshot.itemTable
         committedItemsByKey = snapshot.itemsByKey
         currentEvaluatedSnapshot = snapshot.asCurrent()
         previousEvaluatedSnapshot = demotedSnapshot
@@ -741,6 +754,7 @@ internal class EvaluatedLazyItemsSnapshot(
     val source: LazyItemsSnapshot<*>,
     val environmentRevision: LocalSnapshot,
     val items: List<LazyListItem>,
+    val itemTable: LazyItemTable,
     val itemsByKey: Map<Any, LazyListItem>,
     val previousVariantsWhenRestored: HashMap<Any, LazyListItem>,
     val keyMembershipChangedWhenRestored: Boolean,
@@ -760,6 +774,7 @@ internal class EvaluatedLazyItemsSnapshot(
             source = source,
             environmentRevision = environmentRevision,
             items = items,
+            itemTable = itemTable,
             itemsByKey = itemsByKey,
             previousVariantsWhenRestored = previousVariantsWhenRestored,
             keyMembershipChangedWhenRestored = keyMembershipChangedWhenRestored,
@@ -771,6 +786,7 @@ internal class EvaluatedLazyItemsSnapshot(
             source = source,
             environmentRevision = environmentRevision,
             items = items,
+            itemTable = itemTable,
             itemsByKey = itemsByKey,
             previousVariantsWhenRestored = HashMap(),
             keyMembershipChangedWhenRestored = false,
@@ -778,7 +794,7 @@ internal class EvaluatedLazyItemsSnapshot(
     }
 }
 
-private class WidgetLazyItemSessionStrategy(
+internal class WidgetLazyItemSessionStrategy(
     private val localSnapshot: LocalSnapshot,
     private val saveableStateHolder: SaveableStateHolder?,
     private val content: WidgetLazyItemContent,
@@ -808,7 +824,7 @@ private class WidgetLazyItemSessionStrategy(
     }
 }
 
-private class TypedWidgetLazyItemContent<T>(
+internal class TypedWidgetLazyItemContent<T>(
     private val content: UiTreeBuilder.(T) -> Unit,
 ) : WidgetLazyItemContent {
     @Suppress("UNCHECKED_CAST")

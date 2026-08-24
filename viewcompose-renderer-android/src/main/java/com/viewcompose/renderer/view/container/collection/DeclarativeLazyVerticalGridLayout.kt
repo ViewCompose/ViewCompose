@@ -15,7 +15,7 @@ import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
 import com.viewcompose.renderer.view.tree.ModifierInsetsApplier
 import com.viewcompose.renderer.view.tree.RetainedSessionSubmission
-import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.LazyItemTable
 import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.state.LazyListState
@@ -79,7 +79,7 @@ internal class DeclarativeLazyVerticalGridLayout(
         contentPadding: PaddingPx,
         horizontalSpacing: Int,
         verticalSpacing: Int,
-        items: List<LazyListItem>,
+        items: LazyItemTable,
         state: LazyListState?,
         reverseLayout: Boolean,
         userScrollEnabled: Boolean,

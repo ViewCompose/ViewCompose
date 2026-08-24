@@ -177,6 +177,16 @@ by a later renderer or child render session.
   replacement snapshot. Selector or duplicate-key failure publishes no evaluated snapshot, and a
   retry reevaluates every selector. No caller-owned aggregate token can bypass ordinary `List`
   checks.
+- Foundation publishes each accepted lazy declaration as a Q3 `LazyItemTable`. Ordinary finite
+  DSLs retain their existing source shape and cache the table plus its key index with the accepted
+  evaluated snapshot, so an exact reuse hit does not rebuild either structure. Optional
+  integrations and other compact sources can use Q3 `lazyItemContentFactory`: it captures the
+  current locals and saveable-state holder, creates type-safe delayed `LazyListItem` snapshots on
+  demand, exposes an opaque process-local `environmentRevision` token for table equality decisions,
+  and applies the caller's retained logical-key set only after parent commit. The factory
+  is declaration-revision scoped; positional placeholders should not be retained as saveable
+  owners. The compiled `compactLazyItemTableSample` emits one million logical positions without one
+  model or key-map entry per position.
 - `ScrollableColumn` and `ScrollableRow` accept Q3 `ScrollState` plus `userScrollEnabled` without
   unmounting eager children. `HorizontalPager` and `VerticalPager` accept Q3 `PagerState`; their
   change callback fires only after a different page settles. Focused editors in real vertical
@@ -432,6 +442,13 @@ shape, adds `state` and `userScrollEnabled` to eager scroll containers, adds sli
 interaction-boundary callbacks, adds pull-to-refresh `enabled`, and requires stable navigation and
 segmented item keys. These changes intentionally keep one source of truth; no deprecated parallel
 signature is retained on the alpha line.
+
+The compact lazy-table change preserves all Foundation `LazyColumn`, `LazyRow`, and
+`LazyVerticalGrid` call sites, but changes the NodeSpec value they publish. Q3
+`lazyItemContentFactory` is additive and intended for integration authors, not a replacement for
+ordinary finite-list DSLs. Its `retainedKeys` set is a committed state-retention contract: omitting
+a removed key permits prompt saveable-state release, while retaining placeholder identities would
+incorrectly give unloaded positions logical state ownership.
 
 `RenderSessionPlatformDiagnostics.inspectionTooling`, `RenderSessionInspectionTooling`,
 `RenderSessionInspectionPolicy`, and `RenderSessionInspectionRegistration` are Q3 tooling APIs.

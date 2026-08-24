@@ -136,12 +136,15 @@ import com.viewcompose.ui.foundation.rememberUpdatedState
 import com.viewcompose.ui.foundation.observedNodeSpec
 import com.viewcompose.ui.foundation.observedValue
 import com.viewcompose.ui.foundation.toLazyItemsSnapshot
+import com.viewcompose.ui.foundation.lazyItemContentFactory
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.MinHeightModifierElement
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.node.LazyItemTable
+import com.viewcompose.ui.node.LazyItemTableUpdate
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextAlign
@@ -442,6 +445,42 @@ fun lazyCollectionRevisionSample() {
 
     check(topLevelVariants.size == 4)
     check((nestedCollections[1].children.single().spec as LazyRowNodeProps).items.single().key == 7L)
+}
+
+/** Emits a million logical positions without allocating a million item models or key entries. */
+fun compactLazyItemTableSample() {
+    val list = buildVNodeTree {
+        val factory = lazyItemContentFactory<Int>(retainedKeys = emptySet()) { index ->
+            Text("Row $index")
+        }
+        val table = object : LazyItemTable {
+            override val size: Int = 1_000_000
+
+            override fun get(index: Int) = factory.createItem(
+                key = index,
+                contentRevision = index,
+                payload = index,
+            )
+
+            override fun indexOfKey(key: Any): Int =
+                (key as? Int)?.takeIf { it in 0 until size } ?: -1
+
+            override fun updatesFrom(previous: LazyItemTable): List<LazyItemTableUpdate>? =
+                if (previous === this) emptyList() else listOf(LazyItemTableUpdate.ReloadAll)
+        }
+        emit(
+            type = NodeType.LazyColumn,
+            spec = LazyColumnNodeProps(
+                contentPadding = com.viewcompose.ui.node.policy.LazyContentPadding.None,
+                spacing = com.viewcompose.ui.unit.UiDp.Zero,
+                items = table,
+            ),
+        )
+    }.single()
+
+    val table = (list.spec as LazyColumnNodeProps).items
+    check(table.size == 1_000_000)
+    check(table.indexOfKey(42) == 42)
 }
 
 fun lazyItemsSnapshotSample() {

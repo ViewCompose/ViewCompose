@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 9896233bff6527c8d03e7b62603896aea21149fa9df4b16886dfcb53b3c837ea
+translation_source_hash: ec128ab13f28fbaa51835336c909690053fa2f6fa0a80a5acba7e62ddf7c3e96
 translation_status: current
 ---
 
@@ -253,9 +253,10 @@ Matrix。Phase 4 负责该基准与最终指导。
   稳定且唯一。
 - 无 key 的 child 只复用相同 index 和类型上的 payload。因此，无 key 的有状态内容重排属于
   语义替换，而不是 move。
-- Lazy 列表精确差分还要求每个 item 都有唯一且非空的 key。key 缺失或重复时使用
-  `ReloadAll`，保护 RecyclerView holder 状态。
-- Lazy Adapter 会先对每个已接受快照分类，再通知 RecyclerView。Key 顺序相同时无需运行
+- Lazy 列表精确差分要求每个 Item 都有唯一且非空的 Key。重复 Key 或无效 Table Update 会在发布前
+  拒绝候选，并保持已经安装的 Adapter Snapshot 不变。
+- Lazy Adapter 会先消费 Table 中已校验的直接 Range Update，再通知 RecyclerView。未提供直接更新的
+  有限 Table 进入兼容路径：Key 顺序相同时无需运行
   `DiffUtil`，而是批量发送相邻原生变更；相同大小的循环排列会选择移动次数较少的左移或右移
   序列；其他结构变化仍使用 AndroidX Diff。逻辑 Item Session 仍同步消费变化的 Revision。
   Item 动画关闭时，纯语义更新因此不会产生冗余 RecyclerView Bind；若直接 Session Commit
@@ -275,13 +276,19 @@ Matrix。Phase 4 负责该基准与最终指导。
   首次 Attach 会直接 Activate 有效 Prepared Frame；如果被观察 State 已变化，则改为渲染当前
   状态。Active 的 Detach Holder 会暂存新 Submission 并在 Reattach 时渲染。低层 Key 重复时
   使用保守 Reload 路径；公开 DSL 拒绝缺失或重复 Key，Renderer 绝不会通过 First Match 查询猜测。
-- Lazy Adapter 会为每个已接受提交建立一次唯一 Key 位置索引。已 Attach 或重新 Attach 的 Holder
-  因而无需扫描 Item 列表即可解析稳定 Key。Payload Bind 只有在 Holder 已提交完全相同的 Item
+- 发布新 Item Table 时，会立即终止 Key 已删除或 Kind/Content Type 已不兼容的每个 Detached
+  Cache Holder。Holder 会在 Dispose 前移出 Registry 所有权，因此 RecyclerView 后续 Recycle
+  不会二次 Dispose 同一个逻辑 Session。Page Drop 的所有权清理由此不再依赖旧 Item 提交更新时
+  是否恰好处于 Attach；Key 仍保留且物理结构兼容的 Holder 会继续暂存 Revision，直到重新 Attach。
+- Lazy Adapter 把唯一 Key 的位置查询委托给已接受的 `LazyItemTable`。已 Attach 或重新 Attach 的
+  Holder 因而无需扫描 Item Table 即可解析稳定 Key。Payload Bind 只有在 Holder 已提交完全相同的 Item
   快照实例和完全相同的 Submission Revision 时才能跳过 Session 路由；仅 Revision 相等并不足够。
   这条确认规则可以防止队列中的 RecyclerView 通知把较早的逻辑提交误判为当前提交。
-- 同一份可处理 Hash 冲突的提交表还持有 Primitive Position 与 Renderer 分配的 Stable ID，避免
-  重叠且带装箱值的 Key Map。紧凑 Registry 在 Mounted Adapter 生命周期内保持 View Type 身份，
-  且不创建 `Pair` Key 或装箱 ID。由于 `contentType` 是有限的物理兼容分类，一个已挂载容器最多
+- Renderer 分配的 Stable ID 可处理冲突，并且只为 RecyclerView 实际查询的 Key 延迟分配；下一个
+  Table 不再包含的已查询 Key 会被释放。Renderer 不会枚举紧凑 Table 来预建 Key 或 Stable ID
+  Array。可选 Sticky Header 元数据同样避免扫描紧凑 Table；没有该元数据的 Table 承诺不含 Sticky
+  Item。紧凑 Registry 在 Mounted Adapter 生命周期内保持 View Type 身份，且不创建 `Pair` Key 或
+  装箱 ID。由于 `contentType` 是有限的物理兼容分类，一个已挂载容器最多
   接受 1,024 种不同的 kind/type 组合；更大的历史会在无界增长前被拒绝。
 - Lazy List 与 Pager Holder 会在 Holder 生命周期内缓存 Container Handle，并直接调用专用 Session
   Host 与 Declaration 共享的 Item Strategy。原生复用仍按 Key 切换逻辑 Session 所有权；该调整只
@@ -442,6 +449,11 @@ Renderer 的多状态路径实现通用 UI Contract，并非 Material 功能。�
 `userScrollEnabled`，实现 Slider 交互阶段与步长，在禁用刷新时保留后代输入，并映射新的 Keyed
 选择 Item 语义。Grid Policy 与 Layout Constraint Host 同样要求升级注册和测量；不得把它们当作
 可忽略 Hint。
+
+Q3 `LazyItemTable` 硬切改变了 Lazy NodeSpec 的二进制契约。Renderer 分支必须消费索引查询、原子
+拒绝无效声明操作、在不依赖应用 Key Hash 的前提下保留 Stable ID，并在紧凑 Table 提供直接更新时
+避免完整枚举。有限 Table 仍可请求通用 Diff。新增第二个 Adapter、Paging 专属 Diff Owner 或完整
+位置 Placeholder Array 都会违反 Renderer 所有权。
 
 Animation Phase 1 Alpha 新增 `viewcompose-animation-core` 实现依赖，并把 Animated Size Transport
 硬切为有限 Spec。自定义 Renderer 分支必须通过同一或等价 Solver 消费物理

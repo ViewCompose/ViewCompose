@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 2372609ed3d9a9097ae6ddc85f5f81db633a238ae22eee21f214f0df721f9bc2
+translation_source_hash: 6146a1c5635a49363d7cf4e69df992ff8d672c8538e6fa2ac276f42697947075
 translation_status: current
 ---
 
@@ -118,6 +118,14 @@ val gap = VNode(
   的候选、结束 Key 所有状态，并只转移已 Reset 的物理呈现。编译样例
   `lazyListItemSessionUpdateSample` 展示此生命周期。`activate` 与 `render` 的 Boolean 结果只在
   已安装内容 Commit 后推进语义 Revision；Rollback 返回 `false` 并保持可重试。
+- `LazyItemTable` 是 Q3 的有序索引集合边界，由 Lazy List NodeSpec 使用。它提供数量、按位置读取
+  Item、Key 到位置查询，以及相对上一个已接受 Table 的不可变更新，但不指定 AndroidX Paging 或
+  Renderer。Q2 `LazyItemTableUpdate` 表示有界 Insert、Remove、Move、Change 或完整 Reload；声明
+  精确更新的 Provider 对其语义正确性负责。Iterator 与 `toList()` 对紧凑 Source 都是完整位置
+  扫描；有限 Wrapper 会返回保留的 Backing List，并且无需复制即可保持结构相等。Q2
+  `LazyItemTableStickyHeaders` 是可选元数据；不实现它的 Table 承诺全部条目都是普通
+  Item。`List<LazyListItem>.asLazyItemTable()` 会校验 Key 唯一性，不复制 Item Model，并作为直接
+  NodeSpec 构造的迁移 Adapter。编译样例 `lazyItemTableSample` 展示该契约。
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   与 [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   为焦点和嵌套滚动定义明确的渲染器连接边界。
@@ -285,6 +293,13 @@ Prepare 来构建原生内容时，必须推迟全部 Commit Bound Callback，�
 把 `LazyListItemSession.activate` 与 `render` 改为返回 Commit 成功状态，补全了该 Q3 硬切。自定义
 实现必须对 Rollback 返回 `false`，让相同 Submission Revision 仍可重试；预编译 Session 与
 Renderer 必须重新构建。
+
+把 `LazyColumnNodeProps.items`、`LazyRowNodeProps.items` 与
+`LazyVerticalGridNodeProps.items` 从 `List<LazyListItem>` 改为 Q3 `LazyItemTable` 是 Alpha 硬切。
+直接源码调用方使用 `asLazyItemTable()` 包装有限模型；Foundation 集合 DSL 调用方无需改源码。
+预编译 NodeSpec Producer 与自定义 Renderer 必须重新构建。自定义紧凑 Provider 必须返回唯一稳定
+Key、精确 `indexOfKey`、结构有效的更新和不可变 Snapshot；`updatesFrom` 返回 `null` 会请求
+Renderer 的有限兼容 Diff，`ReloadAll` 则是显式保守兜底。
 
 新增 `ButtonNodeProps.visualHeight` 属于 Q2 不可变快照契约变更。源码默认值等于 `minHeight`，
 但预编译的构造调用点和自定义渲染器仍必须随对应 Alpha 版本重新构建。

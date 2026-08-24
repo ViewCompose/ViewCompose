@@ -14,7 +14,7 @@ import com.viewcompose.renderer.view.resolvePadding
 import com.viewcompose.renderer.view.roundToPx
 import com.viewcompose.renderer.view.toPx
 import com.viewcompose.ui.environment.UiEnvironmentValues
-import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.LazyItemTable
 import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.VNode
@@ -37,7 +37,7 @@ internal object CollectionViewBinder {
     data class LazyColumnSpec(
         val contentPadding: PaddingPx,
         val spacing: Int,
-        val items: List<LazyListItem>,
+        val items: LazyItemTable,
         val state: LazyListState? = null,
         val reverseLayout: Boolean,
         val userScrollEnabled: Boolean,
@@ -74,7 +74,7 @@ internal object CollectionViewBinder {
         val contentPadding: PaddingPx,
         val horizontalSpacing: Int,
         val verticalSpacing: Int,
-        val items: List<LazyListItem>,
+        val items: LazyItemTable,
         val state: LazyListState?,
         val reverseLayout: Boolean,
         val userScrollEnabled: Boolean,

@@ -10,6 +10,8 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
+import com.viewcompose.ui.node.LazyItemTable
+import com.viewcompose.ui.node.LazyItemTableUpdate
 import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.renderer.reconcile.LazyListChangePayload
 import com.viewcompose.renderer.reconcile.LazyListAdapterChangedPayload
@@ -575,40 +577,170 @@ class LazyListAdapterTest {
     }
 
     @Test
-    fun `duplicate keys never guess which attached holder owns the next item`() {
+    fun `duplicate keys reject the candidate before adapter publication`() {
+        val events = mutableListOf<String>()
+        val adapter = LazyListAdapter()
+        adapter.submitItems(listOf(recordingItem("first", events, key = "stable")))
+
+        val failure = assertThrows(IllegalArgumentException::class.java) {
+            adapter.submitItems(
+                listOf(
+                    recordingItem("second-A", events, key = "duplicate"),
+                    recordingItem("second-B", events, key = "duplicate"),
+                ),
+            )
+        }
+
+        assertTrue(failure.message.orEmpty().contains("Duplicate key: duplicate"))
+        assertEquals(1, adapter.itemCount)
+        assertEquals("stable", adapter.itemKeyAt(0))
+        assertTrue(events.isEmpty())
+    }
+
+    @Test
+    fun `declared compact updates do not enumerate a million item table`() {
+        val adapter = LazyListAdapter()
+        androidx.recyclerview.widget.RecyclerView(RuntimeEnvironment.getApplication()).apply {
+            this.adapter = adapter
+        }
+        val observer = RecordingAdapterObserver()
+        adapter.registerAdapterDataObserver(observer)
+        val first = CountingCompactTable(
+            size = 1_000_000,
+            previous = null,
+            updates = listOf(LazyItemTableUpdate.InsertRange(0, 1_000_000)),
+        )
+
+        assertTrue(adapter.submitItems(first))
+        assertEquals(0, first.getCalls)
+        assertEquals(listOf("insert:0:1000000"), observer.operations)
+
+        val stableId = adapter.getItemId(999_999)
+        assertEquals(1, first.getCalls)
+        observer.operations.clear()
+        val second = CountingCompactTable(
+            size = 1_000_000,
+            previous = first,
+            updates = listOf(LazyItemTableUpdate.ChangeRange(500_000, 2)),
+        )
+
+        assertTrue(adapter.submitItems(second))
+        assertEquals(0, second.getCalls)
+        assertEquals(stableId, adapter.getItemId(999_999))
+        assertEquals(1, second.getCalls)
+        assertEquals(listOf("change:500000:2"), observer.operations)
+    }
+
+    @Test
+    fun `declared page drop disposes the attached loaded item session on placeholder rebind`() {
+        val context = RuntimeEnvironment.getApplication()
+        val events = mutableListOf<String>()
+        val adapter = LazyListAdapter()
+        val recyclerView = androidx.recyclerview.widget.RecyclerView(context).apply {
+            layoutManager = androidx.recyclerview.widget.LinearLayoutManager(context)
+            itemAnimator = null
+            this.adapter = adapter
+        }
+        val loaded = declaredItemTable(
+            item = disposableItem(
+                key = "loaded-0",
+                label = "loaded",
+                events = events,
+            ),
+            predecessor = null,
+            updates = listOf(LazyItemTableUpdate.InsertRange(0, 1)),
+        )
+        assertTrue(adapter.submitItems(loaded))
+        layoutRecyclerView(recyclerView)
+        assertEquals(listOf("render:loaded"), events)
+        val holder = checkNotNull(
+            recyclerView.findViewHolderForAdapterPosition(0) as? LazyListViewHolder,
+        )
+
+        val dropped = declaredItemTable(
+            item = disposableItem(
+                key = "placeholder-0",
+                label = "placeholder",
+                events = events,
+            ),
+            predecessor = loaded,
+            updates = listOf(LazyItemTableUpdate.ChangeRange(0, 1)),
+        )
+        assertTrue(adapter.submitItems(dropped))
+        adapter.onBindViewHolder(
+            holder,
+            0,
+            mutableListOf(LazyListAdapterChangedPayload),
+        )
+
+        assertEquals(
+            listOf("render:loaded", "dispose:loaded", "render:placeholder"),
+            events,
+        )
+        assertEquals("placeholder-0", adapter.itemKeyAt(0))
+    }
+
+    @Test
+    fun `declared page drop immediately disposes a detached cached loaded item session`() {
         val context = RuntimeEnvironment.getApplication()
         val parent = FrameLayout(context)
         val events = mutableListOf<String>()
         val adapter = LazyListAdapter()
-        adapter.submitItems(
-            listOf(
-                recordingItem("first-A", events, key = "duplicate"),
-                recordingItem("first-B", events, key = "duplicate"),
+        val loaded = declaredItemTable(
+            item = disposableItem(
+                key = "loaded-0",
+                label = "loaded",
+                events = events,
             ),
+            predecessor = null,
+            updates = listOf(LazyItemTableUpdate.InsertRange(0, 1)),
         )
-        val firstHolder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
-        val secondHolder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(1))
-        adapter.onBindViewHolder(firstHolder, 0)
-        adapter.onBindViewHolder(secondHolder, 1)
-        adapter.onViewAttachedToWindow(firstHolder)
-        adapter.onViewAttachedToWindow(secondHolder)
+        assertTrue(adapter.submitItems(loaded))
+        val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
+        adapter.onBindViewHolder(holder, 0)
+        adapter.onViewAttachedToWindow(holder)
+        adapter.onViewDetachedFromWindow(holder)
 
-        adapter.submitItems(
-            listOf(
-                recordingItem("second-A", events, key = "duplicate"),
-                recordingItem("second-B", events, key = "duplicate"),
+        val dropped = declaredItemTable(
+            item = disposableItem(
+                key = "placeholder-0",
+                label = "placeholder",
+                events = events,
             ),
+            predecessor = loaded,
+            updates = listOf(LazyItemTableUpdate.ChangeRange(0, 1)),
+        )
+        assertTrue(adapter.submitItems(dropped))
+
+        assertEquals(listOf("render:loaded", "dispose:loaded"), events)
+        assertFalse(holder.hasBinding)
+        adapter.onViewRecycled(holder)
+        assertEquals(listOf("render:loaded", "dispose:loaded"), events)
+    }
+
+    @Test
+    fun `invalid declared compact update leaves the installed adapter unchanged`() {
+        val adapter = LazyListAdapter()
+        val first = CountingCompactTable(
+            size = 2,
+            previous = null,
+            updates = listOf(LazyItemTableUpdate.InsertRange(0, 2)),
+        )
+        adapter.submitItems(first)
+        val invalid = CountingCompactTable(
+            size = 1,
+            previous = first,
+            updates = listOf(LazyItemTableUpdate.RemoveRange(index = 4, count = 1)),
         )
 
-        assertEquals(
-            listOf(
-                "update:first-A",
-                "render:first-A",
-                "update:first-B",
-                "render:first-B",
-            ),
-            events,
-        )
+        val failure = assertThrows(IllegalArgumentException::class.java) {
+            adapter.submitItems(invalid)
+        }
+
+        assertTrue(failure.message.orEmpty().contains("exceeds current size 2"))
+        assertEquals(2, adapter.itemCount)
+        assertEquals(0, adapter.itemKeyAt(0))
+        assertEquals(1, adapter.itemKeyAt(1))
     }
 
     @Test
@@ -1054,6 +1186,33 @@ class LazyListAdapterTest {
         )
     }
 
+    private fun disposableItem(
+        key: Any,
+        label: String,
+        events: MutableList<String>,
+    ): LazyListItem {
+        return LazyListItem(
+            key = key,
+            contentRevision = label,
+            contentType = "paging-row",
+            sessionStrategy = lazyListItemSessionStrategy(
+                create = {
+                    object : LazyListItemSession {
+                        override fun render(): Boolean {
+                            events += "render:$label"
+                            return true
+                        }
+
+                        override fun dispose() {
+                            events += "dispose:$label"
+                        }
+                    }
+                },
+                update = {},
+            ),
+        )
+    }
+
     private fun recordingItem(
         events: MutableList<String>,
         sessionUpdater: (LazyListItemSession) -> Unit,
@@ -1163,6 +1322,64 @@ class LazyListAdapterTest {
 
         override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
             operations += "move:$fromPosition:$toPosition:$itemCount"
+        }
+    }
+
+    private class CountingCompactTable(
+        override val size: Int,
+        private val previous: LazyItemTable?,
+        private val updates: List<LazyItemTableUpdate>,
+    ) : LazyItemTable {
+        var getCalls: Int = 0
+            private set
+
+        override fun get(index: Int): LazyListItem {
+            if (index !in 0 until size) throw IndexOutOfBoundsException()
+            getCalls += 1
+            return LazyListItem(
+                key = index,
+                contentRevision = index,
+                sessionStrategy = lazyListItemSessionStrategy(
+                    create = { error("No holder binding expected in compact-table test.") },
+                    update = {},
+                ),
+            )
+        }
+
+        override fun indexOfKey(key: Any): Int =
+            (key as? Int)?.takeIf { it in 0 until size } ?: -1
+
+        override fun updatesFrom(previous: LazyItemTable): List<LazyItemTableUpdate>? {
+            return if (previous === this.previous || (this.previous == null && previous.size == 0)) {
+                updates
+            } else {
+                null
+            }
+        }
+    }
+
+    private fun declaredItemTable(
+        item: LazyListItem,
+        predecessor: LazyItemTable?,
+        updates: List<LazyItemTableUpdate>,
+    ): LazyItemTable {
+        return object : LazyItemTable {
+            override val size: Int = 1
+
+            override fun get(index: Int): LazyListItem {
+                if (index != 0) throw IndexOutOfBoundsException()
+                return item
+            }
+
+            override fun indexOfKey(key: Any): Int = if (key == item.key) 0 else -1
+
+            override fun updatesFrom(previous: LazyItemTable): List<LazyItemTableUpdate>? {
+                return if (previous === predecessor || (predecessor == null && previous.size == 0)) {
+                    updates
+                } else {
+                    null
+                }
+            }
         }
     }
 

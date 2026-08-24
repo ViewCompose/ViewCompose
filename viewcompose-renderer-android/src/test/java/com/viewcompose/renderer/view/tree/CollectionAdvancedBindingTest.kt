@@ -10,6 +10,7 @@ import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
+import com.viewcompose.ui.node.asLazyItemTable
 import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
@@ -49,7 +50,7 @@ class CollectionAdvancedBindingTest {
                     bottom = 11,
                 ),
                 spacing = 13,
-                items = listOf(item("row")),
+                items = listOf(item("row")).asLazyItemTable(),
                 state = null,
                 reverseLayout = true,
                 userScrollEnabled = false,
@@ -85,7 +86,7 @@ class CollectionAdvancedBindingTest {
                 item(key = "header", span = com.viewcompose.ui.node.policy.GridItemSpan.FullLine),
                 item(key = "wide", span = com.viewcompose.ui.node.policy.GridItemSpan.Fixed(2)),
                 item(key = "single"),
-            ),
+            ).asLazyItemTable(),
             state = null,
             reverseLayout = true,
             userScrollEnabled = false,
@@ -118,7 +119,7 @@ class CollectionAdvancedBindingTest {
                     key = "header",
                     span = com.viewcompose.ui.node.policy.GridItemSpan.FullLine,
                 ),
-            ),
+            ).asLazyItemTable(),
             state = null,
             reverseLayout = false,
             userScrollEnabled = true,
@@ -156,7 +157,7 @@ class CollectionAdvancedBindingTest {
             contentPadding = PaddingPx(0, 0, 0, 0),
             horizontalSpacing = Int.MAX_VALUE,
             verticalSpacing = 0,
-            items = emptyList(),
+            items = emptyList<LazyListItem>().asLazyItemTable(),
             state = null,
             reverseLayout = false,
             userScrollEnabled = true,

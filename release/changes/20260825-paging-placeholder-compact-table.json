@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut lazy NodeSpecs to the compact indexed item table, add validated renderer range updates with lazy stable IDs, and support AndroidX Paging placeholders and page drops without a full positional model table.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "feature" },
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" },
+    { "artifact": "viewcompose-paging-androidx", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

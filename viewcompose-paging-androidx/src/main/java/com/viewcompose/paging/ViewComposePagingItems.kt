@@ -9,6 +9,7 @@ import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import androidx.paging.PagingDataEvent
 import androidx.paging.PagingDataPresenter
+import com.viewcompose.ui.node.LazyItemTableUpdate
 import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
@@ -46,19 +47,23 @@ class ViewComposePagingItems<T : Any> internal constructor() {
         mutableStateOf(PagingPresentation.initial())
     private val presenter = Presenter()
     private val collectionMutex = Mutex()
-    private var pendingPageEvent = false
+    private var pendingPageEvent: PagingDataEvent<T>? = null
     private var closed = false
     private var revision = 0L
 
     private val loadStateListener: (CombinedLoadStates) -> Unit = { states ->
-        if (!closed && !pendingPageEvent) {
+        if (!closed && pendingPageEvent == null) {
             publishLoadStates(states)
         }
     }
     private val pagesUpdatedListener: () -> Unit = {
         if (!closed) {
-            pendingPageEvent = false
-            publishPages(presenter.loadStateFlow.value ?: presentation.value.loadStates)
+            val event = pendingPageEvent
+            pendingPageEvent = null
+            publishPages(
+                states = presenter.loadStateFlow.value ?: presentation.value.loadStates,
+                event = event,
+            )
         }
     }
 
@@ -84,7 +89,7 @@ class ViewComposePagingItems<T : Any> internal constructor() {
      *
      * This operation targets the active presenter generation and must run on Android's main thread.
      * With placeholders disabled, a valid index returns a non-null value. Placeholder-enabled
-     * presentations may return `null` after that overload is introduced.
+     * presentations return `null` for an unloaded slot after sending the access hint.
      *
      * @param index presented zero-based slot index
      * @return the loaded item, or `null` for an unloaded placeholder slot
@@ -140,15 +145,6 @@ class ViewComposePagingItems<T : Any> internal constructor() {
         presenter.refresh()
     }
 
-    internal fun loadedItemsForLazyColumn(): List<PagingLoadedItem<T>> {
-        val current = presentation.value
-        check(current.itemCount == current.items.size) {
-            "PagingLazyColumn without placeholderContent requires placeholders to be disabled. " +
-                "Presented ${current.itemCount} slots but only ${current.items.size} are loaded."
-        }
-        return current.items.mapIndexed { index, item -> PagingLoadedItem(index, item) }
-    }
-
     internal fun requestLoadForActiveItem(index: Int) {
         checkMainThread("PagingLazyColumn item access")
         if (closed || index !in 0 until presenter.size) return
@@ -162,7 +158,7 @@ class ViewComposePagingItems<T : Any> internal constructor() {
                     presenter.collectFrom(pagingData)
                 } finally {
                     withContext(Dispatchers.Main.immediate) {
-                        pendingPageEvent = false
+                        pendingPageEvent = null
                     }
                 }
             }
@@ -173,7 +169,7 @@ class ViewComposePagingItems<T : Any> internal constructor() {
         checkMainThread("ViewComposePagingItems release")
         if (closed) return
         closed = true
-        pendingPageEvent = false
+        pendingPageEvent = null
         presenter.removeLoadStateListener(loadStateListener)
         presenter.removeOnPagesUpdatedListener(pagesUpdatedListener)
     }
@@ -188,13 +184,18 @@ class ViewComposePagingItems<T : Any> internal constructor() {
         )
     }
 
-    private fun publishPages(states: CombinedLoadStates) {
+    private fun publishPages(
+        states: CombinedLoadStates,
+        event: PagingDataEvent<T>?,
+    ) {
         checkMainThread("Paging page publication")
         val snapshot = presenter.snapshot()
         val current = presentation.value
         val nextItems = snapshot.items.toList()
         if (
             current.itemCount == snapshot.size &&
+            current.placeholdersBefore == snapshot.placeholdersBefore &&
+            current.placeholdersAfter == snapshot.placeholdersAfter &&
             current.items == nextItems &&
             current.loadStates == states
         ) {
@@ -202,9 +203,25 @@ class ViewComposePagingItems<T : Any> internal constructor() {
         }
         presentation.value = PagingPresentation(
             itemCount = snapshot.size,
+            placeholdersBefore = snapshot.placeholdersBefore,
+            placeholdersAfter = snapshot.placeholdersAfter,
             items = nextItems,
             loadStates = states,
             revision = nextRevision(),
+            itemRevision = current.itemRevision + 1L,
+            previousItemRevision = current.itemRevision,
+            generation = if (event is PagingDataEvent.Refresh) {
+                current.generation + 1L
+            } else {
+                current.generation
+            },
+            itemUpdates = event.toLazyItemTableUpdates(
+                previous = current,
+                nextItemCount = snapshot.size,
+                nextPlaceholdersBefore = snapshot.placeholdersBefore,
+                nextPlaceholdersAfter = snapshot.placeholdersAfter,
+                nextLoadedItemCount = nextItems.size,
+            ),
         )
     }
 
@@ -224,9 +241,11 @@ class ViewComposePagingItems<T : Any> internal constructor() {
 
     private inner class Presenter : PagingDataPresenter<T>(Dispatchers.Main.immediate) {
         override suspend fun presentPagingDataEvent(event: PagingDataEvent<T>) {
-            pendingPageEvent = true
+            pendingPageEvent = event
         }
     }
+
+    internal fun presentationForLazyColumn(): PagingPresentation<T> = presentation.value
 }
 
 /**
@@ -295,16 +314,17 @@ fun <T : Any> Flow<PagingData<T>>.collectAsViewComposePagingItems(
     return items
 }
 
-internal data class PagingLoadedItem<T : Any>(
-    val index: Int,
-    val value: T,
-)
-
-private data class PagingPresentation<T : Any>(
+internal data class PagingPresentation<T : Any>(
     val itemCount: Int,
+    val placeholdersBefore: Int,
+    val placeholdersAfter: Int,
     val items: List<T>,
     val loadStates: CombinedLoadStates,
     val revision: Long,
+    val itemRevision: Long,
+    val previousItemRevision: Long?,
+    val generation: Long,
+    val itemUpdates: List<LazyItemTableUpdate>,
 ) {
     companion object {
         fun <T : Any> initial(): PagingPresentation<T> {
@@ -316,6 +336,8 @@ private data class PagingPresentation<T : Any>(
             )
             return PagingPresentation(
                 itemCount = 0,
+                placeholdersBefore = 0,
+                placeholdersAfter = 0,
                 items = emptyList(),
                 loadStates = CombinedLoadStates(
                     refresh = LoadState.Loading,
@@ -325,8 +347,141 @@ private data class PagingPresentation<T : Any>(
                     mediator = null,
                 ),
                 revision = 0L,
+                itemRevision = 0L,
+                previousItemRevision = null,
+                generation = 0L,
+                itemUpdates = emptyList(),
             )
         }
+    }
+}
+
+private fun <T : Any> PagingDataEvent<T>?.toLazyItemTableUpdates(
+    previous: PagingPresentation<T>,
+    nextItemCount: Int,
+    nextPlaceholdersBefore: Int,
+    nextPlaceholdersAfter: Int,
+    nextLoadedItemCount: Int,
+): List<LazyItemTableUpdate> {
+    val event = this ?: return listOf(LazyItemTableUpdate.ReloadAll)
+    val updates = when (event) {
+        is PagingDataEvent.Refresh -> listOf(LazyItemTableUpdate.ReloadAll)
+        is PagingDataEvent.Prepend -> {
+            val replacesPlaceholders =
+                event.oldPlaceholdersBefore == previous.placeholdersBefore &&
+                    event.newPlaceholdersBefore == nextPlaceholdersBefore &&
+                    event.oldPlaceholdersBefore - event.inserted.size ==
+                    event.newPlaceholdersBefore &&
+                    nextItemCount == previous.itemCount
+            val insertsWithoutPlaceholders =
+                event.oldPlaceholdersBefore == 0 &&
+                    event.newPlaceholdersBefore == 0 &&
+                    nextItemCount == previous.itemCount + event.inserted.size
+            when {
+                event.inserted.isEmpty() -> emptyList()
+                replacesPlaceholders -> listOf(
+                    LazyItemTableUpdate.ChangeRange(
+                        index = event.newPlaceholdersBefore,
+                        count = event.inserted.size,
+                    ),
+                )
+                insertsWithoutPlaceholders -> listOf(
+                    LazyItemTableUpdate.InsertRange(index = 0, count = event.inserted.size),
+                )
+                else -> listOf(LazyItemTableUpdate.ReloadAll)
+            }
+        }
+        is PagingDataEvent.Append -> {
+            val replacesPlaceholders =
+                event.oldPlaceholdersAfter == previous.placeholdersAfter &&
+                    event.newPlaceholdersAfter == nextPlaceholdersAfter &&
+                    event.oldPlaceholdersAfter - event.inserted.size == event.newPlaceholdersAfter &&
+                    nextItemCount == previous.itemCount
+            val insertsWithoutPlaceholders =
+                event.oldPlaceholdersAfter == 0 &&
+                    event.newPlaceholdersAfter == 0 &&
+                    nextItemCount == previous.itemCount + event.inserted.size
+            when {
+                event.inserted.isEmpty() -> emptyList()
+                replacesPlaceholders -> listOf(
+                    LazyItemTableUpdate.ChangeRange(
+                        index = event.startIndex,
+                        count = event.inserted.size,
+                    ),
+                )
+                insertsWithoutPlaceholders -> listOf(
+                    LazyItemTableUpdate.InsertRange(
+                        index = event.startIndex,
+                        count = event.inserted.size,
+                    ),
+                )
+                else -> listOf(LazyItemTableUpdate.ReloadAll)
+            }
+        }
+        is PagingDataEvent.DropPrepend -> {
+            val createsPlaceholders =
+                event.oldPlaceholdersBefore == previous.placeholdersBefore &&
+                    event.newPlaceholdersBefore == nextPlaceholdersBefore &&
+                    event.oldPlaceholdersBefore + event.dropCount ==
+                    event.newPlaceholdersBefore &&
+                    nextItemCount == previous.itemCount
+            val removesWithoutPlaceholders =
+                event.oldPlaceholdersBefore == 0 &&
+                    event.newPlaceholdersBefore == 0 &&
+                    nextItemCount == previous.itemCount - event.dropCount
+            when {
+                event.dropCount == 0 -> emptyList()
+                createsPlaceholders -> listOf(
+                    LazyItemTableUpdate.ChangeRange(
+                        index = event.oldPlaceholdersBefore,
+                        count = event.dropCount,
+                    ),
+                )
+                removesWithoutPlaceholders -> listOf(
+                    LazyItemTableUpdate.RemoveRange(index = 0, count = event.dropCount),
+                )
+                else -> listOf(LazyItemTableUpdate.ReloadAll)
+            }
+        }
+        is PagingDataEvent.DropAppend -> {
+            val createsPlaceholders =
+                event.oldPlaceholdersAfter == previous.placeholdersAfter &&
+                    event.newPlaceholdersAfter == nextPlaceholdersAfter &&
+                    event.oldPlaceholdersAfter + event.dropCount == event.newPlaceholdersAfter &&
+                    nextItemCount == previous.itemCount
+            val removesWithoutPlaceholders =
+                event.oldPlaceholdersAfter == 0 &&
+                    event.newPlaceholdersAfter == 0 &&
+                    nextItemCount == previous.itemCount - event.dropCount
+            when {
+                event.dropCount == 0 -> emptyList()
+                createsPlaceholders -> listOf(
+                    LazyItemTableUpdate.ChangeRange(
+                        index = event.startIndex,
+                        count = event.dropCount,
+                    ),
+                )
+                removesWithoutPlaceholders -> listOf(
+                    LazyItemTableUpdate.RemoveRange(
+                        index = event.startIndex,
+                        count = event.dropCount,
+                    ),
+                )
+                else -> listOf(LazyItemTableUpdate.ReloadAll)
+            }
+        }
+    }
+    val expectedLoadedCount = when (event) {
+        is PagingDataEvent.Refresh -> nextLoadedItemCount
+        is PagingDataEvent.Prepend -> previous.items.size + event.inserted.size
+        is PagingDataEvent.Append -> previous.items.size + event.inserted.size
+        is PagingDataEvent.DropPrepend -> previous.items.size - event.dropCount
+        is PagingDataEvent.DropAppend -> previous.items.size - event.dropCount
+    }
+    return if (expectedLoadedCount == nextLoadedItemCount) {
+        updates
+    } else {
+        listOf(LazyItemTableUpdate.ReloadAll)
     }
 }
 

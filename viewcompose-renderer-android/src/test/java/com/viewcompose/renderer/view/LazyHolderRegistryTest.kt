@@ -47,6 +47,31 @@ class LazyHolderRegistryTest {
     }
 
     @Test
+    fun `disposeDetachedWhere releases only matching detached holders once`() {
+        val events = mutableListOf<String>()
+        val registry = LazyHolderRegistry<String> { holder ->
+            events += "dispose:$holder"
+        }
+        registry.onBound("attached-stale")
+        registry.onAttached("attached-stale")
+        registry.onBound("detached-stale")
+        registry.onBound("detached-current")
+
+        registry.disposeDetachedWhere { holder -> holder.endsWith("stale") }
+        registry.onRecycled("detached-stale")
+        registry.disposeAll()
+
+        assertEquals(
+            listOf(
+                "dispose:detached-stale",
+                "dispose:attached-stale",
+                "dispose:detached-current",
+            ),
+            events,
+        )
+    }
+
+    @Test
     fun `disposeAll disposes every currently bound holder`() {
         val events = mutableListOf<String>()
         val registry = LazyHolderRegistry<String> { holder ->
