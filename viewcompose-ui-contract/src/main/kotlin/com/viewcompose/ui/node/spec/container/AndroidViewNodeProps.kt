@@ -24,6 +24,7 @@ import com.viewcompose.ui.environment.UiEnvironmentValues
  * @property onCommit action deferred until the containing composition commits
  * @property constructionIdentity opaque, equality-stable constructor-sensitive View identity
  * @property adapterName privacy-safe adapter family label used only for bounded diagnostics
+ * @property lifecycleMode privacy-safe adapter lifecycle capability used only for diagnostics
  */
 data class AndroidViewNodeProps(
     val factory: (Any, UiEnvironmentValues) -> Any,
@@ -33,6 +34,7 @@ data class AndroidViewNodeProps(
     val onCommit: ((Any, UiEnvironmentValues) -> Unit)? = null,
     val constructionIdentity: Any? = Unit,
     val adapterName: String = "callback",
+    val lifecycleMode: String = "None",
 ) : NodeSpec
 
 /** Lifecycle operation reported when an Android view callback fails. */

@@ -96,6 +96,12 @@ Every destination entry receives an independent Android owner containing:
 - a SavedStateRegistry and default SavedStateHandle arguments derived from `NavRoute`;
 - a ViewCompose saveable-state registry namespace.
 
+Destination content installs that object into `LocalLifecycleOwner`,
+`LocalSavedStateRegistryOwner`, `LocalViewModelStoreOwner`, and the ViewCompose saveable-state local.
+Graph content installs the selected graph owner through the same four boundaries. A retained hidden
+destination keeps its owner identity and persisted data but receives a capped lifecycle, so a
+`LifecycleAndroidViewAdapter` drives its native View inactive without relying on physical removal.
+
 Pushing the same route twice creates two owners and does not share page state.
 
 At native `NavHost` creation, destination and graph owners capture the nearest

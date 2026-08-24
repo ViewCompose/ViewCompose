@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 056eec77fc849d268d52447c159d287de48c669756fdb2ba04328bf7670ed5b6
+translation_source_hash: c11810fc4c79cf531851eaa415e06c6fcd101a26e65fdfaa186a57115d6ec560
 translation_status: current
 ---
 
@@ -152,6 +152,8 @@ AndroidView(
   新 Key 的 Update 前运行。默认 `Never` 会阻止包含该节点的 Mounted Tree 跨 Key。
 - `onCommit` 只在完整 Composition 事务提交后执行。`onRelease` 在已创建 View 被永久放弃时
   执行一次，包括候选回滚、正式替换或移除、不可复用 Session 释放或复用缓存最终淘汰。
+- `lifecycleMode` 是有界诊断元数据。原始 Adapter 报告 `None`，AndroidX 集成 Adapter 报告
+  `AdapterManaged`。Host 只记录该值，不会因此安装 Owner Observer 或改变事务顺序。
 
 基于 Callback 的 `AndroidView(factory, update, ...)` 重载仍是底层逃生路径，并委托相同的类型化
 事务路径。其尾部 `constructionKey` 具有相同替换语义；提供 `onReset` 也只表示允许跨 Key 的

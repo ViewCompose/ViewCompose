@@ -63,6 +63,12 @@ returns the root first, then starts rendering as soon as Android publishes that 
 Fragment-scoped ViewModel and saved-state ownership remain stable across View recreation. Activity
 sessions render synchronously and end when the Activity is destroyed.
 
+The roots also install `LocalSavedStateRegistryOwner` for committed SDK View state. Activity
+content receives the Activity for both owner locals. Fragment content receives
+`viewLifecycleOwner` through `LocalLifecycleOwner` and the Fragment through
+`LocalSavedStateRegistryOwner`; lifecycle-bound native work therefore ends with the View while a
+compatible SDK Bundle may restore into the next View instance.
+
 Both entry points accept `diagnostics = RenderDiagnostics(...)`. The configuration starts one
 Host diagnostics tree and is inherited by navigation, lazy, pager, and overlay child sessions.
 The alpha hard cut removes `onRenderStats`, `onRenderResult`, and `onRenderFailure`; use

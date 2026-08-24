@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: aa2808f6883e2c1f304ae35925ebd1f71a45a1decf07e0ed50b07676b66e2eed
+translation_source_hash: 1e8819a264b68329bfc929a9133fdd35d129d87abed68fda5da200fc645dda91
 translation_status: current
 ---
 
@@ -89,6 +89,11 @@ Controller 提供即时不可变 `snapshot` 和 `stackState`，以及可观察 `
 - 仅在 entry 离开所有保留状态后清理的 ViewModelStore；
 - 从 `NavRoute` 派生默认 SavedStateHandle 参数的 SavedStateRegistry；
 - 页面独享的 ViewCompose saveable-state registry 命名空间。
+
+Destination 内容会把该对象安装到 `LocalLifecycleOwner`、`LocalSavedStateRegistryOwner`、
+`LocalViewModelStoreOwner` 与 ViewCompose Saveable-state Local。Graph 内容也通过相同四个边界
+安装选中的 Graph Owner。Retained Hidden Destination 保留 Owner Identity 与持久数据，但获得受限
+Lifecycle，因此 `LifecycleAndroidViewAdapter` 无需依赖物理移除就能让原生 View 进入非活跃状态。
 
 同一个 route 连续 push 两次会创建两个 owner，不会共享页面状态。
 

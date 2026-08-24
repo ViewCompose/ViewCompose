@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/lifecycle-and-saved-state.md
-translation_source_hash: 878903b802cf85a6ce2968d5bd79c0a0e0b6344e3c83c841fce70f4e17707286
+translation_source_hash: e551c2242d25e21c7a9b814805e1e8edc99f5d41174f6bbcb62af6531bc7f084
 translation_status: current
 ---
 
@@ -8,7 +8,8 @@ translation_status: current
 
 ## 1. 目标
 
-本文定义宿主生命周期、生命周期感知 Flow 和 `rememberSaveable` 的提交/恢复边界。
+本文定义宿主生命周期、生命周期感知 Flow、已提交 Android View 和 `rememberSaveable` 的提交/
+恢复边界。
 
 核心原则：
 
@@ -17,11 +18,15 @@ translation_status: current
 3. 独立子组合不能共享一个扁平 Provider Key 命名空间。
 4. 生命周期快速切换时，同一个 Flow 最多只有一个活跃 collector。
 5. 已销毁宿主不能创建新的渲染会话或 SavedState 绑定。
+6. Renderer 拥有的 View 在事务提交前不能观察或发布外部 Owner。
 
 ## 2. 宿主生命周期
 
 `ComponentActivity.setUiContent` 的会话绑定到 Activity 生命周期；
-`Fragment.setUiContent` 的会话绑定到 Fragment view lifecycle，并在 view 销毁时释放。
+`Fragment.setUiContent` 的会话绑定到 Fragment View Lifecycle，并在 View 销毁时释放。Activity
+内容的 Lifecycle 与 SavedState Owner 都是 Activity。Fragment 内容则有意使用 Fragment View
+Owner 作为 Lifecycle Owner、Fragment 作为 SavedState Owner，使 View 工作在 `onDestroyView`
+结束，同时让兼容的 SDK State 可以跨 View 重建保留。
 
 Activity/Fragment 入口与自动 Owner 安装属于 `viewcompose-android`。`viewcompose-host-android`
 负责底层 Session、Scheduler、`renderInto` 与 Android SavedState 桥接，不得重新承载
@@ -49,7 +54,23 @@ Activity/Fragment 便利 API。生命周期感知收集与 ViewModel 访问继�
 `finally` 清理完成后，下一次 collector 才能进入，避免快速 `STOP -> START` 产生并发收集。
 组合释放会取消整个结构化收集作用域。
 
-## 4. rememberSaveable 恢复事务
+## 4. 已提交 Android View 的 Owner 协同
+
+可复用原生 View 集成使用类型安全 Android Host Adapter 管理事务所有权，并使用 AndroidX
+Lifecycle 集成协调 Owner。可重放的 View Create 与 Update 在 Renderer Apply 期间运行；
+Lifecycle 和 SavedState Binding 只从 Post-commit Hook 开始。因此被放弃或回滚的候选对象不能
+观察 Owner、消费恢复的 SDK State，也不能发布 Provider。
+
+一个 View 最多持有一个 Lifecycle Binding。首次 Attach 按 Android 事件顺序 Catch-up 到捕获
+Owner 的当前 State。Owner 替换会先完成旧 View 侧的下降序列并移除 Observer，再执行新 Commit
+工作与上升 Catch-up。Retained Navigation Destination 提供受限的 Destination Owner，而不是
+Activity Owner，因此隐藏内容不会仅因 View 仍挂载就继续运行 Media Surface、Map 工作或 Camera
+Capture。Reset、最终 Release、Owner Destroy 和 Callback Failure 都执行有界、一次性的清理。
+
+Lifecycle Adapter 只协调 View 侧事件，不控制应用拥有的播放、权限、凭据、Lifecycle State 或
+SDK 对象所有权。Host 会记录 Adapter Lifecycle Mode 用于诊断，但不会自行安装 Observer。
+
+## 5. rememberSaveable 恢复事务
 
 恢复分为四步：
 
@@ -63,7 +84,7 @@ Activity/Fragment 便利 API。生命周期感知收集与 ViewModel 访问继�
 `rememberSaveable(inputs...)` 的 input 变化仍表示有意重置：旧 holder 只在提交阶段
 退出，新 holder 同步接管 provider，最终保存替换后的值。
 
-## 5. 子组合所有权
+## 6. 子组合所有权
 
 Host Registry 是根持久化边界，不是所有嵌套 `RenderSession` 的全局 Key 命名空间。创建延迟子组合
 的框架容器会在父组合中 Remember 一个 State Holder。Holder 按稳定 Lazy Item、Pager Page、Tab
@@ -88,7 +109,7 @@ Holder 本身通过父 Registry 的常规事务保存。失败父帧不能发布
 的 Provider 与恢复值 Claim。硬切原因与兼容边界参见
 [ADR-0010](./decisions/0010-hierarchical-saveable-state-ownership.md)。
 
-## 6. Android Bundle 边界
+## 7. Android Bundle 边界
 
 Android host 保存：
 
@@ -102,7 +123,13 @@ Android host 保存：
 
 瞬时系统会话不属于 SavedState：IME composition、撤销历史、进行中的手势和动画不会恢复。
 
-## 7. 验证
+拥有 Bundle Payload 的 SDK View 只在 Adapter Commit 后注册一个 Provider。其稳定 Provider Key
+受最近 SavedState Owner 约束，并与 Renderer Reconciliation Identity 分离。SDK 集成拥有
+Payload Schema 和正数 Format Version；框架拥有注册顺序、Restored Value 一次性消费、防御性
+Bundle Copy、替换与清理。Format 不匹配或损坏的嵌套 SDK Payload 会被当作无 State，不会使其他
+Provider 失效。后续 Commit 只替换 Saver，保证 Host 保存时总是读取最近已提交的 View。
+
+## 8. 验证
 
 核心回归覆盖：
 
@@ -113,4 +140,6 @@ Android host 保存：
 5. destroyed owner
 6. 使用相同自动与显式 Key 的兄弟和嵌套子组合
 7. Keyed 子项回收、重排、Host 重建与并发 Presentation 副本
-8. 未知 Bundle 版本和单 entry 损坏隔离
+8. 未知 Bundle 版本和单 Entry 损坏隔离
+9. Android View Commit 后 Lifecycle Catch-up、串行 Owner 替换与 Callback Failure
+10. Retained Destination Lifecycle 限制、SDK Bundle 重建、Format 隔离与 Provider 清理

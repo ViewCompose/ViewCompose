@@ -10,6 +10,7 @@ import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.renderInto
 import com.viewcompose.host.android.resources.AndroidResourceEnvironment
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
+import com.viewcompose.lifecycle.ProvideSavedStateRegistryOwner
 import com.viewcompose.preview.PreviewThemeResolution
 import com.viewcompose.preview.tooling.PreviewCompositionLocal
 import com.viewcompose.preview.tooling.PreviewCompositionSnapshot
@@ -166,27 +167,29 @@ object StaticPreviewRenderer {
                 ),
             ) {
                 ProvideLifecycleOwner(previewOwner) {
-                    ProvideViewModelStoreOwner(previewOwner) {
-                        ProvideSaveableStateRegistry(previewOwner.compositionSaveableStateRegistry) {
-                            AndroidResourceEnvironment(
-                                context = resolvedPreviewTheme.context,
-                                environmentValues = UiEnvironmentValues(
-                                    density = UiDensity(
-                                        density = configuration.density,
-                                        fontScale = configuration.fontScale,
+                    ProvideSavedStateRegistryOwner(previewOwner) {
+                        ProvideViewModelStoreOwner(previewOwner) {
+                            ProvideSaveableStateRegistry(previewOwner.compositionSaveableStateRegistry) {
+                                AndroidResourceEnvironment(
+                                    context = resolvedPreviewTheme.context,
+                                    environmentValues = UiEnvironmentValues(
+                                        density = UiDensity(
+                                            density = configuration.density,
+                                            fontScale = configuration.fontScale,
+                                        ),
+                                        locales = UiLocaleList.from(configuration.localeTags),
+                                        layoutDirection = when (configuration.layoutDirection) {
+                                            PreviewLayoutDirection.Ltr -> UiLayoutDirection.Ltr
+                                            PreviewLayoutDirection.Rtl -> UiLayoutDirection.Rtl
+                                        },
                                     ),
-                                    locales = UiLocaleList.from(configuration.localeTags),
-                                    layoutDirection = when (configuration.layoutDirection) {
-                                        PreviewLayoutDirection.Ltr -> UiLayoutDirection.Ltr
-                                        PreviewLayoutDirection.Rtl -> UiLayoutDirection.Rtl
-                                    },
-                                ),
-                                observeConfigurationChanges = false,
-                            ) {
-                                UiTheme(
-                                    tokens = themeTokens,
+                                    observeConfigurationChanges = false,
                                 ) {
-                                    entry.content(this)
+                                    UiTheme(
+                                        tokens = themeTokens,
+                                    ) {
+                                        entry.content(this)
+                                    }
                                 }
                             }
                         }

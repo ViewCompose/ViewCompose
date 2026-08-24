@@ -8,6 +8,9 @@ package com.viewcompose.lifecycle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import androidx.savedstate.SavedStateRegistry
+import androidx.savedstate.SavedStateRegistryController
+import androidx.savedstate.SavedStateRegistryOwner
 import com.viewcompose.ui.foundation.buildVNodeTree
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -34,10 +37,48 @@ class LifecycleLocalsTest {
         assertNull(LocalLifecycleOwner.current)
     }
 
+    @Test
+    fun `saved state owner local is independent and restores after scope`() {
+        val owner = TestSavedStateOwner()
+        var inside: SavedStateRegistryOwner? = null
+
+        buildVNodeTree {
+            ProvideSavedStateRegistryOwner(owner) {
+                inside = LocalSavedStateRegistryOwner.current
+                assertNull(LocalLifecycleOwner.current)
+            }
+        }
+
+        assertSame(owner, inside)
+        assertNull(LocalSavedStateRegistryOwner.current)
+        owner.destroy()
+    }
+
     private class TestLifecycleOwner : LifecycleOwner {
         private val registry = LifecycleRegistry.createUnsafe(this)
 
         override val lifecycle: Lifecycle
             get() = registry
+    }
+
+    private class TestSavedStateOwner : SavedStateRegistryOwner {
+        private val registry = LifecycleRegistry.createUnsafe(this)
+        private val controller = SavedStateRegistryController.create(this)
+
+        override val lifecycle: Lifecycle
+            get() = registry
+
+        override val savedStateRegistry: SavedStateRegistry
+            get() = controller.savedStateRegistry
+
+        init {
+            controller.performAttach()
+            controller.performRestore(null)
+            registry.currentState = Lifecycle.State.CREATED
+        }
+
+        fun destroy() {
+            registry.currentState = Lifecycle.State.DESTROYED
+        }
     }
 }

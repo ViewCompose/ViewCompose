@@ -1,9 +1,9 @@
 # AndroidX Lifecycle Integration
 
-`viewcompose-lifecycle-androidx` connects Kotlin `Flow` collection and ViewCompose composition work to
-AndroidX Lifecycle. It provides the lifecycle-owner local installed by Android hosts plus lifecycle-
-aware and composition-only `collectAsState` adapters, paired start/resume effects, and observable
-lifecycle state.
+`viewcompose-lifecycle-androidx` connects Kotlin `Flow` collection, ViewCompose composition work,
+and committed native Views to AndroidX lifecycle and saved-state owners. It provides owner locals,
+lifecycle-aware and composition-only `collectAsState` adapters, paired start/resume effects,
+observable lifecycle state, and the typed boundary used by SDK View integrations.
 
 ## Artifact and stability
 
@@ -16,9 +16,11 @@ dependencies {
 - Stability: **Alpha**. Collection and owner-propagation contracts are reviewed and tested; naming
   may still evolve between alphas.
 - Platform: Android library with a minimum SDK inherited from the repository Android policy.
-- Runtime, UI Foundation, Kotlin Coroutines, and AndroidX Lifecycle Runtime are exposed transitively
-  because `State`, `UiTreeBuilder`, `Flow`, and lifecycle types appear in public APIs.
-- It does not own Activities, Fragments, ViewModels, or saved-state registries.
+- Runtime, UI Foundation, Android Host, Kotlin Coroutines, AndroidX Lifecycle Runtime, and AndroidX
+  SavedState are exposed transitively because their types appear in public APIs.
+- It propagates application-owned lifecycle and saved-state owners and may register a scoped View
+  provider. It does not own Activities, Fragments, ViewModels, owner registries, SDK state formats,
+  or application business state.
 
 ## Lifecycle owner propagation
 
@@ -31,6 +33,48 @@ Read `LocalLifecycleOwner.current` when an owner is optional. Lifecycle-aware co
 resolve it automatically and fail with a direct configuration error when none exists. A custom host
 or deliberately nested boundary can install an owner with `ProvideLifecycleOwner(owner) { ... }`.
 The previous value is restored when the subtree returns or throws.
+
+Android hosts also install `LocalSavedStateRegistryOwner`. The two locals are deliberately
+independent: Fragment content uses the Fragment View owner for lifecycle and the Fragment itself for
+saved state, while a navigation destination or graph installs its own object for both. Custom hosts
+may use `ProvideSavedStateRegistryOwner(owner) { ... }` only after that registry is attached and
+restored.
+
+## Lifecycle-bound Android Views
+
+Reusable SDK integrations subclass `LifecycleAndroidViewAdapter<V, S>` and capture the nearest
+`LifecycleOwner` in immutable adapter state. Construction and `update` remain replay-safe. The
+protected `onViewCommit` hook runs only after the renderer transaction commits; only then does the
+base class install an observer and catch the View up in Android order through `ON_CREATE`,
+`ON_START`, and `ON_RESUME` as required.
+
+Owner replacement first drives the old View side down through `ON_PAUSE`, `ON_STOP`, and
+`ON_DESTROY`, detaches it, and then runs the new commit and catch-up. The owners never overlap. This
+also means a retained navigation destination automatically caps a player, map, or camera View when
+the destination becomes hidden, even though the physical View can remain mounted.
+
+`onLifecycleEvent` receives the latest successfully committed state. A lifecycle-event callback
+failure is terminal for that binding: bounded downward cleanup and observer removal are attempted
+before the error is rethrown. `onViewCommit` must keep SDK-specific work failure-atomic; if it
+throws, the base still clears its lifecycle and saved-state bindings instead of leaving preceding
+state active. Reset and release always remove both bindings before the protected adapter cleanup
+hooks run. The callbacks are synchronous main-thread work and must not issue application-owned
+lifecycle commands or block dispatch.
+
+## Committed Android View saved state
+
+Call `AndroidViewCommitScope.bindAndroidViewSavedState(...)` from `onViewCommit` when an SDK View
+owns a Bundle payload such as `MapView` state. The stable key is a persistence identity within the
+captured `SavedStateRegistryOwner`, not the AndroidView reconciliation key. The integration chooses
+and versions its own SDK payload; the framework only isolates registration, replacement, restore,
+and cleanup.
+
+The first bind returns `AndroidViewSavedStateBindResult.Initial` with one defensive restored Bundle
+or `null`. Later commits with the same owner, key, and version return `Retained` and replace only the
+saver, so Android snapshots the latest committed View. A format mismatch or corrupt nested payload
+is isolated as absent state without blocking the new provider. Lifecycle-aware adapters clear the
+provider automatically on reset, release, or owner destruction; a raw `AndroidViewAdapter` must
+call `clearAndroidViewSavedStateBinding()` from its own final cleanup.
 
 ## Composition-scoped collection
 
@@ -123,6 +167,9 @@ depending on an orphan exception handler.
 | Paired setup/cleanup while started | `LifecycleStartEffect(key) { ... }` |
 | Paired setup/cleanup while resumed | `LifecycleResumeEffect(key) { ... }` |
 | Observe lifecycle state in declarative content | `lifecycle.currentStateAsState()` |
+| Coordinate one committed native View with a replaceable owner | subclass `LifecycleAndroidViewAdapter<V, S>` |
+| Read or install the nearest saved-state owner | `LocalSavedStateRegistryOwner` / `ProvideSavedStateRegistryOwner` |
+| Restore and save one SDK View Bundle | `bindAndroidViewSavedState(...)` from commit |
 
 Do not mirror the returned value into a second `MutableState`; reading the returned state already
 participates in runtime observation and invalidates the owning composition scope.
@@ -130,8 +177,27 @@ participates in runtime observation and invalidates the owning composition scope
 ## Testing
 
 Use a `LifecycleRegistry` to drive `ON_CREATE`, `ON_START`, `ON_STOP`, and destruction explicitly.
-Tests should verify initial value, inactive retention, restart delivery, cancellation on disposal,
-missing-owner failure, invalid thresholds, and non-overlapping collectors during rapid restarts.
+Collection tests should verify initial value, inactive retention, restart delivery, cancellation on
+disposal, missing-owner failure, invalid thresholds, and non-overlapping collectors during rapid
+restarts. Native-View adapter tests should additionally verify post-commit catch-up, owner
+replacement ordering, hidden-destination capping, callback failure cleanup, process recreation,
+format mismatch isolation, and one-shot provider removal.
+
+## Phase 2 verification evidence
+
+The 2026-08-24 acceptance against baseline `eb02abc5` passed all 35 lifecycle-module JVM and
+Robolectric tests, including six lifecycle-adapter and three SDK saved-state cases. The affected
+Host, Renderer, Android aggregate, navigation, and Preview tests also passed. The selected Q3 API
+audit, documentation/dependency/release/tooling gates, full `qaQuick` (1,954 tasks in 6 min 35 s),
+and `qaPreview` (1,115 tasks in 22 s) all passed.
+
+The baseline had composition-scoped lifecycle effects but no transaction-bound native View owner
+or SDK Bundle provider boundary. The accepted implementation records post-commit catch-up, serial
+owner replacement, retained-destination capping, failure cleanup, process recreation, and provider
+removal, so the behavioral conclusion is **improved**. Gate timings are not normalized for cache
+state and support no performance claim. This phase adds no SDK or visual surface, so physical-device
+UI evidence would not test a new behavior; real Surface and foreground/background validation starts
+with the Media3 integration.
 
 ## Related documentation
 
@@ -155,3 +221,9 @@ context.
 Q3 lifecycle APIs in this release. Paired effects require at least one explicit key and do not
 replace the existing Flow collection APIs; choose them when the owned work itself, rather than only
 its data collection, must enter and leave with an Android lifecycle threshold.
+
+`LifecycleAndroidViewAdapter`, the saved-state-owner local, and the committed Android View
+saved-state binding are Q3 integration APIs. They add Android Host and AndroidX SavedState to this
+artifact's transitive API surface. SDK integrations should hard-cut hand-written lifecycle observer
+and provider bookkeeping to these boundaries; application state and playback, permission, or
+credential policy remain outside them.

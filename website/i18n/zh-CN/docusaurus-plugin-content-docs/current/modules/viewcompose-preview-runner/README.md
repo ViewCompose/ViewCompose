@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-runner/README.md
-translation_source_hash: 368b358b4305b7a73b3843a23dbe3481a757081d116950c56bbc66fe4ce0f110
+translation_source_hash: 602fe433ae282671235f1461015f504b7be461dd9bc3e4e66e91226ff575f59a
 translation_status: current
 ---
 
@@ -32,6 +32,10 @@ Provider 通过 Kotlin `INSTANCE` 字段或 public 无参构造函数创建。
 随后 `StaticPreviewRenderer.mount` 校验描述符与 API 级别的一致性，解析 Android 配置和主题，安装
 Lifecycle、ViewModel、可保存状态、环境与主题所有者，同步渲染并布局原生层级。返回的
 `StaticPreviewFrame` 持有这些资源，必须关闭。
+
+Frame Owner 会同时安装到 `LocalLifecycleOwner` 与 `LocalSavedStateRegistryOwner`，因此 SDK
+Adapter Fallback 路径与 Frame 其余内容使用同一确定性边界。关闭 Frame 会销毁 Owner 与 Provider；
+Preview 不承诺在独立 Mount Request 之间持久保存 SDK State。
 
 `StaticPreviewWorker` 在请求输出目录生成 `preview.png` 和 `render-tree.json`。临时文件以原子方式替换，
 Gradle 和 Studio 不会读取到只写了一部分的产物。响应会记录入口解析、挂载/布局、图片导出和快照导出的

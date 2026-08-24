@@ -13,6 +13,15 @@ enum class AndroidViewReusePolicy {
     Resettable,
 }
 
+/** Describes whether an adapter serializes the View against an external lifecycle owner. */
+enum class AndroidViewLifecycleMode {
+    /** The adapter has no lifecycle-owner binding beyond renderer ownership. */
+    None,
+
+    /** The adapter manages an external lifecycle owner after transaction commit. */
+    AdapterManaged,
+}
+
 /** Identifies why a retained Android View is being reset before another binding. */
 enum class AndroidViewResetReason {
     /** The physical mounted tree is moving to a different logical lazy-item or pager key. */
@@ -107,6 +116,16 @@ interface AndroidViewAdapter<V : View, S> {
      */
     val reusePolicy: AndroidViewReusePolicy
         get() = AndroidViewReusePolicy.Never
+
+    /**
+     * Returns bounded lifecycle capability metadata used by renderer diagnostics.
+     *
+     * This value reports adapter behavior only; the Host never installs an external lifecycle
+     * observer from it. Adapters must still implement the corresponding commit and cleanup
+     * contract. The default reports no external lifecycle binding.
+     */
+    val lifecycleMode: AndroidViewLifecycleMode
+        get() = AndroidViewLifecycleMode.None
 
     /**
      * Creates one candidate View on the Android main thread.

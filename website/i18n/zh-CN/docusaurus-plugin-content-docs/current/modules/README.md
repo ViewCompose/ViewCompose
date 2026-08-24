@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 7eb2b85c592c762d4f5dfaebc8a57b1b36e76a19b34465e63460acb1fcb2871d
+translation_source_hash: 6fa56282d17caa3ece81d9abd421211aad05fd4e3fa4297018f971e6d0e1f45f
 translation_status: current
 ---
 
@@ -33,7 +33,7 @@ translation_status: current
 | `viewcompose-overlay-oneui7-android` | Integration | 不依赖 Material 的 One UI Snackbar 与底部对话框呈现 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-overlay-oneui7-android) |
 | `viewcompose-image-coil` | 集成 | 基于 Coil 的通用图片加载 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-image-coil) |
 | `viewcompose-image-glide` | 集成 | 基于 Glide 的通用图片加载 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-image-glide) |
-| `viewcompose-lifecycle-androidx` | 集成 | 感知生命周期的状态收集 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-lifecycle-androidx) |
+| `viewcompose-lifecycle-androidx` | 集成 | 感知 AndroidX 生命周期的状态、Effect 与已提交原生 View 协同 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-lifecycle-androidx) |
 | `viewcompose-viewmodel-androidx` | 集成 | ViewModel 与 SavedStateHandle 集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-viewmodel-androidx) |
 | `viewcompose-preview-core` | 预览工具 | 预览注解与工具协议 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-preview-core) |
 | `viewcompose-preview-gradle-plugin` | 预览工具 | 预览发现与 Gradle 任务 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-preview-gradle-plugin) |

@@ -21,13 +21,20 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
+    api(project(":viewcompose-host-android"))
     api(project(":viewcompose-runtime"))
     api(project(":viewcompose-ui-foundation"))
     api(libs.kotlinx.coroutines.core)
     api(libs.androidx.lifecycle.runtime.ktx)
+    api(libs.androidx.savedstate)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
 }

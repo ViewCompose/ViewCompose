@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
 import com.viewcompose.lifecycle.LocalLifecycleOwner
+import com.viewcompose.lifecycle.LocalSavedStateRegistryOwner
 import com.viewcompose.ui.foundation.DisposableEffect
 import com.viewcompose.ui.foundation.LocalSaveableStateRegistry
 import com.viewcompose.ui.foundation.SaveableStateRegistry
@@ -43,6 +44,7 @@ class FragmentHostLifecycleIntegrationTest {
 
         val firstOwner = fragment.viewLifecycleOwner
         assertSame(firstOwner, fragment.capturedOwner)
+        assertSame(fragment, fragment.capturedSavedStateRegistryOwner)
         assertSame(fragment, fragment.capturedViewModelStoreOwner)
         assertEquals(1, fragment.compositionCount)
 
@@ -57,6 +59,7 @@ class FragmentHostLifecycleIntegrationTest {
         val secondOwner = fragment.viewLifecycleOwner
         assertNotSame(firstOwner, secondOwner)
         assertSame(secondOwner, fragment.capturedOwner)
+        assertSame(fragment, fragment.capturedSavedStateRegistryOwner)
         assertSame(fragment, fragment.capturedViewModelStoreOwner)
         assertSame(fragment.firstSaveableStateRegistry, fragment.capturedSaveableStateRegistry)
         assertEquals(2, fragment.compositionCount)
@@ -65,6 +68,7 @@ class FragmentHostLifecycleIntegrationTest {
 
 class LifecycleCapturingFragment : Fragment() {
     var capturedOwner: LifecycleOwner? = null
+    var capturedSavedStateRegistryOwner: Any? = null
     var capturedViewModelStoreOwner: Any? = null
     var capturedSaveableStateRegistry: SaveableStateRegistry? = null
     var firstSaveableStateRegistry: SaveableStateRegistry? = null
@@ -78,6 +82,7 @@ class LifecycleCapturingFragment : Fragment() {
     ): View {
         return setUiContent {
             capturedOwner = LocalLifecycleOwner.current
+            capturedSavedStateRegistryOwner = LocalSavedStateRegistryOwner.current
             capturedViewModelStoreOwner = LocalViewModelStoreOwner.current
             capturedSaveableStateRegistry = LocalSaveableStateRegistry.current
             if (firstSaveableStateRegistry == null) {

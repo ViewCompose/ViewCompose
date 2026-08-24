@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: b36d4037afdeaee1b686dccd4985745cb98640c33b0c34c7a640e65a1b5ea0a6
+translation_source_hash: 2372609ed3d9a9097ae6ddc85f5f81db633a238ae22eee21f214f0df721f9bc2
 translation_status: current
 ---
 
@@ -212,6 +212,8 @@ val gap = VNode(
   不可变 Environment。`update` 与 `onReset` 是可重放的事务回调。一次性外部动作应放在
   `onCommit`，资源清理应放在 `onRelease`。Release 是一次性的永久放弃清理，也覆盖未提交的
   回滚候选节点。
+- `AndroidViewNodeProps.lifecycleMode` 只是一段诊断文本。它描述下游 Adapter 的所有权，但不
+  授权 UI Contract 或 Renderer 观察 Lifecycle Owner。
 - `AndroidViewNodeProps.constructionIdentity` 是物理构造身份，与 VNode 的逻辑 `key` 分离。
   身份相等时保留 View 并重新绑定，不执行 Reset；身份变化时必须原子替换候选节点，候选创建或
   绑定失败时 Renderer 必须保留已提交 View。

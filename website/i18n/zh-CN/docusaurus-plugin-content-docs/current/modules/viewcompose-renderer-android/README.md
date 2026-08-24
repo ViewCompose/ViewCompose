@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: d15ecbed8f7d17502140083be67fbbc8dc82a88332808775a32ad2b58e927e18
+translation_source_hash: 9896233bff6527c8d03e7b62603896aea21149fa9df4b16886dfcb53b3c837ea
 translation_status: current
 ---
 
@@ -303,8 +303,8 @@ Matrix。Phase 4 负责该基准与最终指导。
 - AndroidView 协调会分离逻辑身份与构造身份。普通的同构造身份更新会重新绑定保留 View，且不
   调用 Reset。构造身份变化时，Renderer 会先创建并绑定一个尚未挂载的候选节点，再在结构提交时
   交换节点，并恰好释放一次被替换 View。候选或后续 Sibling 失败时会恢复旧 Container，且只释放
-  候选。有限 Patch Detail 会报告 Adapter 名称、构造代次、复用策略及本次是否替换，不会保留
-  原生 View。
+  候选。有限 Patch Detail 会报告 Adapter 名称、构造代次、复用策略、Lifecycle Mode 及本次是否
+  替换，不会保留原生 View。Lifecycle Mode 只供观察；Renderer 不安装或驱动 Owner。
 - Shared-content Modifier 解析会把完整类型化端点 Element 写入一个稳定 Keyed View Tag，并在
   Modifier 消失或 View 复用时清除。Renderer 不执行 Tree Scan、Bitmap Capture、Overlay
   Allocation、Animation Scheduling 或 Navigation；这些有界的转场期操作由消费它的 Android

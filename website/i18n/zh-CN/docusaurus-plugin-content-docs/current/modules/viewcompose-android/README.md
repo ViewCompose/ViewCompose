@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-android/README.md
-translation_source_hash: 1e082204b4647bf37445e86a9bf90d5636195cbf2c4cb13a23d6b980a057abe3
+translation_source_hash: 6d5813280a1baef29bd0bccf1cc3fe1fc00450cf08884b18097d3d1e8d795a34
 translation_status: current
 ---
 
@@ -64,6 +64,11 @@ Context，并由根节点、原生子 View 与默认 Overlay 共同使用。
 Android 发布该 Root 的 `viewLifecycleOwner` 后立即开始渲染；内容接收这个 View Owner，Session
 在 `onDestroyView` 时结束，而 Fragment Scope 的 ViewModel 与 Saved State Owner 会跨 View 重建
 保持稳定。Activity Session 同步渲染，并在 Activity 销毁时结束。
+
+标准 Root 还会为已提交 SDK View State 安装 `LocalSavedStateRegistryOwner`。Activity 内容的两个
+Owner Local 都接收 Activity。Fragment 内容通过 `LocalLifecycleOwner` 接收
+`viewLifecycleOwner`，通过 `LocalSavedStateRegistryOwner` 接收 Fragment；因此绑定 Lifecycle
+的原生工作会随 View 结束，而兼容 SDK Bundle 可恢复到下一个 View 实例。
 
 两个入口都接受 `diagnostics = RenderDiagnostics(...)`。该配置会启动一棵 Host 诊断树，并由
 Navigation、Lazy、Pager 和 Overlay 子 Session 继承。Alpha 硬切移除了 `onRenderStats`、

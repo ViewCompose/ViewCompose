@@ -2,10 +2,11 @@
 
 ## Status
 
-Active. Phases 0 and 1 are complete. The common typed adapter, construction identity,
+Active. Phases 0 through 2 are complete. The common typed adapter, construction identity,
 cross-key-only reset hard cut, callback delegation, environment scopes, atomic candidate
-replacement, rollback, and bounded diagnostics are implemented and verified. No target SDK module
-has started. The target integrations are AndroidX Media3, legacy
+replacement, rollback, bounded diagnostics, lifecycle-owner serialization, and committed SDK
+saved-state boundary are implemented and verified. No target SDK module has started. The target
+integrations are AndroidX Media3, legacy
 `com.google.android.exoplayer2` ExoPlayer, Google Maps SDK for Android, and CameraX. Media3 and
 legacy ExoPlayer remain separate compatibility lines because their public namespaces, dependency
 graphs, support status, and consumer migration constraints are not interchangeable.
@@ -16,11 +17,13 @@ migration, and owning-module documentation before this plan is archived.
 
 Last verified: 2026-08-24.
 
-Next action: begin Phase 2 lifecycle and saved-state coordination before any SDK module is created.
+Next action: begin Phase 3 with the independent AndroidX Media3 module and deterministic local-media
+fixture.
 
 ## Maven release changesets
 
 - `release/changes/20260824-typed-android-view-adapter.json`
+- `release/changes/20260824-android-view-lifecycle-saved-state.json`
 
 ## Objective
 
@@ -186,9 +189,16 @@ enum class AndroidViewResetReason {
     MountedTreeReuse,
 }
 
+enum class AndroidViewLifecycleMode {
+    None,
+    AdapterManaged,
+}
+
 interface AndroidViewAdapter<V : View, S> {
     val reusePolicy: AndroidViewReusePolicy
         get() = AndroidViewReusePolicy.Never
+    val lifecycleMode: AndroidViewLifecycleMode
+        get() = AndroidViewLifecycleMode.None
 
     fun create(scope: AndroidViewCreateScope): V
     fun update(scope: AndroidViewUpdateScope<V>, state: S)
@@ -249,8 +259,7 @@ renderer path.
 
 ### Lifecycle and saved state
 
-Phase 2 may add downstream helpers in `viewcompose-lifecycle-androidx` or the SDK-specific
-integrations for:
+Phase 2 adds the reusable owner coordination boundary to `viewcompose-lifecycle-androidx` for:
 
 - registering a lifecycle observer only after the Android View transaction commits;
 - catching up to the nearest current `LifecycleOwner` state in Android lifecycle order;
@@ -262,9 +271,70 @@ integrations for:
 - isolating corrupt or incompatible SDK state without corrupting the surrounding ViewCompose
   saveable registry.
 
-The common Host contract must not depend upward on AndroidX Lifecycle or an individual SDK. A
-reusable lifecycle decorator belongs in an AndroidX integration layer; SDK-specific lifecycle and
-Bundle behavior stays with the SDK integration when it cannot be expressed generically.
+The common Host contract does not depend upward on AndroidX Lifecycle or an individual SDK. Its
+`lifecycleMode` is diagnostic metadata only. The reusable lifecycle adapter, saved-state-owner
+local, and provider binding live in the AndroidX integration layer. SDK-specific event mapping and
+Bundle payload schemas remain with each SDK integration.
+
+The frozen Phase 2 shape is:
+
+```kotlin
+abstract class LifecycleAndroidViewAdapter<V : View, S> : AndroidViewAdapter<V, S> {
+    final override val lifecycleMode: AndroidViewLifecycleMode
+        get() = AndroidViewLifecycleMode.AdapterManaged
+
+    protected abstract fun lifecycleOwner(state: S): LifecycleOwner
+    protected open fun onViewCommit(scope: AndroidViewCommitScope<V>, state: S) = Unit
+    protected abstract fun onLifecycleEvent(
+        scope: AndroidViewLifecycleEventScope<V>,
+        state: S,
+        event: Lifecycle.Event,
+    )
+    protected open fun onViewReset(
+        scope: AndroidViewResetScope<V>,
+        reason: AndroidViewResetReason,
+    ) = Unit
+    protected open fun onViewRelease(view: V) = Unit
+}
+
+object LocalSavedStateRegistryOwner {
+    val current: SavedStateRegistryOwner?
+}
+
+fun UiTreeBuilder.ProvideSavedStateRegistryOwner(
+    owner: SavedStateRegistryOwner,
+    content: UiTreeBuilder.() -> Unit,
+)
+
+sealed interface AndroidViewSavedStateBindResult {
+    class Initial internal constructor(
+        val restoredState: Bundle?,
+    ) : AndroidViewSavedStateBindResult
+
+    data object Retained : AndroidViewSavedStateBindResult
+}
+
+class AndroidViewSaveStateScope<V : View> internal constructor(
+    val view: V,
+)
+
+fun <V : View> AndroidViewCommitScope<V>.bindAndroidViewSavedState(
+    owner: SavedStateRegistryOwner,
+    key: String,
+    formatVersion: Int,
+    saveState: AndroidViewSaveStateScope<V>.() -> Bundle,
+): AndroidViewSavedStateBindResult
+
+fun View.clearAndroidViewSavedStateBinding()
+```
+
+Activity, Fragment, navigation destination/graph, and Preview hosts install the nearest saved-state
+owner automatically. Fragment content intentionally uses its View owner for lifecycle and the
+Fragment for saved state. Binding occurs only after commit; the first bind returns one compatible
+defensive restored Bundle, later commits replace only the saver, and format mismatch or corrupt
+nested state is isolated. Owner replacement installs the new provider before removing the old.
+Lifecycle adapter reset/release automatically remove both lifecycle and saved-state bindings before
+the SDK hook runs. Raw adapters use the explicit clear function.
 
 The first-release ownership is frozen as follows:
 
@@ -410,7 +480,7 @@ and replacement flag.
 | --- | --- | --- | --- |
 | 0. Dependency and contract freeze | Complete | Pinned reviewed SDK versions and repositories; froze module/package names, dependency exposure, supported API/device matrix, license/notice impact, ownership table, deterministic fixtures, lifecycle/saved-state behavior, and rollback strategy | Worktree, Google Maven, and official SDK contracts agree; no production/publication mutation was required |
 | 1. Typed AndroidView adapter | Complete | Q3 typed adapter, environment scopes, separate construction identity, explicit reuse policy/reset reason, callback delegation, same-identity reset hard cut, diagnostics, and renderer-neutral tests | Factory/update/reset/commit/release ordering, rollback, replacement, keyed reuse, raw-overload parity, and zero-adapter inactive cost pass |
-| 2. Lifecycle and saved-state coordination | Not started | AndroidX lifecycle decorator plus reusable saved-state boundary where evidence supports it | Owner catch-up/replacement, retained destination visibility, corrupt restore, process recreation, and one-shot cleanup pass |
+| 2. Lifecycle and saved-state coordination | Complete | Q3 AndroidX lifecycle adapter, independent saved-state-owner local, committed versioned SDK Bundle provider boundary, automatic host/navigation/Preview propagation, diagnostics, samples, and owning documentation | Owner catch-up/replacement, retained destination visibility, callback failure, corrupt restore, process recreation, and one-shot cleanup pass |
 | 3. AndroidX Media3 | Not started | Optional Media3 module, caller-owned `Player` component, controller/appearance state, local-media Demo/sample, tests, docs, and release intent | Playback attachment/detachment, theme/configuration, navigation retention, Surface cleanup, accessibility, and leak gates pass |
 | 4. Legacy ExoPlayer 2 | Not started | Separate legacy namespace module and sample with no Media3 dependency or type aliasing | Dependency isolation, caller ownership, lifecycle parity, theme/configuration, release cleanup, and migration guidance pass |
 | 5. Google Maps | Not started | Optional Maps module with MapView lifecycle, map-ready state delivery, camera/UI binding, explicit style/recreation behavior, and saved state | No-key deterministic tests, credentialed smoke evidence, lifecycle/process restore, navigation retention, theme/style, and leak gates pass |
@@ -573,6 +643,7 @@ This plan is complete only when:
 | 2026-08-24 | External fixed sources | Phase 0 SDK audit | Official release/API/lifecycle documentation plus direct fixed-POM probes in Google Maven and Maven Central | Media3 1.11.0, CameraX 1.6.1, Maps 20.0.0, and legacy ExoPlayer 2.19.1 resolve from Google Maven; legacy core/UI are absent from Maven Central; lifecycle, Surface, deprecation, minSdk, license, and Maps known-issue contracts recorded | Freeze exact lines, Google Maven, ownership, notices, and device lanes; begin common adapter implementation only |
 | 2026-08-24 | Working tree from `54151a09f082518c7e49146caf6853b24ffc54ba` | Phase 0 closeout | `./gradlew verifyDocumentationStructure verifyViewComposeReleaseIntent --console=plain`; `git diff --check` | Documentation structure passed for 113 canonical and 109 current Chinese pages; release intent reported 0 release artifacts, 0 ignored artifacts, and 0 shared-path classifications; diff check passed | Phase 0 is complete without production or publication changes; start the Phase 1 typed-adapter and reset-semantics hard cut |
 | 2026-08-24 | Working tree from `718220e6178f8368646c59a7119671e188d16799` | Phase 1 implementation and closeout | Focused Host/Renderer JVM tests; Android 9 Xiaomi MI 6 `AndroidInteropRenderingUiTest`; selected Q3 API audit; documentation/release/tooling gates; `./gradlew qaQuick`; `./gradlew qaPreview` | Focused tests passed; device instrumentation passed 3/3 in 70.283 s; API/docs/release/tooling gates passed; `qaQuick` passed 1,945 tasks in 6 min 45 s; `qaPreview` passed 1,115 tasks in 24 s; release intent reported exactly 3 artifacts; no inactive registration, poller, SDK dependency, or recurring work was introduced | Comparison baseline had one reset on an ordinary same-key update and no construction identity; Phase 1 records zero such resets, a 100% removal for that asserted transition, and atomic replacement. Conclusion: improved. Gate timings are not normalized because cache state differs and support no performance claim. Device evidence is limited to one Android 9 model and used root installation only to bypass MIUI USB confirmation; SDK-specific devices remain Phase 3–7 work. Begin Phase 2 lifecycle and saved-state coordination. |
+| 2026-08-24 | Working tree from `eb02abc5d95bf92d03ebf565e6268e379ac3cba5` | Phase 2 implementation and closeout | Lifecycle module JVM/Robolectric tests; affected Host/Renderer/Android/navigation/Preview tests; selected Q3 API audit; documentation/dependency/release/tooling gates; `./gradlew qaQuick`; `./gradlew qaPreview` | All 35 lifecycle-module tests passed, including 6 lifecycle-adapter and 3 SDK saved-state cases; affected tests and API/docs/dependency/tooling gates passed; `qaQuick` passed 1,954 tasks in 6 min 35 s; `qaPreview` passed 1,115 tasks in 22 s; release intent reported exactly 7 artifacts | The baseline had composition-scoped lifecycle effects but no transaction-bound native View owner or SDK Bundle provider. Phase 2 adds post-commit serial ownership, retained-destination capping, failure cleanup, process recreation, and one-shot provider removal. Conclusion: improved. Gate timings are not cache-normalized and support no performance claim. No SDK or visual surface was added, so device UI evidence would not test new behavior; the connected Xiaomi lane is reserved for Phase 3 Media3 Surface and foreground/background validation. Begin Phase 3. |
 
 ## Decision history
 
@@ -592,3 +663,6 @@ This plan is complete only when:
 | 2026-08-24 | Scope media lifecycle to View/player attachment, not playback commands | Caller ownership permits background audio or service playback; ViewCompose owns controller, listener, and Surface cleanup but cannot pause or release the supplied player |
 | 2026-08-24 | Require an explicit Maps saveable-state key and exact CameraX Preview ownership | Arbitrary logical keys cannot become durable process-state namespaces, and `unbindAll` would exceed authority over caller-owned unrelated camera use cases |
 | 2026-08-24 | Keep CameraX backend selection and Maps StrictMode policy application-owned | The supplied provider already represents backend policy, while a process-global StrictMode relaxation would hide an attributed upstream Maps 20.0.0 issue |
+| 2026-08-24 | Put typed View lifecycle coordination in the existing AndroidX lifecycle integration | Composition-scoped effects have no native View transaction boundary; an AndroidX adapter can reuse the committed Host contract and retained destination owner without teaching neutral Host about Lifecycle |
+| 2026-08-24 | Separate lifecycle and saved-state owner locals and keep SDK Bundle schemas downstream | Fragment View work must end at `onDestroyView` while Fragment SavedState can survive View recreation; only provider registration, version isolation, replacement, and cleanup are generic across SDKs |
+| 2026-08-24 | Make lifecycle adapter terminal hooks automatically clear both owner bindings | Requiring every SDK adapter to remember provider cleanup would make reset/release safety convention-based; the base class can enforce one-shot cleanup without SDK knowledge |

@@ -44,6 +44,7 @@ class AndroidInteropDslTest {
         assertEquals(null, spec.onReset)
         assertEquals(null, spec.onRelease)
         assertEquals(null, spec.onCommit)
+        assertEquals(AndroidViewLifecycleMode.None.name, spec.lifecycleMode)
     }
 
     @Test
@@ -129,6 +130,7 @@ class AndroidInteropDslTest {
         )
         assertSame(context, view.context)
         assertEquals(RecordingAdapter::class.java.name, spec.adapterName)
+        assertEquals(AndroidViewLifecycleMode.AdapterManaged.name, spec.lifecycleMode)
     }
 
     @Test
@@ -149,6 +151,7 @@ class AndroidInteropDslTest {
         private val events: MutableList<String>,
     ) : AndroidViewAdapter<View, String> {
         override val reusePolicy: AndroidViewReusePolicy = AndroidViewReusePolicy.Resettable
+        override val lifecycleMode: AndroidViewLifecycleMode = AndroidViewLifecycleMode.AdapterManaged
 
         override fun create(scope: AndroidViewCreateScope): View {
             events += "create:${scope.environment.resourceRevision}"

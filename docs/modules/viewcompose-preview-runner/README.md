@@ -33,6 +33,11 @@ configuration and theme, installs lifecycle, ViewModel, saveable-state, environm
 owners, renders synchronously, and lays out the native hierarchy. The returned
 `StaticPreviewFrame` owns these resources and must be closed.
 
+The frame owner is installed in both `LocalLifecycleOwner` and `LocalSavedStateRegistryOwner`, so
+SDK adapter fallback paths use the same deterministic boundary as the rest of the frame. Closing
+the frame destroys the owner and providers; preview does not promise durable SDK state across
+independent mount requests.
+
 `StaticPreviewWorker` captures `preview.png` and `render-tree.json` into the request output
 directory. Temporary files are replaced atomically, so Gradle and Studio never consume partially
 written artifacts. The response records entry-resolution, mount/layout, image-export, and

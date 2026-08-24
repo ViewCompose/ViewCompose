@@ -242,6 +242,8 @@ first-party image loaders; its zero default preserves deterministic non-Android/
   callbacks. External one-shot work belongs in `onCommit`; resource cleanup belongs in
   `onRelease`. Release is one-shot permanent-abandonment cleanup and also covers an uncommitted
   rollback candidate.
+- `AndroidViewNodeProps.lifecycleMode` is diagnostic text only. It describes downstream adapter
+  ownership without authorizing UI Contract or a renderer to observe a lifecycle owner.
 - `AndroidViewNodeProps.constructionIdentity` is physical constructor identity, separate from the
   VNode's logical `key`. Equal identity rebinds the retained View without reset. Changed identity
   requires an atomic candidate replacement; the renderer must preserve the committed View if

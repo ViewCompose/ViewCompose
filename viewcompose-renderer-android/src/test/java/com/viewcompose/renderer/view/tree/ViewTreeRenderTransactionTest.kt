@@ -641,6 +641,7 @@ class ViewTreeRenderTransactionTest {
                     onRelease = { oldReleases += 1 },
                     constructionIdentity = "style-a",
                     adapterName = "player-adapter",
+                    lifecycleMode = "AdapterManaged",
                 ),
             ),
         )
@@ -656,6 +657,7 @@ class ViewTreeRenderTransactionTest {
                     onRelease = { newReleases += 1 },
                     constructionIdentity = "style-b",
                     adapterName = "player-adapter",
+                    lifecycleMode = "AdapterManaged",
                 ),
             ),
         )
@@ -667,6 +669,7 @@ class ViewTreeRenderTransactionTest {
         assertEquals(1, oldReleases)
         assertEquals(0, newReleases)
         assertTrue(replaced.patches.single().detail.orEmpty().contains("generation=1"))
+        assertTrue(replaced.patches.single().detail.orEmpty().contains("lifecycle=AdapterManaged"))
         assertTrue(replaced.patches.single().detail.orEmpty().contains("replacement=true"))
 
         ViewTreeRenderer.disposeMounted(container, replaced.mountedNodes)
@@ -1516,6 +1519,7 @@ class ViewTreeRenderTransactionTest {
         onCommit: (() -> Unit)? = null,
         constructionIdentity: Any? = Unit,
         adapterName: String = "callback",
+        lifecycleMode: String = "None",
     ): VNode {
         return VNode(
             type = NodeType.AndroidView,
@@ -1547,6 +1551,7 @@ class ViewTreeRenderTransactionTest {
                 },
                 constructionIdentity = constructionIdentity,
                 adapterName = adapterName,
+                lifecycleMode = lifecycleMode,
             ),
         )
     }

@@ -164,6 +164,9 @@ AndroidView(
 - `onCommit` runs only after the complete composition transaction commits. `onRelease` runs once
   whenever a created View is permanently abandoned: candidate rollback, committed replacement or
   removal, non-reusable session disposal, or final reuse-cache eviction.
+- `lifecycleMode` is bounded diagnostic metadata. Raw adapters report `None`; AndroidX integration
+  adapters report `AdapterManaged`. Host records the value but never installs an owner observer or
+  changes transaction ordering because of it.
 
 The callback-based `AndroidView(factory, update, ...)` overload remains the low-level escape hatch
 and delegates to the same typed transaction path. Its trailing `constructionKey` has the same

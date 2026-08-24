@@ -28,7 +28,7 @@ this table. Architecture and guide pages remain the source of truth for cross-mo
 | `viewcompose-overlay-oneui7-android` | Integration | Material-free One UI Snackbar and bottom-dialog presentation | [Available](./viewcompose-overlay-oneui7-android/README.md) |
 | `viewcompose-image-coil` | Integration | Coil-backed general image loading | [Available](./viewcompose-image-coil/README.md) |
 | `viewcompose-image-glide` | Integration | Glide-backed general image loading | [Available](./viewcompose-image-glide/README.md) |
-| `viewcompose-lifecycle-androidx` | Integration | AndroidX Lifecycle-aware state collection | [Available](./viewcompose-lifecycle-androidx/README.md) |
+| `viewcompose-lifecycle-androidx` | Integration | AndroidX lifecycle-aware state, effects, and committed native-View coordination | [Available](./viewcompose-lifecycle-androidx/README.md) |
 | `viewcompose-viewmodel-androidx` | Integration | AndroidX ViewModel and SavedStateHandle integration | [Available](./viewcompose-viewmodel-androidx/README.md) |
 | `viewcompose-preview-core` | Preview tooling | Preview annotations and tooling protocol | [Available](./viewcompose-preview-core/README.md) |
 | `viewcompose-preview-gradle-plugin` | Preview tooling | Preview discovery and Gradle tasks | [Available](./viewcompose-preview-gradle-plugin/README.md) |
