@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Preserve source and mediator refresh failures in the typed primary-content projection and verify lifecycle restart, recreation, cancellation, and real RemoteMediator coordination.",
+  "changes": [
+    { "artifact": "viewcompose-paging-androidx", "impact": "fix" }
+  ],
+  "ignored": [],
+  "shared": []
+}
