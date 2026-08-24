@@ -67,6 +67,7 @@ dependencies {
     implementation(project(":viewcompose-media3-androidx"))
     implementation(project(":viewcompose-exoplayer2-android"))
     implementation(project(":viewcompose-google-maps-android"))
+    implementation(project(":viewcompose-camerax-androidx"))
     implementation(project(":viewcompose-animation"))
     implementation(project(":viewcompose-gesture"))
     implementation(project(":viewcompose-graphics"))
@@ -93,6 +94,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.foundation)
@@ -105,4 +107,5 @@ dependencies {
     androidTestImplementation(libs.androidx.test.uiautomator)
     androidTestImplementation(libs.androidx.media3.ui)
     androidTestImplementation(libs.exoplayer2.ui)
+    androidTestImplementation(libs.androidx.camera.view)
 }

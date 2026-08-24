@@ -54,6 +54,21 @@ API key and is governed by the
 [Maps SDK for Android policies](https://developers.google.com/maps/documentation/android-sdk/policies).
 The artifact's published POM and the SDK distribution remain the authoritative license metadata.
 
+### AndroidX CameraX 1.6.1
+
+The optional `viewcompose-camerax-androidx` integration directly uses:
+
+- `androidx.camera:camera-core:1.6.1`
+- `androidx.camera:camera-lifecycle:1.6.1`
+- `androidx.camera:camera-view:1.6.1`
+
+The Demo application selects `androidx.camera:camera-camera2:1.6.1` as its hardware backend. These
+artifacts are provided by the Android Open Source Project under the Apache License 2.0. Their
+release notes, source, and license terms are available from the
+[CameraX release page](https://developer.android.com/jetpack/androidx/releases/camera),
+[AndroidX source tree](https://android.googlesource.com/platform/frameworks/support/), and
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
 ## How to Verify
 
 Check declared dependencies in Gradle files and version catalogs, then map to

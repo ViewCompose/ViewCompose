@@ -57,6 +57,7 @@
     "modules/viewcompose-android/README.md",
     "modules/viewcompose-animation-core/README.md",
     "modules/viewcompose-animation/README.md",
+    "modules/viewcompose-camerax-androidx/README.md",
     "modules/viewcompose-constraintlayout-androidx/README.md",
     "modules/viewcompose-diagnostics/README.md",
     "modules/viewcompose-exoplayer2-android/README.md",

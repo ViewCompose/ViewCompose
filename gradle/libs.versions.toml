@@ -34,6 +34,7 @@ asm = "9.8"
 media3 = "1.10.1"
 exoplayer2 = "2.19.1"
 googleMaps = "20.0.0"
+camerax = "1.6.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -80,6 +81,10 @@ androidx-media3-exoplayer = { group = "androidx.media3", name = "media3-exoplaye
 exoplayer2-core = { group = "com.google.android.exoplayer", name = "exoplayer-core", version.ref = "exoplayer2" }
 exoplayer2-ui = { group = "com.google.android.exoplayer", name = "exoplayer-ui", version.ref = "exoplayer2" }
 google-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "googleMaps" }
+androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
+androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
+androidx-camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "camerax" }
+androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

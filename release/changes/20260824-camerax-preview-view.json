@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add an ownership-explicit, lifecycle-bound CameraX PreviewView integration with bounded fill rendering and deterministic and physical-device verification paths.",
+  "changes": [
+    { "artifact": "viewcompose-camerax-androidx", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "Register the new CameraX artifact package, architectural layer, compile task, and unit-test task without changing an existing artifact's production source."
+    },
+    {
+      "path": "settings.gradle.kts",
+      "reason": "Include the independently published CameraX project in the repository build."
+    },
+    {
+      "path": "gradle/libs.versions.toml",
+      "reason": "Declare the reviewed CameraX 1.6.1 dependency line used by the new integration and its Demo hardware backend."
+    }
+  ]
+}
