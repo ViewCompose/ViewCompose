@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: c11810fc4c79cf531851eaa415e06c6fcd101a26e65fdfaa186a57115d6ec560
+translation_source_hash: f56d5cbd8516d6c994ca73af2b51d0bfeb5a5c110bb43dc303ed445057f8e51e
 translation_status: current
 ---
 
@@ -78,10 +78,13 @@ Callback 时，每个 Host 使用一个 `AndroidResourceRefreshController`。调
 
 ## 可选 Session 检查边界
 
-Host 会对中立的 `RenderSessionInspectionTooling` 端口执行一次进程级 `ServiceLoader` 查找。没有
-Provider 是正常的生产配置，并稳定表现为 no-op。发现多个 Provider 或查找失败时会禁用检查并
-记录诊断，不会改变渲染。Host 不包含设备定位协议、Android Component、报告写入器、View Tree
-Listener 或持续检查生命周期。
+Host 从进程级内存 Slot 读取中立的 `RenderSessionInspectionTooling` 端口。没有 Provider 是正常
+的生产配置，并在首个 Session 读取时冻结为稳定 No-op。下游 Tooling 制品可以在任何 Render
+Session 启动前，通过 Q3 `installRenderSessionInspectionTooling` 集成 Hook 完成 Android
+Component 初始化。同一实例重复安装是幂等的；多个不同的早期 Provider 会禁用该端口，晚于首次
+读取的安装会被忽略。安装与首次读取均受同步保护，不执行 Classpath 扫描、文件 I/O 或 Android
+Service 查找。Host 不包含设备定位协议、Android Component、报告写入器、View Tree Listener 或
+持续检查生命周期。
 
 真机 DSL 导航由下游可选制品 `viewcompose-preview` 实现。要启用该功能，应通过
 `debugImplementation` 引入它。该制品存在于可调试进程时，可以通过中立端口保留首次成功
@@ -97,6 +100,8 @@ Report 使用 Runtime Trace ID、Parent ID 与 Role，不再生成第二套仅�
 Mounted Node 并写入私有报告。滚动、布局、Rendering Active 变化与 Session 释放都不会发布报告，
 Host 也不持有 Overlay 或 IDE 协议。此所有权遵循
 [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md)。
+无发现式初始化机制由
+[ADR-0022](../../architecture/decisions/0022-in-memory-development-tooling-installation.md) 固定。
 
 同一 Registration 还会收到中立的 Q3 `RenderSessionTimingInspection` Control。下游显式请求可以启动
 一次有限的 Composition/Reconciliation/Binding Capture；Android Host 只负责把同步

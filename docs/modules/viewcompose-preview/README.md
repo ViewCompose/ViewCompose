@@ -88,6 +88,13 @@ artifact-presence gate required in addition to a debuggable process and an expli
 See [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md) for the zero-pay
 runtime and performance contract.
 
+The artifact contributes one non-exported initialization provider. Before `Application.onCreate`,
+the provider verifies `FLAG_DEBUGGABLE` and installs the neutral Host and Animation tooling ports
+into their process-local in-memory slots. A non-debuggable process installs neither port. This
+startup path performs no `ServiceLoader` scan, report I/O, View traversal, or request work; the
+explicit request remains the activation gate. See
+[ADR-0022](../../architecture/decisions/0022-in-memory-development-tooling-installation.md).
+
 ## Running-device animation timeline inspector
 
 The same debug-scoped artifact is the only application-process implementation of

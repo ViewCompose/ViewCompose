@@ -29,7 +29,7 @@ internal const val ANIMATION_TIMELINE_REPORT_RELATIVE_PATH =
     "viewcompose/animation-timeline-v1.json"
 internal const val ANIMATION_TIMELINE_PROTOCOL_VERSION = 1
 
-/** Optional read-only animation service discovered only from the Preview artifact. */
+/** Optional read-only animation port installed only from the Preview artifact. */
 internal class AndroidAnimationTimelineTooling : AnimationTimelineTooling {
     override fun register(source: AnimationTimelineSource): AnimationTimelineRegistration? {
         // Registration is intentionally only a bounded weak reference. Keeping it before the

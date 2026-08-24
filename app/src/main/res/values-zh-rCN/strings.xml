@@ -278,4 +278,27 @@
     <string name="demo_exoplayer2_status">当前：%1$s · %2$s · 首帧次数：%3$d</string>
     <string name="demo_exoplayer2_manual_check">人工验收：替换 Player、替换 Surface、进入后台并返回后，旧版视频仍然可见。</string>
     <string name="demo_exoplayer2_content_description">ViewCompose 旧版 ExoPlayer 本地样片</string>
+    <string name="demo_activity_google_maps_title">Google 地图</string>
+    <string name="demo_scenario_google_maps_title">Google MapView 集成</string>
+    <string name="demo_scenario_google_maps_summary">无凭据生命周期覆盖，以及通过外部凭据启用的渲染器、相机、样式与键控覆盖物路径。</string>
+    <string name="demo_google_maps_section_title">原生地图生命周期与状态</string>
+    <string name="demo_google_maps_section_summary">集成负责 MapView 生命周期和 SDK 恢复；应用继续负责凭据、网络、渲染器和定位策略。</string>
+    <string name="demo_google_maps_toggle_scheme">切换地图配色</string>
+    <string name="demo_google_maps_toggle_location">切换城市</string>
+    <string name="demo_google_maps_reset">重置地图夹具</string>
+    <string name="demo_google_maps_scheme_light">浅色</string>
+    <string name="demo_google_maps_scheme_dark">深色</string>
+    <string name="demo_google_maps_city_shanghai">上海</string>
+    <string name="demo_google_maps_city_hangzhou">杭州</string>
+    <string name="demo_google_maps_status_configured">已配置 · %1$s · %2$s · 样式 %3$s · 就绪 %4$d · 已加载 %5$d · 点击 %6$d</string>
+    <string name="demo_google_maps_status_unconfigured">无凭据 · %1$s · %2$s · 不宣称渲染成功</string>
+    <string name="demo_google_maps_style_default">默认</string>
+    <string name="demo_google_maps_style_pending">等待</string>
+    <string name="demo_google_maps_style_accepted">已接受</string>
+    <string name="demo_google_maps_style_rejected">已拒绝</string>
+    <string name="demo_google_maps_placeholder">仓库不会保存 API key。此确定性占位明确展示不支持路径，不会制造虚假的渲染通过结果。</string>
+    <string name="demo_google_maps_content_description">ViewCompose Google 地图夹具</string>
+    <string name="demo_google_maps_marker_title">所选城市</string>
+    <string name="demo_google_maps_marker_content_description">所选城市标记</string>
+    <string name="demo_google_maps_manual_check">人工检查：提供外部 key 后，验证地图瓦片、标记、路线、相机、配色、后台返回和 Activity 重建；未提供 key 时只应显示当前明确占位。</string>
 </resources>

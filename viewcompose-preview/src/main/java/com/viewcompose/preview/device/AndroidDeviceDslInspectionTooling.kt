@@ -55,7 +55,7 @@ internal const val DEVICE_DSL_SOURCE_REPORT_RELATIVE_PATH =
     "viewcompose/device-dsl-source-v7.json"
 internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 7
 
-/** Optional debug-scoped session-inspection service discovered by the Android Host. */
+/** Optional debug-scoped session-inspection port installed before the first Host session. */
 internal class AndroidDeviceDslInspectionTooling : RenderSessionInspectionTooling {
     override fun inspectionPolicy(
         container: RenderContainerHandle,

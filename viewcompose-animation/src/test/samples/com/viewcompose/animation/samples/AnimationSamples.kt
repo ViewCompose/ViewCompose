@@ -55,6 +55,7 @@ import com.viewcompose.animation.tooling.AnimationTimelineTerminalCondition
 import com.viewcompose.animation.tooling.AnimationTimelineTooling
 import com.viewcompose.animation.tooling.AnimationTimelineValue
 import com.viewcompose.animation.tooling.AnimationTimelineValueKind
+import com.viewcompose.animation.tooling.installAnimationTimelineTooling
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.frame.MonotonicFrameClock
 import com.viewcompose.ui.modifier.Modifier
@@ -67,6 +68,11 @@ import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.remember
 import java.lang.ref.WeakReference
+
+/** Installs an optional downstream timeline port before the first transition starts. */
+fun installAnimationTimelineToolingSample(tooling: AnimationTimelineTooling) {
+    installAnimationTimelineTooling(tooling)
+}
 
 /** Implements the neutral request-time projection without retaining application state. */
 fun animationTimelineToolingSample(): AnimationTimelineTooling {

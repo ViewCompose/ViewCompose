@@ -261,6 +261,25 @@ interface AnimationTimelineTooling {
     fun register(source: AnimationTimelineSource): AnimationTimelineRegistration?
 }
 
+/**
+ * Q3 installs one process-wide optional animation-timeline implementation from a downstream
+ * tooling artifact.
+ *
+ * Tooling artifacts must call this during application-component initialization, before the first
+ * transition reads the port. The call is synchronized, performs no file or service discovery, and
+ * retains the implementation for the process lifetime. Reinstalling the same instance is
+ * idempotent. Distinct instances installed before first use disable the port, while installations
+ * after first use are ignored. Both cases leave animation behavior unchanged.
+ *
+ * Applications do not call this integration hook. Concrete tooling must independently enforce its
+ * artifact-presence, debuggable-process, and explicit-request gates.
+ *
+ * @sample com.viewcompose.animation.samples.installAnimationTimelineToolingSample
+ */
+fun installAnimationTimelineTooling(tooling: AnimationTimelineTooling) {
+    AnimationTimelineToolingDiscovery.install(tooling)
+}
+
 /** Maximum channels retained in one neutral transition snapshot. */
 const val MAX_TIMELINE_CHANNELS: Int = 32
 

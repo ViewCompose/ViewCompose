@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 7cb46dfa4d66410ce1919ec70df1edbc5f1567d05211716687064a312f8fbf59
+translation_source_hash: 8a0ee48fabd558974ce9832e59c582b08883b47e9cc0ca2f5e61f0297afe81b9
 translation_status: current
 ---
 
@@ -50,6 +50,7 @@ translation_status: current
 | `viewcompose-constraintlayout-androidx` | Integration | AndroidX ConstraintLayout DSL | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-constraintlayout-androidx) |
 | `viewcompose-media3-androidx` | Integration | 生命周期安全的 AndroidX Media3 PlayerView 托管 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-media3-androidx) |
 | `viewcompose-exoplayer2-android` | Integration | 冻结的旧版 ExoPlayer 2 StyledPlayerView 兼容层 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-exoplayer2-android) |
+| `viewcompose-google-maps-android` | Integration | 生命周期安全的 Google Maps MapView 托管 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-google-maps-android) |
 
 ## 目录规则
 

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add a lifecycle-safe Google Maps integration and hard-cut inactive Host and Animation development-tooling discovery to pre-Application in-memory installation.",
+  "changes": [
+    { "artifact": "viewcompose-google-maps-android", "impact": "feature" },
+    { "artifact": "viewcompose-host-android", "impact": "fix" },
+    { "artifact": "viewcompose-animation", "impact": "fix" },
+    { "artifact": "viewcompose-preview", "impact": "fix" }
+  ],
+  "ignored": [],
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "Register the new Google Maps artifact package, architectural layer, compile task, and unit-test task without changing an existing artifact's production source."
+    },
+    {
+      "path": "settings.gradle.kts",
+      "reason": "Include the independently published Google Maps project in the repository build."
+    },
+    {
+      "path": "gradle/libs.versions.toml",
+      "reason": "Declare the exact Google Maps SDK line used only by the new integration and its Demo fixture."
+    }
+  ]
+}

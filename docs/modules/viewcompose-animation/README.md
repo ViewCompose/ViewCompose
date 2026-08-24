@@ -212,8 +212,12 @@ cancel. The label remains diagnostic metadata and does not alter identity.
 optional downstream development tooling. `AnimationTimelineSource` supplies one immutable,
 bounded snapshot of a committed `Transition`; `AnimationTimelineTooling` and its lifecycle
 registration decide whether one explicit request currently selects that transition. The runtime
-discovers at most one provider and treats absence, ambiguity, provider failure, and disposal
-failure as diagnostic no-ops.
+reads at most one provider from a frozen process-local in-memory slot. A downstream tooling
+artifact may call the Q3 `installAnimationTimelineTooling` integration hook during Android
+component initialization, before the first transition reads the port. Reinstalling the same
+instance is idempotent; distinct early providers disable the port, and late installation is
+ignored. The path performs no classpath scan, file I/O, or Android service lookup. Absence,
+ambiguity, provider failure, and disposal failure remain diagnostic no-ops.
 
 Snapshots contain a process-lifetime transition identity, bounded label, safe logical-state
 summaries, segment version/time, running/idle/interrupted state, and at most 32 committed channels.
@@ -231,6 +235,9 @@ before the first request so an already composed transition remains discoverable.
 receiver rejects non-debuggable processes and performs no snapshot, serialization, or report I/O
 until a nonce-bearing bounded request selects that identity. The port is read-only: live
 application seeking is not part of the contract.
+
+The initialization boundary is defined by
+[ADR-0022](../../architecture/decisions/0022-in-memory-development-tooling-installation.md).
 
 ## InfiniteTransition
 

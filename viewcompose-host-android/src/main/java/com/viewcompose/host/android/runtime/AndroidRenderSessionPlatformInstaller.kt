@@ -12,7 +12,6 @@ import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.nativeContainer
 import com.viewcompose.ui.foundation.installRenderSessionPlatform
-import java.util.ServiceLoader
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.Dispatchers
 
@@ -73,7 +72,7 @@ private class AndroidSessionFocusManager(
 /** Android logging and tracing adapter for the platform-neutral session coordinator. */
 private object AndroidRenderSessionDiagnostics : RenderSessionPlatformDiagnostics {
     override val inspectionTooling: RenderSessionInspectionTooling?
-        get() = AndroidRenderSessionInspectionToolingDiscovery.inspectionTooling
+        get() = AndroidRenderSessionInspectionToolingRegistry.resolve()
 
     override fun monotonicTimeNanos(): Long = SystemClock.elapsedRealtimeNanos()
 
@@ -102,35 +101,69 @@ private object AndroidRenderSessionDiagnostics : RenderSessionPlatformDiagnostic
     }
 }
 
-private object AndroidRenderSessionInspectionToolingDiscovery {
-    val inspectionTooling: RenderSessionInspectionTooling? by lazy {
-        runCatching {
-            val providers = ServiceLoader.load(
-                RenderSessionInspectionTooling::class.java,
-                RenderSessionInspectionTooling::class.java.classLoader,
-            ).toList()
-            selectSingleRenderSessionInspectionTooling(providers)
-        }.getOrElse { error ->
-            Log.w(
-                "ViewCompose",
-                "Optional render-session inspection service discovery failed; continuing without it.",
-                error,
-            )
-            null
-        }
+internal object AndroidRenderSessionInspectionToolingRegistry {
+    private val slot = AndroidRenderSessionInspectionToolingSlot(
+        warning = { message -> Log.w("ViewCompose", message) },
+    )
+
+    fun install(tooling: RenderSessionInspectionTooling) {
+        slot.install(tooling)
     }
+
+    fun resolve(): RenderSessionInspectionTooling? = slot.resolve()
 }
 
-internal fun selectSingleRenderSessionInspectionTooling(
-    providers: List<RenderSessionInspectionTooling>,
-): RenderSessionInspectionTooling? {
-    if (providers.size <= 1) return providers.singleOrNull()
-    Log.w(
-        "ViewCompose",
-        "Multiple render-session inspection services were installed; disabling all of them: " +
-            providers.joinToString { provider -> provider.javaClass.name },
-    )
-    return null
+internal class AndroidRenderSessionInspectionToolingSlot(
+    private val warning: (String) -> Unit = {},
+) {
+    @Volatile
+    private var resolved = false
+
+    @Volatile
+    private var selected: RenderSessionInspectionTooling? = null
+
+    private var candidate: RenderSessionInspectionTooling? = null
+    private var ambiguous = false
+
+    fun install(tooling: RenderSessionInspectionTooling) {
+        synchronized(this) {
+            if (resolved) {
+                if (selected !== tooling) {
+                    warning(
+                        "Render-session inspection tooling was installed after the runtime " +
+                            "selection had been frozen; ignoring ${tooling.javaClass.name}.",
+                    )
+                }
+                return
+            }
+            val current = candidate
+            when {
+                ambiguous || current === tooling -> Unit
+                current == null -> candidate = tooling
+                else -> {
+                    candidate = null
+                    ambiguous = true
+                    warning(
+                        "Multiple render-session inspection tooling implementations were " +
+                            "installed before runtime startup; disabling all of them: " +
+                            "${current.javaClass.name}, ${tooling.javaClass.name}.",
+                    )
+                }
+            }
+        }
+    }
+
+    fun resolve(): RenderSessionInspectionTooling? {
+        if (resolved) return selected
+        return synchronized(this) {
+            if (!resolved) {
+                selected = if (ambiguous) null else candidate
+                candidate = null
+                resolved = true
+            }
+            selected
+        }
+    }
 }
 
 private fun FocusDirection.toAndroidDirection(): Int {

@@ -36,4 +36,5 @@ dependencies {
     implementation(viewCompose("viewcompose-constraintlayout-androidx"))
     implementation(viewCompose("viewcompose-media3-androidx"))
     implementation(viewCompose("viewcompose-exoplayer2-android"))
+    implementation(viewCompose("viewcompose-google-maps-android"))
 }

@@ -52,6 +52,7 @@ class DemoCatalogFilterTest {
                 "interop.android-view",
                 "media.media3-player-view",
                 "media.exoplayer2-player-view",
+                "maps.google-map-view",
                 "overlay.transient",
                 "overlay.dialog",
                 "overlay.menu",

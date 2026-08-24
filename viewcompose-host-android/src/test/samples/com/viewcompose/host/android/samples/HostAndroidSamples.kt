@@ -11,6 +11,7 @@ import com.viewcompose.host.android.AndroidViewResetScope
 import com.viewcompose.host.android.AndroidViewReusePolicy
 import com.viewcompose.host.android.AndroidViewUpdateScope
 import com.viewcompose.host.android.renderInto
+import com.viewcompose.host.android.installRenderSessionInspectionTooling
 import com.viewcompose.host.android.resources.AndroidResourceEnvironment
 import com.viewcompose.host.android.resources.AndroidResourceRefreshController
 import com.viewcompose.host.android.resources.booleanResource
@@ -28,6 +29,12 @@ import com.viewcompose.ui.foundation.RenderDiagnostics
 import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
+
+/** Installs an optional downstream inspection port before the first render session starts. */
+fun installRenderSessionInspectionToolingSample(tooling: RenderSessionInspectionTooling) {
+    installRenderSessionInspectionTooling(tooling)
+}
 
 fun renderIntoSample(container: ViewGroup) {
     val diagnostics = RenderDiagnostics(

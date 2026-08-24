@@ -581,4 +581,12 @@
     <item name="demo_media_exoplayer2_player_view_reset" type="id" />
     <item name="demo_media_exoplayer2_player_view_state" type="id" />
     <item name="demo_media_exoplayer2_player_view_target" type="id" />
+
+    <item name="demo_maps_google_map_view_root" type="id" />
+    <item name="demo_maps_google_map_view_ready" type="id" />
+    <item name="demo_maps_google_map_view_primary_action" type="id" />
+    <item name="demo_maps_google_map_view_secondary_action" type="id" />
+    <item name="demo_maps_google_map_view_reset" type="id" />
+    <item name="demo_maps_google_map_view_state" type="id" />
+    <item name="demo_maps_google_map_view_target" type="id" />
 </resources>

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: 16c3152f7dc62ef7ad229a8d80c9118958205d345461276ea05f5acfbdf53e39
+translation_source_hash: b1966d59968f240da67eb6c4a800feabc1bfc09a55e21185cdbaf4a42303566b
 translation_status: current
 ---
 
@@ -197,8 +197,11 @@ Owner 可以把 Predictive Back Progress 交给 `seekTo`，但 Back Stack Transa
 `viewcompose-animation` 提供 Q3 `com.viewcompose.animation.tooling` 契约，供可选下游开发工具
 使用。`AnimationTimelineSource` 提供已提交 `Transition` 的一份不可变有界 Snapshot；
 `AnimationTimelineTooling` 及其 Lifecycle Registration 决定当前显式请求是否选中了该
-Transition。运行时最多发现一个 Provider；缺失、歧义、Provider 失败与 Disposal 失败都作为
-诊断 No-op 处理。
+Transition。运行时最多从冻结的进程级内存 Slot 读取一个 Provider。下游 Tooling 制品可以在
+首个 Transition 读取端口前，通过 Q3 `installAnimationTimelineTooling` 集成 Hook 完成 Android
+Component 初始化。同一实例重复安装是幂等的；多个不同的早期 Provider 会禁用该端口，晚于首次
+读取的安装会被忽略。该路径不执行 Classpath 扫描、文件 I/O 或 Android Service 查找；缺失、
+歧义、Provider 失败与 Disposal 失败仍作为诊断 No-op 处理。
 
 Snapshot 包含进程生命周期 Transition Identity、有界 Label、安全逻辑 State Summary、Segment
 Version/Time、Running/Idle/Interrupted 状态，以及最多 32 个已提交 Channel。内置 Float、可被
@@ -213,6 +216,9 @@ Frame Callback。没有可选 Provider 时不会创建 Source Projection，只�
 可以在首次请求前弱持有中立 Source，使已经组合的 Transition 仍可发现。具体 Receiver 会拒绝
 不可调试进程；只有带 Nonce 的有界请求选中该 Identity 时才会 Snapshot、Serialize 或写入报告。
 该 Port 严格只读，不支持远程 Seek 真机应用。
+
+初始化边界由
+[ADR-0022](../../architecture/decisions/0022-in-memory-development-tooling-installation.md) 定义。
 
 ## InfiniteTransition 无限动画
 
