@@ -40,6 +40,28 @@ internal class StudioPreviewSourceResolver(
             emptyList()
         }
     }
+
+    fun resolveEach(
+        sourceCandidates: List<List<StudioPreviewSourceCallSite>>,
+    ): List<StudioPreviewSourceLocation?> {
+        if (sourceCandidates.isEmpty()) return emptyList()
+        return try {
+            ReadAction.computeBlocking<List<StudioPreviewSourceLocation?>, RuntimeException> {
+                val scope = GlobalSearchScope.projectScope(project)
+                val pathsByFileName = mutableMapOf<String, List<String>>()
+                sourceCandidates.map { callSites ->
+                    resolveRuntimeSource(callSites) { fileName ->
+                        pathsByFileName.getOrPut(fileName) {
+                            FilenameIndex.getVirtualFilesByName(fileName, scope)
+                                .map { file -> file.path }
+                        }
+                    }
+                }
+            }
+        } catch (_: IndexNotReadyException) {
+            List(sourceCandidates.size) { null }
+        }
+    }
 }
 
 internal fun resolveRuntimeSource(

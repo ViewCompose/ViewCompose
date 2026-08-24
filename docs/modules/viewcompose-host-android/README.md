@@ -168,6 +168,6 @@ Version `0.1.0-alpha04` restricts overlay service discovery to one neutral provi
 choose their backend explicitly, and duplicate providers are a configuration error.
 Device source inspection moved out of this artifact. The alpha `renderInto` hard cut replaces the
 three render callbacks with one `RenderDiagnostics` configuration and adds typed role/parent
-integration inputs. Custom platforms may keep the default `null` port. Applications that use **Locate Device DSL** retain
-`viewcompose-preview` in a debug configuration, while release builds carry no locator
-implementation.
+integration inputs. Custom platforms may keep the default `null` port. Applications that use
+**Inspect Device Diagnostics** retain `viewcompose-preview` in a debug configuration, while release
+builds carry no device-inspector implementation.

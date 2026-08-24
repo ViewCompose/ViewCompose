@@ -3,6 +3,7 @@ package com.viewcompose.host.android.runtime
 import com.viewcompose.ui.foundation.RenderSessionInspectionPolicy
 import com.viewcompose.ui.foundation.RenderSessionInspectionRegistration
 import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
+import com.viewcompose.ui.foundation.RenderSessionDiagnosticInspection
 import com.viewcompose.ui.foundation.RenderSessionNodeInspection
 import com.viewcompose.ui.foundation.RenderSessionTimingInspection
 import com.viewcompose.ui.foundation.RenderDiagnosticContext
@@ -44,6 +45,7 @@ class AndroidRenderSessionInspectionToolingDiscoveryTest {
             context: RenderDiagnosticContext,
             sourceCandidates: List<List<UiSourceCallSite>>,
             nodeInspection: RenderSessionNodeInspection,
+            diagnosticInspection: RenderSessionDiagnosticInspection,
             timingInspection: RenderSessionTimingInspection,
         ): RenderSessionInspectionRegistration? = null
     }

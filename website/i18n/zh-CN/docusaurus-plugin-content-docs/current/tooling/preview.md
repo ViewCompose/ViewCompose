@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/preview.md
-translation_source_hash: c03c1737e6e7a55ecac967d13213ef6025764a75d5795715e2487656d216071e
+translation_source_hash: df17d794dc6ec5660e2a07f99103c078dae63efaed3b2fa077b64dc3fc6b2c49
 translation_status: current
 ---
 
@@ -164,68 +164,48 @@ fun composePreviewBridgeSample() {
 Compose Preview Lifecycle Semantics。需要生产主题一致性或 ViewCompose 诊断链路时，请选择
 原生静态 Runner。
 
-## 定位真机当前 DSL
+## 检查真机诊断
 
-`ViewCompose Preview` Android Studio 插件还提供独立的 `Locate Device DSL` 工具栏动作与
-Tools 菜单入口，不与预览工具窗口共用图标。要打开设备当前可见页面的 DSL：
+Android Studio 插件只提供一个 `Inspect Device Diagnostics` 工具栏与 Tools 菜单动作。Alpha 版本会
+硬切删除原来的 Locate、Highlight、Clear 与 Timing 动作：用户只需选择一次设备和 Session，便能在
+同一个 Inspector 中查看源码、最近关联帧与失败、Mounted Node 高亮和有限耗时。
 
-1. 通过 `debugImplementation` 引入 `viewcompose-preview`，然后安装并打开该可调试应用。
-2. 在设备上进入目标 ViewCompose 页面。
-3. 在 Android Studio 中选择 `Locate Device DSL`。
+1. 通过 `debugImplementation` 引入 `viewcompose-preview`，安装并让该可调试构建保持前台。
+2. 在设备上进入待排查的 ViewCompose 页面。
+3. 选择 `Inspect Device Diagnostics`；多台设备在线时，按设备类型、Android 版本和序列号选择。
+4. 在 Parent/Child Tree 中选择 Session。摘要会区分活动、不可见、未启用和已结束生命周期；分别显示
+   最近已提交帧与后续回滚尝试；并关联最近一次安全失败的 Phase、Recovery、异常类型和 Android View
+   Operation。
+5. 使用 `Session sources` 跳转所选 Owner，使用 `Mounted nodes` 加载、跳转、高亮或清除真实 View
+   边界，使用 `Finite timing` 采集并跳转可相加的 Top-cost 记录；无需再次选择设备或 Session。
 
-只有一台在线设备时会直接使用它。连接多台真机或模拟器时，插件会先弹出设备选择框，显示设备
-类型、Android 版本和序列号。当同一窗口存在多个同样可见且嵌套最深的 ViewCompose 会话（例如
-双栏布局）时，还会显示第二个选择框列出候选源码位置。
-
-该动作先查找前台包名、生成一次性 Nonce，再通过 ADB 向 `viewcompose-preview` Debug Receiver
-发送显式请求。进程只采样一次当前 Session 可见性并写入一份私有响应；IDE 仅在 Nonce、包名和
-存活进程都匹配时才接受它。滚动与布局不会刷新响应。随后插件把有界 JVM 源码候选解析到当前项目。
-当共享 Scaffold 先于 Content 发出工具栏或容器节点时，插件会移除在其他候选中重复出现的外层
-调用方，优先进入 Content DSL；仍有多个独立 Content 来源时会显示源码选择框。
-
-Receiver 要求 ADB Shell 持有的 Android `DUMP` 权限，进程还会独立确认应用可调试。该动作不依赖
-预览面板、外部存储、网络服务、持续 View Listener，也不会传输源码文本。非调试构建会拒绝请求。
-如果没有可用响应，请让目标应用保持在前台，并确认 Debug 构建包含当前 `viewcompose-preview`
-制品。
-
-## 高亮真机节点
-
-让同一个可调试应用保持前台，然后选择 **Tools → Highlight Device DSL Node**。选择设备与可见 Session
-后，Studio 会请求一份当前 Mounted Tree 快照，并按深度优先顺序列出声明式节点类型。
-`Diagnostics → Renderer` Demo Fixture 提供唯一的 `AndroidView` 目标，便于确定性验收。
-**Tools → Clear Device DSL Highlight** 可以立即移除当前 Overlay。
+Inspector 只在显式操作时刷新。每次请求都会查找前台包、生成一次性 Nonce，并只在 Nonce、Operation、
+Package 和存活 Process 全部匹配时读取一份私有响应。协议 v7 会硬拒绝旧报告。关联 Snapshot 只读取
+Session 已保留的状态，不安装 Event History 或持续 Callback；也不暴露原始异常、Message、Cause、
+Stack、应用 Key、View 文本、Semantics、State、Local 值、URL、Credential 或任意 `toString()`。
+异常输出仅保留最长 256 字符的二进制类名。
 
 Host、Navigation 与 Pager Session 可以携带有界 Source Candidate。Lazy Item、Overlay 与 Preview
-Session 同样可选，但其被动登记不捕获 Source Stack；因此虚拟化 Child Session 中的 Target 仍然
-可达，又不会增加高频组合工作。
+Session 无需组合期 Source Stack Capture 也会出现在树中。源码导航只在当前项目中解析有界元数据；
+缺失源码会明确失败，不会跳到另一个 Session。
 
-节点请求最多访问 2,048 个 Mounted Node，返回 512 个、深度不超过 64，并为每个条目分配新的不透明
-进程内 Token。它不会公开应用 Key、View 文本、Semantics、State、Local 值或任意 `toString()` 输出。
-选择 Token 后会解析当前弱引用 View，返回其屏幕边界和全局可见裁剪边界，并安装一个最长五秒、进程内
-唯一且不可交互的 Overlay。目标替换、View Detach、Session 释放、显式清除和超时都会移除它。
+节点请求最多访问 2,048 个 Mounted Node，返回 512 个、深度不超过 64，并分配新的不透明进程内 Token。
+高亮会解析当前弱引用 View，报告完整与裁剪后的屏幕可见边界，并安装最长五秒、不可交互的 Overlay。
+替换、Detach、Session 释放、显式清除和超时都会移除它。Stale、Recycled、Hidden、Fully Clipped、
+Synthetic/Unsupported、Ended 与 Rejected 都会 Fail Closed，不改变布局、Focus、Accessibility Focus、
+输入或应用 State。
 
-Studio 会明确报告 Stale、Recycled、Hidden、Fully Clipped、Synthetic/Unsupported、Ended Session
-与 Rejected，不会猜测其他 View。Overlay 不能触发重组或应用代码，不能改变 Focus 或 Accessibility
-Focus，不拦截输入，也不修改布局。协议 v6 会分别校验 Source、Nodes、Select、Clear 与 Timing
-Operation 的 Nonce、前台 Package 与存活 Process；旧版报告会被明确拒绝。
+耗时采集会提示触发工作负载，并在最多八个已完成 Frame Attempt 或两秒后停止。Composition 与
+Reconciliation 区分 Inclusive 和 Self，Binding 使用 Direct；Studio 只把 Self/Direct 记录作为可相加
+Top Cost，并报告时钟开销、Drop、Truncation、Unsupported Domain 与结束原因，还能从选中记录跳转
+源码。结果限制为每帧 64 个计时节点、总计 512 条记录、深度 32、128 个有界字符串和 256 KiB。
+它不测量 Android Measure/Layout/Draw、GPU、RenderThread、SurfaceFlinger、解码、网络、数据库或
+外部 SDK。没有请求时，不会遍历 Mounted Tree、写报告、轮询、安装持续 Observer、逐节点读取时钟或
+分配计时记录。
 
-## 检查真机逐节点耗时
-
-让可调试应用保持前台，然后选择 **Tools → Inspect Device Node Timing**。完成设备与可见 Session
-选择后，Studio 会提示在两秒内触发工作负载。在 Demo 的 `Diagnostics → Renderer` 页面点击
-**Run 8-frame timing workload**；可见计数器会到达 `8/8`，请求的 Capture 则在最多八个已完成
-Frame Attempt 或两秒后自动停止。
-
-报告包含实际执行的组合 Scope、Reconciliation 与 Direct Binding 聚合。组合和 Reconciliation
-区分 Inclusive 与 Self，Binding 采用 Direct 语义。Studio 按 Self/Direct 记录排序，避免嵌套的
-Inclusive 总量被重复累加。Node Token 不透明且只在当前 Capture 内有效；Source Hint 复用已有的
-有界组合元数据，不会在计时时抓取 Stack Trace。
-
-同一进程一次只接受一个活动 Capture。结果会报告时钟读取次数、空计时对开销估计、Drop、
-Truncation、Unsupported Domain 与结束原因；每帧最多 64 个计时节点，总计 512 条记录、深度 32、
-128 个有界字符串，响应最多 256 KiB。该能力不测量 Android Measure/Layout/Draw、GPU、
-RenderThread、SurfaceFlinger、解码、网络、数据库或外部 SDK。没有请求时不会安装持续 Observer，
-逐节点时钟读取和计时记录分配都为零。
+Receiver 要求 ADB Shell 持有的 Android `DUMP` 权限，并独立确认进程可调试。如果没有报告，请让
+目标应用保持前台，并确认包含当前 `viewcompose-preview` 制品。`Diagnostics → Renderer` Demo Route
+为刷新、Mounted-node 替换/高亮和可见的 `0/8` 到 `8/8` 耗时工作负载提供稳定自动化 Tag。
 
 ## 检查真机动画时间线
 

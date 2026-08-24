@@ -36,17 +36,20 @@ ViewCompose supports two complementary paths:
 The similarly named APIs live in different packages: the static annotation is in
 `com.viewcompose.preview.tooling`; the Compose bridge function is in `com.viewcompose.preview`.
 
-## Running-device DSL location, highlighting, and timing
+## Running-device correlated diagnostics
 
-This optional artifact owns the application-process half of Android Studio's **Locate Device DSL**,
-**Highlight Device DSL Node**, **Clear Device DSL Highlight**, and **Inspect Device Node Timing**
-actions. In a debuggable process
+This optional artifact owns the application-process half of Android Studio's single **Inspect
+Device Diagnostics** action. The alpha line hard-removes the former Locate, Highlight, Clear, and
+Timing actions instead of retaining compatibility entries. In a debuggable process
 it retains bounded source candidates for Host, navigation-destination, and pager-page sessions and
 registers a weak, request-only mounted-node inspector for every supported logical session role.
 Lazy-item, overlay, and preview sessions therefore remain selectable without composition-time source
-stack capture. Protocol v6 carries the same process-local
-trace ID, optional parent ID, and typed role used by runtime diagnostics. It does not continuously
-publish a report or observe scroll, global layout, draw, touch, frames, or recomposition.
+stack capture. Protocol v7 carries the same process-local trace ID, optional parent ID, and typed
+role used by runtime diagnostics, plus a request-time safe summary of rendering activity, latest
+committed frame, latest completed attempt, and latest failure. The summary reads already retained
+Session state and contains no raw exception, message, cause, stack, application key, node content,
+or native object. It does not continuously publish a report or observe scroll, global layout, draw,
+touch, frames, or recomposition.
 
 Source location sends one `DUMP`-permission-protected source request. Highlighting first selects a
 visible session, then requests one mounted-tree snapshot capped at 2,048 visited nodes, 512 returned
@@ -66,8 +69,8 @@ then atomically written in application-private cache. The IDE accepts only a res
 matching operation, nonce, foreground package, and live process. Invalid requests, missing
 services, writer or overlay failures, and session disposal cannot fail application rendering.
 
-The timing action selects one visible correlated Session and starts one finite request while the
-developer triggers the workload. Protocol v6 carries executed composition, reconciliation, and
+The inspector starts one finite timing request for its selected Session while the developer
+triggers the workload. Protocol v7 carries executed composition, reconciliation, and
 direct-binding aggregates with opaque capture-scoped node tokens, inclusive/self or direct
 semantics, clock-read counts, empty-pair overhead, drops, truncation, unsupported domains, and
 terminal reason. A process accepts only one active capture. It stops after at most eight completed
@@ -178,8 +181,9 @@ in the demo and user-facing documentation.
 - Run `qaPreview` before merge. Record a changed baseline only after reviewing the rendered image
   and its difference report; an unexplained mismatch is a regression, not a baseline update.
 - Treat renderer or provider exceptions as preview failures; do not hide them with placeholder UI.
-- Device-locator changes must prove zero writes during idle scrolling, one response per valid
-  request, stale-nonce rejection, and release-classpath exclusion.
+- Device-inspector changes must prove zero writes during idle scrolling, one response per valid
+  request, stale-nonce rejection, privacy-safe correlated summaries, and release-classpath
+  exclusion.
 
 ## Related documentation
 
@@ -196,8 +200,9 @@ The complete generated reference is available in the
 The `0.1.0-alpha03` line establishes the coherent native/DSL theme resolution, retained Compose
 bridge session, explicit root-access overload, and shared catalog/snapshot coverage model. Static
 preview protocol compatibility remains owned by preview-core.
-Running-device source location, node highlighting, and timing are request-driven and owned entirely
-by this optional artifact; Android Host retains only a neutral nullable session-inspection port.
-Protocol v6 hard-cuts older reports by adding the timing operation and finite result to operation
+Running-device source location, correlated summaries, node highlighting, and timing are
+request-driven and owned entirely by this optional artifact; Android Host retains only a neutral
+nullable session-inspection port. Protocol v7 hard-cuts older reports by adding the safe
+latest-frame/failure summary and the unified inspector contract to the existing operation
 validation, request-scoped opaque node tokens, bounded node snapshots, structured highlight states,
-clipping bounds, and explicit clear.
+clipping bounds, finite timing, and explicit clear.

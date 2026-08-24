@@ -89,8 +89,9 @@ interface RenderSessionPlatformDiagnostics {
  * path. [register] runs at most once after the first successful native frame for every tracked
  * session, including sessions whose source-candidate list is empty.
  *
- * [register] also receives a request-only mounted-node inspector. The inspector owns no strong
- * native target and performs no traversal until tooling explicitly calls it.
+ * [register] also receives request-only mounted-node, diagnostic-summary, and timing inspectors.
+ * They own the session and native targets weakly, read no history, and perform no traversal or
+ * timing until tooling explicitly calls them.
  *
  * Implementations must be optional, fast, and thread-confined to the platform render thread. They
  * may retain a weak container reference until the returned [RenderSessionInspectionRegistration] is
@@ -126,6 +127,7 @@ interface RenderSessionInspectionTooling {
      * @param context stable session identity, parent, and role shared with runtime diagnostics
      * @param sourceCandidates emission-ordered candidates whose inner lists are nearest-first chains
      * @param nodeInspection request-only bounded mounted-node inspector for this logical session
+     * @param diagnosticInspection request-only privacy-safe latest-frame/failure inspector
      * @param timingInspection request-only finite timing control for this logical session
      * @return a lifecycle handle, or `null` to decline this session permanently
      */
@@ -134,6 +136,7 @@ interface RenderSessionInspectionTooling {
         context: RenderDiagnosticContext,
         sourceCandidates: List<List<UiSourceCallSite>>,
         nodeInspection: RenderSessionNodeInspection,
+        diagnosticInspection: RenderSessionDiagnosticInspection,
         timingInspection: RenderSessionTimingInspection,
     ): RenderSessionInspectionRegistration?
 }

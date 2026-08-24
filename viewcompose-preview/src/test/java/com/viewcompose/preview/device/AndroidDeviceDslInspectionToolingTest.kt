@@ -7,6 +7,10 @@ import android.widget.FrameLayout
 import com.viewcompose.ui.foundation.RenderInspectedNode
 import com.viewcompose.ui.foundation.RenderInspectedNodeKind
 import com.viewcompose.ui.foundation.RenderDiagnosticContext
+import com.viewcompose.ui.foundation.RenderFailureOperation
+import com.viewcompose.ui.foundation.RenderFailurePhase
+import com.viewcompose.ui.foundation.RenderFailureRecovery
+import com.viewcompose.ui.foundation.RenderFrameStatus
 import com.viewcompose.ui.foundation.RenderNodeTimingCapture
 import com.viewcompose.ui.foundation.RenderNodeTimingCaptureRequest
 import com.viewcompose.ui.foundation.RenderNodeTimingCaptureResult
@@ -20,6 +24,10 @@ import com.viewcompose.ui.foundation.RenderNodeTimingUnsupportedDomain
 import com.viewcompose.ui.foundation.RenderNodePlatformTarget
 import com.viewcompose.ui.foundation.RenderNodeToken
 import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
+import com.viewcompose.ui.foundation.RenderSessionDiagnosticInspection
+import com.viewcompose.ui.foundation.RenderSessionDiagnosticSnapshot
+import com.viewcompose.ui.foundation.RenderSessionInspectedFailure
+import com.viewcompose.ui.foundation.RenderSessionInspectedFrame
 import com.viewcompose.ui.foundation.RenderSessionRole
 import com.viewcompose.ui.foundation.RenderSessionNodeInspection
 import com.viewcompose.ui.foundation.RenderSessionTimingInspection
@@ -155,6 +163,7 @@ class AndroidDeviceDslInspectionToolingTest {
             role = RenderSessionRole.Host,
             sourceCandidates = sourceCandidates(),
             nodeInspection = emptyNodeInspection(),
+            diagnosticInspection = fixedDiagnosticInspection(),
         )
         var executeCount = 0
         var writeCount = 0
@@ -194,11 +203,20 @@ class AndroidDeviceDslInspectionToolingTest {
         assertEquals(1L, session.getLong("sessionId"))
         assertTrue(session.isNull("parentSessionId"))
         assertEquals(RenderSessionRole.Host.name, session.getString("role"))
+        val diagnostics = session.getJSONObject("diagnostics")
+        assertEquals(1L, diagnostics.getLong("sessionId"))
+        assertEquals(7L, diagnostics.getLong("committedFrameId"))
+        assertEquals("committed", diagnostics.getJSONObject("latestFrame").getString("status"))
+        val failure = diagnostics.getJSONObject("latestFailure")
+        assertEquals("android_view_update", failure.getString("operation"))
+        assertEquals(IllegalStateException::class.java.name, failure.getString("exceptionType"))
+        assertFalse(checkNotNull(writtenJson).contains("private-message"))
+        assertFalse(checkNotNull(writtenJson).contains("private-key"))
         registration?.dispose()
     }
 
     @Test
-    fun `timing request writes one complete bounded v6 response`() {
+    fun `timing request writes one complete bounded v7 response`() {
         val context = applicationContext()
         val registry = AndroidDeviceDslSourceRegistry(
             processId = { 42 },
@@ -728,6 +746,35 @@ class AndroidDeviceDslInspectionToolingTest {
             Long::class.javaPrimitiveType,
         )
         return method.invoke(null, value) as RenderSessionTraceId
+    }
+
+    private fun fixedDiagnosticInspection(): RenderSessionDiagnosticInspection {
+        val failure = RenderSessionInspectedFailure(
+            frameId = 7L,
+            phase = RenderFailurePhase.ViewTreeRender,
+            recovery = RenderFailureRecovery.FrameCommitted,
+            operation = RenderFailureOperation.AndroidViewUpdate,
+            exceptionType = IllegalStateException::class.java.name,
+        )
+        return object : RenderSessionDiagnosticInspection {
+            override fun snapshot(): RenderSessionDiagnosticSnapshot {
+                return RenderSessionDiagnosticSnapshot(
+                    sessionId = renderSessionTraceId(1L),
+                    parentSessionId = null,
+                    role = RenderSessionRole.Host,
+                    renderingActive = true,
+                    committedFrameId = 7L,
+                    latestFrame = RenderSessionInspectedFrame(
+                        frameId = 7L,
+                        status = RenderFrameStatus.Committed,
+                        failures = listOf(failure),
+                        droppedFailures = 0,
+                    ),
+                    latestFailure = failure,
+                    ended = false,
+                )
+            }
+        }
     }
 
     private fun timingResult(

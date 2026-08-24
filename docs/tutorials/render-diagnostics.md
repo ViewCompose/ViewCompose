@@ -129,10 +129,25 @@ fingerprints and safe framework context; it contains no original `Throwable`, me
 key, application stack, file, or line. The framework does not choose a scheduler, storage system,
 consent model, upload endpoint, or telemetry vendor.
 
+## Inspect the same app from Android Studio
+
+Add `debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha04")`, run the debuggable
+app, and choose **Inspect Device Diagnostics** in Android Studio. Select the Host Session once. Its
+summary keeps the latest committed frame separate from a later rolled-back attempt and shows only a
+safe failure phase, recovery, exception type, and optional Android View operation.
+
+Use **Session sources** to return to this Activity, **Mounted nodes** to load and optionally
+highlight a real View boundary, and **Finite timing** only while reproducing a bounded interaction.
+Click **Refresh snapshot** after another render; the inspector never polls or records a continuous
+history. If you need a deterministic timing target, the Demo `Diagnostics → Renderer` route exposes
+a visible `0/8` to `8/8` workload.
+
 ## Verify the result
 
-Press `Sample render stats` and confirm that a stable counter summary appears. Debug diagnostics
-can add work, so use release benchmarks for performance conclusions. Compile with:
+Press `Sample render stats` and confirm that a stable counter summary appears. If the optional
+Preview artifact is present, also confirm the inspector shows the selected Session, source, and
+latest committed frame without changing the running page. Debug diagnostics can add work, so use
+release benchmarks for performance conclusions. Compile with:
 
 ```bash
 ./gradlew :samples:tutorials:assembleDebug

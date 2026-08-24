@@ -2,7 +2,7 @@
 title: 读取渲染诊断
 sidebar_position: 14
 translation_source: tutorials/render-diagnostics.md
-translation_source_hash: 291490d831540125e7e093a104053b416e66bc7f12874e5ebf8c737aebf5c325
+translation_source_hash: ae5523fa11e163bc082bb6b26d46b3ee8439bce24523c1f035b18b4b8b6c98e9
 translation_status: current
 ---
 
@@ -129,10 +129,23 @@ exportQueue.trySend(completedWindow)
 原始 `Throwable`、消息、原始 Node Key、应用栈帧、文件或行号。框架不选择调度器、存储系统、
 用户同意模型、上传端点或遥测厂商。
 
+## 从 Android Studio 检查同一个应用
+
+添加 `debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha04")`，运行可调试应用，
+再在 Android Studio 中选择 `Inspect Device Diagnostics`。只需选择一次 Host Session；摘要会把最近
+已提交帧与后续回滚尝试分开，并且只显示安全的 Failure Phase、Recovery、异常类型和可选 Android
+View Operation。
+
+使用 `Session sources` 返回该 Activity，使用 `Mounted nodes` 加载并按需高亮真实 View 边界，只在
+复现有界交互时使用 `Finite timing`。另一次渲染完成后点击 `Refresh snapshot`；Inspector 不会轮询或
+记录持续 History。如需确定性的 Timing Target，Demo 的 `Diagnostics → Renderer` Route 提供可见的
+`0/8` 到 `8/8` 工作负载。
+
 ## 验证结果
 
-点击 `Sample render stats`，确认出现稳定的计数器摘要。debug 诊断本身可能增加工作量，性能结论
-应使用 release 基准。编译命令：
+点击 `Sample render stats`，确认出现稳定的计数器摘要。如果加入了可选 Preview 制品，还应确认
+Inspector 能显示所选 Session、源码与最近已提交帧，同时不会改变运行页面。Debug 诊断本身可能增加
+工作量，性能结论应使用 Release 基准。编译命令：
 
 ```bash
 ./gradlew :samples:tutorials:assembleDebug

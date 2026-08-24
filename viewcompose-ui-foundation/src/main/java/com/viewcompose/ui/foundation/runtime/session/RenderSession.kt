@@ -44,6 +44,7 @@ class RenderSession(
     private var resolvedInspectionPolicy: RenderSessionInspectionPolicy? = null
     private var mountedNodeInspectionState: RenderSessionMountedNodeState? = null
     private var nodeInspection: RenderSessionNodeInspection? = null
+    private var diagnosticInspection: RenderSessionDiagnosticInspection? = null
     private val timingInspectionState = RenderSessionTimingState()
     private val timingInspection: RenderSessionTimingInspection =
         DefaultRenderSessionTimingInspection(timingInspectionState)
@@ -777,6 +778,7 @@ class RenderSession(
                     context = sourceContext,
                     sourceCandidates = prepared.sourceCandidates,
                     nodeInspection = checkNotNull(nodeInspection),
+                    diagnosticInspection = checkNotNull(diagnosticInspection),
                     timingInspection = timingInspection,
                 )
                 if (!renderingActive) {
@@ -1020,9 +1022,35 @@ class RenderSession(
                 state = state,
                 renderEngine = platform.renderEngine,
             )
+            diagnosticInspection = DefaultRenderSessionDiagnosticInspection(
+                owner = this,
+                context = sourceContext,
+            )
         }
         resolvedInspectionPolicy = policy
         return policy
+    }
+
+    internal fun diagnosticInspectionSnapshot(): RenderSessionDiagnosticSnapshot {
+        val frame = lastFrameReport
+        val retainedFailures = frame?.failures.orEmpty().take(MAX_INSPECTED_FRAME_FAILURES)
+        return RenderSessionDiagnosticSnapshot(
+            sessionId = traceId,
+            parentSessionId = parentSessionId,
+            role = role,
+            renderingActive = renderingActive,
+            committedFrameId = committedFrameId,
+            latestFrame = frame?.let { report ->
+                RenderSessionInspectedFrame(
+                    frameId = report.frameId,
+                    status = report.status,
+                    failures = retainedFailures.map(RenderFailure::toInspectionSummary),
+                    droppedFailures = (report.failures.size - retainedFailures.size).coerceAtLeast(0),
+                )
+            },
+            latestFailure = lastRenderFailure?.toInspectionSummary(),
+            ended = disposed,
+        )
     }
 
     private fun ensureDiagnosticsStarted() {

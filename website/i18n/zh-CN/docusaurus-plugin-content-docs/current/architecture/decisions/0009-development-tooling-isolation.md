@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0009-development-tooling-isolation.md
-translation_source_hash: 1ffda4a57b2d4df7b4ba3c9e41e613cf88676b481c9efe8797500d81208934b5
+translation_source_hash: da2e00d03d88dc35a87e58b6c4bd574e5add8aef149b4664133552beae1ddd9f
 translation_status: current
 ---
 
@@ -119,6 +119,6 @@ Debug、Test 或专用 Tooling 配置。Release 构建不需要 Preview 制品�
    匹配响应；无效请求不会写入，陈旧响应不能满足后续 Nonce；释放会清理弱 Session 状态。
 3. Android Studio 插件测试覆盖请求命令构建、响应轮询、超时、进程/包名验证、协议边界与多栏/最深
    Session 选择。
-4. Demo Debug APK 保留 `Locate Device DSL`，Release APK 同时不包含 Request Receiver 和定位服务
-   实现。
-5. 同设备 Debug 数据按上述阈值比较受影响的首页列表 Workload，且空闲滚动期间定位器写入为零。
+4. Demo Debug APK 保留按请求工作的 `Inspect Device Diagnostics` 能力，Release APK 同时不包含
+   Request Receiver 和 Inspector 实现。
+5. 同设备 Debug 数据按上述阈值比较受影响的首页列表 Workload，且空闲滚动期间 Inspector 写入为零。

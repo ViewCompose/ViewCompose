@@ -189,6 +189,48 @@ class DeviceDslSourceProtocolTest {
         assertTrue(report.visibleTimingSessions().single().sourceCandidates.isEmpty())
     }
 
+    @Test
+    fun `parses one correlated privacy safe session diagnostic snapshot`() {
+        val report = parseDeviceDslSourceReport(
+            reportJson(
+                sessions = sessionJson(
+                    id = 2,
+                    depth = 3,
+                    focused = true,
+                    diagnostics = diagnosticsJson(id = 2, parentId = 1),
+                ),
+            ),
+        )
+
+        val diagnostics = checkNotNull(report.sessions.single().diagnostics)
+        assertEquals(2L, diagnostics.sessionId)
+        assertEquals(1L, diagnostics.parentSessionId)
+        assertEquals(9L, diagnostics.committedFrameId)
+        assertEquals(StudioDeviceDslFrameStatus.Committed, diagnostics.latestFrame?.status)
+        assertEquals(StudioRenderFailurePhase.ViewTreeRender, diagnostics.latestFailure?.phase)
+        assertEquals(StudioRenderFailureRecovery.FrameCommitted, diagnostics.latestFailure?.recovery)
+        assertEquals(StudioRenderFailureOperation.AndroidViewUpdate, diagnostics.latestFailure?.operation)
+        assertEquals(IllegalStateException::class.java.name, diagnostics.latestFailure?.exceptionType)
+    }
+
+    @Test
+    fun `rejects diagnostics attributed to a different session`() {
+        val failure = runCatching {
+            parseDeviceDslSourceReport(
+                reportJson(
+                    sessions = sessionJson(
+                        id = 2,
+                        depth = 3,
+                        focused = true,
+                        diagnostics = diagnosticsJson(id = 3, parentId = 1),
+                    ),
+                ),
+            )
+        }.exceptionOrNull()
+
+        assertTrue(failure is IllegalArgumentException)
+    }
+
     private fun reportJson(
         sessions: String,
         protocolVersion: Int = DEVICE_DSL_SOURCE_PROTOCOL_VERSION,
@@ -213,6 +255,7 @@ class DeviceDslSourceProtocolTest {
         attached: Boolean = true,
         shown: Boolean = true,
         includeSources: Boolean = true,
+        diagnostics: String = "null",
     ): String {
         val sourceCandidates = if (includeSources) {
             """
@@ -239,6 +282,7 @@ class DeviceDslSourceProtocolTest {
               "hasWindowFocus": $focused,
               "windowVisibility": 0,
               "viewDepth": $depth,
+              "diagnostics": $diagnostics,
               "nodeGeneration": 0,
               "nodeInspectionSupported": true,
               "nodeInspectionEnded": false,
@@ -250,6 +294,30 @@ class DeviceDslSourceProtocolTest {
             }
         """.trimIndent()
     }
+
+    private fun diagnosticsJson(id: Int, parentId: Int?): String = """
+        {
+          "sessionId": $id,
+          "parentSessionId": ${parentId ?: "null"},
+          "role": "${if (id == 1) "Host" else "NavigationDestination"}",
+          "renderingActive": true,
+          "committedFrameId": 9,
+          "ended": false,
+          "latestFrame": {
+            "frameId": 9,
+            "status": "committed",
+            "failures": [],
+            "droppedFailures": 0
+          },
+          "latestFailure": {
+            "frameId": 9,
+            "phase": "view_tree_render",
+            "recovery": "frame_committed",
+            "operation": "android_view_update",
+            "exceptionType": "java.lang.IllegalStateException"
+          }
+        }
+    """.trimIndent()
 
     private fun timingReportJson(): String = """
         {

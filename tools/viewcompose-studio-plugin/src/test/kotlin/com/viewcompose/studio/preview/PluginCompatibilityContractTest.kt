@@ -19,7 +19,7 @@ class PluginCompatibilityContractTest {
     }
 
     @Test
-    fun `device DSL locator declares Android APIs and a distinct action icon`() {
+    fun `unified device inspector declares Android APIs and a distinct action icon`() {
         val pluginXml = checkNotNull(
             javaClass.classLoader.getResourceAsStream("META-INF/plugin.xml"),
         ).bufferedReader().use { reader -> reader.readText() }
@@ -30,8 +30,20 @@ class PluginCompatibilityContractTest {
         )
         assertTrue(
             Regex(
-                """id="com\.viewcompose\.studio\.preview\.LocateDeviceDsl"[\s\S]*?icon="/icons/viewcomposeLocateDeviceDsl\.svg""",
+                """id="com\.viewcompose\.studio\.preview\.InspectDeviceDiagnostics"[\s\S]*?icon="/icons/viewcomposeLocateDeviceDsl\.svg""",
             ).containsMatchIn(pluginXml),
+        )
+        assertTrue(
+            "Locate action must be hard-removed.",
+            "class=\"com.viewcompose.studio.preview.LocateDeviceDslAction\"" !in pluginXml,
+        )
+        assertTrue(
+            "Standalone highlight action must be hard-removed.",
+            "HighlightDeviceDslNode" !in pluginXml,
+        )
+        assertTrue(
+            "Standalone timing action must be hard-removed.",
+            "InspectDeviceNodeTiming" !in pluginXml,
         )
         assertTrue(
             Regex(

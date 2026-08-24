@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: da7834edd29ae5457bc967cad4aa47ae1dcc9ddfc61556c71da97f760884d674
+translation_source_hash: 078b02804179e2f187275df9fc0464c7cc515c50a2157190951f4752971994b9
 translation_status: current
 ---
 
@@ -38,14 +38,16 @@ ViewCompose 提供两条互补路径：
 两个同名 API 位于不同包：静态注解在 `com.viewcompose.preview.tooling`，Compose 桥接函数在
 `com.viewcompose.preview`。
 
-## 真机 DSL 定位、节点高亮与耗时
+## 真机关联诊断
 
-这个可选制品负责 Android Studio `Locate Device DSL`、`Highlight Device DSL Node`、
-`Clear Device DSL Highlight` 与 `Inspect Device Node Timing` 动作的应用进程侧实现。在可调试进程中，它会为 Host、Navigation
+这个可选制品负责 Android Studio 单一 `Inspect Device Diagnostics` 动作的应用进程侧实现。Alpha
+版本会硬切删除原来的 Locate、Highlight、Clear 与 Timing 动作，不保留兼容入口。在可调试进程中，它会为 Host、Navigation
 Destination 与 Pager Page Session 保留有界源码候选，并为全部受支持的 Logical Session Role
 登记弱持有、仅按请求工作的 Mounted-node Inspector。Lazy Item、Overlay 与 Preview Session 因而
-无需组合期 Source Stack Capture 也能被选中。协议 v6 携带与运行时诊断相同的进程内 Trace ID、可选 Parent ID 和类型化
-角色。它不会持续发布报告，也不会观察滚动、全局布局、绘制、触摸、Frame 或重组。
+无需组合期 Source Stack Capture 也能被选中。协议 v7 携带与运行时诊断相同的进程内 Trace ID、可选 Parent ID 和类型化
+角色，以及按请求读取的 Rendering Activity、最近已提交帧、最近已完成尝试和最近失败安全摘要。
+摘要只读取 Session 已保留的状态，不包含原始异常、Message、Cause、Stack、应用 Key、Node Content
+或 Native Object。它不会持续发布报告，也不会观察滚动、全局布局、绘制、触摸、Frame 或重组。
 
 源码定位会发送一条受 `DUMP` 权限保护的源码请求。高亮会先选择可见 Session，再请求一份 Mounted
 Tree 快照：最多访问 2,048 个节点、返回 512 个节点、深度不超过 64。每个保留节点都会获得新的不透明
@@ -62,8 +64,8 @@ Focus 或 Accessibility Focus 变化，不拦截输入，也不修改 LayoutPara
 IDE 只接受 Operation、Nonce、前台包名与存活进程均匹配的响应。无效请求、服务缺失、Writer/Overlay
 失败和 Session 释放都不能导致应用渲染失败。
 
-Timing Action 会选择一个可见的关联 Session，并在开发者触发工作负载期间启动一次有限请求。协议
-v6 携带实际执行的 Composition、Reconciliation 与 Direct-binding Aggregate，包括不透明且仅当前
+Inspector 会为已选 Session 在开发者触发工作负载期间启动一次有限请求。协议
+v7 携带实际执行的 Composition、Reconciliation 与 Direct-binding Aggregate，包括不透明且仅当前
 Capture 有效的 Node Token、Inclusive/Self 或 Direct 语义、时钟读取数、空计时对开销、Drop、
 Truncation、Unsupported Domain 与结束原因。同一进程只接受一个活动 Capture；它最多在八个已完成
 Frame Attempt 或两秒后停止，每帧最多保留 64 个计时节点，总计 512 条 Aggregate、深度 32，并复用
@@ -157,8 +159,8 @@ Preview-only Renderer 路径。
 - 合并前运行 `qaPreview`。只有审阅渲染图片及其差异报告后才能录制变更基准；原因不明的差异属于
   回归，不能当作基准更新。
 - Renderer 或 Provider 异常应作为预览失败暴露，不能用占位 UI 隐藏。
-- 设备定位器变更必须证明空闲滚动期间写入次数为零、每个有效请求只产生一个响应、陈旧 Nonce 会被
-  拒绝，且 Release Classpath 不包含定位器。
+- 设备 Inspector 变更必须证明空闲滚动期间写入次数为零、每个有效请求只产生一个响应、陈旧 Nonce
+  会被拒绝、关联摘要满足隐私边界，且 Release Classpath 不包含 Inspector。
 
 ## 相关文档
 
@@ -174,6 +176,7 @@ Preview-only Renderer 路径。
 
 `0.1.0-alpha03` 建立了原生/DSL 一致主题解析、可保留的 Compose 桥接会话、显式根节点访问重载，以及
 共享目录/快照覆盖模型。静态预览协议兼容性仍由 preview-core 统一管理。
-真机源码定位、节点高亮与耗时都按请求运行，并完全归属于这个可选制品；Android Host 只保留中立、
-可空的 Session Inspection 端口。协议 v6 硬切旧版报告，在 Operation 校验、Request-scoped 不透明
-Node Token、有界节点快照、结构化高亮状态、裁剪边界与显式清除之上新增 Timing Operation 与有限结果。
+真机源码定位、关联摘要、节点高亮与耗时都按请求运行，并完全归属于这个可选制品；Android Host 只保留
+中立、可空的 Session Inspection 端口。协议 v7 硬切旧版报告，在已有 Operation 校验、Request-scoped
+不透明 Node Token、有界节点快照、结构化高亮状态、裁剪边界、有限 Timing 与显式清除基础上，加入安全
+的最近帧/失败摘要和统一 Inspector 契约。

@@ -90,13 +90,29 @@ least-recently-updated eviction and count saturation are visible in immutable sn
 Storage, consent, scheduling, upload, vendor metadata, and downstream failure policy remain outside
 the framework. See the [module manual](../modules/viewcompose-diagnostics/README.md).
 
-## 7. Request-driven mounted-node highlighting
+## 7. Correlated running-device inspector
 
-Add `viewcompose-preview` through `debugImplementation`, keep the debuggable application in the
-foreground, and choose **Tools → Highlight Device DSL Node**. Studio first selects one correlated
-visible Session, requests a bounded current mounted-tree snapshot, and lists its declarative nodes.
-Choosing a node draws its clipped real Android View boundary for at most five seconds. **Tools →
-Clear Device DSL Highlight** clears it immediately.
+Add `viewcompose-preview` through `debugImplementation`, foreground the debuggable application, and
+choose **Inspect Device Diagnostics**. The single inspector hard-replaces the earlier source,
+highlight, clear, and timing actions. Its Session tree preserves parent/child roles and keeps the
+latest committed frame distinct from the latest completed attempt and latest failure. A failure
+shows only typed phase, recovery, optional Android View operation, and a bounded exception binary
+class name; the original exception, message, cause, stack, key, and application content never cross
+the tooling boundary.
+
+The same selected Session owns three views: source candidates, mounted nodes, and finite timing.
+Source, node, and timing records can each navigate to their bounded current-project call site.
+Every navigable row displays the resolved authored-project location that the navigation action will
+open; internal framework stack frames are neither shown as the destination nor opened instead.
+Components expose stable `viewcompose.deviceDiagnostics.*` automation roles; the Demo retains stable
+tags for refresh, highlight replacement, timing action, visible timing status, and its deterministic
+eight-frame fixture.
+
+### Mounted-node highlighting
+
+Request one current mounted-tree snapshot, choose a declarative node, and use **Highlight node** or
+**Clear highlight**. The selected node draws its clipped real Android View boundary for at most five
+seconds.
 
 Tokens are opaque, process-local, and snapshot-scoped. They contain no application key. A newer
 snapshot, node replacement, View reuse by another logical owner, Session disposal, or process
@@ -111,14 +127,11 @@ cannot recompose, invoke application callbacks, change focus or accessibility fo
 input, or mutate layout. The Diagnostics → Renderer page includes a unique AndroidView target and
 a replacement action for deterministic manual validation.
 
-## 8. Finite per-node timing
+### Finite per-node timing
 
-Add `viewcompose-preview` through `debugImplementation`, keep the debuggable application in the
-foreground, and choose **Tools → Inspect Device Node Timing**. Studio selects one correlated visible
-Session, starts one explicit sample, and waits while the developer triggers the interaction under
-investigation. The Diagnostics → Renderer page provides **Run 8-frame timing workload**; its visible
-counter advances from `0/8` to `8/8` so manual acceptance does not depend on an invisible state
-change.
+Use **Capture timing** in the selected Session and trigger the interaction under investigation. The
+Diagnostics → Renderer page provides **Run 8-frame timing workload**; its visible counter advances
+from `0/8` to `8/8` so manual acceptance does not depend on an invisible state change.
 
 Each capture stops after at most eight completed frame attempts or two monotonic seconds. It records
 only executed composition scopes, renderer reconciliation, and direct native binding. Composition
@@ -139,18 +152,19 @@ per-node clock reads, timing-record allocation, report writes, polling, or recur
 The timing result is diagnostic evidence, not a frame-time benchmark: instrumentation overhead and
 the small finite sample remain visible limitations.
 
-## 9. Demo inspector
+## 8. Demo inspector
 
 `Diagnostics -> Renderer` provides the render tree, patch timeline, recomposition reasons,
 CompositionLocal browser, aggregate metrics, the mounted-node highlight fixture, and the explicit
 eight-frame timing workload. Cross-session correlation, production aggregation, real View-boundary
-highlighting, and finite per-node timing are implemented. Final inspector and performance
-closeout remain in the active [diagnostics correlation, inspection, and production observability
-plan](../project/plans/diagnostics-correlation-inspection-observability.md).
+highlighting, finite per-node timing, and the correlated Studio inspector are implemented.
+Performance and release closeout remain in the active [diagnostics correlation, inspection, and
+production observability plan](../project/plans/diagnostics-correlation-inspection-observability.md).
 
-## 10. Remaining expansion contract
+## 9. Remaining expansion contract
 
 [ADR-0021](../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes Phase 1.
 A failure-only sink activates no frame detail. The optional `viewcompose-diagnostics` artifact owns
-production aggregation; `viewcompose-preview` owns shipped request-driven highlighting and finite
-timing. The active plan owns inspector, performance, device-matrix, and release closeout.
+production aggregation; `viewcompose-preview` owns the shipped request-driven correlated inspector,
+highlighting, and finite timing. The active plan now owns only performance, device-matrix, and
+release closeout.
