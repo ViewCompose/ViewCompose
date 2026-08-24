@@ -115,23 +115,17 @@ conservative reload, ensuring the newer declaration is installed without enumera
 
 ## Verification and current scope
 
-Deterministic tests cover initial refresh, append/prepend access, retry, refresh, invalidation,
-latest-query replacement, lifecycle stop/start retention, release, duplicate keys, stable
-key/index-safe access routing, explicit placeholder enablement, placeholder-to-loaded replacement,
-placeholder revision invalidation, page drops, skipped-revision reload safety, and immediate
-detached-cache disposal without a later double release. Renderer tests also prove a
-one-million-position direct update without full table enumeration. The Q3 samples compile from the
-modules' public APIs.
+Deterministic tests cover presenter generations and commands, lifecycle/release, keyed routing,
+placeholder replacement and invalidation, page drops, skipped revisions, and detached-cache
+disposal without double release. Renderer coverage also updates 1,000,000 positions without full
+enumeration; Q3 samples compile from public APIs.
 
-On 2026-08-25, a Pixel 4 XL running Android 13/API 33 passed both focused physical tests in 5.51 s
-with a local deterministic source and 48 dp rows. A 1,000,000-position placeholder presentation
-increased process PSS by 48,124 KiB from the same launched-process baseline, jumped to the last
-position in 555 ms, retained 81 loaded items under `maxSize = 96`, and released the initial item
-Sessions. Sequential page-window scrolling ended at the configured 96 loaded items and released
-the initial visible Sessions. Conclusion: **improved** compact-memory, jump/drop, and ownership
-confidence for this path. Limitations: this is one debug build, one device/API, local data, and a
-single row geometry; it is not a frame benchmark and does not cover RemoteMediator, network errors,
-the load-state UI, or the interactive Demo. Those remain later plan phases.
+On 2026-08-25, two Pixel 4 XL Android 13/API 33 debug tests passed in 5.51 s. The
+1,000,000-position case added 48,124 KiB PSS, jumped to the last position in 555 ms, retained 81
+loaded items under `maxSize = 96`, and released initial Sessions; bounded scrolling ended at 96
+loaded items. Conclusion: **improved** memory, jump/drop, and ownership confidence. This local,
+single-device/geometry evidence is not a frame, network, RemoteMediator, load-state UI, or Demo
+claim; later phases own those paths.
 
 ## Related documentation
 

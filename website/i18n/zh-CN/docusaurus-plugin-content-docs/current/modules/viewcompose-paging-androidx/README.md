@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-paging-androidx/README.md
-translation_source_hash: 056708acd433d078c23bf7bf2da3ee59eac7065a0e7f2ed0b90ac525ef08b6aa
+translation_source_hash: acd519284b4a3ffe3bb2c5f0e2183cd9250dfc9761762349bf0fc785f10f1233
 translation_status: current
 ---
 
@@ -113,19 +113,15 @@ Selector 结果变化也会请求保守 Reload，确保安装新的 Declaration�
 
 ## 验证与当前范围
 
-确定性测试覆盖初始 Refresh、Append/Prepend Access、Retry、Refresh、Invalidation、最新 Query
-替换、生命周期停止/恢复保留、释放、重复 Key、稳定 Key/索引安全 Access Routing、显式 Placeholder
-启用、Placeholder 到 Loaded 替换、Placeholder Revision 失效、Page Drop、跳过 Revision 的 Reload
-安全性，以及 Detached Cache 的立即释放且后续不会二次释放。Renderer 测试还证明一百万位置的直接
-更新不会完整枚举 Table。Q3 Sample 只使用各模块公共 API 并参与编译。
+确定性测试覆盖 Presenter Generation 与命令、Lifecycle/Release、Keyed Routing、Placeholder
+替换与失效、Page Drop、跳过 Revision，以及 Detached Cache 释放且不会二次释放。Renderer 还覆盖
+一百万位置更新且不完整枚举；Q3 Sample 只使用公共 API 编译。
 
-2026-08-25，Android 13/API 33 的 Pixel 4 XL 使用本地确定性数据源和 48 dp Row，在 5.51 s
-内通过两项聚焦真机测试。一百万位置的 Placeholder Presentation 相对同一已启动进程基线增加
-48,124 KiB PSS，555 ms 跳至最后位置，在 `maxSize = 96` 下保留 81 个 Loaded Item，并释放初始
-Item Session；顺序滚动 Page Window 最终保持配置的 96 个 Loaded Item，并释放初始可见 Session。
-结论：该路径的紧凑内存、Jump/Drop 与所有权信心为 **improved**。限制：这只是一个 Debug Build、
-一个设备/API、本地数据与一种 Row 几何，不是 Frame Benchmark，也未覆盖 RemoteMediator、网络错误、
-Load State UI 或交互式 Demo；这些仍属于后续计划阶段。
+2026-08-25，Android 13/API 33 的 Pixel 4 XL 在 5.51 s 内通过两项 Debug 测试。一百万位置用例
+增加 48,124 KiB PSS，555 ms 跳至最后位置，在 `maxSize = 96` 下保留 81 个 Loaded Item 并释放
+初始 Session；有界滚动最终保持 96 个 Loaded Item。结论：内存、Jump/Drop 与所有权信心为
+**improved**。该本地单设备/几何证据不代表 Frame、网络、RemoteMediator、Load State UI 或 Demo；
+后续阶段继续负责这些路径。
 
 ## 相关文档
 
