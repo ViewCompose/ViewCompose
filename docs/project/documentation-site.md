@@ -207,6 +207,15 @@ identity token.
 
 Completed checkpoints are condensed here; Git history retains their execution detail.
 
+- **2026-08-24, Android View Phase 2:** the complete 100-version corpus plus one unpublished
+  current API tree initially produced 48,276,155 non-API bytes, 41,659 bytes beyond 46 MiB.
+  Moving closed Phase 1 and 2 API narratives from the active integration plan to their owning
+  manuals reduced the evidence-inclusive corpus to 48,186,584 bytes, an 89,571-byte (0.186%)
+  improvement, and left 47,912 bytes of headroom without changing a threshold or deleting a
+  durable contract.
+  English/Chinese search is 5,574,102/6,072,178 bytes; 430 pages, accessibility, API routing, and
+  the 34.2-second build passed. This local macOS comparison does not measure Linux deployment;
+  CI remains the next gate, and completed phase detail must continue to converge on owning docs.
 - **2026-08-23, Diagnostics Phase 2:** on the complete 100-version corpus plus one unpublished
   current API tree, the Phase 1 baseline, initial Phase 2 output, and consolidated output measured
   48,217,723, 48,480,209, and 47,801,356 non-API bytes. The initial +262,486-byte (+0.544%)

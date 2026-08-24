@@ -161,180 +161,23 @@ the owning active document.
 
 ### Common Android View adapter foundation
 
-The common foundation adds high-risk Q3 API in `viewcompose-host-android` for:
-
-- a typed `AndroidViewAdapter<V, S>` contract;
-- immutable `UiEnvironmentValues` visible to adapter creation, replay-safe update, reset, and
-  commit scopes, while creation also receives the renderer-owned Android `Context`;
-- a separate `constructionKey` whose change creates a new View without changing application
-  content identity;
-- an explicit reuse policy and structured reset reason; reset is reserved for cross-logical-key
-  mounted-tree reuse and is never part of an ordinary same-identity update;
-- commit and release callbacks with the existing renderer transaction guarantees;
-- bounded adapter diagnostics that identify adapter class, construction generation, reuse policy,
-  lifecycle binding, and fallback without retaining the native View; and
-- typed delegation from the existing callback-based `AndroidView` API, whose `onReset` semantics
-  are hard-cut to the same cross-key-only contract rather than preserved as a second behavior.
-
-The Phase 1 target shape is frozen as follows. Scope constructors remain internal; their public
-properties and the adapter callbacks are Android-main-thread-only.
-
-```kotlin
-enum class AndroidViewReusePolicy {
-    Never,
-    Resettable,
-}
-
-enum class AndroidViewResetReason {
-    MountedTreeReuse,
-}
-
-enum class AndroidViewLifecycleMode {
-    None,
-    AdapterManaged,
-}
-
-interface AndroidViewAdapter<V : View, S> {
-    val reusePolicy: AndroidViewReusePolicy
-        get() = AndroidViewReusePolicy.Never
-    val lifecycleMode: AndroidViewLifecycleMode
-        get() = AndroidViewLifecycleMode.None
-
-    fun create(scope: AndroidViewCreateScope): V
-    fun update(scope: AndroidViewUpdateScope<V>, state: S)
-    fun onReset(scope: AndroidViewResetScope<V>, reason: AndroidViewResetReason) = Unit
-    fun onCommit(scope: AndroidViewCommitScope<V>, state: S) = Unit
-    fun onRelease(view: V) = Unit
-}
-
-fun <V : View, S> UiTreeBuilder.AndroidView(
-    adapter: AndroidViewAdapter<V, S>,
-    state: S,
-    key: Any? = null,
-    constructionKey: Any? = Unit,
-    modifier: Modifier = Modifier,
-)
-```
-
-`key` owns logical content identity. `constructionKey` owns constructor-sensitive View identity.
-The renderer's actual construction identity is the adapter implementation class plus
-`constructionKey`; recreating an equivalent adapter object during composition does not replace the
-View, while changing adapter family always does. Runtime-restylable values belong in immutable
-adapter state. Context wrappers, SDK options, surface implementation, or styles read only during
-construction belong in `constructionKey`. A resource revision must never force recreation by
-default when replay-safe update is sufficient. Both keys must have stable equality and hash
-behavior for the lifetime of the VNode; mutating a key object in place is unsupported.
-
-`AndroidViewCreateScope` exposes the renderer-supplied `Context` and current immutable
-`UiEnvironmentValues`. Update, reset, and commit scopes expose the typed View and the current
-environment snapshot. They do not expose a mutable transaction, renderer, session, application
-scope, or SDK registry. Adapter state remains caller-owned; ViewCompose retains only the state
-captured by the current and rollback VNodes and never clones arbitrary mutable state.
-
-The exact reconciliation contract is:
-
-1. Same logical key, adapter class, and construction key reuse the View. `update` replaces complete
-   replay-safe configuration. `onReset` is not invoked.
-2. A later same-identity update failure replays the previously committed adapter and state through
-   `update`; it does not guess how to undo hidden SDK state.
-3. A changed adapter class or construction key creates and updates a candidate View without
-   releasing the committed View. Candidate failure releases only the candidate and preserves the
-   previous View. Success structurally commits the candidate and releases the displaced View
-   exactly once. The candidate's `onCommit` remains a later composition-commit effect; native
-   resource release cannot depend on whether a low-level Renderer caller executes returned effects.
-4. Cross-logical-key mounted-tree reuse is allowed only when `reusePolicy` is `Resettable`.
-   `onReset(..., MountedTreeReuse)` runs exactly once before the next key's `update`. `Never`
-   prevents the containing mounted tree from crossing keys.
-5. `onCommit` runs at most once for each successful insert or rebind, never for a skipped or
-   rolled-back binding, and may run again after later successful state. Implementations therefore
-   perform serial transition or publication work rather than assuming a one-call lifetime.
-6. `onRelease` runs exactly once for every created View after candidate rollback, committed
-   replacement/removal, reuse-cache eviction, or session disposal. It releases only resources
-   explicitly owned by the adapter.
-
-The callback-based overload remains a supported low-level escape hatch. Phase 1 appends a named
-`constructionKey` parameter without shifting the existing positional parameters and implements the
-overload with one internal typed adapter. There is no deprecated forwarding facade and no second
-renderer path.
+Phase 1 is complete. The durable Q3 contract now lives in
+`docs/modules/viewcompose-host-android/README.md` and `docs/architecture/render-failure.md`. In
+summary, logical `key`, adapter
+class plus `constructionKey`, and opted-in cross-key reuse are separate identities; update is
+replay-safe, commit publishes effects, candidate replacement is atomic, and every created View is
+released exactly once. The callback overload delegates to that single typed path. Future SDK
+phases consume this contract and must not restate or fork it here.
 
 ### Lifecycle and saved state
 
-Phase 2 adds the reusable owner coordination boundary to `viewcompose-lifecycle-androidx` for:
-
-- registering a lifecycle observer only after the Android View transaction commits;
-- catching up to the nearest current `LifecycleOwner` state in Android lifecycle order;
-- serial owner replacement without overlapping active observers;
-- unregistering before final View cleanup;
-- keeping retained navigation destinations capped by their destination owner rather than the
-  Activity owner;
-- restoring SDK state before first visible use and saving from the committed View only; and
-- isolating corrupt or incompatible SDK state without corrupting the surrounding ViewCompose
-  saveable registry.
-
-The common Host contract does not depend upward on AndroidX Lifecycle or an individual SDK. Its
-`lifecycleMode` is diagnostic metadata only. The reusable lifecycle adapter, saved-state-owner
-local, and provider binding live in the AndroidX integration layer. SDK-specific event mapping and
-Bundle payload schemas remain with each SDK integration.
-
-The frozen Phase 2 shape is:
-
-```kotlin
-abstract class LifecycleAndroidViewAdapter<V : View, S> : AndroidViewAdapter<V, S> {
-    final override val lifecycleMode: AndroidViewLifecycleMode
-        get() = AndroidViewLifecycleMode.AdapterManaged
-
-    protected abstract fun lifecycleOwner(state: S): LifecycleOwner
-    protected open fun onViewCommit(scope: AndroidViewCommitScope<V>, state: S) = Unit
-    protected abstract fun onLifecycleEvent(
-        scope: AndroidViewLifecycleEventScope<V>,
-        state: S,
-        event: Lifecycle.Event,
-    )
-    protected open fun onViewReset(
-        scope: AndroidViewResetScope<V>,
-        reason: AndroidViewResetReason,
-    ) = Unit
-    protected open fun onViewRelease(view: V) = Unit
-}
-
-object LocalSavedStateRegistryOwner {
-    val current: SavedStateRegistryOwner?
-}
-
-fun UiTreeBuilder.ProvideSavedStateRegistryOwner(
-    owner: SavedStateRegistryOwner,
-    content: UiTreeBuilder.() -> Unit,
-)
-
-sealed interface AndroidViewSavedStateBindResult {
-    class Initial internal constructor(
-        val restoredState: Bundle?,
-    ) : AndroidViewSavedStateBindResult
-
-    data object Retained : AndroidViewSavedStateBindResult
-}
-
-class AndroidViewSaveStateScope<V : View> internal constructor(
-    val view: V,
-)
-
-fun <V : View> AndroidViewCommitScope<V>.bindAndroidViewSavedState(
-    owner: SavedStateRegistryOwner,
-    key: String,
-    formatVersion: Int,
-    saveState: AndroidViewSaveStateScope<V>.() -> Bundle,
-): AndroidViewSavedStateBindResult
-
-fun View.clearAndroidViewSavedStateBinding()
-```
-
-Activity, Fragment, navigation destination/graph, and Preview hosts install the nearest saved-state
-owner automatically. Fragment content intentionally uses its View owner for lifecycle and the
-Fragment for saved state. Binding occurs only after commit; the first bind returns one compatible
-defensive restored Bundle, later commits replace only the saver, and format mismatch or corrupt
-nested state is isolated. Owner replacement installs the new provider before removing the old.
-Lifecycle adapter reset/release automatically remove both lifecycle and saved-state bindings before
-the SDK hook runs. Raw adapters use the explicit clear function.
+Phase 2 is complete. The durable API and ordering contract now lives in
+`docs/modules/viewcompose-lifecycle-androidx/README.md` and
+`docs/architecture/lifecycle-and-saved-state.md`.
+The reusable adapter binds only after commit, serializes owner replacement, follows retained
+destination visibility, isolates versioned SDK bundles, and clears lifecycle and saved-state
+bindings before SDK reset or release. Host remains AndroidX- and SDK-neutral; downstream modules
+still own event mapping and bundle schemas.
 
 The first-release ownership is frozen as follows:
 
@@ -400,43 +243,14 @@ This plan does not:
 - retain a legacy ExoPlayer artifact through an undocumented alias once its explicit support line
   is retired.
 
-## Phase 0 baseline and Phase 1 delta
+## Completed foundation baseline
 
-The following Phase 0 baseline was verified from
-`54151a09f082518c7e49146caf6853b24ffc54ba` on 2026-08-24. Items 2, 3, and 9 are retained as
-historical inputs and are superseded by the Phase 1 delta immediately below:
-
-1. The repository has no Media3, legacy ExoPlayer, Google Maps, or CameraX dependency declaration,
-   source adapter, published artifact, Demo route, or module manual.
-2. `UiTreeBuilder.AndroidView` accepts untyped `View` callbacks for factory, replay-safe update,
-   reset, post-transaction commit, and one-shot release.
-3. A single `key` currently represents AndroidView reconciliation identity; there is no separate
-   public construction-sensitive identity.
-4. `AndroidResourceEnvironment` supplies the resolved root Context and advances
-   `Environment.resourceRevision` after Android configuration callbacks or an explicit
-   `AndroidResourceRefreshController.refresh()` request.
-5. Standard Activity, Fragment, navigation, and preview hosts provide a scoped
-   `LocalLifecycleOwner`, but AndroidView has no reusable typed lifecycle adapter.
-6. The renderer can replay framework-visible View configuration after failure but cannot clone or
-   restore arbitrary hidden state inside a third-party View.
-7. Lazy mounted-tree reuse crosses logical keys only when every contained AndroidView declares a
-   replay-safe reset contract; final abandonment invokes release exactly once.
-8. Direct `AndroidViewBinding` and Fragment-in-tree integration remain unsupported.
-9. The observed-property patch path currently invokes `onReset` when an AndroidView spec changes
-   under the same logical identity, even though the public Host manual defines reset as cross-key
-   reuse preparation. Phase 1 treats this implementation/documentation conflict as a rejected
-   foundation design and removes the same-identity reset call rather than documenting two meanings.
-10. Repository and coordinate searches still find no target SDK declaration, adapter, Demo route,
-    module manual, publication entry, or current Changeset. Google Maven already exists in the
-    centralized repository policy, so Phase 0 requires no repository mutation.
-
-Phase 1 now adds `AndroidViewAdapter<V, S>`, typed environment scopes, explicit reuse policy and
-reset reason, and construction identity composed from adapter implementation class plus
-`constructionKey`. The callback overload delegates the same path. Same-identity binding and
-rollback no longer call reset. Construction changes create and bind a detached candidate, preserve
-the committed View on failure, swap on structural commit, and release each abandoned View exactly
-once. Renderer diagnostics report a bounded adapter name, construction generation, reuse policy,
-and replacement flag.
+Phase 0 found no target SDK integration and identified same-identity `onReset` as a contradictory
+foundation design. Phases 1 and 2 hard-cut that behavior, added typed construction/reuse identity,
+atomic rollback, lifecycle serialization, and committed saved state, then moved the resulting
+contracts into their owning manuals and architecture pages. The evidence ledger retains the
+revision and verification boundary; later phases build on the current contracts, not the rejected
+baseline.
 
 ## Locked architectural rules
 
