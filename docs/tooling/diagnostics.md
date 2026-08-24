@@ -158,13 +158,21 @@ the small finite sample remain visible limitations.
 CompositionLocal browser, aggregate metrics, the mounted-node highlight fixture, and the explicit
 eight-frame timing workload. Cross-session correlation, production aggregation, real View-boundary
 highlighting, finite per-node timing, and the correlated Studio inspector are implemented.
-Performance and release closeout remain in the active [diagnostics correlation, inspection, and
-production observability plan](../project/plans/diagnostics-correlation-inspection-observability.md).
+Same-device idle/request performance, weak lifecycle ownership, optimized-Release exclusion, and
+isolated Maven consumption have also closed without an accepted regression. The execution record
+is retained in the [archived diagnostics correlation, inspection, and production observability
+plan](../archive/diagnostics-correlation-inspection-observability.md).
 
 ## 9. Remaining expansion contract
 
 [ADR-0021](../architecture/decisions/0021-correlated-render-diagnostics-ownership.md) freezes Phase 1.
 A failure-only sink activates no frame detail. The optional `viewcompose-diagnostics` artifact owns
 production aggregation; `viewcompose-preview` owns the shipped request-driven correlated inspector,
-highlighting, and finite timing. The active plan now owns only performance, device-matrix, and
-release closeout.
+highlighting, and finite timing. No diagnostics expansion is currently active. A future continuous
+observer, new timing domain, or broader device contract requires a new attributed plan and must
+preserve ADR-0009's inactive and Release isolation rules.
+
+`./gradlew verifyDemoReleaseToolingApk` assembles the optimized Demo Release APK and rejects the
+device request action, v7 report path, receiver, service registration, or concrete inspection class
+in any packaged entry. `qaQuick` runs this artifact-level gate in addition to the Release runtime
+dependency-graph check.

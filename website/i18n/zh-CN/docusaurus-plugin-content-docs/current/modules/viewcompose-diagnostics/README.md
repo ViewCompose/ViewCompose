@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-diagnostics/README.md
-translation_source_hash: dd9ccde04c0f39b97b0a6da48e04d1cccde9acca1322560c5240db699c46c207
+translation_source_hash: 523827db6dd032d318650a352c47bbd5714d4393bdaf584d2b0e1ca4f2741a69
 translation_status: current
 ---
 
@@ -103,7 +103,6 @@ applicationQueue.trySend(completedWindow)
 
 聚焦测试覆盖构造参数边界、被忽略事件零工作、脱敏、去重、确定性的最久未更新淘汰、计数饱和、
 窗口过期、重置不可变性、1,000 个高基数指纹、多 Session 并发发布、销毁分类、导出故障隔离，以及
-应用持有的进程重置。本模块不执行 Android UI 工作，因此 Phase 2 不增加可视化 Demo 验收页面；
-设备节点高亮和计时仍属于活动
-[诊断计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)
-中相互独立、按请求激活的后续阶段。
+应用持有的进程重置。本模块不执行 Android UI 工作，因此 Phase 2 不增加可视化 Demo 验收页面。
+设备节点高亮和计时仍是相互独立、按请求激活的 Preview 能力；完整跨模块证据保留在
+[已归档的诊断计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md)。

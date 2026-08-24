@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Close diagnostics performance and release verification without changing published artifacts.",
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "The root build changes only compile the internal benchmark, test the request measurement tool, and scan the Demo Release APK; no published artifact source, output, dependency metadata, or publication configuration changes."
+    }
+  ]
+}

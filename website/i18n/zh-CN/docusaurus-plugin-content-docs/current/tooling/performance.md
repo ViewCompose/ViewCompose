@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 1ce90fb638df928e8bb032dc453193f709df7c17a90c3f2b36c2a294705189d1
+translation_source_hash: 66f7b3b2bb6485c1dc59870b74e7ebf42627f23e91857332af0d5c32c92f2de1
 translation_status: current
 ---
 
@@ -215,13 +215,16 @@ Android Views，ViewCompose 在列表变更中的 heap/RSS 高 `12.2%/2.8%`，�
 
 1. `diagnosticsThemeLongFlingToBottomAndBackRevision2` 在每个方向执行 8 次固定大力度 fling，并在
    对应手势序列后分别验证真实底部和顶部锚点。
-2. `collectionsScrollRevision3` 在 setup 阶段捕获直接场景 LazyColumn 边界，然后在 measured block 内
+2. `diagnosticsThemeDebugToolingIdleLongFlingRevision1` 复用完全相同的手势与锚点契约，并使用
+   `CompilationMode.None`，从而在不安装 Baseline Profile 的情况下比较包含可选 Preview 工具的
+   Debug APK。
+3. `collectionsScrollRevision3` 在 setup 阶段捕获直接场景 LazyColumn 边界，然后在 measured block 内
    每个方向执行 8 次固定 swipe，期间不执行 Accessibility 查询。每次 swipe 使用 500 ms 物理
    稳定窗口，因为 benchmark setup 会关闭 UiAutomator 隐式 idle timeout；省略该窗口会让惯性
    滚动重叠，并在 FrameTimeline 中产生与工作负载无关的 `Buffer Stuffing`。
-3. `collectionsStressMutationRevision3` 执行 8 个完整 rotate/insert/reset 闭环，并断言每次 reset
+4. `collectionsStressMutationRevision3` 执行 8 个完整 rotate/insert/reset 闭环，并断言每次 reset
    都恢复原始逻辑顺序。
-4. 三个方法都使用相同的 measured block 外 5 秒启动稳定窗口。正式原始结果通过 AndroidX
+5. 四个方法都使用相同的 measured block 外 5 秒启动稳定窗口。正式原始结果通过 AndroidX
    benchmark payload 记录 `scenario`、`workloadRevision` 和 `clockPolicy`。
 
 2026-08-15 在 Samsung SM-G991B / Android 13 上验收的 fixture 基线使用 5 次 iteration、每个方法
@@ -712,10 +715,40 @@ Commit，并以一个有界 Builder 配合增量 UTF-8 计数直接编码。这�
 
 ### Phase 3：诊断增强
 
-状态：核心可视化已完成。Render Tree、Patch、CompositionLocal、重组原因、跨 Session 关联、
-有界故障聚合、节点高亮和有限逐节点耗时都已可读。耗时请求是带时钟开销度量的诊断采样，不能替代
-Macrobenchmark；其非激活/请求成本证明与最终收尾仍由有效的
-[诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)。
+状态：已完成。Render Tree、Patch、CompositionLocal、重组原因、跨 Session 关联、有界故障聚合、
+节点高亮和有限逐节点耗时都已可读。耗时请求是带时钟开销度量的诊断采样，不能替代
+Macrobenchmark。
+
+2026-08-24 的收尾在同一台已 Root 的 Xiaomi MI 6 / Android 9 上，对比 Phase 4 提交
+`da67ad78` 与 Phase 6 候选。两个 Debug APK 使用同一套五轮、十六次 Fling 的
+`diagnostics.theme` 工作负载；CPU 固定为 1.4016/1.8048 GHz，GPU 固定为 515 MHz，
+`cpubw` 与 `gpubw` 固定为 13763。Frame CPU P50 从 2.684531 变为 2.769011 ms
+（+0.084480 ms、+3.15%），P95 从 5.012443 变为 5.200990 ms（+0.188547 ms、+3.76%）；
+Run-P50 CV 为 0.0155/0.0153。两项指标都没有同时越过相对与绝对失败阈值，因此空闲结论为
+**无实质变化**。两次运行的 v6/v7 工具报告写入都严格为零。
+
+另外二十次显式 protocol-v7 Source 刷新都返回固定 32,633 bytes、两个 Session 的响应；从主机
+广播到读取匹配报告的 P50/P95/最大值为 161.304/175.494/175.936 ms，开始和结束温度均为
+34.0 °C。该成本低于两秒请求预算，且没有摊入空闲结果。由于目标是度量可选 Debug 工具而非
+Release 性能，对照显式抑制 AndroidX 的 `DEBUGGABLE` 警告。主机耗时包含 adb 与轮询；单台
+Android 9 手机和固定频率不能建立 OEM、校准功耗或 Release 矩阵。完整执行记录保留在
+[已归档的诊断计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md)。
+
+在前台运行 Debug Demo 后，可使用以下命令复现显式请求度量：
+
+```bash
+python3 tools/performance/measure_device_diagnostics_request.py \
+  --serial "$ANDROID_SERIAL" \
+  --operation source \
+  --warmups 5 \
+  --iterations 20 \
+  --clock-policy <recorded-policy> \
+  --output build/diagnostics-request.json
+./gradlew testDeviceDiagnosticsRequestMeasurementTool
+```
+
+工具会先校验 Protocol、Nonce、Operation 与 Package 身份，再接受响应，并保留原始延迟样本而不是
+只输出聚合值。
 
 ### Phase 4：容器与布局收口
 

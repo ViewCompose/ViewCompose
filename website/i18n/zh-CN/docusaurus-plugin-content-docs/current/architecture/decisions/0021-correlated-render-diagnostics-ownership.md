@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0021-correlated-render-diagnostics-ownership.md
-translation_source_hash: 8e56d53c966d20f2da5c04e1fc9571abc7508588a2778e5b1d8497b763dadeb5
+translation_source_hash: b42c15d305bb8f2fe0573163a57af2d8d35e8b2546fc7070de38811489cbcc20
 translation_status: current
 ---
 
@@ -218,5 +218,6 @@ Phase 1 必须验证成功、回滚、异步、准备、保留、复用和销毁
 Changeset 和 Maven 消费者。后续 Phase 必须覆盖每个边界、确定性淘汰、并发/高基数失败、
 高亮清理/过期、校准计时、发布 classpath，以及同设备未激活/已请求性能。
 
-活动诊断计划维护精确的定向检查。设备和性能证据在实现 Phase 被接受前必须提供，本文档
-契约冻结阶段无需提供。
+[已完成的诊断计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md)
+记录精确的定向检查。设备和性能证据必须在每个实现 Phase 被接受前提供，本文档契约冻结阶段
+无需提供。

@@ -8,10 +8,6 @@ This directory contains multi-step work that is currently active and must surviv
   the intentionally deferred collection-stress revision-3 fixed-clock baseline, broad bilingual and
   configuration visual matrix, popup pixel golden, and zero-caller hard deletion of obsolete Demo
   harness infrastructure after the coordinated framework and Preview-plugin release.
-- [Diagnostics correlation, inspection, and production observability](./diagnostics-correlation-inspection-observability.md) —
-  correlate frames and failures across render sessions, add bounded privacy-safe production failure
-  aggregation, highlight real View boundaries only on explicit debug requests, and capture finite
-  per-node timing without charging inactive render paths.
 - [Paging 3 integration](./paging3-integration.md) — integrate official AndroidX Paging through an
   optional custom-presenter bridge, preserving ViewCompose lazy identity and renderer ownership
   without moving paging types or loading policy into the core contract.

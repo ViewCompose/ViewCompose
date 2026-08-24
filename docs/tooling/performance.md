@@ -253,14 +253,17 @@ a universal memory winner.
 
 1. `diagnosticsThemeLongFlingToBottomAndBackRevision2` executes eight fixed forceful flings in each
    direction and proves the real bottom and top anchors after their respective gesture sequences.
-2. `collectionsScrollRevision3` captures the direct scenario LazyColumn bounds during setup, then executes
+2. `diagnosticsThemeDebugToolingIdleLongFlingRevision1` reuses that exact gesture and anchor
+   contract with `CompilationMode.None` so a Debug APK containing optional Preview tooling can be
+   compared without baseline-profile installation.
+3. `collectionsScrollRevision3` captures the direct scenario LazyColumn bounds during setup, then executes
    eight fixed swipes in each direction without performing Accessibility queries inside the measured
    block. Each swipe has a 500 ms physical settle window because benchmark setup disables
    UiAutomator's implicit idle timeout; omitting that window overlaps inertial scrolls and causes
    non-workload `Buffer Stuffing` in FrameTimeline.
-3. `collectionsStressMutationRevision3` executes eight complete rotate/insert/reset cycles and
+4. `collectionsStressMutationRevision3` executes eight complete rotate/insert/reset cycles and
    asserts that every reset restores the original logical order.
-4. All three wait through the same 5-second unmeasured launch-settling window. Formal raw results
+5. All four wait through the same 5-second unmeasured launch-settling window. Formal raw results
    record `scenario`, `workloadRevision`, and `clockPolicy` through AndroidX benchmark payload.
 
 Accepted Samsung SM-G991B / Android 13 fixture baselines from 2026-08-15 use five iterations,
@@ -812,12 +815,43 @@ continues in Phases 3 and 4.
 
 ### Phase 3: Diagnostics
 
-Status: core visualization complete. Render tree, patches, CompositionLocal, recomposition reasons,
-cross-session correlation, bounded failure aggregation, node highlighting, and finite per-node
-timing are readable. A timing request is diagnostic sampling with measured clock overhead, not a
-replacement for Macrobenchmark. Its inactive/request-cost proof and final closeout remain in the
-active
-[diagnostics plan](../project/plans/diagnostics-correlation-inspection-observability.md).
+Status: complete. Render tree, patches, CompositionLocal, recomposition reasons, cross-session
+correlation, bounded failure aggregation, node highlighting, and finite per-node timing are
+readable. A timing request is diagnostic sampling with measured clock overhead, not a replacement
+for Macrobenchmark.
+
+The 2026-08-24 closeout compared Phase 4 commit `da67ad78` with the Phase 6 candidate on the same
+rooted Xiaomi MI 6 / Android 9. Both Debug APKs used the same five-iteration, sixteen-fling
+`diagnostics.theme` workload with CPU fixed at 1.4016/1.8048 GHz, GPU at 515 MHz, and `cpubw` and
+`gpubw` at 13763. Frame CPU P50 changed from 2.684531 to 2.769011 ms (+0.084480 ms, +3.15%) and P95
+from 5.012443 to 5.200990 ms (+0.188547 ms, +3.76%); run-P50 CV remained 0.0155/0.0153. Neither
+metric crossed both its relative and absolute failure thresholds, so the idle conclusion is
+**no material change**. Both runs performed exactly zero v6/v7 tooling report writes.
+
+Twenty separately requested protocol-v7 source refreshes returned a fixed 32,633-byte, two-Session
+response with host broadcast-through-matching-report P50/P95/max of 161.304/175.494/175.936 ms at
+34.0 °C start and end. This is bounded below the two-second request budget and is not amortized into
+idle results. The comparison deliberately suppresses AndroidX's `DEBUGGABLE` warning because it
+measures optional Debug tooling rather than Release performance. Host latency includes adb and
+polling; one Android 9 phone and fixed clocks do not establish an OEM, calibrated-power, or Release
+matrix. The completed execution record is retained in the
+[archived diagnostics plan](../archive/diagnostics-correlation-inspection-observability.md).
+
+Reproduce the explicit-request characterization against a foreground Debug Demo with:
+
+```bash
+python3 tools/performance/measure_device_diagnostics_request.py \
+  --serial "$ANDROID_SERIAL" \
+  --operation source \
+  --warmups 5 \
+  --iterations 20 \
+  --clock-policy <recorded-policy> \
+  --output build/diagnostics-request.json
+./gradlew testDeviceDiagnosticsRequestMeasurementTool
+```
+
+The tool validates protocol, nonce, operation, and package identity before accepting a response and
+records raw latency samples rather than only aggregates.
 
 ### Phase 4: Containers and layout
 

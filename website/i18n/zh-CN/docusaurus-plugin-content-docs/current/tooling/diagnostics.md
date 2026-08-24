@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: bbe2f3532092c099953de39cd0e41182b9606f1d1c32340f326fe954264bab00
+translation_source_hash: 102218052e3a4d1621ba5a91dd9066d3b50f4d5711c138eeaf451fb6b47402f3
 translation_status: current
 ---
 
@@ -139,11 +139,18 @@ GPU、RenderThread、SurfaceFlinger、图片解码、网络、数据库和外部
 `Diagnostics -> 渲染器` 提供 Render Tree、Patch 时间线、重组原因、CompositionLocal 浏览器与
 聚合指标、Mounted-node 高亮 Fixture 与显式八帧耗时工作负载。跨 Session 关联、生产聚合、真实
 View 边界高亮、有限逐节点耗时与关联 Studio Inspector 已经实现；性能与发布收尾仍由有效的
-[诊断关联、检查与生产可观测性计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)负责。
+同机空闲/请求性能、弱生命周期所有权、优化 Release 排除与隔离 Maven 消费也已闭环，且没有
+可接受的回退。执行记录保留在
+[已归档的诊断关联、检查与生产可观测性计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md)。
 
 ## 9. 剩余扩展契约
 
 [ADR-0021](https://docs.viewcompose.com/architecture/decisions/0021-correlated-render-diagnostics-ownership)
 冻结 Phase 1；只关心 Failure 的 Sink 不激活 Frame 明细。可选 `viewcompose-diagnostics`
 现已负责生产聚合，`viewcompose-preview` 已交付按请求工作的关联 Inspector、高亮与有限耗时。
-有效计划现在只负责性能、设备矩阵与发布收尾。
+当前没有有效的诊断扩展计划。未来的持续观察器、新耗时域或更广设备契约必须重新建立可归因计划，
+并继续遵守 ADR-0009 的非激活路径与 Release 隔离规则。
+
+`./gradlew verifyDemoReleaseToolingApk` 会构建优化后的 Demo Release APK，并在任意打包条目中拒绝
+设备请求 Action、v7 报告路径、Receiver、Service 注册或具体 Inspection 类。`qaQuick` 除了检查
+Release Runtime 依赖图，也会执行这项制品级门禁。

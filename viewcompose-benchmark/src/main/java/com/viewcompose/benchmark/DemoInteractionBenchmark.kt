@@ -168,6 +168,28 @@ class DemoInteractionBenchmark {
     }
 
     @Test
+    fun diagnosticsThemeDebugToolingIdleLongFlingRevision1() = benchmarkRule.measureRepeated(
+        packageName = TARGET_PACKAGE,
+        metrics = listOf(FrameTimingMetric()),
+        compilationMode = CompilationMode.None(),
+        iterations = DEFAULT_ITERATIONS,
+        startupMode = StartupMode.WARM,
+        setupBlock = {
+            startDiagnosticsThemeAndWait()
+            waitForPerformanceMeasurementSettle()
+        },
+    ) {
+        repeat(DIAGNOSTICS_THEME_FLING_COUNT) {
+            flingPageUp()
+        }
+        waitForScenarioTarget("diagnostics.theme", DemoTargetRole.SecondaryTarget)
+        repeat(DIAGNOSTICS_THEME_FLING_COUNT) {
+            flingPageDown()
+        }
+        waitForScenarioTarget("diagnostics.theme", DemoTargetRole.Target)
+    }
+
+    @Test
     fun interopBenchmarkAnchor() = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),

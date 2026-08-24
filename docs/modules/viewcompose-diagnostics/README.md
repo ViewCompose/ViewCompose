@@ -110,6 +110,7 @@ The focused suite covers constructor limits, zero-work ignored events, redaction
 deterministic least-recently-updated eviction, count saturation, expiration, reset immutability,
 1,000 high-cardinality fingerprints, concurrent multi-session publication, disposal
 classification, export failure isolation, and application-owned process reset. The module performs
-no Android UI work, so Phase 2 adds no visual Demo acceptance surface; device highlighting and
-timing remain separate request-driven phases in the active
-[diagnostics plan](../../project/plans/diagnostics-correlation-inspection-observability.md).
+no Android UI work, so Phase 2 adds no visual Demo acceptance surface. Device highlighting and
+timing remain separate request-driven Preview capabilities; their completed cross-module evidence
+is retained in the
+[archived diagnostics plan](../../archive/diagnostics-correlation-inspection-observability.md).
