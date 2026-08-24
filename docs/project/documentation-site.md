@@ -205,82 +205,20 @@ identity token.
 
 <div className="search-partition-detail">
 
-Completed checkpoints are condensed here; Git history retains their execution detail.
+- **2026-08-25, Paging Phase 0 contract:** on the same local macOS lockfile and complete corpus of
+  100 immutable plus 5 unpublished-current API trees, main, the initial candidate, and the compact
+  evidence-inclusive candidate measured 48,752,081, 48,821,194, and 48,751,657 non-API bytes. The
+  initial +69,113 bytes (+0.142%) exceeded 46.5 MiB by 62,410; consolidating repeated plan rules and
+  superseded site-ledger narrative removed 69,537 bytes (0.142%) without dropping a frozen contract
+  or raising the limit. Representation is **improved**; 438 pages, both locales, search, routing,
+  accessibility, and budgets pass. The comparison is one local host and does not measure deployment
+  or network behavior. CI is the next gate; future phases keep contracts in one owning section.
 
-- **2026-08-24, Google Maps and tooling installation contracts:** the successful main Linux
-  artifact and the initial same-lockfile complete local candidate measured 48,227,224 and
-  48,597,863 non-API bytes. The candidate added four required English/Chinese manual and ADR
-  routes, moving 434 to 438 audited pages; final English/Chinese search changed from
-  5,609,166/6,111,326 to 5,673,773/6,178,824 bytes. The initial +370,639 bytes (+0.768%) exceeded
-  the 46 MiB limit by 363,367 bytes. Moving completed Maps execution narrative out of the active
-  integration plan and into links to its owning manual and ADR saved 7,385 bytes (-0.015%) to
-  48,590,478, but could not offset four durable routes. Including this required measurement record,
-  final output is 48,609,108 bytes, +381,884 (+0.792%) over main and 149,676 bytes below the new
-  46.5 MiB stop. Representation consolidation is **improved** while total durable-contract size is
-  **regressed and accepted**.
-  The baseline is a Linux artifact and the candidate is a local macOS build, so host-level output
-  variance remains a limitation; CI is the next gate. Another 46.5 MiB failure must consolidate
-  completed evidence or change site representation before any threshold review.
-- **2026-08-24, Android View Phase 2:** the complete 100-version corpus plus one unpublished
-  current API tree initially produced 48,276,155 non-API bytes, 41,659 bytes beyond 46 MiB.
-  Moving closed Phase 1 and 2 API narratives from the active integration plan to their owning
-  manuals reduced the evidence-inclusive corpus to 48,186,584 bytes, an 89,571-byte (0.186%)
-  improvement, and left 47,912 bytes of headroom without changing a threshold or deleting a
-  durable contract.
-  English/Chinese search is 5,574,102/6,072,178 bytes; 430 pages, accessibility, API routing, and
-  the 34.2-second build passed. This local macOS comparison does not measure Linux deployment;
-  CI remains the next gate, and completed phase detail must continue to converge on owning docs.
-- **2026-08-23, Diagnostics Phase 2:** on the complete 100-version corpus plus one unpublished
-  current API tree, the Phase 1 baseline, initial Phase 2 output, and consolidated output measured
-  48,217,723, 48,480,209, and 47,801,356 non-API bytes. The initial +262,486-byte (+0.544%)
-  growth exceeded 46 MiB by 245,713 bytes. Consolidating repeated closed performance narratives
-  into current decision tables removed 678,853 bytes (-1.400%) without deleting contracts or
-  raising the ceiling; final output is 416,367 bytes (-0.863%) below the baseline and leaves
-  433,140 bytes of headroom. English/Chinese search is 5,432,660/5,916,011 bytes. Representation
-  **improved**; 432 pages, both locales, compatibility anchors, accessibility, API routing, and the
-  28.7-second build passed. This local macOS comparison reused one generated API corpus and does
-  not measure network deployment or another host; the next action is to keep the compact decision
-  ledger while Phase 3 adds highlighting guidance.
-- **2026-08-23, Diagnostics Phase 1:** with complete 100-version output, main, the initial
-  candidate, and the consolidated candidate measured 48,209,136, 48,349,648, and 48,217,723
-  non-API bytes. The initial +140,512-byte (0.29%) regression exceeded 46 MiB by 115,152 bytes;
-  consolidating completed site evidence and repeated module guidance removed 131,925 bytes. The
-  final +8,587 bytes (0.02%) leaves 16,773 bytes of headroom, while English/Chinese search changed
-  from 5,552,901/6,041,625 to 5,551,470/6,039,478 bytes. Representation **improved** with no
-  threshold change. Main came from the Linux CI artifact and the candidate from the local macOS
-  complete build, which limits machine-level comparison; both used the same dependency set and
-  non-API accounting. Keep central contracts searchable and consolidate repetition before Phase 2.
-- **2026-08-23, Animation Phase 5:** on one complete 100-version API corpus, main/candidate
-  non-API output was 47,678,608/47,827,249 bytes (+148,641, 0.31%) and search was
-  5,369,073/5,841,187 versus 5,400,738/5,876,861 bytes. Final evidence-inclusive output was
-  47,840,947 bytes. The bilingual Q3-contract growth **regressed** but was accepted, moving only
-  non-API from 45.5 to 46 MiB. Reusing one API corpus is the limitation; another ceiling failure
-  requires consolidation or representation work.
-- **2026-08-23, Animation Phase 4:** main/unconsolidated/final output was
-  47,667,169/47,810,162/47,678,361 bytes; consolidation saved 131,801 bytes and final search was
-  5,369,073/5,841,187. Representation **improved** without moving a threshold. The corpus
-  limitation is unchanged; unresolved requirements remain in owning manuals.
-- **2026-08-18, plan search partition:** main was 45,313,029 bytes. Candidate output/search fell
-  from 48,070,239 and 6,575,126/7,037,032 to 46,680,423 and
-  5,887,279/6,335,029, a 2.89% output and about 10% search reduction. The result was **mixed**;
-  non-API moved to 45.5 MiB, search stayed at 6.25 MiB. API history was not rebuilt; the next action
-  was plan consolidation.
-- **2026-08-18 to 2026-08-17, ledger partitions:** lazy evidence changed
-  45,041,594 main to 45,298,674 accepted bytes after saving 144,489 bytes; manual-review evidence
-  changed 44,793,209 main and 45,212,251 initial candidate to 44,941,342 accepted bytes. Results
-  were **mixed** and **improved** respectively; compared non-API/search trees were complete but API
-  history was not rebuilt. The resulting action was structural plan/index segmentation.
-- **2026-08-16, observed-property contracts:** main/candidate was
-  43,622,588/44,251,626 bytes (+629,038, 1.44%), with search
-  5,592,645/6,015,718 versus 5,732,917/6,165,632. The result **regressed** but was accepted after
-  duplicate-route review; non-API moved to 43 MiB and the next failure required partitioning.
-- **2026-08-15 to 2026-08-14:** native contracts changed 42,829,400 to 43,024,465 bytes
-  (+195,065, 0.46%) and moved non-API to 42 MiB; the Demo-plan pair changed 39.999791 to
-  40.427350 MiB and moved it to 41 MiB. Both accepted durable-contract regressions, used complete
-  non-API trees without rebuilt API history, and required representation review at the next limit.
-- **2026-08-06, complete-history baseline:** 69 immutable and 9 unpublished current trees passed
-  source, route, locale, search, redirect, and 310-page accessibility checks. Total/non-API was
-  316.3/32.9 MiB, API trees averaged 3.6 MiB, largest JavaScript was 650 KiB, and build time was
-  24.2 seconds. Later checkpoints supersede its size thresholds, not its reconstruction proof.
+Only the latest same-corpus decision remains expanded here. Git history preserves the superseded
+2026-08-06 through 2026-08-24 checkpoint details. Those measurements established immutable API
+history reconstruction, bilingual search and accessibility gates, plan and evidence segmentation,
+and repeated consolidation before the non-API ceiling advanced from 41 to 46.5 MiB. They found both
+accepted durable-contract growth and representation improvements; none authorizes deleting current
+contracts or bypassing the next stop condition.
 
 </div>
