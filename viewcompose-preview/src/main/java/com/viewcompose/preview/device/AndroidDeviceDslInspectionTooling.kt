@@ -19,6 +19,9 @@ import android.view.ViewGroup
 import com.viewcompose.ui.foundation.RenderSessionInspectionPolicy
 import com.viewcompose.ui.foundation.RenderSessionInspectionRegistration
 import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
+import com.viewcompose.ui.foundation.RenderSessionDiagnosticInspection
+import com.viewcompose.ui.foundation.RenderSessionDiagnosticSnapshot
+import com.viewcompose.ui.foundation.RenderSessionInspectedFailure
 import com.viewcompose.ui.foundation.RenderSessionNodeInspection
 import com.viewcompose.ui.foundation.RenderSessionTimingInspection
 import com.viewcompose.ui.foundation.RenderNodeTimingCapture
@@ -49,8 +52,8 @@ internal const val DEVICE_DSL_SOURCE_REQUEST_SESSION_ID_EXTRA = "session_id"
 internal const val DEVICE_DSL_SOURCE_REQUEST_NODE_TOKEN_EXTRA = "node_token"
 internal const val DEVICE_DSL_TIMING_PHASES_EXTRA = "timing_phases"
 internal const val DEVICE_DSL_SOURCE_REPORT_RELATIVE_PATH =
-    "viewcompose/device-dsl-source-v6.json"
-internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 6
+    "viewcompose/device-dsl-source-v7.json"
+internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 7
 
 /** Optional debug-scoped session-inspection service discovered by the Android Host. */
 internal class AndroidDeviceDslInspectionTooling : RenderSessionInspectionTooling {
@@ -75,6 +78,7 @@ internal class AndroidDeviceDslInspectionTooling : RenderSessionInspectionToolin
         context: RenderDiagnosticContext,
         sourceCandidates: List<List<UiSourceCallSite>>,
         nodeInspection: RenderSessionNodeInspection,
+        diagnosticInspection: RenderSessionDiagnosticInspection,
         timingInspection: RenderSessionTimingInspection,
     ): RenderSessionInspectionRegistration? {
         val viewGroup = container.nativeContainer as? ViewGroup ?: return null
@@ -86,6 +90,7 @@ internal class AndroidDeviceDslInspectionTooling : RenderSessionInspectionToolin
             role = context.role,
             sourceCandidates = sourceCandidates,
             nodeInspection = nodeInspection,
+            diagnosticInspection = diagnosticInspection,
             timingInspection = timingInspection,
         )
     }
@@ -225,6 +230,7 @@ internal class AndroidDeviceDslSourceRegistry(
         role: RenderSessionRole,
         sourceCandidates: List<List<UiSourceCallSite>>,
         nodeInspection: RenderSessionNodeInspection,
+        diagnosticInspection: RenderSessionDiagnosticInspection? = null,
         timingInspection: RenderSessionTimingInspection = endedTimingInspection,
     ): RenderSessionInspectionRegistration? {
         val boundedCandidates = sourceCandidates.boundedSourceCandidates()
@@ -246,6 +252,7 @@ internal class AndroidDeviceDslSourceRegistry(
                 container = WeakReference(container),
                 sourceCandidates = boundedCandidates,
                 nodeInspection = nodeInspection,
+                diagnosticInspection = diagnosticInspection,
                 timingInspection = timingInspection,
             )
         }
@@ -556,6 +563,7 @@ private class DeviceDslSourceSession(
     val container: WeakReference<ViewGroup>,
     val sourceCandidates: List<List<UiSourceCallSite>>,
     val nodeInspection: RenderSessionNodeInspection,
+    val diagnosticInspection: RenderSessionDiagnosticInspection?,
     val timingInspection: RenderSessionTimingInspection,
     var renderingActive: Boolean = true,
 ) {
@@ -595,6 +603,7 @@ private class DeviceDslSourceSession(
             windowVisibility = view.windowVisibility,
             viewDepth = view.depthInHierarchy(),
             sourceCandidates = sourceCandidates,
+            diagnostics = diagnosticInspection?.snapshot(),
         )
     }
 
@@ -731,6 +740,7 @@ private class DeviceDslSourceSession(
             windowVisibility = View.GONE,
             viewDepth = 0,
             sourceCandidates = sourceCandidates,
+            diagnostics = diagnosticInspection?.snapshot(),
             nodeInspectionEnded = true,
         )
     }
@@ -757,6 +767,7 @@ internal data class DeviceDslSourceSessionSnapshot(
     val windowVisibility: Int,
     val viewDepth: Int,
     val sourceCandidates: List<List<UiSourceCallSite>>,
+    val diagnostics: RenderSessionDiagnosticSnapshot? = null,
     val nodes: List<DeviceDslNodeSnapshot> = emptyList(),
     val nodeGeneration: Long = 0L,
     val nodeInspectionSupported: Boolean = true,
@@ -894,6 +905,8 @@ private fun DeviceDslSourceSessionSnapshot.toBoundedJson(): String = buildString
     append(windowVisibility)
     append(",\"viewDepth\":")
     append(viewDepth)
+    append(",\"diagnostics\":")
+    diagnostics?.let { snapshot -> append(snapshot.toBoundedJson()) } ?: append("null")
     append(",\"nodeGeneration\":")
     append(nodeGeneration)
     append(",\"nodeInspectionSupported\":")
@@ -937,6 +950,57 @@ private fun DeviceDslSourceSessionSnapshot.toBoundedJson(): String = buildString
     append(']')
     append(",\"nodesTruncated\":")
     append(nodesTruncated || emittedNodes < nodes.size)
+    append('}')
+}
+
+private fun RenderSessionDiagnosticSnapshot.toBoundedJson(): String = buildString {
+    append('{')
+    append("\"sessionId\":")
+    append(sessionId.value)
+    append(",\"parentSessionId\":")
+    append(parentSessionId?.value ?: "null")
+    append(",\"role\":")
+    appendJsonString(role.name)
+    append(",\"renderingActive\":")
+    append(renderingActive)
+    append(",\"committedFrameId\":")
+    append(committedFrameId ?: "null")
+    append(",\"ended\":")
+    append(ended)
+    append(",\"latestFrame\":")
+    latestFrame?.let { frame ->
+        append('{')
+        append("\"frameId\":")
+        append(frame.frameId)
+        append(",\"status\":")
+        appendJsonString(frame.status.name.toSnakeCase())
+        append(",\"failures\":[")
+        frame.failures.forEachIndexed { index, failure ->
+            if (index > 0) append(',')
+            append(failure.toBoundedJson())
+        }
+        append(']')
+        append(",\"droppedFailures\":")
+        append(frame.droppedFailures)
+        append('}')
+    } ?: append("null")
+    append(",\"latestFailure\":")
+    latestFailure?.let { failure -> append(failure.toBoundedJson()) } ?: append("null")
+    append('}')
+}
+
+private fun RenderSessionInspectedFailure.toBoundedJson(): String = buildString {
+    append('{')
+    append("\"frameId\":")
+    append(frameId ?: "null")
+    append(",\"phase\":")
+    appendJsonString(phase.name.toSnakeCase())
+    append(",\"recovery\":")
+    appendJsonString(recovery.name.toSnakeCase())
+    append(",\"operation\":")
+    operation?.let { value -> appendJsonString(value.name.toSnakeCase()) } ?: append("null")
+    append(",\"exceptionType\":")
+    appendJsonString(exceptionType.take(MAX_NODE_STRING_LENGTH))
     append('}')
 }
 

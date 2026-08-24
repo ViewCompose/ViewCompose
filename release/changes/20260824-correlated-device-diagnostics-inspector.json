@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add a request-only privacy-safe latest-frame and failure snapshot, upgrade the debug device protocol to v7, and hard-cut four separate Studio actions into one correlated diagnostics inspector.",
+  "changes": [
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
+    { "artifact": "viewcompose-preview", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

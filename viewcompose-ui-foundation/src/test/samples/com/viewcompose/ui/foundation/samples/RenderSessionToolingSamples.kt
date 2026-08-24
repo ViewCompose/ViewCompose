@@ -3,6 +3,7 @@ package com.viewcompose.ui.foundation.samples
 import com.viewcompose.ui.foundation.RenderSessionInspectionPolicy
 import com.viewcompose.ui.foundation.RenderSessionInspectionRegistration
 import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
+import com.viewcompose.ui.foundation.RenderSessionDiagnosticInspection
 import com.viewcompose.ui.foundation.RenderSessionNodeInspection
 import com.viewcompose.ui.foundation.RenderSessionTimingInspection
 import com.viewcompose.ui.foundation.RenderNodeTimingCapture
@@ -59,12 +60,16 @@ fun renderSessionInspectionToolingSample(): RenderSessionInspectionTooling {
             context: RenderDiagnosticContext,
             sourceCandidates: List<List<UiSourceCallSite>>,
             nodeInspection: RenderSessionNodeInspection,
+            diagnosticInspection: RenderSessionDiagnosticInspection,
             timingInspection: RenderSessionTimingInspection,
         ): RenderSessionInspectionRegistration {
             check(context.eventSequence == 0L)
             check(sourceCandidates.flatten().all { source -> source.lineNumber > 0 })
             // Only an explicit tooling request may traverse the mounted tree.
             check(nodeInspection.snapshot().nodes.size <= 512)
+            val diagnosticSnapshot = diagnosticInspection.snapshot()
+            check(diagnosticSnapshot.sessionId == context.sessionId)
+            check(!diagnosticSnapshot.ended)
             return object : RenderSessionInspectionRegistration {
                 override fun setRenderingActive(active: Boolean) {
                     renderingActive = active

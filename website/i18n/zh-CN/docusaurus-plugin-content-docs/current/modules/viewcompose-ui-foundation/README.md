@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 2704744f14905f9b77b9c7757cd3f82759e2bb834b662a4235966a328d4ceecb
+translation_source_hash: 69ea69662f241e2edaea3750bc2c78fe240b634cc7af96eda8d4d503567b00c5
 translation_status: current
 ---
 
@@ -182,6 +182,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   `RenderSessionInspectionRegistration` 组成 Q3 可选平台契约。Policy 将 Lifecycle/Node Tracking
   与有界的首次 Frame Source Capture 分离，使高频 Lazy Item Session 不执行 Source Stack 工作也能
   按请求检查。编译样例 `renderSessionInspectionToolingSample` 展示其 Adapter 生命周期。
+- `RenderSessionDiagnosticInspection` 是为同一个 Logical Session 注册的 Q3、仅按请求工作的安全摘要
+  Handle。其 Q2 Snapshot 会公开 Activity、结束状态、最近已提交帧、最近已完成尝试与有界类型化失败
+  摘要，但不会保留或返回原始异常、Message、Cause、Stack、应用 Key、Node Content 或 Native Object。
 - `RenderSessionTimingInspection`、`RenderNodeTimingCaptureRequest` 与
   `RenderNodeTimingCaptureResult` 组成 Q3、仅按请求激活的有限计时控制，并与同一 Logical Session
   一起注册。一次 Capture 最多在八个已完成 Frame Attempt 或两秒单调时间内记录实际执行的组合、
@@ -380,9 +383,12 @@ Adapter，行为不变。主动启用的自定义平台必须让注册状态受�
 Type/Source Metadata 与弱 Platform Target，并明确报告 Unsupported、Ended、Dropped 和 Truncated。
 新快照、节点替换、跨 Owner 复用、Session 结束或进程重建都会让旧 Token 失效。
 
-Registration 现在还会收到 Q3 `RenderSessionTimingInspection`。这是对注册签名的有意 Alpha
-硬切：自定义 Tooling 实现必须接收 Timing Control，不能再通过另一个 Callback 或 Adapter 发现它。
-请求可以选择 Composition、Reconciliation 与 Binding 的非空子集，但不得超过八个已完成 Frame
+Registration 现在还会收到 Q3 `RenderSessionDiagnosticInspection` 与
+`RenderSessionTimingInspection`。这是对注册签名的有意 Alpha 硬切：自定义 Tooling 实现必须接收
+这两个仅按请求工作的 Control，不能再通过另一个 Callback 或 Adapter 发现它们。Diagnostic Handle
+弱持有 Session，只在 Render Thread 读取已经保留的最近 Frame/Failure 状态，每帧最多保留 16 条安全
+Failure，并在 Owner 释放后返回 Ended Snapshot。Timing 请求可以选择 Composition、Reconciliation
+与 Binding 的非空子集，但不得超过八个已完成 Frame
 Attempt 或两秒；每个 Session 同时只有一个 Capture，Dispose 会结束它，所有调用都留在所属 Render
 Thread。未激活的 Session 执行零次逐节点时钟读取，也不保留计时记录。
 

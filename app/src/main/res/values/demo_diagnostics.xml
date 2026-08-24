@@ -22,7 +22,7 @@
     <string name="demo_diagnostics_renderer_actions_summary">Keep refresh and reset controls at the start of the direct renderer fixture.</string>
     <string name="demo_diagnostics_highlight_title">Mounted-node highlight fixture</string>
     <string name="demo_diagnostics_highlight_summary">A deterministic AndroidView boundary for the request-driven Studio highlighter.</string>
-    <string name="demo_diagnostics_highlight_instructions">Use Tools → Highlight Device DSL Node and choose the AndroidView entry. The overlay is read-only and clears after five seconds.</string>
+    <string name="demo_diagnostics_highlight_instructions">Open Inspect Device Diagnostics, select this Session, then load Mounted nodes and highlight the AndroidView entry. The overlay is read-only and clears after five seconds.</string>
     <string name="demo_diagnostics_highlight_replace">Replace mounted target</string>
     <string name="demo_diagnostics_highlight_target">Highlight target · generation %1$d</string>
     <string name="demo_diagnostics_snapshot_revision">Snapshot refresh revision: %1$d</string>

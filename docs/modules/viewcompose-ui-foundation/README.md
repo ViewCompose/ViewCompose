@@ -211,6 +211,10 @@ by a later renderer or child render session.
   lifecycle/node tracking from bounded first-frame source capture, allowing high-churn lazy-item
   sessions to remain request-inspectable without source-stack work. The compiled
   `renderSessionInspectionToolingSample` demonstrates the adapter lifecycle.
+- `RenderSessionDiagnosticInspection` is the Q3 request-only safe-summary handle registered for the
+  same logical Session. Its Q2 snapshot exposes activity, end state, latest committed frame, latest
+  completed attempt, and bounded typed failure summaries without retaining or returning a raw
+  exception, message, cause, stack, application key, node content, or native object.
 - `RenderSessionTimingInspection`, `RenderNodeTimingCaptureRequest`, and
   `RenderNodeTimingCaptureResult` form the Q3 request-only finite timing control registered with the
   same logical Session. One capture records executed composition, reconciliation, and direct
@@ -444,9 +448,12 @@ mounted nodes, retains at most 512 to depth 64, emits privacy-safe type/source m
 platform targets, and reports unsupported, ended, dropped, and truncated states. A newer snapshot,
 node replacement, cross-owner reuse, session end, or process recreation invalidates prior tokens.
 
-Registration now also receives Q3 `RenderSessionTimingInspection`. This is an intentional alpha
-hard cut to the registration signature: custom tooling implementations must accept the timing
-control rather than discovering it through another callback or adapter. A request may select a
+Registration now also receives Q3 `RenderSessionDiagnosticInspection` and
+`RenderSessionTimingInspection`. This is an intentional alpha hard cut to the registration
+signature: custom tooling implementations must accept both request-only controls rather than
+discovering them through another callback or adapter. The diagnostic handle owns the Session
+weakly, reads only the already retained latest frame/failure state on the render thread, caps one
+frame at 16 safe failures, and returns an ended snapshot after owner release. A timing request may select a
 non-empty subset of composition, reconciliation, and binding, but cannot exceed eight completed
 frame attempts or two seconds. Only one capture per Session is active, disposal ends it, and all
 calls stay on the owning render thread. Inactive Sessions perform zero per-node clock reads and keep

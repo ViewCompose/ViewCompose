@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: d21f28eb3e9e533f95f496d2449fb55da26591bcb108500f5b7a9c9060fd98b5
+translation_source_hash: bbe2f3532092c099953de39cd0e41182b9606f1d1c32340f326fe954264bab00
 translation_status: current
 ---
 
@@ -85,12 +85,24 @@ Alpha API 无适配层地移除了三个 Callback 与仅 Result Local。Stats/Tr
 调度、上传、厂商元数据和下游失败策略都保留给应用。详见
 [模块手册](https://docs.viewcompose.com/zh-CN/modules/viewcompose-diagnostics)。
 
-## 7. 按请求高亮 Mounted Node
+## 7. 关联真机 Inspector
 
 通过 `debugImplementation` 引入 `viewcompose-preview`，让可调试应用保持前台，然后选择
-**Tools → Highlight Device DSL Node**。Studio 会先选择一个关联后的可见 Session，请求一份有界的
-当前 Mounted Tree 快照，再列出声明式节点。选中后会绘制该节点真实 Android View 的裁剪后边界，
-最长保留五秒；**Tools → Clear Device DSL Highlight** 可立即清除。
+`Inspect Device Diagnostics`。单一 Inspector 会硬切替代原来的 Source、Highlight、Clear 和 Timing
+动作。Session Tree 会保留 Parent/Child Role，并区分最近已提交帧、最近已完成尝试和最近失败。失败
+只展示类型化 Phase、Recovery、可选 Android View Operation 与有界异常二进制类名；原始异常、
+Message、Cause、Stack、Key 和应用内容不会跨越 Tooling 边界。
+
+同一个已选 Session 拥有 Source Candidate、Mounted Node 和有限耗时三个视图。Source、Node 与
+Timing Record 都能跳转到当前项目内的有界调用位置。每个可导航行都会显示导航动作实际打开的、
+解析后的业务项目位置；内部框架栈帧既不会被显示为目标，也不会替代业务位置打开。组件提供稳定的
+`viewcompose.deviceDiagnostics.*` 自动化 Role；Demo 则保留刷新、高亮替换、耗时动作、可见耗时状态
+与确定性八帧 Fixture 的稳定 Tag。
+
+### 按请求高亮 Mounted Node
+
+请求一份当前 Mounted Tree 快照，选择声明式节点，再使用 `Highlight node` 或 `Clear highlight`。
+选中节点真实 Android View 的裁剪后边界最长显示五秒。
 
 Token 不透明、只在当前进程和快照内有效，不包含应用 Key。新快照、节点替换、View 被另一逻辑 Owner
 复用、Session 释放或进程重启都会使其失效。响应会区分 Selected、Partially Clipped、Missing、
@@ -102,12 +114,10 @@ Bounds 同时提供屏幕坐标和全局可见裁剪矩形。
 Overlay 不可交互，不能触发重组、应用 Callback、Focus 或 Accessibility Focus 变化，不拦截输入，
 也不修改布局。`Diagnostics → Renderer` 页面提供唯一 AndroidView 目标与替换动作，便于确定性人工验收。
 
-## 8. 有限逐节点耗时
+### 有限逐节点耗时
 
-通过 `debugImplementation` 引入 `viewcompose-preview`，让可调试应用保持前台，然后选择
-**Tools → Inspect Device Node Timing**。Studio 会选择一个关联后的可见 Session，启动一次显式采样，
-并等待开发者触发待排查的交互。`Diagnostics → Renderer` 页面提供 **Run 8-frame timing workload**；
-可见计数器会从 `0/8` 推进到 `8/8`，人工验收无需依赖不可见的状态变化。
+在所选 Session 中使用 `Capture timing`，再触发待排查的交互。`Diagnostics → Renderer` 页面提供
+`Run 8-frame timing workload`；可见计数器会从 `0/8` 推进到 `8/8`，人工验收无需依赖不可见状态变化。
 
 每次采集最多经过八次已完成 Frame Attempt 或两秒单调时间后自动停止。它只记录实际执行的组合
 Scope、Renderer Reconciliation 与直接 Native Binding。组合和 Reconciliation 同时报告 Inclusive
@@ -124,16 +134,16 @@ GPU、RenderThread、SurfaceFlinger、图片解码、网络、数据库和外部
 报告写入、轮询与持续观察都为零。耗时结果是诊断证据，不是 Frame-time Benchmark；插桩开销和有限
 样本量都会作为显式限制保留。
 
-## 9. Demo 检查器
+## 8. Demo 检查器
 
 `Diagnostics -> 渲染器` 提供 Render Tree、Patch 时间线、重组原因、CompositionLocal 浏览器与
 聚合指标、Mounted-node 高亮 Fixture 与显式八帧耗时工作负载。跨 Session 关联、生产聚合、真实
-View 边界高亮和有限逐节点耗时已经实现；最终 Inspector 与性能收尾仍由有效的
+View 边界高亮、有限逐节点耗时与关联 Studio Inspector 已经实现；性能与发布收尾仍由有效的
 [诊断关联、检查与生产可观测性计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)负责。
 
-## 10. 剩余扩展契约
+## 9. 剩余扩展契约
 
 [ADR-0021](https://docs.viewcompose.com/architecture/decisions/0021-correlated-render-diagnostics-ownership)
 冻结 Phase 1；只关心 Failure 的 Sink 不激活 Frame 明细。可选 `viewcompose-diagnostics`
-现已负责生产聚合，`viewcompose-preview` 已交付按请求高亮与有限耗时。有效计划负责 Inspector、
-性能、设备矩阵与发布收尾。
+现已负责生产聚合，`viewcompose-preview` 已交付按请求工作的关联 Inspector、高亮与有限耗时。
+有效计划现在只负责性能、设备矩阵与发布收尾。

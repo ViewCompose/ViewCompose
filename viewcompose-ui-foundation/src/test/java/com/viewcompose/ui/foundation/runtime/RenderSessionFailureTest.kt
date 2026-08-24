@@ -1008,6 +1008,7 @@ class RenderSessionFailureTest {
     @Test
     fun `source tooling follows a successfully rendered session lifecycle`() {
         val events = mutableListOf<String>()
+        var capturedDiagnostics: RenderSessionDiagnosticInspection? = null
         NoOpRenderSessionDiagnostics.inspectionTooling = object : RenderSessionInspectionTooling {
             override fun inspectionPolicy(
                 container: RenderContainerHandle,
@@ -1020,11 +1021,13 @@ class RenderSessionFailureTest {
                 context: RenderDiagnosticContext,
                 sourceCandidates: List<List<UiSourceCallSite>>,
                 nodeInspection: RenderSessionNodeInspection,
+                diagnosticInspection: RenderSessionDiagnosticInspection,
                 timingInspection: RenderSessionTimingInspection,
             ): RenderSessionInspectionRegistration {
                 assertTrue(sourceCandidates.isNotEmpty())
                 assertTrue(sourceCandidates.all(List<UiSourceCallSite>::isNotEmpty))
                 assertFalse(nodeInspection.snapshot().ended)
+                capturedDiagnostics = diagnosticInspection
                 events += "registered"
                 return object : RenderSessionInspectionRegistration {
                     override fun setRenderingActive(active: Boolean) {
@@ -1042,10 +1045,66 @@ class RenderSessionFailureTest {
         }
 
         session.render()
+        val rendered = checkNotNull(capturedDiagnostics).snapshot()
+        assertEquals(RenderFrameStatus.Committed, rendered.latestFrame?.status)
+        assertEquals(rendered.committedFrameId, rendered.latestFrame?.frameId)
+        assertFalse(rendered.ended)
         session.setRenderingActive(false)
         session.dispose()
 
         assertEquals(listOf("registered", "active=false", "disposed"), events)
+        assertTrue(checkNotNull(capturedDiagnostics).snapshot().ended)
+    }
+
+    @Test
+    fun `diagnostic inspection bounds failures and omits application details`() {
+        lateinit var capturedDiagnostics: RenderSessionDiagnosticInspection
+        NoOpRenderSessionDiagnostics.inspectionTooling = object : RenderSessionInspectionTooling {
+            override fun inspectionPolicy(
+                container: RenderContainerHandle,
+                context: RenderDiagnosticContext,
+            ): RenderSessionInspectionPolicy = RenderSessionInspectionPolicy.TrackSession
+
+            override fun register(
+                container: RenderContainerHandle,
+                context: RenderDiagnosticContext,
+                sourceCandidates: List<List<UiSourceCallSite>>,
+                nodeInspection: RenderSessionNodeInspection,
+                diagnosticInspection: RenderSessionDiagnosticInspection,
+                timingInspection: RenderSessionTimingInspection,
+            ): RenderSessionInspectionRegistration? {
+                capturedDiagnostics = diagnosticInspection
+                return null
+            }
+        }
+        engine.renderBlock = { previous, _ ->
+            CoreRenderFrame(
+                mountedNodes = previous,
+                commitFailures = List(20) { index ->
+                    CoreRenderCommitFailure(
+                        operation = RenderFailureOperation.AndroidViewUpdate,
+                        nodeKey = "private-key-$index",
+                        cause = IllegalStateException("private-message-$index"),
+                    )
+                },
+            )
+        }
+        session = createSession(failures = mutableListOf())
+
+        session.render()
+
+        val snapshot = capturedDiagnostics.snapshot()
+        val frame = checkNotNull(snapshot.latestFrame)
+        assertEquals(RenderFrameStatus.Committed, frame.status)
+        assertEquals(16, frame.failures.size)
+        assertEquals(4, frame.droppedFailures)
+        assertEquals(
+            IllegalStateException::class.java.name,
+            checkNotNull(snapshot.latestFailure).exceptionType,
+        )
+        assertEquals(RenderFailureOperation.AndroidViewUpdate, snapshot.latestFailure?.operation)
+        assertFalse(snapshot.toString().contains("private-key"))
+        assertFalse(snapshot.toString().contains("private-message"))
     }
 
     @Test
@@ -1066,6 +1125,7 @@ class RenderSessionFailureTest {
                 context: RenderDiagnosticContext,
                 sourceCandidates: List<List<UiSourceCallSite>>,
                 nodeInspection: RenderSessionNodeInspection,
+                diagnosticInspection: RenderSessionDiagnosticInspection,
                 timingInspection: RenderSessionTimingInspection,
             ): RenderSessionInspectionRegistration? {
                 registrationCalls += 1
@@ -1101,6 +1161,7 @@ class RenderSessionFailureTest {
                 context: RenderDiagnosticContext,
                 sourceCandidates: List<List<UiSourceCallSite>>,
                 nodeInspection: RenderSessionNodeInspection,
+                diagnosticInspection: RenderSessionDiagnosticInspection,
                 timingInspection: RenderSessionTimingInspection,
             ): RenderSessionInspectionRegistration? {
                 assertTrue(sourceCandidates.isEmpty())

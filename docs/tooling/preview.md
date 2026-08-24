@@ -168,82 +168,61 @@ This bridge entry is covered by the compiled `viewcompose-preview` API sample. T
 `UiThemeDefaults` and Compose Preview lifecycle semantics. Choose the native static runner when
 production-theme fidelity or the ViewCompose diagnostic pipeline matters.
 
-## Locate a running device DSL
+## Inspect running-device diagnostics
 
-The `ViewCompose Preview` Android Studio plugin also provides a separate **Locate Device DSL**
-toolbar action and Tools-menu entry; it does not share the preview tool-window icon. To open the DSL
-for the page currently visible on a device:
+The Android Studio plugin exposes one **Inspect Device Diagnostics** toolbar and Tools-menu action.
+The alpha line hard-removes the former Locate, Highlight, Clear, and Timing actions: selecting a
+device and Session once now keeps source navigation, the latest correlated frame and failure,
+mounted-node highlighting, and finite timing in one inspector.
 
-1. Add `viewcompose-preview` with `debugImplementation`, then install and open that debuggable
-   application build.
-2. Navigate to the ViewCompose page on the device.
-3. Choose **Locate Device DSL** in Android Studio.
+1. Add `viewcompose-preview` with `debugImplementation`, then install and foreground that debuggable
+   build.
+2. Navigate to the ViewCompose page under investigation.
+3. Choose **Inspect Device Diagnostics**. If several devices are online, choose one by device kind,
+   Android version, and serial number.
+4. Select a Session in the parent/child tree. The summary distinguishes active, invisible,
+   inactive, and ended lifetimes; shows the latest committed frame separately from a later rolled
+   back attempt; and correlates the latest safe failure phase, recovery, exception type, and Android
+   View operation.
+5. Use **Session sources** to open the selected owner, **Mounted nodes** to load, navigate, highlight,
+   or clear real View boundaries, and **Finite timing** to capture and navigate additive top-cost
+   records without choosing the device or Session again.
 
-One online device is used directly. When multiple phones or emulators are connected, the plugin
-first shows a device chooser with device kind, Android version, and serial number. When a window
-contains multiple equally visible deepest ViewCompose sessions, such as a two-pane layout, a
-second chooser lists the candidate source locations.
-
-The action finds the foreground package, creates a one-use nonce, and sends an explicit ADB request
-to the `viewcompose-preview` debug receiver. The process samples current session visibility once and
-writes one private response; the IDE accepts it only when the nonce, package, and live process all
-match. Scroll and layout never refresh the response. Bounded JVM source candidates are then resolved
-against the current project. When shared scaffolds emit toolbar or container nodes before their
-content, candidates that reappear as outer callers are removed so navigation prefers the content
-DSL. Independent remaining content sources are shown in the source chooser.
-
-The receiver requires Android's `DUMP` permission held by ADB shell, and the process independently
-verifies that the application is debuggable. The action does not use the preview panel, external
-storage, a network service, continuous View listeners, or source-text transfer. Non-debuggable
-builds reject requests. If no response is available, keep the intended app in the foreground and
-verify that its debug build includes the current `viewcompose-preview` artifact.
-
-## Highlight a running device node
-
-Choose **Tools → Highlight Device DSL Node** with the same debuggable application in the foreground.
-After device and visible-Session selection, Studio requests one current mounted-tree snapshot and
-lists declarative node types in depth-first order. The Diagnostics → Renderer Demo fixture exposes a
-unique `AndroidView` target for deterministic acceptance. **Tools → Clear Device DSL Highlight**
-removes the current overlay immediately.
+The inspector refreshes only on an explicit command. Each request finds the foreground package,
+creates a one-use nonce, and reads one private response only when nonce, operation, package, and live
+process all match. Protocol v7 hard-rejects older reports. The correlated snapshot reads state that
+the Session already retains; it installs no event history or recurring callback. It exposes no raw
+exception, message, cause, stack, application key, View text, semantics, State, Local value, URL,
+credential, or arbitrary `toString()` output. Exception output is limited to a 256-character binary
+class name.
 
 Host, navigation, and pager sessions may carry bounded source candidates. Lazy-item, overlay, and
-preview sessions are also selectable, but their passive registration captures no source stack; this
-keeps a target inside a virtualized child session reachable without adding high-churn composition
-work.
+preview sessions remain visible in the tree without composition-time source-stack capture. Source
+navigation resolves bounded metadata against the current project. A missing source remains explicit
+rather than falling through to another Session.
 
-The node request visits at most 2,048 mounted nodes, returns 512 to depth 64, and assigns fresh
-opaque process-local tokens. It exposes no application key, View text, semantics, state, Local
-value, or arbitrary `toString()` output. Selecting a token resolves a weak current View, returns its
-screen and globally visible clipped bounds, and installs one non-interactive process-wide overlay
-for at most five seconds. Replacement, View detach, Session disposal, explicit clear, and timeout
-remove it.
+A node request visits at most 2,048 mounted nodes, returns 512 to depth 64, and assigns fresh opaque
+process-local tokens. Highlighting resolves a weak current View, reports full and clipped-visible
+screen bounds, and installs one non-interactive overlay for at most five seconds. Replacement,
+detach, Session disposal, explicit clear, and timeout remove it. Stale, recycled, hidden, fully
+clipped, synthetic/unsupported, ended, and rejected states fail closed without changing layout,
+focus, accessibility focus, input, or application state.
 
-Studio reports stale, recycled, hidden, fully clipped, synthetic/unsupported, ended-session, and
-rejected selections instead of guessing another View. The overlay cannot recompose, call
-application code, change focus or accessibility focus, intercept input, or alter layout. Protocol
-v6 validates the source, nodes, select, clear, and timing operations independently with the nonce,
-foreground package, and live process; older reports are intentionally rejected.
+Timing prompts for a workload and stops after at most eight completed frame attempts or two seconds.
+Composition and reconciliation distinguish inclusive from self time; binding is direct. Studio
+ranks only self/direct records as additive top costs, reports clock-read overhead, drops,
+truncation, unsupported domains, and terminal reason, and lets a selected record open its source.
+The result is capped at 64 timed nodes per frame, 512 records, depth 32, 128 bounded strings, and
+256 KiB. It does not measure Android measure/layout/draw, GPU, RenderThread, SurfaceFlinger,
+decoding, network, database, or external-SDK work. Without a request, there is no mounted-tree
+traversal, report write, polling, recurring observer, per-node clock read, or timing-record
+allocation.
 
-## Inspect running-device node timing
-
-Choose **Tools → Inspect Device Node Timing** with the debuggable application in the foreground.
-After device and visible-Session selection, Studio prompts you to trigger the workload within two
-seconds. On the Demo Diagnostics → Renderer page, tap **Run 8-frame timing workload**. Its visible
-counter reaches `8/8`, while the requested capture stops automatically after at most eight completed
-frame attempts or two seconds.
-
-The report contains executed composition-scope, reconciliation, and direct-binding aggregates.
-Composition and reconciliation distinguish inclusive from self time; binding is direct time. Studio
-ranks self/direct records so nested inclusive totals are not added twice. Node tokens are opaque and
-capture-scoped, and source hints reuse already bounded composition metadata rather than taking a
-stack trace while timing.
-
-One process accepts only one active capture. A result reports clock-read counts, an empty-pair
-overhead estimate, drops, truncation, unsupported domains, and its terminal reason. It is capped at
-64 timed nodes per frame, 512 records, depth 32, 128 bounded strings, and 256 KiB. The feature does
-not measure Android measure/layout/draw, GPU, RenderThread, SurfaceFlinger, decoding, network,
-database, or external-SDK work. With no request, it installs no recurring observer and performs zero
-per-node clock reads or timing-record allocation.
+The receiver requires Android's `DUMP` permission held by ADB shell and independently verifies the
+debuggable process. If no report appears, keep the intended app foregrounded and verify the current
+`viewcompose-preview` artifact is present. The Diagnostics → Renderer Demo route provides stable
+automation tags for refresh, mounted-node replacement/highlighting, and the visible `0/8` to `8/8`
+timing workload.
 
 ## Inspect a running animation timeline
 

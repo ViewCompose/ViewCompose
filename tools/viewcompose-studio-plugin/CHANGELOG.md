@@ -4,8 +4,13 @@
 
 ### Added
 
-- Add **Inspect Device Node Timing** as an explicit finite capture for one active correlated render
-  session, with an eight-frame/two-second bound and a top-cost summary.
+- Add one **Inspect Device Diagnostics** panel for the correlated Session parent tree, latest
+  committed/attempted frame, privacy-safe failure, source navigation, mounted nodes, highlighting,
+  explicit clear, and finite top-cost timing.
+- Add stable `viewcompose.deviceDiagnostics.*` automation roles and deterministic Session-tree and
+  summary fixtures.
+- Add an explicit finite timing capture for one selected correlated render session, with an
+  eight-frame/two-second bound and source-aware top-cost records.
 - Distinguish composition inclusive/self time, reconciliation inclusive/self time, and direct
   binding time while reporting capture overhead, truncation, terminal reason, and unsupported
   domains.
@@ -13,6 +18,15 @@
   and a selected 500 ms capture from a connected debuggable application.
 - Show unequal channel durations, physical terminal conditions, interruption/retarget samples, and
   unsupported private values without enabling live remote seeking.
+
+### Changed
+
+- Hard-remove the separate **Locate Device DSL**, **Highlight Device DSL Node**, **Clear Device DSL
+  Highlight**, and **Inspect Device Node Timing** actions. Use **Inspect Device Diagnostics** and
+  select the device and Session once.
+- Upgrade the running-device protocol to v7. Older reports are intentionally rejected; v7 adds a
+  request-only latest-frame/failure summary that omits messages, stacks, keys, content, and raw
+  exceptions.
 
 ## 1.1.0 — 2026-08-20
 

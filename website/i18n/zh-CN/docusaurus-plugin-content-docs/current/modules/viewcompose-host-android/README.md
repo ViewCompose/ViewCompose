@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 429ccd52f7827d03fe782ab6237beeb5943fad167155b3e3eba2fb096d5ea820
+translation_source_hash: db7a775e950b81e3142ba7a11e73b6eda9594d6d7a0d3330333cd77dd981473c
 translation_status: current
 ---
 
@@ -157,5 +157,5 @@ Target 会直接失败，不会触发整树渲染。
 Backend，重复 Provider 属于配置错误。
 设备源码检查已移出本制品。Alpha `renderInto` 硬切用一个 `RenderDiagnostics` 配置替代三个
 Render Callback，并增加类型化 Role/Parent 集成输入；自定义平台可以继续使用默认 `null` 端口。
-需要 `Locate Device DSL` 的应用应在 Debug 配置中保留 `viewcompose-preview`，Release 构建不会
-携带定位实现。
+需要 `Inspect Device Diagnostics` 的应用应在 Debug 配置中保留 `viewcompose-preview`，Release 构建
+不会携带设备 Inspector 实现。

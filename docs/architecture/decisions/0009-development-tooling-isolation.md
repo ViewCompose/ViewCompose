@@ -141,7 +141,7 @@ The change is retained only when all of the following stay green:
    stale responses never satisfy a later nonce; and disposal releases weak session state.
 3. Android Studio plugin tests cover request command construction, response polling, timeout,
    process/package validation, protocol bounds, and multi-pane/deepest-session selection.
-4. the Demo debug APK retains **Locate Device DSL**, while the release APK contains neither the
-   request receiver nor locator service implementation.
+4. the Demo debug APK retains the request-driven **Inspect Device Diagnostics** capability, while
+   the release APK contains neither the request receiver nor inspector implementation.
 5. same-device debug measurements compare the affected home-list workload before and after the
-   change under the thresholds above, with zero locator writes during idle scrolling.
+   change under the thresholds above, with zero inspector writes during idle scrolling.

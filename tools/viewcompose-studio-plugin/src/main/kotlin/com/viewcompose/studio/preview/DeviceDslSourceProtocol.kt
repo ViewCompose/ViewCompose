@@ -7,7 +7,7 @@ import java.io.StringReader
 import java.nio.charset.StandardCharsets
 
 internal const val DEVICE_DSL_SOURCE_REPORT_PATH =
-    "cache/viewcompose/device-dsl-source-v6.json"
+    "cache/viewcompose/device-dsl-source-v7.json"
 internal const val DEVICE_DSL_SOURCE_REQUEST_ACTION =
     "com.viewcompose.preview.action.REQUEST_DEVICE_DSL_SOURCE"
 internal const val DEVICE_DSL_SOURCE_REQUEST_ID_EXTRA = "request_id"
@@ -15,7 +15,7 @@ internal const val DEVICE_DSL_SOURCE_REQUEST_OPERATION_EXTRA = "operation"
 internal const val DEVICE_DSL_SOURCE_REQUEST_SESSION_ID_EXTRA = "session_id"
 internal const val DEVICE_DSL_SOURCE_REQUEST_NODE_TOKEN_EXTRA = "node_token"
 internal const val DEVICE_DSL_TIMING_PHASES_EXTRA = "timing_phases"
-internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 6
+internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 7
 
 internal enum class StudioDeviceDslOperation(val wireValue: String) {
     Source("source"),
@@ -96,6 +96,68 @@ internal data class StudioDeviceDslTimingSnapshot(
     val result: StudioDeviceDslTimingResult?,
 )
 
+internal enum class StudioDeviceDslFrameStatus(val wireValue: String) {
+    Committed("committed"),
+    RolledBack("rolled_back"),
+}
+
+internal enum class StudioRenderFailurePhase(val wireValue: String) {
+    CompositionPrepare("composition_prepare"),
+    ObservedPropertyPrepare("observed_property_prepare"),
+    ObservedPropertyRender("observed_property_render"),
+    ObservedPropertyCommit("observed_property_commit"),
+    ViewTreeRender("view_tree_render"),
+    ViewTreeCommit("view_tree_commit"),
+    CompositionCommit("composition_commit"),
+    CompositionSideEffect("composition_side_effect"),
+    NativeViewCommit("native_view_commit"),
+    OverlayCommit("overlay_commit"),
+    DiagnosticsSink("diagnostics_sink"),
+    CompositionCoroutine("composition_coroutine"),
+    SessionDispose("session_dispose"),
+}
+
+internal enum class StudioRenderFailureRecovery(val wireValue: String) {
+    PreviousFrameRestored("previous_frame_restored"),
+    FrameCommitted("frame_committed"),
+    FrameUnchanged("frame_unchanged"),
+    SessionDisposed("session_disposed"),
+}
+
+internal enum class StudioRenderFailureOperation(val wireValue: String) {
+    AndroidViewFactory("android_view_factory"),
+    AndroidViewUpdate("android_view_update"),
+    AndroidViewReset("android_view_reset"),
+    AndroidViewCommit("android_view_commit"),
+    AndroidViewRelease("android_view_release"),
+}
+
+internal data class StudioDeviceDslFailure(
+    val frameId: Long?,
+    val phase: StudioRenderFailurePhase,
+    val recovery: StudioRenderFailureRecovery,
+    val operation: StudioRenderFailureOperation?,
+    val exceptionType: String,
+)
+
+internal data class StudioDeviceDslFrame(
+    val frameId: Long,
+    val status: StudioDeviceDslFrameStatus,
+    val failures: List<StudioDeviceDslFailure>,
+    val droppedFailures: Int,
+)
+
+internal data class StudioDeviceDslSessionDiagnostics(
+    val sessionId: Long,
+    val parentSessionId: Long?,
+    val role: StudioRenderSessionRole,
+    val renderingActive: Boolean,
+    val committedFrameId: Long?,
+    val latestFrame: StudioDeviceDslFrame?,
+    val latestFailure: StudioDeviceDslFailure?,
+    val ended: Boolean,
+)
+
 internal data class StudioDeviceDslSourceSession(
     val sessionId: Long,
     val parentSessionId: Long?,
@@ -106,6 +168,7 @@ internal data class StudioDeviceDslSourceSession(
     val hasWindowFocus: Boolean,
     val windowVisibility: Int,
     val viewDepth: Int,
+    val diagnostics: StudioDeviceDslSessionDiagnostics?,
     val sourceCandidates: List<List<StudioPreviewSourceCallSite>>,
     val nodes: List<StudioDeviceDslNode>,
     val nodeGeneration: Long,
@@ -179,16 +242,24 @@ internal fun parseDeviceDslSourceReport(json: String): StudioDeviceDslSourceRepo
         .take(MAX_REPORTED_SESSIONS)
         .map { element ->
             val session = element.requiredObject("session")
+            val sessionId = session.requiredLong("sessionId").also { require(it > 0L) }
+            val parentSessionId = session.optionalLong("parentSessionId")?.also {
+                require(it > 0L && it != sessionId)
+            }
+            val role = session.requiredRenderSessionRole("role")
+            val diagnostics = session.optionalObject("diagnostics")
+                ?.toDeviceDslSessionDiagnostics()
             StudioDeviceDslSourceSession(
-                sessionId = session.requiredLong("sessionId"),
-                parentSessionId = session.optionalLong("parentSessionId"),
-                role = session.requiredRenderSessionRole("role"),
+                sessionId = sessionId,
+                parentSessionId = parentSessionId,
+                role = role,
                 renderingActive = session.requiredBoolean("renderingActive"),
                 attachedToWindow = session.requiredBoolean("attachedToWindow"),
                 shown = session.requiredBoolean("shown"),
                 hasWindowFocus = session.requiredBoolean("hasWindowFocus"),
                 windowVisibility = session.requiredInt("windowVisibility"),
                 viewDepth = session.requiredInt("viewDepth").coerceAtLeast(0),
+                diagnostics = diagnostics,
                 sourceCandidates = session.optionalArray("sourceCandidates")
                     .take(MAX_SOURCE_CANDIDATES)
                     .map { candidateElement ->
@@ -217,7 +288,18 @@ internal fun parseDeviceDslSourceReport(json: String): StudioDeviceDslSourceRepo
                 visitedNodes = session.requiredInt("visitedNodes").coerceAtLeast(0),
                 droppedNodes = session.requiredInt("droppedNodes").coerceAtLeast(0),
                 nodesTruncated = session.requiredBoolean("nodesTruncated"),
-            )
+            ).also {
+                require(
+                    diagnostics == null ||
+                        (
+                            diagnostics.sessionId == sessionId &&
+                                diagnostics.parentSessionId == parentSessionId &&
+                                diagnostics.role == role
+                            )
+                ) {
+                    "Device DSL diagnostics identity does not match its session envelope."
+                }
+            }
         }
     return StudioDeviceDslSourceReport(
         requestId = root.requiredRequestId("requestId"),
@@ -234,6 +316,79 @@ internal fun parseDeviceDslSourceReport(json: String): StudioDeviceDslSourceRepo
             "Device DSL source report timestamp must be positive."
         }
     }
+}
+
+private fun JsonObject.toDeviceDslSessionDiagnostics(): StudioDeviceDslSessionDiagnostics {
+    val latestFrame = optionalObject("latestFrame")?.let { frame ->
+        val statusValue = frame.requiredBoundedString("status")
+        val status = StudioDeviceDslFrameStatus.entries.firstOrNull { candidate ->
+            candidate.wireValue == statusValue
+        } ?: throw IllegalArgumentException("Unknown device DSL frame status '$statusValue'.")
+        StudioDeviceDslFrame(
+            frameId = frame.requiredLong("frameId").also { require(it > 0L) },
+            status = status,
+            failures = frame.optionalArray("failures")
+                .take(MAX_FRAME_FAILURES)
+                .map { failure -> failure.requiredObject("frame failure").toDeviceDslFailure() },
+            droppedFailures = frame.requiredInt("droppedFailures").coerceAtLeast(0),
+        )
+    }
+    return StudioDeviceDslSessionDiagnostics(
+        sessionId = requiredLong("sessionId").also { require(it > 0L) },
+        parentSessionId = optionalLong("parentSessionId"),
+        role = requiredRenderSessionRole("role"),
+        renderingActive = requiredBoolean("renderingActive"),
+        committedFrameId = optionalLong("committedFrameId")?.also { require(it > 0L) },
+        latestFrame = latestFrame,
+        latestFailure = optionalObject("latestFailure")?.toDeviceDslFailure(),
+        ended = requiredBoolean("ended"),
+    )
+}
+
+private fun JsonObject.toDeviceDslFailure(): StudioDeviceDslFailure {
+    return StudioDeviceDslFailure(
+        frameId = optionalLong("frameId")?.also { require(it > 0L) },
+        phase = requiredWireEnum(
+            "phase",
+            StudioRenderFailurePhase.entries,
+            StudioRenderFailurePhase::wireValue,
+        ),
+        recovery = requiredWireEnum(
+            "recovery",
+            StudioRenderFailureRecovery.entries,
+            StudioRenderFailureRecovery::wireValue,
+        ),
+        operation = optionalWireEnum(
+            "operation",
+            StudioRenderFailureOperation.entries,
+            StudioRenderFailureOperation::wireValue,
+        ),
+        exceptionType = requiredBoundedString("exceptionType").also { type ->
+            require(type.length <= MAX_DIAGNOSTIC_STRING_LENGTH) {
+                "Device DSL exception type exceeds $MAX_DIAGNOSTIC_STRING_LENGTH characters."
+            }
+        },
+    )
+}
+
+private fun <T> JsonObject.requiredWireEnum(
+    name: String,
+    values: Iterable<T>,
+    toWireValue: (T) -> String,
+): T {
+    val wireValue = requiredBoundedString(name)
+    return values.firstOrNull { value -> toWireValue(value) == wireValue }
+        ?: throw IllegalArgumentException("Unknown device DSL $name '$wireValue'.")
+}
+
+private fun <T> JsonObject.optionalWireEnum(
+    name: String,
+    values: Iterable<T>,
+    toWireValue: (T) -> String,
+): T? {
+    val wireValue = optionalBoundedString(name) ?: return null
+    return values.firstOrNull { value -> toWireValue(value) == wireValue }
+        ?: throw IllegalArgumentException("Unknown device DSL $name '$wireValue'.")
 }
 
 private fun JsonObject.requiredRequestId(name: String): String {
@@ -552,3 +707,5 @@ private const val MAX_TIMING_DEPTH = 32
 private const val MAX_TIMING_FRAMES = 8
 private const val MAX_TIMING_RECORDS = 512
 private const val MAX_UNSUPPORTED_DOMAINS = 16
+private const val MAX_FRAME_FAILURES = 16
+private const val MAX_DIAGNOSTIC_STRING_LENGTH = 256

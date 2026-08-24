@@ -258,7 +258,6 @@ internal enum class DeviceDslLocateFailureReason {
     ReportUnavailable,
     StaleReport,
     NoVisibleDsl,
-    SourceMissing,
     NoInspectableNode,
     HighlightRejected,
     TimingRejected,
