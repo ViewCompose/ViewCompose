@@ -49,6 +49,7 @@ import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
+import com.viewcompose.ui.node.asLazyItemTable
 import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.node.VNode
@@ -1661,14 +1662,14 @@ class ViewTreeRenderTransactionTest {
                 NodeType.LazyColumn -> LazyColumnNodeProps(
                     contentPadding = contentPadding,
                     spacing = 0.dp,
-                    items = emptyList(),
+                    items = emptyList<LazyListItem>().asLazyItemTable(),
                 )
                 NodeType.LazyVerticalGrid -> LazyVerticalGridNodeProps(
                     cells = com.viewcompose.ui.node.policy.GridCells.Fixed(2),
                     contentPadding = contentPadding,
                     horizontalSpacing = 0.dp,
                     verticalSpacing = 0.dp,
-                    items = emptyList(),
+                    items = emptyList<LazyListItem>().asLazyItemTable(),
                     state = null,
                 )
                 else -> error("Unsupported lazy collection node type: $nodeType")
@@ -1703,7 +1704,7 @@ class ViewTreeRenderTransactionTest {
                             },
                         ),
                     ),
-                ),
+                ).asLazyItemTable(),
             ),
         )
     }

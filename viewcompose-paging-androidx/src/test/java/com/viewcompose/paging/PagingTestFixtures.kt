@@ -23,12 +23,14 @@ internal class ControlledSourceFactory {
         placeholders: Boolean = false,
         prefetchDistance: Int = 1,
         initialKey: Int? = null,
+        maxSize: Int = PagingConfig.MAX_SIZE_UNBOUNDED,
     ): Pager<Int, Int> = Pager(
         config = PagingConfig(
             pageSize = 2,
             prefetchDistance = prefetchDistance,
             enablePlaceholders = placeholders,
             initialLoadSize = 2,
+            maxSize = maxSize,
         ),
         initialKey = initialKey,
         pagingSourceFactory = {

@@ -24,6 +24,7 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionStrategy
+import com.viewcompose.ui.node.asLazyItemTable
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.UiImageLoadHandle
@@ -182,6 +183,35 @@ fun lazyListItemSessionUpdateSample() {
     session.render()
     check(session.installedLabel == "Updated")
     check(session.renderCount == 1)
+}
+
+/** Wraps an immutable finite submission with validated key and sticky-header lookup metadata. */
+fun lazyItemTableSample() {
+    val strategy = object : LazyListItemSessionStrategy {
+        override fun create(
+            container: RenderContainerHandle,
+            item: LazyListItem,
+        ): LazyListItemSession = object : LazyListItemSession {
+            override fun render(): Boolean = true
+            override fun dispose() = Unit
+        }
+
+        override fun update(
+            session: LazyListItemSession,
+            item: LazyListItem,
+        ) = Unit
+    }
+    val table = listOf(
+        LazyListItem(
+            key = "status",
+            contentRevision = 3,
+            sessionStrategy = strategy,
+        ),
+    ).asLazyItemTable()
+
+    check(table.size == 1)
+    check(table.indexOfKey("status") == 0)
+    check(table[0].contentRevision == 3)
 }
 
 fun collectionPolicySample() {

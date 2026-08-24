@@ -1,6 +1,6 @@
 package com.viewcompose.ui.node.spec
 
-import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.LazyItemTable
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
 import com.viewcompose.ui.node.policy.LazyContentPadding
@@ -24,7 +24,7 @@ import com.viewcompose.ui.unit.UiDp
 data class LazyRowNodeProps(
     val contentPadding: LazyContentPadding,
     val spacing: UiDp,
-    val items: List<LazyListItem>,
+    val items: LazyItemTable,
     val state: LazyListState? = null,
     val reverseLayout: Boolean = false,
     val userScrollEnabled: Boolean = true,

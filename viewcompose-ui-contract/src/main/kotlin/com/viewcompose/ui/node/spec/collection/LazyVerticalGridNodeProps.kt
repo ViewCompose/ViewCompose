@@ -1,6 +1,6 @@
 package com.viewcompose.ui.node.spec
 
-import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.LazyItemTable
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
 import com.viewcompose.ui.node.policy.GridCells
@@ -32,7 +32,7 @@ data class LazyVerticalGridNodeProps(
     val contentPadding: LazyContentPadding,
     val horizontalSpacing: UiDp,
     val verticalSpacing: UiDp,
-    val items: List<LazyListItem>,
+    val items: LazyItemTable,
     val state: LazyListState?,
     val reverseLayout: Boolean = false,
     val userScrollEnabled: Boolean = true,

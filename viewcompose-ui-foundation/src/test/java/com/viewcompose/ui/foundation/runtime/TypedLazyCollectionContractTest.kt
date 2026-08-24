@@ -523,7 +523,7 @@ class TypedLazyCollectionContractTest {
     }
 
     private fun VNode.lazyItems(): List<LazyListItem> {
-        return (spec as LazyColumnNodeProps).items
+        return (spec as LazyColumnNodeProps).items.toList()
     }
 
     private fun rows(revision: Int): List<Row> {

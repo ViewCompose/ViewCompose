@@ -23,6 +23,8 @@ fun UiTreeBuilder.pagingLazyColumnSample(pages: Flow<PagingData<PagingSampleRow>
         key = PagingSampleRow::id,
         contentType = { "paging-row" },
         contentRevision = PagingSampleRow::version,
+        placeholderContentRevision = "paging-placeholder-v1",
+        placeholderContent = { index -> Text("Loading row $index") },
     ) { row ->
         Text(row.label)
     }

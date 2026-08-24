@@ -127,6 +127,17 @@ created for the node.
   Boolean result from `activate` and `render` advances the semantic revision only after the
   installed content commits; rollback returns `false` and remains retryable. The compiled
   `lazyListItemSessionUpdateSample` demonstrates this lifecycle.
+- `LazyItemTable` is the Q3 ordered, indexed collection boundary used by lazy-list NodeSpecs. It
+  exposes count, positional item lookup, key-to-position lookup, and immutable updates from the
+  immediately preceding accepted table without prescribing AndroidX Paging or a renderer. Q2
+  `LazyItemTableUpdate` values describe bounded insert, remove, move, change, or full reload work;
+  a provider that declares an exact update owns its semantic correctness. Iteration and `toList()`
+  are full positional scans for compact sources; a finite wrapper returns its retained backing
+  list and preserves structural equality without copying. Q2
+  `LazyItemTableStickyHeaders` is optional metadata: a table that does not implement it promises
+  that all entries are ordinary items. `List<LazyListItem>.asLazyItemTable()` validates unique keys,
+  retains the finite list without copying its item models, and is the migration adapter for direct
+  NodeSpec construction. The compiled `lazyItemTableSample` demonstrates the contract.
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   and [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   define explicit renderer attachment boundaries for focus and nested scrolling.
@@ -324,6 +335,14 @@ commit-bound callbacks deferred and support disposal before activation.
 Changing `LazyListItemSession.activate` and `render` to return commit success completes that Q3
 hard cut. Custom implementations must return `false` for rolled-back attempts so equal submission
 revisions remain retryable; precompiled sessions and renderers must be rebuilt.
+
+Changing `LazyColumnNodeProps.items`, `LazyRowNodeProps.items`, and
+`LazyVerticalGridNodeProps.items` from `List<LazyListItem>` to Q3 `LazyItemTable` is an alpha hard
+cut. Direct source callers wrap finite models with `asLazyItemTable()`; Foundation collection DSL
+callers need no source change. Precompiled NodeSpec producers and custom renderers must rebuild.
+Custom compact providers must return unique stable keys, exact `indexOfKey` results, structurally
+valid updates, and immutable snapshots; returning `null` from `updatesFrom` requests the renderer's
+finite compatibility diff, while `ReloadAll` remains the explicit conservative fallback.
 
 Adding `ButtonNodeProps.visualHeight` is a Q2 immutable snapshot-contract change. The source default
 equals `minHeight`, but precompiled constructor call sites and custom renderers must be rebuilt for

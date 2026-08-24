@@ -297,9 +297,11 @@ Because the current line is alpha, the documentation site intentionally does not
   stable and unique among siblings.
 - An unkeyed child reuses only the previous payload at the same index and type. Reordering unkeyed
   stateful content is therefore a semantic replacement, not a move.
-- Lazy-list precision additionally requires every item to have a unique non-null key. Missing or
-  duplicate keys produce `ReloadAll` to protect RecyclerView holder state.
-- The lazy adapter classifies each accepted snapshot before notifying RecyclerView. Equal key order
+- Lazy-list precision requires every item to have a unique non-null key. A duplicate key or invalid
+  table update rejects the candidate before publication and leaves the installed adapter snapshot
+  unchanged.
+- The lazy adapter consumes a table's validated direct range updates before notifying RecyclerView.
+  A finite table that returns no direct update uses the compatibility path: equal key order
   batches adjacent native changes without running `DiffUtil`; a same-size cyclic permutation emits
   the smaller left/right sequence of moves; other structural changes retain AndroidX diffing.
   Logical item Sessions still consume changed revisions synchronously. When item animations are
@@ -326,13 +328,22 @@ Because the current line is alpha, the documentation site intentionally does not
   detached holder stages a newer submission and renders it on reattach. Missing or duplicate keys
   use the conservative reload path; the renderer never resolves an ambiguous holder through
   first-match key lookup.
-- The lazy adapter builds one unique-key position index per accepted submission. Attached and
-  reattached holders therefore resolve stable keys without scanning the item list. A payload bind
+- Publishing a new item table immediately terminates every detached cached holder whose key was
+  removed or whose kind/content type became physically incompatible. The holder leaves registry
+  ownership before disposal, so a later RecyclerView recycle cannot dispose the same logical
+  Session twice. This makes page-drop ownership independent of whether the old item happens to be
+  attached when the update commits; retained keys with compatible physical structure continue to
+  stage revisions until reattachment.
+- The lazy adapter delegates unique-key position lookup to the accepted `LazyItemTable`. Attached
+  and reattached holders therefore resolve stable keys without scanning the item table. A payload bind
   may skip Session routing only when the holder has committed the exact item-snapshot instance at
   the exact submission revision; revision equality alone is not sufficient. This acknowledgement
   rule prevents queued RecyclerView notifications from treating an older logical commit as current.
-- The same collision-safe submission table owns primitive positions and renderer-assigned stable
-  IDs, avoiding overlapping boxed key maps. A compact registry preserves view-type identity for the
+- Renderer-assigned stable IDs are collision-safe and allocated lazily only for keys actually
+  queried by RecyclerView; stale queried keys are released when the next table no longer contains
+  them. The renderer does not enumerate a compact table to prebuild key or stable-ID arrays.
+  Optional sticky-header metadata similarly avoids scanning a compact table; a table without that
+  metadata promises no sticky entries. A compact registry preserves view-type identity for the
   mounted adapter lifetime without `Pair` keys or boxed IDs. Because `contentType` is a finite
   physical-compatibility taxonomy, one mounted container accepts at most 1,024 distinct
   kind/type combinations and rejects a larger history before it can grow without bound.
@@ -542,6 +553,12 @@ disposal, deliver pager callbacks only after idle settlement, honor `userScrollE
 slider interaction phases and steps, preserve descendant input when refresh is disabled, and map
 the new keyed selection-item semantics. The grid policy and layout-constraint host also require a
 registry and measurement upgrade; treating them as optional hints is incorrect.
+
+The Q3 `LazyItemTable` hard cut changes the lazy NodeSpec binary contract. Renderer forks must
+consume indexed lookup, reject invalid declared operations atomically, preserve stable IDs without
+assuming application-key hashes, and avoid full enumeration when a compact table supplies direct
+updates. Finite tables may still request the generic diff path. A second adapter, Paging-specific
+diff owner, or full positional placeholder array would violate renderer ownership.
 
 The animation Phase 1 alpha adds an implementation dependency on `viewcompose-animation-core` and
 hard-cuts the animated-size transport to finite specifications. Custom renderer forks must consume

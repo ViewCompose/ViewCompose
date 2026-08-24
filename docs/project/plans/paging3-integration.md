@@ -2,7 +2,8 @@
 
 ## Status
 
-Active. Phases 0 through 2 completed on 2026-08-25. This plan is the only active owner of Paging 3
+Active. Phases 0 through 3 completed on 2026-08-25; Phase 4 is next. This
+plan is the only active owner of Paging 3
 delivery after the optional roadmap item and the Lazy Collections non-goal were redirected here on
 2026-08-18. Historical archives retain only evidence.
 
@@ -13,10 +14,10 @@ durable shipped contracts move to their owning active public documentation befor
 
 Last verified: 2026-08-25.
 
-Next action: Phase 3 hard-cuts the neutral lazy-item boundary to the compact indexed table, then
-adds positional placeholders and page-drop handling. It must preserve the Phase 2 lifecycle,
-coherence, stable-key Session, and sole-renderer ownership contracts while proving bounded work and
-prompt release for dropped pages.
+Next action: begin Phase 4 load-state composition with explicit refresh, append, prepend, source,
+and mediator UI contracts. Phase 3 hard-cut the neutral boundary to the compact table and now has
+complete same-build bounded-work, memory, dropped-session, Pixel physical-device, API,
+documentation, publication, and consumer evidence.
 
 ## Maven release changesets
 
@@ -24,6 +25,11 @@ prompt release for dropped pages.
   explicitly release-neutral; no Maven artifact changes.
 - `release/changes/20260825-paging-non-placeholder.json` — introduces the optional published
   non-placeholder frontend and explicitly classifies its shared registration inputs.
+- `release/changes/20260825-paging-placeholder-compact-table.json` — hard-cuts the neutral lazy
+  collection contract to an indexed table and records the placeholder/page-drop frontend plus
+  renderer update support.
+- `release/changes/20260825-paging-placeholder-compact-table.json` — classifies the Q3 table hard
+  cut, Foundation compact factory, Renderer update path, and Paging placeholder/drop frontend.
 
 ## Objective and ownership
 
@@ -166,11 +172,17 @@ drops therefore require this Q3 compact snapshot and Q2 immutable updates in
 `viewcompose-ui-contract`:
 
 ```kotlin
-interface LazyItemTable {
+interface LazyItemTable : Iterable<LazyListItem> {
     val size: Int
     operator fun get(index: Int): LazyListItem
+    fun toList(): List<LazyListItem>
     fun indexOfKey(key: Any): Int
     fun updatesFrom(previous: LazyItemTable): List<LazyItemTableUpdate>?
+}
+
+interface LazyItemTableStickyHeaders {
+    val hasStickyHeaders: Boolean
+    fun findStickyHeaderIndex(itemIndex: Int): Int
 }
 
 sealed interface LazyItemTableUpdate {
@@ -189,6 +201,11 @@ and non-triggering; invalid indices fail, missing keys return `-1`, and duplicat
 publication. `updatesFrom` returns an exact ordered transform for a recognized committed
 predecessor, empty for semantic equality, or `null` for generic keyed fallback. Invalid operations,
 wrong predecessors, or a mismatched result roll back without changing the installed adapter.
+Iteration and `toList()` are full compatibility scans and not compact-source optimizations; the
+finite wrapper returns its retained backing list and keeps structural equality. Optional sticky
+metadata was added during implementation because the existing renderer otherwise had to scan every
+virtual position merely to prove that no sticky header existed; non-implementers therefore promise
+ordinary items only. This extension preserves the frozen Paging-neutral and sole-renderer boundary.
 
 Paging stores loaded metadata plus placeholder counts, never one object per placeholder, and maps
 accepted `PagingDataEvent` values to neutral range updates. Renderer remains the sole adapter,
@@ -222,15 +239,17 @@ host Compose collections, or give a Paging adapter ownership of the native list.
 
 ## Current baseline
 
-The optional `viewcompose-paging-androidx` module now publishes the official-presenter collector,
+The optional `viewcompose-paging-androidx` module publishes the official-presenter collector,
 three explicit lifecycle policies, coherent observable items/load states, retry/refresh delegation,
-and a non-placeholder `PagingLazyColumn` bridge with compiled Q3 usage. Existing finite lazy
+and two `PagingLazyColumn` overloads: one rejects unloaded slots and one requires explicit
+placeholder content, revision, and optional type. Existing finite lazy
 collections provide logical keys, revisions, item Sessions, saveable-state isolation, renderer
 reuse, transactional commit, visible indices, total count, scrolling, and scroll save/restore.
 Renderer prefetch prepares ViewCompose/native presentation only; it is not a remote or database
-loader. The shipped Phase 2 path is linear in loaded item count and deliberately rejects unloaded
-slots. Placeholder and page-drop support still requires the Phase 3 neutral compact-table hard cut;
-no Paging adapter, Demo, mediator helper, or physical-device performance claim exists yet.
+loader. The Phase 3 table stores metadata proportional to loaded items and calculates positional
+placeholders on demand. Accepted page events become neutral range updates, skipped revisions reload
+conservatively, and renderer inspection sends no load hint. No Paging adapter, Demo, mediator helper,
+or physical-device performance claim exists yet.
 
 ## Execution plan
 
@@ -239,7 +258,7 @@ no Paging adapter, Demo, mediator helper, or physical-device performance claim e
 | 0. Dependency and contract freeze | Complete | Paging 3.5.1 presenter path, artifact/package, lifecycle, overloads, LazyColumn-only scope, tests, and compact indexed-table prerequisite | Official API review and Kotlin 2.0.21 compile probes pass; full-table path is rejected with the Q3 replacement and breaking impact documented |
 | 1. Presenter characterization harness | Complete | Non-published JVM module with deterministic generations, insert/drop, placeholder, hint, load-state, retry, refresh, invalidation, and cancellation fixtures | Six tests pass without Android Renderer, Android runtime, device, or network; explicit main-context injection and coherent publication ordering are frozen |
 | 2. Non-placeholder LazyColumn slice | Complete | Optional module, observable items, stable-key bridge, latest generation, retry/refresh, and core Q3 sample | 12 deterministic tests, strict Q3 audit, local Maven consumers, complete API reconstruction, and the bilingual production site pass |
-| 3. Placeholder and page-drop slice | Not started | Neutral indexed hard cut, positional placeholders, jump/drop handling | Placeholder transitions isolate state; dropped pages release Sessions and memory; bounded-work evidence passes |
+| 3. Placeholder and page-drop slice | Complete | Neutral indexed hard cut, positional placeholders, jump/drop handling | Implementation, deterministic contract tests, release intent, local publication, consumers, dropped-session/memory evidence, Pixel bounded-work verification, and post-ownership-hard-cut full gates pass |
 | 4. Load-state composition | Not started | Refresh/append/prepend and source/mediator helpers plus empty/header/footer/error examples | Loaded content persists; retry and refresh differ; mediator detail remains visible |
 | 5. Lifecycle and mediated data | Not started | Frozen policies, `cachedIn` guidance, recreation, deterministic mediator fixture | Hidden/revealed navigation, cancellation, recreation, and source/mediator failure tests pass |
 | 6. Samples, Demo, and documentation | Not started | Demo, Q3 samples, catalog/manual, setup/architecture/testing/migration docs, mirrors, notices | Localization, sample, automation-role, dependency, and consumer gates pass |
@@ -316,6 +335,9 @@ work pending.
 | 2026-08-25 | CodeGraph plus Foundation/NodeSpec/Renderer review | Current path materializes every item and builds full key/diff tables. Phase 1 can test presenter events independently; Phase 3 implements the frozen neutral hard cut. |
 | 2026-08-25 | `integration-tests:paging-presenter`: Kotlin 2.0.21, Paging 3.5.1, coroutines-test 1.10.2 | 6/6 deterministic JVM tests passed in 2 s. Outside Android, the presenter needs an explicit main context. Its event hook saw new items with refresh still `Loading`; the later page listener saw the same items with final `NotLoading`. `peek` sent no request; repeated active `get` sent one load; retry reused its source; refresh/invalidation replaced generations; a superseded load was cancelled and never published; both drop directions restored placeholders. Conclusion: **improved** contract confidence, with no performance claim. Limitations: no Android lifecycle, renderer, mediator, device, network, or published frontend. Next: Phase 2 implements the non-placeholder frontend without changing this ordering. |
 | 2026-08-25 | Phase 2 module tests, API audit, publication consumers, API reconstruction, and production site | 12/12 deterministic Robolectric/JVM tests passed in 4 s, including generation replacement, lifecycle stop/start and release, duplicate keys, and index-safe stable-key moves. The strict Q3 audit passed in 18 s; selected local Maven publication plus all isolated consumers passed 1,022 tasks in 4 min 19 s; complete 100-version API reconstruction plus 6 unpublished-current trees passed in 7 min 23 s. The bilingual site audits 440 pages; its 48,942,128 non-API bytes are +190,471 (+0.391%) over the Phase 0 candidate, so the documented minimum ceiling moved from 46.5 to 46.7 MiB. Conclusion: **improved** correctness and release confidence, with a **mixed** site-size result and no runtime-performance claim. Limitations: placeholders, page drops, mediator UI, Demo, device, network, frame time, and memory were not exercised; neither connected phone was needed. Next: Phase 3 implements the compact neutral table and records bounded-work/drop evidence before claiming those behaviors. |
+| 2026-08-25 | Phase 3 compact-table implementation, direct module tests, strict API audit, and `qaQuick` | The UI Contract, UI Foundation, Android Renderer, and Paging modules passed 1,012/1,012 tests with zero failures, errors, or skips (81 + 391 + 524 + 16). Deterministic coverage includes positional placeholders, append and page drop, isolated loaded/placeholder identity, conservative declaration refresh, rejected duplicate keys and invalid neutral updates, a 1,000,000-position table update with zero full enumeration, typed payload/environment capture, and renderer rollback. The latest strict four-module Q3 audit passed in 18 s. `qaQuick` passed 2,324 tasks in 5 min 12 s, including documentation structure, release intent for four artifacts, Release build, local Maven publication, and isolated sample consumers. Conclusion: **improved** correctness, bounded-work confidence, API safety, and release confidence. Limitations: the million-position proof observes enumeration, not heap residency; active-holder disposal after a Paging page drop and Pixel frame/memory behavior are not yet measured; load-state composition, mediator UI, and Demo remain later phases. Next: record dropped-session and memory evidence, then run the bounded-work physical path on the network-capable Pixel. |
+| 2026-08-25 | Pixel 4 XL Android 13/API 33 compact-memory, page-drop, jump, and Session-ownership acceptance | Two debug-build instrumentation tests with a local deterministic source and 48 dp rows passed in 5.51 s. The 1,000,000-position presentation added 48,124 KiB PSS from the same launched-process baseline, jumped to position 999,999 in 555 ms, retained 81 loaded items under `maxSize = 96`, and released the initial Sessions. Sequential bounded scrolling ended at 96 loaded items and released the initial visible Sessions. The first ownership probe exposed detached RecyclerView holders retaining dropped keys; the renderer now removes such holders from registry ownership and disposes their logical Sessions synchronously, with unit proof against later double disposal. A zero-height-style fixture also demonstrated that an active viewport wider than `maxSize` can force AndroidX to oscillate; realistic fixed row geometry removed that invalid comparison condition. Conclusion: **improved** compact-memory, jump/drop correctness, and lifecycle confidence. Limitations: one device/API, debug build, local data, one geometry, no frame benchmark, RemoteMediator, network-error, load-state UI, or Demo evidence. Next: rerun all post-fix gates and close Phase 3 if they remain green. |
+| 2026-08-25 | Phase 3 post-ownership-hard-cut module, documentation, and `qaQuick` closeout | The four owning modules passed 1,015/1,015 tests with no failures, errors, or skips (81 UI Contract + 391 Foundation + 527 Renderer + 16 Paging). The strict four-module API documentation audit plus documentation structure, 118 canonical-English pages, and 115 current Chinese mirrors passed in 15 s. Final `qaQuick` passed 2,324 tasks in 2 min 9 s (295 executed, 2,029 up to date), including full tests, Release/Lint, release intent, development-tooling isolation, local Maven publication, and isolated consumers. Conclusion: **improved** Phase 3 correctness and release confidence with no remaining Phase 3 gate. Limitations from the Pixel row and later load-state, mediator, Demo, and broader performance work remain owned by Phases 4 through 7. Next: start Phase 4 load-state composition. |
 
 ## Decision history
 

@@ -554,7 +554,7 @@ class LazyItemsSnapshotContractTest {
     }
 
     private fun VNode.lazyItems(): List<LazyListItem> {
-        return (spec as LazyColumnNodeProps).items
+        return (spec as LazyColumnNodeProps).items.toList()
     }
 
     private fun rows(version: Int): List<Row> {

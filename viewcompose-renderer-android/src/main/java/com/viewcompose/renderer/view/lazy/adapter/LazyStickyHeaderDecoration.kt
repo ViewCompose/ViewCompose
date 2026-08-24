@@ -7,18 +7,14 @@ import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.R
-import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.LazyItemTable
 
 /**
- * Draws and dispatches pointer input to a sticky-header holder detached from RecyclerView children.
- * Draws and dispatches pointer input to a detached, session-backed header holder.
+ * Draws and dispatches pointer input to a detached, session-backed sticky-header holder.
  *
- * Keeps the pinned copy outside RecyclerView children to avoid conflicting with LayoutManager recycling.
- * Keeping the pinned copy outside RecyclerView's child set avoids fighting LayoutManager recycling.
- *
- * The in-list header remains the semantics and accessibility source; the pinned copy is only a visual and pointer surface.
- * The ordinary in-list header remains the semantic/accessibility source while this copy owns the
- * pinned visual and pointer surface.
+ * Keeping the pinned copy outside RecyclerView's child set avoids conflicting with LayoutManager
+ * recycling. The ordinary in-list header remains the semantics and accessibility source while the
+ * detached copy owns only the pinned visual and pointer surface.
  */
 internal class LazyStickyHeaderDecoration private constructor(
     private val recyclerView: RecyclerView,
@@ -199,7 +195,6 @@ internal class LazyStickyHeaderDecoration private constructor(
     private fun dispatchToHeader(event: MotionEvent) {
         val header = headerHolder?.itemView ?: return
         val transformed = MotionEvent.obtain(event)
-        // Convert RecyclerView coordinates to detached-header local coordinates before dispatch.
         // Convert RecyclerView coordinates into the detached header's local coordinates before dispatching.
         transformed.offsetLocation(
             -headerBounds.left.toFloat(),
@@ -213,7 +208,7 @@ internal class LazyStickyHeaderDecoration private constructor(
         fun submitItemsAndUpdate(
             recyclerView: RecyclerView,
             adapter: LazyListAdapter,
-            items: List<LazyListItem>,
+            items: LazyItemTable,
             submissionRevision: Long,
         ) {
             var failure: Throwable? = null

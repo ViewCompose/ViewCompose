@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: ab57052d58e020535725faefa5146b88a4d0bf6f68ea02ce7f13306c80fbe52b
+translation_source_hash: b357bbd9a6b6fd13b3f12a19c03ae11788cdaa7cc56a30ca5ac620645cbe14e6
 translation_status: current
 ---
 
@@ -185,8 +185,10 @@ LazyVerticalGrid(cells = GridCells.Adaptive(minSize = 120.dp)) {
 | mounted-tree 缓存大小 | 框架所有、有界、确定性 Release 的 Reset Tree 缓存 |
 | 布局状态 | scroll、layout 和 adapter observer 推送给 `LazyListState` |
 
-Android Adapter 使用一个可处理 Hash 冲突的紧凑 Key 表表示一次已接受提交，并由该表同时持有
-唯一 Position 与 Stable ID；不会为同一快照再保留第二份带装箱值的 Key Map。RecyclerView
+Android Adapter 接受 Q3 `LazyItemTable`：有限 Foundation Declaration 提供索引 Wrapper，紧凑
+集成可以按需计算位置并发布中立 Range Update。Stable ID 可处理冲突，并且只为已查询 Key 延迟
+分配，不会枚举整个 Table。Table 持有 Key 到位置查询；可选 Sticky Header 元数据可以避免完整
+扫描。无效声明操作或重复 Key 会原子拒绝候选。RecyclerView
 View Type 在 Mounted Container 的整个生命周期内保持稳定，包括某个 Type 暂时消失的情况。
 一个容器最多接受 1,024 种不同的 `kind`/`contentType` 兼容类别；超过上限会立即失败，而不是
 保留无界 Type 历史。模型值与 Revision 不属于 `contentType`。
@@ -250,9 +252,10 @@ Attach 或重排时按 Item Key 恢复。分离的 Pinned Header 副本是不拥
 
 Paging 3 的加载、失效与重试仍不进入核心集合契约。可选的
 [`viewcompose-paging-androidx`](https://docs.viewcompose.com/modules/viewcompose-paging-androidx/)
-产物现在已把官方 Presenter 适配为不启用 Placeholder 的 `PagingLazyColumn`，没有把 Paging 类型或
-加载策略移入 UI Foundation。Placeholder 与 Page Drop 支持仍依赖有效的
-[Paging 3 集成计划](https://docs.viewcompose.com/project/plans/paging3-integration)持有的中立紧凑 Item
-Table 硬切。有限列表应用仍可读取 `isAtEnd`、`lastVisibleItemIndex` 和
+产物现在已把官方 Presenter 适配为 `PagingLazyColumn`，没有把 Paging 类型或加载策略移入 UI
+Foundation。显式 Placeholder Overload 与 Page Drop 处理使用中立紧凑 Item Table；禁用
+Placeholder 的 Overload 会拒绝未加载 Slot。Paging 仍持有加载、Generation、Retry 与 Refresh，
+Android Renderer 仍是唯一 Adapter、Stable ID、Diff、Holder 与 Session Owner。后续工作继续由
+[Paging 3 集成计划](https://docs.viewcompose.com/project/plans/paging3-integration)跟踪。有限列表应用仍可读取 `isAtEnd`、`lastVisibleItemIndex` 和
 `layoutInfo.totalItemsCount`，无需引入 Paging 依赖。自定义 Fling 物理和编译器驱动的 Item 内组合仍
 属于其他独立集成事项。

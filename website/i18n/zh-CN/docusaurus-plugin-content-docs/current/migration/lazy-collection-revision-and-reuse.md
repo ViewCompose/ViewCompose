@@ -1,7 +1,7 @@
 ---
 title: 迁移 Lazy 集合 Revision 与复用
 translation_source: migration/lazy-collection-revision-and-reuse.md
-translation_source_hash: 0e28bdf72f7c04aa215d2f603d0b40c048e45b7cf34686fa7c7e64318e8265a9
+translation_source_hash: ca384abe66620d0472d41cf3307a3f3742d4f48947af95c8568765b70204320b
 translation_status: current
 ---
 
@@ -217,6 +217,27 @@ AndroidView(
   Type 不做同步原生准备。
 
 ## 更新自定义 Session 与 Renderer
+
+直接 NodeSpec Producer 还必须把 Alpha 集合边界从 `List<LazyListItem>` 迁移到
+`LazyItemTable`：
+
+```kotlin
+LazyColumnNodeProps(
+    contentPadding = LazyContentPadding.None,
+    spacing = UiDp.Zero,
+    items = itemModels.asLazyItemTable(),
+)
+```
+
+Foundation `LazyColumn`、`LazyRow` 与 `LazyVerticalGrid` DSL 调用方式不变。有限 Adapter 会校验
+Key 唯一性并保留普通 Keyed Diff 行为。自定义紧凑 Source 可以直接实现 `LazyItemTable`，但其
+Snapshot 必须不可变；`get` 与 `indexOfKey` 必须同步且无副作用；每个声明的
+`LazyItemTableUpdate` 必须精确变换已识别的前驱。返回 `null` 会请求有限通用 Diff，返回
+`ReloadAll` 则表示显式保守替换。无效操作会拒绝完整候选，不会局部更新 RecyclerView。
+
+自定义 Renderer 不得枚举紧凑 Table 来预建全部 Key 或 Stable ID。应通过 `indexOfKey` 解析位置，
+分配不依赖应用 Hash 的无冲突物理 ID，并消费可选 `LazyItemTableStickyHeaders` 元数据。不提供该
+元数据的 Table 承诺不含 Sticky Entry。遍历 Table 属于有限兼容扫描，对虚拟位置可能成本极高。
 
 自定义 `LazyListItemSession` 必须保持完整生命周期：可选且不对外发布的 `prepare`；首次呈现前一次
 `activate`；只在内容或环境 Revision 改变时 `render`；通过 `disposeForReuse` 结束全部逻辑 Owner，

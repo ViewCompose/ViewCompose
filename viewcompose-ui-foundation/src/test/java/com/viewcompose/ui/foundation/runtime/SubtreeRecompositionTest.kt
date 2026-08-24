@@ -17,6 +17,7 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionStrategy
+import com.viewcompose.ui.node.asLazyItemTable
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageLoader
@@ -228,7 +229,7 @@ class SubtreeRecompositionTest {
                     composer.commitSideEffects()
                 }
             }.let { node ->
-                (node.spec as LazyColumnNodeProps).items
+                (node.spec as LazyColumnNodeProps).items.toList()
             }
 
         val first = compose().associateBy(LazyListItem::key)
@@ -398,7 +399,7 @@ class SubtreeRecompositionTest {
                             spec = LazyColumnNodeProps(
                                 contentPadding = LazyContentPadding(),
                                 spacing = com.viewcompose.ui.unit.UiDp.Zero,
-                                items = listOf(item),
+                                items = listOf(item).asLazyItemTable(),
                             ),
                         )
                     }.single()
@@ -640,7 +641,7 @@ class SubtreeRecompositionTest {
     }
 
     private fun VNode.lazyItems(): List<LazyListItem> {
-        return (spec as LazyColumnNodeProps).items
+        return (spec as LazyColumnNodeProps).items.toList()
     }
 
     private fun textSpec(text: String): TextNodeProps {

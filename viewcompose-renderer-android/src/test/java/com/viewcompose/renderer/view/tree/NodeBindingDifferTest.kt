@@ -21,6 +21,7 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
+import com.viewcompose.ui.node.asLazyItemTable
 import com.viewcompose.ui.node.lazyListItemSessionStrategy
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiImageLoadHandle
@@ -659,7 +660,7 @@ class NodeBindingDifferTest {
             spec = LazyColumnNodeProps(
                 contentPadding = com.viewcompose.ui.node.policy.LazyContentPadding.all(12.dp),
                 spacing = spacing,
-                items = emptyList(),
+                    items = emptyList<LazyListItem>().asLazyItemTable(),
             ),
             modifier = Modifier,
         )
@@ -678,7 +679,7 @@ class NodeBindingDifferTest {
                 items = listOf(
                     lazyItem("grid-1"),
                     lazyItem("grid-2"),
-                ),
+                ).asLazyItemTable(),
                 state = null,
             ),
             modifier = Modifier,

@@ -16,6 +16,9 @@ import com.viewcompose.ui.focus.FocusManager
 import com.viewcompose.ui.node.PlatformRenderContainerHandle
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.VNode
+import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.asLazyItemTable
+import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
 import com.viewcompose.ui.node.spec.TabRowNodeProps
@@ -24,6 +27,7 @@ import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AndroidViewOperationException
 import com.viewcompose.ui.tooling.UiSourceCallSite
 import com.viewcompose.ui.tooling.UiNodeTooling
+import com.viewcompose.ui.unit.UiDp
 import java.lang.ref.WeakReference
 import kotlin.coroutines.EmptyCoroutineContext
 import org.junit.After
@@ -1442,6 +1446,51 @@ class RenderSessionFailureTest {
     }
 
     @Test
+    fun `compact lazy item factory renders the typed payload in an isolated child session`() {
+        var rootNodes = emptyList<VNode>()
+        val renderedPayloads = mutableListOf<Int>()
+        engine.renderBlock = { previous, nodes ->
+            if (nodes.singleOrNull()?.spec is LazyColumnNodeProps) {
+                rootNodes = nodes
+            }
+            CoreRenderFrame(mountedNodes = previous)
+        }
+        session = createSession(failures = mutableListOf()) {
+            val factory = lazyItemContentFactory<Int>(retainedKeys = setOf("row-42")) { payload ->
+                renderedPayloads += payload
+                Text("Row $payload")
+            }
+            emit(
+                type = NodeType.LazyColumn,
+                spec = LazyColumnNodeProps(
+                    contentPadding = LazyContentPadding.None,
+                    spacing = UiDp.Zero,
+                    items = listOf(
+                        factory.createItem(
+                            key = "row-42",
+                            contentRevision = "v1",
+                            contentType = "row",
+                            payload = 42,
+                        ),
+                    ).asLazyItemTable(),
+                ),
+            )
+        }
+
+        session.render()
+        val item = (rootNodes.single().spec as LazyColumnNodeProps).items.single()
+        val childSession = item.createSession(childContainer())
+
+        assertEquals("row-42", item.key)
+        assertEquals("v1", item.contentRevision)
+        assertEquals("row", item.contentType)
+        assertTrue(childSession.render())
+        assertEquals(listOf(42), renderedPayloads)
+
+        childSession.dispose()
+    }
+
+    @Test
     fun `snapshot fast hit keeps item content state independently observable`() {
         val snapshot = listOf("item").toLazyItemsSnapshot()
         val itemState = mutableStateOf("first")
@@ -1453,7 +1502,7 @@ class RenderSessionFailureTest {
             val node = nodes.singleOrNull()
             when (node?.spec) {
                 is LazyColumnNodeProps -> {
-                    latestItems = (node.spec as LazyColumnNodeProps).items
+                    latestItems = (node.spec as LazyColumnNodeProps).items.toList()
                 }
 
                 is com.viewcompose.ui.node.spec.TextNodeProps -> {

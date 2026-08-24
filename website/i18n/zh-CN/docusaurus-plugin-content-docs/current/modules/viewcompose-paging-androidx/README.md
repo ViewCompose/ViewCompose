@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-paging-androidx/README.md
-translation_source_hash: a817f8cba12f549b3ec038441c040cafcc400b20c82ca47ffd2846c09f7995a6
+translation_source_hash: 056708acd433d078c23bf7bf2da3ee59eac7065a0e7f2ed0b90ac525ef08b6aa
 translation_status: current
 ---
 
@@ -42,6 +42,23 @@ PagingLazyColumn(
 }
 ```
 
+当 `Pager` 启用 Placeholder 时，应选择显式 Overload，并独立设置 Placeholder 外观版本：
+
+```kotlin
+PagingLazyColumn(
+    items = pagingItems,
+    key = Contact::id,
+    placeholderContentRevision = contactSkeletonVersion,
+    placeholderContentType = "contact-placeholder",
+    placeholderContent = { ContactPlaceholder() },
+) { contact ->
+    ContactRow(contact)
+}
+```
+
+禁用 Placeholder 的 Overload 遇到未加载 Slot 会直接拒绝，让意外启用 Placeholder 的配置可见，
+而不是静默渲染空 Item。
+
 应用负责 `Pager`、`PagingSource`、可选的 `RemoteMediator`、存储、网络、Query、Cache 和
 `cachedIn` Scope。集成层调用官方 `PagingDataPresenter`，不会重新实现加载、失效、Generation、
 Retry、Refresh 或 Page Event。
@@ -79,17 +96,36 @@ Saveable State。Paging Access Hint 只在 Item Session 激活时发送，不会
 List 时触发。RecyclerView、Android Renderer 与既有 Lazy List Policy 仍是滚动、Stable ID、复用、
 Diff 和事务的唯一 Owner。
 
-当前 Alpha Slice 要求禁用 Placeholder。出现未加载 Slot 时，`PagingLazyColumn` 会在发布候选前拒绝
-该候选。当前实现为每个已加载 Item 构建一个 Declaration 和 Key Table Entry，因此 Composition 与
-Reconciliation 成本与已加载 Item 数量线性相关。Placeholder、Page Drop 和紧凑索引表由下一阶段
-负责；当前不会创建完整占位对象表，也不公开 Placeholder Key。
+显式 Placeholder Overload 会构建紧凑索引 Table，其元数据与已加载 Item 数量成正比，而不是与
+`itemCount` 成正比。未加载 Item 根据 Placeholder Count 在位置查询时计算；不会创建完整
+Placeholder 对象表，也不公开 Placeholder Key。Placeholder Identity 是私有的、按位置生成，并按
+Items Owner 与 Paging Generation 建立命名空间。Loaded Identity 会在另一个私有域中包装应用 Key，
+因此两种域不会冲突。`placeholderContentRevision` 可以在不替换位置 Identity 的情况下让 Placeholder
+外观失效；该位置变为 Loaded Item 时会终止 Placeholder Session。
+
+标准 AndroidX Refresh、Prepend、Append 与 Page Drop Event 会转换为中立的有界 Range Update。
+Renderer 若跳过中间 Table Revision，Bridge 会请求 `ReloadAll`，不会重放不安全 Event。被丢弃的
+Loaded Key 会立即从 Table 消失，让 Renderer 释放 Key 持有的 Session、Effect 与 Saveable State。
+该释放会在同一个已提交 Submission 中覆盖 Attached Holder 与 Detached Cache Holder。
+非触发 Table 检查不会发送 Access Hint；Hint 由已提交 Child Session 的 `SideEffect` 在内容真正
+激活后发送。未由 Paging Page Event 表示的 Theme/Local、Placeholder Revision/Type 或 Loaded
+Selector 结果变化也会请求保守 Reload，确保安装新的 Declaration，同时不枚举 Placeholder。
 
 ## 验证与当前范围
 
 确定性测试覆盖初始 Refresh、Append/Prepend Access、Retry、Refresh、Invalidation、最新 Query
-替换、生命周期停止/恢复保留、释放、重复 Key，以及稳定 Key/索引安全 Access Routing。Q3 Sample 只使用模块
-公共 API 并参与编译。本 Slice 不声称已经完成真机性能、Placeholder/Drop、Mediator 专用 UI Helper
-或交互式 Demo；这些属于后续计划阶段。
+替换、生命周期停止/恢复保留、释放、重复 Key、稳定 Key/索引安全 Access Routing、显式 Placeholder
+启用、Placeholder 到 Loaded 替换、Placeholder Revision 失效、Page Drop、跳过 Revision 的 Reload
+安全性，以及 Detached Cache 的立即释放且后续不会二次释放。Renderer 测试还证明一百万位置的直接
+更新不会完整枚举 Table。Q3 Sample 只使用各模块公共 API 并参与编译。
+
+2026-08-25，Android 13/API 33 的 Pixel 4 XL 使用本地确定性数据源和 48 dp Row，在 5.51 s
+内通过两项聚焦真机测试。一百万位置的 Placeholder Presentation 相对同一已启动进程基线增加
+48,124 KiB PSS，555 ms 跳至最后位置，在 `maxSize = 96` 下保留 81 个 Loaded Item，并释放初始
+Item Session；顺序滚动 Page Window 最终保持配置的 96 个 Loaded Item，并释放初始可见 Session。
+结论：该路径的紧凑内存、Jump/Drop 与所有权信心为 **improved**。限制：这只是一个 Debug Build、
+一个设备/API、本地数据与一种 Row 几何，不是 Frame Benchmark，也未覆盖 RemoteMediator、网络错误、
+Load State UI 或交互式 Demo；这些仍属于后续计划阶段。
 
 ## 相关文档
 

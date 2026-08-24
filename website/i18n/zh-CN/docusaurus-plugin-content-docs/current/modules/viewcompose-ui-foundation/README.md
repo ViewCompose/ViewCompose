@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 69ea69662f241e2edaea3750bc2c78fe240b634cc7af96eda8d4d503567b00c5
+translation_source_hash: 27f001b56c220b45c1a6facdaa4723bcf13524fd3ca62bee74bb1b7bc0700098
 translation_status: current
 ---
 
@@ -153,6 +153,14 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   State 会独立观察；Selector 读取的 State 或其他变化输入要求替换 Snapshot。Selector 失败或 Key
   重复不会发布已求值 Snapshot，Retry 会重新执行全部 Selector。调用方不能用聚合 Token 绕过普通
   `List` 校验。
+- Foundation 会把每个已接受 Lazy Declaration 发布为 Q3 `LazyItemTable`。普通有限 DSL 保持原有
+  源码形态，并随已接受的求值 Snapshot 缓存 Table 与 Key Index，因此精确复用命中不会重建这两个
+  结构。可选集成与其他紧凑 Source 可使用 Q3 `lazyItemContentFactory`：它捕获当前 Local 与
+  Saveable State Holder，按需创建类型安全的延迟 `LazyListItem` Snapshot，公开仅用于 Table 相等
+  决策的进程内不透明 `environmentRevision` Token，并只在父组合 Commit 后
+  应用调用方提供的保留逻辑 Key 集合。Factory 只在当前 Declaration Revision 内有效；位置
+  Placeholder 不应作为 Saveable Owner 保留。编译样例 `compactLazyItemTableSample` 发出一百万个
+  逻辑位置，但不会为每个位置分配 Model 或 Key Map Entry。
 - `ScrollableColumn` 与 `ScrollableRow` 接受 Q3 `ScrollState` 和 `userScrollEnabled`，不需要
   卸载 Eager Child。`HorizontalPager` 与 `VerticalPager` 接受 Q3 `PagerState`；只有不同页面停稳后
   才触发变化回调。真实垂直滚动所有者中的焦点编辑器会自动使用原生矩形传播，即使直接用户滚动
@@ -370,6 +378,11 @@ Ownership 与 `rememberUpdatedState` 发布现在遵循
 Scroll Container 新增 `state` 和 `userScrollEnabled`，为 Slider 新增 Step 与交互边界 Callback，
 为下拉刷新新增 `enabled`，并要求稳定的 Navigation 与 Segmented Item Key。这些变更只保留一个
 权威来源；Alpha 版本线不保留并行的 Deprecated 签名。
+
+紧凑 Lazy Table 变更保留全部 Foundation `LazyColumn`、`LazyRow` 与 `LazyVerticalGrid` 调用方式，
+但改变它们发布的 NodeSpec 值。Q3 `lazyItemContentFactory` 是面向集成作者的新增 API，不替代普通
+有限列表 DSL。它的 `retainedKeys` 是已提交状态保留契约：省略已移除 Key 可以及时释放 Saveable
+State；保留 Placeholder Identity 则会错误地让未加载位置取得逻辑状态所有权。
 
 `RenderSessionPlatformDiagnostics.inspectionTooling`、`RenderSessionInspectionTooling`、
 `RenderSessionInspectionPolicy` 与 `RenderSessionInspectionRegistration` 是 Q3 工具 API。Alpha

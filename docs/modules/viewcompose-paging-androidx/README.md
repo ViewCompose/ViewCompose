@@ -36,6 +36,24 @@ PagingLazyColumn(
 }
 ```
 
+When the `Pager` enables placeholders, select the explicit overload and version placeholder
+appearance independently:
+
+```kotlin
+PagingLazyColumn(
+    items = pagingItems,
+    key = Contact::id,
+    placeholderContentRevision = contactSkeletonVersion,
+    placeholderContentType = "contact-placeholder",
+    placeholderContent = { ContactPlaceholder() },
+) { contact ->
+    ContactRow(contact)
+}
+```
+
+The placeholder-disabled overload rejects an unloaded slot. This makes accidental placeholder
+enablement visible instead of silently rendering an empty item.
+
 The application owns `Pager`, `PagingSource`, optional `RemoteMediator`, storage, network, query,
 cache, and `cachedIn` scope. The integration calls the official `PagingDataPresenter`; it does not
 reimplement loading, invalidation, generations, retry, refresh, or page events.
@@ -77,19 +95,43 @@ state. Paging access hints are sent only when an item Session activates, not whi
 the presented list. RecyclerView, the Android Renderer, and existing lazy-list policies remain the
 sole scrolling, stable-ID, reuse, diff, and transaction owners.
 
-The current alpha slice requires placeholders to be disabled. If an unloaded slot is present,
-`PagingLazyColumn` rejects the candidate before publication. The slice builds one declaration and
-key-table entry per loaded item, so composition and reconciliation are linear in loaded item count.
-Placeholder, page-drop, and compact indexed-table support remain owned by the next active plan
-phase; there is no full placeholder-object table or public placeholder key.
+The explicit placeholder overload builds a compact indexed table whose metadata is proportional to
+loaded items, not `itemCount`. Unloaded items are calculated from placeholder counts on positional
+lookup; there is no full placeholder-object table or public placeholder key. Placeholder identity
+is private, positional, and namespaced by items owner plus Paging generation. Loaded identity uses
+a separate private namespace around the application key, so the two domains cannot collide.
+`placeholderContentRevision` invalidates placeholder appearance without replacing its positional
+identity, while a loaded replacement at that position terminates the placeholder Session.
+
+Standard AndroidX refresh, prepend, append, and page-drop events become neutral bounded range
+updates. If a renderer skips an intermediate table revision, the bridge requests `ReloadAll`
+rather than replaying an unsafe event. Dropped loaded keys disappear from the table immediately so
+the renderer disposes key-owned Sessions, effects, and saveable state for attached and detached
+cached holders in the same committed submission. Non-triggering table
+inspection sends no access hint; the hint is issued from the committed child Session's
+`SideEffect`, after content is actually activated. A theme/Local, placeholder revision/type, or
+loaded selector result change that is not represented by a Paging page event also requests a
+conservative reload, ensuring the newer declaration is installed without enumerating placeholders.
 
 ## Verification and current scope
 
 Deterministic tests cover initial refresh, append/prepend access, retry, refresh, invalidation,
-latest-query replacement, lifecycle stop/start retention, release, duplicate keys, and stable
-key/index-safe access routing. The Q3 sample compiles from the module's public API. Physical-device
-performance, placeholder/drop behavior, mediator-specific UI helpers, and the interactive Demo are
-later plan phases and are not claimed by this slice.
+latest-query replacement, lifecycle stop/start retention, release, duplicate keys, stable
+key/index-safe access routing, explicit placeholder enablement, placeholder-to-loaded replacement,
+placeholder revision invalidation, page drops, skipped-revision reload safety, and immediate
+detached-cache disposal without a later double release. Renderer tests also prove a
+one-million-position direct update without full table enumeration. The Q3 samples compile from the
+modules' public APIs.
+
+On 2026-08-25, a Pixel 4 XL running Android 13/API 33 passed both focused physical tests in 5.51 s
+with a local deterministic source and 48 dp rows. A 1,000,000-position placeholder presentation
+increased process PSS by 48,124 KiB from the same launched-process baseline, jumped to the last
+position in 555 ms, retained 81 loaded items under `maxSize = 96`, and released the initial item
+Sessions. Sequential page-window scrolling ended at the configured 96 loaded items and released
+the initial visible Sessions. Conclusion: **improved** compact-memory, jump/drop, and ownership
+confidence for this path. Limitations: this is one debug build, one device/API, local data, and a
+single row geometry; it is not a frame benchmark and does not cover RemoteMediator, network errors,
+the load-state UI, or the interactive Demo. Those remain later plan phases.
 
 ## Related documentation
 

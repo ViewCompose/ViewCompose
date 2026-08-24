@@ -197,9 +197,12 @@ remembered state, or effects.
 | mounted-tree cache size | bounded framework-owned reset-tree cache with deterministic release |
 | layout state | scroll, layout, and adapter observers feeding `LazyListState` |
 
-The Android adapter represents one accepted submission with a collision-safe compact key table
-that owns both unique positions and stable IDs. It does not retain a second boxed key map for the
-same snapshot. RecyclerView view types remain stable for the mounted container lifetime, including
+The Android adapter accepts Q3 `LazyItemTable`: finite Foundation declarations provide an indexed
+wrapper, while compact integrations can calculate positions on demand and publish neutral range
+updates. Stable IDs are collision-safe and allocated lazily for queried keys rather than by
+enumerating the entire table. The table owns key-to-position lookup; optional sticky-header
+metadata avoids a full scan when present. Invalid declared operations or duplicate keys reject the
+candidate atomically. RecyclerView view types remain stable for the mounted container lifetime, including
 when one type temporarily disappears. A container accepts at most 1,024 distinct
 `kind`/`contentType` compatibility classes; exceeding this limit fails immediately instead of
 retaining an unbounded type history. Model values and revisions do not belong in `contentType`.
@@ -272,9 +275,11 @@ revision change cannot temporarily expose content under a system bar or erase th
 
 Paging 3 loading, invalidation, and retry remain outside the core collection contract. The optional
 [`viewcompose-paging-androidx`](../modules/viewcompose-paging-androidx/README.md) artifact now adapts
-the official presenter into a non-placeholder `PagingLazyColumn` without moving Paging types or
-loading policy into UI Foundation. Placeholder and page-drop support still depends on the compact
-neutral item-table hard cut owned by the active
+the official presenter into `PagingLazyColumn` without moving Paging types or loading policy into
+UI Foundation. Its explicit placeholder overload and page-drop handling use the neutral compact
+item-table contract; the placeholder-disabled overload rejects unloaded slots. Paging remains the
+loading, generation, retry, and refresh owner, while Android Renderer remains the only adapter,
+stable-ID, diff, holder, and Session owner. Later work remains tracked by the active
 [Paging 3 integration plan](../project/plans/paging3-integration.md). Finite-list applications may
 continue to use `isAtEnd`, `lastVisibleItemIndex`, and `layoutInfo.totalItemsCount` without any Paging
 dependency. Custom fling physics and compiler-driven sub-item composition remain separate
