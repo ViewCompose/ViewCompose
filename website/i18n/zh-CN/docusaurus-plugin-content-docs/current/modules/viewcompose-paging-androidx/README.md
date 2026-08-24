@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-paging-androidx/README.md
-translation_source_hash: acd519284b4a3ffe3bb2c5f0e2183cd9250dfc9761762349bf0fc785f10f1233
+translation_source_hash: cac14a854d8e8f301df1de319ba320765543046d80579e489bed0471fadaf274
 translation_status: current
 ---
 
@@ -74,6 +74,33 @@ Presenter Store，但只有配套的最终 Load State 可用后才会对外可�
 拥有的新 Generation。索引访问和命令都在 Android 主线程执行。收集调用离开 Composition 后，保留
 引用仍可读取最终属性，但访问和命令会失败。
 
+## 加载状态组合
+
+`contentState` 是主内容投影，不是框架持有的 Layout。只有尚未加载任何 Item 时，它才返回
+`InitialLoading`、`InitialError` 或 `Empty`。一旦存在已加载 Item，Refresh、Prepend、Append
+加载或失败期间都由 `Content` 优先，方向性 UI 因此不会卸载 List：
+
+```kotlin
+when (val state = items.contentState) {
+    PagingContentState.InitialLoading -> InitialLoading()
+    is PagingContentState.InitialError -> InitialError(
+        error = state.error,
+        onRetry = items::retry,
+    )
+    PagingContentState.Empty -> EmptyResults()
+    PagingContentState.Content -> key("contacts") {
+        PagingLazyColumn(items = items, key = Contact::id) { contact -> ContactRow(contact) }
+    }
+}
+```
+
+要稳定组合 Header/Footer，可用 `loadStates.forLoadType(LoadType.PREPEND)` 或
+`LoadType.APPEND` 一次选择某项操作，再在带 Key 的 List 前后渲染其 `combined` 状态。返回的
+`PagingLoadStateSnapshot` 还会保留同一 AndroidX Snapshot 中的 `source` 与可空 `mediator` 状态，
+即使 `combined` 选择一个可见状态，也可分别诊断 Source 和 Mediator。Helper 不发射 Node，也不决定
+文案、分析、自动重试、离线或破坏性 Refresh 策略。失败加载使用 `retry()` 留在当前 Generation；
+显式 `refresh()` 操作用于请求替换。
+
 ## 生命周期与上游所有权
 
 默认 `Visible` 策略要求最近的 `LocalLifecycleOwner`，并在 `STARTED` 收集；`Retained` 在
@@ -114,14 +141,15 @@ Selector 结果变化也会请求保守 Reload，确保安装新的 Declaration�
 ## 验证与当前范围
 
 确定性测试覆盖 Presenter Generation 与命令、Lifecycle/Release、Keyed Routing、Placeholder
-替换与失效、Page Drop、跳过 Revision，以及 Detached Cache 释放且不会二次释放。Renderer 还覆盖
-一百万位置更新且不完整枚举；Q3 Sample 只使用公共 API 编译。
+替换与失效、Page Drop、跳过 Revision、主内容分支、按 `LoadType` 选择 Source/Mediator，以及
+Detached Cache 释放且不会二次释放。Renderer 还覆盖一百万位置更新且不完整枚举；Q3 Sample
+只使用公共 API 编译。
 
 2026-08-25，Android 13/API 33 的 Pixel 4 XL 在 5.51 s 内通过两项 Debug 测试。一百万位置用例
 增加 48,124 KiB PSS，555 ms 跳至最后位置，在 `maxSize = 96` 下保留 81 个 Loaded Item 并释放
 初始 Session；有界滚动最终保持 96 个 Loaded Item。结论：内存、Jump/Drop 与所有权信心为
-**improved**。该本地单设备/几何证据不代表 Frame、网络、RemoteMediator、Load State UI 或 Demo；
-后续阶段继续负责这些路径。
+**improved**。该本地单设备/几何证据不代表 Frame、网络、真实 `RemoteMediator`、真机 Load State
+UI 或 Demo；后续阶段继续负责这些路径。
 
 ## 相关文档
 

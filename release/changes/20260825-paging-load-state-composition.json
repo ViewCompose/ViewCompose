@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add typed Paging primary-content and per-load-type projections that preserve loaded content and expose combined, source, and mediator states without owning UI policy.",
+  "changes": [
+    { "artifact": "viewcompose-paging-androidx", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}

@@ -1,6 +1,8 @@
 package com.viewcompose.publishing.smoke.feature
 
 import androidx.media3.common.Player as Media3Player
+import androidx.paging.LoadType
+import androidx.paging.PagingData
 import com.google.android.exoplayer2.Player as LegacyPlayer
 import com.viewcompose.animation.AnimatedVisibility
 import com.viewcompose.animation.core.TweenSpec
@@ -13,10 +15,13 @@ import com.viewcompose.media3.Media3PlayerView
 import com.viewcompose.exoplayer2.ExoPlayerView
 import com.viewcompose.maps.google.GoogleMapProperties
 import com.viewcompose.maps.google.GoogleMapView
-import androidx.paging.PagingData
+import com.viewcompose.paging.PagingContentState
 import com.viewcompose.paging.PagingLazyColumn
 import com.viewcompose.paging.PagingLifecyclePolicy
+import com.viewcompose.paging.PagingLoadStateSnapshot
 import com.viewcompose.paging.collectAsViewComposePagingItems
+import com.viewcompose.paging.contentState
+import com.viewcompose.paging.forLoadType
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -64,7 +69,18 @@ fun UiTreeBuilder.compileGoogleMapsFeatureSurface() {
 /** The Paging artifact exposes its AndroidX input and ViewCompose lazy-list surface together. */
 fun UiTreeBuilder.compilePagingFeatureSurface(pages: Flow<PagingData<String>>) {
     val items = pages.collectAsViewComposePagingItems(PagingLifecyclePolicy.Composition)
-    PagingLazyColumn(items = items, key = { value -> value }) { value ->
-        Text(value)
+    when (items.contentState) {
+        PagingContentState.InitialLoading -> Text("Initial loading")
+        is PagingContentState.InitialError -> Text("Initial error")
+        PagingContentState.Empty -> Text("Empty")
+        PagingContentState.Content -> PagingLazyColumn(
+            items = items,
+            key = { value -> value },
+        ) { value ->
+            Text(value)
+        }
     }
+    val append: PagingLoadStateSnapshot = items.loadStates.forLoadType(LoadType.APPEND)
+    append.source
+    append.mediator
 }

@@ -53,6 +53,90 @@ class ViewComposePagingItemsTest {
     }
 
     @Test
+    fun `content state distinguishes initial loading error empty and content`() = pagingTest {
+        val factory = ControlledSourceFactory()
+        val items = ViewComposePagingItems<Int>()
+        collect(factory, items)
+        val source = factory.nextSource()
+        runCurrent()
+
+        assertSame(PagingContentState.InitialLoading, items.contentState)
+
+        val failure = IOException("initial refresh failed")
+        source.nextRequest().completeError(failure)
+        runCurrent()
+
+        val error = items.contentState as PagingContentState.InitialError
+        assertSame(failure, error.error)
+
+        items.retry()
+        runCurrent()
+        source.nextRequest().completePage(emptyList(), prevKey = null, nextKey = null)
+        runCurrent()
+
+        assertSame(PagingContentState.Empty, items.contentState)
+
+        items.refresh()
+        runCurrent()
+        val refreshedSource = factory.nextSource()
+        runCurrent()
+        assertSame(PagingContentState.InitialLoading, items.contentState)
+
+        refreshedSource.nextRequest().completePage(listOf(10), prevKey = null, nextKey = null)
+        runCurrent()
+
+        assertSame(PagingContentState.Content, items.contentState)
+    }
+
+    @Test
+    fun `directional loading and errors keep loaded content mounted`() = pagingTest {
+        val factory = ControlledSourceFactory()
+        val items = ViewComposePagingItems<Int>()
+        collect(factory, items, initialKey = 2)
+        val source = factory.nextSource()
+        runCurrent()
+        source.nextRequest().completePage(
+            data = listOf(2, 3),
+            prevKey = 0,
+            nextKey = 4,
+        )
+        runCurrent()
+
+        assertEquals(2, items[0])
+        runCurrent()
+        val prepend = source.nextRequest()
+        assertTrue(prepend.params is PagingSource.LoadParams.Prepend)
+        assertTrue(items.loadStates.prepend is LoadState.Loading)
+        assertSame(PagingContentState.Content, items.contentState)
+
+        prepend.completeError(IOException("prepend failed"))
+        runCurrent()
+        assertTrue(items.loadStates.prepend is LoadState.Error)
+        assertSame(PagingContentState.Content, items.contentState)
+
+        items.retry()
+        runCurrent()
+        source.nextRequest().completePage(
+            data = listOf(0, 1),
+            prevKey = null,
+            nextKey = 2,
+        )
+        runCurrent()
+
+        assertEquals(3, items[3])
+        runCurrent()
+        val append = source.nextRequest()
+        assertTrue(append.params is PagingSource.LoadParams.Append)
+        assertTrue(items.loadStates.append is LoadState.Loading)
+        assertSame(PagingContentState.Content, items.contentState)
+
+        append.completeError(IOException("append failed"))
+        runCurrent()
+        assertTrue(items.loadStates.append is LoadState.Error)
+        assertSame(PagingContentState.Content, items.contentState)
+    }
+
+    @Test
     fun `peek is non-triggering while active access drives prepend and append`() = pagingTest {
         val factory = ControlledSourceFactory()
         val items = ViewComposePagingItems<Int>()
