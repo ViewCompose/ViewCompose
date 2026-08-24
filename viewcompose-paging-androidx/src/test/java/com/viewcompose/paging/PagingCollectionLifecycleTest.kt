@@ -4,11 +4,15 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
 import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -31,6 +35,164 @@ import org.robolectric.RobolectricTestRunner
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class PagingCollectionLifecycleTest {
+    @Test
+    fun `cached visible flow survives hide reveal and composition recreation without duplicate collection`() =
+        pagingTest {
+            val factory = ControlledSourceFactory()
+            val applicationScope = CoroutineScope(
+                SupervisorJob() + UnconfinedTestDispatcher(testScheduler),
+            )
+            val cachedPages = factory.pager().flow.cachedIn(applicationScope)
+            val starts = AtomicInteger()
+            val active = AtomicInteger()
+            val maximumActive = AtomicInteger()
+            val cancellations = AtomicInteger()
+            val pages: Flow<PagingData<Int>> = flow {
+                starts.incrementAndGet()
+                val activeCollectors = active.incrementAndGet()
+                maximumActive.updateAndGet { previous -> maxOf(previous, activeCollectors) }
+                try {
+                    emitAll(cachedPages)
+                } finally {
+                    active.decrementAndGet()
+                    cancellations.incrementAndGet()
+                }
+            }
+            val owner = TestLifecycleOwner().also { lifecycleOwner ->
+                lifecycleOwner.handle(Lifecycle.Event.ON_CREATE)
+                lifecycleOwner.handle(Lifecycle.Event.ON_START)
+            }
+            val firstHarness = PagingCompositionHarness()
+            lateinit var firstItems: ViewComposePagingItems<Int>
+            firstHarness.render {
+                ProvideLifecycleOwner(owner) {
+                    firstItems = pages.collectAsViewComposePagingItems(
+                        context = Dispatchers.Unconfined,
+                    )
+                }
+            }
+            runCurrent()
+            val source = factory.nextSource()
+            source.nextRequest().completePage(listOf(4, 5), prevKey = null, nextKey = null)
+            runCurrent()
+            assertEquals(listOf(4, 5), firstItems.values())
+            assertEquals(1, starts.get())
+            assertEquals(1, active.get())
+
+            owner.handle(Lifecycle.Event.ON_STOP)
+            runCurrent()
+            assertEquals(listOf(4, 5), firstItems.values())
+            assertEquals(1, cancellations.get())
+            assertEquals(0, active.get())
+
+            owner.handle(Lifecycle.Event.ON_START)
+            runCurrent()
+            assertEquals(listOf(4, 5), firstItems.values())
+            assertEquals(2, starts.get())
+            assertEquals(1, factory.createdSources.size)
+
+            firstHarness.dispose()
+            runCurrent()
+            assertEquals(2, cancellations.get())
+            val secondHarness = PagingCompositionHarness()
+            lateinit var recreatedItems: ViewComposePagingItems<Int>
+            secondHarness.render {
+                ProvideLifecycleOwner(owner) {
+                    recreatedItems = pages.collectAsViewComposePagingItems(
+                        context = Dispatchers.Unconfined,
+                    )
+                }
+            }
+            runCurrent()
+
+            assertNotSame(firstItems, recreatedItems)
+            assertEquals(listOf(4, 5), recreatedItems.values())
+            assertEquals(3, starts.get())
+            assertEquals(1, factory.createdSources.size)
+            assertEquals(1, maximumActive.get())
+
+            secondHarness.dispose()
+            applicationScope.cancel()
+            runCurrent()
+            assertEquals(3, cancellations.get())
+            assertEquals(0, active.get())
+        }
+
+    @Test
+    fun `retained policy remains active while stopped and cancels at destroy`() = pagingTest {
+        val starts = AtomicInteger()
+        val cancellations = AtomicInteger()
+        val pages = flow<PagingData<Int>> {
+            starts.incrementAndGet()
+            try {
+                emit(PagingData.empty())
+                awaitCancellation()
+            } finally {
+                cancellations.incrementAndGet()
+            }
+        }
+        val owner = TestLifecycleOwner().also { it.handle(Lifecycle.Event.ON_CREATE) }
+        val harness = PagingCompositionHarness()
+        harness.render {
+            ProvideLifecycleOwner(owner) {
+                pages.collectAsViewComposePagingItems(
+                    lifecyclePolicy = PagingLifecyclePolicy.Retained,
+                    context = Dispatchers.Unconfined,
+                )
+            }
+        }
+        runCurrent()
+        assertEquals(1, starts.get())
+
+        owner.handle(Lifecycle.Event.ON_START)
+        owner.handle(Lifecycle.Event.ON_STOP)
+        runCurrent()
+        assertEquals(1, starts.get())
+        assertEquals(0, cancellations.get())
+
+        owner.handle(Lifecycle.Event.ON_DESTROY)
+        runCurrent()
+        assertEquals(1, cancellations.get())
+        harness.dispose()
+        runCurrent()
+        assertEquals(1, cancellations.get())
+    }
+
+    @Test
+    fun `composition policy ignores a destroyed lifecycle and ends with composition`() = pagingTest {
+        val starts = AtomicInteger()
+        val cancellations = AtomicInteger()
+        val pages = flow<PagingData<Int>> {
+            starts.incrementAndGet()
+            try {
+                emit(PagingData.empty())
+                awaitCancellation()
+            } finally {
+                cancellations.incrementAndGet()
+            }
+        }
+        val owner = TestLifecycleOwner().also { lifecycleOwner ->
+            lifecycleOwner.handle(Lifecycle.Event.ON_CREATE)
+            lifecycleOwner.handle(Lifecycle.Event.ON_DESTROY)
+        }
+        val harness = PagingCompositionHarness()
+        harness.render {
+            ProvideLifecycleOwner(owner) {
+                pages.collectAsViewComposePagingItems(
+                    lifecyclePolicy = PagingLifecyclePolicy.Composition,
+                    context = Dispatchers.Unconfined,
+                )
+            }
+        }
+        runCurrent()
+
+        assertEquals(1, starts.get())
+        assertEquals(0, cancellations.get())
+        harness.dispose()
+        runCurrent()
+        assertEquals(1, cancellations.get())
+    }
+
     @Test
     fun `visible policy retains presentation while stopped and replaces it after restart`() =
         pagingTest {

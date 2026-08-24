@@ -2,7 +2,7 @@
 
 ## Status
 
-Active. Phases 0 through 4 completed on 2026-08-25; Phase 5 is next. This
+Active. Phases 0 through 5 completed on 2026-08-25; Phase 6 is next. This
 plan is the only active owner of Paging 3
 delivery after the optional roadmap item and the Lazy Collections non-goal were redirected here on
 2026-08-18. Historical archives retain only evidence.
@@ -14,10 +14,9 @@ durable shipped contracts move to their owning active public documentation befor
 
 Last verified: 2026-08-25.
 
-Next action: begin Phase 5 lifecycle and mediated-data verification with the frozen lifecycle
-policies, `cachedIn` ownership guidance, recreation coverage, and a deterministic
-`RemoteMediator` fixture. Phase 4 now has deterministic load-state, Q3 API, bilingual
-documentation, release-intent, local-publication, and isolated-consumer evidence.
+Next action: begin Phase 6 samples, Demo, and documentation closeout. Phase 5 verified every frozen
+lifecycle policy, application-owned `cachedIn` replay across navigation and recreation, structured
+cancellation, and deterministic real-`RemoteMediator` source/mediator failures.
 
 ## Maven release changesets
 
@@ -30,6 +29,8 @@ documentation, release-intent, local-publication, and isolated-consumer evidence
   renderer update support.
 - `release/changes/20260825-paging-load-state-composition.json` — adds typed primary-content and
   per-load-type source/mediator projections without assigning framework-owned UI policy.
+- `release/changes/20260825-paging-mediated-lifecycle.json` — fixes initial content projection to
+  preserve source/mediator refresh failures and records lifecycle/mediator verification.
 
 ## Objective and ownership
 
@@ -162,14 +163,12 @@ failed loads in the current generation; `refresh()` requests the AndroidX-owned 
 `loadedItemCount` counts non-placeholder items without flattening source and mediator detail in
 `CombinedLoadStates`.
 
-Phase 4 adds two pure Q3 projections rather than a framework-owned paging layout. `contentState`
-reads one coherent presentation: any loaded item selects `Content`, so refresh, prepend, and append
-activity or failure cannot replace mounted content; with no loaded items, combined refresh selects
-`InitialLoading`, `InitialError`, or completed `Empty`. `forLoadType` selects `REFRESH`, `PREPEND`,
-or `APPEND` once and returns combined, source, and nullable mediator states from the same immutable
-`CombinedLoadStates`. Both projections are synchronous O(1) reads with no dispatch or blocking,
-own no lifecycle or retry policy, and emit no nodes. Applications retain Header/Footer placement, wording, visuals, analytics, and
-the choice between `retry()` and `refresh()`.
+The two Q3 projections remain pure rather than owning a paging layout. Any loaded item makes
+`contentState` return `Content`. Without items, combined/source/mediator refresh errors win in that
+order, otherwise any loading origin returns `InitialLoading`, and only all-complete refresh returns
+`Empty`; this Phase 5 hard cut prevents a skipped mediator refresh from masking source failure.
+`forLoadType` preserves combined, source, and nullable mediator states. Both are synchronous O(1)
+reads with no dispatch, nodes, lifecycle, or retry policy.
 
 ### Lifecycle and presentation coherence
 
@@ -266,18 +265,13 @@ host Compose collections, or give a Paging adapter ownership of the native list.
 
 ## Current baseline
 
-The optional `viewcompose-paging-androidx` module publishes the official-presenter collector,
-three explicit lifecycle policies, coherent observable items/load states, retry/refresh delegation,
-and two `PagingLazyColumn` overloads: one rejects unloaded slots and one requires explicit
-placeholder content, revision, and optional type. Existing finite lazy
-collections provide logical keys, revisions, item Sessions, saveable-state isolation, renderer
-reuse, transactional commit, visible indices, total count, scrolling, and scroll save/restore.
-Renderer prefetch prepares ViewCompose/native presentation only; it is not a remote or database
-loader. The Phase 3 table stores metadata proportional to loaded items and calculates positional
-placeholders on demand. Accepted page events become neutral range updates, skipped revisions reload
-conservatively, and renderer inspection sends no load hint. Phase 4 projects primary content and
-per-load-type combined/source/mediator states without owning layout policy. No Paging adapter, Demo,
-deterministic mediated-data fixture, or broad Phase 7 performance claim exists yet.
+The optional module publishes the official-presenter collector, three lifecycle policies, coherent
+items/load states, commands, and explicit placeholder/no-placeholder `PagingLazyColumn` overloads.
+Renderer prefetch remains presentation-only. The compact table stores loaded metadata, calculates
+placeholders on demand, and maps page events to neutral updates. Phase 4/5 project primary content
+and exact load origins, verify lifecycle replay/cancellation, and run real `RemoteMediator` control
+flow over deterministic fake storage. No Paging adapter, Demo, real database/network result, or
+broad Phase 7 performance claim exists yet.
 
 ## Execution plan
 
@@ -288,7 +282,7 @@ deterministic mediated-data fixture, or broad Phase 7 performance claim exists y
 | 2. Non-placeholder LazyColumn slice | Complete | Optional module, observable items, stable-key bridge, latest generation, retry/refresh, and core Q3 sample | 12 deterministic tests, strict Q3 audit, local Maven consumers, complete API reconstruction, and the bilingual production site pass |
 | 3. Placeholder and page-drop slice | Complete | Neutral indexed hard cut, positional placeholders, jump/drop handling | Implementation, deterministic contract tests, release intent, local publication, consumers, dropped-session/memory evidence, Pixel bounded-work verification, and post-ownership-hard-cut full gates pass |
 | 4. Load-state composition | Complete | Pure primary-content and per-`LoadType` source/mediator projections plus empty/header/footer/error examples; no framework-owned layout | Twenty distinct tests pass in both variants; Q3 audit, bilingual docs, release intent, local publication, and isolated consumer pass |
-| 5. Lifecycle and mediated data | Not started | Frozen policies, `cachedIn` guidance, recreation, deterministic mediator fixture | Hidden/revealed navigation, cancellation, recreation, and source/mediator failure tests pass |
+| 5. Lifecycle and mediated data | Complete | Frozen policies, `cachedIn` guidance, recreation, deterministic mediator fixture, source-failure hard cut | Hidden/revealed navigation, cancellation, recreation, and source/mediator failure tests pass |
 | 6. Samples, Demo, and documentation | Not started | Demo, Q3 samples, catalog/manual, setup/architecture/testing/migration docs, mirrors, notices | Localization, sample, automation-role, dependency, and consumer gates pass |
 | 7. Performance, device, and release closeout | Not started | Same-build append/drop/large-generation/query/scroll evidence; final Changesets and Maven proof | No accepted correctness, leak, frame, or memory regression; evidence is interpreted before archival |
 
@@ -364,6 +358,7 @@ work pending.
 | 2026-08-25 | Pixel 4 XL Android 13/API 33 Phase 3 acceptance | Two debug tests passed in 5.51 s. The 1,000,000-position case added 48,124 KiB PSS, jumped to 999,999 in 555 ms, retained 81 items under `maxSize = 96`, and released initial Sessions; bounded scrolling ended at 96 loaded items. The probe exposed detached holders retaining dropped keys, now synchronously disposed with double-release proof. Conclusion: **improved** compact-memory, jump/drop, and lifecycle confidence. Limitations: one local-data device/API/geometry; no frame, mediator, network, load-state UI, or Demo evidence. |
 | 2026-08-25 | Phase 3 full closeout | Four modules passed 1,015/1,015 tests (81 + 391 + 527 + 16); strict API/documentation checks passed for 118 English pages and 115 current mirrors in 15 s; `qaQuick` passed 2,324 tasks in 2 min 9 s. Conclusion: **improved** correctness and release confidence; later phases retain mediator, Demo, and broader performance limits. |
 | 2026-08-25 | Phase 4 load-state projections and closeout | Twenty distinct tests passed in both variants (40 executions) in 6 s, covering initial/body states, content retention during directional loading/error, every `LoadType` origin, absent mediator, and retry/refresh distinction. Q3 audit passed in 12 s; documentation passed in 2 s; one feature release intent and the published consumer passed; `qaQuick` passed 2,324 tasks in 18 s. Conclusion: **improved** composition/API confidence without a second layout or state owner. Limitations: synthetic mediator states; no real mediator, database/network, recreation, Demo, device, frame, or memory path. Next: Phase 5. |
+| 2026-08-25 | Phase 5 lifecycle and mediated-data closeout | Twenty-seven distinct module tests passed in Debug and Release (54 executions) in 6 s. Seven new tests cover every lifecycle policy, hide/reveal, `cachedIn` replay across composition recreation without duplicate upstream collection, in-flight mediator cancellation, real `Pager + RemoteMediator` refresh/append errors, and distinct source failure. The fixture exposed combined `NotLoading` masking source refresh failure; `contentState` now hard-cuts to origin-aware error/loading precedence. API/docs/release and dependency/isolation gates passed; `qaQuick` passed 2,324 tasks in 19 s. The 440-page site passed at 49,161,510 non-API bytes under the unchanged 46.9 MiB ceiling. Conclusion: **improved** lifecycle, cancellation, and mediated-state correctness with **mixed** small documentation growth. Limitations: in-memory store and fake remote result; no real database/network, Demo, device, frame, or memory result. Next: Phase 6. |
 
 ## Decision history
 
@@ -380,3 +375,5 @@ work pending.
 7. 2026-08-25 — Ship the non-placeholder frontend first. Fold presenter index into the bridge's
    private content revision so moved stable keys refresh access routing without losing their
    Session/saveable state; require application-owned `cachedIn` for restartable `Pager.flow` use.
+8. 2026-08-25 — Preserve any refresh-origin failure before selecting initial empty content; keep
+   exact origin available through `forLoadType` and retain application ownership of cache/storage.

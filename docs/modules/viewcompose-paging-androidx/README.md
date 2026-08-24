@@ -23,8 +23,13 @@ dependencies {
 ## Basic use
 
 ```kotlin
-// `pages` is cached in an application-owned scope before it reaches the UI.
-val pagingItems = repository.pages.collectAsViewComposePagingItems()
+class ContactsViewModel : ViewModel() {
+    val pages = Pager(config, pagingSourceFactory = repository::contacts)
+        .flow
+        .cachedIn(viewModelScope)
+}
+
+val pagingItems = viewModel.pages.collectAsViewComposePagingItems()
 
 PagingLazyColumn(
     items = pagingItems,
@@ -73,10 +78,12 @@ properties remain readable on a retained reference, but access and commands fail
 
 ## Load-state composition
 
-`contentState` is the primary-body projection, not a framework-owned layout. It returns
-`InitialLoading`, `InitialError`, or `Empty` only while no item is loaded. Once any item is loaded,
-`Content` wins during refresh, prepend, and append activity or failure, so directional UI does not
-unmount the list:
+`contentState` is the primary-body projection, not a framework-owned layout. With no loaded item,
+an error from combined, source, or mediator refresh selects `InitialError`; otherwise any refresh
+loading selects `InitialLoading`, and only fully completed refresh states select `Empty`. This
+prevents a source failure from appearing empty when AndroidX's combined refresh defers to an
+installed mediator. Once any item is loaded, `Content` wins during refresh, prepend, and append
+activity or failure, so directional UI does not unmount the list:
 
 ```kotlin
 when (val state = items.contentState) {
@@ -108,11 +115,19 @@ fixtures. Inactive lifecycle policies retain the last coherent presentation. Flo
 a new items owner, while a policy or non-`Job` context change serially restarts collection on the
 same owner. Leaving composition cancels collection and releases presenter listeners.
 
-Lifecycle restart follows the upstream Flow contract. A raw `Pager.flow` does not support a second
-active collection; use AndroidX `cachedIn` in an application-owned scope before the Flow reaches the
-default lifecycle-gated collector. `PagingData`, pages, presenter state, database rows, and network
-responses are never saved by ViewCompose. Upstream Flow exceptions follow the render-session
-coroutine failure route; Paging load failures stay in `CombinedLoadStates`.
+Lifecycle restart follows the upstream Flow contract. A raw `Pager.flow` does not support repeated
+collection; apply AndroidX `cachedIn` once in an application-owned scope such as a ViewModel before
+the Flow reaches the lifecycle-gated collector. Hiding a `Visible` destination cancels only its UI
+collector; revealing or recreating it replays the cached generation without duplicating upstream
+loading. Cancelling the application scope ends that cache. ViewCompose never saves `PagingData`,
+pages, presenter state, database rows, or network responses. Upstream Flow exceptions follow the
+render-session coroutine failure route; cancellation is not converted to a load failure.
+
+With `RemoteMediator`, the application database or equivalent store remains the source of truth:
+the mediator writes it and invalidates its `PagingSource`. ViewCompose observes AndroidX's real
+combined/source/mediator states and owns neither storage nor network work. If a mediator skips its
+initial refresh, combined refresh may defer to mediator `NotLoading` while source refresh fails;
+`contentState` preserves that source failure, and `forLoadType(REFRESH)` exposes its exact origin.
 
 ## Identity, placeholders, and cost
 
@@ -144,18 +159,17 @@ conservative reload, ensuring the newer declaration is installed without enumera
 
 ## Verification and current scope
 
-Deterministic tests cover presenter generations and commands, lifecycle/release, keyed routing,
-placeholder replacement and invalidation, page drops, skipped revisions, primary-content branches,
-per-`LoadType` source/mediator selection, and detached-cache disposal without double release.
-Renderer coverage also updates 1,000,000 positions without full enumeration; Q3 samples compile
-from public APIs.
+Deterministic tests cover all three lifecycle policies, hidden/revealed navigation, `cachedIn`
+replay across composition recreation, exact cancellation, real `Pager + RemoteMediator` refresh and
+append failures, distinct source failure, presenter generations, placeholders, page drops, and
+detached-cache disposal. Q3 samples compile from public APIs.
 
 On 2026-08-25, two Pixel 4 XL Android 13/API 33 debug tests passed in 5.51 s. The
 1,000,000-position case added 48,124 KiB PSS, jumped to the last position in 555 ms, retained 81
 loaded items under `maxSize = 96`, and released initial Sessions; bounded scrolling ended at 96
-loaded items. Conclusion: **improved** memory, jump/drop, and ownership confidence. This local,
-single-device/geometry evidence is not a frame, network, real `RemoteMediator`, physical load-state
-UI, or Demo claim; later phases own those paths.
+loaded items. Conclusion: **improved** memory, jump/drop, and ownership confidence. The
+mediated-data fixture uses an in-memory store and fake remote result, so this evidence is not a real
+database/network, frame, physical load-state UI, or Demo claim; later phases own those paths.
 
 ## Related documentation
 

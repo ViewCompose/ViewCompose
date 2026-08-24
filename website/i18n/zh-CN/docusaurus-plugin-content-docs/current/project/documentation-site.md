@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: f16c8bafb57f1439527bdbe2c266e16037ae5913a1249348fff4edccb3a520a0
+translation_source_hash: 2923a140e2f8ffccbacde246e927cda497ba3437b2c1f5551abbdea461ffb577
 translation_status: current
 ---
 
@@ -168,14 +168,14 @@ identity token。
 
 <div className="search-partition-detail">
 
-- **2026-08-25，Paging Phase 4 加载状态 Slice：**在同一份本地 macOS Lockfile 上，完成收敛的
-  Phase 3 与 Phase 4 候选非 API 产物分别为 49,109,510 和 49,155,555 字节。增加的 46,045 字节
-  （0.094%）来自长期双语主内容、方向加载与 Source/Mediator 契约；生成 API 产物继续由独立预算
-  约束。首个 Phase 4 候选为 49,167,894 字节，随后在不删除当前契约的前提下合并 Phase 0–4 已完成
-  Ledger 记录，节省 12,339 产物字节。46.9 MiB 上限保持不变，测得余量 22,659 字节。结果为
-  **混合**：用户获得类型安全的 Load State 指引与经过解释的验证，非 API 存储量略有增加。语言、
-  翻译、路由、无障碍和全部预算均通过。本次同主机对照不衡量部署传输、CDN 压缩或运行时网络行为。
-  Phase 5 必须先收敛表示方式，才能再次提高非 API 阈值；不可变 API 历史继续服从独立的单树预算。
+- **2026-08-25，Paging Phase 5 生命周期/Mediator Slice：**在同一份本地 macOS Lockfile 上，
+  完成收敛的 Phase 4 与最终 Phase 5 候选非 API 产物分别为 49,155,555 和 49,161,510 字节。
+  增加的 5,955 字节（0.012%）来自长期双语 `cachedIn`、重建、取消与 Source/Mediator Failure
+  契约，同时删减了重复基线叙述；Phase 3 至 Phase 5 总变化为 +52,000 字节（+0.106%）。
+  46.9 MiB 上限保持不变，测得余量 16,704 字节。结果为**混合**：生命周期与 Mediated State
+  指引得到改进，非 API 存储量略增。语言、翻译、路由、无障碍和全部预算均通过。本次同主机对照
+  不衡量部署传输、CDN 压缩、真实数据库/网络行为；生成 API 产物继续由独立预算约束。Phase 6
+  必须保持在当前上限内，并在增加长期内容前先收敛表示方式。
 
 这里只展开最新的同语料决策；Git 历史保留 2026-08-06 至 Phase 0 检查点被后续结论取代的
 检查点明细。那些测量建立了不可变 API 历史重建、双语搜索与无障碍门禁、计划和证据分段，

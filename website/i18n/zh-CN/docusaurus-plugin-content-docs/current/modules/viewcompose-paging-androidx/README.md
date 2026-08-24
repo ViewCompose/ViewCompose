@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-paging-androidx/README.md
-translation_source_hash: cac14a854d8e8f301df1de319ba320765543046d80579e489bed0471fadaf274
+translation_source_hash: bdc6cd8936e8f9008887f27503c4e3cbaa2b81d1f48c6d96cf01c55fc356cde1
 translation_status: current
 ---
 
@@ -29,8 +29,13 @@ dependencies {
 ## 基本用法
 
 ```kotlin
-// `pages` 在进入 UI 前已由应用持有的 Scope 执行 `cachedIn`。
-val pagingItems = repository.pages.collectAsViewComposePagingItems()
+class ContactsViewModel : ViewModel() {
+    val pages = Pager(config, pagingSourceFactory = repository::contacts)
+        .flow
+        .cachedIn(viewModelScope)
+}
+
+val pagingItems = viewModel.pages.collectAsViewComposePagingItems()
 
 PagingLazyColumn(
     items = pagingItems,
@@ -76,9 +81,11 @@ Presenter Store，但只有配套的最终 Load State 可用后才会对外可�
 
 ## 加载状态组合
 
-`contentState` 是主内容投影，不是框架持有的 Layout。只有尚未加载任何 Item 时，它才返回
-`InitialLoading`、`InitialError` 或 `Empty`。一旦存在已加载 Item，Refresh、Prepend、Append
-加载或失败期间都由 `Content` 优先，方向性 UI 因此不会卸载 List：
+`contentState` 是主内容投影，不是框架持有的 Layout。没有 Loaded Item 时，Combined、Source 或
+Mediator Refresh 任一失败都会选择 `InitialError`；否则任一 Refresh 正在加载就选择
+`InitialLoading`，只有全部 Refresh 都完成才选择 `Empty`。这样即使 AndroidX 的 Combined
+Refresh 延后采用已安装的 Mediator，本地 Source 失败也不会被显示为空。存在 Loaded Item 后，
+Refresh、Prepend、Append 加载或失败期间均由 `Content` 优先，方向性 UI 不会卸载 List：
 
 ```kotlin
 when (val state = items.contentState) {
@@ -109,10 +116,17 @@ when (val state = items.contentState) {
 `Job` 的 Context 时，会在同一 Owner 上串行重启。离开 Composition 会取消收集并释放 Presenter
 Listener。
 
-生命周期重启遵循上游 Flow 契约。原始 `Pager.flow` 不支持第二次活跃收集；在 Flow 进入默认的生命周期
-门控 Collector 前，应用必须在自己拥有的 Scope 中使用 AndroidX `cachedIn`。ViewCompose 不保存
-`PagingData`、Page、Presenter 状态、数据库行或网络响应。上游 Flow 异常进入 Render Session 的协程
-失败通道；Paging Load Failure 仍保留在 `CombinedLoadStates` 中。
+生命周期重启遵循上游 Flow 契约。原始 `Pager.flow` 不支持重复收集；在 Flow 进入生命周期门控
+Collector 前，应当只在应用持有的 Scope（例如 ViewModel）中执行一次 AndroidX `cachedIn`。隐藏
+`Visible` 目标只会取消 UI Collector；恢复或重建时会重放缓存 Generation，不会重复上游加载。取消
+应用 Scope 才会结束缓存。ViewCompose 不保存 `PagingData`、Page、Presenter 状态、数据库行或网络
+响应。上游 Flow 异常进入 Render Session 的协程失败通道；取消不会转换为 Load Failure。
+
+使用 `RemoteMediator` 时，应用数据库或等价存储仍是唯一真实来源：Mediator 写入数据并使其
+`PagingSource` 失效。ViewCompose 只观察 AndroidX 的真实 Combined/Source/Mediator 状态，不持有
+存储或网络工作。若 Mediator 跳过初始 Refresh，Combined Refresh 可能采用 Mediator 的
+`NotLoading`，而 Source Refresh 已失败；`contentState` 会保留该 Source Failure，
+`forLoadType(REFRESH)` 则暴露其准确来源。
 
 ## 标识、占位符与成本
 
@@ -140,16 +154,15 @@ Selector 结果变化也会请求保守 Reload，确保安装新的 Declaration�
 
 ## 验证与当前范围
 
-确定性测试覆盖 Presenter Generation 与命令、Lifecycle/Release、Keyed Routing、Placeholder
-替换与失效、Page Drop、跳过 Revision、主内容分支、按 `LoadType` 选择 Source/Mediator，以及
-Detached Cache 释放且不会二次释放。Renderer 还覆盖一百万位置更新且不完整枚举；Q3 Sample
-只使用公共 API 编译。
+确定性测试覆盖三种生命周期策略、隐藏/恢复导航、Composition 重建时的 `cachedIn` 重放、精确取消、
+真实 `Pager + RemoteMediator` 的 Refresh/Append 失败、独立 Source 失败、Presenter Generation、
+Placeholder、Page Drop 与 Detached Cache 释放。Q3 Sample 只使用公共 API 编译。
 
 2026-08-25，Android 13/API 33 的 Pixel 4 XL 在 5.51 s 内通过两项 Debug 测试。一百万位置用例
 增加 48,124 KiB PSS，555 ms 跳至最后位置，在 `maxSize = 96` 下保留 81 个 Loaded Item 并释放
 初始 Session；有界滚动最终保持 96 个 Loaded Item。结论：内存、Jump/Drop 与所有权信心为
-**improved**。该本地单设备/几何证据不代表 Frame、网络、真实 `RemoteMediator`、真机 Load State
-UI 或 Demo；后续阶段继续负责这些路径。
+**improved**。Mediated-data Fixture 使用内存存储与 Fake Remote Result，因此该证据不代表真实
+数据库/网络、Frame、真机 Load State UI 或 Demo；后续阶段继续负责这些路径。
 
 ## 相关文档
 

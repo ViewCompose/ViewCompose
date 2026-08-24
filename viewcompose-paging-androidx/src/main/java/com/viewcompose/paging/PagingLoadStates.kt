@@ -10,9 +10,11 @@ import androidx.paging.LoadType
  *
  * Resolve this hierarchy exhaustively. [Content] takes precedence whenever at least one item is
  * loaded, including during refresh, prepend, or append loading and failure, so existing content is
- * not replaced by a transient load state. With no loaded items, combined refresh state selects
- * [InitialLoading], [InitialError], or [Empty]. This projection owns no nodes, visuals, wording,
- * analytics, retry policy, or lifecycle.
+ * not replaced by a transient load state. With no loaded items, any combined, source, or mediator
+ * refresh failure selects [InitialError], otherwise any refresh loading state selects
+ * [InitialLoading], and only fully completed refresh states select [Empty]. This preserves local
+ * source failures when AndroidX's combined state defers to an installed mediator. This projection
+ * owns no nodes, visuals, wording, analytics, retry policy, or lifecycle.
  *
  * The known subtypes are a closed source-compatible set for the current Alpha contract. Adding a
  * subtype before stabilization is an API change that requires callers' exhaustive branches to be
@@ -21,17 +23,17 @@ import androidx.paging.LoadType
  * @sample com.viewcompose.paging.samples.pagingLoadStateCompositionSample
  */
 sealed interface PagingContentState {
-    /** Selects initial loading UI when combined refresh is loading and no item is loaded. */
+    /** Selects initial loading UI when any refresh origin is loading and no item is loaded. */
     data object InitialLoading : PagingContentState
 
     /**
-     * Selects initial failure UI when combined refresh failed and no item is loaded.
+     * Selects initial failure UI when any refresh origin failed and no item is loaded.
      *
-     * @property error exact failure carried by AndroidX Paging's combined refresh state
+     * @property error exact failure selected in combined, source, then mediator priority
      */
     data class InitialError(val error: Throwable) : PagingContentState
 
-    /** Selects empty UI after combined refresh completed successfully with no loaded item. */
+    /** Selects empty UI after every refresh origin completed successfully with no loaded item. */
     data object Empty : PagingContentState
 
     /** Selects mounted item content whenever at least one item remains loaded. */
@@ -64,10 +66,12 @@ data class PagingLoadStateSnapshot(
  *
  * The getter reads one accepted item/load-state snapshot. Any positive loaded-item count returns
  * [PagingContentState.Content], even if refresh, prepend, or append is loading or failed. With no
- * loaded items, combined refresh loading returns [PagingContentState.InitialLoading], refresh
- * failure returns [PagingContentState.InitialError] with the original [Throwable], and completed
- * refresh returns [PagingContentState.Empty]. Inspect [ViewComposePagingItems.loadStates] and
- * [forLoadType] for non-blocking refresh UI and unflattened source or mediator detail.
+ * loaded items, refresh failures are selected in combined, source, then mediator priority and
+ * return [PagingContentState.InitialError] with the original [Throwable]. Otherwise any combined,
+ * source, or mediator refresh loading state returns [PagingContentState.InitialLoading]; only all
+ * completed refresh states return [PagingContentState.Empty]. Inspect
+ * [ViewComposePagingItems.loadStates] and [forLoadType] for non-blocking refresh UI and exact
+ * unflattened source or mediator detail.
  *
  * Reads participate in normal ViewCompose observation, allocate only an error value when needed,
  * perform O(1) synchronous work without dispatch or blocking, and remain available from a retained
@@ -83,10 +87,24 @@ val ViewComposePagingItems<*>.contentState: PagingContentState
         if (current.items.isNotEmpty()) {
             return PagingContentState.Content
         }
-        return when (val refresh = current.loadStates.refresh) {
-            is LoadState.Loading -> PagingContentState.InitialLoading
-            is LoadState.Error -> PagingContentState.InitialError(refresh.error)
-            is LoadState.NotLoading -> PagingContentState.Empty
+        val states = current.loadStates
+        val combinedRefresh = states.refresh
+        val sourceRefresh = states.source.refresh
+        val mediatorRefresh = states.mediator?.refresh
+        val error = (combinedRefresh as? LoadState.Error)?.error
+            ?: (sourceRefresh as? LoadState.Error)?.error
+            ?: (mediatorRefresh as? LoadState.Error)?.error
+        if (error != null) {
+            return PagingContentState.InitialError(error)
+        }
+        return if (
+            combinedRefresh is LoadState.Loading ||
+            sourceRefresh is LoadState.Loading ||
+            mediatorRefresh is LoadState.Loading
+        ) {
+            PagingContentState.InitialLoading
+        } else {
+            PagingContentState.Empty
         }
     }
 

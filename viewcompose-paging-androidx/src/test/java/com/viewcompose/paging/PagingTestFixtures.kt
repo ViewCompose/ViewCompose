@@ -1,9 +1,11 @@
 package com.viewcompose.paging
 
 import androidx.paging.Pager
+import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingConfig
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import androidx.paging.RemoteMediator
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import kotlinx.coroutines.CancellationException
@@ -33,6 +35,27 @@ internal class ControlledSourceFactory {
             maxSize = maxSize,
         ),
         initialKey = initialKey,
+        pagingSourceFactory = {
+            ControlledPagingSource().also { source ->
+                createdSources += source
+                check(sources.trySend(source).isSuccess)
+            }
+        },
+    )
+
+    @OptIn(ExperimentalPagingApi::class)
+    fun mediatedPager(
+        remoteMediator: RemoteMediator<Int, Int>,
+        placeholders: Boolean = false,
+        prefetchDistance: Int = 1,
+    ): Pager<Int, Int> = Pager(
+        config = PagingConfig(
+            pageSize = 2,
+            prefetchDistance = prefetchDistance,
+            enablePlaceholders = placeholders,
+            initialLoadSize = 2,
+        ),
+        remoteMediator = remoteMediator,
         pagingSourceFactory = {
             ControlledPagingSource().also { source ->
                 createdSources += source
