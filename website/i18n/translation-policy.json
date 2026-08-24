@@ -58,6 +58,7 @@
     "modules/viewcompose-animation/README.md",
     "modules/viewcompose-constraintlayout-androidx/README.md",
     "modules/viewcompose-diagnostics/README.md",
+    "modules/viewcompose-exoplayer2-android/README.md",
     "modules/viewcompose-gesture-core/README.md",
     "modules/viewcompose-gesture/README.md",
     "modules/viewcompose-graphics-core/README.md",

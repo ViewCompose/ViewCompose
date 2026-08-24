@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: a7b094d71e105710207bab0dbfa32a2538c5a534537ff89245f481b7ef714338
+translation_source_hash: 7cb46dfa4d66410ce1919ec70df1edbc5f1567d05211716687064a312f8fbf59
 translation_status: current
 ---
 
@@ -49,6 +49,7 @@ translation_status: current
 | `viewcompose-shadow-android` | Integration | 高级 Android 阴影渲染 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-shadow-android) |
 | `viewcompose-constraintlayout-androidx` | Integration | AndroidX ConstraintLayout DSL | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-constraintlayout-androidx) |
 | `viewcompose-media3-androidx` | Integration | 生命周期安全的 AndroidX Media3 PlayerView 托管 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-media3-androidx) |
+| `viewcompose-exoplayer2-android` | Integration | 冻结的旧版 ExoPlayer 2 StyledPlayerView 兼容层 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-exoplayer2-android) |
 
 ## 目录规则
 

@@ -1,4 +1,6 @@
-package com.viewcompose.media3
+@file:Suppress("DEPRECATION")
+
+package com.viewcompose.exoplayer2
 
 import android.graphics.Color
 import android.os.Looper
@@ -11,11 +13,11 @@ import android.widget.TextView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
-import androidx.media3.common.Player
-import androidx.media3.common.SimpleBasePlayer
-import androidx.media3.ui.AspectRatioFrameLayout
-import androidx.media3.ui.PlayerView
-import androidx.media3.ui.R as Media3UiR
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.SimpleBasePlayer
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
+import com.google.android.exoplayer2.ui.R as ExoPlayerUiR
+import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.viewcompose.host.android.renderInto
@@ -35,7 +37,7 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [24])
-class Media3PlayerViewTest {
+class ExoPlayerViewTest {
     @Test
     fun `player attaches only while lifecycle is started and caller retains release ownership`() {
         val root = FrameLayout(RuntimeEnvironment.getApplication())
@@ -44,10 +46,10 @@ class Media3PlayerViewTest {
 
         val session = renderInto(root) {
             ProvideLifecycleOwner(owner) {
-                Media3PlayerView(player = player, key = "player")
+                ExoPlayerView(player = player, key = "player")
             }
         }
-        val playerView = root.requireDescendant<PlayerView>()
+        val playerView = root.requireDescendant<StyledPlayerView>()
         assertNull(playerView.player)
         assertNull(player.videoOutput)
 
@@ -77,16 +79,16 @@ class Media3PlayerViewTest {
         var player: Player = first
         val session = renderInto(root) {
             ProvideLifecycleOwner(owner) {
-                Media3PlayerView(player = player, key = "player")
+                ExoPlayerView(player = player, key = "player")
             }
         }
-        val mounted = root.requireDescendant<PlayerView>()
+        val mounted = root.requireDescendant<StyledPlayerView>()
         assertTrue(first.videoOutput is SurfaceView)
 
         player = second
         session.render()
 
-        assertSame(mounted, root.requireDescendant<PlayerView>())
+        assertSame(mounted, root.requireDescendant<StyledPlayerView>())
         assertNull(first.videoOutput)
         assertTrue(first.clearedVideoOutputCount > 0)
         assertSame(second, mounted.player)
@@ -99,28 +101,24 @@ class Media3PlayerViewTest {
     fun `surface type is construction identity and selects the exact native output`() {
         val root = FrameLayout(RuntimeEnvironment.getApplication())
         val owner = TestLifecycleOwner().apply { moveTo(Lifecycle.State.RESUMED) }
-        var surfaceType = Media3SurfaceType.SurfaceView
+        var surfaceType = ExoPlayerSurfaceType.SurfaceView
         val session = renderInto(root) {
             ProvideLifecycleOwner(owner) {
-                Media3PlayerView(
-                    player = null,
-                    surfaceType = surfaceType,
-                    key = "player",
-                )
+                ExoPlayerView(player = null, surfaceType = surfaceType, key = "player")
             }
         }
-        val surfacePlayerView = root.requireDescendant<PlayerView>()
+        val surfacePlayerView = root.requireDescendant<StyledPlayerView>()
         assertTrue(surfacePlayerView.videoSurfaceView is SurfaceView)
 
-        surfaceType = Media3SurfaceType.TextureView
+        surfaceType = ExoPlayerSurfaceType.TextureView
         session.render()
-        val texturePlayerView = root.requireDescendant<PlayerView>()
+        val texturePlayerView = root.requireDescendant<StyledPlayerView>()
         assertTrue(surfacePlayerView !== texturePlayerView)
         assertTrue(texturePlayerView.videoSurfaceView is TextureView)
 
-        surfaceType = Media3SurfaceType.None
+        surfaceType = ExoPlayerSurfaceType.None
         session.render()
-        val noSurfacePlayerView = root.requireDescendant<PlayerView>()
+        val noSurfacePlayerView = root.requireDescendant<StyledPlayerView>()
         assertTrue(texturePlayerView !== noSurfacePlayerView)
         assertNull(noSurfacePlayerView.videoSurfaceView)
 
@@ -128,44 +126,44 @@ class Media3PlayerViewTest {
     }
 
     @Test
-    fun `complete configuration maps to native player view and validates timeout`() {
+    fun `complete configuration maps to styled player view and validates timeout`() {
         val root = FrameLayout(RuntimeEnvironment.getApplication())
         val owner = TestLifecycleOwner().apply { moveTo(Lifecycle.State.RESUMED) }
-        val configuration = Media3PlayerViewConfiguration(
-            resizeMode = Media3ResizeMode.Zoom,
+        val configuration = ExoPlayerViewConfiguration(
+            resizeMode = ExoPlayerResizeMode.Zoom,
             useController = false,
             controllerShowTimeoutMillis = 0,
             controllerAutoShow = false,
             controllerHideOnTouch = false,
-            showBuffering = Media3ShowBuffering.Always,
+            showBuffering = ExoPlayerShowBuffering.Always,
             keepContentOnPlayerReset = true,
-            artworkDisplayMode = Media3ArtworkDisplayMode.Fill,
+            artworkDisplayMode = ExoPlayerArtworkDisplayMode.Fill,
             shutterBackgroundColor = Color.MAGENTA,
-            contentDescription = "Fixture player",
+            contentDescription = "Legacy fixture player",
             keepScreenOn = true,
-            customErrorMessage = "Fixture error",
+            customErrorMessage = "Legacy fixture error",
         )
         val session = renderInto(root) {
             ProvideLifecycleOwner(owner) {
-                Media3PlayerView(player = null, configuration = configuration)
+                ExoPlayerView(player = null, configuration = configuration)
             }
         }
-        val view = root.requireDescendant<PlayerView>()
+        val view = root.requireDescendant<StyledPlayerView>()
 
         assertEquals(AspectRatioFrameLayout.RESIZE_MODE_ZOOM, view.resizeMode)
         assertFalse(view.useController)
         assertEquals(0, view.controllerShowTimeoutMs)
         assertFalse(view.controllerAutoShow)
         assertFalse(view.controllerHideOnTouch)
-        assertEquals(PlayerView.ARTWORK_DISPLAY_MODE_FILL, view.artworkDisplayMode)
-        assertEquals("Fixture player", view.contentDescription)
+        assertEquals(StyledPlayerView.ARTWORK_DISPLAY_MODE_FILL, view.artworkDisplayMode)
+        assertEquals("Legacy fixture player", view.contentDescription)
         assertTrue(view.keepScreenOn)
         assertEquals(
-            "Fixture error",
-            view.findViewById<TextView>(Media3UiR.id.exo_error_message).text,
+            "Legacy fixture error",
+            view.findViewById<TextView>(ExoPlayerUiR.id.exo_error_message).text,
         )
         assertThrows(IllegalArgumentException::class.java) {
-            Media3PlayerViewConfiguration(controllerShowTimeoutMillis = -1)
+            ExoPlayerViewConfiguration(controllerShowTimeoutMillis = -1)
         }
 
         session.dispose()
@@ -181,10 +179,7 @@ class Media3PlayerViewTest {
         var callbackCount = 0
         val session = renderInto(root) {
             ProvideLifecycleOwner(owner) {
-                Media3PlayerView(
-                    player = player,
-                    onRenderedFirstFrame = { callbackCount++ },
-                )
+                ExoPlayerView(player = player, onRenderedFirstFrame = { callbackCount++ })
             }
         }
 
@@ -206,9 +201,9 @@ class Media3PlayerViewTest {
     }
 
     @Test
-    fun `Media3 artifact runtime does not contain legacy ExoPlayer 2`() {
+    fun `legacy artifact runtime does not contain Media3`() {
         assertThrows(ClassNotFoundException::class.java) {
-            Class.forName("com.google.android.exoplayer2.Player")
+            Class.forName("androidx.media3.common.Player")
         }
     }
 

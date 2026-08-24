@@ -35,4 +35,5 @@ dependencies {
     implementation(viewCompose("viewcompose-shadow-android"))
     implementation(viewCompose("viewcompose-constraintlayout-androidx"))
     implementation(viewCompose("viewcompose-media3-androidx"))
+    implementation(viewCompose("viewcompose-exoplayer2-android"))
 }

@@ -44,6 +44,7 @@ this table. Architecture and guide pages remain the source of truth for cross-mo
 | `viewcompose-shadow-android` | Integration | Advanced Android shadow rendering | [Available](./viewcompose-shadow-android/README.md) |
 | `viewcompose-constraintlayout-androidx` | Integration | AndroidX ConstraintLayout DSL | [Available](./viewcompose-constraintlayout-androidx/README.md) |
 | `viewcompose-media3-androidx` | Integration | Lifecycle-safe AndroidX Media3 PlayerView hosting | [Available](./viewcompose-media3-androidx/README.md) |
+| `viewcompose-exoplayer2-android` | Integration | Frozen legacy ExoPlayer 2 StyledPlayerView compatibility | [Available](./viewcompose-exoplayer2-android/README.md) |
 
 ## Catalog rules
 

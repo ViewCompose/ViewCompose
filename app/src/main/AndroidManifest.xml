@@ -64,6 +64,9 @@
             android:name=".Media3Activity"
             android:exported="false" />
         <activity
+            android:name=".ExoPlayer2Activity"
+            android:exported="false" />
+        <activity
             android:name=".performance.PerformanceComparisonActivity"
             android:exported="false" />
         <activity

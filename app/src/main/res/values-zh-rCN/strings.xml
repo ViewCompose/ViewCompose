@@ -263,4 +263,19 @@
     <string name="demo_media3_status">当前：%1$s · %2$s · 首帧次数：%3$d</string>
     <string name="demo_media3_manual_check">人工验收：切换播放器、切换 Surface、离开应用再返回后，视频都必须保持可见。</string>
     <string name="demo_media3_content_description">ViewCompose Media3 本地样片播放器</string>
+    <string name="demo_activity_exoplayer2_title">旧版 ExoPlayer 2</string>
+    <string name="demo_scenario_exoplayer2_player_view_title">旧版 ExoPlayer StyledPlayerView</string>
+    <string name="demo_scenario_exoplayer2_player_view_summary">冻结在 2.19.1 的兼容路径，验证调用方持有 Player、生命周期安全挂载，且不使用 Media3 别名。</string>
+    <string name="demo_exoplayer2_section_title">旧命名空间兼容</string>
+    <string name="demo_exoplayer2_section_summary">Activity 持有两个旧版 Player；ViewCompose 只负责 started 状态下的 StyledPlayerView 挂载。</string>
+    <string name="demo_exoplayer2_switch_player">切换 Player</string>
+    <string name="demo_exoplayer2_switch_surface">切换 Surface</string>
+    <string name="demo_exoplayer2_reset">重置</string>
+    <string name="demo_exoplayer2_player_a">旧版 Player A</string>
+    <string name="demo_exoplayer2_player_b">旧版 Player B</string>
+    <string name="demo_exoplayer2_surface_view">SurfaceView</string>
+    <string name="demo_exoplayer2_texture_view">TextureView</string>
+    <string name="demo_exoplayer2_status">当前：%1$s · %2$s · 首帧次数：%3$d</string>
+    <string name="demo_exoplayer2_manual_check">人工验收：替换 Player、替换 Surface、进入后台并返回后，旧版视频仍然可见。</string>
+    <string name="demo_exoplayer2_content_description">ViewCompose 旧版 ExoPlayer 本地样片</string>
 </resources>
