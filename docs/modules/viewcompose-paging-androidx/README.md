@@ -71,6 +71,35 @@ current generation, while `refresh()` requests the AndroidX-owned replacement. I
 commands run on the Android main thread. After the collecting call leaves composition, final
 properties remain readable on a retained reference, but access and commands fail.
 
+## Load-state composition
+
+`contentState` is the primary-body projection, not a framework-owned layout. It returns
+`InitialLoading`, `InitialError`, or `Empty` only while no item is loaded. Once any item is loaded,
+`Content` wins during refresh, prepend, and append activity or failure, so directional UI does not
+unmount the list:
+
+```kotlin
+when (val state = items.contentState) {
+    PagingContentState.InitialLoading -> InitialLoading()
+    is PagingContentState.InitialError -> InitialError(
+        error = state.error,
+        onRetry = items::retry,
+    )
+    PagingContentState.Empty -> EmptyResults()
+    PagingContentState.Content -> key("contacts") {
+        PagingLazyColumn(items = items, key = Contact::id) { contact -> ContactRow(contact) }
+    }
+}
+```
+
+For stable Header/Footer composition, select an operation once with
+`loadStates.forLoadType(LoadType.PREPEND)` or `LoadType.APPEND`, then render its `combined` state
+before or after the keyed list. The returned `PagingLoadStateSnapshot` also retains `source` and the
+nullable `mediator` state from the same AndroidX snapshot. This permits separate source and mediator
+diagnostics even when `combined` chooses one visible state. The helpers emit no nodes and select no
+wording, analytics, auto-retry, offline, or destructive-refresh policy. Use `retry()` for failed
+loads in the current generation and an explicit `refresh()` action for replacement.
+
 ## Lifecycle and upstream ownership
 
 The default `Visible` policy requires the nearest `LocalLifecycleOwner` and collects at `STARTED`.
@@ -116,16 +145,17 @@ conservative reload, ensuring the newer declaration is installed without enumera
 ## Verification and current scope
 
 Deterministic tests cover presenter generations and commands, lifecycle/release, keyed routing,
-placeholder replacement and invalidation, page drops, skipped revisions, and detached-cache
-disposal without double release. Renderer coverage also updates 1,000,000 positions without full
-enumeration; Q3 samples compile from public APIs.
+placeholder replacement and invalidation, page drops, skipped revisions, primary-content branches,
+per-`LoadType` source/mediator selection, and detached-cache disposal without double release.
+Renderer coverage also updates 1,000,000 positions without full enumeration; Q3 samples compile
+from public APIs.
 
 On 2026-08-25, two Pixel 4 XL Android 13/API 33 debug tests passed in 5.51 s. The
 1,000,000-position case added 48,124 KiB PSS, jumped to the last position in 555 ms, retained 81
 loaded items under `maxSize = 96`, and released initial Sessions; bounded scrolling ended at 96
 loaded items. Conclusion: **improved** memory, jump/drop, and ownership confidence. This local,
-single-device/geometry evidence is not a frame, network, RemoteMediator, load-state UI, or Demo
-claim; later phases own those paths.
+single-device/geometry evidence is not a frame, network, real `RemoteMediator`, physical load-state
+UI, or Demo claim; later phases own those paths.
 
 ## Related documentation
 

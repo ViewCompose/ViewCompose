@@ -205,19 +205,17 @@ identity token.
 
 <div className="search-partition-detail">
 
-- **2026-08-25, Paging Phase 3 compact-table slice:** on the same local macOS lockfile, the Phase 2
-  and consolidated Phase 3 candidates measured 48,942,128 and 49,109,510 non-API bytes. The
-  +167,382-byte change (+0.342%) adds durable bilingual placeholder, bounded-update, migration,
-  and holder-lifecycle contracts; generated API output remains separately budgeted. Before the
-  measurement, the branch removed its redundant intermediate acceptance row and merged duplicated
-  device evidence across the plan and module manuals. The result still exceeded 46.8 MiB by 36,154
-  bytes, so the smallest 0.1 MiB step that contains the measured corpus raises the ceiling from 46.7
-  to 46.9 MiB and leaves 68,704 bytes of headroom. The result is **mixed**: compact-table users gain
-  current contracts and interpreted device evidence in both locales while non-API storage grows.
-  Language, translation, routing, and accessibility checks pass. This same-host comparison does not
-  measure deployment transfer, CDN compression, or runtime network behavior. Phase 4 must
-  consolidate representation before any further non-API increase; immutable API history continues
-  under independent per-tree budgets.
+- **2026-08-25, Paging Phase 4 load-state slice:** on the same local macOS lockfile, the consolidated
+  Phase 3 and Phase 4 candidates measured 49,109,510 and 49,155,555 non-API bytes. The +46,045-byte
+  change (+0.094%) adds durable bilingual primary-content, directional-load, and source/mediator
+  contracts; generated API output remains separately budgeted. The first Phase 4 candidate measured
+  49,167,894 bytes, after which completed Phase 0–4 ledger rows were merged without removing current
+  contracts, saving 12,339 output bytes. The 46.9 MiB ceiling is unchanged and retains 22,659 bytes
+  of measured headroom. The result is **mixed**: users gain typed load-state guidance and interpreted
+  verification while non-API storage grows slightly. Language, translation, routing, accessibility,
+  and all budgets pass. This same-host comparison does not measure deployment transfer, CDN
+  compression, or runtime network behavior. Phase 5 must consolidate representation before any
+  further non-API increase; immutable API history remains under independent per-tree budgets.
 
 Only the latest same-corpus decision remains expanded here. Git history preserves the superseded
 2026-08-06 through the Phase 0 checkpoint details. Those measurements established immutable API
