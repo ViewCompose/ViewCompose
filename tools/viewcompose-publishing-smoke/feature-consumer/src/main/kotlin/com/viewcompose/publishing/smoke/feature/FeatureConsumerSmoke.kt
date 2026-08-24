@@ -1,6 +1,7 @@
 package com.viewcompose.publishing.smoke.feature
 
-import androidx.media3.common.Player
+import androidx.media3.common.Player as Media3Player
+import com.google.android.exoplayer2.Player as LegacyPlayer
 import com.viewcompose.animation.AnimatedVisibility
 import com.viewcompose.animation.core.TweenSpec
 import com.viewcompose.gesture.combinedClickable
@@ -9,6 +10,7 @@ import com.viewcompose.graphics.Canvas
 import com.viewcompose.graphics.core.PathModel
 import com.viewcompose.navigation.core.NavGraph
 import com.viewcompose.media3.Media3PlayerView
+import com.viewcompose.exoplayer2.ExoPlayerView
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -37,6 +39,12 @@ fun UiTreeBuilder.compileAdvertisedFeatureSurfaces() {
 }
 
 /** The independently published Media3 artifact exposes both its DSL and Media3 Player contract. */
-fun UiTreeBuilder.compileMedia3FeatureSurface(player: Player) {
+fun UiTreeBuilder.compileMedia3FeatureSurface(player: Media3Player) {
     Media3PlayerView(player = player)
+}
+
+/** Media3 and legacy ExoPlayer compile together without aliases supplied by ViewCompose. */
+@Suppress("DEPRECATION")
+fun UiTreeBuilder.compileLegacyExoPlayerFeatureSurface(player: LegacyPlayer) {
+    ExoPlayerView(player = player)
 }

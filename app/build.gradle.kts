@@ -53,6 +53,7 @@ dependencies {
     implementation(project(":viewcompose-shadow-android"))
     implementation(project(":viewcompose-constraintlayout-androidx"))
     implementation(project(":viewcompose-media3-androidx"))
+    implementation(project(":viewcompose-exoplayer2-android"))
     implementation(project(":viewcompose-animation"))
     implementation(project(":viewcompose-gesture"))
     implementation(project(":viewcompose-graphics"))
@@ -90,4 +91,5 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.test.uiautomator)
     androidTestImplementation(libs.androidx.media3.ui)
+    androidTestImplementation(libs.exoplayer2.ui)
 }

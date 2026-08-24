@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add an independently published legacy ExoPlayer 2.19.1 StyledPlayerView integration with caller-owned players, lifecycle-safe Surface cleanup, migration guidance, and no Media3 aliasing.",
+  "changes": [
+    { "artifact": "viewcompose-exoplayer2-android", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "Register the new legacy ExoPlayer artifact package, architectural layer, compile task, and unit-test task without changing an existing artifact's production source."
+    },
+    {
+      "path": "settings.gradle.kts",
+      "reason": "Include the independently published legacy ExoPlayer project in the repository build."
+    },
+    {
+      "path": "gradle/libs.versions.toml",
+      "reason": "Declare the exact final legacy ExoPlayer dependency line used only by the compatibility integration and Demo."
+    }
+  ]
+}

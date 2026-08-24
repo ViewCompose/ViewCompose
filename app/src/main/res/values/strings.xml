@@ -262,4 +262,19 @@
     <string name="demo_media3_status">Active: %1$s · %2$s · first frames: %3$d</string>
     <string name="demo_media3_manual_check">Manual check: video must remain visible after switching player, switching Surface, leaving the app, and returning.</string>
     <string name="demo_media3_content_description">ViewCompose Media3 local fixture player</string>
+    <string name="demo_activity_exoplayer2_title">Legacy ExoPlayer 2</string>
+    <string name="demo_scenario_exoplayer2_player_view_title">Legacy ExoPlayer StyledPlayerView</string>
+    <string name="demo_scenario_exoplayer2_player_view_summary">A frozen 2.19.1 compatibility path with caller-owned players, lifecycle-safe attachment, and no Media3 alias.</string>
+    <string name="demo_exoplayer2_section_title">Legacy namespace compatibility</string>
+    <string name="demo_exoplayer2_section_summary">The Activity owns two legacy players; ViewCompose owns only the started StyledPlayerView attachment.</string>
+    <string name="demo_exoplayer2_switch_player">Switch player</string>
+    <string name="demo_exoplayer2_switch_surface">Switch Surface</string>
+    <string name="demo_exoplayer2_reset">Reset</string>
+    <string name="demo_exoplayer2_player_a">Legacy player A</string>
+    <string name="demo_exoplayer2_player_b">Legacy player B</string>
+    <string name="demo_exoplayer2_surface_view">SurfaceView</string>
+    <string name="demo_exoplayer2_texture_view">TextureView</string>
+    <string name="demo_exoplayer2_status">Active: %1$s · %2$s · first frames: %3$d</string>
+    <string name="demo_exoplayer2_manual_check">Manual check: the legacy video remains visible after player replacement, Surface replacement, background, and return.</string>
+    <string name="demo_exoplayer2_content_description">ViewCompose legacy ExoPlayer local fixture</string>
 </resources>

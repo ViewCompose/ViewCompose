@@ -51,6 +51,7 @@ class DemoCatalogFilterTest {
                 "environment.cross-activity-theme",
                 "interop.android-view",
                 "media.media3-player-view",
+                "media.exoplayer2-player-view",
                 "overlay.transient",
                 "overlay.dialog",
                 "overlay.menu",

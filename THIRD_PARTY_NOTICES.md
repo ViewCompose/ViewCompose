@@ -31,6 +31,20 @@ license, and release terms are available from the
 [AndroidX Media repository](https://github.com/androidx/media) and the
 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
+### Legacy ExoPlayer 2.19.1
+
+The optional `viewcompose-exoplayer2-android` compatibility integration directly uses:
+
+- `com.google.android.exoplayer:exoplayer-core:2.19.1`
+- `com.google.android.exoplayer:exoplayer-ui:2.19.1`
+
+These final legacy-namespace artifacts are discontinued in favor of AndroidX Media3 and are
+provided under the Apache License 2.0. Upstream source, license, final release information, and
+migration guidance are available from the
+[archived ExoPlayer repository](https://github.com/google/ExoPlayer), the
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), and the
+[Media3 migration guide](https://developer.android.com/media/media3/exoplayer/migration-guide).
+
 ## How to Verify
 
 Check declared dependencies in Gradle files and version catalogs, then map to
