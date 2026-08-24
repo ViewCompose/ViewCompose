@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "summary": "Characterize AndroidX PagingDataPresenter behavior in a non-published JVM test harness.",
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "The root build change only adds the non-published Paging presenter characterization test to qaQuick; it does not change any published artifact source, output, dependency metadata, or publication configuration."
+    },
+    {
+      "path": "settings.gradle.kts",
+      "reason": "The settings change includes only the non-published integration-tests:paging-presenter JVM project used to characterize the upstream AndroidX contract before production implementation."
+    }
+  ]
+}

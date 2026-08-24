@@ -208,6 +208,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-exoplayer2-android:testDebugUnitTest",
     ":viewcompose-google-maps-android:testDebugUnitTest",
     ":viewcompose-camerax-androidx:testDebugUnitTest",
+    ":integration-tests:paging-presenter:test",
     ":app:testDebugUnitTest",
 )
 

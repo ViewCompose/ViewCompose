@@ -31,6 +31,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "ViewCompose"
 include(":app")
+include(":integration-tests:paging-presenter")
 include(":samples:compose-migration")
 include(":samples:counter")
 include(":samples:tutorials")
