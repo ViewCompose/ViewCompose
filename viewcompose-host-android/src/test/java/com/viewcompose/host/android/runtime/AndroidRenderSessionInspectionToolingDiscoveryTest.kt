@@ -11,27 +11,48 @@ import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.tooling.UiSourceCallSite
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class AndroidRenderSessionInspectionToolingDiscoveryTest {
+class AndroidRenderSessionInspectionToolingRegistryTest {
     @Test
-    fun `selects the only neutral inspection tooling service`() {
+    fun `selects one installed implementation without discovery`() {
+        val slot = AndroidRenderSessionInspectionToolingSlot()
         val provider = TestInspectionTooling()
 
-        assertSame(provider, selectSingleRenderSessionInspectionTooling(listOf(provider)))
+        slot.install(provider)
+
+        assertSame(provider, slot.resolve())
+        assertSame(provider, slot.resolve())
     }
 
     @Test
-    fun `absence and ambiguity both disable optional inspection tooling`() {
-        assertNull(selectSingleRenderSessionInspectionTooling(emptyList()))
-        assertNull(
-            selectSingleRenderSessionInspectionTooling(
-                listOf(TestInspectionTooling(), TestInspectionTooling()),
-            ),
-        )
+    fun `absence freezes to no tooling and rejects later installation`() {
+        val warnings = mutableListOf<String>()
+        val slot = AndroidRenderSessionInspectionToolingSlot(warnings::add)
+
+        assertNull(slot.resolve())
+        slot.install(TestInspectionTooling())
+
+        assertNull(slot.resolve())
+        assertTrue(warnings.single().contains("after the runtime selection had been frozen"))
+    }
+
+    @Test
+    fun `same instance is idempotent and distinct implementations disable the port`() {
+        val warnings = mutableListOf<String>()
+        val slot = AndroidRenderSessionInspectionToolingSlot(warnings::add)
+        val first = TestInspectionTooling()
+
+        slot.install(first)
+        slot.install(first)
+        slot.install(TestInspectionTooling())
+
+        assertNull(slot.resolve())
+        assertTrue(warnings.single().contains("disabling all of them"))
     }
 
     private class TestInspectionTooling : RenderSessionInspectionTooling {

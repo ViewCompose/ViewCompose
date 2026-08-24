@@ -18,6 +18,7 @@ import com.viewcompose.InputActivity
 import com.viewcompose.InteropActivity
 import com.viewcompose.Media3Activity
 import com.viewcompose.ExoPlayer2Activity
+import com.viewcompose.GoogleMapsActivity
 import com.viewcompose.R
 import com.viewcompose.ResourceConfigurationActivity
 import com.viewcompose.StateActivity
@@ -95,6 +96,7 @@ internal object DemoScenarioIds {
     val InteropAndroidView = DemoScenarioId("interop.android-view")
     val Media3PlayerView = DemoScenarioId("media.media3-player-view")
     val ExoPlayer2View = DemoScenarioId("media.exoplayer2-player-view")
+    val GoogleMapView = DemoScenarioId("maps.google-map-view")
     val OverlayTransient = DemoScenarioId("overlay.transient")
     val OverlayDialog = DemoScenarioId("overlay.dialog")
     val OverlayMenu = DemoScenarioId("overlay.menu")
@@ -1025,6 +1027,25 @@ internal object DemoScenarioRegistry {
                 reset = R.id.demo_media_exoplayer2_player_view_reset,
                 state = R.id.demo_media_exoplayer2_player_view_state,
                 target = R.id.demo_media_exoplayer2_player_view_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.GoogleMapView,
+            category = DemoScenarioCategory.AndroidIntegration,
+            titleRes = R.string.demo_scenario_google_maps_title,
+            summaryRes = R.string.demo_scenario_google_maps_summary,
+            host = DemoHostPolicy.Dedicated,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(GoogleMapsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_maps_google_map_view_root,
+                ready = R.id.demo_maps_google_map_view_ready,
+                primaryAction = R.id.demo_maps_google_map_view_primary_action,
+                secondaryAction = R.id.demo_maps_google_map_view_secondary_action,
+                reset = R.id.demo_maps_google_map_view_reset,
+                state = R.id.demo_maps_google_map_view_state,
+                target = R.id.demo_maps_google_map_view_target,
             ),
         ),
         scenario(

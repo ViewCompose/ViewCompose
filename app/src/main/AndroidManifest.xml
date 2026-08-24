@@ -15,6 +15,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ViewCompose">
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${viewComposeMapsApiKey}" />
         <profileable
             android:shell="true"
             tools:targetApi="29" />
@@ -65,6 +68,9 @@
             android:exported="false" />
         <activity
             android:name=".ExoPlayer2Activity"
+            android:exported="false" />
+        <activity
+            android:name=".GoogleMapsActivity"
             android:exported="false" />
         <activity
             android:name=".performance.PerformanceComparisonActivity"

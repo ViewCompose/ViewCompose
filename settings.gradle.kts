@@ -70,4 +70,5 @@ include(":viewcompose-shadow-android")
 include(":viewcompose-constraintlayout-androidx")
 include(":viewcompose-media3-androidx")
 include(":viewcompose-exoplayer2-android")
+include(":viewcompose-google-maps-android")
  

@@ -9,11 +9,9 @@ import com.viewcompose.animation.tooling.AnimationTimelineSource
 import com.viewcompose.animation.tooling.AnimationTimelineSpecFamily
 import com.viewcompose.animation.tooling.AnimationTimelineStateSummary
 import com.viewcompose.animation.tooling.AnimationTimelineTerminalCondition
-import com.viewcompose.animation.tooling.AnimationTimelineTooling
 import com.viewcompose.animation.tooling.AnimationTimelineValue
 import com.viewcompose.animation.tooling.AnimationTimelineValueKind
 import java.io.File
-import java.util.ServiceLoader
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -26,16 +24,6 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class AndroidAnimationTimelineToolingTest {
-    @Test
-    fun `service is discoverable only from the optional preview artifact`() {
-        val providers = ServiceLoader.load(
-            AnimationTimelineTooling::class.java,
-            AnimationTimelineTooling::class.java.classLoader,
-        ).toList()
-
-        assertTrue(providers.any { provider -> provider is AndroidAnimationTimelineTooling })
-    }
-
     @Test
     fun `provider retains only a weak source before the debuggable request gate`() {
         AndroidDeviceToolingDebugGate.resetForTest()
@@ -151,7 +139,8 @@ class AndroidAnimationTimelineToolingTest {
     @Test
     fun `missing busy and stale captures preserve request identity`() {
         val registry = AndroidAnimationTimelineRegistry()
-        registry.register(MutableTimelineSource("transition-1"))
+        val source = MutableTimelineSource("transition-1")
+        registry.register(source)
         val missing = registry.beginCapture(
             "com.example.app",
             REQUEST_ID,

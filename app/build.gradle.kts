@@ -17,6 +17,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val mapsApiKey = providers.gradleProperty("viewComposeMapsApiKey").orNull.orEmpty()
+        manifestPlaceholders["viewComposeMapsApiKey"] = mapsApiKey
+        buildConfigField(
+            "boolean",
+            "VIEWCOMPOSE_MAPS_CONFIGURED",
+            mapsApiKey.isNotBlank().toString(),
+        )
     }
 
     buildTypes {
@@ -46,6 +54,10 @@ android {
         unitTests.isIncludeAndroidResources = true
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
 }
 
 dependencies {
@@ -54,6 +66,7 @@ dependencies {
     implementation(project(":viewcompose-constraintlayout-androidx"))
     implementation(project(":viewcompose-media3-androidx"))
     implementation(project(":viewcompose-exoplayer2-android"))
+    implementation(project(":viewcompose-google-maps-android"))
     implementation(project(":viewcompose-animation"))
     implementation(project(":viewcompose-gesture"))
     implementation(project(":viewcompose-graphics"))

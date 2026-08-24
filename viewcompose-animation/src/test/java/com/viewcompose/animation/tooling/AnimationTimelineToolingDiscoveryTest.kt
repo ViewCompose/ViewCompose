@@ -1,28 +1,36 @@
 package com.viewcompose.animation.tooling
 
-import java.util.ServiceLoader
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertSame
 import org.junit.Test
 
-class AnimationTimelineToolingDiscoveryTest {
+class AnimationTimelineToolingRegistryTest {
     @Test
-    fun `animation artifact alone contains no concrete timeline provider`() {
-        val providers = ServiceLoader.load(
-            AnimationTimelineTooling::class.java,
-            AnimationTimelineTooling::class.java.classLoader,
-        ).toList()
+    fun `selects one installed implementation without discovery`() {
+        val slot = AnimationTimelineToolingSlot()
+        val provider = EmptyTimelineTooling()
 
-        assertTrue(providers.isEmpty())
-        assertNull(selectSingleAnimationTimelineTooling(providers))
+        slot.install(provider)
+
+        assertSame(provider, slot.resolve())
+        assertSame(provider, slot.resolve())
     }
 
     @Test
-    fun `ambiguous providers disable tooling instead of selecting implicitly`() {
+    fun `absence and ambiguity freeze to no tooling`() {
+        val absent = AnimationTimelineToolingSlot()
+        assertNull(absent.resolve())
+        absent.install(EmptyTimelineTooling())
+        assertNull(absent.resolve())
+
+        val ambiguous = AnimationTimelineToolingSlot()
         val first = EmptyTimelineTooling()
         val second = EmptyTimelineTooling()
+        ambiguous.install(first)
+        ambiguous.install(first)
+        ambiguous.install(second)
 
-        assertNull(selectSingleAnimationTimelineTooling(listOf(first, second)))
+        assertNull(ambiguous.resolve())
     }
 
     private class EmptyTimelineTooling : AnimationTimelineTooling {

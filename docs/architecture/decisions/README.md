@@ -27,6 +27,7 @@ architecture pages describe how the system works now.
 - [ADR-0019: Animation physics, transition, and inspection ownership](./0019-animation-physics-transition-and-inspection-ownership.md)
 - [ADR-0020: Separate animation value and velocity domains](./0020-separate-animation-value-and-velocity-domains.md)
 - [ADR-0021: Correlated render diagnostics ownership](./0021-correlated-render-diagnostics-ownership.md)
+- [ADR-0022: In-memory development-tooling installation](./0022-in-memory-development-tooling-installation.md)
 
 ## Rules
 

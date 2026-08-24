@@ -11,6 +11,8 @@ import com.viewcompose.graphics.core.PathModel
 import com.viewcompose.navigation.core.NavGraph
 import com.viewcompose.media3.Media3PlayerView
 import com.viewcompose.exoplayer2.ExoPlayerView
+import com.viewcompose.maps.google.GoogleMapProperties
+import com.viewcompose.maps.google.GoogleMapView
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -47,4 +49,9 @@ fun UiTreeBuilder.compileMedia3FeatureSurface(player: Media3Player) {
 @Suppress("DEPRECATION")
 fun UiTreeBuilder.compileLegacyExoPlayerFeatureSurface(player: LegacyPlayer) {
     ExoPlayerView(player = player)
+}
+
+/** The independently published Maps artifact exposes its typed state and Maps SDK contracts. */
+fun UiTreeBuilder.compileGoogleMapsFeatureSurface() {
+    GoogleMapView(properties = GoogleMapProperties())
 }

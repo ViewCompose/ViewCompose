@@ -277,4 +277,27 @@
     <string name="demo_exoplayer2_status">Active: %1$s · %2$s · first frames: %3$d</string>
     <string name="demo_exoplayer2_manual_check">Manual check: the legacy video remains visible after player replacement, Surface replacement, background, and return.</string>
     <string name="demo_exoplayer2_content_description">ViewCompose legacy ExoPlayer local fixture</string>
+    <string name="demo_activity_google_maps_title">Google Maps</string>
+    <string name="demo_scenario_google_maps_title">Google MapView integration</string>
+    <string name="demo_scenario_google_maps_summary">Credential-free lifecycle coverage plus an externally credentialed renderer, camera, style, and keyed-overlay path.</string>
+    <string name="demo_google_maps_section_title">Native map lifecycle and state</string>
+    <string name="demo_google_maps_section_summary">The integration owns MapView lifecycle and SDK restoration. The app retains credentials, network, renderer, and location policy.</string>
+    <string name="demo_google_maps_toggle_scheme">Toggle map scheme</string>
+    <string name="demo_google_maps_toggle_location">Switch city</string>
+    <string name="demo_google_maps_reset">Reset map fixture</string>
+    <string name="demo_google_maps_scheme_light">Light</string>
+    <string name="demo_google_maps_scheme_dark">Dark</string>
+    <string name="demo_google_maps_city_shanghai">Shanghai</string>
+    <string name="demo_google_maps_city_hangzhou">Hangzhou</string>
+    <string name="demo_google_maps_status_configured">Configured · %1$s · %2$s · style %3$s · ready %4$d · loaded %5$d · clicks %6$d</string>
+    <string name="demo_google_maps_status_unconfigured">Credential-free · %1$s · %2$s · renderer not claimed</string>
+    <string name="demo_google_maps_style_default">default</string>
+    <string name="demo_google_maps_style_pending">pending</string>
+    <string name="demo_google_maps_style_accepted">accepted</string>
+    <string name="demo_google_maps_style_rejected">rejected</string>
+    <string name="demo_google_maps_placeholder">No API key is stored in the repository. This deterministic placeholder confirms the explicit unsupported path without creating a false renderer pass.</string>
+    <string name="demo_google_maps_content_description">ViewCompose Google map fixture</string>
+    <string name="demo_google_maps_marker_title">Selected city</string>
+    <string name="demo_google_maps_marker_content_description">Selected city marker</string>
+    <string name="demo_google_maps_manual_check">Manual check: with an external key, tiles, marker, route, camera, scheme, background/return, and Activity recreation remain correct. Without a key, only this explicit placeholder is expected.</string>
 </resources>

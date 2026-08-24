@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: 078b02804179e2f187275df9fc0464c7cc515c50a2157190951f4752971994b9
+translation_source_hash: 0cc37020ff825f03b532cfb4e843d02d24cf6c2164acb50b3484fb76a0236e30
 translation_status: current
 ---
 
@@ -79,6 +79,12 @@ Measure/Layout/Draw、GPU、RenderThread、SurfaceFlinger、解码、网络、�
 本制品应只放在 `debugImplementation`、测试或专用 Tooling 配置中。除可调试进程与显式 IDE 请求
 外，制品存在是启用功能所需的第三道门。零运行时持续开销与性能契约见
 [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md)。
+
+本制品会合并一个不导出的初始化 Provider。它会在 `Application.onCreate` 前验证
+`FLAG_DEBUGGABLE`，并把中立的 Host 与 Animation Tooling 端口安装到各自进程级内存 Slot。
+不可调试进程不会安装任何端口。该启动路径不执行 `ServiceLoader` 扫描、Report I/O、View 遍历
+或请求工作；显式请求仍是激活门。详见
+[ADR-0022](../../architecture/decisions/0022-in-memory-development-tooling-installation.md)。
 
 ## 真机动画时间线检查器
 

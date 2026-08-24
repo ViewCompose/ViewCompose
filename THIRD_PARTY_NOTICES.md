@@ -45,6 +45,15 @@ migration guidance are available from the
 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), and the
 [Media3 migration guide](https://developer.android.com/media/media3/exoplayer/migration-guide).
 
+### Google Maps SDK for Android 20.0.0
+
+The optional `viewcompose-google-maps-android` integration directly uses
+`com.google.android.gms:play-services-maps:20.0.0`. Use of Google Maps requires an application-owned
+API key and is governed by the
+[Google Maps Platform Terms of Service](https://cloud.google.com/maps-platform/terms) and the
+[Maps SDK for Android policies](https://developers.google.com/maps/documentation/android-sdk/policies).
+The artifact's published POM and the SDK distribution remain the authoritative license metadata.
+
 ## How to Verify
 
 Check declared dependencies in Gradle files and version catalogs, then map to

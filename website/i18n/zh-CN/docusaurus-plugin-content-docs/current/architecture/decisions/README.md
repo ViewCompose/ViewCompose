@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: f20beb1217219379e50f86493931104ee01811ae3a243930dc9c2c3153cda8e1
+translation_source_hash: 21f5be4445fb339fa0895a84b2229b61788fd951a800252332f64ad7042e3c93
 translation_status: current
 ---
 
@@ -32,6 +32,7 @@ translation_status: current
 - [ADR-0019：动画物理、过渡与检查所有权](./0019-animation-physics-transition-and-inspection-ownership.md)
 - [ADR-0020：分离动画值域与速度域](./0020-separate-animation-value-and-velocity-domains.md)
 - [ADR-0021：关联式渲染诊断所有权](./0021-correlated-render-diagnostics-ownership.md)
+- [ADR-0022：开发工具内存安装](./0022-in-memory-development-tooling-installation.md)
 
 ## 规则
 

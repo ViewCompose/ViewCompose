@@ -23,7 +23,6 @@ import com.viewcompose.ui.foundation.RenderNodeTimingStartStatus
 import com.viewcompose.ui.foundation.RenderNodeTimingUnsupportedDomain
 import com.viewcompose.ui.foundation.RenderNodePlatformTarget
 import com.viewcompose.ui.foundation.RenderNodeToken
-import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
 import com.viewcompose.ui.foundation.RenderSessionDiagnosticInspection
 import com.viewcompose.ui.foundation.RenderSessionDiagnosticSnapshot
 import com.viewcompose.ui.foundation.RenderSessionInspectedFailure
@@ -36,7 +35,6 @@ import com.viewcompose.ui.foundation.RenderNodeInspectionSnapshot
 import com.viewcompose.ui.tooling.UiSourceCallSite
 import com.viewcompose.ui.node.NodeType
 import java.io.File
-import java.util.ServiceLoader
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -50,18 +48,6 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class AndroidDeviceDslInspectionToolingTest {
-    @Test
-    fun `service is discoverable only from the optional preview artifact`() {
-        val providers = ServiceLoader.load(
-            RenderSessionInspectionTooling::class.java,
-            RenderSessionInspectionTooling::class.java.classLoader,
-        ).toList()
-
-        assertTrue(
-            providers.any { provider -> provider is AndroidDeviceDslInspectionTooling },
-        )
-    }
-
     @Test
     fun `session changes remain passive until an explicit request`() {
         val context = applicationContext()
