@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0021-correlated-render-diagnostics-ownership.md
-translation_source_hash: b42c15d305bb8f2fe0573163a57af2d8d35e8b2546fc7070de38811489cbcc20
+translation_source_hash: 73cc96b1613241db41172dca58373ea3880c5575fbcc93bc0d86d6a43c07d096
 translation_status: current
 ---
 

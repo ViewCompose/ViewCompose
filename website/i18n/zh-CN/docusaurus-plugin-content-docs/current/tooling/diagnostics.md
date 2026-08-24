@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: 102218052e3a4d1621ba5a91dd9066d3b50f4d5711c138eeaf451fb6b47402f3
+translation_source_hash: b3c2c504d3b1b6b89b2da4897b85548c07e9630544a72e077b94517ec88a910d
 translation_status: current
 ---
 

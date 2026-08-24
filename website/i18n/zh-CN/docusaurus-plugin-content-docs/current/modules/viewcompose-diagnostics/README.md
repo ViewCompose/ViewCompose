@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-diagnostics/README.md
-translation_source_hash: 523827db6dd032d318650a352c47bbd5714d4393bdaf584d2b0e1ca4f2741a69
+translation_source_hash: 5484310085f152f123f862110c6847dadbd57614f0254ffcd249843859ec3c95
 translation_status: current
 ---
 

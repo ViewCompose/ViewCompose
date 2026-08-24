@@ -835,7 +835,7 @@ idle results. The comparison deliberately suppresses AndroidX's `DEBUGGABLE` war
 measures optional Debug tooling rather than Release performance. Host latency includes adb and
 polling; one Android 9 phone and fixed clocks do not establish an OEM, calibrated-power, or Release
 matrix. The completed execution record is retained in the
-[archived diagnostics plan](../archive/diagnostics-correlation-inspection-observability.md).
+[archived diagnostics plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md).
 
 Reproduce the explicit-request characterization against a foreground Debug Demo with:
 

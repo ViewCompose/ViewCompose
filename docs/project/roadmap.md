@@ -139,7 +139,7 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 | A: Overlay stability | Completed | C:✅ U:✅ D:✅ UI:✅ | Unified overlay reconciliation covers Dialog, Popup, ModalBottomSheet, and feedback flows |
 | B: Collections and containers | Completed | C:✅ U:✅ D:✅ UI:✅ | Lazy/Pager baseline, structured items, complete list state, sticky headers, content types/spans, prefetch, and restoration are implemented |
 | C: Input and forms | In Progress | C:✅ U:✅ D:✅ UI:⚠ | TextFieldState, selection/composition, IME batch, undo, transformations, keyboard actions, autofill, and restoration are implemented; real-device IME/accessibility matrix remains |
-| D: Diagnostics and performance | In Progress | C:✅ U:✅ D:✅ UI:✅ | Diagnostics correlation, aggregation, inspector, idle/request budgets, Release isolation, and Maven closeout are complete in the [archived diagnostics plan](../archive/diagnostics-correlation-inspection-observability.md); baseline-profile benefit remains to be measured |
+| D: Diagnostics and performance | In Progress | C:✅ U:✅ D:✅ UI:✅ | Diagnostics correlation, aggregation, inspector, idle/request budgets, Release isolation, and Maven closeout are complete in the [archived diagnostics plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md); baseline-profile benefit remains to be measured |
 | E: Preview and screenshots | In Progress | C:✅ U:✅ D:✅ UI:✅ | Compose Preview/Paparazzi and Studio Preview plugin 1.0 cover source linkage, all previews, cache, incremental refresh, zoom/pan, and diagnostics; Dark/Tablet matrix remains |
 | F: Animation and gestures | Completed | C:✅ U:✅ D:✅ UI:✅ | The first-round Core/DSL baseline and all seven later expansions are complete; the [archived Animation capability plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md) records physical motion, content/visibility, seeking, bounds, shared navigation motion, timeline tooling, and acceptance evidence |
 | G: Graphics 2D | In Progress | C:✅ U:✅ D:✅ UI:⚠ | Core/DSL layers, Canvas/draw modifiers/cache, renderer pipeline, Android interop, and v2 P0 fixes are implemented; stable current-device UI evidence remains |
@@ -244,7 +244,7 @@ process restoration without cursor jumps or text loss.
 ### Milestone D: Diagnostics and performance
 
 Diagnostics observability is complete. The
-[archived diagnostics correlation, inspection, and production observability plan](../archive/diagnostics-correlation-inspection-observability.md)
+[archived diagnostics correlation, inspection, and production observability plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md)
 records the correlated inspector, production aggregation, real-View highlighting, finite timing,
 same-device idle/request budgets, lifecycle ownership, and Release/Maven closeout. This milestone
 remains open only for maintained benchmark baselines and release optimization such as baseline

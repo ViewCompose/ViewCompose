@@ -236,6 +236,6 @@ Maven consumers. Later phases must exercise every limit, deterministic eviction,
 high-cardinality failures, highlight cleanup/staleness, calibrated timing, release classpaths, and
 same-device inactive/requested performance.
 
-The [completed diagnostics plan](../../archive/diagnostics-correlation-inspection-observability.md)
+The [completed diagnostics plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md)
 records the exact targeted checks. Device and performance evidence was required before each
 implementation phase was accepted, not for this documentation-only freeze.

@@ -113,4 +113,4 @@ classification, export failure isolation, and application-owned process reset. T
 no Android UI work, so Phase 2 adds no visual Demo acceptance surface. Device highlighting and
 timing remain separate request-driven Preview capabilities; their completed cross-module evidence
 is retained in the
-[archived diagnostics plan](../../archive/diagnostics-correlation-inspection-observability.md).
+[archived diagnostics plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md).

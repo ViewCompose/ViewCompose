@@ -161,7 +161,7 @@ highlighting, finite per-node timing, and the correlated Studio inspector are im
 Same-device idle/request performance, weak lifecycle ownership, optimized-Release exclusion, and
 isolated Maven consumption have also closed without an accepted regression. The execution record
 is retained in the [archived diagnostics correlation, inspection, and production observability
-plan](../archive/diagnostics-correlation-inspection-observability.md).
+plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md).
 
 ## 9. Remaining expansion contract
 
