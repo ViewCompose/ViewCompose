@@ -34,4 +34,5 @@ dependencies {
     implementation(viewCompose("viewcompose-graphics"))
     implementation(viewCompose("viewcompose-shadow-android"))
     implementation(viewCompose("viewcompose-constraintlayout-androidx"))
+    implementation(viewCompose("viewcompose-media3-androidx"))
 }

@@ -1,0 +1,20 @@
+{
+  "file": "viewcompose_media3_fixture.mp4",
+  "ownership": "Generated specifically for the ViewCompose repository from FFmpeg synthetic sources; no third-party footage, audio, artwork, or trademark is included.",
+  "generationCommand": "ffmpeg -hide_banner -loglevel error -f lavfi -i 'testsrc2=size=640x360:rate=30:duration=2' -f lavfi -i 'anullsrc=channel_layout=stereo:sample_rate=48000' -shortest -c:v libx264 -profile:v baseline -level 3.0 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 96k -t 2 viewcompose_media3_fixture.mp4",
+  "container": "ISO Base Media / MP4",
+  "durationSeconds": 2.0,
+  "video": {
+    "codec": "H.264/AVC",
+    "profile": "Constrained Baseline",
+    "dimensions": "640x360",
+    "frameRate": "30/1"
+  },
+  "audio": {
+    "codec": "AAC LC",
+    "sampleRateHz": 48000,
+    "channels": 2,
+    "content": "silence"
+  },
+  "sha256": "015dc14eacee1c20d5c7d6b2c31221817c94d5011613d677372b9a8779a4e8e7"
+}

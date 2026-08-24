@@ -1,5 +1,6 @@
 package com.viewcompose.publishing.smoke.feature
 
+import androidx.media3.common.Player
 import com.viewcompose.animation.AnimatedVisibility
 import com.viewcompose.animation.core.TweenSpec
 import com.viewcompose.gesture.combinedClickable
@@ -7,6 +8,7 @@ import com.viewcompose.gesture.core.LockedAxis
 import com.viewcompose.graphics.Canvas
 import com.viewcompose.graphics.core.PathModel
 import com.viewcompose.navigation.core.NavGraph
+import com.viewcompose.media3.Media3PlayerView
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -32,4 +34,9 @@ fun UiTreeBuilder.compileAdvertisedFeatureSurfaces() {
     Canvas { drawContext ->
         check(drawContext.size.width >= 0f)
     }
+}
+
+/** The independently published Media3 artifact exposes both its DSL and Media3 Player contract. */
+fun UiTreeBuilder.compileMedia3FeatureSurface(player: Player) {
+    Media3PlayerView(player = player)
 }

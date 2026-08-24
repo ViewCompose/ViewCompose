@@ -248,4 +248,19 @@
     <string name="demo_activity_material3_theme_title">主题与 Token 验证</string>
     <string name="demo_activity_graphics_title">图形</string>
     <string name="demo_activity_material3_visual_baseline_title">Material 3 视觉基线</string>
+    <string name="demo_activity_media3_title">Media3 播放器</string>
+    <string name="demo_scenario_media3_player_view_title">Media3 PlayerView 集成</string>
+    <string name="demo_scenario_media3_player_view_summary">由调用方持有的 ExoPlayer，验证生命周期安全挂载、播放器替换和原生 Surface 替换。</string>
+    <string name="demo_media3_section_title">原生视频生命周期</string>
+    <string name="demo_media3_section_summary">两个播放器始终由 Activity 持有；ViewCompose 只在页面处于 started 状态时挂载当前播放器。</string>
+    <string name="demo_media3_switch_player">切换播放器</string>
+    <string name="demo_media3_switch_surface">切换 Surface</string>
+    <string name="demo_media3_reset">重置</string>
+    <string name="demo_media3_player_a">播放器 A</string>
+    <string name="demo_media3_player_b">播放器 B</string>
+    <string name="demo_media3_surface_view">SurfaceView</string>
+    <string name="demo_media3_texture_view">TextureView</string>
+    <string name="demo_media3_status">当前：%1$s · %2$s · 首帧次数：%3$d</string>
+    <string name="demo_media3_manual_check">人工验收：切换播放器、切换 Surface、离开应用再返回后，视频都必须保持可见。</string>
+    <string name="demo_media3_content_description">ViewCompose Media3 本地样片播放器</string>
 </resources>

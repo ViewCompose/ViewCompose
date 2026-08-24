@@ -247,4 +247,19 @@
     <string name="demo_activity_material3_theme_title">Theme and token verification</string>
     <string name="demo_activity_graphics_title">Graphics</string>
     <string name="demo_activity_material3_visual_baseline_title">Material 3 visual baseline</string>
+    <string name="demo_activity_media3_title">Media3 player</string>
+    <string name="demo_scenario_media3_player_view_title">Media3 PlayerView integration</string>
+    <string name="demo_scenario_media3_player_view_summary">A caller-owned ExoPlayer with lifecycle-safe attachment, player replacement, and native Surface replacement.</string>
+    <string name="demo_media3_section_title">Native video lifecycle</string>
+    <string name="demo_media3_section_summary">The two players remain Activity-owned. ViewCompose attaches only the selected player while this page is started.</string>
+    <string name="demo_media3_switch_player">Switch player</string>
+    <string name="demo_media3_switch_surface">Switch Surface</string>
+    <string name="demo_media3_reset">Reset</string>
+    <string name="demo_media3_player_a">Player A</string>
+    <string name="demo_media3_player_b">Player B</string>
+    <string name="demo_media3_surface_view">SurfaceView</string>
+    <string name="demo_media3_texture_view">TextureView</string>
+    <string name="demo_media3_status">Active: %1$s · %2$s · first frames: %3$d</string>
+    <string name="demo_media3_manual_check">Manual check: video must remain visible after switching player, switching Surface, leaving the app, and returning.</string>
+    <string name="demo_media3_content_description">ViewCompose Media3 local fixture player</string>
 </resources>

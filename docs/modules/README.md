@@ -43,6 +43,7 @@ this table. Architecture and guide pages remain the source of truth for cross-mo
 | `viewcompose-graphics` | UI Foundation | Drawing DSL and composition integration | [Available](./viewcompose-graphics/README.md) |
 | `viewcompose-shadow-android` | Integration | Advanced Android shadow rendering | [Available](./viewcompose-shadow-android/README.md) |
 | `viewcompose-constraintlayout-androidx` | Integration | AndroidX ConstraintLayout DSL | [Available](./viewcompose-constraintlayout-androidx/README.md) |
+| `viewcompose-media3-androidx` | Integration | Lifecycle-safe AndroidX Media3 PlayerView hosting | [Available](./viewcompose-media3-androidx/README.md) |
 
 ## Catalog rules
 
