@@ -2,7 +2,7 @@
 title: 使用 AndroidView
 sidebar_position: 10
 translation_source: tutorials/android-view.md
-translation_source_hash: c1aff9bfbc9df9b79762f53298772cc9dff37f6e3a206d255c52dd0ff5dcffe2
+translation_source_hash: df02d028eac8f6909d678e3c85676ec00b9c2579363c818c026e878056d53599
 translation_status: current
 ---
 
@@ -72,7 +72,41 @@ class AndroidViewTutorialActivity : ComponentActivity() {
 {/* tutorial-sample-end */}
 
 只有 reconciliation 需要新节点时，`factory` 才创建原生 View。`update` 把最新状态应用到保留的
-View，而且必须允许 rollback 或 rebind 时再次执行；不要在其中执行一次性的外部副作用。
+View，而且必须允许 rollback 或 rebind 时再次执行；不要在其中执行一次性的外部副作用。这种
+Callback 形式是简洁的底层逃生路径。
+
+## 提取可复用的类型安全 Adapter
+
+集成会被复用或需要持有生命周期 Callback 时，应使用 `AndroidViewAdapter<V, S>`。View 类型与
+完整状态快照会在全部 Callback 间保持编译期检查：
+
+```kotlin
+private data class NativeLabelState(val text: String)
+
+private class NativeLabelAdapter(
+    private val textAppearance: Int,
+) : AndroidViewAdapter<TextView, NativeLabelState> {
+    override fun create(scope: AndroidViewCreateScope): TextView =
+        TextView(scope.context, null, 0, textAppearance)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: NativeLabelState) {
+        scope.view.text = state.text
+    }
+}
+
+AndroidView(
+    adapter = NativeLabelAdapter(textAppearance),
+    state = NativeLabelState("Native TextView count: ${count.value}"),
+    key = "counter-label",
+    constructionKey = textAppearance,
+    modifier = Modifier.fillMaxWidth(),
+)
+```
+
+`key` 标识逻辑条目；Adapter 实现类与 `constructionKey` 共同标识构造敏感的 View 状态。状态
+变化会复用 View 且只调用 `update`；构造身份变化时会创建并绑定候选节点，只有完整事务成功后
+才替换旧 View。`onReset` 只用于通过 `AndroidViewReusePolicy.Resettable` 主动允许跨 Key
+Mounted Tree 复用的集成。
 
 ## 验证结果
 

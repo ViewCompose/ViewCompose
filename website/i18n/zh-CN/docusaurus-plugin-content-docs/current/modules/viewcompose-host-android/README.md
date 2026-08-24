@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: db7a775e950b81e3142ba7a11e73b6eda9594d6d7a0d3330333cd77dd981473c
+translation_source_hash: 056eec77fc849d268d52447c159d287de48c669756fdb2ba04328bf7670ed5b6
 translation_status: current
 ---
 
@@ -107,26 +107,55 @@ Engine 会让 Composition Node Identity 贯穿 Reconciliation 与 Binding；仅 
 
 ## 原生 View 事务契约
 
-`AndroidView` 挂载平台 View，同时保留 renderer 的回滚语义：
+可复用集成应实现类型安全的 `AndroidViewAdapter<V, S>` 契约。Adapter 类与
+`constructionKey` 标识构造敏感状态，`key` 则继续标识逻辑内容：
 
 ```kotlin
+private class NativeLabelAdapter(
+    private val textAppearance: Int,
+) : AndroidViewAdapter<TextView, NativeLabelState> {
+    override val reusePolicy = AndroidViewReusePolicy.Resettable
+
+    override fun create(scope: AndroidViewCreateScope): TextView =
+        TextView(scope.context, null, 0, textAppearance)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: NativeLabelState) {
+        scope.view.text = state.text
+        scope.view.setTextColor(state.color)
+    }
+
+    override fun onReset(
+        scope: AndroidViewResetScope<TextView>,
+        reason: AndroidViewResetReason,
+    ) {
+        scope.view.text = null
+    }
+}
+
 AndroidView(
-    factory = { context -> PlayerView(context) },
-    update = { view -> configurePlayer(view as PlayerView, state) },
-    key = playerId,
-    onReset = { view -> resetPlayer(view as PlayerView) },
-    onCommit = { view -> (view as PlayerView).play() },
-    onRelease = { view -> (view as PlayerView).release() },
+    adapter = NativeLabelAdapter(textAppearance = textAppearance),
+    state = NativeLabelState(text = title, color = titleColor),
+    key = itemId,
+    constructionKey = textAppearance,
 )
 ```
 
-- `factory` 只在创建新原生节点时执行。
-- `update`、`onReset` 与 `Modifier.nativeView` 必须是可重放配置。
-- `onReset` 允许节点在 Lazy Key 之间复用 Mounted Tree。它只在旧逻辑 Session、Effect 与
-  Saveable Lease 全部结束后、新 Key 绑定前运行。
-- `onCommit` 只在整棵 View tree 提交后执行。
-- `onRelease` 在已创建 View 被永久放弃时执行一次，包括候选回滚、正式移除、不可复用 Session
-  释放或复用缓存最终淘汰。省略 `onReset` 会阻止该 Mounted Tree 跨 Key。
+- `create`、`update`、Reset、Commit 与 Release 都在 Android 主线程同步执行。Create 接收
+  Renderer 提供的带主题 `Context`；Create、Update、Reset 与 Commit Scope 还会暴露 VNode
+  捕获的不可变 `UiEnvironmentValues`。
+- `state` 仍由调用方持有。`update` 应用完整的可重放配置，并可能在回滚时再次运行。普通的同身份
+  更新绝不会调用 `onReset`。
+- Adapter 实现类或 `constructionKey` 变化时，Renderer 会创建并更新一个尚未挂载的候选 View。
+  失败只释放候选并保留已提交 View；成功则原子替换，并恰好释放一次被替换 View。
+- `AndroidViewReusePolicy.Resettable` 允许节点在 Lazy Key 之间复用 Mounted Tree。
+  `onReset(..., MountedTreeReuse)` 只在旧逻辑 Session、Effect 与 Saveable Lease 全部结束后、
+  新 Key 的 Update 前运行。默认 `Never` 会阻止包含该节点的 Mounted Tree 跨 Key。
+- `onCommit` 只在完整 Composition 事务提交后执行。`onRelease` 在已创建 View 被永久放弃时
+  执行一次，包括候选回滚、正式替换或移除、不可复用 Session 释放或复用缓存最终淘汰。
+
+基于 Callback 的 `AndroidView(factory, update, ...)` 重载仍是底层逃生路径，并委托相同的类型化
+事务路径。其尾部 `constructionKey` 具有相同替换语义；提供 `onReset` 也只表示允许跨 Key 的
+Mounted Tree 复用。
 
 ## 状态保存、调度与线程
 

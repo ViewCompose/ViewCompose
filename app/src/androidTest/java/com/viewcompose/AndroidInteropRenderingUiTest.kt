@@ -15,6 +15,7 @@ import com.viewcompose.ui.node.spec.AndroidViewNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.unit.sp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -66,7 +67,7 @@ class AndroidInteropRenderingUiTest {
     }
 
     @Test
-    fun androidView_reuseAndDisposeInvokeLifecycleCallbacksOnce() {
+    fun androidView_sameIdentityUpdateDoesNotResetAndDisposeReleasesOnce() {
         launchDemoScenarioActivity(
             InteropActivity::class.java,
             "interop.android-view",
@@ -112,12 +113,62 @@ class AndroidInteropRenderingUiTest {
                 assertSame(nativeView, reused.mountedNodes.single().view)
                 assertEquals(1, factoryCalls)
                 assertEquals(2, updates)
-                assertEquals(1, resets)
+                assertEquals(0, resets)
 
                 ViewTreeRenderer.disposeMounted(container, reused.mountedNodes)
                 ViewTreeRenderer.disposeMounted(container, reused.mountedNodes)
 
                 assertEquals(1, releases)
+            }
+        }
+    }
+
+    @Test
+    fun androidView_constructionIdentityChangeReplacesAndReleasesCommittedView() {
+        launchDemoScenarioActivity(
+            InteropActivity::class.java,
+            "interop.android-view-construction",
+        ).use { scenario ->
+            scenario.onActivity { activity ->
+                val container = FrameLayout(activity)
+                var oldReleases = 0
+                var newReleases = 0
+                val initial = ViewTreeRenderer.renderInto(
+                    container = container,
+                    previous = emptyList(),
+                    nodes = listOf(
+                        androidViewNode(
+                            factory = { TextView(activity) },
+                            update = { it.text = "old" },
+                            onRelease = { oldReleases += 1 },
+                            constructionIdentity = "style-a",
+                        ),
+                    ),
+                )
+                val oldView = initial.mountedNodes.single().view
+
+                val replaced = ViewTreeRenderer.renderInto(
+                    container = container,
+                    previous = initial.mountedNodes,
+                    nodes = listOf(
+                        androidViewNode(
+                            factory = { TextView(activity) },
+                            update = { it.text = "new" },
+                            onRelease = { newReleases += 1 },
+                            constructionIdentity = "style-b",
+                        ),
+                    ),
+                )
+                val newView = replaced.mountedNodes.single().view
+
+                assertNotSame(oldView, newView)
+                assertSame(newView, container.getChildAt(0))
+                assertEquals("new", (newView as TextView).text.toString())
+                assertEquals(1, oldReleases)
+                assertEquals(0, newReleases)
+
+                ViewTreeRenderer.disposeMounted(container, replaced.mountedNodes)
+                assertEquals(1, newReleases)
             }
         }
     }
@@ -150,19 +201,21 @@ class AndroidInteropRenderingUiTest {
         update: (TextView) -> Unit,
         onReset: ((TextView) -> Unit)? = null,
         onRelease: ((TextView) -> Unit)? = null,
+        constructionIdentity: Any? = Unit,
     ): VNode {
         return VNode(
             type = NodeType.AndroidView,
             key = "native-view",
             spec = AndroidViewNodeProps(
-                factory = { factory() },
-                update = { view -> update(view as TextView) },
+                factory = { _, _ -> factory() },
+                update = { view, _ -> update(view as TextView) },
                 onReset = onReset?.let { reset ->
-                    { view -> reset(view as TextView) }
+                    { view, _ -> reset(view as TextView) }
                 },
                 onRelease = onRelease?.let { release ->
                     { view -> release(view as TextView) }
                 },
+                constructionIdentity = constructionIdentity,
             ),
         )
     }

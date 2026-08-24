@@ -1,5 +1,6 @@
 package com.viewcompose.ui.samples
 
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.TransformOrigin
 import com.viewcompose.ui.modifier.ContentSizeEasingModel
@@ -42,6 +43,7 @@ import com.viewcompose.ui.node.spec.AnimatedVisibilityHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedContentHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedContentItemNodeProps
 import com.viewcompose.ui.node.spec.AnimatedBoundsHostNodeProps
+import com.viewcompose.ui.node.spec.AndroidViewNodeProps
 import com.viewcompose.ui.node.spec.ConstraintDimension
 import com.viewcompose.ui.node.spec.ConstraintMatchMode
 import com.viewcompose.ui.node.spec.ConstraintRatio
@@ -52,6 +54,22 @@ import com.viewcompose.ui.tooling.UiSourceCallSite
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.dp
 import java.io.File
+
+/** Builds and invokes the renderer-neutral contract for one typed Android View adapter binding. */
+fun androidViewNodePropsSample(platformContext: Any, platformView: Any) {
+    var boundEnvironment: UiEnvironmentValues? = null
+    val spec = AndroidViewNodeProps(
+        factory = { _, _ -> platformView },
+        update = { _, environment -> boundEnvironment = environment },
+        constructionIdentity = "adapter-family/default-style",
+        adapterName = "sample-adapter",
+    )
+
+    val environment = UiEnvironmentValues.Default
+    val created = spec.factory(platformContext, environment)
+    spec.update?.invoke(created, environment)
+    check(boundEnvironment === environment)
+}
 
 /** Declares typed shared endpoints for two destination-specific modifier chains. */
 fun sharedContentModifierSample() {

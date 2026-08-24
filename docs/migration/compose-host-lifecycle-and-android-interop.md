@@ -9,7 +9,7 @@ have identical semantics.
 - **Target state:** `viewcompose-android`, `viewcompose-lifecycle-androidx`,
   `viewcompose-viewmodel-androidx`, and `viewcompose-renderer-android` 0.1.0-alpha01, plus the
   low-level `viewcompose-host-android` 0.1.0-alpha04 engine.
-- **Last verified:** 2026-08-14.
+- **Last verified:** 2026-08-24.
 - **Re-verification owner:** maintainers of `viewcompose-android`, `viewcompose-host-android`,
   `viewcompose-lifecycle-androidx`, `viewcompose-viewmodel-androidx`, and
   `viewcompose-renderer-android`.
@@ -87,9 +87,10 @@ private fun UiTreeBuilder.ViewComposeInteropSample() {
 ```
 {/* paired-sample-end */}
 
-The example proves only the public installation, factory, and replay-safe update path. The target
-does not inherit Compose disposal or reuse semantics; choose owners and add `onReset`, `onCommit`,
-and `onRelease` behavior from the contracts below when the embedded View requires them.
+The example proves only the callback escape hatch's public installation, factory, and replay-safe
+update path. Reusable integrations should use `AndroidViewAdapter<V, S>` so View type, state,
+construction identity, reuse policy, and cleanup remain one compiled contract. Neither form
+inherits Compose disposal or reuse semantics implicitly.
 
 ## Capability matrix
 
@@ -106,8 +107,8 @@ and **Unsupported**.
 | Saved state | Compose host integrations combine `SavedStateRegistryOwner`, `SavedStateHandle`, and saveable-state facilities. | ViewCompose hosts install a ViewCompose `SaveableStateRegistry`; applicable Activity, Fragment, and navigation owners also participate in AndroidX saved state. These are related layers, not one interchangeable owner API. | Partially supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt), [`NavEntryOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt), and saved-state coverage in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). |
 | Frame scheduling and explicit rendering | Compose recomposition is coordinated by its Recomposer and frame clock. | An explicit `render` is synchronous. State invalidations are coalesced to an Android frame, and an inactive session retains invalidation until reactivated. | Intentionally different | [`AndroidFrameAlignedRenderSessionRuntime.kt`](../../viewcompose-host-android/src/main/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntime.kt) and [`AndroidFrameAlignedRenderSessionRuntimeTest.kt`](../../viewcompose-host-android/src/test/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntimeTest.kt). |
 | Effect ownership and terminal disposal | Effects leave with their Composition scope; disposing a `Composition` is terminal. | A `RenderSession` owns one composition coroutine scope, render state, overlays, native views, and cleanup. Disposal is idempotent; later public render or activation work fails fast, while already queued internal callbacks safely no-op. | Supported | [`RenderSession.kt`](../../viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt), [`RenderSessionFailureTest.kt`](../../viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt), and [`AndroidFrameAlignedRenderSessionRuntimeTest.kt`](../../viewcompose-host-android/src/test/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntimeTest.kt). |
-| Android View factory and update | `AndroidView` creates the View once for an instance and runs `update` on applicable recompositions. | `AndroidView` uses a factory for new nodes and replay-safe update binding inside a transactional native-tree patch. Failed candidate insertion is rolled back. | Supported | [`AndroidInteropDsl.kt`](../../viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidInteropDsl.kt), [`ViewTreePatchPipeline.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreePatchPipeline.kt), and [`AndroidInteropRenderingUiTest.kt`](../../app/src/androidTest/java/com/viewcompose/AndroidInteropRenderingUiTest.kt). |
-| Android View reset, commit, and release | Compose uses non-null `onReset` to opt into reusable content and `onRelease` when content permanently leaves composition. It has no equivalent transaction-commit callback. | `onReset` may run when a same-key, same-type node receives changed props; `onCommit` runs only after the complete native-tree transaction succeeds; `onRelease` is one-shot cleanup for a created node that is permanently abandoned, including rollback candidates. | Intentionally different | [`AndroidViewNodeProps.kt`](../../viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/node/spec/container/AndroidViewNodeProps.kt), [`ViewTreeDisposer.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreeDisposer.kt), and [`ViewTreeRenderTransactionTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt). |
+| Android View factory and update | `AndroidView` creates the View once for an instance and runs `update` on applicable recompositions. | The typed `AndroidViewAdapter<V, S>` and callback escape hatch create a View for one construction identity and apply complete replay-safe state inside a transactional native-tree patch. A changed adapter class or `constructionKey` creates a detached candidate; failure preserves the committed View. | Supported | [`AndroidViewAdapter.kt`](../../viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidViewAdapter.kt), [`ViewTreePatchPipeline.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreePatchPipeline.kt), and [`AndroidInteropRenderingUiTest.kt`](../../app/src/androidTest/java/com/viewcompose/AndroidInteropRenderingUiTest.kt). |
+| Android View reset, commit, and release | Compose uses non-null `onReset` to opt into reusable content and `onRelease` when content permanently leaves composition. It has no equivalent transaction-commit callback. | `onReset(..., MountedTreeReuse)` runs only for opted-in cross-logical-key mounted-tree reuse, never ordinary update or rollback. `onCommit` runs only after the complete composition transaction succeeds; `onRelease` is one-shot cleanup for permanent abandonment, including failed candidates and displaced construction identities. | Intentionally different | [`AndroidViewNodeProps.kt`](../../viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/node/spec/container/AndroidViewNodeProps.kt), [`ViewTreeDisposer.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreeDisposer.kt), and [`ViewTreeRenderTransactionTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt). |
 | ViewBinding and Fragment-in-tree interop | Compose supplies `AndroidViewBinding` and `AndroidFragment` integrations. | XML can be inflated manually inside an Android View factory, but there is no direct ViewBinding integration or supported Fragment-in-render-tree counterpart. | Unsupported | No corresponding public API or compiled sample was found in the reviewed modules. |
 
 ## Choosing a host entry point
@@ -204,13 +205,20 @@ lifecycle-aware migration rule.
 
 ViewCompose Android View callbacks participate in the renderer's native-tree transaction:
 
+For a reusable integration, implement `AndroidViewAdapter<V, S>` and pass a complete state
+snapshot. The VNode `key` is logical content identity. The adapter implementation class plus
+`constructionKey` is physical constructor identity: changing it replaces the View atomically
+without pretending that the logical item changed. Adapter scopes expose the VNode's immutable
+environment; their constructors, renderer/session internals, and mutable transaction are not
+public.
+
 | Callback | Required migration interpretation |
 | --- | --- |
-| `factory` | Creates only a new native node. Do not read changing state that belongs in `update`. |
+| `create` / `factory` | Creates only a new construction identity. Do not read changing state that belongs in `update`. |
 | `update` | Must be replay-safe. A failed frame can restore the previously committed tree. |
-| `onReset` | Must be replay-safe. Unlike Compose lazy-content reuse, it can run for an ordinary same-key, same-type node whose props changed. |
+| `onReset` | Must be replay-safe. It runs only when a `Resettable` node crosses logical keys; ordinary update and rollback never invoke it. |
 | `onCommit` | Runs only after the complete native-tree transaction succeeds. Put irreversible work that requires a committed tree here. |
-| `onRelease` | Performs one-shot cleanup whenever a created node is permanently abandoned, including successful removal, session disposal, and rollback of an uncommitted candidate. |
+| `onRelease` | Performs one-shot cleanup whenever a created node is permanently abandoned, including replacement, removal, session disposal, and rollback of an uncommitted candidate. |
 
 ## Unsupported direct interop
 

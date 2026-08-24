@@ -237,9 +237,15 @@ first-party image loaders; its zero default preserves deterministic non-Android/
 - `UiNodeTooling.withSourceCandidateCapture` samples at most 64 eligible emissions and retains at
   most 32 distinct chains. Its callback runs only after a successful block returns and after its
   capture state is restored; failed or empty builds do not report candidates.
-- `AndroidViewNodeProps.update` and `onReset` are replay-safe transaction callbacks. External
-  one-shot work belongs in `onCommit`; resource cleanup belongs in `onRelease`. Release is one-shot
-  permanent-abandonment cleanup and also covers an uncommitted rollback candidate.
+- `AndroidViewNodeProps.factory`, `update`, `onReset`, and `onCommit` receive the immutable
+  environment captured by their VNode. `update` and `onReset` are replay-safe transaction
+  callbacks. External one-shot work belongs in `onCommit`; resource cleanup belongs in
+  `onRelease`. Release is one-shot permanent-abandonment cleanup and also covers an uncommitted
+  rollback candidate.
+- `AndroidViewNodeProps.constructionIdentity` is physical constructor identity, separate from the
+  VNode's logical `key`. Equal identity rebinds the retained View without reset. Changed identity
+  requires an atomic candidate replacement; the renderer must preserve the committed View if
+  candidate creation or binding fails.
 - A mounted tree containing `AndroidView` may cross logical keys only when every interop node
   declares `onReset`. The renderer calls reset after old-session disposal and before new-key bind;
   final cache eviction calls `onRelease` exactly once.

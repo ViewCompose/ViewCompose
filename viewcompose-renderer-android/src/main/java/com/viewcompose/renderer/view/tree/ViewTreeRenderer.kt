@@ -473,7 +473,7 @@ object ViewTreeRenderer {
             node.vnode.runAndroidViewOperation(
                 com.viewcompose.ui.node.spec.AndroidViewOperation.Reset,
             ) {
-                reset(node.view)
+                reset(node.view, node.vnode.environment)
             }
         }
     }

@@ -4,6 +4,12 @@ import android.content.Context
 import android.view.ViewGroup
 import android.widget.TextView
 import com.viewcompose.host.android.AndroidView
+import com.viewcompose.host.android.AndroidViewAdapter
+import com.viewcompose.host.android.AndroidViewCreateScope
+import com.viewcompose.host.android.AndroidViewResetReason
+import com.viewcompose.host.android.AndroidViewResetScope
+import com.viewcompose.host.android.AndroidViewReusePolicy
+import com.viewcompose.host.android.AndroidViewUpdateScope
 import com.viewcompose.host.android.renderInto
 import com.viewcompose.host.android.resources.AndroidResourceEnvironment
 import com.viewcompose.host.android.resources.AndroidResourceRefreshController
@@ -45,6 +51,32 @@ fun androidViewInteropSample(builder: UiTreeBuilder) {
         update = { view -> (view as TextView).text = "Native TextView" },
         onRelease = { view -> (view as TextView).text = null },
     )
+}
+
+fun typedAndroidViewAdapterSample(builder: UiTreeBuilder) {
+    builder.AndroidView(
+        adapter = NativeLabelAdapter,
+        state = "Typed native label",
+        key = "label",
+        constructionKey = "default-text-appearance",
+    )
+}
+
+private object NativeLabelAdapter : AndroidViewAdapter<TextView, String> {
+    override val reusePolicy: AndroidViewReusePolicy = AndroidViewReusePolicy.Resettable
+
+    override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: String) {
+        scope.view.text = state
+    }
+
+    override fun onReset(
+        scope: AndroidViewResetScope<TextView>,
+        reason: AndroidViewResetReason,
+    ) {
+        scope.view.text = null
+    }
 }
 
 fun androidResourceEnvironmentSample(

@@ -146,8 +146,8 @@ class AnimatedContentRenderTransactionTest {
             type = NodeType.AndroidView,
             key = "failure-probe",
             spec = AndroidViewNodeProps(
-                factory = { rawContext -> View(rawContext as Context) },
-                update = { rawView ->
+                factory = { rawContext, _ -> View(rawContext as Context) },
+                update = { rawView, _ ->
                     if (failUpdate) error("injected update failure")
                     (rawView as View).tag = value
                 },

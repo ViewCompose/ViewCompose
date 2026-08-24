@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import com.viewcompose.renderer.R
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.AndroidViewNodeProps
@@ -101,6 +102,15 @@ internal object ViewTreePatchPipeline {
                 check(patch.previous.spec::class == patch.next.spec::class) {
                     "Observed property ${patch.id} cannot change NodeSpec type."
                 }
+                if (patch.next.type == NodeType.AndroidView) {
+                    check(
+                        patch.previous.requireSpec<AndroidViewNodeProps>().constructionIdentity ==
+                            patch.next.requireSpec<AndroidViewNodeProps>().constructionIdentity,
+                    ) {
+                        "Observed property ${patch.id} cannot change AndroidView construction " +
+                            "identity; use a full tree render."
+                    }
+                }
                 prepared += patch to NodeBindingDiffer.plan(patch.previous, patch.next)
             }
         }
@@ -117,14 +127,6 @@ internal object ViewTreePatchPipeline {
                     depth = nodeDepths[mountedNode] ?: 0,
                     phase = RenderTreeTimingPhase.Binding,
                 ) {
-                    if (
-                        patch.next.type == NodeType.AndroidView &&
-                        patch.previous.spec != patch.next.spec
-                    ) {
-                        patch.next.runAndroidViewOperation(AndroidViewOperation.Reset) {
-                            patch.next.requireSpec<AndroidViewNodeProps>().onReset?.invoke(mountedNode.view)
-                        }
-                    }
                     when (bindingPlan) {
                         NodeBindingPlan.Rebind -> {
                             bindView(
@@ -206,6 +208,7 @@ internal object ViewTreePatchPipeline {
         val nextResolved: ResolvedModifiers? = null,
         val layoutParams: ViewGroup.LayoutParams? = null,
         val updatesLayoutParams: Boolean = false,
+        val replacesAndroidView: Boolean = false,
     )
 
     /**
@@ -317,14 +320,6 @@ internal object ViewTreePatchPipeline {
 
         transaction.mountedCheckpoints.values.forEach { checkpoint ->
             bestEffort {
-                if (checkpoint.vnode.type == NodeType.AndroidView) {
-                    checkpoint.vnode.runAndroidViewOperation(AndroidViewOperation.Reset) {
-                        checkpoint.vnode
-                            .requireSpec<AndroidViewNodeProps>()
-                            .onReset
-                            ?.invoke(checkpoint.mountedNode.view)
-                    }
-                }
                 bindView(
                     view = checkpoint.mountedNode.view,
                     node = checkpoint.vnode,
@@ -530,6 +525,7 @@ internal object ViewTreePatchPipeline {
                         key = patch.nextVNode.key,
                         parentKey = parentNodeKey,
                         index = patch.targetIndex,
+                        detail = mountedNode.androidViewDiagnosticDetail(),
                         toolingMetadata = UiNodeTooling.metadataOf(patch.nextVNode),
                     ))
                 }
@@ -554,6 +550,20 @@ internal object ViewTreePatchPipeline {
             is ReusePatch -> {
                 val mountedNode = patch.payload
                 val bindingPlan = checkNotNull(preparedPatch.bindingPlan)
+                if (preparedPatch.replacesAndroidView) {
+                    return replaceAndroidView(
+                        container = container,
+                        patch = patch,
+                        preparedPatch = preparedPatch,
+                        defaultRippleColor = defaultRippleColor,
+                        transaction = transaction,
+                        collectStats = collectStats,
+                        parentNodeKey = parentNodeKey,
+                        timingCollector = timingCollector,
+                        nodeDepth = nodeDepth,
+                        renderChildren = renderChildren,
+                    )
+                }
                 val reusesExactVNode = bindingPlan == NodeBindingPlan.SkipSubtree &&
                     mountedNode.vnode === patch.nextVNode
                 val needsMove = container.indexOfChild(mountedNode.view) != patch.targetIndex
@@ -596,18 +606,6 @@ internal object ViewTreePatchPipeline {
                     depth = nodeDepth,
                     phase = RenderTreeTimingPhase.Binding,
                 ) {
-                    if (patch.nextVNode.type == NodeType.AndroidView &&
-                        mountedNode.vnode.spec != patch.nextVNode.spec &&
-                        !mountedNode.requiresCrossOwnerRebind
-                    ) {
-                        // AndroidView spec changes trigger Reset before rebind/patch and the later commit effect.
-                        patch.nextVNode.runAndroidViewOperation(AndroidViewOperation.Reset) {
-                            patch.nextVNode
-                                .requireSpec<AndroidViewNodeProps>()
-                                .onReset
-                                ?.invoke(mountedNode.view)
-                        }
-                    }
                     when (bindingPlan) {
                         NodeBindingPlan.Rebind -> {
                             bindView(
@@ -713,7 +711,7 @@ internal object ViewTreePatchPipeline {
                             ?: if (bindingPlan == NodeBindingPlan.ModifierOnly) {
                                 "ModifierOnly"
                             } else {
-                                null
+                                mountedNode.androidViewDiagnosticDetail()
                             },
                         toolingMetadata = UiNodeTooling.metadataOf(patch.nextVNode),
                     ))
@@ -737,6 +735,76 @@ internal object ViewTreePatchPipeline {
                 )
             }
         }
+    }
+
+    private fun replaceAndroidView(
+        container: ViewGroup,
+        patch: ReusePatch<MountedNode>,
+        preparedPatch: PreparedPatch,
+        defaultRippleColor: Int,
+        transaction: RenderTransaction,
+        collectStats: Boolean,
+        parentNodeKey: Any?,
+        timingCollector: RenderTreeTimingCollector?,
+        nodeDepth: Int,
+        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?, VNode) -> RenderTreeResult,
+    ): PatchApplicationResult {
+        val displaced = patch.payload
+        val candidate = mountNode(
+            context = container.context,
+            node = patch.nextVNode,
+            defaultRippleColor = defaultRippleColor,
+            resolved = checkNotNull(preparedPatch.nextResolved),
+            transaction = transaction,
+            timingCollector = timingCollector,
+            nodeDepth = nodeDepth,
+            renderChildren = renderChildren,
+        )
+        candidate.view.setTag(
+            R.id.viewcompose_android_view_construction_generation,
+            displaced.androidViewConstructionGeneration() + 1L,
+        )
+
+        // Keep the committed View untouched until candidate creation and replay-safe binding have
+        // both succeeded. Container order then provides the rollback checkpoint while disposal is
+        // deferred until structural commit, exactly like an ordinary removal.
+        captureContainer(transaction = transaction, target = container)
+        check(container.indexOfChild(displaced.view) >= 0) {
+            "AndroidView construction replacement requires the committed View in its container."
+        }
+        container.removeView(displaced.view)
+        container.addView(
+            candidate.view,
+            patch.targetIndex.coerceAtMost(container.childCount),
+            checkNotNull(preparedPatch.layoutParams),
+        )
+        DecorationChildDrawingOrder.invalidate(container)
+        transaction.deferredRemovals += displaced
+
+        if (collectStats) {
+            transaction.recordPatch(
+                RenderPatchRecord(
+                    operation = RenderPatchOperation.Rebind,
+                    type = patch.nextVNode.type,
+                    key = patch.nextVNode.key,
+                    parentKey = parentNodeKey,
+                    index = patch.targetIndex,
+                    detail = candidate.androidViewDiagnosticDetail(replacement = true),
+                    toolingMetadata = UiNodeTooling.metadataOf(patch.nextVNode),
+                ),
+            )
+        }
+        return PatchApplicationResult(
+            mountedNode = candidate,
+            stats = if (collectStats) {
+                emptyStats.withReuse(
+                    result = ReuseBindingResult.Rebound,
+                    nodeType = patch.nextVNode.type,
+                )
+            } else {
+                emptyStats
+            },
+        )
     }
 
     private fun applyRemoval(
@@ -814,7 +882,7 @@ internal object ViewTreePatchPipeline {
                         val factory = node.requireSpec<AndroidViewNodeProps>().factory
                         { rawContext ->
                             node.runAndroidViewOperation(AndroidViewOperation.Factory) {
-                                factory(rawContext)
+                                factory(rawContext, node.environment)
                             }
                         }
                     }
@@ -899,6 +967,10 @@ internal object ViewTreePatchPipeline {
                     is ReusePatch -> {
                         val nextNode = patch.nextVNode
                         val previousNode = patch.payload.vnode
+                        val replacesAndroidView = previousNode.type == NodeType.AndroidView &&
+                            nextNode.type == NodeType.AndroidView &&
+                            previousNode.requireSpec<AndroidViewNodeProps>().constructionIdentity !=
+                            nextNode.requireSpec<AndroidViewNodeProps>().constructionIdentity
                         val bindingPlan = if (patch.payload.requiresCrossOwnerRebind) {
                             NodeBindingPlan.Rebind
                         } else {
@@ -952,6 +1024,7 @@ internal object ViewTreePatchPipeline {
                                 null
                             },
                             updatesLayoutParams = updatesLayoutParams,
+                            replacesAndroidView = replacesAndroidView,
                         )
                     }
                 }
@@ -994,10 +1067,24 @@ internal object ViewTreePatchPipeline {
             nodeKey = node.key,
             commit = {
                 node.runAndroidViewOperation(AndroidViewOperation.Commit) {
-                    onCommit(view)
+                    onCommit(view, node.environment)
                 }
             },
         )
+    }
+
+    private fun MountedNode.androidViewConstructionGeneration(): Long {
+        if (vnode.type != NodeType.AndroidView) return 0L
+        return (view.getTag(R.id.viewcompose_android_view_construction_generation) as? Long) ?: 0L
+    }
+
+    private fun MountedNode.androidViewDiagnosticDetail(replacement: Boolean = false): String? {
+        if (vnode.type != NodeType.AndroidView) return null
+        val spec = vnode.requireSpec<AndroidViewNodeProps>()
+        val adapterName = spec.adapterName.take(MAX_ANDROID_VIEW_ADAPTER_NAME_LENGTH)
+        val reuse = if (spec.onReset == null) "Never" else "Resettable"
+        return "AndroidView(adapter=$adapterName,generation=${androidViewConstructionGeneration()}," +
+            "reuse=$reuse,replacement=$replacement)"
     }
 
     private fun captureNode(
@@ -1070,4 +1157,5 @@ internal object ViewTreePatchPipeline {
     }
 
     private const val MAX_PATCH_RECORDS = 5_000
+    private const val MAX_ANDROID_VIEW_ADAPTER_NAME_LENGTH = 160
 }
