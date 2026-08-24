@@ -159,6 +159,7 @@ val qaQuickTasks = listOf(
     ":samples:tutorials:assembleDebug",
     ":samples:tutorials:compileDebugAndroidTestKotlin",
     ":app:compileDebugKotlin",
+    ":viewcompose-benchmark:compileBenchmarkKotlin",
     ":viewcompose-runtime:test",
     ":viewcompose-navigation-core:test",
     ":viewcompose-navigation-android:testDebugUnitTest",
@@ -526,6 +527,49 @@ tasks.register("verifyDevelopmentToolingIsolation") {
                 buildString {
                     appendLine("Development-tooling isolation verification failed:")
                     violations.distinct().sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
+tasks.register("verifyDemoReleaseToolingApk") {
+    group = "verification"
+    description = "Verify the optimized Demo release APK contains no concrete development tooling."
+    dependsOn(":app:assembleRelease")
+    doLast {
+        val releaseApk = rootDir.resolve("app/build/outputs/apk/release/app-release-unsigned.apk")
+        check(releaseApk.isFile) {
+            "Demo release APK was not produced at ${releaseApk.relativeTo(rootDir)}"
+        }
+        val forbiddenMarkers = listOf(
+            "com.viewcompose.preview.action.REQUEST_DEVICE_DSL_SOURCE",
+            "viewcompose/device-dsl-source-v7.json",
+            "com/viewcompose/preview/device/AndroidDeviceDslInspectionTooling",
+            "DeviceDslSourceRequestReceiver",
+            "META-INF/services/com.viewcompose.ui.foundation.RenderSessionInspectionTooling",
+        )
+        val violations = mutableListOf<String>()
+        java.util.zip.ZipFile(releaseApk).use { archive ->
+            val entries = archive.entries()
+            while (entries.hasMoreElements()) {
+                val entry = entries.nextElement()
+                if (entry.isDirectory) continue
+                val content = archive.getInputStream(entry).use { input ->
+                    input.readBytes().toString(Charsets.ISO_8859_1)
+                }
+                forbiddenMarkers.forEach { marker ->
+                    if (entry.name.contains(marker) || content.contains(marker)) {
+                        violations += "${entry.name} -> forbidden tooling marker '$marker'"
+                    }
+                }
+            }
+        }
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Release APK tooling-isolation verification failed:")
+                    violations.distinct().sorted().forEach { violation -> appendLine("- $violation") }
                 },
             )
         }
@@ -2244,6 +2288,8 @@ tasks.register("qaQuick") {
     dependsOn("verifyAndroidModuleNamespaces")
     dependsOn("verifyModuleDependencyBoundaries")
     dependsOn("verifyDevelopmentToolingIsolation")
+    dependsOn("verifyDemoReleaseToolingApk")
+    dependsOn("testDeviceDiagnosticsRequestMeasurementTool")
     dependsOn("verifyDemoAutomationSelectors")
     dependsOn("verifyDemoLocalizationResources")
     dependsOn("verifyDemoLocalizedVisibleCopy")
@@ -2474,6 +2520,18 @@ tasks.register<Exec>("testBenchmarkComparisonTool") {
         "-m",
         "unittest",
         "test_compare_macrobenchmarks.py",
+    )
+}
+
+tasks.register<Exec>("testDeviceDiagnosticsRequestMeasurementTool") {
+    group = "verification"
+    description = "Run unit tests for the explicit device diagnostics request measurement tool."
+    workingDir(rootDir.resolve("tools/performance"))
+    commandLine(
+        "python3",
+        "-m",
+        "unittest",
+        "test_measure_device_diagnostics_request.py",
     )
 }
 

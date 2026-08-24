@@ -24,6 +24,7 @@ import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AndroidViewOperationException
 import com.viewcompose.ui.tooling.UiSourceCallSite
 import com.viewcompose.ui.tooling.UiNodeTooling
+import java.lang.ref.WeakReference
 import kotlin.coroutines.EmptyCoroutineContext
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -1054,6 +1055,14 @@ class RenderSessionFailureTest {
 
         assertEquals(listOf("registered", "active=false", "disposed"), events)
         assertTrue(checkNotNull(capturedDiagnostics).snapshot().ended)
+    }
+
+    @Test
+    fun `diagnostic inspection cannot strongly retain its render session`() {
+        val fields = DefaultRenderSessionDiagnosticInspection::class.java.declaredFields
+
+        assertTrue(fields.any { field -> WeakReference::class.java.isAssignableFrom(field.type) })
+        assertFalse(fields.any { field -> RenderSession::class.java.isAssignableFrom(field.type) })
     }
 
     @Test

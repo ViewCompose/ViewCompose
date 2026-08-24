@@ -139,7 +139,7 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 | A: Overlay stability | Completed | C:✅ U:✅ D:✅ UI:✅ | Unified overlay reconciliation covers Dialog, Popup, ModalBottomSheet, and feedback flows |
 | B: Collections and containers | Completed | C:✅ U:✅ D:✅ UI:✅ | Lazy/Pager baseline, structured items, complete list state, sticky headers, content types/spans, prefetch, and restoration are implemented |
 | C: Input and forms | In Progress | C:✅ U:✅ D:✅ UI:⚠ | TextFieldState, selection/composition, IME batch, undo, transformations, keyboard actions, autofill, and restoration are implemented; real-device IME/accessibility matrix remains |
-| D: Diagnostics and performance | In Progress | C:✅ U:✅ D:✅ UI:✅ | Diagnostics visualization and R8 release benchmark are implemented; remaining observability is owned by the active [diagnostics plan](./plans/diagnostics-correlation-inspection-observability.md), while baseline-profile benefit remains to be measured |
+| D: Diagnostics and performance | In Progress | C:✅ U:✅ D:✅ UI:✅ | Diagnostics correlation, aggregation, inspector, idle/request budgets, Release isolation, and Maven closeout are complete in the [archived diagnostics plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md); baseline-profile benefit remains to be measured |
 | E: Preview and screenshots | In Progress | C:✅ U:✅ D:✅ UI:✅ | Compose Preview/Paparazzi and Studio Preview plugin 1.0 cover source linkage, all previews, cache, incremental refresh, zoom/pan, and diagnostics; Dark/Tablet matrix remains |
 | F: Animation and gestures | Completed | C:✅ U:✅ D:✅ UI:✅ | The first-round Core/DSL baseline and all seven later expansions are complete; the [archived Animation capability plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md) records physical motion, content/visibility, seeking, bounds, shared navigation motion, timeline tooling, and acceptance evidence |
 | G: Graphics 2D | In Progress | C:✅ U:✅ D:✅ UI:⚠ | Core/DSL layers, Canvas/draw modifiers/cache, renderer pipeline, Android interop, and v2 P0 fixes are implemented; stable current-device UI evidence remains |
@@ -161,14 +161,14 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 | Foundations / Input / Layout / State | v1 core plus declarative focus, directional navigation, focus groups, and hardware KeyEvent dispatch | Real-device keyboard/focus edge cases and complex compositions |
 | Accessibility / Semantics | Structured semantics and native Android mapping for state, role, heading, live region, errors, progress, and more | TalkBack, Switch Access, and font-scale device matrix |
 | Text Editing | TextDocument, TextFieldState, EditingBuffer, InputTransformation, and Android editor bridge support rich text, selection/composition/undo/save, attachments, and Receive Content | Chinese/Japanese IMEs, TalkBack, hardware keyboard, drag/drop, and third-party content providers |
-| Runtime Effects / Transactions | Composition transaction, structured coroutines, renderer recovery, failure reports, and onCommit boundary | Production failure aggregation and exception sampling have moved to the active [diagnostics plan](./plans/diagnostics-correlation-inspection-observability.md) |
+| Runtime Effects / Transactions | Composition transaction, structured coroutines, renderer recovery, failure reports, onCommit boundary, and optional bounded failure aggregation | Maintain the shipped privacy and inactive-path contracts; application exporters retain scheduling, consent, persistence, and upload ownership |
 | Runtime Recomposition Performance | VNode subtree cache, mutation journals, invalidation merging, explicit boundaries, and O(1) identity skip | Maintain leaf-update scale benchmarks and bound whole-tree fixed cost |
 | Lifecycle / ViewModel | Split modules, serial lifecycle collection, transactional SavedState claim, destroyed-host and corrupt-entry handling | Multi-window and background process-recovery matrix |
 | Collections | LazyColumn/Row/Grid plus Pager, complete list state, sticky headers, content types/spans, and prefetch | Paging 3 execution has moved to the active [Paging 3 integration plan](./plans/paging3-integration.md); it remains an optional AndroidX integration outside the core contract |
 | Overlay | Precise Popup anchoring/following/RTL/flip/clamp and unified feedback queues | Multi-window, IME, and freeform-window device matrix |
 | Theming | Semantic tokens, dynamic-color policy, complete shape bridge, configuration lifecycle, and authoritative Theme diagnostics | Multi-window, vendor-theme, and dynamic-color matrix |
 | Interop | AndroidView replay-safe update/reset/nativeView, commit-time onCommit, and one-time release | Complex native and third-party Views with theme coordination |
-| Diagnostics | Correlated render sessions and Studio inspector, bounded production failure aggregation, render/layout trees, per-node patches, Locals, recomposition reasons, source navigation, request-driven real-View highlighting, and finite sampled composition/reconciliation/binding timing | Performance, device-matrix, and release closeout remain in the active [diagnostics plan](./plans/diagnostics-correlation-inspection-observability.md) |
+| Diagnostics | Correlated render sessions and Studio inspector, bounded production failure aggregation, render/layout trees, per-node patches, Locals, recomposition reasons, source navigation, request-driven real-View highlighting, finite sampled composition/reconciliation/binding timing, and accepted idle/request/Release isolation budgets | No active expansion; any continuous observer, new timing domain, or broader device contract requires a newly attributed plan and ADR-backed inactive-path evidence |
 | UI Testing | Core instrumentation plus P1 focus/keyboard, nested-scroll, and rollback cases | Multi-API, TV, ChromeOS, overlay host, and theme assertions |
 | Developer Preview | Compose Preview, Paparazzi, and Studio plugin with static render, source linkage, diagnostics, bounded cache, and incremental refresh | More domains and Dark/Tablet snapshots |
 | ConstraintLayout | Alpha DSL plus classified reconciliation, typed chain/wrap/physical-direction APIs, typed Grid, declarative CircularFlow, exact helper/rollback/lifecycle coverage, pairwise visual acceptance, API 24/33/36 device coverage, and a stable-row-safe released/candidate/direct matrix | The [archived parity/performance expansion](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md) completed Phases 0--4 with **no material change** release safety and no whole-frame optimization win. Keep MotionScene/MotionLayout out of scope; require a new attributed plan for multi-OEM performance or any additional parity work |
@@ -243,11 +243,12 @@ process restoration without cursor jumps or text loss.
 
 ### Milestone D: Diagnostics and performance
 
-The remaining observability work has moved to the active
-[diagnostics correlation, inspection, and production observability plan](./plans/diagnostics-correlation-inspection-observability.md).
-It owns enhanced render/patch/layout inspection and the panel that locates high-frequency problems.
-This milestone retains maintained benchmark baselines and release optimization such as baseline
-profiles. Completion requires quantitative evidence from both work streams.
+Diagnostics observability is complete. The
+[archived diagnostics correlation, inspection, and production observability plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md)
+records the correlated inspector, production aggregation, real-View highlighting, finite timing,
+same-device idle/request budgets, lifecycle ownership, and Release/Maven closeout. This milestone
+remains open only for maintained benchmark baselines and release optimization such as baseline
+profiles; completion still requires quantitative baseline-profile evidence.
 
 ### Milestone E: Preview and screenshots
 

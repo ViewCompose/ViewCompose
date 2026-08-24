@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: d51d193931457a418b0bcbf57841231bffcaad7a3e3ce988420397bfeea75aeb
+translation_source_hash: 46936dccc2f44c52685a1b27e799f04904be2b25731ca0dc261acd1a414b05ef
 translation_status: current
 ---
 
@@ -93,7 +93,7 @@ translation_status: current
 | A：Overlay 稳定性收口 | Completed | C:✅ U:✅ D:✅ UI:✅ | Overlay host 已统一 reconcile 模板，Dialog/Popup/ModalBottomSheet/反馈流均已回归 |
 | B：Collections 与容器扩展 | Completed | C:✅ U:✅ D:✅ UI:✅ | Lazy/Pager 基线、结构化条目、完整 list state、sticky headers、contentType/span、预取与保存恢复均已落地 |
 | C：Input 与表单态增强 | In Progress | C:✅ U:✅ D:✅ UI:⚠ | `TextFieldState` 硬切、selection/composition、IME batch、撤销历史、输入变换、键盘动作、autofill 与保存恢复已落地；仍需真实设备 IME/无障碍矩阵 |
-| D：Diagnostics + Performance 联动 | In Progress | C:✅ U:✅ D:✅ UI:✅ | 诊断可视化与 R8 release 基准已经落地；剩余可观测性工作由有效的[诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)负责，baseline profile 收益仍待量化 |
+| D：Diagnostics + Performance 联动 | In Progress | C:✅ U:✅ D:✅ UI:✅ | 诊断关联、聚合、Inspector、空闲/请求预算、Release 隔离与 Maven 收尾已在[归档诊断计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md)中完成；baseline profile 收益仍待量化 |
 | E：开发预览与截图回归 | In Progress | C:✅ U:✅ D:✅ UI:✅ | Compose Preview/Paparazzi 与独立 Android Studio 预览插件 1.0 已落地，覆盖源码联动、全部预览、缓存、增量刷新、缩放平移和诊断；下一步扩展 Dark/Tablet 快照矩阵 |
 | F：动画与手势 | Completed | C:✅ U:✅ D:✅ UI:✅ | 首轮 Core/DSL 基线与后续七项增强均已完成；[已归档的动画能力计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/animation-compose-capability-expansion.md)记录了物理运动、内容与显隐、seek、bounds、导航共享运动、时间线工具及验收证据 |
 | G：Graphics 2D 主链能力 | In Progress | C:✅ U:✅ D:✅ UI:⚠ | 已完成 `viewcompose-graphics-core` + `viewcompose-graphics` 分层、Canvas/draw modifiers/drawWithCache、renderer 渲染管线与 `AndroidGraphicsInterop`，并完成 v2 P0 语义收口（RoundRect/Drawable/ImageFilter Chain）；在当前设备矩阵重新取得稳定 UI 证据前不标记 Completed |
@@ -113,14 +113,14 @@ translation_status: current
 | Foundations / Input / Layout / State | 已形成 v1 主能力；声明式焦点、方向导航、焦点组和硬件 KeyEvent 分发已落地 | 聚焦真实设备键盘/焦点边界态与复杂组合场景 |
 | Accessibility / Semantics | 结构化 semantics 契约与 Android 原生 Accessibility 映射已落地，支持状态、role、heading、live region、错误和进度等核心语义 | 扩展真实设备 TalkBack、Switch Access 与字体放大回归矩阵 |
 | Text Editing | `TextDocument + TextFieldState + EditingBuffer + InputTransformation + AppCompatEditText/InputConnection bridge` 已落地，支持富文本、段落、行内附件、selection/composition/undo/save 与统一 Receive Content | 真实设备覆盖主流中文/日文 IME、TalkBack、硬件键盘、拖放和第三方内容提供方 |
-| Runtime Effects / Transactions | 组合 prepare/commit/abort、结构化协程、renderer 恢复、`RenderFailure/RenderFrameReport` 与 `AndroidView.onCommit` 副作用边界已落地 | 线上失败聚合与异常采样已拆分到有效的[诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability) |
+| Runtime Effects / Transactions | 组合 prepare/commit/abort、结构化协程、renderer 恢复、`RenderFailure/RenderFrameReport`、`AndroidView.onCommit` 副作用边界与可选有界故障聚合已落地 | 维护已交付的隐私与非激活路径契约；调度、同意、持久化与上传仍由应用 Exporter 持有 |
 | Runtime Recomposition Performance | VNode 子树缓存、mutation journal、失效合并、显式边界和 renderer O(1) identity skip 已落地 | 维护叶子更新规模基准，避免固定成本随整树节点数增长 |
 | Lifecycle / ViewModel Integration | 模块拆分与 API 硬切、串行 lifecycle collection、事务化 SavedState claim、destroyed host 与损坏 Bundle 隔离均已完成 | 扩展多窗口/后台进程回收真实设备矩阵 |
 | Collections | `LazyColumn/LazyRow/LazyVerticalGrid` + Pager；完整 list state、sticky headers、contentType/span 与预取已落地 | Paging 3 的执行工作已拆分到有效的 [Paging 3 集成计划](https://docs.viewcompose.com/project/plans/paging3-integration)；它仍是位于核心契约之外的可选 AndroidX 集成 |
 | Overlay | Popup 精确锚点、滚动跟随、RTL、翻转/夹取，以及 Snackbar/Toast 统一队列与结构化结束原因已落地 | 扩展多窗口、IME 与自由窗真实设备矩阵 |
 | Theming | 已完成 token 收口、Android 动态色策略、完整 shape 桥接与配置变化 token 生命周期，并提供 `Diagnostics -> 主题诊断` 权威人工验证入口 | 扩展多窗口、厂商主题和动态色设备矩阵 |
 | Interop | `AndroidView` 支持 replay-safe update/reset/nativeView、提交期 onCommit 与一次性 release | 强化复杂原生 View、第三方控件与主题协同 |
-| Diagnostics | 已关联的渲染 Session 与 Studio Inspector、受限的生产故障聚合、Render/Layout Tree、逐节点 Patch、CompositionLocal、重组原因、源码跳转、按请求触发的真实 View 高亮，以及有限采样的 Composition/Reconciliation/Binding 逐节点耗时 | 性能、设备矩阵与发布收口仍由有效的[诊断增强计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)负责 |
+| Diagnostics | 已关联的渲染 Session 与 Studio Inspector、受限的生产故障聚合、Render/Layout Tree、逐节点 Patch、CompositionLocal、重组原因、源码跳转、按请求触发的真实 View 高亮、有限采样的 Composition/Reconciliation/Binding 逐节点耗时，以及已验收的空闲/请求/Release 隔离预算 | 当前没有扩展计划；持续观察器、新耗时域或更广设备契约必须重新建立可归因计划，并提供 ADR 支持的非激活路径证据 |
 | UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |
 | Developer Preview | Compose Preview、Paparazzi 与独立 Studio 插件链路已建立；插件支持静态渲染、源码双向联动、布局/View/组合诊断、全部预览、有界缓存和增量刷新 | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |
 | ConstraintLayout | Alpha DSL 加分类协调、类型化 Chain/Wrap/物理方向 API、类型化 Grid、声明式 CircularFlow、精确 Helper/回滚/Lifecycle 覆盖、Pairwise 视觉验收、API 24/33/36 设备覆盖，以及稳定行发版安全的 Released/Candidate/Direct 矩阵 | [已归档的能力与性能扩展计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md)完成了 Phase 0～4，发版安全为 **no material change**，没有全帧优化胜利。保持 MotionScene/MotionLayout 范围外；多 OEM 性能或新增能力必须新建归因计划 |
@@ -221,9 +221,9 @@ translation_status: current
 
 交付：
 
-1. 剩余可观测性工作已拆分到有效的[诊断关联、检查与生产可观测性计划](https://docs.viewcompose.com/project/plans/diagnostics-correlation-inspection-observability)，由其负责 render/patch/layout 检查增强与高频问题定位面板
+1. 诊断可观测性已经完成；[归档诊断关联、检查与生产可观测性计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/diagnostics-correlation-inspection-observability.md)记录了关联 Inspector、生产聚合、真实 View 高亮、有限耗时、同机空闲/请求预算、生命周期所有权以及 Release/Maven 收尾
 2. 本里程碑继续负责固定 viewcompose-benchmark 路线并持续更新基线
-3. 继续推进发布态优化项，例如 baseline profile
+3. 当前未完成项只剩发布态优化量化，例如 baseline profile
 
 完成标准：
 
