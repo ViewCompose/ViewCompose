@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="viewcompose_android_view_lifecycle_binding" type="id" />
+    <item name="viewcompose_android_view_saved_state_binding" type="id" />
+</resources>

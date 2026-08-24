@@ -1,10 +1,7 @@
 package com.viewcompose.navigation
 
-/*
- * 测试职责：覆盖 Android navigation runtime 中的 Nav Entry Owner 行为，防止导航契约在后续重构中回退。
- * Test responsibility: covers Nav Entry Owner behavior in Android navigation runtime and guards navigation contracts against regressions.
- */
-
+import android.view.View
+import android.widget.FrameLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.DEFAULT_ARGS_KEY
 import androidx.lifecycle.SAVED_STATE_REGISTRY_OWNER_KEY
@@ -15,15 +12,22 @@ import androidx.lifecycle.VIEW_MODEL_STORE_OWNER_KEY
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.MutableCreationExtras
+import com.viewcompose.host.android.AndroidView
+import com.viewcompose.host.android.AndroidViewCreateScope
+import com.viewcompose.host.android.AndroidViewUpdateScope
+import com.viewcompose.host.android.renderInto
+import com.viewcompose.lifecycle.AndroidViewLifecycleEventScope
+import com.viewcompose.lifecycle.LifecycleAndroidViewAdapter
 import com.viewcompose.lifecycle.LocalLifecycleOwner
+import com.viewcompose.lifecycle.LocalSavedStateRegistryOwner
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryLifecycleState
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavValue
-import com.viewcompose.viewmodel.LocalViewModelStoreOwner
 import com.viewcompose.ui.foundation.LocalSaveableStateRegistry
 import com.viewcompose.ui.foundation.buildVNodeTree
+import com.viewcompose.viewmodel.LocalViewModelStoreOwner
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -33,6 +37,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+
+/*
+ * 测试职责：覆盖 Android navigation runtime 中的 Nav Entry Owner 行为，防止导航契约在后续重构中回退。
+ * Test responsibility: covers Nav Entry Owner behavior in Android navigation runtime and guards navigation contracts against regressions.
+ */
 
 @RunWith(RobolectricTestRunner::class)
 class NavEntryOwnerTest {
@@ -216,23 +225,63 @@ class NavEntryOwnerTest {
     fun `entry owner environment injects all page scoped locals`() {
         val owner = owner(entry("root", "home"))
         var lifecycleOwner: Any? = null
+        var savedStateOwner: Any? = null
         var viewModelOwner: Any? = null
         var saveableRegistry: Any? = null
 
         buildVNodeTree {
             ProvideNavEntryOwner(owner) {
                 lifecycleOwner = LocalLifecycleOwner.current
+                savedStateOwner = LocalSavedStateRegistryOwner.current
                 viewModelOwner = LocalViewModelStoreOwner.current
                 saveableRegistry = LocalSaveableStateRegistry.current
             }
         }
 
         assertSame(owner, lifecycleOwner)
+        assertSame(owner, savedStateOwner)
         assertSame(owner, viewModelOwner)
         assertSame(owner.compositionSaveableStateRegistry, saveableRegistry)
         assertNull(LocalLifecycleOwner.current)
+        assertNull(LocalSavedStateRegistryOwner.current)
         assertNull(LocalViewModelStoreOwner.current)
         assertNull(LocalSaveableStateRegistry.current)
+    }
+
+    @Test
+    fun `retained destination owner caps committed Android View lifecycle`() {
+        val owner = owner(entry("root", "home"))
+        owner.moveTo(NavEntryLifecycleState.Resumed)
+        val events = mutableListOf<Lifecycle.Event>()
+        val root = FrameLayout(RuntimeEnvironment.getApplication())
+
+        val session = renderInto(root) {
+            ProvideNavEntryOwner(owner) {
+                AndroidView(
+                    adapter = DestinationLifecycleAdapter(events),
+                    state = checkNotNull(LocalLifecycleOwner.current),
+                    key = "destination-view",
+                )
+            }
+        }
+        assertEquals(
+            listOf(
+                Lifecycle.Event.ON_CREATE,
+                Lifecycle.Event.ON_START,
+                Lifecycle.Event.ON_RESUME,
+            ),
+            events,
+        )
+
+        owner.moveTo(NavEntryLifecycleState.Created)
+        assertEquals(
+            listOf(Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP),
+            events.takeLast(2),
+        )
+
+        session.dispose()
+        assertEquals(Lifecycle.Event.ON_DESTROY, events.last())
+        owner.moveTo(NavEntryLifecycleState.Destroyed)
     }
 
     @Test
@@ -272,6 +321,29 @@ class NavEntryOwnerTest {
             defaultViewModelProviderFactory,
             defaultViewModelCreationExtras,
         )[key, VM::class.java]
+    }
+
+    private class DestinationLifecycleAdapter(
+        private val events: MutableList<Lifecycle.Event>,
+    ) : LifecycleAndroidViewAdapter<View, androidx.lifecycle.LifecycleOwner>() {
+        override fun lifecycleOwner(
+            state: androidx.lifecycle.LifecycleOwner,
+        ): androidx.lifecycle.LifecycleOwner = state
+
+        override fun create(scope: AndroidViewCreateScope): View = View(scope.context)
+
+        override fun update(
+            scope: AndroidViewUpdateScope<View>,
+            state: androidx.lifecycle.LifecycleOwner,
+        ) = Unit
+
+        override fun onLifecycleEvent(
+            scope: AndroidViewLifecycleEventScope<View>,
+            state: androidx.lifecycle.LifecycleOwner,
+            event: Lifecycle.Event,
+        ) {
+            events += event
+        }
     }
 
     private inline fun <reified T : Throwable> assertThrows(block: () -> Unit): T {

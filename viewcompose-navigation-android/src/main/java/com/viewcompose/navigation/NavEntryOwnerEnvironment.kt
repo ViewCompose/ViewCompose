@@ -1,6 +1,7 @@
 package com.viewcompose.navigation
 
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
+import com.viewcompose.lifecycle.ProvideSavedStateRegistryOwner
 import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import com.viewcompose.ui.foundation.ProvideLocal
 import com.viewcompose.ui.foundation.ProvideSaveableStateRegistry
@@ -30,9 +31,11 @@ internal fun UiTreeBuilder.ProvideNavEntryOwner(
     content: UiTreeBuilder.() -> Unit,
 ) {
     ProvideLifecycleOwner(owner) {
-        ProvideViewModelStoreOwner(owner) {
-            ProvideSaveableStateRegistry(owner.compositionSaveableStateRegistry) {
-                content()
+        ProvideSavedStateRegistryOwner(owner) {
+            ProvideViewModelStoreOwner(owner) {
+                ProvideSaveableStateRegistry(owner.compositionSaveableStateRegistry) {
+                    content()
+                }
             }
         }
     }
@@ -64,9 +67,11 @@ fun UiTreeBuilder.ProvideNavGraphOwner(
         "ProvideNavGraphOwner must be called inside NavHost destination content."
     }.requireOwner(route)
     ProvideLifecycleOwner(owner) {
-        ProvideViewModelStoreOwner(owner) {
-            ProvideSaveableStateRegistry(owner.delegate.compositionSaveableStateRegistry) {
-                content()
+        ProvideSavedStateRegistryOwner(owner) {
+            ProvideViewModelStoreOwner(owner) {
+                ProvideSaveableStateRegistry(owner.delegate.compositionSaveableStateRegistry) {
+                    content()
+                }
             }
         }
     }

@@ -1,8 +1,20 @@
 package com.viewcompose.lifecycle.samples
 
+import android.os.Bundle
+import android.widget.TextView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import androidx.savedstate.SavedStateRegistryOwner
+import com.viewcompose.host.android.AndroidView
+import com.viewcompose.host.android.AndroidViewCommitScope
+import com.viewcompose.host.android.AndroidViewCreateScope
+import com.viewcompose.host.android.AndroidViewUpdateScope
+import com.viewcompose.lifecycle.AndroidViewLifecycleEventScope
+import com.viewcompose.lifecycle.AndroidViewSavedStateBindResult
+import com.viewcompose.lifecycle.LifecycleAndroidViewAdapter
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
+import com.viewcompose.lifecycle.ProvideSavedStateRegistryOwner
+import com.viewcompose.lifecycle.bindAndroidViewSavedState
 import com.viewcompose.lifecycle.LifecycleResumeEffect
 import com.viewcompose.lifecycle.LifecycleStartEffect
 import com.viewcompose.lifecycle.collectAsState
@@ -88,3 +100,105 @@ fun UiTreeBuilder.lifecycleResumeEffectSample(
 fun UiTreeBuilder.lifecycleCurrentStateSample(
     owner: LifecycleOwner,
 ): State<Lifecycle.State> = owner.lifecycle.currentStateAsState()
+
+/** Installs the saved-state owner used by SDK-specific committed Android View state. */
+fun UiTreeBuilder.provideSavedStateRegistryOwnerSample(
+    owner: SavedStateRegistryOwner,
+    content: UiTreeBuilder.() -> Unit,
+) {
+    ProvideSavedStateRegistryOwner(owner, content)
+}
+
+private data class LifecycleLabelState(
+    val owner: LifecycleOwner,
+    val text: String,
+)
+
+private object LifecycleLabelAdapter : LifecycleAndroidViewAdapter<TextView, LifecycleLabelState>() {
+    override fun lifecycleOwner(state: LifecycleLabelState): LifecycleOwner = state.owner
+
+    override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: LifecycleLabelState) {
+        scope.view.text = state.text
+    }
+
+    override fun onLifecycleEvent(
+        scope: AndroidViewLifecycleEventScope<TextView>,
+        state: LifecycleLabelState,
+        event: Lifecycle.Event,
+    ) {
+        when (event) {
+            Lifecycle.Event.ON_START -> scope.view.isActivated = true
+            Lifecycle.Event.ON_STOP,
+            Lifecycle.Event.ON_DESTROY,
+            -> scope.view.isActivated = false
+
+            else -> Unit
+        }
+    }
+}
+
+/** Mounts a View whose AndroidX owner is caught up only after the View transaction commits. */
+fun UiTreeBuilder.lifecycleAndroidViewAdapterSample(
+    owner: LifecycleOwner,
+    text: String,
+) {
+    AndroidView(
+        adapter = LifecycleLabelAdapter,
+        state = LifecycleLabelState(owner = owner, text = text),
+        key = "lifecycle-label",
+    )
+}
+
+private data class SavedLabelState(
+    val lifecycleOwner: LifecycleOwner,
+    val savedStateOwner: SavedStateRegistryOwner,
+    val text: String,
+)
+
+private object SavedLabelAdapter : LifecycleAndroidViewAdapter<TextView, SavedLabelState>() {
+    override fun lifecycleOwner(state: SavedLabelState): LifecycleOwner = state.lifecycleOwner
+
+    override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: SavedLabelState) {
+        scope.view.text = state.text
+    }
+
+    override fun onViewCommit(scope: AndroidViewCommitScope<TextView>, state: SavedLabelState) {
+        val result = scope.bindAndroidViewSavedState(
+            owner = state.savedStateOwner,
+            key = "saved-label",
+            formatVersion = 1,
+        ) {
+            Bundle().apply { putString("text", view.text.toString()) }
+        }
+        if (result is AndroidViewSavedStateBindResult.Initial) {
+            result.restoredState?.getString("text")?.let(scope.view::setText)
+        }
+    }
+
+    override fun onLifecycleEvent(
+        scope: AndroidViewLifecycleEventScope<TextView>,
+        state: SavedLabelState,
+        event: Lifecycle.Event,
+    ) = Unit
+}
+
+/** Registers SDK Bundle state from commit and restores it before lifecycle catch-up. */
+fun UiTreeBuilder.androidViewSavedStateBindingSample(
+    lifecycleOwner: LifecycleOwner,
+    savedStateOwner: SavedStateRegistryOwner,
+    text: String,
+) {
+    AndroidView(
+        adapter = SavedLabelAdapter,
+        state = SavedLabelState(
+            lifecycleOwner = lifecycleOwner,
+            savedStateOwner = savedStateOwner,
+            text = text,
+        ),
+        key = "saved-label",
+    )
+}

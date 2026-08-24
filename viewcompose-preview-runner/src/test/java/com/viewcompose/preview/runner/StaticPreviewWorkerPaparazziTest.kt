@@ -36,6 +36,7 @@ import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.PreviewVariant
 import com.viewcompose.preview.tooling.viewportHeightDp
 import com.viewcompose.lifecycle.LocalLifecycleOwner
+import com.viewcompose.lifecycle.LocalSavedStateRegistryOwner
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.height
@@ -170,11 +171,13 @@ class StaticPreviewWorkerPaparazziTest {
     @Test
     fun `static preview provides frame scoped lifecycle viewmodel and saveable owners`() {
         var lifecycleOwner: LifecycleOwner? = null
+        var savedStateRegistryOwner: Any? = null
         var viewModelStoreOwner: ViewModelStoreOwner? = null
         var hasSaveableRegistry = false
         val hostedEntry = entry().let { original ->
             StaticPreviewEntry(descriptor = original.descriptor) {
                 lifecycleOwner = LocalLifecycleOwner.current
+                savedStateRegistryOwner = LocalSavedStateRegistryOwner.current
                 viewModelStoreOwner = LocalViewModelStoreOwner.current
                 hasSaveableRegistry = LocalSaveableStateRegistry.current != null
                 val handle = savedStateHandle(key = "preview-host-test")
@@ -195,6 +198,7 @@ class StaticPreviewWorkerPaparazziTest {
 
         assertTrue(mount is StaticPreviewMountResult.Success)
         assertEquals(Lifecycle.State.RESUMED, lifecycleOwner?.lifecycle?.currentState)
+        assertTrue(lifecycleOwner === savedStateRegistryOwner)
         assertTrue(lifecycleOwner === viewModelStoreOwner)
         assertTrue(hasSaveableRegistry)
         (mount as StaticPreviewMountResult.Success).frame.close()

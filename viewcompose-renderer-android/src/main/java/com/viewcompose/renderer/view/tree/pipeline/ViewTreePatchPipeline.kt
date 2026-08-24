@@ -1084,7 +1084,8 @@ internal object ViewTreePatchPipeline {
         val adapterName = spec.adapterName.take(MAX_ANDROID_VIEW_ADAPTER_NAME_LENGTH)
         val reuse = if (spec.onReset == null) "Never" else "Resettable"
         return "AndroidView(adapter=$adapterName,generation=${androidViewConstructionGeneration()}," +
-            "reuse=$reuse,replacement=$replacement)"
+            "reuse=$reuse,lifecycle=${spec.lifecycleMode.take(MAX_ANDROID_VIEW_LIFECYCLE_MODE_LENGTH)}," +
+            "replacement=$replacement)"
     }
 
     private fun captureNode(
@@ -1158,4 +1159,5 @@ internal object ViewTreePatchPipeline {
 
     private const val MAX_PATCH_RECORDS = 5_000
     private const val MAX_ANDROID_VIEW_ADAPTER_NAME_LENGTH = 160
+    private const val MAX_ANDROID_VIEW_LIFECYCLE_MODE_LENGTH = 40
 }

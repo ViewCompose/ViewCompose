@@ -9,6 +9,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.savedstate.SavedStateRegistryOwner
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.renderInto
 import com.viewcompose.host.android.resources.AndroidResourceEnvironment
@@ -16,6 +17,7 @@ import com.viewcompose.host.android.resources.AndroidResourceRefreshController
 import com.viewcompose.host.android.runtime.AndroidMonotonicFrameClock
 import com.viewcompose.host.android.viewComposeSaveableStateRegistry
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
+import com.viewcompose.lifecycle.ProvideSavedStateRegistryOwner
 import com.viewcompose.overlay.android.AndroidOverlayHost
 import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import com.viewcompose.ui.foundation.ProvideAnimationCoroutineContext
@@ -95,6 +97,7 @@ fun Fragment.setUiContent(
                 withHostEnvironment(
                     root = root,
                     lifecycleOwner = viewLifecycleOwner,
+                    savedStateRegistryOwner = this@setUiContent,
                     viewModelStoreOwner = this@setUiContent,
                     saveableStateRegistry = saveableStateRegistry,
                     platform = platform,
@@ -165,6 +168,7 @@ fun ComponentActivity.setUiContent(
         withHostEnvironment(
             root = root,
             lifecycleOwner = this@setUiContent,
+            savedStateRegistryOwner = this@setUiContent,
             viewModelStoreOwner = this@setUiContent,
             saveableStateRegistry = saveableStateRegistry,
             platform = platform,
@@ -212,22 +216,25 @@ private fun resolveAndroidHostPlatform(
 private fun UiTreeBuilder.withHostEnvironment(
     root: ViewGroup,
     lifecycleOwner: LifecycleOwner,
+    savedStateRegistryOwner: SavedStateRegistryOwner,
     viewModelStoreOwner: ViewModelStoreOwner,
     saveableStateRegistry: com.viewcompose.ui.foundation.SaveableStateRegistry,
     platform: ResolvedAndroidHostPlatform,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ) {
     ProvideLifecycleOwner(lifecycleOwner) {
-        ProvideViewModelStoreOwner(viewModelStoreOwner) {
-            ProvideSaveableStateRegistry(saveableStateRegistry) {
-                ProvideAnimationCoroutineContext(defaultAnimationCoroutineContext) {
-                    ProvideMonotonicFrameClock(defaultMonotonicFrameClock) {
-                        AndroidResourceEnvironment(
-                            context = platform.rootContext,
-                            refreshController = platform.resourceRefreshController,
-                            onBeforeRefresh = platform.onBeforeResourceRefresh,
-                        ) {
-                            content(root)
+        ProvideSavedStateRegistryOwner(savedStateRegistryOwner) {
+            ProvideViewModelStoreOwner(viewModelStoreOwner) {
+                ProvideSaveableStateRegistry(saveableStateRegistry) {
+                    ProvideAnimationCoroutineContext(defaultAnimationCoroutineContext) {
+                        ProvideMonotonicFrameClock(defaultMonotonicFrameClock) {
+                            AndroidResourceEnvironment(
+                                context = platform.rootContext,
+                                refreshController = platform.resourceRefreshController,
+                                onBeforeRefresh = platform.onBeforeResourceRefresh,
+                            ) {
+                                content(root)
+                            }
                         }
                     }
                 }

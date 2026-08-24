@@ -99,6 +99,7 @@ fun <V : View, S> UiTreeBuilder.AndroidView(
             ),
             adapterName = callbackPresence?.adapterName
                 ?: adapterClass.name.take(MAX_ADAPTER_NAME_LENGTH),
+            lifecycleMode = adapter.lifecycleMode.name,
         ),
         modifier = modifier,
     )

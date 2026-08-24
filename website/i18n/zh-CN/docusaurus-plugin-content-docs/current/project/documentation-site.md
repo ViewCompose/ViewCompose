@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 8abd30eeddce9222d4ac6954fec8c284944d28df777393d6fc9a128fa3f40abd
+translation_source_hash: 100a63e0eb7b0e3dbece3adbebee7b4499a3f471c91c53e2803f792df9a69850
 translation_status: current
 ---
 
@@ -170,6 +170,13 @@ identity token。
 
 此处收敛已完成检查点；Git 历史继续保留执行明细。
 
+- **2026-08-24，Android View Phase 2：**完整 100 版本语料加一个未发布 Current API 树
+  最初生成 48,276,155 个非 API 字节，超过 46 MiB 上限 41,659 字节。把已闭环的 Phase 1
+  和 Phase 2 API 叙述从有效集成计划收敛到归属手册后，含证据的语料降至 48,186,584
+  字节，减少 89,571 字节（0.186%），没有调整阈值或删除长期契约，并留下 47,912 字节
+  余量。英文/中文搜索为 5,574,102/6,072,178 字节；430 个页面、无障碍、API 路由与 34.2 秒
+  构建全部通过。该本地 macOS 对照不衡量 Linux 部署；下一道门禁仍是 CI，且已完成阶段的
+  明细应继续收敛到归属文档。
 - **2026-08-23，诊断 Phase 2：**在完整 100 版本语料和一个未发布 Current API 树上，
   Phase 1 基线、Phase 2 初始产物与收敛后产物的非 API 字节为 48,217,723、48,480,209 和
   47,801,356。初始增长 262,486 字节（0.544%），超过 46 MiB 上限 245,713 字节。把重复

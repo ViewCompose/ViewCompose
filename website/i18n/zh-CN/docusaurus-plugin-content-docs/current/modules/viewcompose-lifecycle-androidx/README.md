@@ -1,14 +1,15 @@
 ---
 translation_source: modules/viewcompose-lifecycle-androidx/README.md
-translation_source_hash: d6a1ae599780bf345b91a69bef68b16c614db75e3ab0942b000295ef4e0717d9
+translation_source_hash: b3f4c681027a381c61871fe4808051a177c9c442e4b89cc769f9c4fed522790b
 translation_status: current
 ---
 
 # AndroidX Lifecycle 集成
 
-`viewcompose-lifecycle-androidx` 把 Kotlin `Flow` 收集及 ViewCompose 组合工作连接到 AndroidX
-Lifecycle。它提供 Android 宿主安装的 LifecycleOwner Local、感知生命周期和仅感知组合
-生命周期的 `collectAsState` 适配器、成对 Start/Resume Effect，以及可观察 Lifecycle State。
+`viewcompose-lifecycle-androidx` 把 Kotlin `Flow` 收集、ViewCompose 组合工作和已提交的原生 View
+连接到 AndroidX Lifecycle 与 SavedState Owner。它提供 Owner Local、感知 Lifecycle 和仅感知
+组合生命周期的 `collectAsState` 适配器、成对 Start/Resume Effect、可观察 Lifecycle State，
+以及 SDK View 集成使用的类型安全边界。
 
 ## 产物与稳定性
 
@@ -20,9 +21,10 @@ dependencies {
 
 - 稳定性：**Alpha**。收集与 Owner 传播契约已经过审查和测试，命名在 Alpha 版本间仍可能演进。
 - 平台：Android 库，最低 SDK 跟随仓库 Android 策略。
-- Runtime、UI Foundation、Kotlin Coroutines 与 AndroidX Lifecycle Runtime 会被传递暴露，因为
-  `State`、`UiTreeBuilder`、`Flow` 与 Lifecycle 类型出现在公开 API 中。
-- 它不拥有 Activity、Fragment、ViewModel 或 SavedStateRegistry。
+- Runtime、UI Foundation、Android Host、Kotlin Coroutines、AndroidX Lifecycle Runtime 与
+  AndroidX SavedState 会被传递暴露，因为其类型出现在公开 API 中。
+- 它传播由应用拥有的 Lifecycle/SavedState Owner，并可注册 View 级 Provider；它不拥有
+  Activity、Fragment、ViewModel、Owner Registry、SDK State Format 或应用业务状态。
 
 ## LifecycleOwner 传播
 
@@ -33,6 +35,43 @@ Activity、Fragment、自定义容器和导航目的地宿主会把最近的 And
 Owner 可选时读取 `LocalLifecycleOwner.current`。感知生命周期的收集重载会自动解析它；不存在
 Owner 时会抛出明确的配置错误。自定义 Host 或有意建立的嵌套边界可使用
 `ProvideLifecycleOwner(owner) { ... }` 安装 Owner。子树正常返回或抛出异常后都会恢复先前值。
+
+Android Host 还会安装 `LocalSavedStateRegistryOwner`。两个 Local 有意保持独立：Fragment 内容
+使用 Fragment View Owner 作为 Lifecycle Owner，而 SavedState Owner 是 Fragment 本身；导航
+Destination 或 Graph 则会为两个 Local 安装自己的 Owner。自定义 Host 只有在 Registry 已完成
+Attach 和 Restore 后才能使用 `ProvideSavedStateRegistryOwner(owner) { ... }`。
+
+## 绑定 Lifecycle 的 Android View
+
+可复用 SDK 集成应继承 `LifecycleAndroidViewAdapter<V, S>`，并在不可变 Adapter State 中捕获
+最近的 `LifecycleOwner`。Create 与 `update` 仍须可重放。受保护的 `onViewCommit` 只在 Renderer
+事务提交后运行；随后基类才安装 Observer，并按 Android 顺序根据需要补齐 `ON_CREATE`、
+`ON_START` 和 `ON_RESUME`。
+
+Owner 替换会先让旧 View 侧依次下降到 `ON_PAUSE`、`ON_STOP`、`ON_DESTROY` 并分离，然后执行
+新 Commit 与 Catch-up，两个 Owner 永不重叠。因此 Retained Navigation Destination 隐藏时会
+自动限制 Player、Map 或 Camera View，即使物理 View 仍保留在树中也不会继续活跃。
+
+`onLifecycleEvent` 接收最近一次成功提交的 State。Lifecycle-event Callback 失败会终止当前
+Binding：错误重新抛出前会尝试完成有界的下降清理与 Observer 移除。`onViewCommit` 必须让 SDK
+特定工作具有 Failure Atomicity；若它抛出，基类仍会清除自己的 Lifecycle 与 SavedState Binding，
+而不会让此前 State 继续活跃。Reset 与 Release 一定先移除两个 Binding，再运行受保护的 Adapter
+Cleanup Hook。所有回调都是主线程同步工作，不能发出由应用拥有的 Lifecycle 命令，也不能阻塞
+分发。
+
+## 已提交 Android View 的 SavedState
+
+当 SDK View 拥有 Bundle Payload（例如 `MapView` State）时，在 `onViewCommit` 中调用
+`AndroidViewCommitScope.bindAndroidViewSavedState(...)`。稳定 Key 是捕获的
+`SavedStateRegistryOwner` 内的持久化身份，不是 AndroidView Reconciliation Key。集成层自行
+定义并版本化 SDK Payload；框架只负责隔离 Provider 注册、替换、恢复与清理。
+
+首次 Bind 返回 `AndroidViewSavedStateBindResult.Initial`，其中包含一次性的防御性 Restored
+Bundle 或 `null`。相同 Owner、Key 与 Version 的后续 Commit 返回 `Retained`，只替换 Saver，
+保证 Android 保存最近已提交的 View。Format 不匹配或嵌套 Payload 损坏会被隔离为无 State，
+且不阻止新 Provider。Lifecycle-aware Adapter 会在 Reset、Release 或 Owner Destroy 时自动清除
+Provider；原始 `AndroidViewAdapter` 必须在自己的最终清理中调用
+`clearAndroidViewSavedStateBinding()`。
 
 ## 组合生命周期收集
 
@@ -117,15 +156,33 @@ Flow identity、Lifecycle identity、活跃阈值和 Context 共同构成 produc
 | 在 Started 期间执行成对 Setup/Cleanup | `LifecycleStartEffect(key) { ... }` |
 | 在 Resumed 期间执行成对 Setup/Cleanup | `LifecycleResumeEffect(key) { ... }` |
 | 在声明式内容中观察 Lifecycle State | `lifecycle.currentStateAsState()` |
+| 让一个已提交原生 View 协同可替换 Owner | 继承 `LifecycleAndroidViewAdapter<V, S>` |
+| 读取或安装最近的 SavedState Owner | `LocalSavedStateRegistryOwner` / `ProvideSavedStateRegistryOwner` |
+| 恢复和保存一个 SDK View Bundle | 在 Commit 中调用 `bindAndroidViewSavedState(...)` |
 
 不要把返回值再镜像到第二个 `MutableState`；读取返回 State 已经会参与 runtime observation，
 并使所属组合 Scope 失效。
 
 ## 测试
 
-使用 `LifecycleRegistry` 显式驱动 `ON_CREATE`、`ON_START`、`ON_STOP` 和销毁。测试应覆盖
-初始值、不活跃期间保留、重启后的 emission、dispose 取消、Owner 缺失失败、非法阈值，以及
-快速重启时 collector 不重叠。
+使用 `LifecycleRegistry` 显式驱动 `ON_CREATE`、`ON_START`、`ON_STOP` 和销毁。Collection 测试
+应覆盖初始值、不活跃期间保留、重启后的 Emission、Dispose 取消、Owner 缺失失败、非法阈值，
+以及快速重启时 Collector 不重叠。原生 View Adapter 测试还应覆盖 Commit 后 Catch-up、Owner
+替换顺序、Hidden Destination 限制、回调失败清理、进程重建、Format 不匹配隔离和 Provider
+一次性移除。
+
+## Phase 2 验证证据
+
+2026-08-24 相对基线 `eb02abc5` 的验收通过 Lifecycle 模块全部 35 个 JVM 与 Robolectric 测试，
+其中包括 6 个 Lifecycle Adapter Case 和 3 个 SDK SavedState Case。受影响的 Host、Renderer、
+Android Aggregate、Navigation 与 Preview 测试也通过。选定 Q3 API 审计、文档/依赖/发布/工具
+隔离门禁、完整 `qaQuick`（1,954 个任务，6 分 35 秒）与 `qaPreview`（1,115 个任务，22 秒）均通过。
+
+基线只有 Composition-scoped Lifecycle Effect，没有受事务约束的原生 View Owner 或 SDK Bundle
+Provider Boundary。验收实现覆盖 Commit 后 Catch-up、串行 Owner 替换、Retained Destination 限制、
+失败清理、进程重建与 Provider 移除，因此行为结论为 **improved**。门禁耗时未按缓存状态归一化，
+不能支持性能结论。本阶段没有新增 SDK 或可视 Surface，真机 UI 证据无法检验新行为；真实 Surface
+与前后台验证从 Media3 集成开始。
 
 ## 相关文档
 
@@ -148,3 +205,8 @@ Flow identity、Lifecycle identity、活跃阈值和 Context 共同构成 produc
 Q3 Lifecycle API。成对 Effect 至少要求一个显式 Key，且不会替代现有 Flow Collection API；
 当被拥有的工作本身（而不只是数据收集）必须随 Android Lifecycle Threshold 进入和退出时，
 应选择这些 API。
+
+`LifecycleAndroidViewAdapter`、SavedState Owner Local 与已提交 Android View SavedState Binding
+是 Q3 集成 API，并把 Android Host 与 AndroidX SavedState 加入本产物的传递 API Surface。SDK
+集成应把手写 Lifecycle Observer 与 Provider Bookkeeping 硬切到这些边界；应用 State 及播放、
+权限或凭据策略仍不属于它们。

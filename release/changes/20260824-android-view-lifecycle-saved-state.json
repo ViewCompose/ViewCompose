@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add post-commit lifecycle-owner coordination and a versioned SDK View saved-state boundary, propagate saved-state owners through standard hosts, and expose bounded lifecycle diagnostics.",
+  "changes": [
+    { "artifact": "viewcompose-host-android", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" },
+    { "artifact": "viewcompose-lifecycle-androidx", "impact": "feature" },
+    { "artifact": "viewcompose-android", "impact": "feature" },
+    { "artifact": "viewcompose-navigation-android", "impact": "feature" },
+    { "artifact": "viewcompose-preview-runner", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": []
+}
