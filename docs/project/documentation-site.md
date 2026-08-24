@@ -94,17 +94,17 @@ locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to t
 tree, so those copies add storage but no localized content or supported route.
 
 The budget model separates expected release-history growth from regressions. Current ceilings are
-46 MiB for non-API output, 4.5 MiB average and 24 MiB maximum per API tree, 1 MiB for API routing
+46.5 MiB for non-API output, 4.5 MiB average and 24 MiB maximum per API tree, 1 MiB for API routing
 overhead, 8 MiB total and 768 KiB largest-file JavaScript, 128 KiB CSS, 6.25 MiB per locale search
 index, and 120 seconds for the Docusaurus build. Locale-prefixed API copies remain forbidden.
 
-The non-API ceiling evolved from 41 MiB through 46 MiB only after paired builds attributed growth
+The non-API ceiling evolved from 41 MiB through 46.5 MiB only after paired builds attributed growth
 to durable bilingual contracts and representation reviews removed avoidable duplication. Completed
 measurements are consolidated below instead of repeating their execution narrative in this active
 contract. Raise any threshold only with same-corpus absolute and normalized results, reader or
 release value, a conclusion, limitations, and a next stop condition.
 
-At the 46 MiB boundary, a failing branch must first consolidate completed evidence or change site
+At the 46.5 MiB boundary, a failing branch must first consolidate completed evidence or change site
 representation. Current public API, architecture, migration, tutorial, and module contracts must
 not be deleted merely to recover budget, and valid immutable API history remains governed by its
 separate per-tree budgets.
@@ -207,6 +207,20 @@ identity token.
 
 Completed checkpoints are condensed here; Git history retains their execution detail.
 
+- **2026-08-24, Google Maps and tooling installation contracts:** the successful main Linux
+  artifact and the initial same-lockfile complete local candidate measured 48,227,224 and
+  48,597,863 non-API bytes. The candidate added four required English/Chinese manual and ADR
+  routes, moving 434 to 438 audited pages; final English/Chinese search changed from
+  5,609,166/6,111,326 to 5,673,773/6,178,824 bytes. The initial +370,639 bytes (+0.768%) exceeded
+  the 46 MiB limit by 363,367 bytes. Moving completed Maps execution narrative out of the active
+  integration plan and into links to its owning manual and ADR saved 7,385 bytes (-0.015%) to
+  48,590,478, but could not offset four durable routes. Including this required measurement record,
+  final output is 48,609,108 bytes, +381,884 (+0.792%) over main and 149,676 bytes below the new
+  46.5 MiB stop. Representation consolidation is **improved** while total durable-contract size is
+  **regressed and accepted**.
+  The baseline is a Linux artifact and the candidate is a local macOS build, so host-level output
+  variance remains a limitation; CI is the next gate. Another 46.5 MiB failure must consolidate
+  completed evidence or change site representation before any threshold review.
 - **2026-08-24, Android View Phase 2:** the complete 100-version corpus plus one unpublished
   current API tree initially produced 48,276,155 non-API bytes, 41,659 bytes beyond 46 MiB.
   Moving closed Phase 1 and 2 API narratives from the active integration plan to their owning
