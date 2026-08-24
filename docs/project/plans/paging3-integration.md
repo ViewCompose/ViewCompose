@@ -2,108 +2,80 @@
 
 ## Status
 
-Active. Planning baseline only; no production implementation or publication input has started.
-This plan was split out on 2026-08-18 from the optional Paging 3 follow-up in the unified roadmap
-and the separate-integration note in the Lazy Collections guide. Those documents now point here;
-this file is the only active plan that owns Paging 3 scope and delivery status.
+Active. Phase 0 completed on 2026-08-25; production implementation and publication inputs have not
+started. This plan is the only active owner of Paging 3 delivery after the optional roadmap item and
+the Lazy Collections non-goal were redirected here on 2026-08-18. Historical archives retain only
+evidence.
 
-This plan is canonical English-only under the documentation-governance policy. Every durable API,
-behavior, dependency, and compatibility contract must move into active architecture, guide,
-reference, and owning-module documentation before this plan is archived.
+Phase 0 pinned AndroidX Paging 3.5.1, compiled its public `PagingDataPresenter` contract with Kotlin
+2.0.21, froze the API and lifecycle policies below, and rejected the current fully materialized
+`List<LazyListItem>` path for placeholders and page drops. This plan is canonical English-only;
+durable shipped contracts move to their owning active public documentation before archival.
 
-Last verified: 2026-08-18.
+Last verified: 2026-08-25.
 
-Next action: complete Phase 0 by selecting the reviewed AndroidX Paging baseline, proving the
-custom-presenter path against the current lazy-collection contract, and freezing the module,
-package, placeholder, lifecycle, and load-state decisions before production source is added.
+Next action: Phase 1 builds deterministic presenter fixtures for refresh, prepend, append, drops,
+placeholders, access hints, load-state ordering, latest-generation cancellation, retry, and refresh
+before any published module or neutral lazy-contract change.
 
 ## Maven release changesets
 
 - None.
 
-## Objective
+## Objective and ownership
 
-Provide an optional AndroidX Paging 3 integration for ViewCompose lazy collections without moving
-AndroidX Paging types or loading policy into the framework core. The completed integration must:
+Provide an optional AndroidX Paging frontend for ViewCompose lazy collections. AndroidX owns paging
+generations, loading, invalidation, retry, refresh, page eviction, jumps, and source/mediator
+coordination. ViewCompose owns observable presentation state, stable lazy-item identity, renderer
+transactions, lifecycle-bound collection, samples, and documentation. The application continues to
+own `Pager`, `PagingConfig`, `PagingSource`, `RemoteMediator`, storage, network, repository, query,
+cache, and `cachedIn` policy.
 
-1. consume `Flow<PagingData<T>>` through official AndroidX Paging presentation primitives;
-2. expose one ViewCompose-observable item and load-state surface with explicit refresh, retry,
-   placeholder, generation, and cancellation semantics;
-3. preserve lazy-item identity, revision, saveable state, renderer ownership, and transactional
-   rendering while loaded pages are inserted, removed, invalidated, or replaced;
-4. support local `PagingSource` and `RemoteMediator` pipelines without owning the application's
-   database, network, repository, cache, or `cachedIn` policy;
-5. add no AndroidX Paging dependency or recurring work when the optional integration is absent; and
-6. ship compiled samples, Demo coverage, documentation, dependency verification, and deterministic
-   tests for the supported paging matrix.
+Declarative rendering simplifies an already available immutable list; it does not replace the
+concurrency and generation semantics above. The integration therefore uses the official custom-UI
+presenter and never recreates a paging engine from collection primitives.
 
-## Planning origin and ownership transfer
-
-This table records where Paging 3 was previously mentioned and how status ownership changed. It
-prevents the old candidate wording from becoming a second source of truth.
-
-| Previous active location | Previous responsibility | Status after this split |
-| --- | --- | --- |
-| [Unified roadmap](../roadmap.md), Collections next focus | Listed optional Paging 3 integration as an unactivated follow-up | Superseded for execution tracking. The roadmap keeps a summary and links to this active plan. |
-| [Lazy Collections guide](../../guides/lazy-collections.md), deliberate non-goals | Kept Paging adapters and remote loading/retry outside the core collection contract | Architectural boundary retained. The guide now delegates the optional integration's API and delivery work to this plan. |
-| `docs/archive/` | Historical evidence, if an older record mentions adjacent paging work | Unchanged. Archived documents never carry current status and must not be rewritten to simulate a transfer. |
-
-No other active plan owns Paging 3. If another plan discovers a prerequisite in the shared lazy
-contract, that plan may own the neutral prerequisite only; this plan continues to own the Paging
-dependency, adapter, public integration API, samples, compatibility, and release evidence.
-
-## Why the integration uses AndroidX Paging
-
-Declarative rendering makes an already available immutable list straightforward to display and
-replace. It does not by itself provide paging generations, concurrent load arbitration, append and
-prepend state, invalidation, cancellation, retry, refresh, page dropping, jump support, placeholder
-semantics, request deduplication, or database/network mediation.
-
-ViewCompose must therefore integrate the official AndroidX Paging library instead of implementing
-an equivalent paging engine from existing collection primitives. AndroidX Paging owns the data
-pipeline and presentation events. ViewCompose owns conversion of the currently presented data into
-stable lazy declarations, observation through ViewCompose state, and user-facing composition of
-items and load-state UI.
-
-The integration must prefer the public custom-UI presenter surface, currently
-`PagingDataPresenter`, rather than embedding `PagingDataAdapter`, `AsyncPagingDataDiffer`, or
-`paging-compose`. Phase 0 must verify the selected version and public contract before this choice
-is frozen. A second RecyclerView adapter or diff owner is forbidden because Android Renderer
-already owns the native collection, recycling, patching, and rollback boundary.
-
-## Proposed module and dependency boundary
-
-The names below are planning targets. Phase 0 must confirm them against the module catalog,
-five-layer migration state, publication coordinates, and the selected AndroidX Paging version.
-
-| Concern | Planning target |
+| Previous active location | Status after the split |
 | --- | --- |
-| Published artifact | `viewcompose-paging-androidx` |
-| Package root | `com.viewcompose.paging` |
-| ViewCompose dependency | The smallest public UI Foundation surface required to declare and observe lazy content |
-| AndroidX dependency | `androidx.paging:paging-common` by default; add `paging-runtime` only if verified lifecycle/runtime behavior requires it |
-| Explicitly excluded dependency | `androidx.paging:paging-compose`, RecyclerView `PagingDataAdapter`, and a second native collection owner |
-| Application-owned inputs | `Pager`, `PagingConfig`, `PagingSource`, `RemoteMediator`, database, network client, repository, query stream, and `cachedIn` scope |
-| Integration-owned state | Active presenter generation, presented item access, combined load states, retry/refresh delegation, and disposal of collection work |
+| [Unified roadmap](../roadmap.md), Collections next focus | Keeps a summary and delegates execution here. |
+| [Lazy Collections guide](../../guides/lazy-collections.md), deliberate non-goals | Retains the core/integration boundary and delegates Paging delivery here. |
+| `docs/archive/` | Remains historical evidence and never owns current status. |
 
-Paging types may appear in this optional artifact, its samples, and its tests. They must not enter
+## Frozen module and dependency boundary
+
+| Concern | Frozen contract |
+| --- | --- |
+| Published artifact / package | `viewcompose-paging-androidx` / `com.viewcompose.paging` |
+| ViewCompose dependencies | `viewcompose-ui-foundation` as API; `viewcompose-lifecycle-androidx` as implementation |
+| AndroidX dependencies | `androidx.paging:paging-common:3.5.1` as API; `androidx.paging:paging-testing:3.5.1` in tests |
+| Forbidden dependencies/owners | `paging-runtime`, `paging-compose`, `PagingDataAdapter`, `AsyncPagingDataDiffer`, Compose lazy containers, and any second RecyclerView adapter or diff owner |
+| Integration-owned state | Active presenter generation, presented access, coherent items/load states, retry/refresh delegation, and collector disposal |
+| First container | `LazyColumn`; row and grid require equivalent correctness, placeholder, memory, and device evidence in later work |
+
+Paging types remain inside the optional artifact, its samples, and tests. They never enter
 `viewcompose-runtime`, `viewcompose-ui-contract`, `viewcompose-ui-foundation`, Android Renderer, or
-an SDK-neutral collection node. Any shared collection prerequisite discovered during Phase 0 must
-remain generically useful without AndroidX Paging on the classpath.
+an SDK-neutral node. The optional artifact contributes no initializer, observer, recurring work, or
+transitive dependency when absent. Only official public AndroidX APIs are allowed.
 
-## Provisional public API shape
+## Frozen public API
 
-The following shape is a planning hypothesis, not an approved source contract. Phase 0 must assign
-Q levels, enumerate all applicable contract fields, test Kotlin inference and lifecycle ownership,
-and record the final signature before implementation.
+Names may change only by reopening Phase 0 with compiled call-site evidence before publication.
 
 ```kotlin
 fun <T : Any> Flow<PagingData<T>>.collectAsViewComposePagingItems(
     lifecyclePolicy: PagingLifecyclePolicy = PagingLifecyclePolicy.Visible,
+    context: CoroutineContext = EmptyCoroutineContext,
 ): ViewComposePagingItems<T>
 
-interface ViewComposePagingItems<T : Any> {
+enum class PagingLifecyclePolicy {
+    Visible,
+    Retained,
+    Composition,
+}
+
+class ViewComposePagingItems<T : Any> internal constructor(...) {
     val itemCount: Int
+    val loadedItemCount: Int
     val loadStates: CombinedLoadStates
 
     operator fun get(index: Int): T?
@@ -117,194 +89,172 @@ fun <T : Any> UiTreeBuilder.PagingLazyColumn(
     key: (T) -> Any,
     contentType: (T) -> Any? = { null },
     contentRevision: (T) -> Any? = { it },
-    placeholderKey: ((index: Int) -> Any)? = null,
-    placeholderContent: (UiTreeBuilder.(index: Int) -> Unit)? = null,
+    contentPadding: UiDp = UiDp.Zero,
+    spacing: UiDp = UiDp.Zero,
     state: LazyListState? = null,
+    reverseLayout: Boolean = false,
+    userScrollEnabled: Boolean = true,
+    prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
+    reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
+    motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
+    modifier: Modifier = Modifier,
+    itemContent: UiTreeBuilder.(T) -> Unit,
+)
+
+fun <T : Any> UiTreeBuilder.PagingLazyColumn(
+    items: ViewComposePagingItems<T>,
+    key: (T) -> Any,
+    placeholderContentRevision: Any,
+    placeholderContent: UiTreeBuilder.(index: Int) -> Unit,
+    contentType: (T) -> Any? = { null },
+    contentRevision: (T) -> Any? = { it },
+    placeholderContentType: Any? = null,
+    contentPadding: UiDp = UiDp.Zero,
+    spacing: UiDp = UiDp.Zero,
+    state: LazyListState? = null,
+    reverseLayout: Boolean = false,
+    userScrollEnabled: Boolean = true,
+    prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
+    reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
+    motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
     modifier: Modifier = Modifier,
     itemContent: UiTreeBuilder.(T) -> Unit,
 )
 ```
 
-The final API may use a scoped builder instead of `PagingLazyColumn`, but it must preserve these
-properties:
+The first overload is for placeholders disabled and fails before candidate publication if an
+unloaded slot exists. The second requires explicit placeholder content and revision. Integration-
+owned placeholder keys are positional and namespaced to the paging-items owner; loaded keys wrap
+the application key in a separate domain. Placeholder/item transitions therefore cannot inherit
+remember or saveable state, and there is no public `placeholderKey` escape hatch.
 
-1. indexed access used for visible/bind work reaches the presenter and therefore participates in
-   AndroidX Paging prefetch-distance behavior;
-2. non-triggering inspection is distinguishable from load-triggering access;
-3. a loaded item requires an application-stable key and an explicit content revision;
-4. a placeholder has deterministic positional identity that never masquerades as loaded-item
-   identity;
-5. `refresh()` creates the AndroidX-owned replacement generation and `retry()` retries failed loads
-   in the current generation;
-6. source and mediator load states remain distinguishable through `CombinedLoadStates`; and
-7. cancelling composition collection stops presenter work but does not invent ownership over an
-   upstream scope selected by the application through `cachedIn`.
+`get(index)` is the load-triggering presenter access used only by an active item Session; `peek`
+is the non-triggering path for inspection, diagnostics, reconciliation, generic diff, and framework
+prefetch. Loaded items require stable application keys and explicit revisions. `retry()` retries
+failed loads in the current generation; `refresh()` requests the AndroidX-owned replacement.
+`loadedItemCount` counts non-placeholder items without flattening source and mediator detail in
+`CombinedLoadStates`.
 
-If the current finite `LazyItemsSnapshot` path cannot represent placeholder slots or page drops
-without rebuilding the complete table, Phase 0 may propose a generic read-only indexed lazy-data
-contract in UI Foundation. That contract must be Paging-neutral, immutable per accepted revision,
-transaction compatible, independently documented, and useful without this artifact. It cannot be
-a disguised `PagingData` wrapper in a core package.
+### Lifecycle and presentation coherence
 
-## Scope
+| Policy | Collection lifetime |
+| --- | --- |
+| `Visible` (default) | Requires the nearest `LocalLifecycleOwner`; collects at `STARTED` or above. Hidden retained destinations keep the last presentation without collecting. |
+| `Retained` | Requires the nearest owner; collects at `CREATED` or above for explicitly retained presentation. |
+| `Composition` | Ignores Android lifecycle and collects from successful commit until composition release for custom hosts, tests, and preview fixtures. |
 
-### Presenter and observable state
+Flow identity owns the remembered `ViewComposePagingItems`. Policy or context changes restart its
+structured collector after commit without replacing accepted state. `context` may supply non-Job
+elements; composition retains Job and cancellation ownership. Inactive policies retain the last
+presentation; restart follows normal Flow semantics, including application-owned `cachedIn` replay.
+Upstream Flow exceptions terminate the collector, while Paging load errors remain load-state data.
 
-1. Collect one `PagingData` generation at a time with structured cancellation and latest-generation
-   semantics.
-2. Apply accepted `PagingDataEvent` updates atomically to one observable presentation revision.
-3. Publish item count, accessible presented items, and `CombinedLoadStates` from a consistent
-   accepted presenter state; a render cannot combine items from one event with load states from an
-   earlier event.
-4. Delegate indexed reads, non-triggering peeks, retry, and refresh to official Paging behavior.
-5. Dispose collectors and listeners exactly once when the owning composition scope is permanently
-   released.
+Initial state has zero items, source refresh `Loading`, prepend/append incomplete `NotLoading`, and
+no mediator. One private immutable snapshot contains `ItemSnapshotList`, `CombinedLoadStates`, and a
+monotonic revision. Publication occurs only after the presenter page store and combined load states
+both advance, preventing mixed item/load-state revisions. Latest generation wins, and released or
+superseded collectors cannot publish.
 
-### Lazy-collection bridge
+## Frozen Paging-neutral lazy prerequisite
 
-1. Render loaded data through existing logical item sessions and Android Renderer collection
-   ownership.
-2. Preserve state for a stable loaded-item key across insertions, page replacement, and moves, and
-   release it when that logical item leaves the accepted dataset.
-3. Keep placeholder identity positional and isolated from loaded-item remember/saveable identity.
-4. Ensure page drops and large generations release item sessions, mounted trees, prepared-prefetch
-   state, and renderer metadata outside the retained window.
-5. Keep ViewCompose renderer prefetch and AndroidX data prefetch separate: indexed access may ask
-   Paging for data, while renderer prefetch may only prepare framework presentation work that is
-   already permitted by the existing lazy contract.
-6. Define whether `LazyColumn`, `LazyRow`, and `LazyVerticalGrid` share one bridge in the first
-   release. The minimum accepted release is `LazyColumn`; additional containers require the same
-   evidence rather than API aliases without coverage.
+The current full `List<LazyListItem>` NodeSpec allocates one declaration per presented position;
+Android Renderer also builds a complete key table and list diff. Large placeholder counts and page
+drops therefore require this Q3 compact snapshot and Q2 immutable updates in
+`viewcompose-ui-contract`:
 
-### Load-state UI and commands
+```kotlin
+interface LazyItemTable {
+    val size: Int
+    operator fun get(index: Int): LazyListItem
+    fun indexOfKey(key: Any): Int
+    fun updatesFrom(previous: LazyItemTable): List<LazyItemTableUpdate>?
+}
 
-The first release must support refresh, append, and prepend loading/error/end states without
-building application visual policy into Paging. It may provide typed helpers or scoped declarations
-for header/footer/empty/error content, but applications remain responsible for wording, visuals,
-analytics, automatic retry, offline messaging, and destructive refresh confirmation.
+sealed interface LazyItemTableUpdate {
+    data class InsertRange(val index: Int, val count: Int) : LazyItemTableUpdate
+    data class RemoveRange(val index: Int, val count: Int) : LazyItemTableUpdate
+    data class Move(val fromIndex: Int, val toIndex: Int) : LazyItemTableUpdate
+    data class ChangeRange(val index: Int, val count: Int) : LazyItemTableUpdate
+    data object ReloadAll : LazyItemTableUpdate
+}
+```
 
-An empty-state branch is valid only when refresh is complete, no refresh error is active, and the
-accepted presentation contains no loaded item. Append failure must not replace already loaded
-content. Source and mediator failures must remain inspectable even if a convenience projection
-selects the user-visible state.
+`LazyColumnNodeProps`, `LazyRowNodeProps`, and `LazyVerticalGridNodeProps` hard-cut `items` to this
+contract in one breaking alpha change; existing finite lists receive a behavior-preserving wrapper.
+A table is immutable per accepted revision. `get`/`indexOfKey` are synchronous, side-effect-free,
+and non-triggering; invalid indices fail, missing keys return `-1`, and duplicate keys fail candidate
+publication. `updatesFrom` returns an exact ordered transform for a recognized committed
+predecessor, empty for semantic equality, or `null` for generic keyed fallback. Invalid operations,
+wrong predecessors, or a mismatched result roll back without changing the installed adapter.
 
-### Lifecycle, navigation, and saveable state
+Paging stores loaded metadata plus placeholder counts, never one object per placeholder, and maps
+accepted `PagingDataEvent` values to neutral range updates. Renderer remains the sole adapter,
+stable-ID, holder, diff, and transaction owner. The prerequisite contains no Paging type, is useful
+for other compact immutable indexed sources and custom renderers, and lands with Q3 samples,
+manuals, compatibility notes, tests, and Changesets for UI Contract, UI Foundation, and Android
+Renderer. A Paging-only adapter, parallel diff owner, or full placeholder table is forbidden.
 
-Collection belongs to the nearest composition scope and follows the selected documented lifecycle
-policy. A hidden retained navigation destination must not continue presenter/UI collection merely
-because its Activity is resumed, unless the caller explicitly selects a broader policy. Application
-`cachedIn` ownership remains upstream and may deliberately outlive the UI collector.
+## Delivery requirements
 
-The integration saves lazy scroll state through existing collection facilities. It does not
-serialize `PagingData`, loaded pages, presenter internals, a database cache, or network responses.
-After host recreation, AndroidX Paging recreates or resumes the application-owned pipeline and
-stable keys restore meaningful presentation state as data becomes available.
+| Area | Required delivery |
+| --- | --- |
+| Presenter/state | Structured latest-generation collection; atomic presenter events; coherent item/load-state revisions; official access, peek, retry, and refresh behavior; exactly-once listener/collector disposal |
+| Lazy bridge | Stable loaded-item state across inserts, moves, and replacement; isolated placeholder identity; prompt release after page drops; bounded compact metadata; separate AndroidX data access from non-triggering renderer prefetch |
+| Load-state UI | Refresh, append, prepend, source, mediator, empty, loading, and error composition without framework-owned wording, visuals, analytics, auto-retry, offline, or destructive-refresh policy |
+| Lifecycle/save | Frozen lifecycle policies; upstream `cachedIn` ownership; existing lazy scroll save/restore; no serialization of `PagingData`, pages, presenter, database, or network responses |
+| Samples/Demo | Compiled Q3 sample; directly launchable in-process fake `PagingSource` Demo with stable automation roles and controlled initial/append/empty/error states; deterministic `RemoteMediator` example or fixture without production Room/network dependencies |
+| Documentation/release | Module catalog/manual, setup, lifecycle, identity, placeholders, load states, cancellation, testing, migration, dependency notices, Chinese mirrors for active public pages, consumer proof, and immutable release Changesets |
 
-### Samples and documentation
-
-The completed work must add:
-
-- a compiled Q3 sample for collection, rendering, retry, refresh, keys, revisions, and load-state UI;
-- a deterministic Demo route backed by an in-process fake `PagingSource` with stable automation
-  roles and controllable initial, append, empty, and error states;
-- one `RemoteMediator` architecture example or tested fixture that does not make Room or a network
-  client a production dependency unless separately approved;
-- an owning-module manual covering dependency setup, lifecycle, keys, placeholders, load states,
-  cancellation, testing, and migration from a manually accumulated immutable list; and
-- active English public documentation with reviewed Simplified Chinese mirrors where required.
+An empty state requires completed refresh, no refresh error, and zero loaded items. Append failure
+does not replace loaded content. Source and mediator failures remain inspectable even when a
+convenience projection chooses the visible UI state.
 
 ## Non-goals
 
-This plan does not:
-
-- reimplement `Pager`, `PagingSource`, `PagingData`, `RemoteMediator`, generation invalidation,
-  caching, request scheduling, page eviction, retry, or refresh machinery;
-- make Paging 3 mandatory for finite, in-memory, already-loaded, or modest lists;
-- add AndroidX Paging types to an SDK-neutral ViewCompose layer;
-- adopt `paging-compose`, host a Compose lazy list, or let a Paging RecyclerView adapter own the
-  renderer's native list;
-- select an application's page size, prefetch distance, initial load size, placeholder policy,
-  jump threshold, network protocol, database schema, cache lifetime, query debounce, or error copy;
-- persist loaded pages through ViewCompose saveable state;
-- guarantee stable scroll position when an application supplies unstable or positional keys for
-  loaded items; or
-- publish a generic infinite-scroll component whose callback and boolean flags reproduce only a
-  subset of Paging behavior.
+The integration does not reimplement AndroidX loading/caching/generation behavior, make Paging
+mandatory for finite lists, persist pages through saveable state, select application paging/network/
+database/error-copy policy, guarantee state for unstable or positional loaded keys, or publish a
+callback-and-boolean infinite-scroll substitute. It does not introduce Paging into neutral modules,
+host Compose collections, or give a Paging adapter ownership of the native list.
 
 ## Current baseline
 
-Verified from the worktree on 2026-08-18:
-
-1. The repository has no AndroidX Paging dependency, integration module, source adapter, Demo
-   scenario, module manual, or compiled Paging sample.
-2. `LazyColumn` accepts a finite `List<T>`, a copied finite `LazyItemsSnapshot<T>`, or synchronous
-   scoped item declarations. The current node receives one complete ordered item table.
-3. Lazy items already have explicit logical keys, content types, content revisions, item sessions,
-   saveable-state isolation, renderer reuse policy, and transactional commit behavior.
-4. `LazyListState` publishes visible indices and total item count and owns scroll commands and
-   save/restore of the first visible index and offset.
-5. Renderer prefetch prepares ViewCompose sessions/native presentation; it is not a remote or
-   database data-loading scheduler.
-6. The unified roadmap previously listed Paging 3 as an optional Collections follow-up, and the
-   Lazy Collections guide classified it as a separate integration concern. Both now delegate
-   execution ownership to this plan.
-
-## Locked architectural rules
-
-1. AndroidX Paging owns data loading and paging correctness; ViewCompose owns declarative
-   presentation and lazy-item identity.
-2. The integration is optional and independently removable. Its absence contributes no dependency,
-   code path, startup initializer, observer, or recurring work.
-3. Only official public AndroidX Paging APIs may be used. No reflection or dependency on internal
-   presenter state is allowed.
-4. Android Renderer retains the only RecyclerView adapter, diff, bind, recycling, and transaction
-   owner.
-5. Each accepted presenter event becomes one coherent ViewCompose observation revision.
-6. Loaded application items use application-stable keys. Placeholder identity is positional,
-   transient, and isolated from loaded-item remember/saveable state.
-7. `get(index)`-style access that drives Paging prefetch is allowed only from documented active
-   presentation work; diagnostics and diff inspection use a non-triggering path.
-8. `refresh`, `retry`, source/mediator load states, cancellation, and end-of-pagination semantics
-   retain AndroidX Paging meaning instead of being redefined by ViewCompose.
-9. Any neutral lazy-contract extension must be independently useful, Paging-free, transaction-safe,
-   and documented in its owning public module.
-10. No public API ships without Q-level classification, applicable contract fields,
-    canonical-English KDoc, compiled Q3 samples, owning-module documentation, reviewed Chinese
-    mirrors, binary/API validation, and an immutable release Changeset.
+The repository has no Paging dependency, module, adapter, sample, Demo, or manual. Existing finite
+lazy collections already provide logical keys, revisions, item Sessions, saveable-state isolation,
+renderer reuse, transactional commit, visible indices, total count, scrolling, and scroll
+save/restore. Renderer prefetch prepares ViewCompose/native presentation only; it is not a remote or
+database loader. Phase 0 verified that the full-table boundary, rather than those higher-level
+semantics, is the shared prerequisite requiring a hard cut.
 
 ## Execution plan
 
 | Phase | Status | Deliverable | Exit gate |
 | --- | --- | --- | --- |
-| 0. Dependency and contract freeze | Not started | Pin a reviewed AndroidX Paging version; characterize `PagingDataPresenter`; freeze artifact/package names, lifecycle policy, placeholder support, container scope, public API, testing dependencies, and release baseline | Written spike proves official APIs can feed the current lazy contract or documents the smallest Paging-neutral prerequisite with its Q level and impact |
-| 1. Presenter characterization harness | Not started | Deterministic presenter fixtures for generations, insert/drop events, placeholders, access hints, load states, retry, refresh, invalidation, and cancellation | Event ordering and state-coherence assertions pass without Android Renderer or network dependencies |
-| 2. Non-placeholder LazyColumn slice | Not started | Optional module, observable paging-items state, stable-key bridge, latest-generation collection, retry/refresh, and core Q3 sample | Initial load, append/prepend, error/retry, invalidation, query replacement, navigation disposal, and key-state tests pass |
-| 3. Placeholder and page-drop slice | Not started | Positional placeholder contract, unloaded-slot rendering, jump/page-drop handling, and any approved generic indexed lazy prerequisite | Placeholder-to-item transitions cannot steal state; dropped pages release sessions and memory; bounded-work evidence passes |
-| 4. Load-state composition | Not started | Refresh/append/prepend and source/mediator state helpers with empty, header, footer, and error composition examples | State matrix preserves loaded content, distinguishes retry from refresh, and exposes mediator detail without visual policy |
-| 5. Lifecycle and mediated data | Not started | Visible/retained lifecycle behavior, upstream `cachedIn` ownership guidance, recreation coverage, and deterministic `RemoteMediator` fixture | Hidden/revealed navigation, cancellation, process recreation, source plus mediator failures, and database/network boundary tests pass |
-| 6. Samples, Demo, and documentation | Not started | Directly launchable fake-source Demo, compiled Q3 samples, module catalog/manual, setup/architecture/testing/migration docs, Chinese mirrors, and dependency notices | Documentation/localization, sample compilation, automation-role, dependency verification, and consumer-build gates pass |
-| 7. Performance, device, and release closeout | Not started | Same-build timing/allocation/memory evidence for append, drop, large generations, rapid query replacement, and scroll; final Changesets and Maven consumer verification | No accepted correctness, leak, frame-time, or memory regression; evidence is interpreted in active docs before archival |
+| 0. Dependency and contract freeze | Complete | Paging 3.5.1 presenter path, artifact/package, lifecycle, overloads, LazyColumn-only scope, tests, and compact indexed-table prerequisite | Official API review and Kotlin 2.0.21 compile probes pass; full-table path is rejected with the Q3 replacement and breaking impact documented |
+| 1. Presenter characterization harness | Not started | Deterministic generations, insert/drop, placeholder, hint, load-state, retry, refresh, invalidation, and cancellation fixtures | Ordering and coherent-state assertions pass without Android Renderer or network |
+| 2. Non-placeholder LazyColumn slice | Not started | Optional module, observable items, stable-key bridge, latest generation, retry/refresh, and core Q3 sample | Initial/append/prepend/error/retry/invalidation/query/navigation/key-state tests pass |
+| 3. Placeholder and page-drop slice | Not started | Neutral indexed hard cut, positional placeholders, jump/drop handling | Placeholder transitions isolate state; dropped pages release Sessions and memory; bounded-work evidence passes |
+| 4. Load-state composition | Not started | Refresh/append/prepend and source/mediator helpers plus empty/header/footer/error examples | Loaded content persists; retry and refresh differ; mediator detail remains visible |
+| 5. Lifecycle and mediated data | Not started | Frozen policies, `cachedIn` guidance, recreation, deterministic mediator fixture | Hidden/revealed navigation, cancellation, recreation, and source/mediator failure tests pass |
+| 6. Samples, Demo, and documentation | Not started | Demo, Q3 samples, catalog/manual, setup/architecture/testing/migration docs, mirrors, notices | Localization, sample, automation-role, dependency, and consumer gates pass |
+| 7. Performance, device, and release closeout | Not started | Same-build append/drop/large-generation/query/scroll evidence; final Changesets and Maven proof | No accepted correctness, leak, frame, or memory regression; evidence is interpreted before archival |
 
 ## Acceptance matrix
 
 | Scenario | Required evidence |
 | --- | --- |
-| Initial refresh | Loading, first data, empty, and initial error states are distinct and deterministic |
-| Append and prepend | Existing content remains mounted where keys are stable; direction-specific state and retry are correct |
-| Retry and refresh | Retry preserves the generation and targets failed loads; refresh creates the AndroidX-owned replacement generation |
-| Query replacement | Latest generation wins; old collectors, access hints, errors, and load states cannot publish afterward |
-| Invalidation | New generation replaces old data atomically without mixing item and load-state revisions |
-| Placeholders | Unloaded slots render deterministically; loaded items receive their own stable identity and never inherit placeholder state |
-| Page drops and jumps | Removed pages release sessions and renderer metadata; supported jumps retain bounded work and correct indices |
-| Stable-key state | Insert, move, refresh, and mediator updates preserve remember/saveable state only for the same logical item |
-| Source and mediator | `CombinedLoadStates` retains both origins and convenience UI does not erase diagnostic detail |
-| Navigation and lifecycle | Hidden retained destinations follow the selected policy; re-entry and recreation resume without duplicate collection |
-| Failure and cancellation | Exceptions remain structured, cancellation is not reported as load failure, and permanent release leaks no collector |
-| Performance and memory | Large generations, rapid appends, page drops, and flings remain within recorded same-build budgets |
+| Initial refresh | Loading, data, empty, and initial error are distinct and deterministic |
+| Append/prepend | Stable content remains mounted; directional state and retry are correct |
+| Retry/refresh | Retry preserves the generation; refresh creates its AndroidX replacement |
+| Query/invalidation | Latest generation replaces old state atomically; old hints/errors/states cannot publish |
+| Placeholders/drop/jump | Identity never crosses loaded/unloaded domains; removed pages release Sessions and metadata; work remains bounded |
+| Stable-key state | Insert, move, refresh, and mediator updates preserve state only for the same logical item |
+| Source/mediator | Both origins remain inspectable through `CombinedLoadStates` |
+| Lifecycle/recreation | Each policy, re-entry, and recreation avoid duplicate collection and honor upstream ownership |
+| Failure/cancellation | Exceptions remain structured; cancellation is not a load failure; release leaks no collector |
+| Performance/memory | Large generations, rapid appends, drops, query replacement, and flings meet recorded same-build budgets |
 
 ## Verification commands
-
-Exact new-module task names are frozen in Phase 0. The completed plan must include at least:
 
 ```bash
 ./gradlew :viewcompose-paging-androidx:test
@@ -316,55 +266,57 @@ Exact new-module task names are frozen in Phase 0. The completed plan must inclu
 ./gradlew qaFull
 ```
 
-Device-only or credential-dependent cases must be isolated and reported as explicit prerequisites;
-they cannot turn a missing environment into a false pass. Accepted performance or benchmark output
-must be interpreted in the owning active documentation with comparison context, absolute results,
-normalized change, conclusion, limitations, and next action.
+Missing device or credentials must be reported as prerequisites, not passes. Accepted performance
+evidence records comparison context, absolute and normalized results, conclusion, limitations, and
+next action in owning active documentation.
 
 ## API and documentation impact
 
-The provisional collection function, paging-items owner, and Paging-aware container/scope are Q3
-because they establish lifecycle, observation, identity, cancellation, dependency, and failure
-contracts. Immutable public policy or state values are at least Q2. Before source is added, Phase 0
-must inventory every applicable contract field from the API documentation standard and record any
-inapplicable field with a reason.
+The collector, items owner, both containers, and `LazyItemTable` are Q3. Lifecycle and immutable
+range-update values are Q2; closed entries may be Q1 where their owner makes meaning unambiguous.
 
-Production work must update the module catalog, owning module manual, API reference, Lazy
-Collections guide, unified roadmap, compiled sample catalog, Demo documentation, dependency
-verification metadata, consumer rules if required, and Simplified Chinese mirrors of active public
-pages. The first publication-relevant source or publication-input change must add immutable
-`release/changes/<unique>.json` entries for every directly affected artifact; this section must then
-replace `- None.` with the exact filenames.
+| API family | Required contract fields | Inapplicable fields |
+| --- | --- | --- |
+| Collector/items owner | Ordering; inputs; observable output/identity; ownership/retention; commit/start/stop/disposal; main-thread presenter, structured cancellation, latest generation, no-Job context; command timing; upstream/load failure; lifecycle-owner requirement; allocation cost; Paging compatibility | Application callback, resource, theme, measurement, coordinate, accessibility |
+| `get`/`peek`/commands | Triggering distinction; bounds/null placeholder; generation; main-thread boundary; inactive behavior; failure/cancellation; delegation cost | Callback, child content, View ownership, saved payload |
+| Both containers | Loaded keys/revisions/types; placeholder enablement/identity; standard list policies; content slots; observation; Session lifecycle; hint order; validation/rollback; layout/scroll/semantics/environment/Modifier; compact cost; first-container compatibility | Application I/O, repository/cache, permission/credential, native View ownership |
+| Lifecycle policy | Threshold/default, owner, inactive retention, restart, disposal, migration | Output, callback, allocation; only missing/unsupported owner use can fail |
+| Indexed table/updates | Immutability, bounds/key lookup, predecessor/operation validation, renderer ownership, concurrency, rollback, storage/fallback complexity, custom-renderer and binary compatibility | Android type/lifecycle/Flow, callback, theme/resource/measurement, application persistence |
+
+Every Q3 family lands with canonical-English KDoc and a compiled owning-module sample. The neutral
+hard cut updates UI Contract, UI Foundation, and Android Renderer manuals and compatibility notes;
+the Paging work updates its manual, Lazy Collections guide, roadmap, Demo docs, dependency metadata,
+and required Chinese mirrors. The first publication-relevant change adds immutable
+`release/changes/<unique>.json` entries for every affected artifact and replaces `- None.` above
+with exact filenames.
 
 ## Completion criteria
 
-This plan is complete only when:
-
-1. the optional artifact and final public API satisfy every locked boundary and Q-level contract;
-2. official AndroidX Paging behavior, not a ViewCompose paging clone, owns the data pipeline;
-3. the acceptance matrix passes for the supported no-placeholder and placeholder configurations;
-4. lifecycle, navigation, recreation, source/mediator, cancellation, stable-key, leak, performance,
-   and memory evidence has durable interpretation in active documentation;
-5. compiled samples, Demo routes, public English pages, reviewed Chinese mirrors, module manual,
-   dependency metadata, release Changesets, and Maven consumer verification are complete;
-6. the unified roadmap and Lazy Collections guide describe the shipped behavior rather than an
-   active future plan; and
-7. this document moves to `docs/archive/` with final evidence and no active document continues to
-   present the work as pending.
+Completion requires all frozen boundaries and acceptance rows to pass; official AndroidX behavior
+to remain the only paging engine; lifecycle, mediator, cancellation, identity, leak, performance,
+and memory evidence to be interpreted in active docs; samples, Demo, manuals, mirrors, dependency
+metadata, Changesets, and Maven consumer proof to be complete; and roadmap/guide text to describe
+shipped behavior. This file then moves to `docs/archive/` with no active source still marking the
+work pending.
 
 ## Evidence ledger
 
-| Date | Evidence | Result | Interpretation / next action |
-| --- | --- | --- | --- |
-| 2026-08-18 | Worktree and active-document review | Planning baseline established | No Paging dependency or implementation exists. The roadmap candidate and Lazy Collections boundary were transferred to this plan; Phase 0 must verify the official presenter and freeze the public contract. |
+| Date | Evidence | Result and next action |
+| --- | --- | --- |
+| 2026-08-18 | Worktree and active-document review | No Paging implementation existed; roadmap/guide execution ownership moved here. |
+| 2026-08-25 | [Paging releases](https://developer.android.com/jetpack/androidx/releases/paging) and [`PagingDataPresenter`](https://developer.android.com/reference/androidx/paging/PagingDataPresenter) | Stable `paging-common:3.5.1` exposes public generation, event, snapshot, load-state, access, retry, and refresh APIs. Use it without runtime/Compose/adapters and re-review any dependency-line change. |
+| 2026-08-25 | Isolated Kotlin 2.0.21 probes | Presenter API compiled in 12 s; both frozen overload calls and method references compiled cleanly in 1 s. This proves compatibility/inference, not runtime performance. |
+| 2026-08-25 | CodeGraph plus Foundation/NodeSpec/Renderer review | Current path materializes every item and builds full key/diff tables. Phase 1 can test presenter events independently; Phase 3 implements the frozen neutral hard cut. |
 
 ## Decision history
 
-1. 2026-08-18 — Use AndroidX Paging as the paging engine; declarative collection primitives are
-   presentation infrastructure, not a substitute for paging generations and load coordination.
-2. 2026-08-18 — Keep Paging optional and outside all SDK-neutral core contracts.
-3. 2026-08-18 — Prefer the official custom-UI presenter path and forbid a second RecyclerView
-   adapter/diff owner.
-4. 2026-08-18 — Treat loaded-item keys and placeholder identity as different state domains.
-5. 2026-08-18 — Transfer execution ownership from the roadmap candidate and Lazy Collections
-   non-goal note into this dedicated active plan while leaving historical archives unchanged.
+1. 2026-08-18 — Use AndroidX Paging as the optional engine and the public custom-UI presenter;
+   preserve Android Renderer as sole adapter/diff owner.
+2. 2026-08-18 — Keep Paging outside neutral modules and separate loaded/placeholder identity.
+3. 2026-08-25 — Pin 3.5.1 with `paging-common`/`paging-testing`; exclude runtime and Compose.
+4. 2026-08-25 — Default to visible (`STARTED`), with explicit retained (`CREATED`) and
+   composition-only policies.
+5. 2026-08-25 — First release is `LazyColumn` with distinct placeholder/no-placeholder overloads
+   and private positional placeholder keys.
+6. 2026-08-25 — Hard-cut full NodeSpec lists to compact `LazyItemTable` plus range updates; never
+   add a Paging-only adapter, full placeholder table, or second diff owner.
