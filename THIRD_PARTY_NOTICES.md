@@ -69,6 +69,16 @@ release notes, source, and license terms are available from the
 [AndroidX source tree](https://android.googlesource.com/platform/frameworks/support/), and
 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
+### AndroidX Paging 3.5.1
+
+The optional `viewcompose-paging-androidx` integration directly uses
+`androidx.paging:paging-common:3.5.1`; its tests also use
+`androidx.paging:paging-testing:3.5.1`. These artifacts are provided by the Android Open Source
+Project under the Apache License 2.0. Their release notes, source, and license terms are available
+from the [Paging release page](https://developer.android.com/jetpack/androidx/releases/paging), the
+[AndroidX source tree](https://android.googlesource.com/platform/frameworks/support/), and the
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
 ## How to Verify
 
 Check declared dependencies in Gradle files and version catalogs, then map to

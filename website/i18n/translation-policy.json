@@ -79,6 +79,7 @@
     "modules/viewcompose-overlay-android/README.md",
     "modules/viewcompose-overlay-material3-android/README.md",
     "modules/viewcompose-overlay-oneui7-android/README.md",
+    "modules/viewcompose-paging-androidx/README.md",
     "modules/viewcompose-preview-core/README.md",
     "modules/viewcompose-preview-gradle-plugin/README.md",
     "modules/viewcompose-preview-runner/README.md",
