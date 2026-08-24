@@ -357,6 +357,13 @@ Because the current line is alpha, the documentation site intentionally does not
   layout or parent-data changes replace them. A changed `NativeViewElement.stableKey` replays its
   configuration, while AndroidView update, reset, commit, and release callbacks remain untouched.
   Diagnostics classify this path as a targeted patch with detail `ModifierOnly`.
+- AndroidView reconciliation separates logical and construction identity. An ordinary
+  same-construction update rebinds the retained View without invoking reset. A changed construction
+  identity creates and binds a detached candidate first, then swaps it at structural commit and
+  releases the displaced View exactly once. Any candidate or later sibling failure restores the
+  old container and releases only the candidate. Bounded patch detail reports adapter name,
+  construction generation, reuse policy, and whether the operation was a replacement without
+  retaining the native View.
 - Shared-content modifier resolution writes the complete typed endpoint element to one stable keyed
   View tag and clears it when the modifier disappears or a View is reused. The renderer performs no
   tree scan, bitmap capture, overlay allocation, animation scheduling, or navigation work; the

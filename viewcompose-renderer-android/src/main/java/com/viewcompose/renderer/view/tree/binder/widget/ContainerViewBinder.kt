@@ -3,6 +3,7 @@ package com.viewcompose.renderer.view.tree
 import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.renderer.R
 import com.viewcompose.renderer.view.PaddingPx
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
@@ -104,7 +105,7 @@ internal object ContainerViewBinder {
     )
 
     data class AndroidViewSpec(
-        val update: ((Any) -> Unit)?,
+        val update: ((Any, UiEnvironmentValues) -> Unit)?,
     )
 
     data class FlowRowSpec(

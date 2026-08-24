@@ -324,7 +324,7 @@ internal fun MutableList<NodeBinderDescriptor>.addContainerNodeBinderDescriptors
             bind = { view, node ->
                 val update = ContainerViewBinder.readAndroidViewSpec(node).update
                 node.runAndroidViewOperation(AndroidViewOperation.Update) {
-                    update?.invoke(view)
+                    update?.invoke(view, node.environment)
                 }
             },
         ),

@@ -34,4 +34,5 @@
     <item name="viewcompose_key_input_binding" type="id" />
     <item name="viewcompose_key_input_listener" type="id" />
     <item name="viewcompose_image_request_binding" type="id" />
+    <item name="viewcompose_android_view_construction_generation" type="id" />
 </resources>

@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-host-lifecycle-and-android-interop.md
-translation_source_hash: 8eac506e631cc89bfe09f4a952973a4c8be78f3d6b9513b9ae292ac853ece95d
+translation_source_hash: 6353107547260309445baa915329401ad38ec2c86dd0527d293c1b72245c79a6
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ translation_status: current
 - **目标状态：** `viewcompose-android`、`viewcompose-lifecycle-androidx`、
   `viewcompose-viewmodel-androidx` 与 `viewcompose-renderer-android` 0.1.0-alpha01，以及底层
   `viewcompose-host-android` 0.1.0-alpha04 引擎。
-- **最后核验：** 2026-08-14。
+- **最后核验：** 2026-08-24。
 - **重新核验负责人：** `viewcompose-android`、`viewcompose-host-android`、
   `viewcompose-lifecycle-androidx`、`viewcompose-viewmodel-androidx` 和
   `viewcompose-renderer-android` 的维护者。
@@ -91,9 +91,9 @@ private fun UiTreeBuilder.ViewComposeInteropSample() {
 ```
 {/* paired-sample-end */}
 
-该示例只证明公共安装、factory 与可安全重放的 update 路径。目标代码不会继承 Compose 的释放
-或复用语义；当嵌入的 View 需要这些行为时，应按下文契约选择 owner，并补充 `onReset`、
-`onCommit` 与 `onRelease` 行为。
+该示例只证明 Callback 逃生路径的公共安装、Factory 与可安全重放的 Update。可复用集成应使用
+`AndroidViewAdapter<V, S>`，让 View 类型、状态、构造身份、复用策略与清理组成同一个可编译
+契约。两种形式都不会隐式继承 Compose 的释放或复用语义。
 
 ## 能力矩阵
 
@@ -110,8 +110,8 @@ private fun UiTreeBuilder.ViewComposeInteropSample() {
 | 保存状态 | Compose 宿主集成组合使用 `SavedStateRegistryOwner`、`SavedStateHandle` 与 saveable-state 设施。 | ViewCompose 宿主安装 ViewCompose `SaveableStateRegistry`；适用的 Activity、Fragment 和导航 owner 也参与 AndroidX 保存状态。这些是相关但不可互换的 owner 层。 | Partially supported | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)、[`NavEntryOwner.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt)，以及 [`NavHostPublicApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt)中的保存状态覆盖。 |
 | 帧调度与显式渲染 | Compose 重组由 Recomposer 和帧时钟协调。 | 显式 `render` 是同步的。状态失效会合并到 Android 帧；处于 inactive 状态的会话会保留失效请求，直到再次激活。 | Intentionally different | [`AndroidFrameAlignedRenderSessionRuntime.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntime.kt)和 [`AndroidFrameAlignedRenderSessionRuntimeTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/test/java/com/viewcompose/host/android/runtime/AndroidFrameAlignedRenderSessionRuntimeTest.kt)。 |
 | Effect 所有权与终结性释放 | Effect 随其 Composition 作用域退出；释放 `Composition` 是终结操作。 | 一个 `RenderSession` 拥有 Composition 协程 Scope、渲染状态、Overlay、原生 View 和清理逻辑。Dispose 幂等；之后的公共 Render/Activation 工作快速失败，已排队的内部回调安全 no-op。 | Supported | [`RenderSession.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt)、[`RenderSessionFailureTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt)与 `AndroidFrameAlignedRenderSessionRuntimeTest.kt`。 |
-| Android View factory 与 update | `AndroidView` 为一个实例创建一次 View，并在适用的重组中运行 `update`。 | `AndroidView` 使用 factory 创建新节点，并在事务式原生树 patch 内执行可安全重放的 update 绑定。候选节点插入失败时会回滚。 | Supported | [`AndroidInteropDsl.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidInteropDsl.kt)、[`ViewTreePatchPipeline.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreePatchPipeline.kt)和 [`AndroidInteropRenderingUiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/app/src/androidTest/java/com/viewcompose/AndroidInteropRenderingUiTest.kt)。 |
-| Android View reset、commit 与 release | Compose 使用非空 `onReset` 选择加入可复用内容，并在内容永久离开 Composition 时调用 `onRelease`。它没有等价的事务 commit 回调。 | 同 key、同类型节点的 props 发生变化时也可能运行 `onReset`；`onCommit` 仅在整个原生树事务成功后运行；`onRelease` 为永久放弃的已创建节点执行一次性清理，其中包括回滚候选节点。 | Intentionally different | [`AndroidViewNodeProps.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/node/spec/container/AndroidViewNodeProps.kt)、[`ViewTreeDisposer.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreeDisposer.kt)和 [`ViewTreeRenderTransactionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt)。 |
+| Android View factory 与 update | `AndroidView` 为一个实例创建一次 View，并在适用的重组中运行 `update`。 | 类型安全的 `AndroidViewAdapter<V, S>` 与 Callback 逃生路径会为一个构造身份创建 View，并在事务式原生树 Patch 内应用完整、可安全重放的状态。Adapter 类或 `constructionKey` 变化时先创建尚未挂载的候选节点；失败会保留已提交 View。 | Supported | [`AndroidViewAdapter.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidViewAdapter.kt)、[`ViewTreePatchPipeline.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreePatchPipeline.kt)和 [`AndroidInteropRenderingUiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/app/src/androidTest/java/com/viewcompose/AndroidInteropRenderingUiTest.kt)。 |
+| Android View reset、commit 与 release | Compose 使用非空 `onReset` 选择加入可复用内容，并在内容永久离开 Composition 时调用 `onRelease`。它没有等价的事务 commit 回调。 | `onReset(..., MountedTreeReuse)` 只在主动允许的 Mounted Tree 跨逻辑 Key 复用时运行，普通更新或回滚绝不调用。`onCommit` 仅在完整 Composition 事务成功后运行；`onRelease` 为永久放弃执行一次性清理，其中包括失败候选与被替换的构造身份。 | Intentionally different | [`AndroidViewNodeProps.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/node/spec/container/AndroidViewNodeProps.kt)、[`ViewTreeDisposer.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreeDisposer.kt)和 [`ViewTreeRenderTransactionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt)。 |
 | ViewBinding 与树内 Fragment 互操作 | Compose 提供 `AndroidViewBinding` 和 `AndroidFragment` 集成。 | 可以在 Android View factory 中手动 inflate XML，但没有直接 ViewBinding 集成，也没有受支持的渲染树内 Fragment 对应能力。 | Unsupported | 在已审查模块中未找到对应的公共 API 或已编译样例。 |
 
 ## 选择宿主入口 {/* #choosing-a-host-entry-point */}
@@ -197,13 +197,18 @@ composition 作用域中的 Effect。生命周期感知迁移规则见
 
 ViewCompose Android View 回调参与渲染器的原生树事务：
 
+可复用集成应实现 `AndroidViewAdapter<V, S>` 并传入完整状态快照。VNode 的 `key` 是逻辑内容
+身份；Adapter 实现类与 `constructionKey` 共同组成物理构造身份。改变构造身份会原子替换 View，
+无需伪装成逻辑条目变化。Adapter Scope 会暴露 VNode 的不可变 Environment，但不会公开其
+Constructor、Renderer/Session 内部对象或可变 Transaction。
+
 | 回调 | 必需的迁移解释 |
 | --- | --- |
-| `factory` | 只创建新的原生节点。不要读取应放入 `update` 的变化状态。 |
+| `create` / `factory` | 只创建新的构造身份。不要读取应放入 `update` 的变化状态。 |
 | `update` | 必须可安全重放。失败帧可以恢复此前已提交的树。 |
-| `onReset` | 必须可安全重放。不同于 Compose lazy-content 复用，普通的同 key、同类型节点只要 props 变化也可能调用它。 |
+| `onReset` | 必须可安全重放。只在 `Resettable` 节点跨逻辑 Key 时运行；普通更新与回滚绝不调用。 |
 | `onCommit` | 仅在完整原生树事务成功后运行。需要已提交树的不可逆工作应放在这里。 |
-| `onRelease` | 每当已创建节点被永久放弃时执行一次性清理，包括成功删除、会话释放和未提交候选节点的回滚。 |
+| `onRelease` | 每当已创建节点被永久放弃时执行一次性清理，包括替换、删除、会话释放和未提交候选节点的回滚。 |
 
 ## 不支持的直接互操作 {/* #unsupported-direct-interop */}
 

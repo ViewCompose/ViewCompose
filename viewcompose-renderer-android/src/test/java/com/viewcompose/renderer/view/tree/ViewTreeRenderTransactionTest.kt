@@ -513,11 +513,11 @@ class ViewTreeRenderTransactionTest {
         var releases = 0
         var commits = 0
         val spec = AndroidViewNodeProps(
-            factory = { rawContext -> View(rawContext as Context) },
-            update = { updates += 1 },
-            onReset = { resets += 1 },
+            factory = { rawContext, _ -> View(rawContext as Context) },
+            update = { _, _ -> updates += 1 },
+            onReset = { _, _ -> resets += 1 },
             onRelease = { releases += 1 },
-            onCommit = { commits += 1 },
+            onCommit = { _, _ -> commits += 1 },
         )
         val initial = ViewTreeRenderer.renderInto(
             container = container,
@@ -556,6 +556,209 @@ class ViewTreeRenderTransactionTest {
         assertTrue(patched.commitEffects.isEmpty())
         assertEquals(0, patched.stats.reboundNodes)
         assertEquals(1, patched.stats.patchedNodes)
+    }
+
+    @Test
+    fun `same construction identity rebinds without invoking cross-key reset`() {
+        val container = FrameLayout(context)
+        var resets = 0
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                androidNode(
+                    key = "interop",
+                    value = "old",
+                    onReset = { resets += 1 },
+                    constructionIdentity = "style-a",
+                ),
+            ),
+        )
+        val view = initial.mountedNodes.single().view
+
+        val rebound = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = initial.mountedNodes,
+            nodes = listOf(
+                androidNode(
+                    key = "interop",
+                    value = "new",
+                    onReset = { resets += 1 },
+                    constructionIdentity = "style-a",
+                ),
+            ),
+        )
+
+        assertSame(view, rebound.mountedNodes.single().view)
+        assertEquals("new", view.tag)
+        assertEquals(0, resets)
+    }
+
+    @Test
+    fun `android view lifecycle receives the owning immutable environment`() {
+        val container = FrameLayout(context)
+        val environment = UiEnvironmentValues.Default.copy(resourceRevision = 42L)
+        val revisions = mutableListOf<Long>()
+        val node = VNode(
+            type = NodeType.AndroidView,
+            key = "interop",
+            spec = AndroidViewNodeProps(
+                factory = { rawContext, values ->
+                    revisions += values.resourceRevision
+                    View(rawContext as Context)
+                },
+                update = { _, values -> revisions += values.resourceRevision },
+                onReset = { _, values -> revisions += values.resourceRevision },
+                onCommit = { _, values -> revisions += values.resourceRevision },
+            ),
+            environment = environment,
+        )
+
+        val rendered = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(node),
+        )
+        rendered.commitEffects.single().commit()
+        assertTrue(ViewTreeRenderer.detachMountedForReuse(container, rendered.mountedNodes))
+
+        assertEquals(listOf(42L, 42L, 42L, 42L), revisions)
+        ViewTreeRenderer.releaseReusableMounted(rendered.mountedNodes)
+    }
+
+    @Test
+    fun `construction identity change atomically replaces and releases displaced view`() {
+        val container = FrameLayout(context)
+        var oldReleases = 0
+        var newReleases = 0
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                androidNode(
+                    key = "interop",
+                    value = "old",
+                    onRelease = { oldReleases += 1 },
+                    constructionIdentity = "style-a",
+                    adapterName = "player-adapter",
+                ),
+            ),
+        )
+        val oldView = initial.mountedNodes.single().view
+
+        val replaced = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = initial.mountedNodes,
+            nodes = listOf(
+                androidNode(
+                    key = "interop",
+                    value = "new",
+                    onRelease = { newReleases += 1 },
+                    constructionIdentity = "style-b",
+                    adapterName = "player-adapter",
+                ),
+            ),
+        )
+
+        val newView = replaced.mountedNodes.single().view
+        assertNotSame(oldView, newView)
+        assertSame(newView, container.getChildAt(0))
+        assertEquals("new", newView.tag)
+        assertEquals(1, oldReleases)
+        assertEquals(0, newReleases)
+        assertTrue(replaced.patches.single().detail.orEmpty().contains("generation=1"))
+        assertTrue(replaced.patches.single().detail.orEmpty().contains("replacement=true"))
+
+        ViewTreeRenderer.disposeMounted(container, replaced.mountedNodes)
+        assertEquals(1, newReleases)
+    }
+
+    @Test
+    fun `failed construction candidate releases candidate and preserves committed view`() {
+        val container = FrameLayout(context)
+        var oldReleases = 0
+        var candidateReleases = 0
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                androidNode(
+                    key = "interop",
+                    value = "old",
+                    onRelease = { oldReleases += 1 },
+                    constructionIdentity = "style-a",
+                ),
+            ),
+        )
+        val oldMounted = initial.mountedNodes.single()
+
+        val error = runCatching {
+            ViewTreeRenderer.renderInto(
+                container = container,
+                previous = initial.mountedNodes,
+                nodes = listOf(
+                    androidNode(
+                        key = "interop",
+                        value = "broken",
+                        failUpdate = true,
+                        onRelease = { candidateReleases += 1 },
+                        constructionIdentity = "style-b",
+                    ),
+                ),
+            )
+        }.exceptionOrNull()
+
+        assertAndroidViewUpdateFailure(error)
+        assertSame(oldMounted.view, container.getChildAt(0))
+        assertSame(oldMounted, initial.mountedNodes.single())
+        assertEquals("old", oldMounted.view.tag)
+        assertEquals(0, oldReleases)
+        assertEquals(1, candidateReleases)
+    }
+
+    @Test
+    fun `later frame failure rolls back construction replacement`() {
+        val container = FrameLayout(context)
+        var displacedReleases = 0
+        var candidateReleases = 0
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                androidNode(
+                    key = "first",
+                    value = "old",
+                    onRelease = { displacedReleases += 1 },
+                    constructionIdentity = "style-a",
+                ),
+                androidNode(key = "second", value = "stable"),
+            ),
+        )
+        val previousViews = initial.mountedNodes.map(MountedNode::view)
+
+        val error = runCatching {
+            ViewTreeRenderer.renderInto(
+                container = container,
+                previous = initial.mountedNodes,
+                nodes = listOf(
+                    androidNode(
+                        key = "first",
+                        value = "candidate",
+                        onRelease = { candidateReleases += 1 },
+                        constructionIdentity = "style-b",
+                    ),
+                    androidNode(key = "second", value = "broken", failUpdate = true),
+                ),
+            )
+        }.exceptionOrNull()
+
+        assertAndroidViewUpdateFailure(error)
+        assertSame(previousViews[0], container.getChildAt(0))
+        assertSame(previousViews[1], container.getChildAt(1))
+        assertEquals("old", previousViews[0].tag)
+        assertEquals("stable", previousViews[1].tag)
+        assertEquals(0, displacedReleases)
+        assertEquals(1, candidateReleases)
     }
 
     @Test
@@ -1087,9 +1290,9 @@ class ViewTreeRenderTransactionTest {
                     type = NodeType.AndroidView,
                     key = "old",
                     spec = AndroidViewNodeProps(
-                        factory = { rawContext -> View(rawContext as Context) },
-                        update = { oldUpdates += 1 },
-                        onReset = {},
+                        factory = { rawContext, _ -> View(rawContext as Context) },
+                        update = { _, _ -> oldUpdates += 1 },
+                        onReset = { _, _ -> },
                         onRelease = { releases += 1 },
                     ),
                 ),
@@ -1162,7 +1365,42 @@ class ViewTreeRenderTransactionTest {
     }
 
     @Test
-    fun `observed property batch failure restores every earlier native target`() {
+    fun `observed property patch rejects construction identity changes before mutation`() {
+        val container = FrameLayout(context)
+        val previous = androidNode(
+            key = "interop",
+            value = "old",
+            constructionIdentity = "style-a",
+        ).copy(observedPropertyId = 7L)
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(previous),
+        )
+        val mounted = initial.mountedNodes.single()
+        val next = androidNode(
+            key = "interop",
+            value = "new",
+            constructionIdentity = "style-b",
+        ).copy(observedPropertyId = 7L)
+
+        val error = runCatching {
+            ViewTreeRenderer.patchObservedProperties(
+                patches = listOf(
+                    ViewTreeObservedPropertyPatch(7L, mounted, previous, next),
+                ),
+            )
+        }.exceptionOrNull()
+
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("cannot change AndroidView construction identity"))
+        assertSame(previous, mounted.vnode)
+        assertEquals("old", mounted.view.tag)
+        assertSame(mounted.view, container.getChildAt(0))
+    }
+
+    @Test
+    fun `observed property rollback restores native targets without invoking reuse reset`() {
         val container = FrameLayout(context)
         val lifecycle = mutableListOf<String>()
         val previousNodes = listOf(
@@ -1214,15 +1452,7 @@ class ViewTreeRenderTransactionTest {
         assertEquals("old-second", secondMounted.view.tag)
         assertSame(previousNodes[0], firstMounted.vnode)
         assertSame(previousNodes[1], secondMounted.vnode)
-        assertEquals(
-            listOf(
-                "reset-new-first",
-                "reset-new-second",
-                "reset-old-first",
-                "reset-old-second",
-            ),
-            lifecycle,
-        )
+        assertTrue(lifecycle.isEmpty())
     }
 
     @Test
@@ -1284,15 +1514,17 @@ class ViewTreeRenderTransactionTest {
         onReset: (() -> Unit)? = null,
         onRelease: (() -> Unit)? = null,
         onCommit: (() -> Unit)? = null,
+        constructionIdentity: Any? = Unit,
+        adapterName: String = "callback",
     ): VNode {
         return VNode(
             type = NodeType.AndroidView,
             key = key,
             spec = AndroidViewNodeProps(
-                factory = { rawContext ->
+                factory = { rawContext, _ ->
                     View(rawContext as Context)
                 },
-                update = { rawView ->
+                update = { rawView, _ ->
                     if (failUpdate) {
                         error("update failed")
                     }
@@ -1301,7 +1533,7 @@ class ViewTreeRenderTransactionTest {
                 onReset = if (onReset == null) {
                     null
                 } else {
-                    { onReset() }
+                    { _, _ -> onReset() }
                 },
                 onRelease = if (onRelease == null) {
                     null
@@ -1311,8 +1543,10 @@ class ViewTreeRenderTransactionTest {
                 onCommit = if (onCommit == null) {
                     null
                 } else {
-                    { onCommit() }
+                    { _, _ -> onCommit() }
                 },
+                constructionIdentity = constructionIdentity,
+                adapterName = adapterName,
             ),
         )
     }

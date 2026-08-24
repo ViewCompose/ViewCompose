@@ -2,12 +2,13 @@
 
 ## Status
 
-Active. Phase 0 is complete; no production implementation or publication input has started. The
-dependency, repository, artifact, package, ownership, transaction, lifecycle, saved-state,
-fixture, license, and device baselines are frozen below. The target integrations are AndroidX
-Media3, legacy `com.google.android.exoplayer2` ExoPlayer, Google Maps SDK for Android, and CameraX.
-Media3 and legacy ExoPlayer remain separate compatibility lines because their public namespaces,
-dependency graphs, support status, and consumer migration constraints are not interchangeable.
+Active. Phases 0 and 1 are complete. The common typed adapter, construction identity,
+cross-key-only reset hard cut, callback delegation, environment scopes, atomic candidate
+replacement, rollback, and bounded diagnostics are implemented and verified. No target SDK module
+has started. The target integrations are AndroidX Media3, legacy
+`com.google.android.exoplayer2` ExoPlayer, Google Maps SDK for Android, and CameraX. Media3 and
+legacy ExoPlayer remain separate compatibility lines because their public namespaces, dependency
+graphs, support status, and consumer migration constraints are not interchangeable.
 
 This plan is canonical English-only under the documentation-governance policy. Every durable API,
 theme, lifecycle, saved-state, and ownership contract must move into active architecture, guide,
@@ -15,14 +16,11 @@ migration, and owning-module documentation before this plan is archived.
 
 Last verified: 2026-08-24.
 
-Next action: implement Phase 1 as a hard cut in the common Android View transaction boundary. Add
-the typed adapter and construction identity, restrict reset to cross-logical-key mounted-tree
-reuse, preserve the callback overload through typed delegation, and prove replacement, rollback,
-commit, release, diagnostics, and zero-adapter inactive cost before any SDK module is created.
+Next action: begin Phase 2 lifecycle and saved-state coordination before any SDK module is created.
 
 ## Maven release changesets
 
-- None.
+- `release/changes/20260824-typed-android-view-adapter.json`
 
 ## Objective
 
@@ -332,9 +330,11 @@ This plan does not:
 - retain a legacy ExoPlayer artifact through an undocumented alias once its explicit support line
   is retired.
 
-## Current baseline
+## Phase 0 baseline and Phase 1 delta
 
-Verified from the worktree at `54151a09f082518c7e49146caf6853b24ffc54ba` on 2026-08-24:
+The following Phase 0 baseline was verified from
+`54151a09f082518c7e49146caf6853b24ffc54ba` on 2026-08-24. Items 2, 3, and 9 are retained as
+historical inputs and are superseded by the Phase 1 delta immediately below:
 
 1. The repository has no Media3, legacy ExoPlayer, Google Maps, or CameraX dependency declaration,
    source adapter, published artifact, Demo route, or module manual.
@@ -359,6 +359,14 @@ Verified from the worktree at `54151a09f082518c7e49146caf6853b24ffc54ba` on 2026
 10. Repository and coordinate searches still find no target SDK declaration, adapter, Demo route,
     module manual, publication entry, or current Changeset. Google Maven already exists in the
     centralized repository policy, so Phase 0 requires no repository mutation.
+
+Phase 1 now adds `AndroidViewAdapter<V, S>`, typed environment scopes, explicit reuse policy and
+reset reason, and construction identity composed from adapter implementation class plus
+`constructionKey`. The callback overload delegates the same path. Same-identity binding and
+rollback no longer call reset. Construction changes create and bind a detached candidate, preserve
+the committed View on failure, swap on structural commit, and release each abandoned View exactly
+once. Renderer diagnostics report a bounded adapter name, construction generation, reuse policy,
+and replacement flag.
 
 ## Locked architectural rules
 
@@ -401,7 +409,7 @@ Verified from the worktree at `54151a09f082518c7e49146caf6853b24ffc54ba` on 2026
 | Phase | Status | Deliverable | Exit gate |
 | --- | --- | --- | --- |
 | 0. Dependency and contract freeze | Complete | Pinned reviewed SDK versions and repositories; froze module/package names, dependency exposure, supported API/device matrix, license/notice impact, ownership table, deterministic fixtures, lifecycle/saved-state behavior, and rollback strategy | Worktree, Google Maven, and official SDK contracts agree; no production/publication mutation was required |
-| 1. Typed AndroidView adapter | Not started | Q3 typed adapter, environment scopes, separate construction identity, explicit reuse policy/reset reason, callback delegation, same-identity reset hard cut, diagnostics, and renderer-neutral tests | Factory/update/reset/commit/release ordering, rollback, replacement, keyed reuse, raw-overload parity, and zero-adapter inactive cost pass |
+| 1. Typed AndroidView adapter | Complete | Q3 typed adapter, environment scopes, separate construction identity, explicit reuse policy/reset reason, callback delegation, same-identity reset hard cut, diagnostics, and renderer-neutral tests | Factory/update/reset/commit/release ordering, rollback, replacement, keyed reuse, raw-overload parity, and zero-adapter inactive cost pass |
 | 2. Lifecycle and saved-state coordination | Not started | AndroidX lifecycle decorator plus reusable saved-state boundary where evidence supports it | Owner catch-up/replacement, retained destination visibility, corrupt restore, process recreation, and one-shot cleanup pass |
 | 3. AndroidX Media3 | Not started | Optional Media3 module, caller-owned `Player` component, controller/appearance state, local-media Demo/sample, tests, docs, and release intent | Playback attachment/detachment, theme/configuration, navigation retention, Surface cleanup, accessibility, and leak gates pass |
 | 4. Legacy ExoPlayer 2 | Not started | Separate legacy namespace module and sample with no Media3 dependency or type aliasing | Dependency isolation, caller ownership, lifecycle parity, theme/configuration, release cleanup, and migration guidance pass |
@@ -564,6 +572,7 @@ This plan is complete only when:
 | 2026-08-24 | `54151a09f082518c7e49146caf6853b24ffc54ba` | Phase 0 repository audit | CodeGraph AndroidView callback/renderer/reuse paths; `settings.gradle.kts`, publishing registry, dependency contracts, module catalog/manuals, and coordinate search | Existing Google Maven policy and module architecture can host all four independent integrations; same-identity observed-property binding incorrectly shares `onReset` with cross-key reuse | Hard-cut reset semantics and construction identity in Phase 1 before creating SDK modules |
 | 2026-08-24 | External fixed sources | Phase 0 SDK audit | Official release/API/lifecycle documentation plus direct fixed-POM probes in Google Maven and Maven Central | Media3 1.11.0, CameraX 1.6.1, Maps 20.0.0, and legacy ExoPlayer 2.19.1 resolve from Google Maven; legacy core/UI are absent from Maven Central; lifecycle, Surface, deprecation, minSdk, license, and Maps known-issue contracts recorded | Freeze exact lines, Google Maven, ownership, notices, and device lanes; begin common adapter implementation only |
 | 2026-08-24 | Working tree from `54151a09f082518c7e49146caf6853b24ffc54ba` | Phase 0 closeout | `./gradlew verifyDocumentationStructure verifyViewComposeReleaseIntent --console=plain`; `git diff --check` | Documentation structure passed for 113 canonical and 109 current Chinese pages; release intent reported 0 release artifacts, 0 ignored artifacts, and 0 shared-path classifications; diff check passed | Phase 0 is complete without production or publication changes; start the Phase 1 typed-adapter and reset-semantics hard cut |
+| 2026-08-24 | Working tree from `718220e6178f8368646c59a7119671e188d16799` | Phase 1 implementation and closeout | Focused Host/Renderer JVM tests; Android 9 Xiaomi MI 6 `AndroidInteropRenderingUiTest`; selected Q3 API audit; documentation/release/tooling gates; `./gradlew qaQuick`; `./gradlew qaPreview` | Focused tests passed; device instrumentation passed 3/3 in 70.283 s; API/docs/release/tooling gates passed; `qaQuick` passed 1,945 tasks in 6 min 45 s; `qaPreview` passed 1,115 tasks in 24 s; release intent reported exactly 3 artifacts; no inactive registration, poller, SDK dependency, or recurring work was introduced | Comparison baseline had one reset on an ordinary same-key update and no construction identity; Phase 1 records zero such resets, a 100% removal for that asserted transition, and atomic replacement. Conclusion: improved. Gate timings are not normalized because cache state differs and support no performance claim. Device evidence is limited to one Android 9 model and used root installation only to bypass MIUI USB confirmation; SDK-specific devices remain Phase 3–7 work. Begin Phase 2 lifecycle and saved-state coordination. |
 
 ## Decision history
 

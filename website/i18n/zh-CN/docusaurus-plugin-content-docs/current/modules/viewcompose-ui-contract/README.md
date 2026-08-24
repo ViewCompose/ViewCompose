@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: d151def5a6f917d266f93e64e4be0798d3f9395414304192dfd355cbb2fc89b2
+translation_source_hash: b36d4037afdeaee1b686dccd4985745cb98640c33b0c34c7a640e65a1b5ea0a6
 translation_status: current
 ---
 
@@ -208,9 +208,13 @@ val gap = VNode(
   ThreadLocal 状态后继续抛出。
 - `UiNodeTooling.withSourceCandidateCapture` 最多采样 64 次有效发射并保留 32 条不同调用链。只有
   代码块成功返回且捕获状态恢复后才会回调；构建失败或没有节点时不会报告候选。
-- `AndroidViewNodeProps.update` 与 `onReset` 是可重放的事务回调。一次性外部动作应放在
+- `AndroidViewNodeProps.factory`、`update`、`onReset` 与 `onCommit` 都会接收其 VNode 捕获的
+  不可变 Environment。`update` 与 `onReset` 是可重放的事务回调。一次性外部动作应放在
   `onCommit`，资源清理应放在 `onRelease`。Release 是一次性的永久放弃清理，也覆盖未提交的
   回滚候选节点。
+- `AndroidViewNodeProps.constructionIdentity` 是物理构造身份，与 VNode 的逻辑 `key` 分离。
+  身份相等时保留 View 并重新绑定，不执行 Reset；身份变化时必须原子替换候选节点，候选创建或
+  绑定失败时 Renderer 必须保留已提交 View。
 - 包含 `AndroidView` 的 Mounted Tree 只有在每个互操作节点都声明 `onReset` 时才能跨逻辑 Key。
   Renderer 在旧 Session Dispose 后、新 Key Bind 前调用 Reset；最终缓存淘汰恰好调用一次
   `onRelease`。

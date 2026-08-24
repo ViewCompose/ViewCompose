@@ -71,7 +71,42 @@ class AndroidViewTutorialActivity : ComponentActivity() {
 
 `factory` creates the native View only when reconciliation needs a new node. `update` applies the
 latest observable state to a retained View and must be safe to run again during rollback or
-rebind. Keep external one-shot work out of `update`.
+rebind. Keep external one-shot work out of `update`. This callback form is the concise low-level
+escape hatch.
+
+## Extract a reusable typed adapter
+
+Use `AndroidViewAdapter<V, S>` when the integration is reused or owns lifecycle callbacks. The View
+type and complete state snapshot remain checked across every callback:
+
+```kotlin
+private data class NativeLabelState(val text: String)
+
+private class NativeLabelAdapter(
+    private val textAppearance: Int,
+) : AndroidViewAdapter<TextView, NativeLabelState> {
+    override fun create(scope: AndroidViewCreateScope): TextView =
+        TextView(scope.context, null, 0, textAppearance)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: NativeLabelState) {
+        scope.view.text = state.text
+    }
+}
+
+AndroidView(
+    adapter = NativeLabelAdapter(textAppearance),
+    state = NativeLabelState("Native TextView count: ${count.value}"),
+    key = "counter-label",
+    constructionKey = textAppearance,
+    modifier = Modifier.fillMaxWidth(),
+)
+```
+
+`key` identifies the logical item. The adapter implementation class plus `constructionKey`
+identifies constructor-sensitive View state. A changed state reuses the View and calls only
+`update`; a changed construction identity creates and binds a candidate, then replaces the old
+View only if the complete transaction succeeds. `onReset` is reserved for integrations that opt
+into cross-key mounted-tree reuse with `AndroidViewReusePolicy.Resettable`.
 
 ## Verify the result
 

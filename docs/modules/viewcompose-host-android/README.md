@@ -115,27 +115,59 @@ keeps no timing history.
 
 ## Native View transaction contract
 
-`AndroidView` mounts a platform View without weakening renderer rollback semantics:
+Reusable integrations implement the typed `AndroidViewAdapter<V, S>` contract. The adapter class
+and `constructionKey` identify constructor-sensitive state, while `key` continues to identify
+logical content:
 
 ```kotlin
+private class NativeLabelAdapter(
+    private val textAppearance: Int,
+) : AndroidViewAdapter<TextView, NativeLabelState> {
+    override val reusePolicy = AndroidViewReusePolicy.Resettable
+
+    override fun create(scope: AndroidViewCreateScope): TextView =
+        TextView(scope.context, null, 0, textAppearance)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: NativeLabelState) {
+        scope.view.text = state.text
+        scope.view.setTextColor(state.color)
+    }
+
+    override fun onReset(
+        scope: AndroidViewResetScope<TextView>,
+        reason: AndroidViewResetReason,
+    ) {
+        scope.view.text = null
+    }
+}
+
 AndroidView(
-    factory = { context -> PlayerView(context) },
-    update = { view -> configurePlayer(view as PlayerView, state) },
-    key = playerId,
-    onReset = { view -> resetPlayer(view as PlayerView) },
-    onCommit = { view -> (view as PlayerView).play() },
-    onRelease = { view -> (view as PlayerView).release() },
+    adapter = NativeLabelAdapter(textAppearance = textAppearance),
+    state = NativeLabelState(text = title, color = titleColor),
+    key = itemId,
+    constructionKey = textAppearance,
 )
 ```
 
-- `factory` runs only for a new native node.
-- `update`, `onReset`, and `Modifier.nativeView` are replay-safe configuration.
-- `onReset` opts the node into mounted-tree reuse across lazy keys. It runs only after the old
-  logical session, effects, and saveable lease have ended and before the new key binds.
-- `onCommit` runs only after the complete View-tree transaction commits.
-- `onRelease` runs once whenever a created View is permanently abandoned: candidate rollback,
-  committed removal, non-reusable session disposal, or final reuse-cache eviction. Omitting
-  `onReset` prevents that mounted tree from crossing keys.
+- `create`, `update`, reset, commit, and release run synchronously on the Android main thread.
+  Creation receives the renderer-supplied themed `Context`; creation, update, reset, and commit
+  scopes also expose the VNode's immutable `UiEnvironmentValues`.
+- `state` remains caller-owned. `update` applies its complete replay-safe configuration and may run
+  again during rollback. Ordinary same-identity updates never invoke `onReset`.
+- A changed adapter implementation class or `constructionKey` creates and updates a detached
+  candidate. Failure releases only that candidate and preserves the committed View; success swaps
+  it atomically and releases the displaced View once.
+- `AndroidViewReusePolicy.Resettable` opts the node into mounted-tree reuse across lazy keys.
+  `onReset(..., MountedTreeReuse)` runs only after the old logical session, effects, and saveable
+  lease have ended and before the new key's update. The default `Never` policy prevents the
+  containing mounted tree from crossing keys.
+- `onCommit` runs only after the complete composition transaction commits. `onRelease` runs once
+  whenever a created View is permanently abandoned: candidate rollback, committed replacement or
+  removal, non-reusable session disposal, or final reuse-cache eviction.
+
+The callback-based `AndroidView(factory, update, ...)` overload remains the low-level escape hatch
+and delegates to the same typed transaction path. Its trailing `constructionKey` has the same
+replacement semantics, and supplying `onReset` opts into only cross-key mounted-tree reuse.
 
 ## Saved state, scheduling, and threading
 
