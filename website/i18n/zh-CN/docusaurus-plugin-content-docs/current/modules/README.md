@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 2dd8fa7067c4d4529f1e320e1a6ecfa7636282e5cfa50995e01f9e539ab8ffe8
+translation_source_hash: 4eb16ca0ca7ad36abb2fd01919213bc399eff4cf97fd3498108efb55dfe7e1d0
 translation_status: current
 ---
 
@@ -52,6 +52,7 @@ translation_status: current
 | `viewcompose-exoplayer2-android` | Integration | 冻结的旧版 ExoPlayer 2 StyledPlayerView 兼容层 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-exoplayer2-android) |
 | `viewcompose-google-maps-android` | Integration | 生命周期安全的 Google Maps MapView 托管 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-google-maps-android) |
 | `viewcompose-camerax-androidx` | Integration | 精确且受生命周期约束的 CameraX PreviewView 托管 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-camerax-androidx) |
+| `viewcompose-paging-androidx` | Integration | 面向 ViewCompose LazyColumn 的生命周期感知 AndroidX Paging 集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-paging-androidx) |
 
 ## 目录规则
 

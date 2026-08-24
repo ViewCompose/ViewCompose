@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add the independently published AndroidX Paging frontend with coherent observable presentation, lifecycle-gated collection, a stable-key non-placeholder LazyColumn bridge, and deterministic contract tests.",
+  "changes": [
+    { "artifact": "viewcompose-paging-androidx", "impact": "feature" }
+  ],
+  "ignored": [],
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "Register the new Paging artifact package, architectural layer, compile task, and unit-test task without changing an existing artifact's production source."
+    },
+    {
+      "path": "settings.gradle.kts",
+      "reason": "Include the independently published Paging integration project in the repository build."
+    },
+    {
+      "path": "gradle/libs.versions.toml",
+      "reason": "Declare the exact AndroidX Paging dependency line used only by the new integration and its tests."
+    }
+  ]
+}

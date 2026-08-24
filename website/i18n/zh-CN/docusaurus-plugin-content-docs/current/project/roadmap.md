@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: 46936dccc2f44c52685a1b27e799f04904be2b25731ca0dc261acd1a414b05ef
+translation_source_hash: 209b999414be2d93a1612929f6923515ab393fc00297557d134f8e1d431f60b6
 translation_status: current
 ---
 
@@ -116,7 +116,7 @@ translation_status: current
 | Runtime Effects / Transactions | 组合 prepare/commit/abort、结构化协程、renderer 恢复、`RenderFailure/RenderFrameReport`、`AndroidView.onCommit` 副作用边界与可选有界故障聚合已落地 | 维护已交付的隐私与非激活路径契约；调度、同意、持久化与上传仍由应用 Exporter 持有 |
 | Runtime Recomposition Performance | VNode 子树缓存、mutation journal、失效合并、显式边界和 renderer O(1) identity skip 已落地 | 维护叶子更新规模基准，避免固定成本随整树节点数增长 |
 | Lifecycle / ViewModel Integration | 模块拆分与 API 硬切、串行 lifecycle collection、事务化 SavedState claim、destroyed host 与损坏 Bundle 隔离均已完成 | 扩展多窗口/后台进程回收真实设备矩阵 |
-| Collections | `LazyColumn/LazyRow/LazyVerticalGrid` + Pager；完整 list state、sticky headers、contentType/span 与预取已落地 | Paging 3 的执行工作已拆分到有效的 [Paging 3 集成计划](https://docs.viewcompose.com/project/plans/paging3-integration)；它仍是位于核心契约之外的可选 AndroidX 集成 |
+| Collections | `LazyColumn/LazyRow/LazyVerticalGrid` + Pager；完整 List State、Sticky Header、Content Type/Span、预取，以及可选的 AndroidX Paging 非 Placeholder `PagingLazyColumn` 前端已落地 | 继续有效的 [Paging 3 集成计划](https://docs.viewcompose.com/project/plans/paging3-integration)，硬切中立紧凑 Item Table 并补齐 Placeholder 与 Page Drop；Paging 仍位于核心契约之外 |
 | Overlay | Popup 精确锚点、滚动跟随、RTL、翻转/夹取，以及 Snackbar/Toast 统一队列与结构化结束原因已落地 | 扩展多窗口、IME 与自由窗真实设备矩阵 |
 | Theming | 已完成 token 收口、Android 动态色策略、完整 shape 桥接与配置变化 token 生命周期，并提供 `Diagnostics -> 主题诊断` 权威人工验证入口 | 扩展多窗口、厂商主题和动态色设备矩阵 |
 | Interop | `AndroidView` 支持 replay-safe update/reset/nativeView、提交期 onCommit 与一次性 release | 强化复杂原生 View、第三方控件与主题协同 |

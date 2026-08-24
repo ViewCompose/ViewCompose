@@ -270,11 +270,12 @@ revision change cannot temporarily expose content under a system bar or erase th
 
 ## 6. Deliberate non-goals
 
-Paging 3 adapters and remote loading/retry remain outside the core collection contract. Their API
-and delivery work has moved to the active
-[Paging 3 integration plan](../project/plans/paging3-integration.md), which adapts official AndroidX
-Paging without moving Paging types or loading policy into UI Foundation. Until that optional
-integration ships, paging libraries can drive an immutable list and use `isAtEnd`,
-`lastVisibleItemIndex`, and `layoutInfo.totalItemsCount` without coupling Android paging types into
-the core contract. Custom fling physics and compiler-driven sub-item composition remain separate
+Paging 3 loading, invalidation, and retry remain outside the core collection contract. The optional
+[`viewcompose-paging-androidx`](../modules/viewcompose-paging-androidx/README.md) artifact now adapts
+the official presenter into a non-placeholder `PagingLazyColumn` without moving Paging types or
+loading policy into UI Foundation. Placeholder and page-drop support still depends on the compact
+neutral item-table hard cut owned by the active
+[Paging 3 integration plan](../project/plans/paging3-integration.md). Finite-list applications may
+continue to use `isAtEnd`, `lastVisibleItemIndex`, and `layoutInfo.totalItemsCount` without any Paging
+dependency. Custom fling physics and compiler-driven sub-item composition remain separate
 integration concerns.

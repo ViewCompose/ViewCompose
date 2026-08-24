@@ -13,9 +13,14 @@ import com.viewcompose.media3.Media3PlayerView
 import com.viewcompose.exoplayer2.ExoPlayerView
 import com.viewcompose.maps.google.GoogleMapProperties
 import com.viewcompose.maps.google.GoogleMapView
+import androidx.paging.PagingData
+import com.viewcompose.paging.PagingLazyColumn
+import com.viewcompose.paging.PagingLifecyclePolicy
+import com.viewcompose.paging.collectAsViewComposePagingItems
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import kotlinx.coroutines.flow.Flow
 
 /**
  * These core types must remain visible when a consumer declares only their feature artifacts.
@@ -54,4 +59,12 @@ fun UiTreeBuilder.compileLegacyExoPlayerFeatureSurface(player: LegacyPlayer) {
 /** The independently published Maps artifact exposes its typed state and Maps SDK contracts. */
 fun UiTreeBuilder.compileGoogleMapsFeatureSurface() {
     GoogleMapView(properties = GoogleMapProperties())
+}
+
+/** The Paging artifact exposes its AndroidX input and ViewCompose lazy-list surface together. */
+fun UiTreeBuilder.compilePagingFeatureSurface(pages: Flow<PagingData<String>>) {
+    val items = pages.collectAsViewComposePagingItems(PagingLifecyclePolicy.Composition)
+    PagingLazyColumn(items = items, key = { value -> value }) { value ->
+        Text(value)
+    }
 }

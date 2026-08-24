@@ -2,10 +2,9 @@
 
 ## Status
 
-Active. Phases 0 and 1 completed on 2026-08-25; production implementation and publication inputs
-have not started. This plan is the only active owner of Paging 3 delivery after the optional roadmap
-item and the Lazy Collections non-goal were redirected here on 2026-08-18. Historical archives
-retain only evidence.
+Active. Phases 0 through 2 completed on 2026-08-25. This plan is the only active owner of Paging 3
+delivery after the optional roadmap item and the Lazy Collections non-goal were redirected here on
+2026-08-18. Historical archives retain only evidence.
 
 Phase 0 pinned AndroidX Paging 3.5.1, compiled its public `PagingDataPresenter` contract with Kotlin
 2.0.21, froze the API and lifecycle policies below, and rejected the current fully materialized
@@ -14,15 +13,17 @@ durable shipped contracts move to their owning active public documentation befor
 
 Last verified: 2026-08-25.
 
-Next action: Phase 2 adds the published non-placeholder `LazyColumn` slice against the characterized
-presenter contract. It must preserve explicit main-context ownership, publish item and load-state
-snapshots only after both are coherent, and keep placeholders and the neutral table hard cut out of
-this slice.
+Next action: Phase 3 hard-cuts the neutral lazy-item boundary to the compact indexed table, then
+adds positional placeholders and page-drop handling. It must preserve the Phase 2 lifecycle,
+coherence, stable-key Session, and sole-renderer ownership contracts while proving bounded work and
+prompt release for dropped pages.
 
 ## Maven release changesets
 
 - `release/changes/20260825-paging-presenter-characterization.json` — shared build wiring is
   explicitly release-neutral; no Maven artifact changes.
+- `release/changes/20260825-paging-non-placeholder.json` — introduces the optional published
+  non-placeholder frontend and explicitly classifies its shared registration inputs.
 
 ## Objective and ownership
 
@@ -221,12 +222,15 @@ host Compose collections, or give a Paging adapter ownership of the native list.
 
 ## Current baseline
 
-The repository has no Paging dependency, module, adapter, sample, Demo, or manual. Existing finite
-lazy collections already provide logical keys, revisions, item Sessions, saveable-state isolation,
-renderer reuse, transactional commit, visible indices, total count, scrolling, and scroll
-save/restore. Renderer prefetch prepares ViewCompose/native presentation only; it is not a remote or
-database loader. Phase 0 verified that the full-table boundary, rather than those higher-level
-semantics, is the shared prerequisite requiring a hard cut.
+The optional `viewcompose-paging-androidx` module now publishes the official-presenter collector,
+three explicit lifecycle policies, coherent observable items/load states, retry/refresh delegation,
+and a non-placeholder `PagingLazyColumn` bridge with compiled Q3 usage. Existing finite lazy
+collections provide logical keys, revisions, item Sessions, saveable-state isolation, renderer
+reuse, transactional commit, visible indices, total count, scrolling, and scroll save/restore.
+Renderer prefetch prepares ViewCompose/native presentation only; it is not a remote or database
+loader. The shipped Phase 2 path is linear in loaded item count and deliberately rejects unloaded
+slots. Placeholder and page-drop support still requires the Phase 3 neutral compact-table hard cut;
+no Paging adapter, Demo, mediator helper, or physical-device performance claim exists yet.
 
 ## Execution plan
 
@@ -234,7 +238,7 @@ semantics, is the shared prerequisite requiring a hard cut.
 | --- | --- | --- | --- |
 | 0. Dependency and contract freeze | Complete | Paging 3.5.1 presenter path, artifact/package, lifecycle, overloads, LazyColumn-only scope, tests, and compact indexed-table prerequisite | Official API review and Kotlin 2.0.21 compile probes pass; full-table path is rejected with the Q3 replacement and breaking impact documented |
 | 1. Presenter characterization harness | Complete | Non-published JVM module with deterministic generations, insert/drop, placeholder, hint, load-state, retry, refresh, invalidation, and cancellation fixtures | Six tests pass without Android Renderer, Android runtime, device, or network; explicit main-context injection and coherent publication ordering are frozen |
-| 2. Non-placeholder LazyColumn slice | Not started | Optional module, observable items, stable-key bridge, latest generation, retry/refresh, and core Q3 sample | Initial/append/prepend/error/retry/invalidation/query/navigation/key-state tests pass |
+| 2. Non-placeholder LazyColumn slice | Complete | Optional module, observable items, stable-key bridge, latest generation, retry/refresh, and core Q3 sample | 12 deterministic tests, strict Q3 audit, local Maven consumers, complete API reconstruction, and the bilingual production site pass |
 | 3. Placeholder and page-drop slice | Not started | Neutral indexed hard cut, positional placeholders, jump/drop handling | Placeholder transitions isolate state; dropped pages release Sessions and memory; bounded-work evidence passes |
 | 4. Load-state composition | Not started | Refresh/append/prepend and source/mediator helpers plus empty/header/footer/error examples | Loaded content persists; retry and refresh differ; mediator detail remains visible |
 | 5. Lifecycle and mediated data | Not started | Frozen policies, `cachedIn` guidance, recreation, deterministic mediator fixture | Hidden/revealed navigation, cancellation, recreation, and source/mediator failure tests pass |
@@ -260,7 +264,7 @@ semantics, is the shared prerequisite requiring a hard cut.
 
 ```bash
 ./gradlew :viewcompose-paging-androidx:test
-./gradlew :viewcompose-paging-androidx:apiCheck
+./gradlew auditViewComposeApiDocs -PviewComposeDocsModules=viewcompose-paging-androidx
 ./gradlew :integration-tests:paging-presenter:test
 ./gradlew verifyModulePackageRoots verifyAndroidModuleNamespaces verifyModuleDependencyBoundaries
 ./gradlew verifyDocumentationStructure
@@ -311,6 +315,7 @@ work pending.
 | 2026-08-25 | Isolated Kotlin 2.0.21 probes | Presenter API compiled in 12 s; both frozen overload calls and method references compiled cleanly in 1 s. This proves compatibility/inference, not runtime performance. |
 | 2026-08-25 | CodeGraph plus Foundation/NodeSpec/Renderer review | Current path materializes every item and builds full key/diff tables. Phase 1 can test presenter events independently; Phase 3 implements the frozen neutral hard cut. |
 | 2026-08-25 | `integration-tests:paging-presenter`: Kotlin 2.0.21, Paging 3.5.1, coroutines-test 1.10.2 | 6/6 deterministic JVM tests passed in 2 s. Outside Android, the presenter needs an explicit main context. Its event hook saw new items with refresh still `Loading`; the later page listener saw the same items with final `NotLoading`. `peek` sent no request; repeated active `get` sent one load; retry reused its source; refresh/invalidation replaced generations; a superseded load was cancelled and never published; both drop directions restored placeholders. Conclusion: **improved** contract confidence, with no performance claim. Limitations: no Android lifecycle, renderer, mediator, device, network, or published frontend. Next: Phase 2 implements the non-placeholder frontend without changing this ordering. |
+| 2026-08-25 | Phase 2 module tests, API audit, publication consumers, API reconstruction, and production site | 12/12 deterministic Robolectric/JVM tests passed in 4 s, including generation replacement, lifecycle stop/start and release, duplicate keys, and index-safe stable-key moves. The strict Q3 audit passed in 18 s; selected local Maven publication plus all isolated consumers passed 1,022 tasks in 4 min 19 s; complete 100-version API reconstruction plus 6 unpublished-current trees passed in 7 min 23 s. The bilingual site audits 440 pages; its 48,942,128 non-API bytes are +190,471 (+0.391%) over the Phase 0 candidate, so the documented minimum ceiling moved from 46.5 to 46.7 MiB. Conclusion: **improved** correctness and release confidence, with a **mixed** site-size result and no runtime-performance claim. Limitations: placeholders, page drops, mediator UI, Demo, device, network, frame time, and memory were not exercised; neither connected phone was needed. Next: Phase 3 implements the compact neutral table and records bounded-work/drop evidence before claiming those behaviors. |
 
 ## Decision history
 
@@ -324,3 +329,6 @@ work pending.
    and private positional placeholder keys.
 6. 2026-08-25 — Hard-cut full NodeSpec lists to compact `LazyItemTable` plus range updates; never
    add a Paging-only adapter, full placeholder table, or second diff owner.
+7. 2026-08-25 — Ship the non-placeholder frontend first. Fold presenter index into the bridge's
+   private content revision so moved stable keys refresh access routing without losing their
+   Session/saveable state; require application-owned `cachedIn` for restartable `Pager.flow` use.

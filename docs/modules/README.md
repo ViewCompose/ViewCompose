@@ -47,6 +47,7 @@ this table. Architecture and guide pages remain the source of truth for cross-mo
 | `viewcompose-exoplayer2-android` | Integration | Frozen legacy ExoPlayer 2 StyledPlayerView compatibility | [Available](./viewcompose-exoplayer2-android/README.md) |
 | `viewcompose-google-maps-android` | Integration | Lifecycle-safe Google Maps MapView hosting | [Available](./viewcompose-google-maps-android/README.md) |
 | `viewcompose-camerax-androidx` | Integration | Exact lifecycle-bound CameraX PreviewView hosting | [Available](./viewcompose-camerax-androidx/README.md) |
+| `viewcompose-paging-androidx` | Integration | Lifecycle-aware AndroidX Paging for ViewCompose LazyColumn | [Available](./viewcompose-paging-androidx/README.md) |
 
 ## Catalog rules
 

@@ -73,4 +73,5 @@ include(":viewcompose-media3-androidx")
 include(":viewcompose-exoplayer2-android")
 include(":viewcompose-google-maps-android")
 include(":viewcompose-camerax-androidx")
+include(":viewcompose-paging-androidx")
  

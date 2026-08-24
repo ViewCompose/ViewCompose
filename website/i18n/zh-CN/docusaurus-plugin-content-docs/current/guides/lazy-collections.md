@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: 2e9dbcb9fd397668c8433481ea97117f4179ea373d69ad34f39cace9fbf8c1a1
+translation_source_hash: ab57052d58e020535725faefa5146b88a4d0bf6f68ea02ce7f13306c80fbe52b
 translation_status: current
 ---
 
@@ -248,9 +248,11 @@ Attach 或重排时按 Item Key 恢复。分离的 Pinned Header 副本是不拥
 
 ## 6. 明确不包含的能力
 
-Paging 3 适配以及远程加载/重试仍不进入核心集合契约。相关 API 与交付工作已经拆分到有效的
-[Paging 3 集成计划](https://docs.viewcompose.com/project/plans/paging3-integration)，由该计划适配官方
-AndroidX Paging，同时避免把 Paging 类型或加载策略移入 UI Foundation。在这项可选集成发布前，
-Paging 库仍可驱动不可变列表，并读取 `isAtEnd`、`lastVisibleItemIndex` 和
-`layoutInfo.totalItemsCount`，无需把 Android paging 类型耦合进核心契约。自定义 fling 物理和
-编译器驱动的 item 内组合仍属于其他独立集成事项。
+Paging 3 的加载、失效与重试仍不进入核心集合契约。可选的
+[`viewcompose-paging-androidx`](https://docs.viewcompose.com/modules/viewcompose-paging-androidx/)
+产物现在已把官方 Presenter 适配为不启用 Placeholder 的 `PagingLazyColumn`，没有把 Paging 类型或
+加载策略移入 UI Foundation。Placeholder 与 Page Drop 支持仍依赖有效的
+[Paging 3 集成计划](https://docs.viewcompose.com/project/plans/paging3-integration)持有的中立紧凑 Item
+Table 硬切。有限列表应用仍可读取 `isAtEnd`、`lastVisibleItemIndex` 和
+`layoutInfo.totalItemsCount`，无需引入 Paging 依赖。自定义 Fling 物理和编译器驱动的 Item 内组合仍
+属于其他独立集成事项。
