@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "governanceVersion": 2,
-  "status": "phase-2-no-new-debt",
+  "status": "phase-2-type-aware-sample-discovery",
   "recordPlacement": "docs/project/records/documentation-governance-v2",
   "scannerImplementation": "tools/viewcompose-quality-build:verifyDocumentationGovernanceV2",
   "reportOutput": "build/reports/viewcompose-quality/documentation-governance-v2-report.json",

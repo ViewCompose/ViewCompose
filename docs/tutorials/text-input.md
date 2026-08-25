@@ -24,7 +24,7 @@ dependencies {
 
 Create `TextInputTutorialActivity.kt`:
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TextInputTutorialActivity.kt" region="text-input" */}
+{/* tutorial-sample sample_id="tutorial.text-input" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TextInputTutorialActivity.kt" region="text-input" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

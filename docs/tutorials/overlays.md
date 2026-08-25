@@ -27,7 +27,7 @@ Android presenter.
 
 Create `OverlaysTutorialActivity.kt`:
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/OverlaysTutorialActivity.kt" region="overlays" */}
+{/* tutorial-sample sample_id="tutorial.overlays" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/OverlaysTutorialActivity.kt" region="overlays" required_artifacts="viewcompose-overlay-material3-android" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

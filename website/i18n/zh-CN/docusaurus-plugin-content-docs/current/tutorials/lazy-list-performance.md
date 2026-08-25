@@ -2,7 +2,7 @@
 title: 调整 Lazy 列表性能
 sidebar_position: 13
 translation_source: tutorials/lazy-list-performance.md
-translation_source_hash: 58c6962e6e186e86285a81e3513df5f0f87a78d499b421641ee4de1f404ff4fd
+translation_source_hash: 32481517be1569bc2d9169c15380be849be88fb5dadb3836a164cac03934ada5
 translation_status: current
 ---
 
@@ -26,7 +26,7 @@ dependencies {
 
 创建 `LazyListPerformanceTutorialActivity.kt`：
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LazyListPerformanceTutorialActivity.kt" region="lazy-list-performance" */}
+{/* tutorial-sample sample_id="tutorial.lazy-list-performance" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LazyListPerformanceTutorialActivity.kt" region="lazy-list-performance" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

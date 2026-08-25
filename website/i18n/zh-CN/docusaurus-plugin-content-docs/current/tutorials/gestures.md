@@ -2,7 +2,7 @@
 title: 使用手势
 sidebar_position: 12
 translation_source: tutorials/gestures.md
-translation_source_hash: ae62ea1397140040d95ecce6663abb3ccdd8860da0a4ca8f189913dd2a71c537
+translation_source_hash: f5c7e6c089b60474601147e99403ae8372cb6676ac2777421cf1e8eb49b155b1
 translation_status: current
 ---
 
@@ -27,7 +27,7 @@ dependencies {
 
 创建 `GesturesTutorialActivity.kt`：
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/GesturesTutorialActivity.kt" region="gestures" */}
+{/* tutorial-sample sample_id="tutorial.gestures" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/GesturesTutorialActivity.kt" region="gestures" required_artifacts="viewcompose-gesture" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

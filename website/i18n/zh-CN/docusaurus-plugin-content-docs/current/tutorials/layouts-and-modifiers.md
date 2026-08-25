@@ -2,7 +2,7 @@
 title: 使用布局与 Modifier
 sidebar_position: 4
 translation_source: tutorials/layouts-and-modifiers.md
-translation_source_hash: 912a8da4170e8c814f6e12f0b3b92096e2456fae7f155689043447ead12b7a5a
+translation_source_hash: f2beda3f1e53e018e6b9dc027919a084d67c21f8f0c535906a6d6819fbc2dc74
 translation_status: current
 ---
 
@@ -26,7 +26,7 @@ dependencies {
 
 创建 `LayoutsTutorialActivity.kt`：
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LayoutsTutorialActivity.kt" region="layouts" */}
+{/* tutorial-sample sample_id="tutorial.layouts-and-modifiers" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LayoutsTutorialActivity.kt" region="layouts" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

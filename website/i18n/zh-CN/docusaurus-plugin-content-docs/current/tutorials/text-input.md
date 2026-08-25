@@ -2,7 +2,7 @@
 title: 使用文本输入
 sidebar_position: 5
 translation_source: tutorials/text-input.md
-translation_source_hash: 18db62c8e9abe70e03fe06158532506c542310c0e0332fee04bd05da8e4039f9
+translation_source_hash: 178c27db23937e02e56f8cd26e8ac9cf16ac4fc4d925d36ecb4ff1fed1a97510
 translation_status: current
 ---
 
@@ -27,7 +27,7 @@ dependencies {
 
 创建 `TextInputTutorialActivity.kt`：
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TextInputTutorialActivity.kt" region="text-input" */}
+{/* tutorial-sample sample_id="tutorial.text-input" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TextInputTutorialActivity.kt" region="text-input" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

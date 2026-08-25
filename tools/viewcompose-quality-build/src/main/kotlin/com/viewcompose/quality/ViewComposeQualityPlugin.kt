@@ -456,17 +456,19 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
             dependsOn(":samples:tutorials:compileDebugKotlin")
             repositoryDirectory.set(extension.repositoryDirectory)
             sampleSourceFiles.from(
-                tutorialSamplesByPage.values.map { sample ->
-                    extension.repositoryDirectory.file(sample.source)
+                project.fileTree(
+                    extension.repositoryDirectory.dir("samples/tutorials/src"),
+                ) {
+                    include("**/*.kt", "**/*.java")
                 },
             )
             documentationFiles.from(
-                tutorialDocumentationRootPaths.flatMap { documentationRootPath ->
-                    tutorialSamplesByPage.keys.map { pageName ->
-                        extension.repositoryDirectory.file("$documentationRootPath/$pageName")
-                    } + extension.repositoryDirectory.file(
-                        "$documentationRootPath/getting-started.md",
-                    )
+                tutorialDocumentationRootPaths.map { documentationRootPath ->
+                    project.fileTree(
+                        extension.repositoryDirectory.dir(documentationRootPath),
+                    ) {
+                        include("**/*.md", "**/*.mdx")
+                    }
                 },
             )
             sampleBuildFiles.from(
@@ -477,9 +479,6 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
             )
             documentationRootPaths.set(tutorialDocumentationRootPaths)
             baseArtifacts.set(tutorialBaseArtifacts)
-            samplesByPage.set(
-                tutorialSamplesByPage.mapValues { (_, sample) -> encodeTutorialSample(sample) },
-            )
         }
         project.tasks.register<Exec>("verifyDocumentationScripts") {
             group = "verification"

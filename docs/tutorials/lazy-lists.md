@@ -24,7 +24,7 @@ dependencies {
 
 Create `LazyListsTutorialActivity.kt`:
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LazyListsTutorialActivity.kt" region="lazy-lists" */}
+{/* tutorial-sample sample_id="tutorial.lazy-lists" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LazyListsTutorialActivity.kt" region="lazy-lists" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

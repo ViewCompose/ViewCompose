@@ -2,7 +2,7 @@
 title: 读取渲染诊断
 sidebar_position: 14
 translation_source: tutorials/render-diagnostics.md
-translation_source_hash: ae5523fa11e163bc082bb6b26d46b3ee8439bce24523c1f035b18b4b8b6c98e9
+translation_source_hash: a1baeb2a135d391c09d0ac4f362a305e10ab5412e06b2702f9a48075eb5b7d49
 translation_status: current
 ---
 
@@ -26,7 +26,7 @@ dependencies {
 
 创建 `RenderDiagnosticsTutorialActivity.kt`：
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/RenderDiagnosticsTutorialActivity.kt" region="render-diagnostics" */}
+{/* tutorial-sample sample_id="tutorial.render-diagnostics" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/RenderDiagnosticsTutorialActivity.kt" region="render-diagnostics" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

@@ -77,7 +77,6 @@ class SampleDocumentationParityTest {
                 publishingPropertiesFile = fixture.resolve(propertiesPath),
                 documentationRootPaths = emptyList(),
                 baseArtifacts = emptyList(),
-                samplesByPage = emptyMap(),
             )
         }
     }
@@ -100,7 +99,7 @@ class SampleDocumentationParityTest {
                 "// DOCS_REGION_START(state)\ncurrent()\n// DOCS_REGION_END(state)\n",
             pagePath to
                 dependencyBlock +
-                "{/* tutorial-sample source=\"$sourcePath\" region=\"state\" */}\n" +
+                "{/* tutorial-sample sample_id=\"tutorial.state-and-events\" source=\"$sourcePath\" region=\"state\" */}\n" +
                 "```kotlin\nstale()\n```\n{/* tutorial-sample-end */}\n",
             gettingStartedPath to
                 dependencyBlock +
@@ -141,9 +140,78 @@ class SampleDocumentationParityTest {
                 publishingPropertiesFile = fixture.resolve(propertiesPath),
                 documentationRootPaths = listOf("docs/tutorials"),
                 baseArtifacts = listOf("viewcompose-material3-android"),
-                samplesByPage = mapOf(
-                    "state-and-events.md" to TutorialSampleContract(sourcePath, "state"),
+            )
+        }
+        val unregisteredSource = SampleDocumentationVerifiers.verifyTutorialSamples(
+            repository = repository,
+            sampleSourceFiles = emptySet(),
+            documentationFiles = setOf(
+                repository.resolve(pagePath),
+                repository.resolve(gettingStartedPath),
+            ),
+            sampleBuildFiles = emptySet(),
+            publishingPropertiesFile = repository.resolve(propertiesPath),
+            documentationRootPaths = listOf("docs/tutorials"),
+            baseArtifacts = listOf("viewcompose-material3-android"),
+        )
+        assertTrue(
+            unregisteredSource.diagnostics.joinToString("\n").contains(
+                "$sourcePath -> source file is not a registered tutorial input",
+            ),
+        )
+    }
+
+    @Test
+    fun `a newly discovered tutorial without a compiled sample fails`() {
+        val pagePath = "docs/tutorials/foundations/new-capability.md"
+        val gettingStartedPath = "docs/tutorials/getting-started.md"
+        val propertiesPath = "gradle/viewcompose-publishing.properties"
+        val dependencyBlock =
+            "```kotlin title=\"build.gradle.kts\"\n" +
+                "repositories { mavenCentral() }\n" +
+                "implementation(\"com.viewcompose:viewcompose-material3-android:1.0.0\")\n" +
+                "```\n"
+        val repository = fixtureRepository(
+            label = "tutorial-discovery",
+            pagePath to dependencyBlock + "# New capability\n",
+            gettingStartedPath to
+                dependencyBlock +
+                "id(\"com.viewcompose.preview\") version \"1.0.0\"\n" +
+                "com.viewcompose:viewcompose-preview-core:1.0.0\n" +
+                "com.viewcompose:viewcompose-preview-worker-host:1.0.0\n" +
+                "com.viewcompose:viewcompose-preview-runner:1.0.0\n",
+            propertiesPath to
+                listOf(
+                    "module.viewcompose-material3-android.version=1.0.0",
+                    "module.viewcompose-preview-gradle-plugin.version=1.0.0",
+                    "module.viewcompose-preview-core.version=1.0.0",
+                    "module.viewcompose-preview-worker-host.version=1.0.0",
+                    "module.viewcompose-preview-runner.version=1.0.0",
+                ).joinToString("\n", postfix = "\n"),
+        )
+        assertFrozenParity(
+            label = "verifyTutorialSamples-discovery",
+            repository = repository,
+            expected = failedOutcome(
+                diagnostic =
+                    "Tutorial sample verification failed:\n" +
+                        "- $pagePath -> expected exactly one tutorial-sample block, found 0",
+                gettingStartedPath,
+                pagePath,
+                propertiesPath,
+            ),
+        ) { fixture ->
+            SampleDocumentationVerifiers.verifyTutorialSamples(
+                repository = fixture,
+                sampleSourceFiles = emptySet(),
+                documentationFiles = setOf(
+                    fixture.resolve(pagePath),
+                    fixture.resolve(gettingStartedPath),
                 ),
+                sampleBuildFiles = emptySet(),
+                publishingPropertiesFile = fixture.resolve(propertiesPath),
+                documentationRootPaths = listOf("docs/tutorials"),
+                baseArtifacts = listOf("viewcompose-material3-android"),
             )
         }
     }

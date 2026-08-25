@@ -76,9 +76,6 @@ abstract class VerifyTutorialSamplesTask : DefaultTask() {
     @get:Input
     abstract val baseArtifacts: ListProperty<String>
 
-    @get:Input
-    abstract val samplesByPage: MapProperty<String, String>
-
     @TaskAction
     fun verifySamples() {
         SampleDocumentationVerifiers.verifyTutorialSamples(
@@ -89,9 +86,6 @@ abstract class VerifyTutorialSamplesTask : DefaultTask() {
             publishingPropertiesFile = publishingPropertiesFile.get().asFile,
             documentationRootPaths = documentationRootPaths.get(),
             baseArtifacts = baseArtifacts.get(),
-            samplesByPage = samplesByPage.get().mapValues { (_, encoded) ->
-                decodeTutorialSample(encoded)
-            },
         ).failOnSampleDocumentationViolation()
     }
 }
@@ -102,6 +96,7 @@ internal data class SampleReference(
 )
 
 internal data class TutorialSampleContract(
+    val sampleId: String,
     val source: String,
     val region: String,
     val requiredArtifacts: List<String> = emptyList(),
@@ -128,9 +123,9 @@ internal object SampleDocumentationVerifiers {
         val violations = mutableListOf<String>()
 
         fun compiledRegion(sourcePath: String, region: String): String? {
-            val sourceFile = sourceFilesByPath[sourcePath] ?: canonicalRepository.resolve(sourcePath)
-            if (!sourceFile.isFile) {
-                violations += "$sourcePath -> source file does not exist"
+            val sourceFile = sourceFilesByPath[sourcePath]
+            if (sourceFile == null) {
+                violations += "$sourcePath -> source file is not a registered migration input"
                 return null
             }
             val source = sourceFile.readText().replace("\r\n", "\n")
@@ -200,7 +195,6 @@ internal object SampleDocumentationVerifiers {
         publishingPropertiesFile: File,
         documentationRootPaths: List<String>,
         baseArtifacts: List<String>,
-        samplesByPage: Map<String, TutorialSampleContract>,
     ): QualityGateOutcome {
         val canonicalRepository = repository.canonicalFile
         val allInputFiles =
@@ -223,9 +217,9 @@ internal object SampleDocumentationVerifiers {
                 ?: error("Missing published version for tutorial artifact '$artifact'.")
 
         fun compiledRegion(sourcePath: String, region: String): String? {
-            val sourceFile = sourceFilesByPath[sourcePath] ?: canonicalRepository.resolve(sourcePath)
-            if (!sourceFile.isFile) {
-                violations += "$sourcePath -> source file does not exist"
+            val sourceFile = sourceFilesByPath[sourcePath]
+            if (sourceFile == null) {
+                violations += "$sourcePath -> source file is not a registered tutorial input"
                 return null
             }
             val source = sourceFile.readText().replace("\r\n", "\n")
@@ -248,6 +242,45 @@ internal object SampleDocumentationVerifiers {
             return source.substring(start, end).trim()
         }
 
+        val canonicalDocumentationRoot = documentationRootPaths.singleOrNull { rootPath ->
+            rootPath == "docs/tutorials"
+        }
+        val tutorialPageNames = canonicalDocumentationRoot?.let { rootPath ->
+            documentationFilesByPath.keys
+                .filter { path -> path.startsWith("$rootPath/") }
+                .map { path -> path.removePrefix("$rootPath/") }
+                .filter { pageName -> pageName.endsWith(".md") || pageName.endsWith(".mdx") }
+                .filterNot { pageName ->
+                    pageName == "getting-started.md" || pageName.endsWith("/README.md") ||
+                        pageName == "README.md"
+                }
+                .sorted()
+        }.orEmpty()
+        if (documentationRootPaths.isNotEmpty() && canonicalDocumentationRoot == null) {
+            violations += "tutorial discovery -> expected the canonical docs/tutorials root"
+        }
+
+        val samplesByPage = linkedMapOf<String, TutorialSampleContract>()
+        tutorialPageNames.forEach pageLoop@{ pageName ->
+            val pagePath = "$canonicalDocumentationRoot/$pageName"
+            val page = documentationFilesByPath[pagePath] ?: canonicalRepository.resolve(pagePath)
+            val blocks = discoverTutorialSampleBlocks(page.readText().replace("\r\n", "\n"))
+            if (blocks.size != 1) {
+                violations +=
+                    "$pagePath -> expected exactly one tutorial-sample block, found ${blocks.size}"
+                return@pageLoop
+            }
+            val sample = blocks.single().contract(pagePath, violations) ?: return@pageLoop
+            samplesByPage[pageName] = sample
+        }
+        samplesByPage.entries.groupBy { (_, sample) -> sample.sampleId }
+            .filterValues { entries -> entries.size > 1 }
+            .forEach { (sampleId, entries) ->
+                violations +=
+                    "tutorial discovery -> sample_id $sampleId is shared by " +
+                        entries.map { entry -> entry.key }.sorted().joinToString()
+            }
+
         documentationRootPaths.forEach { documentationRootPath ->
             samplesByPage.forEach pageLoop@{ (pageName, sample) ->
                 val pagePath = "$documentationRootPath/$pageName"
@@ -257,33 +290,30 @@ internal object SampleDocumentationVerifiers {
                     return@pageLoop
                 }
                 val pageText = page.readText().replace("\r\n", "\n")
-                val matches = TUTORIAL_SAMPLE_REGEX.findAll(pageText).toList()
-                val actualSamples = matches.map { match ->
-                    SampleReference(match.groupValues[1], match.groupValues[2])
-                }
-                val expectedSamples = listOf(SampleReference(sample.source, sample.region))
-                if (actualSamples != expectedSamples) {
+                val blocks = discoverTutorialSampleBlocks(pageText)
+                if (blocks.size != 1) {
                     violations +=
-                        "$pagePath -> tutorial samples ${actualSamples.asLegacyPairs()} do not match " +
-                            expectedSamples.asLegacyPairs()
+                        "$pagePath -> expected exactly one tutorial-sample block, found ${blocks.size}"
                     return@pageLoop
                 }
-                matches.forEach snippetLoop@{ match ->
-                    val sourcePath = match.groupValues[1]
-                    val region = match.groupValues[2]
-                    val expectedSnippet = compiledRegion(sourcePath, region) ?: return@snippetLoop
-                    val documentedSnippet = match.groupValues[3].trim()
-                    if (documentedSnippet != expectedSnippet) {
-                        violations += "$pagePath -> snippet '$region' differs from $sourcePath"
-                    }
+                val block = blocks.single()
+                val actualSample = block.contract(pagePath, violations) ?: return@pageLoop
+                if (actualSample != sample) {
+                    violations += "$pagePath -> tutorial sample $actualSample does not match $sample"
+                    return@pageLoop
+                }
+                val expectedSnippet = compiledRegion(sample.source, sample.region)
+                    ?: return@pageLoop
+                if (block.snippet.trim() != expectedSnippet) {
+                    violations += "$pagePath -> snippet '${sample.region}' differs from ${sample.source}"
                 }
 
                 val dependencyBlock = DEPENDENCY_BLOCK_REGEX.find(pageText)
                 if (dependencyBlock == null || dependencyBlock.range.first > 1_500) {
                     violations += "$pagePath -> complete Maven dependencies must appear at the top"
                 } else {
-                    val block = dependencyBlock.groupValues[1]
-                    val actualArtifacts = COORDINATE_REGEX.findAll(block)
+                    val dependencySnippet = dependencyBlock.groupValues[1]
+                    val actualArtifacts = COORDINATE_REGEX.findAll(dependencySnippet)
                         .map { match -> match.groupValues[1] to match.groupValues[2] }
                         .toList()
                     val expectedArtifacts = (baseArtifacts + sample.requiredArtifacts).map { artifact ->
@@ -293,10 +323,10 @@ internal object SampleDocumentationVerifiers {
                         violations +=
                             "$pagePath -> Maven artifacts $actualArtifacts do not match $expectedArtifacts"
                     }
-                    if ("repositories { mavenCentral() }" !in block) {
+                    if ("repositories { mavenCentral() }" !in dependencySnippet) {
                         violations += "$pagePath -> dependency block must declare Maven Central"
                     }
-                    if ("project(" in block) {
+                    if ("project(" in dependencySnippet) {
                         violations += "$pagePath -> tutorial dependencies must not use project()"
                     }
                 }
@@ -384,12 +414,87 @@ internal object SampleDocumentationVerifiers {
     private fun List<SampleReference>.asLegacyPairs(): List<Pair<String, String>> =
         map { sample -> sample.source to sample.region }
 
+    private data class TutorialSampleBlock(
+        val attributeSource: String,
+        val snippet: String,
+    ) {
+        fun contract(
+            pagePath: String,
+            violations: MutableList<String>,
+        ): TutorialSampleContract? {
+            val matches = MARKER_ATTRIBUTE_REGEX.findAll(attributeSource).toList()
+            val duplicateAttributes = matches.groupBy { match -> match.groupValues[1] }
+                .filterValues { values -> values.size > 1 }
+                .keys
+                .sorted()
+            if (duplicateAttributes.isNotEmpty()) {
+                violations +=
+                    "$pagePath -> tutorial-sample duplicates attributes $duplicateAttributes"
+                return null
+            }
+            val attributes = matches.associate { match ->
+                match.groupValues[1] to match.groupValues[2]
+            }
+            val unknownAttributes = attributes.keys -
+                setOf("sample_id", "source", "region", "required_artifacts")
+            if (unknownAttributes.isNotEmpty()) {
+                violations +=
+                    "$pagePath -> tutorial-sample has unknown attributes ${unknownAttributes.sorted()}"
+                return null
+            }
+            val sampleId = attributes["sample_id"]
+            val source = attributes["source"]
+            val region = attributes["region"]
+            if (sampleId.isNullOrBlank() || source.isNullOrBlank() || region.isNullOrBlank()) {
+                violations +=
+                    "$pagePath -> tutorial-sample requires sample_id, source, and region"
+                return null
+            }
+            if (!SAMPLE_ID_REGEX.matches(sampleId)) {
+                violations += "$pagePath -> invalid tutorial sample_id '$sampleId'"
+                return null
+            }
+            val requiredArtifacts = attributes["required_artifacts"].orEmpty()
+                .split(',').map(String::trim).filter(String::isNotEmpty)
+            if (requiredArtifacts.distinct().size != requiredArtifacts.size) {
+                violations += "$pagePath -> tutorial-sample required artifacts must be unique"
+                return null
+            }
+            val invalidArtifact = requiredArtifacts.firstOrNull { artifact ->
+                !ARTIFACT_ID_REGEX.matches(artifact)
+            }
+            if (invalidArtifact != null) {
+                violations += "$pagePath -> invalid tutorial artifact '$invalidArtifact'"
+                return null
+            }
+            return TutorialSampleContract(
+                sampleId = sampleId,
+                source = source,
+                region = region,
+                requiredArtifacts = requiredArtifacts,
+            )
+        }
+    }
+
+    private fun discoverTutorialSampleBlocks(pageText: String): List<TutorialSampleBlock> =
+        TUTORIAL_SAMPLE_REGEX.findAll(pageText).map { match ->
+            TutorialSampleBlock(
+                attributeSource = match.groupValues[1],
+                snippet = match.groupValues[2],
+            )
+        }.toList()
+
     private val PAIRED_SAMPLE_REGEX = Regex(
         """\{/\* paired-sample source="([^"]+)" region="([^"]+)" \*/\}\s*```kotlin\s*([\s\S]*?)\s*```\s*\{/\* paired-sample-end \*/\}""",
     )
     private val TUTORIAL_SAMPLE_REGEX = Regex(
-        """\{/\* tutorial-sample source="([^"]+)" region="([^"]+)" \*/\}\s*```kotlin\s*([\s\S]*?)\s*```\s*\{/\* tutorial-sample-end \*/\}""",
+        """\{/\*\s*tutorial-sample\b([^*]*)\*/\}\s*```kotlin(?:[ \t]+[^\r\n]*)?\r?\n([\s\S]*?)\r?\n```\s*\{/\*\s*tutorial-sample-end\s*\*/\}""",
     )
+    private val MARKER_ATTRIBUTE_REGEX = Regex(
+        """([a-zA-Z][a-zA-Z0-9_-]*)\s*=\s*["']([^"']+)["']""",
+    )
+    private val SAMPLE_ID_REGEX = Regex("^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$")
+    private val ARTIFACT_ID_REGEX = Regex("^viewcompose-[a-z0-9-]+$")
     private val DEPENDENCY_BLOCK_REGEX = Regex(
         """```kotlin title="build\.gradle\.kts"\s*([\s\S]*?)```""",
     )
@@ -444,73 +549,6 @@ internal val migrationPairedSamplesByPage = mapOf(
         ),
 )
 
-internal val tutorialSamplesByPage = mapOf(
-    "state-and-events.md" to
-        TutorialSampleContract(
-            "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/StateTutorialActivity.kt",
-            "state",
-        ),
-    "layouts-and-modifiers.md" to
-        TutorialSampleContract(
-            "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LayoutsTutorialActivity.kt",
-            "layouts",
-        ),
-    "text-input.md" to
-        TutorialSampleContract(
-            "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TextInputTutorialActivity.kt",
-            "text-input",
-        ),
-    "lazy-lists.md" to
-        TutorialSampleContract(
-            "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LazyListsTutorialActivity.kt",
-            "lazy-lists",
-        ),
-    "theming.md" to
-        TutorialSampleContract(
-            "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ThemingTutorialActivity.kt",
-            "theming",
-        ),
-    "navigation.md" to
-        TutorialSampleContract(
-            "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/NavigationTutorialActivity.kt",
-            "navigation",
-            listOf("viewcompose-navigation-android"),
-        ),
-    "overlays.md" to
-        TutorialSampleContract(
-            "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/OverlaysTutorialActivity.kt",
-            "overlays",
-            listOf("viewcompose-overlay-material3-android"),
-        ),
-    "android-view.md" to
-        TutorialSampleContract(
-            "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/AndroidViewTutorialActivity.kt",
-            "android-view",
-        ),
-    "animation.md" to
-        TutorialSampleContract(
-            "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/AnimationTutorialActivity.kt",
-            "animation",
-            listOf("viewcompose-animation"),
-        ),
-    "gestures.md" to
-        TutorialSampleContract(
-            "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/GesturesTutorialActivity.kt",
-            "gestures",
-            listOf("viewcompose-gesture"),
-        ),
-    "lazy-list-performance.md" to
-        TutorialSampleContract(
-            "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LazyListPerformanceTutorialActivity.kt",
-            "lazy-list-performance",
-        ),
-    "render-diagnostics.md" to
-        TutorialSampleContract(
-            "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/RenderDiagnosticsTutorialActivity.kt",
-            "render-diagnostics",
-        ),
-)
-
 internal val migrationDocumentationRootPaths = listOf(
     "docs/migration",
     "website/i18n/zh-CN/docusaurus-plugin-content-docs/current/migration",
@@ -534,19 +572,6 @@ private fun decodeSampleReferences(encoded: String): List<SampleReference> =
         require(fields.size == 2) { "Invalid sample reference input: '$line'" }
         SampleReference(source = fields[0], region = fields[1])
     }.toList()
-
-internal fun encodeTutorialSample(sample: TutorialSampleContract): String =
-    listOf(sample.source, sample.region, sample.requiredArtifacts.joinToString(",")).joinToString("|")
-
-private fun decodeTutorialSample(encoded: String): TutorialSampleContract {
-    val fields = encoded.split('|', limit = 3)
-    require(fields.size == 3) { "Invalid tutorial sample input: '$encoded'" }
-    return TutorialSampleContract(
-        source = fields[0],
-        region = fields[1],
-        requiredArtifacts = fields[2].split(',').filter(String::isNotEmpty),
-    )
-}
 
 private fun QualityGateOutcome.failOnSampleDocumentationViolation() {
     if (!succeeded) error(diagnostics.joinToString("\n"))

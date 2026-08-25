@@ -224,6 +224,7 @@ internal object DocumentationGovernanceV2Reporter {
             publicPagePaths = publicPagePaths,
             documents = documents,
             mirrorsBySource = mirrorsBySource,
+            sourceSetDirectories = sourceSetDirectories,
         )
         val records = discoverRecords(
             repository = canonicalRepository,
@@ -380,6 +381,40 @@ internal object DocumentationGovernanceV2Reporter {
                         detail = "executable fence has no adjacent compiled-sample registration marker",
                     ),
                 )
+            }
+            fences.forEach { fence ->
+                val path = fence.getValue("path").toString()
+                @Suppress("UNCHECKED_CAST")
+                val violations = fence["classificationViolations"] as? List<String> ?: emptyList()
+                if (violations.isNotEmpty()) {
+                    add(
+                        GovernanceIssue.file(
+                            category = "taxonomy-mismatch",
+                            target = "${fence.getValue("path")}:${fence.getValue("line")}",
+                            baselineTarget = path,
+                            identitySuffix =
+                                "sample-contract|${fence.getValue("stableFenceIdentity")}",
+                            detail = violations.joinToString("; "),
+                        ),
+                    )
+                }
+                @Suppress("UNCHECKED_CAST")
+                val mirror = fence["languageMirror"] as? Map<String, Any?>
+                @Suppress("UNCHECKED_CAST")
+                val mirrorViolations =
+                    mirror?.get("classificationViolations") as? List<String> ?: emptyList()
+                if (mirrorViolations.isNotEmpty()) {
+                    add(
+                        GovernanceIssue.file(
+                            category = "taxonomy-mismatch",
+                            target = "${mirror?.get("path")}:${mirror?.get("line")}",
+                            baselineTarget = path,
+                            identitySuffix =
+                                "mirror-sample-contract|${fence.getValue("stableFenceIdentity")}",
+                            detail = mirrorViolations.joinToString("; "),
+                        ),
+                    )
+                }
             }
             fences.forEach { fence ->
                 val path = fence.getValue("path").toString()
@@ -691,6 +726,7 @@ internal object DocumentationGovernanceV2Reporter {
         publicPagePaths: Set<String>,
         documents: List<Map<String, Any?>>,
         mirrorsBySource: Map<String, Map<String, Any?>>,
+        sourceSetDirectories: Set<File>,
     ): List<Map<String, Any?>> {
         val versionLaneByPath = documents.associate { document ->
             document.getValue("path").toString() to document["versionLane"]?.toString()
@@ -703,18 +739,22 @@ internal object DocumentationGovernanceV2Reporter {
             val path = file.relativePathWithin(repository)
             val sourceKey = path.removePrefix("docs/")
             val canonicalFences = parseExecutableFences(
+                repository = repository,
                 path = path,
                 source = file.readText(),
                 versionLane = versionLaneByPath[path],
+                sourceSetDirectories = sourceSetDirectories,
             )
             val mirror = mirrorsBySource[sourceKey]
             val mirrorFences = mirror?.get("absoluteFile")
                 ?.let { absoluteFile -> absoluteFile as? File }
                 ?.let { mirrorFile ->
                     parseExecutableFences(
+                        repository = repository,
                         path = mirrorFile.relativePathWithin(repository),
                         source = mirrorFile.readText(),
                         versionLane = versionLaneByPath[path],
+                        sourceSetDirectories = sourceSetDirectories,
                     )
                 }
                 .orEmpty()
@@ -948,17 +988,7 @@ internal object DocumentationGovernanceV2Reporter {
     }
 
     private fun documentPlacementViolations(path: String, docType: String?): List<String> {
-        val expected = when {
-            path == "docs/README.md" || path == "docs/modules/README.md" -> "project"
-            path.startsWith("docs/tutorials/") -> "tutorial"
-            path.startsWith("docs/guides/") -> "guide"
-            path.startsWith("docs/architecture/") -> "architecture"
-            path.startsWith("docs/migration/") -> "migration"
-            path.matches(Regex("docs/modules/[^/]+/README\\.md")) -> "module"
-            path.startsWith("docs/tooling/") -> "tooling"
-            path.startsWith("docs/project/") -> "project"
-            else -> null
-        }
+        val expected = expectedDocumentType(path)
         return if (expected != null && docType != expected) {
             listOf("$.doc_type -> $path requires $expected")
         } else {
@@ -966,10 +996,30 @@ internal object DocumentationGovernanceV2Reporter {
         }
     }
 
+    private fun expectedDocumentType(path: String): String? = when {
+            path == "docs/README.md" || path == "docs/modules/README.md" -> "project"
+            path.startsWith("docs/tutorials/") -> "tutorial"
+            "/tutorials/" in path && path.startsWith("website/i18n/") -> "tutorial"
+            path.startsWith("docs/guides/") -> "guide"
+            "/guides/" in path && path.startsWith("website/i18n/") -> "guide"
+            path.startsWith("docs/architecture/") -> "architecture"
+            "/architecture/" in path && path.startsWith("website/i18n/") -> "architecture"
+            path.startsWith("docs/migration/") -> "migration"
+            "/migration/" in path && path.startsWith("website/i18n/") -> "migration"
+            path.matches(Regex("docs/modules/[^/]+/README\\.md")) -> "module"
+            path.matches(Regex("website/i18n/[^/]+/[^/]+/modules/[^/]+/README\\.md")) -> "module"
+            path.startsWith("docs/tooling/") -> "tooling"
+            "/tooling/" in path && path.startsWith("website/i18n/") -> "tooling"
+            path.startsWith("docs/project/") -> "project"
+            else -> null
+        }
+
     private fun parseExecutableFences(
+        repository: File,
         path: String,
         source: String,
         versionLane: String?,
+        sourceSetDirectories: Set<File>,
     ): List<GovernanceFence> {
         val lines = source.lines()
         val dependencies = discoverDependencies(source)
@@ -1018,11 +1068,129 @@ internal object DocumentationGovernanceV2Reporter {
                 sourceMarker = sourceMarker,
                 contentHash = contentHash,
                 duplicateOrdinal = duplicateOrdinal,
+                classificationViolations = validateFenceClassification(
+                    repository = repository,
+                    sourceSetDirectories = sourceSetDirectories,
+                    documentType = expectedDocumentType(path),
+                    content = content,
+                    marker = sourceMarker,
+                ),
             )
             pendingMarker = null
             index = if (closing < lines.size) closing + 1 else lines.size
         }
         return fences
+    }
+
+    private fun validateFenceClassification(
+        repository: File,
+        sourceSetDirectories: Set<File>,
+        documentType: String?,
+        content: String,
+        marker: SourceMarker?,
+    ): List<String> {
+        if (marker == null) return emptyList()
+        return buildList {
+            when (marker.marker) {
+                "tutorial-sample" -> {
+                    if (documentType != "tutorial") {
+                        add("tutorial-sample is only valid in Tutorial documents")
+                    }
+                    if (marker.sampleId.isNullOrBlank()) {
+                        add("tutorial-sample requires sample_id")
+                    }
+                    addAll(
+                        compiledRegionViolations(
+                            repository = repository,
+                            sourceSetDirectories = sourceSetDirectories,
+                            content = content,
+                            marker = marker,
+                        ),
+                    )
+                }
+                "paired-sample" -> addAll(
+                    compiledRegionViolations(
+                        repository = repository,
+                        sourceSetDirectories = sourceSetDirectories,
+                        content = content,
+                        marker = marker,
+                    ),
+                )
+                "compiled-region" -> {
+                    if (marker.sampleId.isNullOrBlank()) add("compiled-region requires sample_id")
+                    if (marker.buildTarget.isNullOrBlank()) {
+                        add("compiled-region requires build_target")
+                    }
+                    addAll(
+                        compiledRegionViolations(
+                            repository = repository,
+                            sourceSetDirectories = sourceSetDirectories,
+                            content = content,
+                            marker = marker,
+                        ),
+                    )
+                }
+                "generated-signature" -> {
+                    if (marker.symbolId.isNullOrBlank()) {
+                        add("generated-signature requires symbol_id")
+                    }
+                    if (marker.generator.isNullOrBlank()) {
+                        add("generated-signature requires generator")
+                    }
+                }
+                "non-executable" -> {
+                    if (documentType == "tutorial") {
+                        add("non-executable is forbidden in Tutorial documents")
+                    }
+                    if (marker.reason.isNullOrBlank()) add("non-executable requires reason")
+                    if (marker.visibleExplanation.isNullOrBlank()) {
+                        add("non-executable requires visible_explanation")
+                    }
+                }
+            }
+        }.distinct().sorted()
+    }
+
+    private fun compiledRegionViolations(
+        repository: File,
+        sourceSetDirectories: Set<File>,
+        content: String,
+        marker: SourceMarker,
+    ): List<String> {
+        val sourcePath = marker.source
+            ?: return listOf("${marker.marker} requires source")
+        val region = marker.region
+            ?: return listOf("${marker.marker} requires region")
+        val canonicalRepository = repository.canonicalFile
+        val sourceFile = canonicalRepository.resolve(sourcePath).canonicalFile
+        if (!sourceFile.toPath().startsWith(canonicalRepository.toPath())) {
+            return listOf("source must stay inside the repository")
+        }
+        val registeredRoots = sourceSetDirectories
+            .filter(File::isDirectory)
+            .map(File::getCanonicalFile)
+        if (registeredRoots.none { root -> sourceFile.toPath().startsWith(root.toPath()) }) {
+            return listOf("source is not inside a registered source-set input: $sourcePath")
+        }
+        if (!sourceFile.isFile) return listOf("source file does not exist: $sourcePath")
+        val source = sourceFile.readText().replace("\r\n", "\n")
+        val startMarker = "// DOCS_REGION_START($region)"
+        val endMarker = "// DOCS_REGION_END($region)"
+        if (source.windowed(startMarker.length).count { candidate -> candidate == startMarker } != 1) {
+            return listOf("source must contain exactly one '$startMarker': $sourcePath")
+        }
+        if (source.windowed(endMarker.length).count { candidate -> candidate == endMarker } != 1) {
+            return listOf("source must contain exactly one '$endMarker': $sourcePath")
+        }
+        val start = source.indexOf(startMarker) + startMarker.length
+        val end = source.indexOf(endMarker, start)
+        if (end < start) return listOf("'$endMarker' must follow '$startMarker': $sourcePath")
+        val expected = source.substring(start, end).trim()
+        return if (content.trim() == expected) {
+            emptyList()
+        } else {
+            listOf("fence content differs from $sourcePath region $region")
+        }
     }
 
     private fun discoverDependencies(source: String): List<Map<String, Any?>> = buildList {
@@ -1446,6 +1614,11 @@ private data class SourceMarker(
     val source: String?,
     val region: String?,
     val sampleId: String?,
+    val buildTarget: String?,
+    val symbolId: String?,
+    val generator: String?,
+    val reason: String?,
+    val visibleExplanation: String?,
 ) {
     fun report(): Map<String, Any?> = linkedMapOf(
         "marker" to marker,
@@ -1453,6 +1626,11 @@ private data class SourceMarker(
         "source" to source,
         "region" to region,
         "sampleId" to sampleId,
+        "buildTarget" to buildTarget,
+        "symbolId" to symbolId,
+        "generator" to generator,
+        "reason" to reason,
+        "visibleExplanation" to visibleExplanation,
     )
 
     companion object {
@@ -1470,7 +1648,12 @@ private data class SourceMarker(
                 },
                 source = attributes["source"],
                 region = attributes["region"],
-                sampleId = attributes["sample_id"] ?: attributes["sample-id"],
+                sampleId = attributes["sample_id"],
+                buildTarget = attributes["build_target"],
+                symbolId = attributes["symbol_id"],
+                generator = attributes["generator"],
+                reason = attributes["reason"],
+                visibleExplanation = attributes["visible_explanation"],
             )
         }
     }
@@ -1485,6 +1668,7 @@ private data class GovernanceFence(
     val sourceMarker: SourceMarker?,
     val contentHash: String,
     val duplicateOrdinal: Int,
+    val classificationViolations: List<String>,
 ) {
     val registered: Boolean
         get() = sourceMarker?.let { marker ->
@@ -1494,11 +1678,13 @@ private data class GovernanceFence(
 
     fun report(mirror: GovernanceFence?): Map<String, Any?> = linkedMapOf(
         "contentHash" to contentHash,
+        "classificationViolations" to classificationViolations,
         "dependencies" to dependencies,
         "language" to language,
         "languageMirror" to mirror?.let { mirrorFence ->
             linkedMapOf<String, Any?>(
                 "contentMatches" to (contentHash == mirrorFence.contentHash),
+                "classificationViolations" to mirrorFence.classificationViolations,
                 "language" to mirrorFence.language,
                 "line" to mirrorFence.line,
                 "path" to mirrorFence.path,
