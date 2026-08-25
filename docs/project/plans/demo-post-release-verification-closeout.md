@@ -19,7 +19,7 @@ rendering path: the panel has one fixed 60 Hz mode, its framebuffer idle/dynamic
 already disabled, and SurfaceFlinger already uses the available backpressure/latch controls. Scroll
 recapture on this device is therefore deferred rather than tuned into a passing batch.
 
-Last verified: 2026-08-22.
+Last verified: 2026-08-25.
 
 The configuration matrix exposed an unstable framework-level focus-visibility design. That slice
 was completed by the higher-priority
@@ -38,6 +38,16 @@ Collections label tag was deleted after its test adopted the scenario-owned reso
 zero-caller chapter helpers were also deleted. Call-site and structural searches report no old
 tag-registry, chapter-wrapper, module-key, or page-index caller. The rebuilt APKs then passed the
 complete Demo instrumentation suite, 137/137 tests in `742.903 s`.
+
+The independent Paging release closeout gate on 2026-08-25 exposed two app-only harness defects
+without reopening the archived framework focus design: generic scenario launch now waits for
+Root/Ready without scrolling lazy owners, and lazy focus fixtures scroll to and mount their target
+before requesting focus. Reset first restores fixture state, while automation observes actual IME
+visibility before dismissing it. A portrait-locked Pixel 4 XL/API 33 then passed the complete App
+suite: 152 tests, 150 passes and the two documented CameraX/Google Maps prerequisite skips; Counter
+and Tutorials added three passes. Conclusion: **improved** deterministic launch, lazy-focus, IME,
+and reset confidence with no published-artifact impact. Limitation: this gate does not replace the
+remaining fixed-clock collection-scroll baseline, so the plan stays active.
 
 Next action: recapture revision-3 scroll on another root-controllable reference device. Do not
 remove production harness infrastructure or close Phase 1 until scroll passes the unchanged `0.15`

@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 6a6d63e0cfa77c3d545beec23ccd89a641d3643a98161148030430d72a7a9128
+translation_source_hash: e97b67f6bc7a6e1fa1916b63b0e61b6602cb4bdaee4b1dfdf8a4c20f0b0ebca9
 translation_status: current
 ---
 
@@ -179,6 +179,20 @@ root 或策略变更，并在拉取最后一份结果后完整恢复。
 5. 该场景专门观察 ViewGroup 深度、全树 measure/layout 与局部 patch 成本，不用于评价 Lazy 容器。
 6. Android Views 对照保留每个卡片层级、原地 patch 文本，并真实添加或移除条件详情行。它是惯用的
    imperative 参考，不宣称与两个声明式引擎的算法完全等价。
+
+可选 AndroidX Paging 集成的发布态权威基线是 `PagingPerformanceBenchmark`：
+
+1. 它只驱动 ViewCompose 的 `performance.paging@1` 路由，因为被测契约是官方
+   `PagingDataPresenter` 集成，不是引擎排名工作负载。
+2. 确定性本地 Source 提供 1,000,000 个位置，使用 `pageSize = 32`、`prefetchDistance = 2`、
+   `maxSize = 96`、Placeholder、Jump 和按 Query 隔离的稳定 Key。
+3. `pagingAppendDrop`、`pagingQueryReplacement` 与 `pagingScroll` 分别执行八次 Append/Drop、
+   围绕目标 256 的八次最新 Generation 替换，以及八次向下/向上手势，并检查加载窗口有界。
+4. 每个 Release 方法使用五次 `CompilationMode.None` Iteration、Frame Timing 与进程最大内存
+   指标；固定稳定窗口和 Ready 检查位于测量之外。
+5. `tools/performance/summarize_paging_macrobenchmark.py` 只接受精确的三个方法、每方法五次运行且
+   上下文一致的结果；报告 P50/P90/P95/P99、Peak Heap 中位数、可选 RSS 与 Run-P50 CV，使用
+   `--enforce` 时拒绝超过 `0.15` 的 CV。
 
 2026-08-15 在 Samsung SM-G991B / Android 13 上验收的替换基线使用 5 次 iteration、每个方法从
 `NONE`/`LIGHT` 起跑、5 秒 setup 稳定窗口和 `unlocked-dvfs-preflight-v1` 时钟策略：
@@ -592,7 +606,40 @@ Back 帧基准。这些行只覆盖一台 OEM/API 28 设备、峰值而非 GC �
 事件或直接能耗测量。Retarget、一写入者、有界保留、回滚、清理和生命周期正确性由确定性测试
 负责。
 
-#### 2.4.5 当前决策边界
+#### 2.4.5 Paging 集成发布态基线
+
+首份验收的 Paging Release 基线于 2026-08-25 在已 Root 的 Xiaomi MI 6 / Android 9、60 Hz
+环境采集。CPU 小核与大核 Policy 分别固定为 `1,401,600` 与 `1,804,800 kHz`，GPU 固定为
+`515 MHz`，`cpubw`/`gpubw` 固定为 `13,763`；暂停充电并停止会覆盖配置的厂商性能服务。
+三个方法使用同一份 R8 Target 与 Benchmark APK，`CompilationMode.None` 报告为
+`run-from-apk`，每个方法运行五次计量 Iteration。Append/Query/Scroll 开始温度分别为
+`33/34/35°C`，恢复后的设备最终为 `36°C`。独立的运行后回读确认 CPU/GPU/带宽默认 Governor
+与边界、充电、输入和性能服务状态均已恢复。
+
+| 动作 | P50/P90/P95/P99，毫秒 | Peak Heap 中位数，KiB | Peak RSS 中位数，KiB | Run-P50 CV | 结论 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Append/Drop | `4.281/29.189/33.973/43.592` | `117,797` | n/a | `0.077` | 稳定的绝对基线。 |
+| Query Replacement | `4.215/13.810/40.809/48.345` | `128,433` | n/a | `0.021` | 稳定的绝对基线。 |
+| Scroll | `2.581/3.699/4.066/6.511` | `119,087` | n/a | `0.006` | 稳定的绝对基线。 |
+
+所有行都通过冻结的 `0.15` 稳定性上限。由于这是首个兼容工作负载，归一化方向为
+**inconclusive**：这些数值建立绝对发布态基线，并提升有界窗口、Generation 替换和真机信心，
+但不能证明性能得到提升或某个引擎占优。
+
+Android 9 的 `MemoryUsageMetric` 输出进程 Peak Heap，但不输出 RSS。这些值是进程峰值，不是增量
+或 GC 后保留内存；该批次只覆盖一台 OEM、即时本地 Page，不包含数据库、网络、磁盘、校准能耗、
+启动或总时长。Accessibility Polling 与 Action Settling 属于冻结的交互契约。未来若要作方向性
+结论，必须保持相同路由 Revision、设备/系统、固定频率策略、Iteration 和 APK 上下文：
+
+```bash
+python3 tools/performance/summarize_paging_macrobenchmark.py \
+  /path/to/paging-results \
+  --output /path/to/paging-baseline.md \
+  --json-output /path/to/paging-baseline.json \
+  --enforce
+```
+
+#### 2.4.6 当前决策边界
 
 当前证据只支持有范围的结论：
 
@@ -601,7 +648,8 @@ Back 帧基准。这些行只覆盖一台 OEM/API 28 设备、峰值而非 GC �
 2. 强 Lazy Snapshot 是显式的中位数换尾部权衡；普通 `List` 路径仍是通用数据流默认值。
 3. ConstraintLayout 结构快速路径因确定性的零工作边界而保留，不宣称整帧领先。
 4. 动画与共享运动切片通过各自发版安全门槛；帧数变化阻止总工作量或能耗结论。
-5. 没有任何矩阵证明通用的帧时或内存胜者。
+5. Paging 已建立稳定的首份绝对 Release 基线；没有兼容旧基线可支持归一化性能结论。
+6. 没有任何矩阵证明通用的帧时或内存胜者。
 
 后续工作必须从明确的剩余差距开始，保持相同工作负载身份和控制条件，并记录新的绝对值、
 归一化值、稳定性、限制和下一步。来自不同设备或工作负载 Revision 的结果可以建立绝对基线，

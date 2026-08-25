@@ -33,4 +33,12 @@
     <string name="demo_performance_constraint_revision">版本 %1$d</string>
     <string name="demo_performance_constraint_update">更新</string>
     <string name="demo_performance_constraint_reset">重置</string>
+    <string name="demo_performance_paging_ready">ViewCompose Paging 已就绪</string>
+    <string name="demo_performance_paging_state">q=%1$d;target=%2$d;ready=%3$d</string>
+    <string name="demo_performance_paging_loaded_count">loaded=%1$d;max=%2$d</string>
+    <string name="demo_performance_paging_advance">下一页</string>
+    <string name="demo_performance_paging_replace_query">替换查询</string>
+    <string name="demo_performance_paging_reset">重置</string>
+    <string name="demo_performance_paging_placeholder">占位项 %1$d</string>
+    <string name="demo_performance_paging_row">查询 %1$d · 第 %2$d 行</string>
 </resources>

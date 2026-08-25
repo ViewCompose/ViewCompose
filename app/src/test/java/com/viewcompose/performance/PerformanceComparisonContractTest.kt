@@ -47,6 +47,7 @@ class PerformanceComparisonContractTest {
             "complex_layout" to "performance.complex-layout",
             "shadow_list" to "performance.shadow-list",
             "shadow_complex_layout" to "performance.shadow-complex-layout",
+            "paging" to "performance.paging",
         )
 
         expected.forEach { (wireValue, scenarioId) ->

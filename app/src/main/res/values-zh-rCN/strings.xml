@@ -160,6 +160,8 @@
     <string name="demo_scenario_performance_shadow_list_summary">使用可选后端对比高级阴影懒列表负载。</string>
     <string name="demo_scenario_performance_shadow_complex_layout_title">阴影复杂布局性能</string>
     <string name="demo_scenario_performance_shadow_complex_layout_summary">使用可选后端对比高级阴影嵌套布局负载。</string>
+    <string name="demo_scenario_performance_paging_title">Paging 性能</string>
+    <string name="demo_scenario_performance_paging_summary">验证一百万位置下的连续追加、页面丢弃、查询替换与滚动负载。</string>
 
     <string name="resource_configuration_reset_action">重置环境</string>
 

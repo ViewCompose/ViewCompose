@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-paging-androidx/README.md
-translation_source_hash: 03d74272ba4dedbc83ed37d0c6110315bb397d5448d47985fe15807d93249265
+translation_source_hash: 19cb795cd2fca8c2e2592bae30289eb9fa4c15126dea3bb58cff7333d2a6e205
 translation_status: current
 ---
 
@@ -167,6 +167,11 @@ Body、Refresh/Append 和 Loaded Count。编译型 Q3 Sample 覆盖支持 Placeh
 Mediator Fixture 可使用 Fake Storage/Remote Result，但必须运行真实 AndroidX 协调，不能改用 UI
 Boolean。
 
+Benchmark Host 还提供 `performance.paging@1`。其即时本地 Source 使用一百万个位置、32 项 Page、
+最大 96 项加载窗口、Placeholder、Jump 和按 Query 隔离的稳定 Key。**下一页**、**替换 Query** 与
+**重置**为 Append/Drop、Generation 替换和恢复提供稳定自动化 Target；该路由是 Release 集成
+工作负载，不是生产 Fake Source，也不是引擎对照。
+
 ## 迁移
 
 从 Compose Paging 迁移时，保留 `Pager`、Source/Mediator、Repository 与 ViewModel 持有的
@@ -194,18 +199,30 @@ Placeholder、Page Drop 与 Detached Cache 释放。Q3 Sample 只使用公共 AP
 受控的真实 `PagingSource` 路径，以及覆盖 Initial、Append、Empty、Error、Retry 与 Reset 的稳定
 自动化 Role。
 
-2026-08-25，Pixel 4 XL Android 13 的两项测试在一百万位置下增加 48,124 KiB PSS，555 ms 跳至
-末尾，在 `maxSize = 96` 下保留 81 个 Item、释放 Drop Session，并以 96 个 Item 结束有界滚动。
-另一项 13 s 的受控 Demo 测试与人工检查覆盖 Initial、10 行、Append Error、Retry 至 20 行、
-Reset、Empty 与 Initial Error，保留内容易读且可滚动。结论：内存/所有权与 Demo 信心为
-**improved**。限制是一台设备和确定性进程内 Storage/Remote 数据；真实 I/O、Prepend UI、更广
-设备、Frame、Demo 内存与 Release 性能仍未得到证明。
+2026-08-25，Pixel 4 XL Android 13 验收在一百万位置下增加 46,977 KiB PSS，549 ms 跳至末尾，
+在 `maxSize = 96` 下保留 81 个 Item，并释放 58 个 Drop Session；另一轮有界遍历最终加载 96 项，
+释放 189 个初始 Session。受控 Demo 路径覆盖 Initial Loading、10 行、Append Error、Retry 至
+20 行、Reset、Empty 与 Initial Error。Release 性能路由还在 Target 32 通过 Query Replacement
+与 Reset，人工状态 `q=1`、`loaded=64`、`max=96` 清晰可读。
+
+首份固定频率 Release 基线使用已 Root 的 Xiaomi MI 6 / Android 9，每方法五次 Iteration。
+Append/Drop 的 P50/P90/P95/P99 为 `4.281/29.189/33.973/43.592 ms`，Peak Heap 中位数
+`117,797 KiB`，Run-P50 CV `0.077`；Query Replacement 为
+`4.215/13.810/40.809/48.345 ms`、`128,433 KiB` 与 `0.021`；Scroll 为
+`2.581/3.699/4.066/6.511 ms`、`119,087 KiB` 与 `0.006`。所有行都通过 `0.15` 稳定性上限。
+结论：正确性、有界内存、真机、Demo 与首份绝对 Release 基线信心为 **improved**；由于没有兼容
+旧基线，归一化性能方向仍为 **inconclusive**。
+
+证据覆盖两台设备，但固定频率只覆盖一个 OEM/API、即时本地 Page 与进程 Peak Heap。Android 9
+没有输出 RSS；这些值不是增量或 GC 后保留内存。真实数据库/网络/磁盘 I/O、Prepend UI、校准能耗、
+启动、总时长与方向性性能对照仍未证明。未来结论必须使用匹配工作负载和受控纵向基线；精确协议与
+结果位于性能指南。
 
 ## 相关文档
 
 - [延迟集合指南](../../guides/lazy-collections.md)
 - [Lifecycle AndroidX 模块](../viewcompose-lifecycle-androidx/README.md)
-- [Paging 集成计划](https://docs.viewcompose.com/project/plans/paging3-integration)
+- [已归档 Paging 集成计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/paging3-integration.md)
 - [源码文档与 API 注释规范](../../project/api-documentation-quality.md)
 
 完整生成参考位于

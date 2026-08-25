@@ -2,10 +2,11 @@
 
 ## Status
 
-Active. Phases 0 through 6 completed on 2026-08-25; Phase 7 is next. This
-plan is the only active owner of Paging 3
-delivery after the optional roadmap item and the Lazy Collections non-goal were redirected here on
-2026-08-18. Historical archives retain only evidence.
+Complete. Phases 0 through 7 completed on 2026-08-25. The optional official-presenter frontend,
+compact placeholder table, lifecycle and mediator contracts, controlled Demo, large-generation
+device proof, Release fixed-clock baseline, Maven consumers, and repository gates are closed. This
+archived plan retains execution evidence only; current contracts live in the module manual, Lazy
+Collections guide, performance tooling guide, and roadmap.
 
 Phase 0 pinned AndroidX Paging 3.5.1, compiled its public `PagingDataPresenter` contract with Kotlin
 2.0.21, froze the API and lifecycle policies below, and rejected the current fully materialized
@@ -14,9 +15,8 @@ durable shipped contracts move to their owning active public documentation befor
 
 Last verified: 2026-08-25.
 
-Next action: begin Phase 7 performance, device, and release closeout. Phase 6 added the directly
-launchable `collection.paging` controlled-state Demo, stable automation roles, compiled Q3 samples,
-and complete setup, architecture, testing, migration, dependency, and bilingual module guidance.
+Next action: none. Row/grid integration, real database or network fixtures, and comparative
+performance claims require a new attributed plan rather than reopening this archive.
 
 ## Maven release changesets
 
@@ -31,6 +31,8 @@ and complete setup, architecture, testing, migration, dependency, and bilingual 
   per-load-type source/mediator projections without assigning framework-owned UI policy.
 - `release/changes/20260825-paging-mediated-lifecycle.json` — fixes initial content projection to
   preserve source/mediator refresh failures and records lifecycle/mediator verification.
+- `release/changes/20260825-paging-performance-closeout.json` — records the repository-only Paging
+  Release workload, result-tool gate, device evidence, and plan closeout as release-neutral.
 
 ## Objective and ownership
 
@@ -47,8 +49,8 @@ presenter and never recreates a paging engine from collection primitives.
 
 | Previous active location | Status after the split |
 | --- | --- |
-| [Unified roadmap](../roadmap.md), Collections next focus | Keeps a summary and delegates execution here. |
-| [Lazy Collections guide](../../guides/lazy-collections.md), deliberate non-goals | Retains the core/integration boundary and delegates Paging delivery here. |
+| [Unified roadmap](../project/roadmap.md), Collections next focus | Keeps a summary and delegates execution here. |
+| [Lazy Collections guide](../guides/lazy-collections.md), deliberate non-goals | Retains the core/integration boundary and delegates Paging delivery here. |
 | `docs/archive/` | Remains historical evidence and never owns current status. |
 
 ## Frozen module and dependency boundary
@@ -70,17 +72,17 @@ transitive dependency when absent. Only official public AndroidX APIs are allowe
 ## Shipped contract references
 
 Phases 0–6 shipped the collector, items, container, load-state, lifecycle, placeholder, and compact
-lazy-table contracts. The [Paging module manual](../../modules/viewcompose-paging-androidx/README.md)
+lazy-table contracts. The [Paging module manual](../modules/viewcompose-paging-androidx/README.md)
 now owns their usage, lifecycle, identity, placeholder, load-state, testing, migration, and
 dependency guidance; the
 [`viewcompose-paging-androidx` API tree](https://docs.viewcompose.com/api/viewcompose-paging-androidx/current/)
-owns the exact current signatures. The [Lazy Collections guide](../../guides/lazy-collections.md)
+owns the exact current signatures. The [Lazy Collections guide](../guides/lazy-collections.md)
 owns the Paging-neutral `LazyItemTable` and renderer transaction contract.
 
 AndroidX remains the sole paging engine. Android Renderer remains the sole adapter, stable-ID,
-holder, diff, transaction, and item-Session owner. Phase 7 may measure these shipped contracts and
-close their release evidence, but must not reopen them without a new attributed plan, applicable Q
-documentation, compiled samples, and release Changesets.
+holder, diff, transaction, and item-Session owner. Phase 7 measured these shipped contracts and
+closed their release evidence without reopening them. Any future contract change requires a new
+attributed plan, applicable Q documentation, compiled samples, and release Changesets.
 
 ## Delivery requirements
 
@@ -114,8 +116,10 @@ placeholders on demand, and maps page events to neutral updates. Phase 4/5 proje
 and exact load origins, verify lifecycle replay/cancellation, and run real `RemoteMediator` control
 flow over deterministic fake storage. Phase 6 adds a directly launchable controlled `PagingSource`
 Demo that exposes initial loading, data, append, empty, error, retry, and generation reset states
-without network or database timing. No Paging adapter, real database/network result, or broad
-Phase 7 performance claim exists yet.
+without network or database timing. Phase 7 adds the Release-only `performance.paging@1` route,
+five-iteration append/drop, query-replacement, and scroll workloads, compact and million-position
+Pixel proofs, and a fixed-clock Xiaomi absolute baseline. It intentionally makes no comparative
+performance claim because no compatible prior or alternate-engine baseline exists.
 
 ## Execution plan
 
@@ -128,7 +132,7 @@ Phase 7 performance claim exists yet.
 | 4. Load-state composition | Complete | Pure primary-content and per-`LoadType` source/mediator projections plus empty/header/footer/error examples; no framework-owned layout | Twenty distinct tests pass in both variants; Q3 audit, bilingual docs, release intent, local publication, and isolated consumer pass |
 | 5. Lifecycle and mediated data | Complete | Frozen policies, `cachedIn` guidance, recreation, deterministic mediator fixture, source-failure hard cut | Hidden/revealed navigation, cancellation, recreation, and source/mediator failure tests pass |
 | 6. Samples, Demo, and documentation | Complete | Controlled `PagingSource` Demo, Q3 samples, catalog/manual, setup/architecture/testing/migration docs, mirrors, and notices | Local compile/unit/localization/automation gates and the full controlled-state Pixel device path pass; dependency and sample contracts remain covered by the Phase 2/5 published-module gates |
-| 7. Performance, device, and release closeout | Not started | Same-build append/drop/large-generation/query/scroll evidence; final Changesets and Maven proof | No accepted correctness, leak, frame, or memory regression; evidence is interpreted before archival |
+| 7. Performance, device, and release closeout | Complete | Same-build append/drop/large-generation/query/scroll evidence; final Changesets and Maven proof | Release fixed-clock evidence, Pixel functional/manual evidence, local Maven/consumer proof, documentation/site gates, and complete repository/device gates pass with limitations interpreted before archival |
 
 ## Acceptance matrix
 
@@ -198,6 +202,7 @@ work pending.
 | --- | --- | --- |
 | 2026-08-18 to 2026-08-25 | Phases 0–5 consolidated baseline | Official presenter characterization, the published frontend, compact placeholders/page drops, load-state projections, every lifecycle policy, `cachedIn` recreation, structured cancellation, and real `Pager + RemoteMediator` fake-storage coordination passed their API, unit, device, Maven, consumer, and documentation gates. The Pixel Phase 3 probe added 48,124 KiB PSS for 1,000,000 positions, jumped to 999,999 in 555 ms, retained 81 loaded items, and released dropped Sessions. Phase 5 ended at 49,161,510 non-API documentation bytes. Conclusion: **improved** correctness, ownership, lifecycle, and compact-memory confidence with **mixed** documentation growth. Limitations remained one local-data device/API and no real database/network, Demo, frame, or release-performance result. Git history preserves the superseded per-phase execution ledger. |
 | 2026-08-25 | Phase 6 controlled Demo and documentation acceptance | The controlled-source unit suite, registry tests, app/debug/android-test compilation, localization, and automation-selector gates passed. One Pixel 4 XL Android 13/API 33 instrumentation test passed in a 13 s Gradle run and deterministically traversed initial loading, ten loaded items, append loading/error, same-generation retry to twenty items, generation reset, empty, and initial error. Manual inspection of the same Pixel confirmed that initial, content, and retained-content append-error states are fully visible, readable, and scrollable. Bounding the Demo viewport and disabling renderer cache prefetch prevented an off-screen Session from requesting append before the explicit action, while the real Paging configuration retained its valid `prefetchDistance = 1`. Documentation/API/dependency/release-intent gates passed for 118 English pages and 115 current mirrors; `qaQuick + qaPreview` passed 2,338 tasks in 1 min 21 s, including local publication, consumer/sample compilation, unit tests, Paparazzi, and Release APK verification. Conclusion: **improved** sample, automation, documentation, and manual-verification confidence. Limitations: one device/API, in-process fake source, no real database/network, prepend UI, frame, memory, or release-performance result. Next: Phase 7. |
+| 2026-08-25 | Phase 7 performance, device, and release closeout | A rooted Xiaomi MI 6 ran the R8 Release APK for five fixed-clock iterations per method. Append/drop recorded frame P50/P90/P95/P99 `4.281/29.189/33.973/43.592 ms`, median peak heap `117,797 KiB`, and run-P50 CV `0.077`; query replacement recorded `4.215/13.810/40.809/48.345 ms`, `128,433 KiB`, and CV `0.021`; scroll recorded `2.581/3.699/4.066/6.511 ms`, `119,087 KiB`, and CV `0.006`. RSS was unavailable. Pixel 4 XL/API 33 functional proof ended the compact path at 96 loaded and 189 released Sessions; the million-position path added 46,977 KiB PSS, jumped to the end in 549 ms, and ended with 81 loaded and 58 released Sessions. Manual inspection accepted query, append/drop, jump, reset, and bounded loaded-window feedback. Local Maven publication, metadata, six isolated consumers, complete API reconstruction, and `qaRelease` passed 1,486 tasks in 13 min 59 s. The bilingual site generated 440 pages within all output budgets; `qaQuick + qaPreview` passed 2,339 tasks in 31 s. With Pixel temporarily locked to portrait and its original auto-rotation setting restored afterward, `qaFull` passed 152 App tests (150 pass, two documented prerequisite skips), one Counter test, and two Tutorials tests in 15 min 9 s. Conclusion: **improved** release, functional, bounded-memory, and automation confidence; normalized performance direction is **inconclusive** because this is the first absolute baseline. Limitations: synthetic in-process data, one API level per device role, no real database/network I/O, prepend workload, alternate engine, comparable prior baseline, or benchmark RSS. Future expansion requires a new plan. |
 
 ## Decision history
 
@@ -219,3 +224,6 @@ work pending.
 9. 2026-08-25 — Keep the Demo on a real `Pager + PagingSource`, but suspend each load behind an
    explicit result control and bound its viewport so people and automation can inspect transient
    states without network/database timing or accidental off-screen append access.
+10. 2026-08-25 — Make `performance.paging@1` a ViewCompose-only Release workload, accept its first
+    fixed-clock run as an absolute baseline rather than a comparative claim, and require any row,
+    grid, real-I/O, or alternate-engine expansion to receive a new plan and workload revision.

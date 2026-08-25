@@ -148,8 +148,7 @@ const config: Config = {
         searchResultLimits: 8,
         ignoreFiles: [
           /^architecture\/decisions\/0021-correlated-render-diagnostics-ownership$/,
-          /^project\/plans\/paging3-integration$/,
-          /^archive\/(?:constraintlayout-native-engine-hardening|constraintlayout-parity-performance-expansion|diagnostics-correlation-inspection-observability)$/,
+          /^archive\/(?:constraintlayout-native-engine-hardening|constraintlayout-parity-performance-expansion|diagnostics-correlation-inspection-observability|paging3-integration)$/,
         ],
         ignoreCssSelectors: ['.benchmark-evidence', '.search-partition-detail'],
       },

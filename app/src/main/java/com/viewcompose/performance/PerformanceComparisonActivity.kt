@@ -86,6 +86,11 @@ class PerformanceComparisonActivity : AppCompatActivity() {
                                 fixtures = fixtures,
                             )
                         }
+                        PerformanceScenario.Paging -> {
+                            ViewComposePagingPerformanceScreen(
+                                scenario = demoScenario,
+                            )
+                        }
                     }
                 }
             }
@@ -129,6 +134,9 @@ class PerformanceComparisonActivity : AppCompatActivity() {
                                         fixtures = fixtures,
                                     )
                                 }
+                                PerformanceScenario.Paging -> error(
+                                    "Paging performance is a ViewCompose-only integration workload.",
+                                )
                             }
                         }
                     },
@@ -159,8 +167,9 @@ class PerformanceComparisonActivity : AppCompatActivity() {
                         }
                     PerformanceScenario.ShadowList,
                     PerformanceScenario.ShadowComplexLayout,
+                    PerformanceScenario.Paging,
                     -> error(
-                        "Android Views control does not support shadow scenario: " +
+                        "Android Views control does not support scenario: " +
                             performanceScenario.wireValue,
                     )
                 }

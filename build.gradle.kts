@@ -2310,6 +2310,7 @@ tasks.register("qaQuick") {
     dependsOn("verifyModuleDependencyBoundaries")
     dependsOn("verifyDevelopmentToolingIsolation")
     dependsOn("verifyDemoReleaseToolingApk")
+    dependsOn("testPagingMacrobenchmarkSummaryTool")
     dependsOn("testDeviceDiagnosticsRequestMeasurementTool")
     dependsOn("verifyDemoAutomationSelectors")
     dependsOn("verifyDemoLocalizationResources")
@@ -2541,6 +2542,18 @@ tasks.register<Exec>("testBenchmarkComparisonTool") {
         "-m",
         "unittest",
         "test_compare_macrobenchmarks.py",
+    )
+}
+
+tasks.register<Exec>("testPagingMacrobenchmarkSummaryTool") {
+    group = "verification"
+    description = "Run unit tests for the Paging Macrobenchmark summary tool."
+    workingDir(rootDir.resolve("tools/performance"))
+    commandLine(
+        "python3",
+        "-m",
+        "unittest",
+        "test_summarize_paging_macrobenchmark.py",
     )
 }
 

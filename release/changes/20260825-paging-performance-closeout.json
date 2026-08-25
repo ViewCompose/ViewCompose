@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add repository-only Paging Release workloads, result validation, device acceptance, and plan closeout without changing a published artifact.",
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "The root build change only adds the repository-owned Paging Macrobenchmark summary-tool unit test to qaQuick; it does not change published artifact source, output, dependency metadata, API samples, or publication configuration."
+    }
+  ]
+}
