@@ -19,6 +19,14 @@ rendering path: the panel has one fixed 60 Hz mode, its framebuffer idle/dynamic
 already disabled, and SurfaceFlinger already uses the available backpressure/latch controls. Scroll
 recapture on this device is therefore deferred rather than tuned into a passing batch.
 
+A 2026-08-25 source/history recheck also rejected a proposed revision-4 pacing hard cut:
+revision 3 already waits `500 ms` after every gesture, so adding the same wait would not create a
+new workload. Pixel 4 XL / API 33 cannot replace the Xiaomi: its user build exposes the
+fixed-performance shell command but rejects it because the required Power HAL AIDL mode is absent.
+No benchmark ran, and peak/minimum refresh plus rotation settings were restored exactly. Emulator
+execution remains diagnostic only because it substitutes the host GPU and display pipeline for the
+physical path whose stability this gate must prove.
+
 Last verified: 2026-08-25.
 
 The configuration matrix exposed an unstable framework-level focus-visibility design. That slice
@@ -49,9 +57,10 @@ and Tutorials added three passes. Conclusion: **improved** deterministic launch,
 and reset confidence with no published-artifact impact. Limitation: this gate does not replace the
 remaining fixed-clock collection-scroll baseline, so the plan stays active.
 
-Next action: recapture revision-3 scroll on another root-controllable reference device. Do not
-remove production harness infrastructure or close Phase 1 until scroll passes the unchanged `0.15`
-gate.
+Next action: recapture revision-3 scroll on another physical reference device that proves stable
+CPU, GPU, and display-pipeline control. Android 9/API 28 is not required, and root is optional only
+when equivalent control and observation are available. Do not remove production harness
+infrastructure or close Phase 1 until scroll passes the unchanged `0.15` gate.
 
 ## Maven release changesets
 
@@ -84,7 +93,7 @@ finished state has:
 ### In scope
 
 - `collection.stress@3` scroll and mutation under the existing five-iteration, per-method cooling,
-  ready/action/state/reset, fixed-clock, and `run-from-apk` protocol;
+  ready/action/state/reset, physical fixed-clock, and `run-from-apk` protocol;
 - the focused menu-shadow, theme-swatch, NavigationBar quick-tap, One UI navigation, segmented
   shape, nested-scroll, and rounded-grid pressure slices;
 - English and Simplified Chinese, light and dark themes, LTR and RTL where supported, font scales
@@ -110,7 +119,8 @@ finished state has:
 ### Phase 0: contract freeze — complete
 
 - Preserve the existing scenario IDs, workload revisions, resource-ID selectors, five-run
-  stability ceiling, and fixed-clock Xiaomi protocol.
+  stability ceiling, and physical fixed-clock protocol; the accepted Xiaomi mutation result keeps
+  its exact device context.
 - Carry forward the exact remaining scope from the archived rearchitecture record rather than
   silently redefining its completion criteria.
 - Keep the first post-release pull request publication-neutral unless implementation actually
@@ -123,10 +133,15 @@ the phase remain incomplete. The complete interpretation, APK hashes, rejected b
 BufferQueue attribution, limitations, and next action live in
 [`docs/tooling/performance.md`](../../tooling/performance.md).
 
+The 2026-08-25 recheck confirms that revision 3 already owns the required per-gesture settle and
+that neither the same Xiaomi display pipeline, the non-fixed Pixel, nor an emulator can produce the
+missing acceptance evidence. This is a hardware prerequisite, not authorization to revise the
+workload or lower its stability ceiling.
+
 1. Build one release-like target and benchmark APK from a reviewed source revision.
-2. Run scroll and mutation separately on the rooted reference device with CPU/GPU and required
-   renderer-interconnect policy, thermal start, compilation identity, frame count, heap, and APK
-   hashes recorded.
+2. Run scroll and mutation separately on a physical reference device whose CPU/GPU and required
+   renderer-interconnect policy are controlled and observed, with thermal start, compilation
+   identity, frame count, heap, and APK hashes recorded.
 3. Accept only five-run batches whose run-P50 CV is at most `0.15`; unstable results are rerun, not
    averaged into acceptance.
 4. Record P50/P95/P99, frame count, peak heap, absolute values, normalized direction, conclusion,

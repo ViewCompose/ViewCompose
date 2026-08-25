@@ -342,22 +342,35 @@ or replacing the HWUI renderer would change the system path being measured rathe
 existing variable, so those experiments are excluded from baseline acceptance. This device audit
 therefore closes the safe-control search, not the scroll gate.
 
+A 2026-08-25 follow-up rejected two apparent shortcuts. Source and history confirm that
+`collectionsScrollRevision3` already included a `500 ms` settle after every gesture before any
+revision-3 result was collected; advancing to revision 4 merely to add pacing would therefore
+mislabel an unchanged workload. A Pixel 4 XL / Android 13 preflight exposed the platform
+fixed-performance command, but invocation failed because its user build does not implement the
+required Power HAL AIDL mode. No benchmark ran, and the temporary display settings were restored
+exactly to peak refresh `null`, minimum refresh `0.0`, automatic rotation `1`, and user rotation
+`0`. An emulator may exercise the route and result plumbing, but its host-bound GPU and display
+pipeline cannot close this physical-device baseline.
+
 The scoped conclusion is `mixed`: mutation now has a stable fixed-clock absolute baseline, with
 directional comparison `inconclusive` because revision 2 is a retired fixture; scroll remains
 `inconclusive`, so the post-release Phase 1 gate is not complete. Limitations are one API-28 device,
-`run-from-apk` JIT/code placement, and an unresolved system display-buffer plateau. The next action
-is to preserve revision 3 and the `0.15` gate, then recapture scroll on another root-controllable
-reference device whose clocks and display pipeline can be held stable. Do not change swipe count,
-pacing, or fixture merely to obtain a passing batch.
+`run-from-apk` JIT/code placement, and an unresolved system display-buffer plateau. Android 9/API
+28 is not a requirement for the replacement device. The next action is to preserve revision 3 and
+the `0.15` gate, then recapture scroll on another physical reference device that can prove stable
+CPU, GPU, and display-pipeline control throughout the batch. Root is optional only when equivalent
+control and observation are available. Do not change swipe count, pacing, or fixture merely to
+obtain a passing batch.
 
-The collection-scroll preflight is also the reference for gesture-driver contamination. Repeated
-target lookup inside measurement first added Accessibility traversal. After that was removed,
-back-to-back swipes still produced run-P50 plateaus near 3.6, 7.2, and 14.7 ms. Perfetto showed
-stable `RV Scroll`, display-list recording, and RenderThread draw cost across those runs; only
-`dequeueBuffer` wait changed, and FrameTimeline classified the slow spans as `Buffer Stuffing`.
-Changing refresh-rate or ART compilation policy did not remove it. The explicit per-gesture settle
-did, reducing run-P50 CV to 0.018. Never interpret an unpaced synthetic input loop as framework
-scroll cost.
+The original revision-2 collection-scroll preflight is also the reference for gesture-driver
+contamination. Repeated target lookup inside measurement first added Accessibility traversal.
+After that was removed, back-to-back swipes still produced run-P50 plateaus near 3.6, 7.2, and
+14.7 ms. Perfetto showed stable `RV Scroll`, display-list recording, and RenderThread draw cost
+across those runs; only `dequeueBuffer` wait changed, and FrameTimeline classified the slow spans
+as `Buffer Stuffing`. Changing refresh-rate or ART compilation policy did not remove it. The
+explicit per-gesture settle produced that retired fixture's `0.018` CV; revision 3 already inherited
+the same settle before its first run, so this earlier result is not an untried revision-3 remedy.
+Never interpret an unpaced synthetic input loop as framework scroll cost.
 
 `ShadowPerformanceComparisonBenchmark` is the shadow control:
 

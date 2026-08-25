@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: e97b67f6bc7a6e1fa1916b63b0e61b6602cb4bdaee4b1dfdf8a4c20f0b0ebca9
+translation_source_hash: 71b02e3441e9f8e9775a48704454c9cfc877e93972432eafea0227ceb0a2559d
 translation_status: current
 ---
 
@@ -292,18 +292,28 @@ API 28 的 display/BufferQueue pipeline，而不是 revision-3 列表协调，�
 HWUI renderer 会改变被测系统路径，而不是控制既有变量，因此不能用于基线验收。本次设备审计
 关闭的是安全控制项搜索，而不是滚动门禁。
 
+2026-08-25 的后续检查排除了两个看似可行的捷径。源码与历史记录证明，
+`collectionsScrollRevision3` 在采集任何 revision-3 结果前，就已经在每次手势后包含 `500 ms`
+稳定窗口；如果仅为了加入节奏控制而升级到 revision 4，实际是在给未变化的工作负载贴上错误版本。
+Pixel 4 XL / Android 13 预检虽然发现系统提供 fixed-performance 命令，但该 user build 未实现所需
+Power HAL AIDL 模式，实际调用失败。没有执行 benchmark，临时显示设置也已精确恢复为 Peak Refresh
+`null`、Minimum Refresh `0.0`、自动旋转 `1` 和 User Rotation `0`。模拟器可以验证路由和结果管道，
+但受宿主机约束的 GPU 与显示管线不能关闭这条物理设备基线。
+
 限定结论为 `mixed`：变更已经拥有稳定的固定频率绝对基线；由于 revision 2 fixture 已退役，
 方向性比较仍为 `inconclusive`。滚动仍为 `inconclusive`，因此发布后 Phase 1 门禁尚未完成。
 限制包括仅覆盖一台 API 28 设备、`run-from-apk` JIT/code placement，以及尚未解决的系统显示
-缓冲平台。下一步保持 revision 3 和 `0.15` 门禁不变，在另一台可 root 且能稳定控制时钟与显示
-管线的参考设备上重新采集滚动。不得仅为得到通过批次而修改 swipe 次数、节奏或 fixture。
+缓冲平台。替换设备不要求 Android 9/API 28。下一步保持 revision 3 和 `0.15` 门禁不变，在另一台
+能够证明整个批次 CPU、GPU 与显示管线控制稳定的物理参考设备上重新采集滚动；只有能够提供等价
+控制与观测时才可以不使用 root。不得仅为得到通过批次而修改 swipe 次数、节奏或 fixture。
 
-集合滚动预检也是手势驱动污染的参考案例。最初在 measured block 中重复定位 target 会增加
-Accessibility 遍历；移除后，连续无间隔 swipe 仍产生约 3.6、7.2 与 14.7 ms 的 run-P50 平台。
-Perfetto 显示 `RV Scroll`、display-list recording 与 RenderThread draw 成本稳定，只有
-`dequeueBuffer` 等待变化，FrameTimeline 把慢帧归类为 `Buffer Stuffing`。调整刷新率和 ART 编译
-策略都没有消除它；显式的逐手势稳定窗口把 run-P50 CV 降到 0.018。因此不得把没有节奏控制的
-合成输入循环解释为框架滚动成本。
+原始 revision-2 集合滚动预检也是手势驱动污染的参考案例。最初在 measured block 中重复定位
+target 会增加 Accessibility 遍历；移除后，连续无间隔 swipe 仍产生约 3.6、7.2 与 14.7 ms 的
+run-P50 平台。Perfetto 显示 `RV Scroll`、display-list recording 与 RenderThread draw 成本稳定，
+只有 `dequeueBuffer` 等待变化，FrameTimeline 把慢帧归类为 `Buffer Stuffing`。调整刷新率和 ART
+编译策略都没有消除它。显式逐手势稳定窗口产生的是已退役 fixture 的 `0.018` CV；revision 3 在
+首次运行前就已经继承相同等待，因此该早期结果不是尚未尝试的 revision-3 修复。不得把没有节奏
+控制的合成输入循环解释为框架滚动成本。
 
 高级阴影对照基线是 `ShadowPerformanceComparisonBenchmark`：
 
