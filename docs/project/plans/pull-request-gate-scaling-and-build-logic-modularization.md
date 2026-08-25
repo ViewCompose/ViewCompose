@@ -21,38 +21,41 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-25
-next_action: Extract Demo tooling, selector, and localization gates with old/new parity.
+next_action: Extract migration, tutorial, documentation, and DSL-contract gates with old/new parity.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
   - release/changes/20260825-quality-build-phase2-purity.json
+  - release/changes/20260825-quality-build-phase2-demo.json
 ---
 
 # Pull-request Gate Scaling and Build-logic Modularization Plan
 
 ## Status
 
-Active. Phases 0 and 1 and the first two Phase 2 extraction families are complete. Required-check
-behavior remains frozen, and thirteen architecture, purity, and Preview-boundary gates now have
-compiled ownership plus isolated parity coverage.
+Active. Phases 0 and 1 and the first three Phase 2 extraction families are complete. Required-check
+behavior remains frozen, and eighteen architecture, purity, Preview-boundary, and Demo-policy gates
+now have compiled ownership plus isolated parity coverage.
 
 Last verified: 2026-08-25.
 
-Next action: continue Phase 2 with Demo tooling, automation-selector, and localization gates. Move
-the complete family, prove parity, and delete its root-script implementation in the accepting
-slice; do not carry parallel implementations into a later pull request.
+Next action: continue Phase 2 with migration, tutorial, documentation structure,
+language/translation, and DSL-contract gates. Move the complete family in reviewable subfamilies,
+prove parity, and delete each root-script implementation in its accepting slice; do not carry
+parallel implementations into a later pull request.
 
 ## Maven release changesets
 
 - `release/changes/20260825-quality-build-phase1.json`
 - `release/changes/20260825-quality-build-phase2-architecture.json`
 - `release/changes/20260825-quality-build-phase2-purity.json`
+- `release/changes/20260825-quality-build-phase2-demo.json`
 
 ## Release intent rationale
 
 Phase 1 modifies shared root build inputs only to make the repository-only quality plugin available
-and configure its explicit inputs. Phase 2's first two slices change the root build only to replace
-thirteen repository-only task bodies with typed compiled tasks. Their names and lifecycle
+and configure its explicit inputs. Phase 2's first three slices change the root build only to replace
+eighteen repository-only task bodies with typed compiled tasks. Their names and lifecycle
 dependencies are unchanged. The Changesets classify shared build inputs and declare no artifact
 release. The new Gradle types remain build implementation rather than published artifact APIs;
 application-facing capability IDs, Q levels, compiled API samples, and module-manual changes are
@@ -388,6 +391,35 @@ tasks in `11 min 49 s`. Fresh dry runs again matched every ordered task exactly:
 behavior. This evidence preserves the legacy literal import and build-marker contract; it does not
 claim semantic parsing of arbitrary Gradle syntax, and timings are not performance evidence. The
 next extraction family is Demo tooling, selectors, and localization.
+
+The third family completed on 2026-08-25 as a hard cut. `verifyDevelopmentToolingIsolation`,
+`verifyDemoReleaseToolingApk`, `verifyDemoAutomationSelectors`,
+`verifyDemoLocalizationResources`, and `verifyDemoLocalizedVisibleCopy` now belong to five typed
+compiled tasks and pure verifiers. The consuming build supplies runtime/tooling source roots, the
+Demo build file, a resolved release-component snapshot, the release APK, automation sources,
+locale resource directories, and the explicit migrated-source allowlist. Task actions do not query
+Gradle projects or discover inputs outside those declarations. The five old root bodies were
+deleted in the same change, reducing the root script from 1,846 to 1,415 lines.
+
+Five parity tests preserve the frozen multi-source tooling diagnostic, release-archive marker,
+visible-text selector count, localization key/format contract, and visible-copy line diagnostic;
+the plugin fixture also proves all five stable task names resolve to their intended compiled task
+types. Before acceptance, the Phase 0 tooling, APK, and selector inputs were corrected because
+their original `PreviewWorkerHost` and duplicate-`testTag` examples were not rejected by the
+unchanged literal scanners; the replacements now exercise `DeviceDslSource`,
+`DeviceDslSourceRequestReceiver`, and `By.text` respectively. The included build passed all 18
+tests. All five extracted gates passed against the current repository; the optimized Demo release
+APK build and marker scan completed successfully in
+`3 min 25 s`, and a forced rerun of the other four gates completed in `11 s`. The Phase 0 fixture
+suite passed all six tests, while fresh dry runs matched every ordered task exactly: `qaQuick`
+2,899/2,899, `qaPreview` 1,640/1,640, `qaFull` 3,098/3,098, and
+`verifyDocumentationStructure` 4/4. The normalized task-set and ordering change is zero, so the
+result is **no material change** to selected work or accepted gate behavior. The complete local
+`qaQuick` acceptance passed 2,341 actionable tasks in `5 min 57 s` on the warmed checkout. Archive
+scanning still reads the complete optimized APK and the scanners intentionally preserve literal
+marker/regex semantics; the local duration is completeness evidence and this slice does not claim
+an incremental speedup or semantic parsing. The next extraction family is migration, tutorial,
+documentation, language/translation, and DSL-contract gates.
 
 ### Phase 3: classify pull-request impact
 

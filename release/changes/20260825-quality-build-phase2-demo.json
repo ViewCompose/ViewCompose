@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut five existing Demo tooling, selector, and localization gates into typed compiled quality tasks without changing published artifacts or task selection.",
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "Remove repository-only Demo policy task bodies after compiled parity acceptance while preserving every task name and lifecycle dependency."
+    }
+  ]
+}
