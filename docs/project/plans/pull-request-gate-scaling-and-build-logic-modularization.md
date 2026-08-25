@@ -21,35 +21,39 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-25
-next_action: Extract module, package, namespace, dependency, and platform-layer gates with old/new parity.
+next_action: Extract runtime and Preview purity and boundary gates with old/new parity.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
+  - release/changes/20260825-quality-build-phase2-architecture.json
 ---
 
 # Pull-request Gate Scaling and Build-logic Modularization Plan
 
 ## Status
 
-Active. Phases 0 and 1 are complete. Required-check behavior remains frozen, and the repository now
-has isolated compiled quality ownership plus a reusable old/new parity harness.
+Active. Phases 0 and 1 and the first Phase 2 extraction family are complete. Required-check
+behavior remains frozen, and five architecture gates now have compiled ownership plus isolated
+parity coverage.
 
 Last verified: 2026-08-25.
 
-Next action: begin Phase 2 with module/package/namespace/dependency and platform-layer gates. Move
-one parity-proven family at a time and delete its root-script implementation in the accepting
-slice; do not carry parallel implementations into a later pull request.
+Next action: continue Phase 2 with runtime and Preview purity and boundary gates. Move the complete
+family, prove parity, and delete its root-script implementation in the accepting slice; do not
+carry parallel implementations into a later pull request.
 
 ## Maven release changesets
 
-- [`20260825-quality-build-phase1.json`](../../../release/changes/20260825-quality-build-phase1.json)
+- `release/changes/20260825-quality-build-phase1.json`
+- `release/changes/20260825-quality-build-phase2-architecture.json`
 
 ## Release intent rationale
 
 Phase 1 modifies shared root build inputs only to make the repository-only quality plugin available
-and configure its explicit inputs. The Changeset classifies both root files as shared and declares
-no artifact release. The new Gradle types are build implementation, not published artifact APIs;
-application-facing capability IDs, Q levels, compiled API samples, and module-manual changes are
-not applicable.
+and configure its explicit inputs. Phase 2's first slice changes the root build only to replace
+five repository-only task bodies with typed compiled tasks. Their names and lifecycle dependencies
+are unchanged. The Changesets classify shared build inputs and declare no artifact release. The new
+Gradle types remain build implementation rather than published artifact APIs; application-facing
+capability IDs, Q levels, compiled API samples, and module-manual changes are not applicable.
 
 ## Objective
 
@@ -334,6 +338,33 @@ Each move must preserve task names, inputs, ordering, failure semantics, and the
 root build script target is at most 600 lines, with no repository-scanning `doLast` body and no
 embedded process-control implementation. A temporary increase is allowed only while one parity
 slice contains both implementations; the old body is deleted in the same slice that accepts parity.
+
+The first family completed on 2026-08-25 as one hard cut. `verifyModulePackageRoots`,
+`verifyAndroidModuleNamespaces`, `verifyModuleDependencyBoundaries`,
+`verifyDesignSystemIsolation`, and `verifyUiFoundationPlatformBoundary` now belong to typed tasks
+in `tools/viewcompose-quality-build`; the five root-script bodies were deleted in the same change.
+The consuming build supplies canonical package ownership, retired roots, JVM-module membership,
+runtime/tooling classifications, allowed layer directions, settings, module build files, source
+roots, and a deterministic dependency-declaration snapshot. Task actions no longer query Gradle
+projects.
+
+Six architecture tests cover the five frozen failure cases plus the legacy duplicate diagnostic
+for a neutral module that depends on Material 3. They compare success, normalized diagnostics, and
+selected paths through the Phase 1 parity harness. The pre-extraction fixture audit also corrected
+`foundation-androidx-dependency`: that input belonged to design-system isolation and could never
+fail the named platform-boundary scanner. Its replacement imports `android.view.View`, which is an
+actual forbidden input for the unchanged platform contract.
+
+The compiled included-build check passed all 11 tests, and all five extracted tasks passed against
+the current repository. The complete local `qaQuick` acceptance then passed 2,341 actionable tasks
+in `10 min 50 s`. Fresh dry runs matched every ordered Phase 0 task exactly: `qaQuick` 2,899/2,899,
+`qaPreview` 1,640/1,640, `qaFull` 3,098/3,098, and
+`verifyDocumentationStructure` 4/4. The normalized task-set and ordering change is zero, so the
+result is **no material change** to active task selection or accepted gate behavior. This evidence
+covers frozen negative fixtures and the current valid repository; it does not enumerate every
+hypothetical Gradle syntax, and the single local duration is completeness evidence rather than a
+performance comparison. The next extraction family is runtime and Preview purity and boundary
+rules.
 
 ### Phase 3: classify pull-request impact
 

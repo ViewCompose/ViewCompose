@@ -8,6 +8,8 @@ import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -28,6 +30,30 @@ abstract class ViewComposeQualityExtension {
 
     /** Source roots supplied by the consuming build without filesystem discovery by this plugin. */
     abstract val sourceSetDirectories: ConfigurableFileCollection
+
+    /** Gradle settings file that declares the repository's module set. */
+    abstract val settingsFile: RegularFileProperty
+
+    /** Module build files supplied explicitly for namespace and dependency-boundary checks. */
+    abstract val moduleBuildFiles: ConfigurableFileCollection
+
+    /** Canonical package owner for every module participating in repository gates. */
+    abstract val modulePackageRoots: MapProperty<String, String>
+
+    /** Retired package taxonomies that cannot return through source or service declarations. */
+    abstract val forbiddenLegacyPackageRoots: SetProperty<String>
+
+    /** Modules that intentionally have no Android namespace. */
+    abstract val kotlinJvmModules: SetProperty<String>
+
+    /** Runtime module to architectural-layer classifications. */
+    abstract val runtimeModuleLayers: MapProperty<String, String>
+
+    /** Allowed dependency layers encoded as stable comma-separated values by source layer. */
+    abstract val allowedDependencyLayers: MapProperty<String, String>
+
+    /** Build-time tooling modules kept outside the application runtime dependency graph. */
+    abstract val toolingModules: SetProperty<String>
 
     /** Policy files supplied by the consuming build for compiled gate implementations. */
     abstract val policyFiles: ConfigurableFileCollection
@@ -144,5 +170,88 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
             policyFiles.from(extension.policyFiles)
             reportFile.set(extension.reportsDirectory.file("configuration.json"))
         }
+
+        project.tasks.register<VerifyModulePackageRootsTask>("verifyModulePackageRoots") {
+            group = "verification"
+            description = "Verify source package declarations follow module package-root prefixes."
+            repositoryDirectory.set(extension.repositoryDirectory)
+            modulePackageRoots.set(extension.modulePackageRoots)
+            forbiddenLegacyPackageRoots.set(extension.forbiddenLegacyPackageRoots)
+            sourceSetDirectories.from(extension.sourceSetDirectories)
+        }
+        project.tasks.register<VerifyAndroidModuleNamespacesTask>("verifyAndroidModuleNamespaces") {
+            group = "verification"
+            description = "Verify Android module namespace matches canonical package-root mapping."
+            repositoryDirectory.set(extension.repositoryDirectory)
+            modulePackageRoots.set(extension.modulePackageRoots)
+            kotlinJvmModules.set(extension.kotlinJvmModules)
+            moduleBuildFiles.from(extension.moduleBuildFiles)
+        }
+        project.tasks.register<VerifyModuleDependencyBoundariesTask>(
+            "verifyModuleDependencyBoundaries",
+        ) {
+            group = "verification"
+            description =
+                "Verify framework modules are classified and project dependencies point in the allowed direction."
+            repositoryDirectory.set(extension.repositoryDirectory)
+            settingsFile.set(extension.settingsFile)
+            moduleBuildFiles.from(extension.moduleBuildFiles)
+            modulePackageRoots.set(extension.modulePackageRoots)
+            runtimeModuleLayers.set(extension.runtimeModuleLayers)
+            allowedDependencyLayers.set(extension.allowedDependencyLayers)
+            toolingModules.set(extension.toolingModules)
+        }
+        project.tasks.register<VerifyDesignSystemIsolationTask>("verifyDesignSystemIsolation") {
+            group = "verification"
+            description =
+                "Verify neutral layers and named design-system artifacts remain mutually isolated."
+            repositoryDirectory.set(extension.repositoryDirectory)
+            sourceSetDirectories.from(project.providers.provider {
+                extension.sourceSetDirectories.files.filter { sourceDirectory ->
+                    sourceDirectory.moduleNameWithin(extension.repositoryDirectory.get().asFile) in
+                        designSystemSourceModules
+                }
+            })
+            dependencyDeclarations.set(project.providers.provider {
+                designSystemDependencyModules.sorted().flatMap { module ->
+                    val moduleProject = project.findProject(":$module") ?: return@flatMap emptyList()
+                    productionDependencyConfigurations.sorted().flatMap { configurationName ->
+                        moduleProject.configurations.findByName(configurationName)
+                            ?.dependencies
+                            .orEmpty()
+                            .map { dependency ->
+                                DependencyDeclaration(
+                                    module = module,
+                                    configuration = configurationName,
+                                    group = dependency.group,
+                                    name = dependency.name,
+                                ).encode()
+                            }
+                    }
+                }.sorted()
+            })
+        }
+        project.tasks.register<VerifyUiFoundationPlatformBoundaryTask>(
+            "verifyUiFoundationPlatformBoundary",
+        ) {
+            group = "verification"
+            description =
+                "Verify UI Foundation delegates Android execution, host adaptation, logging, and tracing."
+            repositoryDirectory.set(extension.repositoryDirectory)
+            sourceSetDirectories.from(project.providers.provider {
+                extension.sourceSetDirectories.files.filter { sourceDirectory ->
+                    sourceDirectory.moduleNameWithin(extension.repositoryDirectory.get().asFile) ==
+                        "viewcompose-ui-foundation"
+                }
+            })
+        }
     }
+}
+
+private fun File.moduleNameWithin(repository: File): String? {
+    val repositoryPath = repository.canonicalFile.toPath()
+    val sourcePath = canonicalFile.toPath()
+    if (!sourcePath.startsWith(repositoryPath)) return null
+    val relative = repositoryPath.relativize(sourcePath)
+    return relative.getName(0)?.toString()
 }
