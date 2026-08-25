@@ -6,6 +6,7 @@ const homepage = (themeStorageKey, body = '<main>Documentation</main>') => `
 <!doctype html>
 <html>
   <head>
+    <meta property="og:image" content="https://docs.viewcompose.com/img/social-card.png">
     <script>window.localStorage.getItem("${themeStorageKey}");</script>
   </head>
   <body>${body}</body>
@@ -20,6 +21,7 @@ test('accepts one shared color-mode storage key across localized homepages', () 
 
   assert.deepEqual(result.violations, []);
   assert.equal(result.themeStorageKey, 'theme-viewcompose-docs');
+  assert.equal(result.socialCard, 'https://docs.viewcompose.com/img/social-card.png');
 });
 
 test('rejects locale-specific color-mode storage keys', () => {
@@ -43,4 +45,18 @@ test('rejects the removed standalone Maven coordinate', () => {
 
   assert.equal(result.violations.length, 1);
   assert.match(result.violations[0], /standalone Maven coordinate/u);
+});
+
+test('rejects a locale-prefixed social card URL', () => {
+  const localizedCard = homepage('theme-viewcompose-docs').replaceAll(
+    'https://docs.viewcompose.com/img/social-card.png',
+    'https://docs.viewcompose.com/zh-CN/img/social-card.png',
+  );
+  const result = analyzeSiteShellPages({
+    'index.html': homepage('theme-viewcompose-docs'),
+    'zh-CN/index.html': localizedCard,
+  });
+
+  assert.equal(result.violations.length, 1);
+  assert.match(result.violations[0], /social card must use/u);
 });

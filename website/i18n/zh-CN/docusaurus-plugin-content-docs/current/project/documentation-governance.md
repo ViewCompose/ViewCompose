@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: 95b7fb835cb0b732b093b4fbd0e287ffa4c89c6927344f980d9d887e2f90a316
+translation_source_hash: f7e2a4fb9d8fcc9d0d30a86f70e55df55d8988cdbbcfa999a2a4535d837f1ffa
 translation_status: current
 ---
 
@@ -60,8 +60,8 @@ Jetpack Compose 的事实比较和迁移路径；由可执行 sample 支撑且�
 
 ## Governance V2 结构化契约
 
-Governance V2 增加稳定标识和机器可读记录。规则现在生效：一份审阅基线可容纳既有违规，但
-新增或被触及内容不能在相应类别新增或保留债务；阻断只在 report-only 发现稳定后启用。
+Governance V2 增加稳定标识和机器可读记录。`verifyDocumentationGovernanceV2` 通过
+`verifyDocumentationStructure` 执行冻结的 Phase 2 基线；下文定义所有权、记录和棘轮规则。
 
 ### 能力标识与所有权
 
@@ -127,13 +127,14 @@ Architecture/Migration/redirect 处置。处置只能是带精确目标的 `upda
 ### Exception 与债务棘轮
 
 Exception 必须有稳定 ID、精确 file/symbol、类别、理由、owner、创建日期、移除条件、计数和可选
-过期日；禁止 wildcard 和永久 legacy bucket。棘轮拒绝新增、扩大、增加或重新加入的债务，并要求
-被触及 allowlisted 页面修复该类别。完成时基线为空，且本地、PR、部署 strict gate 全部启用。
+过期日；禁止 wildcard 和永久 legacy bucket。当前棘轮阻断未进入基线、扩大、增加、重新加入或
+改变 identity 的债务；只允许精确降计数和删除已解决记录。完成时基线为空，且本地、PR、部署
+strict gate 全部启用。
 
 ### 契约资产与门禁边界
 
 `docs/project/contracts/` 中的 V2 清单冻结 schema/fixture 与 record/task/report 位置。Document 用
-front matter，其他 record 用复数子目录。Fixture fail closed；发现项到 Phase 2 才阻断。
+front matter，其他 record 用复数子目录。Fixture fail closed；Phase 2 执行冻结的精确基线。
 
 机器负责 shape/identity、发现/唯一性、source/lane/route 一致性、棘轮/新鲜度；reviewer 负责
 内聚性、目的、证据、exception 可信度与 rationale。机器通过不能覆盖审查。

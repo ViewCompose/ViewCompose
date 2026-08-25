@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Activate Phase 2 no-new-debt and capability-impact gates against the frozen baseline.
+next_action: Replace hardcoded Tutorial registration with automatic type-aware sample discovery.
 maven_release_changesets: []
 ---
 
@@ -30,9 +30,9 @@ maven_release_changesets: []
 ## Status
 
 Active. The assessment baseline was frozen on `main` at `4fd14c4a` on 2026-08-25. Phases 0A, 0B,
-and 1 are complete: the normative Governance V2 contract, compiled report-only scanner, precise
-production/public inventory, and exact reviewed debt baseline now run from the quality included
-build without changing an existing blocking lifecycle.
+and 1 are complete, and the first Phase 2 slice now enforces the frozen baseline as a blocking
+no-new-debt ratchet. The normative contract, compiled scanner, precise production/public inventory,
+and exact reviewed debt baseline all run from the quality included build.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -41,7 +41,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: activate Phase 2 no-new-debt and capability-impact gates against the frozen baseline.
+Next action: replace hardcoded Tutorial registration with automatic type-aware sample discovery.
 
 ## Maven release changesets
 
@@ -49,10 +49,11 @@ Next action: activate Phase 2 no-new-debt and capability-impact gates against th
 
 ## Release intent rationale
 
-Phase 1 changes governance records and compiled repository-quality tooling only; it does not change
-a published artifact's production source, publication inputs, or compiled API samples.
+The first Phase 2 slice changes governance records, workflows, and compiled repository-quality
+tooling only; it does not change a published artifact's production source, publication inputs, or
+compiled API samples.
 `verifyViewComposeReleaseIntent` confirmed zero release artifacts, zero ignored artifacts, and zero
-shared-path classifications against `7b79cc978c737b6368744bcc798aaf64dac538b7`.
+shared-path classifications against `5cdb9851760541180ede6a4e12240f7fb17bf59a`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -442,6 +443,40 @@ fully invalidated Android build, and Phase 2 remains the next action.
 Exit condition: representative negative fixtures prove that an undocumented `Modifier.foo`, an
 uncompiled new Tutorial, a Guide containing Plan metadata, a stale named argument, an ambiguous
 version lane, and an added debt exception all fail before content migration begins.
+
+The first Phase 2 slice completed the baseline ratchet on 2026-08-26 without claiming the full
+phase exit condition. The report-only task was hard-cut to `verifyDocumentationGovernanceV2`. It
+still writes deterministic machine and human reports before failing, but now rejects every
+unbaselined issue, non-exact baseline count, duplicated exception identity/target, added or
+re-added exception, immutable target/category/rationale change, rename/copy, and count increase.
+Deleting a resolved record is allowed; reducing a record is allowed only when its immutable
+identity is unchanged, `violation_count` decreases, and the new count exactly matches discovery.
+The verification base comes from an explicit CI revision with a full-history `origin/main`
+fallback, so adding an exception cannot hide newly added debt.
+
+`verifyDocumentationStructure` now owns the gate, which also places it in `qaQuick`, `qaFull`, and
+documentation CI while leaving `qaPreview` unchanged. Relative to the immutable Phase 0 task-graph
+comparator, `qaQuick` changed from 2,899 to 2,900 tasks (+1, +0.0345%), `qaFull` from 3,098 to 3,099
+(+1, +0.0323%), and `verifyDocumentationStructure` from four to five (+1, +25%); the only added
+path in each affected graph is `:verifyDocumentationGovernanceV2`. The conclusion is `improved`:
+733 existing findings still match all 311 exact entries with zero unbaselined issue, while new or
+widened debt has changed from non-blocking to blocking. The quality included build passed 35/35
+tests, including monotonic reduction, immutable identity, addition/re-addition, deletion, widened
+count, and unbaselined-debt negatives. Documentation verification passed 55/55 script tests and
+116/116 current translations. The deterministic report hashes are
+`6c9e7b91160a018c49fe98be662be26d904bb856f07b78e171f21a62a1101de1` for JSON and
+`8c1a3f2d6736bb086bfedc5f11eb9e7a1ebdc6473835e62061dd9111b9857f6f` for text.
+An implementation-invalidated `qaQuick` passed in 7 minutes 41 seconds with 2,342 actionable
+tasks (2,262 executed and 80 up-to-date), exactly one more executed task than the Phase 1 run.
+The first pull-request documentation build passed Governance V2 and complete API generation but
+exposed 7,020.6 B (+0.0143%) of non-API site-budget debt. The same-corpus correction preserved the
+active contract, canonicalized the shared social card, pruned its 761,036 B locale copy, and passed
+the production build with 762,215.4 B (1.5499%) headroom. The owning site contract records the
+absolute and normalized comparison; the conclusion is `improved`, the single local production
+build is the limitation, and independent documentation CI is the next acceptance action.
+The limitation is that this slice enforces debt monotonicity only; automatic Tutorial/sample
+ownership, complete capability-impact semantics, generated Reference freshness, and route-change
+checks remain later Phase 2 slices. Type-aware Tutorial discovery is the next action.
 
 ### Phase 3: information-architecture restructure
 

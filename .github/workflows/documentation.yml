@@ -71,6 +71,8 @@ jobs:
         run: npm ci
 
       - name: Verify documentation sources and translations
+        env:
+          VIEWCOMPOSE_DOCUMENTATION_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: ./gradlew verifyDocumentationStructure --stacktrace
 
       - name: Generate and verify complete versioned API reference

@@ -20,8 +20,8 @@ ordered_work:
   - Extract gates, classify impact, cache immutable API output, and verify affected modules.
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
-last_verified: 2026-08-25
-next_action: Extract lifecycle aggregation tasks and stable aliases without changing task graphs.
+last_verified: 2026-08-26
+next_action: Resume Phase 3 classification after Governance V2 gate families and generated-reference inputs stabilize.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -36,15 +36,15 @@ maven_release_changesets:
 
 ## Status
 
-Active. Phases 0 and 1 and the first five Phase 2 extraction families are complete. Required-check
-behavior remains frozen, and thirty quality gates and tooling entry points now have compiled
-ownership plus isolated regression or parity coverage.
+Active. Phases 0 through 2 are complete. Required-check behavior remained frozen throughout the
+extraction, and the repository quality gates, device/benchmark tooling, and lifecycle aggregation
+now have compiled ownership plus isolated regression or parity coverage.
 
-Last verified: 2026-08-25.
+Last verified: 2026-08-26.
 
-Next action: finish Phase 2 extraction with lifecycle aggregation tasks and stable aliases. Keep
-the frozen task graphs, connected-test preflight ordering, Maven-sample publication ordering, and
-all user-facing task names unchanged.
+Next action: wait for Governance V2 gate families and generated-reference inputs to stabilize, then
+resume Phase 3 pull-request classification. The Phase 0 task-graph fixtures remain the immutable
+pre-extraction comparator rather than being rewritten for later intentional gates.
 
 ## Maven release changesets
 
@@ -254,6 +254,13 @@ must not be implemented independently or completed one after the other. Use this
 
 The only intentional overlap is Phase 6 observation. Implementation ownership remains serialized:
 the root build must not receive a temporary Governance V2 scanner that will later be extracted.
+
+Governance V2 Phase 2 activates its compiled no-new-debt task directly in the quality included
+build. Relative to the frozen Phase 0 comparator, this intentionally adds only
+`:verifyDocumentationGovernanceV2` to `verifyDocumentationStructure`, `qaQuick`, and `qaFull`;
+`qaPreview` is unchanged. This is the planned step 4 transition, not extraction drift, so the
+historical Phase 0 fixtures remain unchanged and the current deltas are interpreted in the
+Governance V2 plan.
 
 ## Execution plan
 

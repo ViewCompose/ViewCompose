@@ -540,13 +540,24 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("website/i18n/translation-policy.json"),
             )
         }
-        project.tasks.register<ReportDocumentationGovernanceV2Task>(
-            "reportDocumentationGovernanceV2",
+        val documentationGovernanceV2 = project.tasks.register<VerifyDocumentationGovernanceV2Task>(
+            "verifyDocumentationGovernanceV2",
         ) {
             group = "verification"
             description =
-                "Validates Governance V2 fixtures and writes non-blocking documentation discovery."
+                "Enforces Governance V2 contracts and the exact no-new-debt baseline."
             repositoryDirectory.set(extension.repositoryDirectory)
+            baseRevision.set(
+                project.providers.gradleProperty("viewComposeDocumentationBaseRevision")
+                    .orElse(
+                        project.providers.environmentVariable(
+                            "VIEWCOMPOSE_DOCUMENTATION_BASE_REVISION",
+                        ),
+                    )
+                    .orElse(
+                        project.providers.environmentVariable("VIEWCOMPOSE_RELEASE_BASE_REVISION"),
+                    ),
+            )
             contractFiles.from(
                 project.fileTree(
                     extension.repositoryDirectory.dir(
@@ -602,12 +613,14 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
             humanReportFile.set(
                 extension.reportsDirectory.file("documentation-governance-v2-report.txt"),
             )
+            outputs.upToDateWhen { false }
         }
         project.tasks.register<VerifyDocumentationStructureTask>("verifyDocumentationStructure") {
             group = "verification"
             description =
                 "Verifies documentation tooling, localization, placement, link coverage, and module catalog."
             dependsOn(
+                documentationGovernanceV2,
                 "verifyDocumentationScripts",
                 "verifyDocumentLanguages",
                 "verifyDocumentationTranslations",

@@ -156,7 +156,7 @@ const config: Config = {
     ],
   ],
   themeConfig: {
-    image: 'img/social-card.png',
+    image: 'https://docs.viewcompose.com/img/social-card.png',
     navbar: {
       title: 'ViewCompose',
       hideOnScroll: true,

@@ -119,23 +119,22 @@ or campaign route; canonical document paths remain the source of truth.
 The versioned thresholds live in `website/site-budgets.json`. Immutable Dokka output is canonical
 at `/api/**`; after Docusaurus finishes its locale builds, the supported build entry point removes
 locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to the canonical API
-tree, so those copies add storage but no localized content or supported route.
+tree, so those copies add storage but no localized content or supported route. The shared social
+card likewise uses one absolute root URL, and the supported build removes its locale copy.
 
 The budget model separates expected release-history growth from regressions. Current ceilings are
 46.9 MiB for non-API output, 4.5 MiB average and 24 MiB maximum per API tree, 1 MiB for API routing
 overhead, 8 MiB total and 768 KiB largest-file JavaScript, 128 KiB CSS, 6.25 MiB per locale search
 index, and 120 seconds for the Docusaurus build. Locale-prefixed API copies remain forbidden.
 
-The non-API ceiling evolved from 41 MiB through 46.9 MiB only after paired builds attributed growth
-to durable bilingual contracts and representation reviews removed avoidable duplication. Completed
-measurements are consolidated below instead of repeating their execution narrative in this active
-contract. Raise any threshold only with same-corpus absolute and normalized results, reader or
-release value, a conclusion, limitations, and a next stop condition.
-
-At the 46.9 MiB boundary, a failing branch must first consolidate completed evidence or change site
-representation. Current public API, architecture, migration, tutorial, and module contracts must
-not be deleted merely to recover budget, and valid immutable API history remains governed by its
-separate per-tree budgets.
+The ceiling rose from 41 MiB to 46.9 MiB only after paired attribution and consolidation. In the
+2026-08-26 Governance V2 gate change, one same-corpus build reached 49,185,235 B, 7,020.6 B
+(+0.0143%) over the limit. Consolidating repeated prose while retaining the active ratchet contract
+and pruning the unused locale social-card copy reduced it by 769,236 B (-1.5640%) to 48,415,999 B,
+leaving 762,215.4 B (1.5499%) headroom: the result is `improved`. The measurement covers one local
+production build; the stop condition remains unchanged: do not raise the threshold, and make the
+next failure consolidate representation again. Current public contracts and valid immutable API
+history must not be deleted merely to recover budget.
 
 The accessibility audit covers the site-owned English and localized pages and checks document
 language, title and main landmarks, heading order, accessible names, image alternatives, table

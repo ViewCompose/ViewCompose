@@ -4,6 +4,7 @@ import {buildDir} from './site-quality-lib.mjs';
 
 const homepagePaths = ['index.html', 'zh-CN/index.html'];
 const removedHomepageCoordinate = 'com.viewcompose:viewcompose-ui-foundation';
+const canonicalSocialCard = 'https://docs.viewcompose.com/img/social-card.png';
 const themeStoragePattern = /localStorage\.getItem\(["'](theme(?:-[A-Za-z0-9_-]+)?)["']\)/gu;
 
 export function analyzeSiteShellPages(pages) {
@@ -13,6 +14,9 @@ export function analyzeSiteShellPages(pages) {
   for (const [path, html] of Object.entries(pages)) {
     if (html.includes(removedHomepageCoordinate)) {
       violations.push(`${path}: removed standalone Maven coordinate is still rendered`);
+    }
+    if (!html.includes(canonicalSocialCard)) {
+      violations.push(`${path}: social card must use ${canonicalSocialCard}`);
     }
 
     const keys = new Set(
@@ -44,6 +48,9 @@ export function analyzeSiteShellPages(pages) {
     violations,
     themeStorageKey:
       distinctThemeStorageKeys.size === 1 ? [...distinctThemeStorageKeys][0] : undefined,
+    socialCard: violations.some((violation) => violation.includes('social card'))
+      ? undefined
+      : canonicalSocialCard,
   };
 }
 
@@ -64,10 +71,11 @@ export async function verifySiteShell({buildDirectory = buildDir} = {}) {
 
   console.log(
     `Site shell verification passed: ${homepagePaths.length} localized homepages share ` +
-      `${result.themeStorageKey} and omit the standalone Maven coordinate.`,
+      `${result.themeStorageKey}, use one canonical social card, and omit the standalone Maven coordinate.`,
   );
   return {
     homepageCount: homepagePaths.length,
+    socialCard: result.socialCard,
     themeStorageKey: result.themeStorageKey,
   };
 }

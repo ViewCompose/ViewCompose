@@ -111,13 +111,14 @@ class ViewComposeQualityRootPluginTest {
         assertTrue(project.tasks.getByName("verifyDocumentationScripts") is Exec)
         assertTrue(project.tasks.getByName("verifyDocumentLanguages") is Exec)
         assertTrue(project.tasks.getByName("verifyDocumentationTranslations") is Exec)
+        val documentationStructure = project.tasks.getByName("verifyDocumentationStructure")
+        val documentationGovernance = project.tasks.getByName("verifyDocumentationGovernanceV2")
+        assertTrue(documentationStructure is VerifyDocumentationStructureTask)
+        assertTrue(documentationGovernance is VerifyDocumentationGovernanceV2Task)
         assertTrue(
-            project.tasks.getByName("verifyDocumentationStructure") is
-                VerifyDocumentationStructureTask,
-        )
-        assertTrue(
-            project.tasks.getByName("reportDocumentationGovernanceV2") is
-                ReportDocumentationGovernanceV2Task,
+            documentationStructure.taskDependencies
+                .getDependencies(documentationStructure)
+                .contains(documentationGovernance),
         )
         assertTrue(
             project.tasks.getByName("verifyDslApiContracts") is VerifyDslApiContractsTask,
