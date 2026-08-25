@@ -423,6 +423,63 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 demoLocalizedSourcePaths.map(repository::resolve)
             })
         }
+        project.tasks.register<VerifyMigrationPairedSamplesTask>("verifyMigrationPairedSamples") {
+            group = "verification"
+            description =
+                "Compile migration pairs and verify canonical and translated snippets match them."
+            dependsOn(":samples:compose-migration:compileDebugKotlin")
+            repositoryDirectory.set(extension.repositoryDirectory)
+            sampleSourceFiles.from(
+                migrationPairedSamplesByPage.values.flatten().map { sample ->
+                    extension.repositoryDirectory.file(sample.source)
+                },
+            )
+            documentationFiles.from(
+                migrationDocumentationRootPaths.flatMap { documentationRootPath ->
+                    migrationPairedSamplesByPage.keys.map { pageName ->
+                        extension.repositoryDirectory.file("$documentationRootPath/$pageName")
+                    }
+                },
+            )
+            documentationRootPaths.set(migrationDocumentationRootPaths)
+            expectedPairsByPage.set(
+                migrationPairedSamplesByPage.mapValues { (_, samples) ->
+                    encodeSampleReferences(samples)
+                },
+            )
+        }
+        project.tasks.register<VerifyTutorialSamplesTask>("verifyTutorialSamples") {
+            group = "verification"
+            description =
+                "Compile independent Maven-backed tutorial sources and verify snippets and dependencies."
+            dependsOn(":samples:tutorials:compileDebugKotlin")
+            repositoryDirectory.set(extension.repositoryDirectory)
+            sampleSourceFiles.from(
+                tutorialSamplesByPage.values.map { sample ->
+                    extension.repositoryDirectory.file(sample.source)
+                },
+            )
+            documentationFiles.from(
+                tutorialDocumentationRootPaths.flatMap { documentationRootPath ->
+                    tutorialSamplesByPage.keys.map { pageName ->
+                        extension.repositoryDirectory.file("$documentationRootPath/$pageName")
+                    } + extension.repositoryDirectory.file(
+                        "$documentationRootPath/getting-started.md",
+                    )
+                },
+            )
+            sampleBuildFiles.from(
+                tutorialSampleBuildPaths.map(extension.repositoryDirectory::file),
+            )
+            publishingPropertiesFile.set(
+                extension.repositoryDirectory.file("gradle/viewcompose-publishing.properties"),
+            )
+            documentationRootPaths.set(tutorialDocumentationRootPaths)
+            baseArtifacts.set(tutorialBaseArtifacts)
+            samplesByPage.set(
+                tutorialSamplesByPage.mapValues { (_, sample) -> encodeTutorialSample(sample) },
+            )
+        }
     }
 }
 

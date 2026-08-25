@@ -137,9 +137,9 @@
       "expectedDiagnostic": "Navigation core purity verification failed:"
     },
     {
-      "id": "migration-snippet-drift",
+      "id": "migration-pair-mismatch",
       "task": "verifyMigrationPairedSamples",
-      "input": { "virtualFiles": { "docs/migration/state.md": "{/* paired-sample source=\"sample.kt\" region=\"state\" */}\n```kotlin\nstale()\n```\n{/* paired-sample-end */}\n", "sample.kt": "// DOCS_REGION_START(state)\ncurrent()\n// DOCS_REGION_END(state)\n" } },
+      "input": { "virtualFiles": { "docs/migration/compose-state-recomposition-and-restoration.md": "# Missing configured sample pairs\n" } },
       "expectedDiagnostic": "Migration paired-sample verification failed:"
     },
     {

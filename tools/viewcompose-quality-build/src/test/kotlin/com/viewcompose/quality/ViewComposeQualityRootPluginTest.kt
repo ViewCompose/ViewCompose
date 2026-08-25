@@ -96,6 +96,17 @@ class ViewComposeQualityRootPluginTest {
             project.tasks.getByName("verifyDemoLocalizedVisibleCopy") is
                 VerifyDemoLocalizedVisibleCopyTask,
         )
+        assertTrue(
+            project.tasks.getByName("verifyMigrationPairedSamples") is
+                VerifyMigrationPairedSamplesTask,
+        )
+        val tutorialTask = project.tasks.getByName("verifyTutorialSamples")
+            as VerifyTutorialSamplesTask
+        assertTrue(
+            tutorialTask.documentationFiles.files.any { file ->
+                file.invariantSeparatorsPath.endsWith("docs/tutorials/getting-started.md")
+            },
+        )
     }
 
     @Test
