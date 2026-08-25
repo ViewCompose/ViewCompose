@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.viewcompose.com/contracts/documentation-governance-v2/capability.schema.json",
+  "title": "ViewCompose capability contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "capability_id",
+    "kind",
+    "owner",
+    "artifact",
+    "version_state",
+    "symbols",
+    "reference_owner",
+    "sample_owner",
+    "document_owners"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "capability_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$"
+    },
+    "kind": {
+      "enum": ["dsl", "modifier", "component", "host", "integration", "tooling"]
+    },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "enum": ["module", "project"] },
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]+$" }
+      }
+    },
+    "artifact": {
+      "type": "string",
+      "pattern": "^viewcompose-[a-z0-9-]+$"
+    },
+    "version_state": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["lane", "version"],
+          "properties": {
+            "lane": { "const": "released" },
+            "version": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["lane"],
+          "properties": { "lane": { "const": "next" } }
+        }
+      ]
+    },
+    "symbols": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["symbol_id", "kind", "visibility", "source"],
+        "properties": {
+          "symbol_id": { "type": "string", "minLength": 3 },
+          "kind": {
+            "enum": ["type", "constructor", "property", "function", "extension", "overload-set"]
+          },
+          "visibility": { "enum": ["public", "protected"] },
+          "source": { "type": "string", "pattern": "^[^*?\\[\\]{}]+$" }
+        }
+      }
+    },
+    "reference_owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reference_id", "generated"],
+      "properties": {
+        "reference_id": { "type": "string", "minLength": 3 },
+        "generated": { "const": true }
+      }
+    },
+    "sample_owner": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sample_id"],
+          "properties": { "sample_id": { "type": "string", "minLength": 3 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["exception_id"],
+          "properties": { "exception_id": { "type": "string", "minLength": 3 } }
+        }
+      ]
+    },
+    "document_owners": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tutorial": { "$ref": "#/$defs/documentIds" },
+        "guide": { "$ref": "#/$defs/documentIds" },
+        "architecture": { "$ref": "#/$defs/documentIds" },
+        "module": { "$ref": "#/$defs/documentIds" },
+        "tooling": { "$ref": "#/$defs/documentIds" },
+        "migration": { "$ref": "#/$defs/documentIds" }
+      }
+    }
+  },
+  "$defs": {
+    "documentIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 3 }
+    }
+  }
+}

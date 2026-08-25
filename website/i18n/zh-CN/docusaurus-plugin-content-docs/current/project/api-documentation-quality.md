@@ -1,6 +1,6 @@
 ---
 translation_source: project/api-documentation-quality.md
-translation_source_hash: 33f43fab63f5161905e63b4f80dbc0d452402c2f97b1fac5a18e8fd0647d2480
+translation_source_hash: 2fb2bc8f71e3c79576d7f5c9e5ec1dc7331f88176eaba45f67be514150a49bc5
 translation_status: current
 ---
 
@@ -46,11 +46,13 @@ private/internal 声明无需覆盖率注释，但非显然 invariant、workarou
 
 文档属于实现，不是后续清理。一个变更只有在同一 PR 完成以下工作才算完成：
 
-1. 记录每个新增已发布 declaration 和每个变化的 public/protected contract；
-2. 同步参数名、默认值、状态所有权、生命周期、线程、失败、性能与 Android interop 变化；
-3. 为 Q3 API 新增或更新可编译 sample；
-4. 按影响矩阵更新所属模块手册与 migration/release 材料；
-5. 运行所属模块文档 audit 和相关行为测试。
+1. 按[文档治理规范](documentation-governance.md#公共能力影响)确定稳定 `capability_id`，并处理
+   结构化 capability-impact 处置；
+2. 记录每个新增已发布 declaration 和每个变化的 public/protected contract；
+3. 同步参数名、默认值、状态所有权、生命周期、线程、失败、性能与 Android interop 变化；
+4. 为 Q3 API 新增或更新可编译 sample；
+5. 按影响矩阵更新所属模块手册与 migration/release 材料；
+6. 运行所属模块文档 audit 和相关行为测试。
 
 既有未触及债务可以按有效计划渐进修复，但不能用来合并新债务。placeholder KDoc、`TODO` 文档、
 复制签名或“之后补文档”都不满足完成定义。

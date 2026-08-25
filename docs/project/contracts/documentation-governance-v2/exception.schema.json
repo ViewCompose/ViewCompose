@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.viewcompose.com/contracts/documentation-governance-v2/exception.schema.json",
+  "title": "ViewCompose documentation governance exception",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "exception_id",
+    "target",
+    "category",
+    "reason",
+    "owner",
+    "created_on",
+    "removal_condition",
+    "violation_count"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "exception_id": { "type": "string", "pattern": "^DOC-[0-9]{4}$" },
+    "target": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file"],
+          "properties": { "file": { "type": "string", "pattern": "^[^*?\\[\\]{}]+$" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["symbol"],
+          "properties": { "symbol": { "type": "string", "pattern": "^[^*?\\[\\]{}]+$" } }
+        }
+      ]
+    },
+    "category": {
+      "enum": [
+        "missing-metadata",
+        "orphan-symbol",
+        "orphan-document",
+        "duplicate-owner",
+        "unclassified-sample",
+        "version-conflict",
+        "taxonomy-mismatch",
+        "stale-generated-output"
+      ]
+    },
+    "reason": { "type": "string", "minLength": 20 },
+    "owner": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]+$" },
+    "created_on": { "type": "string", "format": "date" },
+    "removal_condition": { "type": "string", "minLength": 20 },
+    "expires_on": { "type": "string", "format": "date" },
+    "violation_count": { "type": "integer", "minimum": 1 }
+  }
+}

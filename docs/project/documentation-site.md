@@ -1,3 +1,21 @@
+---
+schema_version: 2
+document_id: project.documentation-site
+doc_type: project
+owner:
+  kind: project
+  id: documentation-site
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+workflow: Build, verify, deploy, and recover the hosted documentation system.
+validation:
+  - npm run build
+  - npm run verify:deployment
+lifecycle: Update with documentation pipeline, hosting, route, or budget changes.
+---
+
 # Documentation Site Operations
 
 ## Purpose
@@ -50,8 +68,15 @@ npm run build
 `npm run build` includes the accessibility and budget gates. Run `npm run verify:site` to recheck an
 existing `website/build/` artifact without rebuilding it.
 
+The quality report lives at `build/reports/documentation/site-quality-report.json`, outside the
+deployed/budgeted tree, so rechecking `website/build/` reproduces the build result.
+
 During local iteration, `-PviewComposeDocsModules=artifact-a,artifact-b` limits Dokka assembly to an
 explicit subset. A production build never uses this shortcut.
+
+Governance V2 assets are repository inputs, not another site registry: Phase 0A freezes schemas,
+Phase 0B reports through compiled quality ownership, and Phase 2 blocks new debt. Generated
+Reference routes consume that same discovered model rather than a second page/capability list.
 
 Run `npm run write-translations` when React, navbar, footer, or sidebar messages gain new keys. It
 adds missing JSON messages without overwriting reviewed Chinese translations. Markdown mirror
@@ -208,24 +233,16 @@ identity token.
 
 <div className="search-partition-detail">
 
-- **2026-08-25, Paging Phase 6 Demo/documentation slice:** on the same local macOS lockfile, the
-  Phase 5 baseline, unconsolidated Phase 6 candidate, and pre-ledger consolidated candidate measured
-  49,161,510, 49,231,869, and 49,090,456 non-API bytes. The first candidate exceeded the unchanged
-  46.9 MiB ceiling by 53,655 bytes; moving repeated shipped signatures and per-phase evidence from
-  the active plan to the owning module manual, Lazy Collections guide, generated API tree, and Git
-  history produced a -71,054-byte change (-0.145%) from baseline with 87,758 bytes of measured
-  headroom. The result is **mixed**: the first representation regressed, while the consolidated
-  representation improves reader guidance and storage. All language, translation, routing,
-  accessibility, and budget gates pass after adding this ledger. This same-host comparison excludes
-  deployment transfer,
-  CDN compression, real database/network behavior, and generated API output, which remains
-  separately budgeted. Phase 7 and archive work must not re-expand completed contract copies.
+- **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
+  unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and
+  moving the generated quality report outside the deploy tree reduced it to 49,175,712 bytes,
+  leaving 2,502 bytes; build and post-build recheck both pass. The result is **mixed**: the first
+  representation regressed, while consolidation and repeatable verification corrected it without
+  removing contracts or raising the limit. This local build excludes deployment/CDN/network
+  behavior and separately budgeted API output; Phase 0B must reuse the compiled model and preserve
+  the ceiling.
 
-Only the latest same-corpus decision remains expanded here. Git history preserves the superseded
-2026-08-06 through the Phase 0 checkpoint details. Those measurements established immutable API
-history reconstruction, bilingual search and accessibility gates, plan and evidence segmentation,
-and repeated consolidation before the non-API ceiling advanced from 41 to 46.9 MiB. They found both
-accepted durable-contract growth and representation improvements; none authorizes deleting current
-contracts or bypassing the next stop condition.
+Git history preserves earlier Paging and site checkpoints. They do not authorize deleting current
+contracts, raising the limit without evidence, or re-expanding completed copies.
 
 </div>

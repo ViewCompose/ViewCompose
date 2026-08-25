@@ -7,9 +7,10 @@ These rules apply to AI-assisted work in this repository:
    when creating, moving, or updating documentation.
 3. Read the owning entry in [`docs/modules/README.md`](docs/modules/README.md) before changing a
    published module, and update its module manual once available.
-4. Before implementing a new or changed public/protected API, assign its Q level and identify every
-   applicable contract field. The same change must include canonical-English KDoc/Javadoc,
-   compiled Q3 samples, and owning-module documentation required by the
+4. Before implementing a new or changed public/protected API, resolve its stable `capability_id`,
+   add the structured capability-impact dispositions defined by documentation governance, assign
+   its Q level, and identify every applicable contract field. The same change must include
+   canonical-English KDoc/Javadoc, compiled Q3 samples, and owning-module documentation required by the
    [`Source Documentation and API Comment Standard`](docs/project/api-documentation-quality.md).
    Never add placeholder comments or defer documentation to a cleanup task; a `No documentation
    impact` conclusion needs a written rationale.

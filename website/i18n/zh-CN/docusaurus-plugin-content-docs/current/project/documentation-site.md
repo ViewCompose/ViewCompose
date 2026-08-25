@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: c97e493b68a712a8171ec4b0986b8e70007d6739941ecda66c9d9b0a2400e2ea
+translation_source_hash: ae1779d80c776514869898c98ab2bd304bd7211938613dec09f508fb7912fe5c
 translation_status: current
 ---
 
@@ -48,8 +48,14 @@ npm run build
 `npm run build` 包含无障碍和预算门禁；`npm run verify:site` 可在不重建时复查现有
 `website/build/`。
 
+质量报告位于 `build/reports/documentation/site-quality-report.json`，不进入部署/预算树；复查
+`website/build/` 会重现构建结果。
+
 本地迭代可用 `-PviewComposeDocsModules=artifact-a,artifact-b` 限制 Dokka 制品集合，生产构建
 不得使用该捷径。
+
+Governance V2 资产是仓库输入，不是第二份站点注册表：Phase 0A 冻结 schema，Phase 0B 通过
+compiled quality owner 报告，Phase 2 阻止新债务。生成 Reference 路由复用同一发现模型。
 
 React、navbar、footer 或 sidebar 新增消息 key 时运行 `npm run write-translations`。它只补充
 缺失 JSON，不覆盖已审阅中文。Markdown 镜像、源指纹、必需层级和恢复流程见
@@ -170,19 +176,12 @@ identity token。
 
 <div className="search-partition-detail">
 
-- **2026-08-25，Paging Phase 6 Demo/文档 Slice：**在同一份本地 macOS Lockfile 上，Phase 5
-  基线、未收敛 Phase 6 候选与加入本条证据前的收敛候选，其非 API 产物分别为 49,161,510、
-  49,231,869 和 49,090,456 字节。首个候选超过未调整的 46.9 MiB 上限 53,655 字节；把执行计划
-  中重复的已交付签名和逐阶段证据迁移到所属模块手册、Lazy Collections 指南、生成 API 树与 Git
-  历史后，相对基线减少 71,054 字节（-0.145%），测得余量为 87,758 字节。结果为**混合**：首版
-  表示方式发生回退，收敛后的表示方式同时改善了读者指引与存储量。加入本条证据记录后，语言、
-  翻译、路由、无障碍和全部预算仍通过。本次同主机对照不衡量部署传输、CDN 压缩、真实数据库/
-  网络行为；生成 API 产物继续由
-  独立预算约束。Phase 7 与归档工作不得重新扩张已完成契约的副本。
+- **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
+  上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量
+  2,502 字节；构建和构建后复查均通过。结论为**混合**：首版表示回退，收敛与可重复校验在不
+  删除契约、不提额的情况下纠正了问题。本地构建不覆盖部署/CDN/网络行为和独立预算的 API
+  产物；Phase 0B 必须复用编译模型并守住上限。
 
-这里只展开最新的同语料决策；Git 历史保留 2026-08-06 至 Phase 0 检查点被后续结论取代的
-检查点明细。那些测量建立了不可变 API 历史重建、双语搜索与无障碍门禁、计划和证据分段，
-并要求非 API 上限从 41 MiB 演进到 46.9 MiB 前先做重复内容收敛。历史中既有长期契约增长
-获接受，也有表示方式改进；它们都不授权删除当前契约或绕过下一次停止条件。
+Git 历史保存早期 Paging 和站点检查点；它们不授权删除当前契约、无证据提额或重新扩张副本。
 
 </div>

@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "capability_id": "layout.box",
+  "kind": "dsl",
+  "owner": { "kind": "module", "id": "viewcompose-ui-foundation" },
+  "artifact": "viewcompose-ui-foundation",
+  "version_state": { "lane": "next" },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.ui.foundation.dsl.Box",
+      "kind": "overload-set",
+      "visibility": "public",
+      "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/LayoutDsl.kt"
+    }
+  ],
+  "reference_owner": { "reference_id": "reference.layout.box", "generated": true },
+  "sample_owner": { "sample_id": "sample.layout.box-basic" },
+  "document_owners": {
+    "tutorial": ["tutorial.layout-basics"],
+    "module": ["module.viewcompose-ui-foundation"]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "impact_id": "impact.layout-box-alignment",
+  "change": "changed",
+  "breaking": false,
+  "artifact": "viewcompose-ui-foundation",
+  "symbol_id": "com.viewcompose.ui.foundation.dsl.Box",
+  "capability_id": "layout.box",
+  "q_level": "Q3",
+  "contract_fields": ["behavior", "inputs", "state"],
+  "documentation": {
+    "kdoc": { "status": "updated", "targets": ["com.viewcompose.ui.foundation.dsl.Box"] },
+    "module": { "status": "updated", "targets": ["module.viewcompose-ui-foundation"] },
+    "sample": { "status": "updated", "targets": ["sample.layout.box-basic"] },
+    "reference": { "status": "updated", "targets": ["reference.layout.box"] },
+    "tutorial": { "status": "not-applicable", "rationale": "The existing tutorial already covers the behavior." },
+    "guide": { "status": "not-applicable", "rationale": "No task workflow changes for this overload." },
+    "architecture": { "status": "not-applicable", "rationale": "No durable ownership invariant changes." },
+    "migration": { "status": "not-applicable", "rationale": "The change is source and behavior compatible." },
+    "redirect": { "status": "not-applicable", "rationale": "No public route or ownership location moves." }
+  }
+}

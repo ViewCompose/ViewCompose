@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.viewcompose.com/contracts/documentation-governance-v2/capability-impact.schema.json",
+  "title": "ViewCompose public capability impact contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "impact_id",
+    "change",
+    "breaking",
+    "artifact",
+    "symbol_id",
+    "capability_id",
+    "q_level",
+    "contract_fields",
+    "documentation"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "impact_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$" },
+    "change": { "enum": ["added", "changed", "moved", "deleted", "deprecated"] },
+    "breaking": { "type": "boolean" },
+    "artifact": { "type": "string", "pattern": "^viewcompose-[a-z0-9-]+$" },
+    "symbol_id": { "type": "string", "minLength": 3 },
+    "capability_id": { "type": "string", "minLength": 3 },
+    "q_level": { "enum": ["Q1", "Q2", "Q3"] },
+    "contract_fields": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "behavior",
+          "inputs",
+          "outputs",
+          "state",
+          "lifecycle",
+          "concurrency",
+          "callbacks",
+          "failure",
+          "android",
+          "performance",
+          "compatibility"
+        ]
+      }
+    },
+    "documentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kdoc",
+        "module",
+        "sample",
+        "reference",
+        "tutorial",
+        "guide",
+        "architecture",
+        "migration",
+        "redirect"
+      ],
+      "properties": {
+        "kdoc": { "$ref": "#/$defs/disposition" },
+        "module": { "$ref": "#/$defs/disposition" },
+        "sample": { "$ref": "#/$defs/disposition" },
+        "reference": { "$ref": "#/$defs/disposition" },
+        "tutorial": { "$ref": "#/$defs/disposition" },
+        "guide": { "$ref": "#/$defs/disposition" },
+        "architecture": { "$ref": "#/$defs/disposition" },
+        "migration": { "$ref": "#/$defs/disposition" },
+        "redirect": { "$ref": "#/$defs/disposition" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "change": { "enum": ["moved", "deleted"] } }, "required": ["change"] },
+      "then": {
+        "properties": {
+          "documentation": {
+            "properties": { "redirect": { "properties": { "status": { "const": "updated" } } } }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "breaking": { "const": true } }, "required": ["breaking"] },
+      "then": {
+        "properties": {
+          "documentation": {
+            "properties": { "migration": { "properties": { "status": { "const": "updated" } } } }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "disposition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "targets"],
+          "properties": {
+            "status": { "const": "updated" },
+            "targets": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "rationale"],
+          "properties": {
+            "status": { "const": "not-applicable" },
+            "rationale": { "type": "string", "minLength": 12 }
+          }
+        }
+      ]
+    }
+  }
+}
