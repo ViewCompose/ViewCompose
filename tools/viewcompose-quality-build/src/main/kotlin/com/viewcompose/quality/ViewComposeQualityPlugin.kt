@@ -713,6 +713,7 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 ),
             )
         }
+        project.registerLifecycleQualityTasks()
     }
 }
 

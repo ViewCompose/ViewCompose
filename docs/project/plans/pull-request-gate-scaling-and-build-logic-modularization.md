@@ -261,7 +261,7 @@ the root build must not receive a temporary Governance V2 scanner that will late
 | --- | --- | --- | --- |
 | 0 | baseline, task-graph manifest, required-check contract, failure fixtures | reviewed baseline and reproducible evidence checked in | Complete |
 | 1 | compiled quality-build skeleton and parity harness | old and delegated task graphs/failures match | Complete |
-| 2 | extraction of architecture, purity, Demo, documentation, device, and benchmark gates | root script contains no long verifier bodies; isolated tests pass | In progress (5/6 families complete) |
+| 2 | extraction of architecture, purity, Demo, documentation, device, and benchmark gates | root script contains no long verifier bodies; isolated tests pass | Complete |
 | 3 | conservative PR classifier and required-result facade | synthetic diff matrix and branch-protection scenarios pass | Not started |
 | 4 | immutable API cache and deduplicated site verification | hit, miss, corruption, tooling-change, and unpublished-source cases pass | Not started |
 | 5 | affected-module `qaQuick` execution and selective `qaPreview` | dependency/reverse-dependency golden graph and full fallback pass | Not started |
@@ -501,6 +501,33 @@ executed and `80` up-to-date) in `8 min 26 s` on the warmed checkout. The result
 change** to selected work or accepted gate behavior. The local duration is completeness evidence
 rather than a speedup claim because caches, daemon state, and machine load were not controlled.
 The next extraction family is lifecycle aggregation tasks and stable aliases.
+
+The sixth and final Phase 2 extraction family completed on 2026-08-25 as a hard cut. `qaQuick`,
+`qaPreview`, `qaFull`, `qaRelease`, `benchmarkRelease`, and `benchmarkCompare` now belong to the
+compiled quality plugin together with the complete `qaQuick` compile/test path list. The ordering
+contract that keeps every Maven-coordinate sample task after `publishViewComposeToLocalRepository`
+also moved under compiled ownership and remains lazy because the publishing plugin is applied
+after the quality plugin. All six root registrations, the path list, and root ordering wiring were
+deleted, reducing the root script from 359 to 182 lines. The Phase 2 target is therefore met: the
+root script is below 600 lines and contains neither lifecycle task registrations nor embedded
+scanner/process-control bodies.
+
+Two focused lifecycle tests preserve stable task metadata, every direct dependency, unique
+`qaQuick` paths, lazy included-build test ownership, and both existing and future Maven sample task
+ordering. The included build passed all 31 tests. Fresh dry-run graphs again matched every ordered
+Phase 0 task exactly: `qaQuick` 2,899/2,899, `qaPreview` 1,640/1,640, `qaFull` 3,098/3,098, and
+`verifyDocumentationStructure` 4/4. A detached comparison against the pre-cut `main` revision also
+matched the previously unfrozen stable aliases exactly: `qaRelease` 1,255/1,255,
+`benchmarkRelease` 1,198/1,198, and `benchmarkCompare` 1,200/1,200. The normalized task-set and
+ordering change is zero. Final acceptance also migrated the documentation-wiring regression from
+the deleted root registration to compiled lifecycle ownership; all 52 documentation script tests
+then passed and the test now rejects any root `qaQuick` re-registration. One subsequent
+`qaQuick` attempt reached Android sample packaging before `:samples:counter:packageDebug` reported
+an undetailed incremental-packager failure. A focused rerun rebuilt that task successfully, and the
+complete final `qaQuick` passed 2,341 actionable tasks (`179` executed and `2,162` up-to-date) in
+`16 s`. The result is **no material change** to selected work or accepted lifecycle behavior. This
+highly warmed post-retry duration is completeness evidence only, not a speedup measurement. The
+next action is Phase 3's conservative pull-request classifier and required-result facade.
 
 ### Phase 3: classify pull-request impact
 

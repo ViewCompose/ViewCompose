@@ -130,6 +130,16 @@ class ViewComposeQualityRootPluginTest {
         ).forEach { taskName ->
             assertTrue(project.tasks.getByName(taskName) is Exec)
         }
+        listOf(
+            "qaQuick",
+            "qaFull",
+            "qaRelease",
+            "benchmarkRelease",
+            "benchmarkCompare",
+            "qaPreview",
+        ).forEach { taskName ->
+            assertEquals("verification", project.tasks.getByName(taskName).group)
+        }
     }
 
     @Test
