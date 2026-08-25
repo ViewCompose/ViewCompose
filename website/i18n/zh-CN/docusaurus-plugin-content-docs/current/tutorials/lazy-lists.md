@@ -2,7 +2,7 @@
 title: 使用 Lazy 列表
 sidebar_position: 6
 translation_source: tutorials/lazy-lists.md
-translation_source_hash: 9cb4730f987bb4b32339356b1810c00621650f5a547fe9995d3d1fa7a0e6c756
+translation_source_hash: c6394a27c2401162b0012be34350d94e1010ec42987b4f30057515ec9be77bd4
 translation_status: current
 ---
 
@@ -26,7 +26,7 @@ dependencies {
 
 创建 `LazyListsTutorialActivity.kt`：
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LazyListsTutorialActivity.kt" region="lazy-lists" */}
+{/* tutorial-sample sample_id="tutorial.lazy-lists" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LazyListsTutorialActivity.kt" region="lazy-lists" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

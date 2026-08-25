@@ -24,7 +24,7 @@ dependencies {
 
 Create `LayoutsTutorialActivity.kt`:
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LayoutsTutorialActivity.kt" region="layouts" */}
+{/* tutorial-sample sample_id="tutorial.layouts-and-modifiers" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LayoutsTutorialActivity.kt" region="layouts" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

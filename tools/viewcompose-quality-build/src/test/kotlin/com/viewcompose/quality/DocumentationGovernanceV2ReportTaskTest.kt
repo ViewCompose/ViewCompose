@@ -60,6 +60,15 @@ class DocumentationGovernanceV2ReportTaskTest {
                 """.trimIndent(),
             )
         }
+        val compiledSamplePath =
+            "viewcompose-example/src/main/java/example/CurrentDocumentationSample.kt"
+        repository.resolve(compiledSamplePath).apply {
+            writeText(
+                "// DOCS_REGION_START(current)\n" +
+                    "VisibleDsl()\n" +
+                    "// DOCS_REGION_END(current)\n",
+            )
+        }
         val currentDocument = repository.resolve("docs/guides/current.md").apply {
             parentFile.mkdirs()
             writeText(
@@ -71,7 +80,7 @@ class DocumentationGovernanceV2ReportTaskTest {
                 version_lane: next
                 ---
 
-                {/* compiled-region source="samples/current.kt" region="current" sample_id="sample.current" */}
+                {/* compiled-region source="$compiledSamplePath" region="current" sample_id="sample.current" build_target=":viewcompose-example:compileKotlin" */}
                 ```kotlin
                 VisibleDsl()
                 ```
@@ -101,7 +110,7 @@ class DocumentationGovernanceV2ReportTaskTest {
                 translation_status: current
                 ---
 
-                {/* compiled-region source="samples/current.kt" region="current" sample_id="sample.current" */}
+                {/* compiled-region source="$compiledSamplePath" region="current" sample_id="sample.current" build_target=":viewcompose-example:compileKotlin" */}
                 ```kotlin
                 VisibleDsl()
                 ```
@@ -202,6 +211,50 @@ class DocumentationGovernanceV2ReportTaskTest {
         assertTrue(first.report.contains("\"contractViolations\": []"))
         assertTrue(first.report.contains("\"ratchetViolations\": ["))
         assertTrue(first.humanReport.contains("Gate: failed; violations: 4"))
+
+        val currentMirrorText = localeMirror.readText()
+        localeMirror.writeText(currentMirrorText.replace("VisibleDsl()", "StaleDsl()"))
+        val staleMirror = DocumentationGovernanceV2Reporter.generate(
+            repository = repository,
+            contractFiles = inputs,
+            recordFiles = setOf(baseline),
+            sourceSetDirectories = setOf(sourceRoot),
+            activeDocumentationFiles = setOf(currentDocument, legacyDocument),
+            localeMirrorFiles = setOf(localeMirror),
+            publishingFiles = setOf(publishing, releases),
+            documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
+        )
+        assertTrue(
+            staleMirror.report.contains(
+                "fence content differs from $compiledSamplePath region current",
+            ),
+        )
+        assertTrue(
+            staleMirror.ratchetViolations.any { violation ->
+                violation.contains("taxonomy-mismatch")
+            },
+        )
+        localeMirror.writeText(currentMirrorText)
+
+        val currentDocumentText = currentDocument.readText()
+        currentDocument.writeText(
+            currentDocumentText.replace(
+                " build_target=\":viewcompose-example:compileKotlin\"",
+                "",
+            ),
+        )
+        val incompleteMarker = DocumentationGovernanceV2Reporter.generate(
+            repository = repository,
+            contractFiles = inputs,
+            recordFiles = setOf(baseline),
+            sourceSetDirectories = setOf(sourceRoot),
+            activeDocumentationFiles = setOf(currentDocument, legacyDocument),
+            localeMirrorFiles = setOf(localeMirror),
+            publishingFiles = setOf(publishing, releases),
+            documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
+        )
+        assertTrue(incompleteMarker.report.contains("compiled-region requires build_target"))
+        currentDocument.writeText(currentDocumentText)
 
         legacyDocument.appendText(
             """

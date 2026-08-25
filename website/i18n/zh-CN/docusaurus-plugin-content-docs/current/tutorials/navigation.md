@@ -2,7 +2,7 @@
 title: 使用导航
 sidebar_position: 8
 translation_source: tutorials/navigation.md
-translation_source_hash: 84cf874bf493622b631cea75ed1c5c8a0deac82f997a74a3023715fbbf79506f
+translation_source_hash: 58c6049d35a8e5111b734d28b3b3638d59e89ecb85045302ca38b201999f4fc4
 translation_status: current
 ---
 
@@ -27,7 +27,7 @@ dependencies {
 
 创建 `NavigationTutorialActivity.kt`：
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/NavigationTutorialActivity.kt" region="navigation" */}
+{/* tutorial-sample sample_id="tutorial.navigation" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/NavigationTutorialActivity.kt" region="navigation" required_artifacts="viewcompose-navigation-android" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

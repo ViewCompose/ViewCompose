@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: f7e2a4fb9d8fcc9d0d30a86f70e55df55d8988cdbbcfa999a2a4535d837f1ffa
+translation_source_hash: 451b1d95643fedb2fdf68906cbbf1c37c23bdb210b09625a374ed7c8bc613e13
 translation_status: current
 ---
 
@@ -116,6 +116,17 @@ Tutorial 不能是 `version-agnostic`；切换 lane 属于显式文档/发布事
 Tutorial、安装和可复制示例禁止 `non-executable`，也不能借它掩盖陈旧 API 或缺失依赖。分类以
 注册记录为准，而不是语法高亮。
 
+注册标记紧邻其拥有的 fence。`compiled-region` 必须声明稳定 `sample_id`、仓库相对 `source`、
+唯一 `region`，以及位于已注册 source-set 输入中的 `build_target`。`generated-signature` 声明
+`symbol_id` 与 `generator`；`non-executable` 声明 `reason` 与 `visible_explanation`。Tutorial
+页面使用 `tutorial-sample`，声明稳定 `sample_id`、源码区域和可选的逗号分隔
+`required_artifacts`，其构建目标固定为 Tutorial sample 模块。迁移比较使用 `paired-sample` 及其
+专用 paired-sample 构建。
+
+门禁只规范化换行与边界空白，将每个已注册可编译 fence 与唯一分隔的源码区域逐字比较；canonical
+页面和 locale 镜像分别执行相同校验。源码未纳入输入、region 分隔符缺失或重复、fence 正文陈旧、
+标记字段不完整，或文档类型禁止该标记分类时，都会成为 taxonomy violation。
+
 ### 公共能力影响
 
 每个 public/protected 新增、改变、移动、弃用或删除，都记录 artifact、symbol、capability、
@@ -213,8 +224,11 @@ Compose 文档，也不能把名称相似当作语义等价。
 - screenshot 标识设备、theme、font scale、locale 和模块版本；
 - 使 sample 失效的同一变更中修复或删除。
 
-教程门禁会核对精确源码区域、两种语言中的完整依赖声明，并禁止公共教程 sample 使用本地
-`project(...)` 依赖。不得维护会静默漂移的大段独立代码块。
+教程门禁会递归发现每个 Tutorial 根目录下的全部 Markdown/MDX 页面；只有索引和
+`getting-started.md` 是保留的非 sample 页面。其余每个 Tutorial 都必须且只能包含一个
+`tutorial-sample` 注册，并且 `sample_id` 不得重复。门禁会核对精确源码区域、两种语言中的完整
+依赖声明、已声明的可选制品，并禁止公共教程 sample 使用本地 `project(...)` 依赖。因此新增或嵌套
+Tutorial 不能通过未写入手工 map 来绕过编译。不得维护会静默漂移的大段独立代码块。
 
 ## 版本与 URL 稳定性
 

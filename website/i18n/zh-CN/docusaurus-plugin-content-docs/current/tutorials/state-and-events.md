@@ -2,7 +2,7 @@
 title: 使用状态与事件
 sidebar_position: 3
 translation_source: tutorials/state-and-events.md
-translation_source_hash: 081f733ce4e1948577f8b78b7dea34a3e27285c73af37d1bfa59fa79ae2b5a68
+translation_source_hash: ccdd6d5aa61def1a89af043dd9cd33af5f678dcb90c239dab169af5410d1a3b5
 translation_status: current
 ---
 
@@ -27,7 +27,7 @@ dependencies {
 
 创建 `StateTutorialActivity.kt`。这个文件自行拥有状态、界面与 Android 宿主，不依赖其他教程文件。
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/StateTutorialActivity.kt" region="state" */}
+{/* tutorial-sample sample_id="tutorial.state-and-events" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/StateTutorialActivity.kt" region="state" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

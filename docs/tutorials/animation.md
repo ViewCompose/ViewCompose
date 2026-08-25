@@ -25,7 +25,7 @@ dependencies {
 
 Create `AnimationTutorialActivity.kt`:
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/AnimationTutorialActivity.kt" region="animation" */}
+{/* tutorial-sample sample_id="tutorial.animation" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/AnimationTutorialActivity.kt" region="animation" required_artifacts="viewcompose-animation" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

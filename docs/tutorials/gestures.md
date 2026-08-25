@@ -24,7 +24,7 @@ dependencies {
 
 Create `GesturesTutorialActivity.kt`:
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/GesturesTutorialActivity.kt" region="gestures" */}
+{/* tutorial-sample sample_id="tutorial.gestures" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/GesturesTutorialActivity.kt" region="gestures" required_artifacts="viewcompose-gesture" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

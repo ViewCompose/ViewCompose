@@ -19,6 +19,14 @@ class ViewComposeQualityRootPluginTest {
         val catalog = repository.resolve("catalog.properties").apply { writeText("module=value\n") }
         val sourceSet = repository.resolve("module/src/main").apply { mkdirs() }
         val policy = repository.resolve("policy.txt").apply { writeText("policy\n") }
+        repository.resolve("docs/tutorials/getting-started.md").apply {
+            parentFile.mkdirs()
+            writeText("# Getting started\n")
+        }
+        repository.resolve("docs/tutorials/nested/automatically-discovered.md").apply {
+            parentFile.mkdirs()
+            writeText("# Automatically discovered\n")
+        }
         val project = ProjectBuilder.builder().withProjectDir(repository).build()
 
         project.pluginManager.apply(ViewComposeQualityRootPlugin::class.java)
@@ -106,6 +114,13 @@ class ViewComposeQualityRootPluginTest {
         assertTrue(
             tutorialTask.documentationFiles.files.any { file ->
                 file.invariantSeparatorsPath.endsWith("docs/tutorials/getting-started.md")
+            },
+        )
+        assertTrue(
+            tutorialTask.documentationFiles.files.any { file ->
+                file.invariantSeparatorsPath.endsWith(
+                    "docs/tutorials/nested/automatically-discovered.md",
+                )
             },
         )
         assertTrue(project.tasks.getByName("verifyDocumentationScripts") is Exec)

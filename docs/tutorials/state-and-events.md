@@ -25,7 +25,7 @@ dependencies {
 Create `StateTutorialActivity.kt`. The file owns its state, UI, and Android host, so it does not
 depend on another tutorial file.
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/StateTutorialActivity.kt" region="state" */}
+{/* tutorial-sample sample_id="tutorial.state-and-events" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/StateTutorialActivity.kt" region="state" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

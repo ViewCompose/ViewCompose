@@ -24,7 +24,7 @@ dependencies {
 
 Create `LazyListPerformanceTutorialActivity.kt`:
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LazyListPerformanceTutorialActivity.kt" region="lazy-list-performance" */}
+{/* tutorial-sample sample_id="tutorial.lazy-list-performance" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LazyListPerformanceTutorialActivity.kt" region="lazy-list-performance" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

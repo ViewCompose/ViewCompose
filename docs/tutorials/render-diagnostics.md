@@ -24,7 +24,7 @@ dependencies {
 
 Create `RenderDiagnosticsTutorialActivity.kt`:
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/RenderDiagnosticsTutorialActivity.kt" region="render-diagnostics" */}
+{/* tutorial-sample sample_id="tutorial.render-diagnostics" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/RenderDiagnosticsTutorialActivity.kt" region="render-diagnostics" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

@@ -2,7 +2,7 @@
 title: 使用 AndroidView
 sidebar_position: 10
 translation_source: tutorials/android-view.md
-translation_source_hash: df02d028eac8f6909d678e3c85676ec00b9c2579363c818c026e878056d53599
+translation_source_hash: d41d832345ed0019868501d4cfa93fd2f80a98136dfeae40387f0436a4e77b3b
 translation_status: current
 ---
 
@@ -26,7 +26,7 @@ dependencies {
 
 创建 `AndroidViewTutorialActivity.kt`：
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/AndroidViewTutorialActivity.kt" region="android-view" */}
+{/* tutorial-sample sample_id="tutorial.android-view" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/AndroidViewTutorialActivity.kt" region="android-view" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

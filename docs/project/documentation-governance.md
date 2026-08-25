@@ -158,6 +158,20 @@ Every public Kotlin/Java fence has one registered identity and class:
 `non-executable` is forbidden in Tutorials, installation, and copy-ready examples and cannot hide
 stale APIs or missing dependencies. Registration, not syntax highlighting, classifies a fence.
 
+Registration markers are adjacent to the fence they own. `compiled-region` names a stable
+`sample_id`, repository-relative `source`, unique `region`, and `build_target`; the source must be
+under a registered source-set input. `generated-signature` names its `symbol_id` and `generator`; `non-executable`
+names its `reason` and `visible_explanation`. Tutorial pages use `tutorial-sample` with a stable
+`sample_id`, source region, and optional comma-separated `required_artifacts`; their build target
+is the Tutorial sample module. Migration comparisons use `paired-sample` and their dedicated
+paired-sample build.
+
+The gate compares each registered compiled fence byte-for-byte with the unique delimited source
+region after normalizing only line endings and boundary whitespace. It applies the same comparison
+independently to the canonical page and locale mirror. A missing source input, duplicate/missing
+region delimiter, stale fence body, incomplete marker, or marker class forbidden for that document
+type is a taxonomy violation.
+
 ### Public capability impact
 
 Every public/protected add, change, move, deprecation, or deletion records artifact, symbol,
@@ -339,9 +353,14 @@ Executable source is the truth for code samples:
   versions;
 - obsolete samples are fixed or removed in the same change that invalidates them.
 
-The tutorial gate verifies exact source regions, complete dependency declarations in both locales,
-and the absence of local `project(...)` dependencies in public tutorial sample modules. Do not
-maintain large independent code blocks that can silently diverge from the repository.
+The tutorial gate recursively discovers every Markdown/MDX page under each Tutorial root; only the
+index and `getting-started.md` are reserved non-sample pages. Every other discovered Tutorial must
+contain exactly one `tutorial-sample` registration, and `sample_id` values must be unique. The gate
+verifies exact source regions, complete dependency declarations in both locales, declared optional
+artifacts, and the absence of local `project(...)` dependencies in public tutorial sample modules.
+A newly added or nested Tutorial therefore cannot bypass compilation by being omitted from a
+handwritten map. Do not maintain large independent code blocks that can silently diverge from the
+repository.
 
 ## Versioning and URL stability
 

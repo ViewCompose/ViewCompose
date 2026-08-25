@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Replace hardcoded Tutorial registration with automatic type-aware sample discovery.
+next_action: Enforce public API capability-impact ownership and generated Reference freshness.
 maven_release_changesets: []
 ---
 
@@ -30,9 +30,11 @@ maven_release_changesets: []
 ## Status
 
 Active. The assessment baseline was frozen on `main` at `4fd14c4a` on 2026-08-25. Phases 0A, 0B,
-and 1 are complete, and the first Phase 2 slice now enforces the frozen baseline as a blocking
-no-new-debt ratchet. The normative contract, compiled scanner, precise production/public inventory,
-and exact reviewed debt baseline all run from the quality included build.
+and 1 are complete. The first Phase 2 slice enforces the frozen baseline as a blocking no-new-debt
+ratchet; the second automatically discovers Tutorial pages and validates type-aware sample markers
+plus exact source-region identity in both languages. The normative contract, compiled scanner,
+precise production/public inventory, and exact reviewed debt baseline all run from the quality
+included build.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -41,7 +43,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: replace hardcoded Tutorial registration with automatic type-aware sample discovery.
+Next action: enforce public API capability-impact ownership and generated Reference freshness.
 
 ## Maven release changesets
 
@@ -49,11 +51,11 @@ Next action: replace hardcoded Tutorial registration with automatic type-aware s
 
 ## Release intent rationale
 
-The first Phase 2 slice changes governance records, workflows, and compiled repository-quality
-tooling only; it does not change a published artifact's production source, publication inputs, or
-compiled API samples.
+The completed Phase 2 governance-tooling slices change governance records, documentation markers,
+workflows, and compiled repository-quality tooling only; they do not change a published artifact's
+production source, publication inputs, or compiled API sample bodies.
 `verifyViewComposeReleaseIntent` confirmed zero release artifacts, zero ignored artifacts, and zero
-shared-path classifications against `5cdb9851760541180ede6a4e12240f7fb17bf59a`.
+shared-path classifications against `1cdad31d99dfb37b249609276259a16eb7e20954`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -474,9 +476,42 @@ active contract, canonicalized the shared social card, pruned its 761,036 B loca
 the production build with 762,215.4 B (1.5499%) headroom. The owning site contract records the
 absolute and normalized comparison; the conclusion is `improved`, the single local production
 build is the limitation, and independent documentation CI is the next acceptance action.
-The limitation is that this slice enforces debt monotonicity only; automatic Tutorial/sample
-ownership, complete capability-impact semantics, generated Reference freshness, and route-change
-checks remain later Phase 2 slices. Type-aware Tutorial discovery is the next action.
+The limitation of the first slice was that it enforced debt monotonicity only. The second slice
+removes the handwritten Tutorial map: the gate recursively discovers canonical and localized
+Tutorial pages, requires exactly one stable `tutorial-sample` registration per non-index page,
+derives optional artifact requirements from that marker, and rejects duplicate sample IDs or
+unregistered source inputs. The shared scanner now interprets `compiled-region`,
+`generated-signature`, `non-executable`, `tutorial-sample`, and `paired-sample` according to their
+type-specific fields. All registered compiled fences are checked against one unique delimited
+source region in both the canonical page and language mirror; stale content, invalid fields,
+forbidden Tutorial pseudocode, and source paths outside registered source-set inputs become
+unbaselined taxonomy debt and fail the existing ratchet.
+
+The current inventory remains 433 production entries, 116 public pages, 198 Kotlin/Java fences,
+116 locale mirrors, 733 findings, and 311 exact baseline records. Twenty fences are registered—12
+Tutorial regions and eight migration comparison regions—and all 20 canonical plus 20 mirrored
+source comparisons have zero classification violation. The remaining 178 historical unclassified
+fences stay frozen rather than being reclassified by assertion; Phase 5 removes that debt through
+owned compiled-source migration. Automatic discovery and exact source identity are therefore
+`improved`, while the historical issue count has `no material change`. Complete capability-impact
+semantics, generated Reference freshness, route-change checks, and migration of the frozen fence
+debt remain later slices. Public API capability-impact ownership is the next action.
+
+The second-slice quality included build passed 36/36 tests. Negative coverage proves that a nested
+new Tutorial without one compiled registration fails automatic discovery and that stale localized
+fence content fails exact source identity. `verifyTutorialSamples`,
+`verifyDocumentationStructure`, `verifyDevelopmentToolingIsolation`, and release-intent validation
+all passed; the documentation script suite passed 55/55 tests and all 116 required translations
+were current. Two independently forced Governance V2 reports were byte-identical: machine JSON
+SHA-256 `fc1d37497983376ff35c5d036cc4fa9eb21d6182f6da385d6b368f1cb94bb5fa` and human report
+SHA-256 `8c1a3f2d6736bb086bfedc5f11eb9e7a1ebdc6473835e62061dd9111b9857f6f`.
+The final implementation-invalidated `qaQuick` passed in 10 minutes 22 seconds with 2,342
+actionable tasks (2,246 executed and 96 up-to-date). Against the first-slice acceptance run,
+actionable task count was unchanged (0%), executed work fell by 16 tasks (-0.71%), while wall time
+rose by 161 seconds (+34.92%). The opposing work/time directions and uncontrolled host load/cache
+make build-timing impact `inconclusive`; the task-graph conclusion is `no material change`, and the
+functional gate conclusion remains `improved`. One local host run is the limitation and
+pull-request CI is the next independent acceptance step.
 
 ### Phase 3: information-architecture restructure
 

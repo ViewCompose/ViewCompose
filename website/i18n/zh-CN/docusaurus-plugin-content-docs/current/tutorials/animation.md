@@ -2,7 +2,7 @@
 title: 使用 AnimatedVisibility
 sidebar_position: 11
 translation_source: tutorials/animation.md
-translation_source_hash: eb76fd40fcc854142fde09d231354bb1b367d75f3c75835ade13588e554db543
+translation_source_hash: a941cb06bb8b5cc907a3559a6bc0a919d6fc4e2351e5cf4572c7d12e0b2a1911
 translation_status: current
 ---
 
@@ -27,7 +27,7 @@ dependencies {
 
 创建 `AnimationTutorialActivity.kt`：
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/AnimationTutorialActivity.kt" region="animation" */}
+{/* tutorial-sample sample_id="tutorial.animation" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/AnimationTutorialActivity.kt" region="animation" required_artifacts="viewcompose-animation" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

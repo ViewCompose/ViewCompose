@@ -2,7 +2,7 @@
 title: 使用 Overlay
 sidebar_position: 9
 translation_source: tutorials/overlays.md
-translation_source_hash: 63462bcc0ae213914f42a60b294be149235e097fb54ea5ab4bf06173e9a45d3a
+translation_source_hash: 357436db439ad1a6b46ff86b07562e60d41edd78da2b7a8ffecedeb7a34aa101
 translation_status: current
 ---
 
@@ -30,7 +30,7 @@ presenter，无法显示。
 
 创建 `OverlaysTutorialActivity.kt`：
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/OverlaysTutorialActivity.kt" region="overlays" */}
+{/* tutorial-sample sample_id="tutorial.overlays" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/OverlaysTutorialActivity.kt" region="overlays" required_artifacts="viewcompose-overlay-material3-android" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

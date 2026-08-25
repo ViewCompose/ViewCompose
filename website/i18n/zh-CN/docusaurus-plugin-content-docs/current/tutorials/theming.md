@@ -2,7 +2,7 @@
 title: 使用主题
 sidebar_position: 7
 translation_source: tutorials/theming.md
-translation_source_hash: 976e4ec81efafafac9d01d7b0098a32350615ea0dbfdbc008403069f7091d015
+translation_source_hash: 220462d5f5347df6b0a79f783b46e20955e93e2da38ed8985daed680160745b4
 translation_status: current
 ---
 
@@ -33,7 +33,7 @@ dependencies {
 
 创建 `ThemingTutorialActivity.kt`：
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ThemingTutorialActivity.kt" region="theming" */}
+{/* tutorial-sample sample_id="tutorial.theming" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ThemingTutorialActivity.kt" region="theming" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 

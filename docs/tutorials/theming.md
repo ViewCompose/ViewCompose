@@ -30,7 +30,7 @@ Use a Material DayNight theme on the application or Activity:
 
 Create `ThemingTutorialActivity.kt`:
 
-{/* tutorial-sample source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ThemingTutorialActivity.kt" region="theming" */}
+{/* tutorial-sample sample_id="tutorial.theming" source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ThemingTutorialActivity.kt" region="theming" */}
 ```kotlin
 package com.viewcompose.samples.tutorials
 
