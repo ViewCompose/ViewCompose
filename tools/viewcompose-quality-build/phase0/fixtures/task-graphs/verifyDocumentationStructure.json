@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "df97484db36539cb2011e30f480f850e25ab9fd4",
+  "target": "verifyDocumentationStructure",
+  "command": "./gradlew --dry-run --console=plain verifyDocumentationStructure",
+  "taskCount": 4,
+  "tasks": [
+    ":verifyDocumentLanguages",
+    ":verifyDocumentationScripts",
+    ":verifyDocumentationTranslations",
+    ":verifyDocumentationStructure"
+  ]
+}

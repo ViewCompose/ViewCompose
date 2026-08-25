@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Phase 0 safety contract for the future pull-request classifier; this is not active CI selection logic.",
+  "alwaysFull": [
+    ".github/workflows/**",
+    "build.gradle.kts",
+    "settings.gradle.kts",
+    "gradle/**",
+    "release/**",
+    "tools/viewcompose-quality-build/**",
+    "tools/viewcompose-preview-build/**",
+    "tools/viewcompose-publishing-build/**",
+    "tools/viewcompose-publishing-smoke/**",
+    "website/package.json",
+    "website/package-lock.json",
+    "website/docusaurus.config.ts",
+    "website/scripts/**"
+  ],
+  "knownScoped": [
+    "docs/**",
+    "website/src/**",
+    "website/static/**",
+    "website/i18n/**",
+    "app/**",
+    "samples/**",
+    "integration-tests/**"
+  ],
+  "unknownPathBehavior": "full",
+  "cases": [
+    {
+      "path": "build.gradle.kts",
+      "expected": { "mode": "full", "reason": "always-full:build.gradle.kts" }
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "expected": { "mode": "full", "reason": "always-full:.github/workflows/**" }
+    },
+    {
+      "path": "docs/project/development-workflow.md",
+      "expected": { "mode": "scoped", "reason": "known-scoped:docs/**" }
+    },
+    {
+      "path": "future-system/unknown.file",
+      "expected": { "mode": "full", "reason": "unknown-path" }
+    }
+  ]
+}

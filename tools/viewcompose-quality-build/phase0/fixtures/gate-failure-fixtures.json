@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Virtual failing repositories for the Phase 1 parity harness. Paths are repository-relative and contents are deliberately minimal.",
+  "requiredScannerTasks": [
+    "verifyModulePackageRoots",
+    "verifyAndroidModuleNamespaces",
+    "verifyModuleDependencyBoundaries",
+    "verifyDevelopmentToolingIsolation",
+    "verifyDemoReleaseToolingApk",
+    "verifyDemoAutomationSelectors",
+    "verifyDemoLocalizationResources",
+    "verifyDemoLocalizedVisibleCopy",
+    "verifyDesignSystemIsolation",
+    "verifyUiFoundationPlatformBoundary",
+    "verifyRuntimePurity",
+    "verifyGestureCorePurity",
+    "verifyGraphicsCorePurity",
+    "verifyPreviewCorePurity",
+    "verifyPreviewRunnerBoundary",
+    "verifyPreviewGradlePluginBoundary",
+    "verifyPreviewWorkerHostBoundary",
+    "verifyNavigationCorePurity",
+    "verifyMigrationPairedSamples",
+    "verifyTutorialSamples",
+    "verifyDocumentLanguages",
+    "verifyDocumentationTranslations",
+    "verifyDocumentationStructure",
+    "verifyDslApiContracts"
+  ],
+  "fixtures": [
+    {
+      "id": "package-root-outside-contract",
+      "task": "verifyModulePackageRoots",
+      "input": { "virtualFiles": { "viewcompose-runtime/src/main/java/wrong/Bad.kt": "package wrong\n" } },
+      "expectedDiagnostic": "Module package-root verification failed:"
+    },
+    {
+      "id": "android-namespace-mismatch",
+      "task": "verifyAndroidModuleNamespaces",
+      "input": { "virtualFiles": { "viewcompose-host-android/build.gradle.kts": "android { namespace = \"wrong.namespace\" }\n" } },
+      "expectedDiagnostic": "Android namespace verification failed:"
+    },
+    {
+      "id": "forbidden-project-dependency",
+      "task": "verifyModuleDependencyBoundaries",
+      "input": { "virtualFiles": { "viewcompose-runtime/build.gradle.kts": "dependencies { implementation(project(\":app\")) }\n" } },
+      "expectedDiagnostic": "Module dependency-boundary verification failed:"
+    },
+    {
+      "id": "runtime-tooling-marker",
+      "task": "verifyDevelopmentToolingIsolation",
+      "input": { "virtualFiles": { "viewcompose-runtime/src/main/kotlin/Bad.kt": "val marker = \"PreviewWorkerHost\"\n" } },
+      "expectedDiagnostic": "Development-tooling isolation verification failed:"
+    },
+    {
+      "id": "release-apk-tooling-entry",
+      "task": "verifyDemoReleaseToolingApk",
+      "input": { "zipEntries": { "com/viewcompose/preview/worker/PreviewWorkerHost.class": "PreviewWorkerHost" } },
+      "expectedDiagnostic": "Release APK tooling-isolation verification failed:"
+    },
+    {
+      "id": "duplicate-demo-selector",
+      "task": "verifyDemoAutomationSelectors",
+      "input": { "virtualFiles": { "app/src/main/java/demo.kt": "Modifier.testTag(\"duplicate\")\nModifier.testTag(\"duplicate\")\n" } },
+      "expectedDiagnostic": "Demo automation selector verification failed:"
+    },
+    {
+      "id": "missing-chinese-demo-string",
+      "task": "verifyDemoLocalizationResources",
+      "input": { "virtualFiles": { "app/src/main/res/values/strings.xml": "<resources><string name=\"only_default\">Default</string></resources>", "app/src/main/res/values-zh-rCN/strings.xml": "<resources/>" } },
+      "expectedDiagnostic": "Demo localization resource verification failed:"
+    },
+    {
+      "id": "hard-coded-visible-copy",
+      "task": "verifyDemoLocalizedVisibleCopy",
+      "input": { "virtualFiles": { "app/src/main/java/demo.kt": "Text(text = \"Visible copy\")\n" } },
+      "expectedDiagnostic": "Demo localized visible-copy verification failed:"
+    },
+    {
+      "id": "foundation-material-import",
+      "task": "verifyDesignSystemIsolation",
+      "input": { "virtualFiles": { "viewcompose-ui-foundation/src/main/kotlin/Bad.kt": "import com.google.android.material.button.MaterialButton\n" } },
+      "expectedDiagnostic": "Design-system isolation verification failed:"
+    },
+    {
+      "id": "foundation-androidx-dependency",
+      "task": "verifyUiFoundationPlatformBoundary",
+      "input": { "virtualFiles": { "viewcompose-ui-foundation/build.gradle.kts": "dependencies { implementation(\"androidx.core:core-ktx:1.0.0\") }\n" } },
+      "expectedDiagnostic": "UI Foundation platform-boundary verification failed:"
+    },
+    {
+      "id": "runtime-android-import",
+      "task": "verifyRuntimePurity",
+      "input": { "virtualFiles": { "viewcompose-runtime/src/main/kotlin/Bad.kt": "import android.content.Context\n" } },
+      "expectedDiagnostic": "Runtime purity verification failed:"
+    },
+    {
+      "id": "gesture-core-android-import",
+      "task": "verifyGestureCorePurity",
+      "input": { "virtualFiles": { "viewcompose-gesture-core/src/main/kotlin/Bad.kt": "import android.view.MotionEvent\n" } },
+      "expectedDiagnostic": "Gesture-core purity verification failed:"
+    },
+    {
+      "id": "graphics-core-android-import",
+      "task": "verifyGraphicsCorePurity",
+      "input": { "virtualFiles": { "viewcompose-graphics-core/src/main/kotlin/Bad.kt": "import android.graphics.Canvas\n" } },
+      "expectedDiagnostic": "Graphics-core purity verification failed:"
+    },
+    {
+      "id": "preview-core-android-import",
+      "task": "verifyPreviewCorePurity",
+      "input": { "virtualFiles": { "viewcompose-preview-core/src/main/kotlin/Bad.kt": "import android.app.Application\n" } },
+      "expectedDiagnostic": "Preview-core purity verification failed:"
+    },
+    {
+      "id": "preview-runner-compose-import",
+      "task": "verifyPreviewRunnerBoundary",
+      "input": { "virtualFiles": { "viewcompose-preview-runner/src/main/kotlin/Bad.kt": "import androidx.compose.runtime.Composable\n" } },
+      "expectedDiagnostic": "Preview-runner boundary verification failed:"
+    },
+    {
+      "id": "preview-plugin-android-import",
+      "task": "verifyPreviewGradlePluginBoundary",
+      "input": { "virtualFiles": { "viewcompose-preview-gradle-plugin/src/main/kotlin/Bad.kt": "import android.content.Context\n" } },
+      "expectedDiagnostic": "Preview Gradle plugin boundary verification failed:"
+    },
+    {
+      "id": "preview-worker-gradle-import",
+      "task": "verifyPreviewWorkerHostBoundary",
+      "input": { "virtualFiles": { "viewcompose-preview-worker-host/src/main/kotlin/Bad.kt": "import org.gradle.api.Project\n" } },
+      "expectedDiagnostic": "Preview worker host boundary verification failed:"
+    },
+    {
+      "id": "navigation-core-android-import",
+      "task": "verifyNavigationCorePurity",
+      "input": { "virtualFiles": { "viewcompose-navigation-core/src/main/kotlin/Bad.kt": "import android.os.Bundle\n" } },
+      "expectedDiagnostic": "Navigation core purity verification failed:"
+    },
+    {
+      "id": "migration-snippet-drift",
+      "task": "verifyMigrationPairedSamples",
+      "input": { "virtualFiles": { "docs/migration/state.md": "{/* paired-sample source=\"sample.kt\" region=\"state\" */}\n```kotlin\nstale()\n```\n{/* paired-sample-end */}\n", "sample.kt": "// DOCS_REGION_START(state)\ncurrent()\n// DOCS_REGION_END(state)\n" } },
+      "expectedDiagnostic": "Migration paired-sample verification failed:"
+    },
+    {
+      "id": "tutorial-project-dependency",
+      "task": "verifyTutorialSamples",
+      "input": { "virtualFiles": { "samples/tutorials/build.gradle.kts": "dependencies { implementation(project(\":viewcompose-runtime\")) }\n" } },
+      "expectedDiagnostic": "Tutorial sample verification failed:"
+    },
+    {
+      "id": "canonical-document-chinese-prose",
+      "task": "verifyDocumentLanguages",
+      "input": { "virtualFiles": { "docs/guides/bad.md": "# Guide\n\n这是中文正文。\n" } },
+      "expectedDiagnostic": "Document language verification failed:"
+    },
+    {
+      "id": "translation-fingerprint-stale",
+      "task": "verifyDocumentationTranslations",
+      "input": { "translation": { "source": "docs/guides/example.md", "recordedFingerprint": "0000000000000000", "actualFingerprint": "ffffffffffffffff" } },
+      "expectedDiagnostic": "Translation verification failed:"
+    },
+    {
+      "id": "broken-document-link",
+      "task": "verifyDocumentationStructure",
+      "input": { "virtualFiles": { "docs/README.md": "[Missing](./missing.md)\n" } },
+      "expectedDiagnostic": "Documentation structure verification failed:"
+    },
+    {
+      "id": "dsl-missing-kdoc",
+      "task": "verifyDslApiContracts",
+      "input": { "virtualFiles": { "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/Bad.kt": "fun UiTreeBuilder.Bad(value: Int) = Unit\n" } },
+      "expectedDiagnostic": "DSL API contract verification failed:"
+    }
+  ],
+  "nonScannerExtractionCoverage": [
+    {
+      "task": "verifyConnectedAndroidDeviceReady",
+      "existingContract": "build.gradle.kts device-state diagnostics and connected-test dependency wiring"
+    },
+    {
+      "task": "testBenchmarkComparisonTool",
+      "existingContract": "tools/performance/test_compare_macrobenchmarks.py"
+    },
+    {
+      "task": "testPagingMacrobenchmarkSummaryTool",
+      "existingContract": "tools/performance/test_summarize_paging_macrobenchmark.py"
+    },
+    {
+      "task": "testDeviceDiagnosticsRequestMeasurementTool",
+      "existingContract": "tools/performance/test_measure_device_diagnostics_request.py"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-25",
+  "sourceRevision": "df97484db36539cb2011e30f480f850e25ab9fd4",
+  "repository": "ViewCompose/ViewCompose",
+  "defaultBranch": "main",
+  "branchProtection": {
+    "strict": false,
+    "requiredApprovingReviewCount": 0,
+    "requiredContexts": [
+      {
+        "context": "qaQuick",
+        "workflow": ".github/workflows/ci.yml",
+        "job": "qaQuick"
+      },
+      {
+        "context": "Build documentation",
+        "workflow": ".github/workflows/documentation.yml",
+        "job": "build"
+      }
+    ],
+    "observedNonRequiredContexts": ["qaPreview"]
+  },
+  "workflows": {
+    "ci": {
+      "triggers": ["pull_request", "push:main"],
+      "concurrency": "ci-${workflow}-${ref}",
+      "cancelInProgress": true,
+      "jobs": {
+        "qaQuick": {
+          "timeoutMinutes": 45,
+          "command": "./gradlew -Dorg.gradle.jvmargs=\"-Xmx4096m -Dfile.encoding=UTF-8\" --max-workers=2 qaQuick --stacktrace"
+        },
+        "qaPreview": {
+          "timeoutMinutes": 45,
+          "command": "./gradlew qaPreview --stacktrace",
+          "failureArtifacts": true
+        }
+      }
+    },
+    "documentation": {
+      "triggers": ["pull_request", "push:main:path-filtered", "workflow_dispatch"],
+      "concurrency": "documentation-${workflow}-${ref}",
+      "cancelInProgress": true,
+      "buildTimeoutMinutes": 45,
+      "buildSteps": [
+        "./gradlew verifyDocumentationStructure --stacktrace",
+        "./gradlew verifyCompleteViewComposeApiDocs --stacktrace",
+        "npm run typecheck",
+        "npm run build"
+      ],
+      "deployment": {
+        "branch": "main",
+        "requiresBuildJob": true,
+        "artifactPath": "website/build",
+        "environment": "github-pages",
+        "postDeployCommand": "npm run verify:deployment",
+        "baseUrl": "https://docs.viewcompose.com"
+      }
+    }
+  },
+  "stableGradleEntryPoints": [
+    "qaQuick",
+    "qaPreview",
+    "qaFull",
+    "verifyDocumentationStructure"
+  ],
+  "taskGraphFixtures": {
+    "qaQuick": "task-graphs/qaQuick.json",
+    "qaPreview": "task-graphs/qaPreview.json",
+    "qaFull": "task-graphs/qaFull.json",
+    "verifyDocumentationStructure": "task-graphs/verifyDocumentationStructure.json"
+  }
+}
