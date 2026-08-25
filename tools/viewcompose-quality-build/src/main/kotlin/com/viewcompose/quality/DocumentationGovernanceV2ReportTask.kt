@@ -1,8 +1,10 @@
 package com.viewcompose.quality
 
 import groovy.json.JsonSlurper
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.math.BigDecimal
+import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
@@ -12,15 +14,18 @@ import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
-/** Produces the non-blocking Governance V2 discovery report and validates its frozen fixtures. */
-abstract class ReportDocumentationGovernanceV2Task : DefaultTask() {
+/** Enforces the Governance V2 no-new-debt ratchet and writes its deterministic audit reports. */
+abstract class VerifyDocumentationGovernanceV2Task : DefaultTask() {
     @get:Internal
     abstract val repositoryDirectory: DirectoryProperty
 
@@ -52,6 +57,10 @@ abstract class ReportDocumentationGovernanceV2Task : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val documentationPolicyFiles: ConfigurableFileCollection
 
+    @get:Input
+    @get:Optional
+    abstract val baseRevision: Property<String>
+
     @get:OutputFile
     abstract val reportFile: RegularFileProperty
 
@@ -59,9 +68,14 @@ abstract class ReportDocumentationGovernanceV2Task : DefaultTask() {
     abstract val humanReportFile: RegularFileProperty
 
     @TaskAction
-    fun report() {
+    fun verify() {
+        val repository = repositoryDirectory.get().asFile
+        val mutationAudit = DocumentationGovernanceV2GitRatchet.inspect(
+            repository = repository,
+            explicitBaseRevision = baseRevision.orNull,
+        )
         val result = DocumentationGovernanceV2Reporter.generate(
-            repository = repositoryDirectory.get().asFile,
+            repository = repository,
             contractFiles = contractFiles.files,
             recordFiles = recordFiles.files,
             sourceSetDirectories = sourceSetDirectories.files,
@@ -69,6 +83,10 @@ abstract class ReportDocumentationGovernanceV2Task : DefaultTask() {
             localeMirrorFiles = localeMirrorFiles.files,
             publishingFiles = publishingFiles.files,
             documentationPolicyFiles = documentationPolicyFiles.files,
+            ratchetContext = DocumentationGovernanceV2RatchetContext(
+                verificationBase = mutationAudit.verificationBase,
+                mutationViolations = mutationAudit.violations,
+            ),
         )
         reportFile.get().asFile.apply {
             parentFile.mkdirs()
@@ -78,20 +96,30 @@ abstract class ReportDocumentationGovernanceV2Task : DefaultTask() {
             parentFile.mkdirs()
             writeText(result.humanReport)
         }
-        if (result.contractViolations.isNotEmpty()) {
+        if (result.contractViolations.isNotEmpty() || result.ratchetViolations.isNotEmpty()) {
             throw GradleException(
                 buildString {
-                    appendLine("Documentation Governance V2 contract validation failed:")
-                    result.contractViolations.sorted().forEach { violation ->
-                        appendLine("- $violation")
+                    if (result.contractViolations.isNotEmpty()) {
+                        appendLine("Documentation Governance V2 contract validation failed:")
+                        result.contractViolations.sorted().forEach { violation ->
+                            appendLine("- $violation")
+                        }
+                    }
+                    if (result.ratchetViolations.isNotEmpty()) {
+                        if (isNotEmpty()) appendLine()
+                        appendLine("Documentation Governance V2 no-new-debt ratchet failed:")
+                        result.ratchetViolations.sorted().forEach { violation ->
+                            appendLine("- $violation")
+                        }
                     }
                 }.trimEnd(),
             )
         }
         logger.lifecycle(
-            "Documentation Governance V2 report written to {} ({} report-only issues).",
-            reportFile.get().asFile,
+            "Documentation Governance V2 verified against {}: {} issue(s), all within the exact baseline. Report: {}.",
+            mutationAudit.verificationBase,
             result.issueCount,
+            reportFile.get().asFile,
         )
     }
 }
@@ -100,7 +128,13 @@ internal data class DocumentationGovernanceV2ReportResult(
     val report: String,
     val humanReport: String,
     val contractViolations: List<String>,
+    val ratchetViolations: List<String>,
     val issueCount: Int,
+)
+
+internal data class DocumentationGovernanceV2RatchetContext(
+    val verificationBase: String? = null,
+    val mutationViolations: List<String> = emptyList(),
 )
 
 internal object DocumentationGovernanceV2Reporter {
@@ -128,6 +162,8 @@ internal object DocumentationGovernanceV2Reporter {
         localeMirrorFiles: Set<File>,
         publishingFiles: Set<File>,
         documentationPolicyFiles: Set<File>,
+        ratchetContext: DocumentationGovernanceV2RatchetContext =
+            DocumentationGovernanceV2RatchetContext(),
     ): DocumentationGovernanceV2ReportResult {
         val canonicalRepository = repository.canonicalFile
         val manifestFile = contractFiles.singleOrNull { it.name == "contract-set.json" }
@@ -202,6 +238,13 @@ internal object DocumentationGovernanceV2Reporter {
             publishing = publishing,
         )
         val baseline = correlateDebtBaseline(issues, records)
+        val ratchetViolations = (
+            ratchetViolations(
+                issues = issues,
+                records = records,
+                baseline = baseline,
+            ) + ratchetContext.mutationViolations
+        ).distinct().sorted()
         val reportIssues = issues.map { issue ->
             val matchingBaseline = baseline.matches[issue.baselineKey]
             issue.toReportMap(matchingBaseline?.exceptionId)
@@ -212,7 +255,7 @@ internal object DocumentationGovernanceV2Reporter {
 
         val report = linkedMapOf<String, Any?>(
             "schemaVersion" to 1,
-            "mode" to "report-only",
+            "mode" to "no-new-debt",
             "contractRoot" to contractRootPath,
             "recordRoot" to recordRootPath,
             "fixtureValidation" to fixtureReports,
@@ -230,7 +273,16 @@ internal object DocumentationGovernanceV2Reporter {
                 "publishing" to publishing,
             ),
             "debtBaseline" to baseline.report(),
+            "gate" to linkedMapOf(
+                "status" to if (ratchetViolations.isEmpty() && contractViolations.isEmpty()) "passed" else "failed",
+                "verificationBase" to ratchetContext.verificationBase,
+                "contractViolationCount" to contractViolations.size,
+                "ratchetViolationCount" to ratchetViolations.size,
+                "contractViolations" to contractViolations.sorted(),
+                "ratchetViolations" to ratchetViolations,
+            ),
             "summary" to linkedMapOf(
+                "blockingViolationCount" to (contractViolations.size + ratchetViolations.size),
                 "contractCount" to contracts.size,
                 "contractViolationCount" to contractViolations.size,
                 "declarationCount" to declarations.size,
@@ -238,11 +290,11 @@ internal object DocumentationGovernanceV2Reporter {
                 "executableFenceCount" to fences.size,
                 "localeMirrorCount" to localeMirrors.size,
                 "recordCount" to records.size,
-                "reportOnlyIssueCount" to issues.size,
+                "issueCount" to issues.size,
                 "unbaselinedIssueCount" to baseline.unbaselinedIssueCount,
                 "issueCounts" to issueCounts,
             ),
-            "reportOnlyIssues" to reportIssues,
+            "issues" to reportIssues,
         )
         return DocumentationGovernanceV2ReportResult(
             report = StableJson.encode(report) + "\n",
@@ -252,8 +304,11 @@ internal object DocumentationGovernanceV2Reporter {
                 declarationCount = declarations.size,
                 documentCount = documents.size,
                 fenceCount = fences.size,
+                contractViolations = contractViolations.sorted(),
+                ratchetViolations = ratchetViolations,
             ),
             contractViolations = contractViolations.sorted(),
+            ratchetViolations = ratchetViolations,
             issueCount = issues.size,
         )
     }
@@ -1027,16 +1082,78 @@ internal object DocumentationGovernanceV2Reporter {
         return DebtBaselineResult(entries, matches, unbaselined)
     }
 
+    private fun ratchetViolations(
+        issues: List<GovernanceIssue>,
+        records: List<GovernanceRecord>,
+        baseline: DebtBaselineResult,
+    ): List<String> = buildList {
+        val exceptionRecords = records.filter { record -> record.contractId == "exception" }
+        exceptionRecords.groupBy(GovernanceRecord::recordId)
+            .filterKeys { recordId -> !recordId.isNullOrBlank() }
+            .filterValues { matching -> matching.size > 1 }
+            .forEach { (recordId, matching) ->
+                add(
+                    "exception id $recordId is duplicated by " +
+                        matching.map(GovernanceRecord::path).sorted().joinToString(),
+                )
+            }
+        exceptionRecords.filter(GovernanceRecord::valid)
+            .groupBy { record ->
+                val target = record.value.objectValue("target").orEmpty()
+                val targetKind = if ("file" in target) "file" else "symbol"
+                GovernanceIssue.baselineKey(
+                    category = record.value.requiredString("category"),
+                    targetKind = targetKind,
+                    target = target[targetKind]?.toString().orEmpty(),
+                )
+            }
+            .filterValues { matching -> matching.size > 1 }
+            .forEach { (key, matching) ->
+                add(
+                    "baseline target ${key.replace('\u0000', '|')} is duplicated by " +
+                        matching.mapNotNull(GovernanceRecord::recordId).sorted().joinToString(),
+                )
+            }
+        issues.filter { issue -> issue.baselineKey !in baseline.matches }.forEach { issue ->
+            add("${issue.id} is unbaselined: ${issue.target} (${issue.category})")
+        }
+        baseline.entries.filterNot { entry -> entry.status == "exact" }.forEach { entry ->
+            val action = when (entry.status) {
+                "stale" -> "delete the resolved exception"
+                "reduced" -> "lower violation_count to ${entry.actualCount} or finish and delete the exception"
+                else -> "repair the added debt; increasing violation_count is forbidden"
+            }
+            add(
+                "${entry.exceptionId} is ${entry.status}: expected ${entry.expectedCount}, " +
+                    "actual ${entry.actualCount}; $action",
+            )
+        }
+    }.distinct().sorted()
+
     private fun humanReport(
         issues: List<GovernanceIssue>,
         baseline: DebtBaselineResult,
         declarationCount: Int,
         documentCount: Int,
         fenceCount: Int,
+        contractViolations: List<String>,
+        ratchetViolations: List<String>,
     ): String = buildString {
-        appendLine("Documentation Governance V2 — Phase 1 report-only audit")
+        appendLine("Documentation Governance V2 — Phase 2 no-new-debt gate")
         appendLine("Inventory: $declarationCount production entries; $documentCount public pages; $fenceCount executable fences")
         appendLine("Issues: ${issues.size}; baseline entries: ${baseline.entries.size}; unbaselined: ${baseline.unbaselinedIssueCount}")
+        val blockingViolationCount = contractViolations.size + ratchetViolations.size
+        appendLine("Gate: ${if (blockingViolationCount == 0) "passed" else "failed"}; violations: $blockingViolationCount")
+        if (contractViolations.isNotEmpty()) {
+            appendLine()
+            appendLine("[contract-violations] ${contractViolations.size}")
+            contractViolations.forEach { violation -> appendLine("- $violation") }
+        }
+        if (ratchetViolations.isNotEmpty()) {
+            appendLine()
+            appendLine("[ratchet-violations] ${ratchetViolations.size}")
+            ratchetViolations.forEach { violation -> appendLine("- $violation") }
+        }
         issueCategories.forEach { category ->
             val matching = issues.filter { issue -> issue.category == category }
             appendLine()
@@ -1163,6 +1280,135 @@ internal object DocumentationGovernanceV2Reporter {
             }
         }
         return result
+    }
+}
+
+internal data class DocumentationGovernanceV2MutationAudit(
+    val verificationBase: String,
+    val violations: List<String>,
+)
+
+internal data class DocumentationGovernanceV2GitCommandResult(
+    val exitCode: Int,
+    val output: String,
+)
+
+internal fun interface DocumentationGovernanceV2GitCommandExecutor {
+    fun execute(arguments: List<String>): DocumentationGovernanceV2GitCommandResult
+}
+
+internal object DocumentationGovernanceV2GitRatchet {
+    private const val exceptionRoot =
+        "docs/project/records/documentation-governance-v2/exceptions"
+
+    fun inspect(
+        repository: File,
+        explicitBaseRevision: String?,
+        executor: DocumentationGovernanceV2GitCommandExecutor = processExecutor(repository),
+    ): DocumentationGovernanceV2MutationAudit {
+        val git = GitCommands(executor)
+        val base = when {
+            !explicitBaseRevision.isNullOrBlank() ->
+                git.execute("rev-parse", "--verify", "$explicitBaseRevision^{commit}").trim()
+            git.executeOrNull("rev-parse", "--verify", "origin/main") != null ->
+                git.execute("merge-base", "HEAD", "origin/main").trim()
+            else -> git.execute("rev-parse", "HEAD^").trim()
+        }
+        val changes = git.execute(
+            "diff",
+            "--name-status",
+            "--find-renames",
+            base,
+            "--",
+            exceptionRoot,
+        ).lineSequence().filter(String::isNotBlank).map { line ->
+            val fields = line.split('\t')
+            ExceptionChange(
+                status = fields.first().first(),
+                path = fields.last().replace('\\', '/'),
+            )
+        }.toMutableList()
+        git.execute(
+            "ls-files",
+            "--others",
+            "--exclude-standard",
+            "--",
+            exceptionRoot,
+        ).lineSequence().filter(String::isNotBlank).forEach { path ->
+            changes += ExceptionChange('A', path.replace('\\', '/'))
+        }
+        val violations = changes.distinct().sortedBy(ExceptionChange::path).mapNotNull { change ->
+            when (change.status) {
+                'D' -> null
+                'A' -> "${change.path} adds a debt exception; the frozen baseline cannot grow or re-add a removed id"
+                'M' -> verifyReducedException(repository, git, base, change.path)
+                'R', 'C' -> "${change.path} renames or copies a debt exception; baseline identity is immutable"
+                else -> "${change.path} has unsupported debt-baseline status ${change.status}"
+            }
+        }
+        return DocumentationGovernanceV2MutationAudit(
+            verificationBase = base,
+            violations = violations.sorted(),
+        )
+    }
+
+    private fun verifyReducedException(
+        repository: File,
+        git: GitCommands,
+        base: String,
+        path: String,
+    ): String? = runCatching {
+        val previous = JsonSlurper().parseText(git.execute("show", "$base:$path")).asObject()
+            ?: error("base content is not a JSON object")
+        val current = repository.resolve(path).parseJsonObject()
+        val previousCount = previous["violation_count"].asIntegerOrNull()
+            ?: error("base violation_count is missing")
+        val currentCount = current["violation_count"].asIntegerOrNull()
+            ?: error("current violation_count is missing")
+        val previousIdentity = previous - "violation_count"
+        val currentIdentity = current - "violation_count"
+        when {
+            previousIdentity != currentIdentity ->
+                "$path changes immutable exception identity or rationale; only a lower violation_count is allowed"
+            currentCount >= previousCount ->
+                "$path changes violation_count from $previousCount to $currentCount; it must decrease"
+            else -> null
+        }
+    }.getOrElse { failure ->
+        "$path cannot be validated as a monotonic exception reduction: ${failure.message}"
+    }
+
+    private fun processExecutor(repository: File) = DocumentationGovernanceV2GitCommandExecutor { arguments ->
+        val output = ByteArrayOutputStream()
+        val process = ProcessBuilder(listOf("git") + arguments)
+            .directory(repository)
+            .redirectErrorStream(true)
+            .start()
+        process.inputStream.use { input -> input.copyTo(output) }
+        DocumentationGovernanceV2GitCommandResult(
+            exitCode = process.waitFor(),
+            output = output.toString(StandardCharsets.UTF_8.name()),
+        )
+    }
+
+    private data class ExceptionChange(
+        val status: Char,
+        val path: String,
+    )
+
+    private class GitCommands(
+        private val executor: DocumentationGovernanceV2GitCommandExecutor,
+    ) {
+        fun execute(vararg arguments: String): String {
+            val result = executor.execute(arguments.toList())
+            check(result.exitCode == 0) {
+                "git ${arguments.joinToString(" ")} failed (${result.exitCode}): ${result.output.trim()}"
+            }
+            return result.output
+        }
+
+        fun executeOrNull(vararg arguments: String): String? =
+            executor.execute(arguments.toList()).takeIf { result -> result.exitCode == 0 }?.output
     }
 }
 

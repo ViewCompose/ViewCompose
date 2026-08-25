@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: 95b7fb835cb0b732b093b4fbd0e287ffa4c89c6927344f980d9d887e2f90a316
+translation_source_hash: 64c3b7cc836b000b4846440680d752e7ac9e5d2589614bf766b8e3dbcb087bef
 translation_status: current
 ---
 
@@ -61,7 +61,13 @@ Jetpack Compose 的事实比较和迁移路径；由可执行 sample 支撑且�
 ## Governance V2 结构化契约
 
 Governance V2 增加稳定标识和机器可读记录。规则现在生效：一份审阅基线可容纳既有违规，但
-新增或被触及内容不能在相应类别新增或保留债务；阻断只在 report-only 发现稳定后启用。
+新增或被触及内容不能在相应类别新增或保留债务。确定性发现和审阅基线现已冻结，
+`verifyDocumentationGovernanceV2` 会阻断未进入基线的发现项，以及数量不再精确匹配的基线项。
+该任务已接入 `verifyDocumentationStructure`，因此也会随 `qaQuick` 和文档 CI 执行。
+
+例外记录不是通用 allowlist。相对验证基准，一个 PR 只能删除已解决记录，或在减少同一精确
+target/category 债务后仅调低其 `violation_count`。新增、复制、重命名、改目标、扩大或删除后
+重新加入例外都会失败；数量减少必须在同一变更中记录，降为零时应删除该记录。
 
 ### 能力标识与所有权
 

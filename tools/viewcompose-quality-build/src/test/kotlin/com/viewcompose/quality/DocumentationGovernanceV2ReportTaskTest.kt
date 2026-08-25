@@ -41,7 +41,7 @@ class DocumentationGovernanceV2ReportTaskTest {
     }
 
     @Test
-    fun `report discovery is deterministic and repository debt stays non-blocking`() {
+    fun `discovery is deterministic and unbaselined debt is blocking`() {
         val repository = temporaryFolder.newFolder("report-repository")
         val contractRoot = repository.resolve(
             "docs/project/contracts/documentation-governance-v2",
@@ -197,6 +197,11 @@ class DocumentationGovernanceV2ReportTaskTest {
         assertTrue(first.report.contains("\"versionState\": \"next\""))
         assertTrue(first.report.contains("\"exactEntryCount\": 1"))
         assertTrue(first.report.contains("\"unbaselinedIssueCount\": 4"))
+        assertEquals(4, first.ratchetViolations.size)
+        assertTrue(first.report.contains("\"status\": \"failed\""))
+        assertTrue(first.report.contains("\"contractViolations\": []"))
+        assertTrue(first.report.contains("\"ratchetViolations\": ["))
+        assertTrue(first.humanReport.contains("Gate: failed; violations: 4"))
 
         legacyDocument.appendText(
             """
@@ -218,7 +223,98 @@ class DocumentationGovernanceV2ReportTaskTest {
         )
         assertTrue(broadened.report.contains("\"status\": \"broadened\""))
         assertTrue(broadened.report.contains("\"actualCount\": 2"))
+        assertTrue(
+            broadened.ratchetViolations.any { violation ->
+                violation.contains("DOC-0001 is broadened")
+            },
+        )
     }
+
+    @Test
+    fun `git ratchet permits only monotonic violation count reduction`() {
+        val repository = temporaryFolder.newFolder("ratchet-repository")
+        val path =
+            "docs/project/records/documentation-governance-v2/exceptions/DOC-0001.json"
+        val current = repository.resolve(path).apply {
+            parentFile.mkdirs()
+            writeText(exceptionFixture(count = 2))
+        }
+        val previous = exceptionFixture(count = 3)
+        val executor = ratchetExecutor(
+            diff = "M\t$path\n",
+            baseFiles = mapOf(path to previous),
+        )
+
+        val reduced = DocumentationGovernanceV2GitRatchet.inspect(
+            repository = repository,
+            explicitBaseRevision = "base",
+            executor = executor,
+        )
+        assertTrue(reduced.violations.joinToString("\n"), reduced.violations.isEmpty())
+
+        current.writeText(exceptionFixture(count = 2, category = "taxonomy-mismatch"))
+        val retargeted = DocumentationGovernanceV2GitRatchet.inspect(
+            repository = repository,
+            explicitBaseRevision = "base",
+            executor = executor,
+        )
+        assertTrue(
+            retargeted.violations.single().contains("immutable exception identity"),
+        )
+    }
+
+    @Test
+    fun `git ratchet rejects a new exception and permits deletion`() {
+        val repository = temporaryFolder.newFolder("ratchet-add-delete")
+        val path =
+            "docs/project/records/documentation-governance-v2/exceptions/DOC-0312.json"
+
+        val added = DocumentationGovernanceV2GitRatchet.inspect(
+            repository = repository,
+            explicitBaseRevision = "base",
+            executor = ratchetExecutor(diff = "A\t$path\n"),
+        )
+        assertTrue(added.violations.single().contains("cannot grow or re-add"))
+
+        val deleted = DocumentationGovernanceV2GitRatchet.inspect(
+            repository = repository,
+            explicitBaseRevision = "base",
+            executor = ratchetExecutor(diff = "D\t$path\n"),
+        )
+        assertTrue(deleted.violations.joinToString("\n"), deleted.violations.isEmpty())
+    }
+
+    private fun ratchetExecutor(
+        diff: String,
+        baseFiles: Map<String, String> = emptyMap(),
+    ) = DocumentationGovernanceV2GitCommandExecutor { arguments ->
+        val output = when (arguments.firstOrNull()) {
+            "rev-parse" -> "base\n"
+            "diff" -> diff
+            "ls-files" -> ""
+            "show" -> baseFiles.getValue(arguments.last().substringAfter(':'))
+            else -> error("Unexpected git arguments: $arguments")
+        }
+        DocumentationGovernanceV2GitCommandResult(exitCode = 0, output = output)
+    }
+
+    private fun exceptionFixture(
+        count: Int,
+        category: String = "unclassified-sample",
+    ): String =
+        """
+        {
+          "schema_version": 2,
+          "exception_id": "DOC-0001",
+          "target": {"file": "docs/guides/legacy.md"},
+          "category": "$category",
+          "reason": "The legacy fence still needs a compiled source owner.",
+          "owner": "documentation-governance",
+          "created_on": "2026-08-26",
+          "removal_condition": "Delete this exact entry when the legacy fence is registered.",
+          "violation_count": $count
+        }
+        """.trimIndent()
 
     private fun fixtureContract(contractRoot: File) {
         contractRoot.resolve("fixtures/accepted").mkdirs()

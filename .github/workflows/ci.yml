@@ -50,6 +50,7 @@ jobs:
 
       - name: Run qaQuick
         env:
+          VIEWCOMPOSE_DOCUMENTATION_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
           VIEWCOMPOSE_RELEASE_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
         # Release R8, lint, and documentation generation share this Gradle process. Keep the
         # complete gate while preventing the hosted runner's default 2 GiB heap from exhausting.

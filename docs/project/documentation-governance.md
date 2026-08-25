@@ -102,7 +102,15 @@ Link between focused pages instead.
 
 Governance V2 adds stable identities and machine-readable records. Its rules are normative; one
 reviewed baseline may contain existing violations, but new or touched content cannot add or retain
-debt in the affected category. Blocking begins only after deterministic report-only discovery.
+debt in the affected category. Deterministic discovery and the reviewed baseline are now frozen,
+so `verifyDocumentationGovernanceV2` blocks unbaselined findings and every baseline count that is
+not exact. The task is part of `verifyDocumentationStructure`, and therefore also runs in
+`qaQuick` and documentation CI.
+
+An exception record is not a general allowlist. Relative to the verification base, a pull request
+may delete a resolved record or lower only its `violation_count` after reducing the same exact
+target/category debt. Adding, copying, renaming, retargeting, widening, or re-adding an exception
+fails. A reduced count must be recorded in the same change, and a zero count removes the record.
 
 ### Capability identity and ownership
 
