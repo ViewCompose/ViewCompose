@@ -175,21 +175,13 @@ that category. Completion requires an empty baseline and strict local, PR, and d
 
 ### Contract assets and enforcement boundary
 
-Schemas and fixtures live in `docs/project/contracts/documentation-governance-v2/`. Capability,
-sample, capability-impact, and exception records live under the matching plural subdirectories of
-`docs/project/records/documentation-governance-v2/`; canonical document records remain in Markdown
-front matter so the page and its identity cannot diverge.
+The V2 manifest in `docs/project/contracts/` freezes schemas, fixtures, and record/task/report
+locations. Documents use front matter; other records use plural subdirectories. Fixtures fail
+closed; findings do not block until Phase 2.
 
-The compiled `reportDocumentationGovernanceV2` task in `tools/viewcompose-quality-build` validates
-the frozen schemas and fixtures and writes deterministic discovery to
-`build/reports/viewcompose-quality/documentation-governance-v2-report.json`. During report-only
-Phases 0B and 1, fixture-contract defects fail that task, while discovered repository debt is
-reported without joining an existing blocking lifecycle. Phase 2 owns the explicit hard cut to
-ratcheted blocking enforcement.
-
-Machines own shape, exact identity, discovery, uniqueness, source/lane/route consistency, ratchet
-arithmetic, and freshness. Reviewers own capability cohesion, page purpose, evidence, exception
-credibility, and rationale correctness. Machine success never overrides review.
+Machines own shape, identity, discovery, uniqueness, source/lane/route consistency, ratchet, and
+freshness; reviewers own cohesion, purpose, evidence, exception credibility, and rationale.
+Automation never overrides review.
 
 ## Framework and module boundaries
 

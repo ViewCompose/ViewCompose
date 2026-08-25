@@ -339,12 +339,22 @@ Phase 0B deliberately includes app/sample candidates and uses conservative textu
 marker recognition. Therefore the absolute inventory is useful, but change from a prior baseline is
 not available and the debt conclusion is `inconclusive` until Phase 1 removes false positives and
 freezes exact IDs. The compiled quality suite passed 33/33 tests, the documentation script suite
-passed 52/52 tests, and two forced report executions produced the same SHA-256
-`451f743b8b8ebe07d247f658b7eca0d63e621a4cb4686909c95d3f6f59953003`. The frozen task graphs
+passed 52/52 tests, and repeated final-checkout report executions produced the same SHA-256
+`c79c10f1ac6dc2e800dbda6fc9c4f91bb3f9946427e4030c6627d86959c2eb29`. The frozen task graphs
 matched exactly: `qaQuick` 2,899/2,899, `qaPreview` 1,640/1,640, `qaFull` 3,098/3,098, and
 `verifyDocumentationStructure` 4/4. The blocking-gate conclusion is therefore
 `no material change`. A build-logic-invalidated `qaQuick` then passed in 7 minutes 30 seconds with
 2,341 actionable tasks (2,261 executed and 80 up-to-date). Phase 1 accuracy work is the next action.
+
+PR #164's first documentation build exposed that the durable governance prose crossed the existing
+46.9 MiB non-API site ceiling. A same-corpus detached-parent build measured 49,175,724 B; the
+initial branch representation measured 49,184,804 B, an increase of 9,080 B (0.0185%). The fix did
+not raise the threshold or delete a public contract: Phase 0B execution evidence remains here,
+while the public governance page now keeps only the durable enforcement rule. The final complete
+site build measured 49,176,039 B, 315 B (0.00064%) above the parent and 2,175 B below the existing
+limit, and completed in 43.2 seconds. The conclusion is `no material change`. The comparison
+excludes `/api/**` exactly as the production non-API metric does; future public contract growth
+still requires structural site-budget work rather than another prose-only threshold increase.
 
 ### Phase 1: complete discovery and report-only audits
 

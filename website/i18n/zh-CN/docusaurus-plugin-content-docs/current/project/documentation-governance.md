@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: 15dee3e9d43023bc33778a03f5d11090d38b360291b846e2b71ffc117cfe2193
+translation_source_hash: 95b7fb835cb0b732b093b4fbd0e287ffa4c89c6927344f980d9d887e2f90a316
 translation_status: current
 ---
 
@@ -132,19 +132,11 @@ Exception 必须有稳定 ID、精确 file/symbol、类别、理由、owner、�
 
 ### 契约资产与门禁边界
 
-Schema 与 fixture 位于 `docs/project/contracts/documentation-governance-v2/`。Capability、sample、
-capability-impact 与 exception record 分别位于
-`docs/project/records/documentation-governance-v2/` 下对应的复数子目录；canonical document record
-继续放在 Markdown front matter 中，避免页面与 identity 分离。
+`docs/project/contracts/` 中的 V2 清单冻结 schema/fixture 与 record/task/report 位置。Document 用
+front matter，其他 record 用复数子目录。Fixture fail closed；发现项到 Phase 2 才阻断。
 
-`tools/viewcompose-quality-build` 中的 compiled `reportDocumentationGovernanceV2` task 负责验证冻结的
-schema/fixture，并把确定性发现结果写入
-`build/reports/viewcompose-quality/documentation-governance-v2-report.json`。在 report-only 的 Phase
-0B 和 Phase 1 中，fixture 契约缺陷会使该 task 失败，但发现的仓库债务只进入报告，不接入既有
-blocking lifecycle；Phase 2 才以明确硬切方式启用带棘轮的阻断门禁。
-
-机器负责 shape、精确 identity、发现/唯一性、source/lane/route 一致性、棘轮计算和新鲜度；
-reviewer 负责能力内聚、页面目的、证据、exception 可信度与 rationale 正确性。机器通过不能覆盖审查。
+机器负责 shape/identity、发现/唯一性、source/lane/route 一致性、棘轮/新鲜度；reviewer 负责
+内聚性、目的、证据、exception 可信度与 rationale。机器通过不能覆盖审查。
 
 ## 框架与模块边界
 

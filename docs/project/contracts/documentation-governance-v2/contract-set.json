@@ -4,6 +4,7 @@
   "status": "phase-0b-report-only",
   "recordPlacement": "docs/project/records/documentation-governance-v2",
   "scannerImplementation": "tools/viewcompose-quality-build:reportDocumentationGovernanceV2",
+  "reportOutput": "build/reports/viewcompose-quality/documentation-governance-v2-report.json",
   "contracts": [
     {
       "id": "capability",
