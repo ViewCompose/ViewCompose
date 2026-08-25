@@ -157,19 +157,72 @@ inspection sends no access hint; the hint is issued from the committed child Ses
 loaded selector result change that is not represented by a Paging page event also requests a
 conservative reload, ensuring the newer declaration is installed without enumerating placeholders.
 
+## Demo and deterministic testing
+
+Open the directly launchable `collection.paging` scenario in the Demo catalog. It uses a real
+in-process `Pager + PagingSource`; each load suspends until **Resolve pending load** applies the
+selected Data, Empty, or Error result. The primary action then becomes **Request next page** or
+**Retry failed load** as appropriate. **Reset generation** creates a fresh Flow and source. This
+makes initial loading, data, append loading/error, retry, empty, and initial error inspectable
+without a database, network, clock delay, or production fake inside the published artifact.
+
+Automation should select the scenario by `collection.paging` and use its stable `root`, `ready`,
+`primary_action`, `secondary_action`, `reset`, `state`, `target`, and `secondary_target` roles.
+The state target reports the body, exact refresh/append projection, and loaded count. The compiled
+Q3 sample source includes `pagingLazyColumnSample` for placeholder-aware rendering and
+`pagingLoadStateCompositionSample` for primary plus directional states.
+
+For application tests, keep repository and `PagingSource` tests below the UI, use AndroidX
+`paging-testing` when consuming generations as snapshots, and reserve ViewCompose device tests for
+renderer identity, scroll, visible load-state composition, and interaction. A deterministic
+`RemoteMediator` fixture should own fake storage and fake remote results while still running the
+real AndroidX source/mediator coordination; do not replace that coordination with UI booleans.
+
+## Migration
+
+From Compose Paging, keep the application's `Pager`, `PagingSource`, `RemoteMediator`, repository,
+and ViewModel-owned `cachedIn` Flow. Replace `collectAsLazyPagingItems()` with
+`collectAsViewComposePagingItems()`, then replace the Compose `LazyColumn` item-count loop with
+`PagingLazyColumn`. Supply a stable application key and a `contentRevision` that covers ordinary
+captured row values. Map `LazyPagingItems.loadState` UI to `contentState` for the primary body and
+`loadStates.forLoadType(...)` for refresh, prepend, or append origin detail. `retry()` and
+`refresh()` retain their AndroidX meanings.
+
+For an existing finite ViewCompose list, keep `LazyColumn` unless data loading genuinely needs
+Paging generations, invalidation, retry, page eviction, jumps, or mediator coordination. When
+adopting Paging, move callback/end-reached loading into `PagingSource` instead of carrying a second
+`isLoading`/`isAtEnd` engine beside AndroidX. Enable placeholders only with the explicit overload;
+positional loaded keys and a manually materialized placeholder list are unsupported migration
+shortcuts.
+
+## Dependency and license notice
+
+The published module exposes `androidx.paging:paging-common:3.5.1`; tests also use
+`androidx.paging:paging-testing:3.5.1`. It does not require `paging-runtime` or `paging-compose`.
+AndroidX Paging is distributed under Apache License 2.0 and is recorded in
+`THIRD_PARTY_NOTICES.md`.
+
 ## Verification and current scope
 
 Deterministic tests cover all three lifecycle policies, hidden/revealed navigation, `cachedIn`
 replay across composition recreation, exact cancellation, real `Pager + RemoteMediator` refresh and
 append failures, distinct source failure, presenter generations, placeholders, page drops, and
-detached-cache disposal. Q3 samples compile from public APIs.
+detached-cache disposal. Q3 samples compile from public APIs. The Demo adds a controlled real
+`PagingSource` path and stable automation roles for initial, append, empty, error, retry, and reset.
 
 On 2026-08-25, two Pixel 4 XL Android 13/API 33 debug tests passed in 5.51 s. The
 1,000,000-position case added 48,124 KiB PSS, jumped to the last position in 555 ms, retained 81
 loaded items under `maxSize = 96`, and released initial Sessions; bounded scrolling ended at 96
-loaded items. Conclusion: **improved** memory, jump/drop, and ownership confidence. The
-mediated-data fixture uses an in-memory store and fake remote result, so this evidence is not a real
-database/network, frame, physical load-state UI, or Demo claim; later phases own those paths.
+loaded items. Conclusion: **improved** memory, jump/drop, and ownership confidence.
+
+On the same Pixel and date, the controlled Demo instrumentation passed in a 13 s Gradle run and
+traversed initial loading, ten loaded rows, append loading/error, retry to twenty rows, generation
+reset, empty, and initial error. Manual inspection confirmed that initial, content, and retained-
+content append-error states were fully visible, readable, and scrollable. Conclusion:
+**improved** Demo, automation, and manual-verification confidence. Both device results use one
+Android 13 device and deterministic in-process data. The mediated-data fixture uses in-memory
+storage and a fake remote result, so real database/network behavior, prepend UI, broader device
+coverage, frames, memory under the Demo workload, and release performance remain unproven.
 
 ## Related documentation
 

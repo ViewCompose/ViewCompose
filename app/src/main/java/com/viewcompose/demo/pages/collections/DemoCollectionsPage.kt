@@ -8,6 +8,7 @@ import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.demo.registry.DemoScenarioIds
 import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.host.android.resources.pluralStringResource
+import com.viewcompose.paging.PagingLifecyclePolicy
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
@@ -94,6 +95,14 @@ internal fun UiTreeBuilder.PreviewCollectionsNestedLazyList() {
     CollectionPage(CollectionFixture.NestedLazyList)
 }
 
+@ViewComposePreview(name = "Collections · Paging", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewCollectionsPaging() {
+    CollectionPagingPage(
+        scenario = null,
+        lifecyclePolicy = PagingLifecyclePolicy.Composition,
+    )
+}
+
 internal enum class CollectionFixture(
     val scenarioId: DemoScenarioId,
 ) {
@@ -105,6 +114,7 @@ internal enum class CollectionFixture(
     Grid(DemoScenarioIds.CollectionGrid),
     PullRefresh(DemoScenarioIds.CollectionPullRefresh),
     NestedLazyList(DemoScenarioIds.CollectionNestedLazyList),
+    Paging(DemoScenarioIds.CollectionPaging),
     ;
 
     companion object {
@@ -136,6 +146,11 @@ internal fun UiTreeBuilder.CollectionPage(
 
         CollectionFixture.NestedLazyList -> {
             CollectionNestedLazyListPage(scenario)
+            return
+        }
+
+        CollectionFixture.Paging -> {
+            CollectionPagingPage(scenario)
             return
         }
 
@@ -186,6 +201,7 @@ internal fun UiTreeBuilder.CollectionPage(
         CollectionFixture.Grid -> listOf("grid")
         CollectionFixture.PullRefresh -> listOf("pull_refresh")
         CollectionFixture.NestedLazyList -> error("Nested lazy fixture uses a dedicated root")
+        CollectionFixture.Paging -> error("Paging fixture uses a dedicated root")
     }
 
     LazyColumn(

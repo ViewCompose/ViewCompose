@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: b357bbd9a6b6fd13b3f12a19c03ae11788cdaa7cc56a30ca5ac620645cbe14e6
+translation_source_hash: a8b5fa679a888cbf03a1597efcedbcb53d09301c062be43d476a647874159de2
 translation_status: current
 ---
 
@@ -256,6 +256,7 @@ Paging 3 的加载、失效与重试仍不进入核心集合契约。可选的
 Foundation。显式 Placeholder Overload 与 Page Drop 处理使用中立紧凑 Item Table；禁用
 Placeholder 的 Overload 会拒绝未加载 Slot。Paging 仍持有加载、Generation、Retry 与 Refresh，
 Android Renderer 仍是唯一 Adapter、Stable ID、Diff、Holder 与 Session Owner。后续工作继续由
-[Paging 3 集成计划](https://docs.viewcompose.com/project/plans/paging3-integration)跟踪。有限列表应用仍可读取 `isAtEnd`、`lastVisibleItemIndex` 和
+[Paging 3 集成计划](https://docs.viewcompose.com/project/plans/paging3-integration)跟踪；Phase 6
+已交付受控 Demo 与公共指南，余下 Phase 7 负责性能、更广真机证据和发版收尾。有限列表应用仍可读取 `isAtEnd`、`lastVisibleItemIndex` 和
 `layoutInfo.totalItemsCount`，无需引入 Paging 依赖。自定义 Fling 物理和编译器驱动的 Item 内组合仍
 属于其他独立集成事项。

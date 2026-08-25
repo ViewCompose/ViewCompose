@@ -2,7 +2,7 @@
 
 ## Status
 
-Active. Phases 0 through 5 completed on 2026-08-25; Phase 6 is next. This
+Active. Phases 0 through 6 completed on 2026-08-25; Phase 7 is next. This
 plan is the only active owner of Paging 3
 delivery after the optional roadmap item and the Lazy Collections non-goal were redirected here on
 2026-08-18. Historical archives retain only evidence.
@@ -14,9 +14,9 @@ durable shipped contracts move to their owning active public documentation befor
 
 Last verified: 2026-08-25.
 
-Next action: begin Phase 6 samples, Demo, and documentation closeout. Phase 5 verified every frozen
-lifecycle policy, application-owned `cachedIn` replay across navigation and recreation, structured
-cancellation, and deterministic real-`RemoteMediator` source/mediator failures.
+Next action: begin Phase 7 performance, device, and release closeout. Phase 6 added the directly
+launchable `collection.paging` controlled-state Demo, stable automation roles, compiled Q3 samples,
+and complete setup, architecture, testing, migration, dependency, and bilingual module guidance.
 
 ## Maven release changesets
 
@@ -270,8 +270,10 @@ items/load states, commands, and explicit placeholder/no-placeholder `PagingLazy
 Renderer prefetch remains presentation-only. The compact table stores loaded metadata, calculates
 placeholders on demand, and maps page events to neutral updates. Phase 4/5 project primary content
 and exact load origins, verify lifecycle replay/cancellation, and run real `RemoteMediator` control
-flow over deterministic fake storage. No Paging adapter, Demo, real database/network result, or
-broad Phase 7 performance claim exists yet.
+flow over deterministic fake storage. Phase 6 adds a directly launchable controlled `PagingSource`
+Demo that exposes initial loading, data, append, empty, error, retry, and generation reset states
+without network or database timing. No Paging adapter, real database/network result, or broad
+Phase 7 performance claim exists yet.
 
 ## Execution plan
 
@@ -283,7 +285,7 @@ broad Phase 7 performance claim exists yet.
 | 3. Placeholder and page-drop slice | Complete | Neutral indexed hard cut, positional placeholders, jump/drop handling | Implementation, deterministic contract tests, release intent, local publication, consumers, dropped-session/memory evidence, Pixel bounded-work verification, and post-ownership-hard-cut full gates pass |
 | 4. Load-state composition | Complete | Pure primary-content and per-`LoadType` source/mediator projections plus empty/header/footer/error examples; no framework-owned layout | Twenty distinct tests pass in both variants; Q3 audit, bilingual docs, release intent, local publication, and isolated consumer pass |
 | 5. Lifecycle and mediated data | Complete | Frozen policies, `cachedIn` guidance, recreation, deterministic mediator fixture, source-failure hard cut | Hidden/revealed navigation, cancellation, recreation, and source/mediator failure tests pass |
-| 6. Samples, Demo, and documentation | Not started | Demo, Q3 samples, catalog/manual, setup/architecture/testing/migration docs, mirrors, notices | Localization, sample, automation-role, dependency, and consumer gates pass |
+| 6. Samples, Demo, and documentation | Complete | Controlled `PagingSource` Demo, Q3 samples, catalog/manual, setup/architecture/testing/migration docs, mirrors, and notices | Local compile/unit/localization/automation gates and the full controlled-state Pixel device path pass; dependency and sample contracts remain covered by the Phase 2/5 published-module gates |
 | 7. Performance, device, and release closeout | Not started | Same-build append/drop/large-generation/query/scroll evidence; final Changesets and Maven proof | No accepted correctness, leak, frame, or memory regression; evidence is interpreted before archival |
 
 ## Acceptance matrix
@@ -359,6 +361,7 @@ work pending.
 | 2026-08-25 | Phase 3 full closeout | Four modules passed 1,015/1,015 tests (81 + 391 + 527 + 16); strict API/documentation checks passed for 118 English pages and 115 current mirrors in 15 s; `qaQuick` passed 2,324 tasks in 2 min 9 s. Conclusion: **improved** correctness and release confidence; later phases retain mediator, Demo, and broader performance limits. |
 | 2026-08-25 | Phase 4 load-state projections and closeout | Twenty distinct tests passed in both variants (40 executions) in 6 s, covering initial/body states, content retention during directional loading/error, every `LoadType` origin, absent mediator, and retry/refresh distinction. Q3 audit passed in 12 s; documentation passed in 2 s; one feature release intent and the published consumer passed; `qaQuick` passed 2,324 tasks in 18 s. Conclusion: **improved** composition/API confidence without a second layout or state owner. Limitations: synthetic mediator states; no real mediator, database/network, recreation, Demo, device, frame, or memory path. Next: Phase 5. |
 | 2026-08-25 | Phase 5 lifecycle and mediated-data closeout | Twenty-seven distinct module tests passed in Debug and Release (54 executions) in 6 s. Seven new tests cover every lifecycle policy, hide/reveal, `cachedIn` replay across composition recreation without duplicate upstream collection, in-flight mediator cancellation, real `Pager + RemoteMediator` refresh/append errors, and distinct source failure. The fixture exposed combined `NotLoading` masking source refresh failure; `contentState` now hard-cuts to origin-aware error/loading precedence. API/docs/release and dependency/isolation gates passed; `qaQuick` passed 2,324 tasks in 19 s. The 440-page site passed at 49,161,510 non-API bytes under the unchanged 46.9 MiB ceiling. Conclusion: **improved** lifecycle, cancellation, and mediated-state correctness with **mixed** small documentation growth. Limitations: in-memory store and fake remote result; no real database/network, Demo, device, frame, or memory result. Next: Phase 6. |
+| 2026-08-25 | Phase 6 controlled Demo and documentation acceptance | The controlled-source unit suite, registry tests, app/debug/android-test compilation, localization, and automation-selector gates passed. One Pixel 4 XL Android 13/API 33 instrumentation test passed in a 13 s Gradle run and deterministically traversed initial loading, ten loaded items, append loading/error, same-generation retry to twenty items, generation reset, empty, and initial error. Manual inspection of the same Pixel confirmed that initial, content, and retained-content append-error states are fully visible, readable, and scrollable. Bounding the Demo viewport and disabling renderer cache prefetch prevented an off-screen Session from requesting append before the explicit action, while the real Paging configuration retained its valid `prefetchDistance = 1`. Documentation/API/dependency/release-intent gates passed for 118 English pages and 115 current mirrors; `qaQuick + qaPreview` passed 2,338 tasks in 1 min 21 s, including local publication, consumer/sample compilation, unit tests, Paparazzi, and Release APK verification. Conclusion: **improved** sample, automation, documentation, and manual-verification confidence. Limitations: one device/API, in-process fake source, no real database/network, prepend UI, frame, memory, or release-performance result. Next: Phase 7. |
 
 ## Decision history
 
@@ -377,3 +380,6 @@ work pending.
    Session/saveable state; require application-owned `cachedIn` for restartable `Pager.flow` use.
 8. 2026-08-25 — Preserve any refresh-origin failure before selecting initial empty content; keep
    exact origin available through `forLoadType` and retain application ownership of cache/storage.
+9. 2026-08-25 — Keep the Demo on a real `Pager + PagingSource`, but suspend each load behind an
+   explicit result control and bound its viewport so people and automation can inspect transient
+   states without network/database timing or accidental off-screen append access.

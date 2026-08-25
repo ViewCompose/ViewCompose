@@ -86,6 +86,7 @@ internal object DemoScenarioIds {
     val CollectionGrid = DemoScenarioId("collection.grid")
     val CollectionPullRefresh = DemoScenarioId("collection.pull-refresh")
     val CollectionNestedLazyList = DemoScenarioId("collection.nested-lazy-list")
+    val CollectionPaging = DemoScenarioId("collection.paging")
     val LayoutLinear = DemoScenarioId("layout.linear")
     val LayoutStack = DemoScenarioId("layout.stack")
     val LayoutEdges = DemoScenarioId("layout.edges")
@@ -829,6 +830,26 @@ internal object DemoScenarioRegistry {
                 root = R.id.demo_collection_nested_lazy_list_root,
                 ready = R.id.demo_collection_nested_lazy_list_ready,
                 target = R.id.demo_collection_nested_lazy_list_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.CollectionPaging,
+            category = DemoScenarioCategory.Collections,
+            titleRes = R.string.demo_scenario_collection_paging_title,
+            summaryRes = R.string.demo_scenario_collection_paging_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(CollectionsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_collection_paging_root,
+                ready = R.id.demo_collection_paging_ready,
+                primaryAction = R.id.demo_collection_paging_primary_action,
+                secondaryAction = R.id.demo_collection_paging_secondary_action,
+                reset = R.id.demo_collection_paging_reset,
+                state = R.id.demo_collection_paging_state,
+                target = R.id.demo_collection_paging_target,
+                secondaryTarget = R.id.demo_collection_paging_secondary_target,
             ),
         ),
         scenario(
