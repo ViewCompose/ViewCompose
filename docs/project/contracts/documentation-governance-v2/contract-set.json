@@ -1,10 +1,18 @@
 {
   "schemaVersion": 1,
   "governanceVersion": 2,
-  "status": "phase-0b-report-only",
+  "status": "phase-1-report-only",
   "recordPlacement": "docs/project/records/documentation-governance-v2",
   "scannerImplementation": "tools/viewcompose-quality-build:reportDocumentationGovernanceV2",
   "reportOutput": "build/reports/viewcompose-quality/documentation-governance-v2-report.json",
+  "humanReportOutput": "build/reports/viewcompose-quality/documentation-governance-v2-report.txt",
+  "debtBaseline": {
+    "placement": "docs/project/records/documentation-governance-v2/exceptions",
+    "entryCount": 311,
+    "issueCount": 733,
+    "grouping": "exact target, category, and violation count",
+    "stableIssueId": "SHA-256(category + canonical identity), first 16 hexadecimal characters"
+  },
   "contracts": [
     {
       "id": "capability",

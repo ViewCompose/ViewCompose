@@ -29,6 +29,10 @@ class DocumentationGovernanceV2ReportTaskTest {
                 repository.resolve("gradle/viewcompose-publishing.properties"),
                 repository.resolve("gradle/viewcompose-documentation-releases.properties"),
             ),
+            documentationPolicyFiles = setOf(
+                repository.resolve("website/i18n/translation-policy.json"),
+                repository.resolve("docs/modules/README.md"),
+            ),
         )
 
         assertTrue(result.contractViolations.joinToString("\n"), result.contractViolations.isEmpty())
@@ -67,7 +71,7 @@ class DocumentationGovernanceV2ReportTaskTest {
                 version_lane: next
                 ---
 
-                {/* sample_id="sample.current" */}
+                {/* compiled-region source="samples/current.kt" region="current" sample_id="sample.current" */}
                 ```kotlin
                 VisibleDsl()
                 ```
@@ -96,6 +100,11 @@ class DocumentationGovernanceV2ReportTaskTest {
                 translation_source_hash: abc
                 translation_status: current
                 ---
+
+                {/* compiled-region source="samples/current.kt" region="current" sample_id="sample.current" */}
+                ```kotlin
+                VisibleDsl()
+                ```
                 """.trimIndent(),
             )
         }
@@ -114,34 +123,101 @@ class DocumentationGovernanceV2ReportTaskTest {
         ).apply {
             writeText("release.count=0\n")
         }
+        val translationPolicy = repository.resolve("website/i18n/translation-policy.json").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                {
+                  "schemaVersion": 1,
+                  "locale": "zh-CN",
+                  "required": ["guides/current.md", "guides/legacy.md"]
+                }
+                """.trimIndent(),
+            )
+        }
+        val moduleCatalog = repository.resolve("docs/modules/README.md").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                | Artifact | Family | Runtime role | Manual |
+                | --- | --- | --- | --- |
+                | `viewcompose-example` | UI Foundation | Test | Available |
+                """.trimIndent(),
+            )
+        }
+        val baseline = repository.resolve(
+            "docs/project/records/documentation-governance-v2/exceptions/DOC-0001.json",
+        ).apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                {
+                  "schema_version": 2,
+                  "exception_id": "DOC-0001",
+                  "target": {"file": "docs/guides/legacy.md"},
+                  "category": "unclassified-sample",
+                  "reason": "The legacy fence still needs a compiled source owner.",
+                  "owner": "documentation-governance",
+                  "created_on": "2026-08-26",
+                  "removal_condition": "Delete this exact entry when the legacy fence is registered.",
+                  "violation_count": 1
+                }
+                """.trimIndent(),
+            )
+        }
         val inputs = contractRoot.walkTopDown().filter(File::isFile).toSet()
         val first = DocumentationGovernanceV2Reporter.generate(
             repository = repository,
             contractFiles = inputs,
-            recordFiles = emptySet(),
+            recordFiles = setOf(baseline),
             sourceSetDirectories = setOf(sourceRoot),
             activeDocumentationFiles = setOf(currentDocument, legacyDocument),
             localeMirrorFiles = setOf(localeMirror),
             publishingFiles = setOf(publishing, releases),
+            documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
         )
         val second = DocumentationGovernanceV2Reporter.generate(
             repository = repository,
             contractFiles = inputs.reversed().toSet(),
-            recordFiles = emptySet(),
+            recordFiles = setOf(baseline),
             sourceSetDirectories = setOf(sourceRoot),
             activeDocumentationFiles = setOf(legacyDocument, currentDocument),
             localeMirrorFiles = setOf(localeMirror),
             publishingFiles = setOf(releases, publishing),
+            documentationPolicyFiles = setOf(moduleCatalog, translationPolicy),
         )
 
         assertEquals(first.report, second.report)
         assertTrue(first.contractViolations.isEmpty())
-        assertEquals(2, first.issueCount)
+        assertEquals(5, first.issueCount)
         assertTrue(first.report.contains("example.UiTreeBuilder.VisibleDsl"))
         assertTrue(first.report.contains("example.Modifier.visibleModifier"))
         assertFalse(first.report.contains("HiddenDsl"))
         assertTrue(first.report.contains("website/i18n/zh-CN"))
         assertTrue(first.report.contains("\"versionState\": \"next\""))
+        assertTrue(first.report.contains("\"exactEntryCount\": 1"))
+        assertTrue(first.report.contains("\"unbaselinedIssueCount\": 4"))
+
+        legacyDocument.appendText(
+            """
+
+            ```kotlin
+            anotherLegacyCall()
+            ```
+            """.trimIndent(),
+        )
+        val broadened = DocumentationGovernanceV2Reporter.generate(
+            repository = repository,
+            contractFiles = inputs,
+            recordFiles = setOf(baseline),
+            sourceSetDirectories = setOf(sourceRoot),
+            activeDocumentationFiles = setOf(currentDocument, legacyDocument),
+            localeMirrorFiles = setOf(localeMirror),
+            publishingFiles = setOf(publishing, releases),
+            documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
+        )
+        assertTrue(broadened.report.contains("\"status\": \"broadened\""))
+        assertTrue(broadened.report.contains("\"actualCount\": 2"))
     }
 
     private fun fixtureContract(contractRoot: File) {
@@ -159,6 +235,17 @@ class DocumentationGovernanceV2ReportTaskTest {
                     {
                       "fixture": "fixtures/rejected/sample.json",
                       "rule": "name is required"
+                    }
+                  ]
+                },
+                {
+                  "id": "exception",
+                  "schema": "exception.schema.json",
+                  "accepted": ["fixtures/accepted/exception.json"],
+                  "rejected": [
+                    {
+                      "fixture": "fixtures/rejected/exception.json",
+                      "rule": "target is required"
                     }
                   ]
                 }
@@ -180,6 +267,24 @@ class DocumentationGovernanceV2ReportTaskTest {
         )
         contractRoot.resolve("fixtures/accepted/sample.json").writeText("{\"name\":\"ok\"}\n")
         contractRoot.resolve("fixtures/rejected/sample.json").writeText("{}\n")
+        contractRoot.resolve("exception.schema.json").writeText(
+            """
+            {
+              "type": "object",
+              "required": ["exception_id", "target", "category", "violation_count"],
+              "properties": {
+                "exception_id": {"type": "string"},
+                "target": {"type": "object"},
+                "category": {"type": "string"},
+                "violation_count": {"type": "integer", "minimum": 1}
+              }
+            }
+            """.trimIndent(),
+        )
+        contractRoot.resolve("fixtures/accepted/exception.json").writeText(
+            """{"exception_id":"DOC-0001","target":{"file":"docs/a.md"},"category":"missing-metadata","violation_count":1}""",
+        )
+        contractRoot.resolve("fixtures/rejected/exception.json").writeText("{}\n")
     }
 
     private fun locateRepository(): File {

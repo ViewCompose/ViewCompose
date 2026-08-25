@@ -592,8 +592,15 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                     "gradle/viewcompose-documentation-releases.properties",
                 ),
             )
+            documentationPolicyFiles.from(
+                extension.repositoryDirectory.file("website/i18n/translation-policy.json"),
+                extension.repositoryDirectory.file("docs/modules/README.md"),
+            )
             reportFile.set(
                 extension.reportsDirectory.file("documentation-governance-v2-report.json"),
+            )
+            humanReportFile.set(
+                extension.reportsDirectory.file("documentation-governance-v2-report.txt"),
             )
         }
         project.tasks.register<VerifyDocumentationStructureTask>("verifyDocumentationStructure") {
