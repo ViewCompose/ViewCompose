@@ -346,6 +346,83 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
             forbiddenImportPrefixes = listOf("import android.", "import androidx."),
             diagnosticHeader = "Navigation core purity verification failed:",
         )
+
+        project.tasks.register<VerifyDevelopmentToolingIsolationTask>(
+            "verifyDevelopmentToolingIsolation",
+        ) {
+            group = "verification"
+            description =
+                "Verify concrete application-process tooling stays downstream and inactive on runtime hot paths."
+            repositoryDirectory.set(extension.repositoryDirectory)
+            runtimeSourceDirectories.from(project.providers.provider {
+                val repository = extension.repositoryDirectory.get().asFile
+                extension.runtimeModuleLayers.get().keys.sorted().map { module ->
+                    repository.resolve("$module/src/main")
+                }
+            })
+            toolingSourceDirectories.from(project.providers.provider {
+                val repository = extension.repositoryDirectory.get().asFile
+                extension.toolingModules.get().sorted().map { module ->
+                    repository.resolve("$module/src/main")
+                }
+            })
+            appBuildFile.set(extension.repositoryDirectory.file("app/build.gradle.kts"))
+            toolingModules.set(extension.toolingModules)
+            releaseRuntimeComponents.set(project.providers.provider {
+                project.project(":app").configurations
+                    .getByName("releaseRuntimeClasspath")
+                    .incoming
+                    .resolutionResult
+                    .allComponents
+                    .map { component -> component.id.displayName }
+                    .sorted()
+            })
+        }
+        project.tasks.register<VerifyDemoReleaseToolingApkTask>("verifyDemoReleaseToolingApk") {
+            group = "verification"
+            description = "Verify the optimized Demo release APK contains no concrete development tooling."
+            dependsOn(":app:assembleRelease")
+            repositoryDirectory.set(extension.repositoryDirectory)
+            releaseApk.set(
+                extension.repositoryDirectory.file(
+                    "app/build/outputs/apk/release/app-release-unsigned.apk",
+                ),
+            )
+        }
+        project.tasks.register<VerifyDemoAutomationSelectorsTask>("verifyDemoAutomationSelectors") {
+            group = "verification"
+            description =
+                "Prevent new Demo automation from selecting app-owned UI through localized visible copy."
+            repositoryDirectory.set(extension.repositoryDirectory)
+            sourceDirectories.from(
+                extension.repositoryDirectory.dir("app/src/androidTest"),
+                extension.repositoryDirectory.dir("viewcompose-benchmark/src/main"),
+            )
+        }
+        project.tasks.register<VerifyDemoLocalizationResourcesTask>(
+            "verifyDemoLocalizationResources",
+        ) {
+            group = "verification"
+            description =
+                "Verify Demo default-English and Simplified-Chinese resource parity and format contracts."
+            repositoryDirectory.set(extension.repositoryDirectory)
+            defaultResourcesDirectory.set(extension.repositoryDirectory.dir("app/src/main/res/values"))
+            chineseResourcesDirectory.set(
+                extension.repositoryDirectory.dir("app/src/main/res/values-zh-rCN"),
+            )
+        }
+        project.tasks.register<VerifyDemoLocalizedVisibleCopyTask>(
+            "verifyDemoLocalizedVisibleCopy",
+        ) {
+            group = "verification"
+            description =
+                "Prevent hard-coded visible copy from returning to Demo source domains already migrated to resources."
+            repositoryDirectory.set(extension.repositoryDirectory)
+            migratedSources.from(project.providers.provider {
+                val repository = extension.repositoryDirectory.get().asFile
+                demoLocalizedSourcePaths.map(repository::resolve)
+            })
+        }
     }
 }
 

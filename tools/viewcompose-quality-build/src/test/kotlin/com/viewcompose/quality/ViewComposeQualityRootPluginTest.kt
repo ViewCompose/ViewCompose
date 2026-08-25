@@ -76,6 +76,26 @@ class ViewComposeQualityRootPluginTest {
         ).forEach { taskName ->
             assertTrue(project.tasks.getByName(taskName) is VerifySourceBoundaryTask)
         }
+        assertTrue(
+            project.tasks.getByName("verifyDevelopmentToolingIsolation") is
+                VerifyDevelopmentToolingIsolationTask,
+        )
+        assertTrue(
+            project.tasks.getByName("verifyDemoReleaseToolingApk") is
+                VerifyDemoReleaseToolingApkTask,
+        )
+        assertTrue(
+            project.tasks.getByName("verifyDemoAutomationSelectors") is
+                VerifyDemoAutomationSelectorsTask,
+        )
+        assertTrue(
+            project.tasks.getByName("verifyDemoLocalizationResources") is
+                VerifyDemoLocalizationResourcesTask,
+        )
+        assertTrue(
+            project.tasks.getByName("verifyDemoLocalizedVisibleCopy") is
+                VerifyDemoLocalizedVisibleCopyTask,
+        )
     }
 
     @Test

@@ -49,19 +49,19 @@
     {
       "id": "runtime-tooling-marker",
       "task": "verifyDevelopmentToolingIsolation",
-      "input": { "virtualFiles": { "viewcompose-runtime/src/main/kotlin/Bad.kt": "val marker = \"PreviewWorkerHost\"\n" } },
+      "input": { "virtualFiles": { "viewcompose-runtime/src/main/kotlin/Bad.kt": "val marker = \"DeviceDslSource\"\n" } },
       "expectedDiagnostic": "Development-tooling isolation verification failed:"
     },
     {
       "id": "release-apk-tooling-entry",
       "task": "verifyDemoReleaseToolingApk",
-      "input": { "zipEntries": { "com/viewcompose/preview/worker/PreviewWorkerHost.class": "PreviewWorkerHost" } },
+      "input": { "zipEntries": { "classes.dex": "DeviceDslSourceRequestReceiver" } },
       "expectedDiagnostic": "Release APK tooling-isolation verification failed:"
     },
     {
-      "id": "duplicate-demo-selector",
+      "id": "visible-text-demo-selector",
       "task": "verifyDemoAutomationSelectors",
-      "input": { "virtualFiles": { "app/src/main/java/demo.kt": "Modifier.testTag(\"duplicate\")\nModifier.testTag(\"duplicate\")\n" } },
+      "input": { "virtualFiles": { "app/src/androidTest/kotlin/BadTest.kt": "By.text(\"Visible copy\")\n" } },
       "expectedDiagnostic": "Demo automation selector verification failed:"
     },
     {
