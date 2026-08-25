@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut eight existing runtime, core, and Preview purity gates into one typed compiled boundary verifier without changing published artifacts or task selection.",
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "Remove repository-only purity task bodies after compiled parity acceptance while preserving every task name and lifecycle dependency."
+    }
+  ]
+}

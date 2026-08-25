@@ -64,6 +64,18 @@ class ViewComposeQualityRootPluginTest {
             project.tasks.getByName("verifyUiFoundationPlatformBoundary") is
                 VerifyUiFoundationPlatformBoundaryTask,
         )
+        listOf(
+            "verifyRuntimePurity",
+            "verifyGestureCorePurity",
+            "verifyGraphicsCorePurity",
+            "verifyPreviewCorePurity",
+            "verifyPreviewRunnerBoundary",
+            "verifyPreviewGradlePluginBoundary",
+            "verifyPreviewWorkerHostBoundary",
+            "verifyNavigationCorePurity",
+        ).forEach { taskName ->
+            assertTrue(project.tasks.getByName(taskName) is VerifySourceBoundaryTask)
+        }
     }
 
     @Test

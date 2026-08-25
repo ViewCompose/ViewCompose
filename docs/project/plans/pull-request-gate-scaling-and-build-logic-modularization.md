@@ -21,39 +21,42 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-25
-next_action: Extract runtime and Preview purity and boundary gates with old/new parity.
+next_action: Extract Demo tooling, selector, and localization gates with old/new parity.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
+  - release/changes/20260825-quality-build-phase2-purity.json
 ---
 
 # Pull-request Gate Scaling and Build-logic Modularization Plan
 
 ## Status
 
-Active. Phases 0 and 1 and the first Phase 2 extraction family are complete. Required-check
-behavior remains frozen, and five architecture gates now have compiled ownership plus isolated
-parity coverage.
+Active. Phases 0 and 1 and the first two Phase 2 extraction families are complete. Required-check
+behavior remains frozen, and thirteen architecture, purity, and Preview-boundary gates now have
+compiled ownership plus isolated parity coverage.
 
 Last verified: 2026-08-25.
 
-Next action: continue Phase 2 with runtime and Preview purity and boundary gates. Move the complete
-family, prove parity, and delete its root-script implementation in the accepting slice; do not
-carry parallel implementations into a later pull request.
+Next action: continue Phase 2 with Demo tooling, automation-selector, and localization gates. Move
+the complete family, prove parity, and delete its root-script implementation in the accepting
+slice; do not carry parallel implementations into a later pull request.
 
 ## Maven release changesets
 
 - `release/changes/20260825-quality-build-phase1.json`
 - `release/changes/20260825-quality-build-phase2-architecture.json`
+- `release/changes/20260825-quality-build-phase2-purity.json`
 
 ## Release intent rationale
 
 Phase 1 modifies shared root build inputs only to make the repository-only quality plugin available
-and configure its explicit inputs. Phase 2's first slice changes the root build only to replace
-five repository-only task bodies with typed compiled tasks. Their names and lifecycle dependencies
-are unchanged. The Changesets classify shared build inputs and declare no artifact release. The new
-Gradle types remain build implementation rather than published artifact APIs; application-facing
-capability IDs, Q levels, compiled API samples, and module-manual changes are not applicable.
+and configure its explicit inputs. Phase 2's first two slices change the root build only to replace
+thirteen repository-only task bodies with typed compiled tasks. Their names and lifecycle
+dependencies are unchanged. The Changesets classify shared build inputs and declare no artifact
+release. The new Gradle types remain build implementation rather than published artifact APIs;
+application-facing capability IDs, Q levels, compiled API samples, and module-manual changes are
+not applicable.
 
 ## Objective
 
@@ -363,8 +366,28 @@ in `10 min 50 s`. Fresh dry runs matched every ordered Phase 0 task exactly: `qa
 result is **no material change** to active task selection or accepted gate behavior. This evidence
 covers frozen negative fixtures and the current valid repository; it does not enumerate every
 hypothetical Gradle syntax, and the single local duration is completeness evidence rather than a
-performance comparison. The next extraction family is runtime and Preview purity and boundary
-rules.
+performance comparison.
+
+The second family completed on 2026-08-25 as another hard cut. `verifyRuntimePurity`,
+`verifyGestureCorePurity`, `verifyGraphicsCorePurity`, `verifyNavigationCorePurity`,
+`verifyPreviewCorePurity`, `verifyPreviewRunnerBoundary`,
+`verifyPreviewGradlePluginBoundary`, and `verifyPreviewWorkerHostBoundary` now share one typed
+compiled source-boundary task and one pure verifier. Each registration declares its exact source
+directory, optional build file, forbidden import prefixes, build markers, and frozen diagnostic
+header; task actions do not access a Gradle project or discover repository paths. The eight old
+root task bodies were deleted in the same change, reducing the root script from 2,171 to 1,846
+lines.
+
+The new parity suite exercises all eight frozen source failures and four build-script marker
+groups, including multi-marker ordering for the Preview runner and worker host. The included build
+passed all 13 tests, the eight extracted tasks passed against the current repository, and the Phase
+0 fixture contract remained valid. The complete local `qaQuick` acceptance passed 2,341 actionable
+tasks in `11 min 49 s`. Fresh dry runs again matched every ordered task exactly: `qaQuick`
+2,899/2,899, `qaPreview` 1,640/1,640, `qaFull` 3,098/3,098, and
+`verifyDocumentationStructure` 4/4. The result is **no material change** to selected work or gate
+behavior. This evidence preserves the legacy literal import and build-marker contract; it does not
+claim semantic parsing of arbitrary Gradle syntax, and timings are not performance evidence. The
+next extraction family is Demo tooling, selectors, and localization.
 
 ### Phase 3: classify pull-request impact
 
