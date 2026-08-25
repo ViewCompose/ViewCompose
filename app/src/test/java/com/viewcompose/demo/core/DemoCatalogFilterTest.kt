@@ -71,6 +71,7 @@ class DemoCatalogFilterTest {
                 "performance.complex-layout",
                 "performance.shadow-list",
                 "performance.shadow-complex-layout",
+                "performance.paging",
             ),
             filterDemoScenarios(
                 scenarios = scenarios,

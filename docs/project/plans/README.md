@@ -8,12 +8,9 @@ This directory contains multi-step work that is currently active and must surviv
   the intentionally deferred collection-stress revision-3 fixed-clock baseline, broad bilingual and
   configuration visual matrix, popup pixel golden, and zero-caller hard deletion of obsolete Demo
   harness infrastructure after the coordinated framework and Preview-plugin release.
-- [Paging 3 integration](./paging3-integration.md) — integrate official AndroidX Paging through an
-  optional custom-presenter bridge, preserving ViewCompose lazy identity and renderer ownership
-  without moving paging types or loading policy into the core contract.
 Completed architecture, animation-capability, design-system, theme-propagation, native-widget,
 component-appearance, tutorial, language-consistency, migration-sample, hosted-documentation, and
-version-retention plans are retained in the
+version-retention, and Paging-integration plans are retained in the
 [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).
 
 Before adding a plan, read [Documentation governance](../documentation-governance.md). A plan must

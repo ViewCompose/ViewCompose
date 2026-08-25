@@ -129,6 +129,10 @@ internal enum class PerformanceScenario(
         wireValue = "shadow_complex_layout",
         demoScenarioId = "performance.shadow-complex-layout",
     ),
+    Paging(
+        wireValue = "paging",
+        demoScenarioId = "performance.paging",
+    ),
     ;
 
     companion object {

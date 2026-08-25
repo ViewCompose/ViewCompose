@@ -130,6 +130,7 @@ internal object DemoScenarioIds {
     val PerformanceComplexLayout = DemoScenarioId("performance.complex-layout")
     val PerformanceShadowList = DemoScenarioId("performance.shadow-list")
     val PerformanceShadowComplexLayout = DemoScenarioId("performance.shadow-complex-layout")
+    val PerformancePaging = DemoScenarioId("performance.paging")
 }
 
 internal object DemoScenarioRegistry {
@@ -1504,6 +1505,21 @@ internal object DemoScenarioRegistry {
             target = R.id.demo_performance_shadow_complex_layout_target,
             benchmarkRevision = 3,
         ),
+        performanceScenario(
+            id = DemoScenarioIds.PerformancePaging,
+            titleRes = R.string.demo_scenario_performance_paging_title,
+            summaryRes = R.string.demo_scenario_performance_paging_summary,
+            performanceScenario = "paging",
+            root = R.id.demo_performance_paging_root,
+            ready = R.id.demo_performance_paging_ready,
+            primaryAction = R.id.demo_performance_paging_primary_action,
+            secondaryAction = R.id.demo_performance_paging_secondary_action,
+            reset = R.id.demo_performance_paging_reset,
+            state = R.id.demo_performance_paging_state,
+            target = R.id.demo_performance_paging_target,
+            secondaryTarget = R.id.demo_performance_paging_secondary_target,
+            benchmarkRevision = 1,
+        ),
     )
 
     private val scenariosById: Map<String, DemoScenarioSpec> = scenarios.associateBy { it.id.value }
@@ -1877,6 +1893,7 @@ internal object DemoScenarioRegistry {
         reset: Int,
         state: Int,
         target: Int,
+        secondaryTarget: Int? = null,
         benchmarkRevision: Int = 1,
     ): DemoScenarioSpec = scenario(
         id = id,
@@ -1902,6 +1919,7 @@ internal object DemoScenarioRegistry {
             reset = reset,
             state = state,
             target = target,
+            secondaryTarget = secondaryTarget,
         ),
         benchmarkRevision = benchmarkRevision,
     )

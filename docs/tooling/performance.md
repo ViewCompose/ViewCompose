@@ -212,6 +212,22 @@ longitudinal baseline because it does not preserve the Demo workload contract.
    adds or removes the conditional detail row. It is the idiomatic imperative reference, not an
    assertion of algorithmic equivalence with either declarative engine.
 
+`PagingPerformanceBenchmark` is the release authority for the optional AndroidX Paging
+integration:
+
+1. It drives the ViewCompose-only `performance.paging@1` route because the measured contract is the
+   official `PagingDataPresenter` integration, not an engine-ranking workload.
+2. The deterministic local source exposes 1,000,000 positions with `pageSize = 32`,
+   `prefetchDistance = 2`, `maxSize = 96`, placeholders, jumps, and query-separated stable keys.
+3. `pagingAppendDrop`, `pagingQueryReplacement`, and `pagingScroll` respectively exercise eight
+   append/drop advances, eight latest-generation replacements around target 256, and eight
+   down/up gestures while checking the bounded loaded window.
+4. Each Release method uses five `CompilationMode.None` iterations plus frame timing and maximum
+   process-memory metrics. A fixed settling window and readiness checks remain outside measurement.
+5. `tools/performance/summarize_paging_macrobenchmark.py` accepts only the exact three-method,
+   five-run, matching-context set; it reports P50/P90/P95/P99, median peak heap, optional RSS, and
+   run-P50 CV, and rejects CV above `0.15` when `--enforce` is used.
+
 Accepted Samsung SM-G991B / Android 13 replacement baselines from 2026-08-15 use five iterations,
 per-method `NONE`/`LIGHT` starts, the 5-second setup settling window, and clock policy
 `unlocked-dvfs-preflight-v1`:
@@ -674,7 +690,43 @@ frame benchmark. These rows cover one OEM/API-28 device, peak rather than post-G
 no per-object allocation events, and no direct energy measurement. Deterministic tests own
 retargeting, one-writer, bounded-retention, rollback, cleanup, and lifecycle correctness.
 
-#### 2.4.5 Current decision boundary
+#### 2.4.5 Paging integration release baseline
+
+The first accepted Paging Release baseline was collected on 2026-08-25 from a rooted Xiaomi MI 6 /
+Android 9 at 60 Hz. Little and big CPU policies were fixed at `1,401,600` and `1,804,800 kHz`, GPU
+at `515 MHz`, and `cpubw`/`gpubw` at `13,763`; charging was suspended and overriding vendor
+performance services were stopped. The three methods used the same R8 target and benchmark APKs,
+`CompilationMode.None` reported as `run-from-apk`, and five measured iterations. Start temperature
+was `33/34/35°C` for append/query/scroll and the restored device ended at `36°C`. Independent
+post-run reads confirmed default CPU/GPU/bandwidth governors and bounds, charging, input, and
+performance-service state were restored.
+
+| Action | P50/P90/P95/P99, ms | Median peak heap, KiB | Median peak RSS, KiB | Run-P50 CV | Conclusion |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Append/drop | `4.281/29.189/33.973/43.592` | `117,797` | n/a | `0.077` | Stable absolute baseline. |
+| Query replacement | `4.215/13.810/40.809/48.345` | `128,433` | n/a | `0.021` | Stable absolute baseline. |
+| Scroll | `2.581/3.699/4.066/6.511` | `119,087` | n/a | `0.006` | Stable absolute baseline. |
+
+All rows pass the frozen `0.15` stability ceiling. Because this is the first compatible workload,
+the normalized direction is **inconclusive**: these numbers establish an absolute release baseline
+and improve bounded-window, generation-replacement, and device confidence, but do not prove a
+performance improvement or an engine advantage.
+
+Android 9's `MemoryUsageMetric` emitted peak process heap but no RSS. The values are process peaks,
+not deltas or post-GC retained memory; the batch covers one OEM, immediate local pages, no database,
+network, disk, calibrated energy, startup, or total-duration measurement. Accessibility polling and
+action settling are part of the frozen interaction contract. A future directional claim requires
+the same route revision, device/system, fixed-clock policy, iteration and APK context:
+
+```bash
+python3 tools/performance/summarize_paging_macrobenchmark.py \
+  /path/to/paging-results \
+  --output /path/to/paging-baseline.md \
+  --json-output /path/to/paging-baseline.json \
+  --enforce
+```
+
+#### 2.4.6 Current decision boundary
 
 The current evidence supports targeted claims only:
 
@@ -686,7 +738,9 @@ The current evidence supports targeted claims only:
    whole-frame leadership claim.
 4. Animation and shared-motion slices pass their scoped release-safety gates; changed frame counts
    prevent total-work or energy claims.
-5. No matrix establishes a universal frame-time or memory winner.
+5. Paging owns a stable first absolute Release baseline; no compatible prior exists for a
+   normalized performance claim.
+6. No matrix establishes a universal frame-time or memory winner.
 
 Next work must start from the named remaining gap, preserve the same workload identity and controls,
 and record new absolute, normalized, stability, limitation, and next-action evidence. A result from

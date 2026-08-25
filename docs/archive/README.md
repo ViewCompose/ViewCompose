@@ -26,6 +26,7 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `paging3-integration.md` | AndroidX `PagingDataPresenter` 可选前端、紧凑占位表、生命周期与 mediator 契约、受控 Demo、百万位置真机证明、Release 固定频率绝对基线、Maven 消费和完整仓库门禁均已闭环；首个基线不作相对性能结论，Row/Grid、真实 I/O 或替代引擎需重新立项 |
 | `third-party-android-view-integrations.md` | The typed Android View adapter, lifecycle and saved-state coordination, Media3, legacy ExoPlayer 2, Google Maps, and CameraX integrations are complete; exact ownership, physical-device evidence, bilingual manuals, consumer gates, and release changesets are closed, and future integrations require a new attributed plan |
 | `diagnostics-correlation-inspection-observability.md` | 跨 Session 关联、有界生产故障聚合、请求驱动的真实 View 高亮、有限逐节点耗时与统一 Studio Inspector 已全部闭环；同机固定频率 Debug 对照为 `no material change`，显式刷新成本有界，弱生命周期、Release APK 排除与 Maven 消费门禁通过，后续扩展必须重新立项 |
 | `animation-compose-capability-expansion.md` | 动画 Phase 0～7 已全部合并：物理 spring/decay/result、完整 AnimatedContent、丰富显隐变换、可 seek Transition、真实 Bounds、导航共享运动，以及请求驱动的只读时间线工具均完成；固定频率结果保持 `no material change` 的精确边界，后续能力必须重新立项，MotionLayout、持续 profiler 与真机远程修改仍未排期 |

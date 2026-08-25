@@ -135,6 +135,7 @@ class DemoScenarioAutomationUiTest {
             "performance.complex-layout",
             "performance.shadow-list",
             "performance.shadow-complex-layout",
+            "performance.paging",
         ).forEach { scenarioId ->
             launchScenario(scenarioId)
             requireTarget(scenarioId, "root")
@@ -149,12 +150,17 @@ class DemoScenarioAutomationUiTest {
             "performance.complex-layout",
             "performance.shadow-list",
             "performance.shadow-complex-layout",
+            "performance.paging",
         ).forEach { scenarioId ->
-            val engines = buildList {
-                add("viewcompose" to "ViewCompose")
-                add("compose" to "Compose")
-                if (!scenarioId.startsWith("performance.shadow-")) {
-                    add("android_views" to "Android Views")
+            val engines = if (scenarioId == "performance.paging") {
+                listOf("viewcompose" to "ViewCompose")
+            } else {
+                buildList {
+                    add("viewcompose" to "ViewCompose")
+                    add("compose" to "Compose")
+                    if (!scenarioId.startsWith("performance.shadow-")) {
+                        add("android_views" to "Android Views")
+                    }
                 }
             }
             engines.forEach { (engine, displayName) ->
@@ -262,6 +268,17 @@ class DemoScenarioAutomationUiTest {
                 val changed = waitForTargetTextChange(scenarioId, initial)
                 assertNotEquals("$scenarioId action must publish state", initial, changed)
 
+                if (
+                    scenarioId.startsWith("input.focus-follow-") &&
+                    waitForImeVisibility(expectedVisible = true)
+                ) {
+                    device.pressBack()
+                    assertTrue(
+                        "$scenarioId IME must hide before reset",
+                        waitForImeVisibility(expectedVisible = false),
+                    )
+                    waitForUiIdle()
+                }
                 requireTarget(scenarioId, "reset").click()
                 assertEquals(
                     "$scenarioId reset must restore initial state",
@@ -675,6 +692,7 @@ class DemoScenarioAutomationUiTest {
                 "-f $NEW_CLEAR_TASK_FLAGS " +
                 "--es demo_scenario_id $scenarioId",
         )
+        awaitScenarioReady(scenarioId)
     }
 
     private fun launchPerformanceScenario(
@@ -688,6 +706,20 @@ class DemoScenarioAutomationUiTest {
                 "--es demo_scenario_id $scenarioId " +
                 "--es performance_engine $engine",
         )
+        awaitScenarioReady(scenarioId)
+    }
+
+    private fun awaitScenarioReady(scenarioId: String) {
+        val normalized = scenarioId.replace('.', '_').replace('-', '_')
+        listOf("root", "ready").forEach { role ->
+            val resourceName = "demo_${normalized}_$role"
+            val target = device.wait(
+                Until.findObject(By.res(TARGET_PACKAGE, resourceName)),
+                TARGET_TIMEOUT_MS,
+            )
+            assertNotNull("Missing $scenarioId/$role after launch", target)
+        }
+        waitForUiIdle()
     }
 
     private fun requireTarget(
@@ -759,6 +791,17 @@ class DemoScenarioAutomationUiTest {
         return current.orEmpty()
     }
 
+    private fun waitForImeVisibility(expectedVisible: Boolean): Boolean {
+        val deadline = SystemClock.uptimeMillis() + TARGET_TIMEOUT_MS
+        do {
+            val shown = device.executeShellCommand("dumpsys input_method")
+                .contains("mInputShown=true")
+            if (shown == expectedVisible) return true
+            SystemClock.sleep(16L)
+        } while (SystemClock.uptimeMillis() < deadline)
+        return false
+    }
+
     private fun readTargetText(scenarioId: String): String? =
         try {
             requireTarget(scenarioId, "state").text.orEmpty()
@@ -800,6 +843,7 @@ class DemoScenarioAutomationUiTest {
                 )
             }
         }
+        waitForUiIdle()
     }
 
     private companion object {

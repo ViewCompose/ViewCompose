@@ -33,4 +33,12 @@
     <string name="demo_performance_constraint_revision">Revision %1$d</string>
     <string name="demo_performance_constraint_update">Update</string>
     <string name="demo_performance_constraint_reset">Reset</string>
+    <string name="demo_performance_paging_ready">ViewCompose Paging ready</string>
+    <string name="demo_performance_paging_state">q=%1$d;target=%2$d;ready=%3$d</string>
+    <string name="demo_performance_paging_loaded_count">loaded=%1$d;max=%2$d</string>
+    <string name="demo_performance_paging_advance">Next page</string>
+    <string name="demo_performance_paging_replace_query">Replace query</string>
+    <string name="demo_performance_paging_reset">Reset</string>
+    <string name="demo_performance_paging_placeholder">Placeholder %1$d</string>
+    <string name="demo_performance_paging_row">Query %1$d · row %2$d</string>
 </resources>

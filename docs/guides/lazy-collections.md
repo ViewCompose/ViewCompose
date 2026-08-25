@@ -279,10 +279,11 @@ the official presenter into `PagingLazyColumn` without moving Paging types or lo
 UI Foundation. Its explicit placeholder overload and page-drop handling use the neutral compact
 item-table contract; the placeholder-disabled overload rejects unloaded slots. Paging remains the
 loading, generation, retry, and refresh owner, while Android Renderer remains the only adapter,
-stable-ID, diff, holder, and Session owner. Later work remains tracked by the active
-[Paging 3 integration plan](../project/plans/paging3-integration.md), whose remaining Phase 7 owns
-performance, broader device evidence, and release closeout after the controlled Demo and public
-guidance shipped in Phase 6. Finite-list applications may
+stable-ID, diff, holder, and Session owner. The
+[archived Paging 3 integration plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/paging3-integration.md)
+completed its controlled Demo, million-position device path, stable first Release baseline, Maven
+proof, and release closeout. Row/grid support, real I/O, or a directional longitudinal performance
+claim now requires a newly attributed plan. Finite-list applications may
 continue to use `isAtEnd`, `lastVisibleItemIndex`, and `layoutInfo.totalItemsCount` without any Paging
 dependency. Custom fling physics and compiler-driven sub-item composition remain separate
 integration concerns.

@@ -574,6 +574,14 @@
     <item name="demo_performance_shadow_complex_layout_reset" type="id" />
     <item name="demo_performance_shadow_complex_layout_state" type="id" />
     <item name="demo_performance_shadow_complex_layout_target" type="id" />
+    <item name="demo_performance_paging_root" type="id" />
+    <item name="demo_performance_paging_ready" type="id" />
+    <item name="demo_performance_paging_primary_action" type="id" />
+    <item name="demo_performance_paging_secondary_action" type="id" />
+    <item name="demo_performance_paging_reset" type="id" />
+    <item name="demo_performance_paging_state" type="id" />
+    <item name="demo_performance_paging_target" type="id" />
+    <item name="demo_performance_paging_secondary_target" type="id" />
 
     <item name="demo_media_media3_player_view_root" type="id" />
     <item name="demo_media_media3_player_view_ready" type="id" />

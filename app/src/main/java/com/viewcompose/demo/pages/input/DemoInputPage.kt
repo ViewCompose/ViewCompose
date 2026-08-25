@@ -25,6 +25,7 @@ import com.viewcompose.ui.node.policy.GridCells
 import com.viewcompose.ui.node.policy.GridItemSpan
 import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.runtime.derivedStateOf
+import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.ButtonSize
@@ -32,10 +33,12 @@ import com.viewcompose.ui.foundation.ButtonVariant
 import com.viewcompose.ui.foundation.Checkbox
 import com.viewcompose.ui.foundation.CheckboxOverrides
 import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.DisposableEffect
 import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.LazyColumn
 import com.viewcompose.ui.foundation.LazyVerticalGrid
+import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.foundation.LocalFocusManager
 import com.viewcompose.ui.foundation.ProvideCheckboxOverrides
 import com.viewcompose.ui.foundation.ProvideRadioButtonOverrides
@@ -66,6 +69,7 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.VerticalPager
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.foundation.rememberLazyListState
 import com.viewcompose.ui.foundation.rememberTextFieldState
 import com.viewcompose.ui.unit.sp
 
@@ -952,10 +956,20 @@ private fun UiTreeBuilder.InputFocusFollowLazyColumnPage(scenario: DemoScenarioS
     val queryState = rememberTextFieldState()
     val focusRequester = remember { FocusRequester() }
     val focusRequestCount = remember { mutableStateOf(0) }
+    val focusRequestPending = remember { mutableStateOf(false) }
+    val focusTargetMounted = remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
     val focusManager = LocalFocusManager.current
+    LaunchedEffect(focusRequestPending.value, focusTargetMounted.value) {
+        if (focusRequestPending.value && focusTargetMounted.value) {
+            if (focusRequester.requestFocus()) focusRequestCount.value += 1
+            focusRequestPending.value = false
+        }
+    }
     LazyColumn(
         spacing = 8.dp,
         contentPadding = LazyContentPadding.all(12.dp),
+        state = listState,
         modifier = Modifier.fillMaxSize(),
     ) {
         item(key = "header", contentRevision = "header") {
@@ -970,12 +984,15 @@ private fun UiTreeBuilder.InputFocusFollowLazyColumnPage(scenario: DemoScenarioS
                 scenario = scenario,
                 focusRequestCount = focusRequestCount.value,
                 onFocus = {
-                    if (focusRequester.requestFocus()) focusRequestCount.value += 1
+                    focusRequestPending.value = true
+                    listState.scrollToItem(LAZY_COLUMN_FOCUS_TARGET_INDEX)
                 },
                 onReset = {
+                    focusRequestPending.value = false
+                    focusRequestCount.value = 0
                     focusManager.clearFocus(force = true)
                     queryState.clearText()
-                    focusRequestCount.value = 0
+                    listState.scrollToItem(0)
                 },
             )
         }
@@ -983,6 +1000,10 @@ private fun UiTreeBuilder.InputFocusFollowLazyColumnPage(scenario: DemoScenarioS
             FocusFollowPlaceholder(index)
         }
         item(key = "search", contentRevision = "search") {
+            FocusTargetMountEffect(
+                identity = "lazy-column-search",
+                mounted = focusTargetMounted,
+            )
             SearchBar(
                 state = queryState,
                 placeholder = stringResource(R.string.demo_input_search_products_placeholder),
@@ -1003,12 +1024,22 @@ private fun UiTreeBuilder.InputFocusFollowLazyGridPage(scenario: DemoScenarioSpe
     val queryState = rememberTextFieldState()
     val focusRequester = remember { FocusRequester() }
     val focusRequestCount = remember { mutableStateOf(0) }
+    val focusRequestPending = remember { mutableStateOf(false) }
+    val focusTargetMounted = remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
     val focusManager = LocalFocusManager.current
+    LaunchedEffect(focusRequestPending.value, focusTargetMounted.value) {
+        if (focusRequestPending.value && focusTargetMounted.value) {
+            if (focusRequester.requestFocus()) focusRequestCount.value += 1
+            focusRequestPending.value = false
+        }
+    }
     LazyVerticalGrid(
         cells = GridCells.Fixed(2),
         horizontalSpacing = 8.dp,
         verticalSpacing = 8.dp,
         contentPadding = LazyContentPadding.all(12.dp),
+        state = listState,
         modifier = Modifier.fillMaxSize(),
     ) {
         item(
@@ -1031,12 +1062,15 @@ private fun UiTreeBuilder.InputFocusFollowLazyGridPage(scenario: DemoScenarioSpe
                 scenario = scenario,
                 focusRequestCount = focusRequestCount.value,
                 onFocus = {
-                    if (focusRequester.requestFocus()) focusRequestCount.value += 1
+                    focusRequestPending.value = true
+                    listState.scrollToItem(LAZY_GRID_FOCUS_TARGET_INDEX)
                 },
                 onReset = {
+                    focusRequestPending.value = false
+                    focusRequestCount.value = 0
                     focusManager.clearFocus(force = true)
                     queryState.clearText()
-                    focusRequestCount.value = 0
+                    listState.scrollToItem(0)
                 },
             )
         }
@@ -1048,6 +1082,10 @@ private fun UiTreeBuilder.InputFocusFollowLazyGridPage(scenario: DemoScenarioSpe
             contentRevision = "search",
             span = GridItemSpan.FullLine,
         ) {
+            FocusTargetMountEffect(
+                identity = "lazy-grid-search",
+                mounted = focusTargetMounted,
+            )
             SearchBar(
                 state = queryState,
                 placeholder = stringResource(R.string.demo_input_search_products_placeholder),
@@ -1086,9 +1124,9 @@ private fun UiTreeBuilder.InputFocusFollowScrollableColumnPage(scenario: DemoSce
                 if (focusRequester.requestFocus()) focusRequestCount.value += 1
             },
             onReset = {
+                focusRequestCount.value = 0
                 focusManager.clearFocus(force = true)
                 queryState.clearText()
-                focusRequestCount.value = 0
             },
         )
         (1..5).forEach { index -> FocusFollowPlaceholder(index) }
@@ -1102,6 +1140,16 @@ private fun UiTreeBuilder.InputFocusFollowScrollableColumnPage(scenario: DemoSce
                 .inputScenarioTarget(scenario, DemoAutomationRole.Target),
         )
         (8..19).forEach { index -> FocusFollowPlaceholder(index) }
+    }
+}
+
+private fun UiTreeBuilder.FocusTargetMountEffect(
+    identity: String,
+    mounted: MutableState<Boolean>,
+) {
+    DisposableEffect(identity) {
+        mounted.value = true
+        onDispose { mounted.value = false }
     }
 }
 
@@ -1135,9 +1183,9 @@ private fun UiTreeBuilder.InputFocusFollowVerticalPagerPage(scenario: DemoScenar
                         if (focusRequester.requestFocus()) focusRequestCount.value += 1
                     },
                     onReset = {
+                        focusRequestCount.value = 0
                         focusManager.clearFocus(force = true)
                         queryState.clearText()
-                        focusRequestCount.value = 0
                         pageState.value = 0
                     },
                 )
@@ -1206,10 +1254,10 @@ private fun UiTreeBuilder.InputFocusFollowPullRefreshPage(scenario: DemoScenario
                     if (focusRequester.requestFocus()) focusRequestCount.value += 1
                 },
                 onReset = {
+                    focusRequestCount.value = 0
                     focusManager.clearFocus(force = true)
                     queryState.clearText()
                     refreshingState.value = false
-                    focusRequestCount.value = 0
                 },
             )
             Button(
@@ -1312,3 +1360,6 @@ private fun Modifier.inputScenarioTarget(
     val target = scenario?.automation?.get(role) ?: return this
     return demoAutomationTarget(target)
 }
+
+private const val LAZY_COLUMN_FOCUS_TARGET_INDEX = 5
+private const val LAZY_GRID_FOCUS_TARGET_INDEX = 10

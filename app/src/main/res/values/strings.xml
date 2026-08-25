@@ -159,6 +159,8 @@
     <string name="demo_scenario_performance_shadow_list_summary">Paired lazy-list workload with advanced shadows and a selectable backend.</string>
     <string name="demo_scenario_performance_shadow_complex_layout_title">Shadow complex-layout performance</string>
     <string name="demo_scenario_performance_shadow_complex_layout_summary">Paired nested-layout workload with advanced shadows and a selectable backend.</string>
+    <string name="demo_scenario_performance_paging_title">Paging performance</string>
+    <string name="demo_scenario_performance_paging_summary">One-million-position append, drop, query-replacement, and scroll workload.</string>
 
     <string name="resource_configuration_reset_action">Reset environment</string>
 

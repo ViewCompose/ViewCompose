@@ -172,6 +172,12 @@ Test repositories and `PagingSource` below UI, use AndroidX `paging-testing` for
 reserve device tests for rendering and interaction. Mediator fixtures may fake storage and remote
 results, but must run real AndroidX source/mediator coordination rather than UI booleans.
 
+The benchmark host also exposes `performance.paging@1`. Its immediate local source presents one
+million positions with pages of 32, a maximum loaded window of 96, placeholders, jumps, and
+query-separated stable keys. **Next page**, **Replace query**, and **Reset** provide stable
+automation targets for append/drop, generation replacement, and recovery; this route is a Release
+integration workload, not a production fake source or an engine comparison.
+
 ## Migration
 
 From Compose Paging, keep `Pager`, sources/mediator, repository, and the ViewModel-owned `cachedIn`
@@ -200,19 +206,33 @@ append failures, distinct source failure, presenter generations, placeholders, p
 detached-cache disposal. Q3 samples compile from public APIs. The Demo adds a controlled real
 `PagingSource` path and stable automation roles for initial, append, empty, error, retry, and reset.
 
-On 2026-08-25, two Pixel 4 XL Android 13 tests added 48,124 KiB PSS for 1,000,000 positions, jumped
-to the end in 555 ms, retained 81 items under `maxSize = 96`, released dropped Sessions, and ended
-bounded scrolling at 96 items. A separate 13 s controlled-Demo test plus manual inspection covered
-initial loading, 10 rows, append error, retry to 20, reset, empty, and initial error with readable,
-scrollable retained content. Conclusion: **improved** memory/ownership and Demo confidence.
-Limitations are one device and deterministic in-process storage/remote data; real I/O, prepend UI,
-broader devices, frames, Demo memory, and release performance remain unproven.
+On 2026-08-25, Pixel 4 XL Android 13 acceptance added 46,977 KiB PSS for 1,000,000 positions, jumped
+to the end in 549 ms, retained 81 items under `maxSize = 96`, and released 58 dropped Sessions. A
+separate bounded traversal ended at 96 loaded items and released 189 initial Sessions. The
+controlled-Demo path covered initial loading, 10 rows, append error, retry to 20, reset, empty, and
+initial error. The Release performance route also passed query replacement at target 32 and reset,
+with a readable manual state of `q=1`, `loaded=64`, and `max=96`.
+
+The first fixed-clock Release baseline used a rooted Xiaomi MI 6 / Android 9 and five iterations per
+method. Append/drop recorded `4.281/29.189/33.973/43.592 ms` P50/P90/P95/P99, median peak heap
+`117,797 KiB`, and run-P50 CV `0.077`; query replacement recorded
+`4.215/13.810/40.809/48.345 ms`, `128,433 KiB`, and `0.021`; scroll recorded
+`2.581/3.699/4.066/6.511 ms`, `119,087 KiB`, and `0.006`. All rows pass the `0.15` stability ceiling.
+Conclusion: correctness, bounded-memory, device, Demo, and first absolute Release-baseline
+confidence are **improved**; normalized performance direction remains **inconclusive** because no
+compatible prior exists.
+
+The evidence covers two devices but only one fixed-clock OEM/API, immediate local pages, and peak
+process heap. Android 9 emitted no RSS; the values are not deltas or post-GC retained memory. Real
+database/network/disk I/O, prepend UI, calibrated energy, startup, total duration, and a directional
+performance comparison remain unproven. Future claims require a matching workload and controlled
+longitudinal baseline; the exact protocol and results live in the performance guide.
 
 ## Related documentation
 
 - [Lazy Collections guide](../../guides/lazy-collections.md)
 - [Lifecycle AndroidX module](../viewcompose-lifecycle-androidx/README.md)
-- [Paging integration plan](../../project/plans/paging3-integration.md)
+- [Archived Paging integration plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/paging3-integration.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 
 The complete generated reference is available in the
