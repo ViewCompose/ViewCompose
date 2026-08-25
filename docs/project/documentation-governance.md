@@ -175,11 +175,13 @@ that category. Completion requires an empty baseline and strict local, PR, and d
 
 ### Contract assets and enforcement boundary
 
-Schemas and fixtures live in `docs/project/contracts/documentation-governance-v2/`; record names,
-discovery, and scanner language wait for Phase 0B compiled ownership. Machines own shape, exact
-identity, discovery, uniqueness, source/lane/route consistency, ratchet arithmetic, and freshness.
-Reviewers own capability cohesion, page purpose, evidence, exception credibility, and rationale
-correctness. Machine success never overrides review.
+The V2 manifest in `docs/project/contracts/` freezes schemas, fixtures, and record/task/report
+locations. Documents use front matter; other records use plural subdirectories. Fixtures fail
+closed; findings do not block until Phase 2.
+
+Machines own shape, identity, discovery, uniqueness, source/lane/route consistency, ratchet, and
+freshness; reviewers own cohesion, purpose, evidence, exception credibility, and rationale.
+Automation never overrides review.
 
 ## Framework and module boundaries
 

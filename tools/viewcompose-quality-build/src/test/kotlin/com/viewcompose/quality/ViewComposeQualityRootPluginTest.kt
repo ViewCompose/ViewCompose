@@ -116,6 +116,10 @@ class ViewComposeQualityRootPluginTest {
                 VerifyDocumentationStructureTask,
         )
         assertTrue(
+            project.tasks.getByName("reportDocumentationGovernanceV2") is
+                ReportDocumentationGovernanceV2Task,
+        )
+        assertTrue(
             project.tasks.getByName("verifyDslApiContracts") is VerifyDslApiContractsTask,
         )
         assertTrue(

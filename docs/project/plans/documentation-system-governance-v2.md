@@ -14,14 +14,14 @@ status: active
 scope: Establish structured documentation ownership, discovery, debt ratchets, and generated Reference.
 non_goals:
   - Weaken existing documentation, source-comment, release, or site gates.
-baseline: Phase 0A freezes the normative contract and reviewed schemas before scanner implementation.
+baseline: Phase 0B provides compiled deterministic report-only discovery without changing blocking gates.
 ordered_work:
   - Add compiled report-only discovery and then activate no-new-debt gates.
   - Generate Reference ownership before broad content and sample migration.
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
-last_verified: 2026-08-25
-next_action: Wait for quality-build Phase 2 existing-gate extraction before Phase 0B.
+last_verified: 2026-08-26
+next_action: Complete Phase 1 discovery accuracy and freeze the exact reviewed debt baseline.
 maven_release_changesets: []
 ---
 
@@ -29,20 +29,19 @@ maven_release_changesets: []
 
 ## Status
 
-Active. The assessment baseline is frozen on `main` at `4fd14c4a` on 2026-08-25. Phase 0A is
-complete: the normative Governance V2 model, machine-readable schemas, enforcement boundaries, and
-accepted/rejected fixtures are frozen without adding a scanner or changing an existing gate.
+Active. The assessment baseline was frozen on `main` at `4fd14c4a` on 2026-08-25. Phases 0A and 0B
+are complete: the normative Governance V2 contract and its compiled report-only scanner now run
+from the quality included build without changing an existing blocking lifecycle.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
 enter one explicit ratchet baseline, but the baseline cannot grow, and touching an allowlisted page
 must remove that page's repaired violations instead of preserving them.
 
-Last verified: 2026-08-25.
+Last verified: 2026-08-26.
 
-Next action: remain on the coordinated pull-request gate plan while Phase 2 extracts existing gates
-into the now-complete compiled quality owner. Phase 0B scanner implementation begins only after
-that extraction and must run there in report-only mode, never as a temporary root-build scanner.
+Next action: complete Phase 1 production-surface discovery, classification, and exact reviewed debt
+baseline while the scanner remains report-only.
 
 ## Maven release changesets
 
@@ -325,6 +324,37 @@ task, workflow, branch-protection context, publishing input, or public API chang
 
 Exit condition: the scanner executes through compiled quality ownership, its fixtures pass in
 isolation, and enabling report output does not change an existing blocking gate result.
+
+Phase 0B completed on 2026-08-26. `reportDocumentationGovernanceV2` is owned only by the compiled
+quality included build, validates all five accepted fixtures and rejects all five negative fixtures,
+and writes byte-stable JSON without timestamps or absolute paths. Record placement is frozen at
+`docs/project/records/documentation-governance-v2/`; document identity remains in canonical
+Markdown front matter.
+
+The first report discovered 254 broad DSL/Modifier candidates, 119 canonical active Markdown
+pages, 198 Kotlin/Java fences, 116 Chinese locale mirrors, 38 publishing artifacts, and no record
+files. It reported 299 non-blocking findings: 113 pages without V2 metadata and 186 fences without
+an adjacent registration marker. This is discovery evidence, not the Phase 1 debt baseline:
+Phase 0B deliberately includes app/sample candidates and uses conservative textual declaration and
+marker recognition. Therefore the absolute inventory is useful, but change from a prior baseline is
+not available and the debt conclusion is `inconclusive` until Phase 1 removes false positives and
+freezes exact IDs. The compiled quality suite passed 33/33 tests, the documentation script suite
+passed 52/52 tests, and repeated final-checkout report executions produced the same SHA-256
+`c79c10f1ac6dc2e800dbda6fc9c4f91bb3f9946427e4030c6627d86959c2eb29`. The frozen task graphs
+matched exactly: `qaQuick` 2,899/2,899, `qaPreview` 1,640/1,640, `qaFull` 3,098/3,098, and
+`verifyDocumentationStructure` 4/4. The blocking-gate conclusion is therefore
+`no material change`. A build-logic-invalidated `qaQuick` then passed in 7 minutes 30 seconds with
+2,341 actionable tasks (2,261 executed and 80 up-to-date). Phase 1 accuracy work is the next action.
+
+PR #164's first documentation build exposed that the durable governance prose crossed the existing
+46.9 MiB non-API site ceiling. A same-corpus detached-parent build measured 49,175,724 B; the
+initial branch representation measured 49,184,804 B, an increase of 9,080 B (0.0185%). The fix did
+not raise the threshold or delete a public contract: Phase 0B execution evidence remains here,
+while the public governance page now keeps only the durable enforcement rule. The final complete
+site build measured 49,176,039 B, 315 B (0.00064%) above the parent and 2,175 B below the existing
+limit, and completed in 43.2 seconds. The conclusion is `no material change`. The comparison
+excludes `/api/**` exactly as the production non-API metric does; future public contract growth
+still requires structural site-budget work rather than another prose-only threshold increase.
 
 ### Phase 1: complete discovery and report-only audits
 

@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: 08bf6bed681b6230f833f48ae266499244ae5d4858348885f7d330c18d0d99b4
+translation_source_hash: 95b7fb835cb0b732b093b4fbd0e287ffa4c89c6927344f980d9d887e2f90a316
 translation_status: current
 ---
 
@@ -132,10 +132,11 @@ Exception 必须有稳定 ID、精确 file/symbol、类别、理由、owner、�
 
 ### 契约资产与门禁边界
 
-Schema 与 fixture 位于 `docs/project/contracts/documentation-governance-v2/`；record 命名、发现和
-scanner 语言留给 Phase 0B compiled ownership。机器负责 shape、精确 identity、发现/唯一性、
-source/lane/route 一致性、棘轮计算和新鲜度；reviewer 负责能力内聚、页面目的、证据、exception
-可信度与 rationale 正确性。机器通过不能覆盖审查。
+`docs/project/contracts/` 中的 V2 清单冻结 schema/fixture 与 record/task/report 位置。Document 用
+front matter，其他 record 用复数子目录。Fixture fail closed；发现项到 Phase 2 才阻断。
+
+机器负责 shape/identity、发现/唯一性、source/lane/route 一致性、棘轮/新鲜度；reviewer 负责
+内聚性、目的、证据、exception 可信度与 rationale。机器通过不能覆盖审查。
 
 ## 框架与模块边界
 
