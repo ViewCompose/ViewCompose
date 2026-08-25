@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut migration and tutorial documentation-sample gates into typed compiled quality tasks without changing published artifacts or task selection.",
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "Remove repository-only sample-contract task bodies after compiled parity acceptance while preserving task names and lifecycle dependencies."
+    }
+  ]
+}
