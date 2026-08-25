@@ -16,10 +16,18 @@ function sliceBetween(source, startMarker, endMarker) {
 
 test('keeps translation freshness inside the canonical repository documentation gate', async () => {
   const buildScript = await readFile(resolve(repositoryRoot, 'build.gradle.kts'), 'utf8');
+  const qualityPlugin = await readFile(
+    resolve(
+      repositoryRoot,
+      'tools/viewcompose-quality-build/src/main/kotlin/com/viewcompose/quality/' +
+        'ViewComposeQualityPlugin.kt',
+    ),
+    'utf8',
+  );
   const structureTask = sliceBetween(
-    buildScript,
-    'tasks.register("verifyDocumentationStructure")',
-    '    val allowedRootMarkdown',
+    qualityPlugin,
+    'project.tasks.register<VerifyDocumentationStructureTask>("verifyDocumentationStructure")',
+    'project.tasks.register<VerifyDslApiContractsTask>("verifyDslApiContracts")',
   );
   const quickGate = sliceBetween(
     buildScript,
@@ -28,13 +36,14 @@ test('keeps translation freshness inside the canonical repository documentation 
   );
 
   assert.match(
-    buildScript,
-    /val verifyDocumentationTranslations by tasks\.registering\(Exec::class\)/u,
+    qualityPlugin,
+    /project\.tasks\.register<Exec>\("verifyDocumentationTranslations"\)/u,
   );
-  assert.match(structureTask, /dependsOn\(verifyDocumentationScripts\)/u);
-  assert.match(structureTask, /dependsOn\(verifyDocumentLanguages\)/u);
-  assert.match(structureTask, /dependsOn\(verifyDocumentationTranslations\)/u);
+  assert.match(structureTask, /"verifyDocumentationScripts"/u);
+  assert.match(structureTask, /"verifyDocumentLanguages"/u);
+  assert.match(structureTask, /"verifyDocumentationTranslations"/u);
   assert.match(quickGate, /dependsOn\("verifyDocumentationStructure"\)/u);
+  assert.doesNotMatch(buildScript, /tasks\.register\("verifyDocumentationStructure"\)/u);
 });
 
 test('documentation CI delegates translation freshness to the canonical Gradle gate', async () => {

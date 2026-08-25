@@ -10,6 +10,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.SetProperty
+import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -480,8 +481,149 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 tutorialSamplesByPage.mapValues { (_, sample) -> encodeTutorialSample(sample) },
             )
         }
+        project.tasks.register<Exec>("verifyDocumentationScripts") {
+            group = "verification"
+            description = "Runs the documentation tooling regression suite."
+            workingDir(project.rootDir.resolve("website"))
+            commandLine("npm", "run", "test:scripts")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("website/scripts")) {
+                    include("**/*.mjs")
+                },
+                project.rootDir.resolve("website/package.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyDocumentLanguages") {
+            group = "verification"
+            description =
+                "Verifies canonical-English and Simplified-Chinese documentation language."
+            workingDir(project.rootDir.resolve("website"))
+            commandLine("node", "scripts/verify-document-languages.mjs")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("docs")) {
+                    include("**/*.md", "**/*.mdx")
+                    exclude("archive/**")
+                },
+                project.fileTree(
+                    project.rootDir.resolve(
+                        "website/i18n/zh-CN/docusaurus-plugin-content-docs/current",
+                    ),
+                ) {
+                    include("**/*.md", "**/*.mdx")
+                },
+                project.rootDir.resolve("website/scripts/verify-document-languages.mjs"),
+                project.rootDir.resolve(
+                    "website/scripts/__tests__/verify-document-languages.test.mjs",
+                ),
+                project.rootDir.resolve("website/i18n/translation-policy.json"),
+            )
+        }
+        project.tasks.register<Exec>("verifyDocumentationTranslations") {
+            group = "verification"
+            description =
+                "Verifies Chinese documentation coverage, status, and reviewed source fingerprints."
+            workingDir(project.rootDir.resolve("website"))
+            commandLine("npm", "run", "verify:translations")
+            inputs.files(
+                project.fileTree(project.rootDir.resolve("docs")) {
+                    include("**/*.md", "**/*.mdx")
+                    exclude("archive/**")
+                },
+                project.fileTree(
+                    project.rootDir.resolve(
+                        "website/i18n/zh-CN/docusaurus-plugin-content-docs/current",
+                    ),
+                ) {
+                    include("**/*.md", "**/*.mdx")
+                },
+                project.rootDir.resolve("website/scripts/verify-translations.mjs"),
+                project.rootDir.resolve("website/i18n/translation-policy.json"),
+            )
+        }
+        project.tasks.register<VerifyDocumentationStructureTask>("verifyDocumentationStructure") {
+            group = "verification"
+            description =
+                "Verifies documentation tooling, localization, placement, link coverage, and module catalog."
+            dependsOn(
+                "verifyDocumentationScripts",
+                "verifyDocumentLanguages",
+                "verifyDocumentationTranslations",
+            )
+            repositoryDirectory.set(extension.repositoryDirectory)
+            rootMarkdownFiles.from(project.providers.provider {
+                extension.repositoryDirectory.get().asFile.listFiles()
+                    .orEmpty()
+                    .filter { file ->
+                        file.isFile && file.extension.equals("md", ignoreCase = true)
+                    }
+            })
+            activeDocumentationFiles.from(project.providers.provider {
+                val documentationRoot = extension.repositoryDirectory.get().asFile.resolve("docs")
+                documentationRoot.walkTopDown()
+                    .filter(File::isFile)
+                    .filter { file -> file.extension.equals("md", ignoreCase = true) }
+                    .filterNot { file ->
+                        file.relativeTo(documentationRoot).invariantSeparatorsPath
+                            .startsWith("archive/")
+                    }
+                    .toList()
+            })
+            checkedMarkdownFiles.from(project.providers.provider {
+                val repository = extension.repositoryDirectory.get().asFile
+                val documentationArchive = repository.resolve("docs/archive").toPath()
+                val websiteTranslations = repository.resolve("website/i18n").toPath()
+                repository.walkTopDown()
+                    .onEnter { directory ->
+                        directory == repository ||
+                            directory.name !in documentationTraversalExcludedDirectories
+                    }
+                    .filter(File::isFile)
+                    .filter { file -> file.extension.equals("md", ignoreCase = true) }
+                    .filterNot { file -> file.toPath().startsWith(documentationArchive) }
+                    .filterNot { file -> file.toPath().startsWith(websiteTranslations) }
+                    .toList()
+            })
+            governanceFiles.from(
+                extension.repositoryDirectory.file("gradle/viewcompose-publishing.properties"),
+                extension.repositoryDirectory.file("docs/modules/README.md"),
+            )
+            documentationTopLevelDirectories.set(project.providers.provider {
+                extension.repositoryDirectory.get().asFile.resolve("docs").listFiles()
+                    .orEmpty()
+                    .filter(File::isDirectory)
+                    .map(File::getName)
+            })
+        }
+        project.tasks.register<VerifyDslApiContractsTask>("verifyDslApiContracts") {
+            group = "verification"
+            description =
+                "Verifies the compact DSL surface, renderer-neutral interaction contract, and Q3 KDoc shape."
+            repositoryDirectory.set(extension.repositoryDirectory)
+            foundationDslFiles.from(
+                extension.repositoryDirectory.dir(
+                    "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl",
+                ),
+            )
+            forbiddenContractFiles.from(
+                extension.repositoryDirectory.dir("viewcompose-ui-contract/src/main"),
+                extension.repositoryDirectory.dir("viewcompose-ui-foundation/src/main"),
+            )
+            animationFiles.from(
+                extension.repositoryDirectory.dir("viewcompose-animation/src/main"),
+            )
+        }
     }
 }
+
+private val documentationTraversalExcludedDirectories = setOf(
+    ".codegraph",
+    ".docusaurus",
+    ".git",
+    ".gradle",
+    "build",
+    "generated",
+    "node_modules",
+)
 
 private fun Project.registerSourceBoundaryTask(
     extension: ViewComposeQualityExtension,

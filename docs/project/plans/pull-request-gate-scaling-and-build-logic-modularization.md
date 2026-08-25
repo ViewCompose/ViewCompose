@@ -21,30 +21,29 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-25
-next_action: Extract documentation structure, language/translation wiring, and DSL-contract gates.
+next_action: Extract connected-device and benchmark/report tooling with old/new parity.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
   - release/changes/20260825-quality-build-phase2-purity.json
   - release/changes/20260825-quality-build-phase2-demo.json
   - release/changes/20260825-quality-build-phase2-sample-docs.json
+  - release/changes/20260825-quality-build-phase2-documentation.json
 ---
 
 # Pull-request Gate Scaling and Build-logic Modularization Plan
 
 ## Status
 
-Active. Phases 0 and 1, the first three Phase 2 extraction families, and the sample-contract
-subfamily of the fourth extraction family are complete. Required-check behavior remains frozen,
-and twenty architecture, purity, Preview-boundary, Demo-policy, and documentation-sample gates now
-have compiled ownership plus isolated parity coverage.
+Active. Phases 0 and 1 and the first four Phase 2 extraction families are complete. Required-check
+behavior remains frozen, and twenty-five architecture, purity, Preview-boundary, Demo-policy, and
+documentation gates now have compiled ownership plus isolated regression or parity coverage.
 
 Last verified: 2026-08-25.
 
-Next action: finish Phase 2's fourth family with documentation structure,
-language/translation-script wiring, and DSL-contract gates. Prove parity and delete every remaining
-root-script implementation in the accepting slice; do not carry parallel implementations into a
-later pull request.
+Next action: continue Phase 2 with connected-device and benchmark/report tooling. Preserve the
+selected-device contract and stable task aliases while moving process control and report-test
+wiring out of the root script.
 
 ## Maven release changesets
 
@@ -53,12 +52,14 @@ later pull request.
 - `release/changes/20260825-quality-build-phase2-purity.json`
 - `release/changes/20260825-quality-build-phase2-demo.json`
 - `release/changes/20260825-quality-build-phase2-sample-docs.json`
+- `release/changes/20260825-quality-build-phase2-documentation.json`
 
 ## Release intent rationale
 
 Phase 1 modifies shared root build inputs only to make the repository-only quality plugin available
 and configure its explicit inputs. Phase 2's accepted extraction slices change the root build only
-to replace twenty repository-only task bodies with typed compiled tasks. Their names and lifecycle
+to replace twenty-five repository-only task bodies or command registrations with compiled build
+logic. Their names and lifecycle
 dependencies are unchanged. The Changesets classify shared build inputs and declare no artifact
 release. The new Gradle types remain build implementation rather than published artifact APIs;
 application-facing capability IDs, Q levels, compiled API samples, and module-manual changes are
@@ -449,6 +450,30 @@ correctness improvement, while task selection and validation semantics remain un
 duration is completeness evidence rather than a speedup claim because caches, daemon state, and
 machine load were not controlled. The next subfamily is documentation structure,
 language/translation-script wiring, and DSL contracts.
+
+The remaining documentation-governance subfamily completed on 2026-08-25 as a hard cut.
+`verifyDocumentationStructure` and `verifyDslApiContracts` now use typed tasks and pure verifiers;
+`verifyDocumentationScripts`, `verifyDocumentLanguages`, and `verifyDocumentationTranslations`
+retain their existing commands and inputs under compiled plugin registration. The structure task
+now explicitly declares root Markdown, active documentation, checked links, catalog metadata, and
+top-level directory names that its legacy action read without declaring. All five root
+registrations and implementations were deleted, reducing the root script from 1,009 to 546 lines.
+
+Three parity tests preserve the frozen broken-link, missing-KDoc, and renderer-detail diagnostics
+and selected inputs. The plugin fixture proves all five stable task names have compiled ownership.
+The website wiring regression test now follows that ownership, retains all three structure-task
+dependencies, and rejects a root-script re-registration. The included build passed all 24 tests;
+the documentation script suite passed all 52 tests; language and translation validation accepted
+119 canonical documents and 116 current Chinese mirrors; and forced execution of the complete
+structure and DSL family passed 19 tasks in `22 s`. Fresh dry-run graphs again matched every
+ordered Phase 0 task exactly: `qaQuick` 2,899/2,899, `qaPreview` 1,640/1,640, `qaFull`
+3,098/3,098, and `verifyDocumentationStructure` 4/4. The normalized task-set and ordering change is
+zero. The complete local `qaQuick` acceptance passed 2,341 actionable tasks (`2,261` executed and
+`80` up-to-date) in `7 min 26 s` on the warmed checkout. The result is **no material change** to
+selected work or accepted gate behavior. The additional structure inputs improve Gradle
+correctness without changing validation semantics. The local duration is completeness evidence
+rather than a speedup claim because caches, daemon state, and machine load were not controlled. The
+next extraction family is connected-device and benchmark/report tooling.
 
 ### Phase 3: classify pull-request impact
 
