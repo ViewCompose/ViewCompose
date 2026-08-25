@@ -1,0 +1,1231 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-25",
+  "methodology": {
+    "queue": "job.startedAt - workflow.createdAt",
+    "setup": "first gate step.startedAt - job.startedAt",
+    "execution": "last gate step.completedAt - first gate step.startedAt",
+    "post": "job.completedAt - last gate step.completedAt",
+    "total": "job.completedAt - workflow.createdAt"
+  },
+  "sampleCount": 10,
+  "summary": {
+    "qaQuick": {
+      "queueMillis": {
+        "min": 2000,
+        "p50": 3000,
+        "p95": 1177000,
+        "max": 1177000
+      },
+      "setupMillis": {
+        "min": 29000,
+        "p50": 40000,
+        "p95": 60000,
+        "max": 60000
+      },
+      "executionMillis": {
+        "min": 780000,
+        "p50": 1030000,
+        "p95": 1481000,
+        "max": 1481000
+      },
+      "postMillis": {
+        "min": 2000,
+        "p50": 3000,
+        "p95": 27000,
+        "max": 27000
+      },
+      "totalMillis": {
+        "min": 847000,
+        "p50": 1077000,
+        "p95": 2689000,
+        "max": 2689000
+      }
+    },
+    "qaPreview": {
+      "queueMillis": {
+        "min": 2000,
+        "p50": 3000,
+        "p95": 4000,
+        "max": 4000
+      },
+      "setupMillis": {
+        "min": 34000,
+        "p50": 44000,
+        "p95": 58000,
+        "max": 58000
+      },
+      "executionMillis": {
+        "min": 348000,
+        "p50": 386000,
+        "p95": 487000,
+        "max": 487000
+      },
+      "postMillis": {
+        "min": 2000,
+        "p50": 3000,
+        "p95": 29000,
+        "max": 29000
+      },
+      "totalMillis": {
+        "min": 404000,
+        "p50": 435000,
+        "p95": 530000,
+        "max": 530000
+      }
+    },
+    "documentation": {
+      "queueMillis": {
+        "min": 2000,
+        "p50": 3000,
+        "p95": 3000,
+        "max": 3000
+      },
+      "setupMillis": {
+        "min": 58000,
+        "p50": 64000,
+        "p95": 110000,
+        "max": 110000
+      },
+      "executionMillis": {
+        "min": 926000,
+        "p50": 1363000,
+        "p95": 1477000,
+        "max": 1477000
+      },
+      "postMillis": {
+        "min": 2000,
+        "p50": 5000,
+        "p95": 26000,
+        "max": 26000
+      },
+      "totalMillis": {
+        "min": 1026000,
+        "p50": 1448000,
+        "p95": 1543000,
+        "max": 1543000
+      }
+    },
+    "requiredCriticalPathMillis": {
+      "definition": "max(qaQuick.totalMillis, documentation.totalMillis) for each pull-request head",
+      "min": 1180000,
+      "p50": 1448000,
+      "p95": 2689000,
+      "max": 2689000
+    }
+  },
+  "runs": [
+    {
+      "headSha": "fe5a66276c29589ededd9e1ce8a9e4c9e3e8e954",
+      "headBranch": "codex/coordinate-quality-doc-governance-plans",
+      "qaQuick": {
+        "runId": 32823705498,
+        "jobId": 97727092808,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32823705498",
+        "queueMillis": 3000,
+        "setupMillis": 29000,
+        "executionMillis": 1030000,
+        "postMillis": 2000,
+        "totalMillis": 1064000,
+        "executionBoundary": {
+          "firstStep": "Run qaQuick",
+          "lastStep": "Run qaQuick"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaQuick",
+            "durationMillis": 1030000
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up JDK 17",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Checkout",
+            "durationMillis": 0
+          },
+          {
+            "name": "Complete job",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "qaPreview": {
+        "runId": 32823705498,
+        "jobId": 97727093039,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32823705498",
+        "queueMillis": 3000,
+        "setupMillis": 34000,
+        "executionMillis": 487000,
+        "postMillis": 6000,
+        "totalMillis": 530000,
+        "executionBoundary": {
+          "firstStep": "Run qaPreview",
+          "lastStep": "Run qaPreview"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaPreview",
+            "durationMillis": 487000
+          },
+          {
+            "name": "Upload qaPreview failure reports",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "documentation": {
+        "runId": 32823705506,
+        "jobId": 97727092627,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32823705506",
+        "queueMillis": 3000,
+        "setupMillis": 64000,
+        "executionMillis": 1466000,
+        "postMillis": 5000,
+        "totalMillis": 1538000,
+        "executionBoundary": {
+          "firstStep": "Verify documentation sources and translations",
+          "lastStep": "Build website"
+        },
+        "executionSteps": [
+          {
+            "name": "Verify documentation sources and translations",
+            "durationMillis": 145000
+          },
+          {
+            "name": "Generate and verify complete versioned API reference",
+            "durationMillis": 1260000
+          },
+          {
+            "name": "Type-check website",
+            "durationMillis": 4000
+          },
+          {
+            "name": "Build website",
+            "durationMillis": 57000
+          },
+          {
+            "name": "Upload Pages artifact",
+            "durationMillis": 0
+          }
+        ]
+      }
+    },
+    {
+      "headSha": "31238950249e250528f3616f4c6920f744906e70",
+      "headBranch": "codex/mark-collection-stress-hardware-deferred",
+      "qaQuick": {
+        "runId": 32817625033,
+        "jobId": 97709005051,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32817625033",
+        "queueMillis": 3000,
+        "setupMillis": 40000,
+        "executionMillis": 902000,
+        "postMillis": 4000,
+        "totalMillis": 949000,
+        "executionBoundary": {
+          "firstStep": "Run qaQuick",
+          "lastStep": "Run qaQuick"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaQuick",
+            "durationMillis": 902000
+          }
+        ]
+      },
+      "qaPreview": {
+        "runId": 32817625033,
+        "jobId": 97709005232,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32817625033",
+        "queueMillis": 3000,
+        "setupMillis": 41000,
+        "executionMillis": 398000,
+        "postMillis": 4000,
+        "totalMillis": 446000,
+        "executionBoundary": {
+          "firstStep": "Run qaPreview",
+          "lastStep": "Run qaPreview"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaPreview",
+            "durationMillis": 398000
+          },
+          {
+            "name": "Upload qaPreview failure reports",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up JDK 17",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Checkout",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "documentation": {
+        "runId": 32817625026,
+        "jobId": 97709005253,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32817625026",
+        "queueMillis": 3000,
+        "setupMillis": 59000,
+        "executionMillis": 1405000,
+        "postMillis": 4000,
+        "totalMillis": 1471000,
+        "executionBoundary": {
+          "firstStep": "Verify documentation sources and translations",
+          "lastStep": "Build website"
+        },
+        "executionSteps": [
+          {
+            "name": "Verify documentation sources and translations",
+            "durationMillis": 137000
+          },
+          {
+            "name": "Generate and verify complete versioned API reference",
+            "durationMillis": 1210000
+          },
+          {
+            "name": "Type-check website",
+            "durationMillis": 4000
+          },
+          {
+            "name": "Build website",
+            "durationMillis": 54000
+          },
+          {
+            "name": "Upload Pages artifact",
+            "durationMillis": 0
+          }
+        ]
+      }
+    },
+    {
+      "headSha": "af9629a43147a5200c821ded8b2ff10aaf63bce8",
+      "headBranch": "codex/collection-stress-device-preflight",
+      "qaQuick": {
+        "runId": 32808328282,
+        "jobId": 97682699066,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32808328282",
+        "queueMillis": 2000,
+        "setupMillis": 31000,
+        "executionMillis": 1340000,
+        "postMillis": 3000,
+        "totalMillis": 1376000,
+        "executionBoundary": {
+          "firstStep": "Run qaQuick",
+          "lastStep": "Run qaQuick"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaQuick",
+            "durationMillis": 1340000
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "qaPreview": {
+        "runId": 32808328282,
+        "jobId": 97682699165,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32808328282",
+        "queueMillis": 2000,
+        "setupMillis": 37000,
+        "executionMillis": 460000,
+        "postMillis": 2000,
+        "totalMillis": 501000,
+        "executionBoundary": {
+          "firstStep": "Run qaPreview",
+          "lastStep": "Run qaPreview"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaPreview",
+            "durationMillis": 460000
+          },
+          {
+            "name": "Upload qaPreview failure reports",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up JDK 17",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Checkout",
+            "durationMillis": 0
+          },
+          {
+            "name": "Complete job",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "documentation": {
+        "runId": 32808328360,
+        "jobId": 97682699326,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32808328360",
+        "queueMillis": 2000,
+        "setupMillis": 58000,
+        "executionMillis": 1477000,
+        "postMillis": 2000,
+        "totalMillis": 1539000,
+        "executionBoundary": {
+          "firstStep": "Verify documentation sources and translations",
+          "lastStep": "Build website"
+        },
+        "executionSteps": [
+          {
+            "name": "Verify documentation sources and translations",
+            "durationMillis": 152000
+          },
+          {
+            "name": "Generate and verify complete versioned API reference",
+            "durationMillis": 1264000
+          },
+          {
+            "name": "Type-check website",
+            "durationMillis": 4000
+          },
+          {
+            "name": "Build website",
+            "durationMillis": 57000
+          },
+          {
+            "name": "Upload Pages artifact",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Node.js 24",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          }
+        ]
+      }
+    },
+    {
+      "headSha": "ba57d860da426adf589527ce7b0f50d7332f21f5",
+      "headBranch": "codex/paging3-phase7-closeout",
+      "qaQuick": {
+        "runId": 32805910908,
+        "jobId": 97675857081,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32805910908",
+        "queueMillis": 4000,
+        "setupMillis": 57000,
+        "executionMillis": 996000,
+        "postMillis": 20000,
+        "totalMillis": 1077000,
+        "executionBoundary": {
+          "firstStep": "Run qaQuick",
+          "lastStep": "Run qaQuick"
+        },
+        "executionSteps": [
+          {
+            "name": "Run qaQuick",
+            "durationMillis": 996000
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "qaPreview": {
+        "runId": 32805910908,
+        "jobId": 97675857324,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32805910908",
+        "queueMillis": 3000,
+        "setupMillis": 58000,
+        "executionMillis": 348000,
+        "postMillis": 16000,
+        "totalMillis": 425000,
+        "executionBoundary": {
+          "firstStep": "Run qaPreview",
+          "lastStep": "Run qaPreview"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaPreview",
+            "durationMillis": 348000
+          },
+          {
+            "name": "Upload qaPreview failure reports",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "documentation": {
+        "runId": 32805910880,
+        "jobId": 97675856880,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32805910880",
+        "queueMillis": 3000,
+        "setupMillis": 59000,
+        "executionMillis": 1103000,
+        "postMillis": 15000,
+        "totalMillis": 1180000,
+        "executionBoundary": {
+          "firstStep": "Verify documentation sources and translations",
+          "lastStep": "Build website"
+        },
+        "executionSteps": [
+          {
+            "name": "Verify documentation sources and translations",
+            "durationMillis": 69000
+          },
+          {
+            "name": "Generate and verify complete versioned API reference",
+            "durationMillis": 977000
+          },
+          {
+            "name": "Type-check website",
+            "durationMillis": 4000
+          },
+          {
+            "name": "Build website",
+            "durationMillis": 53000
+          },
+          {
+            "name": "Upload Pages artifact",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Node.js 24",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          }
+        ]
+      }
+    },
+    {
+      "headSha": "9585c2009f6beaf48bb90146a46c65a6fc674415",
+      "headBranch": "codex/paging3-phase6-demo-docs",
+      "qaQuick": {
+        "runId": 32794951117,
+        "jobId": 97644190816,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32794951117",
+        "queueMillis": 2000,
+        "setupMillis": 53000,
+        "executionMillis": 1005000,
+        "postMillis": 3000,
+        "totalMillis": 1063000,
+        "executionBoundary": {
+          "firstStep": "Run qaQuick",
+          "lastStep": "Run qaQuick"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaQuick",
+            "durationMillis": 1005000
+          }
+        ]
+      },
+      "qaPreview": {
+        "runId": 32794951117,
+        "jobId": 97644191025,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32794951117",
+        "queueMillis": 2000,
+        "setupMillis": 45000,
+        "executionMillis": 355000,
+        "postMillis": 2000,
+        "totalMillis": 404000,
+        "executionBoundary": {
+          "firstStep": "Run qaPreview",
+          "lastStep": "Run qaPreview"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaPreview",
+            "durationMillis": 355000
+          },
+          {
+            "name": "Upload qaPreview failure reports",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up JDK 17",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Checkout",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "documentation": {
+        "runId": 32794951145,
+        "jobId": 97644191114,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32794951145",
+        "queueMillis": 3000,
+        "setupMillis": 110000,
+        "executionMillis": 1227000,
+        "postMillis": 6000,
+        "totalMillis": 1346000,
+        "executionBoundary": {
+          "firstStep": "Verify documentation sources and translations",
+          "lastStep": "Build website"
+        },
+        "executionSteps": [
+          {
+            "name": "Verify documentation sources and translations",
+            "durationMillis": 69000
+          },
+          {
+            "name": "Generate and verify complete versioned API reference",
+            "durationMillis": 1099000
+          },
+          {
+            "name": "Type-check website",
+            "durationMillis": 4000
+          },
+          {
+            "name": "Build website",
+            "durationMillis": 55000
+          },
+          {
+            "name": "Upload Pages artifact",
+            "durationMillis": 0
+          }
+        ]
+      }
+    },
+    {
+      "headSha": "bbd25b448d0a3c85275c119897e5f3d47269451e",
+      "headBranch": "codex/paging3-phase5-lifecycle-mediator",
+      "qaQuick": {
+        "runId": 32787672183,
+        "jobId": 97627168177,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32787672183",
+        "queueMillis": 1177000,
+        "setupMillis": 29000,
+        "executionMillis": 1481000,
+        "postMillis": 2000,
+        "totalMillis": 2689000,
+        "executionBoundary": {
+          "firstStep": "Run qaQuick",
+          "lastStep": "Run qaQuick"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaQuick",
+            "durationMillis": 1481000
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up JDK 17",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "qaPreview": {
+        "runId": 32787672183,
+        "jobId": 97627169011,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32787672183",
+        "queueMillis": 3000,
+        "setupMillis": 37000,
+        "executionMillis": 392000,
+        "postMillis": 3000,
+        "totalMillis": 435000,
+        "executionBoundary": {
+          "firstStep": "Run qaPreview",
+          "lastStep": "Run qaPreview"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaPreview",
+            "durationMillis": 392000
+          },
+          {
+            "name": "Upload qaPreview failure reports",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "documentation": {
+        "runId": 32787672061,
+        "jobId": 97622783102,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32787672061",
+        "queueMillis": 3000,
+        "setupMillis": 79000,
+        "executionMillis": 1420000,
+        "postMillis": 5000,
+        "totalMillis": 1507000,
+        "executionBoundary": {
+          "firstStep": "Verify documentation sources and translations",
+          "lastStep": "Build website"
+        },
+        "executionSteps": [
+          {
+            "name": "Verify documentation sources and translations",
+            "durationMillis": 135000
+          },
+          {
+            "name": "Generate and verify complete versioned API reference",
+            "durationMillis": 1218000
+          },
+          {
+            "name": "Type-check website",
+            "durationMillis": 6000
+          },
+          {
+            "name": "Build website",
+            "durationMillis": 61000
+          },
+          {
+            "name": "Upload Pages artifact",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Node.js 24",
+            "durationMillis": 0
+          }
+        ]
+      }
+    },
+    {
+      "headSha": "ea5d176112a2f701c6c7280f425509110abdea46",
+      "headBranch": "codex/paging3-phase4-load-state",
+      "qaQuick": {
+        "runId": 32783980818,
+        "jobId": 97611892859,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32783980818",
+        "queueMillis": 2000,
+        "setupMillis": 34000,
+        "executionMillis": 1185000,
+        "postMillis": 3000,
+        "totalMillis": 1224000,
+        "executionBoundary": {
+          "firstStep": "Run qaQuick",
+          "lastStep": "Run qaQuick"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaQuick",
+            "durationMillis": 1185000
+          }
+        ]
+      },
+      "qaPreview": {
+        "runId": 32783980818,
+        "jobId": 97611892660,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32783980818",
+        "queueMillis": 2000,
+        "setupMillis": 45000,
+        "executionMillis": 379000,
+        "postMillis": 3000,
+        "totalMillis": 429000,
+        "executionBoundary": {
+          "firstStep": "Run qaPreview",
+          "lastStep": "Run qaPreview"
+        },
+        "executionSteps": [
+          {
+            "name": "Run qaPreview",
+            "durationMillis": 379000
+          },
+          {
+            "name": "Upload qaPreview failure reports",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "documentation": {
+        "runId": 32783980955,
+        "jobId": 97611892870,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32783980955",
+        "queueMillis": 2000,
+        "setupMillis": 60000,
+        "executionMillis": 1477000,
+        "postMillis": 4000,
+        "totalMillis": 1543000,
+        "executionBoundary": {
+          "firstStep": "Verify documentation sources and translations",
+          "lastStep": "Build website"
+        },
+        "executionSteps": [
+          {
+            "name": "Verify documentation sources and translations",
+            "durationMillis": 144000
+          },
+          {
+            "name": "Generate and verify complete versioned API reference",
+            "durationMillis": 1273000
+          },
+          {
+            "name": "Type-check website",
+            "durationMillis": 3000
+          },
+          {
+            "name": "Build website",
+            "durationMillis": 57000
+          },
+          {
+            "name": "Upload Pages artifact",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Node.js 24",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up JDK 17",
+            "durationMillis": 0
+          }
+        ]
+      }
+    },
+    {
+      "headSha": "df0d857c1de372391aa5d39bb15c643a2dc62f15",
+      "headBranch": "codex/paging3-phase3-placeholder-drop",
+      "qaQuick": {
+        "runId": 32779946676,
+        "jobId": 97599585135,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32779946676",
+        "queueMillis": 3000,
+        "setupMillis": 60000,
+        "executionMillis": 780000,
+        "postMillis": 4000,
+        "totalMillis": 847000,
+        "executionBoundary": {
+          "firstStep": "Run qaQuick",
+          "lastStep": "Run qaQuick"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaQuick",
+            "durationMillis": 780000
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "qaPreview": {
+        "runId": 32779946676,
+        "jobId": 97599585183,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32779946676",
+        "queueMillis": 3000,
+        "setupMillis": 44000,
+        "executionMillis": 364000,
+        "postMillis": 2000,
+        "totalMillis": 413000,
+        "executionBoundary": {
+          "firstStep": "Run qaPreview",
+          "lastStep": "Run qaPreview"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaPreview",
+            "durationMillis": 364000
+          },
+          {
+            "name": "Upload qaPreview failure reports",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "documentation": {
+        "runId": 32779946662,
+        "jobId": 97599584610,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32779946662",
+        "queueMillis": 3000,
+        "setupMillis": 79000,
+        "executionMillis": 1363000,
+        "postMillis": 3000,
+        "totalMillis": 1448000,
+        "executionBoundary": {
+          "firstStep": "Verify documentation sources and translations",
+          "lastStep": "Build website"
+        },
+        "executionSteps": [
+          {
+            "name": "Verify documentation sources and translations",
+            "durationMillis": 60000
+          },
+          {
+            "name": "Generate and verify complete versioned API reference",
+            "durationMillis": 1243000
+          },
+          {
+            "name": "Type-check website",
+            "durationMillis": 3000
+          },
+          {
+            "name": "Build website",
+            "durationMillis": 57000
+          },
+          {
+            "name": "Upload Pages artifact",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Node.js 24",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          }
+        ]
+      }
+    },
+    {
+      "headSha": "c385190b60cb6804567a67e4a32e7d92fa5a2cd9",
+      "headBranch": "codex/paging3-phase2-non-placeholder",
+      "qaQuick": {
+        "runId": 32765933143,
+        "jobId": 97555291903,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32765933143",
+        "queueMillis": 3000,
+        "setupMillis": 55000,
+        "executionMillis": 1153000,
+        "postMillis": 27000,
+        "totalMillis": 1238000,
+        "executionBoundary": {
+          "firstStep": "Run qaQuick",
+          "lastStep": "Run qaQuick"
+        },
+        "executionSteps": [
+          {
+            "name": "Run qaQuick",
+            "durationMillis": 1153000
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "qaPreview": {
+        "runId": 32765933143,
+        "jobId": 97555291849,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32765933143",
+        "queueMillis": 4000,
+        "setupMillis": 45000,
+        "executionMillis": 422000,
+        "postMillis": 29000,
+        "totalMillis": 500000,
+        "executionBoundary": {
+          "firstStep": "Run qaPreview",
+          "lastStep": "Run qaPreview"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaPreview",
+            "durationMillis": 422000
+          },
+          {
+            "name": "Upload qaPreview failure reports",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "documentation": {
+        "runId": 32765933905,
+        "jobId": 97555291888,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32765933905",
+        "queueMillis": 3000,
+        "setupMillis": 71000,
+        "executionMillis": 926000,
+        "postMillis": 26000,
+        "totalMillis": 1026000,
+        "executionBoundary": {
+          "firstStep": "Verify documentation sources and translations",
+          "lastStep": "Build website"
+        },
+        "executionSteps": [
+          {
+            "name": "Verify documentation sources and translations",
+            "durationMillis": 89000
+          },
+          {
+            "name": "Generate and verify complete versioned API reference",
+            "durationMillis": 787000
+          },
+          {
+            "name": "Type-check website",
+            "durationMillis": 3000
+          },
+          {
+            "name": "Build website",
+            "durationMillis": 47000
+          },
+          {
+            "name": "Upload Pages artifact",
+            "durationMillis": 0
+          }
+        ]
+      }
+    },
+    {
+      "headSha": "62a71c96df1a00a3ce1763bb8b41ee67d71ef304",
+      "headBranch": "codex/paging3-phase1-presenter-harness",
+      "qaQuick": {
+        "runId": 32758572405,
+        "jobId": 97531703120,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32758572405",
+        "queueMillis": 5000,
+        "setupMillis": 45000,
+        "executionMillis": 1110000,
+        "postMillis": 19000,
+        "totalMillis": 1179000,
+        "executionBoundary": {
+          "firstStep": "Run qaQuick",
+          "lastStep": "Run qaQuick"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaQuick",
+            "durationMillis": 1110000
+          }
+        ]
+      },
+      "qaPreview": {
+        "runId": 32758572405,
+        "jobId": 97531703481,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32758572405",
+        "queueMillis": 3000,
+        "setupMillis": 47000,
+        "executionMillis": 386000,
+        "postMillis": 18000,
+        "totalMillis": 454000,
+        "executionBoundary": {
+          "firstStep": "Run qaPreview",
+          "lastStep": "Run qaPreview"
+        },
+        "executionSteps": [
+          {
+            "name": "Make Gradle wrapper executable",
+            "durationMillis": 0
+          },
+          {
+            "name": "Generate CI-only Maven signing key",
+            "durationMillis": 0
+          },
+          {
+            "name": "Run qaPreview",
+            "durationMillis": 386000
+          },
+          {
+            "name": "Upload qaPreview failure reports",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Gradle",
+            "durationMillis": 0
+          }
+        ]
+      },
+      "documentation": {
+        "runId": 32758572675,
+        "jobId": 97531704136,
+        "url": "https://github.com/ViewCompose/ViewCompose/actions/runs/32758572675",
+        "queueMillis": 3000,
+        "setupMillis": 74000,
+        "executionMillis": 1197000,
+        "postMillis": 18000,
+        "totalMillis": 1292000,
+        "executionBoundary": {
+          "firstStep": "Verify documentation sources and translations",
+          "lastStep": "Build website"
+        },
+        "executionSteps": [
+          {
+            "name": "Verify documentation sources and translations",
+            "durationMillis": 89000
+          },
+          {
+            "name": "Generate and verify complete versioned API reference",
+            "durationMillis": 1049000
+          },
+          {
+            "name": "Type-check website",
+            "durationMillis": 3000
+          },
+          {
+            "name": "Build website",
+            "durationMillis": 56000
+          },
+          {
+            "name": "Upload Pages artifact",
+            "durationMillis": 0
+          },
+          {
+            "name": "Post Set up Node.js 24",
+            "durationMillis": 0
+          }
+        ]
+      }
+    }
+  ]
+}

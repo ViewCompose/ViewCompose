@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-08-25",
+  "repository": "ViewCompose/ViewCompose",
+  "selection": "Ten most recent comparable successful pull-request heads with both CI and Documentation runs when Phase 0 was captured.",
+  "runs": [
+    {
+      "headSha": "fe5a66276c29589ededd9e1ce8a9e4c9e3e8e954",
+      "ciRunId": 32823705498,
+      "documentationRunId": 32823705506
+    },
+    {
+      "headSha": "31238950249e250528f3616f4c6920f744906e70",
+      "ciRunId": 32817625033,
+      "documentationRunId": 32817625026
+    },
+    {
+      "headSha": "af9629a43147a5200c821ded8b2ff10aaf63bce8",
+      "ciRunId": 32808328282,
+      "documentationRunId": 32808328360
+    },
+    {
+      "headSha": "ba57d860da426adf589527ce7b0f50d7332f21f5",
+      "ciRunId": 32805910908,
+      "documentationRunId": 32805910880
+    },
+    {
+      "headSha": "9585c2009f6beaf48bb90146a46c65a6fc674415",
+      "ciRunId": 32794951117,
+      "documentationRunId": 32794951145
+    },
+    {
+      "headSha": "bbd25b448d0a3c85275c119897e5f3d47269451e",
+      "ciRunId": 32787672183,
+      "documentationRunId": 32787672061
+    },
+    {
+      "headSha": "ea5d176112a2f701c6c7280f425509110abdea46",
+      "ciRunId": 32783980818,
+      "documentationRunId": 32783980955
+    },
+    {
+      "headSha": "df0d857c1de372391aa5d39bb15c643a2dc62f15",
+      "ciRunId": 32779946676,
+      "documentationRunId": 32779946662
+    },
+    {
+      "headSha": "c385190b60cb6804567a67e4a32e7d92fa5a2cd9",
+      "ciRunId": 32765933143,
+      "documentationRunId": 32765933905
+    },
+    {
+      "headSha": "62a71c96df1a00a3ce1763bb8b41ee67d71ef304",
+      "ciRunId": 32758572405,
+      "documentationRunId": 32758572675
+    }
+  ]
+}

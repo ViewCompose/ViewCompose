@@ -8,6 +8,8 @@ draft: true
 
 Active. The assessment baseline is frozen on `main` at `4fd14c4a` on 2026-08-25. No production
 implementation, public API, published sample, or Maven publication input has changed yet.
+The coordinated pull-request gate plan has completed its Phase 0 contract and evidence freeze, so
+this plan's Phase 0A can now proceed without changing the accepted gate graph.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may

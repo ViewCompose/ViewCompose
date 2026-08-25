@@ -6,13 +6,14 @@ draft: true
 
 ## Status
 
-Active. Planning is complete and implementation has not started.
+Active. Phase 0 is complete. The current required-check, task-graph, failure, fallback, and timing
+contracts are frozen without changing active Gradle or CI behavior.
 
 Last verified: 2026-08-25.
 
-Next action: complete Phase 0 by capturing the task-graph and timing baselines, then create the
-compiled quality-build included build without changing any existing task name, dependency, failure
-condition, or branch-protection context.
+Next action: complete Documentation Governance V2 Phase 0A contract and schema work. Then return
+to this plan's Phase 1 and create the compiled quality-build included build without changing any
+existing task name, dependency, failure condition, or branch-protection context.
 
 ## Maven release changesets
 
@@ -62,8 +63,8 @@ baseline:
 The required critical path was therefore `25 min 37 s` for a pull request that changed three
 documentation files and no production or test source.
 
-The current `qaQuick --dry-run` graph expands to approximately 2,899 tasks, including 463 compile,
-498 test, 107 publication, and 152 lint task-name matches. `qaQuick` publishes every registered
+The current `qaQuick --dry-run` graph expands to 2,899 tasks, including 463 compile, 498 test, 107
+publication, and 153 lint task-name matches. `qaQuick` publishes every registered
 artifact to the local repository even when the pull request does not change code.
 
 ### Documentation reconstruction
@@ -218,7 +219,7 @@ the root build must not receive a temporary Governance V2 scanner that will late
 
 | Phase | Deliverable | Completion gate | Status |
 | --- | --- | --- | --- |
-| 0 | baseline, task-graph manifest, required-check contract, failure fixtures | reviewed baseline and reproducible evidence checked in | Not started |
+| 0 | baseline, task-graph manifest, required-check contract, failure fixtures | reviewed baseline and reproducible evidence checked in | Complete |
 | 1 | compiled quality-build skeleton and parity harness | old and delegated task graphs/failures match | Not started |
 | 2 | extraction of architecture, purity, Demo, documentation, device, and benchmark gates | root script contains no long verifier bodies; isolated tests pass | Not started |
 | 3 | conservative PR classifier and required-result facade | synthetic diff matrix and branch-protection scenarios pass | Not started |
@@ -236,6 +237,37 @@ the root build must not receive a temporary Governance V2 scanner that will late
    `verifyDocumentationStructure` as test fixtures rather than generated release output.
 4. Add failing fixtures for every extracted file scanner and policy parser before moving it.
 5. Define the full-fallback path list and make an unknown path a tested full-gate case.
+
+Phase 0 completed on 2026-08-25. Its reproducible assets live under
+[`tools/viewcompose-quality-build/phase0`](../../../tools/viewcompose-quality-build/phase0):
+
+1. [`required-check-contract.json`](../../../tools/viewcompose-quality-build/phase0/fixtures/required-check-contract.json)
+   records the exact `qaQuick` and `Build documentation` branch-protection contexts, workflow
+   triggers, stable entry points, and `main`-only deployment contract. `qaPreview` remains observed
+   but non-required.
+2. The checked-in dry-run graphs contain 2,899 tasks for `qaQuick`, 1,640 for `qaPreview`, 3,098
+   for `qaFull`, and four for `verifyDocumentationStructure`. The capture script regenerates them
+   through the repository wrapper, and fixture tests reject missing targets or inconsistent counts.
+3. [`gate-failure-fixtures.json`](../../../tools/viewcompose-quality-build/phase0/fixtures/gate-failure-fixtures.json)
+   gives every file scanner or policy parser scheduled for extraction one concrete failing input and
+   its stable failure header. Existing device and performance-tool regression contracts are also
+   identified so Phase 1 can build the parity harness without inventing new behavior.
+4. [`full-fallback-paths.json`](../../../tools/viewcompose-quality-build/phase0/fixtures/full-fallback-paths.json)
+   freezes sensitive shared inputs and verifies that an unrecognized future path selects the full
+   gate. It is a safety contract for Phase 3, not active change-selection logic.
+5. The timing corpus uses ten recent successful pull-request heads with paired CI and Documentation
+   runs. It records queue, setup, execution, post-job, and total time from GitHub timestamps. The
+   required critical-path P50 was `24 min 08 s`; nearest-rank P95 was `44 min 49 s`. The P95 total
+   includes one `19 min 37 s` `qaQuick` queue delay. Removing queue effects, required execution P50
+   was `22 min 43 s` and P95 was `24 min 41 s`.
+
+Interpretation: the baseline confirms a material execution-cost problem in both required gates,
+while the total-latency tail is mixed because hosted-runner/concurrency queueing can dominate an
+individual sample. Phase 6 comparisons must therefore report both execution and end-to-end
+critical paths rather than attributing queue variation to build changes. Ten samples make
+nearest-rank P95 equal to the maximum observation, so this corpus is an accepted Phase 0 comparator,
+not a stable long-term service-level estimate. The next action is the coordinated Governance V2
+Phase 0A schema freeze, followed by this plan's compiled Phase 1 ownership and old/new parity.
 
 ### Phase 1: create compiled quality ownership
 
