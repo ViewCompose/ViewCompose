@@ -1,3 +1,20 @@
+---
+schema_version: 2
+document_id: project.development-workflow
+doc_type: project
+owner:
+  kind: project
+  id: development-workflow
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+workflow: Define the repository development, validation, pull-request, and handoff sequence.
+validation:
+  - ./gradlew qaQuick
+lifecycle: Update whenever repository development or required-check behavior changes.
+---
+
 # Development Workflow
 
 ## 1. Scope
@@ -39,6 +56,13 @@ Before adding or changing a public/protected API, assign its Q level and satisfy
 parameter, return, state, lifecycle, threading, failure, and platform contract in the same PR under
 the [Source Documentation and API Comment Standard](./api-documentation-quality.md). A Q3 API also
 ships a compiled `@sample`. Existing documentation debt cannot justify new debt.
+
+The same change supplies a structured capability-impact record conforming to the Governance V2
+[public capability impact contract](./documentation-governance.md#public-capability-impact). Resolve
+the stable capability owner and every KDoc, module, sample, Reference, Tutorial, Guide,
+Architecture, Migration, and redirect disposition before implementation. Until Phase 0B chooses a
+record discovery location, include the complete equivalent fields in the pull-request description;
+do not invent a temporary repository filename or root-build parser.
 
 Update documentation before or together with:
 

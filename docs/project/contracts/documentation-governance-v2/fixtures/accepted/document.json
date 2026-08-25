@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "document_id": "tutorial.layout-basics",
+  "doc_type": "tutorial",
+  "owner": { "kind": "capability", "id": "layout.basics" },
+  "version_lane": "released",
+  "capability_ids": ["layout.box"],
+  "artifact_ids": ["viewcompose-ui-foundation"],
+  "sample_ids": ["sample.layout.box-basic"],
+  "expected_result": "A visible child is aligned inside a Box.",
+  "verification_action": "Run the sample and confirm the child remains aligned after resizing."
+}

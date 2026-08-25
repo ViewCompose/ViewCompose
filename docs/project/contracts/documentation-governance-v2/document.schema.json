@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.viewcompose.com/contracts/documentation-governance-v2/document.schema.json",
+  "title": "ViewCompose active document contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "document_id",
+    "doc_type",
+    "owner",
+    "version_lane",
+    "capability_ids",
+    "artifact_ids",
+    "sample_ids"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "document_id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$" },
+    "doc_type": {
+      "enum": [
+        "tutorial",
+        "guide",
+        "architecture",
+        "migration",
+        "reference",
+        "module",
+        "tooling",
+        "project",
+        "plan"
+      ]
+    },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "enum": ["capability", "module", "project"] },
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]+$" }
+      }
+    },
+    "version_lane": { "enum": ["released", "next", "version-agnostic"] },
+    "capability_ids": { "$ref": "#/$defs/ids" },
+    "artifact_ids": { "$ref": "#/$defs/ids" },
+    "sample_ids": { "$ref": "#/$defs/ids" },
+    "expected_result": { "type": "string", "minLength": 1 },
+    "verification_action": { "type": "string", "minLength": 1 },
+    "task": { "type": "string", "minLength": 1 },
+    "success_checks": { "$ref": "#/$defs/nonEmptyStrings" },
+    "failure_checks": { "$ref": "#/$defs/nonEmptyStrings" },
+    "invariants": { "$ref": "#/$defs/nonEmptyStrings" },
+    "evidence": { "$ref": "#/$defs/nonEmptyStrings" },
+    "source_state": { "type": "string", "minLength": 1 },
+    "target_state": { "type": "string", "minLength": 1 },
+    "generated": { "type": "boolean" },
+    "coordinate": { "type": "string", "pattern": "^com\\.viewcompose:viewcompose-[a-z0-9-]+:[^:]+$" },
+    "minimal_usage_sample_id": { "type": "string", "minLength": 3 },
+    "supported_versions": { "$ref": "#/$defs/nonEmptyStrings" },
+    "verification_commands": { "$ref": "#/$defs/nonEmptyStrings" },
+    "workflow": { "type": "string", "minLength": 1 },
+    "validation": { "$ref": "#/$defs/nonEmptyStrings" },
+    "lifecycle": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["active", "blocked", "complete"] },
+    "scope": { "type": "string", "minLength": 1 },
+    "non_goals": { "$ref": "#/$defs/nonEmptyStrings" },
+    "baseline": { "type": "string", "minLength": 1 },
+    "ordered_work": { "$ref": "#/$defs/nonEmptyStrings" },
+    "completion": { "$ref": "#/$defs/nonEmptyStrings" },
+    "last_verified": { "type": "string", "format": "date" },
+    "next_action": { "type": "string", "minLength": 1 },
+    "maven_release_changesets": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^release/changes/[a-zA-Z0-9._-]+\\.json$" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "doc_type": { "const": "tutorial" } }, "required": ["doc_type"] },
+      "then": {
+        "required": ["expected_result", "verification_action"],
+        "properties": {
+          "version_lane": { "enum": ["released", "next"] },
+          "capability_ids": { "minItems": 1 },
+          "sample_ids": { "minItems": 1 }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "doc_type": { "const": "guide" } }, "required": ["doc_type"] },
+      "then": {
+        "required": ["task", "success_checks", "failure_checks"],
+        "properties": { "capability_ids": { "minItems": 1 } }
+      }
+    },
+    {
+      "if": { "properties": { "doc_type": { "const": "architecture" } }, "required": ["doc_type"] },
+      "then": { "required": ["invariants", "evidence"] }
+    },
+    {
+      "if": { "properties": { "doc_type": { "const": "migration" } }, "required": ["doc_type"] },
+      "then": { "required": ["source_state", "target_state"] }
+    },
+    {
+      "if": { "properties": { "doc_type": { "const": "reference" } }, "required": ["doc_type"] },
+      "then": {
+        "required": ["generated"],
+        "properties": { "generated": { "const": true }, "capability_ids": { "minItems": 1 } }
+      }
+    },
+    {
+      "if": { "properties": { "doc_type": { "const": "module" } }, "required": ["doc_type"] },
+      "then": {
+        "required": ["coordinate", "minimal_usage_sample_id"],
+        "properties": { "artifact_ids": { "minItems": 1, "maxItems": 1 } }
+      }
+    },
+    {
+      "if": { "properties": { "doc_type": { "const": "tooling" } }, "required": ["doc_type"] },
+      "then": { "required": ["supported_versions", "verification_commands"] }
+    },
+    {
+      "if": { "properties": { "doc_type": { "const": "project" } }, "required": ["doc_type"] },
+      "then": { "required": ["workflow", "validation", "lifecycle"] }
+    },
+    {
+      "if": { "properties": { "doc_type": { "const": "plan" } }, "required": ["doc_type"] },
+      "then": {
+        "required": [
+          "status",
+          "scope",
+          "non_goals",
+          "baseline",
+          "ordered_work",
+          "completion",
+          "last_verified",
+          "next_action",
+          "maven_release_changesets"
+        ],
+        "properties": { "version_lane": { "const": "version-agnostic" } }
+      }
+    }
+  ],
+  "$defs": {
+    "ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 3 }
+    },
+    "nonEmptyStrings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

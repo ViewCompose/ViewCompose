@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "governanceVersion": 2,
+  "status": "phase-0a-frozen",
+  "recordPlacement": "deferred-to-phase-0b",
+  "scannerImplementation": "deferred-to-compiled-quality-build",
+  "contracts": [
+    {
+      "id": "capability",
+      "schema": "capability.schema.json",
+      "accepted": ["fixtures/accepted/capability.json"],
+      "rejected": [
+        {
+          "fixture": "fixtures/rejected/capability-missing-reference.json",
+          "rule": "reference_owner is required"
+        }
+      ],
+      "reviewerOwned": ["capability grouping is cohesive", "document owners are appropriate for user need"]
+    },
+    {
+      "id": "document",
+      "schema": "document.schema.json",
+      "accepted": ["fixtures/accepted/document.json"],
+      "rejected": [
+        {
+          "fixture": "fixtures/rejected/tutorial-version-agnostic.json",
+          "rule": "tutorials use released or next and own a compiled sample"
+        }
+      ],
+      "reviewerOwned": ["the page has one primary purpose", "required evidence supports its claims"]
+    },
+    {
+      "id": "sample",
+      "schema": "sample.schema.json",
+      "accepted": ["fixtures/accepted/sample.json"],
+      "rejected": [
+        {
+          "fixture": "fixtures/rejected/compiled-sample-missing-target.json",
+          "rule": "compiled-region requires a build_target"
+        }
+      ],
+      "reviewerOwned": ["the sample is complete for its intended audience", "non-executable rationale is honest"]
+    },
+    {
+      "id": "capability-impact",
+      "schema": "capability-impact.schema.json",
+      "accepted": ["fixtures/accepted/capability-impact.json"],
+      "rejected": [
+        {
+          "fixture": "fixtures/rejected/moved-capability-without-redirect.json",
+          "rule": "moved or deleted public ownership requires a redirect disposition"
+        }
+      ],
+      "reviewerOwned": ["Q level and contract fields are complete", "not-applicable rationales are correct"]
+    },
+    {
+      "id": "exception",
+      "schema": "exception.schema.json",
+      "accepted": ["fixtures/accepted/exception.json"],
+      "rejected": [
+        {
+          "fixture": "fixtures/rejected/wildcard-exception.json",
+          "rule": "exception targets must be exact and cannot contain wildcards"
+        }
+      ],
+      "reviewerOwned": ["the reason is temporary and credible", "the removal condition is actionable"]
+    }
+  ],
+  "enforcement": {
+    "phase0A": "reviewed schemas and fixtures only",
+    "phase0B": "compiled report-only parsing and fixture validation",
+    "phase1": "complete deterministic discovery and exact debt baseline",
+    "phase2": "blocking no-new-debt and capability-impact gates"
+  }
+}

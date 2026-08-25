@@ -1,5 +1,28 @@
 ---
 draft: true
+schema_version: 2
+document_id: plan.pull-request-gate-scaling
+doc_type: plan
+owner:
+  kind: project
+  id: quality-build
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+status: active
+scope: Scale pull-request gates and move repository quality logic into compiled ownership.
+non_goals:
+  - Weaken existing required checks or deployment integrity.
+baseline: Phase 0 contracts and timing evidence are frozen at main revision 74f6d452.
+ordered_work:
+  - Create compiled ownership and parity.
+  - Extract gates, classify impact, cache immutable API output, and verify affected modules.
+completion:
+  - Meet the accepted correctness and latency criteria and archive the plan.
+last_verified: 2026-08-25
+next_action: Create the compiled quality-build included build and parity harness.
+maven_release_changesets: []
 ---
 
 # Pull-request Gate Scaling and Build-logic Modularization Plan
@@ -11,9 +34,9 @@ contracts are frozen without changing active Gradle or CI behavior.
 
 Last verified: 2026-08-25.
 
-Next action: complete Documentation Governance V2 Phase 0A contract and schema work. Then return
-to this plan's Phase 1 and create the compiled quality-build included build without changing any
-existing task name, dependency, failure condition, or branch-protection context.
+Next action: create the Phase 1 compiled quality-build included build and parity harness without
+changing any existing task name, dependency, failure condition, or branch-protection context. The
+coordinated Documentation Governance V2 Phase 0A contract and schema freeze is complete.
 
 ## Maven release changesets
 

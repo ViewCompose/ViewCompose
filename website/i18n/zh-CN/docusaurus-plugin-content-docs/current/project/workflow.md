@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: a08ea79604ffc9068ddb09b76b2f6dbeab131ed2bab666590fe7e29578918533
+translation_source_hash: ab89e5e8ee159d8c639e8b5680cfab884aceb900e1222ae2dd60898b68692c6a
 translation_status: current
 ---
 
@@ -59,6 +59,12 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 [源码文档与 API 注释规范](./api-documentation-quality.md)补齐所有参数、返回值、状态、生命周期、
 线程、失败和平台契约；Q3 API 同步提供可编译 `@sample`。既有注释欠账不能作为新增欠账或
 “后续再补文档”的理由。
+
+同一变更还必须提供符合 Governance V2
+[公共能力影响契约](./documentation-governance.md#公共能力影响)的结构化 capability-impact 记录。
+实现前要确定稳定 capability owner，并处理 KDoc、模块、sample、Reference、Tutorial、Guide、
+Architecture、Migration 与 redirect。Phase 0B 确定记录发现位置前，应在 PR 描述中提供完整等价
+字段；不要为此发明临时仓库文件名或根构建 parser。
 
 涉及下面任一情况时，必须先更新文档，或和实现同步提交：
 

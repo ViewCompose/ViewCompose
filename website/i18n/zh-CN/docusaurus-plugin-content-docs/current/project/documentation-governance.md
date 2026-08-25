@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: 766c64acb5999306e33870090cd25a456acf5aa96c32a5e2df90e71a7b5235f9
+translation_source_hash: 08bf6bed681b6230f833f48ae266499244ae5d4858348885f7d330c18d0d99b4
 translation_status: current
 ---
 
@@ -57,6 +57,85 @@ Jetpack Compose 的事实比较和迁移路径；由可执行 sample 支撑且�
 7. **项目文档**：治理仓库维护，而非框架使用。
 
 不得把教程、设计原因、完整 API 清单和 release note 混在一页；应拆成聚焦页面并互链。
+
+## Governance V2 结构化契约
+
+Governance V2 增加稳定标识和机器可读记录。规则现在生效：一份审阅基线可容纳既有违规，但
+新增或被触及内容不能在相应类别新增或保留债务；阻断只在 report-only 发现稳定后启用。
+
+### 能力标识与所有权
+
+每个面向应用的 DSL、Modifier、组件、host、集成或 tooling 入口都按
+`symbol -> capability_id -> artifact/version -> generated Reference -> sample or exception ->`
+适用手写 owner 解析。
+
+能力只能归并代表同一用户决策的 overload/symbol。记录包含种类、owner、唯一制品和版本状态、
+精确 symbol、生成 Reference、sample/exception 及适用文档 owner。移动、弃用和删除同步更新
+identity、impact、migration 与 redirect。internal、test、Demo-only、generated 和 renderer-only
+declaration 不进入应用侧目录。
+
+### 文档元数据与类型要求
+
+每个 canonical 有效手写公共页声明稳定 document/type/owner identity、一个版本 lane，以及显式
+capability、artifact 和 sample 集合；locale 镜像继承该记录，只增加翻译 metadata。目录与
+`doc_type` 必须一致。
+
+| `doc_type` | 机器必需元数据 | 由 reviewer 判断的目的与证据 |
+| --- | --- | --- |
+| `tutorial` | capability/sample、released/next lane、结果、验证 | 新手得到一个可运行结果 |
+| `guide` | capability、任务、成功/失败检查 | 完成一个具体任务 |
+| `architecture` | invariant 与实现/测试证据 | 当前边界、owner 与取舍 |
+| `migration` | source/target state | 可验证迁移与语义风险 |
+| `reference` | generated 标记与 capability | 源码派生检索，不维护手工清单 |
+| `module` | 一个制品、coordinate、最小编译 sample | 制品安装、兼容与限制 |
+| `tooling` | 支持版本与验证命令 | 操作开发 tooling |
+| `project` | workflow、validation、lifecycle | 治理仓库维护 |
+| `plan` | 临时状态、有序工作、完成、验证、下一步、Changeset | 归档前迁出长期结论 |
+
+跨类型内容链接聚焦 owner。目录不匹配时移动页面并提供 locale-aware redirect；只改 `doc_type`
+不能替代重构。
+
+### 版本 lane
+
+每个包含公开代码的页面或 sample 必须恰好声明一个 lane：
+
+1. `released`：不可变注册 Maven 版本，不替换为当前源码；
+2. `next`：当前 checkout 的本地发布制品，并显示未发布提示；
+3. `version-agnostic`：不含版本敏感的可执行 API 用法。
+
+Tutorial 不能是 `version-agnostic`；切换 lane 属于显式文档/发布事件。
+
+### Sample 分类
+
+每个公共 Kotlin/Java fence 都有一个已注册 identity 和分类：
+
+1. `compiled-region`：精确 source region 及 lane-specific build target；
+2. `generated-signature`：一个 source symbol 与具名 generator，绝不手改；
+3. `non-executable`：不完整架构伪代码，旁边有可见解释与理由。
+
+Tutorial、安装和可复制示例禁止 `non-executable`，也不能借它掩盖陈旧 API 或缺失依赖。分类以
+注册记录为准，而不是语法高亮。
+
+### 公共能力影响
+
+每个 public/protected 新增、改变、移动、弃用或删除，都记录 artifact、symbol、capability、
+change/breaking 状态、Q 等级、契约字段和 KDoc/module/sample/Reference/Tutorial/Guide/
+Architecture/Migration/redirect 处置。处置只能是带精确目标的 `updated` 或带具体理由的
+`not-applicable`。移动/删除必须有 redirect，breaking 必须有 migration；公共 symbol 不能使用
+自由文本 `No documentation impact`。
+
+### Exception 与债务棘轮
+
+Exception 必须有稳定 ID、精确 file/symbol、类别、理由、owner、创建日期、移除条件、计数和可选
+过期日；禁止 wildcard 和永久 legacy bucket。棘轮拒绝新增、扩大、增加或重新加入的债务，并要求
+被触及 allowlisted 页面修复该类别。完成时基线为空，且本地、PR、部署 strict gate 全部启用。
+
+### 契约资产与门禁边界
+
+Schema 与 fixture 位于 `docs/project/contracts/documentation-governance-v2/`；record 命名、发现和
+scanner 语言留给 Phase 0B compiled ownership。机器负责 shape、精确 identity、发现/唯一性、
+source/lane/route 一致性、棘轮计算和新鲜度；reviewer 负责能力内聚、页面目的、证据、exception
+可信度与 rationale 正确性。机器通过不能覆盖审查。
 
 ## 框架与模块边界
 
@@ -208,7 +287,7 @@ URL 和真实 UI literal 原样保留；叙述中的外语 literal 用行内代�
 
 | 变更 | 必需文档影响 |
 | --- | --- |
-| 新增/改变 public symbol | KDoc/Javadoc、模块页、非平凡 sample |
+| 新增/改变 public/protected symbol | 结构化 capability-impact 记录、capability owner、KDoc/Javadoc、模块页、生成 Reference、sample 或精确 exception，以及 Tutorial/Guide/Architecture/Migration/redirect 的显式处置 |
 | 新发布模块 | publishing metadata、目录、模块 README、API pipeline、dependency guide |
 | 发布制品源码或发布输入变化 | 每 PR 不可变 Changeset；按需更新所属模块/API 文档；验证确定性 release plan |
 | 依赖/兼容变化 | 模块页和跨模块兼容矩阵 |

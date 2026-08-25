@@ -1,15 +1,37 @@
 ---
 draft: true
+schema_version: 2
+document_id: plan.documentation-governance-v2
+doc_type: plan
+owner:
+  kind: project
+  id: documentation-governance
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+status: active
+scope: Establish structured documentation ownership, discovery, debt ratchets, and generated Reference.
+non_goals:
+  - Weaken existing documentation, source-comment, release, or site gates.
+baseline: Phase 0A freezes the normative contract and reviewed schemas before scanner implementation.
+ordered_work:
+  - Add compiled report-only discovery and then activate no-new-debt gates.
+  - Generate Reference ownership before broad content and sample migration.
+completion:
+  - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
+last_verified: 2026-08-25
+next_action: Wait for compiled quality-build Phase 1 and existing-gate extraction before Phase 0B.
+maven_release_changesets: []
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
 
 ## Status
 
-Active. The assessment baseline is frozen on `main` at `4fd14c4a` on 2026-08-25. No production
-implementation, public API, published sample, or Maven publication input has changed yet.
-The coordinated pull-request gate plan has completed its Phase 0 contract and evidence freeze, so
-this plan's Phase 0A can now proceed without changing the accepted gate graph.
+Active. The assessment baseline is frozen on `main` at `4fd14c4a` on 2026-08-25. Phase 0A is
+complete: the normative Governance V2 model, machine-readable schemas, enforcement boundaries, and
+accepted/rejected fixtures are frozen without adding a scanner or changing an existing gate.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -18,11 +40,9 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-25.
 
-Next action: complete Phase 0A by defining the normative capability, document-type, version-lane,
-sample, ownership, and exception contracts and their machine-readable schemas. Do not add the
-report-only scanner to the root build. Phase 0B scanner implementation begins only after the
-compiled quality-build skeleton and existing-gate extraction from the coordinated pull-request
-gate plan are complete.
+Next action: return to the coordinated pull-request gate plan for its compiled quality-build Phase
+1 and existing-gate extraction. Phase 0B scanner implementation begins only after that ownership
+exists and must run there in report-only mode, never as a temporary root-build scanner.
 
 ## Maven release changesets
 
@@ -282,6 +302,16 @@ are verified.
 Exit condition: governance has an unambiguous rule for every failure class in the frozen baseline,
 the rule states which part is machine-enforced versus reviewer-owned, and every schema has reviewed
 positive and negative fixtures.
+
+Phase 0A completed on 2026-08-25. The canonical governance page now owns capability identity,
+document types, version lanes, sample classes, structured public capability impact, exact
+exceptions, debt-ratchet completion, and the machine/reviewer boundary. The
+[`contract-set.json`](../contracts/documentation-governance-v2/contract-set.json) manifest freezes
+five standalone Draft 2020-12 schemas and one focused accepted/rejected pair for each. Record
+filenames, discovery layout, scanner language, and executable validation remain deliberately
+unselected until Phase 0B. Workflow, source-comment authoring, site operations, `AGENTS.md`, and
+their public Chinese mirrors point to the canonical contract without duplicating it. No Gradle
+task, workflow, branch-protection context, publishing input, or public API changed.
 
 ### Phase 0B: report-only scanner foundation
 

@@ -1,3 +1,20 @@
+---
+schema_version: 2
+document_id: project.api-documentation-quality
+doc_type: project
+owner:
+  kind: project
+  id: documentation-governance
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+workflow: Define public source-comment quality levels, contract fields, and authoring forms.
+validation:
+  - ./gradlew verifyDocumentationStructure
+lifecycle: Update with public source-comment policy and upstream guideline changes.
+---
+
 # Source Documentation and API Comment Standard
 
 ## Purpose
@@ -66,13 +83,15 @@ workaround, algorithm, concurrency rule, or performance decision would otherwise
 Documentation is part of implementation, not follow-up cleanup. A change is incomplete unless the
 same pull request:
 
-1. documents every new published declaration and every changed public/protected contract;
-2. updates comments affected by renamed parameters, changed defaults, state ownership, lifecycle,
+1. resolves the stable `capability_id` and structured capability-impact dispositions defined by
+   [Documentation Governance](documentation-governance.md#public-capability-impact);
+2. documents every new published declaration and every changed public/protected contract;
+3. updates comments affected by renamed parameters, changed defaults, state ownership, lifecycle,
    threading, failure behavior, performance, or Android interoperability;
-3. adds or updates a compiled sample for Q3 APIs;
-4. updates the owning module manual and migration/release material required by the
+4. adds or updates a compiled sample for Q3 APIs;
+5. updates the owning module manual and migration/release material required by the
    [change impact matrix](documentation-governance.md#change-impact-matrix);
-5. runs the owning module's documentation audit and relevant behavioral tests.
+6. runs the owning module's documentation audit and relevant behavioral tests.
 
 Existing untouched documentation debt may be repaired incrementally according to the active plan.
 It is never a reason to merge new debt. Placeholder KDoc, `TODO` documentation, copied signature

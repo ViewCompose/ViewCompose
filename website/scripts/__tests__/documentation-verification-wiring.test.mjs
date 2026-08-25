@@ -46,3 +46,16 @@ test('documentation CI delegates translation freshness to the canonical Gradle g
   assert.match(workflow, /\.\/gradlew verifyDocumentationStructure --stacktrace/u);
   assert.doesNotMatch(workflow, /npm run verify:translations/u);
 });
+
+test('site quality report stays outside the deployable and budgeted site tree', async () => {
+  const buildScript = await readFile(
+    resolve(repositoryRoot, 'website/scripts/build-site.mjs'),
+    'utf8',
+  );
+
+  assert.match(
+    buildScript,
+    /resolve\(websiteRoot, '\.\.', 'build', 'reports', 'documentation'\)/u,
+  );
+  assert.doesNotMatch(buildScript, /resolve\(buildDir, 'site-quality-report\.json'\)/u);
+});

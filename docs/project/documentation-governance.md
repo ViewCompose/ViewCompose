@@ -1,3 +1,20 @@
+---
+schema_version: 2
+document_id: project.documentation-governance
+doc_type: project
+owner:
+  kind: project
+  id: documentation-governance
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+workflow: Define the normative content, ownership, version, sample, and review contracts.
+validation:
+  - ./gradlew verifyDocumentationStructure
+lifecycle: Update with every durable documentation-governance change and preserve history in plans or ADRs.
+---
+
 # Documentation Governance
 
 ## Purpose
@@ -80,6 +97,89 @@ Every public page must have one primary purpose. Use this decision order:
 
 Do not combine tutorial, design rationale, exhaustive API listing, and release notes in one page.
 Link between focused pages instead.
+
+## Governance V2 structured contract
+
+Governance V2 adds stable identities and machine-readable records. Its rules are normative; one
+reviewed baseline may contain existing violations, but new or touched content cannot add or retain
+debt in the affected category. Blocking begins only after deterministic report-only discovery.
+
+### Capability identity and ownership
+
+Every application-facing DSL, Modifier, component, host, integration, or tooling entry resolves as
+`symbol -> capability_id -> artifact/version -> generated Reference -> sample or exception ->`
+applicable handwritten owners.
+
+A capability groups only overloads or symbols representing one user decision. Its record contains
+kind, responsible owner, one artifact and version state, exact symbols, generated Reference,
+sample or exception, and applicable document owners. Moves, deprecations, and deletions update that
+identity, impact, migration, and redirects together. Internal, test, Demo-only, generated, and
+renderer-only declarations stay outside the application catalog.
+
+### Document metadata and type requirements
+
+Every canonical active handwritten public page declares stable document/type/owner identities, one
+version lane, and explicit capability, artifact, and sample sets. Locale mirrors inherit that
+record and add only translation metadata. Directory and `doc_type` must agree.
+
+| `doc_type` | Machine-required metadata | Reviewer-owned purpose and evidence |
+| --- | --- | --- |
+| `tutorial` | capability/sample, released/next lane, result, verification | beginner reaches one working result |
+| `guide` | capability, task, success/failure checks | completes one concrete task |
+| `architecture` | invariants and implementation/test evidence | current boundaries, ownership, and trade-offs |
+| `migration` | source and target states | verifiable transition and semantic risks |
+| `reference` | generated marker and capability | source-derived lookup, no handwritten inventory |
+| `module` | one artifact, coordinate, minimal compiled sample | artifact installation, compatibility, and constraints |
+| `tooling` | supported versions and verification commands | operates development tooling |
+| `project` | workflow, validation, lifecycle | governs repository maintenance |
+| `plan` | temporary state, ordered work, completion, verification, next action, Changesets | moves durable conclusions before archival |
+
+Cross-purpose material links to its focused owner. A mismatched page moves with locale-aware
+redirects; changing `doc_type` alone does not restructure it.
+
+### Version lanes
+
+Every public code-bearing page or sample declares exactly one lane:
+
+1. `released`: immutable registered Maven versions, with no current-source substitution;
+2. `next`: locally published current-checkout artifacts plus a visible unreleased warning;
+3. `version-agnostic`: no version-sensitive executable API usage.
+
+Tutorials cannot be `version-agnostic`; a lane change is an explicit documentation/release event.
+
+### Sample classes
+
+Every public Kotlin/Java fence has one registered identity and class:
+
+1. `compiled-region`: exact source region plus its lane-specific build target;
+2. `generated-signature`: one source symbol and named generator, never hand-edited;
+3. `non-executable`: incomplete architecture pseudocode with an adjacent explanation and reason.
+
+`non-executable` is forbidden in Tutorials, installation, and copy-ready examples and cannot hide
+stale APIs or missing dependencies. Registration, not syntax highlighting, classifies a fence.
+
+### Public capability impact
+
+Every public/protected add, change, move, deprecation, or deletion records artifact, symbol,
+capability, change/breaking state, Q level, contract fields, and KDoc/module/sample/Reference/
+Tutorial/Guide/Architecture/Migration/redirect dispositions. A disposition is `updated` with exact
+targets or `not-applicable` with a concrete rationale. Moves/deletions require redirects; breaking
+changes require migration. Public symbols cannot use free-form `No documentation impact`.
+
+### Exceptions and debt ratchet
+
+An exception has a stable ID, exact file/symbol, category, reason, owner, creation date, removal
+condition, count, and optional expiry; wildcards and permanent legacy buckets are forbidden. The
+ratchet rejects new/wider/increased/re-added debt and requires touched allowlisted pages to repair
+that category. Completion requires an empty baseline and strict local, PR, and deployment gates.
+
+### Contract assets and enforcement boundary
+
+Schemas and fixtures live in `docs/project/contracts/documentation-governance-v2/`; record names,
+discovery, and scanner language wait for Phase 0B compiled ownership. Machines own shape, exact
+identity, discovery, uniqueness, source/lane/route consistency, ratchet arithmetic, and freshness.
+Reviewers own capability cohesion, page purpose, evidence, exception credibility, and rationale
+correctness. Machine success never overrides review.
 
 ## Framework and module boundaries
 
@@ -377,7 +477,7 @@ Use this matrix before implementation and again during review:
 
 | Change | Required documentation impact |
 | --- | --- |
-| New or changed public symbol | KDoc/Javadoc; module page; sample for non-trivial use |
+| New or changed public/protected symbol | Structured capability-impact record; capability owner; KDoc/Javadoc; module page; generated Reference; sample or exact exception; explicit Tutorial/Guide/Architecture/Migration/redirect dispositions |
 | New published module | Publishing metadata; module catalog; module `README`; API reference pipeline; dependency guide |
 | Published artifact source or release-input change | Immutable per-PR Changeset; owning module/API documentation as applicable; deterministic release-plan validation |
 | Dependency or compatibility change | Module page and affected cross-module compatibility matrix |

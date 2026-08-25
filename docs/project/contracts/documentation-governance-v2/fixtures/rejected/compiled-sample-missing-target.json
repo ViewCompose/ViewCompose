@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "sample_id": "sample.layout.box-basic",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "layout.box",
+  "document_ids": ["tutorial.layout-basics"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LayoutsTutorialActivity.kt",
+  "region": "layouts"
+}

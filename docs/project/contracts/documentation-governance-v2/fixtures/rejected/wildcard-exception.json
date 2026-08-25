@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "exception_id": "DOC-0002",
+  "target": { "file": "docs/guides/**" },
+  "category": "unclassified-sample",
+  "reason": "All guide samples are temporarily treated as legacy content.",
+  "owner": "documentation-governance",
+  "created_on": "2026-08-25",
+  "removal_condition": "Remove this entry after the documentation restructure is complete.",
+  "violation_count": 12
+}

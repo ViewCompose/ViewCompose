@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "document_id": "tutorial.layout-basics",
+  "doc_type": "tutorial",
+  "owner": { "kind": "capability", "id": "layout.basics" },
+  "version_lane": "version-agnostic",
+  "capability_ids": ["layout.box"],
+  "artifact_ids": ["viewcompose-ui-foundation"],
+  "sample_ids": [],
+  "expected_result": "A visible child is aligned inside a Box.",
+  "verification_action": "Read the prose."
+}
