@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 991900ac55a2d313a5a531cf8e2ab85d39f391890665fa0b3f106b983442f77e
+translation_source_hash: 66bd7ce045a0c73d616ac7bef2dce88a5c7c8b70be63a5564f7dee7fb143a143
 translation_status: current
 ---
 
@@ -55,7 +55,11 @@ npm run build
 不得使用该捷径。
 
 Governance V2 资产是仓库输入，不是第二份站点注册表：Phase 0A 冻结 schema，Phase 0B 通过
-compiled quality owner 报告，Phase 2 阻止新债务。生成 Reference 路由复用同一发现模型。
+compiled quality owner 报告，Phase 2 阻止新债务。已提交的
+`website/src/data/capability-reference.json` 数据集只能通过
+`./gradlew updateDocumentationCapabilityReference` 主动重写；校验会独立派生并逐字节比较预期
+模型。本地化 `/reference/` 页面消费这一棵树，`/api/` 则继续提供按产物和版本生成的完整
+Dokka 输出。
 
 React、navbar、footer 或 sidebar 新增消息 key 时运行 `npm run write-translations`。它只补充
 缺失 JSON，不覆盖已审阅中文。Markdown 镜像、源指纹、必需层级和恢复流程见

@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Generate source-owned Reference indexes and enforce committed-output freshness.
+next_action: Resume pull-request gate Phase 3 impact classification on the stabilized Governance V2 and Reference inputs.
 maven_release_changesets: []
 ---
 
@@ -33,9 +33,10 @@ Active. The assessment baseline was frozen on `main` at `4fd14c4a` on 2026-08-25
 and 1 are complete. The first Phase 2 slice enforces the frozen baseline as a blocking no-new-debt
 ratchet; the second automatically discovers Tutorial pages and validates type-aware sample markers
 plus exact source-region identity in both languages; the third requires structural public
-capability changes to own exact, immutable capability-impact records. The normative contract, compiled scanner,
-precise production/public inventory, and exact reviewed debt baseline all run from the quality
-included build.
+capability changes to own exact, immutable capability-impact records; and the fourth generates the
+committed capability Reference and rejects stale output. The normative contract, compiled scanner,
+precise production/public inventory, generated Reference, and exact reviewed debt baseline all run
+from the quality included build.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -44,7 +45,8 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: generate source-owned Reference indexes and enforce committed-output freshness.
+Next action: resume Phase 3 pull-request impact classification in the coordinated gate-scaling
+plan. Final Reference link closure remains owned by this plan after the Phase 3 content owners move.
 
 ## Maven release changesets
 
@@ -548,6 +550,56 @@ preceding slice (0%); wall time fell by 155 seconds (-24.92%) despite 96 more ta
 so host/cache effects make timing `inconclusive`. The task-graph conclusion is `no material change`
 and structural change enforcement is `improved`. One local host remains the limitation, and
 pull-request CI is the independent acceptance step.
+
+The fourth Phase 2 slice and early Phase 4 engine hard-cut the application-facing Reference to the
+same compiled Governance V2 model. `updateDocumentationCapabilityReference` intentionally writes
+one committed normalized artifact table and capability-group tree; ordinary verification derives
+the expected bytes independently and reports unbaselined `stale-generated-output` instead of
+auto-healing drift. The `/reference/` page consumes that tree for both locales, supports in-page
+symbol/artifact/namespace search and one-group-at-a-time browsing, and links each entry to its
+versioned API/KDoc root and module manual. Modifier Architecture no longer carries a second scan,
+handwritten count, public/internal mixture, or exhaustive table.
+
+The source inventory contains 433 unique application-facing entries across 29 artifacts and 15
+exclusive groups. All 433 entries appear exactly once, internal/renderer-only entries remain
+excluded, and one aggregate source fingerprint makes overload/signature drift observable without
+shipping raw hashes to the browser. Structured capability ownership remains 0/433 because this
+slice does not relabel the frozen 433 `orphan-symbol` findings by assertion; exact capability,
+sample, and related-document links therefore remain an explicit Phase 3/4 migration limitation.
+The historical baseline is unchanged at 733 findings and 311 exact exceptions with zero
+unbaselined issue. Relative to the previous zero-result stale-output category and handwritten
+Modifier inventory, discovery and deployable navigation are `improved`; final Reference ownership
+coverage is not yet complete.
+
+The first complete site build exposed that a denormalized 469,689-byte catalog raised non-API
+output to 47.3 MiB against the 46.9 MiB ceiling. Normalizing version/routes into one artifact table,
+omitting absent migration fields, retaining one aggregate source fingerprint, and initially
+rendering one selected group reduced the committed data to 134,072 bytes (-71.46%). The repeated
+production build passed at 412.2 MiB total, 46.4/46.9 MiB non-API, 7.7/8.0 MiB JavaScript, 650/768
+KiB largest JavaScript asset, and 35.0/120 seconds. This is an `improved` deployability result; its
+limitation is one local optimized build and only 0.5 MiB of non-API headroom, so pull-request
+documentation CI remains the independent check and later capability-record growth must preserve
+the same budget.
+
+The compiled quality suite passed 41/41 tests, including deterministic generation, exactly-one
+group membership, internal exclusion, fresh-output acceptance, and stale-output rejection.
+Documentation scripts passed 55/55, all 116 required Chinese mirrors were current, type-checking
+passed, and the production build audited 440 site pages. The final Governance reports retained
+deterministic SHA-256 values
+`5cab3d87e8fc3c559524b482aec5bb55aae5c908871acd645f38ca671016d64f` for JSON and
+`af47ac08c68add3dfe31a167fa8b391b376378fca8c79e22d679c04de4b507da` for text. The next
+coordinated action is pull-request gate Phase 3 classification; this plan resumes broad content
+reclassification and final per-entry link closure afterward.
+
+The first final `qaQuick` attempt fully invalidated Android and Dokka work under the repository's
+default 2 GiB Gradle heap, then stopped when garbage collection thrashed; no verification task had
+reported a functional failure. Repeating the same checkout with a one-run-only 4 GiB heap and four
+workers passed all 2,342 actionable tasks in 2 minutes 30 seconds (278 executed and 2,064
+up-to-date). Release-intent verification independently reported zero release artifacts, zero
+ignored artifacts, and zero shared-path classifications. The functional conclusion is `improved`
+and accepted; build-time impact is `inconclusive` because the successful retry reused substantial
+work and changed the process memory limit. The default-heap sensitivity of a fully invalidated
+local build remains the host limitation, and no repository memory setting changed in this slice.
 
 ### Phase 3: information-architecture restructure
 

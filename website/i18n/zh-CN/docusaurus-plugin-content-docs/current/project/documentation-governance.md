@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: ee5e25acf6fc36cdd04e6983a256941b6d14714572e0bc49898bf8eb597ad4f3
+translation_source_hash: 52d3d50c862203538459becff75c759eb77a09cacd3bdc5ba2777e62d8835443
 translation_status: current
 ---
 
@@ -73,6 +73,18 @@ Governance V2 增加稳定标识和机器可读记录。`verifyDocumentationGove
 精确 symbol、生成 Reference、sample/exception 及适用文档 owner。移动、弃用和删除同步更新
 identity、impact、migration 与 redirect。internal、test、Demo-only、generated 和 renderer-only
 declaration 不进入应用侧目录。
+
+### 生成的能力参考
+
+`website/src/data/capability-reference.json` 是唯一提交到仓库的展示数据集，由 Governance V2
+的生产声明、发布、文档、能力和样例模型派生。维护者通过
+`./gradlew updateDocumentationCapabilityReference` 主动重写它；普通校验不会自动生成或修复。
+`verifyDocumentationGovernanceV2` 会独立派生预期字节，并在已提交文件缺失或不一致时报告
+`stale-generated-output`，因此源码、签名、版本、数量和所有权变化不能让公开 `/reference/`
+路由静默陈旧。
+
+英文和简体中文页面消费同一棵符号树。Locale 资源只翻译展示标签，不复制入口、分组、数量或
+路由。模块手册继续负责产物契约，版本化 Dokka 继续负责完整签名和 KDoc。
 
 ### 文档元数据与类型要求
 

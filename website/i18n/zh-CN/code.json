@@ -104,6 +104,156 @@
   "api.module.openManual": {
     "message": "模块手册"
   },
+  "reference.meta.title": {
+    "message": "能力参考"
+  },
+  "reference.meta.description": {
+    "message": "从源码派生的 ViewCompose DSL、Modifier、组件、集成与工具索引。"
+  },
+  "reference.header.eyebrow": {
+    "message": "从生产源码生成"
+  },
+  "reference.header.title": {
+    "message": "能力参考"
+  },
+  "reference.header.description": {
+    "message": "按照所服务的用户能力，浏览面向应用的 DSL、Modifier、组件、集成、宿主和工具入口。"
+  },
+  "reference.summary.label": {
+    "message": "目录摘要"
+  },
+  "reference.summary.entries": {
+    "message": "个入口"
+  },
+  "reference.summary.artifacts": {
+    "message": "个产物"
+  },
+  "reference.summary.groups": {
+    "message": "个能力分组"
+  },
+  "reference.summary.owners": {
+    "message": "个结构化所有者"
+  },
+  "reference.migration.title": {
+    "message": "Governance V2 迁移状态"
+  },
+  "reference.migration.description": {
+    "message": "符号树、分组、版本、重载和数量已经由源码驱动并受新鲜度门禁保护。精确的能力、样例和相关文档链接会随结构化所有者迁移逐步出现。"
+  },
+  "reference.search.label": {
+    "message": "搜索目录"
+  },
+  "reference.search.placeholder": {
+    "message": "符号、产物、命名空间或类型"
+  },
+  "reference.search.results": {
+    "message": "找到 {count} 个入口"
+  },
+  "reference.search.empty": {
+    "message": "没有与当前搜索匹配的目录入口。"
+  },
+  "reference.groups.label": {
+    "message": "能力分组"
+  },
+  "reference.group.layout": {
+    "message": "布局"
+  },
+  "reference.group.appearance": {
+    "message": "外观"
+  },
+  "reference.group.input": {
+    "message": "输入与语义"
+  },
+  "reference.group.gesture": {
+    "message": "手势与滚动"
+  },
+  "reference.group.animation": {
+    "message": "动画"
+  },
+  "reference.group.content": {
+    "message": "内容"
+  },
+  "reference.group.actions": {
+    "message": "操作"
+  },
+  "reference.group.collections": {
+    "message": "集合"
+  },
+  "reference.group.feedback": {
+    "message": "反馈与浮层"
+  },
+  "reference.group.navigation": {
+    "message": "导航"
+  },
+  "reference.group.designSystems": {
+    "message": "设计系统"
+  },
+  "reference.group.integrations": {
+    "message": "集成"
+  },
+  "reference.group.androidInterop": {
+    "message": "Android 互操作"
+  },
+  "reference.group.tooling": {
+    "message": "工具"
+  },
+  "reference.group.general": {
+    "message": "通用 DSL"
+  },
+  "reference.kind.modifier": {
+    "message": "Modifier"
+  },
+  "reference.kind.component": {
+    "message": "组件"
+  },
+  "reference.kind.host": {
+    "message": "宿主"
+  },
+  "reference.kind.integration": {
+    "message": "集成"
+  },
+  "reference.kind.tooling": {
+    "message": "工具"
+  },
+  "reference.kind.dsl": {
+    "message": "DSL"
+  },
+  "reference.entry.artifact": {
+    "message": "产物"
+  },
+  "reference.entry.version": {
+    "message": "版本"
+  },
+  "reference.entry.next": {
+    "message": "下一版本"
+  },
+  "reference.entry.overloads": {
+    "message": "重载"
+  },
+  "reference.entry.api": {
+    "message": "API / KDoc"
+  },
+  "reference.entry.manual": {
+    "message": "模块手册"
+  },
+  "reference.document.tutorial": {
+    "message": "教程"
+  },
+  "reference.document.guide": {
+    "message": "指南"
+  },
+  "reference.document.architecture": {
+    "message": "架构"
+  },
+  "reference.document.module": {
+    "message": "模块"
+  },
+  "reference.document.tooling": {
+    "message": "工具"
+  },
+  "reference.document.migration": {
+    "message": "迁移"
+  },
   "theme.ErrorPageContent.title": {
     "message": "页面已崩溃。",
     "description": "The title of the fallback page when the page crashed"

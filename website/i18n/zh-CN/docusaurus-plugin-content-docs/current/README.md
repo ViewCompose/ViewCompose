@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: 86c0670c53b07d4d6bf6f276e34e3132b738969a5512eba43ddef12abede9a87
+translation_source_hash: 469250c44652559ce63fc12247d8248dbd7c18ff1c1e9071918b73993189330f
 translation_status: current
 ---
 
@@ -22,6 +22,7 @@ GitHub 托管文档站点的内容边界。
 | 理解框架 | [架构总览](https://docs.viewcompose.com/architecture/overview) → [多设计系统标准](./architecture/design-systems.md) → [Modifier 模型](https://docs.viewcompose.com/architecture/modifier) → [NodeSpec 模型](https://docs.viewcompose.com/architecture/node-spec) |
 | 从 Jetpack Compose 迁移 | [Compose 迁移总览](./migration/README.md) → 按状态、布局、宿主或导航选择迁移路径 |
 | 选择或维护已发布产物 | [已发布模块目录](./modules/README.md) → 对应模块手册 |
+| 查找面向应用的入口 | [能力参考](https://docs.viewcompose.com/reference/) → [版本化 API/KDoc](https://docs.viewcompose.com/api/) → 对应模块手册 |
 | 使用某项能力 | 从下面的[指南](#指南)中选择对应主题 |
 | 使用预览或进行性能工作 | [预览](./tooling/preview.md) → [诊断](https://docs.viewcompose.com/tooling/diagnostics) → [性能](https://docs.viewcompose.com/tooling/performance) |
 | 参与贡献 | [开发流程](https://docs.viewcompose.com/project/workflow) → [文档治理规范](https://docs.viewcompose.com/project/documentation-governance) |
@@ -80,6 +81,12 @@ GitHub 托管文档站点的内容边界。
 
 [已发布模块目录](./modules/README.md)与 Maven 发布元数据保持同步。每个已发布产物都在
 `docs/modules/<artifact-id>/` 下提供独立手册，并可随对应产物独立演进。
+
+## 能力与 API 参考
+
+从源码派生的[能力参考](https://docs.viewcompose.com/reference/)按用户能力组织面向应用的 DSL、Modifier、组件、集成、宿主
+和工具入口，数量、版本与路由都受新鲜度门禁保护。完整签名和 KDoc/Javadoc 请查看
+[版本化 API Reference](https://docs.viewcompose.com/api/)，再通过入口中的模块手册链接了解产物契约。
 
 ## 工具
 

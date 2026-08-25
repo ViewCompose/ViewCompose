@@ -15,6 +15,10 @@
     "message": "模块",
     "description": "Navbar item with label Modules"
   },
+  "item.label.Capability Reference": {
+    "message": "能力参考",
+    "description": "Navbar item with label Capability Reference"
+  },
   "item.label.API Reference": {
     "message": "API 参考",
     "description": "Navbar item with label API Reference"

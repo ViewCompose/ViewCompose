@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-26
-next_action: Resume Phase 3 classification after Governance V2 gate families and generated-reference inputs stabilize.
+next_action: Begin Phase 3 pull-request impact classification using the stabilized Governance V2 and generated Reference inputs.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -42,9 +42,10 @@ now have compiled ownership plus isolated regression or parity coverage.
 
 Last verified: 2026-08-26.
 
-Next action: wait for Governance V2 gate families and generated-reference inputs to stabilize, then
-resume Phase 3 pull-request classification. The Phase 0 task-graph fixtures remain the immutable
-pre-extraction comparator rather than being rewritten for later intentional gates.
+Next action: begin Phase 3 pull-request impact classification. Governance V2 now blocks new debt,
+type-checks executable sample ownership, requires structural capability-impact records, and
+byte-compares the committed source-derived Reference. The Phase 0 task-graph fixtures remain the
+immutable pre-extraction comparator rather than being rewritten for later intentional gates.
 
 ## Maven release changesets
 
@@ -537,6 +538,11 @@ highly warmed post-retry duration is completeness evidence only, not a speedup m
 next action is Phase 3's conservative pull-request classifier and required-result facade.
 
 ### Phase 3: classify pull-request impact
+
+The previously blocking documentation inputs stabilized on 2026-08-26. The compiled quality build
+now owns the exact no-new-debt, Tutorial/sample-region, public capability-impact, and generated
+Reference freshness gates. Phase 3 can classify these as one explicit documentation-governance
+family instead of chasing a changing root task body or a second handwritten Reference inventory.
 
 1. Add a standalone planning entry point that can run from the quality included build without
    configuring all Android projects.

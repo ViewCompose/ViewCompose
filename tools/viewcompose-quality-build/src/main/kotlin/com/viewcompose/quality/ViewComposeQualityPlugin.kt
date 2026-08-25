@@ -606,6 +606,11 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 extension.repositoryDirectory.file("website/i18n/translation-policy.json"),
                 extension.repositoryDirectory.file("docs/modules/README.md"),
             )
+            committedReferenceFile.set(
+                extension.repositoryDirectory.file(
+                    "website/src/data/capability-reference.json",
+                ),
+            )
             reportFile.set(
                 extension.reportsDirectory.file("documentation-governance-v2-report.json"),
             )
@@ -613,6 +618,68 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 extension.reportsDirectory.file("documentation-governance-v2-report.txt"),
             )
             outputs.upToDateWhen { false }
+        }
+        project.tasks.register<UpdateDocumentationCapabilityReferenceTask>(
+            "updateDocumentationCapabilityReference",
+        ) {
+            group = "documentation"
+            description =
+                "Rewrites the committed capability Reference from public production source."
+            repositoryDirectory.set(extension.repositoryDirectory)
+            contractFiles.from(
+                project.fileTree(
+                    extension.repositoryDirectory.dir(
+                        "docs/project/contracts/documentation-governance-v2",
+                    ),
+                ) {
+                    include("**/*.json")
+                },
+            )
+            recordFiles.from(
+                project.fileTree(
+                    extension.repositoryDirectory.dir(
+                        "docs/project/records/documentation-governance-v2",
+                    ),
+                ) {
+                    include("**/*.json")
+                },
+            )
+            sourceSetDirectories.from(extension.sourceSetDirectories)
+            activeDocumentationFiles.from(project.providers.provider {
+                val documentationRoot = extension.repositoryDirectory.get().asFile.resolve("docs")
+                documentationRoot.walkTopDown()
+                    .filter(File::isFile)
+                    .filter { file -> file.extension in setOf("md", "mdx") }
+                    .filterNot { file ->
+                        file.relativeTo(documentationRoot).invariantSeparatorsPath
+                            .startsWith("archive/")
+                    }
+                    .toList()
+            })
+            localeMirrorFiles.from(
+                project.fileTree(
+                    extension.repositoryDirectory.dir(
+                        "website/i18n/zh-CN/docusaurus-plugin-content-docs/current",
+                    ),
+                ) {
+                    include("**/*.md", "**/*.mdx")
+                },
+            )
+            publishingFiles.from(
+                extension.repositoryDirectory.file("gradle/viewcompose-publishing.properties"),
+                extension.repositoryDirectory.file(
+                    "gradle/viewcompose-documentation-releases.properties",
+                ),
+            )
+            documentationPolicyFiles.from(
+                extension.repositoryDirectory.file("website/i18n/translation-policy.json"),
+                extension.repositoryDirectory.file("docs/modules/README.md"),
+            )
+            referenceFile.set(
+                extension.repositoryDirectory.file(
+                    "website/src/data/capability-reference.json",
+                ),
+            )
         }
         project.tasks.register<VerifyDocumentationStructureTask>("verifyDocumentationStructure") {
             group = "verification"

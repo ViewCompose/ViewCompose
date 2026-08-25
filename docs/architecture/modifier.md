@@ -58,110 +58,34 @@ across layers.
     later physical or relative declaration replaces the earlier declaration for that complete
     modifier family.
 
-## 3. API inventory
+## 3. Source-owned capability Reference
 
-### 3.1 Scan baseline (`src/main`)
+The exhaustive application-facing inventory is generated from production source and published in
+the [Capability Reference](https://docs.viewcompose.com/reference/). Raw Kotlin KDoc and Java
+Javadoc remain available in the [versioned API Reference](https://docs.viewcompose.com/api/). This
+architecture page owns behavioral boundaries and invariants;
+it does not duplicate a symbol table or an independently maintained count.
 
-The inventory is derived from these repository scans:
+The generated model applies these contracts:
 
-```bash
-rg "^\s*(public\s+)?(internal\s+)?fun\s+(<[^>]+>\s*)?Modifier\.([A-Za-z0-9_]+)\(" --glob "**/src/main/**/*.kt"
-rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|ConstraintLayoutScope)\."
-```
+1. public and protected DSL, Modifier, component, host, integration, and tooling entries are
+   discovered from the published production source sets;
+2. every discovered entry belongs to exactly one user-capability group and carries its symbol,
+   overload count, artifact, namespace, release lane, module manual, and versioned API root;
+3. internal packages, private/internal declarations, Demo code, tests, generated code, and
+   renderer-only helpers are excluded from the application catalog;
+4. the website, inventory counts, and Governance V2 stale-output gate consume the same committed
+   JSON model; changing source, signatures, versions, or structured ownership without regenerating
+   that model fails `verifyDocumentationGovernanceV2`; and
+5. maintainers intentionally refresh the committed model with
+   `./gradlew updateDocumentationCapabilityReference` and review the resulting semantic diff.
 
-Current 2026-08 result:
+Exact capability, sample, and related-document links are populated only by valid Governance V2
+records. Until the frozen ownership debt is migrated, the generated page reports structured-owner
+coverage separately instead of guessing or hiding the gap.
 
-1. `fun Modifier.*` declarations, including overloads and scoped internals: `91`;
-2. unique `fun Modifier.*` API names: `77`;
-3. scoped modifier declarations: `5` across `RowScope/ColumnScope/BoxScope`;
-4. renderer-internal modifier extensions: `1`, used only for resolution.
+### 3.1 Advanced-shadow example and constraints
 
-### 3.2 Architecture groups
-
-1. `ui-contract general decoration`: platform-neutral `Modifier` contracts.
-2. `gesture input`: gesture DSL backed by gesture state and the policy core.
-3. `graphics drawing`: drawing-stage APIs, including `draw*` shorthands.
-4. `graphics shadow decoration`: platform-neutral shadow specifications executed by the Android
-   decoration layer.
-5. `animation size`: the layout-level `animateContentSize` transition.
-6. `host-android interop`: Android escape hatches such as `nativeView/android*`.
-7. `renderer internal resolution`: framework-only APIs that application code cannot depend on.
-
-### 3.3 Global Modifier APIs, including internal entries
-
-| API | Module / namespace | Visibility | Purpose | Scope | Notes |
-| --- | --- | --- | --- | --- | --- |
-| `padding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Content padding | Global | Three overloads: all, horizontal/vertical, four edges |
-| `paddingRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Direction-aware content padding | Global | Logical start/end; physical top/bottom |
-| `margin` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Outer layout-param margin | Global | Three overloads |
-| `marginRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Direction-aware layout-param margin | Global | Logical start/end; physical top/bottom |
-| `size` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Width and height | Global | Fixed framework-unit semantics |
-| `width` / `height` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | One dimension | Global | Cooperates with parent layout rules |
-| `minWidth` / `minHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Minimum dimension | Global | Maps to native minimum size |
-| `maxWidth` / `maxHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Maximum dimension | Layout-aware | One renderer-owned constraint host |
-| `aspectRatio` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Width-to-height ratio | Layout-aware | Resolved with min/max and incoming constraints |
-| `fillMaxWidth` / `fillMaxHeight` / `fillMaxSize` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Fill parent dimension(s) | Global | Maps to `MATCH_PARENT` semantics |
-| `offset` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Translation offset | Global | Maps to `translationX/translationY` |
-| `offsetRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Direction-aware translation | Global | Positive horizontal moves toward logical end |
-| `layoutId` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Child layout identity | Container-specific | Primarily matches `ConstraintLayout` children |
-| `systemBarsInsetsPadding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | System-bar inset padding | Container-aware | Individual edge switches |
-| `systemBarsInsetsPaddingRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Direction-aware system-bar inset padding | Container-aware | Logical start/end selectors |
-| `imeInsetsPadding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | IME inset padding | Container-aware | Bottom only by default |
-| `imeInsetsPaddingRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Direction-aware IME inset padding | Container-aware | Logical start/end selectors; bottom only by default |
-| `backgroundColor` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Color background | Global | Lower priority than drawable background |
-| `backgroundDrawableRes` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Drawable resource background | Global | Auto-clips with corner radius |
-| `border` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Border width and color | Global | Uses the surface-style pipeline |
-| `cornerRadius` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Rounded corners | Global | Uniform, top/bottom, or four-corner overloads |
-| `clip` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Force content clipping | Global | Common with shapes and custom drawing |
-| `alpha` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Opacity | Global | `graphicsLayer.alpha` wins on conflict |
-| `elevation` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Platform elevation | Global | Maps to `View.elevation` |
-| `zIndex` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Sibling drawing order | Global | Currently maps to `translationZ` |
-| `graphicsLayer` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Unified transform/layer properties | Global | Advanced visual-transform entry |
-| `visibility` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Visible/Invisible/Gone | Global | Participates in layout occupancy |
-| `clickable` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Basic click callback | Global | Cooperates with gesture dispatch |
-| `focusable` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Receive focus | Global | Can be overridden by `focusProperties.canFocus` |
-| `focusRequester` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Bind stable focus requester | Global | Rebound during reuse, rollback, and release |
-| `focusProperties` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Focusability and directional targets | Global | next/previous/four directions |
-| `focusGroup` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Keyboard focus group | Container | Native descendant focus/navigation cluster |
-| `onFocusChanged` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Observe self/descendant focus | Global | Receives `FocusState` |
-| `onPreviewKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Key capture before target | Global | Declarative ancestor to target |
-| `onKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Key bubbling after target | Global | Target to declarative ancestor |
-| `semantics` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Accessibility and testing state | Global | Includes collection dimensions, logical item positions, selection, and heading state |
-| `contentDescription` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Accessibility description | Global | Maps to native semantics |
-| `testTag` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Test locator | Global | UI-test targeting |
-| `overlayAnchor` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Overlay anchor ID | Capability-specific | Popup/Tooltip/Dropdown anchor |
-| `drawBehind` | `ui-contract` and `graphics` | public | Draw before content | Global | Prefer `com.viewcompose.graphics` in applications |
-| `drawWithContent` | `ui-contract` and `graphics` | public | Control content/drawing order | Global | Supports foreground/content composition |
-| `drawWithCache` | `ui-contract` and `graphics` | public | Build reusable drawing cache | Global | Avoids repeated command construction |
-| `draw` / `drawCache` | `ui-contract` and `graphics` | public | Drawing shorthands | Global | Aliases for behind/cache entries |
-| `dropShadow` / `dropShadows` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Exact outer shadow layer(s) | Global | Before content; independent of elevation |
-| `innerShadow` / `innerShadows` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Exact inner shadow layer(s) | Global | After complete content, clipped to shape |
-| `pointerInput` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Raw pointer events | Global | `Consumed` short-circuits later gestures |
-| `combinedClickable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Click/double/long click | Global | No callbacks means no-op |
-| `draggable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Continuous drag | Global | Delivers deltas to `DraggableState` |
-| `anchoredDraggable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Anchored drag/settle | Global | Horizontal or Vertical only |
-| `transformable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Multi-pointer zoom/rotate/pan | Global | Deltas consumed by `TransformableState` |
-| `gesturePriority` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Gesture arbitration priority | Global | Resolves nested competition |
-| `nestedScroll` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Parent/child scroll and fling protocol | Global | AndroidX transparent host |
-| `animateContentSize` | `viewcompose-animation` / `com.viewcompose.animation` | public | Layout size transition | Layout-aware | Real parent re-layout, not visual scaling |
-| `constrainAs` / `constrain` | `viewcompose-constraintlayout-androidx` | public | Constraint parent data | Container-specific | `ConstraintLayout` children only |
-| `nativeView` | `viewcompose-host-android` / `com.viewcompose.host.android` | public | Configure native Android View | Android interop | Escape hatch around general semantics |
-| `androidAnimation` | `viewcompose-host-android` / animation namespace | public | Android animation interop | Android interop | Alias over `nativeView` |
-| `androidGraphics` | `viewcompose-host-android` / graphics namespace | public | Android graphics interop | Android interop | Alias over `nativeView` |
-| `resolve` | `viewcompose-renderer-android` / `com.viewcompose.renderer.modifier` | internal | Resolve to `ResolvedModifiers` | Renderer internal | Not an application dependency |
-
-### 3.4 Scoped Modifier APIs
-
-| API | Scope | Module / namespace | Purpose | Constraints |
-| --- | --- | --- | --- | --- |
-| `weight` | `RowScope` | `viewcompose-ui-foundation` | Horizontal linear weight | `weight > 0` |
-| `align` | `RowScope` | `viewcompose-ui-foundation` | Cross-axis vertical alignment | `VerticalAlignment` |
-| `weight` | `ColumnScope` | `viewcompose-ui-foundation` | Vertical linear weight | `weight > 0` |
-| `align` | `ColumnScope` | `viewcompose-ui-foundation` | Cross-axis horizontal alignment | `HorizontalAlignment` |
-| `align` | `BoxScope` | `viewcompose-ui-foundation` | Child position in Box | `BoxAlignment` |
-| `constrainAs / constrain` | `ConstraintLayout` child context | `viewcompose-constraintlayout-androidx` | Constraint parent data | Global extension, meaningful only under `ConstraintLayout` |
-
-### 3.5 Advanced-shadow example and constraints
 
 ```kotlin
 val cardShape = UiShape.rounded(20.dp)
@@ -200,11 +124,15 @@ Surface(
    creates new raster keys.
 5. See [Advanced shadows](../guides/shadows.md) for backend, cache, and diagnostic rules.
 
-### 3.6 Inventory consistency
+### 3.2 Generation and consistency
 
-1. This document covers every scanned `fun Modifier.*`, including the internal entry.
-2. Scoped and global capabilities use separate tables and counts.
-3. Duplicate `draw*` entries in `ui-contract` and `graphics` identify the preferred namespace.
+1. The production scanner and the Reference generator are one model; there is no second Modifier
+   scan or handwritten total to reconcile.
+2. Each application-facing entry has one generated catalog group. Duplicate or missing structured
+   capability ownership remains visible as Governance V2 debt rather than entering this page.
+3. The committed catalog is deterministic and byte-compared during documentation verification.
+4. Module manuals explain artifact contracts, the Capability Reference supports discovery, and
+   Dokka remains the exhaustive signature and KDoc owner.
 
 ## 4. Role boundaries
 

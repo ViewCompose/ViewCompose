@@ -16,6 +16,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
@@ -61,6 +62,10 @@ abstract class VerifyDocumentationGovernanceV2Task : DefaultTask() {
     @get:Optional
     abstract val baseRevision: Property<String>
 
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val committedReferenceFile: RegularFileProperty
+
     @get:OutputFile
     abstract val reportFile: RegularFileProperty
 
@@ -83,6 +88,7 @@ abstract class VerifyDocumentationGovernanceV2Task : DefaultTask() {
             localeMirrorFiles = localeMirrorFiles.files,
             publishingFiles = publishingFiles.files,
             documentationPolicyFiles = documentationPolicyFiles.files,
+            committedReferenceFile = committedReferenceFile.get().asFile,
             ratchetContext = DocumentationGovernanceV2RatchetContext(
                 verificationBase = mutationAudit.verificationBase,
                 mutationViolations = mutationAudit.violations,
@@ -126,9 +132,79 @@ abstract class VerifyDocumentationGovernanceV2Task : DefaultTask() {
     }
 }
 
+/** Rewrites the committed application-facing Reference catalog from the Governance V2 model. */
+abstract class UpdateDocumentationCapabilityReferenceTask : DefaultTask() {
+    @get:Internal
+    abstract val repositoryDirectory: DirectoryProperty
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val contractFiles: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val recordFiles: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val sourceSetDirectories: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val activeDocumentationFiles: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val localeMirrorFiles: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val publishingFiles: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val documentationPolicyFiles: ConfigurableFileCollection
+
+    @get:OutputFile
+    abstract val referenceFile: RegularFileProperty
+
+    @TaskAction
+    fun update() {
+        val result = DocumentationGovernanceV2Reporter.generate(
+            repository = repositoryDirectory.get().asFile,
+            contractFiles = contractFiles.files,
+            recordFiles = recordFiles.files,
+            sourceSetDirectories = sourceSetDirectories.files,
+            activeDocumentationFiles = activeDocumentationFiles.files,
+            localeMirrorFiles = localeMirrorFiles.files,
+            publishingFiles = publishingFiles.files,
+            documentationPolicyFiles = documentationPolicyFiles.files,
+        )
+        if (result.contractViolations.isNotEmpty()) {
+            throw GradleException(
+                "Cannot update the capability Reference while Governance V2 contracts are invalid:\n" +
+                    result.contractViolations.sorted().joinToString("\n") { violation ->
+                        "- $violation"
+                    },
+            )
+        }
+        referenceFile.get().asFile.apply {
+            parentFile.mkdirs()
+            writeText(result.referenceCatalog)
+        }
+        logger.lifecycle(
+            "Updated the source-derived capability Reference with {} entries: {}.",
+            result.referenceEntryCount,
+            referenceFile.get().asFile,
+        )
+    }
+}
+
 internal data class DocumentationGovernanceV2ReportResult(
     val report: String,
     val humanReport: String,
+    val referenceCatalog: String,
+    val referenceEntryCount: Int,
     val contractViolations: List<String>,
     val ratchetViolations: List<String>,
     val issueCount: Int,
@@ -173,6 +249,7 @@ internal object DocumentationGovernanceV2Reporter {
         localeMirrorFiles: Set<File>,
         publishingFiles: Set<File>,
         documentationPolicyFiles: Set<File>,
+        committedReferenceFile: File? = null,
         ratchetContext: DocumentationGovernanceV2RatchetContext =
             DocumentationGovernanceV2RatchetContext(),
     ): DocumentationGovernanceV2ReportResult {
@@ -242,6 +319,13 @@ internal object DocumentationGovernanceV2Reporter {
             files = recordFiles,
             schemas = schemas,
         )
+        val referenceCatalog = generateCapabilityReferenceCatalog(
+            declarations = declarations,
+            documents = documents,
+            records = records,
+            publishing = publishing,
+        )
+        val encodedReferenceCatalog = StableJson.encode(referenceCatalog) + "\n"
         val publicApiChanges = DocumentationGovernanceV2PublicApiChanges.detect(
             baseDeclarations = discoverCapabilityDeclarations(
                 sourceFiles = ratchetContext.changedSourceFiles.mapNotNull { change ->
@@ -274,6 +358,8 @@ internal object DocumentationGovernanceV2Reporter {
             fences = fences,
             records = records,
             publishing = publishing,
+            committedReferenceFile = committedReferenceFile,
+            encodedReferenceCatalog = encodedReferenceCatalog,
         )
         val baseline = correlateDebtBaseline(issues, records)
         val ratchetViolations = (
@@ -312,6 +398,7 @@ internal object DocumentationGovernanceV2Reporter {
                     DocumentationGovernanceV2PublicApiChange::report,
                 ),
                 "publishing" to publishing,
+                "referenceCatalog" to referenceCatalog.getValue("summary"),
             ),
             "debtBaseline" to baseline.report(),
             "gate" to linkedMapOf(
@@ -350,6 +437,8 @@ internal object DocumentationGovernanceV2Reporter {
                 contractViolations = contractViolations.sorted(),
                 ratchetViolations = ratchetViolations,
             ),
+            referenceCatalog = encodedReferenceCatalog,
+            referenceEntryCount = declarations.size,
             contractViolations = contractViolations.sorted(),
             ratchetViolations = ratchetViolations,
             issueCount = issues.size,
@@ -362,6 +451,8 @@ internal object DocumentationGovernanceV2Reporter {
         fences: List<Map<String, Any?>>,
         records: List<GovernanceRecord>,
         publishing: Map<String, Any?>,
+        committedReferenceFile: File?,
+        encodedReferenceCatalog: String,
     ): List<GovernanceIssue> {
         val validCapabilities = records.filter { record ->
             record.contractId == "capability" && record.valid
@@ -554,9 +645,235 @@ internal object DocumentationGovernanceV2Reporter {
                         )
                     }
             }
+            if (committedReferenceFile != null &&
+                (!committedReferenceFile.isFile || committedReferenceFile.readText() != encodedReferenceCatalog)
+            ) {
+                add(
+                    GovernanceIssue.file(
+                        category = "stale-generated-output",
+                        target = "website/src/data/capability-reference.json",
+                        detail =
+                            "committed capability Reference differs from the source-derived Governance V2 model; " +
+                                "run ./gradlew updateDocumentationCapabilityReference",
+                    ),
+                )
+            }
         }.distinctBy(GovernanceIssue::id)
             .sortedWith(compareBy(GovernanceIssue::category, GovernanceIssue::target, GovernanceIssue::id))
     }
+
+    private fun generateCapabilityReferenceCatalog(
+        declarations: List<Map<String, Any?>>,
+        documents: List<Map<String, Any?>>,
+        records: List<GovernanceRecord>,
+        publishing: Map<String, Any?>,
+    ): Map<String, Any?> {
+        val capabilitiesBySymbol = records
+            .filter { record -> record.contractId == "capability" && record.valid }
+            .flatMap { record ->
+                record.value.listOfObjects("symbols").map { symbol ->
+                    symbol.requiredString("symbol_id") to record
+                }
+            }
+            .groupBy(Pair<String, GovernanceRecord>::first)
+            .mapValues { (_, matches) ->
+                matches.map(Pair<String, GovernanceRecord>::second)
+                    .sortedBy(GovernanceRecord::path)
+                    .first()
+            }
+        val samplesById = records
+            .filter { record -> record.contractId == "sample" && record.valid && record.recordId != null }
+            .associateBy { record -> record.recordId.orEmpty() }
+        val documentsById = documents
+            .filter { document -> document["schemaVersion"] == 2 && document["documentId"] != null }
+            .associateBy { document -> document.getValue("documentId").toString() }
+        @Suppress("UNCHECKED_CAST")
+        val publishingByArtifact = (publishing.getValue("artifacts") as List<Map<String, Any?>>)
+            .associateBy { artifact -> artifact.getValue("artifact").toString() }
+        val referenceArtifacts = declarations
+            .map { declaration -> declaration.getValue("artifact").toString() }
+            .distinct()
+            .sorted()
+            .map { artifact ->
+                val publishingArtifact = publishingByArtifact[artifact].orEmpty()
+                val versionState = publishingArtifact["versionState"]?.toString() ?: "unresolved"
+                val version = publishingArtifact["version"]?.toString()
+                val documentationVersion = if (versionState == "released" && version != null) {
+                    version
+                } else {
+                    "current"
+                }
+                linkedMapOf<String, Any?>(
+                    "apiReference" to "/api/$artifact/$documentationVersion/",
+                    "artifact" to artifact,
+                    "moduleManual" to if (versionState == "released" && version != null) {
+                        "/modules/$artifact/$version/"
+                    } else {
+                        "/modules/$artifact/"
+                    },
+                    "version" to version,
+                    "versionState" to versionState,
+                )
+            }
+
+        val entries = declarations.map { declaration ->
+            val artifact = declaration.getValue("artifact").toString()
+            val symbol = declaration.getValue("symbol").toString()
+            val group = referenceGroup(declaration)
+            val capability = capabilitiesBySymbol[symbol]
+            val capabilityValue = capability?.value.orEmpty()
+            val referenceOwner = capabilityValue.objectValue("reference_owner").orEmpty()
+            val sampleOwner = capabilityValue.objectValue("sample_owner").orEmpty()
+            val sampleId = sampleOwner["sample_id"]?.toString()
+            val sampleRecord = sampleId?.let(samplesById::get)
+            val documentOwners = capabilityValue.objectValue("document_owners").orEmpty()
+            val relatedDocuments = referenceDocumentTypes.flatMap { documentType ->
+                documentOwners.stringList(documentType).map { documentId ->
+                    val document = documentsById[documentId]
+                    linkedMapOf<String, Any?>(
+                        "documentId" to documentId,
+                        "documentType" to documentType,
+                        "path" to document?.get("path")?.toString()?.removePrefix("docs/")
+                            ?.removeSuffix(".md")?.removeSuffix(".mdx")?.let { path -> "/$path" },
+                    )
+                }
+            }
+            linkedMapOf<String, Any?>(
+                "artifact" to artifact,
+                "kind" to declaration.getValue("kind"),
+                "namespace" to declaration.getValue("sourcePackage"),
+                "overloadCount" to declaration.getValue("overloadCount"),
+                "symbol" to symbol,
+            ).apply {
+                capability?.recordId?.let { capabilityId -> put("capabilityId", capabilityId) }
+                if (declaration["deprecated"] == true) put("deprecated", true)
+                declaration["receiver"]?.let { receiver -> put("receiver", receiver) }
+                referenceOwner["reference_id"]?.let { referenceId ->
+                    put("referenceId", referenceId)
+                }
+                if (relatedDocuments.isNotEmpty()) put("relatedDocuments", relatedDocuments)
+                val sample = when {
+                    sampleRecord != null -> linkedMapOf<String, Any?>(
+                        "sampleClass" to sampleRecord.value["sample_class"],
+                        "sampleId" to sampleId,
+                        "versionLane" to sampleRecord.value["version_lane"],
+                    )
+                    sampleOwner["exception_id"] != null -> linkedMapOf<String, Any?>(
+                        "exceptionId" to sampleOwner.getValue("exception_id"),
+                    )
+                    else -> null
+                }
+                if (sample != null) put("sample", sample)
+                put("catalogOwner", group)
+            }
+        }.sortedWith(
+            compareBy<Map<String, Any?>>(
+                { entry -> referenceGroups.indexOf(entry.getValue("catalogOwner").toString()) },
+                { entry -> entry.getValue("artifact").toString() },
+                { entry -> entry.getValue("symbol").toString() },
+            ),
+        )
+        val groupedEntries = entries.groupBy { entry -> entry.getValue("catalogOwner").toString() }
+        val groups = referenceGroups.mapNotNull { groupId ->
+            groupedEntries[groupId]?.let { matching ->
+                linkedMapOf<String, Any?>(
+                    "entries" to matching.map { entry -> entry - "catalogOwner" },
+                    "entryCount" to matching.size,
+                    "groupId" to groupId,
+                )
+            }
+        }
+        val countsByKind = entries.groupingBy { entry -> entry.getValue("kind").toString() }
+            .eachCount()
+            .toSortedMap()
+
+        return linkedMapOf(
+            "artifacts" to referenceArtifacts,
+            "generatedBy" to "updateDocumentationCapabilityReference",
+            "groups" to groups,
+            "schemaVersion" to 1,
+            "summary" to linkedMapOf(
+                "artifactCount" to referenceArtifacts.size,
+                "countsByKind" to countsByKind,
+                "entryCount" to entries.size,
+                "groupCount" to groups.size,
+                "ownedEntryCount" to entries.count { entry -> entry["capabilityId"] != null },
+                "sourceFingerprint" to sha256(
+                    declarations.joinToString("\u0000") { declaration ->
+                        declaration.getValue("symbol").toString() + "\u0000" +
+                            StableJson.encode(declaration.getValue("signatureHashes"))
+                    },
+                ),
+            ),
+        )
+    }
+
+    private fun referenceGroup(declaration: Map<String, Any?>): String {
+        val kind = declaration.getValue("kind").toString()
+        val searchable = listOfNotNull(
+            declaration["artifact"],
+            declaration["sourcePackage"],
+            declaration["receiver"],
+            declaration["symbol"],
+        ).joinToString(" ").lowercase()
+        return when {
+            kind == "tooling" -> "tooling"
+            kind == "integration" -> "integrations"
+            kind == "host" -> "android-interop"
+            kind in setOf("modifier", "dsl") &&
+                referenceAndroidInterop.containsMatchIn(searchable) -> "android-interop"
+            referenceAnimation.containsMatchIn(searchable) -> "animation"
+            referenceGesture.containsMatchIn(searchable) -> "gesture"
+            referenceDesignSystem.containsMatchIn(searchable) -> "design-systems"
+            referenceCollection.containsMatchIn(searchable) -> "collections"
+            referenceNavigation.containsMatchIn(searchable) -> "navigation"
+            referenceFeedback.containsMatchIn(searchable) -> "feedback"
+            referenceAction.containsMatchIn(searchable) -> "actions"
+            referenceInput.containsMatchIn(searchable) -> "input"
+            referenceAppearance.containsMatchIn(searchable) -> "appearance"
+            referenceLayout.containsMatchIn(searchable) -> "layout"
+            referenceContent.containsMatchIn(searchable) -> "content"
+            else -> "general"
+        }
+    }
+
+    private val referenceGroups = listOf(
+        "layout",
+        "appearance",
+        "input",
+        "gesture",
+        "animation",
+        "content",
+        "actions",
+        "collections",
+        "feedback",
+        "navigation",
+        "design-systems",
+        "integrations",
+        "android-interop",
+        "tooling",
+        "general",
+    )
+    private val referenceDocumentTypes = listOf(
+        "tutorial",
+        "guide",
+        "architecture",
+        "module",
+        "tooling",
+        "migration",
+    )
+    private val referenceAndroidInterop = Regex("android|nativeview|native-view|viewfactory|viewinterop")
+    private val referenceAnimation = Regex("animat|transition|shared.?content|keyframe|spring|tween")
+    private val referenceGesture = Regex("gesture|drag|pointer|nested.?scroll|fling|swipe|transformable")
+    private val referenceDesignSystem = Regex("material3|fluent2|cupertino|design.?system")
+    private val referenceCollection = Regex("lazy|collection|paging|pager|grid|recycler")
+    private val referenceNavigation = Regex("navigation|navigator|navhost|route|scaffold|tabrow|tab-row")
+    private val referenceFeedback = Regex("progress|snackbar|toast|dialog|sheet|tooltip|popup|badge")
+    private val referenceAction = Regex("button|chip|fab|action|clickable|toggle")
+    private val referenceInput = Regex("textfield|text-field|checkbox|switch|slider|radio|search|focus|keyevent|key-event|semantics|testtag|test-tag|click")
+    private val referenceAppearance = Regex("background|border|clip|alpha|shape|visible|visibility|layer|graphics|draw|shadow|elevation|color|brush")
+    private val referenceLayout = Regex("layout|width|height|size|padding|margin|offset|align|weight|fill|wrap|inset|position|constraint|aspect|spacer|divider|row|column|box|flow")
+    private val referenceContent = Regex("text|image|icon|surface|card|content|richtext|rich-text")
 
     private fun validateFixtures(
         manifestDirectory: File,
