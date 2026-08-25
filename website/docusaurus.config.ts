@@ -9,6 +9,7 @@ const locales = ['en', 'zh-CN'];
 const resolveLocalizedMarkdownLink = createLocalizedMarkdownLinkResolver({
   siteDir,
   docsDir,
+  repositoryDocsUrl: 'https://github.com/ViewCompose/ViewCompose/blob/main/docs',
   locales,
   defaultLocale: 'en',
   trailingSlash: true,

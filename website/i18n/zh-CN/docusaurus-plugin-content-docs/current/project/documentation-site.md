@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 3216a2c3173ecf0505bdd4795649dcfcdf7259353f19553b2b38541f7fba13d3
+translation_source_hash: c97e493b68a712a8171ec4b0986b8e70007d6739941ecda66c9d9b0a2400e2ea
 translation_status: current
 ---
 
@@ -65,9 +65,11 @@ React、navbar、footer 或 sidebar 新增消息 key 时运行 `npm run write-tr
 每个排除块都必须保留相邻且可搜索的标题与摘要；API 契约、命令参考和面向读者的指南不得使用
 该分区。
 
-仅当有效计划索引保留可搜索的目的与范围摘要、所有长期公共契约和命令仍位于其可搜索的归属文档，
-且计划页面继续完整渲染并可直接链接时，体积特别大的临时执行计划才能使用路由级搜索分段。每条被
-排除的路由都必须在站点配置中显式列出，并在本页记录成对体积证据。
+当活动计划索引保留可搜索的目的与范围摘要，并且所有长期公共契约和命令仍位于可搜索的 owner 文档
+时，体积特别大的临时执行计划保持为仓库专属 production draft。Canonical 索引继续使用仓库相对
+源码链接，保证文档图完整；严格 Markdown link hook 只在确认目标包含 `draft: true` 后，于站点构建
+期间把链接改写为精确 GitHub 源码 URL。因此读者仍能从公共索引评审目标，同时临时执行状态不会进入
+渲染产物、locale fallback、搜索或 sitemap。目标缺失、非 draft 坏链或其他未解析路由仍会使构建失败。
 
 单 Locale 搜索预算为 6.25 MiB。经过审阅的双语架构与公共契约曾把它从 4 逐步调整到 6 MiB；
 Lazy Collection 分支先对穷举计划与 Benchmark 明细分区，才形成最终 6.25 MiB 上限。精确转换

@@ -71,11 +71,14 @@ defect-evidence tables and dated measurement ledgers remain rendered and directl
 excluded block must retain an adjacent searchable heading and summary; API contracts, command
 references, and reader-facing guides must not use this partition.
 
-Exceptionally large temporary execution plans may use route-level search segmentation only when
-the active-plan index retains a searchable purpose and scope summary, every durable public contract
-and command remains in its searchable owning documentation, and the plan page remains rendered and
-directly linkable. Each excluded route must be named explicitly in the site configuration and
-supported by paired size evidence in this page.
+Exceptionally large temporary execution plans remain repository-only production drafts when the
+active-plan index retains a searchable purpose and scope summary and every durable public contract
+and command remains in its searchable owning documentation. Canonical indexes keep repository-
+relative source links so the documentation graph remains complete; the strict Markdown-link hook
+rewrites only a verified `draft: true` target to its exact GitHub source URL during the site build.
+The target is therefore reviewable from the public index without adding temporary execution state
+to rendered output, localized fallbacks, search, or the sitemap. A missing target, a non-draft
+broken link, or any other unresolved route still fails the build.
 
 The per-locale search budget is 6.25 MiB. Reviewed bilingual architecture and contract additions
 moved it from 4 through 6 MiB; the lazy-collection branch then partitioned exhaustive plan and

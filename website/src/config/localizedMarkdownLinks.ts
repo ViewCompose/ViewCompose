@@ -4,6 +4,7 @@ import {dirname, isAbsolute, relative, resolve, sep} from 'node:path';
 type ResolverOptions = {
   siteDir: string;
   docsDir: string;
+  repositoryDocsUrl: string;
   locales: readonly string[];
   defaultLocale: string;
   trailingSlash: boolean;
@@ -39,6 +40,12 @@ function isWithin(parent: string, child: string): boolean {
   return path !== '' && path !== '..' && !path.startsWith(`..${sep}`) && !isAbsolute(path);
 }
 
+function isDraftDocument(sourcePath: string): boolean {
+  const source = readFileSync(sourcePath, 'utf8');
+  const frontMatter = source.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1];
+  return frontMatter?.match(/^draft:\s*(.+?)\s*$/m)?.[1].trim() === 'true';
+}
+
 function canonicalRoute(
   sourcePath: string,
   docsDir: string,
@@ -71,12 +78,14 @@ function canonicalRoute(
 /**
  * Docusaurus replaces a canonical document with its localized mirror before resolving Markdown
  * links. A fallback English page can therefore fail to resolve a repository-relative link whose
- * target has already been translated. Rewrite only that verified case to the target's public
- * route; unresolved links continue through Docusaurus' strict broken-link gate.
+ * target has already been translated. Repository-only draft plans also have no production route.
+ * Rewrite only those verified cases to the localized public route or exact repository source URL;
+ * unresolved links continue through Docusaurus' strict broken-link gate.
  */
 export function createLocalizedMarkdownLinkResolver({
   siteDir,
   docsDir,
+  repositoryDocsUrl,
   locales,
   defaultLocale,
   trailingSlash,
@@ -100,6 +109,12 @@ export function createLocalizedMarkdownLinkResolver({
     }
 
     const relativeTarget = relative(docsDir, targetPath);
+    if (isDraftDocument(targetPath)) {
+      const repositoryPath = relativeTarget.split(sep).join('/');
+      const repositoryUrl = repositoryDocsUrl.replace(/\/$/, '');
+      return `${repositoryUrl}/${repositoryPath}${url.slice(urlPath.length)}`;
+    }
+
     const hasLocalizedMirror = localizedRoots.some((root) =>
       existsSync(resolve(root, relativeTarget)),
     );
