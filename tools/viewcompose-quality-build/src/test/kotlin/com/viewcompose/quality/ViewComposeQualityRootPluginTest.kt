@@ -118,6 +118,18 @@ class ViewComposeQualityRootPluginTest {
         assertTrue(
             project.tasks.getByName("verifyDslApiContracts") is VerifyDslApiContractsTask,
         )
+        assertTrue(
+            project.tasks.getByName("verifyConnectedAndroidDeviceReady") is
+                VerifyConnectedAndroidDeviceReadyTask,
+        )
+        listOf(
+            "benchmarkComparisonReport",
+            "testBenchmarkComparisonTool",
+            "testPagingMacrobenchmarkSummaryTool",
+            "testDeviceDiagnosticsRequestMeasurementTool",
+        ).forEach { taskName ->
+            assertTrue(project.tasks.getByName(taskName) is Exec)
+        }
     }
 
     @Test

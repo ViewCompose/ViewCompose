@@ -612,8 +612,115 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 extension.repositoryDirectory.dir("viewcompose-animation/src/main"),
             )
         }
+        val connectedDevicePreflight =
+            project.tasks.register<VerifyConnectedAndroidDeviceReadyTask>(
+                "verifyConnectedAndroidDeviceReady",
+            ) {
+                group = "verification"
+                description =
+                    "Fail early unless one selected Android device is online, booted, awake, and unlocked."
+                outputs.upToDateWhen { false }
+                repositoryDirectory.set(extension.repositoryDirectory)
+                requestedSerial.set(project.providers.environmentVariable("ANDROID_SERIAL"))
+            }
+        project.subprojects {
+            if (path in connectedDebugTestProjects) {
+                tasks.matching { task -> task.name == "connectedDebugAndroidTest" }.configureEach {
+                    dependsOn(connectedDevicePreflight)
+                }
+            }
+        }
+        project.tasks.register<Exec>("benchmarkComparisonReport") {
+            group = "verification"
+            description = "Generate engine-neutral benchmark Markdown and JSON reports."
+            workingDir(project.rootDir)
+            mustRunAfter("benchmarkRelease")
+            inputs.files(
+                project.rootDir.resolve("tools/performance/compare_macrobenchmarks.py"),
+                project.rootDir.resolve("tools/performance/benchmark_policy.json"),
+            )
+            doFirst {
+                val current = project.providers.gradleProperty("benchmarkResult").orNull
+                    ?: "viewcompose-benchmark/build/outputs/" +
+                    "connected_android_test_additional_output"
+                val command = mutableListOf(
+                    "python3",
+                    project.rootDir.resolve(
+                        "tools/performance/compare_macrobenchmarks.py",
+                    ).absolutePath,
+                    current,
+                )
+                project.providers.gradleProperty("benchmarkBaseline").orNull?.let { baseline ->
+                    command += listOf(
+                        "--baseline",
+                        baseline,
+                        "--enforce",
+                    )
+                }
+                commandLine(command)
+            }
+        }
+        project.tasks.register<Exec>("testBenchmarkComparisonTool") {
+            group = "verification"
+            description = "Run unit tests for the Macrobenchmark comparison report tool."
+            workingDir(project.rootDir.resolve("tools/performance"))
+            commandLine(
+                "python3",
+                "-m",
+                "unittest",
+                "test_compare_macrobenchmarks.py",
+            )
+            inputs.files(
+                project.rootDir.resolve("tools/performance/compare_macrobenchmarks.py"),
+                project.rootDir.resolve("tools/performance/test_compare_macrobenchmarks.py"),
+                project.rootDir.resolve("tools/performance/benchmark_policy.json"),
+            )
+        }
+        project.tasks.register<Exec>("testPagingMacrobenchmarkSummaryTool") {
+            group = "verification"
+            description = "Run unit tests for the Paging Macrobenchmark summary tool."
+            workingDir(project.rootDir.resolve("tools/performance"))
+            commandLine(
+                "python3",
+                "-m",
+                "unittest",
+                "test_summarize_paging_macrobenchmark.py",
+            )
+            inputs.files(
+                project.rootDir.resolve("tools/performance/compare_macrobenchmarks.py"),
+                project.rootDir.resolve("tools/performance/summarize_paging_macrobenchmark.py"),
+                project.rootDir.resolve(
+                    "tools/performance/test_summarize_paging_macrobenchmark.py",
+                ),
+                project.rootDir.resolve("tools/performance/benchmark_policy.json"),
+            )
+        }
+        project.tasks.register<Exec>("testDeviceDiagnosticsRequestMeasurementTool") {
+            group = "verification"
+            description =
+                "Run unit tests for the explicit device diagnostics request measurement tool."
+            workingDir(project.rootDir.resolve("tools/performance"))
+            commandLine(
+                "python3",
+                "-m",
+                "unittest",
+                "test_measure_device_diagnostics_request.py",
+            )
+            inputs.files(
+                project.rootDir.resolve("tools/performance/measure_device_diagnostics_request.py"),
+                project.rootDir.resolve(
+                    "tools/performance/test_measure_device_diagnostics_request.py",
+                ),
+            )
+        }
     }
 }
+
+private val connectedDebugTestProjects = setOf(
+    ":app",
+    ":samples:counter",
+    ":samples:tutorials",
+)
 
 private val documentationTraversalExcludedDirectories = setOf(
     ".codegraph",
