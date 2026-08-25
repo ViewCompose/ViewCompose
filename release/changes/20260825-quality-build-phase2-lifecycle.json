@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut lifecycle aggregation tasks and stable quality aliases into compiled quality build ownership without changing published artifacts or task ordering.",
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "Remove repository-only lifecycle registrations, the qaQuick path list, and Maven sample ordering wiring after exact task-graph parity acceptance."
+    }
+  ]
+}

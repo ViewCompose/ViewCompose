@@ -24,15 +24,23 @@ test('keeps translation freshness inside the canonical repository documentation 
     ),
     'utf8',
   );
+  const lifecycleTasks = await readFile(
+    resolve(
+      repositoryRoot,
+      'tools/viewcompose-quality-build/src/main/kotlin/com/viewcompose/quality/' +
+        'LifecycleQualityTasks.kt',
+    ),
+    'utf8',
+  );
   const structureTask = sliceBetween(
     qualityPlugin,
     'project.tasks.register<VerifyDocumentationStructureTask>("verifyDocumentationStructure")',
     'project.tasks.register<VerifyDslApiContractsTask>("verifyDslApiContracts")',
   );
   const quickGate = sliceBetween(
-    buildScript,
+    lifecycleTasks,
     'tasks.register("qaQuick")',
-    'tasks.register("qaPreview")',
+    'tasks.matching { task -> task.name == "publishViewComposeToLocalRepository" }',
   );
 
   assert.match(
@@ -44,6 +52,7 @@ test('keeps translation freshness inside the canonical repository documentation 
   assert.match(structureTask, /"verifyDocumentationTranslations"/u);
   assert.match(quickGate, /dependsOn\("verifyDocumentationStructure"\)/u);
   assert.doesNotMatch(buildScript, /tasks\.register\("verifyDocumentationStructure"\)/u);
+  assert.doesNotMatch(buildScript, /tasks\.register\("qaQuick"\)/u);
 });
 
 test('documentation CI delegates translation freshness to the canonical Gradle gate', async () => {
