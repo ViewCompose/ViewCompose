@@ -21,34 +21,35 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-25
-next_action: Create the compiled quality-build included build and parity harness.
-maven_release_changesets: []
+next_action: Extract module, package, namespace, dependency, and platform-layer gates with old/new parity.
+maven_release_changesets:
+  - release/changes/20260825-quality-build-phase1.json
 ---
 
 # Pull-request Gate Scaling and Build-logic Modularization Plan
 
 ## Status
 
-Active. Phase 0 is complete. The current required-check, task-graph, failure, fallback, and timing
-contracts are frozen without changing active Gradle or CI behavior.
+Active. Phases 0 and 1 are complete. Required-check behavior remains frozen, and the repository now
+has isolated compiled quality ownership plus a reusable old/new parity harness.
 
 Last verified: 2026-08-25.
 
-Next action: create the Phase 1 compiled quality-build included build and parity harness without
-changing any existing task name, dependency, failure condition, or branch-protection context. The
-coordinated Documentation Governance V2 Phase 0A contract and schema freeze is complete.
+Next action: begin Phase 2 with module/package/namespace/dependency and platform-layer gates. Move
+one parity-proven family at a time and delete its root-script implementation in the accepting
+slice; do not carry parallel implementations into a later pull request.
 
 ## Maven release changesets
 
-- None.
+- [`20260825-quality-build-phase1.json`](../../../release/changes/20260825-quality-build-phase1.json)
 
 ## Release intent rationale
 
-This planning change modifies only active project documentation and owns no published-artifact
-production source, publication input, or compiled API sample. Implementation will modify shared
-root build inputs and therefore must add one immutable `release/changes/<unique>.json` file with an
-explicit `shared` classification unless it also changes a published artifact. Replace `None` above
-with every Changeset owned by this plan as soon as the first such implementation change lands.
+Phase 1 modifies shared root build inputs only to make the repository-only quality plugin available
+and configure its explicit inputs. The Changeset classifies both root files as shared and declares
+no artifact release. The new Gradle types are build implementation, not published artifact APIs;
+application-facing capability IDs, Q levels, compiled API samples, and module-manual changes are
+not applicable.
 
 ## Objective
 
@@ -302,6 +303,21 @@ Phase 0A schema freeze, followed by this plan's compiled Phase 1 ownership and o
    repositories and compare success, normalized diagnostics, and selected paths.
 4. Apply the plugin without changing which root tasks run; keep the old body available until the
    corresponding parity slice passes.
+
+Phase 1 completed on 2026-08-25. `tools/viewcompose-quality-build` is now a standalone included
+Kotlin build with a plugin marker, explicit repository/catalog/source/policy/report properties,
+five isolated tests, a deterministic configuration report, and an environment-normalizing parity
+harness that compares success, diagnostics, and selected paths. The root build supplies 44 existing
+source roots, one module catalog, four policy inputs, and one build-owned report directory; the
+plugin performs no source traversal during configuration and no new task joins a lifecycle gate.
+
+On the same local checkout, fresh dry runs after applying the plugin matched every ordered task in
+the Phase 0 fixtures: `qaQuick` 2,899/2,899, `qaPreview` 1,640/1,640, `qaFull` 3,098/3,098, and
+`verifyDocumentationStructure` 4/4. The normalized task-set change is zero, so the result is **no
+material change** to active task selection. This comparison does not yet prove individual gate-body
+or CI timing parity because no gate body moved; those become mandatory per-slice evidence in Phase
+2. Next, extract the module/package/namespace/dependency and platform-layer family through this
+compiled owner and delete the accepted legacy body in the same pull request.
 
 ### Phase 2: extract gate families without behavior changes
 

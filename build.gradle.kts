@@ -1,5 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
+    id("com.viewcompose.quality.root")
     id("com.viewcompose.publishing.root")
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
@@ -8,6 +9,29 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.paparazzi) apply false
+}
+
+extensions.configure<com.viewcompose.quality.ViewComposeQualityExtension> {
+    repositoryDirectory.set(project.layout.projectDirectory)
+    moduleCatalogFile.set(
+        project.layout.projectDirectory.file("gradle/viewcompose-publishing.properties"),
+    )
+    sourceSetDirectories.from(
+        project.subprojects.mapNotNull { subproject ->
+            subproject.layout.projectDirectory.dir("src").asFile.takeIf { directory ->
+                directory.isDirectory
+            }
+        },
+    )
+    policyFiles.from(
+        project.layout.projectDirectory.file("AGENTS.md"),
+        project.layout.projectDirectory.file("docs/project/documentation-governance.md"),
+        project.layout.projectDirectory.file("docs/project/api-documentation-quality.md"),
+        project.layout.projectDirectory.file("gradle/viewcompose-dependency-contracts.properties"),
+    )
+    reportsDirectory.set(
+        project.layout.buildDirectory.dir("reports/viewcompose-quality"),
+    )
 }
 
 val modulePackageRoots = mapOf(
