@@ -157,19 +157,56 @@ inspection sends no access hint; the hint is issued from the committed child Ses
 loaded selector result change that is not represented by a Paging page event also requests a
 conservative reload, ensuring the newer declaration is installed without enumerating placeholders.
 
+## Demo and deterministic testing
+
+Open `collection.paging` in the Demo catalog. Its real in-process `Pager + PagingSource` suspends
+each load until **Resolve pending load** applies Data, Empty, or Error; the action then becomes
+**Request next page** or **Retry failed load**, while **Reset generation** replaces the Flow. This
+exposes initial, append, retry, empty, and error states without I/O or a published production fake.
+
+Automation should select the scenario by `collection.paging` and use its stable `root`, `ready`,
+`primary_action`, `secondary_action`, `reset`, `state`, `target`, and `secondary_target` roles.
+The state target reports body, refresh/append, and loaded count. Compiled Q3 samples cover
+placeholder-aware `pagingLazyColumnSample` and directional `pagingLoadStateCompositionSample`.
+Test repositories and `PagingSource` below UI, use AndroidX `paging-testing` for snapshots, and
+reserve device tests for rendering and interaction. Mediator fixtures may fake storage and remote
+results, but must run real AndroidX source/mediator coordination rather than UI booleans.
+
+## Migration
+
+From Compose Paging, keep `Pager`, sources/mediator, repository, and the ViewModel-owned `cachedIn`
+Flow. Replace `collectAsLazyPagingItems()` with `collectAsViewComposePagingItems()` and the Compose
+item-count loop with `PagingLazyColumn`; provide a stable key and complete `contentRevision`. Map
+the primary body through `contentState`, directional origin through `forLoadType(...)`, and keep
+AndroidX `retry()`/`refresh()` semantics.
+
+Keep finite lists on `LazyColumn` unless they need Paging generations, invalidation, eviction,
+jumps, retry, or mediator coordination. Adoption moves callback/end-reached loading into
+`PagingSource`, never a second `isLoading`/`isAtEnd` engine. Placeholders require the explicit
+overload; positional loaded keys and materialized placeholder lists remain unsupported.
+
+## Dependency and license notice
+
+The published module exposes `androidx.paging:paging-common:3.5.1`; tests also use
+`androidx.paging:paging-testing:3.5.1`. It does not require `paging-runtime` or `paging-compose`.
+AndroidX Paging is distributed under Apache License 2.0 and is recorded in
+`THIRD_PARTY_NOTICES.md`.
+
 ## Verification and current scope
 
 Deterministic tests cover all three lifecycle policies, hidden/revealed navigation, `cachedIn`
 replay across composition recreation, exact cancellation, real `Pager + RemoteMediator` refresh and
 append failures, distinct source failure, presenter generations, placeholders, page drops, and
-detached-cache disposal. Q3 samples compile from public APIs.
+detached-cache disposal. Q3 samples compile from public APIs. The Demo adds a controlled real
+`PagingSource` path and stable automation roles for initial, append, empty, error, retry, and reset.
 
-On 2026-08-25, two Pixel 4 XL Android 13/API 33 debug tests passed in 5.51 s. The
-1,000,000-position case added 48,124 KiB PSS, jumped to the last position in 555 ms, retained 81
-loaded items under `maxSize = 96`, and released initial Sessions; bounded scrolling ended at 96
-loaded items. Conclusion: **improved** memory, jump/drop, and ownership confidence. The
-mediated-data fixture uses an in-memory store and fake remote result, so this evidence is not a real
-database/network, frame, physical load-state UI, or Demo claim; later phases own those paths.
+On 2026-08-25, two Pixel 4 XL Android 13 tests added 48,124 KiB PSS for 1,000,000 positions, jumped
+to the end in 555 ms, retained 81 items under `maxSize = 96`, released dropped Sessions, and ended
+bounded scrolling at 96 items. A separate 13 s controlled-Demo test plus manual inspection covered
+initial loading, 10 rows, append error, retry to 20, reset, empty, and initial error with readable,
+scrollable retained content. Conclusion: **improved** memory/ownership and Demo confidence.
+Limitations are one device and deterministic in-process storage/remote data; real I/O, prepend UI,
+broader devices, frames, Demo memory, and release performance remain unproven.
 
 ## Related documentation
 

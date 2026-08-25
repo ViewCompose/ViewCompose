@@ -124,6 +124,8 @@
     <string name="demo_scenario_collection_pull_refresh_summary">验证刷新手势、进度状态与确定性重置。</string>
     <string name="demo_scenario_collection_nested_lazy_list_title">嵌套懒列表交接</string>
     <string name="demo_scenario_collection_nested_lazy_list_summary">使用隔离的双层列表验证同轴边界交接与嵌套预取。</string>
+    <string name="demo_scenario_collection_paging_title">Paging 3 可控状态</string>
+    <string name="demo_scenario_collection_paging_summary">通过 AndroidX Paging 确定性驱动初始加载、追加、空数据与错误状态。</string>
     <string name="demo_scenario_layout_linear_title">线性布局</string>
     <string name="demo_scenario_layout_linear_summary">验证 Row、Column 测量及可确定重放的变更负载。</string>
     <string name="demo_scenario_layout_stack_title">叠加布局</string>

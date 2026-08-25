@@ -205,16 +205,18 @@ identity token.
 
 <div className="search-partition-detail">
 
-- **2026-08-25, Paging Phase 5 lifecycle/mediator slice:** on the same local macOS lockfile, the
-  consolidated Phase 4 and final Phase 5 candidates measured 49,155,555 and 49,161,510 non-API
-  bytes. The +5,955-byte change (+0.012%) adds durable bilingual `cachedIn`, recreation,
-  cancellation, and source/mediator failure contracts after removing repeated baseline prose; the
-  total Phase 3-to-5 change is +52,000 bytes (+0.106%). The 46.9 MiB ceiling is unchanged and retains
-  16,704 bytes of measured headroom. The result is **mixed**: lifecycle and mediated-state guidance
-  improves while non-API storage grows slightly. All language, translation, routing, accessibility,
-  and budget gates pass. This same-host comparison excludes deployment transfer, CDN compression,
-  real database/network behavior, and generated API output, which remains separately budgeted.
-  Phase 6 must remain within the ceiling and consolidate before adding durable material.
+- **2026-08-25, Paging Phase 6 Demo/documentation slice:** on the same local macOS lockfile, the
+  Phase 5 baseline, unconsolidated Phase 6 candidate, and pre-ledger consolidated candidate measured
+  49,161,510, 49,231,869, and 49,090,456 non-API bytes. The first candidate exceeded the unchanged
+  46.9 MiB ceiling by 53,655 bytes; moving repeated shipped signatures and per-phase evidence from
+  the active plan to the owning module manual, Lazy Collections guide, generated API tree, and Git
+  history produced a -71,054-byte change (-0.145%) from baseline with 87,758 bytes of measured
+  headroom. The result is **mixed**: the first representation regressed, while the consolidated
+  representation improves reader guidance and storage. All language, translation, routing,
+  accessibility, and budget gates pass after adding this ledger. This same-host comparison excludes
+  deployment transfer,
+  CDN compression, real database/network behavior, and generated API output, which remains
+  separately budgeted. Phase 7 and archive work must not re-expand completed contract copies.
 
 Only the latest same-corpus decision remains expanded here. Git history preserves the superseded
 2026-08-06 through the Phase 0 checkpoint details. Those measurements established immutable API

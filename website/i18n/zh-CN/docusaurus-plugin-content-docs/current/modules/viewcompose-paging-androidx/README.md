@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-paging-androidx/README.md
-translation_source_hash: bdc6cd8936e8f9008887f27503c4e3cbaa2b81d1f48c6d96cf01c55fc356cde1
+translation_source_hash: 03d74272ba4dedbc83ed37d0c6110315bb397d5448d47985fe15807d93249265
 translation_status: current
 ---
 
@@ -152,17 +152,54 @@ Loaded Key 会立即从 Table 消失，让 Renderer 释放 Key 持有的 Session
 激活后发送。未由 Paging Page Event 表示的 Theme/Local、Placeholder Revision/Type 或 Loaded
 Selector 结果变化也会请求保守 Reload，确保安装新的 Declaration，同时不枚举 Placeholder。
 
+## Demo 与确定性测试
+
+在 Demo 目录中打开 `collection.paging`。真实的进程内 `Pager + PagingSource` 会暂停每次加载，
+直到 `完成待处理加载` 应用 Data、Empty 或 Error；主操作随后变为 `请求下一页` 或
+`重试失败加载`，`重置数据代` 则替换 Flow。无需 I/O 或发布生产 Fake 即可检查 Initial、Append、
+Retry、Empty 与 Error 状态。
+
+自动化应按 `collection.paging` 选择场景，并使用稳定的 `root`、`ready`、`primary_action`、
+`secondary_action`、`reset`、`state`、`target` 与 `secondary_target` Role。State Target 报告
+Body、Refresh/Append 和 Loaded Count。编译型 Q3 Sample 覆盖支持 Placeholder 的
+`pagingLazyColumnSample` 与方向状态 `pagingLoadStateCompositionSample`。Repository 和
+`PagingSource` 在 UI 之下测试，Snapshot 使用 AndroidX `paging-testing`，真机只验证渲染与交互。
+Mediator Fixture 可使用 Fake Storage/Remote Result，但必须运行真实 AndroidX 协调，不能改用 UI
+Boolean。
+
+## 迁移
+
+从 Compose Paging 迁移时，保留 `Pager`、Source/Mediator、Repository 与 ViewModel 持有的
+`cachedIn` Flow。用 `collectAsViewComposePagingItems()` 替换 `collectAsLazyPagingItems()`，用
+`PagingLazyColumn` 替换 Compose Item Count 循环，并提供稳定 Key 与完整 `contentRevision`。
+`contentState` 映射主内容，`forLoadType(...)` 映射方向来源，`retry()`/`refresh()` 保持 AndroidX
+语义。
+
+有限列表继续使用 `LazyColumn`，除非需要 Paging Generation、Invalidation、Eviction、Jump、
+Retry 或 Mediator。采用后把 Callback/End Reached 加载迁入 `PagingSource`，不得保留第二套
+`isLoading`/`isAtEnd` 引擎。Placeholder 只使用显式 Overload；位置型 Loaded Key 和物化
+Placeholder List 不受支持。
+
+## 依赖与许可证声明
+
+发布模块会暴露 `androidx.paging:paging-common:3.5.1`；测试还使用
+`androidx.paging:paging-testing:3.5.1`。模块不要求 `paging-runtime` 或 `paging-compose`。
+AndroidX Paging 使用 Apache License 2.0 分发，并已记录在 `THIRD_PARTY_NOTICES.md`。
+
 ## 验证与当前范围
 
 确定性测试覆盖三种生命周期策略、隐藏/恢复导航、Composition 重建时的 `cachedIn` 重放、精确取消、
 真实 `Pager + RemoteMediator` 的 Refresh/Append 失败、独立 Source 失败、Presenter Generation、
-Placeholder、Page Drop 与 Detached Cache 释放。Q3 Sample 只使用公共 API 编译。
+Placeholder、Page Drop 与 Detached Cache 释放。Q3 Sample 只使用公共 API 编译。Demo 还提供
+受控的真实 `PagingSource` 路径，以及覆盖 Initial、Append、Empty、Error、Retry 与 Reset 的稳定
+自动化 Role。
 
-2026-08-25，Android 13/API 33 的 Pixel 4 XL 在 5.51 s 内通过两项 Debug 测试。一百万位置用例
-增加 48,124 KiB PSS，555 ms 跳至最后位置，在 `maxSize = 96` 下保留 81 个 Loaded Item 并释放
-初始 Session；有界滚动最终保持 96 个 Loaded Item。结论：内存、Jump/Drop 与所有权信心为
-**improved**。Mediated-data Fixture 使用内存存储与 Fake Remote Result，因此该证据不代表真实
-数据库/网络、Frame、真机 Load State UI 或 Demo；后续阶段继续负责这些路径。
+2026-08-25，Pixel 4 XL Android 13 的两项测试在一百万位置下增加 48,124 KiB PSS，555 ms 跳至
+末尾，在 `maxSize = 96` 下保留 81 个 Item、释放 Drop Session，并以 96 个 Item 结束有界滚动。
+另一项 13 s 的受控 Demo 测试与人工检查覆盖 Initial、10 行、Append Error、Retry 至 20 行、
+Reset、Empty 与 Initial Error，保留内容易读且可滚动。结论：内存/所有权与 Demo 信心为
+**improved**。限制是一台设备和确定性进程内 Storage/Remote 数据；真实 I/O、Prepend UI、更广
+设备、Frame、Demo 内存与 Release 性能仍未得到证明。
 
 ## 相关文档
 

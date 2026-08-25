@@ -123,6 +123,8 @@
     <string name="demo_scenario_collection_pull_refresh_summary">Refresh gesture, progress state, and deterministic reset.</string>
     <string name="demo_scenario_collection_nested_lazy_list_title">Nested lazy-list handoff</string>
     <string name="demo_scenario_collection_nested_lazy_list_summary">An isolated two-level list for verifying same-axis edge handoff and nested prefetch.</string>
+    <string name="demo_scenario_collection_paging_title">Paging 3 controlled states</string>
+    <string name="demo_scenario_collection_paging_summary">Drive deterministic initial, append, empty, and error states through AndroidX Paging.</string>
     <string name="demo_scenario_layout_linear_title">Linear layout</string>
     <string name="demo_scenario_layout_linear_summary">Row and Column measurement plus a deterministic mutation workload.</string>
     <string name="demo_scenario_layout_stack_title">Stack layout</string>

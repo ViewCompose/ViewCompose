@@ -288,6 +288,15 @@
     <item name="demo_collection_nested_lazy_list_ready" type="id" />
     <item name="demo_collection_nested_lazy_list_target" type="id" />
 
+    <item name="demo_collection_paging_root" type="id" />
+    <item name="demo_collection_paging_ready" type="id" />
+    <item name="demo_collection_paging_primary_action" type="id" />
+    <item name="demo_collection_paging_secondary_action" type="id" />
+    <item name="demo_collection_paging_reset" type="id" />
+    <item name="demo_collection_paging_state" type="id" />
+    <item name="demo_collection_paging_target" type="id" />
+    <item name="demo_collection_paging_secondary_target" type="id" />
+
     <item name="demo_layout_linear_root" type="id" />
     <item name="demo_layout_linear_ready" type="id" />
     <item name="demo_layout_linear_primary_action" type="id" />

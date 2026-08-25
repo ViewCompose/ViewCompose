@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 2923a140e2f8ffccbacde246e927cda497ba3437b2c1f5551abbdea461ffb577
+translation_source_hash: 3216a2c3173ecf0505bdd4795649dcfcdf7259353f19553b2b38541f7fba13d3
 translation_status: current
 ---
 
@@ -168,14 +168,15 @@ identity token。
 
 <div className="search-partition-detail">
 
-- **2026-08-25，Paging Phase 5 生命周期/Mediator Slice：**在同一份本地 macOS Lockfile 上，
-  完成收敛的 Phase 4 与最终 Phase 5 候选非 API 产物分别为 49,155,555 和 49,161,510 字节。
-  增加的 5,955 字节（0.012%）来自长期双语 `cachedIn`、重建、取消与 Source/Mediator Failure
-  契约，同时删减了重复基线叙述；Phase 3 至 Phase 5 总变化为 +52,000 字节（+0.106%）。
-  46.9 MiB 上限保持不变，测得余量 16,704 字节。结果为**混合**：生命周期与 Mediated State
-  指引得到改进，非 API 存储量略增。语言、翻译、路由、无障碍和全部预算均通过。本次同主机对照
-  不衡量部署传输、CDN 压缩、真实数据库/网络行为；生成 API 产物继续由独立预算约束。Phase 6
-  必须保持在当前上限内，并在增加长期内容前先收敛表示方式。
+- **2026-08-25，Paging Phase 6 Demo/文档 Slice：**在同一份本地 macOS Lockfile 上，Phase 5
+  基线、未收敛 Phase 6 候选与加入本条证据前的收敛候选，其非 API 产物分别为 49,161,510、
+  49,231,869 和 49,090,456 字节。首个候选超过未调整的 46.9 MiB 上限 53,655 字节；把执行计划
+  中重复的已交付签名和逐阶段证据迁移到所属模块手册、Lazy Collections 指南、生成 API 树与 Git
+  历史后，相对基线减少 71,054 字节（-0.145%），测得余量为 87,758 字节。结果为**混合**：首版
+  表示方式发生回退，收敛后的表示方式同时改善了读者指引与存储量。加入本条证据记录后，语言、
+  翻译、路由、无障碍和全部预算仍通过。本次同主机对照不衡量部署传输、CDN 压缩、真实数据库/
+  网络行为；生成 API 产物继续由
+  独立预算约束。Phase 7 与归档工作不得重新扩张已完成契约的副本。
 
 这里只展开最新的同语料决策；Git 历史保留 2026-08-06 至 Phase 0 检查点被后续结论取代的
 检查点明细。那些测量建立了不可变 API 历史重建、双语搜索与无障碍门禁、计划和证据分段，

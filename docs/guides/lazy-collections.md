@@ -280,7 +280,9 @@ UI Foundation. Its explicit placeholder overload and page-drop handling use the 
 item-table contract; the placeholder-disabled overload rejects unloaded slots. Paging remains the
 loading, generation, retry, and refresh owner, while Android Renderer remains the only adapter,
 stable-ID, diff, holder, and Session owner. Later work remains tracked by the active
-[Paging 3 integration plan](../project/plans/paging3-integration.md). Finite-list applications may
+[Paging 3 integration plan](../project/plans/paging3-integration.md), whose remaining Phase 7 owns
+performance, broader device evidence, and release closeout after the controlled Demo and public
+guidance shipped in Phase 6. Finite-list applications may
 continue to use `isAtEnd`, `lastVisibleItemIndex`, and `layoutInfo.totalItemsCount` without any Paging
 dependency. Custom fling physics and compiler-driven sub-item composition remain separate
 integration concerns.

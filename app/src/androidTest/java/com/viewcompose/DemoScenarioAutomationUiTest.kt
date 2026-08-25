@@ -95,6 +95,7 @@ class DemoScenarioAutomationUiTest {
             "collection.grid",
             "collection.pull-refresh",
             "collection.nested-lazy-list",
+            "collection.paging",
             "layout.linear",
             "layout.stack",
             "layout.edges",
