@@ -67,178 +67,20 @@ Paging types remain inside the optional artifact, its samples, and tests. They n
 an SDK-neutral node. The optional artifact contributes no initializer, observer, recurring work, or
 transitive dependency when absent. Only official public AndroidX APIs are allowed.
 
-## Frozen public API
+## Shipped contract references
 
-Names may change only by reopening Phase 0 with compiled call-site evidence before publication.
+Phases 0–6 shipped the collector, items, container, load-state, lifecycle, placeholder, and compact
+lazy-table contracts. The [Paging module manual](../../modules/viewcompose-paging-androidx/README.md)
+now owns their usage, lifecycle, identity, placeholder, load-state, testing, migration, and
+dependency guidance; the
+[`viewcompose-paging-androidx` API tree](https://docs.viewcompose.com/api/viewcompose-paging-androidx/current/)
+owns the exact current signatures. The [Lazy Collections guide](../../guides/lazy-collections.md)
+owns the Paging-neutral `LazyItemTable` and renderer transaction contract.
 
-```kotlin
-fun <T : Any> Flow<PagingData<T>>.collectAsViewComposePagingItems(
-    lifecyclePolicy: PagingLifecyclePolicy = PagingLifecyclePolicy.Visible,
-    context: CoroutineContext = EmptyCoroutineContext,
-): ViewComposePagingItems<T>
-
-enum class PagingLifecyclePolicy {
-    Visible,
-    Retained,
-    Composition,
-}
-
-class ViewComposePagingItems<T : Any> internal constructor(...) {
-    val itemCount: Int
-    val loadedItemCount: Int
-    val loadStates: CombinedLoadStates
-
-    operator fun get(index: Int): T?
-    fun peek(index: Int): T?
-    fun retry()
-    fun refresh()
-}
-
-sealed interface PagingContentState {
-    data object InitialLoading : PagingContentState
-    data class InitialError(val error: Throwable) : PagingContentState
-    data object Empty : PagingContentState
-    data object Content : PagingContentState
-}
-
-data class PagingLoadStateSnapshot(
-    val loadType: LoadType,
-    val combined: LoadState,
-    val source: LoadState,
-    val mediator: LoadState?,
-)
-
-val ViewComposePagingItems<*>.contentState: PagingContentState
-
-fun CombinedLoadStates.forLoadType(loadType: LoadType): PagingLoadStateSnapshot
-
-fun <T : Any> UiTreeBuilder.PagingLazyColumn(
-    items: ViewComposePagingItems<T>,
-    key: (T) -> Any,
-    contentType: (T) -> Any? = { null },
-    contentRevision: (T) -> Any? = { it },
-    contentPadding: UiDp = UiDp.Zero,
-    spacing: UiDp = UiDp.Zero,
-    state: LazyListState? = null,
-    reverseLayout: Boolean = false,
-    userScrollEnabled: Boolean = true,
-    prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
-    reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
-    motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-    modifier: Modifier = Modifier,
-    itemContent: UiTreeBuilder.(T) -> Unit,
-)
-
-fun <T : Any> UiTreeBuilder.PagingLazyColumn(
-    items: ViewComposePagingItems<T>,
-    key: (T) -> Any,
-    placeholderContentRevision: Any,
-    placeholderContent: UiTreeBuilder.(index: Int) -> Unit,
-    contentType: (T) -> Any? = { null },
-    contentRevision: (T) -> Any? = { it },
-    placeholderContentType: Any? = null,
-    contentPadding: UiDp = UiDp.Zero,
-    spacing: UiDp = UiDp.Zero,
-    state: LazyListState? = null,
-    reverseLayout: Boolean = false,
-    userScrollEnabled: Boolean = true,
-    prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
-    reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
-    motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
-    modifier: Modifier = Modifier,
-    itemContent: UiTreeBuilder.(T) -> Unit,
-)
-```
-
-The first overload is for placeholders disabled and fails before candidate publication if an
-unloaded slot exists. The second requires explicit placeholder content and revision. Integration-
-owned placeholder keys are positional and namespaced to the paging-items owner; loaded keys wrap
-the application key in a separate domain. Placeholder/item transitions therefore cannot inherit
-remember or saveable state, and there is no public `placeholderKey` escape hatch.
-
-`get(index)` is the load-triggering presenter access used only by an active item Session; `peek`
-is the non-triggering path for inspection, diagnostics, reconciliation, generic diff, and framework
-prefetch. Loaded items require stable application keys and explicit revisions. `retry()` retries
-failed loads in the current generation; `refresh()` requests the AndroidX-owned replacement.
-`loadedItemCount` counts non-placeholder items without flattening source and mediator detail in
-`CombinedLoadStates`.
-
-The two Q3 projections remain pure rather than owning a paging layout. Any loaded item makes
-`contentState` return `Content`. Without items, combined/source/mediator refresh errors win in that
-order, otherwise any loading origin returns `InitialLoading`, and only all-complete refresh returns
-`Empty`; this Phase 5 hard cut prevents a skipped mediator refresh from masking source failure.
-`forLoadType` preserves combined, source, and nullable mediator states. Both are synchronous O(1)
-reads with no dispatch, nodes, lifecycle, or retry policy.
-
-### Lifecycle and presentation coherence
-
-| Policy | Collection lifetime |
-| --- | --- |
-| `Visible` (default) | Requires the nearest `LocalLifecycleOwner`; collects at `STARTED` or above. Hidden retained destinations keep the last presentation without collecting. |
-| `Retained` | Requires the nearest owner; collects at `CREATED` or above for explicitly retained presentation. |
-| `Composition` | Ignores Android lifecycle and collects from successful commit until composition release for custom hosts, tests, and preview fixtures. |
-
-Flow identity owns the remembered `ViewComposePagingItems`. Policy or context changes restart its
-structured collector after commit without replacing accepted state. `context` may supply non-Job
-elements; composition retains Job and cancellation ownership. Inactive policies retain the last
-presentation; restart follows normal Flow semantics, including application-owned `cachedIn` replay.
-Upstream Flow exceptions terminate the collector, while Paging load errors remain load-state data.
-
-Initial state has zero items, source refresh `Loading`, prepend/append incomplete `NotLoading`, and
-no mediator. One private immutable snapshot contains `ItemSnapshotList`, `CombinedLoadStates`, and a
-monotonic revision. Publication occurs only after the presenter page store and combined load states
-both advance, preventing mixed item/load-state revisions. Latest generation wins, and released or
-superseded collectors cannot publish.
-
-## Frozen Paging-neutral lazy prerequisite
-
-The current full `List<LazyListItem>` NodeSpec allocates one declaration per presented position;
-Android Renderer also builds a complete key table and list diff. Large placeholder counts and page
-drops therefore require this Q3 compact snapshot and Q2 immutable updates in
-`viewcompose-ui-contract`:
-
-```kotlin
-interface LazyItemTable : Iterable<LazyListItem> {
-    val size: Int
-    operator fun get(index: Int): LazyListItem
-    fun toList(): List<LazyListItem>
-    fun indexOfKey(key: Any): Int
-    fun updatesFrom(previous: LazyItemTable): List<LazyItemTableUpdate>?
-}
-
-interface LazyItemTableStickyHeaders {
-    val hasStickyHeaders: Boolean
-    fun findStickyHeaderIndex(itemIndex: Int): Int
-}
-
-sealed interface LazyItemTableUpdate {
-    data class InsertRange(val index: Int, val count: Int) : LazyItemTableUpdate
-    data class RemoveRange(val index: Int, val count: Int) : LazyItemTableUpdate
-    data class Move(val fromIndex: Int, val toIndex: Int) : LazyItemTableUpdate
-    data class ChangeRange(val index: Int, val count: Int) : LazyItemTableUpdate
-    data object ReloadAll : LazyItemTableUpdate
-}
-```
-
-`LazyColumnNodeProps`, `LazyRowNodeProps`, and `LazyVerticalGridNodeProps` hard-cut `items` to this
-contract in one breaking alpha change; existing finite lists receive a behavior-preserving wrapper.
-A table is immutable per accepted revision. `get`/`indexOfKey` are synchronous, side-effect-free,
-and non-triggering; invalid indices fail, missing keys return `-1`, and duplicate keys fail candidate
-publication. `updatesFrom` returns an exact ordered transform for a recognized committed
-predecessor, empty for semantic equality, or `null` for generic keyed fallback. Invalid operations,
-wrong predecessors, or a mismatched result roll back without changing the installed adapter.
-Iteration and `toList()` are full compatibility scans and not compact-source optimizations; the
-finite wrapper returns its retained backing list and keeps structural equality. Optional sticky
-metadata was added during implementation because the existing renderer otherwise had to scan every
-virtual position merely to prove that no sticky header existed; non-implementers therefore promise
-ordinary items only. This extension preserves the frozen Paging-neutral and sole-renderer boundary.
-
-Paging stores loaded metadata plus placeholder counts, never one object per placeholder, and maps
-accepted `PagingDataEvent` values to neutral range updates. Renderer remains the sole adapter,
-stable-ID, holder, diff, and transaction owner. The prerequisite contains no Paging type, is useful
-for other compact immutable indexed sources and custom renderers, and lands with Q3 samples,
-manuals, compatibility notes, tests, and Changesets for UI Contract, UI Foundation, and Android
-Renderer. A Paging-only adapter, parallel diff owner, or full placeholder table is forbidden.
+AndroidX remains the sole paging engine. Android Renderer remains the sole adapter, stable-ID,
+holder, diff, transaction, and item-Session owner. Phase 7 may measure these shipped contracts and
+close their release evidence, but must not reopen them without a new attributed plan, applicable Q
+documentation, compiled samples, and release Changesets.
 
 ## Delivery requirements
 
@@ -354,13 +196,7 @@ work pending.
 
 | Date | Evidence | Result and next action |
 | --- | --- | --- |
-| 2026-08-18 | Worktree and active-document review | No Paging implementation existed; roadmap/guide execution ownership moved here. |
-| 2026-08-25 | Phase 0–1 official API, Kotlin probes, CodeGraph review, and presenter harness | Paging 3.5.1 compiled with Kotlin 2.0.21 (12 s plus 1 s inference probe); 6/6 deterministic tests passed in 2 s. They freeze coherent event/load-state ordering, explicit non-Android main context, hint behavior, same-generation retry, replacement refresh/invalidation, cancellation, and both drop directions. Conclusion: **improved** contract confidence without a runtime-performance claim. Limitations: no Android lifecycle, renderer, mediator, device, network, or published frontend. |
-| 2026-08-25 | Phase 2 frontend and publication closeout | 12/12 tests passed in 4 s; Q3 audit passed in 18 s; selected Maven publication and consumers passed 1,022 tasks in 4 min 19 s; 100-version plus 6-current API reconstruction passed in 7 min 23 s. The 440-page bilingual site measured 48,942,128 non-API bytes, +190,471 (+0.391%) from Phase 0, and moved the ceiling to 46.7 MiB. Conclusion: **improved** correctness/release confidence with **mixed** site size. Placeholders, mediator, Demo, device, frame, and memory remained later work. |
-| 2026-08-25 | Pixel 4 XL Android 13/API 33 Phase 3 acceptance | Two debug tests passed in 5.51 s. The 1,000,000-position case added 48,124 KiB PSS, jumped to 999,999 in 555 ms, retained 81 items under `maxSize = 96`, and released initial Sessions; bounded scrolling ended at 96 loaded items. The probe exposed detached holders retaining dropped keys, now synchronously disposed with double-release proof. Conclusion: **improved** compact-memory, jump/drop, and lifecycle confidence. Limitations: one local-data device/API/geometry; no frame, mediator, network, load-state UI, or Demo evidence. |
-| 2026-08-25 | Phase 3 full closeout | Four modules passed 1,015/1,015 tests (81 + 391 + 527 + 16); strict API/documentation checks passed for 118 English pages and 115 current mirrors in 15 s; `qaQuick` passed 2,324 tasks in 2 min 9 s. Conclusion: **improved** correctness and release confidence; later phases retain mediator, Demo, and broader performance limits. |
-| 2026-08-25 | Phase 4 load-state projections and closeout | Twenty distinct tests passed in both variants (40 executions) in 6 s, covering initial/body states, content retention during directional loading/error, every `LoadType` origin, absent mediator, and retry/refresh distinction. Q3 audit passed in 12 s; documentation passed in 2 s; one feature release intent and the published consumer passed; `qaQuick` passed 2,324 tasks in 18 s. Conclusion: **improved** composition/API confidence without a second layout or state owner. Limitations: synthetic mediator states; no real mediator, database/network, recreation, Demo, device, frame, or memory path. Next: Phase 5. |
-| 2026-08-25 | Phase 5 lifecycle and mediated-data closeout | Twenty-seven distinct module tests passed in Debug and Release (54 executions) in 6 s. Seven new tests cover every lifecycle policy, hide/reveal, `cachedIn` replay across composition recreation without duplicate upstream collection, in-flight mediator cancellation, real `Pager + RemoteMediator` refresh/append errors, and distinct source failure. The fixture exposed combined `NotLoading` masking source refresh failure; `contentState` now hard-cuts to origin-aware error/loading precedence. API/docs/release and dependency/isolation gates passed; `qaQuick` passed 2,324 tasks in 19 s. The 440-page site passed at 49,161,510 non-API bytes under the unchanged 46.9 MiB ceiling. Conclusion: **improved** lifecycle, cancellation, and mediated-state correctness with **mixed** small documentation growth. Limitations: in-memory store and fake remote result; no real database/network, Demo, device, frame, or memory result. Next: Phase 6. |
+| 2026-08-18 to 2026-08-25 | Phases 0–5 consolidated baseline | Official presenter characterization, the published frontend, compact placeholders/page drops, load-state projections, every lifecycle policy, `cachedIn` recreation, structured cancellation, and real `Pager + RemoteMediator` fake-storage coordination passed their API, unit, device, Maven, consumer, and documentation gates. The Pixel Phase 3 probe added 48,124 KiB PSS for 1,000,000 positions, jumped to 999,999 in 555 ms, retained 81 loaded items, and released dropped Sessions. Phase 5 ended at 49,161,510 non-API documentation bytes. Conclusion: **improved** correctness, ownership, lifecycle, and compact-memory confidence with **mixed** documentation growth. Limitations remained one local-data device/API and no real database/network, Demo, frame, or release-performance result. Git history preserves the superseded per-phase execution ledger. |
 | 2026-08-25 | Phase 6 controlled Demo and documentation acceptance | The controlled-source unit suite, registry tests, app/debug/android-test compilation, localization, and automation-selector gates passed. One Pixel 4 XL Android 13/API 33 instrumentation test passed in a 13 s Gradle run and deterministically traversed initial loading, ten loaded items, append loading/error, same-generation retry to twenty items, generation reset, empty, and initial error. Manual inspection of the same Pixel confirmed that initial, content, and retained-content append-error states are fully visible, readable, and scrollable. Bounding the Demo viewport and disabling renderer cache prefetch prevented an off-screen Session from requesting append before the explicit action, while the real Paging configuration retained its valid `prefetchDistance = 1`. Documentation/API/dependency/release-intent gates passed for 118 English pages and 115 current mirrors; `qaQuick + qaPreview` passed 2,338 tasks in 1 min 21 s, including local publication, consumer/sample compilation, unit tests, Paparazzi, and Release APK verification. Conclusion: **improved** sample, automation, documentation, and manual-verification confidence. Limitations: one device/API, in-process fake source, no real database/network, prepend UI, frame, memory, or release-performance result. Next: Phase 7. |
 
 ## Decision history
