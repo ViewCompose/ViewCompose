@@ -3,6 +3,7 @@ package com.viewcompose.quality
 import groovy.json.JsonSlurper
 import java.io.File
 import java.math.BigDecimal
+import java.security.MessageDigest
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import java.util.Properties
@@ -47,8 +48,15 @@ abstract class ReportDocumentationGovernanceV2Task : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val publishingFiles: ConfigurableFileCollection
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val documentationPolicyFiles: ConfigurableFileCollection
+
     @get:OutputFile
     abstract val reportFile: RegularFileProperty
+
+    @get:OutputFile
+    abstract val humanReportFile: RegularFileProperty
 
     @TaskAction
     fun report() {
@@ -60,10 +68,15 @@ abstract class ReportDocumentationGovernanceV2Task : DefaultTask() {
             activeDocumentationFiles = activeDocumentationFiles.files,
             localeMirrorFiles = localeMirrorFiles.files,
             publishingFiles = publishingFiles.files,
+            documentationPolicyFiles = documentationPolicyFiles.files,
         )
         reportFile.get().asFile.apply {
             parentFile.mkdirs()
             writeText(result.report)
+        }
+        humanReportFile.get().asFile.apply {
+            parentFile.mkdirs()
+            writeText(result.humanReport)
         }
         if (result.contractViolations.isNotEmpty()) {
             throw GradleException(
@@ -85,6 +98,7 @@ abstract class ReportDocumentationGovernanceV2Task : DefaultTask() {
 
 internal data class DocumentationGovernanceV2ReportResult(
     val report: String,
+    val humanReport: String,
     val contractViolations: List<String>,
     val issueCount: Int,
 )
@@ -94,6 +108,16 @@ internal object DocumentationGovernanceV2Reporter {
         "docs/project/contracts/documentation-governance-v2"
     private const val recordRootPath =
         "docs/project/records/documentation-governance-v2"
+    private val issueCategories = listOf(
+        "duplicate-owner",
+        "missing-metadata",
+        "orphan-document",
+        "orphan-symbol",
+        "stale-generated-output",
+        "taxonomy-mismatch",
+        "unclassified-sample",
+        "version-conflict",
+    )
 
     fun generate(
         repository: File,
@@ -103,6 +127,7 @@ internal object DocumentationGovernanceV2Reporter {
         activeDocumentationFiles: Set<File>,
         localeMirrorFiles: Set<File>,
         publishingFiles: Set<File>,
+        documentationPolicyFiles: Set<File>,
     ): DocumentationGovernanceV2ReportResult {
         val canonicalRepository = repository.canonicalFile
         val manifestFile = contractFiles.singleOrNull { it.name == "contract-set.json" }
@@ -124,9 +149,25 @@ internal object DocumentationGovernanceV2Reporter {
             )
         }.sortedBy { report -> report.getValue("contractId").toString() }
 
-        val declarations = discoverDslAndModifierDeclarations(
-            canonicalRepository,
-            sourceSetDirectories,
+        val translationPolicyFile = documentationPolicyFiles.singleOrNull {
+            it.name == "translation-policy.json"
+        } ?: canonicalRepository.resolve("website/i18n/translation-policy.json")
+        val moduleCatalogFile = documentationPolicyFiles.singleOrNull {
+            it.relativePathWithin(canonicalRepository) == "docs/modules/README.md"
+        } ?: canonicalRepository.resolve("docs/modules/README.md")
+        val publicPagePaths = translationPolicyFile.parseJsonObject().stringList("required").toSet()
+        val moduleFamilies = discoverModuleFamilies(moduleCatalogFile)
+        val publishing = discoverPublishingInputs(canonicalRepository, publishingFiles)
+        @Suppress("UNCHECKED_CAST")
+        val publishingArtifacts = publishing.getValue("artifacts") as List<Map<String, Any?>>
+        val activeArtifacts = publishingArtifacts
+            .map { artifact -> artifact.getValue("artifact").toString() }
+            .toSet()
+        val declarations = discoverCapabilityDeclarations(
+            repository = canonicalRepository,
+            sourceSetDirectories = sourceSetDirectories,
+            activeArtifacts = activeArtifacts,
+            moduleFamilies = moduleFamilies,
         )
         val localeMirrors = discoverLocaleMirrors(canonicalRepository, localeMirrorFiles)
         val mirrorsBySource = localeMirrors
@@ -137,58 +178,37 @@ internal object DocumentationGovernanceV2Reporter {
         val documents = discoverDocuments(
             repository = canonicalRepository,
             files = activeDocumentationFiles,
+            publicPagePaths = publicPagePaths,
+            mirrorsBySource = mirrorsBySource,
+            documentSchema = schemas["document"],
+        )
+        val fences = discoverExecutableFences(
+            repository = canonicalRepository,
+            files = activeDocumentationFiles,
+            publicPagePaths = publicPagePaths,
+            documents = documents,
             mirrorsBySource = mirrorsBySource,
         )
-        val fences = discoverExecutableFences(canonicalRepository, activeDocumentationFiles)
         val records = discoverRecords(
             repository = canonicalRepository,
             files = recordFiles,
             schemas = schemas,
         )
-        val publishing = discoverPublishingInputs(canonicalRepository, publishingFiles)
-        val issues = buildList {
-            documents.filterNot { document -> document["schemaVersion"] == 2 }.forEach { document ->
-                add(
-                    reportIssue(
-                        category = "missing-metadata",
-                        target = document.getValue("path").toString(),
-                        detail = "canonical active page does not declare schema_version: 2",
-                    ),
-                )
-            }
-            fences.filterNot { fence -> fence.getValue("registered") as Boolean }.forEach { fence ->
-                add(
-                    reportIssue(
-                        category = "unclassified-sample",
-                        target = "${fence.getValue("path")}:${fence.getValue("line")}",
-                        detail = "executable fence has no adjacent compiled-sample registration marker",
-                    ),
-                )
-            }
-            records.filterNot { record -> record.getValue("valid") as Boolean }.forEach { record ->
-                add(
-                    reportIssue(
-                        category = "taxonomy-mismatch",
-                        target = record.getValue("path").toString(),
-                        detail = "record does not satisfy its Governance V2 schema",
-                    ),
-                )
-            }
-            publishing.getValue("artifacts").let { artifacts ->
-                @Suppress("UNCHECKED_CAST")
-                (artifacts as List<Map<String, Any?>>)
-                    .filter { artifact -> artifact["versionState"] == "unresolved" }
-                    .forEach { artifact ->
-                        add(
-                            reportIssue(
-                                category = "version-conflict",
-                                target = artifact.getValue("artifact").toString(),
-                                detail = "publishing version has no immutable release record",
-                            ),
-                        )
-                    }
-            }
-        }.sortedWith(compareBy({ it.getValue("category").toString() }, { it.getValue("target").toString() }))
+        val issues = buildIssues(
+            declarations = declarations,
+            documents = documents,
+            fences = fences,
+            records = records,
+            publishing = publishing,
+        )
+        val baseline = correlateDebtBaseline(issues, records)
+        val reportIssues = issues.map { issue ->
+            val matchingBaseline = baseline.matches[issue.baselineKey]
+            issue.toReportMap(matchingBaseline?.exceptionId)
+        }
+        val issueCounts = issueCategories.associateWith { category ->
+            issues.count { issue -> issue.category == category }
+        }
 
         val report = linkedMapOf<String, Any?>(
             "schemaVersion" to 1,
@@ -197,13 +217,19 @@ internal object DocumentationGovernanceV2Reporter {
             "recordRoot" to recordRootPath,
             "fixtureValidation" to fixtureReports,
             "discovery" to linkedMapOf(
-                "dslAndModifierDeclarations" to declarations,
+                "capabilityDeclarations" to declarations,
                 "documents" to documents,
                 "executableFences" to fences,
-                "localeMirrors" to localeMirrors,
-                "records" to records,
+                "localeMirrors" to localeMirrors.map { mirror -> mirror - "absoluteFile" },
+                "moduleFamilies" to moduleFamilies.toSortedMap(),
+                "publicPagePolicy" to linkedMapOf(
+                    "path" to translationPolicyFile.relativePathWithin(canonicalRepository),
+                    "requiredPageCount" to publicPagePaths.size,
+                ),
+                "records" to records.map(GovernanceRecord::report),
                 "publishing" to publishing,
             ),
+            "debtBaseline" to baseline.report(),
             "summary" to linkedMapOf(
                 "contractCount" to contracts.size,
                 "contractViolationCount" to contractViolations.size,
@@ -213,14 +239,178 @@ internal object DocumentationGovernanceV2Reporter {
                 "localeMirrorCount" to localeMirrors.size,
                 "recordCount" to records.size,
                 "reportOnlyIssueCount" to issues.size,
+                "unbaselinedIssueCount" to baseline.unbaselinedIssueCount,
+                "issueCounts" to issueCounts,
             ),
-            "reportOnlyIssues" to issues,
+            "reportOnlyIssues" to reportIssues,
         )
         return DocumentationGovernanceV2ReportResult(
             report = StableJson.encode(report) + "\n",
+            humanReport = humanReport(
+                issues = issues,
+                baseline = baseline,
+                declarationCount = declarations.size,
+                documentCount = documents.size,
+                fenceCount = fences.size,
+            ),
             contractViolations = contractViolations.sorted(),
             issueCount = issues.size,
         )
+    }
+
+    private fun buildIssues(
+        declarations: List<Map<String, Any?>>,
+        documents: List<Map<String, Any?>>,
+        fences: List<Map<String, Any?>>,
+        records: List<GovernanceRecord>,
+        publishing: Map<String, Any?>,
+    ): List<GovernanceIssue> {
+        val validCapabilities = records.filter { record ->
+            record.contractId == "capability" && record.valid
+        }
+        val capabilitySymbols = validCapabilities.flatMap { record ->
+            record.value.listOfObjects("symbols").map { symbol ->
+                symbol.requiredString("symbol_id") to record.recordId.orEmpty()
+            }
+        }
+        val capabilityOwnersBySymbol = capabilitySymbols.groupBy(
+            keySelector = Pair<String, String>::first,
+            valueTransform = Pair<String, String>::second,
+        )
+        val capabilityIds = validCapabilities.mapNotNull(GovernanceRecord::recordId).toSet()
+
+        return buildList {
+            documents.filterNot { document -> document["schemaVersion"] == 2 }.forEach { document ->
+                add(
+                    GovernanceIssue.file(
+                        category = "missing-metadata",
+                        target = document.getValue("path").toString(),
+                        detail = "canonical active page does not declare schema_version: 2",
+                    ),
+                )
+            }
+            documents.filter { document -> document["schemaVersion"] == 2 }.forEach { document ->
+                @Suppress("UNCHECKED_CAST")
+                val violations = document.getValue("violations") as List<String>
+                if (violations.isNotEmpty()) {
+                    add(
+                        GovernanceIssue.file(
+                            category = "taxonomy-mismatch",
+                            target = document.getValue("path").toString(),
+                            detail = violations.joinToString("; "),
+                        ),
+                    )
+                }
+                @Suppress("UNCHECKED_CAST")
+                val declaredCapabilities = document["capabilityIds"] as? List<String> ?: emptyList()
+                declaredCapabilities.filterNot(capabilityIds::contains).forEach { capabilityId ->
+                    add(
+                        GovernanceIssue.file(
+                            category = "orphan-document",
+                            target = document.getValue("path").toString(),
+                            identitySuffix = capabilityId,
+                            detail = "document references unknown capability $capabilityId",
+                        ),
+                    )
+                }
+            }
+            fences.filterNot { fence -> fence.getValue("registered") as Boolean }.forEach { fence ->
+                val path = fence.getValue("path").toString()
+                add(
+                    GovernanceIssue.file(
+                        category = "unclassified-sample",
+                        target = "${fence.getValue("path")}:${fence.getValue("line")}",
+                        baselineTarget = path,
+                        identitySuffix = fence.getValue("stableFenceIdentity").toString(),
+                        detail = "executable fence has no adjacent compiled-sample registration marker",
+                    ),
+                )
+            }
+            fences.forEach { fence ->
+                val path = fence.getValue("path").toString()
+                @Suppress("UNCHECKED_CAST")
+                val mirror = fence["languageMirror"] as? Map<String, Any?>
+                when {
+                    mirror == null -> add(
+                        GovernanceIssue.file(
+                            category = "taxonomy-mismatch",
+                            target = "${fence.getValue("path")}:${fence.getValue("line")}",
+                            baselineTarget = path,
+                            identitySuffix = "missing-mirror|${fence.getValue("stableFenceIdentity")}",
+                            detail = "executable fence has no corresponding locale-mirror fence",
+                        ),
+                    )
+                    mirror["contentMatches"] != true -> add(
+                        GovernanceIssue.file(
+                            category = "taxonomy-mismatch",
+                            target = "${fence.getValue("path")}:${fence.getValue("line")}",
+                            baselineTarget = path,
+                            identitySuffix = "mirror-content|${fence.getValue("stableFenceIdentity")}",
+                            detail = "canonical and locale-mirror executable fence content differs",
+                        ),
+                    )
+                    mirror["sourceMarkerMatches"] != true -> add(
+                        GovernanceIssue.file(
+                            category = "taxonomy-mismatch",
+                            target = "${fence.getValue("path")}:${fence.getValue("line")}",
+                            baselineTarget = path,
+                            identitySuffix = "mirror-marker|${fence.getValue("stableFenceIdentity")}",
+                            detail = "canonical and locale-mirror source markers differ",
+                        ),
+                    )
+                }
+            }
+            records.filterNot(GovernanceRecord::valid).forEach { record ->
+                add(
+                    GovernanceIssue.file(
+                        category = "taxonomy-mismatch",
+                        target = record.path,
+                        detail = record.violations.joinToString("; "),
+                    ),
+                )
+            }
+            declarations.forEach { declaration ->
+                val symbol = declaration.getValue("symbol").toString()
+                if (symbol !in capabilityOwnersBySymbol) {
+                    @Suppress("UNCHECKED_CAST")
+                    val locations = declaration.getValue("locations") as List<Map<String, Any?>>
+                    add(
+                        GovernanceIssue.symbol(
+                            category = "orphan-symbol",
+                            target = symbol,
+                            baselineFile = locations.first().getValue("path").toString(),
+                            detail = "public production entry has no Governance V2 capability owner",
+                        ),
+                    )
+                }
+            }
+            capabilityOwnersBySymbol.filterValues { owners -> owners.distinct().size > 1 }
+                .forEach { (symbol, owners) ->
+                    add(
+                        GovernanceIssue.symbol(
+                            category = "duplicate-owner",
+                            target = symbol,
+                            detail = "symbol is owned by ${owners.distinct().sorted().joinToString()}",
+                        ),
+                    )
+                }
+            publishing.getValue("artifacts").let { artifacts ->
+                @Suppress("UNCHECKED_CAST")
+                (artifacts as List<Map<String, Any?>>)
+                    .filter { artifact -> artifact["versionState"] == "unresolved" }
+                    .forEach { artifact ->
+                        add(
+                            GovernanceIssue.symbol(
+                                category = "version-conflict",
+                                target = artifact.getValue("artifact").toString(),
+                                detail = artifact["resolutionProblem"]?.toString()
+                                    ?: "publishing version has no immutable release record",
+                            ),
+                        )
+                    }
+            }
+        }.distinctBy(GovernanceIssue::id)
+            .sortedWith(compareBy(GovernanceIssue::category, GovernanceIssue::target, GovernanceIssue::id))
     }
 
     private fun validateFixtures(
@@ -265,12 +455,15 @@ internal object DocumentationGovernanceV2Reporter {
         )
     }
 
-    private fun discoverDslAndModifierDeclarations(
+    private fun discoverCapabilityDeclarations(
         repository: File,
         sourceSetDirectories: Set<File>,
+        activeArtifacts: Set<String>,
+        moduleFamilies: Map<String, String>,
     ): List<Map<String, Any?>> = sourceSetDirectories
         .asSequence()
         .filter(File::isDirectory)
+        .filter { sourceRoot -> sourceRoot.parentFile.name in activeArtifacts }
         .flatMap { sourceRoot ->
             sourceRoot.resolve("main").takeIf(File::isDirectory)
                 ?.walkTopDown()
@@ -281,61 +474,158 @@ internal object DocumentationGovernanceV2Reporter {
         .flatMap { file ->
             val source = file.readText()
             val packageName = packageDeclaration.find(source)?.groupValues?.get(1).orEmpty()
-            functionDeclaration.findAll(source).mapNotNull declaration@{ match ->
+            if (packageName == "internal" || ".internal." in ".$packageName.") {
+                return@flatMap emptySequence()
+            }
+            val artifact = file.relativePathWithin(repository).substringBefore('/')
+            val family = moduleFamilies[artifact].orEmpty()
+            val sanitized = sanitizeKotlin(source)
+            val braceDepths = braceDepths(sanitized)
+            val entries = mutableListOf<CapabilityDeclaration>()
+            functionDeclaration.findAll(sanitized).forEach declaration@{ match ->
+                if (braceDepths[match.range.first] != 0) return@declaration
                 val modifiers = match.groupValues[1].trim().split(Regex("\\s+"))
                     .filter(String::isNotEmpty)
                     .toSet()
-                if ("private" in modifiers || "internal" in modifiers) return@declaration null
+                if ("private" in modifiers || "internal" in modifiers) return@declaration
                 val receiver = match.groupValues[2].removeSuffix(".").trim()
                 val receiverName = receiver.substringAfterLast('.').substringBefore('<').removeSuffix("?")
-                val kind = when {
-                    receiverName == "Modifier" -> "modifier"
-                    receiverName == "UiTreeBuilder" || receiverName.endsWith("Scope") -> "dsl"
-                    else -> return@declaration null
-                }
                 val name = match.groupValues[3]
                 val path = file.relativePathWithin(repository)
-                linkedMapOf<String, Any?>(
-                    "artifact" to path.substringBefore('/'),
-                    "kind" to kind,
-                    "line" to source.lineNumberAt(match.range.first),
-                    "path" to path,
-                    "receiver" to receiver,
-                    "symbol" to listOf(packageName, receiver, name)
+                val kind = classifyCapability(
+                    artifact = artifact,
+                    family = family,
+                    receiverName = receiverName,
+                    name = name,
+                    path = path,
+                )
+                if (kind == null) return@declaration
+                val canonicalReceiver = receiver.withoutTypeArguments().removeSuffix("?")
+                entries += CapabilityDeclaration(
+                    artifact = artifact,
+                    kind = kind,
+                    line = source.lineNumberAt(match.range.first),
+                    path = path,
+                    receiver = receiver,
+                    sourcePackage = packageName,
+                    symbol = listOf(packageName, canonicalReceiver, name)
                         .filter(String::isNotBlank)
                         .joinToString("."),
-                    "visibility" to if ("protected" in modifiers) "protected" else "public",
+                    visibility = if ("protected" in modifiers) "protected" else "public",
                 )
             }
+            if (family == "Integration" || family == "Preview tooling" || artifact == "viewcompose-host-android") {
+                topLevelCallableDeclaration.findAll(sanitized).forEach declaration@{ match ->
+                    if (braceDepths[match.range.first] != 0) return@declaration
+                    val modifiers = match.groupValues[1].trim().split(Regex("\\s+"))
+                        .filter(String::isNotEmpty)
+                        .toSet()
+                    if ("private" in modifiers || "internal" in modifiers) return@declaration
+                    val name = match.groupValues[2]
+                    if (functionDeclaration.find(match.value) != null) return@declaration
+                    if (!isApplicationEntry(artifact, family, packageName, name)) return@declaration
+                    val path = file.relativePathWithin(repository)
+                    entries += CapabilityDeclaration(
+                        artifact = artifact,
+                        kind = when {
+                            family == "Preview tooling" -> "tooling"
+                            artifact == "viewcompose-host-android" -> "host"
+                            else -> "integration"
+                        },
+                        line = source.lineNumberAt(match.range.first),
+                        path = path,
+                        receiver = null,
+                        sourcePackage = packageName,
+                        symbol = "$packageName.$name",
+                        visibility = if ("protected" in modifiers) "protected" else "public",
+                    )
+                }
+                topLevelTypeDeclaration.findAll(sanitized).forEach declaration@{ match ->
+                    if (braceDepths[match.range.first] != 0) return@declaration
+                    val modifiers = match.groupValues[1].trim().split(Regex("\\s+"))
+                        .filter(String::isNotEmpty)
+                        .toSet()
+                    if ("private" in modifiers || "internal" in modifiers) return@declaration
+                    val name = match.groupValues[3]
+                    if (!isApplicationEntry(artifact, family, packageName, name)) return@declaration
+                    val path = file.relativePathWithin(repository)
+                    entries += CapabilityDeclaration(
+                        artifact = artifact,
+                        kind = when {
+                            family == "Preview tooling" -> "tooling"
+                            artifact == "viewcompose-host-android" -> "host"
+                            else -> "integration"
+                        },
+                        line = source.lineNumberAt(match.range.first),
+                        path = path,
+                        receiver = null,
+                        sourcePackage = packageName,
+                        symbol = "$packageName.$name",
+                        visibility = if ("protected" in modifiers) "protected" else "public",
+                    )
+                }
+            }
+            entries.asSequence()
         }
-        .sortedWith(
-            compareBy(
-                { it.getValue("path").toString() },
-                { it.getValue("line") as Int },
-                { it.getValue("symbol").toString() },
-            ),
-        )
+        .groupBy(CapabilityDeclaration::symbol)
+        .values
+        .map { overloads ->
+            val first = overloads.sortedWith(compareBy(CapabilityDeclaration::path, CapabilityDeclaration::line)).first()
+            linkedMapOf<String, Any?>(
+                "artifact" to first.artifact,
+                "kind" to first.kind,
+                "locations" to overloads
+                    .distinctBy { declaration -> declaration.path to declaration.line }
+                    .sortedWith(compareBy(CapabilityDeclaration::path, CapabilityDeclaration::line))
+                    .map { declaration ->
+                        linkedMapOf<String, Any?>(
+                            "line" to declaration.line,
+                            "path" to declaration.path,
+                        )
+                    },
+                "overloadCount" to overloads.size,
+                "receiver" to first.receiver,
+                "sourcePackage" to first.sourcePackage,
+                "symbol" to first.symbol,
+                "visibility" to first.visibility,
+            )
+        }
+        .sortedWith(compareBy({ it.getValue("artifact").toString() }, { it.getValue("symbol").toString() }))
         .toList()
 
     private fun discoverDocuments(
         repository: File,
         files: Set<File>,
+        publicPagePaths: Set<String>,
         mirrorsBySource: Map<String, Map<String, Any?>>,
+        documentSchema: Map<String, Any?>?,
     ): List<Map<String, Any?>> = files
         .filter(File::isFile)
         .filter { file -> file.extension in setOf("md", "mdx") }
+        .filter { file -> file.relativePathWithin(repository).removePrefix("docs/") in publicPagePaths }
         .map { file ->
             val metadata = parseFrontMatter(file.readText())
             val path = file.relativePathWithin(repository)
             val sourceKey = path.removePrefix("docs/")
+            val schemaVersion = metadata["schema_version"].asIntegerOrNull()
+            val violations = if (schemaVersion == 2 && documentSchema != null) {
+                FrozenJsonSchemaValidator.validate(metadata, documentSchema) +
+                    documentPlacementViolations(path, metadata["doc_type"]?.toString())
+            } else {
+                emptyList()
+            }
             linkedMapOf<String, Any?>(
                 "path" to path,
-                "schemaVersion" to metadata["schema_version"].asIntegerOrNull(),
+                "schemaVersion" to schemaVersion,
                 "documentId" to metadata["document_id"],
                 "docType" to metadata["doc_type"],
                 "versionLane" to metadata["version_lane"],
+                "capabilityIds" to metadata.stringList("capability_ids"),
+                "artifactIds" to metadata.stringList("artifact_ids"),
+                "sampleIds" to metadata.stringList("sample_ids"),
                 "metadataKeys" to metadata.keys.sorted(),
                 "localeMirror" to mirrorsBySource[sourceKey]?.get("path"),
+                "violations" to violations.distinct().sorted(),
             )
         }
         .sortedBy { document -> document.getValue("path").toString() }
@@ -343,23 +633,79 @@ internal object DocumentationGovernanceV2Reporter {
     private fun discoverExecutableFences(
         repository: File,
         files: Set<File>,
-    ): List<Map<String, Any?>> = files
-        .filter(File::isFile)
-        .filter { file -> file.extension in setOf("md", "mdx") }
-        .flatMap { file ->
-            val lines = file.readLines()
-            lines.mapIndexedNotNull { index, line ->
-                val match = executableFence.matchEntire(line.trim()) ?: return@mapIndexedNotNull null
-                val registrationContext = lines.subList(maxOf(0, index - 5), index).joinToString("\n")
-                linkedMapOf<String, Any?>(
-                    "language" to match.groupValues[1].lowercase(),
-                    "line" to index + 1,
-                    "path" to file.relativePathWithin(repository),
-                    "registered" to sampleRegistrationMarker.containsMatchIn(registrationContext),
-                )
-            }
+        publicPagePaths: Set<String>,
+        documents: List<Map<String, Any?>>,
+        mirrorsBySource: Map<String, Map<String, Any?>>,
+    ): List<Map<String, Any?>> {
+        val versionLaneByPath = documents.associate { document ->
+            document.getValue("path").toString() to document["versionLane"]?.toString()
+        }
+        val canonicalFiles = files
+            .filter(File::isFile)
+            .filter { file -> file.extension in setOf("md", "mdx") }
+            .filter { file -> file.relativePathWithin(repository).removePrefix("docs/") in publicPagePaths }
+        return canonicalFiles.flatMap { file ->
+            val path = file.relativePathWithin(repository)
+            val sourceKey = path.removePrefix("docs/")
+            val canonicalFences = parseExecutableFences(
+                path = path,
+                source = file.readText(),
+                versionLane = versionLaneByPath[path],
+            )
+            val mirror = mirrorsBySource[sourceKey]
+            val mirrorFences = mirror?.get("absoluteFile")
+                ?.let { absoluteFile -> absoluteFile as? File }
+                ?.let { mirrorFile ->
+                    parseExecutableFences(
+                        path = mirrorFile.relativePathWithin(repository),
+                        source = mirrorFile.readText(),
+                        versionLane = versionLaneByPath[path],
+                    )
+                }
+                .orEmpty()
+            val mirrorAssociations = associateMirrorFences(canonicalFences, mirrorFences)
+            canonicalFences.mapIndexed { index, fence -> fence.report(mirrorAssociations[index]) }
         }
         .sortedWith(compareBy({ it.getValue("path").toString() }, { it.getValue("line") as Int }))
+    }
+
+    private fun associateMirrorFences(
+        canonical: List<GovernanceFence>,
+        mirrors: List<GovernanceFence>,
+    ): List<GovernanceFence?> {
+        val result = MutableList<GovernanceFence?>(canonical.size) { null }
+        val usedMirrorIndexes = mutableSetOf<Int>()
+        canonical.forEachIndexed { index, fence ->
+            if (fence.sourceMarker == null) return@forEachIndexed
+            val match = mirrors.indices.singleOrNull { mirrorIndex ->
+                mirrorIndex !in usedMirrorIndexes &&
+                    mirrors[mirrorIndex].sourceMarker == fence.sourceMarker &&
+                    mirrors[mirrorIndex].language == fence.language
+            }
+            if (match != null) {
+                result[index] = mirrors[match]
+                usedMirrorIndexes += match
+            }
+        }
+        canonical.forEachIndexed { index, fence ->
+            if (result[index] != null) return@forEachIndexed
+            val match = mirrors.indices.firstOrNull { mirrorIndex ->
+                mirrorIndex !in usedMirrorIndexes &&
+                    mirrors[mirrorIndex].contentHash == fence.contentHash &&
+                    mirrors[mirrorIndex].language == fence.language
+            }
+            if (match != null) {
+                result[index] = mirrors[match]
+                usedMirrorIndexes += match
+            }
+        }
+        val remainingCanonical = canonical.indices.filter { index -> result[index] == null }
+        val remainingMirrors = mirrors.indices.filterNot(usedMirrorIndexes::contains)
+        remainingCanonical.zip(remainingMirrors).forEach { (canonicalIndex, mirrorIndex) ->
+            result[canonicalIndex] = mirrors[mirrorIndex]
+        }
+        return result
+    }
 
     private fun discoverLocaleMirrors(
         repository: File,
@@ -370,6 +716,7 @@ internal object DocumentationGovernanceV2Reporter {
         .map { file ->
             val metadata = parseFrontMatter(file.readText())
             linkedMapOf<String, Any?>(
+                "absoluteFile" to file,
                 "path" to file.relativePathWithin(repository),
                 "translationSource" to metadata["translation_source"],
                 "translationSourceHash" to metadata["translation_source_hash"],
@@ -382,7 +729,7 @@ internal object DocumentationGovernanceV2Reporter {
         repository: File,
         files: Set<File>,
         schemas: Map<String, Map<String, Any?>>,
-    ): List<Map<String, Any?>> = files
+    ): List<GovernanceRecord> = files
         .filter(File::isFile)
         .filter { file -> file.extension == "json" }
         .map { file ->
@@ -399,14 +746,23 @@ internal object DocumentationGovernanceV2Reporter {
                     FrozenJsonSchemaValidator.validate(file.parseJsonValue(), schema)
                 }
             } ?: listOf("$ -> record is not stored in a recognized contract directory")
-            linkedMapOf<String, Any?>(
-                "path" to path,
-                "contractId" to contractId,
-                "valid" to violations.isEmpty(),
-                "violations" to violations,
+            val value = file.parseJsonObject()
+            GovernanceRecord(
+                path = path,
+                contractId = contractId,
+                valid = violations.isEmpty(),
+                violations = violations,
+                value = value,
+                recordId = when (contractId) {
+                    "capability" -> value["capability_id"]?.toString()
+                    "sample" -> value["sample_id"]?.toString()
+                    "capability-impact" -> value["impact_id"]?.toString()
+                    "exception" -> value["exception_id"]?.toString()
+                    else -> null
+                },
             )
         }
-        .sortedBy { record -> record.getValue("path").toString() }
+        .sortedBy(GovernanceRecord::path)
 
     private fun discoverPublishingInputs(
         repository: File,
@@ -420,12 +776,13 @@ internal object DocumentationGovernanceV2Reporter {
         val publishing = publishingFile.loadProperties()
         val releases = releasesFile.loadProperties()
         val unpublished = publishing.csvProperty("release.unpublishedModules")
-        val releasePairs = buildSet {
+        val releaseRecords = buildList {
             val count = releases.getProperty("release.count")?.toIntOrNull() ?: 0
             repeat(count) { index ->
                 val version = releases.getProperty("release.$index.version").orEmpty()
+                val sourceRevision = releases.getProperty("release.$index.sourceRevision").orEmpty()
                 releases.csvProperty("release.$index.modules").forEach { module ->
-                    add(module to version)
+                    add(Triple(module, version, sourceRevision))
                 }
             }
         }
@@ -434,16 +791,27 @@ internal object DocumentationGovernanceV2Reporter {
             .map { versionKey ->
                 val artifact = versionKey.removePrefix("module.").removeSuffix(".version")
                 val version = publishing.getProperty(versionKey)
+                val sourceRevision = publishing.getProperty("module.$artifact.sourceRevision")
+                val release = releaseRecords.singleOrNull { record ->
+                    record.first == artifact && record.second == version
+                }
                 val state = when {
                     artifact in unpublished -> "next"
-                    artifact to version in releasePairs -> "released"
+                    release != null && release.third == sourceRevision -> "released"
                     else -> "unresolved"
+                }
+                val resolutionProblem = when {
+                    state != "unresolved" -> null
+                    release == null -> "publishing version has no immutable release record"
+                    else -> "publishing source revision differs from the immutable release record"
                 }
                 linkedMapOf<String, Any?>(
                     "artifact" to artifact,
-                    "sourceRevision" to publishing.getProperty("module.$artifact.sourceRevision"),
+                    "releaseSourceRevision" to release?.third,
+                    "sourceRevision" to sourceRevision,
                     "version" to version,
                     "versionState" to state,
+                    "resolutionProblem" to resolutionProblem,
                 )
             }
             .sortedBy { artifact -> artifact.getValue("artifact").toString() }
@@ -455,25 +823,552 @@ internal object DocumentationGovernanceV2Reporter {
         )
     }
 
-    private fun reportIssue(
-        category: String,
-        target: String,
-        detail: String,
-    ): Map<String, Any?> = linkedMapOf(
-        "category" to category,
-        "target" to target,
-        "detail" to detail,
-    )
-
     private val packageDeclaration = Regex("""(?m)^\s*package\s+([A-Za-z_][A-Za-z0-9_.]*)""")
     private val functionDeclaration = Regex(
         """(?m)^\s*((?:(?:public|protected|private|internal|inline|infix|operator|suspend|tailrec|external|actual|expect)\s+)*)fun\s+(?:<[^>\n]+>\s+)?([A-Za-z_][A-Za-z0-9_.<>?, ]*\.)\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(""",
     )
     private val executableFence = Regex("""```(kotlin|java)(?:\s+.*)?""", RegexOption.IGNORE_CASE)
-    private val sampleRegistrationMarker = Regex(
-        """tutorial-sample|migration-pair|sample[_-]id|compiled-region""",
+    private val topLevelCallableDeclaration = Regex(
+        """(?m)^\s*((?:(?:public|protected|private|internal|inline|infix|operator|suspend|tailrec|external|actual|expect)\s+)*)fun\s+(?:<[^>\n]+>\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\(""",
+    )
+    private val topLevelTypeDeclaration = Regex(
+        """(?m)^\s*((?:(?:public|protected|private|internal|data|sealed|enum|annotation|value|actual|expect)\s+)*)(class|interface|object|typealias)\s+([A-Za-z_][A-Za-z0-9_]*)""",
+    )
+    private val moduleFamilyRow = Regex(
+        """^\|\s*`(viewcompose-[a-z0-9-]+)`\s*\|\s*([^|]+?)\s*\|""",
+    )
+    private val marker = Regex(
+        """\{/\*\s*(tutorial-sample(?:-end)?|paired-sample|compiled-region|non-executable|generated-signature)\b([^*]*)\*/}""",
         RegexOption.IGNORE_CASE,
     )
+    private val mavenDependency = Regex(
+        """com\.viewcompose:(viewcompose-[a-z0-9-]+):([A-Za-z0-9._+${'$'}{}-]+)""",
+    )
+    private val projectDependency = Regex(
+        """project\(\s*[\"']:(viewcompose-[a-z0-9-]+)[\"']\s*\)""",
+    )
+
+    private fun discoverModuleFamilies(moduleCatalogFile: File): Map<String, String> =
+        moduleCatalogFile.readLines().mapNotNull { line ->
+            moduleFamilyRow.find(line)?.let { match ->
+                match.groupValues[1] to match.groupValues[2].trim()
+            }
+        }.toMap()
+
+    private fun classifyCapability(
+        artifact: String,
+        family: String,
+        receiverName: String,
+        name: String,
+        path: String,
+    ): String? = when {
+        receiverName == "Modifier" -> "modifier"
+        family == "Preview tooling" -> "tooling"
+        artifact == "viewcompose-host-android" -> "host"
+        family == "Integration" -> "integration"
+        receiverName == "UiTreeBuilder" || receiverName.endsWith("Scope") -> {
+            if (isComponentEntry(name, path)) "component" else "dsl"
+        }
+        else -> null
+    }
+
+    private fun isComponentEntry(name: String, path: String): Boolean =
+        ("/dsl/" in path || "Components" in path || path.endsWith("AnimatedContent.kt") ||
+            path.endsWith("AnimatedVisibility.kt") || path.endsWith("GraphicsDsl.kt")) &&
+            !name.startsWith("Provide") && !name.startsWith("create") &&
+            !name.endsWith("Theme") && name != "lazyItemContentFactory"
+
+    private fun isApplicationEntry(
+        artifact: String,
+        family: String,
+        packageName: String,
+        name: String,
+    ): Boolean = when {
+        ".runtime" in packageName -> false
+        family == "Preview tooling" ->
+            name.startsWith("Preview") || name.startsWith("ViewComposePreview") || name.endsWith("Plugin")
+        artifact == "viewcompose-host-android" -> true
+        family == "Integration" -> true
+        else -> false
+    }
+
+    private fun documentPlacementViolations(path: String, docType: String?): List<String> {
+        val expected = when {
+            path == "docs/README.md" || path == "docs/modules/README.md" -> "project"
+            path.startsWith("docs/tutorials/") -> "tutorial"
+            path.startsWith("docs/guides/") -> "guide"
+            path.startsWith("docs/architecture/") -> "architecture"
+            path.startsWith("docs/migration/") -> "migration"
+            path.matches(Regex("docs/modules/[^/]+/README\\.md")) -> "module"
+            path.startsWith("docs/tooling/") -> "tooling"
+            path.startsWith("docs/project/") -> "project"
+            else -> null
+        }
+        return if (expected != null && docType != expected) {
+            listOf("$.doc_type -> $path requires $expected")
+        } else {
+            emptyList()
+        }
+    }
+
+    private fun parseExecutableFences(
+        path: String,
+        source: String,
+        versionLane: String?,
+    ): List<GovernanceFence> {
+        val lines = source.lines()
+        val dependencies = discoverDependencies(source)
+        val fences = mutableListOf<GovernanceFence>()
+        var activeTutorialMarker: SourceMarker? = null
+        var pendingMarker: SourceMarker? = null
+        var index = 0
+        while (index < lines.size) {
+            marker.find(lines[index])?.let { match ->
+                val markerName = match.groupValues[1].lowercase()
+                if (markerName == "tutorial-sample-end") {
+                    activeTutorialMarker = null
+                    pendingMarker = null
+                } else {
+                    val parsed = SourceMarker.from(markerName, match.groupValues[2])
+                    if (markerName == "tutorial-sample") {
+                        activeTutorialMarker = parsed
+                    } else {
+                        pendingMarker = parsed
+                    }
+                }
+            }
+            val opening = executableFence.matchEntire(lines[index].trim())
+            if (opening == null) {
+                index += 1
+                continue
+            }
+            val language = opening.groupValues[1].lowercase()
+            val contentStart = index + 1
+            var closing = contentStart
+            while (closing < lines.size && !lines[closing].trimStart().startsWith("```")) {
+                closing += 1
+            }
+            val content = lines.subList(contentStart, minOf(closing, lines.size)).joinToString("\n")
+            val sourceMarker = activeTutorialMarker ?: pendingMarker
+            val contentHash = sha256(content.trimEnd())
+            val duplicateOrdinal = fences.count { fence ->
+                fence.language == language && fence.contentHash == contentHash
+            }
+            fences += GovernanceFence(
+                path = path,
+                line = index + 1,
+                language = language,
+                versionLane = versionLane,
+                dependencies = dependencies,
+                sourceMarker = sourceMarker,
+                contentHash = contentHash,
+                duplicateOrdinal = duplicateOrdinal,
+            )
+            pendingMarker = null
+            index = if (closing < lines.size) closing + 1 else lines.size
+        }
+        return fences
+    }
+
+    private fun discoverDependencies(source: String): List<Map<String, Any?>> = buildList {
+        mavenDependency.findAll(source).forEach { match ->
+            add(
+                linkedMapOf<String, Any?>(
+                    "artifact" to match.groupValues[1],
+                    "kind" to "maven",
+                    "version" to match.groupValues[2],
+                ),
+            )
+        }
+        projectDependency.findAll(source).forEach { match ->
+            add(
+                linkedMapOf<String, Any?>(
+                    "artifact" to match.groupValues[1],
+                    "kind" to "project",
+                    "version" to null,
+                ),
+            )
+        }
+    }.distinctBy(StableJson::encode).sortedBy(StableJson::encode)
+
+    private fun correlateDebtBaseline(
+        issues: List<GovernanceIssue>,
+        records: List<GovernanceRecord>,
+    ): DebtBaselineResult {
+        val issueGroups = issues.groupBy(GovernanceIssue::baselineKey)
+        val exceptionRecords = records.filter { record -> record.contractId == "exception" && record.valid }
+        val matches = mutableMapOf<String, DebtBaselineMatch>()
+        val entries = exceptionRecords.map { record ->
+            val target = record.value.objectValue("target").orEmpty()
+            val targetKind = if ("file" in target) "file" else "symbol"
+            val targetValue = target[targetKind]?.toString().orEmpty()
+            val category = record.value.requiredString("category")
+            val key = GovernanceIssue.baselineKey(category, targetKind, targetValue)
+            val actualCount = issueGroups[key].orEmpty().size
+            val expectedCount = record.value["violation_count"].asIntegerOrNull() ?: 0
+            val status = when {
+                actualCount == expectedCount -> "exact"
+                actualCount == 0 -> "stale"
+                actualCount < expectedCount -> "reduced"
+                else -> "broadened"
+            }
+            val match = DebtBaselineMatch(
+                exceptionId = record.recordId.orEmpty(),
+                key = key,
+                expectedCount = expectedCount,
+                actualCount = actualCount,
+                status = status,
+                path = record.path,
+            )
+            matches.putIfAbsent(key, match)
+            match
+        }.sortedBy(DebtBaselineMatch::exceptionId)
+        val unbaselined = issues.count { issue -> issue.baselineKey !in matches }
+        return DebtBaselineResult(entries, matches, unbaselined)
+    }
+
+    private fun humanReport(
+        issues: List<GovernanceIssue>,
+        baseline: DebtBaselineResult,
+        declarationCount: Int,
+        documentCount: Int,
+        fenceCount: Int,
+    ): String = buildString {
+        appendLine("Documentation Governance V2 — Phase 1 report-only audit")
+        appendLine("Inventory: $declarationCount production entries; $documentCount public pages; $fenceCount executable fences")
+        appendLine("Issues: ${issues.size}; baseline entries: ${baseline.entries.size}; unbaselined: ${baseline.unbaselinedIssueCount}")
+        issueCategories.forEach { category ->
+            val matching = issues.filter { issue -> issue.category == category }
+            appendLine()
+            appendLine("[$category] ${matching.size}")
+            matching.forEach { issue ->
+                val baselineId = baseline.matches[issue.baselineKey]?.exceptionId ?: "unbaselined"
+                appendLine("- ${issue.id} [$baselineId] ${issue.target}: ${issue.detail}")
+            }
+        }
+        if (baseline.entries.isNotEmpty()) {
+            appendLine()
+            appendLine("[baseline-status] ${baseline.entries.size}")
+            baseline.entries.forEach { entry ->
+                appendLine(
+                    "- ${entry.exceptionId} ${entry.status}: expected ${entry.expectedCount}, actual ${entry.actualCount} (${entry.path})",
+                )
+            }
+        }
+    }
+
+    private fun sanitizeKotlin(source: String): String {
+        val result = source.toCharArray()
+        var index = 0
+        var blockCommentDepth = 0
+        var state = KotlinLexicalState.Code
+        while (index < result.size) {
+            val current = result[index]
+            val next = result.getOrNull(index + 1)
+            when (state) {
+                KotlinLexicalState.Code -> when {
+                    current == '/' && next == '/' -> {
+                        result[index] = ' '
+                        result[index + 1] = ' '
+                        index += 2
+                        state = KotlinLexicalState.LineComment
+                    }
+                    current == '/' && next == '*' -> {
+                        result[index] = ' '
+                        result[index + 1] = ' '
+                        index += 2
+                        blockCommentDepth = 1
+                        state = KotlinLexicalState.BlockComment
+                    }
+                    current == '"' && next == '"' && result.getOrNull(index + 2) == '"' -> {
+                        repeat(3) { offset -> result[index + offset] = ' ' }
+                        index += 3
+                        state = KotlinLexicalState.TripleString
+                    }
+                    current == '"' -> {
+                        result[index] = ' '
+                        index += 1
+                        state = KotlinLexicalState.String
+                    }
+                    current == '\'' -> {
+                        result[index] = ' '
+                        index += 1
+                        state = KotlinLexicalState.Character
+                    }
+                    else -> index += 1
+                }
+                KotlinLexicalState.LineComment -> {
+                    if (current == '\n') {
+                        state = KotlinLexicalState.Code
+                    } else {
+                        result[index] = ' '
+                    }
+                    index += 1
+                }
+                KotlinLexicalState.BlockComment -> when {
+                    current == '/' && next == '*' -> {
+                        result[index] = ' '
+                        result[index + 1] = ' '
+                        blockCommentDepth += 1
+                        index += 2
+                    }
+                    current == '*' && next == '/' -> {
+                        result[index] = ' '
+                        result[index + 1] = ' '
+                        blockCommentDepth -= 1
+                        index += 2
+                        if (blockCommentDepth == 0) state = KotlinLexicalState.Code
+                    }
+                    else -> {
+                        if (current != '\n') result[index] = ' '
+                        index += 1
+                    }
+                }
+                KotlinLexicalState.String, KotlinLexicalState.Character -> {
+                    if (current == '\\') {
+                        result[index] = ' '
+                        result.getOrNull(index + 1)?.let { result[index + 1] = if (it == '\n') '\n' else ' ' }
+                        index += 2
+                    } else {
+                        val closing = (state == KotlinLexicalState.String && current == '"') ||
+                            (state == KotlinLexicalState.Character && current == '\'')
+                        if (current != '\n') result[index] = ' '
+                        index += 1
+                        if (closing) state = KotlinLexicalState.Code
+                    }
+                }
+                KotlinLexicalState.TripleString -> {
+                    if (current == '"' && next == '"' && result.getOrNull(index + 2) == '"') {
+                        repeat(3) { offset -> result[index + offset] = ' ' }
+                        index += 3
+                        state = KotlinLexicalState.Code
+                    } else {
+                        if (current != '\n') result[index] = ' '
+                        index += 1
+                    }
+                }
+            }
+        }
+        return result.concatToString()
+    }
+
+    private fun braceDepths(source: String): IntArray {
+        val result = IntArray(source.length)
+        var depth = 0
+        source.indices.forEach { index ->
+            result[index] = depth
+            when (source[index]) {
+                '{' -> depth += 1
+                '}' -> depth = maxOf(0, depth - 1)
+            }
+        }
+        return result
+    }
+}
+
+private data class CapabilityDeclaration(
+    val artifact: String,
+    val kind: String,
+    val line: Int,
+    val path: String,
+    val receiver: String?,
+    val sourcePackage: String,
+    val symbol: String,
+    val visibility: String,
+)
+
+private data class GovernanceRecord(
+    val path: String,
+    val contractId: String?,
+    val valid: Boolean,
+    val violations: List<String>,
+    val value: Map<String, Any?>,
+    val recordId: String?,
+) {
+    fun report(): Map<String, Any?> = linkedMapOf(
+        "path" to path,
+        "contractId" to contractId,
+        "recordId" to recordId,
+        "valid" to valid,
+        "violations" to violations,
+    )
+}
+
+private data class SourceMarker(
+    val marker: String,
+    val sampleClass: String,
+    val source: String?,
+    val region: String?,
+    val sampleId: String?,
+) {
+    fun report(): Map<String, Any?> = linkedMapOf(
+        "marker" to marker,
+        "sampleClass" to sampleClass,
+        "source" to source,
+        "region" to region,
+        "sampleId" to sampleId,
+    )
+
+    companion object {
+        fun from(marker: String, attributeSource: String): SourceMarker {
+            val attributes = Regex(
+                """([a-zA-Z][a-zA-Z0-9_-]*)\s*=\s*[\"']([^\"']+)[\"']""",
+            ).findAll(attributeSource)
+                .associate { match -> match.groupValues[1] to match.groupValues[2] }
+            return SourceMarker(
+                marker = marker,
+                sampleClass = when (marker) {
+                    "generated-signature" -> "generated-signature"
+                    "non-executable" -> "non-executable"
+                    else -> "compiled-region"
+                },
+                source = attributes["source"],
+                region = attributes["region"],
+                sampleId = attributes["sample_id"] ?: attributes["sample-id"],
+            )
+        }
+    }
+}
+
+private data class GovernanceFence(
+    val path: String,
+    val line: Int,
+    val language: String,
+    val versionLane: String?,
+    val dependencies: List<Map<String, Any?>>,
+    val sourceMarker: SourceMarker?,
+    val contentHash: String,
+    val duplicateOrdinal: Int,
+) {
+    val registered: Boolean
+        get() = sourceMarker?.let { marker ->
+            marker.sampleClass != "compiled-region" ||
+                (marker.source != null && marker.region != null)
+        } == true
+
+    fun report(mirror: GovernanceFence?): Map<String, Any?> = linkedMapOf(
+        "contentHash" to contentHash,
+        "dependencies" to dependencies,
+        "language" to language,
+        "languageMirror" to mirror?.let { mirrorFence ->
+            linkedMapOf<String, Any?>(
+                "contentMatches" to (contentHash == mirrorFence.contentHash),
+                "language" to mirrorFence.language,
+                "line" to mirrorFence.line,
+                "path" to mirrorFence.path,
+                "sourceMarkerMatches" to (sourceMarker == mirrorFence.sourceMarker),
+            )
+        },
+        "line" to line,
+        "path" to path,
+        "registered" to registered,
+        "sourceMarker" to sourceMarker?.report(),
+        "stableFenceIdentity" to "$path|$language|$contentHash|$duplicateOrdinal",
+        "versionLane" to versionLane,
+    )
+}
+
+private data class GovernanceIssue(
+    val id: String,
+    val category: String,
+    val target: String,
+    val detail: String,
+    val baselineTargetKind: String,
+    val baselineTarget: String,
+    val baselineKey: String,
+) {
+    fun toReportMap(baselineExceptionId: String?): Map<String, Any?> = linkedMapOf(
+        "baselineExceptionId" to baselineExceptionId,
+        "baselineTarget" to linkedMapOf(baselineTargetKind to baselineTarget),
+        "category" to category,
+        "detail" to detail,
+        "id" to id,
+        "target" to target,
+    )
+
+    companion object {
+        fun file(
+            category: String,
+            target: String,
+            detail: String,
+            baselineTarget: String = target,
+            identitySuffix: String = target,
+        ): GovernanceIssue = create(category, target, detail, "file", baselineTarget, identitySuffix)
+
+        fun symbol(
+            category: String,
+            target: String,
+            detail: String,
+            identitySuffix: String = target,
+            baselineFile: String? = null,
+        ): GovernanceIssue = create(
+            category,
+            target,
+            detail,
+            if (baselineFile == null) "symbol" else "file",
+            baselineFile ?: target,
+            identitySuffix,
+        )
+
+        fun baselineKey(category: String, targetKind: String, target: String): String =
+            "$category\u0000$targetKind\u0000$target"
+
+        private fun create(
+            category: String,
+            target: String,
+            detail: String,
+            baselineTargetKind: String,
+            baselineTarget: String,
+            identitySuffix: String,
+        ): GovernanceIssue = GovernanceIssue(
+            id = "gov2-${sha256("$category\u0000$identitySuffix").take(16)}",
+            category = category,
+            target = target,
+            detail = detail,
+            baselineTargetKind = baselineTargetKind,
+            baselineTarget = baselineTarget,
+            baselineKey = baselineKey(category, baselineTargetKind, baselineTarget),
+        )
+    }
+}
+
+private data class DebtBaselineMatch(
+    val exceptionId: String,
+    val key: String,
+    val expectedCount: Int,
+    val actualCount: Int,
+    val status: String,
+    val path: String,
+) {
+    fun report(): Map<String, Any?> = linkedMapOf(
+        "actualCount" to actualCount,
+        "exceptionId" to exceptionId,
+        "expectedCount" to expectedCount,
+        "path" to path,
+        "status" to status,
+    )
+}
+
+private data class DebtBaselineResult(
+    val entries: List<DebtBaselineMatch>,
+    val matches: Map<String, DebtBaselineMatch>,
+    val unbaselinedIssueCount: Int,
+) {
+    fun report(): Map<String, Any?> = linkedMapOf(
+        "entries" to entries.map(DebtBaselineMatch::report),
+        "entryCount" to entries.size,
+        "exactEntryCount" to entries.count { entry -> entry.status == "exact" },
+        "unbaselinedIssueCount" to unbaselinedIssueCount,
+    )
+}
+
+private enum class KotlinLexicalState {
+    Code,
+    LineComment,
+    BlockComment,
+    String,
+    TripleString,
+    Character,
 }
 
 internal object FrozenJsonSchemaValidator {
@@ -718,6 +1613,21 @@ private fun File.relativePathWithin(repository: File): String =
 
 private fun String.lineNumberAt(index: Int): Int = substring(0, index).count { it == '\n' } + 1
 
+private fun sha256(value: String): String = MessageDigest.getInstance("SHA-256")
+    .digest(value.toByteArray(Charsets.UTF_8))
+    .joinToString("") { byte -> "%02x".format(byte) }
+
+private fun String.withoutTypeArguments(): String = buildString {
+    var depth = 0
+    this@withoutTypeArguments.forEach { character ->
+        when (character) {
+            '<' -> depth += 1
+            '>' -> depth = maxOf(0, depth - 1)
+            else -> if (depth == 0) append(character)
+        }
+    }
+}
+
 private fun parseFrontMatter(source: String): Map<String, Any?> {
     val lines = source.lineSequence().toList()
     if (lines.firstOrNull()?.trim() != "---") return emptyMap()
@@ -725,32 +1635,86 @@ private fun parseFrontMatter(source: String): Map<String, Any?> {
         .takeIf { index -> index >= 0 }
         ?.plus(1)
         ?: return emptyMap()
+    val yamlLines = lines.subList(1, closingIndex).mapNotNull { line ->
+        val content = line.trimEnd()
+        if (content.isBlank() || content.trimStart().startsWith("#")) {
+            null
+        } else {
+            FrontMatterLine(
+                indent = content.indexOfFirst { character -> !character.isWhitespace() }
+                    .coerceAtLeast(0),
+                content = content.trimStart(),
+            )
+        }
+    }
+    return parseFrontMatterMap(yamlLines, 0, 0).first
+}
+
+private data class FrontMatterLine(val indent: Int, val content: String)
+
+private fun parseFrontMatterMap(
+    lines: List<FrontMatterLine>,
+    start: Int,
+    indent: Int,
+): Pair<Map<String, Any?>, Int> {
     val result = linkedMapOf<String, Any?>()
-    var index = 1
-    while (index < closingIndex) {
+    var index = start
+    while (index < lines.size) {
         val line = lines[index]
-        if (line.isBlank() || line.trimStart().startsWith("#") || line.firstOrNull()?.isWhitespace() == true) {
+        if (line.indent < indent) break
+        if (line.indent > indent || line.content.startsWith("- ")) {
             index += 1
             continue
         }
-        val separator = line.indexOf(':')
+        val separator = line.content.indexOf(':')
         if (separator <= 0) {
             index += 1
             continue
         }
-        val key = line.substring(0, separator).trim()
-        val rawValue = line.substring(separator + 1).trim()
-        result[key] = when {
-            rawValue.isEmpty() -> null
-            rawValue == "[]" -> emptyList<String>()
-            rawValue == "true" -> true
-            rawValue == "false" -> false
-            rawValue.toIntOrNull() != null -> rawValue.toInt()
-            else -> rawValue.removeSurrounding("\"").removeSurrounding("'")
+        val key = line.content.substring(0, separator).trim()
+        val rawValue = line.content.substring(separator + 1).trim()
+        if (rawValue.isNotEmpty()) {
+            result[key] = parseFrontMatterScalar(rawValue)
+            index += 1
+            continue
         }
-        index += 1
+        val child = lines.getOrNull(index + 1)
+        if (child == null || child.indent <= indent) {
+            result[key] = null
+            index += 1
+        } else if (child.content.startsWith("- ")) {
+            val values = mutableListOf<Any?>()
+            index += 1
+            while (index < lines.size && lines[index].indent == child.indent &&
+                lines[index].content.startsWith("- ")
+            ) {
+                values += parseFrontMatterScalar(lines[index].content.removePrefix("- ").trim())
+                index += 1
+            }
+            result[key] = values
+        } else {
+            val (childMap, nextIndex) = parseFrontMatterMap(lines, index + 1, child.indent)
+            result[key] = childMap
+            index = nextIndex
+        }
     }
-    return result
+    return result to index
+}
+
+private fun parseFrontMatterScalar(rawValue: String): Any? = when {
+    rawValue == "[]" -> emptyList<String>()
+    rawValue.startsWith('[') && rawValue.endsWith(']') -> rawValue
+        .removePrefix("[")
+        .removeSuffix("]")
+        .split(',')
+        .map(String::trim)
+        .filter(String::isNotEmpty)
+        .map { value -> value.removeSurrounding("\"").removeSurrounding("'") }
+    rawValue == "true" -> true
+    rawValue == "false" -> false
+    rawValue == "null" -> null
+    rawValue.toIntOrNull() != null -> rawValue.toInt()
+    else -> rawValue.removeSurrounding("\"").removeSurrounding("'")
 }
 
 private fun File.loadProperties(): Properties = Properties().apply {

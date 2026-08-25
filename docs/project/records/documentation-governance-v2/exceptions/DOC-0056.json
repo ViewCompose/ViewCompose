@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "exception_id": "DOC-0056",
+  "target": {
+    "file": "docs/modules/viewcompose-camerax-androidx/README.md"
+  },
+  "category": "missing-metadata",
+  "reason": "This active public page predates Governance V2 structured metadata migration.",
+  "owner": "documentation-governance",
+  "created_on": "2026-08-26",
+  "removal_condition": "Delete this entry when the exact page satisfies the Governance V2 document contract.",
+  "violation_count": 1
+}

@@ -14,14 +14,14 @@ status: active
 scope: Establish structured documentation ownership, discovery, debt ratchets, and generated Reference.
 non_goals:
   - Weaken existing documentation, source-comment, release, or site gates.
-baseline: Phase 0B provides compiled deterministic report-only discovery without changing blocking gates.
+baseline: Phase 1 freezes 733 reviewed findings in 311 exact debt records with no unbaselined issue.
 ordered_work:
   - Add compiled report-only discovery and then activate no-new-debt gates.
   - Generate Reference ownership before broad content and sample migration.
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Complete Phase 1 discovery accuracy and freeze the exact reviewed debt baseline.
+next_action: Activate Phase 2 no-new-debt and capability-impact gates against the frozen baseline.
 maven_release_changesets: []
 ---
 
@@ -29,9 +29,10 @@ maven_release_changesets: []
 
 ## Status
 
-Active. The assessment baseline was frozen on `main` at `4fd14c4a` on 2026-08-25. Phases 0A and 0B
-are complete: the normative Governance V2 contract and its compiled report-only scanner now run
-from the quality included build without changing an existing blocking lifecycle.
+Active. The assessment baseline was frozen on `main` at `4fd14c4a` on 2026-08-25. Phases 0A, 0B,
+and 1 are complete: the normative Governance V2 contract, compiled report-only scanner, precise
+production/public inventory, and exact reviewed debt baseline now run from the quality included
+build without changing an existing blocking lifecycle.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -40,8 +41,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: complete Phase 1 production-surface discovery, classification, and exact reviewed debt
-baseline while the scanner remains report-only.
+Next action: activate Phase 2 no-new-debt and capability-impact gates against the frozen baseline.
 
 ## Maven release changesets
 
@@ -49,7 +49,10 @@ baseline while the scanner remains report-only.
 
 ## Release intent rationale
 
-Creating this plan changes contributor documentation only and has no published-artifact impact.
+Phase 1 changes governance records and compiled repository-quality tooling only; it does not change
+a published artifact's production source, publication inputs, or compiled API samples.
+`verifyViewComposeReleaseIntent` confirmed zero release artifacts, zero ignored artifacts, and zero
+shared-path classifications against `7b79cc978c737b6368744bcc798aaf64dac538b7`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -376,6 +379,49 @@ still requires structural site-budget work rather than another prose-only thresh
 Exit condition: repeated scans of an unchanged checkout are byte-for-byte stable, and every known
 problem is either represented by an exact baseline ID or rejected as a scanner false positive with
 a regression fixture.
+
+Phase 1 completed on 2026-08-26. Discovery now reads the existing translation policy for the public
+page set, the module catalog for artifact families, publishing metadata plus the immutable release
+registry for version state, and only registered Maven artifacts' production `src/main` sources.
+The Kotlin lexical scan ignores comments, strings, nested/local declarations, non-public entries,
+Demo, samples, tests, generated output, internal packages, retired artifacts, and renderer-only
+surfaces. It groups overloads by canonical symbol and classifies component, DSL, Modifier, host,
+integration, and tooling entries by artifact and source package. Executable-fence records include
+stable content identity, source marker, locale peer, version lane, and discovered dependency data.
+
+The reviewed inventory contains 433 production entries, 116 policy-owned public pages, 198
+Kotlin/Java fences, 116 locale mirrors, 38 publishing artifacts, and 311 exact baseline records.
+All 733 findings resolve to a stable issue ID and one baseline ID: 112 missing-metadata findings,
+433 orphan-symbol findings, 178 unclassified-sample findings, and 10 taxonomy mismatches comprising
+two missing locale fences and eight differing locale fence bodies. All 311 baseline records match
+their exact target/category count, and the unbaselined count is zero. Relative to Phase 0B, Demo and
+sample declaration false positives fell from four to zero (-100%), public-page discovery fell from
+119 broad active files to 116 policy-owned pages (-2.52%), and recognized sample markers reduced
+unclassified fences from 186 to 178 (-4.30%). The total finding count rose from 299 to 733
+(+145.15%) because Phase 1 newly audits production entry ownership and locale parity; this is an
+expanded accurate inventory, not a content regression. The discovery-accuracy conclusion is
+`improved`, while blocking-gate behavior remains `no material change` because the task is still
+report-only.
+
+The machine and human reports are deterministic build outputs; unit tests also prove that a wider
+violation count is reported as `broadened`. The scanner is intentionally a compiled lexical parser,
+not a Kotlin compiler frontend, and the repository currently has no Java production sources to
+exercise. Stale generated-reference output remains a zero-result category until the Phase 4 engine
+creates that output. Phase 2 is the next action and will turn unbaselined, widened, increased,
+re-added, or invalid exceptions into blocking failures without changing the frozen baseline.
+The compiled quality suite passed 33/33 tests. Two independently regenerated final-checkout reports
+were byte-identical: machine JSON SHA-256
+`b7ee75107d6275f43688199ce17e0b89db79112a2923c73b223e0d746e0491bd` and human report SHA-256
+`dfdc8082ee87512758df9eb626476bf2d234b451e0800e9494a07403d1604d9f`. The documentation script
+suite passed 52/52 tests, all 116 required translations were current, development-tooling isolation
+passed, and the frozen task graphs remained exact: `qaQuick` 2,899/2,899, `qaPreview` 1,640/1,640,
+`qaFull` 3,098/3,098, and `verifyDocumentationStructure` 4/4. The first full `qaQuick` attempt ran
+for 8 minutes 18 seconds and reached `:samples:counter:mergeExtDexDebug` before D8 exhausted the
+default 2 GiB Gradle heap. Repeating the same checkout with a one-run-only 4 GiB heap and four
+workers passed in 47 seconds with 2,341 actionable tasks (209 executed and 2,132 up-to-date).
+Because no repository memory setting changed and the repeated run passed the complete gate, the
+implementation conclusion remains `improved`; the limitation is host-memory sensitivity during a
+fully invalidated Android build, and Phase 2 remains the next action.
 
 ### Phase 2: no-new-debt gates
 

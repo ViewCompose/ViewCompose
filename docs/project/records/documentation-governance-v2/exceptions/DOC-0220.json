@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "exception_id": "DOC-0220",
+  "target": {
+    "file": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/feedback/FeedbackWidgetsDsl.kt"
+  },
+  "category": "orphan-symbol",
+  "reason": "This production source file still contains public entries without capability ownership records.",
+  "owner": "documentation-governance",
+  "created_on": "2026-08-26",
+  "removal_condition": "Delete this entry when every counted public entry in the exact source file has one capability owner.",
+  "violation_count": 7
+}
