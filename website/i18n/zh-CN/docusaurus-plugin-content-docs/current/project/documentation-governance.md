@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: 451b1d95643fedb2fdf68906cbbf1c37c23bdb210b09625a374ed7c8bc613e13
+translation_source_hash: ee5e25acf6fc36cdd04e6983a256941b6d14714572e0bc49898bf8eb597ad4f3
 translation_status: current
 ---
 
@@ -134,6 +134,19 @@ change/breaking 状态、Q 等级、契约字段和 KDoc/module/sample/Reference
 Architecture/Migration/redirect 处置。处置只能是带精确目标的 `updated` 或带具体理由的
 `not-applicable`。移动/删除必须有 redirect，breaking 必须有 migration；公共 symbol 不能使用
 自由文本 `No documentation impact`。
+
+阻塞门禁会把 PR 与其精确验证基准进行比较，检查面向应用的 capability 清单是否发生结构变化：
+包括公开/受保护的 DSL 与 scope 函数、`Modifier` 扩展、组件、host、集成和 tooling 入口。门禁会
+对 overload 集合、注解、默认值、可见性、弃用状态、制品和稳定符号身份生成指纹。只在文件之间
+移动未改变的源码属于中性变更；package/符号身份改变属于移动。每个检测到的变更都必须在
+`docs/project/records/documentation-governance-v2/impacts/` 下新增且只能新增一条记录，其制品、
+符号和变更类型必须精确匹配。impact 记录合并后不可变，也不能预先创建或重复使用。
+
+被引用的 capability 记录必须有效且唯一，拥有当前制品和符号，并解析到属于同一 capability 的
+有效 sample 记录。记录 ID 重复、陈旧 impact、owner 缺失和 sample 不匹配都会失败。门禁不会根据
+声明未变的函数体推断行为变化，capability 清单也不宣称覆盖每一个底层公开实现类型。这些情况仍
+然负有相同的 impact 记录义务，必须由作者/审阅者结合源码文档和发布检查识别；这一机器边界不构成
+`No documentation impact` 豁免。
 
 ### Exception 与债务棘轮
 

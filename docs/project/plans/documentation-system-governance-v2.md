@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Enforce public API capability-impact ownership and generated Reference freshness.
+next_action: Generate source-owned Reference indexes and enforce committed-output freshness.
 maven_release_changesets: []
 ---
 
@@ -32,7 +32,8 @@ maven_release_changesets: []
 Active. The assessment baseline was frozen on `main` at `4fd14c4a` on 2026-08-25. Phases 0A, 0B,
 and 1 are complete. The first Phase 2 slice enforces the frozen baseline as a blocking no-new-debt
 ratchet; the second automatically discovers Tutorial pages and validates type-aware sample markers
-plus exact source-region identity in both languages. The normative contract, compiled scanner,
+plus exact source-region identity in both languages; the third requires structural public
+capability changes to own exact, immutable capability-impact records. The normative contract, compiled scanner,
 precise production/public inventory, and exact reviewed debt baseline all run from the quality
 included build.
 
@@ -43,7 +44,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: enforce public API capability-impact ownership and generated Reference freshness.
+Next action: generate source-owned Reference indexes and enforce committed-output freshness.
 
 ## Maven release changesets
 
@@ -54,8 +55,9 @@ Next action: enforce public API capability-impact ownership and generated Refere
 The completed Phase 2 governance-tooling slices change governance records, documentation markers,
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
-`verifyViewComposeReleaseIntent` confirmed zero release artifacts, zero ignored artifacts, and zero
-shared-path classifications against `1cdad31d99dfb37b249609276259a16eb7e20954`.
+`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, zero ignored
+artifacts, and zero shared-path classifications against
+`ead2b998b5daa4457ea9e37c8e50da3c41d663b7`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -512,6 +514,40 @@ rose by 161 seconds (+34.92%). The opposing work/time directions and uncontrolle
 make build-timing impact `inconclusive`; the task-graph conclusion is `no material change`, and the
 functional gate conclusion remains `improved`. One local host run is the limitation and
 pull-request CI is the next independent acceptance step.
+
+The third Phase 2 slice hard-cuts structural capability impact from a review-only statement to a
+blocking comparison with the exact pull-request base. The shared production scanner fingerprints
+the changed application-facing DSL/scope, `Modifier`, component, host, integration, and tooling
+overload sets, including annotations, default values, visibility, deprecation state, artifact, and
+symbol identity. It classifies additions, signature changes, deprecations, deletions, and
+unambiguous symbol moves while treating a source-file-only move as neutral. Every detected change
+must match exactly one capability-impact record newly added by the same pull request; historical
+impact records are immutable and stale/pre-created records fail.
+
+The matched impact must reference one valid capability owner for the artifact and current symbol,
+and that capability must resolve a valid sample record belonging to the same capability. Duplicate
+record IDs, missing/mismatched owners, missing/mismatched samples, and an impact that does not
+classify exactly one detected change are blocking. Negative coverage proves that an undocumented
+new `Modifier.foo` fails, an overload addition is classified as `changed` rather than a new
+capability, a changed signature passes only with exact owner/sample evidence, and mutating a merged
+impact record fails. Body-only behavior changes and low-level public types outside the capability
+inventory remain reviewer-owned detection boundaries, not exemptions from the impact contract.
+Generated Reference ownership/freshness is the next Phase 2 slice.
+
+The quality included build passed 41/41 tests, the documentation script suite passed 55/55 tests,
+and all 116 required Chinese translations were current. The real repository scan retained 433
+production entries and all 733 historical findings matched the same 311 exact exceptions, with
+zero structural public API change and zero new violation in this tooling-only pull request. Two
+forced report runs were byte-identical: machine JSON SHA-256
+`f97f72207ed941452fe14eab61839eb51a52eb5b2b9469921314436e549ac793` and human report SHA-256
+`9e4585315638f99953cda4d61bc32e99f757856617d534a2597886faa427343c`.
+An all-tasks-rerun `qaQuick` passed in 7 minutes 47 seconds with 2,342/2,342 tasks executed, and
+release-intent verification reported zero changed, ignored, or shared release classifications
+against `ead2b998b5daa4457ea9e37c8e50da3c41d663b7`. The actionable task count is unchanged from the
+preceding slice (0%); wall time fell by 155 seconds (-24.92%) despite 96 more tasks being executed,
+so host/cache effects make timing `inconclusive`. The task-graph conclusion is `no material change`
+and structural change enforcement is `improved`. One local host remains the limitation, and
+pull-request CI is the independent acceptance step.
 
 ### Phase 3: information-architecture restructure
 
