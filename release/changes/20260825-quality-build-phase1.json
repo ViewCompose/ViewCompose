@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add compiled, isolated ownership and a parity harness for repository quality gates without changing any published artifact or active gate graph.",
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "Apply and explicitly configure the repository-only quality plugin without changing a published artifact or existing quality-task dependency."
+    },
+    {
+      "path": "settings.gradle.kts",
+      "reason": "Make the repository-only compiled quality plugin available as an included build without changing publication inputs or artifact membership."
+    }
+  ]
+}

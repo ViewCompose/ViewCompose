@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-25
-next_action: Wait for compiled quality-build Phase 1 and existing-gate extraction before Phase 0B.
+next_action: Wait for quality-build Phase 2 existing-gate extraction before Phase 0B.
 maven_release_changesets: []
 ---
 
@@ -40,9 +40,9 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-25.
 
-Next action: return to the coordinated pull-request gate plan for its compiled quality-build Phase
-1 and existing-gate extraction. Phase 0B scanner implementation begins only after that ownership
-exists and must run there in report-only mode, never as a temporary root-build scanner.
+Next action: remain on the coordinated pull-request gate plan while Phase 2 extracts existing gates
+into the now-complete compiled quality owner. Phase 0B scanner implementation begins only after
+that extraction and must run there in report-only mode, never as a temporary root-build scanner.
 
 ## Maven release changesets
 

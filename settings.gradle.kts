@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("tools/viewcompose-quality-build")
     includeBuild("tools/viewcompose-preview-build")
     includeBuild("tools/viewcompose-publishing-build")
     repositories {
