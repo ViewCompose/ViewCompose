@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut documentation governance and DSL contract gates into compiled quality build ownership without changing published artifacts or task selection.",
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "Remove repository-only documentation task bodies and command wiring after compiled parity acceptance while preserving stable task names and lifecycle dependencies."
+    }
+  ]
+}

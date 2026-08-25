@@ -1,5 +1,6 @@
 package com.viewcompose.quality
 
+import org.gradle.api.tasks.Exec
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -106,6 +107,16 @@ class ViewComposeQualityRootPluginTest {
             tutorialTask.documentationFiles.files.any { file ->
                 file.invariantSeparatorsPath.endsWith("docs/tutorials/getting-started.md")
             },
+        )
+        assertTrue(project.tasks.getByName("verifyDocumentationScripts") is Exec)
+        assertTrue(project.tasks.getByName("verifyDocumentLanguages") is Exec)
+        assertTrue(project.tasks.getByName("verifyDocumentationTranslations") is Exec)
+        assertTrue(
+            project.tasks.getByName("verifyDocumentationStructure") is
+                VerifyDocumentationStructureTask,
+        )
+        assertTrue(
+            project.tasks.getByName("verifyDslApiContracts") is VerifyDslApiContractsTask,
         )
     }
 
