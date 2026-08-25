@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 71b02e3441e9f8e9775a48704454c9cfc877e93972432eafea0227ceb0a2559d
+translation_source_hash: 063f6f0ab25a199983f5c6c14fe14344f1c40263ec6966224c30d07c558b9945
 translation_status: current
 ---
 
@@ -300,12 +300,17 @@ Power HAL AIDL 模式，实际调用失败。没有执行 benchmark，临时显�
 `null`、Minimum Refresh `0.0`、自动旋转 `1` 和 User Rotation `0`。模拟器可以验证路由和结果管道，
 但受宿主机约束的 GPU 与显示管线不能关闭这条物理设备基线。
 
+当前没有设备符合剩余集合滚动验收运行的要求。已 root 的小米若不改变被测渲染路径，就无法消除其
+显示缓冲平台；Pixel 无法进入可证明的固定性能模式；模拟器时序也不属于物理设备证据。因此正式
+重采集因硬件条件而暂停，直到获得另一台合适的物理参考设备；现有设备不应继续用于这项门禁复跑。
+
 限定结论为 `mixed`：变更已经拥有稳定的固定频率绝对基线；由于 revision 2 fixture 已退役，
 方向性比较仍为 `inconclusive`。滚动仍为 `inconclusive`，因此发布后 Phase 1 门禁尚未完成。
 限制包括仅覆盖一台 API 28 设备、`run-from-apk` JIT/code placement，以及尚未解决的系统显示
-缓冲平台。替换设备不要求 Android 9/API 28。下一步保持 revision 3 和 `0.15` 门禁不变，在另一台
-能够证明整个批次 CPU、GPU 与显示管线控制稳定的物理参考设备上重新采集滚动；只有能够提供等价
-控制与观测时才可以不使用 root。不得仅为得到通过批次而修改 swipe 次数、节奏或 fixture。
+缓冲平台。替换设备不要求 Android 9/API 28，当前也没有符合要求的物理设备。下一步保持 revision 3
+和 `0.15` 门禁不变，等待另一台能够证明整个批次 CPU、GPU 与显示管线控制稳定的物理参考设备，
+然后才重新采集滚动；只有能够提供等价控制与观测时才可以不使用 root。不得仅为得到通过批次而
+修改 swipe 次数、节奏或 fixture。
 
 原始 revision-2 集合滚动预检也是手势驱动污染的参考案例。最初在 measured block 中重复定位
 target 会增加 Accessibility 遍历；移除后，连续无间隔 swipe 仍产生约 3.6、7.2 与 14.7 ms 的

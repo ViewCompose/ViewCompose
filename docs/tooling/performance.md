@@ -352,15 +352,21 @@ exactly to peak refresh `null`, minimum refresh `0.0`, automatic rotation `1`, a
 `0`. An emulator may exercise the route and result plumbing, but its host-bound GPU and display
 pipeline cannot close this physical-device baseline.
 
+No currently available device qualifies for the remaining collection-scroll acceptance run. The
+rooted Xiaomi cannot remove its display-buffer plateau without changing the measured rendering
+path, the Pixel cannot enter a proven fixed-performance mode, and emulator timing is not physical
+device evidence. Formal recapture is therefore hardware-deferred until another suitable physical
+reference device becomes available; the existing devices should not be rerun for this gate.
+
 The scoped conclusion is `mixed`: mutation now has a stable fixed-clock absolute baseline, with
 directional comparison `inconclusive` because revision 2 is a retired fixture; scroll remains
 `inconclusive`, so the post-release Phase 1 gate is not complete. Limitations are one API-28 device,
 `run-from-apk` JIT/code placement, and an unresolved system display-buffer plateau. Android 9/API
-28 is not a requirement for the replacement device. The next action is to preserve revision 3 and
-the `0.15` gate, then recapture scroll on another physical reference device that can prove stable
-CPU, GPU, and display-pipeline control throughout the batch. Root is optional only when equivalent
-control and observation are available. Do not change swipe count, pacing, or fixture merely to
-obtain a passing batch.
+28 is not a requirement for the replacement device. No qualifying physical device is currently
+available. The next action is to preserve revision 3 and the `0.15` gate, wait for another physical
+reference device that can prove stable CPU, GPU, and display-pipeline control throughout the batch,
+and only then recapture scroll. Root is optional only when equivalent control and observation are
+available. Do not change swipe count, pacing, or fixture merely to obtain a passing batch.
 
 The original revision-2 collection-scroll preflight is also the reference for gesture-driver
 contamination. Repeated target lookup inside measurement first added Accessibility traversal.
