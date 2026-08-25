@@ -540,6 +540,62 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 project.rootDir.resolve("website/i18n/translation-policy.json"),
             )
         }
+        project.tasks.register<ReportDocumentationGovernanceV2Task>(
+            "reportDocumentationGovernanceV2",
+        ) {
+            group = "verification"
+            description =
+                "Validates Governance V2 fixtures and writes non-blocking documentation discovery."
+            repositoryDirectory.set(extension.repositoryDirectory)
+            contractFiles.from(
+                project.fileTree(
+                    extension.repositoryDirectory.dir(
+                        "docs/project/contracts/documentation-governance-v2",
+                    ),
+                ) {
+                    include("**/*.json")
+                },
+            )
+            recordFiles.from(
+                project.fileTree(
+                    extension.repositoryDirectory.dir(
+                        "docs/project/records/documentation-governance-v2",
+                    ),
+                ) {
+                    include("**/*.json")
+                },
+            )
+            sourceSetDirectories.from(extension.sourceSetDirectories)
+            activeDocumentationFiles.from(project.providers.provider {
+                val documentationRoot = extension.repositoryDirectory.get().asFile.resolve("docs")
+                documentationRoot.walkTopDown()
+                    .filter(File::isFile)
+                    .filter { file -> file.extension in setOf("md", "mdx") }
+                    .filterNot { file ->
+                        file.relativeTo(documentationRoot).invariantSeparatorsPath
+                            .startsWith("archive/")
+                    }
+                    .toList()
+            })
+            localeMirrorFiles.from(
+                project.fileTree(
+                    extension.repositoryDirectory.dir(
+                        "website/i18n/zh-CN/docusaurus-plugin-content-docs/current",
+                    ),
+                ) {
+                    include("**/*.md", "**/*.mdx")
+                },
+            )
+            publishingFiles.from(
+                extension.repositoryDirectory.file("gradle/viewcompose-publishing.properties"),
+                extension.repositoryDirectory.file(
+                    "gradle/viewcompose-documentation-releases.properties",
+                ),
+            )
+            reportFile.set(
+                extension.reportsDirectory.file("documentation-governance-v2-report.json"),
+            )
+        }
         project.tasks.register<VerifyDocumentationStructureTask>("verifyDocumentationStructure") {
             group = "verification"
             description =

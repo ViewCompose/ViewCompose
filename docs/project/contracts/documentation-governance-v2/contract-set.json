@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "governanceVersion": 2,
-  "status": "phase-0a-frozen",
-  "recordPlacement": "deferred-to-phase-0b",
-  "scannerImplementation": "deferred-to-compiled-quality-build",
+  "status": "phase-0b-report-only",
+  "recordPlacement": "docs/project/records/documentation-governance-v2",
+  "scannerImplementation": "tools/viewcompose-quality-build:reportDocumentationGovernanceV2",
   "contracts": [
     {
       "id": "capability",
