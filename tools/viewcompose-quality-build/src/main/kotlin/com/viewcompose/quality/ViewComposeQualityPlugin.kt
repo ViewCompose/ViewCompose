@@ -245,6 +245,130 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 }
             })
         }
+
+        project.registerSourceBoundaryTask(
+            extension = extension,
+            name = "verifyRuntimePurity",
+            description = "Verify runtime remains Kotlin/JVM-pure without Android imports/dependencies.",
+            module = "viewcompose-runtime",
+            forbiddenImportPrefixes = listOf("import android.", "import androidx."),
+            buildMarkerDiagnostics = mapOf(
+                "androidx.core.ktx" to
+                    "viewcompose-runtime/build.gradle.kts -> forbidden dependency androidx.core.ktx",
+            ),
+            diagnosticHeader = "Runtime purity verification failed:",
+        )
+        project.registerSourceBoundaryTask(
+            extension = extension,
+            name = "verifyGestureCorePurity",
+            description = "Verify gesture-core remains Kotlin/JVM-pure without Android imports.",
+            module = "viewcompose-gesture-core",
+            forbiddenImportPrefixes = listOf("import android.", "import androidx."),
+            diagnosticHeader = "Gesture-core purity verification failed:",
+        )
+        project.registerSourceBoundaryTask(
+            extension = extension,
+            name = "verifyGraphicsCorePurity",
+            description = "Verify graphics-core remains Kotlin/JVM-pure without Android imports.",
+            module = "viewcompose-graphics-core",
+            forbiddenImportPrefixes = listOf("import android.", "import androidx."),
+            diagnosticHeader = "Graphics-core purity verification failed:",
+        )
+        project.registerSourceBoundaryTask(
+            extension = extension,
+            name = "verifyPreviewCorePurity",
+            description = "Verify preview-core remains Kotlin/JVM-pure without Android or Compose imports.",
+            module = "viewcompose-preview-core",
+            forbiddenImportPrefixes = listOf("import android.", "import androidx."),
+            diagnosticHeader = "Preview-core purity verification failed:",
+        )
+        project.registerSourceBoundaryTask(
+            extension = extension,
+            name = "verifyPreviewRunnerBoundary",
+            description = "Verify the native static preview runner stays independent from Compose.",
+            module = "viewcompose-preview-runner",
+            forbiddenImportPrefixes = listOf("import androidx.compose."),
+            buildMarkerDiagnostics = mapOf(
+                "libs.plugins.kotlin.compose" to
+                    "viewcompose-preview-runner/build.gradle.kts -> forbidden Compose dependency " +
+                    "'libs.plugins.kotlin.compose'",
+                "libs.androidx.compose" to
+                    "viewcompose-preview-runner/build.gradle.kts -> forbidden Compose dependency " +
+                    "'libs.androidx.compose'",
+            ),
+            diagnosticHeader = "Preview-runner boundary verification failed:",
+        )
+        project.registerSourceBoundaryTask(
+            extension = extension,
+            name = "verifyPreviewGradlePluginBoundary",
+            description = "Verify preview Gradle tooling uses public build APIs and stays renderer-free.",
+            module = "viewcompose-preview-gradle-plugin",
+            forbiddenImportPrefixes = listOf(
+                "import android.",
+                "import androidx.",
+                "import com.android.build.gradle.internal.",
+                "import com.android.tools.idea.",
+                "import com.viewcompose.preview.runner.",
+            ),
+            buildMarkerDiagnostics = mapOf(
+                "viewcompose-preview-runner" to
+                    "viewcompose-preview-gradle-plugin/build.gradle.kts -> " +
+                    "Gradle tooling must not depend on the renderer",
+            ),
+            diagnosticHeader = "Preview Gradle plugin boundary verification failed:",
+        )
+        project.registerSourceBoundaryTask(
+            extension = extension,
+            name = "verifyPreviewWorkerHostBoundary",
+            description =
+                "Verify the preview worker host stays independent from Gradle, Android Studio, and runner binaries.",
+            module = "viewcompose-preview-worker-host",
+            forbiddenImportPrefixes = listOf(
+                "import org.gradle.",
+                "import com.intellij.",
+                "import org.jetbrains.android.",
+            ),
+            buildMarkerDiagnostics = mapOf(
+                "viewcompose-preview-gradle-plugin" to
+                    "viewcompose-preview-worker-host/build.gradle.kts -> forbidden dependency " +
+                    "'viewcompose-preview-gradle-plugin'",
+                "viewcompose-preview-runner" to
+                    "viewcompose-preview-worker-host/build.gradle.kts -> forbidden dependency " +
+                    "'viewcompose-preview-runner'",
+            ),
+            diagnosticHeader = "Preview worker host boundary verification failed:",
+        )
+        project.registerSourceBoundaryTask(
+            extension = extension,
+            name = "verifyNavigationCorePurity",
+            description = "Verify navigation-core remains Kotlin/JVM-pure without Android imports.",
+            module = "viewcompose-navigation-core",
+            forbiddenImportPrefixes = listOf("import android.", "import androidx."),
+            diagnosticHeader = "Navigation core purity verification failed:",
+        )
+    }
+}
+
+private fun Project.registerSourceBoundaryTask(
+    extension: ViewComposeQualityExtension,
+    name: String,
+    description: String,
+    module: String,
+    forbiddenImportPrefixes: List<String>,
+    buildMarkerDiagnostics: Map<String, String> = emptyMap(),
+    diagnosticHeader: String,
+) {
+    tasks.register<VerifySourceBoundaryTask>(name) {
+        group = "verification"
+        this.description = description
+        repositoryDirectory.set(extension.repositoryDirectory)
+        sourceDirectory.set(extension.repositoryDirectory.dir("$module/src/main"))
+        if (buildMarkerDiagnostics.isNotEmpty()) {
+            buildFile.set(extension.repositoryDirectory.file("$module/build.gradle.kts"))
+        }
+        this.forbiddenImportPrefixes.set(forbiddenImportPrefixes)
+        this.buildMarkerDiagnostics.set(buildMarkerDiagnostics)
+        this.diagnosticHeader.set(diagnosticHeader)
     }
 }
 
