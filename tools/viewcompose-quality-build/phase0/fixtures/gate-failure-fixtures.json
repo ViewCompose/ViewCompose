@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "purpose": "Virtual failing repositories for the Phase 1 parity harness. Paths are repository-relative and contents are deliberately minimal.",
+  "purpose": "Virtual failing repositories for Phase 2 gate-extraction parity. Paths are repository-relative and contents are deliberately minimal.",
   "requiredScannerTasks": [
     "verifyModulePackageRoots",
     "verifyAndroidModuleNamespaces",
@@ -83,9 +83,9 @@
       "expectedDiagnostic": "Design-system isolation verification failed:"
     },
     {
-      "id": "foundation-androidx-dependency",
+      "id": "foundation-android-execution-import",
       "task": "verifyUiFoundationPlatformBoundary",
-      "input": { "virtualFiles": { "viewcompose-ui-foundation/build.gradle.kts": "dependencies { implementation(\"androidx.core:core-ktx:1.0.0\") }\n" } },
+      "input": { "virtualFiles": { "viewcompose-ui-foundation/src/main/kotlin/Bad.kt": "package com.viewcompose.ui.foundation\nimport android.view.View\n" } },
       "expectedDiagnostic": "UI Foundation platform-boundary verification failed:"
     },
     {

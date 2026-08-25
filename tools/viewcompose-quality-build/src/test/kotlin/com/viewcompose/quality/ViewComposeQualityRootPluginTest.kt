@@ -49,6 +49,21 @@ class ViewComposeQualityRootPluginTest {
         assertTrue(report.contains("\"moduleCatalog\": \"catalog.properties\""))
         assertTrue(report.contains("\"module/src/main\""))
         assertTrue(report.contains("\"policy.txt\""))
+
+        assertTrue(project.tasks.getByName("verifyModulePackageRoots") is VerifyModulePackageRootsTask)
+        assertTrue(
+            project.tasks.getByName("verifyAndroidModuleNamespaces") is
+                VerifyAndroidModuleNamespacesTask,
+        )
+        assertTrue(
+            project.tasks.getByName("verifyModuleDependencyBoundaries") is
+                VerifyModuleDependencyBoundariesTask,
+        )
+        assertTrue(project.tasks.getByName("verifyDesignSystemIsolation") is VerifyDesignSystemIsolationTask)
+        assertTrue(
+            project.tasks.getByName("verifyUiFoundationPlatformBoundary") is
+                VerifyUiFoundationPlatformBoundaryTask,
+        )
     }
 
     @Test

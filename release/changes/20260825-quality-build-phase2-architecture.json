@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut five existing architecture gates into compiled repository quality ownership with parity coverage and no published artifact or task-graph change.",
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "Replace repository-only gate implementations with typed compiled tasks while preserving task names, lifecycle dependencies, and all published artifact inputs."
+    }
+  ]
+}
