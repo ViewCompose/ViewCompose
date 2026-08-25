@@ -93,6 +93,11 @@ including language placement and reviewed translation fingerprints. `qaPreview` 
 update committed baselines only after the generated images and differences have been reviewed;
 never record an unexplained mismatch merely to make the gate pass.
 
+GitHub Actions runs the same complete `qaQuick` task with a 4 GiB Gradle heap and at most two
+workers. Release R8, lint, and documentation generation otherwise compete inside the hosted
+runner's default 2 GiB heap. This is only a CI resource envelope: it does not remove, split, retry,
+or waive any gate task, and the project-wide local Gradle default remains unchanged.
+
 `qaFull` adds the application, Counter sample, and tutorial connected tests to `qaQuick`. Every
 repository `connectedDebugAndroidTest` entry first runs `verifyConnectedAndroidDeviceReady`. The
 preflight requires exactly one online device unless `ANDROID_SERIAL` selects one, completed boot,
