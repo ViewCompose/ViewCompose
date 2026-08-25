@@ -4,6 +4,21 @@ This directory contains multi-step work that is currently active and must surviv
 
 ## Active plans
 
+The first two plans form one coordinated program. Freeze and extract the existing quality gates
+before adding Governance V2 scanners; establish the generated reference core before broad content
+movement; then use the documentation migration pull requests to observe the selective CI rollout.
+Detailed plan pages remain repository-only drafts linked from this index because they contain
+temporary contributor execution state rather than user guidance. They do not enter the public
+site, search index, or sitemap.
+
+- [Pull-request gate scaling and build-logic modularization](./pull-request-gate-scaling-and-build-logic-modularization.md) —
+  split the 2,582-line root gate implementation into compiled, testable build logic, then add
+  conservative pull-request impact selection, verified immutable-API caching, and affected-module
+  verification without weakening required checks or full `main` validation.
+- [Documentation system governance V2 and capability restructure](./documentation-system-governance-v2.md) —
+  process-first remediation for capability ownership, document-type and version-lane contracts,
+  complete executable-sample discovery, a no-new-debt ratchet, generated DSL/Modifier reference,
+  information-architecture repair, and prioritized standalone Tutorial/Guide coverage.
 - [Demo post-release verification closeout](./demo-post-release-verification-closeout.md) —
   hardware-deferred because no currently available physical device can prove the required stable
   CPU, GPU, and display-pipeline control. All other phases are complete; resume only to recapture

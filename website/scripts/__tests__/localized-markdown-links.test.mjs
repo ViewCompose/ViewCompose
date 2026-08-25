@@ -34,6 +34,7 @@ test('uses the Docusaurus route for localized targets with number prefixes', asy
   const resolveLocalizedLink = createLocalizedMarkdownLinkResolver({
     siteDir,
     docsDir,
+    repositoryDocsUrl: 'https://github.com/ViewCompose/ViewCompose/blob/main/docs',
     locales: ['en', 'zh-CN'],
     defaultLocale: 'en',
     trailingSlash: true,
@@ -45,5 +46,36 @@ test('uses the Docusaurus route for localized targets with number prefixes', asy
       url: '../../architecture/decisions/0009-development-tooling-isolation.md#activation',
     }),
     '/architecture/decisions/development-tooling-isolation/#activation',
+  );
+});
+
+test('uses the repository source URL for a linked draft document', async (t) => {
+  const repositoryRoot = await mkdtemp(resolve(tmpdir(), 'viewcompose-draft-links-'));
+  t.after(() => rm(repositoryRoot, {recursive: true, force: true}));
+
+  const siteDir = resolve(repositoryRoot, 'website');
+  const docsDir = resolve(repositoryRoot, 'docs');
+  const sourcePath = resolve(docsDir, 'project/plans/README.md');
+  const targetPath = resolve(docsDir, 'project/plans/internal-plan.md');
+
+  await mkdir(resolve(sourcePath, '..'), {recursive: true});
+  await writeFile(sourcePath, '# Active plans\n');
+  await writeFile(targetPath, '---\ndraft: true\n---\n\n# Internal plan\n');
+
+  const resolveLocalizedLink = createLocalizedMarkdownLinkResolver({
+    siteDir,
+    docsDir,
+    repositoryDocsUrl: 'https://github.com/ViewCompose/ViewCompose/blob/main/docs',
+    locales: ['en', 'zh-CN'],
+    defaultLocale: 'en',
+    trailingSlash: true,
+  });
+
+  assert.equal(
+    resolveLocalizedLink({
+      sourceFilePath: sourcePath,
+      url: './internal-plan.md#status',
+    }),
+    'https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/internal-plan.md#status',
   );
 });
