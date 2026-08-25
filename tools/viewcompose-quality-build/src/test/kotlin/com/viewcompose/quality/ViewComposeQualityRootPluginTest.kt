@@ -128,8 +128,21 @@ class ViewComposeQualityRootPluginTest {
         assertTrue(project.tasks.getByName("verifyDocumentationTranslations") is Exec)
         val documentationStructure = project.tasks.getByName("verifyDocumentationStructure")
         val documentationGovernance = project.tasks.getByName("verifyDocumentationGovernanceV2")
+        val updateCapabilityReference =
+            project.tasks.getByName("updateDocumentationCapabilityReference")
         assertTrue(documentationStructure is VerifyDocumentationStructureTask)
         assertTrue(documentationGovernance is VerifyDocumentationGovernanceV2Task)
+        assertTrue(updateCapabilityReference is UpdateDocumentationCapabilityReferenceTask)
+        assertEquals(
+            repository.resolve("website/src/data/capability-reference.json").canonicalFile,
+            (documentationGovernance as VerifyDocumentationGovernanceV2Task)
+                .committedReferenceFile.get().asFile.canonicalFile,
+        )
+        assertEquals(
+            repository.resolve("website/src/data/capability-reference.json").canonicalFile,
+            (updateCapabilityReference as UpdateDocumentationCapabilityReferenceTask)
+                .referenceFile.get().asFile.canonicalFile,
+        )
         assertTrue(
             documentationStructure.taskDependencies
                 .getDependencies(documentationStructure)

@@ -180,6 +180,11 @@ const config: Config = {
           position: 'left',
         },
         {
+          to: '/reference',
+          label: 'Capability Reference',
+          position: 'left',
+        },
+        {
           to: '/api',
           label: 'API Reference',
           position: 'left',
@@ -210,6 +215,7 @@ const config: Config = {
         {
           title: 'Develop',
           items: [
+            {label: 'Capability Reference', to: '/reference'},
             {label: 'API Reference', to: '/api'},
             {label: 'Preview tooling', to: '/tooling/preview'},
             {label: 'Contributing', href: 'https://github.com/ViewCompose/ViewCompose/blob/main/CONTRIBUTING.md'},

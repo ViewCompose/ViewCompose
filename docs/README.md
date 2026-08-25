@@ -22,6 +22,7 @@ historical evidence only.
 | Understand the framework | [Architecture overview](./architecture/overview.md) → [Multi-design-system standard](./architecture/design-systems.md) → [Modifier model](./architecture/modifier.md) → [NodeSpec model](./architecture/node-spec.md) |
 | Migrate from Jetpack Compose | [Compose migration overview](./migration/README.md) → choose the state, layout, host, or navigation path |
 | Choose or maintain a published artifact | [Published module catalog](./modules/README.md) → the owning module manual |
+| Look up an application-facing entry | [Capability Reference](https://docs.viewcompose.com/reference/) → [versioned API/KDoc](https://docs.viewcompose.com/api/) → the owning module manual |
 | Build with a feature | Select the relevant document under [Guides](#guides) |
 | Work on previews or performance | [Preview](./tooling/preview.md) → [Diagnostics](./tooling/diagnostics.md) → [Performance](./tooling/performance.md) |
 | Contribute a change | [Development workflow](./project/workflow.md) → [Documentation governance](./project/documentation-governance.md) |
@@ -83,6 +84,13 @@ Semantic comparisons and migration paths with explicit source and target version
 The [published module catalog](./modules/README.md) is kept in lockstep with Maven publication
 metadata. Every published artifact has a dedicated manual under `docs/modules/<artifact-id>/` and
 can evolve independently.
+
+## Capability and API Reference
+
+The source-derived [Capability Reference](https://docs.viewcompose.com/reference/) groups application-facing DSL, Modifier,
+component, integration, host, and tooling entries by user capability. Its counts, versions, and
+routes are freshness-gated. Use the [versioned API Reference](https://docs.viewcompose.com/api/) for exhaustive signatures and
+KDoc/Javadoc, then follow the entry's module-manual link for artifact contracts.
 
 ## Tooling
 

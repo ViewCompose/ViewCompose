@@ -1,5 +1,6 @@
 package com.viewcompose.quality
 
+import groovy.json.JsonSlurper
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -197,6 +198,24 @@ class DocumentationGovernanceV2ReportTaskTest {
         )
 
         assertEquals(first.report, second.report)
+        assertEquals(first.referenceCatalog, second.referenceCatalog)
+        assertEquals(2, first.referenceEntryCount)
+        assertTrue(first.referenceCatalog.contains("\"entryCount\": 2"))
+        assertFalse(first.referenceCatalog.contains("HiddenDsl"))
+        @Suppress("UNCHECKED_CAST")
+        val reference = JsonSlurper().parseText(first.referenceCatalog) as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val referenceGroups = reference.getValue("groups") as List<Map<String, Any?>>
+        val referenceEntries = referenceGroups.flatMap { group ->
+            @Suppress("UNCHECKED_CAST")
+            val groupEntries = group.getValue("entries") as List<Map<String, Any?>>
+            groupEntries
+        }
+        assertEquals(first.referenceEntryCount, referenceEntries.size)
+        assertEquals(
+            referenceEntries.size,
+            referenceEntries.map { entry -> entry.getValue("symbol") }.distinct().size,
+        )
         assertTrue(first.contractViolations.isEmpty())
         assertEquals(5, first.issueCount)
         assertTrue(first.report.contains("example.UiTreeBuilder.VisibleDsl"))
@@ -211,6 +230,44 @@ class DocumentationGovernanceV2ReportTaskTest {
         assertTrue(first.report.contains("\"contractViolations\": []"))
         assertTrue(first.report.contains("\"ratchetViolations\": ["))
         assertTrue(first.humanReport.contains("Gate: failed; violations: 4"))
+
+        val committedReference = repository.resolve(
+            "website/src/data/capability-reference.json",
+        ).apply {
+            parentFile.mkdirs()
+            writeText(first.referenceCatalog)
+        }
+        val freshReference = DocumentationGovernanceV2Reporter.generate(
+            repository = repository,
+            contractFiles = inputs,
+            recordFiles = setOf(baseline),
+            sourceSetDirectories = setOf(sourceRoot),
+            activeDocumentationFiles = setOf(currentDocument, legacyDocument),
+            localeMirrorFiles = setOf(localeMirror),
+            publishingFiles = setOf(publishing, releases),
+            documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
+            committedReferenceFile = committedReference,
+        )
+        assertEquals(first.issueCount, freshReference.issueCount)
+        committedReference.appendText("stale")
+        val staleReference = DocumentationGovernanceV2Reporter.generate(
+            repository = repository,
+            contractFiles = inputs,
+            recordFiles = setOf(baseline),
+            sourceSetDirectories = setOf(sourceRoot),
+            activeDocumentationFiles = setOf(currentDocument, legacyDocument),
+            localeMirrorFiles = setOf(localeMirror),
+            publishingFiles = setOf(publishing, releases),
+            documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
+            committedReferenceFile = committedReference,
+        )
+        assertEquals(first.issueCount + 1, staleReference.issueCount)
+        assertTrue(staleReference.report.contains("stale-generated-output"))
+        assertTrue(
+            staleReference.ratchetViolations.any { violation ->
+                violation.contains("website/src/data/capability-reference.json")
+            },
+        )
 
         val undocumentedPublicEntry = DocumentationGovernanceV2Reporter.generate(
             repository = repository,

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/modifier.md
-translation_source_hash: af832cc8e6865c96fca66dfb4783012f487438f2c1a9ff9a5d32d814e0acca5b
+translation_source_hash: c0642810660780fa571fd777fbd81f4f108b09270f071aed15f449a9392c0e98
 translation_status: current
 ---
 
@@ -36,117 +36,31 @@ translation_status: current
     Bind 时根据 VNode 捕获的布局方向解析 start/end。同一族内，后声明的物理或相对值会整体
     替换先声明的值。
 
-## 3. API 清单（全量扫描）
+## 3. 源码驱动的能力参考
 
-### 3.1 扫描基线（`src/main`）
+面向应用的完整清单从生产源码生成，并发布在
+[能力参考](https://docs.viewcompose.com/reference/)中。原始 Kotlin KDoc 与 Java Javadoc 继续由
+[版本化 API Reference](https://docs.viewcompose.com/api/)提供。本文档只负责行为边界与架构
+不变量，不再复制符号表或维护一套独立数量。
 
-本节 API 清单来自仓库实时扫描，命令口径固定为：
+生成模型遵循以下契约：
 
-```bash
-rg "^\s*(public\s+)?(internal\s+)?fun\s+(<[^>]+>\s*)?Modifier\.([A-Za-z0-9_]+)\(" --glob "**/src/main/**/*.kt"
-rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|ConstraintLayoutScope)\."
-```
+1. 从已发布产物的生产源码集中发现 public/protected 的 DSL、Modifier、组件、宿主、集成和
+   工具入口；
+2. 每个入口只属于一个用户能力分组，并携带符号、重载数、产物、命名空间、发布通道、模块
+   手册和版本化 API 根路径；
+3. internal 包、private/internal 声明、Demo、测试、生成代码和 Renderer 专用辅助能力不会
+   进入应用目录；
+4. 网站、清单数量和 Governance V2 陈旧输出门禁消费同一个已提交 JSON 模型；源码、签名、
+   版本或结构化所有权改变后未重新生成时，`verifyDocumentationGovernanceV2` 会失败；
+5. 维护者通过 `./gradlew updateDocumentationCapabilityReference` 主动刷新已提交模型，
+   并审查生成结果的语义差异。
 
-当前扫描结果（2026-08）：
+精确的能力、样例和相关文档链接只来自有效的 Governance V2 记录。在冻结的所有权债务迁移
+完成前，生成页面会单独报告结构化所有者覆盖率，不猜测也不隐藏缺口。
 
-1. `fun Modifier.*` 声明总数（含重载、含 scoped 内部定义）：`91`
-2. `fun Modifier.*` 唯一 API 名称数：`77`
-3. scoped modifier 声明总数：`5`（`RowScope/ColumnScope/BoxScope`）
-4. renderer internal modifier 扩展：`1`（仅内部解析能力）
+### 3.1 高级阴影示例与约束
 
-### 3.2 分组说明（按架构边界）
-
-1. `ui-contract 通用修饰`：平台无关的基础 `Modifier` 契约入口。
-2. `gesture 动作输入`：手势 DSL，依赖手势状态对象与策略内核。
-3. `graphics 绘制`：绘制阶段 API（含 `draw*` 短写）。
-4. `graphics 阴影装饰`：平台无关阴影规格，由 Android decoration layer 执行。
-5. `animation 尺寸动画`：`animateContentSize` 布局尺寸过渡入口。
-6. `host-android interop`：Android 平台互操作能力（`nativeView/android*`）。
-7. `renderer internal 解析/策略`：仅 renderer 内部使用，不给业务侧依赖。
-
-### 3.3 Global Modifier APIs（含 internal）
-
-| API | 模块/命名空间 | 可见性 | 用途备注 | 生效范围 | 补充说明 |
-| --- | --- | --- | --- | --- | --- |
-| `padding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置内容内边距 | 全局 | 3 个重载（all/horizontal+vertical/四边） |
-| `paddingRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置感知方向的内容内边距 | 全局 | 逻辑 start/end，物理 top/bottom |
-| `margin` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置外边距（layout params 侧） | 全局 | 3 个重载 |
-| `marginRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置感知方向的 LayoutParams 外边距 | 全局 | 逻辑 start/end，物理 top/bottom |
-| `size` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 同时设置宽高 | 全局 | 固定像素语义（框架单位） |
-| `width` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置宽度 | 全局 | 与父容器布局规则共同生效 |
-| `height` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置高度 | 全局 | 与父容器布局规则共同生效 |
-| `minWidth` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置最小宽度约束 | 全局 | 作用于 `View.minimumWidth` |
-| `minHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置最小高度约束 | 全局 | 作用于 `View.minimumHeight` |
-| `maxWidth` / `maxHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置最大尺寸 | 布局感知 | 使用一个 Renderer 所有的 Constraint Host |
-| `aspectRatio` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置宽高比 | 布局感知 | 与 Min/Max 和输入约束共同解析 |
-| `fillMaxWidth` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 宽度填充父容器 | 全局 | 语义等价 `width(MATCH_PARENT)` |
-| `fillMaxHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 高度填充父容器 | 全局 | 语义等价 `height(MATCH_PARENT)` |
-| `fillMaxSize` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 宽高同时填充父容器 | 全局 | 语义等价 `size(MATCH_PARENT, MATCH_PARENT)` |
-| `offset` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置平移偏移 | 全局 | 映射 `translationX/translationY` |
-| `offsetRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置感知方向的平移偏移 | 全局 | 正水平值朝逻辑 end 移动 |
-| `layoutId` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 标记子项布局 ID | 指定容器 | 主要用于 `ConstraintLayout` 子项匹配 |
-| `systemBarsInsetsPadding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 应用系统栏 inset 内边距 | 全局（容器感知） | 可按四边开关 |
-| `systemBarsInsetsPaddingRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 应用感知方向的系统栏 inset 内边距 | 全局（容器感知） | 逻辑 start/end 选择器 |
-| `imeInsetsPadding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 应用软键盘 inset 内边距 | 全局（容器感知） | 默认仅 bottom=true |
-| `imeInsetsPaddingRelative` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 应用感知方向的软键盘 inset 内边距 | 全局（容器感知） | 逻辑 start/end 选择器；默认仅 bottom=true |
-| `backgroundColor` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置背景色 | 全局 | 与 `backgroundDrawableRes` 同时存在时优先级较低 |
-| `backgroundDrawableRes` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置 drawable 资源背景 | 全局 | 与 `cornerRadius` 组合时自动裁剪 |
-| `border` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置边框宽度与颜色 | 全局 | 依赖 surface style 管线渲染 |
-| `cornerRadius` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置圆角半径 | 全局 | 3 个重载（统一/上下/四角） |
-| `clip` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 强制裁剪内容到形状边界 | 全局 | 常与圆角/自绘搭配 |
-| `alpha` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置透明度 | 全局 | 与 `graphicsLayer.alpha` 冲突时后者优先 |
-| `elevation` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置阴影高度 | 全局 | 映射 `View.elevation` |
-| `zIndex` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置层级偏移 | 全局 | 当前映射 `translationZ` |
-| `graphicsLayer` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 统一设置缩放/旋转/平移/裁剪等图层属性 | 全局 | 高级视觉变换入口 |
-| `visibility` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置可见性（Visible/Invisible/Gone） | 全局 | 参与布局占位语义 |
-| `clickable` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 基础点击回调 | 全局 | 与 gesture 分发链协同 |
-| `focusable` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 声明节点可接收焦点 | 全局 | `focusProperties.canFocus` 可覆盖 |
-| `focusRequester` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 将稳定请求器绑定到节点 | 全局 | 节点复用、回滚和释放时自动换绑 |
-| `focusProperties` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 声明可聚焦状态与方向目标 | 全局 | 支持 next/previous/四方向 |
-| `focusGroup` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 声明键盘导航焦点组 | 容器 | 映射原生 descendant focus 与 navigation cluster |
-| `onFocusChanged` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 观察自身/后代焦点状态 | 全局 | 回调 `FocusState` |
-| `onPreviewKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 焦点目标前的按键捕获阶段 | 全局 | 从声明式祖先向目标分发 |
-| `onKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 按键冒泡阶段 | 全局 | 从目标向声明式祖先分发 |
-| `semantics` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置无障碍与测试状态 | 全局 | 包含集合维度、item 逻辑位置、选择态和标题态 |
-| `contentDescription` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置无障碍描述 | 全局 | 映射 `View.contentDescription` |
-| `testTag` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置测试标记 | 全局 | 供 UI 测试定位 |
-| `overlayAnchor` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置 overlay 锚点 ID | 指定能力 | 用于 Popup/Tooltip/Dropdown 锚定 |
-| `drawBehind` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier`、`viewcompose-graphics` / `com.viewcompose.graphics` | public | 在内容前执行自定义绘制 | 全局 | 两处同名入口；业务侧推荐 `com.viewcompose.graphics` |
-| `drawWithContent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier`、`viewcompose-graphics` / `com.viewcompose.graphics` | public | 自定义内容绘制顺序（可调用内容） | 全局 | 适合混合前景/内容绘制 |
-| `drawWithCache` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier`、`viewcompose-graphics` / `com.viewcompose.graphics` | public | 构建并复用绘制缓存 | 全局 | 用于降低高频重绘成本 |
-| `draw` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier`、`viewcompose-graphics` / `com.viewcompose.graphics` | public | `drawBehind` 短写 | 全局 | 语义等价别名 |
-| `drawCache` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier`、`viewcompose-graphics` / `com.viewcompose.graphics` | public | `drawWithCache` 短写 | 全局 | 语义等价别名 |
-| `dropShadow` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 添加单层精确外阴影 | 全局 | 在节点内容前绘制；与 `elevation` 独立 |
-| `dropShadows` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 添加有序多层精确外阴影 | 全局 | 同一调用内各层共享显式或节点默认 shape |
-| `innerShadow` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 添加单层精确内阴影 | 全局 | 在完整内容后绘制，不参与输入分发 |
-| `innerShadows` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 添加有序多层精确内阴影 | 全局 | 裁切在 shape 内，声明靠后的层后绘制 |
-| `pointerInput` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 原始指针事件处理入口 | 全局 | 可返回 `Consumed` 强拦截后续手势 |
-| `combinedClickable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 点击/双击/长按组合入口 | 全局 | 无回调时 no-op，不吞事件 |
-| `draggable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 连续拖拽手势 | 全局 | 通过 `DraggableState` 回调位移 |
-| `anchoredDraggable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 锚点拖拽/吸附手势 | 全局 | 仅支持 Horizontal/Vertical |
-| `transformable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 多指缩放/旋转/平移 | 全局 | 由 `TransformableState` 消费增量 |
-| `gesturePriority` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 设置手势优先级 | 全局 | 用于嵌套冲突仲裁 |
-| `nestedScroll` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 声明父子滚动与 fling 消费协议 | 全局 | 透明宿主接入 AndroidX nested-scrolling 链 |
-| `animateContentSize` | `viewcompose-animation` / `com.viewcompose.animation` | public | 节点尺寸变化动画 | 全局（布局参与） | 非视觉缩放，真实参与父布局重排 |
-| `constrainAs` | `viewcompose-constraintlayout-androidx` / `com.viewcompose.constraintlayout` | public | 按 `ConstraintReference` 声明子项约束 | 指定容器 | 仅 `ConstraintLayout` 子项有效 |
-| `constrain` | `viewcompose-constraintlayout-androidx` / `com.viewcompose.constraintlayout` | public | 通过字符串 ID 声明子项约束 | 指定容器 | `constrainAs` 的短写风格入口 |
-| `nativeView` | `viewcompose-host-android` / `com.viewcompose.host.android` | public | 直接配置底层 Android `View` | Android interop | 逃生通道，绕过通用语义层 |
-| `androidAnimation` | `viewcompose-host-android` / `com.viewcompose.host.android.animation` | public | 配置 Android 动画互操作 | Android interop | 基于 `nativeView` 封装别名 |
-| `androidGraphics` | `viewcompose-host-android` / `com.viewcompose.host.android.graphics` | public | 配置 Android 图形互操作 | Android interop | 基于 `nativeView` 封装别名 |
-| `resolve` | `viewcompose-renderer-android` / `com.viewcompose.renderer.modifier` | internal | 将 modifier 链解析为 `ResolvedModifiers` | renderer internal | 框架内部 API，业务侧不可依赖 |
-
-### 3.4 作用域限定的 Modifier API
-
-| API | 作用域 | 模块/命名空间 | 可见性 | 用途备注 | 生效范围 | 补充说明 |
-| --- | --- | --- | --- | --- | --- | --- |
-| `weight` | `RowScope` | `viewcompose-ui-foundation` / `com.viewcompose.ui.foundation` | public | 设置横向线性布局权重 | `Row` 子项 | 仅 `RowScope` 可用，要求 `weight > 0` |
-| `align` | `RowScope` | `viewcompose-ui-foundation` / `com.viewcompose.ui.foundation` | public | 设置交叉轴（垂直）对齐 | `Row` 子项 | 参数 `VerticalAlignment` |
-| `weight` | `ColumnScope` | `viewcompose-ui-foundation` / `com.viewcompose.ui.foundation` | public | 设置纵向线性布局权重 | `Column` 子项 | 仅 `ColumnScope` 可用，要求 `weight > 0` |
-| `align` | `ColumnScope` | `viewcompose-ui-foundation` / `com.viewcompose.ui.foundation` | public | 设置交叉轴（水平）对齐 | `Column` 子项 | 参数 `HorizontalAlignment` |
-| `align` | `BoxScope` | `viewcompose-ui-foundation` / `com.viewcompose.ui.foundation` | public | 设置子项在 Box 内对齐 | `Box` 子项 | 参数 `BoxAlignment` |
-| `constrainAs / constrain` | `ConstraintLayout` 子项上下文 | `viewcompose-constraintlayout-androidx` / `com.viewcompose.constraintlayout` | public | 声明子项约束 parent-data | `ConstraintLayout` 子项 | 入口是全局 `Modifier` 扩展，但语义仅在 `ConstraintLayout` 生效 |
-
-### 3.5 高级阴影示例与约束
 
 ```kotlin
 val cardShape = UiShape.rounded(20.dp)
@@ -181,11 +95,13 @@ Surface(
 4. 高频动画优先变换节点的 translation/scale/rotation/alpha；逐帧动画 blur、spread、shape 或尺寸会产生新的栅格 key。
 5. 完整后端、缓存和诊断规则见 [shadows.md](../guides/shadows.md)。
 
-### 3.5 一致性校验（扫描对照）
+### 3.2 生成与一致性
 
-1. 本文档已覆盖扫描得到的全部 `fun Modifier.*`（含 `internal`）。
-2. scoped 能力与 global 能力已分表，不混用统计口径。
-3. 重复语义入口（`draw*` 在 `ui-contract` 与 `graphics`）已注明推荐命名空间。
+1. 生产源码扫描器与能力参考生成器使用同一个模型，不存在第二套 Modifier 扫描或手写数量。
+2. 每个面向应用的入口都有且只有一个生成目录分组；重复或缺失的结构化能力所有权继续作为
+   Governance V2 债务显式展示，不会混入本文档。
+3. 已提交目录具有确定性，并在文档校验中进行逐字节比较。
+4. 模块手册负责产物契约，能力参考负责发现，Dokka 继续负责完整签名与 KDoc。
 
 ## 4. 角色边界
 

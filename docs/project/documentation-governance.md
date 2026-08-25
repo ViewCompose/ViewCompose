@@ -116,6 +116,20 @@ sample or exception, and applicable document owners. Moves, deprecations, and de
 identity, impact, migration, and redirects together. Internal, test, Demo-only, generated, and
 renderer-only declarations stay outside the application catalog.
 
+### Generated capability Reference
+
+`website/src/data/capability-reference.json` is the one committed presentation dataset derived
+from the Governance V2 production declaration, publishing, document, capability, and sample
+models. `./gradlew updateDocumentationCapabilityReference` rewrites it intentionally; ordinary
+verification never regenerates or heals it. `verifyDocumentationGovernanceV2` derives the expected
+bytes independently and reports `stale-generated-output` when the committed file is missing or
+different, so source, signature, version, count, and ownership changes cannot silently leave the
+public `/reference/` route stale.
+
+The English and Simplified Chinese pages consume this same symbol tree. Locale resources translate
+only presentation labels; they never copy entries, groups, counts, or routes. Module manuals remain
+the artifact-contract owner, and versioned Dokka remains the exhaustive signature/KDoc owner.
+
 ### Document metadata and type requirements
 
 Every canonical active handwritten public page declares stable document/type/owner identities, one

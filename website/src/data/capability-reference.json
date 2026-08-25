@@ -1,0 +1,3578 @@
+{
+  "artifacts": [
+    {
+      "apiReference": "/api/viewcompose-animation/0.1.0-alpha04/",
+      "artifact": "viewcompose-animation",
+      "moduleManual": "/modules/viewcompose-animation/0.1.0-alpha04/",
+      "version": "0.1.0-alpha04",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-camerax-androidx/current/",
+      "artifact": "viewcompose-camerax-androidx",
+      "moduleManual": "/modules/viewcompose-camerax-androidx/",
+      "version": "0.1.0-alpha01",
+      "versionState": "next"
+    },
+    {
+      "apiReference": "/api/viewcompose-constraintlayout-androidx/0.1.0-alpha01/",
+      "artifact": "viewcompose-constraintlayout-androidx",
+      "moduleManual": "/modules/viewcompose-constraintlayout-androidx/0.1.0-alpha01/",
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-diagnostics/current/",
+      "artifact": "viewcompose-diagnostics",
+      "moduleManual": "/modules/viewcompose-diagnostics/",
+      "version": "0.1.0-alpha01",
+      "versionState": "next"
+    },
+    {
+      "apiReference": "/api/viewcompose-exoplayer2-android/current/",
+      "artifact": "viewcompose-exoplayer2-android",
+      "moduleManual": "/modules/viewcompose-exoplayer2-android/",
+      "version": "0.1.0-alpha01",
+      "versionState": "next"
+    },
+    {
+      "apiReference": "/api/viewcompose-gesture/0.1.0-alpha04/",
+      "artifact": "viewcompose-gesture",
+      "moduleManual": "/modules/viewcompose-gesture/0.1.0-alpha04/",
+      "version": "0.1.0-alpha04",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-google-maps-android/current/",
+      "artifact": "viewcompose-google-maps-android",
+      "moduleManual": "/modules/viewcompose-google-maps-android/",
+      "version": "0.1.0-alpha01",
+      "versionState": "next"
+    },
+    {
+      "apiReference": "/api/viewcompose-graphics/0.1.0-alpha04/",
+      "artifact": "viewcompose-graphics",
+      "moduleManual": "/modules/viewcompose-graphics/0.1.0-alpha04/",
+      "version": "0.1.0-alpha04",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-host-android/0.1.0-alpha04/",
+      "artifact": "viewcompose-host-android",
+      "moduleManual": "/modules/viewcompose-host-android/0.1.0-alpha04/",
+      "version": "0.1.0-alpha04",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-image-coil/0.1.0-alpha04/",
+      "artifact": "viewcompose-image-coil",
+      "moduleManual": "/modules/viewcompose-image-coil/0.1.0-alpha04/",
+      "version": "0.1.0-alpha04",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-image-glide/0.1.0-alpha02/",
+      "artifact": "viewcompose-image-glide",
+      "moduleManual": "/modules/viewcompose-image-glide/0.1.0-alpha02/",
+      "version": "0.1.0-alpha02",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-lifecycle-androidx/0.1.0-alpha01/",
+      "artifact": "viewcompose-lifecycle-androidx",
+      "moduleManual": "/modules/viewcompose-lifecycle-androidx/0.1.0-alpha01/",
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-material3/0.1.0-alpha01/",
+      "artifact": "viewcompose-material3",
+      "moduleManual": "/modules/viewcompose-material3/0.1.0-alpha01/",
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-media3-androidx/current/",
+      "artifact": "viewcompose-media3-androidx",
+      "moduleManual": "/modules/viewcompose-media3-androidx/",
+      "version": "0.1.0-alpha01",
+      "versionState": "next"
+    },
+    {
+      "apiReference": "/api/viewcompose-navigation-android/0.1.0-alpha01/",
+      "artifact": "viewcompose-navigation-android",
+      "moduleManual": "/modules/viewcompose-navigation-android/0.1.0-alpha01/",
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-oneui7/0.1.0-alpha01/",
+      "artifact": "viewcompose-oneui7",
+      "moduleManual": "/modules/viewcompose-oneui7/0.1.0-alpha01/",
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-overlay-android/0.1.0-alpha04/",
+      "artifact": "viewcompose-overlay-android",
+      "moduleManual": "/modules/viewcompose-overlay-android/0.1.0-alpha04/",
+      "version": "0.1.0-alpha04",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-overlay-material3-android/0.1.0-alpha01/",
+      "artifact": "viewcompose-overlay-material3-android",
+      "moduleManual": "/modules/viewcompose-overlay-material3-android/0.1.0-alpha01/",
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-overlay-oneui7-android/0.1.0-alpha01/",
+      "artifact": "viewcompose-overlay-oneui7-android",
+      "moduleManual": "/modules/viewcompose-overlay-oneui7-android/0.1.0-alpha01/",
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-paging-androidx/current/",
+      "artifact": "viewcompose-paging-androidx",
+      "moduleManual": "/modules/viewcompose-paging-androidx/",
+      "version": "0.1.0-alpha01",
+      "versionState": "next"
+    },
+    {
+      "apiReference": "/api/viewcompose-preview/0.1.0-alpha04/",
+      "artifact": "viewcompose-preview",
+      "moduleManual": "/modules/viewcompose-preview/0.1.0-alpha04/",
+      "version": "0.1.0-alpha04",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-preview-core/0.1.0-alpha03/",
+      "artifact": "viewcompose-preview-core",
+      "moduleManual": "/modules/viewcompose-preview-core/0.1.0-alpha03/",
+      "version": "0.1.0-alpha03",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-preview-gradle-plugin/0.1.0-alpha03/",
+      "artifact": "viewcompose-preview-gradle-plugin",
+      "moduleManual": "/modules/viewcompose-preview-gradle-plugin/0.1.0-alpha03/",
+      "version": "0.1.0-alpha03",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-preview-runner/0.1.0-alpha04/",
+      "artifact": "viewcompose-preview-runner",
+      "moduleManual": "/modules/viewcompose-preview-runner/0.1.0-alpha04/",
+      "version": "0.1.0-alpha04",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-preview-worker-host/0.1.0-alpha03/",
+      "artifact": "viewcompose-preview-worker-host",
+      "moduleManual": "/modules/viewcompose-preview-worker-host/0.1.0-alpha03/",
+      "version": "0.1.0-alpha03",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-shadow-android/0.1.0-alpha04/",
+      "artifact": "viewcompose-shadow-android",
+      "moduleManual": "/modules/viewcompose-shadow-android/0.1.0-alpha04/",
+      "version": "0.1.0-alpha04",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-ui-contract/0.1.0-alpha04/",
+      "artifact": "viewcompose-ui-contract",
+      "moduleManual": "/modules/viewcompose-ui-contract/0.1.0-alpha04/",
+      "version": "0.1.0-alpha04",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-ui-foundation/0.1.0-alpha01/",
+      "artifact": "viewcompose-ui-foundation",
+      "moduleManual": "/modules/viewcompose-ui-foundation/0.1.0-alpha01/",
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
+      "apiReference": "/api/viewcompose-viewmodel-androidx/0.1.0-alpha01/",
+      "artifact": "viewcompose-viewmodel-androidx",
+      "moduleManual": "/modules/viewcompose-viewmodel-androidx/0.1.0-alpha01/",
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    }
+  ],
+  "generatedBy": "updateDocumentationCapabilityReference",
+  "groups": [
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.aspectRatio"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.fillMaxHeight"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.fillMaxSize"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.fillMaxWidth"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.height"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.imeInsetsPadding"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.imeInsetsPaddingRelative"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.layoutId"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 3,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.margin"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.marginRelative"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.maxHeight"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.maxWidth"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.minHeight"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.minWidth"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.offset"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.offsetRelative"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 3,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.padding"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.paddingRelative"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.size"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.systemBarsInsetsPadding"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.systemBarsInsetsPaddingRelative"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.width"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Box"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Column"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Divider"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.FlowColumn"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.FlowRow"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Row"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ScrollableColumn"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ScrollableRow"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Spacer"
+        }
+      ],
+      "entryCount": 31,
+      "groupId": "layout"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-graphics",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.graphics",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.graphics.Modifier.draw"
+        },
+        {
+          "artifact": "viewcompose-graphics",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.graphics",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.graphics.Modifier.drawBehind"
+        },
+        {
+          "artifact": "viewcompose-graphics",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.graphics",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.graphics.Modifier.drawCache"
+        },
+        {
+          "artifact": "viewcompose-graphics",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.graphics",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.graphics.Modifier.drawWithCache"
+        },
+        {
+          "artifact": "viewcompose-graphics",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.graphics",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.graphics.Modifier.drawWithContent"
+        },
+        {
+          "artifact": "viewcompose-graphics",
+          "kind": "component",
+          "namespace": "com.viewcompose.graphics",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.graphics.UiTreeBuilder.Canvas"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.alpha"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.backgroundColor"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.backgroundDrawableRes"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.border"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.clip"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.draw"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.drawBehind"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.drawCache"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.drawWithCache"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.drawWithContent"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.dropShadow"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.dropShadows"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.elevation"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.graphicsLayer"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.innerShadow"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.innerShadows"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.shape"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.visibility"
+        }
+      ],
+      "entryCount": 24,
+      "groupId": "appearance"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-oneui7",
+          "kind": "component",
+          "namespace": "com.viewcompose.oneui7",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.oneui7.UiTreeBuilder.OneUi7Switch"
+        },
+        {
+          "artifact": "viewcompose-oneui7",
+          "kind": "component",
+          "namespace": "com.viewcompose.oneui7",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.oneui7.UiTreeBuilder.OneUi7TextField"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.focusGroup"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.focusProperties"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.focusRequester"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.focusable"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.onFocusChanged"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.onKeyEvent"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.onPreviewKeyEvent"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.semantics"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.testTag"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.BasicTextField"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Checkbox"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideCheckboxOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideSliderOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideSwitchOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideTextFieldOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.SearchBar"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Slider"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Switch"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.TextField"
+        }
+      ],
+      "entryCount": 21,
+      "groupId": "input"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-gesture",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.gesture",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.gesture.Modifier.anchoredDraggable"
+        },
+        {
+          "artifact": "viewcompose-gesture",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.gesture",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.gesture.Modifier.combinedClickable"
+        },
+        {
+          "artifact": "viewcompose-gesture",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.gesture",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.gesture.Modifier.draggable"
+        },
+        {
+          "artifact": "viewcompose-gesture",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.gesture",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.gesture.Modifier.gesturePriority"
+        },
+        {
+          "artifact": "viewcompose-gesture",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.gesture",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.gesture.Modifier.nestedScroll"
+        },
+        {
+          "artifact": "viewcompose-gesture",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.gesture",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.gesture.Modifier.pointerInput"
+        },
+        {
+          "artifact": "viewcompose-gesture",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.gesture",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.gesture.Modifier.toggleDraggable"
+        },
+        {
+          "artifact": "viewcompose-gesture",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.gesture",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.gesture.Modifier.transformable"
+        }
+      ],
+      "entryCount": 8,
+      "groupId": "gesture"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-animation",
+          "kind": "component",
+          "namespace": "com.viewcompose.animation",
+          "overloadCount": 2,
+          "receiver": "ColumnScope",
+          "symbol": "com.viewcompose.animation.ColumnScope.AnimatedVisibility"
+        },
+        {
+          "artifact": "viewcompose-animation",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.animation",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.animation.Modifier.animateBounds"
+        },
+        {
+          "artifact": "viewcompose-animation",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.animation",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.animation.Modifier.animateContentSize"
+        },
+        {
+          "artifact": "viewcompose-animation",
+          "kind": "component",
+          "namespace": "com.viewcompose.animation",
+          "overloadCount": 2,
+          "receiver": "RowScope",
+          "symbol": "com.viewcompose.animation.RowScope.AnimatedVisibility"
+        },
+        {
+          "artifact": "viewcompose-animation",
+          "kind": "component",
+          "namespace": "com.viewcompose.animation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.animation.UiTreeBuilder.AnimatedContent"
+        },
+        {
+          "artifact": "viewcompose-animation",
+          "kind": "component",
+          "namespace": "com.viewcompose.animation",
+          "overloadCount": 2,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.animation.UiTreeBuilder.AnimatedVisibility"
+        },
+        {
+          "artifact": "viewcompose-animation",
+          "kind": "component",
+          "namespace": "com.viewcompose.animation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.animation.UiTreeBuilder.Crossfade"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideAnimationCoroutineContext"
+        }
+      ],
+      "entryCount": 8,
+      "groupId": "animation"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-oneui7",
+          "kind": "component",
+          "namespace": "com.viewcompose.oneui7",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.oneui7.UiTreeBuilder.OneUi7Surface"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.contentDescription"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.BasicSurface"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Card"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Icon"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Image"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideImageLoader"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.RichText"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Surface"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 2,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Text"
+        }
+      ],
+      "entryCount": 10,
+      "groupId": "content"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-oneui7",
+          "kind": "component",
+          "namespace": "com.viewcompose.oneui7",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.oneui7.UiTreeBuilder.OneUi7Button"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.clickable"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.interactionIndication"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.BasicButton"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Button"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Chip"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ExtendedFloatingActionButton"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.FloatingActionButton"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.IconButton"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideButtonOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideExtendedFloatingActionButtonOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideFloatingActionButtonOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideIconButtonOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideRadioButtonOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.RadioButton"
+        }
+      ],
+      "entryCount": 15,
+      "groupId": "actions"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.HorizontalPager"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 3,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.LazyColumn"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 3,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.LazyRow"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 3,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.LazyVerticalGrid"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.VerticalPager"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.lazyItemContentFactory"
+        }
+      ],
+      "entryCount": 6,
+      "groupId": "collections"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.AlertDialog"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Badge"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.BadgedBox"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.CircularProgressIndicator"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Dialog"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.LinearProgressIndicator"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ModalBottomSheet"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.PlainTooltip"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Popup"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideAlertDialogOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideBadgeOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideCircularProgressIndicatorOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideLinearProgressIndicatorOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideModalBottomSheetOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Snackbar"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Toast"
+        }
+      ],
+      "entryCount": 16,
+      "groupId": "feedback"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-oneui7",
+          "kind": "component",
+          "namespace": "com.viewcompose.oneui7",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.oneui7.UiTreeBuilder.OneUi7NavigationBar"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.NavigationBar"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideNavigationBarOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideTabRowOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Scaffold"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.TabRow"
+        }
+      ],
+      "entryCount": 6,
+      "groupId": "navigation"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-material3",
+          "kind": "component",
+          "namespace": "com.viewcompose.material3",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.material3.UiTreeBuilder.Material3Button"
+        },
+        {
+          "artifact": "viewcompose-material3",
+          "kind": "component",
+          "namespace": "com.viewcompose.material3",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.material3.UiTreeBuilder.Material3Card"
+        },
+        {
+          "artifact": "viewcompose-material3",
+          "kind": "component",
+          "namespace": "com.viewcompose.material3",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.material3.UiTreeBuilder.Material3NavigationBar"
+        },
+        {
+          "artifact": "viewcompose-material3",
+          "kind": "component",
+          "namespace": "com.viewcompose.material3",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.material3.UiTreeBuilder.Material3Surface"
+        },
+        {
+          "artifact": "viewcompose-material3",
+          "kind": "component",
+          "namespace": "com.viewcompose.material3",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.material3.UiTreeBuilder.Material3Switch"
+        },
+        {
+          "artifact": "viewcompose-material3",
+          "kind": "component",
+          "namespace": "com.viewcompose.material3",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.material3.UiTreeBuilder.Material3TextField"
+        },
+        {
+          "artifact": "viewcompose-material3",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.material3",
+          "overloadCount": 2,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.material3.UiTreeBuilder.Material3Theme"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.DesignSystemAttributionProvider"
+        }
+      ],
+      "entryCount": 8,
+      "groupId": "design-systems"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-camerax-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.camerax",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.camerax.CameraXLensFacing"
+        },
+        {
+          "artifact": "viewcompose-camerax-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.camerax",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.camerax.CameraXPreviewBindingState"
+        },
+        {
+          "artifact": "viewcompose-camerax-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.camerax",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.camerax.CameraXPreviewConfiguration"
+        },
+        {
+          "artifact": "viewcompose-camerax-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.camerax",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.camerax.CameraXPreviewFailure"
+        },
+        {
+          "artifact": "viewcompose-camerax-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.camerax",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.camerax.CameraXPreviewFailureReason"
+        },
+        {
+          "artifact": "viewcompose-camerax-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.camerax",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.camerax.CameraXPreviewImplementationMode"
+        },
+        {
+          "artifact": "viewcompose-camerax-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.camerax",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.camerax.CameraXPreviewRotation"
+        },
+        {
+          "artifact": "viewcompose-camerax-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.camerax",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.camerax.CameraXPreviewScaleType"
+        },
+        {
+          "artifact": "viewcompose-camerax-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.camerax",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.camerax.CameraXPreviewStreamState"
+        },
+        {
+          "artifact": "viewcompose-camerax-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.camerax",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.camerax.UiTreeBuilder.CameraXPreviewView"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintBaselineAnchorTarget"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintCircularFlowItem"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintConstrainScope"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintGridSkip"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintGridSpan"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintHelperReference"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintHorizontalAnchorReference"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintHorizontalAnchorSide"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintHorizontalAnchorTarget"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutReference"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createBottomBarrier"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createCircularFlow"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createEndBarrier"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createFlow"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGrid"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGroup"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 2,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromBottom"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 2,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromEnd"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 2,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromLeft"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 2,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromRight"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 2,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromStart"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 2,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromTop"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createHorizontalChain"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createLayer"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createLeftBarrier"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createPlaceholder"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createRef"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createRefs"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createRightBarrier"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createStartBarrier"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createTopBarrier"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "ConstraintLayoutScope",
+          "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createVerticalChain"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintParentReference"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintReference"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintSetBuilder"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintVerticalAnchorReference"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintVerticalAnchorSide"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.ConstraintVerticalAnchorTarget"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.constraintlayout.UiTreeBuilder.ConstraintLayout"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.constraintlayout.constraintSet"
+        },
+        {
+          "artifact": "viewcompose-diagnostics",
+          "kind": "integration",
+          "namespace": "com.viewcompose.diagnostics",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.diagnostics.BoundedRenderFailureAggregator"
+        },
+        {
+          "artifact": "viewcompose-diagnostics",
+          "kind": "integration",
+          "namespace": "com.viewcompose.diagnostics",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.diagnostics.RenderFailureAggregate"
+        },
+        {
+          "artifact": "viewcompose-diagnostics",
+          "kind": "integration",
+          "namespace": "com.viewcompose.diagnostics",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.diagnostics.RenderFailureAggregationSnapshot"
+        },
+        {
+          "artifact": "viewcompose-diagnostics",
+          "kind": "integration",
+          "namespace": "com.viewcompose.diagnostics",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.diagnostics.RenderFailureFingerprint"
+        },
+        {
+          "artifact": "viewcompose-diagnostics",
+          "kind": "integration",
+          "namespace": "com.viewcompose.diagnostics",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.diagnostics.RenderFailureStackFrame"
+        },
+        {
+          "artifact": "viewcompose-exoplayer2-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.exoplayer2",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.exoplayer2.ExoPlayerArtworkDisplayMode"
+        },
+        {
+          "artifact": "viewcompose-exoplayer2-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.exoplayer2",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.exoplayer2.ExoPlayerResizeMode"
+        },
+        {
+          "artifact": "viewcompose-exoplayer2-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.exoplayer2",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.exoplayer2.ExoPlayerShowBuffering"
+        },
+        {
+          "artifact": "viewcompose-exoplayer2-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.exoplayer2",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.exoplayer2.ExoPlayerSurfaceType"
+        },
+        {
+          "artifact": "viewcompose-exoplayer2-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.exoplayer2",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.exoplayer2.ExoPlayerViewConfiguration"
+        },
+        {
+          "artifact": "viewcompose-exoplayer2-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.exoplayer2",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.exoplayer2.UiTreeBuilder.ExoPlayerView"
+        },
+        {
+          "artifact": "viewcompose-google-maps-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.maps.google",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.maps.google.GoogleMapColorScheme"
+        },
+        {
+          "artifact": "viewcompose-google-maps-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.maps.google",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.maps.google.GoogleMapMarkerStyle"
+        },
+        {
+          "artifact": "viewcompose-google-maps-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.maps.google",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.maps.google.GoogleMapPadding"
+        },
+        {
+          "artifact": "viewcompose-google-maps-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.maps.google",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.maps.google.GoogleMapPolylineStyle"
+        },
+        {
+          "artifact": "viewcompose-google-maps-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.maps.google",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.maps.google.GoogleMapProperties"
+        },
+        {
+          "artifact": "viewcompose-google-maps-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.maps.google",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.maps.google.GoogleMapScope"
+        },
+        {
+          "artifact": "viewcompose-google-maps-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.maps.google",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.maps.google.GoogleMapType"
+        },
+        {
+          "artifact": "viewcompose-google-maps-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.maps.google",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.maps.google.GoogleMapUiSettings"
+        },
+        {
+          "artifact": "viewcompose-google-maps-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.maps.google",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.maps.google.GoogleMapViewOptions"
+        },
+        {
+          "artifact": "viewcompose-google-maps-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.maps.google",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.maps.google.UiTreeBuilder.GoogleMapView"
+        },
+        {
+          "artifact": "viewcompose-image-coil",
+          "kind": "integration",
+          "namespace": "com.viewcompose.image.coil",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.image.coil.CoilImageLoaderAdapter"
+        },
+        {
+          "artifact": "viewcompose-image-glide",
+          "kind": "integration",
+          "namespace": "com.viewcompose.image.glide",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.image.glide.GlideImageLoaderAdapter"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "receiver": "AndroidViewCommitScope<V>",
+          "symbol": "com.viewcompose.lifecycle.AndroidViewCommitScope.bindAndroidViewSavedState"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.lifecycle.AndroidViewLifecycleEventScope"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.lifecycle.AndroidViewSaveStateScope"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.lifecycle.AndroidViewSavedStateBindResult"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "receiver": "Flow<T>",
+          "symbol": "com.viewcompose.lifecycle.Flow.collectAsState"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 2,
+          "receiver": "Flow<T>",
+          "symbol": "com.viewcompose.lifecycle.Flow.collectAsStateWithLifecycle"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "receiver": "Lifecycle",
+          "symbol": "com.viewcompose.lifecycle.Lifecycle.currentStateAsState"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "deprecated": true,
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 3,
+          "symbol": "com.viewcompose.lifecycle.LifecycleResumeEffect"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.lifecycle.LifecycleResumePauseEffectScope"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "deprecated": true,
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 3,
+          "symbol": "com.viewcompose.lifecycle.LifecycleStartEffect"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.lifecycle.LifecycleStartStopEffectScope"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.lifecycle.LocalLifecycleOwner"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.lifecycle.LocalSavedStateRegistryOwner"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "receiver": "StateFlow<T>",
+          "symbol": "com.viewcompose.lifecycle.StateFlow.collectAsState"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "receiver": "StateFlow<T>",
+          "symbol": "com.viewcompose.lifecycle.StateFlow.collectAsStateWithLifecycle"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.lifecycle.UiTreeBuilder.ProvideLifecycleOwner"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.lifecycle.UiTreeBuilder.ProvideSavedStateRegistryOwner"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "receiver": "View",
+          "symbol": "com.viewcompose.lifecycle.View.clearAndroidViewSavedStateBinding"
+        },
+        {
+          "artifact": "viewcompose-media3-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.media3",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.media3.Media3ArtworkDisplayMode"
+        },
+        {
+          "artifact": "viewcompose-media3-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.media3",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.media3.Media3PlayerViewConfiguration"
+        },
+        {
+          "artifact": "viewcompose-media3-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.media3",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.media3.Media3ResizeMode"
+        },
+        {
+          "artifact": "viewcompose-media3-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.media3",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.media3.Media3ShowBuffering"
+        },
+        {
+          "artifact": "viewcompose-media3-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.media3",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.media3.Media3SurfaceType"
+        },
+        {
+          "artifact": "viewcompose-media3-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.media3",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.media3.UiTreeBuilder.Media3PlayerView"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.LocalNavGraphOwnerScope"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavDeepLinkResult"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavDestinationMotionSpec"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavDestinationTransform"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavFailure"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavFailurePhase"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavGraphOwner"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavGraphOwnerScope"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavHostController"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavHostException"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavMotionEasing"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavMotionTiming"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavPanePolicy"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavPredictiveBackSpec"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavResult"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavSpringSpec"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.navigation.NavTransitionSpec"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.navigation.UiTreeBuilder.NavHost"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.navigation.UiTreeBuilder.ProvideNavGraphOwner"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 4,
+          "symbol": "com.viewcompose.navigation.createNavHostController"
+        },
+        {
+          "artifact": "viewcompose-navigation-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.navigation",
+          "overloadCount": 4,
+          "symbol": "com.viewcompose.navigation.rememberNavHostController"
+        },
+        {
+          "artifact": "viewcompose-overlay-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.overlay.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.overlay.android.AndroidOverlayHost"
+        },
+        {
+          "artifact": "viewcompose-overlay-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.overlay.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.overlay.android.AndroidOverlayHostFactoryProvider"
+        },
+        {
+          "artifact": "viewcompose-overlay-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.overlay.android",
+          "overloadCount": 1,
+          "receiver": "ViewGroup",
+          "symbol": "com.viewcompose.overlay.android.ViewGroup.asOverlayRenderContainerHandle"
+        },
+        {
+          "artifact": "viewcompose-overlay-material3-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.overlay.material3.android.host",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.overlay.material3.android.host.AndroidOverlayHost"
+        },
+        {
+          "artifact": "viewcompose-overlay-material3-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.overlay.material3.android.presenter",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.overlay.material3.android.presenter.AndroidModalBottomSheetPresenter"
+        },
+        {
+          "artifact": "viewcompose-overlay-material3-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.overlay.material3.android.presenter",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.overlay.material3.android.presenter.AndroidSnackbarOverlayPresenter"
+        },
+        {
+          "artifact": "viewcompose-overlay-oneui7-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.overlay.oneui7.android.host",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.overlay.oneui7.android.host.AndroidOverlayHost"
+        },
+        {
+          "artifact": "viewcompose-paging-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.paging",
+          "overloadCount": 1,
+          "receiver": "CombinedLoadStates",
+          "symbol": "com.viewcompose.paging.CombinedLoadStates.forLoadType"
+        },
+        {
+          "artifact": "viewcompose-paging-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.paging",
+          "overloadCount": 1,
+          "receiver": "Flow<PagingData<T>>",
+          "symbol": "com.viewcompose.paging.Flow.collectAsViewComposePagingItems"
+        },
+        {
+          "artifact": "viewcompose-paging-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.paging",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.paging.PagingContentState"
+        },
+        {
+          "artifact": "viewcompose-paging-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.paging",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.paging.PagingLifecyclePolicy"
+        },
+        {
+          "artifact": "viewcompose-paging-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.paging",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.paging.PagingLoadStateSnapshot"
+        },
+        {
+          "artifact": "viewcompose-paging-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.paging",
+          "overloadCount": 2,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.paging.UiTreeBuilder.PagingLazyColumn"
+        },
+        {
+          "artifact": "viewcompose-paging-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.paging",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.paging.ViewComposePagingItems"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.InnerShadowBitmapRasterizer"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.InnerShadowSpecResolver"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.RasterizedInnerShadow"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.RasterizedShadow"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ResolvedInnerShadowSpec"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ResolvedShadowGroup"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ResolvedShadowLayer"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ResolvedShadowSpec"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ShadowBitmapRasterizer"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ShadowDecorationLayer"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ShadowRasterCacheStats"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ShadowRenderBackend"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ShadowRenderBackendDecision"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ShadowRenderBackendSelector"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ShadowRenderBackendStats"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ShadowRenderDecisionReason"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ShadowRenderPolicy"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ShadowSpecResolver"
+        },
+        {
+          "artifact": "viewcompose-shadow-android",
+          "kind": "integration",
+          "namespace": "com.viewcompose.shadow.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.shadow.android.ShadowViewDecorationBackend"
+        },
+        {
+          "artifact": "viewcompose-viewmodel-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.viewmodel",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.viewmodel.LocalViewModelStoreOwner"
+        },
+        {
+          "artifact": "viewcompose-viewmodel-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.viewmodel",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.viewmodel.SavedStateHandleHolderViewModel"
+        },
+        {
+          "artifact": "viewcompose-viewmodel-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.viewmodel",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.viewmodel.UiTreeBuilder.ProvideViewModelStoreOwner"
+        },
+        {
+          "artifact": "viewcompose-viewmodel-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.viewmodel",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.viewmodel.savedStateHandle"
+        },
+        {
+          "artifact": "viewcompose-viewmodel-androidx",
+          "kind": "integration",
+          "namespace": "com.viewcompose.viewmodel",
+          "overloadCount": 2,
+          "symbol": "com.viewcompose.viewmodel.viewModel"
+        }
+      ],
+      "entryCount": 157,
+      "groupId": "integrations"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.constraintlayout.Modifier.constrain"
+        },
+        {
+          "artifact": "viewcompose-constraintlayout-androidx",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.constraintlayout",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.constraintlayout.Modifier.constrainAs"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.AndroidViewAdapter"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.AndroidViewCommitScope"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.AndroidViewCreateScope"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.AndroidViewLifecycleMode"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.AndroidViewResetReason"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.AndroidViewResetScope"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.AndroidViewReusePolicy"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.AndroidViewUpdateScope"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.host.android.Modifier.nativeView"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.RenderSession"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.UiHostAndroid"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 2,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.host.android.UiTreeBuilder.AndroidView"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.animation",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.animation.AndroidAnimationInterop"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.host.android.animation",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.host.android.animation.Modifier.androidAnimation"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.animation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.host.android.animation.UiTreeBuilder.MotionLayoutView"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.environment",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.environment.AndroidEnvironmentBridge"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.graphics",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.graphics.AndroidGraphicsInterop"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.host.android.graphics",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.host.android.graphics.Modifier.androidGraphics"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.installRenderSessionInspectionTooling"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.overlay",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.overlay.AndroidOverlayHostDefaults"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.renderInto"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.resources",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.resources.AndroidResourceRefreshController"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.resources",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.resources.LocalAndroidContext"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.resources",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.resources.LocalAndroidResources"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.resources",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.host.android.resources.UiTreeBuilder.AndroidResourceEnvironment"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.resources",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.resources.booleanResource"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.resources",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.resources.colorResource"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.resources",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.resources.dimensionPixelSizeResource"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.resources",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.resources.dimensionResource"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.resources",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.resources.integerArrayResource"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.resources",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.resources.integerResource"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.resources",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.resources.pluralStringResource"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.resources",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.resources.stringArrayResource"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.resources",
+          "overloadCount": 2,
+          "symbol": "com.viewcompose.host.android.resources.stringResource"
+        },
+        {
+          "artifact": "viewcompose-host-android",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.host.android.viewComposeSaveableStateRegistry"
+        }
+      ],
+      "entryCount": 37,
+      "groupId": "android-interop"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-preview",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.PreviewThemeResolution"
+        },
+        {
+          "artifact": "viewcompose-preview",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.ViewComposePreview"
+        },
+        {
+          "artifact": "viewcompose-preview",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.ViewComposePreviewOptions"
+        },
+        {
+          "artifact": "viewcompose-preview",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.ViewComposePreviewWithRoot"
+        },
+        {
+          "artifact": "viewcompose-preview",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.host",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.host.ViewComposePreviewHost"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewArtifactLayout"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewArtifacts"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewBuildInput"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewBuildInputKind"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewBuildManifest"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewClippingState"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewCompositionLocal"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewCompositionSnapshot"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewConfiguration"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewConfigurationAxis"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewConfigurationMatrix"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewConfigurationOption"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewConfigurationOverride"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewConfigurationPresets"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewDefaults"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewDescriptor"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewDescriptorCatalog"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewDiagnostic"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewDiagnosticSeverity"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewFontScales"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewJvmEntryPoint"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewLayoutBounds"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewLayoutDiagnostic"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewLayoutDiagnosticKind"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewLayoutDirection"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewLightDark"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewLtrRtl"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewNativeViewNode"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewNodeBindingStats"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewPatchRecord"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewPhaseTiming"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewPhoneTablet"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewProtocolJson"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewRecomposeScope"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewRenderRequest"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewRenderResponse"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewRenderSnapshot"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewRenderStats"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewRenderStatus"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewRenderStructure"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewRenderTreeNode"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewSourceCallSite"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewSourceLocation"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewTheme"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewVariant"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewWorkerBatchCommand"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.PreviewWorkerCommand"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.ViewComposePreview"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "receiver": "ViewComposePreview",
+          "symbol": "com.viewcompose.preview.tooling.ViewComposePreview.toPreviewConfiguration"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.ViewComposePreviewProtocol"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.ViewComposePreviewThemeProvider"
+        },
+        {
+          "artifact": "viewcompose-preview-core",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.tooling",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.tooling.ViewComposePreviews"
+        },
+        {
+          "artifact": "viewcompose-preview-gradle-plugin",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.gradle",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.gradle.ViewComposePreviewGradlePlugin"
+        },
+        {
+          "artifact": "viewcompose-preview-runner",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.runner",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.runner.PreviewAndroidContextFactory"
+        },
+        {
+          "artifact": "viewcompose-preview-runner",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.runner",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.runner.PreviewEntryResolutionResult"
+        },
+        {
+          "artifact": "viewcompose-preview-runner",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.runner",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.runner.PreviewJvmEntryPointResolver"
+        },
+        {
+          "artifact": "viewcompose-preview-worker-host",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview.worker",
+          "overloadCount": 1,
+          "symbol": "com.viewcompose.preview.worker.PreviewWorkerHost"
+        }
+      ],
+      "entryCount": 62,
+      "groupId": "tooling"
+    },
+    {
+      "entries": [
+        {
+          "artifact": "viewcompose-oneui7",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.oneui7",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.oneui7.UiTreeBuilder.OneUi7Theme"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 3,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.cornerRadius"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.overlayAnchor"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.sharedBounds"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.sharedElement"
+        },
+        {
+          "artifact": "viewcompose-ui-contract",
+          "kind": "modifier",
+          "namespace": "com.viewcompose.ui.modifier",
+          "overloadCount": 1,
+          "receiver": "Modifier",
+          "symbol": "com.viewcompose.ui.modifier.Modifier.zIndex"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.BottomAppBar"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.DropdownMenu"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.DropdownMenuItem"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ListItem"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideBottomAppBarOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideLocal"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideLocals"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideMonotonicFrameClock"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideOverlayHost"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideSaveableStateRegistry"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideSegmentedControlOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideTopAppBarOverrides"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.PullToRefresh"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.SegmentedControl"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "component",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.TopAppBar"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.UiEnvironment"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 1,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.UiTheme"
+        },
+        {
+          "artifact": "viewcompose-ui-foundation",
+          "kind": "dsl",
+          "namespace": "com.viewcompose.ui.foundation",
+          "overloadCount": 2,
+          "receiver": "UiTreeBuilder",
+          "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.UiThemeOverride"
+        }
+      ],
+      "entryCount": 24,
+      "groupId": "general"
+    }
+  ],
+  "schemaVersion": 1,
+  "summary": {
+    "artifactCount": 29,
+    "countsByKind": {
+      "component": 72,
+      "dsl": 33,
+      "host": 32,
+      "integration": 157,
+      "modifier": 77,
+      "tooling": 62
+    },
+    "entryCount": 433,
+    "groupCount": 15,
+    "ownedEntryCount": 0,
+    "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
+  }
+}

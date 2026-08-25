@@ -75,8 +75,11 @@ During local iteration, `-PviewComposeDocsModules=artifact-a,artifact-b` limits 
 explicit subset. A production build never uses this shortcut.
 
 Governance V2 assets are repository inputs, not another site registry: Phase 0A freezes schemas,
-Phase 0B reports through compiled quality ownership, and Phase 2 blocks new debt. Generated
-Reference routes consume that same discovered model rather than a second page/capability list.
+Phase 0B reports through compiled quality ownership, and Phase 2 blocks new debt. The committed
+`website/src/data/capability-reference.json` dataset is intentionally rewritten with
+`./gradlew updateDocumentationCapabilityReference`; verification independently derives and
+byte-compares the expected model. The localized `/reference/` page consumes that one tree, while
+`/api/` remains the exhaustive per-artifact, per-version Dokka output.
 
 Run `npm run write-translations` when React, navbar, footer, or sidebar messages gain new keys. It
 adds missing JSON messages without overwriting reviewed Chinese translations. Markdown mirror

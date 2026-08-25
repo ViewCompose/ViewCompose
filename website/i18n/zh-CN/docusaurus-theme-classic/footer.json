@@ -27,6 +27,10 @@
     "message": "模块",
     "description": "The label of footer link with label=Modules linking to /modules"
   },
+  "link.item.label.Capability Reference": {
+    "message": "能力参考",
+    "description": "The label of footer link with label=Capability Reference linking to /reference"
+  },
   "link.item.label.API Reference": {
     "message": "API 参考",
     "description": "The label of footer link with label=API Reference linking to /api"
