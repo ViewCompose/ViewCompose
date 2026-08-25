@@ -4,6 +4,7 @@ import {resolve} from 'node:path';
 import {performance} from 'node:perf_hooks';
 import {websiteRoot} from './site-quality-lib.mjs';
 import {pruneLocalizedApiCopies} from './prune-localized-api-copies.mjs';
+import {pruneLocalizedStaticCopies} from './prune-localized-static-copies.mjs';
 import {verifyAccessibility} from './verify-accessibility.mjs';
 import {verifySiteBudgets} from './verify-site-budgets.mjs';
 import {verifySiteShell} from './verify-site-shell.mjs';
@@ -34,6 +35,7 @@ if (exitCode !== 0) {
   try {
     const buildDurationSeconds = (performance.now() - startedAt) / 1000;
     await pruneLocalizedApiCopies();
+    await pruneLocalizedStaticCopies();
     const versionedDocumentation = await verifyVersionedDocumentation();
     const siteShell = await verifySiteShell();
     const accessibility = await verifyAccessibility();

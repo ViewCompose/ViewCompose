@@ -100,17 +100,9 @@ Link between focused pages instead.
 
 ## Governance V2 structured contract
 
-Governance V2 adds stable identities and machine-readable records. Its rules are normative; one
-reviewed baseline may contain existing violations, but new or touched content cannot add or retain
-debt in the affected category. Deterministic discovery and the reviewed baseline are now frozen,
-so `verifyDocumentationGovernanceV2` blocks unbaselined findings and every baseline count that is
-not exact. The task is part of `verifyDocumentationStructure`, and therefore also runs in
-`qaQuick` and documentation CI.
-
-An exception record is not a general allowlist. Relative to the verification base, a pull request
-may delete a resolved record or lower only its `violation_count` after reducing the same exact
-target/category debt. Adding, copying, renaming, retargeting, widening, or re-adding an exception
-fails. A reduced count must be recorded in the same change, and a zero count removes the record.
+Governance V2 adds stable identities and machine-readable records. Its frozen Phase 2 baseline is
+enforced by `verifyDocumentationGovernanceV2` through `verifyDocumentationStructure`; detailed
+ownership, record, and ratchet rules follow.
 
 ### Capability identity and ownership
 
@@ -178,14 +170,15 @@ changes require migration. Public symbols cannot use free-form `No documentation
 
 An exception has a stable ID, exact file/symbol, category, reason, owner, creation date, removal
 condition, count, and optional expiry; wildcards and permanent legacy buckets are forbidden. The
-ratchet rejects new/wider/increased/re-added debt and requires touched allowlisted pages to repair
-that category. Completion requires an empty baseline and strict local, PR, and deployment gates.
+active ratchet blocks unbaselined, wider, increased, re-added, or identity-mutated debt; only exact
+count reductions and resolved-record deletions pass. Completion requires an empty baseline and
+strict local, PR, and deployment gates.
 
 ### Contract assets and enforcement boundary
 
 The V2 manifest in `docs/project/contracts/` freezes schemas, fixtures, and record/task/report
 locations. Documents use front matter; other records use plural subdirectories. Fixtures fail
-closed; findings do not block until Phase 2.
+closed; Phase 2 enforces the frozen exact baseline.
 
 Machines own shape, identity, discovery, uniqueness, source/lane/route consistency, ratchet, and
 freshness; reviewers own cohesion, purpose, evidence, exception credibility, and rationale.

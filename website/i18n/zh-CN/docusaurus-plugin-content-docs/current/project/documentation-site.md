@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: ae1779d80c776514869898c98ab2bd304bd7211938613dec09f508fb7912fe5c
+translation_source_hash: 991900ac55a2d313a5a531cf8e2ab85d39f391890665fa0b3f106b983442f77e
 translation_status: current
 ---
 
@@ -89,20 +89,19 @@ Lazy Collection 分支先对穷举计划与 Benchmark 明细分区，才形成�
 版本化阈值位于 `website/site-budgets.json`。不可变 Dokka 产物只以 `/api/**` 为权威路径；
 Docusaurus 完成各 locale 构建后，受支持的构建入口会删除 `/zh-CN/api/**` 等带 locale 前缀的
 静态副本。中文页面直接链接权威 API 树，因此这些副本只增加存储，并不提供本地化内容或受支持
-路由。
+路由。共享社交卡片同样使用唯一根路径绝对 URL，受支持构建会删除其 Locale 副本。
 
 预算模型把合法发布历史增长与真正回归分开。当前上限为：非 API 产物 46.9 MiB、
 API 树平均 4.5 MiB/单树 24 MiB、API 路由开销 1 MiB、JavaScript 总计 8 MiB/单文件
 768 KiB、CSS 128 KiB、单 Locale 搜索索引 6.25 MiB，以及 Docusaurus 构建 120 秒。
 仍然禁止生成带 Locale 前缀的 API 副本。
 
-非 API 上限从 41 MiB 演进到 46.9 MiB 的每一步，都先通过成对构建把增长归因到长期双语契约，
-并通过表示审查移除可避免的重复。下方把已完成测量收敛为紧凑记录，不再在有效契约中重复每个
-执行阶段。任何阈值调整都必须提供同语料的绝对值和归一化结果、读者或发布价值、结论、限制以及
-下一项停止条件。
-
-达到 46.9 MiB 边界后，失败分支必须先合并已完成证据或改变站点表示。不得仅为回收预算而删除当前
-公共 API、架构、迁移、教程或模块契约；合法不可变 API 历史继续受独立的单树预算约束。
+非 API 上限从 41 MiB 升至 46.9 MiB 前均经过成对归因和内容收敛。2026-08-26 Governance V2
+门禁变更的首次同语料构建为 49,185,235 B，超出上限 7,020.6 B（+0.0143%）；在保留有效棘轮
+契约的前提下合并重复叙述并删除未使用的 Locale 社交卡片副本后，减少 769,236 B（-1.5640%）
+至 48,415,999 B，留下 762,215.4 B（1.5499%）余量，结论为 `improved`。该测量只覆盖一次本地
+生产构建；停止条件不变：不得提高阈值，下次失败仍须改善表示。不得仅为回收预算而删除当前公共
+契约或合法不可变 API 历史。
 
 无障碍检查覆盖站点自有英文与本地化页面，检查文档语言、title/main landmark、标题顺序、
 accessible name、图片替代文本、表头、iframe title 和重复 ID；重定向 stub 与 Dokka 生成页

@@ -462,12 +462,18 @@ path in each affected graph is `:verifyDocumentationGovernanceV2`. The conclusio
 733 existing findings still match all 311 exact entries with zero unbaselined issue, while new or
 widened debt has changed from non-blocking to blocking. The quality included build passed 35/35
 tests, including monotonic reduction, immutable identity, addition/re-addition, deletion, widened
-count, and unbaselined-debt negatives. Documentation verification passed 52/52 script tests and
+count, and unbaselined-debt negatives. Documentation verification passed 55/55 script tests and
 116/116 current translations. The deterministic report hashes are
-`c6dbde0cdb47e122540dc54a39dd1326e083bb67c0f329eb70ad914d589785b5` for JSON and
+`6c9e7b91160a018c49fe98be662be26d904bb856f07b78e171f21a62a1101de1` for JSON and
 `8c1a3f2d6736bb086bfedc5f11eb9e7a1ebdc6473835e62061dd9111b9857f6f` for text.
 An implementation-invalidated `qaQuick` passed in 7 minutes 41 seconds with 2,342 actionable
 tasks (2,262 executed and 80 up-to-date), exactly one more executed task than the Phase 1 run.
+The first pull-request documentation build passed Governance V2 and complete API generation but
+exposed 7,020.6 B (+0.0143%) of non-API site-budget debt. The same-corpus correction preserved the
+active contract, canonicalized the shared social card, pruned its 761,036 B locale copy, and passed
+the production build with 762,215.4 B (1.5499%) headroom. The owning site contract records the
+absolute and normalized comparison; the conclusion is `improved`, the single local production
+build is the limitation, and independent documentation CI is the next acceptance action.
 The limitation is that this slice enforces debt monotonicity only; automatic Tutorial/sample
 ownership, complete capability-impact semantics, generated Reference freshness, and route-change
 checks remain later Phase 2 slices. Type-aware Tutorial discovery is the next action.
