@@ -60,9 +60,10 @@ ships a compiled `@sample`. Existing documentation debt cannot justify new debt.
 The same change supplies a structured capability-impact record conforming to the Governance V2
 [public capability impact contract](./documentation-governance.md#public-capability-impact). Resolve
 the stable capability owner and every KDoc, module, sample, Reference, Tutorial, Guide,
-Architecture, Migration, and redirect disposition before implementation. Until Phase 0B chooses a
-record discovery location, include the complete equivalent fields in the pull-request description;
-do not invent a temporary repository filename or root-build parser.
+Architecture, Migration, and redirect disposition before implementation. Add one immutable record
+under `docs/project/records/documentation-governance-v2/impacts/` for each detected structural
+capability change. The compiled gate compares it with the exact pull-request base and rejects
+missing, reused, stale, duplicated, or mismatched impact ownership.
 
 Update documentation before or together with:
 

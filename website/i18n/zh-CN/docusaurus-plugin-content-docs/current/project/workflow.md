@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: ab89e5e8ee159d8c639e8b5680cfab884aceb900e1222ae2dd60898b68692c6a
+translation_source_hash: 4be33807c29c80c83250b0a70d5507a5023a43570d9023a65d1c34dad56cbe83
 translation_status: current
 ---
 
@@ -63,8 +63,9 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 同一变更还必须提供符合 Governance V2
 [公共能力影响契约](./documentation-governance.md#公共能力影响)的结构化 capability-impact 记录。
 实现前要确定稳定 capability owner，并处理 KDoc、模块、sample、Reference、Tutorial、Guide、
-Architecture、Migration 与 redirect。Phase 0B 确定记录发现位置前，应在 PR 描述中提供完整等价
-字段；不要为此发明临时仓库文件名或根构建 parser。
+Architecture、Migration 与 redirect。每个检测到的结构化 capability 变更，都要在
+`docs/project/records/documentation-governance-v2/impacts/` 下新增一条不可变记录。编译门禁会将其
+与 PR 精确基准比较，并拒绝缺失、复用、陈旧、重复或 owner 不匹配的 impact。
 
 涉及下面任一情况时，必须先更新文档，或和实现同步提交：
 

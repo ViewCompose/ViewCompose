@@ -212,6 +212,64 @@ class DocumentationGovernanceV2ReportTaskTest {
         assertTrue(first.report.contains("\"ratchetViolations\": ["))
         assertTrue(first.humanReport.contains("Gate: failed; violations: 4"))
 
+        val undocumentedPublicEntry = DocumentationGovernanceV2Reporter.generate(
+            repository = repository,
+            contractFiles = inputs,
+            recordFiles = setOf(baseline),
+            sourceSetDirectories = setOf(sourceRoot),
+            activeDocumentationFiles = setOf(currentDocument, legacyDocument),
+            localeMirrorFiles = setOf(localeMirror),
+            publishingFiles = setOf(publishing, releases),
+            documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
+            ratchetContext = DocumentationGovernanceV2RatchetContext(
+                verificationBase = "base",
+                changedSourceFiles = listOf(
+                    DocumentationGovernanceV2SourceChange(
+                        basePath = null,
+                        baseSource = null,
+                        currentPath = "viewcompose-example/src/main/java/example/Example.kt",
+                        currentSource = repository.resolve(
+                            "viewcompose-example/src/main/java/example/Example.kt",
+                        ).readText(),
+                    ),
+                ),
+            ),
+        )
+        assertTrue(
+            undocumentedPublicEntry.ratchetViolations.any { violation ->
+                violation.contains("example.Modifier.visibleModifier added public API change")
+            },
+        )
+
+        val changedDefaultValue = DocumentationGovernanceV2Reporter.generate(
+            repository = repository,
+            contractFiles = inputs,
+            recordFiles = setOf(baseline),
+            sourceSetDirectories = setOf(sourceRoot),
+            activeDocumentationFiles = setOf(currentDocument, legacyDocument),
+            localeMirrorFiles = setOf(localeMirror),
+            publishingFiles = setOf(publishing, releases),
+            documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
+            ratchetContext = DocumentationGovernanceV2RatchetContext(
+                verificationBase = "base",
+                changedSourceFiles = listOf(
+                    DocumentationGovernanceV2SourceChange(
+                        basePath = "viewcompose-example/src/main/java/example/Example.kt",
+                        baseSource =
+                            "package example\nfun Modifier.visibleModifier(label: String = \"old\") = this\n",
+                        currentPath = "viewcompose-example/src/main/java/example/Example.kt",
+                        currentSource =
+                            "package example\nfun Modifier.visibleModifier(label: String = \"new\") = this\n",
+                    ),
+                ),
+            ),
+        )
+        assertTrue(
+            changedDefaultValue.ratchetViolations.any { violation ->
+                violation.contains("example.Modifier.visibleModifier changed public API change")
+            },
+        )
+
         val currentMirrorText = localeMirror.readText()
         localeMirror.writeText(currentMirrorText.replace("VisibleDsl()", "StaleDsl()"))
         val staleMirror = DocumentationGovernanceV2Reporter.generate(
@@ -336,6 +394,154 @@ class DocumentationGovernanceV2ReportTaskTest {
         )
         assertTrue(deleted.violations.joinToString("\n"), deleted.violations.isEmpty())
     }
+
+    @Test
+    fun `new public modifier requires one exact capability impact record`() {
+        val declaration = capabilityDeclaration(
+            symbol = "com.viewcompose.ui.foundation.Modifier.foo",
+            signatureHash = "new-signature",
+        )
+        val changes = DocumentationGovernanceV2PublicApiChanges.detect(
+            baseDeclarations = emptyList(),
+            currentDeclarations = listOf(declaration),
+        )
+
+        assertEquals("added", changes.single().change)
+        val violations = DocumentationGovernanceV2PublicApiChanges.verifyImpacts(
+            changes = changes,
+            addedImpactPaths = emptySet(),
+            records = emptyList(),
+        )
+        assertTrue(violations.single().contains("requires exactly one newly added matching"))
+    }
+
+    @Test
+    fun `changed public signature accepts a newly added exact owned impact`() {
+        val symbol = "com.viewcompose.ui.foundation.Modifier.foo"
+        val changes = DocumentationGovernanceV2PublicApiChanges.detect(
+            baseDeclarations = listOf(capabilityDeclaration(symbol, "old-signature")),
+            currentDeclarations = listOf(capabilityDeclaration(symbol, "new-signature")),
+        )
+        val impactPath =
+            "docs/project/records/documentation-governance-v2/impacts/impact-modifier-foo.json"
+        val records = listOf(
+            governanceRecord(
+                path = impactPath,
+                contractId = "capability-impact",
+                recordId = "impact.modifier-foo",
+                value = mapOf(
+                    "artifact" to "viewcompose-ui-foundation",
+                    "symbol_id" to symbol,
+                    "change" to "changed",
+                    "capability_id" to "modifier.foo",
+                ),
+            ),
+            governanceRecord(
+                path =
+                    "docs/project/records/documentation-governance-v2/capabilities/modifier-foo.json",
+                contractId = "capability",
+                recordId = "modifier.foo",
+                value = mapOf(
+                    "artifact" to "viewcompose-ui-foundation",
+                    "symbols" to listOf(mapOf("symbol_id" to symbol)),
+                    "sample_owner" to mapOf("sample_id" to "sample.modifier-foo"),
+                ),
+            ),
+            governanceRecord(
+                path = "docs/project/records/documentation-governance-v2/samples/modifier-foo.json",
+                contractId = "sample",
+                recordId = "sample.modifier-foo",
+                value = mapOf("capability_id" to "modifier.foo"),
+            ),
+        )
+
+        assertEquals("changed", changes.single().change)
+        assertTrue(
+            DocumentationGovernanceV2PublicApiChanges.verifyImpacts(
+                changes = changes,
+                addedImpactPaths = setOf(impactPath),
+                records = records,
+            ).isEmpty(),
+        )
+    }
+
+    @Test
+    fun `adding an overload to an existing symbol is a change rather than a new capability`() {
+        val symbol = "com.viewcompose.ui.foundation.Modifier.foo"
+        val addedOverload = capabilityDeclaration(symbol, "new-overload")
+        val completeOverloadSet = capabilityDeclaration(symbol, "existing-overload").toMutableMap().apply {
+            this["overloadCount"] = 2
+            this["signatureHashes"] = listOf("existing-overload", "new-overload")
+        }
+
+        val changes = DocumentationGovernanceV2PublicApiChanges.detect(
+            baseDeclarations = emptyList(),
+            currentDeclarations = listOf(addedOverload),
+            currentInventory = listOf(completeOverloadSet),
+        )
+
+        assertEquals("changed", changes.single().change)
+    }
+
+    @Test
+    fun `an unambiguous package change is classified as a move`() {
+        val previous = capabilityDeclaration("example.old.Modifier.foo", "same-signature")
+        val current = capabilityDeclaration("example.new.Modifier.foo", "same-signature")
+
+        val change = DocumentationGovernanceV2PublicApiChanges.detect(
+            baseDeclarations = listOf(previous),
+            currentDeclarations = listOf(current),
+        ).single()
+
+        assertEquals("moved", change.change)
+        assertEquals("example.old.Modifier.foo", change.previousSymbol)
+        assertEquals("example.new.Modifier.foo", change.symbol)
+    }
+
+    @Test
+    fun `git audit keeps capability impacts immutable and supplies changed source snapshots`() {
+        val repository = temporaryFolder.newFolder("public-api-git-audit")
+        val sourcePath = "viewcompose-example/src/main/java/example/ModifierDsl.kt"
+        repository.resolve(sourcePath).apply {
+            parentFile.mkdirs()
+            writeText("package example\nfun Modifier.foo() = this\n")
+        }
+        val impactPath =
+            "docs/project/records/documentation-governance-v2/impacts/impact-example.json"
+        val executor = ratchetExecutor(diff = "A\t$sourcePath\nM\t$impactPath\n")
+
+        val audit = DocumentationGovernanceV2GitRatchet.inspect(
+            repository = repository,
+            explicitBaseRevision = "base",
+            executor = executor,
+        )
+
+        assertTrue(audit.violations.single().contains("immutable capability-impact"))
+        assertEquals(sourcePath, audit.changedSourceFiles.single().currentPath)
+        assertTrue(audit.changedSourceFiles.single().currentSource!!.contains("Modifier.foo"))
+    }
+
+    private fun capabilityDeclaration(symbol: String, signatureHash: String): Map<String, Any?> =
+        mapOf(
+            "artifact" to "viewcompose-ui-foundation",
+            "deprecated" to false,
+            "signatureHashes" to listOf(signatureHash),
+            "symbol" to symbol,
+        )
+
+    private fun governanceRecord(
+        path: String,
+        contractId: String,
+        recordId: String,
+        value: Map<String, Any?>,
+    ) = GovernanceRecord(
+        path = path,
+        contractId = contractId,
+        valid = true,
+        violations = emptyList(),
+        value = value,
+        recordId = recordId,
+    )
 
     private fun ratchetExecutor(
         diff: String,

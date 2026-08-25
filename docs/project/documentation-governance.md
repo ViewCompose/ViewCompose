@@ -180,6 +180,23 @@ Tutorial/Guide/Architecture/Migration/redirect dispositions. A disposition is `u
 targets or `not-applicable` with a concrete rationale. Moves/deletions require redirects; breaking
 changes require migration. Public symbols cannot use free-form `No documentation impact`.
 
+The blocking gate compares the pull request with its exact verification base for structural
+changes to the application-facing capability inventory: public/protected DSL and scope functions,
+`Modifier` extensions, components, hosts, integrations, and tooling entries. It fingerprints the
+overload set, annotations, default values, visibility, deprecation state, artifact, and stable
+symbol identity. Moving unchanged source between files is neutral; changing package/symbol
+identity is a move. Each detected change requires exactly one newly added record under
+`docs/project/records/documentation-governance-v2/impacts/` whose artifact, symbol, and change kind
+match. Impact records are immutable after merge and cannot be pre-created or reused.
+
+The referenced capability record must be valid and unique, own the current artifact and symbol,
+and resolve to a valid sample record for the same capability. Duplicate record IDs, stale impact
+records, missing owners, and mismatched samples fail. The gate deliberately does not infer a
+behavior change from an unchanged declaration body, nor does the capability inventory claim every
+low-level public implementation type. Those cases retain the same impact-record obligation and
+must be identified by the author/reviewer together with the source-documentation and release
+checks; this machine boundary is not a `No documentation impact` exemption.
+
 ### Exceptions and debt ratchet
 
 An exception has a stable ID, exact file/symbol, category, reason, owner, creation date, removal

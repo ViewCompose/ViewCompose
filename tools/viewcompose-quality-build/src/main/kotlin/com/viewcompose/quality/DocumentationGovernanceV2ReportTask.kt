@@ -86,6 +86,8 @@ abstract class VerifyDocumentationGovernanceV2Task : DefaultTask() {
             ratchetContext = DocumentationGovernanceV2RatchetContext(
                 verificationBase = mutationAudit.verificationBase,
                 mutationViolations = mutationAudit.violations,
+                addedImpactPaths = mutationAudit.addedImpactPaths,
+                changedSourceFiles = mutationAudit.changedSourceFiles,
             ),
         )
         reportFile.get().asFile.apply {
@@ -135,6 +137,15 @@ internal data class DocumentationGovernanceV2ReportResult(
 internal data class DocumentationGovernanceV2RatchetContext(
     val verificationBase: String? = null,
     val mutationViolations: List<String> = emptyList(),
+    val addedImpactPaths: Set<String> = emptySet(),
+    val changedSourceFiles: List<DocumentationGovernanceV2SourceChange> = emptyList(),
+)
+
+internal data class DocumentationGovernanceV2SourceChange(
+    val basePath: String?,
+    val baseSource: String?,
+    val currentPath: String?,
+    val currentSource: String?,
 )
 
 internal object DocumentationGovernanceV2Reporter {
@@ -231,6 +242,32 @@ internal object DocumentationGovernanceV2Reporter {
             files = recordFiles,
             schemas = schemas,
         )
+        val publicApiChanges = DocumentationGovernanceV2PublicApiChanges.detect(
+            baseDeclarations = discoverCapabilityDeclarations(
+                sourceFiles = ratchetContext.changedSourceFiles.mapNotNull { change ->
+                    change.baseSource?.let { source ->
+                        GovernanceSourceFile(change.basePath.orEmpty(), source)
+                    }
+                },
+                activeArtifacts = activeArtifacts,
+                moduleFamilies = moduleFamilies,
+            ),
+            currentDeclarations = discoverCapabilityDeclarations(
+                sourceFiles = ratchetContext.changedSourceFiles.mapNotNull { change ->
+                    change.currentSource?.let { source ->
+                        GovernanceSourceFile(change.currentPath.orEmpty(), source)
+                    }
+                },
+                activeArtifacts = activeArtifacts,
+                moduleFamilies = moduleFamilies,
+            ),
+            currentInventory = declarations,
+        )
+        val publicApiImpactViolations = DocumentationGovernanceV2PublicApiChanges.verifyImpacts(
+            changes = publicApiChanges,
+            addedImpactPaths = ratchetContext.addedImpactPaths,
+            records = records,
+        )
         val issues = buildIssues(
             declarations = declarations,
             documents = documents,
@@ -244,7 +281,7 @@ internal object DocumentationGovernanceV2Reporter {
                 issues = issues,
                 records = records,
                 baseline = baseline,
-            ) + ratchetContext.mutationViolations
+            ) + ratchetContext.mutationViolations + publicApiImpactViolations
         ).distinct().sorted()
         val reportIssues = issues.map { issue ->
             val matchingBaseline = baseline.matches[issue.baselineKey]
@@ -271,6 +308,9 @@ internal object DocumentationGovernanceV2Reporter {
                     "requiredPageCount" to publicPagePaths.size,
                 ),
                 "records" to records.map(GovernanceRecord::report),
+                "publicApiChanges" to publicApiChanges.map(
+                    DocumentationGovernanceV2PublicApiChange::report,
+                ),
                 "publishing" to publishing,
             ),
             "debtBaseline" to baseline.report(),
@@ -291,6 +331,7 @@ internal object DocumentationGovernanceV2Reporter {
                 "executableFenceCount" to fences.size,
                 "localeMirrorCount" to localeMirrors.size,
                 "recordCount" to records.size,
+                "publicApiChangeCount" to publicApiChanges.size,
                 "issueCount" to issues.size,
                 "unbaselinedIssueCount" to baseline.unbaselinedIssueCount,
                 "issueCounts" to issueCounts,
@@ -305,6 +346,7 @@ internal object DocumentationGovernanceV2Reporter {
                 declarationCount = declarations.size,
                 documentCount = documents.size,
                 fenceCount = fences.size,
+                publicApiChanges = publicApiChanges,
                 contractViolations = contractViolations.sorted(),
                 ratchetViolations = ratchetViolations,
             ),
@@ -459,6 +501,19 @@ internal object DocumentationGovernanceV2Reporter {
                     ),
                 )
             }
+            records.filter { record -> record.valid && record.recordId != null }
+                .groupBy { record -> record.contractId to record.recordId }
+                .filterValues { matching -> matching.size > 1 }
+                .forEach { (identity, matching) ->
+                    add(
+                        GovernanceIssue.file(
+                            category = "taxonomy-mismatch",
+                            target = matching.map(GovernanceRecord::path).sorted().joinToString(","),
+                            detail =
+                                "${identity.first} record id ${identity.second} is declared more than once",
+                        ),
+                    )
+                }
             declarations.forEach { declaration ->
                 val symbol = declaration.getValue("symbol").toString()
                 if (symbol !in capabilityOwnersBySymbol) {
@@ -550,24 +605,45 @@ internal object DocumentationGovernanceV2Reporter {
         sourceSetDirectories: Set<File>,
         activeArtifacts: Set<String>,
         moduleFamilies: Map<String, String>,
-    ): List<Map<String, Any?>> = sourceSetDirectories
+    ): List<Map<String, Any?>> = discoverCapabilityDeclarations(
+        sourceFiles = sourceSetDirectories
+            .asSequence()
+            .filter(File::isDirectory)
+            .filter { sourceRoot -> sourceRoot.parentFile.name in activeArtifacts }
+            .flatMap { sourceRoot ->
+                sourceRoot.resolve("main").takeIf(File::isDirectory)
+                    ?.walkTopDown()
+                    ?.filter(File::isFile)
+                    ?.filter { file -> file.extension == "kt" }
+                    ?.map { file ->
+                        GovernanceSourceFile(
+                            path = file.relativePathWithin(repository),
+                            source = file.readText(),
+                        )
+                    }
+                    ?: emptySequence()
+            }
+            .toList(),
+        activeArtifacts = activeArtifacts,
+        moduleFamilies = moduleFamilies,
+    )
+
+    private fun discoverCapabilityDeclarations(
+        sourceFiles: List<GovernanceSourceFile>,
+        activeArtifacts: Set<String>,
+        moduleFamilies: Map<String, String>,
+    ): List<Map<String, Any?>> = sourceFiles
         .asSequence()
-        .filter(File::isDirectory)
-        .filter { sourceRoot -> sourceRoot.parentFile.name in activeArtifacts }
-        .flatMap { sourceRoot ->
-            sourceRoot.resolve("main").takeIf(File::isDirectory)
-                ?.walkTopDown()
-                ?.filter(File::isFile)
-                ?.filter { file -> file.extension == "kt" }
-                ?: emptySequence()
-        }
-        .flatMap { file ->
-            val source = file.readText()
+        .filter { sourceFile -> sourceFile.path.substringBefore('/') in activeArtifacts }
+        .filter { sourceFile -> "/src/main/" in "/${sourceFile.path}" }
+        .filter { sourceFile -> sourceFile.path.endsWith(".kt") }
+        .flatMap { sourceFile ->
+            val source = sourceFile.source
             val packageName = packageDeclaration.find(source)?.groupValues?.get(1).orEmpty()
             if (packageName == "internal" || ".internal." in ".$packageName.") {
                 return@flatMap emptySequence()
             }
-            val artifact = file.relativePathWithin(repository).substringBefore('/')
+            val artifact = sourceFile.path.substringBefore('/')
             val family = moduleFamilies[artifact].orEmpty()
             val sanitized = sanitizeKotlin(source)
             val braceDepths = braceDepths(sanitized)
@@ -581,7 +657,7 @@ internal object DocumentationGovernanceV2Reporter {
                 val receiver = match.groupValues[2].removeSuffix(".").trim()
                 val receiverName = receiver.substringAfterLast('.').substringBefore('<').removeSuffix("?")
                 val name = match.groupValues[3]
-                val path = file.relativePathWithin(repository)
+                val path = sourceFile.path
                 val kind = classifyCapability(
                     artifact = artifact,
                     family = family,
@@ -601,6 +677,11 @@ internal object DocumentationGovernanceV2Reporter {
                     symbol = listOf(packageName, canonicalReceiver, name)
                         .filter(String::isNotBlank)
                         .joinToString("."),
+                    signatureHash = sha256(
+                        declarationMetadata(source, match.range.first) + "\u0000" +
+                            declarationSignature(source, sanitized, match.range.first),
+                    ),
+                    deprecated = hasDeprecatedAnnotation(source, match.range.first),
                     visibility = if ("protected" in modifiers) "protected" else "public",
                 )
             }
@@ -614,7 +695,7 @@ internal object DocumentationGovernanceV2Reporter {
                     val name = match.groupValues[2]
                     if (functionDeclaration.find(match.value) != null) return@declaration
                     if (!isApplicationEntry(artifact, family, packageName, name)) return@declaration
-                    val path = file.relativePathWithin(repository)
+                    val path = sourceFile.path
                     entries += CapabilityDeclaration(
                         artifact = artifact,
                         kind = when {
@@ -627,6 +708,11 @@ internal object DocumentationGovernanceV2Reporter {
                         receiver = null,
                         sourcePackage = packageName,
                         symbol = "$packageName.$name",
+                        signatureHash = sha256(
+                            declarationMetadata(source, match.range.first) + "\u0000" +
+                                declarationSignature(source, sanitized, match.range.first),
+                        ),
+                        deprecated = hasDeprecatedAnnotation(source, match.range.first),
                         visibility = if ("protected" in modifiers) "protected" else "public",
                     )
                 }
@@ -638,7 +724,7 @@ internal object DocumentationGovernanceV2Reporter {
                     if ("private" in modifiers || "internal" in modifiers) return@declaration
                     val name = match.groupValues[3]
                     if (!isApplicationEntry(artifact, family, packageName, name)) return@declaration
-                    val path = file.relativePathWithin(repository)
+                    val path = sourceFile.path
                     entries += CapabilityDeclaration(
                         artifact = artifact,
                         kind = when {
@@ -651,6 +737,11 @@ internal object DocumentationGovernanceV2Reporter {
                         receiver = null,
                         sourcePackage = packageName,
                         symbol = "$packageName.$name",
+                        signatureHash = sha256(
+                            declarationMetadata(source, match.range.first) + "\u0000" +
+                                typeDeclarationSignature(source, sanitized, match.range.first),
+                        ),
+                        deprecated = hasDeprecatedAnnotation(source, match.range.first),
                         visibility = if ("protected" in modifiers) "protected" else "public",
                     )
                 }
@@ -674,6 +765,10 @@ internal object DocumentationGovernanceV2Reporter {
                         )
                     },
                 "overloadCount" to overloads.size,
+                "signatureHashes" to overloads.map(CapabilityDeclaration::signatureHash)
+                    .distinct()
+                    .sorted(),
+                "deprecated" to overloads.any(CapabilityDeclaration::deprecated),
                 "receiver" to first.receiver,
                 "sourcePackage" to first.sourcePackage,
                 "symbol" to first.symbol,
@@ -942,6 +1037,73 @@ internal object DocumentationGovernanceV2Reporter {
     private val projectDependency = Regex(
         """project\(\s*[\"']:(viewcompose-[a-z0-9-]+)[\"']\s*\)""",
     )
+
+    private fun declarationSignature(source: String, sanitized: String, start: Int): String {
+        val opening = sanitized.indexOf('(', start).takeIf { index -> index >= 0 }
+            ?: return source.substring(start).lineSequence().firstOrNull().orEmpty()
+                .canonicalPublicSignature()
+        var parenthesisDepth = 0
+        var index = opening
+        while (index < sanitized.length) {
+            when (sanitized[index]) {
+                '(' -> parenthesisDepth += 1
+                ')' -> {
+                    parenthesisDepth -= 1
+                    if (parenthesisDepth == 0) {
+                        index += 1
+                        break
+                    }
+                }
+            }
+            index += 1
+        }
+        while (index < sanitized.length) {
+            when (sanitized[index]) {
+                '{', '=' -> break
+                '\n' -> {
+                    val prefix = sanitized.substring(start, index).trimEnd()
+                    if (!prefix.endsWith(":") && !prefix.endsWith(",")) break
+                }
+            }
+            index += 1
+        }
+        return source.substring(start, index).canonicalPublicSignature()
+    }
+
+    private fun typeDeclarationSignature(source: String, sanitized: String, start: Int): String {
+        val lineEnd = sanitized.indexOf('\n', start).takeIf { index -> index >= 0 } ?: sanitized.length
+        val firstLine = sanitized.substring(start, lineEnd)
+        if (Regex("""\btypealias\b""").containsMatchIn(firstLine)) {
+            return source.substring(start, lineEnd).canonicalPublicSignature()
+        }
+        val paragraphEnd = sanitized.indexOf("\n\n", start).takeIf { index -> index >= 0 }
+        val bodyStart = sanitized.indexOf('{', start).takeIf { index ->
+            index >= 0 && (paragraphEnd == null || index < paragraphEnd)
+        }
+        val end = bodyStart ?: lineEnd
+        return source.substring(start, end).canonicalPublicSignature()
+    }
+
+    private fun String.normalizedSignature(): String = trim().replace(Regex("\\s+"), " ")
+
+    private fun String.canonicalPublicSignature(): String =
+        normalizedSignature().removePrefix("public ")
+
+    private fun declarationMetadata(source: String, declarationStart: Int): String =
+        adjacentDeclarationMetadata(source, declarationStart).lines().let { lines ->
+            val annotationStart = lines.indexOfFirst { line -> line.trimStart().startsWith('@') }
+            if (annotationStart < 0) "" else lines.drop(annotationStart).joinToString(" ")
+        }.normalizedSignature()
+
+    private fun adjacentDeclarationMetadata(source: String, declarationStart: Int): String {
+        val prefix = source.substring(maxOf(0, declarationStart - 2_048), declarationStart)
+        return prefix.substringAfterLast("\n\n")
+    }
+
+    private fun hasDeprecatedAnnotation(source: String, declarationStart: Int): Boolean {
+        return Regex("""@(?:kotlin\.)?Deprecated\b""")
+            .containsMatchIn(adjacentDeclarationMetadata(source, declarationStart))
+    }
 
     private fun discoverModuleFamilies(moduleCatalogFile: File): Map<String, String> =
         moduleCatalogFile.readLines().mapNotNull { line ->
@@ -1304,11 +1466,17 @@ internal object DocumentationGovernanceV2Reporter {
         declarationCount: Int,
         documentCount: Int,
         fenceCount: Int,
+        publicApiChanges: List<DocumentationGovernanceV2PublicApiChange>,
         contractViolations: List<String>,
         ratchetViolations: List<String>,
     ): String = buildString {
         appendLine("Documentation Governance V2 — Phase 2 no-new-debt gate")
         appendLine("Inventory: $declarationCount production entries; $documentCount public pages; $fenceCount executable fences")
+        appendLine("Public API changes: ${publicApiChanges.size}")
+        publicApiChanges.forEach { change ->
+            val previous = change.previousSymbol?.let { symbol -> " (from $symbol)" }.orEmpty()
+            appendLine("- ${change.change} ${change.artifact}:${change.symbol}$previous")
+        }
         appendLine("Issues: ${issues.size}; baseline entries: ${baseline.entries.size}; unbaselined: ${baseline.unbaselinedIssueCount}")
         val blockingViolationCount = contractViolations.size + ratchetViolations.size
         appendLine("Gate: ${if (blockingViolationCount == 0) "passed" else "failed"}; violations: $blockingViolationCount")
@@ -1454,7 +1622,199 @@ internal object DocumentationGovernanceV2Reporter {
 internal data class DocumentationGovernanceV2MutationAudit(
     val verificationBase: String,
     val violations: List<String>,
+    val addedImpactPaths: Set<String>,
+    val changedSourceFiles: List<DocumentationGovernanceV2SourceChange>,
 )
+
+internal data class DocumentationGovernanceV2PublicApiChange(
+    val artifact: String,
+    val change: String,
+    val previousSymbol: String?,
+    val symbol: String,
+) {
+    fun report(): Map<String, Any?> = linkedMapOf(
+        "artifact" to artifact,
+        "change" to change,
+        "previousSymbol" to previousSymbol,
+        "symbol" to symbol,
+    )
+}
+
+/** Correlates source-derived capability-surface changes with immutable ownership evidence. */
+internal object DocumentationGovernanceV2PublicApiChanges {
+    fun detect(
+        baseDeclarations: List<Map<String, Any?>>,
+        currentDeclarations: List<Map<String, Any?>>,
+        currentInventory: List<Map<String, Any?>> = currentDeclarations,
+    ): List<DocumentationGovernanceV2PublicApiChange> {
+        val base = baseDeclarations.associateBy { declaration ->
+            declaration.getValue("symbol").toString()
+        }
+        val current = currentDeclarations.associateBy { declaration ->
+            declaration.getValue("symbol").toString()
+        }
+        val completeCurrent = currentInventory.associateBy { declaration ->
+            declaration.getValue("symbol").toString()
+        }
+        val direct = (base.keys + current.keys).sorted().mapNotNull { symbol ->
+            val previous = base[symbol]
+            val next = current[symbol]
+            when {
+                previous == null && next != null -> next.toChange(
+                    if (completeCurrent.getValue(symbol).overloadCount() > next.overloadCount()) {
+                        "changed"
+                    } else {
+                        "added"
+                    },
+                )
+                previous != null && next == null -> previous.toChange(
+                    if (symbol in completeCurrent) "changed" else "deleted",
+                )
+                previous != null && next != null &&
+                    previous["deprecated"] != true && next["deprecated"] == true ->
+                    next.toChange("deprecated")
+                previous != null && next != null &&
+                    previous["artifact"] != next["artifact"] &&
+                    previous["signatureHashes"] == next["signatureHashes"] ->
+                    DocumentationGovernanceV2PublicApiChange(
+                        artifact = next.getValue("artifact").toString(),
+                        change = "moved",
+                        previousSymbol = symbol,
+                        symbol = symbol,
+                    )
+                previous != null && next != null &&
+                    (previous["artifact"] != next["artifact"] ||
+                        previous["signatureHashes"] != next["signatureHashes"]) ->
+                    next.toChange("changed")
+                else -> null
+            }
+        }.toMutableList()
+
+        val additions = direct.filter { change -> change.change == "added" }
+        val deletions = direct.filter { change -> change.change == "deleted" }
+        val movePairs = deletions.mapNotNull { deletion ->
+            val previousDeclaration = base.getValue(deletion.symbol)
+            val candidates = additions.filter { addition ->
+                val currentDeclaration = current.getValue(addition.symbol)
+                deletion.symbol.substringAfterLast('.') == addition.symbol.substringAfterLast('.') &&
+                    previousDeclaration["signatureHashes"] == currentDeclaration["signatureHashes"]
+            }
+            candidates.singleOrNull()?.let { addition -> deletion to addition }
+        }.filter { (_, addition) ->
+            deletions.count { deletion ->
+                val previousDeclaration = base.getValue(deletion.symbol)
+                deletion.symbol.substringAfterLast('.') == addition.symbol.substringAfterLast('.') &&
+                    previousDeclaration["signatureHashes"] ==
+                    current.getValue(addition.symbol)["signatureHashes"]
+            } == 1
+        }
+        movePairs.forEach { (deletion, addition) ->
+            direct.remove(deletion)
+            direct.remove(addition)
+            direct += DocumentationGovernanceV2PublicApiChange(
+                artifact = addition.artifact,
+                change = "moved",
+                previousSymbol = deletion.symbol,
+                symbol = addition.symbol,
+            )
+        }
+        return direct.sortedWith(compareBy({ it.artifact }, { it.symbol }, { it.change }))
+    }
+
+    fun verifyImpacts(
+        changes: List<DocumentationGovernanceV2PublicApiChange>,
+        addedImpactPaths: Set<String>,
+        records: List<GovernanceRecord>,
+    ): List<String> {
+        val impacts = records.filter { record ->
+            record.path in addedImpactPaths && record.contractId == "capability-impact" && record.valid
+        }
+        val capabilities = records.filter { record ->
+            record.contractId == "capability" && record.valid
+        }
+        val samples = records.filter { record ->
+            record.contractId == "sample" && record.valid
+        }.associateBy(GovernanceRecord::recordId)
+        val exceptions = records.filter { record ->
+            record.contractId == "exception" && record.valid
+        }.mapNotNull(GovernanceRecord::recordId).toSet()
+        return buildList {
+            changes.forEach { change ->
+                val matching = impacts.filter { impact -> impact.matches(change) }
+                if (matching.size != 1) {
+                    add(
+                        "${change.artifact}:${change.symbol} ${change.change} public API change " +
+                            "requires exactly one newly added matching capability-impact record; " +
+                            "found ${matching.size}",
+                    )
+                    return@forEach
+                }
+                val impact = matching.single()
+                val capabilityId = impact.value["capability_id"]?.toString().orEmpty()
+                val owners = capabilities.filter { capability ->
+                    capability.recordId == capabilityId
+                }
+                if (owners.size != 1) {
+                    add(
+                        "${impact.path} references capability '$capabilityId', but exactly one valid " +
+                            "capability owner is required; found ${owners.size}",
+                    )
+                    return@forEach
+                }
+                val owner = owners.single()
+                if (owner.value["artifact"]?.toString() != change.artifact) {
+                    add("${impact.path} capability '$capabilityId' does not own artifact ${change.artifact}")
+                }
+                if (!owner.ownsSymbol(change.symbol)) {
+                    add("${impact.path} capability '$capabilityId' does not own symbol ${change.symbol}")
+                }
+                @Suppress("UNCHECKED_CAST")
+                val sampleOwner = owner.value["sample_owner"] as? Map<String, Any?>
+                val sampleId = sampleOwner?.get("sample_id")?.toString()
+                val exceptionId = sampleOwner?.get("exception_id")?.toString()
+                when {
+                    sampleId != null && sampleId !in samples ->
+                        add("${owner.path} references missing valid sample '$sampleId'")
+                    sampleId != null &&
+                        samples.getValue(sampleId).value["capability_id"]?.toString() != capabilityId ->
+                        add("${owner.path} sample '$sampleId' belongs to a different capability")
+                    exceptionId != null && exceptionId !in exceptions ->
+                        add("${owner.path} references missing valid exception '$exceptionId'")
+                }
+            }
+            impacts.forEach { impact ->
+                val matching = changes.filter { change -> impact.matches(change) }
+                if (matching.size != 1) {
+                    add(
+                        "${impact.path} must classify exactly one detected public API change; " +
+                            "found ${matching.size}",
+                    )
+                }
+            }
+        }.distinct().sorted()
+    }
+
+    private fun Map<String, Any?>.toChange(change: String) =
+        DocumentationGovernanceV2PublicApiChange(
+            artifact = getValue("artifact").toString(),
+            change = change,
+            previousSymbol = null,
+            symbol = getValue("symbol").toString(),
+        )
+
+    private fun Map<String, Any?>.overloadCount(): Int =
+        (get("overloadCount") as? Number)?.toInt()
+            ?: (get("signatureHashes") as? List<*>)?.size
+            ?: 0
+
+    private fun GovernanceRecord.matches(change: DocumentationGovernanceV2PublicApiChange): Boolean =
+        value["artifact"]?.toString() == change.artifact &&
+            value["symbol_id"]?.toString() == change.symbol &&
+            value["change"]?.toString() == change.change
+
+    private fun GovernanceRecord.ownsSymbol(symbol: String): Boolean =
+        value.listOfObjects("symbols").any { owned -> owned["symbol_id"]?.toString() == symbol }
+}
 
 internal data class DocumentationGovernanceV2GitCommandResult(
     val exitCode: Int,
@@ -1468,6 +1828,8 @@ internal fun interface DocumentationGovernanceV2GitCommandExecutor {
 internal object DocumentationGovernanceV2GitRatchet {
     private const val exceptionRoot =
         "docs/project/records/documentation-governance-v2/exceptions"
+    private const val impactRoot =
+        "docs/project/records/documentation-governance-v2/impacts"
 
     fun inspect(
         repository: File,
@@ -1488,36 +1850,73 @@ internal object DocumentationGovernanceV2GitRatchet {
             "--find-renames",
             base,
             "--",
-            exceptionRoot,
-        ).lineSequence().filter(String::isNotBlank).map { line ->
-            val fields = line.split('\t')
-            ExceptionChange(
-                status = fields.first().first(),
-                path = fields.last().replace('\\', '/'),
-            )
-        }.toMutableList()
+        ).lineSequence().filter(String::isNotBlank).map(::parseChange).toMutableList()
         git.execute(
             "ls-files",
             "--others",
             "--exclude-standard",
             "--",
-            exceptionRoot,
         ).lineSequence().filter(String::isNotBlank).forEach { path ->
-            changes += ExceptionChange('A', path.replace('\\', '/'))
+            changes += GitFileChange(
+                status = 'A',
+                oldPath = null,
+                newPath = path.replace('\\', '/'),
+            )
         }
-        val violations = changes.distinct().sortedBy(ExceptionChange::path).mapNotNull { change ->
+        val exceptionChanges = changes.filter { change ->
+            change.paths.any { path -> path.startsWith("$exceptionRoot/") }
+        }
+        val violations = exceptionChanges.distinct().sortedBy { change -> change.displayPath }.mapNotNull { change ->
             when (change.status) {
                 'D' -> null
-                'A' -> "${change.path} adds a debt exception; the frozen baseline cannot grow or re-add a removed id"
-                'M' -> verifyReducedException(repository, git, base, change.path)
-                'R', 'C' -> "${change.path} renames or copies a debt exception; baseline identity is immutable"
-                else -> "${change.path} has unsupported debt-baseline status ${change.status}"
+                'A' -> "${change.displayPath} adds a debt exception; the frozen baseline cannot grow or re-add a removed id"
+                'M' -> verifyReducedException(repository, git, base, change.displayPath)
+                'R', 'C' -> "${change.displayPath} renames or copies a debt exception; baseline identity is immutable"
+                else -> "${change.displayPath} has unsupported debt-baseline status ${change.status}"
             }
+        }.toMutableList()
+        val impactChanges = changes.filter { change ->
+            change.paths.any { path -> path.startsWith("$impactRoot/") && path.endsWith(".json") }
+        }
+        impactChanges.filter { change -> change.status != 'A' }.forEach { change ->
+            violations +=
+                "${change.displayPath} mutates an immutable capability-impact record; add a new record instead"
+        }
+        val addedImpactPaths = impactChanges.filter { change -> change.status == 'A' }
+            .mapNotNull(GitFileChange::newPath)
+            .toSet()
+        val sourceChanges = changes.filter { change ->
+            change.paths.any { path -> path.isPublishedKotlinSource() }
+        }.map { change ->
+            DocumentationGovernanceV2SourceChange(
+                basePath = change.oldPath?.takeIf { path -> path.isPublishedKotlinSource() },
+                baseSource = change.oldPath
+                    ?.takeIf { path -> path.isPublishedKotlinSource() }
+                    ?.let { path -> git.execute("show", "$base:$path") },
+                currentPath = change.newPath?.takeIf { path -> path.isPublishedKotlinSource() },
+                currentSource = change.newPath
+                    ?.takeIf { path -> path.isPublishedKotlinSource() }
+                    ?.let { path -> repository.resolve(path).takeIf(File::isFile)?.readText() },
+            )
         }
         return DocumentationGovernanceV2MutationAudit(
             verificationBase = base,
             violations = violations.sorted(),
+            addedImpactPaths = addedImpactPaths,
+            changedSourceFiles = sourceChanges,
         )
+    }
+
+    private fun parseChange(line: String): GitFileChange {
+        val fields = line.split('\t')
+        val status = fields.first().first()
+        val paths = fields.drop(1).map { path -> path.replace('\\', '/') }
+        return when (status) {
+            'R', 'C' -> GitFileChange(status, paths.getOrNull(0), paths.getOrNull(1))
+            'A' -> GitFileChange(status, null, paths.singleOrNull())
+            'D' -> GitFileChange(status, paths.singleOrNull(), null)
+            else -> GitFileChange(status, paths.singleOrNull(), paths.singleOrNull())
+        }
     }
 
     private fun verifyReducedException(
@@ -1559,10 +1958,17 @@ internal object DocumentationGovernanceV2GitRatchet {
         )
     }
 
-    private data class ExceptionChange(
+    private data class GitFileChange(
         val status: Char,
-        val path: String,
-    )
+        val oldPath: String?,
+        val newPath: String?,
+    ) {
+        val paths: List<String> get() = listOfNotNull(oldPath, newPath).distinct()
+        val displayPath: String get() = newPath ?: oldPath.orEmpty()
+    }
+
+    private fun String.isPublishedKotlinSource(): Boolean =
+        startsWith("viewcompose-") && "/src/main/" in "/$this" && endsWith(".kt")
 
     private class GitCommands(
         private val executor: DocumentationGovernanceV2GitCommandExecutor,
@@ -1582,16 +1988,23 @@ internal object DocumentationGovernanceV2GitRatchet {
 
 private data class CapabilityDeclaration(
     val artifact: String,
+    val deprecated: Boolean,
     val kind: String,
     val line: Int,
     val path: String,
     val receiver: String?,
+    val signatureHash: String,
     val sourcePackage: String,
     val symbol: String,
     val visibility: String,
 )
 
-private data class GovernanceRecord(
+private data class GovernanceSourceFile(
+    val path: String,
+    val source: String,
+)
+
+internal data class GovernanceRecord(
     val path: String,
     val contractId: String?,
     val valid: Boolean,
