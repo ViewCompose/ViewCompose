@@ -4,10 +4,11 @@ This directory contains multi-step work that is currently active and must surviv
 
 ## Active plans
 
-- [Demo post-release verification closeout](./demo-post-release-verification-closeout.md) — finish
-  the intentionally deferred collection-stress revision-3 fixed-clock baseline, broad bilingual and
-  configuration visual matrix, popup pixel golden, and zero-caller hard deletion of obsolete Demo
-  harness infrastructure after the coordinated framework and Preview-plugin release.
+- [Demo post-release verification closeout](./demo-post-release-verification-closeout.md) —
+  hardware-deferred because no currently available physical device can prove the required stable
+  CPU, GPU, and display-pipeline control. All other phases are complete; resume only to recapture
+  the unchanged collection-stress revision-3 scroll baseline when a qualifying device is available.
+
 Completed architecture, animation-capability, design-system, theme-propagation, native-widget,
 component-appearance, tutorial, language-consistency, migration-sample, hosted-documentation, and
 version-retention, and Paging-integration plans are retained in the

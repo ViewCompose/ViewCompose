@@ -2,11 +2,12 @@
 
 ## Status
 
-Active. The coordinated Maven and ViewCompose Preview 1.1.0 release, the preempting focus
-visibility hard cut, the broad visual matrix, popup golden, and dead-infrastructure cleanup are
-complete. The release-bearing Demo rearchitecture and its renderer/overlay repairs are archived in
-`docs/archive/demo-benchmark-verification-harness-rearchitecture.md`. Only the unaccepted Phase 1
-scroll baseline keeps this plan active.
+Active but hardware-deferred. The coordinated Maven and ViewCompose Preview 1.1.0 release, the
+preempting focus visibility hard cut, the broad visual matrix, popup golden, and dead-infrastructure
+cleanup are complete. The release-bearing Demo rearchitecture and its renderer/overlay repairs are
+archived in `docs/archive/demo-benchmark-verification-harness-rearchitecture.md`. Only the
+unaccepted Phase 1 scroll baseline keeps this plan active, and no currently available device
+qualifies to recapture it.
 
 Phase 1 is partially complete. The rooted Xiaomi run accepted the revision-3 eight-cycle mutation
 absolute baseline at run-P50 CV `0.025`. Scroll remains unaccepted after two complete v4 batches at
@@ -26,6 +27,11 @@ fixed-performance shell command but rejects it because the required Power HAL AI
 No benchmark ran, and peak/minimum refresh plus rotation settings were restored exactly. Emulator
 execution remains diagnostic only because it substitutes the host GPU and display pipeline for the
 physical path whose stability this gate must prove.
+
+As of 2026-08-25, the available Xiaomi, Pixel, and emulator therefore provide no suitable test
+device for this baseline. Phase 1 is explicitly paused at the hardware prerequisite: do not rerun
+the rejected Xiaomi path, weaken the gate for the Pixel, or substitute emulator timing. Resume only
+when another physical device can prove stable CPU, GPU, and display-pipeline control.
 
 Last verified: 2026-08-25.
 
@@ -57,9 +63,10 @@ and Tutorials added three passes. Conclusion: **improved** deterministic launch,
 and reset confidence with no published-artifact impact. Limitation: this gate does not replace the
 remaining fixed-clock collection-scroll baseline, so the plan stays active.
 
-Next action: recapture revision-3 scroll on another physical reference device that proves stable
-CPU, GPU, and display-pipeline control. Android 9/API 28 is not required, and root is optional only
-when equivalent control and observation are available. Do not remove production harness
+Next action: wait for a qualifying physical reference device, then recapture revision-3 scroll with
+proven stable CPU, GPU, and display-pipeline control. Android 9/API 28 is not required, and root is
+optional only when equivalent control and observation are available. Until then, perform no more
+formal collection-scroll runs on the currently available devices. Do not remove production harness
 infrastructure or close Phase 1 until scroll passes the unchanged `0.15` gate.
 
 ## Maven release changesets
@@ -136,7 +143,8 @@ BufferQueue attribution, limitations, and next action live in
 The 2026-08-25 recheck confirms that revision 3 already owns the required per-gesture settle and
 that neither the same Xiaomi display pipeline, the non-fixed Pixel, nor an emulator can produce the
 missing acceptance evidence. This is a hardware prerequisite, not authorization to revise the
-workload or lower its stability ceiling.
+workload or lower its stability ceiling. No qualifying physical device is currently available, so
+the following execution steps remain paused.
 
 1. Build one release-like target and benchmark APK from a reviewed source revision.
 2. Run scroll and mutation separately on a physical reference device whose CPU/GPU and required
@@ -202,8 +210,9 @@ The accepted visual result, normalized coverage change, conclusion, limitations,
 are recorded in the current capability-verification document and reviewed Chinese mirror. Release
 intent remains publication-neutral because this batch changes only the Demo application, its
 instrumentation, and contributor documentation. Compilation, selector, documentation, release
-intent, `qaQuick`, and the complete 137-test device gate pass. Final archive remains blocked solely
-by the Phase 1 scroll baseline and its required performance-document interpretation.
+intent, `qaQuick`, and the complete 137-test device gate pass. Final archive remains
+hardware-deferred solely by the Phase 1 scroll baseline and its required performance-document
+interpretation; no qualifying physical device is currently available.
 
 - Interpret every accepted benchmark or visual result in the owning current document with context,
   absolute observations, normalized direction where applicable, conclusion, limitations, and next

@@ -51,7 +51,14 @@ jobs:
       - name: Run qaQuick
         env:
           VIEWCOMPOSE_RELEASE_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: ./gradlew qaQuick --stacktrace
+        # Release R8, lint, and documentation generation share this Gradle process. Keep the
+        # complete gate while preventing the hosted runner's default 2 GiB heap from exhausting.
+        run: >-
+          ./gradlew
+          -Dorg.gradle.jvmargs="-Xmx4096m -Dfile.encoding=UTF-8"
+          --max-workers=2
+          qaQuick
+          --stacktrace
 
   qaPreview:
     name: qaPreview

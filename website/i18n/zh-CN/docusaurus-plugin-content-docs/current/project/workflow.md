@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: 8ab2f9a9796e760ba5a7b922f55aa7fb39050abcc1434ce0485d16aff85c35b1
+translation_source_hash: a08ea79604ffc9068ddb09b76b2f6dbeab131ed2bab666590fe7e29578918533
 translation_status: current
 ---
 
@@ -122,6 +122,10 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 门禁。`qaPreview` 运行
 `:viewcompose-preview:verifyPaparazziDebug`，并作为独立的必需 CI 检查。只有审阅生成图片与差异后，
 视觉变更才能更新已提交基准；禁止仅为通过门禁而录制原因不明的差异。
+
+GitHub Actions 使用 4 GiB Gradle heap 和最多两个 worker 运行同一套完整 `qaQuick` 任务。否则 Release
+R8、lint 与文档生成会在托管 runner 的默认 2 GiB heap 中竞争。这只是 CI 资源边界：不会删除、拆分、
+重试或豁免任何门禁任务，也不改变项目级本地 Gradle 默认配置。
 
 `qaFull` 在 `qaQuick` 基础上增加应用、Counter sample 和教程的连接设备测试。仓库内每个
 `connectedDebugAndroidTest` 入口会先运行 `verifyConnectedAndroidDeviceReady`。前置检查要求：未通过
