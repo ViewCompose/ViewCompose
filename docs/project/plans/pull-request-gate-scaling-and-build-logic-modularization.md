@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-25
-next_action: Extract connected-device and benchmark/report tooling with old/new parity.
+next_action: Extract lifecycle aggregation tasks and stable aliases without changing task graphs.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -29,21 +29,22 @@ maven_release_changesets:
   - release/changes/20260825-quality-build-phase2-demo.json
   - release/changes/20260825-quality-build-phase2-sample-docs.json
   - release/changes/20260825-quality-build-phase2-documentation.json
+  - release/changes/20260825-quality-build-phase2-device-benchmark.json
 ---
 
 # Pull-request Gate Scaling and Build-logic Modularization Plan
 
 ## Status
 
-Active. Phases 0 and 1 and the first four Phase 2 extraction families are complete. Required-check
-behavior remains frozen, and twenty-five architecture, purity, Preview-boundary, Demo-policy, and
-documentation gates now have compiled ownership plus isolated regression or parity coverage.
+Active. Phases 0 and 1 and the first five Phase 2 extraction families are complete. Required-check
+behavior remains frozen, and thirty quality gates and tooling entry points now have compiled
+ownership plus isolated regression or parity coverage.
 
 Last verified: 2026-08-25.
 
-Next action: continue Phase 2 with connected-device and benchmark/report tooling. Preserve the
-selected-device contract and stable task aliases while moving process control and report-test
-wiring out of the root script.
+Next action: finish Phase 2 extraction with lifecycle aggregation tasks and stable aliases. Keep
+the frozen task graphs, connected-test preflight ordering, Maven-sample publication ordering, and
+all user-facing task names unchanged.
 
 ## Maven release changesets
 
@@ -53,13 +54,14 @@ wiring out of the root script.
 - `release/changes/20260825-quality-build-phase2-demo.json`
 - `release/changes/20260825-quality-build-phase2-sample-docs.json`
 - `release/changes/20260825-quality-build-phase2-documentation.json`
+- `release/changes/20260825-quality-build-phase2-device-benchmark.json`
 
 ## Release intent rationale
 
 Phase 1 modifies shared root build inputs only to make the repository-only quality plugin available
 and configure its explicit inputs. Phase 2's accepted extraction slices change the root build only
-to replace twenty-five repository-only task bodies or command registrations with compiled build
-logic. Their names and lifecycle
+to replace thirty repository-only task bodies or command registrations with compiled build logic.
+Their names and lifecycle
 dependencies are unchanged. The Changesets classify shared build inputs and declare no artifact
 release. The new Gradle types remain build implementation rather than published artifact APIs;
 application-facing capability IDs, Q levels, compiled API samples, and module-manual changes are
@@ -258,8 +260,8 @@ the root build must not receive a temporary Governance V2 scanner that will late
 | Phase | Deliverable | Completion gate | Status |
 | --- | --- | --- | --- |
 | 0 | baseline, task-graph manifest, required-check contract, failure fixtures | reviewed baseline and reproducible evidence checked in | Complete |
-| 1 | compiled quality-build skeleton and parity harness | old and delegated task graphs/failures match | Not started |
-| 2 | extraction of architecture, purity, Demo, documentation, device, and benchmark gates | root script contains no long verifier bodies; isolated tests pass | Not started |
+| 1 | compiled quality-build skeleton and parity harness | old and delegated task graphs/failures match | Complete |
+| 2 | extraction of architecture, purity, Demo, documentation, device, and benchmark gates | root script contains no long verifier bodies; isolated tests pass | In progress (5/6 families complete) |
 | 3 | conservative PR classifier and required-result facade | synthetic diff matrix and branch-protection scenarios pass | Not started |
 | 4 | immutable API cache and deduplicated site verification | hit, miss, corruption, tooling-change, and unpublished-source cases pass | Not started |
 | 5 | affected-module `qaQuick` execution and selective `qaPreview` | dependency/reverse-dependency golden graph and full fallback pass | Not started |
@@ -474,6 +476,31 @@ selected work or accepted gate behavior. The additional structure inputs improve
 correctness without changing validation semantics. The local duration is completeness evidence
 rather than a speedup claim because caches, daemon state, and machine load were not controlled. The
 next extraction family is connected-device and benchmark/report tooling.
+
+The fifth Phase 2 extraction family completed on 2026-08-25 as a hard cut.
+`verifyConnectedAndroidDeviceReady` now owns ADB process control in a typed task and delegates
+device-list selection plus boot, display, and keyguard interpretation to pure compiled logic.
+`benchmarkComparisonReport`, `testBenchmarkComparisonTool`,
+`testPagingMacrobenchmarkSummaryTool`, and `testDeviceDiagnosticsRequestMeasurementTool` retain
+their commands and stable names under compiled plugin ownership, with their Python implementation,
+test, and policy files declared as inputs. Connected Debug Android test wiring moved with the
+preflight task. The five root registrations and the device process-control body were deleted,
+reducing the root script from 546 to 359 lines.
+
+Five focused tests preserve multiple-device selection, explicit serial selection, offline-device
+diagnostics, the Android 7 authoritative-keyguard-field precedence workaround, and combined state
+failure ordering. The included build passed all 29 tests. The three Python suites passed 30 tests
+through 17 Gradle tasks in `25 s`. A connected Pixel 4 XL selected through `ANDROID_SERIAL` passed
+the real online, boot-complete, awake, and unlocked preflight through 15 tasks in `7 s`. This did
+not run connected UI tests or a benchmark workload; it verifies only the migrated preflight, while
+multi-device and legacy-policy branches remain deterministic unit evidence. Fresh dry-run graphs
+again matched every ordered Phase 0 task exactly: `qaQuick` 2,899/2,899, `qaPreview` 1,640/1,640,
+`qaFull` 3,098/3,098, and `verifyDocumentationStructure` 4/4. The normalized task-set and ordering
+change is zero. The complete local `qaQuick` acceptance passed 2,341 actionable tasks (`2,261`
+executed and `80` up-to-date) in `8 min 26 s` on the warmed checkout. The result is **no material
+change** to selected work or accepted gate behavior. The local duration is completeness evidence
+rather than a speedup claim because caches, daemon state, and machine load were not controlled.
+The next extraction family is lifecycle aggregation tasks and stable aliases.
 
 ### Phase 3: classify pull-request impact
 
