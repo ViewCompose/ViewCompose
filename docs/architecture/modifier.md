@@ -4,9 +4,16 @@ document_id: architecture.modifier-runtime
 doc_type: architecture
 owner:
   kind: capability
-  id: focus.input
+  id: modifier.layout
 version_lane: released
 capability_ids:
+  - modifier.layout
+  - modifier.appearance
+  - modifier.drawing
+  - modifier.interaction
+  - modifier.shared-content
+  - modifier.semantics
+  - gesture.modifiers
   - focus.input
   - nested.scroll
   - shadow.modifiers
@@ -18,264 +25,158 @@ artifact_ids:
   - viewcompose-renderer-android
   - viewcompose-shadow-android
 sample_ids:
+  - tutorial.layouts-and-modifiers
+  - architecture.modifier-appearance
+  - architecture.modifier-drawing
+  - architecture.modifier-interaction
+  - architecture.modifier-shared-content
+  - architecture.modifier-semantics
+  - tutorial.gestures
   - guide.focus-form
   - guide.nested-scroll-toolbar
   - guide.shadow-card
 invariants:
+  - Modifier remains a renderer-neutral ordered chain; renderer resolution preserves chain order and each modifier family's documented replacement or accumulation rule.
+  - General outer decoration belongs to Modifier, parent-specific data belongs to a typed scope, component semantics belong to NodeSpec, and Theme or Defaults only supply defaults.
+  - Native View padding has one renderer owner that composes container content padding, resolved Modifier padding, and selected system-bar or IME inset edges before writing the View.
+  - Physical spacing and inset selectors remain physical, while Relative forms resolve from the VNode's captured layout direction on every bind.
   - Focus requesters and nested-scroll dispatchers retain renderer-neutral identity and attach to one current platform connector.
   - Preview key input travels root-to-target before unconsumed target-to-root bubbling.
-  - Focused-editor visibility belongs to the nearest real scroll owner, while a pager owns discrete page selection only.
   - Nested pre phases travel outer-to-inner and post phases inner-to-outer, with every consumption bounded by the offered value.
-  - AndroidView keeps arbitrary listener ownership and joins nested scrolling only through an implemented native protocol or explicit dispatcher.
   - Exact outer and inner shadows remain decoration planes that do not alter layout, input, elevation, or sibling order.
 evidence:
-  - viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/focus/FocusRequesterContractTest.kt
+  - viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/modifier/ModifierContractTest.kt
+  - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/InsetsPaddingModifierTest.kt
   - viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/modifier/FocusModifierContractTest.kt
   - viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/gesture/NestedScrollContractsTest.kt
-  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/context/LocalFocusManagerTest.kt
-  - viewcompose-gesture/src/test/java/com/viewcompose/gesture/NestedScrollModifierTest.kt
+  - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/ResolvedModifiersTest.kt
   - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ModifierFocusInputApplierTest.kt
   - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/container/NestedScrollHostLayoutTest.kt
   - viewcompose-shadow-android/src/test/java/com/viewcompose/shadow/android/ShadowDecorationLayerTest.kt
-  - viewcompose-shadow-android/src/test/java/com/viewcompose/shadow/android/ShadowRenderBackendTest.kt
 ---
 
 # Modifier Architecture
 
 ## 1. Scope
 
-This document defines the current boundaries between `Modifier`, component `NodeSpec`, and
-`Theme/Defaults`. New capabilities must have one unambiguous owner instead of mixing semantics
-across layers.
+This document owns the boundary and runtime rules shared by `Modifier`, scoped parent data,
+component `NodeSpec`, and `Theme/Defaults`. The generated
+[Capability Reference](https://docs.viewcompose.com/reference/) owns the exhaustive public-symbol
+inventory; this page does not maintain a second list.
 
-## 2. Current baseline (2026-08)
+## 2. Ownership model
 
-1. The identity entry is `Modifier`; `Modifier.Empty` has been removed.
-2. Historical text-semantic modifiers such as `textColor/textSize` have been removed.
-3. `weight/align/FlexibleSpacer` are exposed only through `RowScope/ColumnScope/BoxScope`.
-4. System-bar and IME adaptation uses physical `Modifier.systemBarsInsetsPadding(...)` /
-   `Modifier.imeInsetsPadding(...)` or their direction-aware `Relative` forms. An Activity using
-   `adjustResize` normally does not add IME padding, which would move content twice.
-5. Collection policies are container parameters: `reusePolicy` (`sharePool`) and `motionPolicy`
-   (`disableItemAnimator/animateInsert/animateRemove/animateMove/animateChange`). Pager residency
-   and direct user input remain pager parameters.
-6. Focused-editor visibility is an invariant of a real Android scroll owner, not a Modifier or
-   container Boolean. LazyColumn, LazyVerticalGrid, and ScrollableColumn preserve native
-   child-rectangle propagation even when direct user scrolling is disabled.
-7. HorizontalPager and VerticalPager own discrete page selection only. A page that can be obscured
-   by the IME declares its own page-local scroll owner; the pager never interprets within-page
-   coordinates as page motion.
-8. `Modifier.backgroundDrawableRes(resId)` installs a drawable background. It takes precedence over
-   `backgroundColor`, clips automatically with `cornerRadius`, and can still be forced through the
-   general `clip()` switch.
-9. `Modifier.animateContentSize(...)` causes the renderer to insert an `AnimatedSizeHost` before
-   patching. It interpolates measured dimensions and participates in parent layout rather than
-   applying a graphicsLayer scale. Easing, spring, keyframes, repeat, and reverse terminal semantics
-   are preserved.
-10. Constraint parent data uses `Modifier.layoutId(...)`, `Modifier.constrainAs(...)`, and
-    `Modifier.constrain(...)`, and is meaningful only for `ConstraintLayout` children.
-11. Drawing modifiers include `drawBehind`, `drawWithContent`, and `drawWithCache`, plus the `draw`
-    and `drawCache` shorthands. Chain order is stable, `drawWithContent` controls content forwarding,
-    and the executor preserves four-corner `DrawRoundRect` and `Drawable + DrawPaint` semantics.
-12. Declarative focus and hardware-key input follows the ownership and propagation contract below;
-    `LocalFocusManager` supplies session-scoped move and clear operations.
-13. `Modifier.nestedScroll(connection, dispatcher)` follows the unified four-phase routing contract
-    below across framework and participating native scrolling containers.
-14. Advanced `dropShadow(s)` layers draw before node content and `innerShadow(s)` layers draw after
-    complete content. Both support ordered layers, independent shapes, blur, spread, offset, and
-    color, without coupling to `elevation` or `zIndex`.
-15. `Modifier.semantics` transports design-system-neutral accessibility state. Collection parents
-    expose logical dimensions and selection cardinality; children expose logical positions and
-    spans. RTL changes physical placement, never these indexes, and item `selected`/`heading`
-    values remain single-source properties on the same semantic configuration.
-16. Native View padding has one renderer owner. Container-specific content padding, resolved
-    `Modifier.padding`, and selected system-bar/IME inset edges are composed before writing the
-    View; binders must not overwrite another layer's contribution during a patch or environment
-    rebind.
-17. Physical `padding/margin/offset` and inset selectors remain physical. Their `Relative`
-    counterparts resolve start/end from the VNode's captured layout direction on every bind. A
-    later physical or relative declaration replaces the earlier declaration for that complete
-    modifier family.
+Use the first matching layer:
 
-### 2.1 Focus and hardware-key routing
+1. `Modifier` owns stable outer decoration and behavior that can apply to most nodes: layout,
+   appearance, drawing, visibility, interaction, focus, semantics, testing, gestures, shared
+   content, nested scroll, shadows, and layout animation.
+2. A typed parent scope owns data meaningful only to that parent, such as
+   `RowScope/ColumnScope.weight`, scoped alignment, or ConstraintLayout child constraints.
+3. Component parameters and `NodeSpec` own component semantics such as text styling, image
+   content scale, button variants, and text-field editing state.
+4. `Theme`, design-system recipes, and `Defaults` supply defaults; renderers consume resolved
+   values and do not invent business defaults.
 
-UI Contract owns focus and normalized key values, UI Foundation exposes the current Session's
-`FocusManager`, and Android Renderer attaches mounted targets without either upper layer retaining
-a View. `focusProperties` merges in Modifier order; its latest non-null target wins and Android
-focus search is the fallback. Keyed connectors restore a saved focused child after remount, while
-unkeyed nodes use View identity.
+Collection reuse and motion remain container policy. Focused-editor visibility belongs to the
+nearest real scroll owner. A pager owns discrete page selection only, so a page that may be hidden
+by the IME supplies its own page-local scrolling.
 
-Preview keys travel root-to-target and unconsumed keys bubble target-to-root. A declared Tab or
-D-pad destination wins before native search. `AndroidView` keeps its business `OnKeyListener` until
-a declarative key contract takes control. Focused-editor visibility remains a child-rectangle
-request owned by the nearest real vertical scroller; a pager stops that request at its page
-boundary and obscurable forms provide page-local scrolling.
+## 3. Runtime contracts
 
-### 2.2 Nested-scroll routing
+### 3.1 Ordering, layout, and appearance
 
-UI Contract owns delta, velocity, source, connection, and dispatcher values; Gesture exposes the
-Modifier; Android Renderer inserts a transparent AndroidX parent/child host. Pre phases travel
-outer-to-inner, post phases inner-to-outer, and each bounded finite result applies only to the
-remaining offered value. Successive `nestedScroll` elements preserve Modifier order.
+`Modifier` is an immutable ordered chain rooted at `Modifier`. Renderer resolution preserves that
+order. Later declarations replace earlier values for complete physical/relative spacing families,
+background and shape families, visibility, click handling, and other documented single-value
+properties. Accumulating properties such as `zIndex` keep their explicit accumulation contract.
 
-Framework scroll containers, PullToRefresh, drag/transform pan, and native children implementing
-Android nested scrolling share the chain. Other `AndroidView` children require an attached
-dispatcher. Same-axis children keep a drag until the matching logical edge and ignore cross-axis
-motion. The legacy native fling bridge reports only Boolean consumption: partial velocity remains
-exact inside ViewCompose, while native `true` means the offered remainder was consumed.
+Physical padding, margin, offset, and inset selectors never change meaning in RTL. Their
+`Relative` counterparts resolve start/end from the VNode's captured direction on every bind. The
+renderer has one native-padding writer: container content padding, resolved Modifier padding, and
+selected insets are composed before the View is updated.
 
-## 3. Source-owned capability Reference
+Maximum dimensions and aspect ratio are portable constraints, not raw Android setters. Android
+Renderer folds them into one synthetic layout boundary around the complete node. Exact incoming
+constraints remain authoritative; invalid finite/positive values or contradictory declared bounds
+fail before rendering. Constraint parent data is meaningful only on ConstraintLayout children.
 
-The exhaustive application-facing inventory is generated from production source and published in
-the [Capability Reference](https://docs.viewcompose.com/reference/). Raw Kotlin KDoc and Java
-Javadoc remain available in the [versioned API Reference](https://docs.viewcompose.com/api/). This
-architecture page owns behavioral boundaries and invariants;
-it does not duplicate a symbol table or an independently maintained count.
+A drawable background takes precedence over a packed color and follows resource qualifiers from
+the View context. Shape and legacy corner-radius declarations replace one another in chain order.
+Clipping, platform elevation, exact shadows, and sibling order remain separate concerns.
 
-The generated model applies these contracts:
+### 3.2 Drawing, interaction, semantics, and shared content
 
-1. public and protected DSL, Modifier, component, host, integration, and tooling entries are
-   discovered from the published production source sets;
-2. every discovered entry belongs to exactly one user-capability group and carries its symbol,
-   overload count, artifact, namespace, release lane, module manual, and versioned API root;
-3. internal packages, private/internal declarations, Demo code, tests, generated code, and
-   renderer-only helpers are excluded from the application catalog;
-4. the website, inventory counts, and Governance V2 stale-output gate consume the same committed
-   JSON model; changing source, signatures, versions, or structured ownership without regenerating
-   that model fails `verifyDocumentationGovernanceV2`; and
-5. maintainers intentionally refresh the committed model with
-   `./gradlew updateDocumentationCapabilityReference` and review the resulting semantic diff.
+Drawing callbacks execute in Modifier order. Behind callbacks run before wrapped content;
+content-aware callbacks decide whether and when to forward content; cache builders use
+renderer-owned caches. Visibility controls drawing and layout participation independently of draw
+callback registration.
 
-Exact capability, sample, and related-document links are populated only by valid Governance V2
-records. Until the frozen ownership debt is migrated, the generated page reports structured-owner
-coverage separately instead of guessing or hiding the gap.
+Interaction indication describes visual feedback only; it does not make a node clickable or
+enabled. High-level components resolve design-system feedback before installing it. Accessibility
+state travels through renderer-neutral semantics, with logical collection indexes unchanged by RTL.
+`testTag` is diagnostic identity, not a globally unique application key.
 
-### 3.1 Advanced-shadow routing
+Shared-content markers publish endpoint identity and mode. Pairing, snapshots, and fallback belong
+to a shared-aware host; outside such a host the marker has no visual effect.
 
-1. UI Contract owns renderer-neutral shadow layers and Modifier ordering. Android Renderer carries
-   decoration requests and owns the parent before/after drawing planes; it does not depend on a
-   concrete raster backend.
-2. `dropShadow(s)` draws before native child content and `innerShadow(s)` after the complete child.
-   Both remain outside layout and hit testing and do not replace `elevation` or `zIndex`.
-3. The optional Shadow Android artifact resolves shapes and density, rasterizes layers, and replays
-   them. When it is absent, shadow requests are no-ops without changing any other render path.
-4. Use the [advanced-shadow guide](../guides/shadows.md) for an application recipe and the
-   [Shadow Android module manual](../modules/viewcompose-shadow-android/README.md) for installation,
-   cache, backend, diagnostics, compatibility, and benchmark contracts.
+### 3.3 Focus, keys, gestures, and nested scroll
 
-### 3.2 Generation and consistency
+UI Contract owns normalized focus, key, gesture, and nested-scroll values. UI Foundation exposes
+session services; Gesture contributes recognizer descriptions; Android Renderer attaches mounted
+targets without upper layers retaining Views.
 
-1. The production scanner and the Reference generator are one model; there is no second Modifier
-   scan or handwritten total to reconcile.
-2. Each application-facing entry has one generated catalog group. Duplicate or missing structured
-   capability ownership remains visible as Governance V2 debt rather than entering this page.
-3. The committed catalog is deterministic and byte-compared during documentation verification.
-4. Module manuals explain artifact contracts, the Capability Reference supports discovery, and
-   Dokka remains the exhaustive signature and KDoc owner.
+Preview keys travel root-to-target and unconsumed keys bubble target-to-root. Explicit focus
+destinations win before native search. Gesture modifiers describe pointer, click, drag, anchored
+drag, transform, and arbitration policy; the renderer owns platform timing, slop, pointer streams,
+velocity, cancellation, and callback delivery.
 
-## 4. Role boundaries
+Nested-scroll pre phases travel outer-to-inner and post phases inner-to-outer. Every finite result
+is bounded by the remaining offered value. Framework scrollers and native children implementing
+Android nested scrolling join the chain directly; other `AndroidView` children require an attached
+dispatcher. The legacy native fling bridge can report only Boolean consumption, while the
+ViewCompose chain preserves exact partial velocity.
 
-### 4.1 Modifier: general outer decoration
+### 3.4 Exact-shadow routing
 
-Modifier owns:
+UI Contract owns renderer-neutral shadow layers and order. Android Renderer owns before/after
+decoration planes without depending on a raster backend. The optional Shadow Android artifact
+resolves shapes and density, rasterizes layers, and replays them. Without it, exact-shadow requests
+are no-ops and do not affect layout, input, elevation, or `zIndex`.
 
-1. dimensions and occupancy:
-   `size/width/height/minWidth/minHeight/maxWidth/maxHeight/aspectRatio/padding/paddingRelative/margin/marginRelative`;
-2. appearance: `backgroundColor/backgroundDrawableRes/border/cornerRadius/alpha/elevation`;
-3. visibility and layering: `visibility/offset/offsetRelative/zIndex`;
-4. general interaction, including renderer-neutral `interactionIndication`, focus, keys, and
-   accessibility;
-5. test identity through `testTag`;
-6. physical or direction-aware system-bar and IME padding;
-7. the `nativeView` escape hatch;
-8. drawing, gesture, nested-scroll, shadow, and layout-size-animation decoration.
+See the [advanced-shadow guide](../guides/shadows.md) and
+[Shadow Android module manual](../modules/viewcompose-shadow-android/README.md) for application and
+backend details.
 
-Collection reuse/motion remains container policy rather than Modifier data. Focused-editor
-visibility has no opt-in parameter: it follows the native child-rectangle contract of the nearest
-real scroll owner.
+## 4. Generated capability ownership
 
-### 4.2 Scoped Modifier: parent-specific data
+The source scanner discovers application-facing public/protected DSL, Modifier, component, host,
+integration, and tooling entries from published production source sets. Each entry must resolve to
+exactly one capability, artifact/version state, generated reference owner, sample decision, module
+manual, and versioned API root. Internal, test, Demo, generated, and renderer-only helpers are
+excluded.
 
-Parent-specific layout data is exposed through:
+The website and governance gate consume the same committed model. Refresh it with
+`./gradlew updateDocumentationCapabilityReference`; stale output, duplicate ownership, or a new
+orphan fails verification. Raw signatures and KDoc/Javadoc remain in the
+[versioned API Reference](https://docs.viewcompose.com/api/).
 
-1. `RowScope.weight/align`;
-2. `ColumnScope.weight/align`;
-3. `BoxScope.align`;
-4. `ConstraintLayout` child data: `layoutId/constrainAs/constrain`.
+## 5. Hard boundaries and change gate
 
-### 4.3 NodeSpec: component semantics
+Do not place component semantics in general `Modifier`, parent-specific data in global `Modifier`,
+theme defaults in renderers, or first-party durable contracts in an untyped dynamic map. Do not
+add a second handwritten symbol inventory beside the generated Reference.
 
-Component semantics belong in parameters and `NodeSpec`, for example:
+A Modifier-boundary change must update this architecture owner, cover the affected contract and
+renderer path, provide compiled Q3 samples and public documentation required by its Q level, and
+add Demo or device evidence when behavior is visual or interactive. Follow the
+[development workflow](../project/workflow.md).
 
-1. `Text`: `color/style/maxLines/overflow/textAlign`;
-2. `Image`: `contentScale/tint/placeholder/error/fallback`;
-3. `Button`: `variant/size/enabled/leadingIcon/trailingIcon`;
-4. `TextField`: `label/placeholder/supportingText/readOnly/imeAction/isError`.
+## 6. Related documents
 
-General feedback does not become a component field merely because a native View draws it.
-`Modifier.interactionIndication(UiInteractionIndication.StateLayer(...))` carries complete pressed,
-focused, and hovered colors in modifier order. High-level components resolve this value from their
-design-system recipe and typed overrides before installing it. Native-backed components with
-multiple internal targets may retain typed selected/unselected state-layer snapshots in their
-NodeSpec because one outer modifier cannot identify those internal targets.
-
-### 4.4 Theme / Defaults: default sources
-
-The fixed path is `Theme -> design-system recipe or Defaults -> typed overrides ->
-NodeSpec/Modifier -> Renderer`.
-
-Do not encode theme defaults as general modifiers or component business defaults inside the
-renderer.
-
-## 5. Placement decision
-
-When adding a property, decide in this order:
-
-1. Is it a stable outer decoration applicable to most nodes?
-2. Is it parent-specific layout data?
-3. Is it semantic state of one component?
-4. Is it a theme/default source?
-
-Place it in the first matching layer and do not duplicate it across layers.
-
-## 6. Anti-patterns
-
-1. Component-specific semantics in general `Modifier`.
-2. Parent-specific capabilities in global `Modifier`.
-3. Returning first-party long-lived semantics to a dynamic map for convenience.
-4. Treating a theme override as a replacement for a component parameter.
-
-## 7. Compose alignment
-
-ViewCompose does not reproduce the Compose runtime or compiler, but keeps the API layers aligned:
-
-1. `Modifier` is the general decoration chain.
-2. Parent data is a scoped API.
-3. Component semantics are parameters and `NodeSpec`.
-4. Theme provides defaults.
-
-`maxWidth`, `maxHeight`, and `aspectRatio` are portable intent, not raw Android setters. The
-Android renderer folds them into one synthetic `LayoutConstraintHost` around the complete node so
-their order does not create stacked wrappers. Invalid positive/finite values fail in the contract;
-declared exact/minimum values above a declared maximum fail before rendering. During measurement,
-an incoming exact parent constraint remains authoritative; otherwise the declared maximum applies,
-and an aspect ratio is preserved whenever the resulting min/max interval is feasible. A custom
-renderer must provide the same one-boundary behavior before accepting these elements.
-
-## 8. Change gate
-
-A Modifier-boundary change includes:
-
-1. an update to this document;
-2. regression coverage for the corresponding `NodeSpec/renderer` path;
-3. a Demo path and any required UI test.
-
-See [Development workflow](../project/workflow.md).
-
-## 9. Related documents
-
-1. [NodeSpec-only specification](node-spec.md)
-2. [Theme runtime architecture](theming.md)
-3. [Architecture overview](overview.md)
-4. [Focus and input](../guides/focus-and-input.md)
-5. [Nested scrolling](../guides/nested-scroll.md)
+1. [Layouts and modifiers tutorial](../tutorials/layouts-and-modifiers.md)
+2. [Gestures tutorial](../tutorials/gestures.md)
+3. [Focus and input](../guides/focus-and-input.md)
+4. [Nested scroll](../guides/nested-scroll.md)
+5. [NodeSpec architecture](node-spec.md)
+6. [Theme runtime architecture](theming.md)

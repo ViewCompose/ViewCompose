@@ -210,178 +210,596 @@
       "entries": [
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.aspectRatio"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.fillMaxHeight"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.fillMaxSize"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.fillMaxWidth"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.height"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.imeInsetsPadding"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.imeInsetsPaddingRelative"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.layoutId"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 3,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.margin"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.marginRelative"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.maxHeight"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.maxWidth"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.minHeight"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.minWidth"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.offset"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.offsetRelative"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 3,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.padding"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.paddingRelative"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.size"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.systemBarsInsetsPadding"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.systemBarsInsetsPaddingRelative"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.layout",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.layout",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.layouts-and-modifiers",
+              "documentType": "tutorial",
+              "path": "/tutorials/layouts-and-modifiers"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.layouts-and-modifiers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.width"
         },
         {
@@ -512,82 +930,222 @@
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.appearance",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.appearance",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-appearance",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.alpha"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.appearance",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.appearance",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-appearance",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.backgroundColor"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.appearance",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.appearance",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-appearance",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.backgroundDrawableRes"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.appearance",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.appearance",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-appearance",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.border"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.appearance",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.appearance",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-appearance",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.clip"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.drawing",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.drawing",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-drawing",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.draw"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.drawing",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.drawing",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-drawing",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.drawBehind"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.drawing",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.drawing",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-drawing",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.drawCache"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.drawing",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.drawing",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-drawing",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.drawWithCache"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.drawing",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.drawing",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-drawing",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.drawWithContent"
         },
         {
@@ -656,18 +1214,46 @@
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.appearance",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.appearance",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-appearance",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.elevation"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.appearance",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.appearance",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-appearance",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.graphicsLayer"
         },
         {
@@ -736,18 +1322,46 @@
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.appearance",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.appearance",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-appearance",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.shape"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.drawing",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.drawing",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-drawing",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.visibility"
         }
       ],
@@ -963,18 +1577,46 @@
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.semantics",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.semantics",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-semantics",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.semantics"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.interaction",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.interaction",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-interaction",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.testTag"
         },
         {
@@ -1152,34 +1794,110 @@
       "entries": [
         {
           "artifact": "viewcompose-gesture",
+          "capabilityId": "gesture.modifiers",
           "kind": "modifier",
           "namespace": "com.viewcompose.gesture",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.gesture.modifiers",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.gestures",
+              "documentType": "tutorial",
+              "path": "/tutorials/gestures"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.gestures",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.gesture.Modifier.anchoredDraggable"
         },
         {
           "artifact": "viewcompose-gesture",
+          "capabilityId": "gesture.modifiers",
           "kind": "modifier",
           "namespace": "com.viewcompose.gesture",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.gesture.modifiers",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.gestures",
+              "documentType": "tutorial",
+              "path": "/tutorials/gestures"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.gestures",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.gesture.Modifier.combinedClickable"
         },
         {
           "artifact": "viewcompose-gesture",
+          "capabilityId": "gesture.modifiers",
           "kind": "modifier",
           "namespace": "com.viewcompose.gesture",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.gesture.modifiers",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.gestures",
+              "documentType": "tutorial",
+              "path": "/tutorials/gestures"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.gestures",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.gesture.Modifier.draggable"
         },
         {
           "artifact": "viewcompose-gesture",
+          "capabilityId": "gesture.modifiers",
           "kind": "modifier",
           "namespace": "com.viewcompose.gesture",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.gesture.modifiers",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.gestures",
+              "documentType": "tutorial",
+              "path": "/tutorials/gestures"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.gestures",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.gesture.Modifier.gesturePriority"
         },
         {
@@ -1211,10 +1929,29 @@
         },
         {
           "artifact": "viewcompose-gesture",
+          "capabilityId": "gesture.modifiers",
           "kind": "modifier",
           "namespace": "com.viewcompose.gesture",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.gesture.modifiers",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.gestures",
+              "documentType": "tutorial",
+              "path": "/tutorials/gestures"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.gestures",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.gesture.Modifier.pointerInput"
         },
         {
@@ -1227,10 +1964,29 @@
         },
         {
           "artifact": "viewcompose-gesture",
+          "capabilityId": "gesture.modifiers",
           "kind": "modifier",
           "namespace": "com.viewcompose.gesture",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.gesture.modifiers",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.gestures",
+              "documentType": "tutorial",
+              "path": "/tutorials/gestures"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.gestures",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.gesture.Modifier.transformable"
         }
       ],
@@ -1319,10 +2075,24 @@
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.interaction",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.interaction",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-interaction",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.contentDescription"
         },
         {
@@ -1443,18 +2213,46 @@
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.interaction",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.interaction",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-interaction",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.clickable"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.interaction",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.interaction",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-interaction",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.interactionIndication"
         },
         {
@@ -5379,10 +6177,24 @@
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.appearance",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 3,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.appearance",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-appearance",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.cornerRadius"
         },
         {
@@ -5414,26 +6226,68 @@
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.shared-content",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.shared-content",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-shared-content",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.sharedBounds"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.shared-content",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.shared-content",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-shared-content",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.sharedElement"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "modifier.appearance",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.modifier.appearance",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "architecture.modifier-appearance",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.zIndex"
         },
         {
@@ -5708,7 +6562,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 89,
+    "ownedEntryCount": 140,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }

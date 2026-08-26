@@ -65,6 +65,31 @@ dependencies {
     // DOCS_REGION_END(lazy-collections-dependencies)
 }
 
+private val layoutsAndModifiersTutorialDependencies = run {
+    // DOCS_REGION_START(layouts-and-modifiers-dependencies)
+repositories { mavenCentral() }
+
+dependencies {
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("androidx.activity:activity:1.12.4")
+    implementation("com.google.android.material:material:1.13.0")
+}
+    // DOCS_REGION_END(layouts-and-modifiers-dependencies)
+}
+
+private val gesturesTutorialDependencies = run {
+    // DOCS_REGION_START(gestures-dependencies)
+repositories { mavenCentral() }
+
+dependencies {
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
+    implementation("androidx.activity:activity:1.12.4")
+    implementation("com.google.android.material:material:1.13.0")
+}
+    // DOCS_REGION_END(gestures-dependencies)
+}
+
 private val shadowModuleDependency = run {
     // DOCS_REGION_START(shadow-dependency)
 dependencies {

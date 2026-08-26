@@ -398,6 +398,16 @@ identity token.
   framework behavior, or budget. This observation validates documentation ownership and build
   output, not device, network, or image-decoder performance.
 
+- **2026-08-26, Governance V2 Modifier Architecture local acceptance:** the hard cut retained the
+  Architecture and Tutorial routes, registered 51 Modifier/Gesture entries and nine compiled
+  sample decisions, replaced the remaining handwritten API inventory with generated Reference
+  ownership, and reduced Governance V2 debt from 571 to 516. The complete build audited 454 pages,
+  produced 49,095,993 non-API bytes, left 82,221 bytes under the unchanged limit, and completed
+  Docusaurus in `28.0 s`. The result is **improved**: structured coverage increased while repeated
+  prose and generated size decreased, without changing the website stack, route count, framework
+  behavior, or budget. This observation validates documentation structure and output only; it
+  reuses existing Modifier contract and renderer evidence.
+
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and
   moving the generated quality report outside the deploy tree reduced it to 49,175,712 bytes,

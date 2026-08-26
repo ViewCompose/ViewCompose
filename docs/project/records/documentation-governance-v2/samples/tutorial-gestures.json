@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "sample_id": "tutorial.gestures",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "gesture.modifiers",
+  "document_ids": [
+    "tutorial.gestures",
+    "architecture.modifier-runtime"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/GesturesTutorialActivity.kt",
+  "region": "gestures",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

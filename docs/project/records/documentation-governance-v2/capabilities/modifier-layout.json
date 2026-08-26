@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "capability_id": "modifier.layout",
+  "kind": "modifier",
+  "owner": { "kind": "module", "id": "viewcompose-ui-contract" },
+  "artifact": "viewcompose-ui-contract",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.padding", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.paddingRelative", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.systemBarsInsetsPadding", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.systemBarsInsetsPaddingRelative", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.imeInsetsPadding", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.imeInsetsPaddingRelative", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.margin", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.marginRelative", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.size", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.width", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.height", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.minHeight", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.minWidth", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.maxWidth", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.maxHeight", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.aspectRatio", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.layoutId", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.offset", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.offsetRelative", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.fillMaxWidth", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.fillMaxHeight", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.fillMaxSize", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.modifier.layout", "generated": true },
+  "sample_owner": { "sample_id": "tutorial.layouts-and-modifiers" },
+  "document_owners": {
+    "tutorial": ["tutorial.layouts-and-modifiers"],
+    "architecture": ["architecture.modifier-runtime"]
+  }
+}

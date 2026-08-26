@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "tutorial.layouts-and-modifiers-dependencies",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "modifier.layout",
+  "document_ids": ["tutorial.layouts-and-modifiers"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "layouts-and-modifiers-dependencies",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

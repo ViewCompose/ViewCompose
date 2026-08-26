@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 1a308f8911ae2d3b23d728a214a958da309c86681bd2a348c0548f33e5cec559
+translation_source_hash: 666f91c680b8898952356643f304100556dcf3047f485f032b572b720950e7b3
 translation_status: current
 ---
 
@@ -302,6 +302,14 @@ identity token。
   字节，并在 `34.6 s` 内完成 Docusaurus。结果为 **improved**，且没有改变 Website Stack、路由
   数量、Framework 行为或 Budget。本次观察验证文档所有权与构建输出，不代表设备、网络或图片
   解码器性能证据。
+
+- **2026-08-26，Governance V2 Modifier Architecture 本地验收：**本次硬切保留 Architecture
+  与 Tutorial 路由，登记 51 个 Modifier/Gesture 入口和九个可编译 Sample Decision，用生成式
+  Reference 所有权替换剩余手写 API 清单，并把 Governance V2 债务从 571 降到 516。完整构建
+  审计 454 个页面，产生 49,095,993 字节非 API 输出，在不变上限下剩余 82,221 字节，并在
+  `28.0 s` 内完成 Docusaurus。结果为 **improved**：结构化覆盖提高，同时重复说明和生成体积
+  下降，且没有改变 Website Stack、路由数量、Framework 行为或 Budget。本次观察只验证文档
+  结构与输出，并复用既有 Modifier Contract 和 Renderer 证据。
 
 - **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
   上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量
