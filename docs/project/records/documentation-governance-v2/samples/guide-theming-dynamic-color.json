@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "guide.theming-dynamic-color",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "theme.material3",
+  "document_ids": [
+    "guide.theming-dynamic-color"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ThemingGuideSamples.kt",
+  "region": "material3-dynamic-color",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

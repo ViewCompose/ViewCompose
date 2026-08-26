@@ -76,7 +76,7 @@ Update documentation before or together with:
 
 Start with the owning current document, such as the
 [architecture overview](../architecture/overview.md), [roadmap](./roadmap.md),
-[theming guide](../guides/theming.md), [Modifier architecture](../architecture/modifier.md), or
+[theme architecture](../architecture/theming.md), [Modifier architecture](../architecture/modifier.md), or
 [NodeSpec specification](../architecture/node-spec.md).
 
 When code resolves a documented problem, update that document in the same or immediately adjacent

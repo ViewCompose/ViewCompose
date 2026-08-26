@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "guide.theming-mode-switch",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "theme.material3",
+  "document_ids": [
+    "guide.theming-mode-switch"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ThemingGuideSamples.kt",
+  "region": "application-theme-mode",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

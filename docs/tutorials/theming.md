@@ -1,15 +1,32 @@
 ---
-title: Use themes
-sidebar_position: 7
+schema_version: 2
+document_id: tutorial.theming
+doc_type: tutorial
+owner:
+  kind: capability
+  id: theme.material3
+version_lane: released
+capability_ids:
+  - theme.material3
+artifact_ids:
+  - viewcompose-material3-android
+  - viewcompose-material3
+  - viewcompose-ui-foundation
+sample_ids:
+  - tutorial.theming
+  - tutorial.theming-dependencies
+expected_result: A Material-hosted screen whose semantic background, text, and control colors follow Android light and dark configuration.
+verification_action: Run the sample and switch the device between light and dark modes while the Activity is active.
 ---
 
 # Use themes
 
 ## Required dependencies
 
-This page is standalone. The theme API is in `viewcompose-ui-foundation`; Android theme resolution is
-installed by `viewcompose-host-android`:
+This page is standalone. The Material Android aggregate supplies UI Foundation and the Material
+token adapter transitively.
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="theming-dependencies" sample_id="tutorial.theming-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -74,17 +91,17 @@ class ThemingTutorialActivity : ComponentActivity() {
 ```
 {/* tutorial-sample-end */}
 
-`setMaterial3UiContent` reads the Android theme and provides semantic ViewCompose tokens. Read
-`Theme.colors` while building the UI instead of saving resolved color integers. The host refreshes
-the tokens when the configuration changes, including light/dark mode.
+`setMaterial3UiContent` resolves one Android Material Context for the native tree and provides its
+semantic ViewCompose tokens. Read `Theme.colors` while building the UI instead of retaining
+resolved color integers. The host refreshes the tokens after light/dark configuration changes.
 
 ## Verify the result
 
-Switch the device between light and dark mode. Background, primary text, and the button should all
-remain readable. Compile with:
+Switch the device between light and dark mode. Background, primary text, and the button must remain
+readable and change as one coherent snapshot. Compile with
+`./gradlew :samples:tutorials:assembleDebug`.
 
-```bash
-./gradlew :samples:tutorials:assembleDebug
-```
-
-For custom tokens, dynamic-color policy, and runtime theme refresh, see the [Theming guide](../guides/theming.md).
+Continue with the focused tasks for [application mode switching](../guides/theming.md),
+[dynamic color and resource refresh](../guides/theming-dynamic-color.md), or
+[local subtree overrides](../guides/theming-local-overrides.md). The long-lived token and
+precedence model is in the [theme architecture](../architecture/theming.md).

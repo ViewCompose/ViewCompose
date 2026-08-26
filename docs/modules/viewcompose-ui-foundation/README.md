@@ -407,7 +407,8 @@ sink is disabled without changing recovery. The alpha hard cut migrates frame da
 - [Transactional effects and structured work](../../architecture/effects.md)
 - [Node specifications and renderer registration](../../architecture/node-spec.md)
 - [Lazy collection guide](../../guides/lazy-collections.md)
-- [Theme and Android integration](../../guides/theming.md)
+- [Theme runtime architecture](../../architecture/theming.md)
+- [Local theme overrides](../../guides/theming-local-overrides.md)
 - [Image loading guide](../../guides/image-loading.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 

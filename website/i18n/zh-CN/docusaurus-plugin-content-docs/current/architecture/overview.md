@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: 319f4cd92e14a3d1a6818d127622ebdced5fe2919ae938d2b4cba9a89aa6a0b6
+translation_source_hash: 7ee26d3c75c3e742154a38c98927aa7476adf6e40a6340b94d97a96e50ca8e20
 translation_status: current
 ---
 
@@ -222,7 +222,7 @@ flowchart TD
 
 - [Modifier 模型](modifier.md)
 - [NodeSpec 模型](node-spec.md)
-- [主题指南](../guides/theming.md)
+- [主题运行时架构](theming.md)
 - [多设计系统架构与接入标准](design-systems.md)
 
 ### 4.3 宿主接入边界

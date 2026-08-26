@@ -72,7 +72,8 @@ the named integration does not register a Material branch in the renderer.
 
 - [Material 3 adapter](../viewcompose-material3/README.md)
 - [Neutral Android aggregate](../viewcompose-android/README.md)
-- [Theming guide](../../guides/theming.md)
+- [Material 3 dynamic-color guide](../../guides/theming-dynamic-color.md)
+- [Theme runtime architecture](../../architecture/theming.md)
 - [Multi-design-system architecture](../../architecture/design-systems.md)
 
 The generated reference is available in the

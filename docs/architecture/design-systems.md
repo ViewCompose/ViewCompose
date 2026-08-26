@@ -452,6 +452,6 @@ plan rather than reopening that record.
 - [Architecture overview](./overview.md)
 - [ADR-0004: Design-system resolution boundary](./decisions/0004-design-system-resolution-boundary.md)
 - [ADR-0005: Design-system host and component backend boundary](./decisions/0005-design-system-host-and-component-backend-boundary.md)
-- [Theming guide](../guides/theming.md)
+- [Theme runtime architecture](./theming.md)
 - [NodeSpec model](./node-spec.md)
 - [Archived multi-design-system execution plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/multi-design-system-high-fidelity.md)

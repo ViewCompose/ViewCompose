@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0013-component-appearance-resolution-boundary.md
-translation_source_hash: 2c2b22bd5277b2b45c93b3a317ade857e3d8810c73e3932cfc106552491f2e23
+translation_source_hash: 78fa188771ba9a577d9ae0776103876b7eb99225883fac36fd87a0efacaee3aa
 translation_status: current
 ---
 
@@ -8,7 +8,7 @@ translation_status: current
 
 - 状态：已接受
 - 日期：2026-08-15
-- 替代：[主题](../../guides/theming.md#4-局部覆盖override规则) 中的组件局部覆盖建议
+- 替代：现由[局部主题 Override](../../guides/theming-local-overrides.md)取代的组件局部覆盖建议
 
 ## 背景
 

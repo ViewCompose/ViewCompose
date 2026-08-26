@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Complete the Phase 3 Theming reclassification, then continue with Text Input and Lazy Collections.
+next_action: Continue Phase 3 with Text Input, then Lazy Collections.
 maven_release_changesets: []
 ---
 
@@ -39,6 +39,10 @@ precise production/public inventory, generated Reference, and exact reviewed deb
 from the quality included build. The first Phase 3 slice has also hard-cut Navigation delivery
 history out of the active Guide, established focused Guide and Architecture owners, registered the
 compiled Tutorial and Android host capability, and reduced the live report from 733 to 701 issues.
+The second Phase 3 slice has now moved Theming ownership into one Architecture page and three
+focused Guides, registered the Foundation and Material theme capabilities plus compiled task
+samples, repaired the Navigation and Theming dependency-block verification path, and reduced the
+report again to 693 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -47,8 +51,8 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: complete the Phase 3 Theming reclassification, then continue with Text Input and Lazy
-Collections. Pull-request gate scaling Phases 3 through 5 are complete, so these scoped content
+Next action: continue Phase 3 with Text Input, then Lazy Collections. Pull-request gate scaling
+Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
 
@@ -628,7 +632,31 @@ Accepted Navigation slice on 2026-08-26:
   Chinese mirrors passed. The conclusion is `improved`: content and ownership debt decreased with
   no framework behavior change. The limitation is that this documentation-only slice reused the
   existing device behavior evidence; it makes no new device or performance claim. The next action
-  is the equivalent Theming hard cut.
+  was the equivalent Theming hard cut.
+
+Accepted Theming slice on 2026-08-26:
+
+- retained `/guides/theming` as the stable route and narrowed it to the application-owned
+  System/Light/Dark mode-switching task; added focused dynamic-color/resource-refresh and local
+  subtree-override Guides;
+- moved token families, precedence, design-system isolation, renderer resolution, Android resource
+  lifecycle, and diagnostic invariants to `docs/architecture/theming.md`, while dependency and
+  conformance matrices remain in their owning module manuals;
+- registered `theme.foundation` and `theme.material3`, their three application-facing DSL symbols,
+  four focused task/tutorial regions, and two compiled Gradle dependency regions. The latter also
+  repairs the Navigation tutorial dependency regression exposed by the complete tutorial gate;
+- removed 6 resolved exception records. The report changed from 701 to 693 issues: missing
+  metadata 110 to 108, orphan symbols 412 to 409, and unclassified samples 172 to 169. Taxonomy
+  mismatches remained 7, while duplicate owners, orphan documents, version conflicts, stale
+  generated output, unbaselined debt, and blocking violations remained zero;
+- Tutorial compilation and exact-region verification, UI Foundation tests, Material 3 tests,
+  Material 3 Android unit tests, Governance V2, documentation structure, 70 documentation script
+  tests, release intent, and all 120 reviewed Chinese mirrors passed. The complete bilingual site
+  audited 448 pages and passed its 60.0-second build budget; the surrounding local npm lifecycle
+  completed in 82.73 seconds. The conclusion is `improved`: ownership and sample debt decreased
+  with no framework or release-artifact change. The limitation is that the task samples are
+  compile-time documentation evidence and make no new device or visual-conformance claim. The next
+  action is the Text Input hard cut.
 
 | Current area | Required target |
 | --- | --- |

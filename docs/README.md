@@ -35,6 +35,7 @@ Long-lived contracts, boundaries, and runtime semantics:
 
 - [Architecture overview](./architecture/overview.md)
 - [Navigation runtime architecture](./architecture/navigation.md)
+- [Theme runtime architecture](./architecture/theming.md)
 - [Multi-design-system architecture and integration standard](./architecture/design-systems.md)
 - [Architecture decisions](./architecture/decisions/README.md)
 - [Modifier model](./architecture/modifier.md)
@@ -59,7 +60,9 @@ Independently runnable learning pages backed by one compiled source file per cap
 
 Feature behavior and platform integration:
 
-- [Theming](./guides/theming.md)
+- [Switch application theme mode](./guides/theming.md)
+- [Enable Material 3 dynamic color](./guides/theming-dynamic-color.md)
+- [Override theme tokens for one subtree](./guides/theming-local-overrides.md)
 - [Text input](./guides/text-input.md)
 - [Lazy collections](./guides/lazy-collections.md)
 - [Focus and input](./guides/focus-and-input.md)

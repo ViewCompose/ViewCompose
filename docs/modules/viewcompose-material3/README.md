@@ -133,7 +133,8 @@ further visual replacement requires the Phase 12 behavior and accessibility gate
 
 ## Related documentation
 
-- [Theme guide](../../guides/theming.md)
+- [Theme runtime architecture](../../architecture/theming.md)
+- [Material 3 dynamic-color guide](../../guides/theming-dynamic-color.md)
 - [UI foundation](../viewcompose-ui-foundation/README.md)
 - [Material 3 Android integration](../viewcompose-material3-android/README.md)
 - [Neutral Android aggregate](../viewcompose-android/README.md)

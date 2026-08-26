@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3-android/README.md
-translation_source_hash: d2ed78ae4445d89a2bad1e143f106a02ad7dab7f581943126e108e582d49c57b
+translation_source_hash: 3b705dad0155ed28466e38204190e1011953bf17f7936c38173e502ea761f8ac
 translation_status: current
 ---
 
@@ -71,7 +71,8 @@ NodeSpec 与 Foundation 契约；具名集成不会在 Renderer 中注册 Materi
 
 - [Material 3 适配器](../viewcompose-material3/README.md)
 - [中立 Android 聚合模块](../viewcompose-android/README.md)
-- [主题指南](../../guides/theming.md)
+- [Material 3 动态颜色指南](../../guides/theming-dynamic-color.md)
+- [主题运行时架构](../../architecture/theming.md)
 - [多设计系统架构](../../architecture/design-systems.md)
 
 完整生成参考位于

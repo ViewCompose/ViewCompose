@@ -1,6 +1,6 @@
 ---
 translation_source: tutorials/navigation.md
-translation_source_hash: 5e713d61576fa681be7b2acdd2933b7521ecad071810f9aa9cd4b6c905500628
+translation_source_hash: b59593695fc6b94ebe51fa7fe7a50c0c1fb84685e15a5eb09d231030418cb372
 translation_status: current
 ---
 
@@ -8,10 +8,19 @@ translation_status: current
 
 ## 必需依赖
 
-本页可以独立使用。请添加 Maven Central、`viewcompose-material3-android:0.1.0-alpha01`、
-`viewcompose-navigation-android:0.1.0-alpha01`、`androidx.activity:activity:1.12.4` 和
-`com.google.android.material:material:1.13.0`。Android 导航产物会传递引入平台无关的 Route
-模型。
+本页可以独立使用。Android 导航产物会传递引入平台无关的 Route 模型。
+
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="navigation-dependencies" sample_id="tutorial.navigation-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
+```kotlin title="build.gradle.kts"
+repositories { mavenCentral() }
+
+dependencies {
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
+    implementation("androidx.activity:activity:1.12.4")
+    implementation("com.google.android.material:material:1.13.0")
+}
+```
 
 ## 在两个目标页之间跳转
 

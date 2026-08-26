@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "capability_id": "theme.foundation",
+  "kind": "dsl",
+  "owner": { "kind": "module", "id": "viewcompose-ui-foundation" },
+  "artifact": "viewcompose-ui-foundation",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.UiTheme", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/Theme.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.UiThemeOverride", "kind": "overload-set", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/Theme.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.theme.foundation", "generated": true },
+  "sample_owner": { "sample_id": "guide.theming-local-override" },
+  "document_owners": {
+    "guide": ["guide.theming-local-overrides"],
+    "architecture": ["architecture.theme-runtime"]
+  }
+}

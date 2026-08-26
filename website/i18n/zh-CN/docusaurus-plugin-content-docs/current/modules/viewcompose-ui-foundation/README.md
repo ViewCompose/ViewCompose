@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 27f001b56c220b45c1a6facdaa4723bcf13524fd3ca62bee74bb1b7bc0700098
+translation_source_hash: 33e3e0c3ca15796a9550ee992e3b2266fab688e530329946c7fa1186350625d3
 translation_status: current
 ---
 
@@ -347,7 +347,8 @@ Alpha 硬切把 Frame 数据迁移到 `RenderFrameCompleted`，把 Failure 迁�
 - [事务式 Effect 与结构化工作](https://docs.viewcompose.com/zh-CN/architecture/effects)
 - [节点规格与渲染器注册](https://docs.viewcompose.com/zh-CN/architecture/node-spec)
 - [Lazy 容器指南](https://docs.viewcompose.com/zh-CN/guides/lazy-collections)
-- [主题与 Android 集成](https://docs.viewcompose.com/zh-CN/guides/theming)
+- [主题运行时架构](../../architecture/theming.md)
+- [局部主题 Override](../../guides/theming-local-overrides.md)
 - [图片加载指南](https://docs.viewcompose.com/zh-CN/guides/image-loading)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
 

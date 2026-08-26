@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "sample_id": "guide.theming-local-override",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "theme.foundation",
+  "document_ids": [
+    "guide.theming-local-overrides",
+    "architecture.theme-runtime"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ThemingGuideSamples.kt",
+  "region": "theme-local-override",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

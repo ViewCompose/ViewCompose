@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-oneui7/README.md
-translation_source_hash: 23d26a5dd23a178a5422c3a7fcf23dba31ec993e304a2a474fa6c01ca49f62b8
+translation_source_hash: c487246d17a6fa46a66de80986f2d6e94bac2c4aa649f2aa1c7c9badd039e387
 translation_status: current
 ---
 
@@ -143,7 +143,7 @@ Pixel 与 Samsung 真机截图验收仍是发布负责人门禁。Alpha 版本�
 
 ## 相关文档
 
-- [主题指南](../../guides/theming.md)
+- [主题运行时架构](../../architecture/theming.md)
 - [UI Foundation](../viewcompose-ui-foundation/README.md)
 - [One UI 7 Android Overlay Adapter](../viewcompose-overlay-oneui7-android/README.md)
 - [架构总览](../../architecture/overview.md)

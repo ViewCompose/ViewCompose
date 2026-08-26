@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/modifier.md
-translation_source_hash: c0642810660780fa571fd777fbd81f4f108b09270f071aed15f449a9392c0e98
+translation_source_hash: 413d6e3adcf80d8fe1866ceb92ddefb770d216b62e2210ee71bd33a199397772
 translation_status: current
 ---
 
@@ -204,7 +204,7 @@ Wrapper。契约层会拒绝非正数或非有限值，声明的 Exact/Minimum �
 ## 9. 关联文档
 
 1. [NodeSpec 模型](node-spec.md)
-2. [主题指南](../guides/theming.md)
+2. [主题运行时架构](theming.md)
 3. [架构总览](overview.md)
 4. [焦点与输入指南](../guides/focus-and-input.md)
 5. [嵌套滚动指南](../guides/nested-scroll.md)

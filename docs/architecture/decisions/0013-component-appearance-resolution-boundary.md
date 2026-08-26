@@ -2,8 +2,8 @@
 
 - Status: Accepted
 - Date: 2026-08-15
-- Supersedes: the component-local override guidance in
-  [Theming](../../guides/theming.md#4-local-override-rules)
+- Supersedes: the component-local override guidance now replaced by
+  [local theme overrides](../../guides/theming-local-overrides.md)
 
 ## Context
 

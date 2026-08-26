@@ -152,7 +152,7 @@ support, or as a replacement for Samsung platform components outside the five en
 
 ## Related documentation
 
-- [Theming guide](../../guides/theming.md)
+- [Theme runtime architecture](../../architecture/theming.md)
 - [UI Foundation](../viewcompose-ui-foundation/README.md)
 - [One UI 7 Android overlay adapter](../viewcompose-overlay-oneui7-android/README.md)
 - [Architecture overview](../../architecture/overview.md)

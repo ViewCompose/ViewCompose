@@ -2,7 +2,7 @@
 title: 构建第一个应用
 sidebar_position: 1
 translation_source: tutorials/getting-started.md
-translation_source_hash: 916ebb6cbea13c52c9e75a8d9e996930aae3eb12b3295b7aa65ded3b78c37023
+translation_source_hash: 425b3659253b2086d7d50a1ad2d6daea496775efec719fd1d84f814a47860511
 translation_status: current
 ---
 
@@ -246,7 +246,8 @@ fun UiTreeBuilder.CounterPreview() {
 ## 下一步
 
 - 阅读[状态快照](https://docs.viewcompose.com/architecture/state-snapshots)，理解事务与观察规则。
-- 阅读[主题](https://docs.viewcompose.com/guides/theming)，再定义应用 token 或动态色策略。
+- 定义应用 token 前阅读[主题运行时架构](../architecture/theming.md)，Android 资源策略使用
+  [动态颜色指南](../guides/theming-dynamic-color.md)。
 - 阅读[预览工具](https://docs.viewcompose.com/tooling/preview)，继续配置主题 provider、诊断与快照策略。
 - 通过[模块目录](../modules/README.md)按需添加导航、文本编辑、图形或其他可选能力，避免把它们
   全部拉入最小应用。
