@@ -775,6 +775,19 @@ the old total work on the critical path. The documentation child completed in `4
 comparison active until the required corpus is complete, then remove the complete shadow only if
 every change class retains zero missed gate or artifact impact.
 
+Pull request #178 supplied the third successful documentation-content observation. The classifier
+again selected documentation governance, documentation site, and samples without full fallback or
+a published-artifact impact. The affected candidate passed `1,176` actionable tasks in `5 min 34 s`;
+the complete shadow passed `2,342` actionable tasks in `9 min 34 s`. Candidate scope was `49.8%`
+smaller and observed duration was `41.8%` lower, with the same successful result and no correctness
+finding. Because the complete shadow reused candidate outputs, the comparison remains conservative.
+Serial observation made the child last `15 min 55 s`; the conclusion is **mixed** for critical-path
+latency and **improved** for selected scope with preserved correctness. The documentation child
+completed in `4 min 34 s`, down `4.5%` from #177. Source and translation verification took `65 s`,
+complete API generation and verification `82 s`, catalog generation `1 s`, type checking `2 s`, and
+Docusaurus `42 s` (`15.3%` of child wall time). Three content samples remain far below the required
+ten-per-class corpus, so shadow comparison stays active.
+
 The current website stack already uses Docusaurus `3.10.2`, React `19.2.8`, Node `24.19.0`, and npm
 `11.8.0`. Replacing or broadly upgrading it is not accepted as a latency action from this evidence:
 it would not reduce source verification, Gradle startup, Android SDK preparation, or immutable API

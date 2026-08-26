@@ -1275,42 +1275,187 @@
       "entries": [
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "lazy.collections",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.lazy.collections",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.lazy-lists",
+              "documentType": "tutorial",
+              "path": "/tutorials/lazy-lists"
+            },
+            {
+              "documentId": "tutorial.lazy-list-performance",
+              "documentType": "tutorial",
+              "path": "/tutorials/lazy-list-performance"
+            },
+            {
+              "documentId": "guide.lazy-collections",
+              "documentType": "guide",
+              "path": "/guides/lazy-collections"
+            },
+            {
+              "documentId": "architecture.lazy-collections-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/lazy-collections"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.lazy-collections-state",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.HorizontalPager"
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "lazy.collections",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 3,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.lazy.collections",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.lazy-lists",
+              "documentType": "tutorial",
+              "path": "/tutorials/lazy-lists"
+            },
+            {
+              "documentId": "tutorial.lazy-list-performance",
+              "documentType": "tutorial",
+              "path": "/tutorials/lazy-list-performance"
+            },
+            {
+              "documentId": "guide.lazy-collections",
+              "documentType": "guide",
+              "path": "/guides/lazy-collections"
+            },
+            {
+              "documentId": "architecture.lazy-collections-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/lazy-collections"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.lazy-collections-state",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.LazyColumn"
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "lazy.collections",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 3,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.lazy.collections",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.lazy-lists",
+              "documentType": "tutorial",
+              "path": "/tutorials/lazy-lists"
+            },
+            {
+              "documentId": "tutorial.lazy-list-performance",
+              "documentType": "tutorial",
+              "path": "/tutorials/lazy-list-performance"
+            },
+            {
+              "documentId": "guide.lazy-collections",
+              "documentType": "guide",
+              "path": "/guides/lazy-collections"
+            },
+            {
+              "documentId": "architecture.lazy-collections-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/lazy-collections"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.lazy-collections-state",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.LazyRow"
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "lazy.collections",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 3,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.lazy.collections",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.lazy-lists",
+              "documentType": "tutorial",
+              "path": "/tutorials/lazy-lists"
+            },
+            {
+              "documentId": "tutorial.lazy-list-performance",
+              "documentType": "tutorial",
+              "path": "/tutorials/lazy-list-performance"
+            },
+            {
+              "documentId": "guide.lazy-collections",
+              "documentType": "guide",
+              "path": "/guides/lazy-collections"
+            },
+            {
+              "documentId": "architecture.lazy-collections-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/lazy-collections"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.lazy-collections-state",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.LazyVerticalGrid"
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "lazy.collections",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.lazy.collections",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.lazy-lists",
+              "documentType": "tutorial",
+              "path": "/tutorials/lazy-lists"
+            },
+            {
+              "documentId": "tutorial.lazy-list-performance",
+              "documentType": "tutorial",
+              "path": "/tutorials/lazy-list-performance"
+            },
+            {
+              "documentId": "guide.lazy-collections",
+              "documentType": "guide",
+              "path": "/guides/lazy-collections"
+            },
+            {
+              "documentId": "architecture.lazy-collections-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/lazy-collections"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.lazy-collections-state",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.VerticalPager"
         },
         {
@@ -1503,10 +1648,39 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "lazy.collections",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.lazy.collections",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.lazy-lists",
+              "documentType": "tutorial",
+              "path": "/tutorials/lazy-lists"
+            },
+            {
+              "documentId": "tutorial.lazy-list-performance",
+              "documentType": "tutorial",
+              "path": "/tutorials/lazy-list-performance"
+            },
+            {
+              "documentId": "guide.lazy-collections",
+              "documentType": "guide",
+              "path": "/guides/lazy-collections"
+            },
+            {
+              "documentId": "architecture.lazy-collections-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/lazy-collections"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.lazy-collections-state",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.TabRow"
         }
       ],
@@ -4230,7 +4404,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 27,
+    "ownedEntryCount": 33,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }

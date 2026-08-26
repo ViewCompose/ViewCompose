@@ -326,6 +326,14 @@ identity token.
   **inconclusive** because the restored state differs and only two post-stabilization content
   pull requests exist. Continue the corpus without a website-stack migration.
 
+- **2026-08-26, Governance V2 Text Input hosted follow-up:** pull request #178's successful
+  documentation child completed in `4 min 34 s`, `13 s` faster than #177 (`-4.5%`). Source and
+  translation verification took `65 s`, complete versioned API generation and verification `82 s`,
+  catalog generation `1 s`, type checking `2 s`, and Docusaurus `42 s`. Docusaurus represented
+  `15.3%` of child wall time and remains a minority stage. The result is **improved** for this
+  hosted sample; P50/P95 and cache-hit conclusions remain **inconclusive** with only three
+  post-stabilization content pull requests. Keep the existing stack and continue the corpus.
+
 - **2026-08-26, Governance V2 Text Input local acceptance:** the first four-page task split built
   successfully but produced 49,245,936 non-API bytes, 67,722 bytes above the unchanged 46.9 MiB
   limit. Consolidating adjacent editing/IME and rich/Receive Content tasks into two Guides retained
@@ -334,6 +342,12 @@ identity token.
   the Docusaurus wrapper in `60.0 s`. The result is **mixed** for the initial representation and
   **improved** after correction. This local sample excludes hosted cache and setup behavior; the
   limit remains unchanged and the next content slice must preserve the same stop condition.
+
+- **2026-08-26, Governance V2 Lazy Collections local acceptance:** the first representation
+  exceeded the unchanged limit by 9,033 bytes. Consolidating duplicated pager and module-owned
+  detail reduced non-API output to 49,168,958 bytes, leaving 9,256 bytes; 454 bilingual pages
+  passed in `36.6 s`. The corrected result is **improved**, but the narrow margin requires the next
+  content slice to remove or consolidate existing output before adding another route.
 
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and

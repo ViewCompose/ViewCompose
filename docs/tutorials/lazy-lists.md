@@ -1,6 +1,21 @@
 ---
-title: Use a lazy list
-sidebar_position: 6
+schema_version: 2
+document_id: tutorial.lazy-lists
+doc_type: tutorial
+owner:
+  kind: capability
+  id: lazy.collections
+version_lane: released
+capability_ids:
+  - lazy.collections
+artifact_ids:
+  - viewcompose-material3-android
+  - viewcompose-ui-foundation
+sample_ids:
+  - tutorial.lazy-lists
+  - tutorial.lazy-collections-dependencies
+expected_result: A native-backed keyed list that scrolls through 100 messages while preserving logical row identity.
+verification_action: Run the sample, scroll from the first to the last message, then insert or move a keyed message and confirm row state follows its key.
 ---
 
 # Use a lazy list
@@ -10,6 +25,7 @@ sidebar_position: 6
 This page is standalone. `LazyColumn` is part of `viewcompose-ui-foundation`; no optional collection
 artifact is required:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="lazy-collections-dependencies" sample_id="tutorial.lazy-collections-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -75,4 +91,6 @@ Compile with:
 ```
 
 Use [Tune lazy-list performance](./lazy-list-performance.md) only when measurements show that the
-default prefetch and cache hints need adjustment.
+default prefetch and cache hints need adjustment. Use the
+[lazy collections guide](../guides/lazy-collections.md) for state control, adaptive grids, and
+pagers.

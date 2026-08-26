@@ -1,8 +1,6 @@
 ---
-title: 调整 Lazy 列表性能
-sidebar_position: 13
 translation_source: tutorials/lazy-list-performance.md
-translation_source_hash: 32481517be1569bc2d9169c15380be849be88fb5dadb3836a164cac03934ada5
+translation_source_hash: eccfcba6f37c86629b0306c709739f2e924014660938e6cfbc3b5bdc612a1c54
 translation_status: current
 ---
 
@@ -12,6 +10,7 @@ translation_status: current
 
 本页可以独立使用。集合策略位于基础 UI 契约，不需要额外的性能产物：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="lazy-collections-dependencies" sample_id="tutorial.lazy-collections-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -77,6 +76,10 @@ class LazyListPerformanceTutorialActivity : ComponentActivity() {
 Tree 缓存按 `contentType` 保留已经 Reset 的物理树，并在淘汰时确定性释放。`contentRevision` 会
 定义条目语义：捕获的非 State 值发生变化时，其 Revision 也必须变化。更大的缓存会消耗更多内存，
 因此应先测量再调整。
+
+如果稳定父级频繁重组，并且 Profile 中出现 Selector 扫描，可在应用的不可变数据边界引入已
+Remember 的 `LazyItemsSnapshot`。它不是普通 List 的通用替代：每次组合都创建新快照仍会执行扫描，
+而普通数据或 Capture 改变后继续保留旧快照则不正确。
 
 ## 验证结果
 

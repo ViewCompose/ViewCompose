@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Continue Phase 3 with Lazy Collections.
+next_action: Continue Phase 3 with Focus and Nested Scroll.
 maven_release_changesets: []
 ---
 
@@ -47,6 +47,10 @@ The third slice has moved Text Input runtime ownership into Architecture, retain
 rich-document, and Receive Content tasks in two coherent Guides, registered the three input DSL
 symbols and six compiled regions, and reduced the report to 683 issues without changing framework
 behavior.
+The fourth slice has moved Lazy Collection Session, reuse, and renderer ownership into Architecture,
+retained list, state-control, grid, pager, and performance tasks in one Guide plus two Tutorials,
+registered six collection DSL entries and six compiled regions, and reduced the report to 668 issues
+without changing framework behavior.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -55,7 +59,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: continue Phase 3 with Lazy Collections. Pull-request gate scaling
+Next action: continue Phase 3 with Focus and Nested Scroll. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -688,6 +692,34 @@ Accepted Text Input slice on 2026-08-26:
   site budget, and no framework or release artifact changed. The limitation is that IME, autofill,
   accessibility, hardware-keyboard, and stylus checklists reuse existing device evidence rather
   than making a new device-conformance claim. The next action is the Lazy Collections hard cut.
+
+Accepted Lazy Collections slice on 2026-08-26:
+
+- retained `/guides/lazy-collections` as the stable task route and focused it on container choice,
+  list state control, adaptive grids, pager/tab coordination, and the ordinary List versus immutable
+  snapshot decision; retained the independently runnable first-list and measured-performance
+  Tutorials;
+- moved logical key/Session identity, revision, immutable-snapshot, prefetch activation, mounted-tree
+  reuse, saveable-state, pager, and Android renderer boundaries to
+  `docs/architecture/lazy-collections.md`; module-specific API detail remains in the UI Foundation
+  manual and Paging loading policy remains in its integration manual;
+- registered `lazy.collections`, its `LazyColumn`, `LazyRow`, `LazyVerticalGrid`,
+  `HorizontalPager`, `VerticalPager`, and `TabRow` entries, three Guide regions, two Tutorial
+  regions, and one shared compiled dependency region. Removed 7 resolved exception records. The
+  report changed from 683 to 668 issues: missing metadata 106 to 103, orphan symbols 406 to 400,
+  and unclassified samples 164 to 158. Taxonomy mismatches remained 7; duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- the first representation exceeded the unchanged 46.9 MiB non-API site limit by 9,033 bytes.
+  Removing a duplicated vertical-pager code branch while retaining its shared contract, then
+  consolidating module-owned detail, reduced generated output to 49,168,958 bytes and left 9,256
+  bytes of budget. The final bilingual build audited 454 pages and completed Docusaurus in `36.6 s`;
+- Tutorial and Guide compilation, exact-region ownership, Governance V2, documentation structure,
+  documentation script tests, language and translation review, generated Reference freshness, and
+  the complete bilingual site passed. The conclusion is `improved`: ownership and sample debt
+  decreased, every task remains independently enterable, and no framework or release artifact
+  changed. The limitation is that compile-time examples make no new device, accessibility, focus,
+  or scrolling-performance claim. The next action is the Focus and Nested Scroll hard cut.
 
 | Current area | Required target |
 | --- | --- |

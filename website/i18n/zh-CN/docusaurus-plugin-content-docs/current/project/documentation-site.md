@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: d3ed171e25f8fb05f827ab383258eebb113e5236c0912829638cfea69ac7d240
+translation_source_hash: f197a091d687cc2cb6df57af3d89009033d69382fe3899e140062d17ff434de8
 translation_status: current
 ---
 
@@ -245,12 +245,24 @@ identity token。
   状态不同，且稳定后只有两个内容 PR，因此 P50/P95 与缓存命中结论仍为 **inconclusive**。继续
   收集语料，不进行 Website 技术栈迁移。
 
+- **2026-08-26，Governance V2 Text Input 托管后续观察：**PR #178 的成功文档 Child Job
+  用时 `4 min 34 s`，比 #177 快 `13 s`（`-4.5%`）。源码与翻译校验 `65 s`、完整版本化 API
+  生成与校验 `82 s`、目录生成 `1 s`、类型检查 `2 s`、Docusaurus 构建 `42 s`。Docusaurus
+  只占 Child Job 时间的 `15.3%`，仍是少数阶段。本次托管样本结论为 **improved**；稳定后只有
+  三个内容 PR，因此 P50/P95 与缓存命中结论仍为 **inconclusive**。保持现有技术栈并继续收集
+  语料。
+
 - **2026-08-26，Governance V2 Text Input 本地验收：**首次四页面任务拆分虽然构建成功，但生成
   49,245,936 个非 API 字节，超过不变的 46.9 MiB 上限 67,722 字节。把相邻的编辑/IME 与富文本/
   Receive Content 任务收敛到两个 Guide 后，四个任务边界仍然保留，生成产物减少 161,958 字节
   （`-0.33%`）至 49,083,978 字节，留下 94,236 字节余量。最终构建审计 452 个双语页面，
   Docusaurus Wrapper 用时 `60.0 s`。首版表示的结论为 **mixed**，修正后为 **improved**。本地
   样本不覆盖托管缓存与环境准备；上限保持不变，下一个内容切片继续使用同一停止条件。
+
+- **2026-08-26，Governance V2 Lazy Collections 本地验收：**首版表示超过不变上限 9,033
+  字节。收敛重复 Pager 和模块拥有的细节后，非 API 产物降至 49,168,958 字节，留下 9,256
+  字节；454 个双语页面以 `36.6 s` 通过。修正后结论为 **improved**，但余量很小，因此下一个
+  内容切片必须先删除或收敛现有产物，再增加新路由。
 
 - **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
   上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量
