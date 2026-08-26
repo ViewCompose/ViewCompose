@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: 78cdccf8b7e3b3f08ae16dff8a414a9e454c678a3ae0a91e49d2eaf006fe1004
+translation_source_hash: 9ef8d57ff04e3f2804ab1d2097e306f84e599456838ce656d5c232fa973523ea
 translation_status: current
 ---
 
@@ -185,6 +185,14 @@ PR，`qaQuick` 变化 `-0.17%`，`qaPreview` 变化 `-0.19%`，两者均为**无
 `cache-read-only`：除仓库默认分支外的任何 ref 只能恢复缓存，PR 和非默认分支不能写入，只有默认
 分支 Job 可以写入。禁止再增加并行的 `actions/cache` Gradle Home 缓存，也不得恢复 `setup-java`
 的 `cache: gradle`；是否采用 Gradle Build Cache 或 Configuration Cache，必须分别测量并验收。
+
+首个隔离 Paging 候选探针表明 Build Cache 有潜力，但还不能进入必需 CI。依赖预热并清理输出后，
+无缓存基线以 `80.88 秒` 通过；两次清理后的缓存恢复分别为 `6.04 秒` 和 `5.45 秒`（`-92.5%` 与
+`-93.3%`），215 个 actionable task 中有 108 个从 `9.9 MiB` 缓存恢复。每轮结果都正确，因此
+本地结论为**有改进**。托管环境可移植性、main 到 PR 的复用、总容量和淘汰行为尚未测量，Build
+Cache 继续关闭。Configuration Cache 也继续关闭：同一候选在本地以 `4.78 秒` 存储、`1.29 秒`
+复用（`-73.0%`），但当前 CI 没有第二次相同调用，也未配置加密的跨 Job 传输；其当前路径结论为
+**无实质变化**。以后只能通过独立托管影子重新评估，禁止与其他门禁或文档工作捆绑启用。
 
 `qaFull` 在 `qaQuick` 基础上增加应用、Counter sample 和教程的连接设备测试。仓库内每个
 `connectedDebugAndroidTest` 入口会先运行 `verifyConnectedAndroidDeviceReady`。前置检查要求：未通过
