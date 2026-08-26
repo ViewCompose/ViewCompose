@@ -35,6 +35,7 @@ dependencies {
     implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
     implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha04")
     implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-constraintlayout-androidx:0.1.0-alpha01")
 
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")

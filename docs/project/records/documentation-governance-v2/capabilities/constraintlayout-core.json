@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "capability_id": "constraintlayout.core",
+  "kind": "dsl",
+  "owner": { "kind": "module", "id": "viewcompose-constraintlayout-androidx" },
+  "artifact": "viewcompose-constraintlayout-androidx",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintBaselineAnchorTarget", "kind": "type", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintConstrainScope", "kind": "type", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintHorizontalAnchorReference", "kind": "type", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintHorizontalAnchorSide", "kind": "type", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintHorizontalAnchorTarget", "kind": "type", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintLayoutReference", "kind": "type", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintLayoutScope", "kind": "type", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createRef", "kind": "extension", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createRefs", "kind": "extension", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintParentReference", "kind": "type", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintReference", "kind": "type", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintSetBuilder", "kind": "type", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintVerticalAnchorReference", "kind": "type", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintVerticalAnchorSide", "kind": "type", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.ConstraintVerticalAnchorTarget", "kind": "type", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.Modifier.constrain", "kind": "extension", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.Modifier.constrainAs", "kind": "extension", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.UiTreeBuilder.ConstraintLayout", "kind": "extension", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" },
+    { "symbol_id": "com.viewcompose.constraintlayout.constraintSet", "kind": "function", "visibility": "public", "source": "viewcompose-constraintlayout-androidx/src/main/java/com/viewcompose/constraintlayout/ConstraintLayoutDsl.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.constraintlayout.core", "generated": true },
+  "sample_owner": { "sample_id": "module.constraintlayout-inline" },
+  "document_owners": { "module": ["module.viewcompose-constraintlayout-androidx"] }
+}

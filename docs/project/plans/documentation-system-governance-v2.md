@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Merge the Image Loading slice, then continue Phase 3 with Modifier Architecture and final Reference link closure.
+next_action: Merge the ConstraintLayout module slice, then continue Phase 3 with Preview tooling ownership.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
 ---
@@ -59,6 +59,11 @@ entries across six capability owners, registers eight compiled regions, and redu
 The accepted Image Loading hard cut now assigns the Foundation, Coil, and Glide entries to three
 capabilities, registers nine sample decisions across the Guide, Migration, and module manuals, and
 reduces the report to 571 issues without changing runtime behavior or public routes.
+The accepted Modifier Architecture hard cut assigns 51 Modifier and Gesture entries to seven
+capability owners, registers nine compiled sample decisions, removes the remaining handwritten API
+inventory, and reduces the report to 516 issues. The accepted ConstraintLayout module hard cut now
+assigns all 43 public DSL and helper entries to two capability owners, registers five compiled
+module sample decisions, removes three resolved exceptions, and reduces the report to 468 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -67,8 +72,8 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: merge the Image Loading slice, then continue Phase 3 with Modifier Architecture and
-final Reference link closure. Pull-request gate scaling
+Next action: merge the ConstraintLayout module slice, then continue Phase 3 with Preview tooling
+ownership. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -78,6 +83,7 @@ remains owned by this plan after the Phase 3 content owners move.
 - `release/changes/20260826-governance-shadows-phase3.json` records the already accepted
   documentation-region-only Shadow sample classification. Image Loading changes only non-published
   Tutorial sources, handwritten documentation, and governance records, so it adds no Changeset.
+  The Modifier and ConstraintLayout slices have the same publication-neutral classification.
 
 ## Release intent rationale
 
@@ -85,8 +91,8 @@ The completed Phase 2 governance-tooling slices change governance records, docum
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
 `verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, zero ignored
-artifacts, and zero shared-path classifications for the Image Loading slice against
-`014c6efcc83bd69042e9372658fc2631b720cd1d`.
+artifacts, and zero shared-path classifications for the ConstraintLayout slice against
+`d9a5bd07e2a7ef75a7fec1a47371a74d8d60030b`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -861,6 +867,30 @@ Accepted Modifier Architecture slice on 2026-08-26:
   Release intent found zero affected artifacts. The limitation is that this documentation slice
   reuses existing contract and renderer tests and makes no new device, visual, or performance
   claim. The next action is module, migration, tooling, and remaining executable-example ownership.
+
+Accepted ConstraintLayout module slice on 2026-08-26:
+
+- retained the existing module route, replaced repeated chronological phase logs with one current
+  installation, DSL, ownership, reconciliation, evidence, and migration contract, and kept
+  completed implementation history in the existing ADR, performance, and archive owners;
+- registered `constraintlayout.core` and `constraintlayout.helpers` for all 43 public DSL and helper
+  entries, plus five compiled dependency, inline-constraint, dimension, `ConstraintSet`, and helper
+  sample decisions. Three resolved exception records were removed;
+- the report changed from 516 to 468 issues: missing metadata 86 to 85, orphan symbols 293 to 250,
+  and unclassified samples 131 to 127. Taxonomy mismatches remained 6; duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- Tutorial compilation, bilingual region identity, Governance V2, documentation structure,
+  language and translation review, complete API reuse, release intent, and the complete bilingual
+  site passed. The final evidence-bearing site audited 454 pages, produced 48,982,759 non-API
+  bytes, left 195,455 bytes under the unchanged 46.9 MiB limit, and completed Docusaurus in
+  `25.2 s`. Complete `qaQuick` passed 2,342 actionable tasks in `22.3 s` (189 executed and 2,153
+  up-to-date);
+- the conclusion is `improved`: all public ConstraintLayout entries now have exact generated
+  ownership and compiled module examples, repeated manual content and generated site size
+  decreased, and no framework API, runtime behavior, route, or published artifact changed. The
+  slice reuses the existing unit, instrumentation, device, visual, and performance evidence and
+  makes no new runtime or performance claim. The next action is Preview tooling ownership.
 
 | Current area | Required target |
 | --- | --- |

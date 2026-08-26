@@ -3161,312 +3161,886 @@
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintBaselineAnchorTarget"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintCircularFlowItem"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintConstrainScope"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintGridSkip"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintGridSpan"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintHelperReference"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintHorizontalAnchorReference"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintHorizontalAnchorSide"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintHorizontalAnchorTarget"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutReference"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createBottomBarrier"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createCircularFlow"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createEndBarrier"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createFlow"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGrid"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGroup"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 2,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromBottom"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 2,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromEnd"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 2,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromLeft"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 2,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromRight"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 2,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromStart"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 2,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createGuidelineFromTop"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createHorizontalChain"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createLayer"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createLeftBarrier"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createPlaceholder"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createRef"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createRefs"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createRightBarrier"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createStartBarrier"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createTopBarrier"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.helpers",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "ConstraintLayoutScope",
+          "referenceId": "reference.constraintlayout.helpers",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-helpers",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintLayoutScope.createVerticalChain"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintParentReference"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintReference"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintSetBuilder"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintVerticalAnchorReference"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintVerticalAnchorSide"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.ConstraintVerticalAnchorTarget"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.UiTreeBuilder.ConstraintLayout"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "integration",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.constraintSet"
         },
         {
@@ -5441,18 +6015,46 @@
       "entries": [
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "modifier",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.Modifier.constrain"
         },
         {
           "artifact": "viewcompose-constraintlayout-androidx",
+          "capabilityId": "constraintlayout.core",
           "kind": "modifier",
           "namespace": "com.viewcompose.constraintlayout",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.constraintlayout.core",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-constraintlayout-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-constraintlayout-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.constraintlayout-inline",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.constraintlayout.Modifier.constrainAs"
         },
         {
@@ -6562,7 +7164,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 140,
+    "ownedEntryCount": 183,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }
