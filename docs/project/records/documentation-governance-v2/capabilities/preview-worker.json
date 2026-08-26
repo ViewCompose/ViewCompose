@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "capability_id": "preview.worker",
+  "kind": "host",
+  "owner": { "kind": "module", "id": "viewcompose-preview-worker-host" },
+  "artifact": "viewcompose-preview-worker-host",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha03" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.preview.worker.PreviewWorkerHost", "kind": "type", "visibility": "public", "source": "viewcompose-preview-worker-host/src/main/kotlin/com/viewcompose/preview/worker/PreviewWorkerHost.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.preview.worker", "generated": true },
+  "sample_owner": { "sample_id": "module.preview-worker-execute" },
+  "document_owners": { "module": ["module.viewcompose-preview-worker-host"] }
+}

@@ -9,6 +9,7 @@ import com.viewcompose.preview.tooling.PreviewProtocolJson
 import com.viewcompose.preview.tooling.PreviewRenderRequest
 import com.viewcompose.preview.tooling.PreviewVariant
 
+// DOCS_REGION_START(preview-configuration-matrix)
 fun previewConfigurationMatrixSample(): List<PreviewVariant> {
     return PreviewConfigurationMatrix(
         axes = listOf(
@@ -17,7 +18,9 @@ fun previewConfigurationMatrixSample(): List<PreviewVariant> {
         ),
     ).variants()
 }
+// DOCS_REGION_END(preview-configuration-matrix)
 
+// DOCS_REGION_START(preview-protocol-round-trip)
 fun previewProtocolRoundTripSample(): PreviewRenderRequest {
     val variant = PreviewVariant(
         id = "phone-light",
@@ -44,3 +47,4 @@ fun previewProtocolRoundTripSample(): PreviewRenderRequest {
     )
     return PreviewProtocolJson.decodeRequest(PreviewProtocolJson.encodeRequest(request))
 }
+// DOCS_REGION_END(preview-protocol-round-trip)

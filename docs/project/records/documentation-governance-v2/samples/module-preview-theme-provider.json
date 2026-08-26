@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.preview-theme-provider",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "preview.integration",
+  "document_ids": ["module.viewcompose-preview", "tooling.preview"],
+  "version_lane": "released",
+  "source": "viewcompose-preview/src/test/samples/com/viewcompose/preview/samples/PreviewSamples.kt",
+  "region": "preview-theme-provider",
+  "build_target": ":viewcompose-preview:compileDebugUnitTestKotlin"
+}

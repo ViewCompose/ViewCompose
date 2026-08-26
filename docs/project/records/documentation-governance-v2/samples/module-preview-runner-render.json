@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.preview-runner-render",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "preview.runner",
+  "document_ids": ["module.viewcompose-preview-runner"],
+  "version_lane": "released",
+  "source": "viewcompose-preview-runner/src/test/samples/com/viewcompose/preview/runner/samples/PreviewRunnerSamples.kt",
+  "region": "preview-runner-render",
+  "build_target": ":viewcompose-preview-runner:compileDebugUnitTestKotlin"
+}

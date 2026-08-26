@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.preview-worker-execute",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "preview.worker",
+  "document_ids": ["module.viewcompose-preview-worker-host"],
+  "version_lane": "released",
+  "source": "viewcompose-preview-worker-host/src/test/samples/com/viewcompose/preview/worker/samples/PreviewWorkerHostSamples.kt",
+  "region": "preview-worker-execute",
+  "build_target": ":viewcompose-preview-worker-host:compileTestKotlin"
+}

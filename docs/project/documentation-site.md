@@ -420,6 +420,16 @@ identity token.
   behavior, or budget. This observation reuses existing ConstraintLayout correctness, device,
   visual, and performance evidence and makes no new runtime claim.
 
+- **2026-08-26, Governance V2 Preview tooling local acceptance:** the hard cut retained the
+  tooling and five module routes, registered all 62 public Preview entries and nine compiled sample
+  decisions, removed repeated protocol and device-inspector prose, and reduced Governance V2 debt
+  from 468 to 390. The complete evidence-bearing build audited 454 pages, produced 48,647,612
+  non-API bytes, left 530,602 bytes under the unchanged limit, and completed Docusaurus in
+  `27.8 s`. The result is **improved**: structured ownership and compiled workflow coverage
+  increased while generated output decreased, without changing the website stack, routes,
+  framework behavior, or budget. This observation reuses existing protocol, runner,
+  device-diagnostic, and Paparazzi evidence and makes no new runtime, visual, or performance claim.
+
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and
   moving the generated quality report outside the deploy tree reduced it to 49,175,712 bytes,

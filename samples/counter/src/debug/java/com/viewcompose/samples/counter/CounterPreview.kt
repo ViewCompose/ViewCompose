@@ -9,6 +9,7 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  *
  * @receiver DSL tree builder supplied by the static preview runner.
  */
+// DOCS_REGION_START(preview-entry)
 @ViewComposePreview(
     name = "Counter · Light",
     group = "Samples/Getting started",
@@ -21,3 +22,4 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
 fun UiTreeBuilder.CounterPreview() {
     CounterScreen()
 }
+// DOCS_REGION_END(preview-entry)

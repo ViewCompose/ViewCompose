@@ -6330,437 +6330,1305 @@
       "entries": [
         {
           "artifact": "viewcompose-preview",
+          "capabilityId": "preview.integration",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview",
           "overloadCount": 1,
+          "referenceId": "reference.preview.integration",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-compose-bridge",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.PreviewThemeResolution"
         },
         {
           "artifact": "viewcompose-preview",
+          "capabilityId": "preview.integration",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview",
           "overloadCount": 1,
+          "referenceId": "reference.preview.integration",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-compose-bridge",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.ViewComposePreview"
         },
         {
           "artifact": "viewcompose-preview",
+          "capabilityId": "preview.integration",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview",
           "overloadCount": 1,
+          "referenceId": "reference.preview.integration",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-compose-bridge",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.ViewComposePreviewOptions"
         },
         {
           "artifact": "viewcompose-preview",
+          "capabilityId": "preview.integration",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview",
           "overloadCount": 1,
+          "referenceId": "reference.preview.integration",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-compose-bridge",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.ViewComposePreviewWithRoot"
         },
         {
           "artifact": "viewcompose-preview",
+          "capabilityId": "preview.integration",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.host",
           "overloadCount": 1,
+          "referenceId": "reference.preview.integration",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-compose-bridge",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.host.ViewComposePreviewHost"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewArtifactLayout"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewArtifacts"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewBuildInput"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewBuildInputKind"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewBuildManifest"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewClippingState"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewCompositionLocal"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewCompositionSnapshot"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewConfiguration"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewConfigurationAxis"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewConfigurationMatrix"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewConfigurationOption"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewConfigurationOverride"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewConfigurationPresets"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewDefaults"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewDescriptor"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewDescriptorCatalog"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewDiagnostic"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewDiagnosticSeverity"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewFontScales"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewJvmEntryPoint"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewLayoutBounds"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewLayoutDiagnostic"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewLayoutDiagnosticKind"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewLayoutDirection"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewLightDark"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewLtrRtl"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewNativeViewNode"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewNodeBindingStats"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewPatchRecord"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewPhaseTiming"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewPhoneTablet"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewProtocolJson"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewRecomposeScope"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewRenderRequest"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewRenderResponse"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewRenderSnapshot"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewRenderStats"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewRenderStatus"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewRenderStructure"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewRenderTreeNode"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewSourceCallSite"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewSourceLocation"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewTheme"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewVariant"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewWorkerBatchCommand"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.PreviewWorkerCommand"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.ViewComposePreview"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
           "receiver": "ViewComposePreview",
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.ViewComposePreview.toPreviewConfiguration"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.protocol",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.protocol",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-core-protocol",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.ViewComposePreviewProtocol"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.ViewComposePreviewThemeProvider"
         },
         {
           "artifact": "viewcompose-preview-core",
+          "capabilityId": "preview.core.annotations",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.tooling",
           "overloadCount": 1,
+          "referenceId": "reference.preview.core.annotations",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-core/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tooling.preview-entry",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.tooling.ViewComposePreviews"
         },
         {
           "artifact": "viewcompose-preview-gradle-plugin",
+          "capabilityId": "preview.gradle",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.gradle",
           "overloadCount": 1,
+          "referenceId": "reference.preview.gradle",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-gradle-plugin",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-gradle-plugin/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-gradle-apply",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.gradle.ViewComposePreviewGradlePlugin"
         },
         {
           "artifact": "viewcompose-preview-runner",
+          "capabilityId": "preview.runner",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.runner",
           "overloadCount": 1,
+          "referenceId": "reference.preview.runner",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-runner",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-runner/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-runner-render",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.runner.PreviewAndroidContextFactory"
         },
         {
           "artifact": "viewcompose-preview-runner",
+          "capabilityId": "preview.runner",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.runner",
           "overloadCount": 1,
+          "referenceId": "reference.preview.runner",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-runner",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-runner/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-runner-render",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.runner.PreviewEntryResolutionResult"
         },
         {
           "artifact": "viewcompose-preview-runner",
+          "capabilityId": "preview.runner",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.runner",
           "overloadCount": 1,
+          "referenceId": "reference.preview.runner",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-runner",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-runner/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-runner-render",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.runner.PreviewJvmEntryPointResolver"
         },
         {
           "artifact": "viewcompose-preview-worker-host",
+          "capabilityId": "preview.worker",
           "kind": "tooling",
           "namespace": "com.viewcompose.preview.worker",
           "overloadCount": 1,
+          "referenceId": "reference.preview.worker",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview-worker-host",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview-worker-host/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-worker-execute",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.preview.worker.PreviewWorkerHost"
         }
       ],
@@ -7164,7 +8032,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 183,
+    "ownedEntryCount": 245,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }

@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "capability_id": "preview.integration",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-preview" },
+  "artifact": "viewcompose-preview",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.preview.PreviewThemeResolution", "kind": "type", "visibility": "public", "source": "viewcompose-preview/src/main/java/com/viewcompose/preview/PreviewThemeProvider.kt" },
+    { "symbol_id": "com.viewcompose.preview.ViewComposePreview", "kind": "function", "visibility": "public", "source": "viewcompose-preview/src/main/java/com/viewcompose/preview/ViewComposePreviewApi.kt" },
+    { "symbol_id": "com.viewcompose.preview.ViewComposePreviewOptions", "kind": "type", "visibility": "public", "source": "viewcompose-preview/src/main/java/com/viewcompose/preview/ViewComposePreviewApi.kt" },
+    { "symbol_id": "com.viewcompose.preview.ViewComposePreviewWithRoot", "kind": "function", "visibility": "public", "source": "viewcompose-preview/src/main/java/com/viewcompose/preview/ViewComposePreviewApi.kt" },
+    { "symbol_id": "com.viewcompose.preview.host.ViewComposePreviewHost", "kind": "function", "visibility": "public", "source": "viewcompose-preview/src/main/java/com/viewcompose/preview/host/ViewComposePreviewHost.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.preview.integration", "generated": true },
+  "sample_owner": { "sample_id": "module.preview-compose-bridge" },
+  "document_owners": { "module": ["module.viewcompose-preview"] }
+}

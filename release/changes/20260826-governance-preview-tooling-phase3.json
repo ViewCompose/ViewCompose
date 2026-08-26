@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register compiled Preview tooling documentation regions and hard-cut duplicated Preview documentation without changing published artifacts.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-preview-core",
+      "reason": "The test API samples only add documentation-region boundary comments around unchanged functions; published source, signatures, bytecode behavior, metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-preview-gradle-plugin",
+      "reason": "The test API sample only adds documentation-region boundary comments around an unchanged function; published source, signatures, bytecode behavior, metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-preview-runner",
+      "reason": "The test API sample only adds documentation-region boundary comments around an unchanged function; published source, signatures, bytecode behavior, metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-preview-worker-host",
+      "reason": "The test API sample only adds documentation-region boundary comments around an unchanged function; published source, signatures, bytecode behavior, metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-preview",
+      "reason": "The test API samples only add documentation-region boundary comments around unchanged declarations; published source, signatures, bytecode behavior, metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

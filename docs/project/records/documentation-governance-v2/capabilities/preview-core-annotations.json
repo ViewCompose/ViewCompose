@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "capability_id": "preview.core.annotations",
+  "kind": "component",
+  "owner": { "kind": "module", "id": "viewcompose-preview-core" },
+  "artifact": "viewcompose-preview-core",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha03" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewConfiguration", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/PreviewConfiguration.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewConfigurationAxis", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/PreviewConfiguration.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewConfigurationMatrix", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/PreviewConfiguration.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewConfigurationOption", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/PreviewConfiguration.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewConfigurationOverride", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/PreviewConfiguration.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewConfigurationPresets", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/PreviewConfiguration.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewDefaults", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/PreviewConfiguration.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewLayoutDirection", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/PreviewConfiguration.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewTheme", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/PreviewConfiguration.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewVariant", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/PreviewConfiguration.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewFontScales", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/ViewComposeMultiPreviews.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewLightDark", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/ViewComposeMultiPreviews.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewLtrRtl", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/ViewComposeMultiPreviews.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.PreviewPhoneTablet", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/ViewComposeMultiPreviews.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.ViewComposePreview", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/ViewComposePreview.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.ViewComposePreview.toPreviewConfiguration", "kind": "extension", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/ViewComposePreview.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.ViewComposePreviews", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/ViewComposePreview.kt" },
+    { "symbol_id": "com.viewcompose.preview.tooling.ViewComposePreviewThemeProvider", "kind": "type", "visibility": "public", "source": "viewcompose-preview-core/src/main/kotlin/com/viewcompose/preview/tooling/ViewComposePreviewThemeProvider.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.preview.core.annotations", "generated": true },
+  "sample_owner": { "sample_id": "tooling.preview-entry" },
+  "document_owners": { "module": ["module.viewcompose-preview-core"] }
+}

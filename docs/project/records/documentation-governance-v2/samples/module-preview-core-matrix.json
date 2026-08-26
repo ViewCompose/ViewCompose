@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.preview-core-matrix",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "preview.core.annotations",
+  "document_ids": ["module.viewcompose-preview-core"],
+  "version_lane": "released",
+  "source": "viewcompose-preview-core/src/test/samples/com/viewcompose/preview/tooling/samples/PreviewCoreSamples.kt",
+  "region": "preview-configuration-matrix",
+  "build_target": ":viewcompose-preview-core:compileTestKotlin"
+}
