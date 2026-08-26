@@ -44,6 +44,7 @@ internal data class PullRequestImpactPlan(
     val fullFallbackReasons: List<String>,
     val gateFamilies: Set<PullRequestGateFamily>,
     val directArtifacts: Set<String>,
+    val directProjects: Set<String>,
     val dependencyClosure: Set<String>,
     val reverseDependentClosure: Set<String>,
     val reasons: List<String>,
@@ -51,7 +52,7 @@ internal data class PullRequestImpactPlan(
 ) {
     fun toJson(): String = buildString {
         appendLine("{")
-        appendLine("  \"schemaVersion\": 1,")
+        appendLine("  \"schemaVersion\": 2,")
         appendLine("  \"baseRevision\": ${baseRevision.jsonString()},")
         appendLine("  \"headRevision\": ${headRevision.jsonString()},")
         appendLine("  \"changedFiles\": $changedFiles,")
@@ -62,6 +63,7 @@ internal data class PullRequestImpactPlan(
                 gateFamilies.map(PullRequestGateFamily::encoded).sorted().jsonArray() + ",",
         )
         appendLine("  \"directArtifacts\": ${directArtifacts.sorted().jsonArray()},")
+        appendLine("  \"directProjects\": ${directProjects.sorted().jsonArray()},")
         appendLine("  \"dependencyClosure\": ${dependencyClosure.sorted().jsonArray()},")
         appendLine(
             "  \"reverseDependentClosure\": ${reverseDependentClosure.sorted().jsonArray()},",
@@ -107,6 +109,7 @@ internal data class PullRequestImpactPlan(
         appendLine("### Artifact impact")
         appendLine()
         appendMarkdownValues("Direct", directArtifacts)
+        appendMarkdownValues("Non-published projects", directProjects)
         appendMarkdownValues("Dependencies", dependencyClosure)
         appendMarkdownValues("Reverse dependents", reverseDependentClosure)
         appendLine()
@@ -124,6 +127,11 @@ internal data class PullRequestImpactPlan(
         appendLine("qa_preview=${workflows.qaPreview}")
         appendLine("documentation=${workflows.documentation}")
         appendLine("full_fallback=$fullFallback")
+        appendLine("gate_families=${gateFamilies.map(PullRequestGateFamily::encoded).sorted().csv()}")
+        appendLine("direct_artifacts=${directArtifacts.sorted().csv()}")
+        appendLine("direct_projects=${directProjects.sorted().csv()}")
+        appendLine("dependency_closure=${dependencyClosure.sorted().csv()}")
+        appendLine("reverse_dependent_closure=${reverseDependentClosure.sorted().csv()}")
     }
 
     private fun StringBuilder.appendMarkdownValues(label: String, values: Set<String>) {
@@ -221,6 +229,7 @@ internal object PullRequestArtifactGraph {
 }
 
 internal object PullRequestImpactPlanner {
+    private val appendOnlyChangeset = Regex("^release/changes/[^/]+\\.json$")
     private val fullGateFamilies = PullRequestGateFamily.values().toSet()
     private val previewArtifacts = setOf(
         "viewcompose-graphics",
@@ -250,6 +259,7 @@ internal object PullRequestImpactPlanner {
         val reasons = linkedSetOf<String>()
         val gates = linkedSetOf<PullRequestGateFamily>()
         val directArtifacts = linkedSetOf<String>()
+        val directProjects = linkedSetOf<String>()
 
         if (eventName != "pull_request") {
             fullReasons += "event:$eventName"
@@ -267,6 +277,11 @@ internal object PullRequestImpactPlanner {
         changes.forEach { change ->
             change.paths.forEach pathLoop@{ path ->
                 val normalized = path.normalizeRepositoryPath()
+                if (change.status == 'A' && appendOnlyChangeset.matches(normalized)) {
+                    gates += PullRequestGateFamily.ReleaseIntent
+                    reasons += "$normalized -> append-only-changeset"
+                    return@pathLoop
+                }
                 policy.alwaysFullPattern(normalized)?.let { pattern ->
                     fullReasons += "always-full:$pattern:$normalized"
                     return@pathLoop
@@ -291,21 +306,34 @@ internal object PullRequestImpactPlanner {
                         reasons += "$normalized -> website"
                     }
                     normalized.startsWith("app/") -> {
+                        directProjects += ":app"
                         gates += PullRequestGateFamily.Demo
                         gates += PullRequestGateFamily.ModuleVerification
                         reasons += "$normalized -> demo"
                     }
                     normalized.startsWith("samples/") -> {
+                        when {
+                            normalized.startsWith("samples/counter/") ->
+                                directProjects += ":samples:counter"
+                            normalized.startsWith("samples/tutorials/") ->
+                                directProjects += ":samples:tutorials"
+                            else -> directProjects += setOf(
+                                ":samples:counter",
+                                ":samples:tutorials",
+                            )
+                        }
                         gates += PullRequestGateFamily.DocumentationGovernance
                         gates += PullRequestGateFamily.Samples
                         reasons += "$normalized -> sample"
                     }
                     normalized.startsWith("integration-tests/") -> {
+                        directProjects += ":integration-tests:paging-presenter"
                         gates += PullRequestGateFamily.IntegrationTests
                         gates += PullRequestGateFamily.ModuleVerification
                         reasons += "$normalized -> integration-test"
                     }
                     normalized.startsWith("viewcompose-benchmark/") -> {
+                        directProjects += ":viewcompose-benchmark"
                         gates += PullRequestGateFamily.DeviceAndBenchmark
                         gates += PullRequestGateFamily.ModuleVerification
                         reasons += "$normalized -> benchmark"
@@ -365,6 +393,7 @@ internal object PullRequestImpactPlanner {
             fullFallbackReasons = fullReasons.sorted(),
             gateFamilies = gates,
             directArtifacts = directArtifacts,
+            directProjects = directProjects,
             dependencyClosure = dependencyClosure,
             reverseDependentClosure = reverseDependentClosure,
             reasons = reasons.sorted(),
@@ -584,3 +613,5 @@ private fun String.jsonString(): String = buildString {
 
 private fun Iterable<String>.jsonArray(): String =
     joinToString(prefix = "[", postfix = "]") { value -> value.jsonString() }
+
+private fun Iterable<String>.csv(): String = joinToString(",")

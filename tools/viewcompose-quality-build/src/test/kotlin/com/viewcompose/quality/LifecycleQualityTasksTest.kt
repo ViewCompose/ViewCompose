@@ -23,6 +23,10 @@ class LifecycleQualityTasksTest {
         project.pluginManager.apply(ViewComposeQualityRootPlugin::class.java)
 
         assertLifecycleTask(
+            project.tasks.getByName("qaAffected"),
+            "Run the graph-validated affected Gradle candidate before complete shadow verification.",
+        )
+        assertLifecycleTask(
             project.tasks.getByName("qaQuick"),
             "Run compile + unit-test quality gate for all core modules.",
         )

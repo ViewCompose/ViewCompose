@@ -4,7 +4,8 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.register
 
 /** Registers the stable repository lifecycle entry points without owning their gate bodies. */
-internal fun Project.registerLifecycleQualityTasks() {
+internal fun Project.registerLifecycleQualityTasks(extension: ViewComposeQualityExtension) {
+    registerAffectedVerificationTask(extension)
     tasks.register("qaQuick") {
         group = "verification"
         description = "Run compile + unit-test quality gate for all core modules."

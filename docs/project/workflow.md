@@ -122,19 +122,19 @@ Pull-request workflows first run the standalone `planPullRequestImpact` entry po
 `tools/viewcompose-quality-build`; this configures only that included build, not the Android
 multi-project build. The classifier reads the exact base-to-head Git diff, the publishing artifact
 catalog, the dependency contract, and the frozen full-fallback policy. Its JSON and job summary list
-selected gate families, direct artifacts, transitive dependencies, reverse dependents, reasons,
-workflow selection, and full-fallback status. Documentation and website-only changes can skip
-Android child work. Module production changes select release, API-documentation, documentation,
-module, and any graph-reachable Preview gates; module test, Demo, sample, integration, and benchmark
-paths retain their explicit families. More than 300 changed paths, an unknown path, a sensitive
-shared input, a non-pull-request event, an empty diff, or the `full-verification` pull-request label
-selects every current workflow.
+selected gate families, direct artifacts and non-published projects, transitive dependencies,
+reverse dependents, reasons, workflow selection, and full-fallback status. Documentation and
+website-only changes can skip Android child work. Module production changes select release,
+API-documentation, documentation, module, and any graph-reachable Preview gates; module test, Demo,
+sample, integration, and benchmark paths retain their explicit families and project ownership.
+More than 300 changed paths, an unknown path, a sensitive shared input, a non-pull-request event,
+an empty diff, or the `full-verification` pull-request label selects every current workflow.
 
-Phase 3 deliberately keeps the frozen `release/**` policy conservative. Therefore a compliant
-published-production pull request that also adds its required `release/changes/*.json` file still
-selects complete verification, even though the plan reports the exact direct and graph closures.
-Phase 5 may separate append-only Changeset ownership from sensitive registry/tooling paths only
-after shadow comparison proves that the narrower result never misses a full-gate failure.
+An added `release/changes/*.json` file is classified as append-only release intent and can accompany
+an otherwise scoped production change. Modifying, deleting, copying, or renaming a Changeset still
+selects complete verification, as do release registries and release tooling. This is a hard
+separation between immutable intent additions and mutable release infrastructure; it is not a
+general relaxation of `release/**`.
 
 The branch-protection contexts remain exactly `qaQuick` and `Build documentation`; `qaPreview` is
 visible but is not currently a required context. Each visible context is an `always()` result facade:
@@ -154,10 +154,30 @@ language, and translation checks run once through `verifyDocumentationStructure`
 site catalog once, then calls the prepared type-check and build entry points to avoid repeating npm
 prebuild hooks.
 
-When selected, GitHub Actions runs the complete `qaQuick` task with a 4 GiB Gradle heap and at most
-two workers. Release R8, lint, and documentation generation otherwise compete inside the hosted
-runner's default 2 GiB heap. This is only a CI resource envelope: it does not split, retry, or waive
-selected task work, and the project-wide local Gradle default remains unchanged.
+During the Phase 5 shadow period, a scoped `qaQuick` selection first runs `qaAffected` with a 4 GiB
+Gradle heap and at most two workers. The root build independently reconstructs the current
+`api`/`implementation`/`compileOnly`/`runtimeOnly` project graph, rejects any classifier closure
+drift, and selects compile plus unit-test tasks from the configured projects rather than an artifact
+task list. Demo, sample, integration-test, and benchmark ownership selects its project-specific
+tasks; local Maven publication is included only for sample consumers. Documentation and Preview
+remain owned by their independently visible workflows.
+
+The same job then runs complete `qaQuick` under the same resource envelope. Both outcomes must
+succeed; a selective success followed by a complete failure, or a selective-only failure, blocks
+the pull request and is a classifier defect. `main`, manual runs, and every full-fallback pull
+request skip the candidate and run only complete `qaQuick`. This shadow contract collects correctness
+evidence before any required-path latency reduction and does not change the project-wide local
+Gradle default.
+
+The 2026-08-26 local acceptance used one real historical Paging diff. `qaAffected` selected 39 task
+paths across one direct and ten dependency artifacts and passed in `2 min 6 s` (215 actionable;
+188 executed and 27 up-to-date). Complete `qaQuick` then passed in `8 min 5 s` (2,342 actionable;
+2,096 executed and 246 up-to-date), so candidate duration was `74.0%` lower and the local
+execution-work conclusion is **improved**. Both outcomes matched. This is not rollout latency
+proof: it is one developer-machine sample, both paths inherited local caches, and the candidate ran
+first and partially warmed the complete gate. Hosted latency therefore remains **inconclusive**;
+keep the complete shadow until the Phase 6 change-class corpus satisfies the plan's observation
+and correctness criteria.
 
 `qaFull` adds the application, Counter sample, and tutorial connected tests to `qaQuick`. Every
 repository `connectedDebugAndroidTest` entry first runs `verifyConnectedAndroidDeviceReady`. The

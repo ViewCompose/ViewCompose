@@ -164,6 +164,7 @@ class ViewComposeQualityRootPluginTest {
             assertTrue(project.tasks.getByName(taskName) is Exec)
         }
         listOf(
+            "qaAffected",
             "qaQuick",
             "qaFull",
             "qaRelease",
