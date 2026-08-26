@@ -217,7 +217,10 @@ The selected child computes the immutable generator and complete-history fingerp
 restoring `website/generated/api`. Pull requests use restore-only access; only a successful `main`
 child may save a cache. The primary key is unique per run so a verified recovery can supersede a
 corrupt archive, while ordered restore prefixes first select the same complete fingerprint and then
-the most recent cache produced by the same generator. A restore is never trusted by key alone: the
+the most recent cache produced by the same generator. Because the generator fingerprint includes
+the actual Java and Node runtimes, the workflow pins their complete distribution versions instead
+of floating major selectors; changing either version is an explicit cache migration. A restore is
+never trusted by key alone: the
 assembler verifies every revision group and publishes hit, partial, miss, recovery, generated-group,
 invalid-group, parallelism, and duration telemetry in the job summary. The source/language/
 translation gate runs once, the catalog is generated once, and CI then uses prepared type-check and
@@ -290,7 +293,11 @@ identity token.
   reduction. The immutable-cache conclusion is **improved**. That hot run exposed one separate
   limitation: versioned manual generation had implicitly relied on cold API reconstruction to fetch
   otherwise unreachable frozen commits. The generator now resolves every unique full SHA before
-  reading snapshots; the next action is a complete hosted hot-path rerun through the site build.
+  reading snapshots. The first correction run then selected Temurin `17.0.20+1` while the seed used
+  `17.0.20+8`; its correctly different generator fingerprint caused a cold `1175.9 s` reconstruction,
+  after which catalog generation and the complete site build passed. The workflow now pins
+  Temurin `17.0.20+8` and Node `24.19.0`; the next action is a complete hosted hot-path rerun through
+  the site build.
 
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and

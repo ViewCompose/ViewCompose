@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 25867329f7b55dc1df6041eda91df515442aeaf8395276d64645f68774261f59
+translation_source_hash: 43a465b8a3351a6db663dbafb4bcacc68f95166a27f4882fb90365294ba02d1c
 translation_status: current
 ---
 
@@ -166,7 +166,9 @@ alpha、beta、RC、snapshot、preview、development 和 EAP 不得成为 `lates
 已选文档子任务会在恢复 `website/generated/api` 前计算不可变生成器指纹和完整历史指纹。PR 只读
 缓存，只有成功的 `main` 子任务可以写入。主键按运行唯一，因此损坏恢复后可以用同一指纹的新键替代
 旧归档；有序恢复前缀先匹配同一完整指纹，再匹配同一生成器产生的最新缓存。任何恢复都不能只凭键
-名信任：装配器逐组验证，并在 Job Summary 输出 hit、partial、miss、recovery、生成组、无效组、
+名信任。由于生成器指纹包含实际 Java 与 Node runtime，工作流固定它们的完整发行版本，而不使用
+浮动 major selector；变更任一版本都属于显式缓存迁移。装配器逐组验证，并在 Job Summary 输出
+hit、partial、miss、recovery、生成组、无效组、
 并行度和耗时。源码/语言/翻译门禁只运行一次，目录只生成一次，随后 CI 调用 prepared type-check 与
 站点构建入口，避免 npm 生命周期钩子重复同一批预构建工作。缓存服务恢复或保存失败时会降级为完整
 生成或跳过写入，不会绕过校验器，也不会阻断原本有效的 Pages 产物。
@@ -218,8 +220,10 @@ identity token。
   缓存进入索引后，`main` 精确复跑在 `7 s` 内恢复缓存，校验并复用 `5/5` 组，生成组和无效组均为
   零，装配耗时 `5.7 s`，完整 API 步骤耗时 `2 min 9 s`，减少 `89.8%`。不可变缓存结论为
   **improved**。该热运行同时暴露了独立限制：版本化手册生成曾隐式依赖冷 API 重建来获取其他路径
-  不可达的冻结提交。生成器现会在读取快照前解析每个唯一完整 SHA；下一步是让完整托管热路径通过
-  站点构建。
+  不可达的冻结提交。生成器现会在读取快照前解析每个唯一完整 SHA。首次修正运行选中了 Temurin
+  `17.0.20+1`，而种子缓存使用 `17.0.20+8`；正确产生的不同生成器指纹触发了 `1175.9 s` 冷重建，
+  随后的目录生成与完整站点构建均通过。工作流现固定 Temurin `17.0.20+8` 与 Node `24.19.0`；
+  下一步是让完整托管热路径通过站点构建。
 
 - **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
   上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量

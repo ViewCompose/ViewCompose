@@ -233,6 +233,10 @@ The cache fingerprint must cover at least:
 - Gradle wrapper, Java/Dokka-relevant versions, and API assembly/verification scripts; and
 - working-tree source and build inputs for unpublished artifacts.
 
+The workflow must pin the complete Java and Node distribution versions covered by the fingerprint.
+Floating major selectors are forbidden because two runners may otherwise produce different
+generator fingerprints for the same repository inputs.
+
 Pull requests restore only exact default-branch entries and never write a broadly reusable cache.
 After restoration, the existing complete manifest, route, alias, and source-link verification still
 runs. A missing, corrupt, partial, or mismatched entry falls back automatically to full generation.
@@ -629,7 +633,12 @@ invalid groups in `5.7 s`, and completed the API step in `2 min 9 s` (`89.8%` lo
 exposed a separate cold-path side-effect dependency: the versioned-manual generator assumed API
 reconstruction had already fetched unreachable frozen revisions. The generator now resolves each
 unique exact SHA itself before reading snapshots. Phase 4 remains open only until this correction
-passes the complete hosted hot path.
+passes the complete hosted hot path. The first correction run also proved that floating JDK major
+selection was unsound: Temurin `17.0.20+1` differed from the seed's `17.0.20+8`, so the actual-runtime
+fingerprint correctly forced a cold `1175.9 s` reconstruction. Catalog generation and the complete
+site build passed, but this did not exercise the hot path. Documentation CI now pins Temurin
+`17.0.20+8` and Node `24.19.0`; the next hosted run must restore the existing `+8` seed and pass the
+same catalog path before the phase closes.
 
 ### Phase 5: execute affected Gradle verification
 
