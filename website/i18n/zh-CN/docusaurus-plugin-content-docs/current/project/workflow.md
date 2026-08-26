@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: e4106a7ebeb3a0edb7a54b20a36d56e78b71f8d513fffa3a2271914ffadc52a3
+translation_source_hash: 78cdccf8b7e3b3f08ae16dff8a414a9e454c678a3ae0a91e49d2eaf006fe1004
 translation_status: current
 ---
 
@@ -173,6 +173,18 @@ up-to-date）；完整 `qaQuick` 随后以 `8 分 5 秒` 通过（2,342 个 acti
 一致。但这不能证明上线后的延迟收益：它只有一个开发机样本，两条路径都继承了本地缓存，而且
 候选先运行并部分预热了完整门禁。因此，托管环境延迟仍为**结论不足**；在 Phase 6 分变更类别
 样本满足计划的观察与正确性条件前，继续保留完整影子对照。
+
+PR #173 提供了该实现的第一份托管全量回退验收。候选按预期跳过，完整 `qaQuick` 以 `19 分 37 秒`
+通过，`qaPreview` 为 `8 分 41 秒`，文档工作为 `5 分 12 秒`，所有结果门面均通过。相对紧邻的已验收
+PR，`qaQuick` 变化 `-0.17%`，`qaPreview` 变化 `-0.19%`，两者均为**无实质变化**。文档耗时变化
+`-14.8%`，但不可变缓存状态和输入不同，因此延迟结果为**结论不足**。一个全量回退样本可以证明
+行为正确，不能代表分布；下一步仍是收集各类范围可收敛变更的观察数据。
+
+所有调用 Gradle 的工作流都由 `gradle/actions/setup-gradle` 单独负责 Gradle User Home 缓存。
+`actions/setup-java` 只安装所需 JDK，不再另行缓存 Gradle。每个 `setup-gradle` 都显式设置
+`cache-read-only`：除仓库默认分支外的任何 ref 只能恢复缓存，PR 和非默认分支不能写入，只有默认
+分支 Job 可以写入。禁止再增加并行的 `actions/cache` Gradle Home 缓存，也不得恢复 `setup-java`
+的 `cache: gradle`；是否采用 Gradle Build Cache 或 Configuration Cache，必须分别测量并验收。
 
 `qaFull` 在 `qaQuick` 基础上增加应用、Counter sample 和教程的连接设备测试。仓库内每个
 `connectedDebugAndroidTest` 入口会先运行 `verifyConnectedAndroidDeviceReady`。前置检查要求：未通过

@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Resume pull-request gate Phase 3 impact classification on the stabilized Governance V2 and Reference inputs.
+next_action: Begin Phase 3 content reclassification and use its scoped pull requests as gate-scaling Phase 6 observations.
 maven_release_changesets: []
 ---
 
@@ -45,8 +45,10 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: resume Phase 3 pull-request impact classification in the coordinated gate-scaling
-plan. Final Reference link closure remains owned by this plan after the Phase 3 content owners move.
+Next action: begin this plan's Phase 3 content reclassification. Pull-request gate scaling Phases 3
+through 5 are complete, so these scoped content changes also supply the gate plan's Phase 6 shadow
+observation corpus. Final Reference link closure remains owned by this plan after the Phase 3
+content owners move.
 
 ## Maven release changesets
 
@@ -284,7 +286,8 @@ documentation caching. The cross-plan order is normative:
 3. the pull-request gate plan creates the quality included build and extracts existing gates;
 4. this plan completes Phase 0B, Phase 1, and Phase 2 directly in that included build;
 5. the generated-reference engine from Phase 4 lands before the broad Phase 3 content moves;
-6. the pull-request gate plan completes classification, API caching, and affected verification;
+6. the pull-request gate plan completes classification, API caching, and affected verification
+   (completed on 2026-08-26);
 7. this plan performs Phase 3 content reclassification, then Phases 5 and 6; and
 8. those content pull requests supply the gate plan's observation corpus before both plans close.
 

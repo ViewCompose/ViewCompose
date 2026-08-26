@@ -179,6 +179,22 @@ first and partially warmed the complete gate. Hosted latency therefore remains *
 keep the complete shadow until the Phase 6 change-class corpus satisfies the plan's observation
 and correctness criteria.
 
+Pull request #173 supplied the first hosted full-fallback acceptance for this implementation. The
+candidate correctly skipped, complete `qaQuick` passed in `19 min 37 s`, `qaPreview` in `8 min 41
+s`, and documentation work in `5 min 12 s`; all facades passed. Relative to the immediately
+preceding accepted pull request, `qaQuick` changed by `-0.17%` and `qaPreview` by `-0.19%`, both
+**no material change**. Documentation changed by `-14.8%`, but different immutable-cache state and
+inputs make that latency result **inconclusive**. One full-fallback sample proves the behavior but
+not a distribution; the next action remains collection of scoped change-class observations.
+
+`gradle/actions/setup-gradle` is the sole owner of Gradle User Home caching in every workflow that
+invokes Gradle. `actions/setup-java` installs the required JDK but does not separately cache
+Gradle. Every `setup-gradle` use explicitly sets `cache-read-only` for any ref other than the
+repository default branch: pull requests and non-default branches can restore entries, while only
+default-branch jobs may write them. Do not add a parallel `actions/cache` Gradle-home entry or
+restore `setup-java` `cache: gradle`; optional Gradle build-cache and configuration-cache adoption
+requires separate measured acceptance.
+
 `qaFull` adds the application, Counter sample, and tutorial connected tests to `qaQuick`. Every
 repository `connectedDebugAndroidTest` entry first runs `verifyConnectedAndroidDeviceReady`. The
 preflight requires exactly one online device unless `ANDROID_SERIAL` selects one, completed boot,

@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-26
-next_action: Merge the locally accepted Phase 5 shadow infrastructure, then begin hosted observation.
+next_action: Merge Phase 6 cache ownership cleanup, then benchmark optional Gradle caches separately while collecting hosted shadow evidence.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -36,14 +36,15 @@ maven_release_changesets:
 
 ## Status
 
-Active. Phases 0 through 4 are complete. Phase 5 affected-Gradle verification is implemented and
-locally accepted; merge and hosted shadow evidence remain.
+Active. Phases 0 through 5 are complete. Phase 6 operational stabilization and hosted observation
+are in progress.
 
 Last verified: 2026-08-26.
 
-Next action: merge the locally accepted Phase 5 shadow infrastructure, then begin the hosted
-observation window. The Phase 0 task-graph fixtures remain the immutable pre-extraction comparator
-rather than being rewritten for later intentional gates.
+Next action: merge the Phase 6 Gradle-cache ownership cleanup, then benchmark build-cache and
+configuration-cache adoption separately while Governance V2 Phase 3 changes supply hosted shadow
+observations. The Phase 0 task-graph fixtures remain the immutable pre-extraction comparator rather
+than being rewritten for later intentional gates.
 
 ## Maven release changesets
 
@@ -74,6 +75,9 @@ changes only repository quality-build implementation, workflow orchestration, an
 documentation. It changes no published artifact, publication input, or compiled public sample;
 release-intent verification again detects zero release artifacts, ignored artifacts, or shared
 publication paths, so Phase 5 also adds no Maven Changeset.
+Phase 6 cache-ownership and observation work changes only repository workflows and active project
+documentation. It does not change a published artifact, publication input, or compiled public
+sample, so it likewise adds no Maven Changeset.
 
 ## Objective
 
@@ -283,8 +287,8 @@ Governance V2 plan.
 | 2 | extraction of architecture, purity, Demo, documentation, device, and benchmark gates | root script contains no long verifier bodies; isolated tests pass | Complete |
 | 3 | conservative PR classifier and required-result facade | synthetic diff matrix and branch-protection scenarios pass | Complete |
 | 4 | immutable API cache and deduplicated site verification | hit, miss, corruption, tooling-change, and unpublished-source cases pass | Complete |
-| 5 | affected-module `qaQuick` execution and selective `qaPreview` | dependency/reverse-dependency golden graph and full fallback pass | In progress |
-| 6 | cache-provider cleanup, CI observation, budgets, documentation, and archive | latency and correctness acceptance criteria hold for observation window | Not started |
+| 5 | affected-module `qaQuick` execution and selective `qaPreview` | dependency/reverse-dependency golden graph and full fallback pass | Complete |
+| 6 | cache-provider cleanup, CI observation, budgets, documentation, and archive | latency and correctness acceptance criteria hold for observation window | In progress |
 
 ### Phase 0: freeze contracts and collect evidence
 
@@ -674,6 +678,20 @@ caches. Therefore hosted latency remains **inconclusive** until the Phase 6 corp
 the next action is to merge the shadow infrastructure and observe scoped pull requests without
 removing the complete required-path comparison.
 
+Pull request #173 supplied the hosted full-fallback acceptance on 2026-08-26. Because it changed
+the classifier, quality build, and CI workflow, the planner selected complete fallback and the
+affected candidate was skipped exactly as required. Complete `qaQuick` passed in `19 min 37 s`,
+`qaPreview` passed in `8 min 41 s`, and complete documentation work passed in `5 min 12 s`; every
+required facade also passed and the pull request merged as `a7e94e8e`. Against the immediately
+preceding accepted pull-request baseline, `qaQuick` changed from `19 min 39 s` to `19 min 37 s`
+(`-0.17%`) and `qaPreview` from `8 min 42 s` to `8 min 41 s` (`-0.19%`), both **no material
+change**. Documentation changed from `6 min 6 s` to `5 min 12 s` (`-14.8%`), but immutable-cache
+state and changed inputs differ, so its latency conclusion is **inconclusive**. This proves the
+hosted full-fallback and result-facade path without weakening existing checks. Together with the
+local real-history scoped comparison and graph-closure fixtures, the correctness conclusion is
+**improved** and Phase 5 is complete. The single full-fallback sample is the limitation; scoped
+hosted latency and correctness frequency remain Phase 6 observations, not Phase 5 rollout claims.
+
 ### Phase 6: stabilize operations and close the plan
 
 1. Remove `cache: gradle` from JDK setup when `gradle/actions/setup-gradle` owns Gradle User Home
@@ -687,6 +705,15 @@ removing the complete required-path comparison.
 5. Update remaining English and Simplified Chinese documentation, move durable decisions out of
    this plan, and archive it. The `qaPreview` required-check documentation/configuration mismatch
    was already resolved in Phase 3.
+
+The first Phase 6 slice assigns Gradle User Home caching exclusively to
+`gradle/actions/setup-gradle`. It removes every `actions/setup-java` `cache: gradle` declaration
+from CI, documentation, Preview, and Demo APK jobs and makes every `setup-gradle` use explicitly
+read-only outside the repository default branch. This preserves deliberate default-branch writes,
+prevents pull-request cache writes, and removes two cache implementations from the same Gradle
+home. Workflow regression coverage rejects either duplicate ownership or an implicit write policy.
+Hosted acceptance of this slice is pending; build-cache and configuration-cache adoption remain
+separate measured decisions rather than being bundled into the ownership cleanup.
 
 ## Validation matrix
 
