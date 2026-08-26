@@ -1,3 +1,44 @@
+---
+schema_version: 2
+document_id: architecture.overlay-root-selection
+doc_type: architecture
+owner:
+  kind: capability
+  id: overlay.android-transport
+version_lane: released
+capability_ids:
+  - overlay.foundation
+  - overlay.anchor
+  - overlay.host-defaults
+  - overlay.android-transport
+  - overlay.material3
+  - overlay.oneui7
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-ui-contract
+  - viewcompose-host-android
+  - viewcompose-overlay-android
+  - viewcompose-overlay-material3-android
+  - viewcompose-overlay-oneui7-android
+sample_ids:
+  - tutorial.overlays
+  - module.overlay-android-dependency
+  - module.overlay-material3-dependency
+  - module.overlay-oneui7-dependency
+invariants:
+  - Overlay transport and presenter selection is explicit per attached render root and never depends on process-global classpath order.
+  - UI Foundation owns requests, session identity, queue policy, and captured content without Android or design-system dependencies.
+  - The neutral Android host owns Dialog, PopupWindow, Toast, nested sessions, anchor observation, and cleanup but never substitutes a design-system presenter.
+  - Delayed overlay content retains the immutable design-system and integration snapshot captured by its declaring render session.
+evidence:
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/overlay/OverlayHostTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/overlay/TransientFeedbackOverlayHostTest.kt
+  - viewcompose-host-android/src/test/java/com/viewcompose/host/android/overlay/AndroidOverlayHostDefaultsTest.kt
+  - viewcompose-overlay-android/src/test/java/com/viewcompose/overlay/android/AndroidOverlayHostTest.kt
+  - viewcompose-overlay-material3-android/src/test/java/com/viewcompose/overlay/material3/android/host/AndroidOverlayHostAttributionTest.kt
+  - viewcompose-overlay-oneui7-android/src/test/java/com/viewcompose/overlay/oneui7/android/host/AndroidOverlayHostAttributionTest.kt
+---
+
 # ADR-0006: Root-scoped overlay backend selection
 
 - Status: Accepted

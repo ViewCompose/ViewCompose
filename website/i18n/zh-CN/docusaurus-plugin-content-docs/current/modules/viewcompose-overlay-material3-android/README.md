@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-material3-android/README.md
-translation_source_hash: 5e86f2c99e16ea3a8cd8304a0159c6507f2cea01ba14322bf699f3181e33c58a
+translation_source_hash: 978bf3a71ed60da17fd7cf11e1bfe1f0681a9439ddce73e2a37187eb2f50c475
 translation_status: current
 ---
 
@@ -13,6 +13,7 @@ Components Snackbar 与模态 Bottom Sheet Presenter。它不负责通用 Dialog
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="overlay-material3-dependency" sample_id="module.overlay-material3-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01")

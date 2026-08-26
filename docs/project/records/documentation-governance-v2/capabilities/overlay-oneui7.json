@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "capability_id": "overlay.oneui7",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-overlay-oneui7-android" },
+  "artifact": "viewcompose-overlay-oneui7-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.overlay.oneui7.android.host.AndroidOverlayHost", "kind": "type", "visibility": "public", "source": "viewcompose-overlay-oneui7-android/src/main/java/com/viewcompose/overlay/oneui7/android/host/AndroidOverlayHost.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.overlay.oneui7", "generated": true },
+  "sample_owner": { "sample_id": "module.overlay-oneui7-dependency" },
+  "document_owners": {
+    "guide": ["guide.overlay-presentation"],
+    "architecture": ["architecture.overlay-root-selection"],
+    "module": ["module.viewcompose-overlay-oneui7-android"]
+  }
+}

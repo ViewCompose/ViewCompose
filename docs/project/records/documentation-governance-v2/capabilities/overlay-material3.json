@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "capability_id": "overlay.material3",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-overlay-material3-android" },
+  "artifact": "viewcompose-overlay-material3-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.overlay.material3.android.host.AndroidOverlayHost", "kind": "type", "visibility": "public", "source": "viewcompose-overlay-material3-android/src/main/java/com/viewcompose/overlay/material3/android/host/AndroidOverlayHost.kt" },
+    { "symbol_id": "com.viewcompose.overlay.material3.android.presenter.AndroidModalBottomSheetPresenter", "kind": "type", "visibility": "public", "source": "viewcompose-overlay-material3-android/src/main/java/com/viewcompose/overlay/material3/android/presenter/AndroidModalBottomSheetPresenter.kt" },
+    { "symbol_id": "com.viewcompose.overlay.material3.android.presenter.AndroidSnackbarOverlayPresenter", "kind": "type", "visibility": "public", "source": "viewcompose-overlay-material3-android/src/main/java/com/viewcompose/overlay/material3/android/presenter/AndroidTransientFeedbackPresenters.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.overlay.material3", "generated": true },
+  "sample_owner": { "sample_id": "module.overlay-material3-dependency" },
+  "document_owners": {
+    "tutorial": ["tutorial.overlays"],
+    "guide": ["guide.overlay-presentation"],
+    "architecture": ["architecture.overlay-root-selection"],
+    "module": ["module.viewcompose-overlay-material3-android"]
+  }
+}

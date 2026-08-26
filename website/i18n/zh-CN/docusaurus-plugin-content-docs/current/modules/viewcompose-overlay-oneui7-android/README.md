@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-oneui7-android/README.md
-translation_source_hash: d48e8945a09486533eeb7277ea2b7812d5db579512fa790523cd704cab0747c1
+translation_source_hash: c450c4972f24c091ce4df38e511de67d3fadea730dccd1b62d5d3db492898572
 translation_status: current
 ---
 
@@ -14,6 +14,7 @@ ViewCompose 自有的 One UI Snackbar、底部对话框 Presenter 组合起来�
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="overlay-oneui7-dependency" sample_id="module.overlay-oneui7-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
@@ -38,28 +39,10 @@ Ownership、主线程约束、清理、Token 快照和 Attribution 契约。
 ## 显式 One UI Root 装配
 
 One UI 不需要在原生 View 创建前解析特定主题的 Android `Context`，因此应用继续使用中立
-`setUiContent`，只显式选择 Overlay Adapter：
-
-```kotlin
-private lateinit var overlayIntegrations: List<UiIntegrationAttribution>
-
-val tokens = OneUi7ThemeDefaults.light()
-setUiContent(
-    overlayHostFactory = { root ->
-        AndroidOverlayHost(root, tokens).also { host ->
-            overlayIntegrations = host.integrationAttribution
-        }
-    },
-) {
-    OneUi7Theme(tokens, integrations = overlayIntegrations) {
-        AppContent()
-    }
-}
-```
-
-把 Host 的 `integrationAttribution` 传给 `OneUi7Theme` 是有意的契约。未安装 Adapter 时，主题
-会把 Overlay 能力报告为 `Unsupported`；安装后只升级当前 Root 实际拥有的能力。仅把产物放入
-Classpath 不会改变行为。
+`setUiContent`，并传入显式 `overlayHostFactory`，用当前 `OneUi7ThemeDefaults` Token 快照构造
+本模块的 `AndroidOverlayHost`。把 Host 的 `integrationAttribution` 传回 `OneUi7Theme`；未安装
+Adapter 时，主题会把 Overlay 能力报告为 `Unsupported`，安装后只升级当前 Root 实际拥有的能力。
+仅把产物放入 Classpath 不会改变行为。
 
 ## Presenter 行为
 

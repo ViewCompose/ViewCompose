@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-android/README.md
-translation_source_hash: 2152c104619c26364cbe1c3d6c75e5f39243a1e637febf8699ef647fb5fbab9b
+translation_source_hash: 6b3a3b064c6d5e67c56d5273e639b572f95ba07c0f474e1ad7d6a5984ccca2bd
 translation_status: current
 ---
 
@@ -16,6 +16,7 @@ Overlay Runtime。
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="overlay-android-dependency" sample_id="module.overlay-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-overlay-android:0.1.0-alpha04")

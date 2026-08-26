@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "tutorial.overlays-dependencies",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "overlay.material3",
+  "document_ids": [
+    "tutorial.overlays"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "overlays-dependencies",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

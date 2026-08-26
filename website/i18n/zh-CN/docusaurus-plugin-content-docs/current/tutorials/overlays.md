@@ -2,7 +2,7 @@
 title: 使用 Overlay
 sidebar_position: 9
 translation_source: tutorials/overlays.md
-translation_source_hash: 357436db439ad1a6b46ff86b07562e60d41edd78da2b7a8ffecedeb7a34aa101
+translation_source_hash: 194ef8c844733e01222d19af430e1c2beff5dec4700f1eca4a3ccb04212f7f0c
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ translation_status: current
 
 本页可以独立使用。显示对话框必须引入单独的 Android Overlay 宿主产物：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="overlays-dependencies" sample_id="tutorial.overlays-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 

@@ -1722,10 +1722,34 @@
       "entries": [
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "overlay.foundation",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.overlay.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.overlays",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.AlertDialog"
         },
         {
@@ -1754,10 +1778,34 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "overlay.foundation",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.overlay.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.overlays",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Dialog"
         },
         {
@@ -1770,34 +1818,130 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "overlay.foundation",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.overlay.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.overlays",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ModalBottomSheet"
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "overlay.foundation",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.overlay.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.overlays",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.PlainTooltip"
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "overlay.foundation",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.overlay.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.overlays",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Popup"
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "overlay.foundation",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.overlay.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.overlays",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideAlertDialogOverrides"
         },
         {
@@ -1826,26 +1970,98 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "overlay.foundation",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.overlay.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.overlays",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideModalBottomSheetOverrides"
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "overlay.foundation",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.overlay.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.overlays",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Snackbar"
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "overlay.foundation",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.overlay.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.overlays",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Toast"
         }
       ],
@@ -3415,52 +3631,250 @@
         },
         {
           "artifact": "viewcompose-overlay-android",
+          "capabilityId": "overlay.android-transport",
           "kind": "integration",
           "namespace": "com.viewcompose.overlay.android",
           "overloadCount": 1,
+          "referenceId": "reference.overlay.android-transport",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            },
+            {
+              "documentId": "module.viewcompose-overlay-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-overlay-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.overlay-android-dependency",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.overlay.android.AndroidOverlayHost"
         },
         {
           "artifact": "viewcompose-overlay-android",
+          "capabilityId": "overlay.android-transport",
           "kind": "integration",
           "namespace": "com.viewcompose.overlay.android",
           "overloadCount": 1,
+          "referenceId": "reference.overlay.android-transport",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            },
+            {
+              "documentId": "module.viewcompose-overlay-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-overlay-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.overlay-android-dependency",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.overlay.android.AndroidOverlayHostFactoryProvider"
         },
         {
           "artifact": "viewcompose-overlay-android",
+          "capabilityId": "overlay.android-transport",
           "kind": "integration",
           "namespace": "com.viewcompose.overlay.android",
           "overloadCount": 1,
           "receiver": "ViewGroup",
+          "referenceId": "reference.overlay.android-transport",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            },
+            {
+              "documentId": "module.viewcompose-overlay-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-overlay-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.overlay-android-dependency",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.overlay.android.ViewGroup.asOverlayRenderContainerHandle"
         },
         {
           "artifact": "viewcompose-overlay-material3-android",
+          "capabilityId": "overlay.material3",
           "kind": "integration",
           "namespace": "com.viewcompose.overlay.material3.android.host",
           "overloadCount": 1,
+          "referenceId": "reference.overlay.material3",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            },
+            {
+              "documentId": "module.viewcompose-overlay-material3-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-overlay-material3-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.overlay-material3-dependency",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.overlay.material3.android.host.AndroidOverlayHost"
         },
         {
           "artifact": "viewcompose-overlay-material3-android",
+          "capabilityId": "overlay.material3",
           "kind": "integration",
           "namespace": "com.viewcompose.overlay.material3.android.presenter",
           "overloadCount": 1,
+          "referenceId": "reference.overlay.material3",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            },
+            {
+              "documentId": "module.viewcompose-overlay-material3-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-overlay-material3-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.overlay-material3-dependency",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.overlay.material3.android.presenter.AndroidModalBottomSheetPresenter"
         },
         {
           "artifact": "viewcompose-overlay-material3-android",
+          "capabilityId": "overlay.material3",
           "kind": "integration",
           "namespace": "com.viewcompose.overlay.material3.android.presenter",
           "overloadCount": 1,
+          "referenceId": "reference.overlay.material3",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            },
+            {
+              "documentId": "module.viewcompose-overlay-material3-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-overlay-material3-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.overlay-material3-dependency",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.overlay.material3.android.presenter.AndroidSnackbarOverlayPresenter"
         },
         {
           "artifact": "viewcompose-overlay-oneui7-android",
+          "capabilityId": "overlay.oneui7",
           "kind": "integration",
           "namespace": "com.viewcompose.overlay.oneui7.android.host",
           "overloadCount": 1,
+          "referenceId": "reference.overlay.oneui7",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            },
+            {
+              "documentId": "module.viewcompose-overlay-oneui7-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-overlay-oneui7-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.overlay-oneui7-dependency",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.overlay.oneui7.android.host.AndroidOverlayHost"
         },
         {
@@ -4302,9 +4716,23 @@
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "overlay.host-defaults",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.overlay",
           "overloadCount": 1,
+          "referenceId": "reference.overlay.host-defaults",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.overlay-android-dependency",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.overlay.AndroidOverlayHostDefaults"
         },
         {
@@ -4878,10 +5306,29 @@
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "overlay.anchor",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.overlay.anchor",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.overlay-dropdown-menu",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.overlayAnchor"
         },
         {
@@ -4918,18 +5365,66 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "overlay.foundation",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.overlay.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.overlays",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.DropdownMenu"
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "overlay.foundation",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.overlay.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.overlays",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.DropdownMenuItem"
         },
         {
@@ -4974,10 +5469,34 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "overlay.foundation",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.overlay.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.overlays",
+              "documentType": "tutorial",
+              "path": "/tutorials/overlays"
+            },
+            {
+              "documentId": "guide.overlay-presentation",
+              "documentType": "guide",
+              "path": "/guides/overlays"
+            },
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.overlays",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideOverlayHost"
         },
         {
@@ -5108,7 +5627,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 64,
+    "ownedEntryCount": 85,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }

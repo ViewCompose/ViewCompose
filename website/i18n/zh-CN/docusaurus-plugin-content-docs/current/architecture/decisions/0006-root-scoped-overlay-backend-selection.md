@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0006-root-scoped-overlay-backend-selection.md
-translation_source_hash: e18ba2d9cd73b4be8115ca63993e8e8dda1cf00620b5a0bdaae7e8fa8616d9ac
+translation_source_hash: 8a87ae55c610301121b17b93c185ca76b925ed9f4c7816e8d86d35865caae6e0
 translation_status: current
 ---
 
