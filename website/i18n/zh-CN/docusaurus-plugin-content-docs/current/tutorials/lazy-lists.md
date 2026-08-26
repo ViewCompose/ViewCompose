@@ -1,8 +1,6 @@
 ---
-title: 使用 Lazy 列表
-sidebar_position: 6
 translation_source: tutorials/lazy-lists.md
-translation_source_hash: c6394a27c2401162b0012be34350d94e1010ec42987b4f30057515ec9be77bd4
+translation_source_hash: daa3cc74a12a0e1b864fdd8a0ccf303dee843f80243b68aefcf20346d379e6db
 translation_status: current
 ---
 
@@ -12,6 +10,7 @@ translation_status: current
 
 本页可以独立使用。`LazyColumn` 位于 `viewcompose-ui-foundation`，不需要额外的集合产物：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="lazy-collections-dependencies" sample_id="tutorial.lazy-collections-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -75,3 +74,4 @@ class LazyListsTutorialActivity : ComponentActivity() {
 ```
 
 只有测量结果表明默认预取和缓存不足时，才需要查看[调整 Lazy 列表性能](./lazy-list-performance.md)。
+状态控制、自适应网格与 Pager 用法见[Lazy 集合指南](../guides/lazy-collections.md)。

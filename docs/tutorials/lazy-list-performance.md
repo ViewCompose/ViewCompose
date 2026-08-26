@@ -1,6 +1,22 @@
 ---
-title: Tune lazy-list performance
-sidebar_position: 13
+schema_version: 2
+document_id: tutorial.lazy-list-performance
+doc_type: tutorial
+owner:
+  kind: capability
+  id: lazy.collections
+version_lane: released
+capability_ids:
+  - lazy.collections
+artifact_ids:
+  - viewcompose-material3-android
+  - viewcompose-ui-foundation
+  - viewcompose-ui-contract
+sample_ids:
+  - tutorial.lazy-list-performance
+  - tutorial.lazy-collections-dependencies
+expected_result: A keyed 500-row list with explicit bounded prefetch and mounted-tree reuse policies ready for same-device comparison against defaults.
+verification_action: Profile the default and configured variants from the same release build on one device and keep the policy only when frame time improves within the memory budget.
 ---
 
 # Tune lazy-list performance
@@ -10,6 +26,7 @@ sidebar_position: 13
 This page is standalone. Collection policies are part of the base UI contract; no optional
 performance artifact is required:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="lazy-collections-dependencies" sample_id="tutorial.lazy-collections-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -76,6 +93,11 @@ pools retain only empty holder shells. The mounted-tree cache retains reset phys
 `contentType` and releases them deterministically on eviction. `contentRevision` does define item
 semantics: when a captured non-State value changes, its revision must change too. Measure before
 increasing either cache because larger values consume more memory.
+
+If a stable parent recomposes often and selector scans appear in the profile, introduce a remembered
+`LazyItemsSnapshot` at the application's immutable data boundary. It is not a general replacement
+for an ordinary list: creating a new snapshot on every composition still performs the scan, while
+retaining one after ordinary data or captures change is incorrect.
 
 ## Verify the result
 

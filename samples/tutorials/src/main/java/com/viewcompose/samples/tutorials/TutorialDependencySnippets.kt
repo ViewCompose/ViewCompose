@@ -52,3 +52,15 @@ dependencies {
 }
     // DOCS_REGION_END(text-input-dependencies)
 }
+
+private val lazyCollectionsTutorialDependencies = run {
+    // DOCS_REGION_START(lazy-collections-dependencies)
+repositories { mavenCentral() }
+
+dependencies {
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("androidx.activity:activity:1.12.4")
+    implementation("com.google.android.material:material:1.13.0")
+}
+    // DOCS_REGION_END(lazy-collections-dependencies)
+}

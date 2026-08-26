@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: b0a720b0a7f9334b7370e3198edb75c5953236fbef9b3fd34f6b7c2c167b48a9
+translation_source_hash: 8ba2f4d8b550b4330fd4fa722e19c9bf05fb4340e957993cdcd07666b708ea00
 translation_status: current
 ---
 
@@ -37,6 +37,7 @@ GitHub 托管文档站点的内容边界。
 - [导航运行时架构](./architecture/navigation.md)
 - [主题运行时架构](./architecture/theming.md)
 - [文本输入运行时架构](./architecture/text-input.md)
+- [Lazy 集合运行时架构](./architecture/lazy-collections.md)
 - [多设计系统架构与接入标准](./architecture/design-systems.md)
 - [架构决策](https://docs.viewcompose.com/architecture/decisions)
 - [Modifier 模型](https://docs.viewcompose.com/architecture/modifier)
@@ -64,7 +65,7 @@ GitHub 托管文档站点的内容边界。
 - [为一个子树覆盖主题 token](./guides/theming-local-overrides.md)
 - [编辑、校验与提交文本](./guides/text-input.md)
 - [使用富文本与外部文本内容](./guides/text-input-rich-text.md)
-- [Lazy 集合](https://docs.viewcompose.com/guides/lazy-collections)
+- [选择并控制 Lazy 集合](./guides/lazy-collections.md)
 - [焦点和输入](https://docs.viewcompose.com/guides/focus-and-input)
 - [嵌套滚动](https://docs.viewcompose.com/guides/nested-scroll)
 - [配置可上线的导航宿主](https://docs.viewcompose.com/guides/navigation)

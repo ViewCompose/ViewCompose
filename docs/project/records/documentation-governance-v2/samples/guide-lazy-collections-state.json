@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "guide.lazy-collections-state",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "lazy.collections",
+  "document_ids": [
+    "guide.lazy-collections"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LazyCollectionsGuideSamples.kt",
+  "region": "lazy-collections-state",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}
