@@ -17,6 +17,7 @@ import com.viewcompose.ui.foundation.RenderDiagnostics
 import com.viewcompose.ui.foundation.UiThemeDefaults
 
 /** Supplies the same application theme to native Views and the ViewCompose DSL tree. */
+// DOCS_REGION_START(preview-theme-provider)
 @ViewComposePreviewThemeProvider
 object ApplicationPreviewThemeProvider : PreviewThemeProvider {
     override fun resolve(
@@ -30,6 +31,7 @@ object ApplicationPreviewThemeProvider : PreviewThemeProvider {
         return PreviewThemeResolution(context = context, tokens = tokens)
     }
 }
+// DOCS_REGION_END(preview-theme-provider)
 
 /** Resolves a preview theme without retaining the configuration context. */
 fun applicationPreviewThemeProviderSample(
@@ -40,6 +42,7 @@ fun applicationPreviewThemeProviderSample(
 }
 
 /** Uses the convenient Compose Preview bridge for a root-independent DSL tree. */
+// DOCS_REGION_START(preview-compose-bridge)
 @Preview
 @Composable
 fun composePreviewBridgeSample() {
@@ -55,6 +58,7 @@ fun composePreviewBridgeSample() {
         Text("ViewCompose")
     }
 }
+// DOCS_REGION_END(preview-compose-bridge)
 
 /** Uses the bridge-owned Android root as an interop input without retaining it. */
 @Preview

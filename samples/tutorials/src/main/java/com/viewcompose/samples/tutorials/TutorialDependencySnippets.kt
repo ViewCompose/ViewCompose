@@ -6,6 +6,16 @@ private class TutorialRepositoryHandler {
 
 private class TutorialDependencyHandler {
     fun implementation(coordinate: String) = coordinate
+    fun debugImplementation(coordinate: String) = coordinate
+    fun add(configuration: String, coordinate: String) = configuration to coordinate
+}
+
+private class TutorialPluginSpec(private val id: String) {
+    infix fun version(version: String) = id to version
+}
+
+private class TutorialPluginHandler {
+    fun id(id: String) = TutorialPluginSpec(id)
 }
 
 private fun repositories(content: TutorialRepositoryHandler.() -> Unit) {
@@ -14,6 +24,10 @@ private fun repositories(content: TutorialRepositoryHandler.() -> Unit) {
 
 private fun dependencies(content: TutorialDependencyHandler.() -> Unit) {
     TutorialDependencyHandler().content()
+}
+
+private fun plugins(content: TutorialPluginHandler.() -> Unit) {
+    TutorialPluginHandler().content()
 }
 
 private val navigationTutorialDependencies = run {
@@ -158,4 +172,24 @@ dependencies {
     implementation("com.viewcompose:viewcompose-constraintlayout-androidx:0.1.0-alpha01")
 }
     // DOCS_REGION_END(constraintlayout-dependency)
+}
+
+private val previewNativeInstall = run {
+    // DOCS_REGION_START(preview-native-install)
+plugins {
+    id("com.viewcompose.preview") version "0.1.0-alpha03"
+}
+
+dependencies {
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha03")
+    add(
+        "viewComposePreviewWorkerHost",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha03",
+    )
+    add(
+        "viewComposePreviewRunner",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04",
+    )
+}
+    // DOCS_REGION_END(preview-native-install)
 }

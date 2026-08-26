@@ -1,96 +1,124 @@
+---
+schema_version: 2
+document_id: module.viewcompose-preview-core
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-preview-core
+version_lane: released
+capability_ids:
+  - preview.core.annotations
+  - preview.core.protocol
+artifact_ids:
+  - viewcompose-preview-core
+sample_ids:
+  - tooling.preview-entry
+  - module.preview-core-matrix
+  - module.preview-core-protocol
+coordinate: com.viewcompose:viewcompose-preview-core:0.1.0-alpha03
+minimal_usage_sample_id: tooling.preview-entry
+---
+
 # Preview Core
 
-`viewcompose-preview-core` defines the platform-neutral annotation, configuration, discovery, render,
-worker, and diagnostic protocols shared by ViewCompose's Gradle plugin, Layoutlib workers, Android
-Studio plugin, tests, and CI. It contains no Android or IDE runtime dependency.
+`viewcompose-preview-core` is the JVM-only contract shared by preview annotations, Gradle discovery,
+the Layoutlib runner and worker, Android Studio, tests, and CI. Add
+`com.viewcompose:viewcompose-preview-core:0.1.0-alpha03` to a debuggable or dedicated preview source
+set; the Gradle plugin strips root and composed preview annotations from non-debuggable output.
 
-## Artifact and stability
+## Entry and configuration contract
 
+`@ViewComposePreview` marks a public static JVM method that accepts exactly one `UiTreeBuilder`
+receiver or parameter and returns `Unit`. It is repeatable and supports source-visible custom
+multi-preview annotations. The built-ins cover light/dark, phone/tablet, LTR/RTL, and common font
+scales.
+
+{/* compiled-region source="samples/counter/src/debug/java/com/viewcompose/samples/counter/CounterPreview.kt" region="preview-entry" sample_id="tooling.preview-entry" build_target=":samples:counter:compileDebugKotlin" */}
 ```kotlin
-dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha03")
+@ViewComposePreview(
+    name = "Counter · Light",
+    group = "Samples/Getting started",
+)
+@ViewComposePreview(
+    name = "Counter · Dark",
+    group = "Samples/Getting started",
+    theme = PreviewTheme.Dark,
+)
+fun UiTreeBuilder.CounterPreview() {
+    CounterScreen()
 }
 ```
 
-- Stability: **Alpha**. Annotation source shape is established; the tooling wire protocol requires
-  exact version equality and may advance before stable.
-- Platform: JVM 11; protocol models are platform-neutral.
-- Kotlinx Serialization JSON is an API dependency because public protocol models carry
-  serialization metadata and `PreviewProtocolJson` is the supported wire-format codec.
-- Packaging: apply preview metadata to debuggable source sets. The ViewCompose preview Gradle plugin
-  removes it from non-debuggable Android output.
-- Boundary: this module does not load Android Views, Layoutlib, Gradle, or IDE classes.
+`PreviewConfiguration` deterministically owns viewport, density, font scale, locales, direction,
+theme, and optional API level. Matrix axes preserve declaration order; later axes win when several
+override the same field. IDs are validated lowercase cache/artifact identities.
 
-## Preview entry annotations
+{/* compiled-region source="viewcompose-preview-core/src/test/samples/com/viewcompose/preview/tooling/samples/PreviewCoreSamples.kt" region="preview-configuration-matrix" sample_id="module.preview-core-matrix" build_target=":viewcompose-preview-core:compileTestKotlin" */}
+```kotlin
+fun previewConfigurationMatrixSample(): List<PreviewVariant> {
+    return PreviewConfigurationMatrix(
+        axes = listOf(
+            PreviewConfigurationPresets.Theme,
+            PreviewConfigurationPresets.LayoutDirection,
+        ),
+    ).variants()
+}
+```
 
-`@ViewComposePreview` marks a top-level or static DSL function. The compiled method must be public
-and static, accept exactly one `UiTreeBuilder` receiver/parameter, and return `Unit`. Additional
-parameters remain unsupported even when Kotlin gives them default values, because the worker invokes
-the exact JVM method rather than Kotlin's synthetic default bridge.
+## Protocol and snapshot contract
 
-Annotations may repeat or be composed into custom multi-preview annotations. Built-ins cover
-light/dark, phone/tablet, LTR/RTL, and common font scales. Auto height (`-1`) begins with a reference
-viewport and grows within safety limits; use a positive height when clipping or scrolling is the
-behavior under test.
+The core model separates project bytecode from Layoutlib-compatible inputs, sorts inputs before
+SHA-256 fingerprinting, caps worker batches at eight sequential commands, requires unique response
+paths, and requires exact protocol-version equality. Filesystem paths remain opaque until the
+process responsible for access resolves and constrains them.
 
-## Deterministic configuration
+{/* compiled-region source="viewcompose-preview-core/src/test/samples/com/viewcompose/preview/tooling/samples/PreviewCoreSamples.kt" region="preview-protocol-round-trip" sample_id="module.preview-core-protocol" build_target=":viewcompose-preview-core:compileTestKotlin" */}
+```kotlin
+fun previewProtocolRoundTripSample(): PreviewRenderRequest {
+    val variant = PreviewVariant(
+        id = "phone-light",
+        displayName = "Phone / Light",
+        configuration = PreviewConfiguration(),
+    )
+    val request = PreviewRenderRequest(
+        requestId = "render-1",
+        descriptor = PreviewDescriptor(
+            id = "account-preview",
+            displayName = "Account preview",
+            entryPoint = PreviewJvmEntryPoint(
+                ownerClassName = "com.example.AccountPreviewsKt",
+                methodName = "accountPreview",
+                methodDescriptor = "(Lcom/viewcompose/ui/foundation/UiTreeBuilder;)V",
+            ),
+            variants = listOf(variant),
+        ),
+        variantId = variant.id,
+        modulePath = ":app",
+        buildVariant = "debug",
+        buildFingerprint = "0".repeat(64),
+        outputDirectory = "build/viewcompose-preview/account-preview/phone-light",
+    )
+    return PreviewProtocolJson.decodeRequest(PreviewProtocolJson.encodeRequest(request))
+}
+```
 
-`PreviewConfiguration` resolves width, height, density, font scale, locales, direction, application
-theme mode, and optional API level without consulting the host system. Configuration matrices form
-a deterministic Cartesian product. Axes and options preserve declaration order; later axes win if
-several override the same field.
+Failures cross process boundaries as structured diagnostics. Success requires an image artifact;
+timings use unique names and non-negative durations. Immutable snapshots contain only bounded,
+serializable structure, native bounds/properties, clipping, layout diagnostics, patches,
+composition information, and source call sites—never live Views, VNodes, class loaders, or
+exceptions. JSON writes defaults, omits explicit nulls, accepts additive unknown keys, and still
+validates identities and protocol compatibility.
 
-Stable IDs use lowercase ASCII words joined by `-`, with `__` reserved for matrix composition. They
-are validated before becoming cache keys or artifact paths.
+## Compatibility and verification
 
-## Build and worker protocol
+- Stability: **Alpha**; annotation shape is established, but the wire protocol may advance between
+  alpha lines.
+- Runtime: JVM 11, no Android, Gradle, Layoutlib, or IDE dependency.
+- Serialization JSON is an API dependency because protocol models and `PreviewProtocolJson` are
+  public.
+- Verify configuration ordering, protocol round trips, invalid-input rejection, deterministic
+  fingerprints, snapshot bounds, and old/new worker mismatch with `:viewcompose-preview-core:test`.
 
-The Gradle bridge exports a canonical `PreviewBuildManifest`, sorted build inputs, and lowercase
-SHA-256 fingerprints. Project bytecode is separated from Layoutlib-compatible inputs so a warm host
-can retain the expensive platform runtime while creating a fresh child class loader for each render.
-
-Worker batches contain at most eight commands and execute sequentially in one short-lived host.
-Response paths must be unique. This amortizes JVM startup without allowing mutable Layoutlib or
-application state to escape indefinitely.
-
-Protocol version checks require exact equality. Paths remain opaque strings across the boundary;
-the process that owns a filesystem operation is responsible for resolving and constraining them.
-
-## Responses and diagnostics
-
-Worker failures cross the boundary as structured response data. Successful responses require an
-image artifact; failures require at least one diagnostic. Optional phase timings use unique names
-and non-negative durations.
-
-Render snapshots deliberately contain only primitive, string, collection, and serializable protocol
-values. They expose VNode structure, native View bounds, clipping, common View properties, layout
-problems, patches, composition scopes, and source call sites without retaining runtime-owned Views,
-VNodes, class loaders, or exceptions.
-
-## JSON compatibility
-
-`PreviewProtocolJson` encodes defaults for deterministic artifacts, omits explicit nulls, and uses
-pretty output. Readers ignore unknown keys to permit additive fields, but still execute model
-validation and reject unsupported protocol versions or invalid identities.
-
-## Testing and operations
-
-- Treat protocol model changes as cross-process compatibility changes and update every producer and
-  consumer together.
-- Keep ordered inputs canonical before hashing; do not fingerprint nondeterministic collection order.
-- Validate annotation discovery against compiled JVM signatures, not Kotlin source appearance.
-- Bound externally supplied snapshot size and recursive structures in the consuming process.
-- Test protocol round trips, invalid input rejection, variant ordering, and old/new worker mismatch.
-
-## Related documentation
-
-- [Source documentation and API comment standard](../../project/api-documentation-quality.md)
-
-The complete generated reference is available in the
-[`viewcompose-preview-core` API tree](https://docs.viewcompose.com/api/viewcompose-preview-core/current/).
-
-## Compatibility notes
-
-The `0.1.0-alpha02` line uses protocol version 1, exact-version negotiation, deterministic JSON and
-fingerprints, bounded worker batches, auto-height configuration, application-owned theme providers,
-and source-aware render diagnostics. The wire format is not yet promised stable across alpha lines.
+See [ViewCompose Preview tooling](../../tooling/preview.md) for installation and the
+[generated API reference](https://docs.viewcompose.com/api/viewcompose-preview-core/current/) for
+the exhaustive symbol inventory.

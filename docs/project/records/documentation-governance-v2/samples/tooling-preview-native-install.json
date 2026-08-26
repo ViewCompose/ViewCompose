@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "tooling.preview-native-install",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "preview.gradle",
+  "document_ids": ["tooling.preview"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "preview-native-install",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

@@ -11,6 +11,7 @@ import com.viewcompose.preview.tooling.PreviewRenderRequest
 import com.viewcompose.preview.tooling.PreviewRenderResponse
 import com.viewcompose.preview.tooling.PreviewRenderSnapshot
 
+// DOCS_REGION_START(preview-runner-render)
 /** Resolves application bytecode and exports one static preview response. */
 fun renderCompiledPreviewSample(
     context: Context,
@@ -19,6 +20,7 @@ fun renderCompiledPreviewSample(
 ): PreviewRenderResponse {
     return StaticPreviewWorker().render(context, request, applicationClassLoader)
 }
+// DOCS_REGION_END(preview-runner-render)
 
 /** Renders a host-owned entry without reflective discovery. */
 fun renderResolvedPreviewSample(

@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "tooling.preview-entry",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "preview.core.annotations",
+  "document_ids": ["tooling.preview", "module.viewcompose-preview-core"],
+  "version_lane": "released",
+  "source": "samples/counter/src/debug/java/com/viewcompose/samples/counter/CounterPreview.kt",
+  "region": "preview-entry",
+  "build_target": ":samples:counter:compileDebugKotlin"
+}

@@ -1,103 +1,72 @@
+---
+schema_version: 2
+document_id: module.viewcompose-preview-gradle-plugin
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-preview-gradle-plugin
+version_lane: released
+capability_ids:
+  - preview.gradle
+artifact_ids:
+  - viewcompose-preview-gradle-plugin
+sample_ids:
+  - module.preview-gradle-apply
+  - tooling.preview-native-install
+coordinate: com.viewcompose:viewcompose-preview-gradle-plugin:0.1.0-alpha03
+minimal_usage_sample_id: module.preview-gradle-apply
+---
+
 # Preview Gradle Plugin
 
-`viewcompose-preview-gradle-plugin` connects Android Gradle Plugin variants to ViewCompose's static
-preview protocol. It discovers compiled preview entries, exports deterministic build inputs, plans
-content-addressed renders, launches isolated workers, and strips preview metadata from production
-artifacts.
+`viewcompose-preview-gradle-plugin` connects debuggable Android Gradle Plugin variants to the static
+preview protocol. The plugin ID is `com.viewcompose.preview`; version `0.1.0-alpha03` targets the AGP
+8.9 line and JDK 17 or newer for rendering.
 
-## Plugin and stability
-
+{/* compiled-region source="viewcompose-preview-gradle-plugin/src/test/samples/com/viewcompose/preview/gradle/samples/PreviewGradlePluginSamples.kt" region="preview-gradle-apply" sample_id="module.preview-gradle-apply" build_target=":viewcompose-preview-gradle-plugin:compileTestKotlin" */}
 ```kotlin
-plugins {
-    id("com.viewcompose.preview") version "0.1.0-alpha03"
-}
-
-dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha03")
+fun applyPreviewPluginSample(project: Project) {
+    project.pluginManager.apply("com.viewcompose.preview")
+    project.tasks.named("viewComposePreviewDescriptors")
 }
 ```
 
-- Stability: **Alpha**. Task names and protocol version 1 form the current tooling contract.
-- Build requirements: Android Gradle Plugin 8.9 line and JDK 17+ for rendering.
-- Scope: Android application and library projects.
-- Production boundary: non-debuggable variants retain no direct or composed ViewCompose preview
-  annotations in project bytecode.
+## Variant, discovery, and task contract
 
-## Android Studio companion plugin
-
-The Gradle plugin configures discovery and rendering but does not install an Android Studio user
-interface. For interactive previews, separately open **Settings | Plugins | Marketplace**, search
-for `ViewCompose Preview`, and install it. The IDE plugin supplies gutter actions, the preview tool
-window and gallery, incremental refresh, source navigation, and diagnostics; it then invokes the
-tasks and artifacts provided by this Gradle plugin.
-
-The IDE and Gradle plugins are independently versioned. See [ViewCompose Preview](../../tooling/preview.md)
-for the complete module dependencies, supported Android Studio line, and first preview entry.
-
-## Variant integration
-
-The plugin may be applied before or after the Android plugin. It configures a project once when an
-Android application or library plugin appears. Debuggable variants receive discovery, render, and
-fast-refresh tasks. Non-debuggable variants receive only ASM instrumentation that removes root
-preview annotations and custom meta-annotations while preserving unrelated annotations and frames.
-
-`viewComposePreviewDescriptors` aggregates descriptor export across debuggable variants. Variant
-task names follow Gradle's normal naming, for example `discoverDebugViewComposePreviews`,
-`renderDebugViewComposePreview`, and `refreshDebugViewComposePreview`.
-
-## Discovery and fingerprints
+The plugin may be applied before or after an Android application/library plugin and configures each
+project once. Debuggable variants receive discovery, render, and refresh tasks. Non-debuggable
+variants receive only bytecode instrumentation that removes root and composed preview annotations
+while preserving unrelated annotations and stack frames.
 
 Discovery scans compiled project directories and JARs without loading application classes into the
-Gradle daemon. Source roots supply navigation locations. Runtime/boot classpaths, manifests,
-resources, assets, resource packages, and project bytecode are canonicalized into sorted input
-groups and lowercase SHA-256 fingerprints.
+Gradle daemon. It combines source locations with canonical runtime/boot classpaths, manifests,
+resources, assets, resource packages, and project bytecode. One full fingerprint invalidates render
+output; a narrower Layoutlib compatibility fingerprint excludes reloadable project code so a warm
+worker can retain platform state while every render receives a fresh application class loader.
 
-The full input fingerprint invalidates render output. A narrower Layoutlib compatibility fingerprint
-excludes reloadable project classes, annotations, and sources so the worker can reuse platform
-state safely while giving every render a fresh application class loader. Manifest and catalog files
-are published atomically; unsupported entries become structured discovery diagnostics.
+`viewComposePreviewDescriptors` aggregates descriptor export. Variant tasks include
+`discoverDebugViewComposePreviews`, `renderDebugViewComposePreview`, and
+`refreshDebugViewComposePreview`. Single rendering selects one preview/variant; gallery rendering
+uses a target file. The modes are exclusive, batches are protocol-bounded, and response paths stay
+isolated. `--rerender=true` bypasses only the response cache.
 
-## Single and gallery rendering
+Fast refresh reuses the last complete discovery/resource baseline after source-only changes.
+Signature, resource, manifest, or dependency changes require full discovery. Missing or
+incompatible baselines request that full path instead of guessing. Content-addressed Layoutlib and
+resource-symbol inputs remain outside the application classpath; optional worker-reuse verification
+compares warm and cold pixels/structure.
 
-Single rendering selects `--preview-id` and optionally `--variant-id`. Gallery rendering selects a
-TSV `--preview-targets-file`; the options are mutually exclusive. Duplicate batch targets are
-rejected, worker batches are capped by the core protocol, and individual response files remain
-isolated.
+## IDE and operational boundary
 
-Successful responses are cached by request content. `--rerender=true` bypasses that response cache
-without discarding canonical build inputs. Single failures fail the Gradle task; batch failures are
-reported per target so other tiles can finish.
+The Gradle plugin does not install Android Studio UI. Install `ViewCompose Preview` from Marketplace
+separately for gutters, galleries, source navigation, refresh, and diagnostics. IDE and Gradle
+plugin versions are independent.
 
-## Fast refresh and worker reuse
+- Keep preview artifacts in debug/tooling configurations and run release builds to verify stripping.
+- Treat task input annotations and fingerprints as incremental-correctness contracts.
+- Use fast refresh only for known descriptors after source-only changes.
+- Run plugin unit/functional tests and worker-reuse verification when discovery, classpaths, or
+  Layoutlib compatibility inputs change.
 
-The refresh task depends only on source compilation and reuses the last complete discovery/resource
-baseline. It rescans current project bytecode, writes fast manifest/catalog artifacts, and uses the
-persisted render toolchain. Missing or incompatible baselines deliberately request full discovery
-instead of guessing.
-
-Layoutlib archives and generated resource-symbol classpaths are materialized content-addressably.
-The worker host stays outside the application classpath. Optional `--verify-worker-reuse=true`
-compares warm and cold render pixels/structure and fails when retained platform state changes output.
-
-## Testing and operations
-
-- Keep preview dependencies and theme providers in debug source sets.
-- Run release builds in CI to verify preview annotation stripping continuously.
-- Treat task input-annotation changes as incremental-build correctness changes.
-- Use worker-reuse verification when changing Layoutlib compatibility inputs or class-loader policy.
-- Prefer the fast refresh task for known descriptors after a source-only save; fall back to full
-  discovery after signature, resource, manifest, or dependency changes.
-
-## Related documentation
-
-- [Preview Core module](../viewcompose-preview-core/README.md)
-- [Source documentation and API comment standard](../../project/api-documentation-quality.md)
-
-The complete generated reference is available in the
-[`viewcompose-preview-gradle-plugin` API tree](https://docs.viewcompose.com/api/viewcompose-preview-gradle-plugin/current/).
-
-## Compatibility notes
-
-The `0.1.0-alpha02` line establishes compiled-bytecode discovery, deterministic grouped fingerprints,
-fast source refresh, bounded gallery batches, content-addressed artifacts, isolated workers, and
-non-debuggable annotation stripping. Task and protocol compatibility may still evolve before stable.
+See [Preview tooling](../../tooling/preview.md), [Preview Core](../viewcompose-preview-core/README.md),
+and the [generated API reference](https://docs.viewcompose.com/api/viewcompose-preview-gradle-plugin/current/).

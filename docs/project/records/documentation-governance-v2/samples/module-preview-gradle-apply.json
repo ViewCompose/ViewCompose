@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.preview-gradle-apply",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "preview.gradle",
+  "document_ids": ["module.viewcompose-preview-gradle-plugin"],
+  "version_lane": "released",
+  "source": "viewcompose-preview-gradle-plugin/src/test/samples/com/viewcompose/preview/gradle/samples/PreviewGradlePluginSamples.kt",
+  "region": "preview-gradle-apply",
+  "build_target": ":viewcompose-preview-gradle-plugin:compileTestKotlin"
+}

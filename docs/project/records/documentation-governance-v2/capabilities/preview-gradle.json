@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "capability_id": "preview.gradle",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-preview-gradle-plugin" },
+  "artifact": "viewcompose-preview-gradle-plugin",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha03" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.preview.gradle.ViewComposePreviewGradlePlugin", "kind": "type", "visibility": "public", "source": "viewcompose-preview-gradle-plugin/src/main/kotlin/com/viewcompose/preview/gradle/ViewComposePreviewGradlePlugin.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.preview.gradle", "generated": true },
+  "sample_owner": { "sample_id": "module.preview-gradle-apply" },
+  "document_owners": { "module": ["module.viewcompose-preview-gradle-plugin"] }
+}

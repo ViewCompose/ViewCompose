@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "capability_id": "preview.runner",
+  "kind": "host",
+  "owner": { "kind": "module", "id": "viewcompose-preview-runner" },
+  "artifact": "viewcompose-preview-runner",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.preview.runner.PreviewAndroidContextFactory", "kind": "type", "visibility": "public", "source": "viewcompose-preview-runner/src/main/java/com/viewcompose/preview/runner/PreviewAndroidContextFactory.kt" },
+    { "symbol_id": "com.viewcompose.preview.runner.PreviewEntryResolutionResult", "kind": "type", "visibility": "public", "source": "viewcompose-preview-runner/src/main/java/com/viewcompose/preview/runner/PreviewJvmEntryPointResolver.kt" },
+    { "symbol_id": "com.viewcompose.preview.runner.PreviewJvmEntryPointResolver", "kind": "type", "visibility": "public", "source": "viewcompose-preview-runner/src/main/java/com/viewcompose/preview/runner/PreviewJvmEntryPointResolver.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.preview.runner", "generated": true },
+  "sample_owner": { "sample_id": "module.preview-runner-render" },
+  "document_owners": { "module": ["module.viewcompose-preview-runner"] }
+}

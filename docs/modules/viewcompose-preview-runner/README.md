@@ -1,110 +1,73 @@
+---
+schema_version: 2
+document_id: module.viewcompose-preview-runner
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-preview-runner
+version_lane: released
+capability_ids:
+  - preview.runner
+artifact_ids:
+  - viewcompose-preview-runner
+sample_ids:
+  - module.preview-runner-render
+coordinate: com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04
+minimal_usage_sample_id: module.preview-runner-render
+---
+
 # Preview Runner
 
-`viewcompose-preview-runner` is the Android execution layer for deterministic ViewCompose static
-previews. It resolves compiled preview entry points, creates a preview-qualified Android context,
-mounts the DSL into a native View hierarchy, captures immutable image and diagnostic artifacts, and
-releases every frame-scoped owner after export.
+`viewcompose-preview-runner` is the Android execution layer for deterministic static previews. It is
+normally resolved by the Gradle plugin/worker host, not placed on an application runtime classpath.
+It supports Android API 24+ inside Layoutlib, Paparazzi, or another controlled host.
 
-## Artifact and stability
-
+{/* compiled-region source="viewcompose-preview-runner/src/test/samples/com/viewcompose/preview/runner/samples/PreviewRunnerSamples.kt" region="preview-runner-render" sample_id="module.preview-runner-render" build_target=":viewcompose-preview-runner:compileDebugUnitTestKotlin" */}
 ```kotlin
-dependencies {
-    implementation("com.viewcompose:viewcompose-preview-runner:0.1.0-alpha04")
+/** Resolves application bytecode and exports one static preview response. */
+fun renderCompiledPreviewSample(
+    context: Context,
+    request: PreviewRenderRequest,
+    applicationClassLoader: ClassLoader,
+): PreviewRenderResponse {
+    return StaticPreviewWorker().render(context, request, applicationClassLoader)
 }
 ```
 
-- Stability: **Alpha**. This is preview-tooling infrastructure rather than an application runtime
-  dependency.
-- Runtime: Android API 24 or newer inside a device host, Paparazzi, or the isolated Layoutlib worker.
-- Normal installation: the ViewCompose preview Gradle plugin and worker host resolve the runner;
-  application modules normally depend only on preview annotations.
-- Public API dependencies: preview-core supplies the protocol and `viewcompose-preview` supplies the
-  optional application theme-provider contract.
+## Execution and ownership
 
-## Execution pipeline
+`PreviewJvmEntryPointResolver` accepts one unambiguous public static JVM method with a single
+`UiTreeBuilder` receiver/parameter and `Unit` return. An application theme provider is constructed
+from Kotlin `INSTANCE` or a public no-argument constructor. `StaticPreviewRenderer.mount` verifies
+descriptor/API identity, resolves Android configuration and theme, installs lifecycle, ViewModel,
+saved-state, resource-environment, and theme owners, and lays out one native hierarchy.
 
-`PreviewJvmEntryPointResolver` loads the descriptor's owner through the supplied application class
-loader. A valid entry is one unambiguous public static JVM method with exactly one `UiTreeBuilder`
-receiver and a `Unit` return. An optional application theme provider is created from Kotlin's
-`INSTANCE` field or a public no-argument constructor.
+Every successful `StaticPreviewFrame` must be closed. Closing destroys all frame-scoped owners and
+providers; independent mounts do not share SDK state. A borrowed application class loader is not
+installed as the thread context loader and is never closed by the runner.
 
-`StaticPreviewRenderer.mount` then verifies descriptor and API-level identity, resolves the Android
-configuration and theme, installs lifecycle, ViewModel, saveable-state, environment, and theme
-owners, renders synchronously, and lays out the native hierarchy. The returned
-`StaticPreviewFrame` owns these resources and must be closed.
+The worker exports `preview.png` and `render-tree.json` with atomic replacement. The response records
+entry resolution, mount/layout, image export, and snapshot export timings. Expected discovery,
+theme, render, layout, capture, and export failures become structured responses; thread death and
+out-of-memory errors escape so the host can retire.
 
-The frame owner is installed in both `LocalLifecycleOwner` and `LocalSavedStateRegistryOwner`, so
-SDK adapter fallback paths use the same deterministic boundary as the rest of the frame. Closing
-the frame destroys the owner and providers; preview does not promise durable SDK state across
-independent mount requests.
+## Configuration, sizing, and diagnostics
 
-`StaticPreviewWorker` captures `preview.png` and `render-tree.json` into the request output
-directory. Temporary files are replaced atomically, so Gradle and Studio never consume partially
-written artifacts. The response records entry-resolution, mount/layout, image-export, and
-snapshot-export timings.
+`PreviewAndroidContextFactory` mirrors density, font scale, viewport, locale, direction, and
+light/dark mode into Android resources and `AndroidResourceEnvironment`, with observation disabled.
+An application `PreviewThemeProvider` is authoritative when present; otherwise the deterministic
+Android theme bridge disables dynamic color. Requested API level must match the worker.
 
-## Configuration and theme fidelity
+Fixed height uses the configured viewport. Auto height first lays out a real viewport and expands
+only root-growing scroll descendants, bounded by maximum dp height and a 16-megapixel capture
+budget. PNG capture is lossless. Immutable diagnostics include structure, native bounds, clipping,
+patches, composition and source locations without retaining runtime objects.
 
-`PreviewAndroidContextFactory` mirrors density, font scale, viewport dimensions, locales, layout
-direction, and light/dark mode into Android resources. The renderer installs the same values in
-`AndroidResourceEnvironment` with observation disabled, keeping native Views, resource lookup
-functions, qualifiers, Android View interop, and the DSL on one deterministic configuration. The
-preview descriptor owns replacement; no runtime configuration callback mutates a static frame.
+- Stability: **Alpha** tooling infrastructure; protocol compatibility belongs to Preview Core.
+- Close every mounted frame, including assertion-only tests.
+- Test fixed/auto height, nested scrollers, capture limits, RTL, locales, font scale, API matching,
+  application themes, and each failure phase with `:viewcompose-preview-runner:testDebugUnitTest`.
 
-When a descriptor names a `PreviewThemeProvider`, its context and `UiThemeTokens` are authoritative.
-Otherwise the Android theme bridge resolves the configured context with dynamic color disabled,
-making Studio, Gradle, and CI renders reproducible. The worker's Android API must exactly match a
-request that specifies an API level.
-
-## Sizing and capture
-
-Fixed-height requests are measured at the configured viewport. Auto-height requests first lay out a
-real viewport, then expand only scrollable descendants that grow with the root. Expansion is bounded
-by the shared maximum dp height and a 16-megapixel capture budget; warnings explain incomplete or
-budget-limited results.
-
-`AndroidBitmapCaptureBackend` draws a measured View into an ARGB bitmap and writes lossless PNG.
-Alternative hosts may implement `StaticPreviewCaptureBackend`, but the worker remains responsible
-for atomic artifact publication and response generation.
-
-## Diagnostics and source mapping
-
-The immutable snapshot contains render statistics, VNode and native View trees, patch records,
-composition scopes and invalidation reasons, source call sites, captured View properties, clipping
-state, and layout diagnostics. Runtime Views are not retained in the protocol model.
-
-The runner installs a Tree-level `RenderDiagnostics` root with the `Preview` role. It consumes the
-authoritative `RenderFrameCompleted.tree` and `RenderFailureObserved.failure` events; the removed
-result and failure callbacks have no runner-only compatibility path.
-
-Expected discovery, theme, render, layout, capture, and export failures become source-aware
-`RenderFailure` responses. Thread death and out-of-memory errors escape so the worker host can retire
-the process. A borrowed application class loader is neither installed as the thread context loader
-nor closed by the runner.
-
-## Testing and extension rules
-
-- Exercise the runner through the same Layoutlib API, resources, density, and theme-provider inputs
-  used by production preview tasks.
-- Close every successful frame, including test assertions that inspect only the snapshot.
-- Keep custom capture backends synchronous and fail before returning a partial image.
-- Preserve descriptor equality and exact JVM signatures when extending discovery.
-- Add protocol data to preview-core first; do not expose live Android objects in serialized models.
-- Test fixed height, auto height, nested fixed scrollers, capture budgets, RTL, locales, font scale,
-  application themes, and each failure phase.
-
-## Related documentation
-
-- [Preview Core module](../viewcompose-preview-core/README.md)
-- [Preview Worker Host module](../viewcompose-preview-worker-host/README.md)
-- [Preview Gradle Plugin module](../viewcompose-preview-gradle-plugin/README.md)
-- [Source documentation and API comment standard](../../project/api-documentation-quality.md)
-
-The complete generated reference is available in the
-[`viewcompose-preview-runner` API tree](https://docs.viewcompose.com/api/viewcompose-preview-runner/current/).
-
-## Compatibility notes
-
-The `0.1.0-alpha03` line establishes exact compiled-entry validation, configuration and theme
-parity, frame-scoped Android owners, bounded auto-height measurement, atomic PNG/snapshot export,
-and immutable diagnostics. Preview protocol compatibility remains owned by preview-core.
+See [Preview Core](../viewcompose-preview-core/README.md),
+[Worker Host](../viewcompose-preview-worker-host/README.md), and the
+[generated API reference](https://docs.viewcompose.com/api/viewcompose-preview-runner/current/).

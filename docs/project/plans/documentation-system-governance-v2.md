@@ -21,9 +21,10 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Merge the ConstraintLayout module slice, then continue Phase 3 with Preview tooling ownership.
+next_action: Merge the Preview tooling slice, then continue Phase 3 with third-party integration modules.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
+  - release/changes/20260826-governance-preview-tooling-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -64,6 +65,9 @@ capability owners, registers nine compiled sample decisions, removes the remaini
 inventory, and reduces the report to 516 issues. The accepted ConstraintLayout module hard cut now
 assigns all 43 public DSL and helper entries to two capability owners, registers five compiled
 module sample decisions, removes three resolved exceptions, and reduces the report to 468 issues.
+The accepted Preview tooling hard cut now assigns all 62 public annotations, protocol, Gradle,
+runner, worker, and integration entries to six capability owners, registers nine compiled sample
+decisions, removes 27 resolved exceptions, and reduces the report to 390 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -72,8 +76,8 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: merge the ConstraintLayout module slice, then continue Phase 3 with Preview tooling
-ownership. Pull-request gate scaling
+Next action: merge the Preview tooling slice, then continue Phase 3 with third-party integration
+modules. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -84,15 +88,19 @@ remains owned by this plan after the Phase 3 content owners move.
   documentation-region-only Shadow sample classification. Image Loading changes only non-published
   Tutorial sources, handwritten documentation, and governance records, so it adds no Changeset.
   The Modifier and ConstraintLayout slices have the same publication-neutral classification.
+- `release/changes/20260826-governance-preview-tooling-phase3.json` explicitly ignores the five
+  Preview artifacts detected because existing compiled sample sources gained documentation-region
+  comments only; no production source, signature, bytecode behavior, publication metadata, or
+  generated artifact content changed.
 
 ## Release intent rationale
 
 The completed Phase 2 governance-tooling slices change governance records, documentation markers,
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
-`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, zero ignored
-artifacts, and zero shared-path classifications for the ConstraintLayout slice against
-`d9a5bd07e2a7ef75a7fec1a47371a74d8d60030b`.
+`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, five explicitly
+ignored Preview artifacts, and zero shared-path classifications against
+`5c1c6068f1c1157596d4457c59dfbc662a0cad03`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -891,6 +899,33 @@ Accepted ConstraintLayout module slice on 2026-08-26:
   decreased, and no framework API, runtime behavior, route, or published artifact changed. The
   slice reuses the existing unit, instrumentation, device, visual, and performance evidence and
   makes no new runtime or performance claim. The next action is Preview tooling ownership.
+
+Accepted Preview tooling slice on 2026-08-26:
+
+- retained the existing tooling and five module routes, separated the task-oriented install,
+  entry, matrix, device, and snapshot workflow from the Core, Gradle, Runner, Worker Host, and
+  application-process integration ownership contracts, and removed repeated protocol and device
+  inspector prose;
+- registered six capability owners for all 62 public annotations, protocol, Gradle, runner,
+  worker, and integration entries, plus nine compiled installation, entry, matrix, protocol,
+  render, worker, theme-provider, and Compose-bridge sample decisions. Twenty-seven resolved
+  exception records were removed;
+- the report changed from 468 to 390 issues: missing metadata 85 to 79, orphan symbols 250 to 188,
+  and unclassified samples 127 to 117. Taxonomy mismatches remained 6; duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- all seven affected sample compilation targets, `qaPreview`, bilingual region identity,
+  Governance V2, documentation structure, language and translation review, complete API reuse,
+  release intent, and the complete bilingual site passed. The final evidence-bearing site audited
+  454 pages, produced 48,647,612 non-API bytes, left 530,602 bytes under the unchanged 46.9 MiB
+  limit, and completed Docusaurus in `27.8 s`. Complete `qaQuick` passed 2,342 actionable tasks in
+  `59.1 s` (194 executed and 2,148 up-to-date);
+- the conclusion is `improved`: exact ownership and compiled workflow coverage increased while
+  repeated prose and generated output decreased. No production API, runtime behavior, route, or
+  published artifact changed; release intent found zero release artifacts and explicitly ignored
+  five artifacts whose test samples gained comments only. This slice reuses existing protocol,
+  runner, device-diagnostic, and Paparazzi evidence and makes no new device, visual, or performance
+  claim. The next action is third-party integration module ownership.
 
 | Current area | Required target |
 | --- | --- |

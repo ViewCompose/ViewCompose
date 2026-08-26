@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.preview-core-protocol",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "preview.core.protocol",
+  "document_ids": ["module.viewcompose-preview-core"],
+  "version_lane": "released",
+  "source": "viewcompose-preview-core/src/test/samples/com/viewcompose/preview/tooling/samples/PreviewCoreSamples.kt",
+  "region": "preview-protocol-round-trip",
+  "build_target": ":viewcompose-preview-core:compileTestKotlin"
+}
