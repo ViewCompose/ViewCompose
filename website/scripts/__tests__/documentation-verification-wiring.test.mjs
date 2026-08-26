@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
+import {readdir, readFile} from 'node:fs/promises';
 import {dirname, resolve} from 'node:path';
 import test from 'node:test';
 import {fileURLToPath} from 'node:url';
@@ -63,6 +63,27 @@ test('documentation CI delegates translation freshness to the canonical Gradle g
 
   assert.match(workflow, /\.\/gradlew verifyDocumentationStructure --stacktrace/u);
   assert.doesNotMatch(workflow, /npm run verify:translations/u);
+});
+
+test('Gradle User Home cache has one owner and explicit branch writes', async () => {
+  const workflowDirectory = resolve(repositoryRoot, '.github/workflows');
+  const workflowNames = (await readdir(workflowDirectory)).filter((name) => /\.ya?ml$/u.test(name));
+  const cachePolicy =
+    "cache-read-only: ${{ github.ref != format('refs/heads/{0}', " +
+    'github.event.repository.default_branch) }}';
+
+  for (const workflowName of workflowNames) {
+    const workflow = await readFile(resolve(workflowDirectory, workflowName), 'utf8');
+    const setupGradleCount = workflow.split('uses: gradle/actions/setup-gradle@v6').length - 1;
+    const explicitPolicyCount = workflow.split(cachePolicy).length - 1;
+
+    assert.doesNotMatch(workflow, /cache:\s*gradle/u);
+    assert.equal(
+      explicitPolicyCount,
+      setupGradleCount,
+      `${workflowName} must make every setup-gradle cache write policy explicit`,
+    );
+  }
 });
 
 test('documentation CI restores only main-owned API output and prepares the site once', async () => {
