@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 71c844f2c409653af85c61054b40f9a4e137f3df771b34ba48e80547cbcedd7a
+translation_source_hash: 53e34ca11856653865bf0885d6d830bf90dfcd8a9dec2fda9010e642c5b16aba
 translation_status: current
 ---
 
@@ -12,7 +12,7 @@ translation_status: current
 Pane 的完整签名与可选 API 仍由 [Navigation Android 模块手册](../modules/viewcompose-navigation-android/README.md)
 维护。
 
-## 1. 选择唯一的 Controller Owner
+## 选择唯一的 Controller Owner
 
 在挂载 `NavHost` 的同一个 UI Owner 中通过 `rememberNavHostController` 创建 Controller。
 不要把它缓存在进程单例中，也不要同时挂到两个 Host。remember 的 Controller 会通过最近的
@@ -23,7 +23,17 @@ Destination 自有 SavedState。
 接受保存的 Route 层级，恢复会失败关闭。应把结果视为安全回到配置的起始目标页，不得拼接出
 部分恢复的栈。
 
-## 2. 穷举处理 Route 渲染
+## 恢复状态并接入平台返回
+
+普通 Activity 或 Fragment Host 保持 `systemBackEnabled = true`。只有 Controller 能消费返回
+时，`NavHost` 才会向最近的 AndroidX Back Dispatcher 注册；到达活动根节点后，它会按配置的
+保留栈历史处理，或向外层继续分发。
+
+界面内返回按钮调用 `popBackStack`。系统返回和 Predictive Back 就会使用同一事务边界。
+Predictive Back 在不发布候选栈的前提下预览上一目标页；取消时恢复已提交 Scene，完成时则走
+与程序化 Pop 相同的路径提交。
+
+## 穷举处理 Route 渲染
 
 在 `NavHost` 内容块中渲染每个可接受 Route，并立即拒绝未知 Route。内容块运行在 Destination
 由框架持有的 Lifecycle、ViewModelStore、SavedStateRegistry namespace、saveable-state
@@ -35,17 +45,7 @@ Route 仍会创建两个不同 Entry Owner。
 ViewModelStore Owner、Overlay Factory、调试身份或 Host `key` 的变化属于所有权变化，因此会
 重建原生 Host。
 
-## 3. 让所有返回操作经过 Controller
-
-普通 Activity 或 Fragment Host 保持 `systemBackEnabled = true`。只有 Controller 能消费返回
-时，`NavHost` 才会向最近的 AndroidX Back Dispatcher 注册；到达活动根节点后，它会按配置的
-保留栈历史处理，或向外层继续分发。
-
-界面内返回按钮调用 `popBackStack`。系统返回和 Predictive Back 就会使用同一事务边界。
-Predictive Back 在不发布候选栈的前提下预览上一目标页；取消时恢复已提交 Scene，完成时则走
-与程序化 Pop 相同的路径提交。
-
-## 4. 处理命令结果
+## 处理命令结果
 
 每个 Controller 命令都返回 `NavResult`：
 
@@ -61,7 +61,7 @@ Predictive Back 在不发布候选栈的前提下预览上一目标页；取消�
 前的失败已经会保留旧栈和可见页面；提交后的失败会通过 `NavFailure.stackCommitted` 明确标出
 边界。
 
-## 5. 验证任务
+## 验证任务
 
 运行编译教程和 Navigation Android 测试：
 
@@ -82,7 +82,7 @@ Predictive Back 在不发布候选栈的前提下预览上一目标页；取消�
 只有五项检查全部通过，任务才算完成。Detached 命令异常、普通 Activity 重建后 Entry 身份
 变化、重复 Pop、失败渲染后候选页可见，或把 `Queued` 当成完成，都属于配置失败。
 
-## 6. 选择下一项聚焦任务
+## 选择下一项聚焦任务
 
 - 使用严格 Deep Link 声明，并在接受外部 URI 前检查 `NavDeepLinkResult`。
 - 使用 `NavStackConfiguration` 配置相互独立的保留 Tab 栈，并从

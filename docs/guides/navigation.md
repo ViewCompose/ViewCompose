@@ -33,7 +33,7 @@ policy. For the runtime reasons behind these rules, see the
 motion, deep-link, multi-stack, graph-owner, and adaptive-pane APIs remain in the
 [Navigation Android module manual](../modules/viewcompose-navigation-android/README.md).
 
-## 1. Choose one controller owner
+## Choose one controller owner
 
 Create the controller with `rememberNavHostController` in the same UI owner that mounts `NavHost`.
 Do not cache it in a process singleton or attach it to two hosts. The remembered controller saves
@@ -44,7 +44,18 @@ Use a stable `NavGraph` when routes need typed arguments, nested ownership, or d
 fails closed when the current graph no longer accepts the saved route hierarchy. Treat that as a
 safe restart at the configured start destination, not as a partially restored stack.
 
-## 2. Keep route rendering exhaustive
+## Restore state and connect platform Back
+
+Leave `systemBackEnabled = true` for the ordinary Activity or Fragment host. `NavHost` registers
+with the nearest AndroidX Back dispatcher only while the controller can consume Back; at the active
+root it follows the configured retained-stack history or delegates outward.
+
+Call `popBackStack` for an in-UI Back action. System Back and predictive Back then use the same
+transaction boundary. Predictive Back previews the previous destination without publishing the
+candidate stack; cancellation restores the committed scene, while completion commits through the
+same path as a programmatic pop.
+
+## Keep route rendering exhaustive
 
 Render every accepted route in the `NavHost` content block and reject unknown routes immediately.
 The content block runs inside the destination's framework-owned lifecycle, ViewModelStore,
@@ -56,18 +67,7 @@ Observable ViewCompose state invalidates the owning destination session directly
 controller, lifecycle owner, parent ViewModelStore owner, overlay factory, debug identity, or host
 `key` changes ownership and therefore recreates the native host.
 
-## 3. Route all Back operations through the controller
-
-Leave `systemBackEnabled = true` for the ordinary Activity or Fragment host. `NavHost` registers
-with the nearest AndroidX Back dispatcher only while the controller can consume Back; at the active
-root it follows the configured retained-stack history or delegates outward.
-
-Call `popBackStack` for an in-UI Back action. System Back and predictive Back then use the same
-transaction boundary. Predictive Back previews the previous destination without publishing the
-candidate stack; cancellation restores the committed scene, while completion commits through the
-same path as a programmatic pop.
-
-## 4. Handle command outcomes
+## Handle command outcomes
 
 Every controller command returns `NavResult`:
 
@@ -84,7 +84,7 @@ mutate a second application-owned back stack: failures before stack commit alrea
 old stack and visible page, while failures after commit identify that boundary with
 `NavFailure.stackCommitted`.
 
-## 5. Verify the task
+## Verify the task
 
 Run the compiled tutorial and the Navigation Android tests:
 
@@ -106,7 +106,7 @@ The task is complete only when all five checks pass. A detached-command exceptio
 identity after ordinary Activity recreation, duplicate pop, visible candidate after failed render,
 or treating `Queued` as completion is a failed configuration.
 
-## 6. Choose the next focused task
+## Choose the next focused task
 
 - Use strict deep-link declarations and inspect `NavDeepLinkResult` before accepting external URIs.
 - Use `NavStackConfiguration` for independently retained tab stacks and derive tab selection from

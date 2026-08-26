@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-state-recomposition-and-restoration.md
-translation_source_hash: 7f0969464c649df782e5cc736ed81673a5644ae830426dd9066ca19cb7851aa3
+translation_source_hash: ebb0a0f215f9403826eec443be0765fc2aaf5bbb2dc5f8122973082e8890a119
 translation_status: current
 ---
 
@@ -438,7 +438,7 @@ Saved State、Environment、Theme 或 Frame Clock 服务。其 Owner 必须显�
 [`validate_android_process_death.sh`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/tools/navigation/validate_android_process_death.sh)
 同样把 Task 移至后台，只终止应用进程而不 Force Stop Package，再恢复既有 Task，要求产生新
 PID，并比较完整的导航与状态恢复报告。准确覆盖范围请参阅公开英文站点的
-[导航恢复指南](https://docs.viewcompose.com/guides/navigation#stage-5-restoration-and-platform-back)。
+[导航恢复指南](https://docs.viewcompose.com/guides/navigation)。
 
 因此，当前证据支持普通 Activity 根节点和导航宿主的标准 Android 宿主恢复。自定义
 `renderInto` 恢复仍为**部分支持（Partially supported）**，因为调用方必须显式安装并拥有
