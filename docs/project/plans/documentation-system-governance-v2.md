@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Merge the Shadows slice, then continue Phase 3 with Overlays.
+next_action: Merge the Overlays slice, then continue Phase 3 with Image Loading.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
 ---
@@ -52,6 +52,10 @@ The fourth slice has moved Lazy Collection Session, reuse, and renderer ownershi
 retained list, state-control, grid, pager, and performance tasks in one Guide plus two Tutorials,
 registered six collection DSL entries and six compiled regions, and reduced the report to 668 issues
 without changing framework behavior.
+The next two slices separated Focus/Nested Scroll and Shadows application tasks from their runtime
+contracts, reducing the report to 625 issues. The accepted Overlays hard cut now assigns 21 public
+entries across six capability owners, registers eight compiled regions, and reduces the report to
+590 issues without changing runtime behavior or public routes.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -60,7 +64,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: merge the Shadows slice, then continue Phase 3 with Overlays. Pull-request gate scaling
+Next action: merge the Overlays slice, then continue Phase 3 with Image Loading. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -780,6 +784,29 @@ Accepted Shadows slice on 2026-08-26:
   that this documentation cut reuses the existing shadow
   screenshot, unit, device, and benchmark evidence and makes no new fidelity or performance claim.
   The next action is the Overlays hard cut.
+
+Accepted Overlays slice on 2026-08-26:
+
+- retained the Tutorial, Guide, ADR, and three module-manual routes; narrowed the Guide to bottom
+  sheet, anchored-menu, transient-feedback, and backend-verification tasks; and concentrated
+  root selection, transport/session, attribution, fallback, presenter, and compatibility contracts
+  in ADR-0006 and the owning module manuals;
+- registered six capability owners for 21 UI Foundation, UI Contract, Host Android, neutral Android,
+  Material 3, and One UI 7 entries, plus the existing Tutorial Activity and seven new compiled
+  regions. Twenty-three resolved exception records were removed; the two shared source-file
+  exceptions narrowed from 5 to 4 and from 7 to 2 remaining symbols;
+- the report changed from 625 to 590 issues: missing metadata 98 to 92, orphan symbols 369 to 348,
+  and unclassified samples 151 to 143. Taxonomy mismatches remained 7; duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- the complete bilingual site retained 454 audited pages, produced 49,142,652 non-API bytes, left
+  35,562 bytes under the unchanged 46.9 MiB limit, and completed Docusaurus in `33.4 s`. Complete
+  `qaQuick` passed 2,342 actionable tasks in `30 s` (183 executed and 2,159 up-to-date);
+- the conclusion is `improved`: task guidance and durable contracts now have distinct owners,
+  exact sample ownership increased, and governance debt decreased without a route, framework,
+  public API, or published-artifact change. This documentation slice reuses existing overlay unit
+  and platform behavior evidence and makes no new visual-fidelity or performance claim. The next
+  action is the Image Loading metadata and compiled-region hard cut.
 
 | Current area | Required target |
 | --- | --- |

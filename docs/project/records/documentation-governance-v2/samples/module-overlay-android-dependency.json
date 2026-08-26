@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.overlay-android-dependency",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "overlay.android-transport",
+  "document_ids": [
+    "architecture.overlay-root-selection",
+    "module.viewcompose-overlay-android"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "overlay-android-dependency",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

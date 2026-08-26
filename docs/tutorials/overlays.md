@@ -1,6 +1,25 @@
 ---
-title: Use overlays
-sidebar_position: 9
+schema_version: 2
+document_id: tutorial.overlays
+doc_type: tutorial
+owner:
+  kind: capability
+  id: overlay.foundation
+version_lane: released
+capability_ids:
+  - overlay.foundation
+  - overlay.android-transport
+  - overlay.material3
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-overlay-android
+  - viewcompose-overlay-material3-android
+  - viewcompose-material3-android
+sample_ids:
+  - tutorial.overlays-dependencies
+  - tutorial.overlays
+expected_result: A caller-controlled confirmation dialog presented by the root-scoped Material 3 overlay host.
+verification_action: Open and dismiss the dialog with its action, Android Back, and an outside press, confirming each path clears the same state.
 ---
 
 # Use overlays
@@ -9,6 +28,7 @@ sidebar_position: 9
 
 This page is standalone. Dialog presentation requires the separate Android overlay host artifact:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="overlays-dependencies" sample_id="tutorial.overlays-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 

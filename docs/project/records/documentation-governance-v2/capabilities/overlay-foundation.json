@@ -1,0 +1,29 @@
+{
+  "schema_version": 2,
+  "capability_id": "overlay.foundation",
+  "kind": "component",
+  "owner": { "kind": "module", "id": "viewcompose-ui-foundation" },
+  "artifact": "viewcompose-ui-foundation",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.AlertDialog", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/feedback/FeedbackCompositesDsl.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.Dialog", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/feedback/FeedbackWidgetsDsl.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.DropdownMenu", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/feedback/FeedbackCompositesDsl.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.DropdownMenuItem", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/feedback/FeedbackCompositesDsl.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.ModalBottomSheet", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/feedback/FeedbackWidgetsDsl.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.PlainTooltip", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/feedback/FeedbackCompositesDsl.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.Popup", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/feedback/FeedbackWidgetsDsl.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideAlertDialogOverrides", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/defaults/feedback/AlertDialogOverrides.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideModalBottomSheetOverrides", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/defaults/feedback/ModalBottomSheetOverrides.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideOverlayHost", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/overlay/OverlayHost.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.Snackbar", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/feedback/FeedbackWidgetsDsl.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.Toast", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/feedback/FeedbackWidgetsDsl.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.overlay.foundation", "generated": true },
+  "sample_owner": { "sample_id": "tutorial.overlays" },
+  "document_owners": {
+    "tutorial": ["tutorial.overlays"],
+    "guide": ["guide.overlay-presentation"],
+    "architecture": ["architecture.overlay-root-selection"]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "guide.overlay-dropdown-menu",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "overlay.anchor",
+  "document_ids": [
+    "guide.overlay-presentation"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/OverlayGuideSamples.kt",
+  "region": "overlay-dropdown-menu",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

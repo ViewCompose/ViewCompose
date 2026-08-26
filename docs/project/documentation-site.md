@@ -382,6 +382,14 @@ identity token.
   shadow-fidelity or performance evidence; the Overlays slice must preserve the same structural
   budget discipline.
 
+- **2026-08-26, Governance V2 Overlays local acceptance:** the hard cut retained all existing
+  routes, split application tasks from ADR/module runtime contracts, registered 21 public entries
+  and eight compiled regions, and reduced Governance V2 debt from 625 to 590. The complete build
+  still audited 454 pages, produced 49,142,652 non-API bytes, left 35,562 bytes under the unchanged
+  limit, and completed Docusaurus in `33.4 s`. The result is **improved** without changing the
+  website stack, route count, framework behavior, or the budget. This observation reuses existing
+  overlay behavior evidence; the Image Loading slice must preserve the same stop condition.
+
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and
   moving the generated quality report outside the deploy tree reduced it to 49,175,712 bytes,

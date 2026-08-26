@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.overlay-oneui7-dependency",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "overlay.oneui7",
+  "document_ids": [
+    "architecture.overlay-root-selection",
+    "module.viewcompose-overlay-oneui7-android"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "overlay-oneui7-dependency",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

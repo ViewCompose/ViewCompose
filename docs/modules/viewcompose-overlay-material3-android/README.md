@@ -1,3 +1,21 @@
+---
+schema_version: 2
+document_id: module.viewcompose-overlay-material3-android
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-overlay-material3-android
+version_lane: released
+capability_ids:
+  - overlay.material3
+artifact_ids:
+  - viewcompose-overlay-material3-android
+sample_ids:
+  - module.overlay-material3-dependency
+coordinate: com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01
+minimal_usage_sample_id: module.overlay-material3-dependency
+---
+
 # Material 3 Android Overlay Adapter
 
 `viewcompose-overlay-material3-android` is the narrow Material presentation adapter for
@@ -8,6 +26,7 @@ containers, or service-provider selection.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="overlay-material3-dependency" sample_id="module.overlay-material3-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01")

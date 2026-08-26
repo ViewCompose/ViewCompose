@@ -72,3 +72,41 @@ dependencies {
 }
     // DOCS_REGION_END(shadow-dependency)
 }
+
+private val overlaysTutorialDependencies = run {
+    // DOCS_REGION_START(overlays-dependencies)
+repositories { mavenCentral() }
+
+dependencies {
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01")
+    implementation("androidx.activity:activity:1.12.4")
+    implementation("com.google.android.material:material:1.13.0")
+}
+    // DOCS_REGION_END(overlays-dependencies)
+}
+
+private val neutralOverlayModuleDependency = run {
+    // DOCS_REGION_START(overlay-android-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-overlay-android:0.1.0-alpha04")
+}
+    // DOCS_REGION_END(overlay-android-dependency)
+}
+
+private val materialOverlayModuleDependency = run {
+    // DOCS_REGION_START(overlay-material3-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(overlay-material3-dependency)
+}
+
+private val oneUiOverlayModuleDependency = run {
+    // DOCS_REGION_START(overlay-oneui7-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-overlay-oneui7-android:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(overlay-oneui7-dependency)
+}

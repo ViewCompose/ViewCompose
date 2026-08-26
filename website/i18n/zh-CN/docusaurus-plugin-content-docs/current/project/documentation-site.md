@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: a4bbae71e964bd458e4ab8edab57b1d179e9958348bfc4a72e4df3a09cacdf12
+translation_source_hash: 1d43caf25da845b861306e077129c97fffd9fb3c301dea268e48f48fb87be4d0
 translation_status: current
 ---
 
@@ -288,6 +288,13 @@ identity token。
   生成大小同时下降，且
   没有新增路由或弱化门禁。这项本地观察不替代真机阴影保真或性能证据；Overlays 切片必须继续
   保持相同的结构化预算纪律。
+
+- **2026-08-26，Governance V2 Overlays 本地验收：**本次硬切保留所有现有路由，将应用任务与
+  ADR/模块 Runtime 契约分开，登记 21 个公开入口与八个可编译 Region，并把 Governance V2 债务
+  从 625 降至 590。完整构建仍审计 454 个页面，产生 49,142,652 字节非 API 输出，在不变上限下
+  留出 35,562 字节，并在 `33.4 s` 内完成 Docusaurus。结果为 **improved**，且没有改变网站技术栈、
+  路由数、框架行为或预算。本次观察复用既有 Overlay 行为证据；Image Loading 切片必须继续遵守
+  相同 Stop Condition。
 
 - **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
   上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量

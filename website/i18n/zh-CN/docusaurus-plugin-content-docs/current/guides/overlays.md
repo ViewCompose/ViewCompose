@@ -1,132 +1,115 @@
 ---
 translation_source: guides/overlays.md
-translation_source_hash: 305b73d3bbc728dce6a761935879805f85c43a85df2e73417861189e05937276
+translation_source_hash: 0c86bbffed62a8482d50b4da7f4d375688289b2ad295c8ecd67e70437b2747de
 translation_status: current
 ---
 
-# Overlay 定位与瞬态反馈
+# 展示 Overlay 与瞬态反馈
 
-`Dialog`、`Popup` 和 `ModalBottomSheet` 使用绑定到 Session 的 overlay surface。`Snackbar`
-和 `Toast` 共用宿主持有的瞬态反馈通道，因此即使两者在同一次渲染中声明，顺序也保持确定。
+Overlay 声明是由状态控制的请求。应用负责决定请求是否存在；Root 作用域 Host 负责平台窗口、
+展示与清理。如果尚未安装 Android Presenter，请先阅读 [Overlay 教程](../tutorials/overlays.md)。
 
-## Backend 选择
+## 展示模态 Bottom Sheet
 
-`viewcompose-overlay-android` 是中立 Android 传输层，负责 Dialog、PopupWindow、Toast、嵌套
-Overlay Render Session、锚点观察与清理，不依赖 Material。中立 `setUiContent` 与 Android
-Navigation Host 会显式选择它。
+同一个逻辑 Sheet 可见期间应保持稳定的 Key。平台关闭操作会调用回调，但不会修改 `visible`；
+请更新创建该请求的同一个应用状态。
 
-`viewcompose-overlay-material3-android` 只增加 Material Snackbar 与 Modal Bottom Sheet
-Presenter。`setMaterial3UiContent` 显式选择该 Adapter；把产物放入 Runtime Classpath 不会改变
-中立或 One UI Root。
-
-`viewcompose-overlay-oneui7-android` 增加不依赖 Material 的 One UI Snackbar 与底部 Dialog
-Presenter。One UI Root 继续使用中立 `setUiContent`，通过 `overlayHostFactory` 构造该 Adapter，
-并把其 `integrationAttribution` 传给 `OneUi7Theme`。由于 One UI 不需要不同的 Root Context，
-这里不会复制一套 One UI Activity/Fragment Host Extension。
-
-自定义底层 Host 可以使用 `AndroidOverlayHostDefaults.androidOrNoOp`，但
-Service Discovery 只接受一个中立 Provider，永远不选择设计系统。
-
-当前设计系统 Attribution 会报告每种 Overlay 的 Transport、Presenter、Conformance 与 Fallback。
-未安装 Adapter 的 One UI Theme 会把 Snackbar 与 Modal Bottom Sheet 报告为 `Unsupported`；显式
-装配 Adapter 后升级为 `Equivalent`，始终不会静默回退 Material。
-
-## Modal Bottom Sheet 外观更新
-
-`ModalBottomSheet` 会在提交请求前，把主题值与稀疏 `ModalBottomSheetOverrides` 解析为一份不可变
-`ModalBottomSheetAppearance`。快照包含容器/内容色、Shape、Scrim 透明度与导航栏策略，并参与
-Overlay Spec 相等性判断。因此主题或 Overrides 变化时，已有同 Key 平台 Sheet 会原地更新，而不
-丢弃逻辑请求身份或嵌套 Saveable State 作用域。
-
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/OverlayGuideSamples.kt" region="overlay-bottom-sheet" sample_id="guide.overlay-bottom-sheet" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-ModalBottomSheet(
-    visible = sheetVisible,
-    requestKey = "account-actions",
-    overrides = ModalBottomSheetOverrides(
-        containerColor = Theme.colors.surfaceContainerHigh,
-        navigationBarColor = ModalBottomSheetNavigationBarColor.PlatformDefault,
-    ),
-    onDismissRequest = { sheetVisible = false },
+fun UiTreeBuilder.AccountActionsSheet(
+    visible: Boolean,
+    onDismissRequest: () -> Unit,
 ) {
-    AccountActions()
+    ModalBottomSheet(
+        visible = visible,
+        requestKey = "account-actions",
+        skipPartiallyExpanded = true,
+        onDismissRequest = onDismissRequest,
+    ) {
+        Text("Account actions")
+    }
 }
 ```
 
-单个可空颜色无法表达全部状态：稀疏 Overrides 中的 `null` 表示继承，`Exact(color)` 请求精确 ARGB
-颜色，`PlatformDefault` 恢复当前 Presenter 捕获的平台值。Material 与 One UI Presenter 会在首次
-展示及每次变化的同 Key 更新时应用完整快照。Material 还会让 `skipPartiallyExpanded` 可逆；One UI
-只有一个内在展开状态，因此该策略仅用于协议兼容。
+Theme 值、嵌套的 `ProvideModalBottomSheetOverrides` 与实例 Override 会解析为一份完整外观快照。
+Material 3 支持可逆的 Partial State 策略；One UI 7 Presenter 只有一个内建展开状态。Presenter
+专属的 Margin、Handle 与手势仍由各自的集成模块拥有。
 
-Presenter 特有的 Margin、Handle、拖拽手势与品牌 Chrome 继续由下游持有。原始 `Dialog` 仍是调用
-方自有内容/生命周期协议，不共用 Bottom Sheet 外观对象。
+## 锚定 Dropdown Menu
 
-## Popup 定位
+在已渲染节点上发布 Anchor，并在 Menu 请求中使用同一个标识。逻辑 start/end 遵循 Anchor 的
+布局方向。默认 `FlipThenClamp` 策略会在窗口边缘先尝试另一侧，再把 Menu 限制在可见窗口内。
 
-`Popup` 在 window 坐标中解析 anchor 和 popup。Android presenter 观察全局布局与滚动变化，
-所以打开的 popup 会跟随移动的 anchor，而不是停留在首帧坐标。
-
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/OverlayGuideSamples.kt" region="overlay-dropdown-menu" sample_id="guide.overlay-dropdown-menu" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-Popup(
-    visible = menuVisible,
-    anchorId = "profile-menu-anchor",
-    alignment = PopupAlignment.BelowEnd,
-    overflowPolicy = PopupOverflowPolicy.FlipThenClamp,
-    windowMargin = 8.dp,
-    offsetY = 4.dp,
-    onDismissRequest = { menuVisible = false },
+fun UiTreeBuilder.ProfileMenu(
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
 ) {
-    ProfileMenu()
+    Text(
+        text = "Profile",
+        modifier = Modifier.overlayAnchor("profile-menu-anchor"),
+    )
+    DropdownMenu(
+        expanded = expanded,
+        anchorId = "profile-menu-anchor",
+        requestKey = "profile-menu",
+        alignment = PopupAlignment.BelowEnd,
+        onDismissRequest = onDismissRequest,
+    ) {
+        DropdownMenuItem("Settings", onClick = onDismissRequest)
+        DropdownMenuItem("Sign out", onClick = onDismissRequest)
+    }
 }
 ```
 
-alignment 覆盖上方/下方、逻辑 start/end 侧和 anchor 中心；逻辑 start/end 按 anchor 的布局
-方向解析。
+Popup 打开期间，Android Presenter 会观察全局布局与滚动。Popup 内容拥有自己的 Shape 与
+Elevation；`PopupWindow` 传输层不会再添加第二层平台阴影。要保留指定侧可使用 `Clamp`；只有
+明确需要精确且不裁切的坐标时才使用 `None`。
 
-溢出策略：
+## 替换重复的瞬态反馈
 
-- `FlipThenClamp`：对侧溢出更少时先翻转，然后把结果限制在可见 window 内；这是默认值。
-- `Clamp`：保持请求侧，只限制最终坐标。
-- `None`：保留精确请求坐标并关闭平台裁切。
+Snackbar 与 Toast 共用一条 Host 所有的 FIFO 通道。Identity 是
+`(render session, requestKey)`，因此内容相同的重组不会重复入队。同一操作可能反复上报时，应
+明确选择 Queue Policy。
 
-`PopupPositioner` 是平台无关定位契约。自定义宿主可使用自己的 anchor bounds、可见 viewport
-和 popup 测量结果复用相同计算。
-
-Android `PopupWindow` Transport 不额外设置平台 Elevation。渲染出的 Popup 内容是唯一视觉
-阴影 Owner：`DropdownMenu` 保留主题 Elevation，Tooltip 或自定义内容使用自身声明，零 Elevation
-的通用内容则保持无阴影。这可以避免第二层矩形 Window 阴影与圆角内容轮廓相互竞争。
-
-Android Transport 会把原生 Elevation 与语义 Popup 尺寸分开测量：透明平台 Window 扩大到足以
-容纳阴影，语义内容矩形仍相对锚点定位，并且透明扩展区域在关闭判断中仍属于内容外部。这样既能
-完整保留圆角阴影，也不会改变对齐方式或为零 Elevation 内容隐式添加 Surface。
-
-## Snackbar 与 Toast 队列
-
-Snackbar 与 Toast 声明共用一条 FIFO 通道。请求由 `(render session, requestKey)` 标识；声明
-保持可见时只投递一次。相同声明的重组不会重复入队；同 key 内容变化会替换该版本。
-
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/OverlayGuideSamples.kt" region="overlay-snackbar" sample_id="guide.overlay-snackbar" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-Snackbar(
-    visible = saveMessageVisible,
-    requestKey = "save-result",
-    message = "Saved",
-    queuePolicy = TransientFeedbackQueuePolicy.Enqueue,
-    onDismiss = { reason ->
-        saveMessageVisible = false
-        log("save-result ended: $reason")
-    },
-)
+fun UiTreeBuilder.SaveResultSnackbar(
+    visible: Boolean,
+    onUndo: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    Snackbar(
+        visible = visible,
+        requestKey = "save-result",
+        message = "Saved",
+        actionLabel = "Undo",
+        queuePolicy = TransientFeedbackQueuePolicy.ReplaceSameKey,
+        onAction = onUndo,
+        onDismiss = { onDismiss() },
+    )
+}
 ```
 
-队列策略：
+独立通知使用 `Enqueue`，新的紧急结果使用 `ReplaceCurrent`，同一操作的最新版本使用
+`ReplaceSameKey`，可丢弃状态使用 `DropIfBusy`。回调区分 Timeout、Action、Gesture、
+Replacement、Removal、Session Cleanup、Dropped 与 Platform Dismissal。Android Toast 的时长
+是近似值，因为所有受支持 API Level 并不都提供可靠的隐藏回调。
 
-- `Enqueue`：追加到活跃请求之后；
-- `ReplaceCurrent`：关闭活跃请求，并把新请求放到队首；
-- `ReplaceSameKey`：更新相同 key 的活跃或排队声明，否则正常入队；
-- `DropIfBusy`：通道繁忙时消费请求但不展示。
+## 选择并验收 Backend
 
-关闭原因是结构化的 `Timeout`、`Action`、`Gesture`、`Replaced`、`Removed`、
-`SessionCleared`、`Dropped` 或 `Platform`。移除声明或清理 RenderSession 都会关闭活跃平台
-对象，并让下一个有效请求前进。
+- 中立 Root 使用 `viewcompose-overlay-android` 提供 Dialog、Popup、Toast、嵌套 Session 与清理；
+  Snackbar 和 Modal Bottom Sheet 会保持明确的 Unsupported 状态。
+- Material Root 使用 `viewcompose-overlay-material3-android`；`setMaterial3UiContent` 会显式选择
+  该 Adapter。
+- One UI Root 保留中立 `setUiContent`，只有需要 One UI Snackbar 或 Bottom Dialog 时才显式构造
+  `viewcompose-overlay-oneui7-android` Host。
 
-Android 并非在所有支持的 API 上都提供可靠 Toast 隐藏回调。因此 presenter 按平台短/长显示
-时长推进通道；请求被显式移除或替换时取消该计时器。
+验收 Outside Press 与 Android Back 都会清除调用方状态，打开的 Menu 会跟随移动 Anchor，
+相同 Key 的反馈不会重复，并且 Session 释放只清理该 Session 的 Surface。Root 选择、传输与
+Session 不变量、Attribution 和 Fallback 规则由
+[ADR-0006](../architecture/decisions/0006-root-scoped-overlay-backend-selection.md)负责。实现契约分别由
+[中立](../modules/viewcompose-overlay-android/README.md)、
+[Material 3](../modules/viewcompose-overlay-material3-android/README.md) 与
+[One UI 7](../modules/viewcompose-overlay-oneui7-android/README.md) 模块手册负责。

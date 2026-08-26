@@ -1,0 +1,17 @@
+{
+  "schema_version": 2,
+  "capability_id": "overlay.anchor",
+  "kind": "modifier",
+  "owner": { "kind": "module", "id": "viewcompose-ui-contract" },
+  "artifact": "viewcompose-ui-contract",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.overlayAnchor", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierInteractionExtensions.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.overlay.anchor", "generated": true },
+  "sample_owner": { "sample_id": "guide.overlay-dropdown-menu" },
+  "document_owners": {
+    "guide": ["guide.overlay-presentation"],
+    "architecture": ["architecture.overlay-root-selection"]
+  }
+}

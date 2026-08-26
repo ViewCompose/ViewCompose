@@ -1,3 +1,21 @@
+---
+schema_version: 2
+document_id: module.viewcompose-overlay-oneui7-android
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-overlay-oneui7-android
+version_lane: released
+capability_ids:
+  - overlay.oneui7
+artifact_ids:
+  - viewcompose-overlay-oneui7-android
+sample_ids:
+  - module.overlay-oneui7-dependency
+coordinate: com.viewcompose:viewcompose-overlay-oneui7-android:0.1.0-alpha01
+minimal_usage_sample_id: module.overlay-oneui7-dependency
+---
+
 # One UI 7 Android Overlay Adapter
 
 `viewcompose-overlay-oneui7-android` is the explicit, Material-free Android presentation adapter
@@ -8,6 +26,7 @@ ViewCompose-owned One UI Snackbar and bottom-dialog presenters. It does not add 
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="overlay-oneui7-dependency" sample_id="module.overlay-oneui7-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
@@ -36,27 +55,10 @@ contracts.
 ## Explicit One UI root assembly
 
 One UI does not require a themed Android `Context` before native View construction. Applications
-therefore keep the neutral `setUiContent` host and select only the overlay adapter explicitly:
-
-```kotlin
-private lateinit var overlayIntegrations: List<UiIntegrationAttribution>
-
-val tokens = OneUi7ThemeDefaults.light()
-setUiContent(
-    overlayHostFactory = { root ->
-        AndroidOverlayHost(root, tokens).also { host ->
-            overlayIntegrations = host.integrationAttribution
-        }
-    },
-) {
-    OneUi7Theme(tokens, integrations = overlayIntegrations) {
-        AppContent()
-    }
-}
-```
-
-Passing the host's `integrationAttribution` into `OneUi7Theme` is intentional. Without the adapter,
-the theme reports overlay capabilities as `Unsupported`; installing the adapter upgrades only the
+therefore keep the neutral `setUiContent` host and pass an explicit `overlayHostFactory` that
+constructs this module's `AndroidOverlayHost` with the current `OneUi7ThemeDefaults` token snapshot.
+Feed the host's `integrationAttribution` back into `OneUi7Theme`; without the adapter, the theme
+reports overlay capabilities as `Unsupported`, and installing the adapter upgrades only the
 capabilities that the active root actually owns. Classpath presence alone never changes behavior.
 
 ## Presenter behavior

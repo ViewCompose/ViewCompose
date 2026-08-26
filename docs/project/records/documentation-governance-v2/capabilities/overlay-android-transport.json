@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "capability_id": "overlay.android-transport",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-overlay-android" },
+  "artifact": "viewcompose-overlay-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.overlay.android.AndroidOverlayHost", "kind": "type", "visibility": "public", "source": "viewcompose-overlay-android/src/main/java/com/viewcompose/overlay/android/AndroidOverlayHost.kt" },
+    { "symbol_id": "com.viewcompose.overlay.android.AndroidOverlayHostFactoryProvider", "kind": "type", "visibility": "public", "source": "viewcompose-overlay-android/src/main/java/com/viewcompose/overlay/android/AndroidOverlayHostFactoryProvider.kt" },
+    { "symbol_id": "com.viewcompose.overlay.android.ViewGroup.asOverlayRenderContainerHandle", "kind": "extension", "visibility": "public", "source": "viewcompose-overlay-android/src/main/java/com/viewcompose/overlay/android/AndroidOverlayRenderContainer.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.overlay.android-transport", "generated": true },
+  "sample_owner": { "sample_id": "module.overlay-android-dependency" },
+  "document_owners": {
+    "tutorial": ["tutorial.overlays"],
+    "guide": ["guide.overlay-presentation"],
+    "architecture": ["architecture.overlay-root-selection"],
+    "module": ["module.viewcompose-overlay-android"]
+  }
+}

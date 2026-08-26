@@ -1,3 +1,21 @@
+---
+schema_version: 2
+document_id: module.viewcompose-overlay-android
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-overlay-android
+version_lane: released
+capability_ids:
+  - overlay.android-transport
+artifact_ids:
+  - viewcompose-overlay-android
+sample_ids:
+  - module.overlay-android-dependency
+coordinate: com.viewcompose:viewcompose-overlay-android:0.1.0-alpha04
+minimal_usage_sample_id: module.overlay-android-dependency
+---
+
 # Neutral Android Overlay Integration
 
 `viewcompose-overlay-android` is the Material-free Android transport for ViewCompose overlays. It
@@ -11,6 +29,7 @@ The artifact does not depend on Material Components, AppCompat, `viewcompose-mat
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="overlay-android-dependency" sample_id="module.overlay-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-overlay-android:0.1.0-alpha04")
