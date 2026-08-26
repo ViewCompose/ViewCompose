@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/modifier.md
-translation_source_hash: 413d6e3adcf80d8fe1866ceb92ddefb770d216b62e2210ee71bd33a199397772
+translation_source_hash: 4362352f1c6db70d7eb7eb66c98b77aaeca057dad6a9c0f81e385b7be77b24d0
 translation_status: current
 ---
 
@@ -25,8 +25,10 @@ translation_status: current
 9. 内容尺寸动画支持 `Modifier.animateContentSize(...)`；renderer 会在 patch 前自动插入 `AnimatedSizeHost`，以“真实测量尺寸插值”参与父布局重排（非 graphicsLayer 视觉缩放），并保留 `AnimationSpec` 的 easing/spring/keyframes/repeat 语义（含 reverse 终态）
 10. 约束 parent-data 支持 `Modifier.layoutId(...)`、`Modifier.constrainAs(...)`、`Modifier.constrain(...)`；仅对 `ConstraintLayout` 子节点生效
 11. 图形绘制 modifier 已接入：`Modifier.drawBehind`、`Modifier.drawWithContent`、`Modifier.drawWithCache`（以及短写 `draw/drawCache`）；执行顺序按 modifier 链稳定，`drawWithContent` 可显式控制内容透传；底层执行保证 `DrawRoundRect` 四角半径与 `Drawable + DrawPaint` 组合语义不丢失
-12. 声明式焦点与硬件键盘输入已接入：`focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent` 映射原生 View 焦点搜索，并由 `LocalFocusManager` 提供会话级移动与清除能力
-13. 统一嵌套滚动协议已接入：`Modifier.nestedScroll(connection, dispatcher)` 通过透明宿主映射 AndroidX nested-scrolling parent/child 链，覆盖 pre/post scroll、pre/post fling、Lazy/Pager/普通滚动容器与自定义 drag/transform pan
+12. 声明式焦点与硬件按键输入遵循下文的所有权和传播契约；`LocalFocusManager` 提供
+    Session 范围的移动与清除操作。
+13. `Modifier.nestedScroll(connection, dispatcher)` 遵循下文统一的四阶段路由契约，覆盖框架
+    滚动容器和参与原生协议的滚动容器。
 14. 高级阴影已接入：`dropShadow/dropShadows` 绘制在节点内容之前，`innerShadow/innerShadows` 绘制在完整内容之后；均支持有序多层、独立 shape、blur/spread/offset/color，并与 `elevation/zIndex` 解耦
 15. `Modifier.semantics` 承载设计系统中立的无障碍状态。集合父节点声明逻辑维度与选择基数，子节点声明逻辑位置与跨度；RTL 只改变物理排列，不改变这些索引，item 的 `selected`/`heading` 仍由同一语义配置中的唯一字段表达
 16. 原生 View Padding 只有一个 Renderer 所有者。容器专属 Content Padding、已解析的
@@ -35,6 +37,28 @@ translation_status: current
 17. 物理 `padding/margin/offset` 与 Inset 选择器保持物理语义；对应的 `Relative` API 会在每次
     Bind 时根据 VNode 捕获的布局方向解析 start/end。同一族内，后声明的物理或相对值会整体
     替换先声明的值。
+
+### 2.1 焦点与硬件按键路由
+
+UI Contract 拥有焦点和标准化按键值，UI Foundation 暴露当前 Session 的 `FocusManager`，
+Android Renderer 附加已挂载目标，上层都不保留 View。`focusProperties` 按 Modifier 顺序
+合并，最后一个非空目标生效，并回退 Android 焦点搜索。带 key Connector 可在重新挂载后恢复
+已保存的焦点子项；无 key 节点使用 View Identity。
+
+Preview 按键从根传播到目标，未消费按键再向上冒泡。显式 Tab 或 D-pad 目标优先于原生搜索。
+`AndroidView` 在声明式按键契约接管前保留业务 `OnKeyListener`。焦点编辑器可见性仍是最近
+真实垂直滚动所有者的子矩形请求；Pager 在页面边界停止请求，可能被遮挡的表单提供页内滚动。
+
+### 2.2 嵌套滚动路由
+
+UI Contract 拥有位移、速度、来源、Connection 和 Dispatcher；Gesture 暴露 Modifier；
+Android Renderer 插入透明 AndroidX Parent/Child Host。Pre 阶段从外向内，Post 阶段从内向
+外；每个有限结果只消费剩余输入并受其方向和大小限制。连续 `nestedScroll` 保持 Modifier 顺序。
+
+框架滚动容器、PullToRefresh、Drag/Transform Pan，以及实现 Android Nested Scrolling 的原生
+Child 共用该链；其他 `AndroidView` 需要已附加 Dispatcher。同轴 Child 保留 Drag 直到对应
+逻辑边缘，并忽略交叉轴移动。旧式原生 Fling 只报告 Boolean：ViewCompose 内保留精确部分速度，
+原生 `true` 表示所提供的余量已被消费。
 
 ## 3. 源码驱动的能力参考
 

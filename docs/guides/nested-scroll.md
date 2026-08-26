@@ -1,95 +1,82 @@
-# Nested Scroll
+---
+schema_version: 2
+document_id: guide.nested-scroll-coordination
+doc_type: guide
+owner:
+  kind: capability
+  id: nested.scroll
+version_lane: released
+capability_ids:
+  - nested.scroll
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-gesture
+  - viewcompose-renderer-android
+sample_ids:
+  - guide.nested-scroll-toolbar
+task: Coordinate an ancestor effect with child scrolling while preserving bounded consumption.
+success_checks:
+  - The connection remains stable and reads the latest callback or state.
+  - Every returned delta or velocity has the offered sign and does not exceed the offered magnitude.
+  - Imperative code dispatches pre, consumes only the remainder locally, then dispatches post.
+  - Native children either implement Android nested scrolling or enter through an explicit dispatcher.
+failure_checks:
+  - A parent reports more consumption than was offered or returns a non-finite value.
+  - Post-scroll receives the original available value instead of the remainder after local consumption.
+  - A plain AndroidView child is assumed to emit nested-scroll phases automatically.
+  - Legacy native fling Boolean consumption is interpreted as an exact partial velocity.
+---
 
-## 1. Contract
+# Coordinate nested scrolling
 
-`Modifier.nestedScroll(connection, dispatcher)` installs one platform-independent connection with
-four synchronous phases:
+## Consume an ancestor effect
 
-1. `onPreScroll(available, source)`
-2. child/local consumption
-3. `onPostScroll(consumed, available, source)`
-4. `onPreFling` / `onPostFling`
+Attach one stable `NestedScrollConnection` to the ancestor that owns the effect. Pre callbacks run
+before child consumption; post callbacks receive what the child consumed and what remains. Return
+only the signed distance or velocity actually consumed.
 
-`NestedScrollSource` distinguishes direct user input, fling continuation, and imperative side
-effects. Consumption uses `ScrollDelta` and `ScrollVelocity`, and the renderer clamps every result
-to the sign and magnitude of the corresponding available value. Invalid or non-finite consumption
-is treated as zero.
-
-## 2. Propagation order
-
-- Pre-scroll and pre-fling travel from the outermost connection toward the child.
-- Post-scroll and post-fling travel from the child back toward outer connections.
-- A child receives only the remainder left after pre-consumption.
-- A parent receives the child's consumption plus any remainder offered during the post phase.
-
-Multiple `nestedScroll` modifiers create multiple transparent hosts and preserve modifier order.
-
-## 3. Android mapping
-
-The renderer inserts a transparent `NestedScrollHost` around a node carrying the modifier. The
-host implements AndroidX `NestedScrollingParent3` and participates upward through
-`NestedScrollingChildHelper`.
-
-This allows a connection on a normal `Box`, `Column`, or other declarative node to coordinate:
-
-- `LazyColumn`, `LazyRow`, and `LazyVerticalGrid`
-- `HorizontalPager` and `VerticalPager`
-- `ScrollableColumn` through `NestedScrollView`
-- `ScrollableRow` through its horizontal nested-child bridge
-- `PullToRefresh`
-- framework `draggable`, `anchoredDraggable`, and transform pan
-
-Native views that already implement Android nested scrolling join the same chain automatically.
-Arbitrary `AndroidView` children that do not implement Android nested scrolling cannot emit native
-scroll phases; they can use a `NestedScrollDispatcher` explicitly.
-
-Same-axis nested framework containers arbitrate the pointer stream by direction and edge. A child
-keeps an axis-matching drag while it can scroll in that direction, releases at the corresponding
-logical edge, and does not capture a cross-axis drag. At the top of a vertical child inside an
-enabled, idle `PullToRefresh`, an initial downward drag belongs to the refresh host; upward movement
-and downward movement away from the top remain child scrolling. Cancellation ends any temporary
-interception reservation.
-
-## 4. Example
-
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/FocusAndNestedScrollGuideSamples.kt" region="nested-scroll-toolbar" sample_id="guide.nested-scroll-toolbar" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-val dispatcher = remember { NestedScrollDispatcher() }
-val connection = remember {
-    object : NestedScrollConnection {
-        override fun onPreScroll(
-            available: ScrollDelta,
-            source: NestedScrollSource,
-        ): ScrollDelta {
-            val collapse = collapseToolbarBy(available.y)
-            return ScrollDelta(x = 0f, y = collapse)
+fun UiTreeBuilder.CollapsingToolbar(
+    collapseBy: (deltaY: Float) -> Float,
+) {
+    val latestCollapseBy = rememberUpdatedState(collapseBy)
+    val connection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(
+                available: ScrollDelta,
+                source: NestedScrollSource,
+            ): ScrollDelta {
+                return ScrollDelta(
+                    x = 0f,
+                    y = latestCollapseBy.value(available.y),
+                )
+            }
         }
+    }
 
-        override fun onPostFling(
-            consumed: ScrollVelocity,
-            available: ScrollVelocity,
-        ): ScrollVelocity {
-            settleToolbar(available.y)
-            return ScrollVelocity.Zero
+    Column(modifier = Modifier.nestedScroll(connection)) {
+        Text("Collapsing toolbar")
+        ScrollableColumn {
+            repeat(40) { index -> Text("Row $index") }
         }
     }
 }
-
-Column(
-    modifier = Modifier.nestedScroll(
-        connection = connection,
-        dispatcher = dispatcher,
-    ),
-) {
-    LazyColumn(/* ... */)
-}
 ```
 
-For a custom side effect, call `dispatcher.dispatchPreScroll(...)`, consume the remainder locally,
-then call `dispatcher.dispatchPostScroll(...)`.
+Clamp application state inside `collapseBy`; the Android renderer also rejects non-finite or
+over-consumed results. Use `NestedScrollSource` when user input, fling continuation, and imperative
+side effects require different policy.
 
-## 5. Native fling limitation
+## Dispatch a custom scroll source
 
-Android's legacy nested-fling callbacks report consumption as a Boolean rather than a velocity
-amount. Partial velocity is preserved across ViewCompose connections and imperative dispatchers;
-when crossing an arbitrary native parent, `true` necessarily means that parent consumed the
-remaining fling.
+Pass a stable `NestedScrollDispatcher` to `nestedScroll` when custom gesture or programmatic code
+must enter the same parent chain. Dispatch pre-scroll first, consume the remainder locally, then
+dispatch post-scroll with the local consumption and remainder. Use the equivalent pre/post fling
+pair for velocity.
+
+Lazy collections, pagers, eager scroll containers, PullToRefresh, and framework drag or transform
+pan participate in the same chain. A native `AndroidView` joins automatically only when its View
+implements Android nested scrolling; otherwise dispatch explicitly. See
+[Modifier architecture](../architecture/modifier.md) for phase order, modifier ordering, AndroidX
+mapping, and the legacy native-fling limitation.

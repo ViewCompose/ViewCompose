@@ -334,6 +334,17 @@ identity token.
   hosted sample; P50/P95 and cache-hit conclusions remain **inconclusive** with only three
   post-stabilization content pull requests. Keep the existing stack and continue the corpus.
 
+- **2026-08-26, Governance V2 Lazy Collections hosted follow-up:** pull request #179's successful
+  documentation child completed in `5 min 12 s`. Source and translation verification took `77 s`,
+  complete API generation and verification `115 s`, catalog generation `1 s`, type checking `2 s`,
+  and Docusaurus `53 s`. Docusaurus represented `17.0%` of child wall time and remained a minority
+  stage. The affected `qaQuick` candidate passed `1,176` actionable tasks in `5 min 32 s`; the
+  complete shadow passed `2,342` in `9 min 8 s`, so selected scope was `49.8%` smaller and observed
+  duration `39.4%` lower with the same successful conclusion. The result is **mixed** because
+  serial shadow observation still extends the required critical path, while scope selection and
+  correctness are **improved**. This is only the fourth post-stabilization content sample; retain
+  the current website stack and shadow comparison until the required corpus is complete.
+
 - **2026-08-26, Governance V2 Text Input local acceptance:** the first four-page task split built
   successfully but produced 49,245,936 non-API bytes, 67,722 bytes above the unchanged 46.9 MiB
   limit. Consolidating adjacent editing/IME and rich/Receive Content tasks into two Guides retained
@@ -348,6 +359,16 @@ identity token.
   detail reduced non-API output to 49,168,958 bytes, leaving 9,256 bytes; 454 bilingual pages
   passed in `36.6 s`. The corrected result is **improved**, but the narrow margin requires the next
   content slice to remove or consolidate existing output before adding another route.
+
+- **2026-08-26, Governance V2 Focus/Nested Scroll local acceptance:** reusing the existing
+  Modifier Architecture route avoided a new page, but the first expanded representation still
+  exceeded the unchanged limit by 21,103 bytes. Removing a duplicated Pager code display while
+  retaining its task contract and consolidating architecture prose reduced non-API output to
+  49,165,583 bytes, leaving 12,631 bytes. The corrected build audited 454 bilingual pages and
+  completed Docusaurus in `51.7 s`. The result is **improved** after correction; capability,
+  compiled-region, route, locale, accessibility, and budget gates passed without changing the
+  limit. The remaining margin is narrow, so the Shadows slice must continue the same
+  consolidate-before-expand rule.
 
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and

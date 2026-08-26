@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "sample_id": "guide.focus-form",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "focus.input",
+  "document_ids": [
+    "guide.focus-and-key-input",
+    "architecture.modifier-runtime"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/FocusAndNestedScrollGuideSamples.kt",
+  "region": "focus-form",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

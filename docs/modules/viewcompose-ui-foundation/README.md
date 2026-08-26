@@ -410,6 +410,7 @@ sink is disabled without changing recovery. The alpha hard cut migrates frame da
 - [Choose and control lazy collections](../../guides/lazy-collections.md)
 - [Theme runtime architecture](../../architecture/theming.md)
 - [Local theme overrides](../../guides/theming-local-overrides.md)
+- [Control focus and hardware keys](../../guides/focus-and-input.md)
 - [Image loading guide](../../guides/image-loading.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 

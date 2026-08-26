@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 57537933ee242fa78844fc5ba99f32e756f254e5ef5491934d7808fabbb1797d
+translation_source_hash: aa03b2aceab77665704837d7c2f42a89562942d12f5d3e93b553b09612d6b755
 translation_status: current
 ---
 
@@ -350,6 +350,7 @@ Alpha 硬切把 Frame 数据迁移到 `RenderFrameCompleted`，把 Failure 迁�
 - [选择并控制 Lazy 集合](../../guides/lazy-collections.md)
 - [主题运行时架构](../../architecture/theming.md)
 - [局部主题 Override](../../guides/theming-local-overrides.md)
+- [控制焦点与硬件按键](../../guides/focus-and-input.md)
 - [图片加载指南](https://docs.viewcompose.com/zh-CN/guides/image-loading)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
 
