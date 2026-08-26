@@ -1,6 +1,37 @@
 ---
-title: Image loading
-slug: /guides/image-loading
+schema_version: 2
+document_id: guide.image-loading
+doc_type: guide
+owner:
+  kind: capability
+  id: image.foundation
+version_lane: released
+capability_ids:
+  - image.foundation
+  - image.coil
+  - image.glide
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-ui-contract
+  - viewcompose-renderer-android
+  - viewcompose-image-coil
+  - viewcompose-image-glide
+sample_ids:
+  - guide.image-loader-install
+  - guide.image-custom-loader
+  - guide.image-coil-uri
+  - guide.image-glide-file
+task: Install the smallest image-loading integration, preserve caller ownership, and make each target request disposable.
+success_checks:
+  - Resource-only content renders without an optional loader.
+  - Remote, URI, file, and model sources run through one explicitly scoped loader.
+  - Every started request returns an idempotent per-target handle and never shuts down the caller-owned decoder.
+  - Placeholder, error, fallback, decode-size, cache, transition, and resource-revision behavior is verified separately.
+failure_checks:
+  - A decoder singleton or target View is treated as renderer-owned.
+  - Global cancellation is used instead of the handle for the exact started request.
+  - A decoder-specific request type leaks into UI Contract or Renderer.
+  - Model payload equality or an unchanged stableKey hides a source-content change.
 ---
 
 # Image loading
@@ -27,6 +58,7 @@ configuration, not an error.
 Install a loader around the smallest subtree that needs it. The provider is read while `Image` or
 `Icon` emits its `NodeSpec`:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt" region="image-loader-install" sample_id="guide.image-loader-install" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 val imageLoader = CoilImageLoaderAdapter(applicationCoilImageLoader)
 
@@ -34,9 +66,9 @@ ProvideImageLoader(imageLoader) {
     Image(
         source = ImageSource.Url("https://example.test/banner.png"),
         contentDescription = "Banner",
-        placeholder = ImageSource.Resource(R.drawable.image_placeholder),
-        error = ImageSource.Resource(R.drawable.image_error),
-        fallback = ImageSource.Resource(R.drawable.image_fallback),
+        placeholder = ImageSource.Resource(android.R.drawable.ic_menu_gallery),
+        error = ImageSource.Resource(android.R.drawable.ic_dialog_alert),
+        fallback = ImageSource.Resource(android.R.drawable.ic_menu_report_image),
         requestOptions = UiImageRequestOptions(
             decodeSize = UiImageDecodeSize.Target,
             memoryCachePolicy = UiImageCachePolicy.Default,
@@ -107,11 +139,12 @@ decoder's global cancellation API as a substitute for the per-request handle.
 An adapter validates its target, maps every supported `ImageSource` subtype, forwards portable
 request options, starts decoder work, and returns a handle that cancels only that work:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt" region="image-custom-loader" sample_id="guide.image-custom-loader" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 class TestImageLoader : UiImageLoader {
     override fun load(target: UiImageTarget, request: UiImageRequest): UiImageLoadHandle {
         val imageView = (target as PlatformUiImageTarget).target as ImageView
-        imageView.setImageResource(R.drawable.image_placeholder)
+        imageView.setImageResource(android.R.drawable.ic_menu_gallery)
         return UiImageLoadHandle { /* cancel only this request */ }
     }
 }
@@ -126,6 +159,7 @@ must not add a second framework cache or change the meaning of `ImageSource.Mode
 `viewcompose-image-coil` is the published optional adapter. Use an application-scoped Coil
 `ImageLoader` when the app owns networking and cache policy:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt" region="image-coil-uri" sample_id="guide.image-coil-uri" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 val imageLoader = CoilImageLoaderAdapter(applicationCoilImageLoader)
 ProvideImageLoader(imageLoader) {
@@ -146,6 +180,7 @@ For module-specific compatibility and operational guidance, see the
 `RequestManager` from each target `ImageView`, while requests inherit the app's `AppGlideModule`,
 registry, cache, and default request configuration:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt" region="image-glide-file" sample_id="guide.image-glide-file" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 val imageLoader = GlideImageLoaderAdapter()
 ProvideImageLoader(imageLoader) {

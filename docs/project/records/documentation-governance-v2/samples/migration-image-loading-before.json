@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "sample_id": "migration.image-loading-before",
+  "sample_class": "non-executable",
+  "language": "kotlin",
+  "capability_id": "image.foundation",
+  "document_ids": ["migration.image-loading"],
+  "version_lane": "released",
+  "reason": "Removed remote-only APIs cannot compile against released current artifacts.",
+  "visible_explanation": "This conceptual source-only baseline identifies the names that must be replaced; do not copy it into current code."
+}

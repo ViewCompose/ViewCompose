@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "guide.image-glide-file",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "image.glide",
+  "document_ids": ["guide.image-loading"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt",
+  "region": "image-glide-file",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

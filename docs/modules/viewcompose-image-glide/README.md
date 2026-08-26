@@ -1,3 +1,21 @@
+---
+schema_version: 2
+document_id: module.viewcompose-image-glide
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-image-glide
+version_lane: released
+capability_ids:
+  - image.glide
+artifact_ids:
+  - viewcompose-image-glide
+sample_ids:
+  - module.image-glide-dependency
+coordinate: com.viewcompose:viewcompose-image-glide:0.1.0-alpha02
+minimal_usage_sample_id: module.image-glide-dependency
+---
+
 # Image Glide
 
 `viewcompose-image-glide` is the optional Glide 5 adapter for ViewCompose image nodes. It translates
@@ -6,6 +24,7 @@ the renderer or widget modules depend on Glide.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="image-glide-dependency" sample_id="module.image-glide-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha02")
@@ -23,18 +42,9 @@ dependencies {
 ## Installation
 
 Create one `GlideImageLoaderAdapter` and supply it to `ProvideImageLoader` or the host configuration
-that owns image loading:
-
-```kotlin
-val imageLoader = GlideImageLoaderAdapter()
-
-ProvideImageLoader(imageLoader) {
-    Image(
-        source = ImageSource.Url("https://example.test/banner.png"),
-        contentDescription = "Banner",
-    )
-}
-```
+that owns image loading. The copy-ready file-loading example lives in the
+[image loading guide](../../guides/image-loading.md), so the integration setup has one compiled
+source owner instead of a duplicated module-local snippet.
 
 The adapter resolves `Glide.with(imageView)` for every request. This preserves the lifecycle scope
 selected by Glide for the mounted target while retaining application-owned registry, networking,

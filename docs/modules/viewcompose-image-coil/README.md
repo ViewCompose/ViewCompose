@@ -1,3 +1,21 @@
+---
+schema_version: 2
+document_id: module.viewcompose-image-coil
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-image-coil
+version_lane: released
+capability_ids:
+  - image.coil
+artifact_ids:
+  - viewcompose-image-coil
+sample_ids:
+  - module.image-coil-dependency
+coordinate: com.viewcompose:viewcompose-image-coil:0.1.0-alpha04
+minimal_usage_sample_id: module.image-coil-dependency
+---
+
 # Image Coil
 
 `viewcompose-image-coil` is the optional Coil 3 adapter for ViewCompose image nodes. It translates
@@ -6,6 +24,7 @@ the renderer or widget modules depend on a networking or image-loading implement
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="image-coil-dependency" sample_id="module.image-coil-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha04")
