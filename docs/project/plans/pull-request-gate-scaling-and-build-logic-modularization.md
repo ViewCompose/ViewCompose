@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-26
-next_action: Begin Phase 3 pull-request impact classification using the stabilized Governance V2 and generated Reference inputs.
+next_action: Merge the Phase 3 classifier and required-result facades, then begin Phase 4 immutable API output reuse.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -36,16 +36,16 @@ maven_release_changesets:
 
 ## Status
 
-Active. Phases 0 through 2 are complete. Required-check behavior remained frozen throughout the
-extraction, and the repository quality gates, device/benchmark tooling, and lifecycle aggregation
-now have compiled ownership plus isolated regression or parity coverage.
+Active. Phases 0 through 3 are complete. The compiled quality build now owns the conservative
+pull-request classifier, and stable required-result facades preserve the existing branch-protection
+contexts while selected child work becomes explicit.
 
 Last verified: 2026-08-26.
 
-Next action: begin Phase 3 pull-request impact classification. Governance V2 now blocks new debt,
-type-checks executable sample ownership, requires structural capability-impact records, and
-byte-compares the committed source-derived Reference. The Phase 0 task-graph fixtures remain the
-immutable pre-extraction comparator rather than being rewritten for later intentional gates.
+Next action: merge the Phase 3 classifier and required-result facades, then begin Phase 4's exact
+immutable API-output fingerprint, manifest, restore, and corruption fallback. The Phase 0 task-
+graph fixtures remain the immutable pre-extraction comparator rather than being rewritten for
+later intentional gates.
 
 ## Maven release changesets
 
@@ -66,7 +66,9 @@ Their names and lifecycle
 dependencies are unchanged. The Changesets classify shared build inputs and declare no artifact
 release. The new Gradle types remain build implementation rather than published artifact APIs;
 application-facing capability IDs, Q levels, compiled API samples, and module-manual changes are
-not applicable.
+not applicable. Phase 3 changes repository-only planning code and workflow orchestration; the
+release-intent verifier detected zero release artifacts, ignored artifacts, or shared publication
+paths, so it adds no Maven Changeset.
 
 ## Objective
 
@@ -270,7 +272,7 @@ Governance V2 plan.
 | 0 | baseline, task-graph manifest, required-check contract, failure fixtures | reviewed baseline and reproducible evidence checked in | Complete |
 | 1 | compiled quality-build skeleton and parity harness | old and delegated task graphs/failures match | Complete |
 | 2 | extraction of architecture, purity, Demo, documentation, device, and benchmark gates | root script contains no long verifier bodies; isolated tests pass | Complete |
-| 3 | conservative PR classifier and required-result facade | synthetic diff matrix and branch-protection scenarios pass | Not started |
+| 3 | conservative PR classifier and required-result facade | synthetic diff matrix and branch-protection scenarios pass | Complete |
 | 4 | immutable API cache and deduplicated site verification | hit, miss, corruption, tooling-change, and unpublished-source cases pass | Not started |
 | 5 | affected-module `qaQuick` execution and selective `qaPreview` | dependency/reverse-dependency golden graph and full fallback pass | Not started |
 | 6 | cache-provider cleanup, CI observation, budgets, documentation, and archive | latency and correctness acceptance criteria hold for observation window | Not started |
@@ -554,6 +556,49 @@ family instead of chasing a changing root task body or a second handwritten Refe
    required context.
 5. Provide manual full override and visible summaries explaining every skipped and selected gate.
 
+Phase 3 completed locally on 2026-08-26. `planPullRequestImpact` is a compiled CLI launched through
+the repository wrapper with `-p tools/viewcompose-quality-build`; the accepted real-history probe
+configured only four included-build tasks and completed in `734 ms`, without configuring an Android
+project. It classified the 21-file Phase 2/Governance merge as full because the diff contained the
+quality build and `website/docusaurus.config.ts`, exactly matching the frozen sensitive-input
+policy. The plan JSON and Markdown summary contain ten gate families, workflow booleans, direct
+artifacts, dependency and reverse-dependent closures, full-fallback reasons, and bounded visible
+path reasons. Unknown paths, non-PR events, empty diffs, more than 300 changed paths, and the
+`full-verification` label are explicit complete-gate fallbacks.
+
+A second real-history probe compared the 11-file Paging lifecycle commit
+`bbd25b448d0a3c85275c119897e5f3d47269451e` with its parent. It reported
+`viewcompose-paging-androidx` as the one direct artifact, ten transitive dependencies, and zero
+reverse dependents from the current canonical contract. It also selected full fallback solely
+because the compliant change contained `release/changes/20260825-paging-mediated-lifecycle.json`.
+This is the intentional Phase 3 limit: the frozen `release/**` safety policy remains broader than
+append-only Changeset ownership. Phase 5 must prove any split between Changesets and sensitive
+release registry/tooling through shadow full-gate comparison before selective module execution can
+use the narrower closure for production changes.
+
+The isolated quality build passed all 53 tests in `5 s`; the 12 new classifier tests cover
+documentation, website, module test, module production and non-source inputs, sample, Preview,
+release, root build, delete, both rename endpoints, large diff, empty diff, manual override,
+non-PR events, unknown paths, deterministic serialization, exact artifact ownership, dependency
+and reverse-dependent closure, and real Git rename/delete parsing. Documentation scripts passed
+56/56, including a repository-wiring test that freezes the `qaQuick` and `Build documentation`
+context names, classifier-owned child selection, `always()` facades, skipped-child acceptance, and
+selected-child failure propagation. English and Simplified Chinese workflow/site operations now
+state that `qaPreview` is visible but non-required, resolving the previous documentation versus
+branch-protection mismatch earlier than Phase 6.
+
+Complete selected-work acceptance ran `qaQuick` and `qaPreview` together with a one-run 4 GiB heap
+and four workers. It passed 2,344 actionable tasks (`2,264` executed and `80` up-to-date) in
+`6 min 44 s`. The production site also passed in `52.2 s`: `412.2 MiB` total,
+`46.4/46.9 MiB` non-API, `7.7/8.0 MiB` JavaScript, `650/768 KiB` largest JavaScript,
+`112/128 KiB` CSS, 100 immutable API versions, 100 module manuals, 100 Chinese fallback routes,
+and 440 audited site pages. The functional conclusion is **improved** because documentation-only
+and website-only diffs can now omit Android child work without weakening a required context, while
+all current full-fallback work still passes. The measured local duration is **inconclusive** as a
+latency comparison because it combines two gates on a warmed checkout, uses four workers instead
+of CI's two, and does not exercise hosted-runner queueing or facade scheduling. Phase 6 will use at
+least ten live samples per change class; the immediate next action is Phase 4 immutable API reuse.
+
 ### Phase 4: reuse immutable documentation safely
 
 1. Add a deterministic fingerprint and manifest for complete API output.
@@ -588,8 +633,9 @@ family instead of chasing a changing root task body or a second handwritten Refe
    substitute for impact selection or immutable API caching.
 4. Observe at least ten successful runs in every enabled change class and record P50, P95, cache hit
    rate, full-fallback rate, and correctness findings in the owning active workflow/site documents.
-5. Update English and Simplified Chinese documentation, resolve the `qaPreview` required-check
-   documentation/configuration mismatch, move durable decisions out of this plan, and archive it.
+5. Update remaining English and Simplified Chinese documentation, move durable decisions out of
+   this plan, and archive it. The `qaPreview` required-check documentation/configuration mismatch
+   was already resolved in Phase 3.
 
 ## Validation matrix
 

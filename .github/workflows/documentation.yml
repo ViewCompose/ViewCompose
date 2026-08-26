@@ -18,6 +18,12 @@ on:
       - "gradle/viewcompose-publishing.properties"
       - "tools/viewcompose-publishing-build/**"
   workflow_dispatch:
+    inputs:
+      force_full:
+        description: Run the complete documentation workflow regardless of the diff
+        required: false
+        default: true
+        type: boolean
 
 concurrency:
   group: documentation-${{ github.workflow }}-${{ github.ref }}
@@ -27,8 +33,48 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build documentation
+  classify:
+    name: Plan documentation verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      documentation: ${{ steps.impact.outputs.documentation }}
+      full_fallback: ${{ steps.impact.outputs.full_fallback }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Classify pull-request impact
+        id: impact
+        env:
+          VIEWCOMPOSE_IMPACT_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD^' }}
+          VIEWCOMPOSE_IMPACT_HEAD_REVISION: ${{ github.sha }}
+          VIEWCOMPOSE_IMPACT_EVENT_NAME: ${{ github.event_name }}
+          VIEWCOMPOSE_FORCE_FULL: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'full-verification')) || inputs.force_full || false }}
+        run: |
+          ./gradlew -p tools/viewcompose-quality-build planPullRequestImpact --stacktrace
+          cat tools/viewcompose-quality-build/build/reports/pull-request-impact/github-output.txt >> "$GITHUB_OUTPUT"
+          cat tools/viewcompose-quality-build/build/reports/pull-request-impact/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+  buildDocumentation:
+    name: Build documentation work
+    needs: classify
+    if: needs.classify.outputs.documentation == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -92,10 +138,45 @@ jobs:
         with:
           path: website/build
 
+  build:
+    name: Build documentation
+    needs:
+      - classify
+      - buildDocumentation
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Report documentation result
+        env:
+          PLAN_RESULT: ${{ needs.classify.result }}
+          SELECTED: ${{ needs.classify.outputs.documentation }}
+          WORK_RESULT: ${{ needs.buildDocumentation.result }}
+        run: |
+          if [[ "$PLAN_RESULT" != "success" ]]; then
+            echo "Impact planning failed with result: $PLAN_RESULT" >&2
+            exit 1
+          fi
+          if [[ "$SELECTED" == "true" && "$WORK_RESULT" != "success" ]]; then
+            echo "Selected documentation work ended with result: $WORK_RESULT" >&2
+            exit 1
+          fi
+          if [[ "$SELECTED" != "true" && "$WORK_RESULT" != "skipped" ]]; then
+            echo "Unselected documentation work unexpectedly ended with result: $WORK_RESULT" >&2
+            exit 1
+          fi
+          echo "documentation selection=$SELECTED result=$WORK_RESULT"
+
   deploy:
     name: Deploy documentation
-    if: github.ref == 'refs/heads/main'
-    needs: build
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      needs.build.result == 'success' &&
+      needs.buildDocumentation.result == 'success'
+    needs:
+      - build
+      - buildDocumentation
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

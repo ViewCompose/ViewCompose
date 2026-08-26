@@ -190,9 +190,14 @@ For each module release:
 
 ## Continuous integration and deployment
 
-`.github/workflows/documentation.yml` builds affected pull requests but never deploys them. A push
-to `main`, or a manual run on `main`, produces the complete site and deploys it through the protected
-`github-pages` environment.
+`.github/workflows/documentation.yml` remains present for every pull request. Its standalone impact
+job configures only `tools/viewcompose-quality-build`, publishes the source-owned classification in
+the job summary, and selects the expensive documentation child only for documentation, website,
+published-production, or conservative full-fallback inputs. The stable `Build documentation`
+context is an `always()` result facade: an intentional skip succeeds only after a successful
+unselected plan, while a planning or selected-child failure remains fatal. A push to `main`, or a
+manual run on `main`, always selects the complete child; only its verified Pages artifact can deploy
+through the protected `github-pages` environment.
 
 Deployment succeeds only after production smoke tests fetch both catalogs and every current manual
 in both locales, including representative no-trailing-slash routes. HTTP, rendered not-found,

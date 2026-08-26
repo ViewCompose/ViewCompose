@@ -65,6 +65,62 @@ test('documentation CI delegates translation freshness to the canonical Gradle g
   assert.doesNotMatch(workflow, /npm run verify:translations/u);
 });
 
+test('required contexts remain always-reported facades around classified child work', async () => {
+  const ciWorkflow = await readFile(resolve(repositoryRoot, '.github/workflows/ci.yml'), 'utf8');
+  const documentationWorkflow = await readFile(
+    resolve(repositoryRoot, '.github/workflows/documentation.yml'),
+    'utf8',
+  );
+  const requiredContract = JSON.parse(
+    await readFile(
+      resolve(
+        repositoryRoot,
+        'tools/viewcompose-quality-build/phase0/fixtures/required-check-contract.json',
+      ),
+      'utf8',
+    ),
+  );
+  const qaQuickWork = sliceBetween(ciWorkflow, '  qaQuickWork:', '  qaQuick:');
+  const qaQuickFacade = sliceBetween(ciWorkflow, '  qaQuick:', '  qaPreviewWork:');
+  const qaPreviewWork = sliceBetween(ciWorkflow, '  qaPreviewWork:', '  qaPreview:');
+  const qaPreviewFacade = ciWorkflow.slice(ciWorkflow.indexOf('  qaPreview:'));
+  const documentationWork = sliceBetween(
+    documentationWorkflow,
+    '  buildDocumentation:',
+    '  build:',
+  );
+  const documentationFacade = sliceBetween(documentationWorkflow, '  build:', '  deploy:');
+
+  assert.deepEqual(
+    requiredContract.branchProtection.requiredContexts.map(({context}) => context),
+    ['qaQuick', 'Build documentation'],
+  );
+  assert.match(ciWorkflow, /\.\/gradlew -p tools\/viewcompose-quality-build planPullRequestImpact/u);
+  assert.match(
+    documentationWorkflow,
+    /\.\/gradlew -p tools\/viewcompose-quality-build planPullRequestImpact/u,
+  );
+  assert.match(qaQuickWork, /if: needs\.classify\.outputs\.qa_quick == 'true'/u);
+  assert.match(qaPreviewWork, /if: needs\.classify\.outputs\.qa_preview == 'true'/u);
+  assert.match(
+    documentationWork,
+    /if: needs\.classify\.outputs\.documentation == 'true'/u,
+  );
+  for (const [facade, name, child] of [
+    [qaQuickFacade, 'qaQuick', 'qaQuickWork'],
+    [qaPreviewFacade, 'qaPreview', 'qaPreviewWork'],
+    [documentationFacade, 'Build documentation', 'buildDocumentation'],
+  ]) {
+    assert.match(facade, new RegExp(`name: ${name}`, 'u'));
+    assert.match(facade, /if: always\(\)/u);
+    assert.match(facade, /- classify/u);
+    assert.match(facade, new RegExp(`- ${child}`, 'u'));
+    assert.match(facade, /if \[\[ "\$PLAN_RESULT" != "success" \]\]/u);
+    assert.match(facade, /"\$SELECTED" == "true" && "\$WORK_RESULT" != "success"/u);
+    assert.match(facade, /"\$SELECTED" != "true" && "\$WORK_RESULT" != "skipped"/u);
+  }
+});
+
 test('site quality report stays outside the deployable and budgeted site tree', async () => {
   const buildScript = await readFile(
     resolve(repositoryRoot, 'website/scripts/build-site.mjs'),
