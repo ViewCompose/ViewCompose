@@ -1,8 +1,6 @@
 ---
-title: 使用导航
-sidebar_position: 8
 translation_source: tutorials/navigation.md
-translation_source_hash: 58c6049d35a8e5111b734d28b3b3638d59e89ecb85045302ca38b201999f4fc4
+translation_source_hash: 5e713d61576fa681be7b2acdd2933b7521ecad071810f9aa9cd4b6c905500628
 translation_status: current
 ---
 
@@ -10,18 +8,10 @@ translation_status: current
 
 ## 必需依赖
 
-本页可以独立使用。添加 Android 导航功能模块即可；它会传递引入平台无关的路由模型：
-
-```kotlin title="build.gradle.kts"
-repositories { mavenCentral() }
-
-dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
-    implementation("androidx.activity:activity:1.12.4")
-    implementation("com.google.android.material:material:1.13.0")
-}
-```
+本页可以独立使用。请添加 Maven Central、`viewcompose-material3-android:0.1.0-alpha01`、
+`viewcompose-navigation-android:0.1.0-alpha01`、`androidx.activity:activity:1.12.4` 和
+`com.google.android.material:material:1.13.0`。Android 导航产物会传递引入平台无关的 Route
+模型。
 
 ## 在两个目标页之间跳转
 
@@ -83,15 +73,14 @@ class NavigationTutorialActivity : ComponentActivity() {
 ```
 {/* tutorial-sample-end */}
 
-被记住的 controller 拥有返回栈。`NavHost` 渲染当前 `NavRoute`，并把系统 Back 接到同一个栈。
-宿主挂载后，可以从界面事件调用 `navigate` 或 `popBackStack`。
+remember 的 Controller 持有已提交返回栈。`NavHost` 渲染当前 `NavRoute`，并把 Android 系统
+返回接到同一个栈。Host 挂载后，从 UI 事件调用 `navigate` 或 `popBackStack`。
 
 ## 验证结果
 
-点击 `Open details`，再通过 `Back` 按钮或 Android 系统 Back 返回。编译命令：
+点击 `Open details`，再通过界面上的 `Back` 返回。重新打开 Details，然后使用 Android 系统
+返回。两条路径都必须只返回 Home 一次。使用
+`./gradlew :samples:tutorials:assembleDebug` 完成编译。
 
-```bash
-./gradlew :samples:tutorials:assembleDebug
-```
-
-类型化参数、多返回栈、SavedState 和预测性返回请查看[导航指南](../guides/navigation.md)。
+需要验证恢复、显式失败处理和 Predictive Back 时，请继续阅读
+[配置可上线的导航宿主](../guides/navigation.md)。

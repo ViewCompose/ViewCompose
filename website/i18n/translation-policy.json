@@ -30,6 +30,7 @@
     "architecture/effects.md",
     "architecture/lifecycle-and-saved-state.md",
     "architecture/modifier.md",
+    "architecture/navigation.md",
     "architecture/node-spec.md",
     "architecture/overview.md",
     "architecture/render-failures.md",

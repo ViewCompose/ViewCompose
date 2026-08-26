@@ -1,25 +1,31 @@
 ---
-title: Use navigation
-sidebar_position: 8
+schema_version: 2
+document_id: tutorial.navigation
+doc_type: tutorial
+owner:
+  kind: capability
+  id: navigation.host
+version_lane: released
+capability_ids:
+  - navigation.host
+artifact_ids:
+  - viewcompose-navigation-android
+  - viewcompose-navigation-core
+  - viewcompose-material3-android
+sample_ids:
+  - tutorial.navigation
+expected_result: A two-destination native View host that pushes and pops one committed back stack.
+verification_action: Run the sample, open Details, and return with both the UI action and Android system Back.
 ---
 
 # Use navigation
 
 ## Required dependencies
 
-This page is standalone. Add the Android navigation feature; it supplies the platform-neutral
-route model transitively:
-
-```kotlin title="build.gradle.kts"
-repositories { mavenCentral() }
-
-dependencies {
-    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
-    implementation("androidx.activity:activity:1.12.4")
-    implementation("com.google.android.material:material:1.13.0")
-}
-```
+This page is standalone. Add Maven Central, `viewcompose-material3-android:0.1.0-alpha01`,
+`viewcompose-navigation-android:0.1.0-alpha01`, `androidx.activity:activity:1.12.4`, and
+`com.google.android.material:material:1.13.0`. The Android navigation artifact supplies the
+platform-neutral route model transitively.
 
 ## Navigate between two destinations
 
@@ -81,17 +87,15 @@ class NavigationTutorialActivity : ComponentActivity() {
 ```
 {/* tutorial-sample-end */}
 
-The remembered controller owns the back stack. `NavHost` renders the current `NavRoute` and
-connects system Back to the same stack. Call `navigate` or `popBackStack` from UI events after the
-host is mounted.
+The remembered controller owns the committed back stack. `NavHost` renders the current `NavRoute`
+and connects Android system Back to the same stack. Call `navigate` or `popBackStack` from UI events
+after the host is mounted.
 
 ## Verify the result
 
-Press `Open details`, then return with either `Back` or Android system Back. Compile with:
+Press `Open details`, then return with the on-screen `Back` action. Open Details again and use
+Android system Back. Both paths must return to Home exactly once. Compile with
+`./gradlew :samples:tutorials:assembleDebug`.
 
-```bash
-./gradlew :samples:tutorials:assembleDebug
-```
-
-For typed arguments, multiple stacks, SavedState, and predictive Back, see the
-[Navigation guide](../guides/navigation.md).
+For restoration, explicit failure handling, and predictive Back acceptance, continue with
+[Configure a production navigation host](../guides/navigation.md).
