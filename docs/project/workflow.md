@@ -114,14 +114,40 @@ Demo UI tests. If one cannot be delivered, state what is missing and why in the 
 
 `qaQuick` compiles core modules, runs unit tests, and enforces the canonical documentation gate,
 including language placement and reviewed translation fingerprints. `qaPreview` runs
-`:viewcompose-preview:verifyPaparazziDebug` and is a separate required CI check. A visual change may
+`:viewcompose-preview:verifyPaparazziDebug` as an independent visual CI check. A visual change may
 update committed baselines only after the generated images and differences have been reviewed;
 never record an unexplained mismatch merely to make the gate pass.
 
-GitHub Actions runs the same complete `qaQuick` task with a 4 GiB Gradle heap and at most two
-workers. Release R8, lint, and documentation generation otherwise compete inside the hosted
-runner's default 2 GiB heap. This is only a CI resource envelope: it does not remove, split, retry,
-or waive any gate task, and the project-wide local Gradle default remains unchanged.
+Pull-request workflows first run the standalone `planPullRequestImpact` entry point from
+`tools/viewcompose-quality-build`; this configures only that included build, not the Android
+multi-project build. The classifier reads the exact base-to-head Git diff, the publishing artifact
+catalog, the dependency contract, and the frozen full-fallback policy. Its JSON and job summary list
+selected gate families, direct artifacts, transitive dependencies, reverse dependents, reasons,
+workflow selection, and full-fallback status. Documentation and website-only changes can skip
+Android child work. Module production changes select release, API-documentation, documentation,
+module, and any graph-reachable Preview gates; module test, Demo, sample, integration, and benchmark
+paths retain their explicit families. More than 300 changed paths, an unknown path, a sensitive
+shared input, a non-pull-request event, an empty diff, or the `full-verification` pull-request label
+selects every current workflow.
+
+Phase 3 deliberately keeps the frozen `release/**` policy conservative. Therefore a compliant
+published-production pull request that also adds its required `release/changes/*.json` file still
+selects complete verification, even though the plan reports the exact direct and graph closures.
+Phase 5 may separate append-only Changeset ownership from sensitive registry/tooling paths only
+after shadow comparison proves that the narrower result never misses a full-gate failure.
+
+The branch-protection contexts remain exactly `qaQuick` and `Build documentation`; `qaPreview` is
+visible but is not currently a required context. Each visible context is an `always()` result facade:
+it succeeds for intentionally skipped child work only when classification succeeded and selected
+false, and it fails when planning fails or selected work does not succeed. Required workflows still
+trigger for every pull request, so path filtering cannot leave a required context pending. Every
+`main` or manual run selects complete verification; documentation deployment remains possible only
+after the complete documentation child and its facade both succeed.
+
+When selected, GitHub Actions runs the complete `qaQuick` task with a 4 GiB Gradle heap and at most
+two workers. Release R8, lint, and documentation generation otherwise compete inside the hosted
+runner's default 2 GiB heap. This is only a CI resource envelope: it does not split, retry, or waive
+selected task work, and the project-wide local Gradle default remains unchanged.
 
 `qaFull` adds the application, Counter sample, and tutorial connected tests to `qaQuick`. Every
 repository `connectedDebugAndroidTest` entry first runs `verifyConnectedAndroidDeviceReady`. The

@@ -5,14 +5,62 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      force_full:
+        description: Run every verification workflow regardless of the diff
+        required: false
+        default: true
+        type: boolean
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  qaQuick:
-    name: qaQuick
+  classify:
+    name: Plan verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      qa_quick: ${{ steps.impact.outputs.qa_quick }}
+      qa_preview: ${{ steps.impact.outputs.qa_preview }}
+      full_fallback: ${{ steps.impact.outputs.full_fallback }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Classify pull-request impact
+        id: impact
+        env:
+          VIEWCOMPOSE_IMPACT_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD^' }}
+          VIEWCOMPOSE_IMPACT_HEAD_REVISION: ${{ github.sha }}
+          VIEWCOMPOSE_IMPACT_EVENT_NAME: ${{ github.event_name }}
+          VIEWCOMPOSE_FORCE_FULL: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'full-verification')) || inputs.force_full || false }}
+        run: |
+          ./gradlew -p tools/viewcompose-quality-build planPullRequestImpact --stacktrace
+          cat tools/viewcompose-quality-build/build/reports/pull-request-impact/github-output.txt >> "$GITHUB_OUTPUT"
+          cat tools/viewcompose-quality-build/build/reports/pull-request-impact/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+  qaQuickWork:
+    name: qaQuick work
+    needs: classify
+    if: needs.classify.outputs.qa_quick == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -61,8 +109,40 @@ jobs:
           qaQuick
           --stacktrace
 
-  qaPreview:
-    name: qaPreview
+  qaQuick:
+    name: qaQuick
+    needs:
+      - classify
+      - qaQuickWork
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Report qaQuick result
+        env:
+          PLAN_RESULT: ${{ needs.classify.result }}
+          SELECTED: ${{ needs.classify.outputs.qa_quick }}
+          WORK_RESULT: ${{ needs.qaQuickWork.result }}
+        run: |
+          if [[ "$PLAN_RESULT" != "success" ]]; then
+            echo "Impact planning failed with result: $PLAN_RESULT" >&2
+            exit 1
+          fi
+          if [[ "$SELECTED" == "true" && "$WORK_RESULT" != "success" ]]; then
+            echo "Selected qaQuick work ended with result: $WORK_RESULT" >&2
+            exit 1
+          fi
+          if [[ "$SELECTED" != "true" && "$WORK_RESULT" != "skipped" ]]; then
+            echo "Unselected qaQuick work unexpectedly ended with result: $WORK_RESULT" >&2
+            exit 1
+          fi
+          echo "qaQuick selection=$SELECTED result=$WORK_RESULT"
+
+  qaPreviewWork:
+    name: qaPreview work
+    needs: classify
+    if: needs.classify.outputs.qa_preview == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -111,3 +191,33 @@ jobs:
             viewcompose-preview/build/reports/paparazzi/
             viewcompose-preview/build/reports/tests/testDebugUnitTest/
             viewcompose-preview/build/test-results/testDebugUnitTest/
+
+  qaPreview:
+    name: qaPreview
+    needs:
+      - classify
+      - qaPreviewWork
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Report qaPreview result
+        env:
+          PLAN_RESULT: ${{ needs.classify.result }}
+          SELECTED: ${{ needs.classify.outputs.qa_preview }}
+          WORK_RESULT: ${{ needs.qaPreviewWork.result }}
+        run: |
+          if [[ "$PLAN_RESULT" != "success" ]]; then
+            echo "Impact planning failed with result: $PLAN_RESULT" >&2
+            exit 1
+          fi
+          if [[ "$SELECTED" == "true" && "$WORK_RESULT" != "success" ]]; then
+            echo "Selected qaPreview work ended with result: $WORK_RESULT" >&2
+            exit 1
+          fi
+          if [[ "$SELECTED" != "true" && "$WORK_RESULT" != "skipped" ]]; then
+            echo "Unselected qaPreview work unexpectedly ended with result: $WORK_RESULT" >&2
+            exit 1
+          fi
+          echo "qaPreview selection=$SELECTED result=$WORK_RESULT"

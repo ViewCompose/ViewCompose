@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 66bd7ce045a0c73d616ac7bef2dce88a5c7c8b70be63a5564f7dee7fb143a143
+translation_source_hash: de2e8dc8a85d26c2b7a37beb1a48537228e8a3505a907a796c4438a9ca176117
 translation_status: current
 ---
 
@@ -146,8 +146,12 @@ alpha、beta、RC、snapshot、preview、development 和 EAP 不得成为 `lates
 
 ## 持续集成与部署
 
-`.github/workflows/documentation.yml` 构建受影响 PR，但不部署。推送到 `main` 或在 `main`
-手工运行时，生成完整站点并通过受保护的 `github-pages` environment 部署。
+`.github/workflows/documentation.yml` 对每个 PR 都保持存在。独立影响规划 Job 只配置
+`tools/viewcompose-quality-build`，在 Job Summary 公布源码归属分类，并且只有文档、`website`、发布
+模块生产输入或保守全量回退才选择高成本文档子任务。稳定的 `Build documentation` Context 是
+`always()` 结果门面：只有规划成功且明确未选择子任务时，跳过才成功；规划失败或已选子任务失败仍会
+阻断。推送到 `main` 或在 `main` 手工运行时始终选择完整子任务，只有它验证过的 Pages 产物才能通过
+受保护的 `github-pages` environment 部署。
 
 部署只有在正式域名冒烟测试访问两个 Locale 的目录、全部当前手册和代表性无尾斜杠路由后才成功。
 HTTP、渲染 Not Found、错误插件或目录缺项在有界 CDN 重试后仍会令部署失败。
