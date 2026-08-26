@@ -296,8 +296,11 @@ identity token.
   reading snapshots. The first correction run then selected Temurin `17.0.20+1` while the seed used
   `17.0.20+8`; its correctly different generator fingerprint caused a cold `1175.9 s` reconstruction,
   after which catalog generation and the complete site build passed. The workflow now pins
-  Temurin `17.0.20+8` and Node `24.19.0`; the next action is a complete hosted hot-path rerun through
-  the site build.
+  Temurin `17.0.20+8` and Node `24.19.0`. The pinned rerun restored the exact `cb67…/ab01…` seed in
+  approximately `4 s`, reused `5/5` groups with zero generation or invalid groups in `5.5 s`, and
+  completed the API step in approximately `1 min 58 s`. Versioned manual generation then completed
+  in approximately `1 s` without cold reconstruction, and the complete production site job passed
+  in `6 min 33 s`. The correction conclusion is **improved**; Phase 4 acceptance is complete.
 
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and

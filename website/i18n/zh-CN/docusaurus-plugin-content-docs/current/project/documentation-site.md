@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 43a465b8a3351a6db663dbafb4bcacc68f95166a27f4882fb90365294ba02d1c
+translation_source_hash: 8d1f98ed7dee853d12e6f84c8b0328a5d8fe56700ad1bb37475f59a61c305a52
 translation_status: current
 ---
 
@@ -223,7 +223,9 @@ identity token。
   不可达的冻结提交。生成器现会在读取快照前解析每个唯一完整 SHA。首次修正运行选中了 Temurin
   `17.0.20+1`，而种子缓存使用 `17.0.20+8`；正确产生的不同生成器指纹触发了 `1175.9 s` 冷重建，
   随后的目录生成与完整站点构建均通过。工作流现固定 Temurin `17.0.20+8` 与 Node `24.19.0`；
-  下一步是让完整托管热路径通过站点构建。
+  固定版本后的复跑约 `4 s` 恢复精确 `cb67…/ab01…` 种子，在 `5.5 s` 内复用 `5/5` 组，生成组与
+  无效组均为零，完整 API 步骤约 `1 min 58 s`。随后版本化手册生成在没有冷重建的情况下约 `1 s`
+  完成，完整生产站点任务以 `6 min 33 s` 通过。修正结论为 **improved**；Phase 4 验收完成。
 
 - **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
   上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量
