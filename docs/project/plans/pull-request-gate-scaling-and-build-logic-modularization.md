@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-26
-next_action: Review Phase 4 in CI, seed the trusted main cache, and record the first hosted exact hit.
+next_action: Implement Phase 5 affected-Gradle verification with shadow full-gate comparison.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -36,15 +36,13 @@ maven_release_changesets:
 
 ## Status
 
-Active. Phases 0 through 3 are complete. Phase 4 implementation and local acceptance are complete;
-hosted restore/save and exact-hit evidence remains before the phase closes.
+Active. Phases 0 through 4 are complete. Phase 5 affected-Gradle verification is next.
 
 Last verified: 2026-08-26.
 
-Next action: review Phase 4 in CI, merge it so the complete `main` documentation child can seed the
-trusted cache, then record a pull-request exact hit before beginning Phase 5. The Phase 0 task-graph
-fixtures remain the immutable pre-extraction comparator rather than being rewritten for later
-intentional gates.
+Next action: implement Phase 5 affected-Gradle verification with shadow full-gate comparison. The
+Phase 0 task-graph fixtures remain the immutable pre-extraction comparator rather than being
+rewritten for later intentional gates.
 
 ## Maven release changesets
 
@@ -234,6 +232,10 @@ The cache fingerprint must cover at least:
 - Gradle wrapper, Java/Dokka-relevant versions, and API assembly/verification scripts; and
 - working-tree source and build inputs for unpublished artifacts.
 
+The workflow must pin the complete Java and Node distribution versions covered by the fingerprint.
+Floating major selectors are forbidden because two runners may otherwise produce different
+generator fingerprints for the same repository inputs.
+
 Pull requests restore only exact default-branch entries and never write a broadly reusable cache.
 After restoration, the existing complete manifest, route, alias, and source-link verification still
 runs. A missing, corrupt, partial, or mismatched entry falls back automatically to full generation.
@@ -275,8 +277,8 @@ Governance V2 plan.
 | 1 | compiled quality-build skeleton and parity harness | old and delegated task graphs/failures match | Complete |
 | 2 | extraction of architecture, purity, Demo, documentation, device, and benchmark gates | root script contains no long verifier bodies; isolated tests pass | Complete |
 | 3 | conservative PR classifier and required-result facade | synthetic diff matrix and branch-protection scenarios pass | Complete |
-| 4 | immutable API cache and deduplicated site verification | hit, miss, corruption, tooling-change, and unpublished-source cases pass | In progress: local accepted; hosted evidence pending |
-| 5 | affected-module `qaQuick` execution and selective `qaPreview` | dependency/reverse-dependency golden graph and full fallback pass | Not started |
+| 4 | immutable API cache and deduplicated site verification | hit, miss, corruption, tooling-change, and unpublished-source cases pass | Complete |
+| 5 | affected-module `qaQuick` execution and selective `qaPreview` | dependency/reverse-dependency golden graph and full fallback pass | In progress |
 | 6 | cache-provider cleanup, CI observation, budgets, documentation, and archive | latency and correctness acceptance criteria hold for observation window | Not started |
 
 ### Phase 0: freeze contracts and collect evidence
@@ -623,7 +625,22 @@ generator-tooling drift, pruning, and the main-only save decision. A local proce
 reached approximately `1.75 GiB` RSS during the 31-entry group, so the accepted CI concurrency is
 `1`; the snapshot is not a hosted-runner peak measurement. The conclusion is **improved** locally.
 The phase remains open until a successful complete `main` child saves the cache and a subsequent
-hosted pull-request child reports an exact verified hit.
+hosted child reports an exact verified hit. The first complete `main` child assembled five groups in
+`1139.4 s`, completed its API step in `21 min`, saved a `39.3 MB` cache, and deployed. After cache
+index propagation, an exact rerun restored it in `7 s`, reused `5/5` groups with zero generation or
+invalid groups in `5.7 s`, and completed the API step in `2 min 9 s` (`89.8%` lower). That run then
+exposed a separate cold-path side-effect dependency: the versioned-manual generator assumed API
+reconstruction had already fetched unreachable frozen revisions. The generator now resolves each
+unique exact SHA itself before reading snapshots. The first correction run also proved that
+floating JDK major selection was unsound: Temurin `17.0.20+1` differed from the seed's
+`17.0.20+8`, so the actual-runtime
+fingerprint correctly forced a cold `1175.9 s` reconstruction. Catalog generation and the complete
+site build passed, but this did not exercise the hot path. Documentation CI now pins Temurin
+`17.0.20+8` and Node `24.19.0`. The pinned hosted rerun restored the exact `cb67…/ab01…` seed in
+approximately `4 s`, reused `5/5` groups with zero generation or invalid groups in `5.5 s`, and
+completed the API step in approximately `1 min 58 s`. Versioned manual generation then completed
+in approximately `1 s` without cold API reconstruction, and the complete production site job
+passed in `6 min 33 s`. The conclusion is **improved** and Phase 4 is complete.
 
 ### Phase 5: execute affected Gradle verification
 

@@ -47,6 +47,8 @@ The production artifact is assembled in seven explicit stages:
 5. the website generators read publishing metadata, the immutable release registry, and
    `docs/modules/README.md`. They generate the catalog plus one module-manual snapshot per released
    artifact/version from the same frozen Git revision; they do not maintain a second registry.
+   Every unique frozen revision is resolved by exact full SHA before any snapshot read, independent
+   of whether immutable API output was restored or rebuilt.
 6. Docusaurus type-checks and builds the handwritten documents, site presentation, generated API
    output, localized search indexes, and compatibility redirects for both `en` and `zh-CN` into
    `website/build/`, with broken links and anchors treated as errors.
@@ -215,7 +217,10 @@ The selected child computes the immutable generator and complete-history fingerp
 restoring `website/generated/api`. Pull requests use restore-only access; only a successful `main`
 child may save a cache. The primary key is unique per run so a verified recovery can supersede a
 corrupt archive, while ordered restore prefixes first select the same complete fingerprint and then
-the most recent cache produced by the same generator. A restore is never trusted by key alone: the
+the most recent cache produced by the same generator. Because the generator fingerprint includes
+the actual Java and Node runtimes, the workflow pins their complete distribution versions instead
+of floating major selectors; changing either version is an explicit cache migration. A restore is
+never trusted by key alone: the
 assembler verifies every revision group and publishes hit, partial, miss, recovery, generated-group,
 invalid-group, parallelism, and duration telemetry in the job summary. The source/language/
 translation gate runs once, the catalog is generated once, and CI then uses prepared type-check and
@@ -279,6 +284,23 @@ identity token.
   valid group, rejected and regenerated only the damaged group in `32.2 s`, and passed the existing
   manifest, route, alias, and immutable-source checks. The local cache result is **improved**;
   hosted restore/save and hit evidence remains the next acceptance action.
+
+- **2026-08-26, immutable API cache hosted acceptance:** the first complete `main` run missed by
+  design, spent `1139.4 s` assembling five historical groups, completed the API step in `21 min`,
+  then built, uploaded, saved a `39.3 MB` cache, and deployed successfully. After the cache became
+  visible, an exact `main` rerun restored it in `7 s`, verified and reused `5/5` groups with zero
+  generation or invalid groups in `5.7 s`, and completed the API step in `2 min 9 s`, an `89.8%`
+  reduction. The immutable-cache conclusion is **improved**. That hot run exposed one separate
+  limitation: versioned manual generation had implicitly relied on cold API reconstruction to fetch
+  otherwise unreachable frozen commits. The generator now resolves every unique full SHA before
+  reading snapshots. The first correction run then selected Temurin `17.0.20+1` while the seed used
+  `17.0.20+8`; its correctly different generator fingerprint caused a cold `1175.9 s` reconstruction,
+  after which catalog generation and the complete site build passed. The workflow now pins
+  Temurin `17.0.20+8` and Node `24.19.0`. The pinned rerun restored the exact `cb67…/ab01…` seed in
+  approximately `4 s`, reused `5/5` groups with zero generation or invalid groups in `5.5 s`, and
+  completed the API step in approximately `1 min 58 s`. Versioned manual generation then completed
+  in approximately `1 s` without cold reconstruction, and the complete production site job passed
+  in `6 min 33 s`. The correction conclusion is **improved**; Phase 4 acceptance is complete.
 
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and

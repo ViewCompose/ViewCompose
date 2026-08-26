@@ -2,6 +2,7 @@ import {spawn} from 'node:child_process';
 import {mkdir, rm, writeFile} from 'node:fs/promises';
 import {dirname, posix, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {ensureRevisionAvailable} from './assemble-versioned-api-docs.mjs';
 import {loadDocumentationReleases} from './documentation-releases.mjs';
 
 const websiteRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -15,10 +16,10 @@ function stripNumberPrefix(segment) {
   return numberPrefix.exec(segment)?.[1] ?? segment;
 }
 
-function gitFile(revision, path) {
+function gitFile(revision, path, root = repositoryRoot) {
   return new Promise((accept, reject) => {
     const child = spawn('git', ['show', `${revision}:${path}`], {
-      cwd: repositoryRoot,
+      cwd: root,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     const output = [];
@@ -37,6 +38,16 @@ function gitFile(revision, path) {
       }
     });
   });
+}
+
+export async function ensureManualSourceRevisions(
+  entries,
+  {root = repositoryRoot, ensureRevision = ensureRevisionAvailable} = {},
+) {
+  const revisions = [...new Set(entries.map(({sourceRevision}) => sourceRevision))].sort();
+  for (const revision of revisions) {
+    await ensureRevision(revision, {root});
+  }
 }
 
 function routeForMarkdown(sourcePath, target) {
@@ -143,19 +154,26 @@ custom_edit_url: null
 ${body.trim()}\n`;
 }
 
-export async function generateVersionedModuleManuals() {
-  const releases = await loadDocumentationReleases(repositoryRoot);
-  await rm(outputRoot, {recursive: true, force: true});
-  await mkdir(outputRoot, {recursive: true});
+export async function generateVersionedModuleManuals({
+  root = repositoryRoot,
+  destination = outputRoot,
+  releaseLoader = loadDocumentationReleases,
+  ensureRevision = ensureRevisionAvailable,
+  readRevisionFile = gitFile,
+} = {}) {
+  const releases = await releaseLoader(root);
+  await ensureManualSourceRevisions(releases.entries, {root, ensureRevision});
+  await rm(destination, {recursive: true, force: true});
+  await mkdir(destination, {recursive: true});
   for (const entry of releases.entries) {
     const sourcePath = `docs/modules/${entry.artifact}/README.md`;
-    const source = await gitFile(entry.sourceRevision, sourcePath);
-    const output = resolve(outputRoot, 'modules', entry.artifact, `${entry.version}.md`);
+    const source = await readRevisionFile(entry.sourceRevision, sourcePath, root);
+    const output = resolve(destination, 'modules', entry.artifact, `${entry.version}.md`);
     await mkdir(dirname(output), {recursive: true});
     await writeFile(output, versionedManualDocument(entry, source, releases.entries), 'utf8');
   }
   await writeFile(
-    resolve(outputRoot, 'manifest.json'),
+    resolve(destination, 'manifest.json'),
     `${JSON.stringify(releases.entries, null, 2)}\n`,
     'utf8',
   );

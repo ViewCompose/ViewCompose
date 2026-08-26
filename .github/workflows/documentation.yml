@@ -51,7 +51,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "17.0.20+8"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
@@ -88,7 +88,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "17.0.20+8"
           cache: gradle
 
       - name: Set up Gradle
@@ -105,7 +105,7 @@ jobs:
       - name: Set up Node.js 24
         uses: actions/setup-node@v7
         with:
-          node-version: "24"
+          node-version: "24.19.0"
           cache: npm
           cache-dependency-path: website/package-lock.json
 
@@ -254,7 +254,7 @@ jobs:
       - name: Set up Node.js 24
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: "24.19.0"
 
       - name: Verify deployed module routes
         working-directory: website

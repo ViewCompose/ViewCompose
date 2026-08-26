@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 51872d016ff16c63c132be3915a785333a5c16b61a58502ddfac8ffd7dcb4998
+translation_source_hash: 8d1f98ed7dee853d12e6f84c8b0328a5d8fe56700ad1bb37475f59a61c305a52
 translation_status: current
 ---
 
@@ -27,7 +27,8 @@ translation_status: current
    缺失的冻结提交只按完整 SHA 补取，绝不替换为可移动引用。历史工作区只接收其 source revision
    组对应的发布记录；早于当前构建契约的 revision 只获得不会进入发布产物的临时配置垫片。
 5. 站点生成器读取发布元数据、不可变注册表和 `docs/modules/README.md`，从同一冻结 Git
-   revision 生成目录和每个已发布制品/版本的模块手册快照，不维护第二份注册表。
+   revision 生成目录和每个已发布制品/版本的模块手册快照，不维护第二份注册表。无论不可变 API
+   产物来自恢复还是重建，生成器都会先按精确完整 SHA 解析每个唯一冻结 revision，再读取快照。
 6. Docusaurus type-check 并构建手写文档、站点界面、生成 API、本地化搜索索引和兼容重定向，
    同时输出 `en` 与 `zh-CN` 到 `website/build/`；坏链和坏锚点均为错误。
 7. 构建 wrapper 验证跨语言站点外壳行为，审核 Docusaurus 自有 HTML 无障碍，并限制构建时间、
@@ -165,7 +166,9 @@ alpha、beta、RC、snapshot、preview、development 和 EAP 不得成为 `lates
 已选文档子任务会在恢复 `website/generated/api` 前计算不可变生成器指纹和完整历史指纹。PR 只读
 缓存，只有成功的 `main` 子任务可以写入。主键按运行唯一，因此损坏恢复后可以用同一指纹的新键替代
 旧归档；有序恢复前缀先匹配同一完整指纹，再匹配同一生成器产生的最新缓存。任何恢复都不能只凭键
-名信任：装配器逐组验证，并在 Job Summary 输出 hit、partial、miss、recovery、生成组、无效组、
+名信任。由于生成器指纹包含实际 Java 与 Node runtime，工作流固定它们的完整发行版本，而不使用
+浮动 major selector；变更任一版本都属于显式缓存迁移。装配器逐组验证，并在 Job Summary 输出
+hit、partial、miss、recovery、生成组、无效组、
 并行度和耗时。源码/语言/翻译门禁只运行一次，目录只生成一次，随后 CI 调用 prepared type-check 与
 站点构建入口，避免 npm 生命周期钩子重复同一批预构建工作。缓存服务恢复或保存失败时会降级为完整
 生成或跳过写入，不会绕过校验器，也不会阻断原本有效的 Pages 产物。
@@ -211,6 +214,18 @@ identity token。
   保持 `1`。随后在双 revision 的 `viewcompose-image-glide` 故障用例中故意修改一个生成 HTML；
   下一次运行复用有效组，仅拒绝并在 `32.2 s` 内重建损坏组，并通过既有 manifest、路由、别名和
   不可变源码检查。本地缓存结论为 **improved**；下一步验收托管缓存的恢复、保存和命中行为。
+
+- **2026-08-26，不可变 API 缓存托管验收：**首次完整 `main` 运行按预期未命中，五个历史组装配
+  耗时 `1139.4 s`，完整 API 步骤耗时 `21 min`；随后成功构建、上传、保存 `39.3 MB` 缓存并部署。
+  缓存进入索引后，`main` 精确复跑在 `7 s` 内恢复缓存，校验并复用 `5/5` 组，生成组和无效组均为
+  零，装配耗时 `5.7 s`，完整 API 步骤耗时 `2 min 9 s`，减少 `89.8%`。不可变缓存结论为
+  **improved**。该热运行同时暴露了独立限制：版本化手册生成曾隐式依赖冷 API 重建来获取其他路径
+  不可达的冻结提交。生成器现会在读取快照前解析每个唯一完整 SHA。首次修正运行选中了 Temurin
+  `17.0.20+1`，而种子缓存使用 `17.0.20+8`；正确产生的不同生成器指纹触发了 `1175.9 s` 冷重建，
+  随后的目录生成与完整站点构建均通过。工作流现固定 Temurin `17.0.20+8` 与 Node `24.19.0`；
+  固定版本后的复跑约 `4 s` 恢复精确 `cb67…/ab01…` 种子，在 `5.5 s` 内复用 `5/5` 组，生成组与
+  无效组均为零，完整 API 步骤约 `1 min 58 s`。随后版本化手册生成在没有冷重建的情况下约 `1 s`
+  完成，完整生产站点任务以 `6 min 33 s` 通过。修正结论为 **improved**；Phase 4 验收完成。
 
 - **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
   上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量
