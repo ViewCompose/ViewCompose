@@ -490,7 +490,7 @@ restores the task under a new PID, and verifies the restored value. The navigati
 runner at `tools/navigation/validate_android_process_death.sh` similarly backgrounds the task,
 terminates only the application process without force-stopping the package, restores the existing
 task, requires a new PID, and compares the full restored navigation and state report. See the
-[navigation restoration guide](../guides/navigation.md#stage-5-restoration-and-platform-back)
+[navigation restoration guide](../guides/navigation.md#restore-state-and-connect-platform-back)
 for its exact scope.
 
 The current evidence supports standard Android host restoration through both ordinary Activity

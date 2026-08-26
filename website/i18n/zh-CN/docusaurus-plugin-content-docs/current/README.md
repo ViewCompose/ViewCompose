@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: 469250c44652559ce63fc12247d8248dbd7c18ff1c1e9071918b73993189330f
+translation_source_hash: 098409432f9c0bd59bcb7211239c23144c12676ae1df4535edfdeb2cb06fa438
 translation_status: current
 ---
 
@@ -34,6 +34,7 @@ GitHub 托管文档站点的内容边界。
 长期有效的契约、边界和运行时语义：
 
 - [架构总览](https://docs.viewcompose.com/architecture/overview)
+- [导航运行时架构](./architecture/navigation.md)
 - [多设计系统架构与接入标准](./architecture/design-systems.md)
 - [架构决策](https://docs.viewcompose.com/architecture/decisions)
 - [Modifier 模型](https://docs.viewcompose.com/architecture/modifier)
@@ -61,7 +62,7 @@ GitHub 托管文档站点的内容边界。
 - [Lazy 集合](https://docs.viewcompose.com/guides/lazy-collections)
 - [焦点和输入](https://docs.viewcompose.com/guides/focus-and-input)
 - [嵌套滚动](https://docs.viewcompose.com/guides/nested-scroll)
-- [导航](https://docs.viewcompose.com/guides/navigation)
+- [配置可上线的导航宿主](https://docs.viewcompose.com/guides/navigation)
 - [浮层](https://docs.viewcompose.com/guides/overlays)
 - [阴影](https://docs.viewcompose.com/guides/shadows)
 - [图片加载](./guides/image-loading.md)

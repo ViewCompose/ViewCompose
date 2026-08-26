@@ -34,6 +34,7 @@ historical evidence only.
 Long-lived contracts, boundaries, and runtime semantics:
 
 - [Architecture overview](./architecture/overview.md)
+- [Navigation runtime architecture](./architecture/navigation.md)
 - [Multi-design-system architecture and integration standard](./architecture/design-systems.md)
 - [Architecture decisions](./architecture/decisions/README.md)
 - [Modifier model](./architecture/modifier.md)
@@ -63,7 +64,7 @@ Feature behavior and platform integration:
 - [Lazy collections](./guides/lazy-collections.md)
 - [Focus and input](./guides/focus-and-input.md)
 - [Nested scrolling](./guides/nested-scroll.md)
-- [Navigation](./guides/navigation.md)
+- [Configure a production navigation host](./guides/navigation.md)
 - [Overlays](./guides/overlays.md)
 - [Shadows](./guides/shadows.md)
 - [Image loading](./guides/image-loading.md)

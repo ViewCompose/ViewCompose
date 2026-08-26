@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Begin Phase 3 content reclassification and use its scoped pull requests as gate-scaling Phase 6 observations.
+next_action: Complete the Phase 3 Theming reclassification, then continue with Text Input and Lazy Collections.
 maven_release_changesets: []
 ---
 
@@ -36,7 +36,9 @@ plus exact source-region identity in both languages; the third requires structur
 capability changes to own exact, immutable capability-impact records; and the fourth generates the
 committed capability Reference and rejects stale output. The normative contract, compiled scanner,
 precise production/public inventory, generated Reference, and exact reviewed debt baseline all run
-from the quality included build.
+from the quality included build. The first Phase 3 slice has also hard-cut Navigation delivery
+history out of the active Guide, established focused Guide and Architecture owners, registered the
+compiled Tutorial and Android host capability, and reduced the live report from 733 to 701 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -45,10 +47,10 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: begin this plan's Phase 3 content reclassification. Pull-request gate scaling Phases 3
-through 5 are complete, so these scoped content changes also supply the gate plan's Phase 6 shadow
-observation corpus. Final Reference link closure remains owned by this plan after the Phase 3
-content owners move.
+Next action: complete the Phase 3 Theming reclassification, then continue with Text Input and Lazy
+Collections. Pull-request gate scaling Phases 3 through 5 are complete, so these scoped content
+changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
+remains owned by this plan after the Phase 3 content owners move.
 
 ## Maven release changesets
 
@@ -607,6 +609,26 @@ local build remains the host limitation, and no repository memory setting change
 ### Phase 3: information-architecture restructure
 
 Apply the document-type contract without changing framework behavior.
+
+Accepted Navigation slice on 2026-08-26:
+
+- retained `/guides/navigation` as the stable route but replaced its mixed Stage 1–10 delivery,
+  architecture, and acceptance content with the focused production-host task;
+- moved transaction, destination/graph ownership, lifecycle, restoration, Back, and motion
+  invariants to `docs/architecture/navigation.md`, and preserved the completed temporary sequence
+  in `docs/archive/system-navigation-delivery-history.md`;
+- registered `navigation.host`, its 21 Android application-facing symbols, and the
+  `tutorial.navigation` compiled region, then regenerated the shared Capability Reference;
+- removed 11 resolved exception records. The report changed from 733 to 701 issues: missing
+  metadata 112 to 110, orphan symbols 433 to 412, taxonomy mismatches 10 to 7, and unclassified
+  samples 178 to 172. Duplicate owners, orphan documents, version conflicts, stale output,
+  unbaselined debt, and blocking violations remained zero;
+- `:samples:tutorials:compileDebugKotlin`, Navigation Core tests, Navigation Android unit tests,
+  Governance V2, documentation structure, 70 documentation script tests, and all 117 reviewed
+  Chinese mirrors passed. The conclusion is `improved`: content and ownership debt decreased with
+  no framework behavior change. The limitation is that this documentation-only slice reused the
+  existing device behavior evidence; it makes no new device or performance claim. The next action
+  is the equivalent Theming hard cut.
 
 | Current area | Required target |
 | --- | --- |

@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "capability_id": "navigation.host",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-navigation-android" },
+  "artifact": "viewcompose-navigation-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.navigation.LocalNavGraphOwnerScope", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwnerEnvironment.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavDeepLinkResult", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostController.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavDestinationMotionSpec", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavTransitionSpec.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavDestinationTransform", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavTransitionSpec.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavFailure", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostController.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavFailurePhase", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostController.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavGraphOwner", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavGraphOwner.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavGraphOwnerScope", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavGraphOwner.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavHostController", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostController.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavHostException", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostController.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavMotionEasing", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavTransitionSpec.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavMotionTiming", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavTransitionSpec.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavPanePolicy", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavPanePolicy.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavPredictiveBackSpec", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavTransitionSpec.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavResult", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostController.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavSpringSpec", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavTransitionSpec.kt" },
+    { "symbol_id": "com.viewcompose.navigation.NavTransitionSpec", "kind": "type", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavTransitionSpec.kt" },
+    { "symbol_id": "com.viewcompose.navigation.UiTreeBuilder.NavHost", "kind": "extension", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostDsl.kt" },
+    { "symbol_id": "com.viewcompose.navigation.UiTreeBuilder.ProvideNavGraphOwner", "kind": "extension", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwnerEnvironment.kt" },
+    { "symbol_id": "com.viewcompose.navigation.createNavHostController", "kind": "overload-set", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostController.kt" },
+    { "symbol_id": "com.viewcompose.navigation.rememberNavHostController", "kind": "overload-set", "visibility": "public", "source": "viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostController.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.navigation.host", "generated": true },
+  "sample_owner": { "sample_id": "tutorial.navigation" },
+  "document_owners": {
+    "tutorial": ["tutorial.navigation"],
+    "guide": ["guide.navigation-production-host"],
+    "architecture": ["architecture.navigation-runtime"]
+  }
+}

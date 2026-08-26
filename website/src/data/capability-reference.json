@@ -2224,151 +2224,655 @@
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.LocalNavGraphOwnerScope"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavDeepLinkResult"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavDestinationMotionSpec"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavDestinationTransform"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavFailure"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavFailurePhase"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavGraphOwner"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavGraphOwnerScope"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavHostController"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavHostException"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavMotionEasing"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavMotionTiming"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavPanePolicy"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavPredictiveBackSpec"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavResult"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavSpringSpec"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.NavTransitionSpec"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.UiTreeBuilder.NavHost"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.UiTreeBuilder.ProvideNavGraphOwner"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 4,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.createNavHostController"
         },
         {
           "artifact": "viewcompose-navigation-android",
+          "capabilityId": "navigation.host",
           "kind": "integration",
           "namespace": "com.viewcompose.navigation",
           "overloadCount": 4,
+          "referenceId": "reference.navigation.host",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.navigation",
+              "documentType": "tutorial",
+              "path": "/tutorials/navigation"
+            },
+            {
+              "documentId": "guide.navigation-production-host",
+              "documentType": "guide",
+              "path": "/guides/navigation"
+            },
+            {
+              "documentId": "architecture.navigation-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/navigation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.navigation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.navigation.rememberNavHostController"
         },
         {
@@ -3572,7 +4076,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 0,
+    "ownedEntryCount": 21,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }
