@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "guide.text-input-receive-content",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "text.input",
+  "document_ids": [
+    "guide.text-input-rich-text"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TextInputGuideSamples.kt",
+  "region": "text-input-receive-content",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

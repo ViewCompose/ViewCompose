@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: b0765ac70c3de16b8977f9562fd8a443289a5ded38370ee23a256eb59225219a
+translation_source_hash: d3ed171e25f8fb05f827ab383258eebb113e5236c0912829638cfea69ac7d240
 translation_status: current
 ---
 
@@ -237,6 +237,20 @@ identity token。
   Docusaurus Wrapper 用时 `60.0 s`，完整外围 npm Lifecycle 用时 `82.73 s`。局限是单个内容 PR
   无法建立 P50/P95 或缓存命中率。继续收集 Phase 6 语料，并优先优化源码校验、不可变 API 复用、
   重复 Gradle 配置和环境/依赖恢复，再重新考虑 Docusaurus、React 或 Node 迁移。
+
+- **2026-08-26，Governance V2 Theming 后续观察：**PR #177 的成功文档 Child Job 用时
+  `4 min 47 s`，比 #176 快 `34 s`（`-10.6%`）。源码与翻译校验 `68 s`、完整版本化 API 生成与
+  校验 `89 s`、目录生成 `1 s`、类型检查 `2 s`、Docusaurus 构建 `46 s`。Docusaurus 仍只占
+  Child Job 时间的 `16.0%`，再次确认它不是主要阶段。本次托管样本结论为 **improved**；但恢复
+  状态不同，且稳定后只有两个内容 PR，因此 P50/P95 与缓存命中结论仍为 **inconclusive**。继续
+  收集语料，不进行 Website 技术栈迁移。
+
+- **2026-08-26，Governance V2 Text Input 本地验收：**首次四页面任务拆分虽然构建成功，但生成
+  49,245,936 个非 API 字节，超过不变的 46.9 MiB 上限 67,722 字节。把相邻的编辑/IME 与富文本/
+  Receive Content 任务收敛到两个 Guide 后，四个任务边界仍然保留，生成产物减少 161,958 字节
+  （`-0.33%`）至 49,083,978 字节，留下 94,236 字节余量。最终构建审计 452 个双语页面，
+  Docusaurus Wrapper 用时 `60.0 s`。首版表示的结论为 **mixed**，修正后为 **improved**。本地
+  样本不覆盖托管缓存与环境准备；上限保持不变，下一个内容切片继续使用同一停止条件。
 
 - **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
   上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量

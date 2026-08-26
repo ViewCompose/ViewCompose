@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-text-core/README.md
-translation_source_hash: 9b5af8b6095c54187259a629913ba7dc51ad5dcc6ac610ac10e4ed1e0a2669bd
+translation_source_hash: d9dcb69cf221d78166a1df7249363f3e5dd3f45601c8e7869066cdfad38ef221
 translation_status: current
 ---
 
@@ -138,7 +138,9 @@ val restored: TextDocument = TextDocumentSaveCodec.decode(saved)
 
 ## 相关文档
 
-- [完整文本输入指南](https://docs.viewcompose.com/zh-CN/guides/text-input)
+- [文本输入运行时架构](../../architecture/text-input.md)
+- [编辑、校验与提交文本](../../guides/text-input.md)
+- [使用富文本与外部文本内容](../../guides/text-input-rich-text.md)
 - [生命周期与状态保存架构](https://docs.viewcompose.com/zh-CN/architecture/lifecycle-and-saved-state)
 - [状态快照架构](https://docs.viewcompose.com/zh-CN/architecture/state-snapshots)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)

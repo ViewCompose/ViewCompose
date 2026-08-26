@@ -1,150 +1,119 @@
 ---
 translation_source: guides/text-input.md
-translation_source_hash: fd2f8abb6fbce7a07e6d878530ee0e869b1a0f95f532e6cfaccd3b485585a9a6
+translation_source_hash: a35c99f3d9b2305fe0790bc2f6424d3cd29fa26d94ee613101b4e2dcaa5a115a
 translation_status: current
 ---
 
-# ViewCompose 文本输入
+# 编辑与校验文本
 
-## 1. 范围
+每个逻辑编辑器使用一个稳定的 `TextFieldState`。它是富文本文档、方向性选区、当前 IME
+组合区以及撤销/重做历史的唯一权威所有者。本任务覆盖普通输入框和搜索提交；持久状态与
+Android 桥接不变量见[文本输入架构](../architecture/text-input.md)。
 
-当前模型是在 Android View 引擎上构建的完整文档编辑状态，拥有：
+## 绑定可编辑状态
 
-- 不可变 `TextDocument` 内容、行内样式与链接；
-- 段落对齐、行高、缩进和项目符号；
-- URI 行内附件、方向选区和临时 IME composition；
-- 原子程序编辑、输入变换和 undo/redo 历史；
-- 键盘选项、语义 IME action 和 autofill hint；
-- 统一剪贴板、拖放与 IME Receive Content；
-- 完整文档和选区的保存恢复。
+`rememberTextFieldState` 会在 Host 重建后保留文档和选区。直接读取它的可观察属性，不要把
+文本复制到另一个由回调维护的值中。
 
-框架不实现自定义文本布局引擎，也不替换 `InputConnection`。Android `Spannable`、
-`ContentInfoCompat` 和 URI 解码保留在 renderer，不泄漏到 text-core。
-
-## 2. 所有权
-
-`TextFieldState` 是唯一真相源。`TextField` 与 `SearchBar` 只接受稳定状态实例；输入用途与
-行行为使用值契约，而不是组件别名。
-
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TextInputGuideSamples.kt" region="text-input-editing" sample_id="guide.text-input-editing" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-val state = rememberTextFieldState("initial")
+fun UiTreeBuilder.EditableSearchForm(onSearch: (String) -> Unit) {
+    val query = rememberTextFieldState()
+    val name = rememberTextFieldState()
 
-TextField(
-    state = state,
-    inputProfile = TextFieldInputProfile.Email,
-    linePolicy = TextFieldLinePolicy.SingleLine,
-    inputTransformation = InputTransformation.maxCodePoints(40),
-)
+    Column {
+        SearchBar(
+            state = query,
+            placeholder = "Search",
+            onSearch = onSearch,
+        )
+        TextField(
+            state = name,
+            label = "Display name",
+            supportingText = "Up to 24 characters",
+            inputTransformation = InputTransformation.maxCodePoints(24),
+        )
+        Button(
+            text = "Undo",
+            enabled = name.canUndo,
+            onClick = { name.undo() },
+        )
+    }
+}
 ```
 
-富文本展示与编辑使用同一文档：
+只有提供 `onSearch` 时，`SearchBar` 才会选择 Search IME Action，并把最新的 `state.text`
+传给回调。它自身不会防抖、清空或提交。`TextField` 负责选择外观、输入用途和行策略，不会
+创建第二份编辑状态。
 
+## 区分用户编辑与应用编辑
+
+`InputTransformation` 只评估平台提出的用户编辑。需要顺序组合时使用 `then`；后一个
+Transformation 会看到前一个的结果。`maxCodePoints` 按 Unicode Code Point 计数，不会拆开
+合法代理项对。
+
+应用变更使用一个显式
+`state.edit { replace(0, length, replacement); selectAll() }` 事务。
+
+一次 `edit` 只发布一次状态变更并建立一个撤销单元。只有选区变化时不增加历史。不要让程序
+编辑经过输入策略：应用校验与平台输入过滤的所有权不同。
+
+## 选择组件层级
+
+- 带 Label 的应用表单和已解析 Design System 默认值使用 `TextField`。
+- 单行查询及可选 Search 提交使用 `SearchBar`。
+- 只有 Design System 已经解析出完整 `BasicTextFieldStyle` 时才使用 `BasicTextField`；它不会
+  读取 Theme 或组件 Local。
+
+注解、内联附件、剪贴板、拖放或 IME 内容必须在编辑后保留时，使用
+[富文本与外部内容](./text-input-rich-text.md)。
+
+## 配置键盘与 IME Action
+
+`TextFieldInputProfile` 组合键盘选项与 Autofill 语义；`TextFieldLinePolicy` 独立拥有可视行
+策略。使用这些值，不要建立 Password、Email、Number 或 Text Area 组件 Wrapper。
+
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TextInputGuideSamples.kt" region="text-input-ime" sample_id="guide.text-input-ime" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-val document = textDocument {
-    append("ViewCompose", TextSpanStyle(fontWeight = 700))
-    append("\n")
-    appendAttachment(
-        InlineTextAttachment(
-            id = "preview",
-            mimeType = "image/png",
-            uri = "content://example/preview",
+fun UiTreeBuilder.EmailSubmissionField(onSubmit: (String) -> Unit) {
+    val email = rememberTextFieldState()
+
+    TextField(
+        state = email,
+        label = "Email",
+        inputProfile = TextFieldInputProfile(
+            keyboardOptions = TextFieldKeyboardOptions(
+                keyboardType = TextFieldType.Email,
+                imeAction = TextFieldImeAction.Done,
+            ),
+            autofillHints = TextFieldInputProfile.Email.autofillHints,
         ),
+        onKeyboardAction = { action ->
+            if (action == TextFieldImeAction.Done) {
+                onSubmit(email.text)
+                true
+            } else {
+                false
+            }
+        },
     )
 }
-val state = rememberTextFieldState(document)
-
-RichText(document)
-TextField(
-    state = state,
-    linePolicy = TextFieldLinePolicy.MultiLine(minLines = 3, maxLines = 8),
-)
 ```
 
-旧的 `value: String + onValueChange(String)` API 已移除。重新引入第二条核心路径会丢失 selection
-和 composition，因此不允许。
+只有应用已处理的 Action 才返回 `true`；`false` 会保留原生降级。修改 Input Type 或 Editor
+Option 可能重启当前原生连接，因此只有产品状态变化时才修改 Profile。相等输入下的重组必须保留
+选区与组合输入。
 
-## 3. 状态模型
+## 验证任务
 
-`TextFieldValue` 包含 `TextDocument`、方向性 `TextRange` selection 和可选 composing range；
-`value.text` 是派生便捷属性。offset 统一使用 UTF-16，以精确对应 Android `Editable` 与
-`InputConnection`。
+通过 `./gradlew :samples:tutorials:compileDebugKotlin` 编译，然后验证：
 
-平台无关且不可变的 `TextDocument` 包含 UTF-16 缓冲、字符样式/链接 `TextSpanRange`、段落
-语义 `ParagraphStyleRange` 和指向 `INLINE_ATTACHMENT_CHARACTER` 的附件 range。
+1. 输入并选择文本；重组不能移动光标或结束当前组合输入；
+2. 通过键盘超过 Code Point 上限；输入提案必须直接被拒绝，不能短暂发布无效值；
+3. 触发 Search；回调必须收到最新可见查询；
+4. 执行并撤销一次应用编辑；文档与选区必须作为一个快照恢复；
+5. 确认预期键盘、Autofill Category 与 Action；提交只读取一次最新文本，未处理 Action 保留原生降级；
+6. 重建 Activity；文档和选区恢复，但组合区和撤销历史不恢复。
 
-通过 `TextDocumentBuilder` 和 `textDocument { ... }` 构建。替换操作保留变更范围外的注解、
-裁剪相交注解、移动后续 range，并原子插入替换文档的注解。
-
-```kotlin
-state.edit {
-    replace(0, length, "replacement")
-    selectAll()
-}
-```
-
-`InputTransformation` 仅运行于平台提出的用户编辑；程序编辑不会被字段过滤器静默拒绝。
-composition 更新合并成一个 undo 单元；undo/redo 会清除活跃 composing range，因为 IME Session
-无法安全重放。
-
-## 4. Receive Content 接收内容
-
-每个可编辑字段登记 `ReceiveContentConfiguration.Default`，接收 `text/*` 和 `image/*`。同一
-listener 处理剪贴板粘贴、拖放、IME `commitContent` 和应用调用的
-`ViewCompat.performReceiveContent`。
-
-styled/HTML 文本从 `Spanned` 转为 `TextDocument`，URI item 转为 `InlineTextAttachment`。
-不支持的 clip item 返回平台作为剩余 payload，不会静默丢弃。
-
-```kotlin
-TextField(
-    state = state,
-    linePolicy = TextFieldLinePolicy.MultiLine(),
-    receiveContent = ReceiveContentConfiguration(
-        mimeTypes = setOf("text/*", "image/png"),
-        transformation = { received ->
-            audit(received.source, received.mimeTypes)
-            received.document
-        },
-    ),
-)
-```
-
-Receive Content 插入经过 `InputTransformation`，形成一个 undo 单元，替换当前 selection，并
-终止活跃 IME composition。
-
-## 5. Android 桥接
-
-renderer 创建 `ViewComposeEditText` 与 `AndroidTextFieldController`，并保持：
-
-1. 原生编辑同步执行，文本、selection 和 composition 作为一个 snapshot 读取。
-2. `InputConnection` 变更和 batch edit 是事务边界。
-3. 原生编辑更新 `TextFieldState`，随后的重组不把相同值写回。
-4. 外部状态变化使用最小 `Editable.replace()` 范围。
-5. 框架文档 span 重新应用时不删除 IME/平台 span。
-6. 框架写入恢复 selection/composition 并抑制反馈回调。
-7. 只有需要时才因 input type 或 editor option 变化重启 input connection。
-8. `EditorInfo` 发布配置的 Receive Content MIME type。
-9. renderer 回滚重新绑定旧文档、selection 与 composition snapshot。
-
-View 继续提供 IME、光标手柄、剪贴板、硬件键盘、无障碍、bidi、拼写检查、autofill 和手写笔。
-`RichText` 与 `TextField` 共用 `TextDocument -> Spannable` adapter。无法解析的图片或非图片
-附件显示为行内占位符，同时保留完整文档元数据。
-
-## 6. 持久化
-
-`rememberTextFieldState` 使用宿主 saveable-state registry，保存文本、样式、段落、附件与
-selection 起止；不保存 IME composition、undo/redo、焦点和键盘可见性，因为它们属于当前
-window 与输入 Session。
-
-## 7. 测试契约
-
-每次 text bridge 变化必须覆盖原生文本/selection 同步、composing 后 commit、输入变换、富文档
-Spannable round-trip、剪贴板和 URI Receive Content、IME MIME 发布、外部最小编辑、renderer
-回滚，以及不含 composition 的完整文档保存恢复。
-
-代表性的中文和日文 IME、硬件键盘、TalkBack、autofill 服务与手写笔仍要求真机覆盖。
-
-## 8. 边界
-
-glyph shaping、bidi、断行、光标几何、selection handle、拼写检查和无障碍文本遍历继续委托
-原生 View 文本引擎。框架不尝试编译器级文本 lowering 或自定义段落 renderer。
+并行 `String`、光标丢失、提交旧值、程序编辑被 Transformation 处理或恢复 IME Session，都
+属于集成失败。

@@ -141,7 +141,9 @@ invariants. IME composition is intentionally not part of the document codec.
 
 ## Related documentation
 
-- [Complete text input guide](../../guides/text-input.md)
+- [Text input runtime architecture](../../architecture/text-input.md)
+- [Edit, validate, and submit text](../../guides/text-input.md)
+- [Use rich and received text content](../../guides/text-input-rich-text.md)
 - [Lifecycle and saved-state architecture](../../architecture/lifecycle-and-saved-state.md)
 - [State snapshot architecture](../../architecture/state-snapshots.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)

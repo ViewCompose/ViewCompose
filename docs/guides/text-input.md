@@ -1,189 +1,149 @@
-# ViewCompose Text Input
+---
+schema_version: 2
+document_id: guide.text-input-editing
+doc_type: guide
+owner:
+  kind: capability
+  id: text.input
+version_lane: released
+capability_ids:
+  - text.input
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-text-core
+  - viewcompose-renderer-android
+sample_ids:
+  - guide.text-input-editing
+  - guide.text-input-ime
+task: Edit, validate, and submit native-backed text using one state plus explicit input and IME policy.
+success_checks:
+  - TextField and SearchBar keep text, selection, composition, and history in caller-owned TextFieldState.
+  - InputTransformation applies only to platform-proposed edits while application edits remain atomic.
+  - Search and undo actions read the latest state synchronously.
+  - Keyboard, autofill, line, and action policy describe one coherent input purpose.
+failure_checks:
+  - Application code mirrors TextFieldState into a second String callback path.
+  - A changing TextFieldState instance is reconstructed on each composition.
+  - Programmatic validation is expected to run through InputTransformation.
+  - An unhandled IME action is consumed or active composition is treated as restorable state.
+---
 
-## 1. Scope
+# Edit and validate text
 
-The current model is a complete document editor state built on the Android View engine. It owns:
+Use one stable `TextFieldState` for each logical editor. It is the authoritative owner of the rich
+document, directional selection, active IME composition, and undo/redo history. This task covers
+ordinary fields and search submission; the durable state and Android bridge invariants are defined
+by the [text input architecture](../architecture/text-input.md).
 
-- immutable `TextDocument` content
-- inline span styles and links
-- paragraph alignment, line height, indentation, and bullets
-- URI-backed inline attachments
-- directional selection
-- ephemeral IME composition
-- atomic programmatic edits
-- input transformations
-- undo/redo history
-- keyboard options and semantic IME actions
-- autofill hints
-- unified clipboard, drag/drop, and IME Receive Content
-- save/restore of the complete document and selection
+## Bind editable state
 
-It deliberately does not implement a custom text layout engine or a replacement `InputConnection`.
-Android `Spannable`, `ContentInfoCompat`, and URI decoding remain renderer details and do not leak
-into `viewcompose-text-core`.
+`rememberTextFieldState` preserves the document and selection through host recreation. Read its
+observable properties directly instead of copying text into another callback-owned value.
 
-## 2. Ownership
-
-`TextFieldState` is the single source of truth. `TextField` and `SearchBar` accept only a stable
-state instance. Input purpose and line behavior are values rather than component aliases:
-
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TextInputGuideSamples.kt" region="text-input-editing" sample_id="guide.text-input-editing" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-val state = rememberTextFieldState("initial")
+fun UiTreeBuilder.EditableSearchForm(onSearch: (String) -> Unit) {
+    val query = rememberTextFieldState()
+    val name = rememberTextFieldState()
 
-TextField(
-    state = state,
-    inputProfile = TextFieldInputProfile.Email,
-    linePolicy = TextFieldLinePolicy.SingleLine,
-    inputTransformation = InputTransformation.maxCodePoints(40),
-)
+    Column {
+        SearchBar(
+            state = query,
+            placeholder = "Search",
+            onSearch = onSearch,
+        )
+        TextField(
+            state = name,
+            label = "Display name",
+            supportingText = "Up to 24 characters",
+            inputTransformation = InputTransformation.maxCodePoints(24),
+        )
+        Button(
+            text = "Undo",
+            enabled = name.canUndo,
+            onClick = { name.undo() },
+        )
+    }
+}
 ```
 
-Rich display text and editable text use the same document:
+`SearchBar` selects the Search IME action only when `onSearch` is present and passes the latest
+`state.text`. It does not debounce, clear, or submit by itself. `TextField` selects appearance,
+input purpose, and line behavior without creating a second editor state.
 
+## Separate user and application edits
+
+`InputTransformation` evaluates only platform-proposed edits. Compose transformations with `then`
+when order matters; a later transformation sees the result of the earlier one. `maxCodePoints`
+counts Unicode code points and therefore does not split a valid surrogate pair.
+
+Application changes use one explicit `state.edit { replace(0, length, replacement); selectAll() }`
+transaction.
+
+One `edit` call publishes one state change and creates one undo unit. Selection-only changes do not
+add history. Do not route programmatic edits through an input policy: application validation and
+platform input filtering have different ownership.
+
+## Choose the component level
+
+- Use `TextField` for labeled application forms and resolved design-system defaults.
+- Use `SearchBar` for a single-line query with optional Search submission.
+- Use `BasicTextField` only when a design system has already resolved a complete
+  `BasicTextFieldStyle`; it intentionally performs no theme or component-Local lookup.
+
+Use [rich and received content](./text-input-rich-text.md) when annotations, inline attachments,
+clipboard, drop, or IME content must survive editing.
+
+## Configure keyboard and IME actions
+
+`TextFieldInputProfile` couples keyboard options and autofill semantics; `TextFieldLinePolicy`
+separately owns visual line behavior. Use these values instead of password, email, number, or
+text-area component wrappers.
+
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TextInputGuideSamples.kt" region="text-input-ime" sample_id="guide.text-input-ime" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-val document = textDocument {
-    append("ViewCompose", TextSpanStyle(fontWeight = 700))
-    append("\n")
-    appendAttachment(
-        InlineTextAttachment(
-            id = "preview",
-            mimeType = "image/png",
-            uri = "content://example/preview",
+fun UiTreeBuilder.EmailSubmissionField(onSubmit: (String) -> Unit) {
+    val email = rememberTextFieldState()
+
+    TextField(
+        state = email,
+        label = "Email",
+        inputProfile = TextFieldInputProfile(
+            keyboardOptions = TextFieldKeyboardOptions(
+                keyboardType = TextFieldType.Email,
+                imeAction = TextFieldImeAction.Done,
+            ),
+            autofillHints = TextFieldInputProfile.Email.autofillHints,
         ),
+        onKeyboardAction = { action ->
+            if (action == TextFieldImeAction.Done) {
+                onSubmit(email.text)
+                true
+            } else {
+                false
+            }
+        },
     )
 }
-val state = rememberTextFieldState(document)
-
-RichText(document)
-TextField(
-    state = state,
-    linePolicy = TextFieldLinePolicy.MultiLine(minLines = 3, maxLines = 8),
-)
 ```
 
-The old `value: String` plus `onValueChange(String)` API is removed. Reintroducing it as a second core path would discard selection and composition and is not allowed.
+Return `true` only for an action the application handled; `false` preserves native fallback. Keep
+the profile stable unless product state changes because changing input type or editor options may
+restart the active native connection. Equal recomposition must preserve selection and composition.
 
-## 3. State model
+## Verify the task
 
-`TextFieldValue` contains a `TextDocument`, a directional `TextRange` selection, and an optional
-composing range. `value.text` remains a derived convenience accessor. All offsets are UTF-16
-indices so they map exactly to Android `Editable` and `InputConnection`.
+Compile with `./gradlew :samples:tutorials:compileDebugKotlin`, then verify:
 
-`TextDocument` is platform-neutral and immutable. It contains:
+1. type and select text; recomposition must not move the cursor or end active composition;
+2. exceed the code-point limit through the keyboard; the proposed edit must be rejected without a
+   transient invalid value;
+3. invoke Search; the callback must receive the latest visible query;
+4. perform an application edit and undo it; document and selection must restore as one snapshot;
+5. confirm the expected keyboard, autofill category, and action; submit must read the latest text
+   once while unhandled actions keep native fallback;
+6. recreate the Activity; document and selection restore, while composition and undo history do
+   not.
 
-1. the UTF-16 text buffer;
-2. `TextSpanRange` entries for character style and links;
-3. `ParagraphStyleRange` entries for paragraph semantics;
-4. `InlineAttachmentRange` entries that point at `INLINE_ATTACHMENT_CHARACTER`.
-
-`TextDocumentBuilder` and `textDocument { ... }` are the construction APIs. A replacement keeps
-annotations outside the changed range, clips intersecting annotations, shifts following ranges,
-and inserts the replacement document's annotations atomically.
-
-Application changes use one atomic edit:
-
-```kotlin
-state.edit {
-    replace(0, length, "replacement")
-    selectAll()
-}
-```
-
-`InputTransformation` runs only for platform-proposed user edits. Programmatic edits are never silently rejected by a field filter.
-
-Composition updates are grouped into one undo unit. Undo and redo clear the active composing range because an IME session cannot be replayed safely.
-
-## 4. Receive Content
-
-Every editable field registers `ReceiveContentConfiguration.Default`, accepting `text/*` and
-`image/*`. The same listener handles:
-
-1. clipboard paste;
-2. drag and drop;
-3. IME `commitContent`;
-4. app-originated `ViewCompat.performReceiveContent`.
-
-Styled or HTML text is converted from `Spanned` into `TextDocument`. URI items become
-`InlineTextAttachment` entries. Unsupported clip items are returned to the platform as the
-remaining payload instead of being silently discarded.
-
-Fields can narrow MIME types or transform/reject a received document before insertion:
-
-```kotlin
-TextField(
-    state = state,
-    linePolicy = TextFieldLinePolicy.MultiLine(),
-    receiveContent = ReceiveContentConfiguration(
-        mimeTypes = setOf("text/*", "image/png"),
-        transformation = { received ->
-            audit(received.source, received.mimeTypes)
-            received.document
-        },
-    ),
-)
-```
-
-Receive Content insertion goes through `InputTransformation`, forms one undo unit, replaces the
-current selection, and terminates active IME composition.
-
-## 5. Android bridge
-
-The renderer creates `ViewComposeEditText`, an `AppCompatEditText` subclass with an `AndroidTextFieldController`.
-
-The bridge follows these invariants:
-
-1. Native editing remains synchronous.
-2. Text, selection, and composition are read as one snapshot.
-3. `InputConnection` mutations and batch edits are observed as transaction boundaries.
-4. A native edit updates `TextFieldState`; the resulting recomposition does not write the same value back.
-5. External state changes use the smallest `Editable.replace()` range.
-6. Framework-owned document spans are reapplied without deleting IME/platform spans.
-7. Framework writes restore selection and composition while suppressing feedback callbacks.
-8. Input type or editor option changes restart the active input connection only when required.
-9. `EditorInfo` publishes the configured Receive Content MIME types.
-10. Renderer rollback rebinds the previous document, selection, and composition snapshot.
-
-The View continues to supply platform behavior such as IME integration, cursor handles, clipboard actions, hardware keyboard input, accessibility, bidi layout, spell checking, autofill, and stylus handwriting.
-
-`RichText` uses the same `TextDocument -> Spannable` adapter as `TextField`. Image URI rendering is
-best effort; unresolved or non-image attachments render as an inline placeholder while retaining
-their full document metadata.
-
-## 6. Persistence
-
-`rememberTextFieldState` uses the host saveable-state registry. It persists:
-
-- text, span styles, paragraph styles, and inline attachments
-- selection start
-- selection end
-
-It intentionally does not persist:
-
-- IME composition
-- undo/redo history
-- focus
-- keyboard visibility
-
-Those values belong to the active window and input session.
-
-## 7. Testing contract
-
-Every text bridge change must cover:
-
-- native text and selection synchronization
-- composing text followed by commit
-- input transformation acceptance/rejection
-- rich document `Spannable` round-trip
-- clipboard and URI Receive Content insertion
-- IME MIME publication
-- external edits without replacing the `Editable`
-- renderer rollback
-- rich document save/restore without composition
-
-Real-device coverage remains required for representative Chinese and Japanese IMEs, hardware keyboards, TalkBack, autofill services, and stylus input.
-
-## 8. Boundary
-
-The framework still delegates glyph shaping, bidi, line breaking, cursor geometry, selection
-handles, spell checking, and accessibility text traversal to the native View text engine. It does
-not attempt compiler-level text lowering or a custom paragraph renderer.
+A parallel `String`, lost cursor, stale submit value, transformation of an application edit, or
+restored IME session is a failed integration.

@@ -750,10 +750,39 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "text.input",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.text.input",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.text-input",
+              "documentType": "tutorial",
+              "path": "/tutorials/text-input"
+            },
+            {
+              "documentId": "guide.text-input-editing",
+              "documentType": "guide",
+              "path": "/guides/text-input"
+            },
+            {
+              "documentId": "guide.text-input-rich-text",
+              "documentType": "guide",
+              "path": "/guides/text-input-rich-text"
+            },
+            {
+              "documentId": "architecture.text-input-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/text-input"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.text-input-editing",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.BasicTextField"
         },
         {
@@ -798,10 +827,39 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "text.input",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.text.input",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.text-input",
+              "documentType": "tutorial",
+              "path": "/tutorials/text-input"
+            },
+            {
+              "documentId": "guide.text-input-editing",
+              "documentType": "guide",
+              "path": "/guides/text-input"
+            },
+            {
+              "documentId": "guide.text-input-rich-text",
+              "documentType": "guide",
+              "path": "/guides/text-input-rich-text"
+            },
+            {
+              "documentId": "architecture.text-input-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/text-input"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.text-input-editing",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.SearchBar"
         },
         {
@@ -822,10 +880,39 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "text.input",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.text.input",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.text-input",
+              "documentType": "tutorial",
+              "path": "/tutorials/text-input"
+            },
+            {
+              "documentId": "guide.text-input-editing",
+              "documentType": "guide",
+              "path": "/guides/text-input"
+            },
+            {
+              "documentId": "guide.text-input-rich-text",
+              "documentType": "guide",
+              "path": "/guides/text-input-rich-text"
+            },
+            {
+              "documentId": "architecture.text-input-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/text-input"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.text-input-editing",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.TextField"
         }
       ],
@@ -4143,7 +4230,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 24,
+    "ownedEntryCount": 27,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }

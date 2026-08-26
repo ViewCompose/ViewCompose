@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "guide.text-input-ime",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "text.input",
+  "document_ids": [
+    "guide.text-input-editing"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TextInputGuideSamples.kt",
+  "region": "text-input-ime",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

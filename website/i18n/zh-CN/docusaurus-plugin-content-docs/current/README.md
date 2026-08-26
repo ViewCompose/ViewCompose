@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: b52b3d0a239708a10542c4695e306b2aa70a92426a087abc289a35e9b9bcf675
+translation_source_hash: b0a720b0a7f9334b7370e3198edb75c5953236fbef9b3fd34f6b7c2c167b48a9
 translation_status: current
 ---
 
@@ -36,6 +36,7 @@ GitHub 托管文档站点的内容边界。
 - [架构总览](https://docs.viewcompose.com/architecture/overview)
 - [导航运行时架构](./architecture/navigation.md)
 - [主题运行时架构](./architecture/theming.md)
+- [文本输入运行时架构](./architecture/text-input.md)
 - [多设计系统架构与接入标准](./architecture/design-systems.md)
 - [架构决策](https://docs.viewcompose.com/architecture/decisions)
 - [Modifier 模型](https://docs.viewcompose.com/architecture/modifier)
@@ -61,7 +62,8 @@ GitHub 托管文档站点的内容边界。
 - [切换应用主题模式](./guides/theming.md)
 - [启用 Material 3 动态颜色](./guides/theming-dynamic-color.md)
 - [为一个子树覆盖主题 token](./guides/theming-local-overrides.md)
-- [文本输入](https://docs.viewcompose.com/guides/text-input)
+- [编辑、校验与提交文本](./guides/text-input.md)
+- [使用富文本与外部文本内容](./guides/text-input-rich-text.md)
 - [Lazy 集合](https://docs.viewcompose.com/guides/lazy-collections)
 - [焦点和输入](https://docs.viewcompose.com/guides/focus-and-input)
 - [嵌套滚动](https://docs.viewcompose.com/guides/nested-scroll)
