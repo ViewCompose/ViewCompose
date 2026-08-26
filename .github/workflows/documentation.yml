@@ -112,6 +112,27 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
+      - name: Plan versioned API cache
+        id: api-cache-plan
+        run: |
+          node website/scripts/versioned-api-cache.mjs plan \
+            --repository . \
+            --json-output build/reports/documentation/versioned-api-cache-plan.json \
+            --github-output "$GITHUB_OUTPUT"
+
+      - name: Restore verified versioned API candidates
+        id: api-cache-restore
+        continue-on-error: true
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            website/generated/api
+            build/versioned-api-cache
+          key: viewcompose-api-v1-${{ runner.os }}-${{ steps.api-cache-plan.outputs.generator_fingerprint }}-${{ steps.api-cache-plan.outputs.complete_fingerprint }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            viewcompose-api-v1-${{ runner.os }}-${{ steps.api-cache-plan.outputs.generator_fingerprint }}-${{ steps.api-cache-plan.outputs.complete_fingerprint }}-
+            viewcompose-api-v1-${{ runner.os }}-${{ steps.api-cache-plan.outputs.generator_fingerprint }}-
+
       - name: Install website dependencies
         working-directory: website
         run: npm ci
@@ -122,21 +143,54 @@ jobs:
         run: ./gradlew verifyDocumentationStructure --stacktrace
 
       - name: Generate and verify complete versioned API reference
+        env:
+          VIEWCOMPOSE_API_DOCS_MAX_PARALLEL_REVISIONS: "1"
         run: ./gradlew verifyCompleteViewComposeApiDocs --stacktrace
+
+      - name: Report versioned API cache result
+        id: api-cache-result
+        env:
+          MATCHED_CACHE_KEY: ${{ steps.api-cache-restore.outputs.cache-matched-key }}
+          DESIRED_CACHE_PREFIX: viewcompose-api-v1-${{ runner.os }}-${{ steps.api-cache-plan.outputs.generator_fingerprint }}-${{ steps.api-cache-plan.outputs.complete_fingerprint }}-
+        run: |
+          node website/scripts/versioned-api-cache.mjs report \
+            --report build/reports/documentation/versioned-api-cache-report.json \
+            --matched-key "$MATCHED_CACHE_KEY" \
+            --desired-prefix "$DESIRED_CACHE_PREFIX" \
+            --github-output "$GITHUB_OUTPUT" \
+            --summary-output build/reports/documentation/versioned-api-cache-summary.md
+          cat build/reports/documentation/versioned-api-cache-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Generate website catalogs
+        working-directory: website
+        run: npm run generate:catalog
 
       - name: Type-check website
         working-directory: website
-        run: npm run typecheck
+        run: npm run typecheck:prepared
 
       - name: Build website
         working-directory: website
-        run: npm run build
+        run: npm run build:prepared
 
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v5
         with:
           path: website/build
+
+      - name: Save trusted versioned API cache on main
+        if: >-
+          github.ref == 'refs/heads/main' &&
+          steps.api-cache-result.outputs.save_required == 'true' &&
+          steps.api-cache-restore.outputs.cache-primary-key != ''
+        continue-on-error: true
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            website/generated/api
+            build/versioned-api-cache
+          key: ${{ steps.api-cache-restore.outputs.cache-primary-key }}
 
   build:
     name: Build documentation

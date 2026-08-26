@@ -65,6 +65,47 @@ test('documentation CI delegates translation freshness to the canonical Gradle g
   assert.doesNotMatch(workflow, /npm run verify:translations/u);
 });
 
+test('documentation CI restores only main-owned API output and prepares the site once', async () => {
+  const workflow = await readFile(
+    resolve(repositoryRoot, '.github/workflows/documentation.yml'),
+    'utf8',
+  );
+  const packageJson = JSON.parse(
+    await readFile(resolve(repositoryRoot, 'website/package.json'), 'utf8'),
+  );
+  const documentationWork = sliceBetween(workflow, '  buildDocumentation:', '  build:');
+
+  assert.match(documentationWork, /node website\/scripts\/versioned-api-cache\.mjs plan/u);
+  assert.match(documentationWork, /uses: actions\/cache\/restore@v5/u);
+  assert.match(documentationWork, /uses: actions\/cache\/save@v5/u);
+  assert.match(documentationWork, /continue-on-error: true[\s\S]*actions\/cache\/restore@v5/u);
+  assert.match(documentationWork, /website\/generated\/api[\s\S]*build\/versioned-api-cache/u);
+  assert.match(
+    documentationWork,
+    /github\.ref == 'refs\/heads\/main'[\s\S]*save_required == 'true'/u,
+  );
+  assert.match(documentationWork, /VIEWCOMPOSE_API_DOCS_MAX_PARALLEL_REVISIONS: "1"/u);
+  assert.match(documentationWork, /npm run generate:catalog/u);
+  assert.match(documentationWork, /npm run typecheck:prepared/u);
+  assert.match(documentationWork, /npm run build:prepared/u);
+  assert.ok(
+    documentationWork.indexOf('npm run build:prepared') <
+      documentationWork.indexOf('uses: actions/cache/save@v5'),
+    'main cache writes must follow a successful production site build',
+  );
+  assert.ok(
+    documentationWork.indexOf('uses: actions/upload-pages-artifact@v5') <
+      documentationWork.indexOf('uses: actions/cache/save@v5'),
+    'main cache writes must follow a successful Pages artifact upload',
+  );
+  assert.doesNotMatch(documentationWork, /run: npm run typecheck\s*$/mu);
+  assert.doesNotMatch(documentationWork, /run: npm run build\s*$/mu);
+  assert.equal(packageJson.scripts['typecheck:prepared'], 'tsc');
+  assert.equal(packageJson.scripts['build:prepared'], 'node scripts/build-site.mjs');
+  assert.match(packageJson.scripts['prepare:site'], /verify:languages/u);
+  assert.match(packageJson.scripts['prepare:site'], /verify:translations/u);
+});
+
 test('required contexts remain always-reported facades around classified child work', async () => {
   const ciWorkflow = await readFile(resolve(repositoryRoot, '.github/workflows/ci.yml'), 'utf8');
   const documentationWorkflow = await readFile(

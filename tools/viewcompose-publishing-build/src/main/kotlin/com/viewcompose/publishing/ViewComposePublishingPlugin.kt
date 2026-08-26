@@ -97,6 +97,9 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                 project.layout.projectDirectory.file(
                     "website/scripts/documentation-releases.mjs",
                 ),
+                project.layout.projectDirectory.file(
+                    "website/scripts/versioned-api-cache.mjs",
+                ),
             )
             inputs.property(
                 "documentationReleaseEntries",
@@ -119,6 +122,7 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                 "--modules",
                 selectedModules.joinToString(","),
             )
+            outputs.upToDateWhen { false }
         }
         project.tasks.register<VerifyApiDocumentationOutputTask>(
             "verifyAssembledViewComposeApiDocs",

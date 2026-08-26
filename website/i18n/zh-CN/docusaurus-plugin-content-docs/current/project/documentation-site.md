@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: de2e8dc8a85d26c2b7a37beb1a48537228e8a3505a907a796c4438a9ca176117
+translation_source_hash: 51872d016ff16c63c132be3915a785333a5c16b61a58502ddfac8ffd7dcb4998
 translation_status: current
 ---
 
@@ -20,10 +20,12 @@ translation_status: current
    公共页面都有必需 locale 镜像。
 2. `verifyDocumentationStructure` 检查源码位置、目录一致性、可达性和仓库链接。
 3. `verify:translations` 检查必需中文覆盖、英文源指纹、显式过期状态和过期警告。
-4. `verifyCompleteViewComposeApiDocs` 按 source revision 对不可变发布注册表分组，在临时工作区
-   重建每个 revision，运行当前 Dokka 工具，并验证全部 manifest、路由、别名和固定源码链接。
-   缺失的冻结提交只按完整 SHA 补取，绝不替换为可移动引用。未发布产物只有工作树 `current`；早于
-   当前构建契约的 revision 只获得不会进入发布产物的临时配置垫片。
+4. `verifyCompleteViewComposeApiDocs` 按 source revision 对不可变发布注册表分组，为维护中的
+   生成器输入计算指纹，并验证逐 revision 完整性记录；该记录包含精确条目集合，以及每个生成文件
+   的大小和 SHA-256。有效的恢复组直接复用；缺失、陈旧、格式错误、多文件、少文件、符号链接或
+   摘要不匹配的组会先删除并在临时工作区重建，再继续校验路由、别名、manifest 和固定源码链接。
+   缺失的冻结提交只按完整 SHA 补取，绝不替换为可移动引用。历史工作区只接收其 source revision
+   组对应的发布记录；早于当前构建契约的 revision 只获得不会进入发布产物的临时配置垫片。
 5. 站点生成器读取发布元数据、不可变注册表和 `docs/modules/README.md`，从同一冻结 Git
    revision 生成目录和每个已发布制品/版本的模块手册快照，不维护第二份注册表。
 6. Docusaurus type-check 并构建手写文档、站点界面、生成 API、本地化搜索索引和兼容重定向，
@@ -53,6 +55,13 @@ npm run build
 
 本地迭代可用 `-PviewComposeDocsModules=artifact-a,artifact-b` 限制 Dokka 制品集合，生产构建
 不得使用该捷径。
+
+`build/versioned-api-cache/integrity-manifest.json` 是生成的缓存状态，不是第二份发布注册表，也不是
+可部署 API 资源。完整缓存键由
+逐 revision 指纹派生；每个 revision 指纹覆盖不可变的产物/版本/源码三元组集合和当前生成器实现。
+别名及未发布工作树 `current` 明确不参与不可变复用，每次装配都会重建。
+`VIEWCOMPOSE_API_DOCS_MAX_PARALLEL_REVISIONS` 只接受 `1` 或 `2`；在获得可接受的托管 runner
+进程树内存测量、确认两个 2 GiB Gradle/Dokka 进程可以并行前，CI 固定为 `1`。
 
 Governance V2 资产是仓库输入，不是第二份站点注册表：Phase 0A 冻结 schema，Phase 0B 通过
 compiled quality owner 报告，Phase 2 阻止新债务。已提交的
@@ -153,6 +162,14 @@ alpha、beta、RC、snapshot、preview、development 和 EAP 不得成为 `lates
 阻断。推送到 `main` 或在 `main` 手工运行时始终选择完整子任务，只有它验证过的 Pages 产物才能通过
 受保护的 `github-pages` environment 部署。
 
+已选文档子任务会在恢复 `website/generated/api` 前计算不可变生成器指纹和完整历史指纹。PR 只读
+缓存，只有成功的 `main` 子任务可以写入。主键按运行唯一，因此损坏恢复后可以用同一指纹的新键替代
+旧归档；有序恢复前缀先匹配同一完整指纹，再匹配同一生成器产生的最新缓存。任何恢复都不能只凭键
+名信任：装配器逐组验证，并在 Job Summary 输出 hit、partial、miss、recovery、生成组、无效组、
+并行度和耗时。源码/语言/翻译门禁只运行一次，目录只生成一次，随后 CI 调用 prepared type-check 与
+站点构建入口，避免 npm 生命周期钩子重复同一批预构建工作。缓存服务恢复或保存失败时会降级为完整
+生成或跳过写入，不会绕过校验器，也不会阻断原本有效的 Pages 产物。
+
 部署只有在正式域名冒烟测试访问两个 Locale 的目录、全部当前手册和代表性无尾斜杠路由后才成功。
 HTTP、渲染 Not Found、错误插件或目录缺项在有界 CDN 重试后仍会令部署失败。
 
@@ -168,6 +185,8 @@ identity token。
 - 源验证失败时修复权威文档或目录，不削弱门禁。
 - 发布历史失败时追加缺失的不可变记录或修正未发布元数据，不重写已发布制品/版本。
 - Dokka 失败时用制品子集复现并修复源码/API 配置。
+- API 缓存组完整性失败时保留自动逐组重建；不得手工修改 manifest、接受只命中键名的结果、从 PR
+  保存缓存或绕过完整 API 校验。恢复成功的 `main` 会为同一指纹写入更新的唯一键。
 - Docusaurus 坏链/锚点保持严格；只有生成的静态 API 链接享受明确豁免。
 - 预算失败时区分非 API 产物、API 树平均值、单个不可变或未发布 `current` API 树、路由开销
   和 locale 重复副本；修复回归，或记录并审查确有必要的阈值变化。不得恢复会因合法追加
@@ -182,6 +201,16 @@ identity token。
 ## 最近验证
 
 <div className="search-partition-detail">
+
+- **2026-08-26，不可变 API 缓存本地验收：**完整 100 条可部署历史由五个源码 revision 组成，
+  占用 `427 MiB`；非部署完整性状态占用 `6.7 MiB`。冷启动以串行方式在 `411.7 s` 内生成全部五组，
+  完整 Gradle 校验耗时 `6 min 58 s`。相同输入复跑时对 26,096 个不可变文件做完整性校验，复用
+  `5/5` 组且没有启动历史
+  Gradle/Dokka，装配耗时 `2.1 s`，完整校验耗时 `5.42 s`，减少 `98.7%`。31 条记录的大组生成期间，
+  抽样到的活动进程 RSS 约为 `1.75 GiB`；这只是本地时间点采样而非托管 runner 峰值测量，因此并发度
+  保持 `1`。随后在双 revision 的 `viewcompose-image-glide` 故障用例中故意修改一个生成 HTML；
+  下一次运行复用有效组，仅拒绝并在 `32.2 s` 内重建损坏组，并通过既有 manifest、路由、别名和
+  不可变源码检查。本地缓存结论为 **improved**；下一步验收托管缓存的恢复、保存和命中行为。
 
 - **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
   上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量
