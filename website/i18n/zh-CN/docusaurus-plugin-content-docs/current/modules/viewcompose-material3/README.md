@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: de784492a42644aa0030ca0fac04de0b4899479ff3eec7b6dfb1a4ee6f7a67be
+translation_source_hash: 7ea18bbd5e9bb11aac379c4873c1edf3509e9d901e7dece04fa1eafab1b4a67e
 translation_status: current
 ---
 
@@ -126,7 +126,8 @@ Thumb Transition；进一步视觉替换必须通过 Phase 12 的行为与无障
 
 ## 相关文档
 
-- [主题指南](../../guides/theming.md)
+- [主题运行时架构](../../architecture/theming.md)
+- [Material 3 动态颜色指南](../../guides/theming-dynamic-color.md)
 - [UI Foundation](../viewcompose-ui-foundation/README.md)
 - [Material 3 Android 集成](../viewcompose-material3-android/README.md)
 - [中立 Android 聚合模块](../viewcompose-android/README.md)

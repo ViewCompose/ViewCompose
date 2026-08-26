@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "tutorial.navigation-dependencies",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "navigation.host",
+  "document_ids": [
+    "tutorial.navigation"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "navigation-dependencies",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

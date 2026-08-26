@@ -1478,10 +1478,39 @@
         },
         {
           "artifact": "viewcompose-material3",
+          "capabilityId": "theme.material3",
           "kind": "dsl",
           "namespace": "com.viewcompose.material3",
           "overloadCount": 2,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.theme.material3",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.theming",
+              "documentType": "tutorial",
+              "path": "/tutorials/theming"
+            },
+            {
+              "documentId": "guide.theming-mode-switch",
+              "documentType": "guide",
+              "path": "/guides/theming"
+            },
+            {
+              "documentId": "guide.theming-dynamic-color",
+              "documentType": "guide",
+              "path": "/guides/theming-dynamic-color"
+            },
+            {
+              "documentId": "architecture.theme-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/theming"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "tutorial.theming",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.material3.UiTreeBuilder.Material3Theme"
         },
         {
@@ -4044,18 +4073,56 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "theme.foundation",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.theme.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.theming-local-overrides",
+              "documentType": "guide",
+              "path": "/guides/theming-local-overrides"
+            },
+            {
+              "documentId": "architecture.theme-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/theming"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.theming-local-override",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.UiTheme"
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "theme.foundation",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 2,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.theme.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.theming-local-overrides",
+              "documentType": "guide",
+              "path": "/guides/theming-local-overrides"
+            },
+            {
+              "documentId": "architecture.theme-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/theming"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.theming-local-override",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.UiThemeOverride"
         }
       ],
@@ -4076,7 +4143,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 21,
+    "ownedEntryCount": 24,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }

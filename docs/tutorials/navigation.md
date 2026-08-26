@@ -14,6 +14,7 @@ artifact_ids:
   - viewcompose-material3-android
 sample_ids:
   - tutorial.navigation
+  - tutorial.navigation-dependencies
 expected_result: A two-destination native View host that pushes and pops one committed back stack.
 verification_action: Run the sample, open Details, and return with both the UI action and Android system Back.
 ---
@@ -22,10 +23,20 @@ verification_action: Run the sample, open Details, and return with both the UI a
 
 ## Required dependencies
 
-This page is standalone. Add Maven Central, `viewcompose-material3-android:0.1.0-alpha01`,
-`viewcompose-navigation-android:0.1.0-alpha01`, `androidx.activity:activity:1.12.4`, and
-`com.google.android.material:material:1.13.0`. The Android navigation artifact supplies the
-platform-neutral route model transitively.
+This page is standalone. The Android navigation artifact supplies the platform-neutral route model
+transitively.
+
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="navigation-dependencies" sample_id="tutorial.navigation-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
+```kotlin title="build.gradle.kts"
+repositories { mavenCentral() }
+
+dependencies {
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
+    implementation("androidx.activity:activity:1.12.4")
+    implementation("com.google.android.material:material:1.13.0")
+}
+```
 
 ## Navigate between two destinations
 

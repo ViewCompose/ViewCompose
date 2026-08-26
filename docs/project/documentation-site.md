@@ -302,6 +302,21 @@ identity token.
   in approximately `1 s` without cold reconstruction, and the complete production site job passed
   in `6 min 33 s`. The correction conclusion is **improved**; Phase 4 acceptance is complete.
 
+- **2026-08-26, Governance V2 Navigation/Theming observation:** pull request #176's successful
+  documentation child completed in `5 min 21 s`. Source and translation verification took `72 s`,
+  complete versioned API generation and verification `112 s`, catalog generation `7 s`, type
+  checking `2 s`, and the Docusaurus build `53 s`. Relative to #174's `5 min 10 s` documentation
+  child, end-to-end time changed by `+3.55%`; the conclusion is **no material change** from one
+  differently restored hosted sample. The Docusaurus step represented `16.5%` of child wall time,
+  so a website-stack replacement is not supported as the primary latency action. The first #176
+  attempt failed on a moved anchor and the strict link gate rejected it; the repaired retry passed,
+  so correctness is **improved**. A local Theming acceptance build later audited 448 bilingual
+  site pages, completed the budgeted Docusaurus wrapper in `60.0 s`, and completed the surrounding
+  npm lifecycle in `82.73 s`. The limitation is that one content pull request does not establish
+  P50/P95 or cache hit rate. Continue collecting the Phase 6 corpus and target source verification,
+  immutable API reuse, repeated Gradle configuration, and setup/dependency restoration before
+  reconsidering Docusaurus, React, or Node migration.
+
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and
   moving the generated quality report outside the deploy tree reduced it to 49,175,712 bytes,

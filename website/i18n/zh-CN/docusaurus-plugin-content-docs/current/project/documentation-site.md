@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 8d1f98ed7dee853d12e6f84c8b0328a5d8fe56700ad1bb37475f59a61c305a52
+translation_source_hash: b0765ac70c3de16b8977f9562fd8a443289a5ded38370ee23a256eb59225219a
 translation_status: current
 ---
 
@@ -226,6 +226,17 @@ identity token。
   固定版本后的复跑约 `4 s` 恢复精确 `cb67…/ab01…` 种子，在 `5.5 s` 内复用 `5/5` 组，生成组与
   无效组均为零，完整 API 步骤约 `1 min 58 s`。随后版本化手册生成在没有冷重建的情况下约 `1 s`
   完成，完整生产站点任务以 `6 min 33 s` 通过。修正结论为 **improved**；Phase 4 验收完成。
+
+- **2026-08-26，Governance V2 Navigation/Theming 观察：**PR #176 的成功文档 Child Job 在
+  `5 min 21 s` 内完成，其中源码与翻译校验 `72 s`、完整版本化 API 生成与校验 `112 s`、目录生成
+  `7 s`、类型检查 `2 s`、Docusaurus 构建 `53 s`。与 #174 的 `5 min 10 s` 文档 Child Job
+  相比，端到端耗时变化 `+3.55%`；单个恢复状态不同的托管样本结论为 **no material change**。
+  Docusaurus 步骤只占 Child Job 时间的 `16.5%`，因此证据不支持把替换 Website 技术栈作为主要
+  延迟措施。#176 首次运行因移动后的锚点失败，严格链接门禁正确拒绝；修复后的复跑通过，因此
+  正确性结论为 **improved**。随后本地 Theming 验收构建审计 448 个双语站点页面，受预算约束的
+  Docusaurus Wrapper 用时 `60.0 s`，完整外围 npm Lifecycle 用时 `82.73 s`。局限是单个内容 PR
+  无法建立 P50/P95 或缓存命中率。继续收集 Phase 6 语料，并优先优化源码校验、不可变 API 复用、
+  重复 Gradle 配置和环境/依赖恢复，再重新考虑 Docusaurus、React 或 Node 迁移。
 
 - **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
   上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量

@@ -1,18 +1,17 @@
 ---
-title: 使用主题
-sidebar_position: 7
 translation_source: tutorials/theming.md
-translation_source_hash: 220462d5f5347df6b0a79f783b46e20955e93e2da38ed8985daed680160745b4
+translation_source_hash: 3dad3cf688c1894df48f09091c26c6e47ad01c1b38ee3b7202d9f35e1050f702
 translation_status: current
 ---
 
 # 使用主题
 
-## 必需依赖
+## 所需依赖
 
-本页可以独立使用。主题 API 位于 `viewcompose-ui-foundation`，Android 主题解析由
-`viewcompose-host-android` 安装：
+本页可以独立使用。Material Android 聚合产物会传递提供 UI Foundation 和 Material token
+适配器。
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="theming-dependencies" sample_id="tutorial.theming-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -77,15 +76,15 @@ class ThemingTutorialActivity : ComponentActivity() {
 ```
 {/* tutorial-sample-end */}
 
-`setMaterial3UiContent` 会读取 Android 主题并提供 ViewCompose 语义 token。构建界面时直接读取
-`Theme.colors`，不要长期保存已经解析的颜色整数。明暗配置变化后，宿主会刷新这些 token。
+`setMaterial3UiContent` 为原生树解析一个 Android Material Context，并提供其中的 ViewCompose
+语义 token。构建界面时读取 `Theme.colors`，不要长期保存已经解析的颜色整数。明暗配置变化后，
+Host 会刷新 token。
 
 ## 验证结果
 
-切换设备明暗模式，确认背景、主色文本和按钮始终清晰可读。编译命令：
+切换设备明暗模式。背景、主色文本和按钮必须始终可读，并且作为一个完整快照同步变化。通过
+`./gradlew :samples:tutorials:assembleDebug` 编译。
 
-```bash
-./gradlew :samples:tutorials:assembleDebug
-```
-
-自定义 token、动态颜色策略和运行时刷新请查看[主题指南](../guides/theming.md)。
+接下来可选择[应用模式切换](../guides/theming.md)、[动态颜色与资源刷新](../guides/theming-dynamic-color.md)
+或[局部子树 Override](../guides/theming-local-overrides.md)。长期有效的 token 与优先级模型位于
+[主题架构](../architecture/theming.md)。

@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: 9ef8d57ff04e3f2804ab1d2097e306f84e599456838ce656d5c232fa973523ea
+translation_source_hash: 965e362d893b132a194a161667eec57ab8e860a78d2a96ad782bb08ae83bc20f
 translation_status: current
 ---
 
@@ -80,7 +80,7 @@ Architecture、Migration 与 redirect。每个检测到的结构化 capability �
 
 1. [架构总览](../architecture/overview.md)
 2. [统一路线图](./roadmap.md)
-3. [主题系统](../guides/theming.md)
+3. [主题运行时架构](../architecture/theming.md)
 4. [Modifier 模型](../architecture/modifier.md)
 5. [NodeSpec 模型](../architecture/node-spec.md)
 

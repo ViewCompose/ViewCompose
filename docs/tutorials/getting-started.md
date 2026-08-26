@@ -251,7 +251,8 @@ Android View hierarchy.
 ## Where to go next
 
 - Read [State snapshots](../architecture/state-snapshots.md) for transaction and observation rules.
-- Read [Theming](../guides/theming.md) before defining application tokens or dynamic color policy.
+- Read the [theme architecture](../architecture/theming.md) before defining application tokens, and
+  use the [dynamic-color guide](../guides/theming-dynamic-color.md) for Android resource policy.
 - Read [Preview tooling](../tooling/preview.md) for theme providers, diagnostics, and snapshot policy.
 - Use the [module catalog](../modules/README.md) to add navigation, text editing, graphics, or other
   optional capabilities without pulling them into the minimal application.

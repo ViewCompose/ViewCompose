@@ -223,7 +223,8 @@ flowchart TD
     in the owning design-system module. Renderer branches on a design-system identity and one
     universal component-recipe bundle are forbidden.
 
-See [Modifier architecture](modifier.md), [NodeSpec architecture](node-spec.md), and [theming](../guides/theming.md).
+See [Modifier architecture](modifier.md), [NodeSpec architecture](node-spec.md), and
+[theme runtime architecture](theming.md).
 The complete design-system ownership and onboarding rules are in the
 [multi-design-system architecture standard](design-systems.md).
 

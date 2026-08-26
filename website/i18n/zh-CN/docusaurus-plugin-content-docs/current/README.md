@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: 098409432f9c0bd59bcb7211239c23144c12676ae1df4535edfdeb2cb06fa438
+translation_source_hash: b52b3d0a239708a10542c4695e306b2aa70a92426a087abc289a35e9b9bcf675
 translation_status: current
 ---
 
@@ -35,6 +35,7 @@ GitHub 托管文档站点的内容边界。
 
 - [架构总览](https://docs.viewcompose.com/architecture/overview)
 - [导航运行时架构](./architecture/navigation.md)
+- [主题运行时架构](./architecture/theming.md)
 - [多设计系统架构与接入标准](./architecture/design-systems.md)
 - [架构决策](https://docs.viewcompose.com/architecture/decisions)
 - [Modifier 模型](https://docs.viewcompose.com/architecture/modifier)
@@ -57,7 +58,9 @@ GitHub 托管文档站点的内容边界。
 
 功能行为和平台集成：
 
-- [主题](https://docs.viewcompose.com/guides/theming)
+- [切换应用主题模式](./guides/theming.md)
+- [启用 Material 3 动态颜色](./guides/theming-dynamic-color.md)
+- [为一个子树覆盖主题 token](./guides/theming-local-overrides.md)
 - [文本输入](https://docs.viewcompose.com/guides/text-input)
 - [Lazy 集合](https://docs.viewcompose.com/guides/lazy-collections)
 - [焦点和输入](https://docs.viewcompose.com/guides/focus-and-input)

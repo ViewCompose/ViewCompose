@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-26
-next_action: Begin Governance V2 Phase 3 content reclassification and collect hosted shadow observations with optional Gradle caches disabled.
+next_action: Continue Governance V2 content pull requests as hosted observations and optimize measured pipeline stages before considering website-stack changes.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -41,9 +41,10 @@ are in progress.
 
 Last verified: 2026-08-26.
 
-Next action: begin Governance V2 Phase 3 content reclassification and use its scoped pull requests
-as hosted shadow observations. Build-cache and configuration-cache probes are complete but neither
-option is enabled; adoption requires evidence beyond the accepted local samples. The Phase 0
+Next action: continue Governance V2 content pull requests as hosted shadow observations and target
+measured source/API pipeline stages before considering website-stack changes. Build-cache and
+configuration-cache probes are complete but neither option is enabled; adoption requires evidence
+beyond the accepted local samples. The Phase 0
 task-graph fixtures remain the immutable pre-extraction comparator rather than being rewritten for
 later intentional gates.
 
@@ -747,6 +748,26 @@ different `qaQuick` graph, while no encrypted cross-job configuration-cache tran
 The current-path conclusion is **no material change**, so Configuration Cache also stays disabled.
 The limitation is that complete `qaQuick` was not probed; there is no reason to expand that probe
 until an actual reusable CI invocation exists.
+
+Pull request #176 supplied the first Phase 3 documentation-content observation after cache
+ownership stabilized. Its successful documentation child completed in `5 min 21 s`, compared with
+`5 min 10 s` for #174 (`+3.55%`), which is **no material change** from one differently restored
+sample. Within #176, source and translation verification took `72 s`, complete versioned API
+generation and verification took `112 s`, catalog generation `7 s`, type checking `2 s`, and the
+final Docusaurus build `53 s`. The website build was therefore `16.5%` of child wall time and was
+not the dominant stage. The first #176 attempt failed on a moved Navigation anchor and the strict
+link gate rejected it; the corrected rerun passed and auto-merged. Correctness is **improved**
+because the required gate caught a real route defect, while latency remains **inconclusive** until
+the required change-class corpus exists.
+
+The current website stack already uses Docusaurus `3.10.2`, React `19.2.8`, Node `24.19.0`, and npm
+`11.8.0`. Replacing or broadly upgrading it is not accepted as a latency action from this evidence:
+it would not reduce source verification, Gradle startup, Android SDK preparation, or immutable API
+work. The next optimization candidates are verified API-cache reuse, fewer duplicate Gradle
+configurations/scans, setup and dependency caching, and avoiding complete-history regeneration
+when the immutable fingerprint proves it unnecessary. A later website-stack proposal must measure
+the complete documentation child and demonstrate a material end-to-end improvement, not only a
+faster isolated Docusaurus invocation.
 
 ## Validation matrix
 

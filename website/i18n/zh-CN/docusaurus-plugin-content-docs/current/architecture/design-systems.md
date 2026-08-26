@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/design-systems.md
-translation_source_hash: 12f1d9a407eee4d08a24a8135af250650ccfbf983b8ea38ea2f0f05322fb9e54
+translation_source_hash: 51312889fdf1a8d9e678fd1c587f766bfdbfe51453ad567e407833d6ddc10aaf
 translation_status: current
 ---
 
@@ -405,6 +405,6 @@ Diagnostics 是架构证据，不是可有可无的 Demo 装饰。如果审查�
 - [架构总览](./overview.md)
 - [ADR-0004：设计系统解析边界](./decisions/0004-design-system-resolution-boundary.md)
 - [ADR-0005：设计系统 Host 与组件 Backend 边界](./decisions/0005-design-system-host-and-component-backend-boundary.md)
-- [主题指南](../guides/theming.md)
+- [主题运行时架构](./theming.md)
 - [NodeSpec 模型](./node-spec.md)
 - [多设计系统执行归档计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/multi-design-system-high-fidelity.md)

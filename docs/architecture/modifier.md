@@ -236,7 +236,7 @@ See [Development workflow](../project/workflow.md).
 ## 9. Related documents
 
 1. [NodeSpec-only specification](node-spec.md)
-2. [Theming](../guides/theming.md)
+2. [Theme runtime architecture](theming.md)
 3. [Architecture overview](overview.md)
 4. [Focus and input](../guides/focus-and-input.md)
 5. [Nested scrolling](../guides/nested-scroll.md)
