@@ -9,20 +9,25 @@ version_lane: released
 capability_ids:
   - focus.input
   - nested.scroll
+  - shadow.modifiers
+  - shadow.android-backend
 artifact_ids:
   - viewcompose-ui-contract
   - viewcompose-ui-foundation
   - viewcompose-gesture
   - viewcompose-renderer-android
+  - viewcompose-shadow-android
 sample_ids:
   - guide.focus-form
   - guide.nested-scroll-toolbar
+  - guide.shadow-card
 invariants:
   - Focus requesters and nested-scroll dispatchers retain renderer-neutral identity and attach to one current platform connector.
   - Preview key input travels root-to-target before unconsumed target-to-root bubbling.
   - Focused-editor visibility belongs to the nearest real scroll owner, while a pager owns discrete page selection only.
   - Nested pre phases travel outer-to-inner and post phases inner-to-outer, with every consumption bounded by the offered value.
   - AndroidView keeps arbitrary listener ownership and joins nested scrolling only through an implemented native protocol or explicit dispatcher.
+  - Exact outer and inner shadows remain decoration planes that do not alter layout, input, elevation, or sibling order.
 evidence:
   - viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/focus/FocusRequesterContractTest.kt
   - viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/modifier/FocusModifierContractTest.kt
@@ -31,6 +36,8 @@ evidence:
   - viewcompose-gesture/src/test/java/com/viewcompose/gesture/NestedScrollModifierTest.kt
   - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ModifierFocusInputApplierTest.kt
   - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/container/NestedScrollHostLayoutTest.kt
+  - viewcompose-shadow-android/src/test/java/com/viewcompose/shadow/android/ShadowDecorationLayerTest.kt
+  - viewcompose-shadow-android/src/test/java/com/viewcompose/shadow/android/ShadowRenderBackendTest.kt
 ---
 
 # Modifier Architecture
@@ -143,45 +150,18 @@ Exact capability, sample, and related-document links are populated only by valid
 records. Until the frozen ownership debt is migrated, the generated page reports structured-owner
 coverage separately instead of guessing or hiding the gap.
 
-### 3.1 Advanced-shadow example and constraints
+### 3.1 Advanced-shadow routing
 
-
-```kotlin
-val cardShape = UiShape.rounded(20.dp)
-
-Surface(
-    modifier = Modifier
-        .shape(cardShape)
-        .dropShadows(
-            shadows = listOf(
-                UiShadow(
-                    color = 0x33000000,
-                    blurRadius = 12.dp,
-                    offsetY = 5.dp,
-                ),
-                UiShadow(
-                    color = 0x223B82F6,
-                    blurRadius = 18.dp,
-                    spreadRadius = 2.dp,
-                    offsetX = (-4).dp,
-                ),
-            ),
-            shape = cardShape,
-        ),
-) {
-    Content()
-}
-```
-
-1. Use `dropShadow(s)` for exact blur, spread, offset, color, or multiple layers. Continue using
-   `elevation` for Material elevation semantics.
-2. Pass the same `UiShape` to content and shadow when a stable outline matters. Without an explicit
-   shadow shape, resolution uses node `shape/cornerRadius`, then a rectangle.
-3. Shadows do not expand layout bounds. Reserve visual space and avoid unnecessary clipping on
-   ancestors that are not viewports.
-4. Prefer animating translation, scale, rotation, or alpha. Animating blur, spread, shape, or size
-   creates new raster keys.
-5. See [Advanced shadows](../guides/shadows.md) for backend, cache, and diagnostic rules.
+1. UI Contract owns renderer-neutral shadow layers and Modifier ordering. Android Renderer carries
+   decoration requests and owns the parent before/after drawing planes; it does not depend on a
+   concrete raster backend.
+2. `dropShadow(s)` draws before native child content and `innerShadow(s)` after the complete child.
+   Both remain outside layout and hit testing and do not replace `elevation` or `zIndex`.
+3. The optional Shadow Android artifact resolves shapes and density, rasterizes layers, and replays
+   them. When it is absent, shadow requests are no-ops without changing any other render path.
+4. Use the [advanced-shadow guide](../guides/shadows.md) for an application recipe and the
+   [Shadow Android module manual](../modules/viewcompose-shadow-android/README.md) for installation,
+   cache, backend, diagnostics, compatibility, and benchmark contracts.
 
 ### 3.2 Generation and consistency
 

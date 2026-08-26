@@ -592,18 +592,66 @@
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "shadow.modifiers",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.shadow.modifiers",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.shadow-card",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.dropShadow"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "shadow.modifiers",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.shadow.modifiers",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.shadow-card",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.dropShadows"
         },
         {
@@ -624,18 +672,66 @@
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "shadow.modifiers",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.shadow.modifiers",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.shadow-card",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.innerShadow"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "shadow.modifiers",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.shadow.modifiers",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.shadow-card",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.innerShadows"
         },
         {
@@ -3421,135 +3517,591 @@
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.InnerShadowBitmapRasterizer"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.InnerShadowSpecResolver"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.RasterizedInnerShadow"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.RasterizedShadow"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ResolvedInnerShadowSpec"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ResolvedShadowGroup"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ResolvedShadowLayer"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ResolvedShadowSpec"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ShadowBitmapRasterizer"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ShadowDecorationLayer"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ShadowRasterCacheStats"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ShadowRenderBackend"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ShadowRenderBackendDecision"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ShadowRenderBackendSelector"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ShadowRenderBackendStats"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ShadowRenderDecisionReason"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ShadowRenderPolicy"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ShadowSpecResolver"
         },
         {
           "artifact": "viewcompose-shadow-android",
+          "capabilityId": "shadow.android-backend",
           "kind": "integration",
           "namespace": "com.viewcompose.shadow.android",
           "overloadCount": 1,
+          "referenceId": "reference.shadow.android-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.advanced-shadows",
+              "documentType": "guide",
+              "path": "/guides/shadows"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            },
+            {
+              "documentId": "module.viewcompose-shadow-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-shadow-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.shadow-backend-selection",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.shadow.android.ShadowViewDecorationBackend"
         },
         {
@@ -4556,7 +5108,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 41,
+    "ownedEntryCount": 64,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }

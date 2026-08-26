@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 73d7faf4eb27935fcb0d85fa966cef28361b63a3362f50d3c7a9ce6fa4cf49e5
+translation_source_hash: a4bbae71e964bd458e4ab8edab57b1d179e9958348bfc4a72e4df3a09cacdf12
 translation_status: current
 ---
 
@@ -279,6 +279,15 @@ identity token。
   修正构建审计 454 个双语页面，Docusaurus 用时 `51.7 s`。修正后结论为 **improved**；能力、
   编译区域、路由、语言、无障碍和预算门禁均通过，且未改变上限。余量仍很窄，因此 Shadows
   切片必须继续遵循先收敛、后扩展的规则。
+
+- **2026-08-26，Governance V2 Shadows 本地验收：**硬切保留现有路由，把绘制平面所有权放入
+  Modifier Architecture，将后端、缓存与诊断契约集中到 Android 阴影模块手册，并减少 Guide
+  中的重复细节。第一次双语构建完成英文产物后，正确拒绝了两个相对路径多深入一层的中文链接。
+  修正链接后，最终完整构建审计 454 个页面，生成 49,136,607 个非 API 字节；纳入本段验收证据
+  后，在不变上限下留下 41,607 字节，Docusaurus 用时 `42.9 s`。结论为 **improved**：债务和
+  生成大小同时下降，且
+  没有新增路由或弱化门禁。这项本地观察不替代真机阴影保真或性能证据；Overlays 切片必须继续
+  保持相同的结构化预算纪律。
 
 - **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
   上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量

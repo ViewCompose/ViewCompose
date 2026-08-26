@@ -61,6 +61,7 @@ fun rasterizeShadowSample() {
     check(raster != null)
 }
 
+// DOCS_REGION_START(shadow-backend-selection)
 fun selectShadowBackendSample(): ShadowRenderBackendDecision {
     return ShadowRenderBackendSelector.select(
         policy = ShadowRenderPolicy.RenderNodeDisplayList,
@@ -68,3 +69,4 @@ fun selectShadowBackendSample(): ShadowRenderBackendDecision {
         hardwareAccelerated = true,
     )
 }
+// DOCS_REGION_END(shadow-backend-selection)

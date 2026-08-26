@@ -1,3 +1,23 @@
+---
+schema_version: 2
+document_id: module.viewcompose-shadow-android
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-shadow-android
+version_lane: released
+capability_ids:
+  - shadow.modifiers
+  - shadow.android-backend
+artifact_ids:
+  - viewcompose-shadow-android
+sample_ids:
+  - module.shadow-dependency
+  - module.shadow-backend-selection
+coordinate: com.viewcompose:viewcompose-shadow-android:0.1.0-alpha04
+minimal_usage_sample_id: module.shadow-dependency
+---
+
 # Shadow Android
 
 `viewcompose-shadow-android` is the optional Android backend for ViewCompose drop shadows and inner
@@ -6,6 +26,7 @@ multi-layer effects, and connects them to the renderer's parent drawing planes.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="shadow-dependency" sample_id="module.shadow-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha04")
@@ -68,6 +89,21 @@ RenderNode requests fall back to bitmap replay below API 29, on software canvase
 RenderNode failure. The policy affects bitmap replay only; it does not replace exact rasterization.
 Use `backendStats()`, `cacheStats()`, and `innerCacheStats()` for diagnostics.
 
+Use the deterministic selector when validating a requested policy against a known platform and
+canvas capability. Application code changes the live policy through `ShadowDecorationLayer` and
+must restore `Auto` after an isolated experiment.
+
+{/* compiled-region source="viewcompose-shadow-android/src/test/samples/com/viewcompose/shadow/android/samples/ShadowAndroidSamples.kt" region="shadow-backend-selection" sample_id="module.shadow-backend-selection" build_target=":viewcompose-shadow-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun selectShadowBackendSample(): ShadowRenderBackendDecision {
+    return ShadowRenderBackendSelector.select(
+        policy = ShadowRenderPolicy.RenderNodeDisplayList,
+        sdkInt = 35,
+        hardwareAccelerated = true,
+    )
+}
+```
+
 ## Testing and operations
 
 - Test resolver output independently from pixels.
@@ -78,6 +114,8 @@ Use `backendStats()`, `cacheStats()`, and `innerCacheStats()` for diagnostics.
 
 ## Related documentation
 
+- [Advanced shadow guide](../../guides/shadows.md)
+- [Modifier architecture](../../architecture/modifier.md)
 - [Renderer module](../viewcompose-renderer-android/README.md)
 - [UI Contract module](../viewcompose-ui-contract/README.md)
 - [Graphics module](../viewcompose-graphics/README.md)

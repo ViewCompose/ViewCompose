@@ -21,8 +21,9 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Merge the Focus and Nested Scroll slice, then continue Phase 3 with Shadows.
-maven_release_changesets: []
+next_action: Merge the Shadows slice, then continue Phase 3 with Overlays.
+maven_release_changesets:
+  - release/changes/20260826-governance-shadows-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -59,7 +60,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: merge the Focus and Nested Scroll slice, then continue Phase 3 with Shadows. Pull-request gate scaling
+Next action: merge the Shadows slice, then continue Phase 3 with Overlays. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -748,6 +749,37 @@ Accepted Focus and Nested Scroll slice on 2026-08-26:
   changed. The complete run is cold-build completeness evidence, not a gate-speed comparison; the
   slice reuses existing unit, instrumentation, and device evidence and makes no new focus,
   keyboard, or scroll-performance claim. The next action is the Shadows hard cut.
+
+Accepted Shadows slice on 2026-08-26:
+
+- retained `/guides/shadows` as the stable application task, reduced it to exact outer/inner shadow
+  construction, layout-space, raster-stability, backend-enablement, and manual-verification steps,
+  kept drawing-plane ownership in Modifier Architecture, and concentrated installation, shape
+  resolution, cache, replay policy, diagnostics, compatibility, and benchmark contracts in the
+  Shadow Android module manual;
+- registered `shadow.modifiers` for four UI Contract Modifier entries and
+  `shadow.android-backend` for all 19 Shadow Android integration entries, plus one Guide and two
+  module compiled regions. Eleven resolved exception records were removed and the shared Modifier
+  source-file exception narrowed from 14 to 10 remaining symbols;
+- the report changed from 654 to 625 issues: missing metadata 100 to 98, orphan symbols 392 to 369,
+  and unclassified samples 155 to 151. Taxonomy mismatches remained 7; duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- the first bilingual build completed English output but rejected two Chinese links whose relative
+  paths were one level too deep. Correcting those links produced 49,136,607 non-API bytes, leaving
+  41,607 bytes under the unchanged limit after acceptance evidence was included. The complete build
+  audited 454 pages and completed Docusaurus in `42.9 s`;
+- all three compiled regions, exact ownership, Governance V2, documentation structure, language
+  and translation review, TypeScript, generated Reference freshness, accessibility, and the
+  complete bilingual site passed. A warm complete `qaQuick` also passed 2,342 actionable tasks in
+  `34 s` (186 executed and 2,156 up-to-date); this is completeness evidence, not a gate-speed
+  comparison. The conclusion is `improved`: runtime and application contracts now have distinct
+  owners and debt and generated size decreased. Release intent explicitly ignores
+  `viewcompose-shadow-android` because its compiled API sample changed only by adding region-boundary
+  comments; no framework API, behavior, metadata, or published artifact changed. The limitation is
+  that this documentation cut reuses the existing shadow
+  screenshot, unit, device, and benchmark evidence and makes no new fidelity or performance claim.
+  The next action is the Overlays hard cut.
 
 | Current area | Required target |
 | --- | --- |
