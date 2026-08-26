@@ -1,83 +1,93 @@
+---
+schema_version: 2
+document_id: module.viewcompose-constraintlayout-androidx
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-constraintlayout-androidx
+version_lane: released
+capability_ids:
+  - constraintlayout.core
+  - constraintlayout.helpers
+artifact_ids:
+  - viewcompose-constraintlayout-androidx
+sample_ids:
+  - module.constraintlayout-dependency
+  - module.constraintlayout-inline
+  - module.constraintlayout-dimensions
+  - module.constraintlayout-set
+  - module.constraintlayout-helpers
+coordinate: com.viewcompose:viewcompose-constraintlayout-androidx:0.1.0-alpha01
+minimal_usage_sample_id: module.constraintlayout-dependency
+---
+
 # AndroidX ConstraintLayout Integration
 
-`viewcompose-constraintlayout-androidx` adds a declarative ConstraintLayout node, child-constraint
-modifiers, reusable constraint sets, and AndroidX virtual helpers to ViewCompose.
-
-Its public API root is `com.viewcompose.constraintlayout`; the Maven suffix records the AndroidX
-backend without retaining the retired `com.viewcompose.widget.constraintlayout` taxonomy.
+`viewcompose-constraintlayout-androidx` adds a declarative ConstraintLayout node, typed child
+constraints, immutable constraint sets, and AndroidX-backed virtual helpers. Its public package is
+`com.viewcompose.constraintlayout`; the artifact suffix identifies the AndroidX backend.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="constraintlayout-dependency" sample_id="module.constraintlayout-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-constraintlayout-androidx:0.1.0-alpha01")
 }
 ```
 
-- Stability: **Alpha**. The current source contains the first-release API and renderer hard cut;
-  its Robolectric, physical-device, Demo, AndroidX `2.2.2`, performance-safety, documentation, and
-  repository release gates are accepted under the completed first-release hardening plan,
-  archived as `docs/archive/constraintlayout-native-engine-hardening.md`.
-  Broader parity and optimization were completed under the archived
-  [post-release expansion plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md).
-  Its Demo fixed-clock baseline, Phase 0 contract freeze, Phase 1 classified reconciliation,
-  Phase 2 high-value parity, Phase 3 complete acceptance, and Phase 4 controlled benchmark are all
-  complete. The expansion line is release-safe; it does not claim a whole-frame performance win.
-- Platform: Android 7.0 (API 24) and newer.
-- Optional: `viewcompose-ui-foundation` does not depend on this artifact.
-- UI Contract and UI Foundation are exposed transitively because their modifier, unit, and builder
-  types appear in the public DSL; runtime remains an implementation dependency.
-- Native engine: AndroidX ConstraintLayout `2.2.2` and its Guideline, Barrier, Flow, Group, Layer,
-  and Placeholder helpers. Typed Grid expands into renderer-owned row/column solver proxies rather
-  than AndroidX Grid's string grammar; declarative CircularFlow expands into ordinary circle
-  constraints and creates no helper View.
+- Stability: **Alpha**. The source-breaking typed DSL and atomic renderer contract are established;
+  later alphas may add capabilities but must not restore partial graph application or string helper
+  grammars.
+- Platform: Android 7.0 (API 24) and newer; AndroidX ConstraintLayout `2.2.2`.
+- Dependency boundary: UI Contract and UI Foundation are API dependencies because their Modifier,
+  unit, and builder types appear publicly. Runtime and AndroidX are implementation dependencies.
+- Optionality: UI Foundation does not depend on this module. Add it only where the native
+  constraint solver or helpers are useful.
 
-## Inline constraints
+## Inline constraints and typed scope
 
-Create references inside `ConstraintLayout`, attach them to children with `Modifier.constrainAs`,
-and connect source anchors in the constraint scope:
+Create references inside `ConstraintLayout`, attach one to each child with `constrainAs`, and link
+typed anchors in the constraint scope:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ConstraintLayoutModuleSamples.kt" region="constraintlayout-inline" sample_id="module.constraintlayout-inline" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 ConstraintLayout {
     val (title, body) = createRefs("title", "body")
-    Text("Title", Modifier.constrainAs(title) {
-        startToStart(parent)
-        topToTop(parent)
-    })
-    Text("Body", Modifier.constrainAs(body) {
-        startToStart(title)
-        topToBottom(title, margin = 8.dp)
-    })
+    Text(
+        "Title",
+        modifier = Modifier.constrainAs(title) {
+            startToStart(parent)
+            topToTop(parent)
+        },
+    )
+    Text(
+        "Body",
+        modifier = Modifier.constrainAs(body) {
+            startToStart(title)
+            topToBottom(title, margin = 8.dp)
+        },
+    )
 }
 ```
 
-References are non-blank string identities local to one layout. Duplicate child IDs, helper IDs,
-and child/helper collisions reject the complete candidate. A repeated source-anchor call replaces
-its earlier link. `start` and `end` follow layout direction; `left` and `right` remain physical;
-top, bottom, and baseline are physical/native anchors. One item cannot mix logical and physical
-horizontal links. A baseline link is mutually exclusive with top/bottom positioning, and a circle
-is mutually exclusive with all edge/baseline links. `wrapBehaviorInParent` independently selects
-whether the item contributes to both, one, or neither wrap-content parent axis without removing it
-from solving or placement.
+References are non-blank identities local to one layout. Duplicate child IDs, helper IDs, and
+child/helper collisions reject the complete candidate. A repeated source-anchor declaration
+replaces its earlier link. Start/end are logical; left/right, top/bottom, and baseline are physical.
+One item cannot mix logical and physical horizontal links. Baseline excludes top/bottom, and circle
+placement excludes every edge or baseline link.
 
-`ConstraintLayoutScope` is a dedicated `@UiDslMarker` receiver rather than a `UiTreeBuilder` type
-alias. It still exposes every ordinary widget, but helper declarations belong directly to the
-current layout and an outer ConstraintLayout receiver is hidden inside a nested layout scope. The
-scope freezes its helper specification after content completes; no thread-local collector or
-mutable post-emission helper payload is part of the public behavior.
-
-Anchor targets are separated by capability. Logical start/end APIs accept only
-`ConstraintHorizontalAnchorTarget`; top/bottom APIs accept only
-`ConstraintVerticalAnchorTarget`; baseline-to-baseline accepts only
-`ConstraintBaselineAnchorTarget`. Ordinary child references implement all three planes. A
-start/end Guideline or Barrier implements only the horizontal plane, while a top/bottom Guideline
-or Barrier implements only the vertical plane. Group and Layer return identity-only helper
-references. Cross-axis links therefore fail during Kotlin compilation rather than graph preflight.
+`ConstraintLayoutScope` and `ConstraintConstrainScope` are dedicated `@UiDslMarker` receivers.
+Horizontal helpers implement only horizontal target types, vertical helpers only vertical target
+types, and ordinary child references implement every applicable plane. Cross-axis links and helper
+calls leaked through nested scopes therefore fail during Kotlin compilation. A retained scope is
+invalid after its content evaluation finishes.
 
 ## Dimensions and positioning
 
 Width and height use one mutually exclusive algebra:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ConstraintLayoutModuleSamples.kt" region="constraintlayout-dimensions" sample_id="module.constraintlayout-dimensions" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 width = ConstraintDimension.MatchConstraints(
     mode = ConstraintMatchMode.Percent(0.6f),
@@ -89,21 +99,19 @@ ratio = ConstraintRatio(width = 16f, height = 9f, constrainedSide = ConstraintRa
 ```
 
 Available dimensions are `WrapContent`, `ConstrainedWrapContent`, `Fixed`, and
-`MatchConstraints(Spread|Wrap|Percent, min, max)`. Bounds and percentages validate eagerly;
-`MatchParent`, independent min/max/percent/constrained fields, and raw ratio strings are absent.
-Typed ratios require positive finite terms and at least one match-constraint axis. Biases and
-guideline percentages use `0f..1f`. Circular angles use the finite `0f..<360f` Android clockwise
-convention: `0f` is above the center and values advance clockwise.
+`MatchConstraints(Spread|Wrap|Percent, min, max)`. Bounds and percentages validate eagerly. A typed
+ratio requires positive finite terms and at least one match-constraint axis. Bias and Guideline
+fractions use `0f..1f`; circular angles use the finite Android clockwise range `0f..<360f`.
+`wrapBehaviorInParent` independently selects contribution to each wrap-content parent axis.
 
 ## Reusable constraint sets
 
-`constraintSet { ... }` builds an immutable `ConstraintSetSpec` without emitting UI. Pass it to
-`ConstraintLayout(constraintSet = set)`. Inline constraints and helpers are merged afterward and win
-when the same constraint ID or same-kind helper ID exists in both sources. Duplicate constraints or
-helpers inside one source fail immediately; a cross-kind helper collision rejects graph preflight.
+`constraintSet` builds an immutable graph without emitting UI. Pass it to
+`ConstraintLayout(constraintSet = set)`. Inline constraints and helpers merge afterward and win for
+the same constraint ID or same-kind helper ID; duplicate entries inside one source and cross-kind
+helper collisions fail before native mutation.
 
-Reusable entries use the same typed reference for declaration and links:
-
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ConstraintLayoutModuleSamples.kt" region="constraintlayout-set" sample_id="module.constraintlayout-set" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 val set = constraintSet {
     val (title, body) = createRefs("title", "body")
@@ -118,255 +126,126 @@ val set = constraintSet {
 }
 ```
 
-The removed `constrain(id: String)` builder overload cannot drift away from a separately created
-reference. `Modifier.constrain(id, ...)` remains as the explicit XML-migration shortcut for an
-inline child; `Modifier.constrainAs(ref, ...)` is the reference-based form.
+Use `Modifier.constrainAs(reference)` for reference-based inline children.
+`Modifier.constrain(id, ...)` remains the explicit XML-migration shortcut; the removed string-based
+constraint-set builder is not restored.
 
-## Virtual helpers
+## Typed virtual helpers
 
-- Guidelines use finite non-negative dp offsets or inclusive `0f..1f` parent fractions. Explicit
-  left/right variants remain physically fixed while start/end variants mirror in RTL.
-- Barriers track logical or physical extremes with margins and gone-widget policy.
-- Chains require at least two unique members, own their members' anchors on the chain axis, validate
-  finite positive weights plus bias, and accept explicit parent/child/Guideline/Barrier endpoints
-  with non-negative boundary margins. Horizontal endpoints must stay entirely logical or physical.
-- Typed Grid accepts fixed or inferred axes bounded to `50 x 50`, positive row/column weights,
-  logical fill orientation, dp gaps, typed spans, and typed skips. It owns both positioning axes of
-  every member; overlapping or insufficient topology rejects the complete candidate.
-- Declarative CircularFlow groups explicit child/radius/angle values around one child center. It
-  owns each member's circular positioning and creates no native helper identity.
-- Flow maps orientation, wrapping, styles, biases, alignment, gaps, padding, and maximum wrap count.
-- Group propagates visibility and elevation.
-- Layer propagates visibility, elevation, rotation, scale, translation, and optional pivots.
-- Placeholder hosts one referenced child and defines empty visibility.
+Helpers are declared inside the current layout or reusable set and share the same typed references:
 
-Inline helper functions exist only on `ConstraintLayoutScope`; unrelated builders cannot call them.
-The reusable builder variants use `ConstraintSetBuilder`. Barrier, Flow, Group, and Layer require
-layout-local references. Flow and Placeholder are constraint-capable graph nodes, so a reusable set
-may constrain their helper reference; Guideline, Barrier, Group, and Layer are not ordinary
-constraint-item sources.
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ConstraintLayoutModuleSamples.kt" region="constraintlayout-helpers" sample_id="module.constraintlayout-helpers" build_target=":samples:tutorials:compileDebugKotlin" */}
+```kotlin
+ConstraintLayout {
+    val (hero, metric, status, center, orbit) = createRefs(
+        "hero", "metric", "status", "center", "orbit",
+    )
+    val start = createGuidelineFromStart(0.1f)
+    createGrid(
+        hero,
+        metric,
+        status,
+        rows = 2,
+        columns = 2,
+        orientation = ConstraintGridOrientation.Horizontal,
+        spans = listOf(ConstraintGridSpan(hero, index = 0, columnSpan = 2)),
+        skips = listOf(ConstraintGridSkip(index = 2)),
+    )
+    createCircularFlow(
+        center,
+        ConstraintCircularFlowItem(orbit, radius = 48.dp, angle = 90f),
+    )
+    Text("Hero", modifier = Modifier.constrainAs(hero) { startToStart(start) })
+    Text("Metric", modifier = Modifier.constrainAs(metric) {})
+    Text("Status", modifier = Modifier.constrainAs(status) {})
+    Text("Center", modifier = Modifier.constrainAs(center) {})
+    Text("Orbit", modifier = Modifier.constrainAs(orbit) {})
+}
+```
 
-## Native reconciliation and failures
+- Guidelines support physical or logical offsets/fractions; Barriers support all logical and
+  physical directions, margin, and gone-widget policy.
+- Chains require at least two unique members and typed boundaries. Positive weights, bias, margins,
+  and logical-versus-physical horizontal consistency validate before rendering.
+- Typed Grid is bounded to `50 x 50` and supports fixed/inferred axes, weights, gaps, orientation,
+  spans, and skips. It expands into renderer-owned solver proxies instead of AndroidX Grid's string
+  grammar.
+- CircularFlow expands typed radius/angle items into ordinary circle constraints and creates no
+  helper View. Flow, Group, Layer, and Placeholder map to managed AndroidX helpers.
+- Flow and Placeholder are constraint-capable graph nodes. Guideline, Barrier, Group, and Layer
+  expose only the target or identity planes they actually support.
 
-The native container coalesces rebuild requests and preflights the complete merged graph before
-mutation. Child and helper strings map to stable Android View IDs. One registry creates, reuses,
-retypes, and removes Guideline, Barrier, Flow, Group, Layer, and Placeholder Views plus Grid's
-zero-thickness row/column proxies; AndroidX no longer creates unowned helpers as an `applyTo` side
-effect. Grid's semantic ID is identity-only and never maps to a View; CircularFlow has neither a
-helper View nor generated native ID.
+## Native ownership and failure behavior
 
-An accepted candidate is built from a clean native set. The renderer snapshots touched IDs,
-LayoutParams, helper membership, accessibility, visibility, and transforms before apply. Missing
-references, duplicate/colliding IDs, invalid anchor planes, competing chain/item ownership, helper
-cycles, and invalid dimensions/ranges reject the whole candidate. Native failure restores the
-previous helper registry and View state. Diagnostics are structured and bounded by graph revision,
-identity, and reason; invalid links are never dropped individually.
+The renderer preflights the complete merged graph before mutation. One registry owns stable native
+IDs and all managed Guideline, Barrier, Flow, Group, Layer, Placeholder, and Grid proxy Views. An
+accepted candidate is applied from a clean native set; snapshots cover touched IDs, LayoutParams,
+helper membership, accessibility, visibility, and transforms.
 
-The accepted graph now carries deterministic topology and scalar fingerprints plus its raw child,
-environment, native-ID, and helper-ownership inputs. A semantically equal or content-only update
-returns before graph compilation and performs no adapter-owned constraint allocation or native
-write. Scalar updates preserve unchanged helper instances and references, create/remove no helper,
-clone no live LayoutParams, and request layout at most once. Environment-only updates resolve the
-environment once while retaining topology and IDs; topology updates retain the existing staged
-commit and full rollback contract. These classifications are implementation behavior, not new
-public DSL controls.
+Missing references, duplicate or colliding IDs, invalid anchor planes, competing item/helper
+ownership, helper cycles, and invalid dimensions reject the whole candidate. A native exception
+restores the previous registry and View state. Diagnostics are structured and bounded by graph
+revision, identity, and reason; individual invalid links are never silently dropped.
 
-This transaction follows
-[ADR-0016](../../architecture/decisions/0016-constraintlayout-graph-and-helper-ownership.md).
-A focused 2026-08-18 API 35 Robolectric run against cached ConstraintLayout `2.2.1` passed 16/16
-renderer tests. Under the same harness, the trailing-Barrier control changed from an expected
-`125 px`/actual `0 px` before the ID-index and direction fixes to exact `125 px` afterward, reducing
-coordinate error from `125 px` to zero; the result is **improved**. The 1,000-retype case retained
-exactly one managed helper and two total children on every iteration. The run also covers all-six-
-kind retyping, Layer transform/removal/detach/reattach, Placeholder release, invalid-candidate
-retention, injected mid-commit rollback, valid retry, and stable native identity when declarations
-of every retained helper kind reorder. This is focused correctness evidence, not release
-acceptance: it used a manual classpath and `2.2.1`, emitted Robolectric-only resource-name
-diagnostics for generated IDs. A follow-up Gradle 8.13 run resolved ConstraintLayout `2.2.2` plus
-core `1.1.2` and passed 75/75 UI Contract tests, 11/11 DSL tests, and 451/451 Renderer tests,
-including the 12 graph and 16 focused ConstraintLayout cases; `verifyDocumentationStructure` also
-passed. The formal JVM compatibility conclusion remains **improved**. The later device and
-performance matrices below close the first-release acceptance scope; the post-release plan now
-owns typed Grid, CircularFlow, broader visual acceptance, and final performance comparison.
+Equal and content-only updates return before graph compilation. Scalar updates preserve helper
+instances and IDs, avoid live LayoutParams cloning, and request layout at most once. Environment
+updates resolve the environment once while retaining topology; topology updates use the complete
+staged commit and rollback path. These classifications are renderer behavior, not public tuning
+flags.
 
-The 2026-08-21 Phase 1 run passed all 459 renderer tests. Named cases cover 1,000 equal submissions,
-content-only child replacement, scalar helper retention, one-pass environment resolution, and an
-injected topology failure followed by a valid retry. Structural counters report zero compiler,
-environment, native commit, helper write, layout-request, and adapter-allocation work for accepted
-equal input; the scalar case creates/removes no helper, clones no live LayoutParams, and commits at
-most once. The counters and activation hook are internal and container-local, so there is no public
-API documentation addition or inactive global observer. Release-intent, development-tooling
-isolation, and documentation gates pass.
+## Accepted correctness and performance evidence
 
-The 2026-08-21 Phase 2 focused JVM run passes the six frozen `CL-P2-*` renderer cases. Chain tests
-cover exact parent/child/Guideline/Barrier boundaries, margins, physical placement, and logical
-LTR/RTL mirroring. Baseline normal/gone margins match a direct AndroidX control and an invalid retry
-retains the accepted graph. All four parent-wrap policies produce exact two-axis sizes. Physical
-links and Guidelines remain fixed through an RTL-to-LTR environment update while logical start
-mirrors. Weighted Grid produces exact span/skip geometry, rejects an overlapping candidate without
-changing five retained proxies, and stays within `0..5` proxies across 1,000 replacements.
-CircularFlow matches AndroidX circle coordinates, rejects competing direct ownership atomically,
-and retains zero helper identity across 1,000 replacements. This is **improved** capability and
-failure-safety evidence relative to the released source, which has none of these Phase 2 contracts.
-It is JVM/API-35 Robolectric evidence; Phase 3 still owns the complete device, screenshot,
-configuration, and lifecycle matrix, and Phase 4 still owns performance conclusions.
+The final JVM run passed 75/75 UI Contract, 11/11 module DSL, and 451/451 Renderer tests. Device
+acceptance passed 8/8 focused cases on API 24 and API 33, retained the earlier 3/3 API-28 helper
+matrix and 200-toggle stress, and reviewed 12/12 pairwise screenshots across size, orientation,
+theme, direction, and font scale without overlap, clipping, or helper artifacts. The correctness,
+typed-safety, rollback, lifecycle, and configuration conclusion is **improved**. Limits are two
+focused physical OEM/API points plus emulator coverage and a pairwise set rather than every visual
+Cartesian combination.
 
-The same 2026-08-21 candidate passed 4/4 `ConstraintLayoutReleaseDeviceTest` cases in `15.674 s` on
-a rooted Xiaomi MI 6 / Android 9. The new Phase 2 case verifies exact Grid span/skip ordering with
-four content children plus five generated row/column proxies, and verifies four CircularFlow
-members at the cardinal positions of a `78 dp` radius with no helper View. The other three cases
-retain the earlier light/LTR/font-scale 1.0 and dark/RTL/font-scale 1.3 helper matrix and 200 rapid
-state switches; structured diagnostics reported no unexpected warning. Manual review of two
-focused Chinese Demo captures confirmed the weighted `2 x 3` Grid and four-member CircularFlow are
-legible, unclipped, and free of overlap or helper artifacts. Process-filtered logs contained no
-`UIConstraintLayout`, `ConstraintSet`, renderer, helper-layer, or fatal entry. The physical-device
-capability and failure-safety conclusion is **improved** relative to the released source. This is
-one OEM/API point and a focused visual sample rather than the complete Phase 3 screenshot and
-lifecycle matrix, and it provides no Phase 4 performance conclusion.
+The controlled released/candidate/direct-AndroidX matrix covered stable, scalar, helper, and
+topology changes at 10/50/100 nodes. Seven comparable pairs passed every timing and peak-heap
+regression gate; five remained `inconclusive` after the one permitted repeat. Direct AndroidX was
+faster at P95 for all twelve candidate actions and at P50 for eleven. The release-safety conclusion
+is **no material change**, not whole-frame leadership. Preserve the zero-work and bounded-write fast
+paths; rerun the controlled matrix only when production reconciliation changes. Full absolute
+results, normalized deltas, CVs, thermal controls, and limitations remain in
+[performance tooling](../../tooling/performance.md#247-constraintlayout-phase-4-controlled-matrix).
 
-The 2026-08-21 Phase 3 acceptance adds discoverable one-purpose Grid, CircularFlow, gone-margin,
-parent-wrap, chain, and helper-lifecycle Demo fixtures plus app-only mounted-scene diagnostics. Its
-12/12 reviewed Paparazzi snapshots use a pairwise/orthogonal selection across phone/tablet,
-portrait/landscape, light/dark, LTR/RTL, and font scales `1.0`, `1.3`, and `2.0`; manual review found
-no overlap, clipping, ambiguous fixture, or direction/theme defect. The combined Phase 2/3 suite
-passes 8/8 on API 24 in `16.45 s`, 8/8 on API 36 across the final focused runs, and 8/8 in
-`26.442 s` on a physical Google Pixel 4 XL / Android 13 (API 33). Exact native geometry covers Grid
-orientation/span/skip, CircularFlow, normal/gone margins, all four parent-wrap policies, anchors,
-dimensions, bias, logical/physical direction, and fixed/weighted chains. Lifecycle coverage includes
-child reorder, key reuse, detach/reattach, density/direction recreation, rejected-candidate rollback,
-valid retry, the retained 200-toggle device case, and the retained Phase 2 1,000-replacement stress.
-There is no unexpected `UIConstraintLayout`, `ConstraintSet`, or uncaught AndroidX warning; the one
-expected rejection is bounded and followed by recovery. Relative to Phase 2-only acceptance, the
-configuration, visual, lifecycle, and API-compatibility confidence is **improved**. No published
-renderer behavior changed and no controlled timing comparison ran, so the Phase 3 performance
-conclusion is **no material change**. Limits are one final physical Google/API-33 point alongside
-the earlier Xiaomi/API-28 evidence, 12 pairwise cases rather than all 48 Cartesian visual
-combinations, and no cooled direct-native/released-baseline/candidate matrix. Phase 4 owns that
-benchmark and final release guidance.
+## Performance guidance
 
-The 2026-08-19 DSL safety follow-up passed 17/17 ConstraintLayout module tests: 12 behavior tests
-and five Kotlin 2.0.21 compiler fixtures. The positive typed-axis/reference sample compiled; a
-vertical helper used as a horizontal target, a horizontal helper used as a vertical target, an
-outer ConstraintLayout helper call leaked through a nested Column, and a string ConstraintSet
-entry all failed compilation as required. The prior generic target/type-alias surface admitted
-those four invalid forms, so the compile-safety conclusion is **improved**. The same run proved
-nested helper snapshots remain independent and a retained scope rejects late declarations.
-`verifyDslApiContracts`, the UI Foundation scoped-container sample, Demo compilation, and Preview
-compilation also passed. This source-contract evidence is complemented by the device and performance
-acceptance below.
-
-The focused 2026-08-19 physical-device rerun on a Samsung SM-G991B / Android 13 accepted the
-revised Guideline/Barrier fixture in light theme, LTR, and font scale 1.0. The Barrier marker
-center moved from `596 px` for the short copy to `782 px` for the long copy, an absolute `186 px`
-delta (17.2% of the 1080 px screen width), while the visible 55% Guideline stayed fixed and the
-complete marker remained inside its container. The exact geometry instrumentation passed 1/1,
-the warning-free Demo APK assembled successfully, and filtered logs contained no app-fatal,
-ConstraintSet, renderer-layout, or helper-layer failure. The focused visual/geometry conclusion
-is **improved**. This focused default-configuration fixture was followed by the complete matrix
-below.
-
-The complete 2026-08-19 device acceptance then passed 3/3 instrumentation tests on a rooted
-Xiaomi MI 6 / Android 9. It exercised the complete retained helper surface in light/LTR/font-scale
-1.0 and dark/RTL/font-scale 1.3 configurations, asserted exact native Guideline, Barrier, Flow,
-Group, Layer, and Placeholder effects, and completed 100 retained-helper plus 100 virtual-helper
-state alternations with constant child/helper counts. Nine screenshots were reviewed manually;
-the focused Guideline/Barrier fixture, all Barrier directions, single-column Flow, hidden Group,
-Layer transform, and Placeholder transfer remained contained and legible in both configurations.
-Filtered logs contained no unexpected ConstraintSet, helper-layer, renderer-layout, or fatal entry.
-
-On 2026-08-20, the archival candidate was rebuilt after the final Demo localization and benchmark
-harness edits, then installed over the prior fixture on the same Xiaomi device. Application APK
-`0bd034432282130b9c7c99f0fe9d0120699d113ff3e288936a3b9562f3e09673` and test APK
-`2c555fafe3dbdbd96c0bbbd43401179d115483ca601ee01c3c813739b4bc26d3` passed the same 3/3
-release-device tests in `195.759 s`. This reproduces the accepted exact-geometry, virtual-helper,
-bounded-registry, and warning-free behavior after the final build; the conclusion is **no material
-change**. It does not add another OEM/API point or replace the earlier nine-screenshot manual
-review, so the same single-device limitation remains.
-
-The RTL pass exposed one Android 9 lifecycle defect before acceptance: a retained programmatic
-helper could keep its previously resolved LTR direction after the container changed to RTL, which
-prevented AndroidX from mirroring logical Guideline begin/end. The renderer now synchronizes each
-retained helper's `layoutDirection` with its container before applying the graph. A transition
-regression fails without that synchronization and passes with exact mirrored geometry afterward;
-the device correctness conclusion is **improved**. This evidence covers one physical API 28 device
-and two high-risk configurations, not every supported OEM/API combination.
-
-The final rooted first-release performance matrix compared the pre-hard-cut ViewCompose APK, the
-candidate, and direct Android Views across stable-content, scalar, helper, and topology actions at
-10/50/100 nodes. Eight actions were stable on both ViewCompose arms; four remained
-`inconclusive` after one adjacent repeat. No stable frame P50/P95 or median peak-heap row regressed,
-and the corrected Android-Views-normalized `--enforce` gate passed. The renderer also removed an
-O(n-squared) child-index lookup from rollback snapshot capture and skipped an identical second
-snapshot when no content overlay had been released; this changed the previously failing stable
-topology-50 P50 from `7.076 ms` to `6.162 ms`, versus the `6.304 ms` baseline. The first-release
-performance-safety conclusion is **no material change**. Full absolute results, normalized deltas,
-CVs, limitations, and protocol are recorded in
-[performance tooling](../../tooling/performance.md#245-constraintlayout-first-release-safety).
+- Reuse a constraint set while topology is stable and only content or scalar values change.
+- Keep reference IDs and helper kinds stable so native IDs and helper instances remain reusable.
+- Prefer simpler containers when constraints add no value; ConstraintLayout still incurs a solver
+  pass.
+- Avoid rebuilding large helper graphs from rapidly changing state.
+- Do not add a public optimization mode without stable evidence that the classified automatic paths
+  are insufficient.
 
 ## Alpha source migration
 
 | Removed Alpha source | Replacement |
 | --- | --- |
-| `ConstraintDimension.FillToConstraints` | `ConstraintDimension.MatchConstraints()` |
-| `ConstraintDimension.MatchParent` | Opposing anchors plus `MatchConstraints()` |
-| `widthMin` / `widthMax` | `width = MatchConstraints(min = ..., max = ...)` |
-| `heightMin` / `heightMax` | `height = MatchConstraints(min = ..., max = ...)` |
-| `widthPercent` / `heightPercent` | `MatchConstraints(mode = ConstraintMatchMode.Percent(...))` |
-| `constrainedWidth` / `constrainedHeight` | `ConstraintDimension.ConstrainedWrapContent` |
-| `dimensionRatio = "W,16:9"` | `ratio = ConstraintRatio(16f, 9f, ConstraintRatioSide.Width)` |
-| circle plus edge declarations | Put circle and edge placement in separate constraint-set states |
-| repeated constraint/helper IDs in one builder | Declare each ID once; use inline-over-set precedence only for intentional state overlay |
-| `ConstraintLayoutScope` as a `UiTreeBuilder` alias | Use the dedicated receiver supplied by `ConstraintLayout { ... }`; do not retain or construct it |
-| one generic anchor-target type for every helper | Link start/end only to horizontal targets, top/bottom only to vertical targets, and baselines only to baseline-capable children |
-| `constraintSet { constrain(ref.id) { ... } }` | `constraintSet { constrain(ref) { ... } }` |
-| AndroidX Grid string spans/skips | Use typed `ConstraintGridSpan` and `ConstraintGridSkip` values in `createGrid(...)` |
-| logical start/end used as fixed screen edges | Use explicit left/right anchors, Guidelines, Barriers, and physical chain sides |
+| `ConstraintDimension.FillToConstraints` / `MatchParent` | Opposing anchors plus `ConstraintDimension.MatchConstraints()` |
+| independent min/max/percent/constrained fields | `Fixed`, `ConstrainedWrapContent`, or one typed `MatchConstraints(...)` value |
+| raw ratio strings | `ConstraintRatio(width, height, constrainedSide)` |
+| circle combined with edge constraints | Separate constraint-set states |
+| duplicate constraint/helper IDs | Declare once; use inline-over-set precedence only for intentional overlays |
+| `ConstraintLayoutScope` as a `UiTreeBuilder` alias | Use the dedicated receiver supplied by `ConstraintLayout` |
+| one generic helper target type | Use horizontal, vertical, baseline, or identity-only references as declared |
+| `constraintSet { constrain(ref.id) }` | `constraintSet { constrain(ref) }` |
+| AndroidX Grid string spans/skips | `ConstraintGridSpan` and `ConstraintGridSkip` |
+| logical start/end used as fixed screen edges | Physical left/right anchors, Guidelines, Barriers, and chain sides |
 
-The changed public surface is Q3: transport invariants, defaults, failure timing, DSL scope,
-merge precedence, native mapping, and replacement samples are contract fields. There is no
-deprecated compatibility alias or raw AndroidX escape hatch.
-
-## Performance guidance
-
-- Reuse a constraint set when the graph is stable and only child content changes.
-- Keep reference IDs and helper kinds stable to reuse their generated View IDs and instances.
-- Stable equal/content-only submissions now take the classified fast path automatically; no public
-  optimization flag is required.
-- Prefer simpler containers when constraints do not add value; ConstraintLayout incurs a solver pass.
-- Avoid rebuilding large helper graphs from rapidly changing state.
-
-The revision-6 Phase 4 matrix compares released, candidate, and direct AndroidX at 10/50/100 nodes
-for stable, scalar, helper, and topology changes. Seven longitudinal pairs are stable on both
-ViewCompose arms and pass every timing and peak-heap regression gate; five remain
-`inconclusive` after the single permitted paired repeat. The release-safety conclusion is
-**no material change**, not a whole-frame optimization win. Direct Android Views is faster at P95
-for all twelve Candidate actions and at P50 for eleven. Helper-100 has the opposing Candidate P50,
-but its P95 remains slower, so it is mixed rather than leadership evidence. Phase 1's classified
-fast paths remain justified by exact zero-work and bounded-write counters, not by a frame-time
-claim. Do not describe this adapter as the fastest ViewCompose layout path or treat repeated runs
-as a way to select a favorable sample. See the controlled protocol, absolute values, limitations,
-and next action in [ViewCompose Performance](../../tooling/performance.md#247-constraintlayout-phase-4-controlled-matrix).
-
-The direct-AndroidX Demo fixtures render every benchmark node with a visible fill. Manual review on
-the Xiaomi/API-28 reference device confirmed one row of 10 cells, a `5 x 10` field of 50 cells, and
-a `10 x 10` field of 100 cells before timing capture. Each fixture exposes update, reset, and node-
-count controls; a fixture that shows only controls or transparent cells is invalid benchmark
-evidence. The focused app test also requires ten visible non-Barrier nodes for every workload.
+This is an intentional source hard cut. There is no deprecated compatibility alias, partial-link
+recovery, raw AndroidX helper grammar, or second constraint solver.
 
 ## Related documentation
 
-- [UI Foundation module](../viewcompose-ui-foundation/README.md)
-- [Renderer module](../viewcompose-renderer-android/README.md)
-- [UI Contract module](../viewcompose-ui-contract/README.md)
-- [Source documentation and API comment standard](../../project/api-documentation-quality.md)
-
-The complete generated reference is available in the
-[`viewcompose-constraintlayout-androidx` API tree](https://docs.viewcompose.com/api/viewcompose-constraintlayout-androidx/current/).
-
-## Compatibility notes
-
-Source snapshots before the first-release hard cut used warning-based partial recovery and split
-helper ownership. Current source intentionally breaks that behavior and does not provide a second
-constraint solver or compatibility engine. The first-release and post-release plans are both
-archived; current contracts and performance boundaries are owned by this module manual and the
-linked active architecture, migration, and tooling documents.
+- [Constraint graph and helper ownership ADR](../../architecture/decisions/0016-constraintlayout-graph-and-helper-ownership.md)
+- [Typed helper expansion ADR](../../architecture/decisions/0017-typed-constraint-helper-expansion.md)
+- [Modifier architecture](../../architecture/modifier.md)
+- [Performance tooling](../../tooling/performance.md#247-constraintlayout-phase-4-controlled-matrix)
+- [First-release hardening record](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-native-engine-hardening.md)
+- [Parity and performance expansion record](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/constraintlayout-parity-performance-expansion.md)
+- [Generated API reference](https://docs.viewcompose.com/api/viewcompose-constraintlayout-androidx/current/)

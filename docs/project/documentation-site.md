@@ -408,6 +408,18 @@ identity token.
   behavior, or budget. This observation validates documentation structure and output only; it
   reuses existing Modifier contract and renderer evidence.
 
+- **2026-08-26, Governance V2 ConstraintLayout module local acceptance:** the hard cut retained the
+  module route, registered all 43 public core/helper DSL entries and five compiled module sample
+  decisions, removed repeated chronological phase logs, and reduced Governance V2 debt from 516 to
+  468. The first complete build correctly rejected two relative archive links that are not deployed;
+  after replacing them with the repository's established immutable-history link form, the complete
+  evidence-bearing build audited 454 pages, produced 48,982,759 non-API bytes, left 195,455 bytes
+  under the unchanged limit, and completed Docusaurus in `25.2 s`. The result is **improved**:
+  structured ownership increased and generated output decreased without changing the website
+  stack, routes, framework
+  behavior, or budget. This observation reuses existing ConstraintLayout correctness, device,
+  visual, and performance evidence and makes no new runtime claim.
+
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and
   moving the generated quality report outside the deploy tree reduced it to 49,175,712 bytes,

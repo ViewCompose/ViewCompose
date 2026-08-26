@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.constraintlayout-helpers",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "constraintlayout.helpers",
+  "document_ids": ["module.viewcompose-constraintlayout-androidx"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ConstraintLayoutModuleSamples.kt",
+  "region": "constraintlayout-helpers",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

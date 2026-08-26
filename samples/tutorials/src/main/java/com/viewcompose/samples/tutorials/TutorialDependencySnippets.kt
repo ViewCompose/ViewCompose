@@ -151,3 +151,11 @@ dependencies {
 }
     // DOCS_REGION_END(image-glide-dependency)
 }
+
+private val constraintLayoutModuleDependency = run {
+    // DOCS_REGION_START(constraintlayout-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-constraintlayout-androidx:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(constraintlayout-dependency)
+}
