@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register compiled shadow documentation regions and hard-cut duplicated shadow documentation without changing a published artifact.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-shadow-android",
+      "reason": "The compiled API sample only adds documentation-region boundary comments around an unchanged function; published source, signatures, behavior, metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "capability_id": "shadow.modifiers",
+  "kind": "modifier",
+  "owner": { "kind": "module", "id": "viewcompose-ui-contract" },
+  "artifact": "viewcompose-ui-contract",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.dropShadow", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.dropShadows", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.innerShadow", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.innerShadows", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.shadow.modifiers", "generated": true },
+  "sample_owner": { "sample_id": "guide.shadow-card" },
+  "document_owners": {
+    "guide": ["guide.advanced-shadows"],
+    "architecture": ["architecture.modifier-runtime"],
+    "module": ["module.viewcompose-shadow-android"]
+  }
+}

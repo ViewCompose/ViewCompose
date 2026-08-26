@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.shadow-dependency",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "shadow.android-backend",
+  "document_ids": [
+    "module.viewcompose-shadow-android"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "shadow-dependency",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

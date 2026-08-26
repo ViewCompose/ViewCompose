@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "capability_id": "shadow.android-backend",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-shadow-android" },
+  "artifact": "viewcompose-shadow-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.shadow.android.InnerShadowBitmapRasterizer", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/InnerShadowBitmapRasterizer.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.RasterizedInnerShadow", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/InnerShadowBitmapRasterizer.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.InnerShadowSpecResolver", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ResolvedShadowSpec.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ResolvedInnerShadowSpec", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ResolvedShadowSpec.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ResolvedShadowGroup", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ResolvedShadowSpec.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ResolvedShadowLayer", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ResolvedShadowSpec.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ResolvedShadowSpec", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ResolvedShadowSpec.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ShadowSpecResolver", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ResolvedShadowSpec.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.RasterizedShadow", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ShadowBitmapRasterizer.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ShadowBitmapRasterizer", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ShadowBitmapRasterizer.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ShadowRasterCacheStats", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ShadowBitmapRasterizer.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ShadowDecorationLayer", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ShadowDecorationLayer.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ShadowRenderBackend", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ShadowRenderBackend.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ShadowRenderBackendDecision", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ShadowRenderBackend.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ShadowRenderBackendSelector", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ShadowRenderBackend.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ShadowRenderBackendStats", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ShadowRenderBackend.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ShadowRenderDecisionReason", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ShadowRenderBackend.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ShadowRenderPolicy", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ShadowRenderBackend.kt" },
+    { "symbol_id": "com.viewcompose.shadow.android.ShadowViewDecorationBackend", "kind": "type", "visibility": "public", "source": "viewcompose-shadow-android/src/main/java/com/viewcompose/shadow/android/ShadowViewDecorationBackend.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.shadow.android-backend", "generated": true },
+  "sample_owner": { "sample_id": "module.shadow-backend-selection" },
+  "document_owners": {
+    "guide": ["guide.advanced-shadows"],
+    "architecture": ["architecture.modifier-runtime"],
+    "module": ["module.viewcompose-shadow-android"]
+  }
+}

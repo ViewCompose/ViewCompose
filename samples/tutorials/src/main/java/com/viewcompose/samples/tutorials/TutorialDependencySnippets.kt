@@ -64,3 +64,11 @@ dependencies {
 }
     // DOCS_REGION_END(lazy-collections-dependencies)
 }
+
+private val shadowModuleDependency = run {
+    // DOCS_REGION_START(shadow-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha04")
+}
+    // DOCS_REGION_END(shadow-dependency)
+}

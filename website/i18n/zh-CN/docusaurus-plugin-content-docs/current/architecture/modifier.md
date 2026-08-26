@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/modifier.md
-translation_source_hash: 4362352f1c6db70d7eb7eb66c98b77aaeca057dad6a9c0f81e385b7be77b24d0
+translation_source_hash: cd91a3a094f9e25ccbb813bf4bc1e7e31bc1b2e80bb8b6023e5782af2d114942
 translation_status: current
 ---
 
@@ -83,41 +83,16 @@ Child 共用该链；其他 `AndroidView` 需要已附加 Dispatcher。同轴 Ch
 精确的能力、样例和相关文档链接只来自有效的 Governance V2 记录。在冻结的所有权债务迁移
 完成前，生成页面会单独报告结构化所有者覆盖率，不猜测也不隐藏缺口。
 
-### 3.1 高级阴影示例与约束
+### 3.1 高级阴影路由
 
-
-```kotlin
-val cardShape = UiShape.rounded(20.dp)
-
-Surface(
-    modifier = Modifier
-        .shape(cardShape)
-        .dropShadows(
-            shadows = listOf(
-                UiShadow(
-                    color = 0x33000000,
-                    blurRadius = 12.dp,
-                    offsetY = 5.dp,
-                ),
-                UiShadow(
-                    color = 0x223B82F6,
-                    blurRadius = 18.dp,
-                    spreadRadius = 2.dp,
-                    offsetX = (-4).dp,
-                ),
-            ),
-            shape = cardShape,
-        ),
-) {
-    Content()
-}
-```
-
-1. 要求像素级 blur/spread/offset/color 或多层合成时使用 `dropShadow(s)`；Material 高程语义继续使用 `elevation`。
-2. 需要稳定轮廓时推荐同时为内容和阴影传入同一个 `UiShape`；未显式传入时使用节点 `shape/cornerRadius`，再回退矩形。
-3. 阴影不扩张布局 bounds。外阴影需要调用侧保留视觉空间，并避免在非 viewport 祖先上启用不必要裁切。
-4. 高频动画优先变换节点的 translation/scale/rotation/alpha；逐帧动画 blur、spread、shape 或尺寸会产生新的栅格 key。
-5. 完整后端、缓存和诊断规则见 [shadows.md](../guides/shadows.md)。
+1. UI Contract 拥有 Renderer-neutral 阴影图层与 Modifier 顺序。Android Renderer 携带装饰请求，
+   并拥有父级前后绘制平面；它不依赖具体栅格后端。
+2. `dropShadow(s)` 在原生子内容之前绘制，`innerShadow(s)` 在完整子节点之后绘制。两者都不参与
+   布局和命中测试，也不替代 `elevation` 或 `zIndex`。
+3. 可选的 Android 阴影产物负责解析形状与密度、栅格化图层并完成回放。该产物不存在时，阴影
+   请求是 no-op，不改变其他渲染路径。
+4. 应用写法参见[高级阴影指南](../guides/shadows.md)；安装、缓存、后端、诊断、兼容性与基准契约
+   参见 [Android 阴影模块手册](../modules/viewcompose-shadow-android/README.md)。
 
 ### 3.2 生成与一致性
 

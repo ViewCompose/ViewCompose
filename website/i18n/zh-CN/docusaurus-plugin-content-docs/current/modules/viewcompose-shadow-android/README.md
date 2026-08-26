@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-shadow-android/README.md
-translation_source_hash: 8d8c4440572131a0cc0c64488c0c8f1e7d9f525cc41ea7acb0242dfc5ebc4581
+translation_source_hash: 55e09ee7cf243f17cd77fd944a4d9a135bb34abe5ba4617fe8ee43116401de96
 translation_status: current
 ---
 
@@ -11,6 +11,7 @@ Shadow Modifier 解析成像素规格，栅格化精确的多层效果，并接�
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="shadow-dependency" sample_id="module.shadow-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha04")
@@ -66,6 +67,20 @@ Invalidation 复用 Bitmap；Size、Density、Outline 或 Shadow 变化会产生
 API 29 以下、Software Canvas 或 RenderNode 运行时失败都会回退到 Bitmap。策略只影响 Bitmap 回放，
 不会替换精确栅格化。可通过 `backendStats()`、`cacheStats()` 与 `innerCacheStats()` 诊断。
 
+验证请求策略与已知平台、Canvas 能力的组合时，应使用确定性的 Selector。应用代码通过
+`ShadowDecorationLayer` 修改实时策略，并且必须在隔离实验结束后恢复 `Auto`。
+
+{/* compiled-region source="viewcompose-shadow-android/src/test/samples/com/viewcompose/shadow/android/samples/ShadowAndroidSamples.kt" region="shadow-backend-selection" sample_id="module.shadow-backend-selection" build_target=":viewcompose-shadow-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun selectShadowBackendSample(): ShadowRenderBackendDecision {
+    return ShadowRenderBackendSelector.select(
+        policy = ShadowRenderPolicy.RenderNodeDisplayList,
+        sdkInt = 35,
+        hardwareAccelerated = true,
+    )
+}
+```
+
 ## 测试与运维
 
 - Resolver Output 与像素结果分开测试。
@@ -76,6 +91,8 @@ API 29 以下、Software Canvas 或 RenderNode 运行时失败都会回退到 Bi
 
 ## 相关文档
 
+- [高级阴影指南](../../guides/shadows.md)
+- [Modifier 架构](../../architecture/modifier.md)
 - [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer-android)
 - [UI Contract 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract)
 - [Graphics 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-graphics)

@@ -370,6 +370,18 @@ identity token.
   limit. The remaining margin is narrow, so the Shadows slice must continue the same
   consolidate-before-expand rule.
 
+- **2026-08-26, Governance V2 Shadows local acceptance:** the hard cut retained existing routes,
+  moved drawing-plane ownership to Modifier Architecture, concentrated backend/cache/diagnostic
+  contracts in the Shadow Android module manual, and reduced duplicated Guide detail. The first
+  bilingual attempt completed English output but correctly rejected two Chinese links whose
+  relative paths were one level too deep. After fixing those links, the final complete build
+  audited 454 pages, produced 49,136,607 non-API bytes, left 41,607 bytes under the unchanged limit
+  after including this acceptance evidence, and completed Docusaurus in `42.9 s`. The result is
+  **improved**: debt and generated size both fell
+  without adding a route or weakening a gate. This local observation does not replace device
+  shadow-fidelity or performance evidence; the Overlays slice must preserve the same structural
+  budget discipline.
+
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and
   moving the generated quality report outside the deploy tree reduced it to 49,175,712 bytes,

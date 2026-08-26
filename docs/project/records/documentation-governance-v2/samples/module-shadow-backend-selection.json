@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.shadow-backend-selection",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "shadow.android-backend",
+  "document_ids": [
+    "module.viewcompose-shadow-android"
+  ],
+  "version_lane": "released",
+  "source": "viewcompose-shadow-android/src/test/samples/com/viewcompose/shadow/android/samples/ShadowAndroidSamples.kt",
+  "region": "shadow-backend-selection",
+  "build_target": ":viewcompose-shadow-android:compileDebugUnitTestKotlin"
+}
