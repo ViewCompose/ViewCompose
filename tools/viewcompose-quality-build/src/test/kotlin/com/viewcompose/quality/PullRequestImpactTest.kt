@@ -122,6 +122,7 @@ class PullRequestImpactTest {
         val plan = plan(change('M', "samples/tutorials/src/main/kotlin/Counter.kt"))
 
         assertFalse(plan.fullFallback)
+        assertEquals(setOf(":samples:tutorials"), plan.directProjects)
         assertTrue(PullRequestGateFamily.Samples in plan.gateFamilies)
         assertTrue(PullRequestGateFamily.DocumentationGovernance in plan.gateFamilies)
         assertTrue(plan.workflows.qaQuick)
@@ -137,6 +138,28 @@ class PullRequestImpactTest {
         assertTrue(plan.workflows.qaQuick)
         assertTrue(plan.workflows.qaPreview)
         assertTrue(plan.workflows.documentation)
+    }
+
+    @Test
+    fun `non-published paths emit exact Gradle project ownership`() {
+        val app = plan(change('M', "app/src/main/java/com/viewcompose/MainActivity.kt"))
+        val counter = plan(change('M', "samples/counter/src/main/kotlin/Counter.kt"))
+        val sampleRoot = plan(change('M', "samples/build.gradle.kts"))
+        val integration = plan(
+            change('M', "integration-tests/paging-presenter/src/test/kotlin/PagingTest.kt"),
+        )
+        val benchmark = plan(
+            change('M', "viewcompose-benchmark/src/main/java/Benchmark.kt"),
+        )
+
+        assertEquals(setOf(":app"), app.directProjects)
+        assertEquals(setOf(":samples:counter"), counter.directProjects)
+        assertEquals(
+            setOf(":samples:counter", ":samples:tutorials"),
+            sampleRoot.directProjects,
+        )
+        assertEquals(setOf(":integration-tests:paging-presenter"), integration.directProjects)
+        assertEquals(setOf(":viewcompose-benchmark"), benchmark.directProjects)
     }
 
     @Test
@@ -156,6 +179,40 @@ class PullRequestImpactTest {
             assertEquals(
                 PullRequestWorkflowSelection(true, true, true),
                 plan.workflows,
+            )
+        }
+    }
+
+    @Test
+    fun `new changeset is scoped while mutable release inputs stay full`() {
+        val added = plan(
+            change('M', "viewcompose-material3/src/main/kotlin/Button.kt"),
+            change('A', "release/changes/material3-button.json"),
+        )
+        assertFalse(added.fullFallback)
+        assertEquals(setOf("viewcompose-material3"), added.directArtifacts)
+        assertTrue(PullRequestGateFamily.ReleaseIntent in added.gateFamilies)
+        assertTrue(added.reasons.any { it.endsWith("-> append-only-changeset") })
+        listOf(
+            change('M', "release/changes/existing.json"),
+            change('D', "release/changes/existing.json"),
+            change(
+                'R',
+                "release/changes/existing.json",
+                "release/changes/renamed.json",
+            ),
+            change(
+                'C',
+                "release/changes/existing.json",
+                "release/changes/copied.json",
+            ),
+        ).forEach { mutableChange ->
+            val mutable = plan(mutableChange)
+            assertTrue(mutable.fullFallback)
+            assertTrue(
+                mutable.fullFallbackReasons.any { reason ->
+                    reason.startsWith("always-full:release/**")
+                },
             )
         }
     }
@@ -206,10 +263,18 @@ class PullRequestImpactTest {
 
         assertEquals(first.toJson(), second.toJson())
         val json = JsonSlurper().parseText(first.toJson()) as Map<*, *>
-        assertEquals(1, (json["schemaVersion"] as Number).toInt())
+        assertEquals(2, (json["schemaVersion"] as Number).toInt())
         assertEquals(false, json["fullFallback"])
         assertEquals(
-            "qa_quick=false\nqa_preview=false\ndocumentation=true\nfull_fallback=false\n",
+            "qa_quick=false\n" +
+                "qa_preview=false\n" +
+                "documentation=true\n" +
+                "full_fallback=false\n" +
+                "gate_families=documentation-governance,documentation-site\n" +
+                "direct_artifacts=\n" +
+                "direct_projects=\n" +
+                "dependency_closure=\n" +
+                "reverse_dependent_closure=\n",
             first.toGitHubOutputs(),
         )
     }
@@ -296,8 +361,8 @@ class PullRequestImpactTest {
         dependencies = dependencies,
     )
 
-    private fun change(status: Char, path: String): PullRequestPathChange =
-        PullRequestPathChange(status, listOf(path))
+    private fun change(status: Char, vararg paths: String): PullRequestPathChange =
+        PullRequestPathChange(status, paths.toList())
 
     private fun File.git(vararg arguments: String): String {
         val process = ProcessBuilder(listOf("git") + arguments).directory(this).start()

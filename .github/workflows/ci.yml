@@ -26,6 +26,11 @@ jobs:
       qa_quick: ${{ steps.impact.outputs.qa_quick }}
       qa_preview: ${{ steps.impact.outputs.qa_preview }}
       full_fallback: ${{ steps.impact.outputs.full_fallback }}
+      gate_families: ${{ steps.impact.outputs.gate_families }}
+      direct_artifacts: ${{ steps.impact.outputs.direct_artifacts }}
+      direct_projects: ${{ steps.impact.outputs.direct_projects }}
+      dependency_closure: ${{ steps.impact.outputs.dependency_closure }}
+      reverse_dependent_closure: ${{ steps.impact.outputs.reverse_dependent_closure }}
 
     steps:
       - name: Checkout
@@ -63,6 +68,9 @@ jobs:
     if: needs.classify.outputs.qa_quick == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      VIEWCOMPOSE_DOCUMENTATION_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
+      VIEWCOMPOSE_RELEASE_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
 
     steps:
       - name: Checkout
@@ -96,18 +104,60 @@ jobs:
           gpg --batch --pinentry-mode loopback --passphrase '' \
             --quick-generate-key "ViewCompose CI <ci@viewcompose.invalid>" rsa2048 sign 1d
 
-      - name: Run qaQuick
+      - name: Run affected qaQuick candidate
+        id: affected
+        if: needs.classify.outputs.full_fallback != 'true'
+        continue-on-error: true
         env:
-          VIEWCOMPOSE_DOCUMENTATION_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
-          VIEWCOMPOSE_RELEASE_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
+          VIEWCOMPOSE_AFFECTED_GATE_FAMILIES: ${{ needs.classify.outputs.gate_families }}
+          VIEWCOMPOSE_AFFECTED_DIRECT_ARTIFACTS: ${{ needs.classify.outputs.direct_artifacts }}
+          VIEWCOMPOSE_AFFECTED_DIRECT_PROJECTS: ${{ needs.classify.outputs.direct_projects }}
+          VIEWCOMPOSE_AFFECTED_DEPENDENCY_CLOSURE: ${{ needs.classify.outputs.dependency_closure }}
+          VIEWCOMPOSE_AFFECTED_REVERSE_DEPENDENT_CLOSURE: ${{ needs.classify.outputs.reverse_dependent_closure }}
+        run: >-
+          ./gradlew
+          -Dorg.gradle.jvmargs="-Xmx4096m -Dfile.encoding=UTF-8"
+          --max-workers=2
+          qaAffected
+          --stacktrace
+
+      - name: Run complete qaQuick shadow
+        id: complete
+        if: always()
+        continue-on-error: true
         # Release R8, lint, and documentation generation share this Gradle process. Keep the
-        # complete gate while preventing the hosted runner's default 2 GiB heap from exhausting.
+        # complete shadow while preventing the hosted runner's default 2 GiB heap from exhausting.
         run: >-
           ./gradlew
           -Dorg.gradle.jvmargs="-Xmx4096m -Dfile.encoding=UTF-8"
           --max-workers=2
           qaQuick
           --stacktrace
+
+      - name: Report affected versus complete qaQuick
+        if: always()
+        env:
+          FULL_FALLBACK: ${{ needs.classify.outputs.full_fallback }}
+          AFFECTED_OUTCOME: ${{ steps.affected.outcome }}
+          COMPLETE_OUTCOME: ${{ steps.complete.outcome }}
+        run: |
+          if [[ -f build/reports/viewcompose-quality/affected-verification.md ]]; then
+            cat build/reports/viewcompose-quality/affected-verification.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "Affected candidate=$AFFECTED_OUTCOME complete shadow=$COMPLETE_OUTCOME full fallback=$FULL_FALLBACK" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$FULL_FALLBACK" == "true" ]]; then
+            if [[ -n "$AFFECTED_OUTCOME" && "$AFFECTED_OUTCOME" != "skipped" ]]; then
+              echo "Full fallback unexpectedly ran affected candidate with outcome: $AFFECTED_OUTCOME" >&2
+              exit 1
+            fi
+          elif [[ "$AFFECTED_OUTCOME" != "success" ]]; then
+            echo "Affected qaQuick candidate ended with outcome: $AFFECTED_OUTCOME" >&2
+            exit 1
+          fi
+          if [[ "$COMPLETE_OUTCOME" != "success" ]]; then
+            echo "Complete qaQuick shadow ended with outcome: $COMPLETE_OUTCOME" >&2
+            exit 1
+          fi
 
   qaQuick:
     name: qaQuick

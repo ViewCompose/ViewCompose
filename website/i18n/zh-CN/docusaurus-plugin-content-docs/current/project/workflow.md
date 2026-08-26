@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: ef0e25d240b7facb8adbe722b1aa92db5ed16556065e8494ea299047a9c32391
+translation_source_hash: e4106a7ebeb3a0edb7a54b20a36d56e78b71f8d513fffa3a2271914ffadc52a3
 translation_status: current
 ---
 
@@ -132,15 +132,15 @@ Architecture、Migration 与 redirect。每个检测到的结构化 capability �
 PR 工作流会先从 `tools/viewcompose-quality-build` 独立运行 `planPullRequestImpact`；该入口只配置这个
 Included Build，不配置 Android 多项目构建。分类器读取精确 base-to-head Git diff、发布产物目录、
 依赖契约和冻结的全量回退策略。其 JSON 与 Job Summary 会列出所选门禁族、直接产物、传递依赖、
-反向依赖、原因、工作流选择和全量回退状态。纯文档与 `website` 变更可跳过 Android 子任务；发布
-模块生产代码会选择发布意图、API 文档、文档、模块以及依赖图可达的 Preview 门禁；模块测试、Demo、
-sample、集成测试和 benchmark 各自保留显式门禁族。变更路径超过 300 条、出现未知路径、命中敏感
-共享输入、事件不是 PR、diff 为空，或 PR 带 `full-verification` 标签时，一律选择当前全部工作流。
+反向依赖、直接非发布项目、原因、工作流选择和全量回退状态。纯文档与 `website` 变更可跳过 Android
+子任务；发布模块生产代码会选择发布意图、API 文档、文档、模块以及依赖图可达的 Preview 门禁；
+模块测试、Demo、sample、集成测试和 benchmark 各自保留显式门禁族与项目归属。变更路径超过
+300 条、出现未知路径、命中敏感共享输入、事件不是 PR、diff 为空，或 PR 带 `full-verification`
+标签时，一律选择当前全部工作流。
 
-Phase 3 有意保留冻结的 `release/**` 保守策略。因此，发布模块生产改动按要求同时增加
-`release/changes/*.json` 后，仍会选择完整验证，但计划会照常报告精确直接产物和依赖图闭包。只有
-Phase 5 的 Shadow 对比证明缩小范围不会漏掉任何全量失败后，才能把只追加 Changeset 的产物归属与
-敏感注册表/工具路径拆开。
+新增的 `release/changes/*.json` 文件按只追加发布意图分类，可以随其他可收敛范围的生产改动一起
+执行。修改、删除、复制或重命名 Changeset 仍会选择完整验证，发布注册表与发布工具也一样。这是
+不可变意图新增与可变发布基础设施之间的硬切，并非普遍放宽 `release/**`。
 
 分支保护 Context 继续精确使用 `qaQuick` 与 `Build documentation`；`qaPreview` 可见，但当前不是必需
 Context。每个可见 Context 都由 `always()` 结果门面报告：只有分类成功且明确未选择子任务时，跳过
@@ -155,9 +155,24 @@ partial、miss、recovery、复用/生成组数、无效组、有界并行度和
 `verifyDocumentationStructure` 只运行一次；CI 只生成一次站点目录，再调用 prepared type-check
 与构建入口，避免重复 npm 预构建钩子。
 
-当 `qaQuick` 被选择时，GitHub Actions 使用 4 GiB Gradle heap 和最多两个 worker 运行其完整任务。
-否则 Release R8、lint 与文档生成会在托管 runner 的默认 2 GiB heap 中竞争。这只是 CI 资源边界：
-不会拆分、重试或豁免已选任务，也不改变项目级本地 Gradle 默认配置。
+Phase 5 影子期内，范围可收敛的 `qaQuick` 选择会先用 4 GiB Gradle heap 和最多两个 worker 运行
+`qaAffected`。根构建独立重建当前 `api`/`implementation`/`compileOnly`/`runtimeOnly` 项目图，
+分类器闭包只要与真实图不一致就失败；编译和单测任务从已配置项目动态选择，不读取手写产物任务表。
+Demo、sample、集成测试和 benchmark 选择各自项目任务；只有依赖 Maven 坐标的 sample 消费者才
+加入本地发布。文档与 Preview 继续由各自独立可见的工作流负责。
+
+同一 Job 随后在相同资源边界下运行完整 `qaQuick`。两者都必须成功；候选成功但全量失败，或只有
+候选失败，都会阻断 PR 并视为分类器缺陷。`main`、手工运行和任何全量回退 PR 会跳过候选，只运行
+完整 `qaQuick`。该影子契约先收集正确性证据，尚不缩短 required path，也不改变项目级本地 Gradle
+默认配置。
+
+2026-08-26 的本地验收使用了一份真实 Paging 历史 diff。`qaAffected` 为一个直接产物和十个依赖
+产物选择 39 条任务路径，以 `2 分 6 秒` 通过（215 个 actionable task，其中 188 个执行、27 个
+up-to-date）；完整 `qaQuick` 随后以 `8 分 5 秒` 通过（2,342 个 actionable task，其中 2,096 个
+执行、246 个 up-to-date）。候选耗时降低 `74.0%`，本地执行工作量结论为**有改进**，且两个结果
+一致。但这不能证明上线后的延迟收益：它只有一个开发机样本，两条路径都继承了本地缓存，而且
+候选先运行并部分预热了完整门禁。因此，托管环境延迟仍为**结论不足**；在 Phase 6 分变更类别
+样本满足计划的观察与正确性条件前，继续保留完整影子对照。
 
 `qaFull` 在 `qaQuick` 基础上增加应用、Counter sample 和教程的连接设备测试。仓库内每个
 `connectedDebugAndroidTest` 入口会先运行 `verifyConnectedAndroidDeviceReady`。前置检查要求：未通过

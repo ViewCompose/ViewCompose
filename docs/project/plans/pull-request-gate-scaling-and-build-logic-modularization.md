@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-26
-next_action: Implement Phase 5 affected-Gradle verification with shadow full-gate comparison.
+next_action: Merge the locally accepted Phase 5 shadow infrastructure, then begin hosted observation.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -36,13 +36,14 @@ maven_release_changesets:
 
 ## Status
 
-Active. Phases 0 through 4 are complete. Phase 5 affected-Gradle verification is next.
+Active. Phases 0 through 4 are complete. Phase 5 affected-Gradle verification is implemented and
+locally accepted; merge and hosted shadow evidence remain.
 
 Last verified: 2026-08-26.
 
-Next action: implement Phase 5 affected-Gradle verification with shadow full-gate comparison. The
-Phase 0 task-graph fixtures remain the immutable pre-extraction comparator rather than being
-rewritten for later intentional gates.
+Next action: merge the locally accepted Phase 5 shadow infrastructure, then begin the hosted
+observation window. The Phase 0 task-graph fixtures remain the immutable pre-extraction comparator
+rather than being rewritten for later intentional gates.
 
 ## Maven release changesets
 
@@ -68,7 +69,11 @@ release-intent verifier detected zero release artifacts, ignored artifacts, or s
 paths, so it adds no Maven Changeset. Phase 4 changes repository-only documentation generation,
 cache state, publishing-build task wiring, and CI orchestration without changing a published
 artifact or publication input; its release-intent verification likewise detects zero release
-artifacts, ignored artifacts, or shared publication paths, so it adds no Maven Changeset.
+artifacts, ignored artifacts, or shared publication paths, so it adds no Maven Changeset. Phase 5
+changes only repository quality-build implementation, workflow orchestration, and workflow
+documentation. It changes no published artifact, publication input, or compiled public sample;
+release-intent verification again detects zero release artifacts, ignored artifacts, or shared
+publication paths, so Phase 5 also adds no Maven Changeset.
 
 ## Objective
 
@@ -653,6 +658,21 @@ passed in `6 min 33 s`. The conclusion is **improved** and Phase 4 is complete.
 4. Run `qaPreview` only for Preview, snapshot, renderer, graphics, or declared transitive inputs.
 5. Compare selective and full outcomes during a shadow period; any selective success/full failure
    is a classifier defect that blocks rollout and becomes a regression fixture.
+
+Phase 5 implementation was locally accepted on 2026-08-26 against the real historical Paging
+change `c6a3a2bc8949c2583323208522b2c93d05faede3..bbd25b448d0a3c85275c119897e5f3d47269451e`.
+The classifier scoped its 11 changed paths to one direct artifact and ten dependency artifacts,
+with no reverse dependents, and treated the newly added Changeset as append-only intent. The root
+build independently reconstructed the configured project graph, matched both supplied closures,
+and passed 39 selected task paths in `2 min 6 s`; Gradle reported 215 actionable tasks, with 188
+executed and 27 up-to-date. The same checkout then passed complete `qaQuick` in `8 min 5 s`; Gradle
+reported 2,342 actionable tasks, with 2,096 executed and 246 up-to-date. The candidate duration was
+`74.0%` lower in this comparison, so the local execution-work conclusion is **improved** and the
+correctness conclusion is matching success. Limitations: this is one developer-machine sample,
+the candidate ran before and partially warmed the complete gate, and both runs inherited local
+caches. Therefore hosted latency remains **inconclusive** until the Phase 6 corpus is collected;
+the next action is to merge the shadow infrastructure and observe scoped pull requests without
+removing the complete required-path comparison.
 
 ### Phase 6: stabilize operations and close the plan
 

@@ -142,6 +142,15 @@ test('required contexts remain always-reported facades around classified child w
     /\.\/gradlew -p tools\/viewcompose-quality-build planPullRequestImpact/u,
   );
   assert.match(qaQuickWork, /if: needs\.classify\.outputs\.qa_quick == 'true'/u);
+  assert.match(qaQuickWork, /name: Run affected qaQuick candidate/u);
+  assert.match(qaQuickWork, /if: needs\.classify\.outputs\.full_fallback != 'true'/u);
+  assert.match(qaQuickWork, /qaAffected/u);
+  assert.match(qaQuickWork, /name: Run complete qaQuick shadow/u);
+  assert.match(qaQuickWork, /name: Report affected versus complete qaQuick/u);
+  assert.ok(
+    qaQuickWork.indexOf('qaAffected') < qaQuickWork.indexOf('qaQuick\n'),
+    'affected verification must run before the complete shadow gate',
+  );
   assert.match(qaPreviewWork, /if: needs\.classify\.outputs\.qa_preview == 'true'/u);
   assert.match(
     documentationWork,

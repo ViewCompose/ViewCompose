@@ -855,7 +855,7 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
                 ),
             )
         }
-        project.registerLifecycleQualityTasks()
+        project.registerLifecycleQualityTasks(extension)
     }
 }
 
