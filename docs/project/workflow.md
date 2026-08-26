@@ -195,6 +195,17 @@ default-branch jobs may write them. Do not add a parallel `actions/cache` Gradle
 restore `setup-java` `cache: gradle`; optional Gradle build-cache and configuration-cache adoption
 requires separate measured acceptance.
 
+The first isolated Paging candidate probe found Build Cache promising but not ready for required
+CI. With dependencies prewarmed and outputs cleaned, the no-cache baseline passed in `80.88 s`;
+clean cache restores passed in `6.04 s` and `5.45 s` (`-92.5%` and `-93.3%`) with 108 of 215
+actionable tasks restored from a `9.9 MiB` cache. The result was correct on every run, so the local
+conclusion is **improved**. Hosted portability, main-to-PR reuse, aggregate size, and eviction are
+unmeasured, so Build Cache remains disabled. Configuration Cache also remains disabled: the same
+candidate stored and reused locally in `4.78 s` and `1.29 s` (`-73.0%`), but current CI has no
+second identical invocation and no configured encrypted cross-job transport. Its current-path
+conclusion is **no material change**. Revisit either option only through a separate hosted shadow;
+do not combine adoption with unrelated gate or documentation work.
+
 `qaFull` adds the application, Counter sample, and tutorial connected tests to `qaQuick`. Every
 repository `connectedDebugAndroidTest` entry first runs `verifyConnectedAndroidDeviceReady`. The
 preflight requires exactly one online device unless `ANDROID_SERIAL` selects one, completed boot,

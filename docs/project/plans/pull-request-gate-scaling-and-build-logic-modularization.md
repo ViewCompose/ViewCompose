@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-26
-next_action: Merge Phase 6 cache ownership cleanup, then benchmark optional Gradle caches separately while collecting hosted shadow evidence.
+next_action: Begin Governance V2 Phase 3 content reclassification and collect hosted shadow observations with optional Gradle caches disabled.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -41,10 +41,11 @@ are in progress.
 
 Last verified: 2026-08-26.
 
-Next action: merge the Phase 6 Gradle-cache ownership cleanup, then benchmark build-cache and
-configuration-cache adoption separately while Governance V2 Phase 3 changes supply hosted shadow
-observations. The Phase 0 task-graph fixtures remain the immutable pre-extraction comparator rather
-than being rewritten for later intentional gates.
+Next action: begin Governance V2 Phase 3 content reclassification and use its scoped pull requests
+as hosted shadow observations. Build-cache and configuration-cache probes are complete but neither
+option is enabled; adoption requires evidence beyond the accepted local samples. The Phase 0
+task-graph fixtures remain the immutable pre-extraction comparator rather than being rewritten for
+later intentional gates.
 
 ## Maven release changesets
 
@@ -712,8 +713,40 @@ from CI, documentation, Preview, and Demo APK jobs and makes every `setup-gradle
 read-only outside the repository default branch. This preserves deliberate default-branch writes,
 prevents pull-request cache writes, and removes two cache implementations from the same Gradle
 home. Workflow regression coverage rejects either duplicate ownership or an implicit write policy.
-Hosted acceptance of this slice is pending; build-cache and configuration-cache adoption remain
-separate measured decisions rather than being bundled into the ownership cleanup.
+Build-cache and configuration-cache adoption remain separate measured decisions rather than being
+bundled into the ownership cleanup.
+
+Pull request #174 accepted the cache-ownership slice on hosted runners. Complete `qaQuick` passed
+in `18 min 43 s`, `qaPreview` in `6 min 52 s`, documentation work in `5 min 10 s`, and the Demo APK
+build in `5 min 15 s`; every result facade passed and the pull request merged as `9666f669`.
+Relative to #173, `qaQuick` changed by `-4.59%`, documentation by `-0.64%`, and `qaPreview` by
+`-20.9%`. Correctness is **improved** because one cache owner covered every workflow without a
+failure. The timing conclusion is **mixed**: `qaQuick` and documentation show no material change,
+while the Preview reduction is substantial but cannot be attributed to cache ownership from one
+sample with different restored state. The next action is observation rather than further cache-
+owner changes.
+
+A separate 2026-08-26 local Build Cache probe used an isolated Gradle home and the accepted
+historical Paging candidate: 39 selected task paths over one direct and ten dependency artifacts.
+The dependency/compiler warm-up took `6 min 8.45 s` and was excluded. After `clean`, the
+`--no-build-cache` baseline passed in `80.88 s` with 198 executed and 17 up-to-date tasks. The
+initial `--build-cache` seed passed in `63.79 s` (`-21.1%`) with 164 executed, 34 from-cache, and 17
+up-to-date tasks. Two clean restores passed in `6.04 s` and `5.45 s` (`-92.5%` and `-93.3%`), each
+with 90 executed, 108 from-cache, and 17 up-to-date tasks; `50.2%` of actionable tasks were restored.
+The isolated cache contained 82 files totaling `9.9 MiB`, and every run produced the same successful
+candidate result. The local conclusion is **improved**, but hosted portability, default-branch
+population, pull-request restore rate, aggregate size, and eviction behavior remain unmeasured.
+Build Cache therefore stays disabled on required paths; a future hosted shadow must meet all of
+those criteria before adoption.
+
+The same isolated candidate accepted Configuration Cache with problems set to fail. Its first hot-
+output invocation stored an entry in `4.78 s`; an identical invocation reused it in `1.29 s`
+(`-73.0%`) with the same successful result. This proves local compatibility for `qaAffected`, not
+an end-to-end build improvement. Current CI invokes `qaAffected` only once and then requests the
+different `qaQuick` graph, while no encrypted cross-job configuration-cache transport is configured.
+The current-path conclusion is **no material change**, so Configuration Cache also stays disabled.
+The limitation is that complete `qaQuick` was not probed; there is no reason to expand that probe
+until an actual reusable CI invocation exists.
 
 ## Validation matrix
 
