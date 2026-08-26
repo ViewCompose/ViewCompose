@@ -1,3 +1,22 @@
+---
+schema_version: 2
+document_id: module.viewcompose-media3-androidx
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-media3-androidx
+version_lane: released
+capability_ids:
+  - media3.player
+artifact_ids:
+  - viewcompose-media3-androidx
+sample_ids:
+  - module.media3-dependency
+  - module.media3-player
+coordinate: com.viewcompose:viewcompose-media3-androidx:0.1.0-alpha01
+minimal_usage_sample_id: module.media3-dependency
+---
+
 # Media3 AndroidX Integration
 
 `viewcompose-media3-androidx` hosts a caller-owned AndroidX Media3 `Player` in a native
@@ -6,6 +25,7 @@ AndroidX lifecycle without taking ownership of playback or player release.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="media3-dependency" sample_id="module.media3-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-media3-androidx:0.1.0-alpha01")
@@ -24,16 +44,22 @@ dependencies {
 
 ## Basic use
 
+{/* compiled-region source="viewcompose-media3-androidx/src/test/samples/com/viewcompose/media3/samples/Media3Samples.kt" region="media3-player" sample_id="module.media3-player" build_target=":viewcompose-media3-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
-Media3PlayerView(
-    player = activityOwnedPlayer,
-    surfaceType = Media3SurfaceType.SurfaceView,
-    configuration = Media3PlayerViewConfiguration(
-        showBuffering = Media3ShowBuffering.WhenPlaying,
-        contentDescription = "Episode video",
-    ),
-    onRenderedFirstFrame = { firstFrameVisible = true },
-)
+fun UiTreeBuilder.media3PlayerViewSample(player: Player) {
+    Media3PlayerView(
+        player = player,
+        surfaceType = Media3SurfaceType.SurfaceView,
+        configuration = Media3PlayerViewConfiguration(
+            useController = true,
+            showBuffering = Media3ShowBuffering.WhenPlaying,
+            contentDescription = "Episode video",
+        ),
+        onRenderedFirstFrame = {
+            // Update caller-owned UI state or diagnostics here.
+        },
+    )
+}
 ```
 
 The caller creates, configures, commands, and eventually releases the `Player`. The integration

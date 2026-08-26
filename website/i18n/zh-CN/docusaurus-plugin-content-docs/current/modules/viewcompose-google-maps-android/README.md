@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-google-maps-android/README.md
-translation_source_hash: 36f31d6b88e8d7d7fde2c2b3de263801dc513e42ef014da5c591cf35980bbf0e
+translation_source_hash: de80d428b4e5bff0115e7f2b27ff2ca1b1d2ebd0dddacb7996ee74a3a5853c45
 translation_status: current
 ---
 
@@ -12,8 +12,11 @@ translation_status: current
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="google-maps-dependency" sample_id="module.google-maps-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-implementation("com.viewcompose:viewcompose-google-maps-android:0.1.0-alpha01")
+dependencies {
+    implementation("com.viewcompose:viewcompose-google-maps-android:0.1.0-alpha01")
+}
 ```
 
 - 稳定性：**Alpha**。`GoogleMapView` 及其 Scope 为 Q3，状态类型为 Q2，封闭枚举为 Q1。
@@ -26,15 +29,22 @@ implementation("com.viewcompose:viewcompose-google-maps-android:0.1.0-alpha01")
 按照 Google 的凭据与限制指南，在应用 Manifest 中配置 Maps SDK API Key。模块不会读取、保存
 或初始化凭据。
 
+{/* compiled-region source="viewcompose-google-maps-android/src/test/samples/com/viewcompose/maps/google/samples/GoogleMapSamples.kt" region="google-map-view" sample_id="module.google-map-view" build_target=":viewcompose-google-maps-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-GoogleMapView(
-    properties = GoogleMapProperties(
-        cameraPosition = CameraPosition.fromLatLngZoom(LatLng(31.23, 121.47), 10f),
-        contentDescription = "配送地图",
-    ),
-    saveableStateKey = "delivery-map",
-) {
-    Marker(key = "destination", position = LatLng(31.23, 121.47))
+fun UiTreeBuilder.googleMapViewSample() {
+    val office = LatLng(31.2304, 121.4737)
+    GoogleMapView(
+        modifier = Modifier.fillMaxWidth().height(240.dp),
+        properties = GoogleMapProperties(
+            colorScheme = GoogleMapColorScheme.FollowSystem,
+            cameraPosition = CameraPosition.fromLatLngZoom(office, 13f),
+            contentDescription = "Office map",
+        ),
+        uiSettings = GoogleMapUiSettings(zoomControlsEnabled = true),
+        saveableStateKey = "office-map",
+    ) {
+        googleMapContentSample()
+    }
 }
 ```
 
@@ -53,6 +63,22 @@ start、resume、pause、stop、destroy、低内存与状态保存事件。Owner
 Scope 内的 Marker 和 Polyline 由适配器持有，按键分别更新，缺失时移除；重复键会在组合阶段失败。
 `onMapReady` 可访问原生 `GoogleMap` 以实现未封装能力，但不得在 View 释放后继续持有，也不得覆盖
 适配器持有的监听器或托管图层。定位权限与“我的位置”图层属于应用策略。
+
+{/* compiled-region source="viewcompose-google-maps-android/src/test/samples/com/viewcompose/maps/google/samples/GoogleMapSamples.kt" region="google-map-content" sample_id="module.google-map-content" build_target=":viewcompose-google-maps-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun GoogleMapScope.googleMapContentSample() {
+    val office = LatLng(31.2304, 121.4737)
+    Marker(
+        key = "office",
+        position = office,
+        style = GoogleMapMarkerStyle(title = "Office"),
+    )
+    Polyline(
+        key = "walking-route",
+        points = listOf(office, LatLng(31.2320, 121.4770)),
+    )
+}
+```
 
 模块不选择渲染器、不调用 `MapsInitializer`、不申请权限、不提供网络降级，也不伪造 Wear 环境模式
 事件；应用应在挂载 View 前配置这些全局能力。Manifest 将 `org.apache.http.legacy` 声明为可选，

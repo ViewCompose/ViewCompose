@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 25904a236a80f61cbc5688fec82569a1526a61f8b02b3355e6cd2216f2b8dbb7
+translation_source_hash: c7480372b3ab87b60b3f25fa05e7b94afade0b9aba01ae6ad7deeb9517979e14
 translation_status: current
 ---
 
@@ -327,6 +327,15 @@ identity token。
   Docusaurus。结果为 **improved**：结构化所有权和可编译 Workflow 覆盖增加，生成输出减少，
   且没有改变 Website Stack、路由、Framework 行为或 Budget。本次观察复用既有 Protocol、
   Runner、设备诊断与 Paparazzi 证据，不提出新的 Runtime、视觉或性能结论。
+
+- **2026-08-26，Governance V2 第三方集成本地验收：**本次硬切保留 CameraX、Google Maps、
+  Media3 与旧版 ExoPlayer 模块路由，登记全部 32 个公开入口和九个可编译 Sample Decision，并把
+  Governance V2 债务从 390 降到 345。最终含验收证据的完整构建审计 454 个页面，产生
+  48,715,878 字节非 API 输出，在不变上限下留下 462,336 字节，并在 `27.4 s` 内完成
+  Docusaurus。相比预览工具链批次增加 68,266 字节（`0.1403%`），原因是现在会生成四份结构化
+  模块契约和完整可编译样例。结果为 **improved**：精确所有权与双语可执行覆盖增加，构建仍远低于
+  不变 Budget，且没有改变 Website Stack、路由、Framework 行为或已发布产物。本次观察复用既有
+  模块与设备证据，不提出新的 Runtime、网络、功耗或性能结论。
 
 - **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
   上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量

@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.google-map-view",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "maps.google.view",
+  "document_ids": [
+    "module.viewcompose-google-maps-android"
+  ],
+  "version_lane": "released",
+  "source": "viewcompose-google-maps-android/src/test/samples/com/viewcompose/maps/google/samples/GoogleMapSamples.kt",
+  "region": "google-map-view",
+  "build_target": ":viewcompose-google-maps-android:compileDebugUnitTestKotlin"
+}

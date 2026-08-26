@@ -10,6 +10,7 @@ import com.viewcompose.exoplayer2.ExoPlayerViewConfiguration
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /** Demonstrates the Q3 caller-owned legacy player contract. */
+// DOCS_REGION_START(exoplayer2-player)
 fun UiTreeBuilder.exoPlayerViewSample(player: Player) {
     ExoPlayerView(
         player = player,
@@ -20,3 +21,4 @@ fun UiTreeBuilder.exoPlayerViewSample(player: Player) {
         ),
     )
 }
+// DOCS_REGION_END(exoplayer2-player)

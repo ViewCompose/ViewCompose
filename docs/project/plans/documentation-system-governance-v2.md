@@ -21,10 +21,11 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Merge the Preview tooling slice, then continue Phase 3 with third-party integration modules.
+next_action: Merge the third-party integration slice, then continue Phase 3 with remaining module ownership.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
+  - release/changes/20260826-governance-third-party-integrations-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -68,6 +69,9 @@ module sample decisions, removes three resolved exceptions, and reduces the repo
 The accepted Preview tooling hard cut now assigns all 62 public annotations, protocol, Gradle,
 runner, worker, and integration entries to six capability owners, registers nine compiled sample
 decisions, removes 27 resolved exceptions, and reduces the report to 390 issues.
+The accepted third-party integration hard cut now assigns all 32 CameraX, Google Maps, Media3, and
+legacy ExoPlayer entries to five capability owners, registers nine compiled sample decisions,
+removes 14 resolved exceptions, and reduces the report to 345 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -76,8 +80,8 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: merge the Preview tooling slice, then continue Phase 3 with third-party integration
-modules. Pull-request gate scaling
+Next action: merge the third-party integration slice, then continue Phase 3 with remaining module
+ownership. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -92,15 +96,20 @@ remains owned by this plan after the Phase 3 content owners move.
   Preview artifacts detected because existing compiled sample sources gained documentation-region
   comments only; no production source, signature, bytecode behavior, publication metadata, or
   generated artifact content changed.
+- `release/changes/20260826-governance-third-party-integrations-phase3.json` explicitly ignores the
+  four integration artifacts detected because test-only compiled documentation samples gained
+  exact regions or were reorganized for separate host/content examples. Test sources are excluded
+  from published artifacts; production source, API, runtime behavior, publication metadata, and
+  generated artifact content remain unchanged.
 
 ## Release intent rationale
 
 The completed Phase 2 governance-tooling slices change governance records, documentation markers,
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
-`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, five explicitly
-ignored Preview artifacts, and zero shared-path classifications against
-`5c1c6068f1c1157596d4457c59dfbc662a0cad03`.
+`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, four explicitly
+ignored third-party integration artifacts, and zero shared-path classifications against
+`39e7ae01eedfaeae792ab549f057c66893c98be2`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -926,6 +935,34 @@ Accepted Preview tooling slice on 2026-08-26:
   five artifacts whose test samples gained comments only. This slice reuses existing protocol,
   runner, device-diagnostic, and Paparazzi evidence and makes no new device, visual, or performance
   claim. The next action is third-party integration module ownership.
+
+Accepted third-party integration slice on 2026-08-26:
+
+- retained the CameraX, Google Maps, Media3, and legacy ExoPlayer module routes and their verified
+  lifecycle/resource contracts. Google Maps ownership is deliberately split between native View
+  configuration/lifecycle and keyed Marker/Polyline content; the other three modules each have one
+  cohesive integration capability owner;
+- registered five capability owners for all 32 public entries and nine compiled dependency,
+  CameraX preview, Google Maps View/content, Media3 player, and legacy ExoPlayer sample decisions.
+  Fourteen resolved metadata, symbol, taxonomy, and sample exception records were removed;
+- the report changed from 390 to 345 issues: missing metadata 79 to 75, orphan symbols 188 to 156,
+  taxonomy mismatches 6 to 5, and unclassified samples 117 to 109. Duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- all five affected sample compilation targets, all four module unit-test suites, Governance V2,
+  documentation structure, language and translation review, complete API reuse, release intent,
+  and the complete bilingual site passed. The evidence-bearing site audited 454 pages, produced
+  48,715,878 non-API bytes, left 462,336 bytes under the unchanged 46.9 MiB limit, and completed
+  Docusaurus in `27.4 s`. This is 68,266 bytes (`0.1403%`) above the Preview slice because four
+  module metadata contracts and full compiled samples are now emitted. Complete `qaQuick` passed
+  2,359 actionable tasks in `59 s` (207 executed and 2,152 up-to-date);
+- the conclusion is `improved`: all four integration families now have exact generated ownership,
+  independently compiled installation/usage samples, and identical bilingual code while remaining
+  well inside the unchanged site budget. Release intent found zero release artifacts and explicitly
+  ignored four test-sample-only artifacts. No production API, runtime behavior, route, or published
+  artifact changed. This slice reuses the existing module, device, visual, and third-party SDK
+  evidence and makes no new runtime, network, power, or performance claim. The next action is
+  remaining module and executable-sample ownership.
 
 | Current area | Required target |
 | --- | --- |

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-exoplayer2-android/README.md
-translation_source_hash: 8104f4470c9e9441b07b715b1f3a2505c186b8bf3bf9de5137fbd2f5000a7e3f
+translation_source_hash: 6eaf447e050e65c3f3839e7e65ed3f8c1420ab0a220c1b90d0a93989ffb11401
 translation_status: current
 ---
 
@@ -11,8 +11,11 @@ translation_status: current
 
 ## 产物
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="exoplayer2-dependency" sample_id="module.exoplayer2-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-implementation("com.viewcompose:viewcompose-exoplayer2-android:0.1.0-alpha01")
+dependencies {
+    implementation("com.viewcompose:viewcompose-exoplayer2-android:0.1.0-alpha01")
+}
 ```
 
 Alpha：`ExoPlayerView` Q3、配置 Q2、枚举 Q1；API 24+；已停止维护的 SDK 2.19.1。Core 对 API
@@ -21,8 +24,18 @@ Alpha：`ExoPlayerView` Q3、配置 Q2、枚举 Q1；API 24+；已停止维护�
 
 ## 使用与契约
 
+{/* compiled-region source="viewcompose-exoplayer2-android/src/test/samples/com/viewcompose/exoplayer2/samples/ExoPlayerSamples.kt" region="exoplayer2-player" sample_id="module.exoplayer2-player" build_target=":viewcompose-exoplayer2-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-ExoPlayerView(player = ownedPlayer, surfaceType = ExoPlayerSurfaceType.SurfaceView)
+fun UiTreeBuilder.exoPlayerViewSample(player: Player) {
+    ExoPlayerView(
+        player = player,
+        surfaceType = ExoPlayerSurfaceType.SurfaceView,
+        configuration = ExoPlayerViewConfiguration(
+            showBuffering = ExoPlayerShowBuffering.WhenPlaying,
+            contentDescription = "Legacy episode video",
+        ),
+    )
+}
 ```
 
 调用方拥有 Player 的命令、状态和释放。必须提供最近的 `LocalLifecycleOwner`；挂载始于 `ON_START`，

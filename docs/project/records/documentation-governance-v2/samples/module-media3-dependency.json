@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.media3-dependency",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "media3.player",
+  "document_ids": [
+    "module.viewcompose-media3-androidx"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "media3-dependency",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

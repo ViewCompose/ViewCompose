@@ -1,3 +1,24 @@
+---
+schema_version: 2
+document_id: module.viewcompose-google-maps-android
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-google-maps-android
+version_lane: released
+capability_ids:
+  - maps.google.view
+  - maps.google.content
+artifact_ids:
+  - viewcompose-google-maps-android
+sample_ids:
+  - module.google-maps-dependency
+  - module.google-map-view
+  - module.google-map-content
+coordinate: com.viewcompose:viewcompose-google-maps-android:0.1.0-alpha01
+minimal_usage_sample_id: module.google-maps-dependency
+---
+
 # Google Maps Android Integration
 
 `viewcompose-google-maps-android` hosts Google Maps SDK 20.0.0 `MapView` inside ViewCompose. It owns
@@ -6,8 +27,11 @@ polyline reconciliation. The application still owns credentials, data, network a
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="google-maps-dependency" sample_id="module.google-maps-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-implementation("com.viewcompose:viewcompose-google-maps-android:0.1.0-alpha01")
+dependencies {
+    implementation("com.viewcompose:viewcompose-google-maps-android:0.1.0-alpha01")
+}
 ```
 
 - Stability: **Alpha**. `GoogleMapView` and its scope are Q3; state types are Q2 and closed enums
@@ -22,15 +46,22 @@ implementation("com.viewcompose:viewcompose-google-maps-android:0.1.0-alpha01")
 Configure the Maps SDK API key in the application manifest according to Google's credential and
 restriction guidance. The library never reads, stores, or initializes credentials.
 
+{/* compiled-region source="viewcompose-google-maps-android/src/test/samples/com/viewcompose/maps/google/samples/GoogleMapSamples.kt" region="google-map-view" sample_id="module.google-map-view" build_target=":viewcompose-google-maps-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-GoogleMapView(
-    properties = GoogleMapProperties(
-        cameraPosition = CameraPosition.fromLatLngZoom(LatLng(31.23, 121.47), 10f),
-        contentDescription = "Delivery map",
-    ),
-    saveableStateKey = "delivery-map",
-) {
-    Marker(key = "destination", position = LatLng(31.23, 121.47))
+fun UiTreeBuilder.googleMapViewSample() {
+    val office = LatLng(31.2304, 121.4737)
+    GoogleMapView(
+        modifier = Modifier.fillMaxWidth().height(240.dp),
+        properties = GoogleMapProperties(
+            colorScheme = GoogleMapColorScheme.FollowSystem,
+            cameraPosition = CameraPosition.fromLatLngZoom(office, 13f),
+            contentDescription = "Office map",
+        ),
+        uiSettings = GoogleMapUiSettings(zoomControlsEnabled = true),
+        saveableStateKey = "office-map",
+    ) {
+        googleMapContentSample()
+    }
 }
 ```
 
@@ -52,6 +83,22 @@ when absent. Duplicate keys fail during composition. `onMapReady` exposes the na
 for unsupported SDK features, but callers must not retain it beyond View release or replace the
 listeners and managed overlays owned by this adapter. Location permission and the my-location
 layer remain application policy.
+
+{/* compiled-region source="viewcompose-google-maps-android/src/test/samples/com/viewcompose/maps/google/samples/GoogleMapSamples.kt" region="google-map-content" sample_id="module.google-map-content" build_target=":viewcompose-google-maps-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun GoogleMapScope.googleMapContentSample() {
+    val office = LatLng(31.2304, 121.4737)
+    Marker(
+        key = "office",
+        position = office,
+        style = GoogleMapMarkerStyle(title = "Office"),
+    )
+    Polyline(
+        key = "walking-route",
+        points = listOf(office, LatLng(31.2320, 121.4770)),
+    )
+}
+```
 
 The module does not select a renderer, call `MapsInitializer`, request permission, perform network
 fallback, or provide Wear ambient-mode events. Configure those application-wide concerns before

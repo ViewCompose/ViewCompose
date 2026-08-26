@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.exoplayer2-dependency",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "exoplayer2.player",
+  "document_ids": [
+    "module.viewcompose-exoplayer2-android"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "exoplayer2-dependency",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}
