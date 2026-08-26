@@ -1,6 +1,22 @@
 ---
-title: Use text input
-sidebar_position: 5
+schema_version: 2
+document_id: tutorial.text-input
+doc_type: tutorial
+owner:
+  kind: capability
+  id: text.input
+version_lane: released
+capability_ids:
+  - text.input
+artifact_ids:
+  - viewcompose-material3-android
+  - viewcompose-ui-foundation
+  - viewcompose-text-core
+sample_ids:
+  - tutorial.text-input
+  - tutorial.text-input-dependencies
+expected_result: A native-backed name field whose greeting updates from one remembered TextFieldState without a parallel String callback.
+verification_action: Run the sample, type and select a name, rotate the device, and confirm the greeting and selection restore.
 ---
 
 # Use text input
@@ -10,6 +26,7 @@ sidebar_position: 5
 This page is standalone. The Android host supplies text editing and the base application APIs
 transitively, so no separate `viewcompose-text-core` dependency is needed:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="text-input-dependencies" sample_id="tutorial.text-input-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -77,4 +94,7 @@ Type a name and confirm that the greeting changes on every edit. Compile with:
 ./gradlew :samples:tutorials:assembleDebug
 ```
 
-For validation, rich text, undo, and Receive Content, use the [Text input guide](../guides/text-input.md).
+For validation, undo, keyboard purpose, and IME actions, use
+[editing text](../guides/text-input.md). Continue with
+[rich and received content](../guides/text-input-rich-text.md) for annotated documents, clipboard,
+drop, or IME payloads.

@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Continue Phase 3 with Text Input, then Lazy Collections.
+next_action: Continue Phase 3 with Lazy Collections.
 maven_release_changesets: []
 ---
 
@@ -43,6 +43,10 @@ The second Phase 3 slice has now moved Theming ownership into one Architecture p
 focused Guides, registered the Foundation and Material theme capabilities plus compiled task
 samples, repaired the Navigation and Theming dependency-block verification path, and reduced the
 report again to 693 issues.
+The third slice has moved Text Input runtime ownership into Architecture, retained editing, IME,
+rich-document, and Receive Content tasks in two coherent Guides, registered the three input DSL
+symbols and six compiled regions, and reduced the report to 683 issues without changing framework
+behavior.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -51,7 +55,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: continue Phase 3 with Text Input, then Lazy Collections. Pull-request gate scaling
+Next action: continue Phase 3 with Lazy Collections. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -657,6 +661,33 @@ Accepted Theming slice on 2026-08-26:
   with no framework or release-artifact change. The limitation is that the task samples are
   compile-time documentation evidence and make no new device or visual-conformance claim. The next
   action is the Text Input hard cut.
+
+Accepted Text Input slice on 2026-08-26:
+
+- retained `/guides/text-input` as the stable editing route, added one coherent rich/received-content
+  Guide, and kept editing, IME action, rich-document, and Receive Content tasks independently
+  enterable by heading and compiled example;
+- moved document/offset ownership, edit/history transactions, native bridge feedback suppression,
+  Receive Content normalization, persistence, and platform-verification boundaries to
+  `docs/architecture/text-input.md`; dependency and compatibility detail remains in Text Core and
+  UI Foundation module manuals;
+- registered `text.input`, its `BasicTextField`, `TextField`, and `SearchBar` DSL entries, four task
+  regions, the Tutorial region, and one compiled dependency region. Removed 6 resolved exception
+  records. The report changed from 693 to 683 issues: missing metadata 108 to 106, orphan symbols
+  409 to 406, and unclassified samples 169 to 164. Taxonomy mismatches remained 7; duplicate
+  owners, orphan documents, version conflicts, stale generated output, unbaselined debt, and
+  blocking violations remained zero;
+- the first four-page representation exceeded the unchanged 46.9 MiB non-API site limit by 67,722
+  bytes. Consolidating adjacent editing/IME and rich/Receive Content tasks into two Guides retained
+  the four task boundaries and reduced generated output by 161,958 bytes to 49,083,978 bytes,
+  leaving 94,236 bytes of budget. The final bilingual build audited 452 pages and completed the
+  Docusaurus wrapper in 60.0 seconds;
+- Tutorial compilation and exact-region verification, Governance V2, documentation structure, 70
+  documentation script tests, and all 122 reviewed Chinese mirrors passed. The conclusion is
+  `improved`: ownership and sample debt decreased, the final representation satisfies the existing
+  site budget, and no framework or release artifact changed. The limitation is that IME, autofill,
+  accessibility, hardware-keyboard, and stylus checklists reuse existing device evidence rather
+  than making a new device-conformance claim. The next action is the Lazy Collections hard cut.
 
 | Current area | Required target |
 | --- | --- |

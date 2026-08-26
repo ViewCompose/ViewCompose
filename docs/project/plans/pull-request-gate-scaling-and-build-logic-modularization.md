@@ -760,6 +760,21 @@ link gate rejected it; the corrected rerun passed and auto-merged. Correctness i
 because the required gate caught a real route defect, while latency remains **inconclusive** until
 the required change-class corpus exists.
 
+Pull request #177 supplied the second successful documentation-content observation. The classifier
+selected documentation governance, documentation site, and samples without full fallback, found no
+published artifact, and skipped API documentation, Demo, device/benchmark, integration, module,
+Preview, and release-intent families. The affected candidate passed `1,176` actionable tasks in
+`6 min 22 s`; the complete shadow passed `2,342` actionable tasks in `10 min 9 s`. Candidate scope
+was `49.8%` smaller and its observed duration `37.3%` lower, while both paths reached the same
+successful conclusion and produced no correctness finding. The complete shadow reused outputs from
+the candidate, so this duration comparison is conservative evidence, not an isolated cold-build
+speedup. The serial shadow made the complete `qaQuick` child last `17 min 32 s`; the result is
+**mixed**: selection is materially narrower and correct, but observation mode deliberately keeps
+the old total work on the critical path. The documentation child completed in `4 min 47 s`, down
+`10.6%` from #176; its final Docusaurus build was `46 s` (`16.0%` of child wall time). Keep shadow
+comparison active until the required corpus is complete, then remove the complete shadow only if
+every change class retains zero missed gate or artifact impact.
+
 The current website stack already uses Docusaurus `3.10.2`, React `19.2.8`, Node `24.19.0`, and npm
 `11.8.0`. Replacing or broadly upgrading it is not accepted as a latency action from this evidence:
 it would not reduce source verification, Gradle startup, Android SDK preparation, or immutable API

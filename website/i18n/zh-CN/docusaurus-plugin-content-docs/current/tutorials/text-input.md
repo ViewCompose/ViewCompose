@@ -1,8 +1,6 @@
 ---
-title: 使用文本输入
-sidebar_position: 5
 translation_source: tutorials/text-input.md
-translation_source_hash: 178c27db23937e02e56f8cd26e8ac9cf16ac4fc4d925d36ecb4ff1fed1a97510
+translation_source_hash: 3bf9beb784dc30a120f6e66c0854c2c260cce921eb492c4e564503a85e313e19
 translation_status: current
 ---
 
@@ -13,6 +11,7 @@ translation_status: current
 本页可以独立使用。Android 宿主会传递引入文本编辑与基础应用 API，因此不需要单独依赖
 `viewcompose-text-core`：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="text-input-dependencies" sample_id="tutorial.text-input-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -79,4 +78,5 @@ class TextInputTutorialActivity : ComponentActivity() {
 ./gradlew :samples:tutorials:assembleDebug
 ```
 
-输入校验、富文本、撤销和 Receive Content 请查看[文本输入指南](../guides/text-input.md)。
+输入校验、撤销、键盘用途与 IME Action 见[编辑文本](../guides/text-input.md)。注解文档、剪贴板、
+拖放或 IME Payload 见[富文本与外部内容](../guides/text-input-rich-text.md)。

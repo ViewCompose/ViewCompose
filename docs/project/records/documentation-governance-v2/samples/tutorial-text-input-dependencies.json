@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "tutorial.text-input-dependencies",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "text.input",
+  "document_ids": [
+    "tutorial.text-input"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "text-input-dependencies",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

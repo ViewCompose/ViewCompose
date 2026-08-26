@@ -317,6 +317,24 @@ identity token.
   immutable API reuse, repeated Gradle configuration, and setup/dependency restoration before
   reconsidering Docusaurus, React, or Node migration.
 
+- **2026-08-26, Governance V2 Theming follow-up:** pull request #177's successful documentation
+  child completed in `4 min 47 s`, `34 s` faster than #176 (`-10.6%`). Source and translation
+  verification took `68 s`, complete versioned API generation and verification `89 s`, catalog
+  generation `1 s`, type checking `2 s`, and the Docusaurus build `46 s`. Docusaurus represented
+  `16.0%` of child wall time, again confirming that it is not the dominant stage. The result is
+  **improved** for this hosted sample, but P50/P95 and cache-hit conclusions remain
+  **inconclusive** because the restored state differs and only two post-stabilization content
+  pull requests exist. Continue the corpus without a website-stack migration.
+
+- **2026-08-26, Governance V2 Text Input local acceptance:** the first four-page task split built
+  successfully but produced 49,245,936 non-API bytes, 67,722 bytes above the unchanged 46.9 MiB
+  limit. Consolidating adjacent editing/IME and rich/Receive Content tasks into two Guides retained
+  all four task boundaries while reducing generated output by 161,958 bytes (`-0.33%`) to
+  49,083,978 bytes, leaving 94,236 bytes. The final build audited 452 bilingual pages and completed
+  the Docusaurus wrapper in `60.0 s`. The result is **mixed** for the initial representation and
+  **improved** after correction. This local sample excludes hosted cache and setup behavior; the
+  limit remains unchanged and the next content slice must preserve the same stop condition.
+
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and
   moving the generated quality report outside the deploy tree reduced it to 49,175,712 bytes,
