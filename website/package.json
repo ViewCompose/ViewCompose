@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "generate:catalog": "node scripts/generate-module-catalog.mjs && node scripts/generate-versioned-module-manuals.mjs",
+    "prepare:site": "npm run generate:catalog && npm run verify:languages && npm run verify:translations",
     "write-translations": "docusaurus write-translations --locale zh-CN",
     "prestart": "npm run generate:catalog",
     "start": "docusaurus start",
-    "prebuild": "npm run generate:catalog && npm run verify:languages && npm run verify:translations",
+    "prebuild": "npm run prepare:site",
     "build": "node scripts/build-site.mjs",
+    "build:prepared": "node scripts/build-site.mjs",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear",
     "test:translations": "node --test scripts/__tests__/verify-translations.test.mjs",
@@ -23,7 +25,8 @@
     "verify:versions": "node scripts/verify-versioned-documentation.mjs",
     "verify:deployment": "node scripts/verify-deployed-module-routes.mjs",
     "verify:site": "node scripts/verify-site-quality.mjs",
-    "typecheck": "npm run generate:catalog && npm run verify:languages && npm run verify:translations && tsc"
+    "typecheck": "npm run prepare:site && tsc",
+    "typecheck:prepared": "tsc"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",

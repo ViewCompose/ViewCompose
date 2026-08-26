@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: bf2808ab6224dc6769c6c7a3b8de727cea648b8654cce45cfc270d587e752a93
+translation_source_hash: ef0e25d240b7facb8adbe722b1aa92db5ed16556065e8494ea299047a9c32391
 translation_status: current
 ---
 
@@ -147,6 +147,13 @@ Context。每个可见 Context 都由 `always()` 结果门面报告：只有分�
 才算成功；规划失败或已选子任务未成功都会失败。必需工作流仍对每个 PR 触发，因此路径过滤不会让
 必需 Context 永久 pending。所有 `main` 与手工运行都会选择完整验证；只有完整文档子任务及其门面
 都成功后才允许部署。
+
+已选文档子任务会在恢复生成 API 候选前规划生成器指纹和完整不可变历史指纹。PR 永不保存该缓存，
+成功的 `main` 子任务是唯一写入方。恢复键只是一条提示：每个 source revision 的条目集合和全部
+文件大小/SHA-256 都必须验证后才能复用；陈旧或损坏组会删除并重建。Job Summary 会报告 hit、
+partial、miss、recovery、复用/生成组数、无效组、有界并行度和装配耗时。源码、语言和翻译检查通过
+`verifyDocumentationStructure` 只运行一次；CI 只生成一次站点目录，再调用 prepared type-check
+与构建入口，避免重复 npm 预构建钩子。
 
 当 `qaQuick` 被选择时，GitHub Actions 使用 4 GiB Gradle heap 和最多两个 worker 运行其完整任务。
 否则 Release R8、lint 与文档生成会在托管 runner 的默认 2 GiB heap 中竞争。这只是 CI 资源边界：

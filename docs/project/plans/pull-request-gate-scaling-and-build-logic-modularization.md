@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-26
-next_action: Merge the Phase 3 classifier and required-result facades, then begin Phase 4 immutable API output reuse.
+next_action: Review Phase 4 in CI, seed the trusted main cache, and record the first hosted exact hit.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -36,16 +36,15 @@ maven_release_changesets:
 
 ## Status
 
-Active. Phases 0 through 3 are complete. The compiled quality build now owns the conservative
-pull-request classifier, and stable required-result facades preserve the existing branch-protection
-contexts while selected child work becomes explicit.
+Active. Phases 0 through 3 are complete. Phase 4 implementation and local acceptance are complete;
+hosted restore/save and exact-hit evidence remains before the phase closes.
 
 Last verified: 2026-08-26.
 
-Next action: merge the Phase 3 classifier and required-result facades, then begin Phase 4's exact
-immutable API-output fingerprint, manifest, restore, and corruption fallback. The Phase 0 task-
-graph fixtures remain the immutable pre-extraction comparator rather than being rewritten for
-later intentional gates.
+Next action: review Phase 4 in CI, merge it so the complete `main` documentation child can seed the
+trusted cache, then record a pull-request exact hit before beginning Phase 5. The Phase 0 task-graph
+fixtures remain the immutable pre-extraction comparator rather than being rewritten for later
+intentional gates.
 
 ## Maven release changesets
 
@@ -68,7 +67,10 @@ release. The new Gradle types remain build implementation rather than published 
 application-facing capability IDs, Q levels, compiled API samples, and module-manual changes are
 not applicable. Phase 3 changes repository-only planning code and workflow orchestration; the
 release-intent verifier detected zero release artifacts, ignored artifacts, or shared publication
-paths, so it adds no Maven Changeset.
+paths, so it adds no Maven Changeset. Phase 4 changes repository-only documentation generation,
+cache state, publishing-build task wiring, and CI orchestration without changing a published
+artifact or publication input; its release-intent verification likewise detects zero release
+artifacts, ignored artifacts, or shared publication paths, so it adds no Maven Changeset.
 
 ## Objective
 
@@ -273,7 +275,7 @@ Governance V2 plan.
 | 1 | compiled quality-build skeleton and parity harness | old and delegated task graphs/failures match | Complete |
 | 2 | extraction of architecture, purity, Demo, documentation, device, and benchmark gates | root script contains no long verifier bodies; isolated tests pass | Complete |
 | 3 | conservative PR classifier and required-result facade | synthetic diff matrix and branch-protection scenarios pass | Complete |
-| 4 | immutable API cache and deduplicated site verification | hit, miss, corruption, tooling-change, and unpublished-source cases pass | Not started |
+| 4 | immutable API cache and deduplicated site verification | hit, miss, corruption, tooling-change, and unpublished-source cases pass | In progress: local accepted; hosted evidence pending |
 | 5 | affected-module `qaQuick` execution and selective `qaPreview` | dependency/reverse-dependency golden graph and full fallback pass | Not started |
 | 6 | cache-provider cleanup, CI observation, budgets, documentation, and archive | latency and correctness acceptance criteria hold for observation window | Not started |
 
@@ -610,6 +612,18 @@ least ten live samples per change class; the immediate next action is Phase 4 im
 5. Run language, translation, catalog generation, type-check, and prebuild source validation once
    per job while preserving their individual test coverage.
 6. Keep every `main` deployment on the complete verifier and complete production site build.
+
+Local acceptance on 2026-08-26 exercised all five immutable source revisions and 100 registered
+artifact/version entries. A cold cache generated all five groups in `411.7 s`, with the complete
+Gradle verifier finishing in `6 min 58 s`; an unchanged run verified 26,096 files, reused all five
+groups in `2.1 s`, and finished in `5.42 s` (`98.7%` lower). A deliberately changed generated HTML
+file invalidated and regenerated only its source-revision group. Unit fixtures also cover a missing
+file, extra file, symbolic link, malformed or path-traversing manifest, newly added revision,
+generator-tooling drift, pruning, and the main-only save decision. A local process-tree snapshot
+reached approximately `1.75 GiB` RSS during the 31-entry group, so the accepted CI concurrency is
+`1`; the snapshot is not a hosted-runner peak measurement. The conclusion is **improved** locally.
+The phase remains open until a successful complete `main` child saves the cache and a subsequent
+hosted pull-request child reports an exact verified hit.
 
 ### Phase 5: execute affected Gradle verification
 

@@ -144,6 +144,16 @@ trigger for every pull request, so path filtering cannot leave a required contex
 `main` or manual run selects complete verification; documentation deployment remains possible only
 after the complete documentation child and its facade both succeed.
 
+The selected documentation child plans a generator fingerprint and a complete immutable-history
+fingerprint before restoring generated API candidates. Pull requests never save this cache; a
+successful `main` child is its only writer. A restored key is only a hint: per-source-revision
+entry sets and every file size/SHA-256 digest must verify before reuse, while a stale or corrupt
+group is deleted and regenerated. The job summary reports hit, partial, miss, recovery, reused and
+generated group counts, invalid groups, bounded parallelism, and assembly duration. Source,
+language, and translation checks run once through `verifyDocumentationStructure`; CI generates the
+site catalog once, then calls the prepared type-check and build entry points to avoid repeating npm
+prebuild hooks.
+
 When selected, GitHub Actions runs the complete `qaQuick` task with a 4 GiB Gradle heap and at most
 two workers. Release R8, lint, and documentation generation otherwise compete inside the hosted
 runner's default 2 GiB heap. This is only a CI resource envelope: it does not split, retry, or waive

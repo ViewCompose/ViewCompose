@@ -7,10 +7,21 @@ import {
   CURRENT_DOCUMENTATION_TOOLING_PATHS,
   ensureRevisionAvailable,
   installCurrentDocumentationTooling,
+  maximumParallelApiRevisions,
   projectDependencyContractsForPublishingMetadata,
+  projectDocumentationReleases,
 } from '../assemble-versioned-api-docs.mjs';
 
 const frozenRevision = '1234567890abcdef1234567890abcdef12345678';
+
+test('historical generation concurrency is explicitly bounded', () => {
+  assert.equal(maximumParallelApiRevisions(), 1);
+  assert.equal(maximumParallelApiRevisions('1'), 1);
+  assert.equal(maximumParallelApiRevisions('2'), 2);
+  assert.throws(() => maximumParallelApiRevisions('0'), /must be between 1 and 2/u);
+  assert.throws(() => maximumParallelApiRevisions('3'), /must be between 1 and 2/u);
+  assert.throws(() => maximumParallelApiRevisions('unbounded'), /must be between 1 and 2/u);
+});
 
 test('frozen revisions reject movable Git references before running a command', async () => {
   let commandCount = 0;
@@ -112,10 +123,31 @@ test('versioned API generation overlays the publishing build as one current tool
   assert.ok(paths.includes('tools/viewcompose-publishing-build/settings.gradle.kts'));
   assert.ok(paths.includes('tools/viewcompose-publishing-build/src/main'));
   assert.ok(paths.includes('gradle/viewcompose-dependency-contracts.properties'));
+  assert.equal(paths.includes('gradle/viewcompose-documentation-releases.properties'), false);
   assert.equal(
     paths.some((path) => path.endsWith('/ViewComposePublishingPlugin.kt')),
     false,
   );
+});
+
+test('historical workspaces receive only the current source-revision release group', () => {
+  const projected = projectDocumentationReleases([
+    {
+      artifact: 'viewcompose-runtime',
+      version: '0.1.0-alpha02',
+      sourceRevision: frozenRevision,
+    },
+    {
+      artifact: 'viewcompose-ui-foundation',
+      version: '0.1.0-alpha01',
+      sourceRevision: frozenRevision,
+    },
+  ]);
+
+  assert.match(projected, /^release\.count=2$/mu);
+  assert.match(projected, /^release\.\d+\.modules=viewcompose-runtime$/mu);
+  assert.match(projected, /^release\.\d+\.modules=viewcompose-ui-foundation$/mu);
+  assert.doesNotMatch(projected, /viewcompose-preview/u);
 });
 
 test('historical API workspaces receive only contracts for their registered artifacts', () => {

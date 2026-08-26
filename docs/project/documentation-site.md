@@ -36,11 +36,14 @@ The production artifact is assembled in seven explicit stages:
 3. `verify:translations` validates required Chinese coverage, canonical source fingerprints,
    explicit stale status, and stale-warning markers.
 4. `verifyCompleteViewComposeApiDocs` groups the immutable release registry by source revision,
-   reconstructs each revision in a temporary workspace, runs the current maintained Dokka tooling,
-   and verifies every manifest, route, alias, and pinned source link. Missing frozen commits are
-   fetched by exact full SHA; movable references are never substituted. Unpublished artifacts get
-   only working-tree `current` output, while revisions predating current build contracts receive
-   temporary configuration shims that never enter published output.
+   fingerprints the maintained generator inputs, and verifies a per-revision integrity record
+   containing the exact entry set plus every generated file's size and SHA-256 digest. A valid
+   restored revision group is reused; a missing, stale, malformed, extra, deleted, symlinked, or
+   digest-mismatched group is removed and regenerated in a temporary workspace before route,
+   alias, manifest, and pinned-source-link verification continues. Missing frozen commits are
+   fetched by exact full SHA; movable references are never substituted. Historical workspaces get
+   only the release records for their source-revision group, and revisions predating current build
+   contracts receive temporary configuration shims that never enter published output.
 5. the website generators read publishing metadata, the immutable release registry, and
    `docs/modules/README.md`. They generate the catalog plus one module-manual snapshot per released
    artifact/version from the same frozen Git revision; they do not maintain a second registry.
@@ -73,6 +76,15 @@ deployed/budgeted tree, so rechecking `website/build/` reproduces the build resu
 
 During local iteration, `-PviewComposeDocsModules=artifact-a,artifact-b` limits Dokka assembly to an
 explicit subset. A production build never uses this shortcut.
+
+`build/versioned-api-cache/integrity-manifest.json` is generated cache state, not a second release
+registry or a deployable API resource.
+Its complete key is derived from per-revision fingerprints; each revision fingerprint covers its
+immutable artifact/version/source triple set and the current generator implementation. Aliases and
+unpublished working-tree `current` output are deliberately outside immutable reuse and are rebuilt
+for every assembly. `VIEWCOMPOSE_API_DOCS_MAX_PARALLEL_REVISIONS` accepts only `1` or `2`; CI keeps
+it at `1` until an accepted hosted-runner process-tree memory measurement justifies two concurrent
+2 GiB Gradle/Dokka processes.
 
 Governance V2 assets are repository inputs, not another site registry: Phase 0A freezes schemas,
 Phase 0B reports through compiled quality ownership, and Phase 2 blocks new debt. The committed
@@ -199,6 +211,18 @@ unselected plan, while a planning or selected-child failure remains fatal. A pus
 manual run on `main`, always selects the complete child; only its verified Pages artifact can deploy
 through the protected `github-pages` environment.
 
+The selected child computes the immutable generator and complete-history fingerprints before
+restoring `website/generated/api`. Pull requests use restore-only access; only a successful `main`
+child may save a cache. The primary key is unique per run so a verified recovery can supersede a
+corrupt archive, while ordered restore prefixes first select the same complete fingerprint and then
+the most recent cache produced by the same generator. A restore is never trusted by key alone: the
+assembler verifies every revision group and publishes hit, partial, miss, recovery, generated-group,
+invalid-group, parallelism, and duration telemetry in the job summary. The source/language/
+translation gate runs once, the catalog is generated once, and CI then uses prepared type-check and
+site-build entry points so npm lifecycle hooks do not repeat the same prebuild work. Cache-service
+restore or save failures degrade to full generation or a skipped write rather than bypassing the
+verifier or blocking an otherwise valid Pages artifact.
+
 Deployment succeeds only after production smoke tests fetch both catalogs and every current manual
 in both locales, including representative no-trailing-slash routes. HTTP, rendered not-found,
 wrong-plugin, or missing-catalog failures remain fatal after bounded CDN retries.
@@ -218,6 +242,9 @@ identity token.
 - If release-history verification fails, append the missing immutable record or correct unpublished
   metadata. Never rewrite an already released artifact/version entry.
 - If Dokka fails, reproduce with a selected module and correct its source/API configuration.
+- If an API cache group fails integrity, keep the automatic group-level regeneration. Do not edit
+  the manifest, accept a key-only hit, save caches from pull requests, or bypass the complete API
+  verifier. A recovered `main` run writes a newer unique key for the same fingerprint.
 - If Docusaurus reports a broken link or anchor, preserve strict checking; generated static API
   links are the only links explicitly exempted from its route graph.
 - If the accessibility gate fails, fix the rendered page or theme component. Do not suppress a
@@ -239,6 +266,19 @@ identity token.
 ## Last verified
 
 <div className="search-partition-detail">
+
+- **2026-08-26, immutable API cache local acceptance:** the complete 100-entry deployable history
+  occupied `427 MiB` across five source revisions; its non-deployable integrity state occupied
+  `6.7 MiB`. A cold run generated all five groups sequentially in `411.7 s`; the complete Gradle
+  verifier took `6 min 58 s`. The unchanged rerun integrity-checked all 26,096 immutable files,
+  reused `5/5` groups with zero historical Gradle/Dokka generation in `2.1 s`, and completed the
+  verifier in `5.42 s`, a `98.7%` reduction. During the 31-entry group,
+  sampled active-process RSS reached approximately `1.75 GiB`; because this is a local point sample,
+  not a hosted-runner peak measurement, parallelism remains `1`. A two-revision
+  `viewcompose-image-glide` fault test then changed one generated HTML file: the next run reused the
+  valid group, rejected and regenerated only the damaged group in `32.2 s`, and passed the existing
+  manifest, route, alias, and immutable-source checks. The local cache result is **improved**;
+  hosted restore/save and hit evidence remains the next acceptance action.
 
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and

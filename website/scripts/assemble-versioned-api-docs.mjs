@@ -2,8 +2,21 @@ import {spawn} from 'node:child_process';
 import {chmod, cp, mkdir, mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {dirname, resolve} from 'node:path';
+import {performance} from 'node:perf_hooks';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {isStableRelease, loadDocumentationReleases} from './documentation-releases.mjs';
+import {
+  VERSIONED_API_CACHE_REPORT,
+  VERSIONED_API_CACHE_STATE_ROOT,
+  createRevisionIntegrityRecord,
+  createVersionedApiCachePlan,
+  pruneVersionedApiOutput,
+  readVersionedApiIntegrityManifest,
+  removeRevisionOutput,
+  validateRevisionIntegrity,
+  writeVersionedApiCacheReport,
+  writeVersionedApiIntegrityManifest,
+} from './versioned-api-cache.mjs';
 
 const websiteRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repositoryRoot = resolve(websiteRoot, '..');
@@ -24,10 +37,6 @@ export const CURRENT_DOCUMENTATION_TOOLING_PATHS = Object.freeze([
   }),
   Object.freeze({
     relativePath: 'gradle/viewcompose-dependency-contracts.properties',
-    replaceDirectory: false,
-  }),
-  Object.freeze({
-    relativePath: 'gradle/viewcompose-documentation-releases.properties',
     replaceDirectory: false,
   }),
   Object.freeze({
@@ -226,6 +235,21 @@ export function projectDependencyContractsForPublishingMetadata(
   return projected.join('\n');
 }
 
+export function projectDocumentationReleases(entries) {
+  const normalized = [...entries].sort((left, right) =>
+    left.version.localeCompare(right.version) || left.artifact.localeCompare(right.artifact));
+  return [
+    'schema.version=1',
+    `release.count=${normalized.length}`,
+    ...normalized.flatMap((entry, index) => [
+      `release.${index}.version=${entry.version}`,
+      `release.${index}.sourceRevision=${entry.sourceRevision}`,
+      `release.${index}.modules=${entry.artifact}`,
+    ]),
+    '',
+  ].join('\n');
+}
+
 async function generateRevision(revision, entries, releases) {
   await ensureRevisionAvailable(revision);
   const workspace = await mkdtemp(resolve(tmpdir(), 'viewcompose-versioned-api-'));
@@ -239,6 +263,11 @@ async function generateRevision(revision, entries, releases) {
       () => '',
     );
     await installCurrentDocumentationTooling(workspace);
+    await writeFile(
+      resolve(workspace, 'gradle/viewcompose-documentation-releases.properties'),
+      projectDocumentationReleases(entries),
+      'utf8',
+    );
     const metadataPath = resolve(workspace, 'gradle/viewcompose-publishing.properties');
     let metadata = await readFile(metadataPath, 'utf8');
     for (const artifact of releases.current.keys()) {
@@ -276,6 +305,39 @@ async function generateRevision(revision, entries, releases) {
   } finally {
     await rm(workspace, {recursive: true, force: true});
   }
+}
+
+export const MAX_PARALLEL_API_REVISIONS = 2;
+
+export function maximumParallelApiRevisions(value = process.env.VIEWCOMPOSE_API_DOCS_MAX_PARALLEL_REVISIONS) {
+  if (value === undefined || value === '') return 1;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > MAX_PARALLEL_API_REVISIONS) {
+    throw new Error(
+      `VIEWCOMPOSE_API_DOCS_MAX_PARALLEL_REVISIONS must be between 1 and ` +
+        `${MAX_PARALLEL_API_REVISIONS}, but was '${value}'`,
+    );
+  }
+  return parsed;
+}
+
+async function generateMissingRevisions(revisions, releases, concurrency) {
+  let next = 0;
+  const results = new Map();
+  const workers = Array.from({length: Math.min(concurrency, revisions.length)}, async () => {
+    while (next < revisions.length) {
+      const index = next;
+      next += 1;
+      const revision = revisions[index];
+      const startedAt = performance.now();
+      await generateRevision(revision.revision, revision.entries, releases);
+      results.set(revision.revision, {
+        durationSeconds: (performance.now() - startedAt) / 1000,
+      });
+    }
+  });
+  await Promise.all(workers);
+  return results;
 }
 
 function redirectDocument(artifact, version) {
@@ -320,6 +382,7 @@ async function copyUnpublishedCurrentApi(artifact) {
 }
 
 async function main(argumentsList) {
+  const startedAt = performance.now();
   const releases = await loadDocumentationReleases(repositoryRoot);
   const modules = selectedModules(argumentsList, new Set(releases.current.keys()));
   const completeSelection = modules.length === releases.current.size;
@@ -328,12 +391,45 @@ async function main(argumentsList) {
     ...(completeSelection ? releases.retired : []),
   ]);
   const selected = releases.entries.filter((entry) => historyArtifacts.has(entry.artifact));
-  await rm(outputRoot, {recursive: true, force: true});
-  await mkdir(outputRoot, {recursive: true});
+  const cachePlan = await createVersionedApiCachePlan({entries: selected, root: repositoryRoot});
+  const manifestState = await readVersionedApiIntegrityManifest(VERSIONED_API_CACHE_STATE_ROOT);
+  await pruneVersionedApiOutput(outputRoot, selected, modules);
 
-  const byRevision = Map.groupBy(selected, (entry) => entry.sourceRevision);
-  for (const [revision, entries] of byRevision) {
-    await generateRevision(revision, entries, releases);
+  const records = new Map();
+  const groupResults = [];
+  for (const revision of cachePlan.revisions) {
+    const validationStartedAt = performance.now();
+    const validation = await validateRevisionIntegrity(outputRoot, revision, manifestState);
+    groupResults.push({
+      revision: revision.revision,
+      entryCount: revision.entries.length,
+      status: validation.status,
+      reason: validation.reason,
+      validationSeconds: (performance.now() - validationStartedAt) / 1000,
+    });
+    if (validation.status === 'hit') {
+      records.set(revision.revision, validation.record);
+    } else {
+      await removeRevisionOutput(outputRoot, revision);
+    }
+  }
+
+  const missingRevisions = cachePlan.revisions.filter(
+    (revision) => !records.has(revision.revision),
+  );
+  const maxParallelRevisions = maximumParallelApiRevisions();
+  const generationResults = await generateMissingRevisions(
+    missingRevisions,
+    releases,
+    maxParallelRevisions,
+  );
+  for (const revision of missingRevisions) {
+    records.set(
+      revision.revision,
+      await createRevisionIntegrityRecord(outputRoot, revision),
+    );
+    const group = groupResults.find((result) => result.revision === revision.revision);
+    group.generationSeconds = generationResults.get(revision.revision).durationSeconds;
   }
   for (const artifact of modules) {
     const entries = selected.filter((entry) => entry.artifact === artifact);
@@ -349,6 +445,31 @@ async function main(argumentsList) {
     sourceRevision,
   }));
   await writeFile(resolve(outputRoot, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  await writeVersionedApiIntegrityManifest(
+    VERSIONED_API_CACHE_STATE_ROOT,
+    cachePlan,
+    records.values(),
+  );
+
+  const report = {
+    schemaVersion: 1,
+    generatorFingerprint: cachePlan.generatorFingerprint,
+    completeFingerprint: cachePlan.completeFingerprint,
+    totalGroups: cachePlan.revisions.length,
+    reusedGroups: groupResults.filter(({status}) => status === 'hit').length,
+    generatedGroups: missingRevisions.length,
+    invalidGroups: groupResults.filter(({status}) => status === 'invalid').length,
+    staleGroups: groupResults.filter(({status}) => status === 'stale').length,
+    maxParallelRevisions,
+    durationSeconds: (performance.now() - startedAt) / 1000,
+    groups: groupResults,
+  };
+  await writeVersionedApiCacheReport(report, VERSIONED_API_CACHE_REPORT);
+  console.log(
+    `Versioned API cache: reused ${report.reusedGroups}/${report.totalGroups}, ` +
+      `generated ${report.generatedGroups}, invalid ${report.invalidGroups}, ` +
+      `parallelism ${maxParallelRevisions}, ${report.durationSeconds.toFixed(1)} s.`,
+  );
 }
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
