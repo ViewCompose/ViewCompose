@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-26
-next_action: Review Phase 4 in CI, seed the trusted main cache, and record the first hosted exact hit.
+next_action: Verify the hot-path frozen-revision fix through the complete hosted site build, then close Phase 4.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -36,15 +36,14 @@ maven_release_changesets:
 
 ## Status
 
-Active. Phases 0 through 3 are complete. Phase 4 implementation and local acceptance are complete;
-hosted restore/save and exact-hit evidence remains before the phase closes.
+Active. Phases 0 through 3 are complete. Phase 4 local acceptance, trusted `main` seed, and hosted
+exact-hit evidence are complete; one hot-path frozen-revision independence fix remains in review.
 
 Last verified: 2026-08-26.
 
-Next action: review Phase 4 in CI, merge it so the complete `main` documentation child can seed the
-trusted cache, then record a pull-request exact hit before beginning Phase 5. The Phase 0 task-graph
-fixtures remain the immutable pre-extraction comparator rather than being rewritten for later
-intentional gates.
+Next action: verify the hot-path frozen-revision fix through the complete hosted site build, then
+close Phase 4 and begin Phase 5. The Phase 0 task-graph fixtures remain the immutable pre-extraction
+comparator rather than being rewritten for later intentional gates.
 
 ## Maven release changesets
 
@@ -623,7 +622,14 @@ generator-tooling drift, pruning, and the main-only save decision. A local proce
 reached approximately `1.75 GiB` RSS during the 31-entry group, so the accepted CI concurrency is
 `1`; the snapshot is not a hosted-runner peak measurement. The conclusion is **improved** locally.
 The phase remains open until a successful complete `main` child saves the cache and a subsequent
-hosted pull-request child reports an exact verified hit.
+hosted child reports an exact verified hit. The first complete `main` child assembled five groups in
+`1139.4 s`, completed its API step in `21 min`, saved a `39.3 MB` cache, and deployed. After cache
+index propagation, an exact rerun restored it in `7 s`, reused `5/5` groups with zero generation or
+invalid groups in `5.7 s`, and completed the API step in `2 min 9 s` (`89.8%` lower). That run then
+exposed a separate cold-path side-effect dependency: the versioned-manual generator assumed API
+reconstruction had already fetched unreachable frozen revisions. The generator now resolves each
+unique exact SHA itself before reading snapshots. Phase 4 remains open only until this correction
+passes the complete hosted hot path.
 
 ### Phase 5: execute affected Gradle verification
 

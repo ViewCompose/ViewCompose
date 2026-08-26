@@ -47,6 +47,8 @@ The production artifact is assembled in seven explicit stages:
 5. the website generators read publishing metadata, the immutable release registry, and
    `docs/modules/README.md`. They generate the catalog plus one module-manual snapshot per released
    artifact/version from the same frozen Git revision; they do not maintain a second registry.
+   Every unique frozen revision is resolved by exact full SHA before any snapshot read, independent
+   of whether immutable API output was restored or rebuilt.
 6. Docusaurus type-checks and builds the handwritten documents, site presentation, generated API
    output, localized search indexes, and compatibility redirects for both `en` and `zh-CN` into
    `website/build/`, with broken links and anchors treated as errors.
@@ -279,6 +281,16 @@ identity token.
   valid group, rejected and regenerated only the damaged group in `32.2 s`, and passed the existing
   manifest, route, alias, and immutable-source checks. The local cache result is **improved**;
   hosted restore/save and hit evidence remains the next acceptance action.
+
+- **2026-08-26, immutable API cache hosted acceptance:** the first complete `main` run missed by
+  design, spent `1139.4 s` assembling five historical groups, completed the API step in `21 min`,
+  then built, uploaded, saved a `39.3 MB` cache, and deployed successfully. After the cache became
+  visible, an exact `main` rerun restored it in `7 s`, verified and reused `5/5` groups with zero
+  generation or invalid groups in `5.7 s`, and completed the API step in `2 min 9 s`, an `89.8%`
+  reduction. The immutable-cache conclusion is **improved**. That hot run exposed one separate
+  limitation: versioned manual generation had implicitly relied on cold API reconstruction to fetch
+  otherwise unreachable frozen commits. The generator now resolves every unique full SHA before
+  reading snapshots; the next action is a complete hosted hot-path rerun through the site build.
 
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and
