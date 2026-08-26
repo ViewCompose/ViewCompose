@@ -1,94 +1,55 @@
 ---
 translation_source: guides/nested-scroll.md
-translation_source_hash: 24bc6a2fc809bccac8a2a506879b99414d722711a5991bac2bf4fc64c84f3242
+translation_source_hash: 54fb72436802acb7e57857bfea5148f7702d4db09f2be5e6bf6ca61f1190a688
 translation_status: current
 ---
 
-# 嵌套滚动
+# 协调嵌套滚动
 
-## 1. 契约
+## 消费祖先效果
 
-`Modifier.nestedScroll(connection, dispatcher)` 安装一个平台无关 connection，包含四个同步阶段：
+把一个稳定的 `NestedScrollConnection` 附加到拥有该效果的祖先。pre 回调在子项消费之前
+运行；post 回调会收到子项已消费量和剩余量。只返回实际消费的带方向距离或速度。
 
-1. `onPreScroll(available, source)`；
-2. child/本地消费；
-3. `onPostScroll(consumed, available, source)`；
-4. `onPreFling` / `onPostFling`。
-
-`NestedScrollSource` 区分直接用户输入、fling 延续和命令式副作用。消费量使用 `ScrollDelta`
-与 `ScrollVelocity`；渲染器把每个结果限制在对应 available 值的方向和大小之内，无效或非有限
-数值按零处理。
-
-## 2. 传播顺序
-
-- pre-scroll 和 pre-fling 从最外层 connection 向 child 传播；
-- post-scroll 和 post-fling 从 child 返回外层 connection；
-- child 只收到 pre-consumption 后的余量；
-- post 阶段中，parent 收到 child 消费量以及剩余量。
-
-多个 `nestedScroll` modifier 会生成多个透明宿主，并保持 modifier 顺序。
-
-## 3. Android 映射
-
-渲染器在带有该 modifier 的节点外加入透明 `NestedScrollHost`。宿主实现 AndroidX
-`NestedScrollingParent3`，并通过 `NestedScrollingChildHelper` 向上参与链路。
-
-因此普通 `Box`、`Column` 等声明节点上的 connection 可以协调：
-
-- `LazyColumn`、`LazyRow`、`LazyVerticalGrid`；
-- `HorizontalPager`、`VerticalPager`；
-- 基于 `NestedScrollView` 的 `ScrollableColumn`；
-- 使用水平 nested-child bridge 的 `ScrollableRow`；
-- `PullToRefresh`；
-- 框架 `draggable`、`anchoredDraggable` 和 transform pan。
-
-已实现 Android nested scrolling 的原生 View 会自动加入同一链路。其他 `AndroidView` child
-不能发出原生滚动阶段，可显式使用 `NestedScrollDispatcher`。
-
-同轴嵌套框架容器会按方向与边缘仲裁 Pointer Stream。Child 能沿手势方向继续滚动时保留该
-Drag，到达对应逻辑边缘后释放，并且不会捕获交叉轴 Drag。垂直 Child 位于顶部且处于启用、
-空闲的 `PullToRefresh` 内时，初始向下拖动归刷新 Host；向上位移以及离开顶部后的向下位移仍由
-Child 滚动。取消手势会结束所有临时拦截保留。
-
-## 4. 示例
-
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/FocusAndNestedScrollGuideSamples.kt" region="nested-scroll-toolbar" sample_id="guide.nested-scroll-toolbar" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-val dispatcher = remember { NestedScrollDispatcher() }
-val connection = remember {
-    object : NestedScrollConnection {
-        override fun onPreScroll(
-            available: ScrollDelta,
-            source: NestedScrollSource,
-        ): ScrollDelta {
-            val collapse = collapseToolbarBy(available.y)
-            return ScrollDelta(x = 0f, y = collapse)
+fun UiTreeBuilder.CollapsingToolbar(
+    collapseBy: (deltaY: Float) -> Float,
+) {
+    val latestCollapseBy = rememberUpdatedState(collapseBy)
+    val connection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(
+                available: ScrollDelta,
+                source: NestedScrollSource,
+            ): ScrollDelta {
+                return ScrollDelta(
+                    x = 0f,
+                    y = latestCollapseBy.value(available.y),
+                )
+            }
         }
+    }
 
-        override fun onPostFling(
-            consumed: ScrollVelocity,
-            available: ScrollVelocity,
-        ): ScrollVelocity {
-            settleToolbar(available.y)
-            return ScrollVelocity.Zero
+    Column(modifier = Modifier.nestedScroll(connection)) {
+        Text("Collapsing toolbar")
+        ScrollableColumn {
+            repeat(40) { index -> Text("Row $index") }
         }
     }
 }
-
-Column(
-    modifier = Modifier.nestedScroll(
-        connection = connection,
-        dispatcher = dispatcher,
-    ),
-) {
-    LazyColumn(/* ... */)
-}
 ```
 
-自定义副作用先调用 `dispatcher.dispatchPreScroll(...)`，在本地消费余量，再调用
-`dispatcher.dispatchPostScroll(...)`。
+在 `collapseBy` 内限制应用状态；Android Renderer 还会拒绝非有限值或超量消费结果。当用户
+输入、fling 延续和命令式副作用需要不同策略时，使用 `NestedScrollSource` 区分来源。
 
-## 5. 原生 fling 限制
+## 分发自定义滚动来源
 
-Android 旧式 nested-fling 回调只用 Boolean 报告是否消费，无法返回速度大小。ViewCompose
-connection 与命令式 dispatcher 之间会保留部分速度；跨越任意原生 parent 时，`true` 必然表示
-该 parent 消费了剩余 fling。
+当自定义手势或程序代码必须进入相同父链时，向 `nestedScroll` 传入稳定的
+`NestedScrollDispatcher`。先分发 pre-scroll，在本地消费余量，再以本地消费量和剩余量分发
+post-scroll。速度使用对应的 pre/post fling 对。
+
+Lazy 集合、Pager、Eager 滚动容器、PullToRefresh，以及框架 Drag 或 Transform Pan 都参与同一
+条链。只有实现 Android Nested Scrolling 的原生 `AndroidView` 才会自动加入，否则应显式
+分发。阶段顺序、Modifier 顺序、AndroidX 映射和旧式原生 fling 限制见
+[Modifier 架构](../architecture/modifier.md)。

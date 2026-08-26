@@ -788,6 +788,18 @@ complete API generation and verification `82 s`, catalog generation `1 s`, type 
 Docusaurus `42 s` (`15.3%` of child wall time). Three content samples remain far below the required
 ten-per-class corpus, so shadow comparison stays active.
 
+Pull request #179 supplied the fourth successful documentation-content observation. The affected
+candidate again selected `1,176` actionable tasks and passed in `5 min 32 s`; the complete shadow
+passed `2,342` actionable tasks in `9 min 8 s`. Candidate scope was `49.8%` smaller and observed
+duration was `39.4%` lower, with the same successful conclusion and no correctness finding. The
+complete shadow reused candidate outputs, so the comparison remains conservative. Serial
+observation made the `qaQuick` work child last `15 min 31 s`; the result is **mixed** for current
+critical-path latency and **improved** for selected scope with preserved correctness. The
+documentation child completed in `5 min 12 s`; source and translation verification took `77 s`,
+complete API generation and verification `115 s`, catalog generation `1 s`, type checking `2 s`,
+and Docusaurus `53 s` (`17.0%` of child wall time). Four content samples remain below the required
+ten-per-class corpus, so keep shadow comparison active and continue collecting the same fields.
+
 The current website stack already uses Docusaurus `3.10.2`, React `19.2.8`, Node `24.19.0`, and npm
 `11.8.0`. Replacing or broadly upgrading it is not accepted as a latency action from this evidence:
 it would not reduce source verification, Gradle startup, Android SDK preparation, or immutable API

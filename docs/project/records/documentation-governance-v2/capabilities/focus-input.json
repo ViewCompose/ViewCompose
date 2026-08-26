@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "capability_id": "focus.input",
+  "kind": "modifier",
+  "owner": { "kind": "module", "id": "viewcompose-ui-contract" },
+  "artifact": "viewcompose-ui-contract",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.focusable", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierInteractionExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.focusRequester", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierInteractionExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.focusProperties", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierInteractionExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.focusGroup", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierInteractionExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.onFocusChanged", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierInteractionExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.onPreviewKeyEvent", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierInteractionExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.onKeyEvent", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierInteractionExtensions.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.focus.input", "generated": true },
+  "sample_owner": { "sample_id": "guide.focus-form" },
+  "document_owners": {
+    "guide": ["guide.focus-and-key-input"],
+    "architecture": ["architecture.modifier-runtime"]
+  }
+}

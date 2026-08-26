@@ -678,58 +678,191 @@
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "focus.input",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.focus.input",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.focus-and-key-input",
+              "documentType": "guide",
+              "path": "/guides/focus-and-input"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.focus-form",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.focusGroup"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "focus.input",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.focus.input",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.focus-and-key-input",
+              "documentType": "guide",
+              "path": "/guides/focus-and-input"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.focus-form",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.focusProperties"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "focus.input",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.focus.input",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.focus-and-key-input",
+              "documentType": "guide",
+              "path": "/guides/focus-and-input"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.focus-form",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.focusRequester"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "focus.input",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.focus.input",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.focus-and-key-input",
+              "documentType": "guide",
+              "path": "/guides/focus-and-input"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.focus-form",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.focusable"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "focus.input",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.focus.input",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.focus-and-key-input",
+              "documentType": "guide",
+              "path": "/guides/focus-and-input"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.focus-form",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.onFocusChanged"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "focus.input",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.focus.input",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.focus-and-key-input",
+              "documentType": "guide",
+              "path": "/guides/focus-and-input"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.focus-form",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.onKeyEvent"
         },
         {
           "artifact": "viewcompose-ui-contract",
+          "capabilityId": "focus.input",
           "kind": "modifier",
           "namespace": "com.viewcompose.ui.modifier",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.focus.input",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.focus-and-key-input",
+              "documentType": "guide",
+              "path": "/guides/focus-and-input"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.focus-form",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.modifier.Modifier.onPreviewKeyEvent"
         },
         {
@@ -955,10 +1088,29 @@
         },
         {
           "artifact": "viewcompose-gesture",
+          "capabilityId": "nested.scroll",
           "kind": "modifier",
           "namespace": "com.viewcompose.gesture",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.nested.scroll",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.nested-scroll-coordination",
+              "documentType": "guide",
+              "path": "/guides/nested-scroll"
+            },
+            {
+              "documentId": "architecture.modifier-runtime",
+              "documentType": "architecture",
+              "path": "/architecture/modifier"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.nested-scroll-toolbar",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.gesture.Modifier.nestedScroll"
         },
         {
@@ -4404,7 +4556,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 33,
+    "ownedEntryCount": 41,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-gesture/README.md
-translation_source_hash: 0438c320533d2568694df3a0187a355bebb4109d317cd30adaf85b02214759ef
+translation_source_hash: fb509e6fc6933d5df9f6f018177b9c6f040b901670e6bbfebb6d253c1cc7a5af
 translation_status: current
 ---
 
@@ -148,6 +148,8 @@ Post 回调在之后。可选 `NestedScrollDispatcher` 支持应用主动派发�
 - [Gesture Core 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-gesture-core)
 - [UI Contract 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract)
 - [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer-android)
+- [协调嵌套滚动](../../guides/nested-scroll.md)
+- [Modifier 架构](../../architecture/modifier.md)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
 
 完整生成参考位于

@@ -9,5 +9,5 @@
   "owner": "documentation-governance",
   "created_on": "2026-08-26",
   "removal_condition": "Delete this entry when every counted public entry in the exact source file has one capability owner.",
-  "violation_count": 7
+  "violation_count": 6
 }

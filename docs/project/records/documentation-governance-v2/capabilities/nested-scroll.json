@@ -1,0 +1,17 @@
+{
+  "schema_version": 2,
+  "capability_id": "nested.scroll",
+  "kind": "modifier",
+  "owner": { "kind": "module", "id": "viewcompose-gesture" },
+  "artifact": "viewcompose-gesture",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.gesture.Modifier.nestedScroll", "kind": "extension", "visibility": "public", "source": "viewcompose-gesture/src/main/java/com/viewcompose/gesture/GestureModifierDsl.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.nested.scroll", "generated": true },
+  "sample_owner": { "sample_id": "guide.nested-scroll-toolbar" },
+  "document_owners": {
+    "guide": ["guide.nested-scroll-coordination"],
+    "architecture": ["architecture.modifier-runtime"]
+  }
+}

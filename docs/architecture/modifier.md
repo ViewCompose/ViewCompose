@@ -1,3 +1,38 @@
+---
+schema_version: 2
+document_id: architecture.modifier-runtime
+doc_type: architecture
+owner:
+  kind: capability
+  id: focus.input
+version_lane: released
+capability_ids:
+  - focus.input
+  - nested.scroll
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-gesture
+  - viewcompose-renderer-android
+sample_ids:
+  - guide.focus-form
+  - guide.nested-scroll-toolbar
+invariants:
+  - Focus requesters and nested-scroll dispatchers retain renderer-neutral identity and attach to one current platform connector.
+  - Preview key input travels root-to-target before unconsumed target-to-root bubbling.
+  - Focused-editor visibility belongs to the nearest real scroll owner, while a pager owns discrete page selection only.
+  - Nested pre phases travel outer-to-inner and post phases inner-to-outer, with every consumption bounded by the offered value.
+  - AndroidView keeps arbitrary listener ownership and joins nested scrolling only through an implemented native protocol or explicit dispatcher.
+evidence:
+  - viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/focus/FocusRequesterContractTest.kt
+  - viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/modifier/FocusModifierContractTest.kt
+  - viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/gesture/NestedScrollContractsTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/context/LocalFocusManagerTest.kt
+  - viewcompose-gesture/src/test/java/com/viewcompose/gesture/NestedScrollModifierTest.kt
+  - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ModifierFocusInputApplierTest.kt
+  - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/container/NestedScrollHostLayoutTest.kt
+---
+
 # Modifier Architecture
 
 ## 1. Scope
@@ -35,13 +70,10 @@ across layers.
 11. Drawing modifiers include `drawBehind`, `drawWithContent`, and `drawWithCache`, plus the `draw`
     and `drawCache` shorthands. Chain order is stable, `drawWithContent` controls content forwarding,
     and the executor preserves four-corner `DrawRoundRect` and `Drawable + DrawPaint` semantics.
-12. Declarative focus and hardware-key input uses
-    `focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent`.
-    It maps to native View focus search, while `LocalFocusManager` supplies session-scoped move and
-    clear operations.
-13. `Modifier.nestedScroll(connection, dispatcher)` maps the unified protocol through a transparent
-    AndroidX nested-scrolling parent/child host. It covers pre/post scroll, pre/post fling,
-    Lazy/Pager/ordinary scrolling containers, and custom drag or transform pan.
+12. Declarative focus and hardware-key input follows the ownership and propagation contract below;
+    `LocalFocusManager` supplies session-scoped move and clear operations.
+13. `Modifier.nestedScroll(connection, dispatcher)` follows the unified four-phase routing contract
+    below across framework and participating native scrolling containers.
 14. Advanced `dropShadow(s)` layers draw before node content and `innerShadow(s)` layers draw after
     complete content. Both support ordered layers, independent shapes, blur, spread, offset, and
     color, without coupling to `elevation` or `zIndex`.
@@ -57,6 +89,33 @@ across layers.
     counterparts resolve start/end from the VNode's captured layout direction on every bind. A
     later physical or relative declaration replaces the earlier declaration for that complete
     modifier family.
+
+### 2.1 Focus and hardware-key routing
+
+UI Contract owns focus and normalized key values, UI Foundation exposes the current Session's
+`FocusManager`, and Android Renderer attaches mounted targets without either upper layer retaining
+a View. `focusProperties` merges in Modifier order; its latest non-null target wins and Android
+focus search is the fallback. Keyed connectors restore a saved focused child after remount, while
+unkeyed nodes use View identity.
+
+Preview keys travel root-to-target and unconsumed keys bubble target-to-root. A declared Tab or
+D-pad destination wins before native search. `AndroidView` keeps its business `OnKeyListener` until
+a declarative key contract takes control. Focused-editor visibility remains a child-rectangle
+request owned by the nearest real vertical scroller; a pager stops that request at its page
+boundary and obscurable forms provide page-local scrolling.
+
+### 2.2 Nested-scroll routing
+
+UI Contract owns delta, velocity, source, connection, and dispatcher values; Gesture exposes the
+Modifier; Android Renderer inserts a transparent AndroidX parent/child host. Pre phases travel
+outer-to-inner, post phases inner-to-outer, and each bounded finite result applies only to the
+remaining offered value. Successive `nestedScroll` elements preserve Modifier order.
+
+Framework scroll containers, PullToRefresh, drag/transform pan, and native children implementing
+Android nested scrolling share the chain. Other `AndroidView` children require an attached
+dispatcher. Same-axis children keep a drag until the matching logical edge and ignore cross-axis
+motion. The legacy native fling bridge reports only Boolean consumption: partial velocity remains
+exact inside ViewCompose, while native `true` means the offered remainder was consumed.
 
 ## 3. Source-owned capability Reference
 

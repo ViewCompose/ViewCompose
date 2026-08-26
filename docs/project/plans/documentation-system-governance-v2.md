@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Continue Phase 3 with Focus and Nested Scroll.
+next_action: Merge the Focus and Nested Scroll slice, then continue Phase 3 with Shadows.
 maven_release_changesets: []
 ---
 
@@ -59,7 +59,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: continue Phase 3 with Focus and Nested Scroll. Pull-request gate scaling
+Next action: merge the Focus and Nested Scroll slice, then continue Phase 3 with Shadows. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -720,6 +720,34 @@ Accepted Lazy Collections slice on 2026-08-26:
   decreased, every task remains independently enterable, and no framework or release artifact
   changed. The limitation is that compile-time examples make no new device, accessibility, focus,
   or scrolling-performance claim. The next action is the Focus and Nested Scroll hard cut.
+
+Accepted Focus and Nested Scroll slice on 2026-08-26:
+
+- retained `/guides/focus-and-input` and `/guides/nested-scroll` as stable routes, narrowed them to
+  focus/key/restoration/editor-visibility and ancestor-scroll/custom-dispatch tasks, and moved
+  propagation, connector ownership, AndroidView boundaries, AndroidX mapping, edge arbitration,
+  and legacy fling constraints into the existing Modifier Architecture route;
+- registered `focus.input` for seven UI Contract focus/key Modifier entries and `nested.scroll` for
+  the Gesture `nestedScroll` entry, plus two compiled Guide regions. Three document metadata debts,
+  three executable-fence debts, and all eight selected orphan symbols were repaired. Five fully
+  resolved exception records were removed, while the two shared source-file exceptions were
+  narrowed from 12 to 5 and from 7 to 6 remaining symbols;
+- the report changed from 668 to 654 issues: missing metadata 103 to 100, orphan symbols 400 to 392,
+  and unclassified samples 158 to 155. Taxonomy mismatches remained 7; duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- the first complete site representation exceeded the unchanged 46.9 MiB non-API limit by 21,103
+  bytes. Removing the duplicate Pager code display while retaining its task contract and
+  consolidating architecture prose reduced output to 49,165,583 bytes, leaving 12,631 bytes. The
+  corrected bilingual build audited 454 pages and completed Docusaurus in `51.7 s`;
+- both compiled regions, exact ownership, Governance V2, language and translation review,
+  generated Reference freshness, and the complete bilingual site passed. A complete `qaQuick`
+  verification after cleaning generated outputs also passed 2,342 actionable tasks in `9 min 26 s`
+  (2,143 executed and 199 up-to-date). The conclusion is `improved`: user tasks and runtime
+  contracts now have distinct owners, debt decreased, and no framework or release artifact
+  changed. The complete run is cold-build completeness evidence, not a gate-speed comparison; the
+  slice reuses existing unit, instrumentation, and device evidence and makes no new focus,
+  keyboard, or scroll-performance claim. The next action is the Shadows hard cut.
 
 | Current area | Required target |
 | --- | --- |

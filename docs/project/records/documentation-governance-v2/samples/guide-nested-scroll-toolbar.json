@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "sample_id": "guide.nested-scroll-toolbar",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "nested.scroll",
+  "document_ids": [
+    "guide.nested-scroll-coordination",
+    "architecture.modifier-runtime"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/FocusAndNestedScrollGuideSamples.kt",
+  "region": "nested-scroll-toolbar",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

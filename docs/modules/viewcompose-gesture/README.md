@@ -162,6 +162,8 @@ nested-scroll attachment.
 - [Gesture Core module](../viewcompose-gesture-core/README.md)
 - [UI Contract module](../viewcompose-ui-contract/README.md)
 - [Renderer module](../viewcompose-renderer-android/README.md)
+- [Coordinate nested scrolling](../../guides/nested-scroll.md)
+- [Modifier architecture](../../architecture/modifier.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 
 The complete generated reference is available in the

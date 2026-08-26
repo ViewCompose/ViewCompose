@@ -1,57 +1,52 @@
-# Focus and Hardware Key Input
+---
+schema_version: 2
+document_id: guide.focus-and-key-input
+doc_type: guide
+owner:
+  kind: capability
+  id: focus.input
+version_lane: released
+capability_ids:
+  - focus.input
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+sample_ids:
+  - guide.focus-form
+task: Move focus, handle hardware keys, and keep an editor visible without creating a second scroll policy.
+success_checks:
+  - Every imperative FocusRequester is stable and attached before requestFocus is called.
+  - Directional overrides point to the intended target and unhandled keys remain available to later dispatch.
+  - Keyed restoration is limited to temporary remount while screen or process state remains application-owned.
+  - A pager form uses a page-local vertical scroll owner for IME visibility.
+failure_checks:
+  - A FocusRequester is reconstructed during every composition or invoked before mounting.
+  - Preview and bubble handlers both consume an event without owning that shortcut.
+  - Focus-follow behavior is represented by a container Boolean or a manually assigned scroll offset.
+  - A pager is expected to reveal arbitrary within-page editor coordinates by changing pages.
+---
 
-## 1. Architecture
+# Control focus and hardware keys
 
-The focus contract is split into three layers:
+## Move and clear focus
 
-1. `viewcompose-ui-contract` owns platform-independent focus directions, requester state,
-   focus properties, and key-event values.
-2. `viewcompose-renderer-android` binds those contracts to Android `View` focus and key dispatch.
-3. `viewcompose-ui-foundation` exposes the current render session through
-   `LocalFocusManager.current`.
+Keep each `FocusRequester` stable with `remember`, attach it to the destination, and declare
+directional traversal on the source. Use `LocalFocusManager.current` for session-wide move or clear
+operations. A requester must be attached to a mounted target before `requestFocus()` is called.
 
-Focus requesters never retain a `View` directly. The renderer attaches and detaches connectors as
-nodes mount, rebind, roll back, and dispose.
-
-## 2. Public APIs
-
-- `Modifier.focusable(enabled)`
-- `Modifier.focusRequester(requester)`
-- `Modifier.focusProperties { ... }`
-- `Modifier.focusGroup(enabled)`
-- `Modifier.onFocusChanged { state -> ... }`
-- `Modifier.onPreviewKeyEvent { event -> ... }`
-- `Modifier.onKeyEvent { event -> ... }`
-- `LocalFocusManager.current`
-- `FocusRequester.requestFocus(direction)`
-- `FocusRequester.saveFocusedChild()` / `restoreFocusedChild()`
-
-`onPreviewKeyEvent` travels from the root-most declarative ancestor to the focused target.
-Unconsumed events then travel from the target back through its declarative ancestors via
-`onKeyEvent`.
-
-## 3. Example
-
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/FocusAndNestedScrollGuideSamples.kt" region="focus-form" sample_id="guide.focus-form" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
-val emailFocus = remember { FocusRequester() }
-val passwordFocus = remember { FocusRequester() }
-val focusManager = LocalFocusManager.current
+fun UiTreeBuilder.CredentialFocusForm() {
+    val email = rememberTextFieldState()
+    val password = rememberTextFieldState()
+    val passwordFocus = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
 
-Column {
-    TextField(
-        state = email,
+    Column(
         modifier = Modifier
-            .focusRequester(emailFocus)
-            .focusProperties {
-                next = passwordFocus
-                down = passwordFocus
-            },
-    )
-    TextField(
-        state = password,
-        modifier = Modifier
-            .focusRequester(passwordFocus)
-            .onKeyEvent { event ->
+            .focusGroup()
+            .onPreviewKeyEvent { event ->
                 if (event.key == Key.Escape && event.type == KeyEventType.KeyDown) {
                     focusManager.clearFocus(force = true)
                     true
@@ -59,53 +54,45 @@ Column {
                     false
                 }
             },
-    )
-}
-```
-
-## 4. Restoration
-
-`saveFocusedChild()` records the focused connector's declarative node key. If that target is
-temporarily removed or recycled, `restoreFocusedChild()` remains pending until the same requester
-is attached to a target carrying that key again.
-
-This API restores focus across framework node reuse/remount. Durable screen and process restoration
-must still be driven by application state, followed by an explicit focus request after mounting.
-
-## 5. Focused-editor visibility
-
-Focused editors inside LazyColumn, LazyVerticalGrid, and ScrollableColumn use Android's native
-child-rectangle request chain automatically. There is no focus-follow flag. The nearest vertical
-scroll owner moves only enough to reveal the editor, and this programmatic movement remains active
-when `userScrollEnabled = false`.
-
-A pager is different: it owns complete-page selection, not arbitrary movement inside a page. Put a
-form that may be obscured by the IME inside a page-local scroll owner:
-
-```kotlin
-VerticalPager(currentPage = page, onPageChanged = { page = it }) {
-    Page(key = "profile", contentRevision = profile.version) {
-        ScrollableColumn {
-            Text("Profile")
-            TextField(state = name, placeholder = "Name")
-        }
+    ) {
+        TextField(
+            state = email,
+            label = "Email",
+            modifier = Modifier.focusProperties {
+                next = passwordFocus
+                down = passwordFocus
+            },
+        )
+        TextField(
+            state = password,
+            label = "Password",
+            modifier = Modifier.focusRequester(passwordFocus),
+        )
+        Button(
+            text = "Focus password",
+            onClick = { passwordFocus.requestFocus() },
+        )
     }
 }
 ```
 
-The page boundary stops the editor's within-page request before it reaches the pager, so opening
-the IME does not select another page. Control unwanted initial movement by controlling which editor
-receives focus; do not disable the scroll owner's visibility contract.
+`onPreviewKeyEvent` travels from the outermost declarative ancestor to the focused target. An
+unconsumed event then bubbles from the target through `onKeyEvent`. Hardware keys are separate from
+soft-keyboard composition, which continues through `TextFieldState` and the Android input bridge.
 
-## 6. Android boundaries
+## Restore a keyed child
 
-- Hardware key events are separate from IME text editing. Soft-keyboard composition continues
-  through the `TextFieldState` and `InputConnection` bridge.
-- Native Android focus search remains the fallback when no explicit `focusProperties` destination
-  is declared.
-- On Android versions where the initial focus request occurs before the IME finishes resizing the
-  window, the renderer reissues the same native rectangle request after the visible viewport
-  changes. It does not calculate or assign a container scroll offset.
-- `AndroidView` owns arbitrary native listeners. A `nativeView` callback that replaces
-  `View.OnKeyListener` also replaces framework key dispatch for that native target; use the
-  declarative key modifiers as the single owner when preview/bubble semantics are required.
+Call `saveFocusedChild()` before temporarily removing or recycling a focus group, then call
+`restoreFocusedChild()` after it returns. Restoration uses the declarative node key and remains
+pending until a matching target mounts. Screen or process restoration still belongs to application
+state followed by an explicit request after mounting.
+
+## Keep a pager editor visible
+
+Vertical scroll owners reveal a focused editor through Android's native child-rectangle chain, even
+when direct user scrolling is disabled. A pager owns whole-page selection, so place a potentially
+obscured form in a page-local `ScrollableColumn`; the enclosing `VerticalPager` remains controlled
+by application page state. There is no focus-follow flag. Control unwanted initial movement by
+deciding which editor receives focus; do not disable the scroll owner's visibility contract. See
+[Modifier architecture](../architecture/modifier.md) for ownership, propagation, and Android
+mapping invariants.

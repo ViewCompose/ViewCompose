@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: f197a091d687cc2cb6df57af3d89009033d69382fe3899e140062d17ff434de8
+translation_source_hash: 73d7faf4eb27935fcb0d85fa966cef28361b63a3362f50d3c7a9ce6fa4cf49e5
 translation_status: current
 ---
 
@@ -252,6 +252,15 @@ identity token。
   三个内容 PR，因此 P50/P95 与缓存命中结论仍为 **inconclusive**。保持现有技术栈并继续收集
   语料。
 
+- **2026-08-26，Governance V2 Lazy Collections 托管后续观察：**PR #179 的成功文档
+  Child Job 用时 `5 min 12 s`。源码与翻译校验 `77 s`、完整版本化 API 生成与校验 `115 s`、
+  目录生成 `1 s`、类型检查 `2 s`、Docusaurus 构建 `53 s`。Docusaurus 占 Child Job 时间的
+  `17.0%`，仍是少数阶段。受影响 `qaQuick` 候选以 `5 min 32 s` 通过 `1,176` 个可执行任务；
+  完整 Shadow 以 `9 min 8 s` 通过 `2,342` 个，因此选择范围缩小 `49.8%`，观察耗时降低
+  `39.4%`，且结论相同。串行 Shadow 观察仍延长必需关键路径，因此总体结论为 **mixed**；
+  范围选择和正确性为 **improved**。这只是稳定后的第四个内容样本；在满足语料要求之前，
+  保留当前 Website 技术栈和 Shadow 对照。
+
 - **2026-08-26，Governance V2 Text Input 本地验收：**首次四页面任务拆分虽然构建成功，但生成
   49,245,936 个非 API 字节，超过不变的 46.9 MiB 上限 67,722 字节。把相邻的编辑/IME 与富文本/
   Receive Content 任务收敛到两个 Guide 后，四个任务边界仍然保留，生成产物减少 161,958 字节
@@ -263,6 +272,13 @@ identity token。
   字节。收敛重复 Pager 和模块拥有的细节后，非 API 产物降至 49,168,958 字节，留下 9,256
   字节；454 个双语页面以 `36.6 s` 通过。修正后结论为 **improved**，但余量很小，因此下一个
   内容切片必须先删除或收敛现有产物，再增加新路由。
+
+- **2026-08-26，Governance V2 Focus/Nested Scroll 本地验收：**复用现有 Modifier Architecture
+  路由避免了新增页面，但首版扩展表示仍超过不变上限 21,103 字节。删除重复 Pager 代码展示并
+  保留其任务契约，同时收敛架构说明后，非 API 产物降至 49,165,583 字节，留下 12,631 字节。
+  修正构建审计 454 个双语页面，Docusaurus 用时 `51.7 s`。修正后结论为 **improved**；能力、
+  编译区域、路由、语言、无障碍和预算门禁均通过，且未改变上限。余量仍很窄，因此 Shadows
+  切片必须继续遵循先收敛、后扩展的规则。
 
 - **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
   上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量
