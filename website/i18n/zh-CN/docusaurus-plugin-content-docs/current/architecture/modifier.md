@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/modifier.md
-translation_source_hash: cd91a3a094f9e25ccbb813bf4bc1e7e31bc1b2e80bb8b6023e5782af2d114942
+translation_source_hash: e72da34b0855514655e6650719b1788317368e763ed62b466672885edce9389f
 translation_status: current
 ---
 
@@ -8,202 +8,108 @@ translation_status: current
 
 ## 1. 文档定位
 
-本文档定义 `Modifier`、组件 `NodeSpec`、`Theme/Defaults` 的当前边界。
+本文档负责 `Modifier`、带作用域的 Parent Data、组件 `NodeSpec` 与 `Theme/Defaults` 之间的边界
+和共用运行时规则。公开符号的完整清单由生成的
+[能力参考](https://docs.viewcompose.com/reference/)负责；本文不再维护第二份清单。
 
-目标是保证新增能力时落点明确，避免语义混放。
+## 2. 所有权模型
 
-## 2. 当前基线（2026-08）
+按顺序选择第一个匹配的层：
 
-1. identity 入口统一为 `Modifier`（`Modifier.Empty` 已移除）
-2. 文本语义类历史 modifier（如 `textColor/textSize`）已退场
-3. `weight/align/FlexibleSpacer` 仅通过 `RowScope/ColumnScope/BoxScope` 暴露
-4. 系统栏/键盘 Inset 适配可使用物理 `Modifier.systemBarsInsetsPadding(...)` / `Modifier.imeInsetsPadding(...)` 或感知方向的 `Relative` 形式（若 Activity 使用 `adjustResize`，通常不再叠加 IME Padding，避免双重位移）
-5. 列表容器策略已收口为容器参数：`reusePolicy`（`sharePool`）与 `motionPolicy`（`disableItemAnimator/animateInsert/animateRemove/animateMove/animateChange`）；Pager 驻留与直接用户输入仍是 Pager 参数
-6. 焦点编辑器可见性是真实 Android 滚动所有者的不变量，不是 Modifier 或容器 Boolean。LazyColumn、LazyVerticalGrid 与 ScrollableColumn 即使禁用直接用户滚动，也会保留原生子矩形传播
-7. HorizontalPager 与 VerticalPager 只负责离散页面选择。可能被 IME 遮挡的页面必须声明页内滚动所有者；Pager 绝不把页内坐标解释成页面运动
-8. 背景资源支持 `Modifier.backgroundDrawableRes(resId)`；与 `backgroundColor` 同时存在时，drawable 优先；当同时存在 `cornerRadius` 时自动裁剪内容，`clip()` 仍可作为通用强制裁剪开关
-9. 内容尺寸动画支持 `Modifier.animateContentSize(...)`；renderer 会在 patch 前自动插入 `AnimatedSizeHost`，以“真实测量尺寸插值”参与父布局重排（非 graphicsLayer 视觉缩放），并保留 `AnimationSpec` 的 easing/spring/keyframes/repeat 语义（含 reverse 终态）
-10. 约束 parent-data 支持 `Modifier.layoutId(...)`、`Modifier.constrainAs(...)`、`Modifier.constrain(...)`；仅对 `ConstraintLayout` 子节点生效
-11. 图形绘制 modifier 已接入：`Modifier.drawBehind`、`Modifier.drawWithContent`、`Modifier.drawWithCache`（以及短写 `draw/drawCache`）；执行顺序按 modifier 链稳定，`drawWithContent` 可显式控制内容透传；底层执行保证 `DrawRoundRect` 四角半径与 `Drawable + DrawPaint` 组合语义不丢失
-12. 声明式焦点与硬件按键输入遵循下文的所有权和传播契约；`LocalFocusManager` 提供
-    Session 范围的移动与清除操作。
-13. `Modifier.nestedScroll(connection, dispatcher)` 遵循下文统一的四阶段路由契约，覆盖框架
-    滚动容器和参与原生协议的滚动容器。
-14. 高级阴影已接入：`dropShadow/dropShadows` 绘制在节点内容之前，`innerShadow/innerShadows` 绘制在完整内容之后；均支持有序多层、独立 shape、blur/spread/offset/color，并与 `elevation/zIndex` 解耦
-15. `Modifier.semantics` 承载设计系统中立的无障碍状态。集合父节点声明逻辑维度与选择基数，子节点声明逻辑位置与跨度；RTL 只改变物理排列，不改变这些索引，item 的 `selected`/`heading` 仍由同一语义配置中的唯一字段表达
-16. 原生 View Padding 只有一个 Renderer 所有者。容器专属 Content Padding、已解析的
-    `Modifier.padding` 与选定的系统栏/IME Insets 边会先合成再写入 View；Binder 不得在 Patch
-    或环境重绑期间覆盖其他层的贡献。
-17. 物理 `padding/margin/offset` 与 Inset 选择器保持物理语义；对应的 `Relative` API 会在每次
-    Bind 时根据 VNode 捕获的布局方向解析 start/end。同一族内，后声明的物理或相对值会整体
-    替换先声明的值。
+1. `Modifier` 负责可应用于大多数节点的稳定外层修饰和行为，包括布局、外观、绘制、可见性、
+   交互、焦点、语义、测试、手势、共享内容、嵌套滚动、阴影和布局动画。
+2. 类型化父级 Scope 负责仅对该父级有意义的数据，例如 `RowScope/ColumnScope.weight`、
+   Scope Alignment 或 ConstraintLayout 子项约束。
+3. 组件参数和 `NodeSpec` 负责组件语义，例如文本样式、图片 Content Scale、按钮 Variant 和
+   TextField 编辑状态。
+4. `Theme`、设计系统 Recipe 与 `Defaults` 提供默认值；Renderer 只消费解析后的值，不创建业务
+   默认值。
 
-### 2.1 焦点与硬件按键路由
+集合复用和动画仍是容器策略。焦点编辑器可见性由最近的真实滚动所有者负责。Pager 只负责离散
+页面选择，因此可能被 IME 遮挡的页面需要提供页内滚动。
 
-UI Contract 拥有焦点和标准化按键值，UI Foundation 暴露当前 Session 的 `FocusManager`，
-Android Renderer 附加已挂载目标，上层都不保留 View。`focusProperties` 按 Modifier 顺序
-合并，最后一个非空目标生效，并回退 Android 焦点搜索。带 key Connector 可在重新挂载后恢复
-已保存的焦点子项；无 key 节点使用 View Identity。
+## 3. 运行时契约
 
-Preview 按键从根传播到目标，未消费按键再向上冒泡。显式 Tab 或 D-pad 目标优先于原生搜索。
-`AndroidView` 在声明式按键契约接管前保留业务 `OnKeyListener`。焦点编辑器可见性仍是最近
-真实垂直滚动所有者的子矩形请求；Pager 在页面边界停止请求，可能被遮挡的表单提供页内滚动。
+### 3.1 顺序、布局与外观
 
-### 2.2 嵌套滚动路由
+`Modifier` 是以 `Modifier` 为起点的不可变有序链，Renderer 解析时必须保留顺序。完整的物理/
+相对间距族、背景和 Shape 族、可见性、点击处理以及其他单值属性，后声明值按各自契约替换先声明
+值；`zIndex` 等累积属性继续遵循其显式累积契约。
 
-UI Contract 拥有位移、速度、来源、Connection 和 Dispatcher；Gesture 暴露 Modifier；
-Android Renderer 插入透明 AndroidX Parent/Child Host。Pre 阶段从外向内，Post 阶段从内向
-外；每个有限结果只消费剩余输入并受其方向和大小限制。连续 `nestedScroll` 保持 Modifier 顺序。
+物理 Padding、Margin、Offset 和 Inset Selector 在 RTL 下也不改变含义。对应的 `Relative` 形式
+在每次 Bind 时根据 VNode 捕获的方向解析 Start/End。Renderer 只有一个原生 Padding 写入者：
+容器 Content Padding、已解析 Modifier Padding 与选定 Insets 会先合成，再更新 View。
 
-框架滚动容器、PullToRefresh、Drag/Transform Pan，以及实现 Android Nested Scrolling 的原生
-Child 共用该链；其他 `AndroidView` 需要已附加 Dispatcher。同轴 Child 保留 Drag 直到对应
-逻辑边缘，并忽略交叉轴移动。旧式原生 Fling 只报告 Boolean：ViewCompose 内保留精确部分速度，
-原生 `true` 表示所提供的余量已被消费。
+最大尺寸与宽高比是可移植约束，不是原始 Android Setter。Android Renderer 会把它们折叠到包住
+完整节点的单个合成布局边界。父级传入的 Exact Constraint 保持权威；非有限、非正数或互相矛盾
+的声明边界会在渲染前失败。Constraint Parent Data 只对 ConstraintLayout 子项有意义。
 
-## 3. 源码驱动的能力参考
+Drawable 背景优先于 Packed Color，并通过 View Context 遵循资源限定符。Shape 与旧 Corner
+Radius 按链顺序互相替换。裁剪、平台 Elevation、精确阴影与兄弟绘制顺序彼此独立。
 
-面向应用的完整清单从生产源码生成，并发布在
-[能力参考](https://docs.viewcompose.com/reference/)中。原始 Kotlin KDoc 与 Java Javadoc 继续由
-[版本化 API Reference](https://docs.viewcompose.com/api/)提供。本文档只负责行为边界与架构
-不变量，不再复制符号表或维护一套独立数量。
+### 3.2 绘制、交互、语义与共享内容
 
-生成模型遵循以下契约：
+绘制 Callback 按 Modifier 顺序执行。Behind Callback 位于被包装内容之前；Content-aware
+Callback 决定是否以及何时透传内容；Cache Builder 使用 Renderer 拥有的缓存。Visibility 独立
+控制绘制与布局参与，不依赖是否注册 Draw Callback。
 
-1. 从已发布产物的生产源码集中发现 public/protected 的 DSL、Modifier、组件、宿主、集成和
-   工具入口；
-2. 每个入口只属于一个用户能力分组，并携带符号、重载数、产物、命名空间、发布通道、模块
-   手册和版本化 API 根路径；
-3. internal 包、private/internal 声明、Demo、测试、生成代码和 Renderer 专用辅助能力不会
-   进入应用目录；
-4. 网站、清单数量和 Governance V2 陈旧输出门禁消费同一个已提交 JSON 模型；源码、签名、
-   版本或结构化所有权改变后未重新生成时，`verifyDocumentationGovernanceV2` 会失败；
-5. 维护者通过 `./gradlew updateDocumentationCapabilityReference` 主动刷新已提交模型，
-   并审查生成结果的语义差异。
+Interaction Indication 只描述视觉反馈，不会让节点自动获得 Clickable 或 Enabled 语义。高层
+组件先解析设计系统反馈，再安装该值。无障碍状态通过 Renderer-neutral Semantics 传递，逻辑集合
+索引不会因 RTL 改变。`testTag` 是诊断标识，不是全局唯一的应用 Key。
 
-精确的能力、样例和相关文档链接只来自有效的 Governance V2 记录。在冻结的所有权债务迁移
-完成前，生成页面会单独报告结构化所有者覆盖率，不猜测也不隐藏缺口。
+共享内容 Marker 发布端点标识与模式。配对、快照和回退属于支持共享内容的 Host；在其他 Host 中，
+Marker 不产生视觉效果。
 
-### 3.1 高级阴影路由
+### 3.3 焦点、按键、手势与嵌套滚动
 
-1. UI Contract 拥有 Renderer-neutral 阴影图层与 Modifier 顺序。Android Renderer 携带装饰请求，
-   并拥有父级前后绘制平面；它不依赖具体栅格后端。
-2. `dropShadow(s)` 在原生子内容之前绘制，`innerShadow(s)` 在完整子节点之后绘制。两者都不参与
-   布局和命中测试，也不替代 `elevation` 或 `zIndex`。
-3. 可选的 Android 阴影产物负责解析形状与密度、栅格化图层并完成回放。该产物不存在时，阴影
-   请求是 no-op，不改变其他渲染路径。
-4. 应用写法参见[高级阴影指南](../guides/shadows.md)；安装、缓存、后端、诊断、兼容性与基准契约
-   参见 [Android 阴影模块手册](../modules/viewcompose-shadow-android/README.md)。
+UI Contract 拥有标准化焦点、按键、手势与嵌套滚动值；UI Foundation 暴露 Session 服务；Gesture
+提供识别器描述；Android Renderer 附加已挂载目标，上层不保留 View。
 
-### 3.2 生成与一致性
+Preview Key 从根传播到目标，未消费 Key 再从目标向根冒泡；显式焦点目标优先于原生搜索。Gesture
+Modifier 描述 Pointer、Click、Drag、Anchored Drag、Transform 与仲裁策略；Renderer 负责平台
+计时、Slop、Pointer Stream、Velocity、取消与 Callback 分发。
 
-1. 生产源码扫描器与能力参考生成器使用同一个模型，不存在第二套 Modifier 扫描或手写数量。
-2. 每个面向应用的入口都有且只有一个生成目录分组；重复或缺失的结构化能力所有权继续作为
-   Governance V2 债务显式展示，不会混入本文档。
-3. 已提交目录具有确定性，并在文档校验中进行逐字节比较。
-4. 模块手册负责产物契约，能力参考负责发现，Dokka 继续负责完整签名与 KDoc。
+Nested Scroll 的 Pre 阶段从外向内，Post 阶段从内向外，每个有限结果都受剩余输入约束。框架
+Scroller 与实现 Android Nested Scrolling 的原生 Child 可直接加入该链；其他 `AndroidView`
+需要已附加的 Dispatcher。旧式原生 Fling 只能报告 Boolean 消费，而 ViewCompose 链会保留精确的
+部分 Velocity。
 
-## 4. 角色边界
+### 3.4 精确阴影路由
 
-### 4.1 Modifier（通用外层修饰）
+UI Contract 拥有 Renderer-neutral 阴影层和顺序；Android Renderer 拥有前后 Decoration Plane，
+但不依赖具体栅格后端。可选 Shadow Android 产物解析 Shape 与 Density、栅格化图层并回放。该产物
+不存在时，精确阴影请求为 No-op，也不会影响布局、输入、Elevation 或 `zIndex`。
 
-适合放入 `Modifier` 的能力：
+应用与后端细节参见[高级阴影指南](../guides/shadows.md)和
+[Shadow Android 模块手册](../modules/viewcompose-shadow-android/README.md)。
 
-1. 尺寸与占位：`size/width/height/minWidth/minHeight/maxWidth/maxHeight/aspectRatio/padding/paddingRelative/margin/marginRelative`
-2. 外观修饰：`backgroundColor/backgroundDrawableRes/border/cornerRadius/alpha/elevation`
-3. 可见性与层级：`visibility/offset/offsetRelative/zIndex`
-4. 通用交互、Renderer-neutral `interactionIndication`、焦点、按键与无障碍
-5. 通过 `testTag` 提供测试标识
-6. 物理方向或感知布局方向的系统栏与 IME Padding
-7. `nativeView` 逃生通道
-8. 绘制、手势、嵌套滚动、阴影和布局尺寸动画修饰
+## 4. 生成式能力所有权
 
-集合复用与动画仍是容器策略，而非 Modifier 数据。焦点编辑器可见性没有 Opt-in 参数；它遵循最近
-真实滚动所有者的原生子矩形契约。
+源码扫描器从已发布生产源码集中发现面向应用的 Public/Protected DSL、Modifier、组件、Host、
+集成与工具入口。每个入口必须且只能解析到一个 Capability、Artifact/Version State、生成 Reference
+Owner、Sample Decision、Module Manual 与版本化 API Root。Internal、测试、Demo、生成代码和仅
+Renderer 使用的辅助项不会进入目录。
 
-### 4.2 Scoped Modifier（父容器相关 parent-data）
+Website 与治理门禁消费同一份已提交模型。使用
+`./gradlew updateDocumentationCapabilityReference` 刷新；陈旧输出、重复所有权或新增孤儿项都会
+使校验失败。原始签名和 KDoc/Javadoc 仍由
+[版本化 API Reference](https://docs.viewcompose.com/api/)负责。
 
-只在特定父容器内成立的能力，通过作用域暴露：
+## 5. 硬边界与变更门禁
 
-1. `RowScope.weight`
-2. `RowScope.align`
-3. `ColumnScope.weight`
-4. `ColumnScope.align`
-5. `BoxScope.align`
-6. `ConstraintLayout` 子项约束 parent-data：`layoutId/constrainAs/constrain`
+不要把组件语义放进通用 `Modifier`，不要把父级专用数据放进全局 `Modifier`，不要在 Renderer
+内写主题默认值，也不要把第一方持久契约放回无类型动态 Map。不要在生成式 Reference 旁维护第二
+份手写符号清单。
 
-### 4.3 NodeSpec（组件语义）
+Modifier 边界变更必须同步本文档，覆盖受影响的 Contract 与 Renderer 路径，提供对应 Q Level
+要求的可编译 Q3 Sample 和公开文档；行为涉及视觉或交互时，还需要 Demo 或设备证据。流程参见
+[开发工作流](../project/workflow.md)。
 
-组件自身语义进入组件参数与 `NodeSpec`，例如：
+## 6. 关联文档
 
-1. `Text`：`color/style/maxLines/overflow/textAlign`
-2. `Image`：`contentScale/tint/placeholder/error/fallback`
-3. `Button`：`variant/size/enabled/leadingIcon/trailingIcon`
-4. `TextField`：`label/placeholder/supportingText/readOnly/imeAction/isError`
-
-通用反馈不会仅仅因为由原生 View 绘制就变成组件字段。
-`Modifier.interactionIndication(UiInteractionIndication.StateLayer(...))` 按 Modifier 顺序携带
-完整的按下、聚焦和悬停颜色。高层组件先从设计系统 recipe 和类型化 overrides 解析该值，再
-安装它。拥有多个内部目标的原生后端组件可以在 NodeSpec 中保留类型化的已选/未选状态层快照，
-因为单个外层 Modifier 无法识别这些内部目标。
-
-### 4.4 Theme / Defaults（默认值来源）
-
-默认值链路固定为：
-
-`Theme -> 设计系统 recipe 或 Defaults -> 类型化 overrides -> NodeSpec/Modifier -> Renderer`
-
-约束：
-
-1. 不把主题默认值直接编码为通用 `Modifier`
-2. 不在 renderer 写组件业务默认值
-
-## 5. 新能力落点判断
-
-新增一个属性时，按顺序判断：
-
-1. 是否对大多数节点都稳定成立的外层修饰？
-2. 是否父容器相关的布局数据？
-3. 是否某个组件自身语义？
-4. 是否默认值来源（主题/默认样式）？
-
-命中哪一类，就落到对应层，不跨层混放。
-
-## 6. 反模式清单
-
-1. 在通用 `Modifier` 新增组件专属语义字段
-2. 在全局 `Modifier` 暴露父容器特定能力
-3. 为了快速接入把第一方长期语义回流到动态 map
-4. 把主题覆盖当作组件参数替代方案
-
-## 7. Compose 对齐原则
-
-`ViewCompose` 不复刻 Compose runtime/compiler，但在 API 分层上保持对齐：
-
-1. `Modifier` = 通用修饰链
-2. parent-data = scope API
-3. 组件语义 = 参数/`NodeSpec`
-4. 主题 = 默认值来源
-
-`maxWidth`、`maxHeight` 与 `aspectRatio` 表达可移植意图，不是原始 Android Setter。Android
-Renderer 会把它们折叠为包裹完整节点的一个合成 `LayoutConstraintHost`，声明顺序不会产生多层
-Wrapper。契约层会拒绝非正数或非有限值，声明的 Exact/Minimum 超过声明 Maximum 也会在渲染前
-失败。测量时父级传入的精确约束保持权威；其余情况下应用声明 Maximum，并在 Min/Max 区间可行时
-保持宽高比。自定义 Renderer 必须提供同样的单边界行为，才能接受这些元素。
-
-## 8. 变更门禁
-
-涉及 `Modifier` 边界变化时，至少完成：
-
-1. 本文档同步
-2. 对应 `NodeSpec/renderer` 路径回归
-3. demo 验证与必要 UI 测试
-
-流程规则见 [workflow.md](../project/workflow.md)。
-
-## 9. 关联文档
-
-1. [NodeSpec 模型](node-spec.md)
-2. [主题运行时架构](theming.md)
-3. [架构总览](overview.md)
-4. [焦点与输入指南](../guides/focus-and-input.md)
-5. [嵌套滚动指南](../guides/nested-scroll.md)
+1. [布局与 Modifier 教程](../tutorials/layouts-and-modifiers.md)
+2. [手势教程](../tutorials/gestures.md)
+3. [焦点与输入](../guides/focus-and-input.md)
+4. [嵌套滚动](../guides/nested-scroll.md)
+5. [NodeSpec 架构](node-spec.md)
+6. [主题运行时架构](theming.md)

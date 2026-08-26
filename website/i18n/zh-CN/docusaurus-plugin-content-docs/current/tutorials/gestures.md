@@ -2,7 +2,7 @@
 title: 使用手势
 sidebar_position: 12
 translation_source: tutorials/gestures.md
-translation_source_hash: f5c7e6c089b60474601147e99403ae8372cb6676ac2777421cf1e8eb49b155b1
+translation_source_hash: e9bdf15dd057e876eb06fbb0cb9891e63437ae0d723f18dc5768a9f999ce7886
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ translation_status: current
 
 本页可以独立使用。手势 Modifier 必须引入单独的 `viewcompose-gesture` 产物：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="gestures-dependencies" sample_id="tutorial.gestures-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 

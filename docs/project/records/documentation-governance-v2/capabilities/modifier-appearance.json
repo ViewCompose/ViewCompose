@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "capability_id": "modifier.appearance",
+  "kind": "modifier",
+  "owner": { "kind": "module", "id": "viewcompose-ui-contract" },
+  "artifact": "viewcompose-ui-contract",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.backgroundColor", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.backgroundDrawableRes", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.border", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.cornerRadius", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.shape", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.clip", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.elevation", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.alpha", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.zIndex", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.graphicsLayer", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierStyleExtensions.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.modifier.appearance", "generated": true },
+  "sample_owner": { "sample_id": "architecture.modifier-appearance" },
+  "document_owners": { "architecture": ["architecture.modifier-runtime"] }
+}

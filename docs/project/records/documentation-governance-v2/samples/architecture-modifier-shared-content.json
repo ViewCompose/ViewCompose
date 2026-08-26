@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "architecture.modifier-shared-content",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "modifier.shared-content",
+  "document_ids": ["architecture.modifier-runtime"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ModifierArchitectureSamples.kt",
+  "region": "modifier-shared-content",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

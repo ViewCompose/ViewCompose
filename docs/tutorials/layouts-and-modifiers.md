@@ -1,6 +1,20 @@
 ---
-title: Use layouts and modifiers
-sidebar_position: 4
+schema_version: 2
+document_id: tutorial.layouts-and-modifiers
+doc_type: tutorial
+owner:
+  kind: capability
+  id: modifier.layout
+version_lane: released
+capability_ids:
+  - modifier.layout
+artifact_ids:
+  - viewcompose-material3-android
+sample_ids:
+  - tutorial.layouts-and-modifiers
+  - tutorial.layouts-and-modifiers-dependencies
+expected_result: A vertical screen containing a horizontal account row whose name takes the remaining width.
+verification_action: Run the sample and confirm that Account appears above a row where Ada expands toward Edit.
 ---
 
 # Use layouts and modifiers
@@ -10,6 +24,7 @@ sidebar_position: 4
 This page is standalone. Add the Android host, which supplies the UI contract and widget APIs
 transitively:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="layouts-and-modifiers-dependencies" sample_id="tutorial.layouts-and-modifiers-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 

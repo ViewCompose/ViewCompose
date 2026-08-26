@@ -1,6 +1,21 @@
 ---
-title: Use gestures
-sidebar_position: 12
+schema_version: 2
+document_id: tutorial.gestures
+doc_type: tutorial
+owner:
+  kind: capability
+  id: gesture.modifiers
+version_lane: released
+capability_ids:
+  - gesture.modifiers
+artifact_ids:
+  - viewcompose-gesture
+  - viewcompose-material3-android
+sample_ids:
+  - tutorial.gestures
+  - tutorial.gestures-dependencies
+expected_result: A card that reports distinct tap and long-press gestures in its label.
+verification_action: Run the sample, tap and long-press the card, and confirm that both labels appear.
 ---
 
 # Use gestures
@@ -9,6 +24,7 @@ sidebar_position: 12
 
 This page is standalone. Gesture modifiers require the separate `viewcompose-gesture` artifact:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="gestures-dependencies" sample_id="tutorial.gestures-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 

@@ -838,6 +838,30 @@ Accepted Image Loading slice on 2026-08-26:
   existing adapter and renderer behavior evidence and makes no new device, network, or performance
   claim. The next action is Modifier Architecture and final Reference link closure.
 
+Accepted Modifier Architecture slice on 2026-08-26:
+
+- retained the existing Architecture and two Tutorial routes, replaced the duplicated handwritten
+  Modifier inventory with a concise ownership/runtime contract, and kept exhaustive discovery in
+  the source-generated Capability Reference;
+- registered seven capability owners for 51 UI Contract and Gesture Modifier entries, plus the two
+  existing Tutorial Activity regions, two compiled dependency regions, and five architecture-owned
+  compiled regions. Eleven resolved exception records were removed;
+- the report changed from 571 to 516 issues: missing metadata 88 to 86, orphan symbols 344 to 293,
+  and unclassified samples 133 to 131. Taxonomy mismatches remained 6; duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- Tutorial compilation, exact bilingual region identity, Governance V2, documentation structure,
+  language and translation review, complete API reuse, release intent, and the complete bilingual
+  site passed. The site audited 454 pages, produced 49,095,993 non-API bytes, left 82,221 bytes
+  under the unchanged 46.9 MiB limit, and completed Docusaurus in `28.0 s`. Complete `qaQuick`
+  passed 2,342 actionable tasks in `18 s` (178 executed and 2,164 up-to-date);
+- the conclusion is `improved`: exact structured ownership increased, duplicated prose and
+  generated site size decreased, and every migrated capability now has one compiled sample
+  decision without changing framework API, runtime behavior, routes, or published artifacts.
+  Release intent found zero affected artifacts. The limitation is that this documentation slice
+  reuses existing contract and renderer tests and makes no new device, visual, or performance
+  claim. The next action is module, migration, tooling, and remaining executable-example ownership.
+
 | Current area | Required target |
 | --- | --- |
 | Navigation Guide | archive temporary delivery stages; move transaction/lifecycle invariants to Architecture; replace with focused navigation task Guides |

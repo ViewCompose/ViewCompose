@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "capability_id": "gesture.modifiers",
+  "kind": "modifier",
+  "owner": { "kind": "module", "id": "viewcompose-gesture" },
+  "artifact": "viewcompose-gesture",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.gesture.Modifier.pointerInput", "kind": "extension", "visibility": "public", "source": "viewcompose-gesture/src/main/java/com/viewcompose/gesture/GestureModifierDsl.kt" },
+    { "symbol_id": "com.viewcompose.gesture.Modifier.combinedClickable", "kind": "extension", "visibility": "public", "source": "viewcompose-gesture/src/main/java/com/viewcompose/gesture/GestureModifierDsl.kt" },
+    { "symbol_id": "com.viewcompose.gesture.Modifier.draggable", "kind": "extension", "visibility": "public", "source": "viewcompose-gesture/src/main/java/com/viewcompose/gesture/GestureModifierDsl.kt" },
+    { "symbol_id": "com.viewcompose.gesture.Modifier.anchoredDraggable", "kind": "extension", "visibility": "public", "source": "viewcompose-gesture/src/main/java/com/viewcompose/gesture/GestureModifierDsl.kt" },
+    { "symbol_id": "com.viewcompose.gesture.Modifier.transformable", "kind": "extension", "visibility": "public", "source": "viewcompose-gesture/src/main/java/com/viewcompose/gesture/GestureModifierDsl.kt" },
+    { "symbol_id": "com.viewcompose.gesture.Modifier.gesturePriority", "kind": "extension", "visibility": "public", "source": "viewcompose-gesture/src/main/java/com/viewcompose/gesture/GestureModifierDsl.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.gesture.modifiers", "generated": true },
+  "sample_owner": { "sample_id": "tutorial.gestures" },
+  "document_owners": {
+    "tutorial": ["tutorial.gestures"],
+    "architecture": ["architecture.modifier-runtime"]
+  }
+}

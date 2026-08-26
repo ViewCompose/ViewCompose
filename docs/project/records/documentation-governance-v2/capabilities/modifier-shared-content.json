@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "capability_id": "modifier.shared-content",
+  "kind": "modifier",
+  "owner": { "kind": "module", "id": "viewcompose-ui-contract" },
+  "artifact": "viewcompose-ui-contract",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.sharedElement", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierSharedContentExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.sharedBounds", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierSharedContentExtensions.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.modifier.shared-content", "generated": true },
+  "sample_owner": { "sample_id": "architecture.modifier-shared-content" },
+  "document_owners": { "architecture": ["architecture.modifier-runtime"] }
+}

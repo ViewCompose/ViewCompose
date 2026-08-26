@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "architecture.modifier-interaction",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "modifier.interaction",
+  "document_ids": ["architecture.modifier-runtime"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ModifierArchitectureSamples.kt",
+  "region": "modifier-interaction",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

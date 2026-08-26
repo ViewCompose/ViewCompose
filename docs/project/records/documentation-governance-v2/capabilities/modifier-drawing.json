@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "capability_id": "modifier.drawing",
+  "kind": "modifier",
+  "owner": { "kind": "module", "id": "viewcompose-ui-contract" },
+  "artifact": "viewcompose-ui-contract",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.drawBehind", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierDrawExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.drawWithContent", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierDrawExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.drawWithCache", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierDrawExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.draw", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierDrawExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.drawCache", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierDrawExtensions.kt" },
+    { "symbol_id": "com.viewcompose.ui.modifier.Modifier.visibility", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierDrawExtensions.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.modifier.drawing", "generated": true },
+  "sample_owner": { "sample_id": "architecture.modifier-drawing" },
+  "document_owners": { "architecture": ["architecture.modifier-runtime"] }
+}

@@ -2,7 +2,7 @@
 title: 使用布局与 Modifier
 sidebar_position: 4
 translation_source: tutorials/layouts-and-modifiers.md
-translation_source_hash: f2beda3f1e53e018e6b9dc027919a084d67c21f8f0c535906a6d6819fbc2dc74
+translation_source_hash: d2d701c3e6edd7bed4c917fe3f8cfee42c9711cbd1eb4b3251ddb0112a16c904
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ translation_status: current
 
 本页可以独立使用。请添加 Android 宿主；它会传递引入 UI contract 和 widget API：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="layouts-and-modifiers-dependencies" sample_id="tutorial.layouts-and-modifiers-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
