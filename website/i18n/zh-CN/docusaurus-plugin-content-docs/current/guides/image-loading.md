@@ -2,7 +2,7 @@
 title: 图片加载
 slug: /guides/image-loading
 translation_source: guides/image-loading.md
-translation_source_hash: b755e96a7b0d7ece51e2ea375a3791f7fd8e383eb94ec8172a90c183d1876832
+translation_source_hash: a6092cfd7640f3abdb76de901f4b7b0ca521e710428bb38c5db6739f4c2cff69
 translation_status: current
 ---
 
@@ -29,6 +29,7 @@ ViewCompose 把图片声明、Android View 绑定和图片解码分在不同层�
 把 loader 安装在真正需要它的最小子树上。Provider 会在 `Image` 或 `Icon` 发射
 `NodeSpec` 时读取：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt" region="image-loader-install" sample_id="guide.image-loader-install" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 val imageLoader = CoilImageLoaderAdapter(applicationCoilImageLoader)
 
@@ -36,9 +37,9 @@ ProvideImageLoader(imageLoader) {
     Image(
         source = ImageSource.Url("https://example.test/banner.png"),
         contentDescription = "Banner",
-        placeholder = ImageSource.Resource(R.drawable.image_placeholder),
-        error = ImageSource.Resource(R.drawable.image_error),
-        fallback = ImageSource.Resource(R.drawable.image_fallback),
+        placeholder = ImageSource.Resource(android.R.drawable.ic_menu_gallery),
+        error = ImageSource.Resource(android.R.drawable.ic_dialog_alert),
+        fallback = ImageSource.Resource(android.R.drawable.ic_menu_report_image),
         requestOptions = UiImageRequestOptions(
             decodeSize = UiImageDecodeSize.Target,
             memoryCachePolicy = UiImageCachePolicy.Default,
@@ -104,12 +105,13 @@ Renderer 释放不能关闭它。
 适配器需要验证 target，映射声明支持的 `ImageSource` 子类型，转发通用 request options，启动
 解码器工作，并返回只取消该工作的句柄：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt" region="image-custom-loader" sample_id="guide.image-custom-loader" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 class TestImageLoader : UiImageLoader {
     override fun load(target: UiImageTarget, request: UiImageRequest): UiImageLoadHandle {
         val imageView = (target as PlatformUiImageTarget).target as ImageView
-        imageView.setImageResource(R.drawable.image_placeholder)
-        return UiImageLoadHandle { /* 只取消当前 request */ }
+        imageView.setImageResource(android.R.drawable.ic_menu_gallery)
+        return UiImageLoadHandle { /* cancel only this request */ }
     }
 }
 ```
@@ -123,6 +125,7 @@ class TestImageLoader : UiImageLoader {
 `viewcompose-image-coil` 是已发布的可选适配器。应用负责网络和缓存策略时，应使用应用级 Coil
 `ImageLoader`：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt" region="image-coil-uri" sample_id="guide.image-coil-uri" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 val imageLoader = CoilImageLoaderAdapter(applicationCoilImageLoader)
 ProvideImageLoader(imageLoader) {
@@ -140,6 +143,7 @@ ProvideImageLoader(imageLoader) {
 `viewcompose-image-glide` 提供 `GlideImageLoaderAdapter`。它从每个目标 `ImageView` 解析生命周期
 关联的 `RequestManager`，请求则继承应用的 `AppGlideModule`、registry、缓存和默认请求配置：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt" region="image-glide-file" sample_id="guide.image-glide-file" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 val imageLoader = GlideImageLoaderAdapter()
 ProvideImageLoader(imageLoader) {

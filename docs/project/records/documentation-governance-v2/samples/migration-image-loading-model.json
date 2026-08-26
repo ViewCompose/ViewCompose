@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "migration.image-loading-model",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "image.foundation",
+  "document_ids": ["migration.image-loading"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt",
+  "region": "image-migration-model",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

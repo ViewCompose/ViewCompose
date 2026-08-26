@@ -110,3 +110,19 @@ dependencies {
 }
     // DOCS_REGION_END(overlay-oneui7-dependency)
 }
+
+private val imageCoilModuleDependency = run {
+    // DOCS_REGION_START(image-coil-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha04")
+}
+    // DOCS_REGION_END(image-coil-dependency)
+}
+
+private val imageGlideModuleDependency = run {
+    // DOCS_REGION_START(image-glide-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha02")
+}
+    // DOCS_REGION_END(image-glide-dependency)
+}

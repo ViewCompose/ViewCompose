@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "capability_id": "image.coil",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-image-coil" },
+  "artifact": "viewcompose-image-coil",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.image.coil.CoilImageLoaderAdapter", "kind": "type", "visibility": "public", "source": "viewcompose-image-coil/src/main/java/com/viewcompose/image/coil/CoilImageLoaderAdapter.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.image.coil", "generated": true },
+  "sample_owner": { "sample_id": "guide.image-coil-uri" },
+  "document_owners": {
+    "guide": ["guide.image-loading"],
+    "migration": ["migration.image-loading"],
+    "module": ["module.viewcompose-image-coil"]
+  }
+}

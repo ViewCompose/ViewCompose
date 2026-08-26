@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-26
-next_action: Merge the Overlays slice, then continue Phase 3 with Image Loading.
+next_action: Merge the Image Loading slice, then continue Phase 3 with Modifier Architecture and final Reference link closure.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
 ---
@@ -56,6 +56,9 @@ The next two slices separated Focus/Nested Scroll and Shadows application tasks 
 contracts, reducing the report to 625 issues. The accepted Overlays hard cut now assigns 21 public
 entries across six capability owners, registers eight compiled regions, and reduces the report to
 590 issues without changing runtime behavior or public routes.
+The accepted Image Loading hard cut now assigns the Foundation, Coil, and Glide entries to three
+capabilities, registers nine sample decisions across the Guide, Migration, and module manuals, and
+reduces the report to 571 issues without changing runtime behavior or public routes.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -64,14 +67,17 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-26.
 
-Next action: merge the Overlays slice, then continue Phase 3 with Image Loading. Pull-request gate scaling
+Next action: merge the Image Loading slice, then continue Phase 3 with Modifier Architecture and
+final Reference link closure. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
 
 ## Maven release changesets
 
-- None.
+- `release/changes/20260826-governance-shadows-phase3.json` records the already accepted
+  documentation-region-only Shadow sample classification. Image Loading changes only non-published
+  Tutorial sources, handwritten documentation, and governance records, so it adds no Changeset.
 
 ## Release intent rationale
 
@@ -79,8 +85,8 @@ The completed Phase 2 governance-tooling slices change governance records, docum
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
 `verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, zero ignored
-artifacts, and zero shared-path classifications against
-`ead2b998b5daa4457ea9e37c8e50da3c41d663b7`.
+artifacts, and zero shared-path classifications for the Image Loading slice against
+`014c6efcc83bd69042e9372658fc2631b720cd1d`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -807,6 +813,30 @@ Accepted Overlays slice on 2026-08-26:
   public API, or published-artifact change. This documentation slice reuses existing overlay unit
   and platform behavior evidence and makes no new visual-fidelity or performance claim. The next
   action is the Image Loading metadata and compiled-region hard cut.
+
+Accepted Image Loading slice on 2026-08-26:
+
+- retained the existing Guide, Migration, Coil, and Glide routes; kept task and lifecycle guidance
+  in the Guide, source-breaking transition guidance in Migration, and dependency/compatibility
+  boundaries in the module manuals;
+- registered `image.foundation`, `image.coil`, and `image.glide` for four application-facing
+  entries, plus four Guide regions, two current Migration regions, one explicitly non-executable
+  removed-API baseline, and two compiled dependency regions. Twelve resolved exception records
+  were removed and the shared content-widget exception narrowed from 4 to 3 symbols;
+- the report changed from 590 to 571 issues: missing metadata 92 to 88, orphan symbols 348 to 344,
+  taxonomy mismatches 7 to 6, and unclassified samples 143 to 133. Duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- Tutorial compilation, exact bilingual region identity, Governance V2, documentation structure,
+  language and translation review, complete API reuse, release intent, and the complete bilingual
+  site passed. The site audited 454 pages, produced 49,151,753 non-API bytes, left 26,461 bytes
+  under the unchanged 46.9 MiB limit, and completed Docusaurus in `34.6 s`. Complete `qaQuick`
+  passed 2,342 actionable tasks in `32 s` (189 executed and 2,153 up-to-date);
+- the conclusion is `improved`: all copy-ready image examples now have one compiled source owner,
+  the Chinese adapter example is byte-identical to canonical code, and governance debt decreased
+  without changing framework API, behavior, routes, or published artifacts. This slice reuses
+  existing adapter and renderer behavior evidence and makes no new device, network, or performance
+  claim. The next action is Modifier Architecture and final Reference link closure.
 
 | Current area | Required target |
 | --- | --- |

@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.image-coil-dependency",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "image.coil",
+  "document_ids": ["module.viewcompose-image-coil"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "image-coil-dependency",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

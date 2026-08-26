@@ -1351,18 +1351,56 @@
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "image.foundation",
           "kind": "component",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.image.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.image-loading",
+              "documentType": "guide",
+              "path": "/guides/image-loading"
+            },
+            {
+              "documentId": "migration.image-loading",
+              "documentType": "migration",
+              "path": "/migration/image-loading"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.image-loader-install",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.Image"
         },
         {
           "artifact": "viewcompose-ui-foundation",
+          "capabilityId": "image.foundation",
           "kind": "dsl",
           "namespace": "com.viewcompose.ui.foundation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.image.foundation",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.image-loading",
+              "documentType": "guide",
+              "path": "/guides/image-loading"
+            },
+            {
+              "documentId": "migration.image-loading",
+              "documentType": "migration",
+              "path": "/migration/image-loading"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.image-loader-install",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideImageLoader"
         },
         {
@@ -2784,16 +2822,59 @@
         },
         {
           "artifact": "viewcompose-image-coil",
+          "capabilityId": "image.coil",
           "kind": "integration",
           "namespace": "com.viewcompose.image.coil",
           "overloadCount": 1,
+          "referenceId": "reference.image.coil",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.image-loading",
+              "documentType": "guide",
+              "path": "/guides/image-loading"
+            },
+            {
+              "documentId": "module.viewcompose-image-coil",
+              "documentType": "module",
+              "path": "/modules/viewcompose-image-coil/README"
+            },
+            {
+              "documentId": "migration.image-loading",
+              "documentType": "migration",
+              "path": "/migration/image-loading"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.image-coil-uri",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.image.coil.CoilImageLoaderAdapter"
         },
         {
           "artifact": "viewcompose-image-glide",
+          "capabilityId": "image.glide",
           "kind": "integration",
           "namespace": "com.viewcompose.image.glide",
           "overloadCount": 1,
+          "referenceId": "reference.image.glide",
+          "relatedDocuments": [
+            {
+              "documentId": "guide.image-loading",
+              "documentType": "guide",
+              "path": "/guides/image-loading"
+            },
+            {
+              "documentId": "module.viewcompose-image-glide",
+              "documentType": "module",
+              "path": "/modules/viewcompose-image-glide/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "guide.image-glide-file",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.image.glide.GlideImageLoaderAdapter"
         },
         {
@@ -5627,7 +5708,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 85,
+    "ownedEntryCount": 89,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }

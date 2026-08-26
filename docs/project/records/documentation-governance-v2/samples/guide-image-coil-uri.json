@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "guide.image-coil-uri",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "image.coil",
+  "document_ids": ["guide.image-loading"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt",
+  "region": "image-coil-uri",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

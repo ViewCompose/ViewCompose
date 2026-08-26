@@ -1,0 +1,17 @@
+{
+  "schema_version": 2,
+  "capability_id": "image.glide",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-image-glide" },
+  "artifact": "viewcompose-image-glide",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha02" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.image.glide.GlideImageLoaderAdapter", "kind": "type", "visibility": "public", "source": "viewcompose-image-glide/src/main/java/com/viewcompose/image/glide/GlideImageLoaderAdapter.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.image.glide", "generated": true },
+  "sample_owner": { "sample_id": "guide.image-glide-file" },
+  "document_owners": {
+    "guide": ["guide.image-loading"],
+    "module": ["module.viewcompose-image-glide"]
+  }
+}

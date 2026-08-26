@@ -2,7 +2,7 @@
 title: 迁移图片加载
 slug: /migration/image-loading
 translation_source: migration/image-loading.md
-translation_source_hash: a5ead84713cc25486207811ad974a75420df82f5e0a4c86c4e2e2216673eb493
+translation_source_hash: 4fd2be6f2440c46cf6c3192f133a0bc47fff57778fbcaa5f64e9fe917186392b
 translation_status: current
 ---
 
@@ -27,6 +27,7 @@ translation_status: current
 
 旧代码的概念形式如下：
 
+{/* non-executable sample_id="migration.image-loading-before" reason="Removed remote-only APIs cannot compile against released current artifacts." visible_explanation="This conceptual source-only baseline identifies the names that must be replaced; do not copy it into current code." */}
 ```kotlin
 ProvideRemoteImageLoader(CoilRemoteImageLoader(imageLoader)) {
     Image(source = ImageSource.Remote(url))
@@ -35,6 +36,7 @@ ProvideRemoteImageLoader(CoilRemoteImageLoader(imageLoader)) {
 
 通用形式如下：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt" region="image-migration-generalized" sample_id="migration.image-loading-generalized" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 ProvideImageLoader(CoilImageLoaderAdapter(imageLoader)) {
     Image(
@@ -52,6 +54,7 @@ ProvideImageLoader(CoilImageLoaderAdapter(imageLoader)) {
 
 非 URL 来源应选择对应类型，不要再次编码成 URL：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt" region="image-migration-model" sample_id="migration.image-loading-model" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 Image(source = ImageSource.Model(value = model, stableKey = modelId))
 ```

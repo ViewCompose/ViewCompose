@@ -1,6 +1,24 @@
 ---
-title: Migrate image loading
-slug: /migration/image-loading
+schema_version: 2
+document_id: migration.image-loading
+doc_type: migration
+owner:
+  kind: capability
+  id: image.foundation
+version_lane: released
+capability_ids:
+  - image.foundation
+  - image.coil
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-ui-contract
+  - viewcompose-image-coil
+sample_ids:
+  - migration.image-loading-before
+  - migration.image-loading-generalized
+  - migration.image-loading-model
+source_state: The removed remote-only loader, request, target, provider, Coil adapter, and ImageSource.Remote protocol.
+target_state: The released portable UiImageLoader, UiImageRequest, ImageSource, ProvideImageLoader, and CoilImageLoaderAdapter contract.
 ---
 
 # Migrate image loading
@@ -25,6 +43,7 @@ the old loader or stored the old request type.
 
 Old code conceptually looked like this:
 
+{/* non-executable sample_id="migration.image-loading-before" reason="Removed remote-only APIs cannot compile against released current artifacts." visible_explanation="This conceptual source-only baseline identifies the names that must be replaced; do not copy it into current code." */}
 ```kotlin
 ProvideRemoteImageLoader(CoilRemoteImageLoader(imageLoader)) {
     Image(source = ImageSource.Remote(url))
@@ -33,6 +52,7 @@ ProvideRemoteImageLoader(CoilRemoteImageLoader(imageLoader)) {
 
 The generalized form is:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt" region="image-migration-generalized" sample_id="migration.image-loading-generalized" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 ProvideImageLoader(CoilImageLoaderAdapter(imageLoader)) {
     Image(
@@ -50,6 +70,7 @@ it to the adapter, and shut it down only when that application owner ends.
 
 For a non-URL source, select the matching type rather than encoding it as a URL:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ImageLoadingGuideSamples.kt" region="image-migration-model" sample_id="migration.image-loading-model" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 Image(source = ImageSource.Model(value = model, stableKey = modelId))
 ```

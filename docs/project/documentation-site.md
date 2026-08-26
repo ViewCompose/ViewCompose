@@ -390,6 +390,14 @@ identity token.
   website stack, route count, framework behavior, or the budget. This observation reuses existing
   overlay behavior evidence; the Image Loading slice must preserve the same stop condition.
 
+- **2026-08-26, Governance V2 Image Loading local acceptance:** the hard cut retained the Guide,
+  Migration, Coil, and Glide routes, registered four public entries and nine sample decisions, and
+  reduced Governance V2 debt from 590 to 571. The complete build audited 454 pages, produced
+  49,151,753 non-API bytes, left 26,461 bytes under the unchanged limit, and completed Docusaurus
+  in `34.6 s`. The result is **improved** without changing the website stack, route count,
+  framework behavior, or budget. This observation validates documentation ownership and build
+  output, not device, network, or image-decoder performance.
+
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and
   moving the generated quality report outside the deploy tree reduced it to 49,175,712 bytes,

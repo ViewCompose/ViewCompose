@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-glide/README.md
-translation_source_hash: ccee0759e6ef1180ac4105b6ce68412fdb4cc4fa544199d665e0cb7512589c45
+translation_source_hash: 9398c865144dc308870ddb92a6cc6c8573dc3dbb1a1a6bdda743e2495eda3d89
 translation_status: current
 ---
 
@@ -11,6 +11,7 @@ translation_status: current
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="image-glide-dependency" sample_id="module.image-glide-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-image-glide:0.1.0-alpha02")
@@ -27,18 +28,9 @@ dependencies {
 
 ## 安装
 
-创建一个 `GlideImageLoaderAdapter`，并把它传给 `ProvideImageLoader` 或负责图片加载的 Host 配置：
-
-```kotlin
-val imageLoader = GlideImageLoaderAdapter()
-
-ProvideImageLoader(imageLoader) {
-    Image(
-        source = ImageSource.Url("https://example.test/banner.png"),
-        contentDescription = "Banner",
-    )
-}
-```
+创建一个 `GlideImageLoaderAdapter`，并把它传给 `ProvideImageLoader` 或负责图片加载的 Host 配置。
+可直接复制的文件加载示例由[图片加载指南](../../guides/image-loading.md)统一维护，因此集成配置只有
+一个可编译源码所有者，不再在模块手册中保留重复片段。
 
 适配器会为每个请求解析 `Glide.with(imageView)`。这样既能保留 Glide 为挂载目标选择的生命周期
 作用域，也能继续使用由应用所有的 registry、网络、缓存与默认请求配置。

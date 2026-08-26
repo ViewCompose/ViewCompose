@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "capability_id": "image.foundation",
+  "kind": "component",
+  "owner": { "kind": "module", "id": "viewcompose-ui-foundation" },
+  "artifact": "viewcompose-ui-foundation",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.Image", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/content/ContentWidgetsDsl.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.UiTreeBuilder.ProvideImageLoader", "kind": "extension", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/ImageLoading.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.image.foundation", "generated": true },
+  "sample_owner": { "sample_id": "guide.image-loader-install" },
+  "document_owners": {
+    "guide": ["guide.image-loading"],
+    "migration": ["migration.image-loading"]
+  }
+}
