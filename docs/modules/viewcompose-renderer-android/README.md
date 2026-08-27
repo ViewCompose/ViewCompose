@@ -1,3 +1,29 @@
+---
+schema_version: 2
+document_id: module.viewcompose-renderer-android
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-renderer-android
+version_lane: released
+capability_ids:
+  - renderer.tree-transactions
+  - renderer.reconciliation
+  - renderer.diagnostics
+  - renderer.decoration-backend
+artifact_ids:
+  - viewcompose-renderer-android
+sample_ids:
+  - module.renderer-dependency
+  - module.renderer-tree-transaction
+  - module.renderer-observed-properties
+  - module.renderer-reconciliation
+  - module.renderer-timing
+  - module.renderer-decoration-backend
+coordinate: com.viewcompose:viewcompose-renderer-android:0.1.0-alpha01
+minimal_usage_sample_id: module.renderer-dependency
+---
+
 # Android Renderer Engine
 
 `viewcompose-renderer-android` is ViewCompose's Android View rendering engine. It reconciles immutable
@@ -16,6 +42,7 @@ modules.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="renderer-android-module-dependency" sample_id="module.renderer-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-renderer-android:0.1.0-alpha01")
@@ -66,20 +93,31 @@ dependencies {
 
 ## Rendering model
 
+{/* compiled-region source="viewcompose-renderer-android/src/test/samples/com/viewcompose/renderer/samples/RendererSamples.kt" region="renderer-tree-transaction" sample_id="module.renderer-tree-transaction" build_target=":viewcompose-renderer-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-var mounted = ViewTreeRenderer.renderInto(
-    container = container,
-    previous = emptyList(),
-    nodes = firstFrame,
-).mountedNodes
+fun renderIntoViewGroupSample(
+    container: ViewGroup,
+    firstFrame: List<VNode>,
+    nextFrame: List<VNode>,
+) {
+    val initial = ViewTreeRenderer.renderInto(
+        container = container,
+        previous = emptyList(),
+        nodes = firstFrame,
+    )
+    initial.commitEffects.forEach { effect -> effect.commit() }
+    var mounted = initial.mountedNodes
 
-mounted = ViewTreeRenderer.renderInto(
-    container = container,
-    previous = mounted,
-    nodes = nextFrame,
-).mountedNodes
+    val updated = ViewTreeRenderer.renderInto(
+        container = container,
+        previous = mounted,
+        nodes = nextFrame,
+    )
+    updated.commitEffects.forEach { effect -> effect.commit() }
+    mounted = updated.mountedNodes
 
-ViewTreeRenderer.disposeMounted(container, mounted)
+    ViewTreeRenderer.disposeMounted(container, mounted)
+}
 ```
 
 The mounted-node list is an ownership token, not an optional cache. A host must pass the exact roots
@@ -225,6 +263,10 @@ Google/API-33 point alongside the earlier Xiaomi/API-28 evidence, 12 pairwise ca
 Phase 4 owns that benchmark and final guidance.
 
 ## Principal APIs
+
+The module's reconciliation, observed-property, timing, and decoration examples are compiled from
+[`RendererSamples.kt`](../../../viewcompose-renderer-android/src/test/samples/com/viewcompose/renderer/samples/RendererSamples.kt),
+so the generated capability reference and KDoc samples share one checked source.
 
 - [`ViewTreeRenderer`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.view.tree/-view-tree-renderer/)
   owns the transactional VNode-to-View render and disposal boundary.

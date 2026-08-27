@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register Android Renderer transaction, reconciliation, timing, and decoration documentation ownership without changing published artifacts.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-renderer-android",
+      "reason": "Only test-only compiled documentation fixtures gain exact source-region comments and clearer test parameter names; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

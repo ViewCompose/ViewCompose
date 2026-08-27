@@ -6,7 +6,8 @@
   "artifact": "viewcompose-host-android",
   "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
   "symbols": [
-    { "symbol_id": "com.viewcompose.host.android.overlay.AndroidOverlayHostDefaults", "kind": "type", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/overlay/AndroidOverlayHostDefaults.kt" }
+    { "symbol_id": "com.viewcompose.host.android.overlay.AndroidOverlayHostDefaults", "kind": "type", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/overlay/AndroidOverlayHostDefaults.kt" },
+    { "symbol_id": "com.viewcompose.host.android.overlay.AndroidOverlayHostFactoryProvider", "kind": "type", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/overlay/AndroidOverlayHostDefaults.kt" }
   ],
   "reference_owner": { "reference_id": "reference.overlay.host-defaults", "generated": true },
   "sample_owner": { "sample_id": "module.overlay-android-dependency" },

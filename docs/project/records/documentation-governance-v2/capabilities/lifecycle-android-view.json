@@ -7,6 +7,7 @@
   "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
   "symbols": [
     { "symbol_id": "com.viewcompose.lifecycle.AndroidViewCommitScope.bindAndroidViewSavedState", "kind": "extension", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/AndroidViewSavedStateBinding.kt" },
+    { "symbol_id": "com.viewcompose.lifecycle.LifecycleAndroidViewAdapter", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/LifecycleAndroidViewAdapter.kt" },
     { "symbol_id": "com.viewcompose.lifecycle.AndroidViewLifecycleEventScope", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/LifecycleAndroidViewAdapter.kt" },
     { "symbol_id": "com.viewcompose.lifecycle.AndroidViewSaveStateScope", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/AndroidViewSavedStateBinding.kt" },
     { "symbol_id": "com.viewcompose.lifecycle.AndroidViewSavedStateBindResult", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/AndroidViewSavedStateBinding.kt" },

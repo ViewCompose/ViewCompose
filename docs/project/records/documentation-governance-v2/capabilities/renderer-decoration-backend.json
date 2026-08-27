@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "capability_id": "renderer.decoration-backend",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-renderer-android" },
+  "artifact": "viewcompose-renderer-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.renderer.decoration.AndroidViewDecorationRequest", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/decoration/AndroidViewDecoration.kt" },
+    { "symbol_id": "com.viewcompose.renderer.decoration.AndroidViewDecorationPresence", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/decoration/AndroidViewDecoration.kt" },
+    { "symbol_id": "com.viewcompose.renderer.decoration.AndroidViewDecorationBackend", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/decoration/AndroidViewDecoration.kt" },
+    { "symbol_id": "com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/decoration/AndroidViewDecoration.kt" },
+    { "symbol_id": "com.viewcompose.renderer.decoration.DecorationChildDrawingOrder", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/decoration/DecorationChildDrawingOrder.kt" },
+    { "symbol_id": "com.viewcompose.renderer.decoration.ViewDecorationHostLayout", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/decoration/ViewDecorationHostLayout.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.renderer.decoration-backend", "generated": true },
+  "sample_owner": { "sample_id": "module.renderer-decoration-backend" },
+  "document_owners": { "module": ["module.viewcompose-renderer-android"] }
+}

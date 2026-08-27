@@ -1,0 +1,20 @@
+{
+  "schema_version": 2,
+  "capability_id": "renderer.tree-transactions",
+  "kind": "host",
+  "owner": { "kind": "module", "id": "viewcompose-renderer-android" },
+  "artifact": "viewcompose-renderer-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.renderer.view.tree.ViewTreeRenderer", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/ViewTreeRenderer.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.MountedNode", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/MountedNode.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.ViewTreeObservedPropertyPatch", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/ViewTreeRenderer.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.RenderTreeResult", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/RenderStats.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.ObservedPropertyRenderResult", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/RenderStats.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.RenderTreeCommitEffect", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/RenderStats.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.RenderTreeCommitFailure", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/RenderStats.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.renderer.tree-transactions", "generated": true },
+  "sample_owner": { "sample_id": "module.renderer-tree-transaction" },
+  "document_owners": { "module": ["module.viewcompose-renderer-android"] }
+}

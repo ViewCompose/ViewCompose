@@ -25,6 +25,7 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
 
+// DOCS_REGION_START(renderer-reconciliation)
 fun childReconciliationSample() {
     val previous = listOf(
         ReconcileNode(vnode("profile"), payload = "profile-view"),
@@ -59,7 +60,9 @@ fun lazyListDiffSample() {
     check(result.items.map(LazyListItem::key) == listOf("B", "A", "C"))
     check(result.updates.none { it is LazyListUpdate.ReloadAll })
 }
+// DOCS_REGION_END(renderer-reconciliation)
 
+// DOCS_REGION_START(renderer-decoration-backend)
 fun installDecorationBackendSample() {
     AndroidViewDecorationRuntime.install(
         object : AndroidViewDecorationBackend {
@@ -79,15 +82,18 @@ fun installDecorationBackendSample() {
         },
     )
 }
+// DOCS_REGION_END(renderer-decoration-backend)
 
+// DOCS_REGION_START(renderer-tree-transaction)
 fun renderIntoViewGroupSample(
     container: ViewGroup,
-    nextNodes: List<VNode>,
+    firstFrame: List<VNode>,
+    nextFrame: List<VNode>,
 ) {
     val initial = ViewTreeRenderer.renderInto(
         container = container,
         previous = emptyList(),
-        nodes = nextNodes,
+        nodes = firstFrame,
     )
     initial.commitEffects.forEach { effect -> effect.commit() }
     var mounted = initial.mountedNodes
@@ -95,14 +101,16 @@ fun renderIntoViewGroupSample(
     val updated = ViewTreeRenderer.renderInto(
         container = container,
         previous = mounted,
-        nodes = nextNodes,
+        nodes = nextFrame,
     )
     updated.commitEffects.forEach { effect -> effect.commit() }
     mounted = updated.mountedNodes
 
     ViewTreeRenderer.disposeMounted(container, mounted)
 }
+// DOCS_REGION_END(renderer-tree-transaction)
 
+// DOCS_REGION_START(renderer-timing)
 fun renderTreeTimingCollectorSample(
     container: ViewGroup,
     nextNodes: List<VNode>,
@@ -120,7 +128,9 @@ fun renderTreeTimingCollectorSample(
     result.commitEffects.forEach { effect -> effect.commit() }
     check(visitedPhases.isNotEmpty())
 }
+// DOCS_REGION_END(renderer-timing)
 
+// DOCS_REGION_START(renderer-observed-properties)
 fun patchObservedPropertySample(
     mountedNode: MountedNode,
     nextNode: VNode,
@@ -138,6 +148,7 @@ fun patchObservedPropertySample(
     )
     result.commitEffects.forEach { effect -> effect.commit() }
 }
+// DOCS_REGION_END(renderer-observed-properties)
 
 private fun vnode(key: Any): VNode = VNode(
     type = NodeType.Text,

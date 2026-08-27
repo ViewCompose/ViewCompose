@@ -42,6 +42,134 @@ class DocumentationGovernanceV2ReportTaskTest {
     }
 
     @Test
+    fun `renderer application packages expose host tooling and integration capability entries`() {
+        val repository = temporaryFolder.newFolder("renderer-capability-repository")
+        val contractRoot = repository.resolve(
+            "docs/project/contracts/documentation-governance-v2",
+        )
+        fixtureContract(contractRoot)
+        val sourceRoot = repository.resolve("viewcompose-renderer-android/src").apply { mkdirs() }
+        repository.resolve(
+            "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/Renderer.kt",
+        ).apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package com.viewcompose.renderer.view.tree
+
+                object ViewTreeRenderer
+                fun interface RenderTreeTimingCollector
+                private object HiddenRenderer
+                """.trimIndent(),
+            )
+        }
+        repository.resolve(
+            "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/Reconcile.kt",
+        ).apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package com.viewcompose.renderer.reconcile
+
+                object ChildReconciler
+                """.trimIndent(),
+            )
+        }
+        repository.resolve(
+            "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/decoration/Decoration.kt",
+        ).apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package com.viewcompose.renderer.decoration
+
+                interface AndroidViewDecorationBackend
+                open class ViewDecorationHostLayout
+                """.trimIndent(),
+            )
+        }
+        repository.resolve(
+            "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/container/Internal.kt",
+        ).apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package com.viewcompose.renderer.view.container
+
+                class DeclarativeInternalLayout
+                """.trimIndent(),
+            )
+        }
+        val publishing = repository.resolve("gradle/viewcompose-publishing.properties").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                release.unpublishedModules=viewcompose-renderer-android
+                module.viewcompose-renderer-android.version=1.0.0
+                module.viewcompose-renderer-android.sourceRevision=abc
+                """.trimIndent(),
+            )
+        }
+        val releases = repository.resolve(
+            "gradle/viewcompose-documentation-releases.properties",
+        ).apply {
+            writeText("release.count=0\n")
+        }
+        val translationPolicy = repository.resolve("website/i18n/translation-policy.json").apply {
+            parentFile.mkdirs()
+            writeText("""{"schemaVersion":1,"locale":"zh-CN","required":[]}""")
+        }
+        val moduleCatalog = repository.resolve("docs/modules/README.md").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                | Artifact | Family | Runtime role | Manual |
+                | --- | --- | --- | --- |
+                | `viewcompose-renderer-android` | Android Engine | Test | Available |
+                """.trimIndent(),
+            )
+        }
+
+        val result = DocumentationGovernanceV2Reporter.generate(
+            repository = repository,
+            contractFiles = contractRoot.walkTopDown().filter(File::isFile).toSet(),
+            recordFiles = emptySet(),
+            sourceSetDirectories = setOf(sourceRoot),
+            activeDocumentationFiles = emptySet(),
+            localeMirrorFiles = emptySet(),
+            publishingFiles = setOf(publishing, releases),
+            documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
+        )
+        @Suppress("UNCHECKED_CAST")
+        val report = JsonSlurper().parseText(result.report) as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val discovery = report.getValue("discovery") as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val declarations = discovery.getValue("capabilityDeclarations") as List<Map<String, Any?>>
+        val kindsBySymbol = declarations.associate { declaration ->
+            declaration.getValue("symbol").toString() to declaration.getValue("kind").toString()
+        }
+
+        assertEquals("host", kindsBySymbol["com.viewcompose.renderer.view.tree.ViewTreeRenderer"])
+        assertEquals("tooling", kindsBySymbol["com.viewcompose.renderer.view.tree.RenderTreeTimingCollector"])
+        assertEquals("host", kindsBySymbol["com.viewcompose.renderer.reconcile.ChildReconciler"])
+        assertEquals(
+            "integration",
+            kindsBySymbol["com.viewcompose.renderer.decoration.AndroidViewDecorationBackend"],
+        )
+        assertEquals(
+            "integration",
+            kindsBySymbol["com.viewcompose.renderer.decoration.ViewDecorationHostLayout"],
+        )
+        assertFalse(kindsBySymbol.containsKey("com.viewcompose.renderer.view.tree.HiddenRenderer"))
+        assertFalse(
+            kindsBySymbol.containsKey(
+                "com.viewcompose.renderer.view.container.DeclarativeInternalLayout",
+            ),
+        )
+    }
+
+    @Test
     fun `discovery is deterministic and unbaselined debt is blocking`() {
         val repository = temporaryFolder.newFolder("report-repository")
         val contractRoot = repository.resolve(

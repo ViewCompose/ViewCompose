@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.renderer-reconciliation",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "renderer.reconciliation",
+  "document_ids": ["module.viewcompose-renderer-android"],
+  "version_lane": "released",
+  "source": "viewcompose-renderer-android/src/test/samples/com/viewcompose/renderer/samples/RendererSamples.kt",
+  "region": "renderer-reconciliation",
+  "build_target": ":viewcompose-renderer-android:compileDebugUnitTestKotlin"
+}

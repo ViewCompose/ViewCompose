@@ -1,0 +1,28 @@
+{
+  "schema_version": 2,
+  "capability_id": "renderer.diagnostics",
+  "kind": "tooling",
+  "owner": { "kind": "module", "id": "viewcompose-renderer-android" },
+  "artifact": "viewcompose-renderer-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.renderer.view.tree.LayoutPassEntry", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/LayoutPassTracker.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.LayoutPassSnapshot", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/LayoutPassTracker.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.LayoutPassTracker", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/LayoutPassTracker.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.NodeTypeBindingStats", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/RenderStats.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.RenderPatchOperation", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/RenderStats.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.RenderPatchRecord", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/RenderStats.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.RenderStats", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/RenderStats.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.RenderStructureStats", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/RenderStructureStats.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.RenderTreeNode", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/RenderStats.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.RenderTreeTimingPhase", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/RenderTreeTiming.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.RenderTreeTimingSubject", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/RenderTreeTiming.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.RenderTreeTimingSpan", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/RenderTreeTiming.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.RenderTreeTimingCollector", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/RenderTreeTiming.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.ReuseBindingResult", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/diagnostics/RenderStats.kt" },
+    { "symbol_id": "com.viewcompose.renderer.view.tree.ViewNodeToolingRegistry", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/tooling/ViewNodeToolingRegistry.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.renderer.diagnostics", "generated": true },
+  "sample_owner": { "sample_id": "module.renderer-timing" },
+  "document_owners": { "module": ["module.viewcompose-renderer-android"] }
+}
