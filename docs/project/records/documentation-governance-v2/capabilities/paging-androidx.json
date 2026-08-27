@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "capability_id": "paging.androidx",
+  "kind": "integration",
+  "owner": {
+    "kind": "module",
+    "id": "viewcompose-paging-androidx"
+  },
+  "artifact": "viewcompose-paging-androidx",
+  "version_state": {
+    "lane": "released",
+    "version": "0.1.0-alpha01"
+  },
+  "symbols": [
+    {
+      "symbol_id": "com.viewcompose.paging.CombinedLoadStates.forLoadType",
+      "kind": "extension",
+      "visibility": "public",
+      "source": "viewcompose-paging-androidx/src/main/java/com/viewcompose/paging/PagingLoadStates.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.paging.Flow.collectAsViewComposePagingItems",
+      "kind": "extension",
+      "visibility": "public",
+      "source": "viewcompose-paging-androidx/src/main/java/com/viewcompose/paging/ViewComposePagingItems.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.paging.PagingContentState",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-paging-androidx/src/main/java/com/viewcompose/paging/PagingLoadStates.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.paging.PagingLifecyclePolicy",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-paging-androidx/src/main/java/com/viewcompose/paging/PagingLifecyclePolicy.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.paging.PagingLoadStateSnapshot",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-paging-androidx/src/main/java/com/viewcompose/paging/PagingLoadStates.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.paging.UiTreeBuilder.PagingLazyColumn",
+      "kind": "overload-set",
+      "visibility": "public",
+      "source": "viewcompose-paging-androidx/src/main/java/com/viewcompose/paging/PagingLazyColumn.kt"
+    },
+    {
+      "symbol_id": "com.viewcompose.paging.ViewComposePagingItems",
+      "kind": "type",
+      "visibility": "public",
+      "source": "viewcompose-paging-androidx/src/main/java/com/viewcompose/paging/ViewComposePagingItems.kt"
+    }
+  ],
+  "reference_owner": {
+    "reference_id": "reference.paging.androidx",
+    "generated": true
+  },
+  "sample_owner": {
+    "sample_id": "module.paging-basic"
+  },
+  "document_owners": {
+    "module": [
+      "module.viewcompose-paging-androidx"
+    ]
+  }
+}

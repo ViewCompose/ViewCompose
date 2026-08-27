@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the design-system ownership slice, then hard-cut Paging integration ownership as the final orphan-symbol Phase 3 boundary.
+next_action: Merge the Paging ownership slice, then hard-cut Runtime, Text Core, and UI Contract module-manual ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -37,6 +37,7 @@ maven_release_changesets:
   - release/changes/20260827-governance-navigation-modules-phase3.json
   - release/changes/20260827-governance-ui-foundation-phase3.json
   - release/changes/20260827-governance-design-systems-phase3.json
+  - release/changes/20260827-governance-paging-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -123,6 +124,9 @@ The accepted design-system hard cut now assigns the remaining 12 Material 3 and 
 component entries to three new and one existing capability owners, registers eight compiled sample
 decisions across the three module manuals, removes eight resolved exceptions, and reduces the
 report to 87 issues.
+The accepted Paging hard cut now assigns the final seven orphan symbols to one AndroidX integration
+capability, registers four exact compiled module samples, removes six resolved exceptions, reduces
+the report to 75 issues, and brings orphan-symbol debt to zero.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -131,8 +135,8 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the design-system ownership slice, then hard-cut Paging integration ownership
-as the final orphan-symbol Phase 3 boundary. Pull-request gate scaling
+Next action: merge the Paging ownership slice, then hard-cut Runtime, Text Core, and UI Contract
+module-manual ownership as the next Phase 3 boundary. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -201,15 +205,19 @@ remains owned by this plan after the Phase 3 content owners move.
   governance records were added. Test sources are excluded from published artifacts; production
   source, public signatures, runtime behavior, publication metadata, and generated artifact
   content remain unchanged.
+- `release/changes/20260827-governance-paging-phase3.json` explicitly ignores Paging AndroidX
+  because only test-only compiled documentation samples and governance records were added. Test
+  sources are excluded from published artifacts; production source, public signatures, runtime
+  behavior, publication metadata, and generated artifact content remain unchanged.
 
 ## Release intent rationale
 
 The completed Phase 2 governance-tooling slices change governance records, documentation markers,
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
-`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, three explicitly
-ignored test-sample-only artifacts, and zero shared-path classifications against
-`434c4b99613991081401d300a3f69134dfeb6b76`.
+`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, one explicitly
+ignored test-sample-only artifact, and zero shared-path classifications against
+`3bd90d8a1d67819cb097a738824d13c0d1d8f091`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1443,6 +1451,45 @@ Accepted Material 3, Material 3 Android, and One UI 7 module ownership slice on 
   reuses existing unit, gesture, renderer, device, visual, and design-reference evidence and makes
   no new runtime, visual, power, or performance claim. The next action is Paging integration
   ownership, which closes the final seven orphan symbols.
+
+Accepted Paging AndroidX module ownership slice on 2026-08-27:
+
+- retained the stable Paging module route and represented collection lifecycle, coherent item and
+  load-state presentation, placeholder-aware lazy rendering, and Paging-owned commands as one
+  `paging.androidx` integration capability. The owner assigns all seven remaining public
+  `PagingLifecyclePolicy`, `ViewComposePagingItems`, collector, content/load-state, and
+  `PagingLazyColumn` entries without creating a second paging engine or diff owner;
+- registered four exact bilingual compiled regions for dependency installation, basic finite-item
+  rendering, explicit placeholders, and complete refresh/prepend/append state composition. The
+  basic example now accepts an application-owned Flow directly while adjacent prose keeps
+  `Pager.flow.cachedIn(viewModelScope)` and the default visible lifecycle policy explicit;
+- removed six resolved metadata, ownership, and sample exception records. The report changed from
+  87 to 75 issues: missing metadata 44 to 43, orphan symbols 7 to 0, and unclassified samples 36 to
+  32. Taxonomy mismatches, duplicate owners, orphan documents, version conflicts, stale generated
+  output, unbaselined debt, and blocking violations remained zero. This closes the entire
+  application-facing orphan-symbol inventory;
+- the generated Reference retained 531 entries while its normalized catalog grew from 233,520 to
+  234,296 bytes, an increase of 776 bytes (`0.3323%`), for seven symbol links and one module link.
+  The module link resolves to the existing stable route;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,032,202 non-API
+  bytes, and left 146,012 bytes under the unchanged 46.9 MiB limit. This is 46,820 bytes
+  (`0.0956%`) above the design-system slice and is `no material change`. Docusaurus completed in
+  `32.2 s`; timing remains `inconclusive` because cache and process state differed, while the
+  absolute result remains below the `120 s` limit;
+- Tutorial and Paging test-sample compilation, exact bilingual region identity, Governance V2,
+  documentation structure, language and translation review, generated Reference freshness,
+  release intent, and the complete bilingual site passed. Complete single-worker `qaQuick` passed
+  2,342 actionable tasks in `33 s` (186 executed and 2,156 up-to-date); this is completeness
+  evidence rather than a speed comparison because it reused previously produced publication,
+  module, and site outputs;
+- the overall conclusion is `improved`: all 531 discovered application-facing entries now have
+  exact capability owners, and the Paging module's public fences have compiled ownership without
+  changing public API, production runtime behavior, routes, or published artifacts. Release intent
+  found zero release artifacts and explicitly ignored the one test-sample-only Paging artifact.
+  This slice reuses the module's existing lifecycle, mediator, placeholder, page-drop, device,
+  visual, bounded-memory, and fixed-clock evidence and makes no new runtime, visual, power, or
+  performance claim. The next action is Runtime, Text Core, and UI Contract module-manual
+  ownership.
 
 | Current area | Required target |
 | --- | --- |

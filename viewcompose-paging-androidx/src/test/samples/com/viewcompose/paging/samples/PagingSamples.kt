@@ -21,20 +21,38 @@ data class PagingSampleRow(
     val label: String,
 )
 
+fun UiTreeBuilder.pagingBasicSample(pages: Flow<PagingData<PagingSampleRow>>) {
+    // DOCS_REGION_START(paging-module-basic)
+val pagingItems = pages.collectAsViewComposePagingItems(
+    lifecyclePolicy = PagingLifecyclePolicy.Composition,
+)
+PagingLazyColumn(
+    items = pagingItems,
+    key = PagingSampleRow::id,
+    contentType = { "paging-row" },
+    contentRevision = PagingSampleRow::version,
+) { row ->
+    Text(row.label)
+}
+    // DOCS_REGION_END(paging-module-basic)
+}
+
 fun UiTreeBuilder.pagingLazyColumnSample(pages: Flow<PagingData<PagingSampleRow>>) {
-    val items = pages.collectAsViewComposePagingItems(
+    val pagingItems = pages.collectAsViewComposePagingItems(
         lifecyclePolicy = PagingLifecyclePolicy.Composition,
     )
-    PagingLazyColumn(
-        items = items,
-        key = PagingSampleRow::id,
-        contentType = { "paging-row" },
-        contentRevision = PagingSampleRow::version,
-        placeholderContentRevision = "paging-placeholder-v1",
-        placeholderContent = { index -> Text("Loading row $index") },
-    ) { row ->
-        Text(row.label)
-    }
+    // DOCS_REGION_START(paging-module-placeholders)
+PagingLazyColumn(
+    items = pagingItems,
+    key = PagingSampleRow::id,
+    contentType = { "paging-row" },
+    contentRevision = PagingSampleRow::version,
+    placeholderContentRevision = "paging-placeholder-v1",
+    placeholderContent = { index -> Text("Loading row $index") },
+) { row ->
+    Text(row.label)
+}
+    // DOCS_REGION_END(paging-module-placeholders)
 }
 
 fun UiTreeBuilder.pagingLoadStateCompositionSample(
@@ -43,47 +61,49 @@ fun UiTreeBuilder.pagingLoadStateCompositionSample(
     val items = pages.collectAsViewComposePagingItems(
         lifecyclePolicy = PagingLifecyclePolicy.Composition,
     )
-    when (val state = items.contentState) {
-        PagingContentState.InitialLoading -> Text("Loading contacts")
-        is PagingContentState.InitialError -> {
-            Text(state.error.message ?: "Unable to load contacts")
-            Button("Retry", onClick = items::retry)
-        }
-        PagingContentState.Empty -> Text("No contacts")
-        PagingContentState.Content -> {
-            val refresh = items.loadStates.forLoadType(LoadType.REFRESH)
-            if (refresh.combined is LoadState.Loading) {
-                Text("Refreshing")
-            }
-            val prepend = items.loadStates.forLoadType(LoadType.PREPEND)
-            when (prepend.combined) {
-                is LoadState.Loading -> Text("Loading previous contacts")
-                is LoadState.Error -> Button("Retry previous", onClick = items::retry)
-                is LoadState.NotLoading -> Unit
-            }
-            key("paging-contact-list") {
-                PagingLazyColumn(
-                    items = items,
-                    key = PagingSampleRow::id,
-                    contentType = { "paging-row" },
-                    contentRevision = PagingSampleRow::version,
-                ) { row ->
-                    Text(row.label)
-                }
-            }
-            val append = items.loadStates.forLoadType(LoadType.APPEND)
-            when (append.combined) {
-                is LoadState.Loading -> Text("Loading more contacts")
-                is LoadState.Error -> Button("Retry more", onClick = items::retry)
-                is LoadState.NotLoading -> Unit
-            }
-            (refresh.source as? LoadState.Error)?.let { source ->
-                Text("Source: ${source.error.message}")
-            }
-            (refresh.mediator as? LoadState.Error)?.let { mediator ->
-                Text("Mediator: ${mediator.error.message}")
-            }
-            Button("Refresh", onClick = items::refresh)
-        }
+    // DOCS_REGION_START(paging-module-load-states)
+when (val state = items.contentState) {
+    PagingContentState.InitialLoading -> Text("Loading contacts")
+    is PagingContentState.InitialError -> {
+        Text(state.error.message ?: "Unable to load contacts")
+        Button("Retry", onClick = items::retry)
     }
+    PagingContentState.Empty -> Text("No contacts")
+    PagingContentState.Content -> {
+        val refresh = items.loadStates.forLoadType(LoadType.REFRESH)
+        if (refresh.combined is LoadState.Loading) {
+            Text("Refreshing")
+        }
+        val prepend = items.loadStates.forLoadType(LoadType.PREPEND)
+        when (prepend.combined) {
+            is LoadState.Loading -> Text("Loading previous contacts")
+            is LoadState.Error -> Button("Retry previous", onClick = items::retry)
+            is LoadState.NotLoading -> Unit
+        }
+        key("paging-contact-list") {
+            PagingLazyColumn(
+                items = items,
+                key = PagingSampleRow::id,
+                contentType = { "paging-row" },
+                contentRevision = PagingSampleRow::version,
+            ) { row ->
+                Text(row.label)
+            }
+        }
+        val append = items.loadStates.forLoadType(LoadType.APPEND)
+        when (append.combined) {
+            is LoadState.Loading -> Text("Loading more contacts")
+            is LoadState.Error -> Button("Retry more", onClick = items::retry)
+            is LoadState.NotLoading -> Unit
+        }
+        (refresh.source as? LoadState.Error)?.let { source ->
+            Text("Source: ${source.error.message}")
+        }
+        (refresh.mediator as? LoadState.Error)?.let { mediator ->
+            Text("Mediator: ${mediator.error.message}")
+        }
+        Button("Refresh", onClick = items::refresh)
+    }
+}
+    // DOCS_REGION_END(paging-module-load-states)
 }
