@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.host-android-view-adapter",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "host.android-view",
+  "document_ids": ["module.viewcompose-host-android", "tutorial.android-view"],
+  "version_lane": "released",
+  "source": "viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt",
+  "region": "host-android-view-adapter",
+  "build_target": ":viewcompose-host-android:compileDebugUnitTestKotlin"
+}

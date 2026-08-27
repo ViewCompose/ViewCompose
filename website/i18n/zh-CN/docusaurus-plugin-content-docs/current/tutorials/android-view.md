@@ -2,7 +2,7 @@
 title: 使用 AndroidView
 sidebar_position: 10
 translation_source: tutorials/android-view.md
-translation_source_hash: d41d832345ed0019868501d4cfa93fd2f80a98136dfeae40387f0436a4e77b3b
+translation_source_hash: fce619c49157d05cf524028412d1487d8c67b34b744871c0ba4e76e7eb8824ec
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ translation_status: current
 
 本页可以独立使用。`AndroidView` 由 `viewcompose-host-android` 提供，不需要额外的 interop 产物：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="android-view-dependencies" sample_id="tutorial.android-view-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -80,27 +81,36 @@ Callback 形式是简洁的底层逃生路径。
 集成会被复用或需要持有生命周期 Callback 时，应使用 `AndroidViewAdapter<V, S>`。View 类型与
 完整状态快照会在全部 Callback 间保持编译期检查：
 
+{/* compiled-region source="viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt" region="host-android-view-adapter" sample_id="module.host-android-view-adapter" build_target=":viewcompose-host-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-private data class NativeLabelState(val text: String)
-
-private class NativeLabelAdapter(
-    private val textAppearance: Int,
-) : AndroidViewAdapter<TextView, NativeLabelState> {
-    override fun create(scope: AndroidViewCreateScope): TextView =
-        TextView(scope.context, null, 0, textAppearance)
-
-    override fun update(scope: AndroidViewUpdateScope<TextView>, state: NativeLabelState) {
-        scope.view.text = state.text
-    }
+fun typedAndroidViewAdapterSample(builder: UiTreeBuilder) {
+    builder.AndroidView(
+        adapter = NativeLabelAdapter,
+        state = "Typed native label",
+        key = "label",
+        constructionKey = "default-text-appearance",
+        modifier = Modifier.nativeView(key = "enabled") { view ->
+            view.isEnabled = true
+        },
+    )
 }
 
-AndroidView(
-    adapter = NativeLabelAdapter(textAppearance),
-    state = NativeLabelState("Native TextView count: ${count.value}"),
-    key = "counter-label",
-    constructionKey = textAppearance,
-    modifier = Modifier.fillMaxWidth(),
-)
+private object NativeLabelAdapter : AndroidViewAdapter<TextView, String> {
+    override val reusePolicy: AndroidViewReusePolicy = AndroidViewReusePolicy.Resettable
+
+    override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: String) {
+        scope.view.text = state
+    }
+
+    override fun onReset(
+        scope: AndroidViewResetScope<TextView>,
+        reason: AndroidViewResetReason,
+    ) {
+        scope.view.text = null
+    }
+}
 ```
 
 `key` 标识逻辑条目；Adapter 实现类与 `constructionKey` 共同标识构造敏感的 View 状态。状态

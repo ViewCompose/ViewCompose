@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "migration.compose-host",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "host.android-container",
+  "document_ids": ["migration.compose-host-lifecycle-android-interop"],
+  "version_lane": "released",
+  "source": "samples/compose-migration/src/main/java/com/viewcompose/samples/migration/host/ComposeHostSample.kt",
+  "region": "compose-host",
+  "build_target": ":samples:compose-migration:compileDebugKotlin"
+}

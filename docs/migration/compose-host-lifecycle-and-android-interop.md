@@ -1,3 +1,27 @@
+---
+schema_version: 2
+document_id: migration.compose-host-lifecycle-android-interop
+doc_type: migration
+owner:
+  kind: capability
+  id: host.android-container
+version_lane: released
+capability_ids:
+  - host.android-container
+  - host.android-view
+artifact_ids:
+  - viewcompose-android
+  - viewcompose-host-android
+  - viewcompose-lifecycle-androidx
+  - viewcompose-viewmodel-androidx
+  - viewcompose-renderer-android
+sample_ids:
+  - migration.compose-host
+  - migration.viewcompose-host
+source_state: Jetpack Compose UI and Runtime 1.11.4 host, lifecycle, state-owner, and Android View interop semantics.
+target_state: ViewCompose Android 0.1.0-alpha01 and Host Android 0.1.0-alpha04 ownership and interop contracts.
+---
+
 # Migrating Compose Hosts, Lifecycle, and Android Interop to ViewCompose
 
 This page maps Android host, lifecycle, state-owner, and Android View interop behavior from Jetpack

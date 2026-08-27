@@ -1,3 +1,26 @@
+---
+schema_version: 2
+document_id: architecture.android-resource-environment
+doc_type: architecture
+owner:
+  kind: capability
+  id: host.android-resources
+version_lane: released
+capability_ids:
+  - host.android-resources
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-host-android
+  - viewcompose-android
+sample_ids: []
+invariants:
+  - Android resource lookup and configuration observation are owned by the host rather than a design system.
+  - Resource revision and host-scoped locals propagate through retained child sessions without global fallback.
+evidence:
+  - Host resource tests, renderer and image revision tests, compiled module samples, Demo instrumentation, and quality gates.
+---
+
 # ADR-0007: Host-owned Android resource environment
 
 - Status: Accepted

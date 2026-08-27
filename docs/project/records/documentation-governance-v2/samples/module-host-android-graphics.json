@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.host-android-graphics",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "host.android-graphics",
+  "document_ids": ["module.viewcompose-host-android"],
+  "version_lane": "released",
+  "source": "viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt",
+  "region": "host-android-graphics",
+  "build_target": ":viewcompose-host-android:compileDebugUnitTestKotlin"
+}

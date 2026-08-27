@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "capability_id": "host.android-container",
+  "kind": "host",
+  "owner": { "kind": "module", "id": "viewcompose-host-android" },
+  "artifact": "viewcompose-host-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.host.android.viewComposeSaveableStateRegistry", "kind": "function", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidSaveableStateRegistry.kt" },
+    { "symbol_id": "com.viewcompose.host.android.RenderSession", "kind": "type", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt" },
+    { "symbol_id": "com.viewcompose.host.android.renderInto", "kind": "function", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt" },
+    { "symbol_id": "com.viewcompose.host.android.installRenderSessionInspectionTooling", "kind": "function", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderSessionInspectionToolingInstaller.kt" },
+    { "symbol_id": "com.viewcompose.host.android.UiHostAndroid", "kind": "type", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/UiHostAndroid.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.host.android-container", "generated": true },
+  "sample_owner": { "sample_id": "module.host-android-render-into" },
+  "document_owners": {
+    "module": ["module.viewcompose-host-android", "module.viewcompose-android"],
+    "migration": ["migration.compose-host-lifecycle-android-interop"]
+  }
+}

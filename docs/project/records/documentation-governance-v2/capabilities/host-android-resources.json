@@ -1,0 +1,30 @@
+{
+  "schema_version": 2,
+  "capability_id": "host.android-resources",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-host-android" },
+  "artifact": "viewcompose-host-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.host.android.environment.AndroidEnvironmentBridge", "kind": "type", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/environment/AndroidEnvironmentBridge.kt" },
+    { "symbol_id": "com.viewcompose.host.android.resources.AndroidResourceRefreshController", "kind": "type", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResourceEnvironment.kt" },
+    { "symbol_id": "com.viewcompose.host.android.resources.LocalAndroidContext", "kind": "type", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResourceEnvironment.kt" },
+    { "symbol_id": "com.viewcompose.host.android.resources.LocalAndroidResources", "kind": "type", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResourceEnvironment.kt" },
+    { "symbol_id": "com.viewcompose.host.android.resources.UiTreeBuilder.AndroidResourceEnvironment", "kind": "extension", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResourceEnvironment.kt" },
+    { "symbol_id": "com.viewcompose.host.android.resources.booleanResource", "kind": "function", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResources.kt" },
+    { "symbol_id": "com.viewcompose.host.android.resources.colorResource", "kind": "function", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResources.kt" },
+    { "symbol_id": "com.viewcompose.host.android.resources.dimensionPixelSizeResource", "kind": "function", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResources.kt" },
+    { "symbol_id": "com.viewcompose.host.android.resources.dimensionResource", "kind": "function", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResources.kt" },
+    { "symbol_id": "com.viewcompose.host.android.resources.integerArrayResource", "kind": "function", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResources.kt" },
+    { "symbol_id": "com.viewcompose.host.android.resources.integerResource", "kind": "function", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResources.kt" },
+    { "symbol_id": "com.viewcompose.host.android.resources.pluralStringResource", "kind": "function", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResources.kt" },
+    { "symbol_id": "com.viewcompose.host.android.resources.stringArrayResource", "kind": "function", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResources.kt" },
+    { "symbol_id": "com.viewcompose.host.android.resources.stringResource", "kind": "function", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/resources/AndroidResources.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.host.android-resources", "generated": true },
+  "sample_owner": { "sample_id": "module.host-android-resources" },
+  "document_owners": {
+    "architecture": ["architecture.android-resource-environment"],
+    "module": ["module.viewcompose-host-android", "module.viewcompose-android"]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.android-entry",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "host.android-container",
+  "document_ids": ["module.viewcompose-android"],
+  "version_lane": "released",
+  "source": "viewcompose-android/src/test/samples/com/viewcompose/android/samples/AndroidEntrySamples.kt",
+  "region": "android-entry",
+  "build_target": ":viewcompose-android:compileDebugUnitTestKotlin"
+}

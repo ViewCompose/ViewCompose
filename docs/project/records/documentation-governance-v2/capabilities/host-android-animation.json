@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "capability_id": "host.android-animation",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-host-android" },
+  "artifact": "viewcompose-host-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.host.android.animation.AndroidAnimationInterop", "kind": "type", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/animation/AndroidAnimationInterop.kt" },
+    { "symbol_id": "com.viewcompose.host.android.animation.Modifier.androidAnimation", "kind": "extension", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/animation/AndroidAnimationInterop.kt" },
+    { "symbol_id": "com.viewcompose.host.android.animation.UiTreeBuilder.MotionLayoutView", "kind": "extension", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/animation/AndroidAnimationInterop.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.host.android-animation", "generated": true },
+  "sample_owner": { "sample_id": "module.host-android-animation" },
+  "document_owners": { "module": ["module.viewcompose-host-android"] }
+}

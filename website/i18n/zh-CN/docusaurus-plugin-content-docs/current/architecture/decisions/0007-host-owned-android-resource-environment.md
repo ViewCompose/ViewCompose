@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0007-host-owned-android-resource-environment.md
-translation_source_hash: 88065d42b67997e27fc287132828ca734667c64dc581f0057b5b29f6312b3bec
+translation_source_hash: 6913c88f7fd1ab945499a0452d96b6a0370df627a1cd077dc92965c314c2cbbe
 translation_status: current
 ---
 

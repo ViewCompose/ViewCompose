@@ -1,6 +1,22 @@
 ---
-title: Use AndroidView
-sidebar_position: 10
+schema_version: 2
+document_id: tutorial.android-view
+doc_type: tutorial
+owner:
+  kind: capability
+  id: host.android-view
+version_lane: released
+capability_ids:
+  - host.android-view
+artifact_ids:
+  - viewcompose-host-android
+  - viewcompose-material3-android
+sample_ids:
+  - tutorial.android-view-dependencies
+  - tutorial.android-view
+  - module.host-android-view-adapter
+expected_result: A retained native TextView whose displayed count updates through ViewCompose state.
+verification_action: Run the sample, press Increment, and verify the same native TextView displays the updated count.
 ---
 
 # Use AndroidView
@@ -10,6 +26,7 @@ sidebar_position: 10
 This page is standalone. `AndroidView` is provided by `viewcompose-host-android`; no separate
 interop artifact is required:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="android-view-dependencies" sample_id="tutorial.android-view-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -79,27 +96,36 @@ escape hatch.
 Use `AndroidViewAdapter<V, S>` when the integration is reused or owns lifecycle callbacks. The View
 type and complete state snapshot remain checked across every callback:
 
+{/* compiled-region source="viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt" region="host-android-view-adapter" sample_id="module.host-android-view-adapter" build_target=":viewcompose-host-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-private data class NativeLabelState(val text: String)
-
-private class NativeLabelAdapter(
-    private val textAppearance: Int,
-) : AndroidViewAdapter<TextView, NativeLabelState> {
-    override fun create(scope: AndroidViewCreateScope): TextView =
-        TextView(scope.context, null, 0, textAppearance)
-
-    override fun update(scope: AndroidViewUpdateScope<TextView>, state: NativeLabelState) {
-        scope.view.text = state.text
-    }
+fun typedAndroidViewAdapterSample(builder: UiTreeBuilder) {
+    builder.AndroidView(
+        adapter = NativeLabelAdapter,
+        state = "Typed native label",
+        key = "label",
+        constructionKey = "default-text-appearance",
+        modifier = Modifier.nativeView(key = "enabled") { view ->
+            view.isEnabled = true
+        },
+    )
 }
 
-AndroidView(
-    adapter = NativeLabelAdapter(textAppearance),
-    state = NativeLabelState("Native TextView count: ${count.value}"),
-    key = "counter-label",
-    constructionKey = textAppearance,
-    modifier = Modifier.fillMaxWidth(),
-)
+private object NativeLabelAdapter : AndroidViewAdapter<TextView, String> {
+    override val reusePolicy: AndroidViewReusePolicy = AndroidViewReusePolicy.Resettable
+
+    override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: String) {
+        scope.view.text = state
+    }
+
+    override fun onReset(
+        scope: AndroidViewResetScope<TextView>,
+        reason: AndroidViewResetReason,
+    ) {
+        scope.view.text = null
+    }
+}
 ```
 
 `key` identifies the logical item. The adapter implementation class plus `constructionKey`

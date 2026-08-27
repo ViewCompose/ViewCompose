@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.android-dependency",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "host.android-container",
+  "document_ids": ["module.viewcompose-android"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "android-module-dependency",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

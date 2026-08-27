@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "capability_id": "host.android-graphics",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-host-android" },
+  "artifact": "viewcompose-host-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.host.android.graphics.AndroidGraphicsInterop", "kind": "type", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/graphics/AndroidGraphicsInterop.kt" },
+    { "symbol_id": "com.viewcompose.host.android.graphics.Modifier.androidGraphics", "kind": "extension", "visibility": "public", "source": "viewcompose-host-android/src/main/java/com/viewcompose/host/android/graphics/AndroidGraphicsInterop.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.host.android-graphics", "generated": true },
+  "sample_owner": { "sample_id": "module.host-android-graphics" },
+  "document_owners": { "module": ["module.viewcompose-host-android"] }
+}
