@@ -1,3 +1,22 @@
+---
+schema_version: 2
+document_id: project.roadmap
+doc_type: project
+slug: /project/roadmap
+owner:
+  kind: project
+  id: planning
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+workflow: Maintain the single current capability and milestone roadmap without parallel status ownership.
+validation:
+  - ./gradlew verifyDocumentationStructure
+  - ./gradlew qaQuick
+lifecycle: Update in the same change whenever capability status, active ownership, milestones, or deferred activation triggers change.
+---
+
 # ViewCompose Unified Roadmap
 
 ## 1. Scope

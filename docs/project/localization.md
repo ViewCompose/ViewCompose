@@ -1,3 +1,23 @@
+---
+schema_version: 2
+document_id: project.localization
+doc_type: project
+slug: /project/localization
+owner:
+  kind: project
+  id: documentation-governance
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+workflow: Maintain canonical English documentation and reviewed Simplified Chinese mirrors as one public change.
+validation:
+  - npm --prefix website run verify:languages
+  - npm --prefix website run verify:translations
+  - ./gradlew verifyDocumentationStructure
+lifecycle: Update whenever locale coverage, source fingerprints, language policy, or translation verification changes.
+---
+
 # Documentation Localization Workflow
 
 This page is the operational contract for maintaining ViewCompose documentation in English and

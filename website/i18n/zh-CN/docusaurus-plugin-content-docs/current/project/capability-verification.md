@@ -1,6 +1,6 @@
 ---
 translation_source: project/capability-verification.md
-translation_source_hash: 31e4c4560f7344047a26152cbf8568b5562fc5c35f2b3f8bcdac91f9eb3d0d01
+translation_source_hash: 271d85d2c86324c9d0e11a36470afa208f05c83f22c05100cf0e7527a02b8182
 translation_status: current
 ---
 

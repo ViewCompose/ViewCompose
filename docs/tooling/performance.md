@@ -1,3 +1,24 @@
+---
+schema_version: 2
+document_id: tooling.performance
+doc_type: tooling
+slug: /tooling/performance
+owner:
+  kind: project
+  id: performance
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+supported_versions:
+  - Current main benchmark targets and every revisioned accepted baseline named in this document.
+  - Android device, API, compilation, thermal, and clock policies stated beside each accepted result.
+verification_commands:
+  - ./gradlew qaRelease
+  - ./gradlew benchmarkRelease
+  - ./gradlew benchmarkCompare
+---
+
 # ViewCompose Performance
 
 ## 1. Scope

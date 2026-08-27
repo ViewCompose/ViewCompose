@@ -26,7 +26,11 @@
   "document_owners": {
     "module": ["module.viewcompose-ui-foundation"],
     "tutorial": ["tutorial.render-diagnostics"],
-    "architecture": ["adr.correlated-render-diagnostics", "architecture.development-tooling-isolation"],
+    "architecture": [
+      "adr.correlated-render-diagnostics",
+      "architecture.development-tooling-isolation",
+      "architecture.in-memory-development-tooling-installation"
+    ],
     "tooling": ["tooling.diagnostics"]
   }
 }

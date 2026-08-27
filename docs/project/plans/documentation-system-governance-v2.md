@@ -20,8 +20,8 @@ ordered_work:
   - Generate Reference ownership before broad content and sample migration.
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
-last_verified: 2026-08-27
-next_action: Merge the governed ADR-0014 through ADR-0018 and site-representation slice, then govern ADR-0022 and the four remaining project pages.
+last_verified: 2026-08-28
+next_action: Merge the zero-debt ADR-0022 and final project/tooling metadata slice, then execute Phase 7 strict closeout and archive this plan.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -162,16 +162,19 @@ governance, and normalized generated-document registry reduce that report to 10 
 missing-metadata findings with every other category at zero. The current ADR-0014 through ADR-0018
 slice removes five more exceptions and establishes a build-time representation boundary that keeps
 machine-only governance metadata out of browser page chunks without weakening source verification.
+The final metadata slice governs ADR-0022 plus the capability-verification, localization, roadmap,
+and performance owners and removes the last five exceptions, leaving a zero-issue report ready for
+Phase 7 strict closeout.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
 enter one explicit ratchet baseline, but the baseline cannot grow, and touching an allowlisted page
 must remove that page's repaired violations instead of preserving them.
 
-Last verified: 2026-08-27.
+Last verified: 2026-08-28.
 
-Next action: merge the governed ADR-0014 through ADR-0018 and site-representation slice, then govern
-ADR-0022 and the four remaining project pages.
+Next action: merge the zero-debt ADR-0022 and final project/tooling metadata slice, then execute
+Phase 7 strict closeout and archive this plan.
 Pull-request gate scaling Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -2026,6 +2029,41 @@ Accepted ADR-0014 through ADR-0018 governance and site-representation slice on 2
   outside its conclusion. Release intent found zero release artifacts, zero ignored artifacts, and
   zero shared-path classifications against `f97303141f9340f1207fef23a7bb32822ac37e5c`. The next
   action is ADR-0022 and the four remaining project pages.
+
+Accepted zero-debt ADR-0022 and final project/tooling metadata slice on 2026-08-28:
+
+- assigned stable ownership, an explicit route, released artifacts, current in-memory-slot
+  invariants, and implementation/test evidence to ADR-0022. Semantic reconciliation confirmed that
+  Host and Animation still freeze one synchronized process-local nullable slot at first read and
+  Preview still installs both ports before application startup only in a debuggable process;
+- assigned version-agnostic project lifecycle contracts to capability verification, localization,
+  and the unified roadmap, and assigned the performance specification a version-agnostic tooling
+  contract with explicit supported-baseline and verification commands. These pages retain project
+  or tooling ownership rather than manufacturing application capability relationships;
+- removed the final five metadata exceptions. The Governance V2 report changed from 5 to 0 issues:
+  all 531 discovered application entries, 123 active public pages and locale mirrors, and 201
+  executable fences now have complete ownership. Missing metadata, unclassified samples, orphan
+  symbols, taxonomy mismatches, duplicate owners, orphan documents, version conflicts, stale
+  generated output, unbaselined debt, and blocking violations are all zero;
+- regenerated the schema-3 Capability Reference with 531 entries. It grows from 234,313 to 234,774
+  bytes, a 461-byte (`0.1967%`) metadata-only increase;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,093,979 non-API
+  bytes, and left 84,235.4 bytes under the unchanged 46.9 MiB limit. This is 5,823 bytes (`0.0119%`)
+  above the preceding accepted build and is `no material change`. Docusaurus completed in `58.4 s`;
+  timing remains `inconclusive` because cache and process state differed, while the absolute result
+  remains below the `120 s` limit;
+- Governance V2, documentation structure, all 72 documentation-script tests, 123 reviewed Chinese
+  translations, generated Reference freshness, stable routes, release intent, and the complete
+  bilingual site passed. Complete single-worker `qaQuick` passed 2,342 actionable tasks in `41.2 s`
+  (180 executed and 2,162 up-to-date); this is completeness evidence rather than a speed comparison
+  because it reused previously produced publication, module, and site outputs;
+- the overall conclusion is `improved`: the exact Governance V2 debt is zero without weakening the
+  source, sample, route, locale, or site contracts. Release intent found zero release artifacts,
+  zero ignored artifacts, and zero shared-path classifications against
+  `f3c2527682d9d8b42dd47cb56c5789f2c28904b4`. This documentation-only slice changes no publication
+  input, public API, production runtime behavior, visual output, power behavior, or application
+  performance. Phase 7 strict closeout and plan archival intentionally remain a separate final
+  review slice after this zero-debt baseline is merged.
 
 | Current area | Required target |
 | --- | --- |

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0022-in-memory-development-tooling-installation.md
-translation_source_hash: 0e9bca1489d146b4213ac72fb5c12a8d5588088c4f6ac113afe88fc85b80ebd8
+translation_source_hash: 632c6a9de86acea61ea90530f80284940d3700d6c32561d3331bd19b9ba66903
 translation_status: current
 ---
 

@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: 1ed4f5b8cd0fdea9c60ba140aa652b652954d4ac8bcd2db19a7884d0e5cf6a7e
+translation_source_hash: cfc5c21f72dcaffd6b3aa2b8c2fcd9de4a16f5d29bd02c0afca053116d7a3d27
 translation_status: current
 ---
 
