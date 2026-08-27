@@ -12,6 +12,7 @@
   "sample_owner": { "sample_id": "guide.nested-scroll-toolbar" },
   "document_owners": {
     "guide": ["guide.nested-scroll-coordination"],
-    "architecture": ["architecture.modifier-runtime"]
+    "architecture": ["architecture.modifier-runtime"],
+    "module": ["module.viewcompose-gesture"]
   }
 }

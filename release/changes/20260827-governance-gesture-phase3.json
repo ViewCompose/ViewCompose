@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "summary": "Complete Gesture module documentation ownership without changing published artifacts.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-gesture-core",
+      "reason": "Only test-only compiled documentation fixtures gain exact source regions and sample bindings; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-gesture",
+      "reason": "Only test-only compiled documentation fixtures gain exact source regions and sample bindings; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

@@ -11,12 +11,14 @@ import com.viewcompose.gesture.core.resolveSwipeDecision
 import com.viewcompose.ui.gesture.GestureOrientation
 
 fun lockDragAxis() {
-    val axis = resolveLockAxis(
-        dx = 18f,
-        dy = 6f,
-        orientation = GestureOrientation.Free,
-        touchSlop = 8f,
-    )
+// DOCS_REGION_START(gesture-core-axis-lock)
+val axis = resolveLockAxis(
+    dx = 18f,
+    dy = 6f,
+    orientation = GestureOrientation.Free,
+    touchSlop = 8f,
+)
+// DOCS_REGION_END(gesture-core-axis-lock)
 
     check(axis == LockedAxis.Horizontal)
 }
@@ -47,14 +49,16 @@ fun updateAnchorsWithoutLosingPosition() {
 }
 
 fun resolveAnchoredDrag() {
-    val result = resolveAnchoredSettleTarget(
-        anchorsPx = listOf(0f, 160f, 320f),
-        startOffsetPx = 160f,
-        currentOffsetPx = 190f,
-        velocityPxPerSecond = 1_200f,
-        touchSlopPx = 8f,
-        minFlingVelocityPxPerSecond = 600f,
-    )
+// DOCS_REGION_START(gesture-core-anchored-settle)
+val result = resolveAnchoredSettleTarget(
+    anchorsPx = listOf(0f, 160f, 320f),
+    startOffsetPx = 160f,
+    currentOffsetPx = 190f,
+    velocityPxPerSecond = 1_200f,
+    touchSlopPx = 8f,
+    minFlingVelocityPxPerSecond = 600f,
+)
+// DOCS_REGION_END(gesture-core-anchored-settle)
 
     check(result.targetOffsetPx == 320f)
     check(result.reason == AnchoredSettleReason.Velocity)

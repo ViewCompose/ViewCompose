@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-gesture/README.md
-translation_source_hash: fb509e6fc6933d5df9f6f018177b9c6f040b901670e6bbfebb6d253c1cc7a5af
+translation_source_hash: a044014cbc6a53ec0e1b47ed169d63d4f4a581b0f520be07e141446c42b3b51b
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ translation_status: current
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="gesture-module-dependency" sample_id="module.gesture-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha04")
@@ -42,6 +43,7 @@ dependencies {
 `combinedClickable` 让一个 Renderer Recognizer 协调单击、双击与长按。计时和 Slop 来自
 Android。禁用或没有任何回调时会原样返回 Modifier，不增加空闲原生识别器。
 
+{/* compiled-region source="viewcompose-gesture/src/test/samples/com/viewcompose/gesture/samples/GestureSamples.kt" region="gesture-combined-click" sample_id="module.gesture-combined-click" build_target=":viewcompose-gesture:compileDebugUnitTestKotlin" */}
 ```kotlin
 val actions = Modifier.combinedClickable(
     onClick = { openItem() },
@@ -63,6 +65,7 @@ Free 方向锁定到主轴。取消原因可能是系统取消、Transform 接�
 `DraggableAnchors` 是经过验证、不可变、非空的有限且唯一像素 Offset 集。输入顺序会自动排序。
 语义值允许重复，但建议保持唯一，因为 `offsetOf` 选择第一个匹配；`valueAt` 使用 Float 精确相等。
 
+{/* compiled-region source="viewcompose-gesture/src/test/samples/com/viewcompose/gesture/samples/GestureSamples.kt" region="gesture-anchored-drag" sample_id="module.gesture-anchored-drag" build_target=":viewcompose-gesture:compileDebugUnitTestKotlin" */}
 ```kotlin
 val anchors = draggableAnchors<SheetValue> {
     anchor(0f, SheetValue.Collapsed)
@@ -95,10 +98,11 @@ Anchor 对齐。Anchored Drag 只接受 Horizontal 或 Vertical。
 物理像素偏移；对外的 `progress` 始终是从 `0f` Unchecked 到 `1f` Checked 的逻辑进度，因此 RTL
 可以传入负数 Checked 偏移，而绘制逻辑不需要反转。
 
+{/* compiled-region source="viewcompose-gesture/src/test/samples/com/viewcompose/gesture/samples/GestureSamples.kt" region="gesture-toggle-drag" sample_id="module.gesture-toggle-drag" build_target=":viewcompose-gesture:compileDebugUnitTestKotlin" */}
 ```kotlin
 val drag = rememberToggleDragState(
     checked = checked,
-    checkedAnchorOffsetPx = density.toPx(if (rtl) -20.dp else 20.dp),
+    checkedAnchorOffsetPx = density.toPx(if (rtl) (-20).dp else 20.dp),
     onCheckedChange = onCheckedChange,
 )
 val target = Modifier
@@ -157,6 +161,6 @@ Post 回调在之后。可选 `NestedScrollDispatcher` 支持应用主动派发�
 
 ## 兼容性说明
 
-`0.1.0-alpha03` 建立同步回调传递、Latest-lambda Remember State、Renderer 所有识别、立即 Anchor
+`0.1.0-alpha04` 建立同步回调传递、Latest-lambda Remember State、Renderer 所有识别、立即 Anchor
 Settle、显式取消和可断开的 Nested Scroll 派发。API 名称类似 Jetpack Compose Gesture Modifier
 不代表具有相同的挂起 Mutation、`MutatorMutex` 或动画行为。

@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.gesture-toggle-drag",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "gesture.modifiers",
+  "document_ids": ["module.viewcompose-gesture"],
+  "version_lane": "released",
+  "source": "viewcompose-gesture/src/test/samples/com/viewcompose/gesture/samples/GestureSamples.kt",
+  "region": "gesture-toggle-drag",
+  "build_target": ":viewcompose-gesture:compileDebugUnitTestKotlin"
+}

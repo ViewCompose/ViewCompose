@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.gesture-core-axis-lock",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "gesture.modifiers",
+  "document_ids": ["module.viewcompose-gesture-core"],
+  "version_lane": "released",
+  "source": "viewcompose-gesture-core/src/test/samples/com/viewcompose/gesture/core/samples/GestureCoreSamples.kt",
+  "region": "gesture-core-axis-lock",
+  "build_target": ":viewcompose-gesture-core:compileTestKotlin"
+}

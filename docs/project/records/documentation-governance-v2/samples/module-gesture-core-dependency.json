@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.gesture-core-dependency",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "gesture.modifiers",
+  "document_ids": ["module.viewcompose-gesture-core"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "gesture-core-module-dependency",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}
