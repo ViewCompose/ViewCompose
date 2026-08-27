@@ -1,3 +1,25 @@
+---
+schema_version: 2
+document_id: project.publishing
+doc_type: project
+owner:
+  kind: project
+  id: publishing
+version_lane: released
+capability_ids: []
+artifact_ids: []
+sample_ids:
+  - project.publishing-material-entry
+  - project.publishing-feature-entries
+  - project.publishing-core-entries
+workflow: Define independent Maven artifact planning, preparation, validation, Central publication, provenance tags, and Android Studio plugin release operations.
+validation:
+  - ./gradlew verifyViewComposePublishingConfiguration verifyViewComposeReleaseIntent
+  - ./gradlew verifyViewComposePublishedConsumption
+  - cd tools/viewcompose-studio-plugin && ./gradlew prepareMarketplaceRelease
+lifecycle: Update whenever artifact identity, release planning, dependency exposure, signing, remote publication, provenance, or Marketplace operations change.
+---
+
 # ViewCompose Publishing
 
 This document defines the local release contract for ViewCompose Maven artifacts and the Android
@@ -286,6 +308,7 @@ entry-point or optional-feature artifacts it intentionally uses, while those art
 ViewCompose types required by their public API. A minimal Android application therefore needs only
 one ViewCompose coordinate:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/PublishingDependencyContractSamples.kt" region="project-publishing-material-entry" sample_id="project.publishing-material-entry" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-material3-android:<version-with-this-contract>")
@@ -302,6 +325,7 @@ communicate deliberate direct API usage rather than compensate for incorrect pub
 Feature artifacts expose every ViewCompose module required to compile their public surface,
 including their platform-neutral core artifact:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/PublishingDependencyContractSamples.kt" region="project-publishing-feature-entries" sample_id="project.publishing-feature-entries" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
@@ -313,6 +337,7 @@ dependencies {
 
 Core artifacts are also independently consumable from Kotlin/JVM modules:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/PublishingDependencyContractSamples.kt" region="project-publishing-core-entries" sample_id="project.publishing-core-entries" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03")

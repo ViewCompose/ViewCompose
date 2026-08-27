@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the Effects architecture ownership slice, then hard-cut publishing workflow ownership as the next Phase 3 boundary.
+next_action: Merge the publishing workflow ownership slice, then hard-cut Source Documentation and API Comment Standard sample ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -147,6 +147,10 @@ The accepted Effects architecture hard cut now gives the Foundation effect runti
 capability owner, extends the existing State, Lifecycle, and Renderer owners only at their real
 boundaries, registers one compiled bilingual Local-capture decision, removes two resolved
 exceptions, and reduces the report to 41 issues.
+The accepted publishing workflow hard cut now gives the repository release workflow exact project
+ownership, registers three compiled bilingual dependency-exposure decisions, removes two resolved
+exceptions representing four findings, and reduces the report to 37 issues without adding a
+maintainer-only concept to the application capability Reference.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -155,9 +159,9 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the Effects architecture ownership slice, then hard-cut publishing workflow
-ownership as the next Phase 3 boundary. Pull-request gate scaling Phases 3 through 5 are complete,
-so these scoped content
+Next action: merge the publishing workflow ownership slice, then hard-cut Source Documentation and
+API Comment Standard sample ownership as the next Phase 3 boundary. Pull-request gate scaling
+Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
 
@@ -242,7 +246,7 @@ workflows, and compiled repository-quality tooling only; they do not change a pu
 production source, publication inputs, or compiled API sample bodies.
 `verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, zero ignored
 artifacts, and zero shared-path classifications against
-`6072312fe117dd32f09922ef28c5c3ac195101c2`.
+`6a89c53e1297cc8a605c571920c0ffd2a1c66b73`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1665,6 +1669,42 @@ Accepted Effects architecture ownership slice on 2026-08-27:
   against `6072312fe117dd32f09922ef28c5c3ac195101c2`. This slice changes no public API or production
   runtime behavior and makes no new runtime, visual, power, or performance claim. The next action
   is publishing workflow ownership.
+
+Accepted publishing workflow ownership slice on 2026-08-27:
+
+- retained the stable Project route and assigned it to the repository-level `publishing` owner.
+  The page remains a maintainer workflow with no application-facing capability or artifact claim;
+  its lifecycle now explicitly covers Maven planning, dependency exposure, signing, Central
+  publication, immutable provenance tags, and Android Studio Marketplace operations;
+- registered three exact bilingual compiled dependency decisions for the Material Android entry
+  point, Android feature artifacts, and independently consumable Core artifacts. A focused
+  application-level Kotlin DSL fixture preserves the copy-ready coordinate forms while the
+  publishing configuration and isolated consumer gates remain the semantic dependency evidence;
+- removed two resolved metadata and sample exception records representing four findings. The
+  report changed from 41 to 37 issues: missing metadata 35 to 34 and unclassified samples 6 to 3.
+  All 531 discovered entries remain owned; orphan symbols, taxonomy mismatches, duplicate owners,
+  orphan documents, version conflicts, stale generated output, unbaselined debt, and blocking
+  violations remain zero;
+- the generated Reference retained 531 entries and its normalized catalog remained byte-for-byte
+  unchanged at 237,828 bytes. This is the intended boundary: project-only publication workflow
+  must not appear as an application capability;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,075,467 non-API
+  bytes, and left 102,747 bytes under the unchanged 46.9 MiB limit. This is 3,760 bytes (`0.0077%`)
+  above the Effects architecture slice and is `no material change`. Docusaurus completed in
+  `40.3 s`; timing remains `inconclusive` because cache and process state differed, while the
+  absolute result remains below the `120 s` limit;
+- Tutorials sample compilation, exact bilingual region identity, Governance V2, documentation
+  structure, language and translation review, generated Reference freshness, release intent, and
+  the complete bilingual site passed. Complete single-worker `qaQuick` passed 2,342 actionable
+  tasks in `1 min 8 s` (187 executed and 2,155 up-to-date); this is completeness evidence rather
+  than a speed comparison because it reused previously produced publication and module outputs;
+- the overall conclusion is `improved`: the release workflow now has exact project lifecycle,
+  validation, and compiled dependency-example ownership without leaking maintainer concepts into
+  the public capability catalog. Release intent found zero release artifacts, zero ignored
+  artifacts, and zero shared-path classifications against
+  `6a89c53e1297cc8a605c571920c0ffd2a1c66b73`. This slice changes no publication input, public API,
+  or production runtime behavior and makes no new runtime, visual, power, or performance claim.
+  The next action is Source Documentation and API Comment Standard sample ownership.
 
 | Current area | Required target |
 | --- | --- |
