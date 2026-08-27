@@ -846,8 +846,19 @@ tasks in `18 min 27 s`; the enclosing child job completed in `19 min 15 s`. Docu
 in `5 min 14 s` and Preview in `7 min 54 s`, so the required critical path was the `qaQuick` child.
 This result is **no material change** for correctness and **inconclusive** for latency because it is
 a single full-fallback rollout sample rather than the newly accepted no-shadow class. It closes
-hosted verification of the typed `complete` mode; `skip` and the first eligible `affected`
-observation remain next.
+hosted verification of the typed `complete` mode; the first eligible `affected` observation
+remains next after the `skip` evidence below.
+
+Pull request #216 supplied that hosted `skip` observation with a plan-document-only diff. The
+classifier selected documentation governance and documentation site, emitted `qaQuick=false` and
+`qaQuickMode=skip`, and selected no project or published artifact. Both `qaQuick work` and
+`qaPreview work` were skipped while their stable required facades passed in `2 s` and `4 s`.
+Documentation planning passed in `56 s`, the complete documentation child passed in `5 min 45 s`,
+and the final documentation facade completed `6 min 53 s` after the workflow started. Scope and
+required-context behavior are **improved**, correctness is **no material change**, and latency is
+**inconclusive** as a cross-class comparison even though this observed path is below the plan's
+`8 min` P50 and `12 min` P95 ceilings. This closes hosted verification of `skip`; it does not count
+as the required post-cut `affected` documentation/Tutorial-sample observation.
 
 The current website stack already uses Docusaurus `3.10.2`, React `19.2.8`, Node `24.19.0`, and npm
 `11.8.0`. Replacing or broadly upgrading it is not accepted as a latency action from this evidence:
