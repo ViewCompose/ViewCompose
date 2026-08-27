@@ -16,6 +16,7 @@
   "sample_owner": { "sample_id": "module.host-android-render-into" },
   "document_owners": {
     "module": ["module.viewcompose-host-android", "module.viewcompose-android"],
+    "architecture": ["architecture.public-package-ownership", "architecture.design-system-host-backends"],
     "migration": ["migration.compose-host-lifecycle-android-interop"]
   }
 }

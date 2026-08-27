@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0004-design-system-resolution-boundary.md
-translation_source_hash: ca33713c92d9f9e53aa1b2a89d374e162c27ac51acf3509b8f52ec62a5c150ca
+translation_source_hash: fab4d1c1609d6c31474747147f669fd8c97cdd1886fefbf2a56ec7c72a40b9ba
 translation_status: current
 ---
 

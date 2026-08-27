@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0003-public-package-ownership-and-platform-handles.md
-translation_source_hash: 241904fbf24c06e426d6c576b418cf5b3dfc319aeb30d22d96c94f8e27de1756
+translation_source_hash: 0d918f2808b009db69d59bc766a9bfc6cec3485cf68e4f02c0f08ad85d4fb227
 translation_status: current
 ---
 

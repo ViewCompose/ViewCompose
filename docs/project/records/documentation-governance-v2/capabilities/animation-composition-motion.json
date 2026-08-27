@@ -20,7 +20,8 @@
     "tutorial": ["tutorial.animation"],
     "architecture": [
       "architecture.animation-physics-ownership",
-      "architecture.animation-value-velocity-domains"
+      "architecture.animation-value-velocity-domains",
+      "architecture.design-system-resolution"
     ],
     "module": [
       "module.viewcompose-animation",

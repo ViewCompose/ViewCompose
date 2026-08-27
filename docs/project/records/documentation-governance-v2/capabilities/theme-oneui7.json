@@ -12,6 +12,10 @@
   "sample_owner": { "sample_id": "module.oneui7-theme" },
   "document_owners": {
     "module": ["module.viewcompose-oneui7"],
-    "architecture": ["architecture.design-system-integration"]
+    "architecture": [
+      "architecture.design-system-integration",
+      "architecture.design-system-resolution",
+      "architecture.design-system-host-backends"
+    ]
   }
 }

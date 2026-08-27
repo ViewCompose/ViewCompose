@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0002-five-layer-runtime-module-architecture.md
-translation_source_hash: 0201bbc759416a91bb257ec31a589c87ad06c8fffafd4c4ed3c059a3ff35b3b1
+translation_source_hash: 5952bdfc2809ddaa93a105019f2ba4b2a816b1424086e67a661a2b84011e701c
 translation_status: current
 ---
 
