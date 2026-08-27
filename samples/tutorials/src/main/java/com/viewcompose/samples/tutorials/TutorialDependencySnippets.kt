@@ -91,6 +91,14 @@ dependencies {
     // DOCS_REGION_END(viewmodel-androidx-module-dependency)
 }
 
+private val rendererAndroidModuleDependency = run {
+    // DOCS_REGION_START(renderer-android-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-renderer-android:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(renderer-android-module-dependency)
+}
+
 private val androidViewTutorialDependencies = run {
     // DOCS_REGION_START(android-view-dependencies)
 repositories { mavenCentral() }

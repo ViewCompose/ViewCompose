@@ -1002,7 +1002,12 @@ internal object DocumentationGovernanceV2Reporter {
                     visibility = if ("protected" in modifiers) "protected" else "public",
                 )
             }
-            if (family == "Integration" || family == "Preview tooling" || artifact == "viewcompose-host-android") {
+            if (
+                family == "Integration" ||
+                family == "Preview tooling" ||
+                artifact == "viewcompose-host-android" ||
+                artifact == "viewcompose-renderer-android"
+            ) {
                 topLevelCallableDeclaration.findAll(sanitized).forEach declaration@{ match ->
                     if (braceDepths[match.range.first] != 0) return@declaration
                     val modifiers = match.groupValues[1].trim().split(Regex("\\s+"))
@@ -1015,11 +1020,12 @@ internal object DocumentationGovernanceV2Reporter {
                     val path = sourceFile.path
                     entries += CapabilityDeclaration(
                         artifact = artifact,
-                        kind = when {
-                            family == "Preview tooling" -> "tooling"
-                            artifact == "viewcompose-host-android" -> "host"
-                            else -> "integration"
-                        },
+                        kind = classifyApplicationEntry(
+                            artifact = artifact,
+                            family = family,
+                            packageName = packageName,
+                            name = name,
+                        ),
                         line = source.lineNumberAt(match.range.first),
                         path = path,
                         receiver = null,
@@ -1044,11 +1050,12 @@ internal object DocumentationGovernanceV2Reporter {
                     val path = sourceFile.path
                     entries += CapabilityDeclaration(
                         artifact = artifact,
-                        kind = when {
-                            family == "Preview tooling" -> "tooling"
-                            artifact == "viewcompose-host-android" -> "host"
-                            else -> "integration"
-                        },
+                        kind = classifyApplicationEntry(
+                            artifact = artifact,
+                            family = family,
+                            packageName = packageName,
+                            name = name,
+                        ),
                         line = source.lineNumberAt(match.range.first),
                         path = path,
                         receiver = null,
@@ -1339,7 +1346,29 @@ internal object DocumentationGovernanceV2Reporter {
         """(?m)^\s*((?:(?:public|protected|private|internal|inline|infix|operator|suspend|tailrec|external|actual|expect)\s+)*)fun\s+(?:<[^>\n]+>\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\(""",
     )
     private val topLevelTypeDeclaration = Regex(
-        """(?m)^\s*((?:(?:public|protected|private|internal|data|sealed|enum|annotation|value|actual|expect)\s+)*)(class|interface|object|typealias)\s+([A-Za-z_][A-Za-z0-9_]*)""",
+        """(?m)^\s*((?:(?:public|protected|private|internal|abstract|open|data|sealed|enum|annotation|value|fun|actual|expect)\s+)*)(class|interface|object|typealias)\s+([A-Za-z_][A-Za-z0-9_]*)""",
+    )
+    private val rendererPublicCapabilityPackages = setOf(
+        "com.viewcompose.renderer.decoration",
+        "com.viewcompose.renderer.reconcile",
+        "com.viewcompose.renderer.view.tree",
+    )
+    private val rendererToolingEntryNames = setOf(
+        "LayoutPassEntry",
+        "LayoutPassSnapshot",
+        "LayoutPassTracker",
+        "NodeTypeBindingStats",
+        "RenderPatchOperation",
+        "RenderPatchRecord",
+        "RenderStats",
+        "RenderStructureStats",
+        "RenderTreeNode",
+        "RenderTreeTimingCollector",
+        "RenderTreeTimingPhase",
+        "RenderTreeTimingSpan",
+        "RenderTreeTimingSubject",
+        "ReuseBindingResult",
+        "ViewNodeToolingRegistry",
     )
     private val moduleFamilyRow = Regex(
         """^\|\s*`(viewcompose-[a-z0-9-]+)`\s*\|\s*([^|]+?)\s*\|""",
@@ -1462,8 +1491,24 @@ internal object DocumentationGovernanceV2Reporter {
         family == "Preview tooling" ->
             name.startsWith("Preview") || name.startsWith("ViewComposePreview") || name.endsWith("Plugin")
         artifact == "viewcompose-host-android" -> true
+        artifact == "viewcompose-renderer-android" -> packageName in rendererPublicCapabilityPackages
         family == "Integration" -> true
         else -> false
+    }
+
+    private fun classifyApplicationEntry(
+        artifact: String,
+        family: String,
+        packageName: String,
+        name: String,
+    ): String = when {
+        family == "Preview tooling" -> "tooling"
+        artifact == "viewcompose-host-android" -> "host"
+        artifact == "viewcompose-renderer-android" &&
+            packageName == "com.viewcompose.renderer.decoration" -> "integration"
+        artifact == "viewcompose-renderer-android" && name in rendererToolingEntryNames -> "tooling"
+        artifact == "viewcompose-renderer-android" -> "host"
+        else -> "integration"
     }
 
     private fun documentPlacementViolations(path: String, docType: String?): List<String> {

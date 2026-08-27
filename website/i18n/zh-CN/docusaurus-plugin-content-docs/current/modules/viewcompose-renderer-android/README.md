@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: ec128ab13f28fbaa51835336c909690053fa2f6fa0a80a5acba7e62ddf7c3e96
+translation_source_hash: 713b33013fc1b6283112d13295551cc2ce4a1345a57d8fae1caf8448d83684e8
 translation_status: current
 ---
 
@@ -19,6 +19,7 @@ shape 与绘图命令，并提供渲染工作量、树结构、布局过程和�
 
 ## 构件与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="renderer-android-module-dependency" sample_id="module.renderer-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-renderer-android:0.1.0-alpha01")
@@ -58,20 +59,31 @@ dependencies {
 
 ## 渲染模型
 
+{/* compiled-region source="viewcompose-renderer-android/src/test/samples/com/viewcompose/renderer/samples/RendererSamples.kt" region="renderer-tree-transaction" sample_id="module.renderer-tree-transaction" build_target=":viewcompose-renderer-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-var mounted = ViewTreeRenderer.renderInto(
-    container = container,
-    previous = emptyList(),
-    nodes = firstFrame,
-).mountedNodes
+fun renderIntoViewGroupSample(
+    container: ViewGroup,
+    firstFrame: List<VNode>,
+    nextFrame: List<VNode>,
+) {
+    val initial = ViewTreeRenderer.renderInto(
+        container = container,
+        previous = emptyList(),
+        nodes = firstFrame,
+    )
+    initial.commitEffects.forEach { effect -> effect.commit() }
+    var mounted = initial.mountedNodes
 
-mounted = ViewTreeRenderer.renderInto(
-    container = container,
-    previous = mounted,
-    nodes = nextFrame,
-).mountedNodes
+    val updated = ViewTreeRenderer.renderInto(
+        container = container,
+        previous = mounted,
+        nodes = nextFrame,
+    )
+    updated.commitEffects.forEach { effect -> effect.commit() }
+    mounted = updated.mountedNodes
 
-ViewTreeRenderer.disposeMounted(container, mounted)
+    ViewTreeRenderer.disposeMounted(container, mounted)
+}
 ```
 
 已挂载节点列表是所有权令牌，不是可有可无的缓存。host 必须把上一次成功帧返回的原始根节点
@@ -192,6 +204,10 @@ Google/API 33，另有此前 Xiaomi/API 28 证据；视觉矩阵是 12 个 Pairw
 Matrix。Phase 4 负责该基准与最终指导。
 
 ## 主要 API
+
+本模块的 Reconciliation、Observed-property、Timing 与 Decoration 示例统一从
+[`RendererSamples.kt`](../../../../../../../viewcompose-renderer-android/src/test/samples/com/viewcompose/renderer/samples/RendererSamples.kt)
+编译，因此生成的能力参考与 KDoc 示例共享同一份受检查源码。
 
 - [`ViewTreeRenderer`](https://docs.viewcompose.com/api/viewcompose-renderer-android/0.1.0-alpha01/viewcompose-renderer-android/com.viewcompose.renderer.view.tree/-view-tree-renderer/)
   管理 VNode 到 View 的事务渲染与释放边界。

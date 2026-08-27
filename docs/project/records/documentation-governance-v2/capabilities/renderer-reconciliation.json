@@ -1,0 +1,26 @@
+{
+  "schema_version": 2,
+  "capability_id": "renderer.reconciliation",
+  "kind": "host",
+  "owner": { "kind": "module", "id": "viewcompose-renderer-android" },
+  "artifact": "viewcompose-renderer-android",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.renderer.reconcile.ChildReconciler", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/ChildReconciler.kt" },
+    { "symbol_id": "com.viewcompose.renderer.reconcile.ReconcileResult", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/ChildReconciler.kt" },
+    { "symbol_id": "com.viewcompose.renderer.reconcile.ReconcileNode", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/RenderPatch.kt" },
+    { "symbol_id": "com.viewcompose.renderer.reconcile.RenderPatch", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/RenderPatch.kt" },
+    { "symbol_id": "com.viewcompose.renderer.reconcile.ReusePatch", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/RenderPatch.kt" },
+    { "symbol_id": "com.viewcompose.renderer.reconcile.InsertPatch", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/RenderPatch.kt" },
+    { "symbol_id": "com.viewcompose.renderer.reconcile.RemovePatch", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/RenderPatch.kt" },
+    { "symbol_id": "com.viewcompose.renderer.reconcile.LazyListDiff", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/LazyListDiff.kt" },
+    { "symbol_id": "com.viewcompose.renderer.reconcile.LazyListDiffResult", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/LazyListDiff.kt" },
+    { "symbol_id": "com.viewcompose.renderer.reconcile.LazyListUpdate", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/LazyListDiff.kt" },
+    { "symbol_id": "com.viewcompose.renderer.reconcile.LazyListChangePayload", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/LazyListDiff.kt" },
+    { "symbol_id": "com.viewcompose.renderer.reconcile.LazyListIdentityInspector", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/LazyListIdentityInspector.kt" },
+    { "symbol_id": "com.viewcompose.renderer.reconcile.LazyListIdentityAnalysis", "kind": "type", "visibility": "public", "source": "viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/reconcile/LazyListIdentityInspector.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.renderer.reconciliation", "generated": true },
+  "sample_owner": { "sample_id": "module.renderer-reconciliation" },
+  "document_owners": { "module": ["module.viewcompose-renderer-android"] }
+}

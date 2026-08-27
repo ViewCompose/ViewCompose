@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the ViewModel ownership slice, then audit Renderer ownership as the next Phase 3 boundary.
+next_action: Merge the Renderer ownership slice, then audit Diagnostics ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -30,6 +30,7 @@ maven_release_changesets:
   - release/changes/20260827-governance-host-android-phase3.json
   - release/changes/20260827-governance-lifecycle-phase3.json
   - release/changes/20260827-governance-viewmodel-phase3.json
+  - release/changes/20260827-governance-renderer-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -90,6 +91,10 @@ compiled sample decisions, removes 10 resolved exceptions, and reduces the repor
 The accepted ViewModel hard cut now assigns all five owner-boundary, store-resolution, and
 saved-state entries to three capability owners, registers four compiled sample decisions, removes
 six resolved exceptions, and reduces the report to 231 issues.
+The accepted Renderer hard cut now assigns all 41 public transaction, reconciliation, diagnostics,
+and decoration-backend entries to four capability owners, registers six compiled sample decisions,
+repairs the scanner's modifier-form and Renderer-package coverage, removes two resolved exceptions,
+and reduces the report to 228 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -98,7 +103,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the ViewModel ownership slice, then audit Renderer ownership as the next
+Next action: merge the Renderer ownership slice, then audit Diagnostics ownership as the next
 Phase 3 boundary. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
@@ -136,6 +141,10 @@ remains owned by this plan after the Phase 3 content owners move.
   declaration was reordered. Test sources are excluded from published artifacts; production
   source, API, runtime behavior, publication metadata, and generated artifact content remain
   unchanged.
+- `release/changes/20260827-governance-renderer-phase3.json` explicitly ignores Renderer Android
+  because only test-only compiled documentation fixtures gained exact source regions and complete
+  transaction execution. Test sources are excluded from published artifacts; production source,
+  API, runtime behavior, publication metadata, and generated artifact content remain unchanged.
 
 ## Release intent rationale
 
@@ -143,8 +152,8 @@ The completed Phase 2 governance-tooling slices change governance records, docum
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
 `verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, one explicitly
-ignored ViewModel AndroidX artifact, and zero shared-path classifications against
-`835c51eb19e794cd3b22ca528e7e2756afcb5f16`.
+ignored Renderer Android artifact, and zero shared-path classifications against
+`6ab095a7f6dbaff532deaaa01f0c37af9efb1c4f`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1115,6 +1124,44 @@ Accepted ViewModel ownership slice on 2026-08-27:
   release artifacts and explicitly ignored the one test-sample-only ViewModel artifact. This slice
   reuses existing unit, navigation, saved-state, and performance evidence and makes no new runtime,
   visual, power, or performance claim. The next action is Renderer ownership.
+
+Accepted Renderer ownership slice on 2026-08-27:
+
+- retained the existing Renderer Android module route while separating structural tree
+  transactions, keyed reconciliation, diagnostics/timing tooling, and platform decoration backend
+  ownership. Application diagnostics remain a separate audit boundary;
+- hard-cut the public inventory scanner to include Renderer application packages and public
+  `abstract`, `open`, and `fun interface` declarations. The generated inventory increased from 433
+  to 479 entries: 41 previously absent Renderer declarations plus five previously omitted
+  Lifecycle, Overlay Host, and Preview modifier-form declarations. The corrected existing owners
+  now include those five declarations instead of leaving scanner blind spots;
+- registered four capability owners for all 41 Renderer entries and six exact compiled dependency,
+  tree-transaction, observed-property, reconciliation, timing, and decoration-backend sample
+  decisions. The tree-transaction example now commits both frames before disposal, so a custom
+  host cannot copy an incomplete transaction sequence. Two resolved metadata and sample exception
+  records were removed;
+- the report changed from 231 to 228 issues: missing metadata 60 to 59 and unclassified samples 77
+  to 75. Orphan symbols remained 92 and taxonomy mismatches remained 2; duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero despite the 46-entry scanner expansion;
+- Renderer Android unit tests, the affected Tutorial compilation, the quality-tool unit suite,
+  Governance V2, documentation structure, language and translation review, complete API reuse,
+  release intent, and the complete bilingual site passed. The evidence-bearing site audited 454
+  pages, produced 49,149,638 non-API bytes, left 28,576 bytes under the unchanged 46.9 MiB limit,
+  and completed Docusaurus in `24.7 s`. This is 81,110 bytes (`0.1653%`) above the ViewModel slice
+  and is `no material change` for four capability records, 46 corrected generated entries, and six
+  compiled sample decisions. The absolute build time remains below the `120 s` limit, but the
+  narrow size headroom means the next slice must avoid duplicated prose or reduce generated output
+  instead of increasing the budget. Complete `qaQuick` passed 2,342 actionable tasks in `8 min
+  17 s` (2,089 executed and 253 up-to-date). The duration comparison with prior warm runs is
+  `inconclusive` because this run regenerated and locally published most module documentation
+  artifacts;
+- the overall conclusion is `improved`: the complete Renderer extension surface now has exact
+  generated ownership, compiled transaction examples, and scanner coverage without changing
+  public API, production runtime behavior, routes, or published artifacts. Release intent found
+  zero release artifacts and explicitly ignored the one test-sample-only Renderer artifact. This
+  slice reuses existing unit, renderer, device, visual, and performance evidence and makes no new
+  runtime, visual, power, or performance claim. The next action is Diagnostics ownership.
 
 | Current area | Required target |
 | --- | --- |

@@ -176,6 +176,13 @@
       "versionState": "released"
     },
     {
+      "apiReference": "/api/viewcompose-renderer-android/0.1.0-alpha01/",
+      "artifact": "viewcompose-renderer-android",
+      "moduleManual": "/modules/viewcompose-renderer-android/0.1.0-alpha01/",
+      "version": "0.1.0-alpha01",
+      "versionState": "released"
+    },
+    {
       "apiReference": "/api/viewcompose-shadow-android/0.1.0-alpha04/",
       "artifact": "viewcompose-shadow-android",
       "moduleManual": "/modules/viewcompose-shadow-android/0.1.0-alpha04/",
@@ -5109,6 +5116,68 @@
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.android-view",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "referenceId": "reference.lifecycle.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-android-view-saved-state",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.lifecycle.LifecycleAndroidViewAdapter"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.effects",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "referenceId": "reference.lifecycle.effects",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "architecture.transactional-effect-lifecycle",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0008-transactional-effect-lifecycle"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-effects",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.lifecycle.LifecyclePauseOrDisposeEffectResult"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
           "capabilityId": "lifecycle.effects",
           "deprecated": true,
           "kind": "integration",
@@ -5232,6 +5301,37 @@
             "versionLane": "released"
           },
           "symbol": "com.viewcompose.lifecycle.LifecycleStartStopEffectScope"
+        },
+        {
+          "artifact": "viewcompose-lifecycle-androidx",
+          "capabilityId": "lifecycle.effects",
+          "kind": "integration",
+          "namespace": "com.viewcompose.lifecycle",
+          "overloadCount": 1,
+          "referenceId": "reference.lifecycle.effects",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.lifecycle-saved-state",
+              "documentType": "architecture",
+              "path": "/architecture/lifecycle-and-saved-state"
+            },
+            {
+              "documentId": "architecture.transactional-effect-lifecycle",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0008-transactional-effect-lifecycle"
+            },
+            {
+              "documentId": "module.viewcompose-lifecycle-androidx",
+              "documentType": "module",
+              "path": "/modules/viewcompose-lifecycle-androidx/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.lifecycle-effects",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.lifecycle.LifecycleStopOrDisposeEffectResult"
         },
         {
           "artifact": "viewcompose-lifecycle-androidx",
@@ -6556,6 +6656,132 @@
           "symbol": "com.viewcompose.paging.ViewComposePagingItems"
         },
         {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.decoration-backend",
+          "kind": "integration",
+          "namespace": "com.viewcompose.renderer.decoration",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.decoration-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-decoration-backend",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.decoration.AndroidViewDecorationBackend"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.decoration-backend",
+          "kind": "integration",
+          "namespace": "com.viewcompose.renderer.decoration",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.decoration-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-decoration-backend",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.decoration.AndroidViewDecorationPresence"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.decoration-backend",
+          "kind": "integration",
+          "namespace": "com.viewcompose.renderer.decoration",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.decoration-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-decoration-backend",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.decoration.AndroidViewDecorationRequest"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.decoration-backend",
+          "kind": "integration",
+          "namespace": "com.viewcompose.renderer.decoration",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.decoration-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-decoration-backend",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.decoration-backend",
+          "kind": "integration",
+          "namespace": "com.viewcompose.renderer.decoration",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.decoration-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-decoration-backend",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.decoration.DecorationChildDrawingOrder"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.decoration-backend",
+          "kind": "integration",
+          "namespace": "com.viewcompose.renderer.decoration",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.decoration-backend",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-decoration-backend",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.decoration.ViewDecorationHostLayout"
+        },
+        {
           "artifact": "viewcompose-shadow-android",
           "capabilityId": "shadow.android-backend",
           "kind": "integration",
@@ -7311,7 +7537,7 @@
           "symbol": "com.viewcompose.viewmodel.viewModel"
         }
       ],
-      "entryCount": 157,
+      "entryCount": 166,
       "groupId": "integrations"
     },
     {
@@ -7927,6 +8153,27 @@
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "overlay.host-defaults",
+          "kind": "host",
+          "namespace": "com.viewcompose.host.android.overlay",
+          "overloadCount": 1,
+          "referenceId": "reference.overlay.host-defaults",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.overlay-root-selection",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.overlay-android-dependency",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.host.android.overlay.AndroidOverlayHostFactoryProvider"
+        },
+        {
+          "artifact": "viewcompose-host-android",
           "capabilityId": "host.android-container",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
@@ -8390,13 +8637,454 @@
             "versionLane": "released"
           },
           "symbol": "com.viewcompose.host.android.viewComposeSaveableStateRegistry"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.reconciliation",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.reconcile",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.reconciliation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-reconciliation",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.reconcile.ChildReconciler"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.reconciliation",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.reconcile",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.reconciliation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-reconciliation",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.reconcile.InsertPatch"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.reconciliation",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.reconcile",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.reconciliation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-reconciliation",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.reconcile.LazyListChangePayload"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.reconciliation",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.reconcile",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.reconciliation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-reconciliation",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.reconcile.LazyListDiff"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.reconciliation",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.reconcile",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.reconciliation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-reconciliation",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.reconcile.LazyListDiffResult"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.reconciliation",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.reconcile",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.reconciliation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-reconciliation",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.reconcile.LazyListIdentityAnalysis"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.reconciliation",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.reconcile",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.reconciliation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-reconciliation",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.reconcile.LazyListIdentityInspector"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.reconciliation",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.reconcile",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.reconciliation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-reconciliation",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.reconcile.LazyListUpdate"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.reconciliation",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.reconcile",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.reconciliation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-reconciliation",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.reconcile.ReconcileNode"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.reconciliation",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.reconcile",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.reconciliation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-reconciliation",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.reconcile.ReconcileResult"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.reconciliation",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.reconcile",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.reconciliation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-reconciliation",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.reconcile.RemovePatch"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.reconciliation",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.reconcile",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.reconciliation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-reconciliation",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.reconcile.RenderPatch"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.reconciliation",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.reconcile",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.reconciliation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-reconciliation",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.reconcile.ReusePatch"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.tree-transactions",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.tree-transactions",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-tree-transaction",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.MountedNode"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.tree-transactions",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.tree-transactions",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-tree-transaction",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.ObservedPropertyRenderResult"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.tree-transactions",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.tree-transactions",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-tree-transaction",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.RenderTreeCommitEffect"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.tree-transactions",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.tree-transactions",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-tree-transaction",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.RenderTreeCommitFailure"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.tree-transactions",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.tree-transactions",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-tree-transaction",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.RenderTreeResult"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.tree-transactions",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.tree-transactions",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-tree-transaction",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.ViewTreeObservedPropertyPatch"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.tree-transactions",
+          "kind": "host",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.tree-transactions",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-tree-transaction",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.ViewTreeRenderer"
         }
       ],
-      "entryCount": 37,
+      "entryCount": 58,
       "groupId": "android-interop"
     },
     {
       "entries": [
+        {
+          "artifact": "viewcompose-preview",
+          "capabilityId": "preview.integration",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.preview",
+          "overloadCount": 1,
+          "referenceId": "reference.preview.integration",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-preview",
+              "documentType": "module",
+              "path": "/modules/viewcompose-preview/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.preview-compose-bridge",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.preview.PreviewThemeProvider"
+        },
         {
           "artifact": "viewcompose-preview",
           "capabilityId": "preview.integration",
@@ -9699,9 +10387,324 @@
             "versionLane": "released"
           },
           "symbol": "com.viewcompose.preview.worker.PreviewWorkerHost"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.LayoutPassEntry"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.LayoutPassSnapshot"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.LayoutPassTracker"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.NodeTypeBindingStats"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.RenderPatchOperation"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.RenderPatchRecord"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.RenderStats"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.RenderStructureStats"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.RenderTreeNode"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.RenderTreeTimingCollector"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.RenderTreeTimingPhase"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.RenderTreeTimingSpan"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.RenderTreeTimingSubject"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.ReuseBindingResult"
+        },
+        {
+          "artifact": "viewcompose-renderer-android",
+          "capabilityId": "renderer.diagnostics",
+          "kind": "tooling",
+          "namespace": "com.viewcompose.renderer.view.tree",
+          "overloadCount": 1,
+          "referenceId": "reference.renderer.diagnostics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-renderer-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-renderer-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.renderer-timing",
+            "versionLane": "released"
+          },
+          "symbol": "com.viewcompose.renderer.view.tree.ViewNodeToolingRegistry"
         }
       ],
-      "entryCount": 62,
+      "entryCount": 78,
       "groupId": "tooling"
     },
     {
@@ -10090,18 +11093,18 @@
   ],
   "schemaVersion": 1,
   "summary": {
-    "artifactCount": 29,
+    "artifactCount": 30,
     "countsByKind": {
       "component": 72,
       "dsl": 33,
-      "host": 32,
-      "integration": 157,
+      "host": 53,
+      "integration": 166,
       "modifier": 77,
-      "tooling": 62
+      "tooling": 78
     },
-    "entryCount": 433,
+    "entryCount": 479,
     "groupCount": 15,
-    "ownedEntryCount": 341,
-    "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
+    "ownedEntryCount": 387,
+    "sourceFingerprint": "09a12f9f38865c0d71fa52879992d2e3824d302e630daa48d3ae0ce2d6ba9652"
   }
 }

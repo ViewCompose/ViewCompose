@@ -7,10 +7,12 @@
   "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
   "symbols": [
     { "symbol_id": "com.viewcompose.lifecycle.Lifecycle.currentStateAsState", "kind": "extension", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/LifecycleEffects.kt" },
+    { "symbol_id": "com.viewcompose.lifecycle.LifecyclePauseOrDisposeEffectResult", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/LifecycleEffects.kt" },
     { "symbol_id": "com.viewcompose.lifecycle.LifecycleResumeEffect", "kind": "overload-set", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/LifecycleEffects.kt" },
     { "symbol_id": "com.viewcompose.lifecycle.LifecycleResumePauseEffectScope", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/LifecycleEffects.kt" },
     { "symbol_id": "com.viewcompose.lifecycle.LifecycleStartEffect", "kind": "overload-set", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/LifecycleEffects.kt" },
-    { "symbol_id": "com.viewcompose.lifecycle.LifecycleStartStopEffectScope", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/LifecycleEffects.kt" }
+    { "symbol_id": "com.viewcompose.lifecycle.LifecycleStartStopEffectScope", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/LifecycleEffects.kt" },
+    { "symbol_id": "com.viewcompose.lifecycle.LifecycleStopOrDisposeEffectResult", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/LifecycleEffects.kt" }
   ],
   "reference_owner": { "reference_id": "reference.lifecycle.effects", "generated": true },
   "sample_owner": { "sample_id": "module.lifecycle-effects" },
