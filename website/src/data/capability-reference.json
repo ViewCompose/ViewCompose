@@ -245,6 +245,11 @@
           "documentId": "migration.compose-animation",
           "documentType": "migration",
           "path": "/migration/compose-animation"
+        },
+        {
+          "documentId": "migration.dsl-contract-convergence",
+          "documentType": "migration",
+          "path": "/migration/dsl-contract-convergence"
         }
       ],
       "sample": {
@@ -490,6 +495,16 @@
           "documentId": "module.viewcompose-ui-foundation",
           "documentType": "module",
           "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
+          "documentId": "migration.compose-layout-modifier-environment",
+          "documentType": "migration",
+          "path": "/migration/compose-layout-modifier-and-environment"
+        },
+        {
+          "documentId": "migration.dsl-contract-convergence",
+          "documentType": "migration",
+          "path": "/migration/dsl-contract-convergence"
         }
       ],
       "sample": {
@@ -511,6 +526,11 @@
           "documentId": "module.viewcompose-ui-foundation",
           "documentType": "module",
           "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
+          "documentId": "migration.compose-state-recomposition-restoration",
+          "documentType": "migration",
+          "path": "/migration/compose-state-recomposition-and-restoration"
         }
       ],
       "sample": {
@@ -527,6 +547,11 @@
           "documentId": "module.viewcompose-ui-foundation",
           "documentType": "module",
           "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
+          "documentId": "migration.compose-layout-modifier-environment",
+          "documentType": "migration",
+          "path": "/migration/compose-layout-modifier-and-environment"
         }
       ],
       "sample": {
@@ -689,6 +714,11 @@
           "documentId": "migration.compose-host-lifecycle-android-interop",
           "documentType": "migration",
           "path": "/migration/compose-host-lifecycle-and-android-interop"
+        },
+        {
+          "documentId": "migration.compose-layout-modifier-environment",
+          "documentType": "migration",
+          "path": "/migration/compose-layout-modifier-and-environment"
         },
         {
           "documentId": "migration.lazy-collection-revision-reuse",
@@ -1007,6 +1037,11 @@
           "documentId": "architecture.modifier-runtime",
           "documentType": "architecture",
           "path": "/architecture/modifier"
+        },
+        {
+          "documentId": "migration.compose-layout-modifier-environment",
+          "documentType": "migration",
+          "path": "/migration/compose-layout-modifier-and-environment"
         }
       ],
       "sample": {
@@ -1039,6 +1074,16 @@
           "documentId": "architecture.modifier-runtime",
           "documentType": "architecture",
           "path": "/architecture/modifier"
+        },
+        {
+          "documentId": "migration.compose-layout-modifier-environment",
+          "documentType": "migration",
+          "path": "/migration/compose-layout-modifier-and-environment"
+        },
+        {
+          "documentId": "migration.dsl-contract-convergence",
+          "documentType": "migration",
+          "path": "/migration/dsl-contract-convergence"
         }
       ],
       "sample": {
@@ -1060,6 +1105,11 @@
           "documentId": "architecture.modifier-runtime",
           "documentType": "architecture",
           "path": "/architecture/modifier"
+        },
+        {
+          "documentId": "migration.compose-layout-modifier-environment",
+          "documentType": "migration",
+          "path": "/migration/compose-layout-modifier-and-environment"
         }
       ],
       "sample": {
@@ -1128,6 +1178,11 @@
           "documentId": "module.viewcompose-navigation-android",
           "documentType": "module",
           "path": "/modules/viewcompose-navigation-android"
+        },
+        {
+          "documentId": "migration.compose-navigation",
+          "documentType": "migration",
+          "path": "/migration/compose-navigation"
         }
       ],
       "sample": {
@@ -1563,6 +1618,11 @@
           "documentId": "module.viewcompose-runtime",
           "documentType": "module",
           "path": "/modules/viewcompose-runtime"
+        },
+        {
+          "documentId": "migration.compose-state-recomposition-restoration",
+          "documentType": "migration",
+          "path": "/migration/compose-state-recomposition-and-restoration"
         }
       ],
       "sample": {
@@ -1656,6 +1716,11 @@
           "documentId": "module.viewcompose-ui-foundation",
           "documentType": "module",
           "path": "/modules/viewcompose-ui-foundation"
+        },
+        {
+          "documentId": "migration.dsl-contract-convergence",
+          "documentType": "migration",
+          "path": "/migration/dsl-contract-convergence"
         }
       ],
       "sample": {

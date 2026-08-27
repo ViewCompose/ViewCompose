@@ -26,6 +26,6 @@
       "module.viewcompose-animation",
       "module.viewcompose-animation-core"
     ],
-    "migration": ["migration.compose-animation"]
+    "migration": ["migration.compose-animation", "migration.dsl-contract-convergence"]
   }
 }

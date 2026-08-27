@@ -1,15 +1,36 @@
+---
+schema_version: 2
+document_id: migration.compose-navigation
+doc_type: migration
+owner:
+  kind: capability
+  id: navigation.host
+version_lane: released
+capability_ids:
+  - navigation.host
+artifact_ids:
+  - viewcompose-navigation-core
+  - viewcompose-navigation-android
+  - viewcompose-ui-foundation
+  - viewcompose-lifecycle-androidx
+  - viewcompose-viewmodel-androidx
+sample_ids: []
+source_state: Jetpack Navigation 2.9.8 and Navigation3 1.1.5 with Compose 1.12.0 and current stable AndroidX owner semantics.
+target_state: ViewCompose Navigation Core 0.1.0-alpha03 and Navigation Android 0.1.0-alpha01 transactional host contracts.
+---
+
 # Migrating Compose Navigation to ViewCompose
 
 This page compares ViewCompose navigation with both Jetpack Navigation 2 and Navigation 3.
 Navigation 2 and Navigation 3 have different ownership models, so a migration must identify its
 actual source before mapping APIs or lifecycle behavior.
 
-- **Source state:** Navigation 2.9.8 or Navigation3 1.1.4, with Compose UI/Runtime 1.11.4,
+- **Source state:** Navigation 2.9.8 or Navigation3 1.1.5, with Compose UI/Runtime 1.12.0,
   Activity 1.13.0, Lifecycle 2.11.0, and SavedState 1.5.0.
-- **Target state:** `viewcompose-navigation-core` 0.1.0-alpha02 and
+- **Target state:** `viewcompose-navigation-core` 0.1.0-alpha03 and
   `viewcompose-navigation-android`, `viewcompose-lifecycle-androidx`, and
   `viewcompose-viewmodel-androidx` 0.1.0-alpha01.
-- **Last verified:** 2026-08-06.
+- **Last verified:** 2026-08-27.
 - **Re-verification owner:** maintainers of `viewcompose-navigation-core`,
   `viewcompose-navigation-android`, `viewcompose-lifecycle-androidx`, and `viewcompose-viewmodel-androidx`.
 
@@ -29,7 +50,7 @@ The upstream side is a semantic review of official stable documentation and rele
 - [Navigation 3 scenes](https://developer.android.com/guide/navigation/navigation-3/scenes)
 - [Navigation 3 multiple-back-stack recipe](https://developer.android.com/guide/navigation/navigation-3/recipes/multiple-backstacks)
 - [Navigation 3 deep-link recipe](https://developer.android.com/guide/navigation/navigation-3/recipes/deeplinks-basic)
-- [Navigation3 1.1.4 release notes](https://developer.android.com/jetpack/androidx/releases/navigation3)
+- [Navigation3 1.1.5 release notes](https://developer.android.com/jetpack/androidx/releases/navigation3)
 - [Lifecycle 2.11 release notes](https://developer.android.com/jetpack/androidx/releases/lifecycle)
 - [Activity 1.13 release notes](https://developer.android.com/jetpack/androidx/releases/activity)
 - [NavigationEvent release notes](https://developer.android.com/jetpack/androidx/releases/navigationevent)
@@ -38,7 +59,7 @@ The repository's executable Android baseline is Compose 1.7.8, Navigation 2.9.8,
 Lifecycle 2.8.7, and Kotlin 2.0.21. The paired sample below compiles one Navigation 2 controller,
 host, route, and navigation action on each side. The cited ViewCompose JVM, integration, and device
 tests establish broader local behavior. None of this is an executable comparison against
-Navigation3 1.1.4, and the paired sample does not prove parity with the complete Navigation 2.9.8
+Navigation3 1.1.5, and the paired sample does not prove parity with the complete Navigation 2.9.8
 surface. Navigation 2 and Navigation 3 claims must still be re-reviewed from official sources
 whenever those versions change.
 
@@ -120,7 +141,7 @@ and **Unsupported**.
 | --- | --- | --- | --- | --- |
 | Navigation ownership | Navigation 2 centers on a library-owned `NavController`. Navigation 3 normally exposes an application-owned back-stack collection to `NavDisplay`. | A `NavBackStackController` owns immutable single- or multi-stack snapshots and exposes prepared transitions to the Android host. | Intentionally different | [`NavBackStackController.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavBackStackController.kt) and [`NavHostRuntime.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostRuntime.kt). It combines controller ownership similar to Navigation 2 with explicit snapshot and pane concepts closer to Navigation 3. |
 | Host and destination type | Navigation 2 supports Compose, Fragment, Activity, and custom destinations. Navigation 3 renders entry content through `NavDisplay`. | `NavHost` renders framework-managed native View sessions. An Activity or Fragment is a host owner, not a destination type. | Intentionally different | [`NavHostDsl.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavHostDsl.kt) and [`NavDestinationSessionStore.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavDestinationSessionStore.kt). Direct Fragment or Activity destinations are not implemented. |
-| Graphs and typed routes | Navigation 2 supports graphs and typed or serializable routes. Navigation 3 keys are application-defined and normally saveable. | Graph and destination identities are explicit, but route arguments use the closed `NavValue` set: null, string, int, long, boolean, float, and double. | Partially supported | [`NavigationModel.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavigationModel.kt), graph tests in [`NavBackStackControllerTest.kt`](../../viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackControllerTest.kt), and public graph coverage in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). There is no compiler-generated route serialization. |
+| Graphs and typed routes | Navigation 2 supports graphs and typed or serializable routes. Navigation 3 keys are application-defined and normally saveable; 1.1.5 gives an instance-key `entry` registration precedence over a class-key registration. | Graph and destination identities are explicit, but route arguments use the closed `NavValue` set: null, string, int, long, boolean, float, and double. | Partially supported | [`NavigationModel.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavigationModel.kt), graph tests in [`NavBackStackControllerTest.kt`](../../viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackControllerTest.kt), and public graph coverage in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). There is no compiler-generated route serialization or Navigation3 instance/class registration precedence to preserve. |
 | Back-stack operations | Navigation 2 supplies `navigate`, `popBackStack`, `popUpTo`, and `NavOptions`; Navigation 3 represents stack changes through application collection updates. | Push, pop, replace, reset, stack selection, and deep-link commands are prepared, rendered, and then committed or rolled back as one transaction. | Partially supported | [`NavBackStackController.kt`](../../viewcompose-navigation-core/src/main/kotlin/com/viewcompose/navigation/core/NavBackStackController.kt), [`NavBackStackControllerTest.kt`](../../viewcompose-navigation-core/src/test/kotlin/com/viewcompose/navigation/core/NavBackStackControllerTest.kt), and [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). The two-phase transaction is stronger than an API-name mapping but is not the full Navigation 2 `NavOptions` surface. |
 | Entry and graph owners | `NavBackStackEntry` owns lifecycle, ViewModel, and saved state. Lifecycle 2.11 adds Navigation3 ViewModel decorators that inherit parent factories and `CreationExtras`. | Each destination and graph gets its own lifecycle, ViewModelStore, saved-state owner, and ViewCompose saveable-state registry. Owners inherit the host parent's default Factory and starting extras, then replace their child ownership and route defaults. | Supported | [`NavEntryOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt), [`NavGraphOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavGraphOwner.kt), [`NavEntryOwnerEnvironment.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwnerEnvironment.kt), and Factory, extras, SavedStateHandle, destination, and graph coverage in [`NavEntryOwnerTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerTest.kt) and [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). |
 | Scoped ViewModels and multiple stacks | Lifecycle 2.11 can hoist a `ViewModelStoreProvider` above the Navigation3 decorator so multiple back stacks retain isolated entry stores. | Owner stores are retained by ViewCompose entry and graph identity across its controller-managed stack set. | Supported | [`NavEntryOwnerStore.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwnerStore.kt), [`NavEntryOwnerStoreTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerStoreTest.kt), and the same-route retained-stack isolation test in [`NavHostPublicApiTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavHostPublicApiTest.kt). |
@@ -220,7 +241,7 @@ Downward transitions are applied before upward transitions, and permanent remova
 interactive, so more than one entry may be `RESUMED`. Code migrated from a single-top-entry model
 must not use `RESUMED` as proof that a destination is the only visible page.
 
-ViewCompose selects up to the three newest eligible pane entries. Navigation3 1.1.4 has a more
+ViewCompose selects up to the three newest eligible pane entries. Navigation3 1.1.5 has a more
 general scene and metadata model. Its 1.1.3 nested-overlay fix and 1.1.4 popped-entry metadata-lambda
 fix are upstream reliability changes, not evidence that ViewCompose supports arbitrary scenes or
 the same overlay animation lifecycle.
@@ -291,7 +312,7 @@ NavigationEvent as recommended by Activity rather than assuming the legacy adapt
 abstraction.
 
 Navigation3 1.1.3 updates its NavigationEvent dependency to 1.1.2, which enables Predictive Back
-in Android Studio Preview inspection mode; Navigation3 1.1.4 retains that behavior. ViewCompose
+in Android Studio Preview inspection mode; Navigation3 1.1.5 retains that behavior. ViewCompose
 device procedures and adapter tests do not verify Preview support. The API 35 device procedure
 referenced by the navigation guide was not rerun while authoring this page, so device status is
 carried as existing repository evidence rather than a fresh result.
@@ -346,5 +367,5 @@ changes.
 The minimum local evidence is the navigation-core controller, lifecycle, and deep-link tests; the
 Android host owner, saved-state, destination-session, and Back-adapter tests; process-recreation
 coverage; and the documented API 35 predictive-back device procedure. The upstream half requires
-a fresh official semantic review. Do not infer Navigation 2.9.8 or Navigation3 1.1.4 parity solely
+a fresh official semantic review. Do not infer Navigation 2.9.8 or Navigation3 1.1.5 parity solely
 from the repository's Compose 1.7.8 executable dependency baseline.

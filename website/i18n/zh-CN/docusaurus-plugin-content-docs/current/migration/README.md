@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: 1c3c1aa96865d404ae6325d584a150cd8aa23dec20d7b2e1a1a1632dbe402fc2
+translation_source_hash: db9405ba19e6d78c7dd75c607f5ebfdfd991beb3c0bace1900a8cba0c9f6a73f
 translation_status: current
 ---
 
@@ -12,7 +12,7 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 生命周期和可观察行为，而不是替换名称相似的函数。在把页面迁移到原生 Android View
 渲染器之前，先用本节识别语义缺口。
 
-最后验证日期：**2026-08-22**
+最后验证日期：**2026-08-27**
 
 复核责任人：**Kernel、UI Foundation、Android Engine、Android 聚合层与 navigation 模块族的维护者**
 
@@ -22,10 +22,10 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 
 | 模块族 | 产物 | 已验证版本 |
 | --- | --- | --- |
-| 状态与组合 | `viewcompose-runtime`、`viewcompose-ui-foundation` | runtime `0.1.0-alpha02`；UI Foundation `0.1.0-alpha01` |
-| UI 与渲染 | `viewcompose-ui-contract`、`viewcompose-renderer-android`、`viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha03`；renderer/ConstraintLayout `0.1.0-alpha01` |
-| Android 所有权 | `viewcompose-android`、`viewcompose-material3-android`、`viewcompose-host-android`、`viewcompose-lifecycle-androidx`、`viewcompose-viewmodel-androidx` | 聚合层/集成层 `0.1.0-alpha01`；host `0.1.0-alpha03` |
-| 导航 | `viewcompose-navigation-core`、`viewcompose-navigation-android` | core `0.1.0-alpha02`；Android `0.1.0-alpha01` |
+| 状态与组合 | `viewcompose-runtime`、`viewcompose-ui-foundation` | runtime `0.1.0-alpha03`；UI Foundation `0.1.0-alpha01` |
+| UI 与渲染 | `viewcompose-ui-contract`、`viewcompose-renderer-android`、`viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha04`；renderer/ConstraintLayout `0.1.0-alpha01` |
+| Android 所有权 | `viewcompose-android`、`viewcompose-material3-android`、`viewcompose-host-android`、`viewcompose-lifecycle-androidx`、`viewcompose-viewmodel-androidx` | 聚合层/集成层 `0.1.0-alpha01`；host `0.1.0-alpha04` |
+| 导航 | `viewcompose-navigation-core`、`viewcompose-navigation-android` | core `0.1.0-alpha03`；Android `0.1.0-alpha01` |
 | 动画 | `viewcompose-animation-core`、`viewcompose-animation` | 均为 `0.1.0-alpha04` |
 
 不可变的发布源码 revision 记录在
@@ -35,18 +35,18 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 
 | 依赖族 | 版本 |
 | --- | --- |
-| Compose Runtime、UI 和 Foundation | `1.11.4` |
+| Compose Runtime、UI 和 Foundation | `1.12.0` |
 | Activity | `1.13.0` |
 | Lifecycle | `2.11.0` |
 | SavedState | `1.5.0` |
 | Navigation 2 | `2.9.8` |
-| Navigation 3 | `1.1.4` |
+| Navigation 3 | `1.1.5` |
 
 仓库内可执行对比基线仍为 Compose `1.7.8`、Activity `1.12.4`、Lifecycle `2.8.7` 和
 Kotlin `2.0.21`，声明位置是
 [`gradle/libs.versions.toml`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/gradle/libs.versions.toml)。
 较新的上游语义由 Android 官方文档和发布说明确定；ViewCompose 行为则由本地源码、测试和
-可编译样例确定。通过基于 `1.7.8` 的本地对比，不能证明与 `1.11.4` 语义等价。
+可编译样例确定。通过基于 `1.7.8` 的本地对比，不能证明与 `1.12.0` 语义等价。
 
 本文不声明性能等价。未来任何性能对比都必须说明设备、构建模式、工作负载、预热、采样和
 统计方法。
@@ -110,8 +110,9 @@ Kotlin `2.0.21`，声明位置是
 | 导航 | 深链 | **Partially supported（部分支持）** | 替换 action/MIME 规则；未声明 query 值可存在，但不能影响导航策略。 | [深链](compose-navigation.md#deep-links) |
 | 导航 | 保存/恢复、系统 Back 和 Predictive Back | **Supported（支持）** | 恢复后重建存活对象，并在发布流程中保留设备验证。 | [恢复与 Back](compose-navigation.md#save-restore-and-process-death) |
 | 导航 | 直接 NavigationEvent 集成 | **Unsupported（不支持）** | 把 dispatcher-owner、forward event、测试 fake 和 Preview 需求留在 ViewCompose 外。 | [NavigationEvent](compose-navigation.md#system-back-and-predictive-back) |
-| 动画 | 时长采样、target-as-state、自主 Transition、淡入淡出/尺寸可见性、Crossfade 与内容尺寸动画 | **Partially supported（部分支持）** | 只使用当前已记录子集，不要把带时长的 `SpringSpec` 当成物理弹簧。 | [动画](compose-animation.md#capability-matrix) |
-| 动画 | 物理弹簧、Decay、Seekable Transition、Bounds、共享运动与时间线检查 | **Unsupported（不支持）** | 遵循已接受的分阶段契约；计划 API 发布前不是迁移目标。 | [动画](compose-animation.md#the-spring-hard-cut) |
+| 动画 | Tween/Keyframes/Snap/Repeat、物理弹簧、`Animatable`、Decay、target-as-state、泛型/Seekable Transition、可见性、内容替换与内容尺寸动画 | **Supported（支持）** | 重新调校物理单位，并保留 ViewCompose 的 Mutation、子树与共享时钟所有权；不要机械翻译 API 名称。 | [动画](compose-animation.md#capability-matrix) |
+| 动画 | Bounds 与单窗口导航共享运动 | **Supported（支持）** | 在 Renderer 中保留几何所有权，使用类型化 `animateBounds`、`sharedElement` 或 `sharedBounds` 契约；跨窗口配对和存活内容重挂载仍不支持。 | [动画](compose-animation.md#layout-and-shared-motion-mapping) |
+| 动画 | 时间线检查与 Seeking 工具 | **Partially supported（部分支持）** | 工具只放在 debug 作用域；已支持选中捕获和 Preview 所有的 Seeking，但不支持连续分析与远程控制存活应用。 | [动画](compose-animation.md#capability-matrix) |
 
 ## 迁移顺序
 

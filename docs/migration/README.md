@@ -1,6 +1,18 @@
 ---
 title: Migrate from Jetpack Compose
 slug: /migration
+schema_version: 2
+document_id: migration.compose-overview
+doc_type: migration
+owner:
+  kind: project
+  id: documentation-governance
+version_lane: released
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+source_state: Stable Jetpack Compose and AndroidX semantics reviewed from official release documentation.
+target_state: The current independently versioned ViewCompose release set and its verified migration contracts.
 ---
 
 # Migrate from Jetpack Compose
@@ -10,7 +22,7 @@ migration preserves ownership, lifecycle, and observable behavior rather than re
 named functions. Use this section to identify semantic gaps before moving a screen to the native
 Android View renderer.
 
-Last verified: **2026-08-22**
+Last verified: **2026-08-27**
 
 Re-verification owner: **maintainers of the Kernel, UI Foundation, Android Engine, Android
 aggregate, and navigation module families**
@@ -21,10 +33,10 @@ The target is the following independently versioned ViewCompose set:
 
 | Module family | Artifacts | Verified version |
 | --- | --- | --- |
-| State and composition | `viewcompose-runtime`, `viewcompose-ui-foundation` | runtime `0.1.0-alpha02`; UI Foundation `0.1.0-alpha01` |
-| UI and rendering | `viewcompose-ui-contract`, `viewcompose-renderer-android`, `viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha03`; renderer/ConstraintLayout `0.1.0-alpha01` |
-| Android ownership | `viewcompose-android`, `viewcompose-material3-android`, `viewcompose-host-android`, `viewcompose-lifecycle-androidx`, `viewcompose-viewmodel-androidx` | aggregates/integrations `0.1.0-alpha01`; host `0.1.0-alpha03` |
-| Navigation | `viewcompose-navigation-core`, `viewcompose-navigation-android` | core `0.1.0-alpha02`; Android `0.1.0-alpha01` |
+| State and composition | `viewcompose-runtime`, `viewcompose-ui-foundation` | runtime `0.1.0-alpha03`; UI Foundation `0.1.0-alpha01` |
+| UI and rendering | `viewcompose-ui-contract`, `viewcompose-renderer-android`, `viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha04`; renderer/ConstraintLayout `0.1.0-alpha01` |
+| Android ownership | `viewcompose-android`, `viewcompose-material3-android`, `viewcompose-host-android`, `viewcompose-lifecycle-androidx`, `viewcompose-viewmodel-androidx` | aggregates/integrations `0.1.0-alpha01`; host `0.1.0-alpha04` |
+| Navigation | `viewcompose-navigation-core`, `viewcompose-navigation-android` | core `0.1.0-alpha03`; Android `0.1.0-alpha01` |
 | Animation | `viewcompose-animation-core`, `viewcompose-animation` | both `0.1.0-alpha04` |
 
 The immutable release revisions are recorded in
@@ -34,19 +46,19 @@ The upstream semantic baseline is:
 
 | Dependency family | Version |
 | --- | --- |
-| Compose Runtime, UI, and Foundation | `1.11.4` |
+| Compose Runtime, UI, and Foundation | `1.12.0` |
 | Activity | `1.13.0` |
 | Lifecycle | `2.11.0` |
 | SavedState | `1.5.0` |
 | Navigation 2 | `2.9.8` |
-| Navigation 3 | `1.1.4` |
+| Navigation 3 | `1.1.5` |
 
 The repository's executable comparison baseline remains Compose `1.7.8`, Activity `1.12.4`,
 Lifecycle `2.8.7`, and Kotlin `2.0.21`, as declared in
 [`gradle/libs.versions.toml`](../../gradle/libs.versions.toml). Official Android documentation and
 release notes establish the newer upstream semantics; local source, tests, and compiled samples
 establish ViewCompose behavior. Passing a local comparison against `1.7.8` does not prove parity
-with `1.11.4`.
+with `1.12.0`.
 
 No performance equivalence is claimed. Any future performance comparison must state devices,
 build modes, workloads, warm-up, sampling, and statistical treatment.
@@ -111,8 +123,9 @@ evidence. Status terms have one meaning across all pages:
 | Navigation | Deep links | **Partially supported** | Replace action/MIME rules; undeclared query values are tolerated but cannot affect navigation policy. | [Deep links](compose-navigation.md#deep-links) |
 | Navigation | Save/restore, system Back, and Predictive Back | **Supported** | Recreate live objects after restore and retain device validation in the release procedure. | [Restoration and Back](compose-navigation.md#save-restore-and-process-death) |
 | Navigation | Direct NavigationEvent integration | **Unsupported** | Keep direct dispatcher-owner, forward-event, test-fake, and Preview needs outside ViewCompose. | [NavigationEvent](compose-navigation.md#system-back-and-predictive-back) |
-| Animation | Duration sampling, target-as-state, autonomous transitions, fade/size visibility, Crossfade, and content-size animation | **Partially supported** | Use only the current documented subset and do not treat the duration-bearing `SpringSpec` as physical. | [Animation](compose-animation.md#capability-matrix) |
-| Animation | Physical spring, decay, seekable transitions, bounds, shared motion, and timeline inspection | **Unsupported** | Follow the accepted phased contract; planned APIs are not migration targets until released. | [Animation](compose-animation.md#the-spring-hard-cut) |
+| Animation | Tween/keyframes/snap/repeat, physical spring, `Animatable`, decay, target-as-state, generic/seekable transitions, visibility, content replacement, and content-size animation | **Supported** | Retune physical units and preserve ViewCompose mutation, subtree, and shared-clock ownership instead of translating names mechanically. | [Animation](compose-animation.md#capability-matrix) |
+| Animation | Bounds and one-window navigation shared motion | **Supported** | Keep geometry in the renderer and use typed `animateBounds`, `sharedElement`, or `sharedBounds` contracts; cross-window pairing and live reparenting remain unsupported. | [Animation](compose-animation.md#layout-and-shared-motion-mapping) |
+| Animation | Timeline inspection and seeking tooling | **Partially supported** | Keep tooling debug-scoped; selected capture and Preview-owned seeking exist, while continuous profiling and remote live-app seeking do not. | [Animation](compose-animation.md#capability-matrix) |
 
 ## Migration sequence
 

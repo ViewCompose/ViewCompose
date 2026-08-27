@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-host-lifecycle-and-android-interop.md
-translation_source_hash: 62a8e4003e8787f129ec7c412740068a827bff8d0ef9baf156a880404e1ec7e9
+translation_source_hash: 1dd1fcff28083a217d9a4cf626a66b842113bcc3f1a00cfcae096191563cec27
 translation_status: current
 ---
 
@@ -9,12 +9,12 @@ translation_status: current
 本文将 Jetpack Compose 的 Android 宿主、生命周期、状态 owner 与 Android View 互操作行为
 映射到 ViewCompose。这是一份工程对比，而不是声称名称相近的 API 具有相同语义。
 
-- **来源状态：** Jetpack Compose UI 与 Runtime 1.11.4、Activity 1.13.0、Lifecycle 2.11.0
+- **来源状态：** Jetpack Compose UI 与 Runtime 1.12.0、Activity 1.13.0、Lifecycle 2.11.0
   和 SavedState 1.5.0。
 - **目标状态：** `viewcompose-android`、`viewcompose-lifecycle-androidx`、
   `viewcompose-viewmodel-androidx` 与 `viewcompose-renderer-android` 0.1.0-alpha01，以及底层
   `viewcompose-host-android` 0.1.0-alpha04 引擎。
-- **最后核验：** 2026-08-24。
+- **最后核验：** 2026-08-27。
 - **重新核验负责人：** `viewcompose-android`、`viewcompose-host-android`、
   `viewcompose-lifecycle-androidx`、`viewcompose-viewmodel-androidx` 和
   `viewcompose-renderer-android` 的维护者。
@@ -35,7 +35,7 @@ translation_status: current
 
 本地可执行基线是 Compose 1.7.8、Activity 1.12.4、Lifecycle 2.8.7 和 Kotlin 2.0.21。
 下文引用的仓库测试和已编译样例依据这组依赖验证 ViewCompose 行为。它们不代表实际执行了
-上游 Compose 1.11.4、Activity 1.13.0 或 Lifecycle 2.11.0。因此，只要任一基线发生变化，
+上游 Compose 1.12.0、Activity 1.13.0 或 Lifecycle 2.11.0。因此，只要任一基线发生变化，
 重新核验就必须同时重复官方语义复核和本地测试运行。
 
 本文涉及的 ViewCompose 契约分别由

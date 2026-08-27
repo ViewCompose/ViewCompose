@@ -24,6 +24,7 @@
     "module": ["module.viewcompose-host-android"],
     "migration": [
       "migration.compose-host-lifecycle-android-interop",
+      "migration.compose-layout-modifier-environment",
       "migration.lazy-collection-revision-reuse"
     ]
   }
