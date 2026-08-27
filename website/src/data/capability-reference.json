@@ -321,6 +321,7 @@
       "relatedDocumentIds": [
         "tutorial.render-diagnostics",
         "adr.correlated-render-diagnostics",
+        "architecture.development-tooling-isolation",
         "module.viewcompose-ui-foundation",
         "tooling.diagnostics"
       ],
@@ -364,6 +365,7 @@
         "architecture.design-system-integration",
         "architecture.design-system-resolution",
         "architecture.design-system-host-backends",
+        "architecture.component-appearance-resolution",
         "module.viewcompose-ui-foundation",
         "migration.compose-layout-modifier-environment",
         "migration.dsl-contract-convergence"
@@ -393,6 +395,7 @@
       "referenceId": "reference.foundation.environment",
       "relatedDocumentIds": [
         "architecture.public-package-ownership",
+        "architecture.hierarchical-saveable-state-ownership",
         "module.viewcompose-ui-foundation",
         "migration.compose-layout-modifier-environment"
       ],
@@ -448,6 +451,8 @@
       "relatedDocumentIds": [
         "architecture.public-package-ownership",
         "architecture.design-system-host-backends",
+        "architecture.development-tooling-isolation",
+        "architecture.hierarchical-saveable-state-ownership",
         "module.viewcompose-host-android",
         "module.viewcompose-android",
         "migration.compose-host-lifecycle-android-interop"
@@ -492,6 +497,7 @@
       "referenceId": "reference.host.android-view",
       "relatedDocumentIds": [
         "tutorial.android-view",
+        "architecture.lazy-collection-ownership",
         "module.viewcompose-host-android",
         "migration.compose-host-lifecycle-android-interop",
         "migration.compose-layout-modifier-environment",
@@ -554,6 +560,9 @@
         "architecture.lazy-collections-runtime",
         "architecture.delayed-session-containers",
         "architecture.state-snapshots",
+        "architecture.hierarchical-saveable-state-ownership",
+        "architecture.prefetched-session-activation",
+        "architecture.lazy-collection-ownership",
         "module.viewcompose-ui-foundation",
         "migration.lazy-collection-revision-reuse"
       ],
@@ -652,6 +661,7 @@
         "architecture.design-system-integration",
         "architecture.design-system-resolution",
         "architecture.design-system-host-backends",
+        "architecture.component-appearance-resolution",
         "module.viewcompose-material3",
         "module.viewcompose-material3-android"
       ],
@@ -789,6 +799,7 @@
         "architecture.design-system-integration",
         "architecture.design-system-resolution",
         "architecture.design-system-host-backends",
+        "architecture.component-appearance-resolution",
         "module.viewcompose-oneui7"
       ],
       "sample": {
@@ -834,6 +845,8 @@
         "tutorial.overlays",
         "guide.overlay-presentation",
         "architecture.overlay-root-selection",
+        "architecture.hierarchical-saveable-state-ownership",
+        "architecture.component-appearance-resolution",
         "module.viewcompose-ui-foundation"
       ],
       "sample": {
@@ -863,6 +876,7 @@
         "architecture.overlay-root-selection",
         "architecture.design-system-integration",
         "architecture.public-package-ownership",
+        "architecture.component-appearance-resolution",
         "module.viewcompose-overlay-material3-android"
       ],
       "sample": {
@@ -878,6 +892,7 @@
         "guide.overlay-presentation",
         "architecture.overlay-root-selection",
         "architecture.design-system-integration",
+        "architecture.component-appearance-resolution",
         "module.viewcompose-overlay-oneui7-android"
       ],
       "sample": {
@@ -940,6 +955,7 @@
       "capabilityId": "preview.integration",
       "referenceId": "reference.preview.integration",
       "relatedDocumentIds": [
+        "architecture.development-tooling-isolation",
         "module.viewcompose-preview"
       ],
       "sample": {
@@ -1002,6 +1018,8 @@
       "relatedDocumentIds": [
         "architecture.node-spec",
         "architecture.delayed-session-containers",
+        "architecture.prefetched-session-activation",
+        "architecture.lazy-collection-ownership",
         "module.viewcompose-renderer-android",
         "migration.lazy-collection-revision-reuse"
       ],
@@ -1018,6 +1036,8 @@
         "architecture.effects",
         "architecture.node-spec",
         "architecture.delayed-session-containers",
+        "architecture.prefetched-session-activation",
+        "architecture.lazy-collection-ownership",
         "module.viewcompose-renderer-android",
         "module.viewcompose-ui-contract"
       ],
@@ -1100,6 +1120,7 @@
         "architecture.design-system-integration",
         "architecture.design-system-resolution",
         "architecture.design-system-host-backends",
+        "architecture.component-appearance-resolution",
         "module.viewcompose-ui-foundation"
       ],
       "sample": {
@@ -1204,6 +1225,10 @@
       "documentType": "architecture",
       "path": "/architecture/decisions/0020-separate-animation-value-and-velocity-domains"
     },
+    "architecture.component-appearance-resolution": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/component-appearance-resolution-boundary"
+    },
     "architecture.delayed-session-containers": {
       "documentType": "architecture",
       "path": "/architecture/session-containers"
@@ -1220,9 +1245,21 @@
       "documentType": "architecture",
       "path": "/architecture/decisions/design-system-resolution-boundary"
     },
+    "architecture.development-tooling-isolation": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/development-tooling-isolation"
+    },
     "architecture.effects": {
       "documentType": "architecture",
       "path": "/architecture/effects"
+    },
+    "architecture.hierarchical-saveable-state-ownership": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/hierarchical-saveable-state-ownership"
+    },
+    "architecture.lazy-collection-ownership": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/lazy-collection-logical-and-physical-ownership"
     },
     "architecture.lazy-collections-runtime": {
       "documentType": "architecture",
@@ -1247,6 +1284,10 @@
     "architecture.overlay-root-selection": {
       "documentType": "architecture",
       "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+    },
+    "architecture.prefetched-session-activation": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/prefetched-session-activation-boundary"
     },
     "architecture.public-package-ownership": {
       "documentType": "architecture",

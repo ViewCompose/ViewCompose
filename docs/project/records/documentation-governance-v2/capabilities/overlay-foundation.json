@@ -25,6 +25,10 @@
     "module": ["module.viewcompose-ui-foundation"],
     "tutorial": ["tutorial.overlays"],
     "guide": ["guide.overlay-presentation"],
-    "architecture": ["architecture.overlay-root-selection"]
+    "architecture": [
+      "architecture.overlay-root-selection",
+      "architecture.hierarchical-saveable-state-ownership",
+      "architecture.component-appearance-resolution"
+    ]
   }
 }

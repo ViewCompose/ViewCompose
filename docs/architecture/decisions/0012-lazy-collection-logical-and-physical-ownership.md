@@ -1,3 +1,34 @@
+---
+schema_version: 2
+document_id: architecture.lazy-collection-ownership
+doc_type: architecture
+slug: /architecture/decisions/lazy-collection-logical-and-physical-ownership
+owner:
+  kind: capability
+  id: lazy.collections
+version_lane: released
+capability_ids:
+  - lazy.collections
+  - host.android-view
+  - renderer.reconciliation
+  - renderer.tree-transactions
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+  - viewcompose-host-android
+sample_ids:
+  - guide.lazy-collections-state
+  - module.host-android-view-adapter
+  - module.renderer-reconciliation
+  - module.renderer-tree-transaction
+invariants:
+  - Logical snapshots, key-owned sessions, and reusable physical presentations remain separate ownership layers.
+  - Cross-key native reuse requires reset-before-bind and exactly-once release without transferring remembered state, effects, or saveable ownership.
+evidence:
+  - Revision, keyed-session, reconciliation, Android View reuse, cache eviction, rollback, release, and accepted collection-performance suites.
+---
+
 # ADR-0012: Lazy collection logical and physical ownership
 
 - Status: Accepted

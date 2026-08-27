@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0009-development-tooling-isolation.md
-translation_source_hash: da2e00d03d88dc35a87e58b6c4bd574e5add8aef149b4664133552beae1ddd9f
+translation_source_hash: 851f5915e60ad2fccff63d92eb958881e69882b46bed35e7b1ec5de68443e93f
 translation_status: current
 ---
 
@@ -35,8 +35,9 @@ ViewCompose 使用 Android View 作为渲染引擎，因此开发工具可能意
    Tooling 所有的 Thread、文件 I/O、序列化、Stack Capture、View Tree Traversal，或注册在滚动、
    布局、绘制、触摸、Animation Frame 或重组热路径上的 Listener。
 4. 真机 DSL 定位器由可选 `viewcompose-preview` 制品持有，应用通过 `debugImplementation` 引入。
-   `viewcompose-host-android` 只发现中立 `RenderSessionInspectionTooling` Service。服务缺失、歧义或失败
-   均为诊断 no-op，不能导致应用渲染失败。
+   按 [ADR-0022](0022-in-memory-development-tooling-installation.md) 的硬切方案，该制品会在应用启动前
+   直接在内存中安装中立 `RenderSessionInspectionTooling` 端口；`viewcompose-host-android` 只读取冻结的
+   可空端口。端口缺失、歧义或失败均为诊断 no-op，不能导致应用渲染失败。
 5. `RenderSessionInspectionPolicy` 将被动 Session Registration 与 Source Capture 分离。可选制品
    存在于可调试进程时，可以在符合条件的 Host、Navigation 或 Pager Page Session 首次提交时有界
    捕获一次源码身份；这是唯一不依赖请求的例外。Lazy Item、Overlay 与 Preview Session 可以登记
@@ -63,8 +64,8 @@ ViewCompose 使用 Android View 作为渲染引擎，因此开发工具可能意
 - `viewcompose-ui-foundation` 持有 Q3 中立 `RenderSessionInspectionTooling`、
   `RenderSessionInspectionPolicy` 与 `RenderSessionInspectionRegistration` 契约；缺失时继续 no-op。
   这次 Alpha 版本线硬切替换旧的 Source-only Port。
-- `viewcompose-host-android` 只持有 Android Platform 安装与中立 Service Discovery；不再持有设备
-  定位实现或协议。
+- `viewcompose-host-android` 只持有 Android Platform 安装与中立的进程内 Tooling Slot；不再持有
+  设备定位实现、协议或 Classpath Discovery。
 - `viewcompose-preview` 持有可调试进程定位服务、显式 Request Receiver、实时 Session Snapshot、
   Response 序列化与私有报告生命周期。
 - Android Studio 插件持有请求创建、Nonce 验证、响应轮询、源码解析与面向用户的失败处理。
@@ -77,7 +78,8 @@ Debug、Test 或专用 Tooling 配置。Release 构建不需要 Preview 制品�
 - 普通 Runtime 制品不能静默获得具体开发工具循环。
 - 包含 Preview 的 Debug 构建仍保留定位器，但滚动与布局不再触发 Snapshot 或报告写入。
 - 点击源码定位会执行一次有界检查往返，因此可能比读取持续刷新的文件稍慢。
-- Service Discovery 在 Android Host 中增加一次进程启动查找；结果不可变且可空，不产生逐帧发现。
+- Host 对进程内 Tooling Slot 执行一次同步、非阻塞读取。冻结结果不可变且可空，因此既不产生
+  Classpath I/O，也不产生逐帧发现。
 - 为了准确定位页面且不在 IDE 请求时重新执行应用组合，首次有界源码候选捕获仍是显式取舍。
 - 确实需要持续观察的工具必须获得新 ADR、狭窄激活生命周期、显式 Allowlist 与 Benchmark 证据；
   便利性不是例外。

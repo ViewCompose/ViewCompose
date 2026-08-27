@@ -67,7 +67,8 @@
     "architecture": [
       "architecture.design-system-integration",
       "architecture.design-system-resolution",
-      "architecture.design-system-host-backends"
+      "architecture.design-system-host-backends",
+      "architecture.component-appearance-resolution"
     ],
     "migration": [
       "migration.compose-layout-modifier-environment",

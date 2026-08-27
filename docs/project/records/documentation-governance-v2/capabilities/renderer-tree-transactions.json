@@ -17,7 +17,13 @@
   "reference_owner": { "reference_id": "reference.renderer.tree-transactions", "generated": true },
   "sample_owner": { "sample_id": "module.renderer-tree-transaction" },
   "document_owners": {
-    "architecture": ["architecture.effects", "architecture.node-spec", "architecture.delayed-session-containers"],
+    "architecture": [
+      "architecture.effects",
+      "architecture.node-spec",
+      "architecture.delayed-session-containers",
+      "architecture.prefetched-session-activation",
+      "architecture.lazy-collection-ownership"
+    ],
     "module": ["module.viewcompose-renderer-android", "module.viewcompose-ui-contract"]
   }
 }

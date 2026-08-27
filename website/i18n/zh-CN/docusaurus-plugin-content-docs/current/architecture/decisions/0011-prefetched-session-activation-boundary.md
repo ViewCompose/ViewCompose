@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0011-prefetched-session-activation-boundary.md
-translation_source_hash: b51df7ab59c3876e525b40ae265ab165a16748fbfd7e8e44a2789149ef4ff5e5
+translation_source_hash: 53f5e8fc5df1d6b83020d5d02c9ed0ad350409684c312b4f56ba3601f3573a10
 translation_status: current
 ---
 

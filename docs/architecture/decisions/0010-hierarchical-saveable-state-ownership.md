@@ -1,3 +1,32 @@
+---
+schema_version: 2
+document_id: architecture.hierarchical-saveable-state-ownership
+doc_type: architecture
+slug: /architecture/decisions/hierarchical-saveable-state-ownership
+owner:
+  kind: capability
+  id: foundation.environment
+version_lane: released
+capability_ids:
+  - foundation.environment
+  - host.android-container
+  - lazy.collections
+  - overlay.foundation
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-host-android
+sample_ids:
+  - module.ui-foundation-environment
+  - module.host-android-render-into
+  - guide.lazy-collections-state
+  - tutorial.overlays
+invariants:
+  - Every independent child composition owns a registry scope derived from its stable logical identity rather than a shared flat key namespace.
+  - Failed transactions and non-owning physical replicas cannot publish or overwrite saveable state.
+evidence:
+  - Hierarchical saveable-state, keyed reorder, recreation, nested-container, overlay, replica, and rollback suites.
+---
+
 # ADR-0010: Hierarchical saveable-state ownership
 
 - Status: Accepted

@@ -1,3 +1,31 @@
+---
+schema_version: 2
+document_id: architecture.prefetched-session-activation
+doc_type: architecture
+slug: /architecture/decisions/prefetched-session-activation-boundary
+owner:
+  kind: capability
+  id: lazy.collections
+version_lane: released
+capability_ids:
+  - lazy.collections
+  - renderer.reconciliation
+  - renderer.tree-transactions
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+sample_ids:
+  - guide.lazy-collections-state
+  - module.renderer-reconciliation
+  - module.renderer-tree-transaction
+invariants:
+  - Speculative preparation may build candidate composition and native trees but cannot cross the committed-effect boundary.
+  - Activation commits only a current prepared revision, while replacement or recycle aborts stale candidates without publishing effects.
+evidence:
+  - Lazy-session prepare, activation, invalidation, recycle, effect-order, transaction, and long-fling performance suites.
+---
+
 # ADR-0011: Prefetched session activation boundary
 
 - Status: Accepted

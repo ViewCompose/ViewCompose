@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the normalized Capability Reference document registry, then govern and reconcile ADR-0009 through ADR-0013.
+next_action: Merge the governed ADR-0009 through ADR-0013 slice, then govern and reconcile ADR-0014 through ADR-0018 without widening the site budget.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -1939,6 +1939,46 @@ Accepted normalized Capability Reference document-registry slice on 2026-08-27:
   classifications against `29033e6154bd761997d603796cc9a15d31c85739`. This tooling-and-site-only
   slice changes no publication input, public API, or production runtime behavior and makes no new
   visual, power, or performance claim. The next action is ADR-0009 through ADR-0013.
+
+Accepted ADR-0009 through ADR-0013 governance slice on 2026-08-27:
+
+- assigned stable capability ownership, released lifecycle contracts, invariants, evidence,
+  artifacts, compiled-sample relationships, explicit stable routes, and reciprocal capability
+  links to development-tooling isolation, hierarchical saveable-state ownership, prefetched
+  activation, lazy logical/physical ownership, and component appearance resolution. All five
+  Chinese mirrors carry reviewed canonical fingerprints;
+- semantically reconciled ADR-0009 with the later ADR-0022 hard cut and current source: Preview
+  installs the neutral inspection port directly in memory before application startup, while Host
+  reads one frozen nullable slot and performs neither `ServiceLoader` discovery nor classpath I/O.
+  ADR-0010 through ADR-0013 remain current against the saveable-scope, prepared-transaction,
+  logical-session/physical-tree, sparse-override, complete-style, and overlay-presenter
+  implementations, so their behavioral decisions required no rewrite;
+- removed five resolved metadata exceptions. The Governance V2 report changed from 15 to 10
+  issues, all remaining findings are exact missing-metadata debt. All 531 discovered entries remain
+  owned; unclassified samples, orphan symbols, taxonomy mismatches, duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remain zero;
+- regenerated the schema-3 Capability Reference with 531 entries. It grows from 230,534 to 232,584
+  bytes, a 2,050-byte (`0.8892%`) metadata-only increase while retaining the normalized global
+  document registry;
+- the complete bilingual site audited 454 pages and 30 redirects, produced 49,167,117 non-API
+  bytes, and left 11,097 bytes under the unchanged 46.9 MiB limit. This is 18,329 bytes (`0.0373%`)
+  above the normalized-registry slice and is `no material change`. Docusaurus completed in `28.7 s`;
+  timing remains `inconclusive` because cache and process state differed, while the absolute result
+  remains below the `120 s` limit;
+- Governance V2, documentation structure, all 70 documentation-script tests, 123 reviewed Chinese
+  translations, generated Reference freshness, stable routes, release intent, and the complete
+  bilingual site passed. Complete single-worker `qaQuick` passed 2,342 actionable tasks in `30 s`
+  (180 executed and 2,162 up-to-date); this is completeness evidence rather than a speed comparison
+  because it reused previously produced publication, module, and site outputs;
+- the overall conclusion is `improved`: five active architecture decisions now have mechanically
+  complete ownership and ADR-0009 no longer describes the removed discovery mechanism. Release
+  intent found zero release artifacts, zero ignored artifacts, and zero shared-path classifications
+  against `8f6d7d0132437b6c1d0079df574756217fa6a259`. This documentation-only slice changes no publication
+  input, public API, or production runtime behavior and makes no new visual, power, or performance
+  claim. The limitation is that only 11,097 non-API bytes remain; ADR-0014 through ADR-0018 must
+  retain the hard budget and normalize another owning representation if ordinary metadata growth
+  cannot fit.
 
 | Current area | Required target |
 | --- | --- |

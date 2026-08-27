@@ -18,7 +18,8 @@
     "architecture": [
       "architecture.overlay-root-selection",
       "architecture.design-system-integration",
-      "architecture.public-package-ownership"
+      "architecture.public-package-ownership",
+      "architecture.component-appearance-resolution"
     ],
     "module": ["module.viewcompose-overlay-material3-android"]
   }
