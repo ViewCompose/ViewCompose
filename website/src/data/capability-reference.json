@@ -220,6 +220,7 @@
         "architecture.animation-physics-ownership",
         "architecture.animation-value-velocity-domains",
         "architecture.design-system-resolution",
+        "architecture.in-memory-development-tooling-installation",
         "module.viewcompose-animation",
         "module.viewcompose-animation-core",
         "migration.compose-animation",
@@ -326,6 +327,7 @@
         "tutorial.render-diagnostics",
         "adr.correlated-render-diagnostics",
         "architecture.development-tooling-isolation",
+        "architecture.in-memory-development-tooling-installation",
         "module.viewcompose-ui-foundation",
         "tooling.diagnostics"
       ],
@@ -459,6 +461,7 @@
         "architecture.design-system-host-backends",
         "architecture.development-tooling-isolation",
         "architecture.hierarchical-saveable-state-ownership",
+        "architecture.in-memory-development-tooling-installation",
         "module.viewcompose-host-android",
         "module.viewcompose-android",
         "migration.compose-host-lifecycle-android-interop"
@@ -966,6 +969,7 @@
       "referenceId": "reference.preview.integration",
       "relatedDocumentIds": [
         "architecture.development-tooling-isolation",
+        "architecture.in-memory-development-tooling-installation",
         "module.viewcompose-preview"
       ],
       "sample": {
@@ -1278,6 +1282,10 @@
     "architecture.hierarchical-saveable-state-ownership": {
       "documentType": "architecture",
       "path": "/architecture/decisions/hierarchical-saveable-state-ownership"
+    },
+    "architecture.in-memory-development-tooling-installation": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/in-memory-development-tooling-installation"
     },
     "architecture.lazy-collection-ownership": {
       "documentType": "architecture",

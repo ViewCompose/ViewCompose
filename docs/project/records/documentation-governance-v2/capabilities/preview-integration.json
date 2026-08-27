@@ -17,6 +17,9 @@
   "sample_owner": { "sample_id": "module.preview-compose-bridge" },
   "document_owners": {
     "module": ["module.viewcompose-preview"],
-    "architecture": ["architecture.development-tooling-isolation"]
+    "architecture": [
+      "architecture.development-tooling-isolation",
+      "architecture.in-memory-development-tooling-installation"
+    ]
   }
 }

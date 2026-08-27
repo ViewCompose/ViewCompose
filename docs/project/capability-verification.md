@@ -1,3 +1,22 @@
+---
+schema_version: 2
+document_id: project.capability-verification
+doc_type: project
+slug: /project/capability-verification
+owner:
+  kind: project
+  id: capability-verification
+version_lane: version-agnostic
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+workflow: Define repository and controlled-device verification matrices plus their accepted evidence.
+validation:
+  - ./gradlew qaQuick
+  - ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.P1CoreCapabilitiesUiTest
+lifecycle: Update whenever capability gates, device requirements, scenario ownership, or accepted verification evidence changes.
+---
+
 # Capability verification
 
 This matrix covers the P1 focus/key input, nested scroll, and render-failure/native-effect

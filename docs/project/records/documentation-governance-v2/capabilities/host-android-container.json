@@ -20,7 +20,8 @@
       "architecture.public-package-ownership",
       "architecture.design-system-host-backends",
       "architecture.development-tooling-isolation",
-      "architecture.hierarchical-saveable-state-ownership"
+      "architecture.hierarchical-saveable-state-ownership",
+      "architecture.in-memory-development-tooling-installation"
     ],
     "migration": ["migration.compose-host-lifecycle-android-interop"]
   }

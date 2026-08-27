@@ -1,3 +1,30 @@
+---
+schema_version: 2
+document_id: architecture.in-memory-development-tooling-installation
+doc_type: architecture
+slug: /architecture/decisions/in-memory-development-tooling-installation
+owner:
+  kind: capability
+  id: diagnostics.session-inspection
+version_lane: released
+capability_ids:
+  - diagnostics.session-inspection
+  - host.android-container
+  - preview.integration
+  - animation.composition-motion
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-host-android
+  - viewcompose-animation
+  - viewcompose-preview
+sample_ids: []
+invariants:
+  - Host and Animation each resolve one synchronized process-local nullable tooling slot exactly once, with absence, ambiguity, and late installation failing closed.
+  - Preview installs both neutral ports in memory before application startup only for a debuggable process; the inactive path performs no discovery or file I/O.
+evidence:
+  - Host and Animation slot suites, Preview initializer tests, development-tooling isolation verification, debug and release manifest checks, and accepted Pixel StrictMode evidence.
+---
+
 # ADR-0022: In-memory development-tooling installation
 
 - Status: Accepted
