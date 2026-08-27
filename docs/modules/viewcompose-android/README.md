@@ -1,3 +1,23 @@
+---
+schema_version: 2
+document_id: module.viewcompose-android
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-android
+version_lane: released
+capability_ids:
+  - host.android-container
+  - host.android-resources
+artifact_ids:
+  - viewcompose-android
+sample_ids:
+  - module.android-dependency
+  - module.android-entry
+coordinate: com.viewcompose:viewcompose-android:0.1.0-alpha01
+minimal_usage_sample_id: module.android-dependency
+---
+
 # Neutral Android Application Aggregate
 
 `viewcompose-android` is the recommended single dependency for an Android application that wants
@@ -12,6 +32,7 @@ curation and a stable application-facing host boundary; Material applications us
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="android-module-dependency" sample_id="module.android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
@@ -26,17 +47,17 @@ dependencies {
 
 ## Neutral entry points
 
+{/* compiled-region source="viewcompose-android/src/test/samples/com/viewcompose/android/samples/AndroidEntrySamples.kt" region="android-entry" sample_id="module.android-entry" build_target=":viewcompose-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-import com.viewcompose.android.setUiContent
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setUiContent {
-            UiTheme(MyDesignTokens.light()) {
-                Text("Hello from ViewCompose")
-            }
-        }
+fun activityHostSample(activity: ComponentActivity) {
+    val diagnostics = RenderDiagnostics(
+        collection = RenderDiagnosticCollection(
+            frameLevel = RenderFrameDiagnosticLevel.Stats,
+        ),
+        sink = { event -> println(event) },
+    )
+    activity.setUiContent(diagnostics = diagnostics) {
+        Text("Hello from ViewCompose")
     }
 }
 ```

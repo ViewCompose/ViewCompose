@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "tutorial.android-view",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "host.android-view",
+  "document_ids": ["tutorial.android-view"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/AndroidViewTutorialActivity.kt",
+  "region": "android-view",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

@@ -59,6 +59,34 @@ dependencies {
     // DOCS_REGION_END(animation-core-module-dependency)
 }
 
+private val hostAndroidModuleDependency = run {
+    // DOCS_REGION_START(host-android-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha04")
+}
+    // DOCS_REGION_END(host-android-module-dependency)
+}
+
+private val androidModuleDependency = run {
+    // DOCS_REGION_START(android-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(android-module-dependency)
+}
+
+private val androidViewTutorialDependencies = run {
+    // DOCS_REGION_START(android-view-dependencies)
+repositories { mavenCentral() }
+
+dependencies {
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("androidx.activity:activity:1.12.4")
+    implementation("com.google.android.material:material:1.13.0")
+}
+    // DOCS_REGION_END(android-view-dependencies)
+}
+
 private val navigationTutorialDependencies = run {
     // DOCS_REGION_START(navigation-dependencies)
 repositories { mavenCentral() }

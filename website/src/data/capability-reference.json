@@ -6780,140 +6780,546 @@
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-view",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.android-view",
+              "documentType": "tutorial",
+              "path": "/tutorials/android-view"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-view-adapter",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.AndroidViewAdapter"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-view",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.android-view",
+              "documentType": "tutorial",
+              "path": "/tutorials/android-view"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-view-adapter",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.AndroidViewCommitScope"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-view",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.android-view",
+              "documentType": "tutorial",
+              "path": "/tutorials/android-view"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-view-adapter",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.AndroidViewCreateScope"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-view",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.android-view",
+              "documentType": "tutorial",
+              "path": "/tutorials/android-view"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-view-adapter",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.AndroidViewLifecycleMode"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-view",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.android-view",
+              "documentType": "tutorial",
+              "path": "/tutorials/android-view"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-view-adapter",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.AndroidViewResetReason"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-view",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.android-view",
+              "documentType": "tutorial",
+              "path": "/tutorials/android-view"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-view-adapter",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.AndroidViewResetScope"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-view",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.android-view",
+              "documentType": "tutorial",
+              "path": "/tutorials/android-view"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-view-adapter",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.AndroidViewReusePolicy"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-view",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.android-view",
+              "documentType": "tutorial",
+              "path": "/tutorials/android-view"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-view-adapter",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.AndroidViewUpdateScope"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-view",
           "kind": "modifier",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.host.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.android-view",
+              "documentType": "tutorial",
+              "path": "/tutorials/android-view"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-view-adapter",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.Modifier.nativeView"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-container",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-container",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-render-into",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.RenderSession"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-container",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-container",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-render-into",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.UiHostAndroid"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-view",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 2,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.host.android-view",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.android-view",
+              "documentType": "tutorial",
+              "path": "/tutorials/android-view"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-view-adapter",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.UiTreeBuilder.AndroidView"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-animation",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.animation",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-animation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-animation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.animation.AndroidAnimationInterop"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-animation",
           "kind": "modifier",
           "namespace": "com.viewcompose.host.android.animation",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.host.android-animation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-animation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.animation.Modifier.androidAnimation"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-animation",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.animation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.host.android-animation",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-animation",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.animation.UiTreeBuilder.MotionLayoutView"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.environment",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.environment.AndroidEnvironmentBridge"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-graphics",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.graphics",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-graphics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-graphics",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.graphics.AndroidGraphicsInterop"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-graphics",
           "kind": "modifier",
           "namespace": "com.viewcompose.host.android.graphics",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.host.android-graphics",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-graphics",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.graphics.Modifier.androidGraphics"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-container",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-container",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-render-into",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.installRenderSessionInspectionTooling"
         },
         {
@@ -6939,108 +7345,468 @@
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-container",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-container",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-render-into",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.renderInto"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.resources",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.resources.AndroidResourceRefreshController"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.resources",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.resources.LocalAndroidContext"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.resources",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.resources.LocalAndroidResources"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.resources",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.resources.UiTreeBuilder.AndroidResourceEnvironment"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.resources",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.resources.booleanResource"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.resources",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.resources.colorResource"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.resources",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.resources.dimensionPixelSizeResource"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.resources",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.resources.dimensionResource"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.resources",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.resources.integerArrayResource"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.resources",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.resources.integerResource"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.resources",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.resources.pluralStringResource"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.resources",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.resources.stringArrayResource"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-resources",
           "kind": "host",
           "namespace": "com.viewcompose.host.android.resources",
           "overloadCount": 2,
+          "referenceId": "reference.host.android-resources",
+          "relatedDocuments": [
+            {
+              "documentId": "architecture.android-resource-environment",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+            },
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-resources",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.resources.stringResource"
         },
         {
           "artifact": "viewcompose-host-android",
+          "capabilityId": "host.android-container",
           "kind": "host",
           "namespace": "com.viewcompose.host.android",
           "overloadCount": 1,
+          "referenceId": "reference.host.android-container",
+          "relatedDocuments": [
+            {
+              "documentId": "module.viewcompose-host-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-host-android/README"
+            },
+            {
+              "documentId": "module.viewcompose-android",
+              "documentType": "module",
+              "path": "/modules/viewcompose-android/README"
+            },
+            {
+              "documentId": "migration.compose-host-lifecycle-android-interop",
+              "documentType": "migration",
+              "path": "/migration/compose-host-lifecycle-and-android-interop"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.host-android-render-into",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.host.android.viewComposeSaveableStateRegistry"
         }
       ],
@@ -8753,7 +9519,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 284,
+    "ownedEntryCount": 318,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }

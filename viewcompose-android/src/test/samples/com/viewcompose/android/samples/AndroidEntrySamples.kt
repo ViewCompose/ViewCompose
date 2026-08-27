@@ -10,6 +10,7 @@ import com.viewcompose.ui.foundation.RenderDiagnostics
 import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 import com.viewcompose.ui.foundation.Text
 
+// DOCS_REGION_START(android-entry)
 fun activityHostSample(activity: ComponentActivity) {
     val diagnostics = RenderDiagnostics(
         collection = RenderDiagnosticCollection(
@@ -21,6 +22,7 @@ fun activityHostSample(activity: ComponentActivity) {
         Text("Hello from ViewCompose")
     }
 }
+// DOCS_REGION_END(android-entry)
 
 fun fragmentHostSample(fragment: Fragment): ViewGroup {
     return fragment.setUiContent {

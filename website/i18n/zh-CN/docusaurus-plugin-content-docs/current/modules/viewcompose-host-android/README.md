@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: f56d5cbd8516d6c994ca73af2b51d0bfeb5a5c110bb43dc303ed445057f8e51e
+translation_source_hash: 4a904449f345e60bedb679018d0c1b5a413af92a8383c20fef9e2ebc32a09a02
 translation_status: current
 ---
 
@@ -16,6 +16,7 @@ translation_status: current
 
 ## 构件与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="host-android-module-dependency" sample_id="module.host-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha04")
@@ -36,14 +37,23 @@ dependencies {
 
 `renderInto(container)` 会安装 Android 引擎，并在返回前提交第一帧：
 
+{/* compiled-region source="viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt" region="host-render-into" sample_id="module.host-android-render-into" build_target=":viewcompose-host-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-val session = renderInto(container) {
-    CustomSurface()
+fun renderIntoSample(container: ViewGroup) {
+    val diagnostics = RenderDiagnostics(
+        collection = RenderDiagnosticCollection(
+            frameLevel = RenderFrameDiagnosticLevel.Stats,
+        ),
+        sink = { event -> println(event) },
+    )
+    val session = renderInto(container, diagnostics = diagnostics) {
+        Text("Custom host")
+    }
+    session.setRenderingActive(false)
+    session.render()
+    session.dispose()
+    check(runCatching(session::render).exceptionOrNull() is IllegalStateException)
 }
-
-session.setRenderingActive(false)
-session.render()
-session.dispose()
 ```
 
 传入 `diagnostics = RenderDiagnostics(...)` 会开启一棵关联诊断树。底层 `role` 与
@@ -75,6 +85,19 @@ Provider 在挂载期间观察 Android Configuration Callback，重新发布密�
 单调递增的资源版本，并随组合释放注销。稳定 Context Wrapper 被替换，或其他主动资源修改没有产生
 Callback 时，每个 Host 使用一个 `AndroidResourceRefreshController`。调用、Callback 与释放都属于
 主线程；资源结果是同步快照，不得在 Session 之外持有 Provider 的 Context 或 Resources。
+
+{/* compiled-region source="viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt" region="host-android-resources" sample_id="module.host-android-resources" build_target=":viewcompose-host-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun androidResourceEnvironmentSample(
+    builder: UiTreeBuilder,
+    context: Context,
+    titleResource: Int,
+) {
+    builder.AndroidResourceEnvironment(context) {
+        Text(stringResource(titleResource))
+    }
+}
+```
 
 ## 可选 Session 检查边界
 
@@ -115,18 +138,27 @@ Engine 会让 Composition Node Identity 贯穿 Reconciliation 与 Binding；仅 
 可复用集成应实现类型安全的 `AndroidViewAdapter<V, S>` 契约。Adapter 类与
 `constructionKey` 标识构造敏感状态，`key` 则继续标识逻辑内容：
 
+{/* compiled-region source="viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt" region="host-android-view-adapter" sample_id="module.host-android-view-adapter" build_target=":viewcompose-host-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-private class NativeLabelAdapter(
-    private val textAppearance: Int,
-) : AndroidViewAdapter<TextView, NativeLabelState> {
-    override val reusePolicy = AndroidViewReusePolicy.Resettable
+fun typedAndroidViewAdapterSample(builder: UiTreeBuilder) {
+    builder.AndroidView(
+        adapter = NativeLabelAdapter,
+        state = "Typed native label",
+        key = "label",
+        constructionKey = "default-text-appearance",
+        modifier = Modifier.nativeView(key = "enabled") { view ->
+            view.isEnabled = true
+        },
+    )
+}
 
-    override fun create(scope: AndroidViewCreateScope): TextView =
-        TextView(scope.context, null, 0, textAppearance)
+private object NativeLabelAdapter : AndroidViewAdapter<TextView, String> {
+    override val reusePolicy: AndroidViewReusePolicy = AndroidViewReusePolicy.Resettable
 
-    override fun update(scope: AndroidViewUpdateScope<TextView>, state: NativeLabelState) {
-        scope.view.text = state.text
-        scope.view.setTextColor(state.color)
+    override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: String) {
+        scope.view.text = state
     }
 
     override fun onReset(
@@ -136,13 +168,6 @@ private class NativeLabelAdapter(
         scope.view.text = null
     }
 }
-
-AndroidView(
-    adapter = NativeLabelAdapter(textAppearance = textAppearance),
-    state = NativeLabelState(text = title, color = titleColor),
-    key = itemId,
-    constructionKey = textAppearance,
-)
 ```
 
 - `create`、`update`、Reset、Commit 与 Release 都在 Android 主线程同步执行。Create 接收
@@ -163,6 +188,48 @@ AndroidView(
 基于 Callback 的 `AndroidView(factory, update, ...)` 重载仍是底层逃生路径，并委托相同的类型化
 事务路径。其尾部 `constructionKey` 具有相同替换语义；提供 `onReset` 也只表示允许跨 Key 的
 Mounted Tree 复用。
+
+## 原生动画与图形互操作
+
+`AndroidAnimationInterop` 可以启动平台 Animator，而不会把其生命周期转移给组合动画引擎。
+`MotionLayoutView` 承载 AndroidX `MotionLayout`，`Modifier.androidAnimation` 则在绑定阶段应用可
+重放的原生动画属性：
+
+{/* compiled-region source="viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt" region="host-android-animation" sample_id="module.host-android-animation" build_target=":viewcompose-host-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun platformAnimationInteropSample(target: View) =
+    AndroidAnimationInterop.startObjectAnimator(
+        target,
+        "alpha",
+        0f,
+        1f,
+        durationMillis = 180L,
+    )
+
+fun UiTreeBuilder.motionLayoutInteropSample() {
+    MotionLayoutView(
+        factory = { context -> MotionLayout(context) },
+        update = { layout -> layout.progress = 0f },
+        modifier = Modifier.androidAnimation(key = "settled-alpha") { view ->
+            view.alpha = 1f
+        },
+    )
+}
+```
+
+`AndroidGraphicsInterop` 提供受 API 级别约束的平台 `RenderEffect` 边界，
+`Modifier.androidGraphics` 通过同一保留式 View 绑定路径应用原生图形状态：
+
+{/* compiled-region source="viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt" region="host-android-graphics" sample_id="module.host-android-graphics" build_target=":viewcompose-host-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun platformGraphicsInteropSample(target: View): Modifier {
+    val effect = AndroidGraphicsInterop.createBlurEffect(radiusX = 12f, radiusY = 12f)
+    AndroidGraphicsInterop.applyRenderEffect(target, effect)
+    return Modifier.androidGraphics(key = "native-graphics") { view ->
+        view.alpha = 1f
+    }
+}
+```
 
 ## 状态保存、调度与线程
 

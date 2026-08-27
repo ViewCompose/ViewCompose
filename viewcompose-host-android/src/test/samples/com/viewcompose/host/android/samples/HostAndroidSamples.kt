@@ -1,8 +1,10 @@
 package com.viewcompose.host.android.samples
 
 import android.content.Context
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.constraintlayout.motion.widget.MotionLayout
 import com.viewcompose.host.android.AndroidView
 import com.viewcompose.host.android.AndroidViewAdapter
 import com.viewcompose.host.android.AndroidViewCreateScope
@@ -12,6 +14,12 @@ import com.viewcompose.host.android.AndroidViewReusePolicy
 import com.viewcompose.host.android.AndroidViewUpdateScope
 import com.viewcompose.host.android.renderInto
 import com.viewcompose.host.android.installRenderSessionInspectionTooling
+import com.viewcompose.host.android.animation.AndroidAnimationInterop
+import com.viewcompose.host.android.animation.MotionLayoutView
+import com.viewcompose.host.android.animation.androidAnimation
+import com.viewcompose.host.android.graphics.AndroidGraphicsInterop
+import com.viewcompose.host.android.graphics.androidGraphics
+import com.viewcompose.host.android.nativeView
 import com.viewcompose.host.android.resources.AndroidResourceEnvironment
 import com.viewcompose.host.android.resources.AndroidResourceRefreshController
 import com.viewcompose.host.android.resources.booleanResource
@@ -30,12 +38,14 @@ import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.RenderSessionInspectionTooling
+import com.viewcompose.ui.modifier.Modifier
 
 /** Installs an optional downstream inspection port before the first render session starts. */
 fun installRenderSessionInspectionToolingSample(tooling: RenderSessionInspectionTooling) {
     installRenderSessionInspectionTooling(tooling)
 }
 
+// DOCS_REGION_START(host-render-into)
 fun renderIntoSample(container: ViewGroup) {
     val diagnostics = RenderDiagnostics(
         collection = RenderDiagnosticCollection(
@@ -51,6 +61,7 @@ fun renderIntoSample(container: ViewGroup) {
     session.dispose()
     check(runCatching(session::render).exceptionOrNull() is IllegalStateException)
 }
+// DOCS_REGION_END(host-render-into)
 
 fun androidViewInteropSample(builder: UiTreeBuilder) {
     builder.AndroidView(
@@ -60,12 +71,16 @@ fun androidViewInteropSample(builder: UiTreeBuilder) {
     )
 }
 
+// DOCS_REGION_START(host-android-view-adapter)
 fun typedAndroidViewAdapterSample(builder: UiTreeBuilder) {
     builder.AndroidView(
         adapter = NativeLabelAdapter,
         state = "Typed native label",
         key = "label",
         constructionKey = "default-text-appearance",
+        modifier = Modifier.nativeView(key = "enabled") { view ->
+            view.isEnabled = true
+        },
     )
 }
 
@@ -85,7 +100,9 @@ private object NativeLabelAdapter : AndroidViewAdapter<TextView, String> {
         scope.view.text = null
     }
 }
+// DOCS_REGION_END(host-android-view-adapter)
 
+// DOCS_REGION_START(host-android-resources)
 fun androidResourceEnvironmentSample(
     builder: UiTreeBuilder,
     context: Context,
@@ -95,6 +112,38 @@ fun androidResourceEnvironmentSample(
         Text(stringResource(titleResource))
     }
 }
+// DOCS_REGION_END(host-android-resources)
+
+// DOCS_REGION_START(host-android-animation)
+fun platformAnimationInteropSample(target: View) =
+    AndroidAnimationInterop.startObjectAnimator(
+        target,
+        "alpha",
+        0f,
+        1f,
+        durationMillis = 180L,
+    )
+
+fun UiTreeBuilder.motionLayoutInteropSample() {
+    MotionLayoutView(
+        factory = { context -> MotionLayout(context) },
+        update = { layout -> layout.progress = 0f },
+        modifier = Modifier.androidAnimation(key = "settled-alpha") { view ->
+            view.alpha = 1f
+        },
+    )
+}
+// DOCS_REGION_END(host-android-animation)
+
+// DOCS_REGION_START(host-android-graphics)
+fun platformGraphicsInteropSample(target: View): Modifier {
+    val effect = AndroidGraphicsInterop.createBlurEffect(radiusX = 12f, radiusY = 12f)
+    AndroidGraphicsInterop.applyRenderEffect(target, effect)
+    return Modifier.androidGraphics(key = "native-graphics") { view ->
+        view.alpha = 1f
+    }
+}
+// DOCS_REGION_END(host-android-graphics)
 
 fun androidResourceRefreshSample(controller: AndroidResourceRefreshController) {
     // Update the stable root Context wrapper first when the mutation replaces its base context.

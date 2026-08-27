@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register Host Android container, native View, resource, animation, and graphics documentation ownership without changing published artifacts.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-host-android",
+      "reason": "Only test-only compiled documentation fixtures are added for existing APIs; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-android",
+      "reason": "Only a test-only compiled documentation region is added around an existing host sample; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-android/README.md
-translation_source_hash: 6d5813280a1baef29bd0bccf1cc3fe1fc00450cf08884b18097d3d1e8d795a34
+translation_source_hash: 37e68e8fe0e05bdc6a9e42114dbf283f6af75075944ab898c9a34cc780a76d7c
 translation_status: current
 ---
 
@@ -17,6 +17,7 @@ Fragment 的 `setUiContent` 入口。
 
 ## 构件与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="android-module-dependency" sample_id="module.android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
@@ -31,17 +32,17 @@ dependencies {
 
 ## 中立入口
 
+{/* compiled-region source="viewcompose-android/src/test/samples/com/viewcompose/android/samples/AndroidEntrySamples.kt" region="android-entry" sample_id="module.android-entry" build_target=":viewcompose-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-import com.viewcompose.android.setUiContent
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setUiContent {
-            UiTheme(MyDesignTokens.light()) {
-                Text("Hello from ViewCompose")
-            }
-        }
+fun activityHostSample(activity: ComponentActivity) {
+    val diagnostics = RenderDiagnostics(
+        collection = RenderDiagnosticCollection(
+            frameLevel = RenderFrameDiagnosticLevel.Stats,
+        ),
+        sink = { event -> println(event) },
+    )
+    activity.setUiContent(diagnostics = diagnostics) {
+        Text("Hello from ViewCompose")
     }
 }
 ```

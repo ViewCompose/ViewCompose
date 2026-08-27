@@ -1,3 +1,30 @@
+---
+schema_version: 2
+document_id: module.viewcompose-host-android
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-host-android
+version_lane: released
+capability_ids:
+  - host.android-container
+  - host.android-view
+  - host.android-resources
+  - host.android-animation
+  - host.android-graphics
+artifact_ids:
+  - viewcompose-host-android
+sample_ids:
+  - module.host-android-dependency
+  - module.host-android-render-into
+  - module.host-android-view-adapter
+  - module.host-android-resources
+  - module.host-android-animation
+  - module.host-android-graphics
+coordinate: com.viewcompose:viewcompose-host-android:0.1.0-alpha04
+minimal_usage_sample_id: module.host-android-dependency
+---
+
 # Android Host Engine
 
 `viewcompose-host-android` is the low-level Android View host engine. It installs the renderer,
@@ -13,6 +40,7 @@ APIs without the standard Activity/Fragment integration.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="host-android-module-dependency" sample_id="module.host-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha04")
@@ -34,14 +62,23 @@ roots use `com.viewcompose.android` and therefore cannot silently expand this lo
 
 `renderInto(container)` installs the Android engine and commits the first frame before returning:
 
+{/* compiled-region source="viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt" region="host-render-into" sample_id="module.host-android-render-into" build_target=":viewcompose-host-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-val session = renderInto(container) {
-    CustomSurface()
+fun renderIntoSample(container: ViewGroup) {
+    val diagnostics = RenderDiagnostics(
+        collection = RenderDiagnosticCollection(
+            frameLevel = RenderFrameDiagnosticLevel.Stats,
+        ),
+        sink = { event -> println(event) },
+    )
+    val session = renderInto(container, diagnostics = diagnostics) {
+        Text("Custom host")
+    }
+    session.setRenderingActive(false)
+    session.render()
+    session.dispose()
+    check(runCatching(session::render).exceptionOrNull() is IllegalStateException)
 }
-
-session.setRenderingActive(false)
-session.render()
-session.dispose()
 ```
 
 Pass `diagnostics = RenderDiagnostics(...)` to start a correlated diagnostics tree. The low-level
@@ -78,6 +115,19 @@ host-scoped `AndroidResourceRefreshController` after replacing a stable Context 
 imperative resource mutation that emits no callback. Calls, callbacks, and disposal are main-thread
 work. Resource results are synchronous snapshots; do not retain provider-owned Context or Resources
 beyond the session.
+
+{/* compiled-region source="viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt" region="host-android-resources" sample_id="module.host-android-resources" build_target=":viewcompose-host-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun androidResourceEnvironmentSample(
+    builder: UiTreeBuilder,
+    context: Context,
+    titleResource: Int,
+) {
+    builder.AndroidResourceEnvironment(context) {
+        Text(stringResource(titleResource))
+    }
+}
+```
 
 ## Optional session-inspection boundary
 
@@ -125,18 +175,27 @@ Reusable integrations implement the typed `AndroidViewAdapter<V, S>` contract. T
 and `constructionKey` identify constructor-sensitive state, while `key` continues to identify
 logical content:
 
+{/* compiled-region source="viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt" region="host-android-view-adapter" sample_id="module.host-android-view-adapter" build_target=":viewcompose-host-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-private class NativeLabelAdapter(
-    private val textAppearance: Int,
-) : AndroidViewAdapter<TextView, NativeLabelState> {
-    override val reusePolicy = AndroidViewReusePolicy.Resettable
+fun typedAndroidViewAdapterSample(builder: UiTreeBuilder) {
+    builder.AndroidView(
+        adapter = NativeLabelAdapter,
+        state = "Typed native label",
+        key = "label",
+        constructionKey = "default-text-appearance",
+        modifier = Modifier.nativeView(key = "enabled") { view ->
+            view.isEnabled = true
+        },
+    )
+}
 
-    override fun create(scope: AndroidViewCreateScope): TextView =
-        TextView(scope.context, null, 0, textAppearance)
+private object NativeLabelAdapter : AndroidViewAdapter<TextView, String> {
+    override val reusePolicy: AndroidViewReusePolicy = AndroidViewReusePolicy.Resettable
 
-    override fun update(scope: AndroidViewUpdateScope<TextView>, state: NativeLabelState) {
-        scope.view.text = state.text
-        scope.view.setTextColor(state.color)
+    override fun create(scope: AndroidViewCreateScope): TextView = TextView(scope.context)
+
+    override fun update(scope: AndroidViewUpdateScope<TextView>, state: String) {
+        scope.view.text = state
     }
 
     override fun onReset(
@@ -146,13 +205,6 @@ private class NativeLabelAdapter(
         scope.view.text = null
     }
 }
-
-AndroidView(
-    adapter = NativeLabelAdapter(textAppearance = textAppearance),
-    state = NativeLabelState(text = title, color = titleColor),
-    key = itemId,
-    constructionKey = textAppearance,
-)
 ```
 
 - `create`, `update`, reset, commit, and release run synchronously on the Android main thread.
@@ -177,6 +229,49 @@ AndroidView(
 The callback-based `AndroidView(factory, update, ...)` overload remains the low-level escape hatch
 and delegates to the same typed transaction path. Its trailing `constructionKey` has the same
 replacement semantics, and supplying `onReset` opts into only cross-key mounted-tree reuse.
+
+## Native animation and graphics interop
+
+`AndroidAnimationInterop` starts platform animators without moving their lifecycle into the
+composition animation engine. `MotionLayoutView` hosts an AndroidX `MotionLayout`, while
+`Modifier.androidAnimation` applies replay-safe native animation properties during binding:
+
+{/* compiled-region source="viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt" region="host-android-animation" sample_id="module.host-android-animation" build_target=":viewcompose-host-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun platformAnimationInteropSample(target: View) =
+    AndroidAnimationInterop.startObjectAnimator(
+        target,
+        "alpha",
+        0f,
+        1f,
+        durationMillis = 180L,
+    )
+
+fun UiTreeBuilder.motionLayoutInteropSample() {
+    MotionLayoutView(
+        factory = { context -> MotionLayout(context) },
+        update = { layout -> layout.progress = 0f },
+        modifier = Modifier.androidAnimation(key = "settled-alpha") { view ->
+            view.alpha = 1f
+        },
+    )
+}
+```
+
+`AndroidGraphicsInterop` exposes the API-gated platform `RenderEffect` boundary, and
+`Modifier.androidGraphics` applies native graphics state through the same retained-View binding
+path:
+
+{/* compiled-region source="viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt" region="host-android-graphics" sample_id="module.host-android-graphics" build_target=":viewcompose-host-android:compileDebugUnitTestKotlin" */}
+```kotlin
+fun platformGraphicsInteropSample(target: View): Modifier {
+    val effect = AndroidGraphicsInterop.createBlurEffect(radiusX = 12f, radiusY = 12f)
+    AndroidGraphicsInterop.applyRenderEffect(target, effect)
+    return Modifier.androidGraphics(key = "native-graphics") { view ->
+        view.alpha = 1f
+    }
+}
+```
 
 ## Saved state, scheduling, and threading
 
