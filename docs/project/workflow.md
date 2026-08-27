@@ -154,20 +154,27 @@ language, and translation checks run once through `verifyDocumentationStructure`
 site catalog once, then calls the prepared type-check and build entry points to avoid repeating npm
 prebuild hooks.
 
-During the Phase 5 shadow period, a scoped `qaQuick` selection first runs `qaAffected` with a 4 GiB
-Gradle heap and at most two workers. The root build independently reconstructs the current
+The classifier owns a typed `qaQuick` execution mode in addition to the stable `qa_quick` workflow
+selection. `skip` omits Android work, `complete` runs only full `qaQuick`, `affected-with-shadow`
+runs `qaAffected` followed by full `qaQuick`, and `affected` runs only `qaAffected`. The workflow
+validates the selected mode and both step outcomes before its required `qaQuick` facade can pass;
+an unsupported mode or an unexpected executed/skipped outcome fails closed.
+
+A scoped candidate uses a 4 GiB Gradle heap and at most two workers. The root build independently reconstructs the current
 `api`/`implementation`/`compileOnly`/`runtimeOnly` project graph, rejects any classifier closure
 drift, and selects compile plus unit-test tasks from the configured projects rather than an artifact
 task list. Demo, sample, integration-test, and benchmark ownership selects its project-specific
 tasks; local Maven publication is included only for sample consumers. Documentation and Preview
 remain owned by their independently visible workflows.
 
-The same job then runs complete `qaQuick` under the same resource envelope. Both outcomes must
-succeed; a selective success followed by a complete failure, or a selective-only failure, blocks
-the pull request and is a classifier defect. `main`, manual runs, and every full-fallback pull
-request skip the candidate and run only complete `qaQuick`. This shadow contract collects correctness
-evidence before any required-path latency reduction and does not change the project-wide local
-Gradle default.
+The no-shadow `affected` mode is deliberately narrow: it requires exactly documentation-governance,
+documentation-site, and Tutorial-sample gate ownership, `:samples:tutorials` as the sole
+non-published project, no published artifact, and no full-fallback reason. Every other scoped
+Android change remains `affected-with-shadow`, where both the candidate and complete gate must
+succeed. `main`, manual runs, and every full-fallback pull request use `complete`. This distinction
+keeps module, production, Preview, Demo, integration, benchmark, release, shared-input, and unknown
+changes under the complete comparison until their own observation classes qualify. It does not
+change the project-wide local Gradle default.
 
 The 2026-08-26 local acceptance used one real historical Paging diff. `qaAffected` selected 39 task
 paths across one direct and ten dependency artifacts and passed in `2 min 6 s` (215 actionable;
@@ -186,6 +193,20 @@ preceding accepted pull request, `qaQuick` changed by `-0.17%` and `qaPreview` b
 **no material change**. Documentation changed by `-14.8%`, but different immutable-cache state and
 inputs make that latency result **inconclusive**. One full-fallback sample proves the behavior but
 not a distribution; the next action remains collection of scoped change-class observations.
+
+Eleven comparable hosted documentation/Tutorial-sample pull requests (#177, #178, #179, #180,
+#182, #183, #184, #185, #203, #204, and #205) supplied the accepted no-shadow corpus. Each selected
+1,176 actionable candidate tasks, selected no published artifact, and reached the same successful
+result as the following 2,342-task complete shadow. Reconstructing the required critical path as
+the maximum of candidate completion from job start and the parallel documentation-child duration
+gives nearest-rank P50 `6 min 22 s` and P95 `7 min 17 s`; both satisfy the `8 min`/`12 min`
+thresholds. All 11 documentation children restored and verified `5/5` immutable API groups with
+zero generation or invalid group, a `100%` exact-hit rate. The scope and cache conclusions are
+**improved**, and correctness is **no material change** with zero divergence. The timing result is
+still **inconclusive** as an observed post-cut result because it is reconstructed from shadow runs;
+the first eligible pull request after rollout must record its actual critical path. This evidence
+enables `affected` only for the exact class above while every other scoped class retains
+`affected-with-shadow`.
 
 `gradle/actions/setup-gradle` is the sole owner of Gradle User Home caching in every workflow that
 invokes Gradle. `actions/setup-java` installs the required JDK but does not separately cache
