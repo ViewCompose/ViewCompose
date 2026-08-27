@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "capability_id": "lifecycle.owner-boundaries",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-lifecycle-androidx" },
+  "artifact": "viewcompose-lifecycle-androidx",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.lifecycle.LocalLifecycleOwner", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/LifecycleLocals.kt" },
+    { "symbol_id": "com.viewcompose.lifecycle.UiTreeBuilder.ProvideLifecycleOwner", "kind": "extension", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/LifecycleLocals.kt" },
+    { "symbol_id": "com.viewcompose.lifecycle.LocalSavedStateRegistryOwner", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/SavedStateOwnerLocals.kt" },
+    { "symbol_id": "com.viewcompose.lifecycle.UiTreeBuilder.ProvideSavedStateRegistryOwner", "kind": "extension", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/SavedStateOwnerLocals.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.lifecycle.owner-boundaries", "generated": true },
+  "sample_owner": { "sample_id": "module.lifecycle-owner-boundary" },
+  "document_owners": {
+    "architecture": ["architecture.lifecycle-saved-state"],
+    "module": ["module.viewcompose-lifecycle-androidx", "module.viewcompose-android"],
+    "migration": ["migration.compose-host-lifecycle-android-interop"]
+  }
+}

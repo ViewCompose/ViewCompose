@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "capability_id": "lifecycle.android-view",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-lifecycle-androidx" },
+  "artifact": "viewcompose-lifecycle-androidx",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.lifecycle.AndroidViewCommitScope.bindAndroidViewSavedState", "kind": "extension", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/AndroidViewSavedStateBinding.kt" },
+    { "symbol_id": "com.viewcompose.lifecycle.AndroidViewLifecycleEventScope", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/LifecycleAndroidViewAdapter.kt" },
+    { "symbol_id": "com.viewcompose.lifecycle.AndroidViewSaveStateScope", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/AndroidViewSavedStateBinding.kt" },
+    { "symbol_id": "com.viewcompose.lifecycle.AndroidViewSavedStateBindResult", "kind": "type", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/AndroidViewSavedStateBinding.kt" },
+    { "symbol_id": "com.viewcompose.lifecycle.View.clearAndroidViewSavedStateBinding", "kind": "extension", "visibility": "public", "source": "viewcompose-lifecycle-androidx/src/main/java/com/viewcompose/lifecycle/AndroidViewSavedStateBinding.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.lifecycle.android-view", "generated": true },
+  "sample_owner": { "sample_id": "module.lifecycle-android-view-saved-state" },
+  "document_owners": {
+    "architecture": ["architecture.lifecycle-saved-state"],
+    "module": ["module.viewcompose-lifecycle-androidx"],
+    "migration": ["migration.compose-host-lifecycle-android-interop"]
+  }
+}

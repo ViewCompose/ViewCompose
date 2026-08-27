@@ -21,13 +21,14 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the Host Android ownership slice, then audit Lifecycle ownership as the next Phase 3 boundary.
+next_action: Merge the Lifecycle ownership slice, then audit ViewModel ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
   - release/changes/20260826-governance-third-party-integrations-phase3.json
   - release/changes/20260827-governance-animation-phase3.json
   - release/changes/20260827-governance-host-android-phase3.json
+  - release/changes/20260827-governance-lifecycle-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -82,6 +83,9 @@ animation interop remains intentionally outside this owner and will be handled w
 The accepted Host Android hard cut now assigns all 34 low-level container, native View, resource,
 native animation, and native graphics entries to five capability owners, registers 12 compiled
 sample decisions, removes 19 resolved exceptions, and reduces the report to 267 issues.
+The accepted Lifecycle hard cut now assigns all 18 owner-boundary, Flow collection, lifecycle
+effect, native View lifecycle, and saved-state entries to four capability owners, registers seven
+compiled sample decisions, removes 10 resolved exceptions, and reduces the report to 243 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -90,7 +94,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the Host Android ownership slice, then audit Lifecycle ownership as the next
+Next action: merge the Lifecycle ownership slice, then audit ViewModel ownership as the next
 Phase 3 boundary. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
@@ -119,15 +123,19 @@ remains owned by this plan after the Phase 3 content owners move.
   the neutral Android aggregate because only test-only compiled documentation fixtures gained
   regions. Test sources are excluded from published artifacts; production source, API, runtime
   behavior, publication metadata, and generated artifact content remain unchanged.
+- `release/changes/20260827-governance-lifecycle-phase3.json` explicitly ignores Lifecycle AndroidX
+  because only test-only compiled documentation fixtures gained exact source regions. Test sources
+  are excluded from published artifacts; production source, API, runtime behavior, publication
+  metadata, and generated artifact content remain unchanged.
 
 ## Release intent rationale
 
 The completed Phase 2 governance-tooling slices change governance records, documentation markers,
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
-`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, two explicitly
-ignored Host Android artifacts, and zero shared-path classifications against
-`397c08bc1d53fdb3924cc5ca5a7e2a50f7ee1c93`.
+`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, one explicitly
+ignored Lifecycle AndroidX artifact, and zero shared-path classifications against
+`7d7afaa37f0da2167d0f375b1710a7d00dd74cee`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1039,6 +1047,35 @@ Accepted Host Android ownership slice on 2026-08-27:
   explicitly ignored two test-sample-only artifacts. This slice reuses existing unit, device,
   visual, resource, and performance evidence and makes no new runtime, visual, power, or
   performance claim. The next action is Lifecycle ownership.
+
+Accepted Lifecycle ownership slice on 2026-08-27:
+
+- retained the existing Lifecycle AndroidX module, neutral Android aggregate, lifecycle and saved
+  state Architecture, transactional-effect ADR, and host migration routes while splitting
+  ownership into owner boundaries, Flow collection, paired lifecycle effects, and committed native
+  View lifecycle/saved-state integration. ViewModel and Renderer remain separate audit boundaries;
+- registered four capability owners for all 18 previously orphaned public entries and seven exact
+  compiled dependency, owner-boundary, collection, effect, lifecycle-adapter, and saved-state sample
+  decisions. Ten resolved metadata, symbol, and sample exception records were removed;
+- the report changed from 267 to 243 issues: missing metadata 64 to 61, orphan symbols 115 to 97,
+  and unclassified samples 84 to 81. Taxonomy mismatches remained 4; duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- Lifecycle AndroidX unit tests, both affected compiled-sample targets, Governance V2,
+  documentation structure, language and translation review, complete API reuse, release intent,
+  and the complete bilingual site passed. The final evidence-bearing site audited 454 pages,
+  produced 49,039,723 non-API bytes, left 138,491 bytes under the unchanged 46.9 MiB limit, and
+  completed Docusaurus in `30.8 s`. This is 182,906 bytes (`0.3744%`) above the Host Android slice
+  and is `no material change` for four capability records plus complete bilingual samples. The
+  local build-time comparison is `inconclusive` because cache and process state differed, but the
+  absolute result remains below the `120 s` limit. Complete `qaQuick` passed 2,342 actionable tasks
+  in `20 s` (185 executed and 2,157 up-to-date);
+- the overall conclusion is `improved`: all Lifecycle integration families now have exact generated
+  ownership and compiled bilingual examples without changing public API, runtime behavior, routes,
+  or published artifacts. Release intent found zero release artifacts and explicitly ignored the
+  one test-sample-only Lifecycle artifact. This slice reuses existing unit, device, lifecycle,
+  saved-state, and performance evidence and makes no new runtime, visual, power, or performance
+  claim. The next action is ViewModel ownership.
 
 | Current area | Required target |
 | --- | --- |

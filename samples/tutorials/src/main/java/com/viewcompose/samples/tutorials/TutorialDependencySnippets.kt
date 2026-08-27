@@ -75,6 +75,14 @@ dependencies {
     // DOCS_REGION_END(android-module-dependency)
 }
 
+private val lifecycleAndroidxModuleDependency = run {
+    // DOCS_REGION_START(lifecycle-androidx-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-lifecycle-androidx:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(lifecycle-androidx-module-dependency)
+}
+
 private val androidViewTutorialDependencies = run {
     // DOCS_REGION_START(android-view-dependencies)
 repositories { mavenCentral() }

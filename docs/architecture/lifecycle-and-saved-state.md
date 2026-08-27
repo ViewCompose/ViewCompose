@@ -1,3 +1,29 @@
+---
+schema_version: 2
+document_id: architecture.lifecycle-saved-state
+doc_type: architecture
+owner:
+  kind: capability
+  id: lifecycle.owner-boundaries
+version_lane: released
+capability_ids:
+  - lifecycle.owner-boundaries
+  - lifecycle.flow-collection
+  - lifecycle.effects
+  - lifecycle.android-view
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-host-android
+  - viewcompose-lifecycle-androidx
+  - viewcompose-android
+sample_ids: []
+invariants:
+  - Lifecycle and saved-state ownership begins only at a committed host, composition, or native View boundary.
+  - Replacement, destruction, and rollback complete old ownership before publishing a new owner.
+evidence:
+  - Lifecycle module tests, Android host integration tests, compiled module samples, and retained-session tests.
+---
+
 # Lifecycle and Saved State
 
 ## 1. Purpose

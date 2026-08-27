@@ -9,6 +9,9 @@ version_lane: released
 capability_ids:
   - host.android-container
   - host.android-view
+  - lifecycle.owner-boundaries
+  - lifecycle.flow-collection
+  - lifecycle.android-view
 artifact_ids:
   - viewcompose-android
   - viewcompose-host-android
