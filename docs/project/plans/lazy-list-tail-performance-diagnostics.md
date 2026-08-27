@@ -18,7 +18,7 @@ artifact_ids:
   - viewcompose-preview
 sample_ids: []
 status: active
-scope: Use and, when evidence proves necessary, minimally extend the finite diagnostics to attribute and reduce the accepted LazyColumn tail-latency gaps.
+scope: Find and correct the source-owned cause of the accepted LazyColumn tail-latency gaps, extending request-driven diagnostics only when the next causal distinction cannot otherwise be measured.
 non_goals:
   - Replace Macrobenchmark or Perfetto with instrumented node timing.
   - Weaken lazy identity, lifecycle, prefetch, accessibility, or benchmark-equivalence contracts.
@@ -29,9 +29,9 @@ ordered_work:
   - Isolate one attributed tail source, implement the minimum reversible correction, and remeasure.
   - Interpret both performance and diagnostic-utility results in their active owners before archival.
 completion:
-  - Close the accepted list-tail regression or assign every remaining material gap to a separately evidenced owner while proving whether the shipped diagnostics changed the investigation decision.
+  - Close the accepted list-tail regression with a source-owned correction and stable same-run three-engine evidence; attribution or a diagnostic-utility result alone cannot complete the plan.
 last_verified: 2026-08-27
-next_action: Continue platform-tail attribution in measure/layout/draw, input, and RenderThread before testing another production candidate; the unresolved Android Views P95 gaps remain open.
+next_action: Continue the platform-tail attribution and correction loop, upgrading bounded request-driven diagnostics whenever the next causal distinction is not observable; stop only after stable same-run evidence closes the Android Views P95 gaps.
 maven_release_changesets:
   - release/changes/20260827-armed-lazy-item-diagnostics.json
 ---
@@ -53,9 +53,10 @@ recorded below.
 Last verified: 2026-08-27.
 
 Next action: continue attribution in the unsupported measure/layout/draw, input, and RenderThread
-domains before testing another production candidate. The plan remains active because the Android
-Views scroll and mutation P95 gaps are still material and no production performance correction has
-passed acceptance.
+domains before testing another production candidate. Repeat the evidence-to-correction loop, and
+upgrade the request-driven diagnostic seam first whenever the next causal distinction is not
+observable. The plan remains active until a production-owned correction closes the Android Views
+scroll and mutation P95 gaps; attribution or a diagnostic-utility conclusion is not an endpoint.
 
 ## Execution record: 2026-08-27
 
@@ -268,16 +269,16 @@ policy branch and performs no recurring observation or per-node timing without a
 
 ## Objective
 
-Use the completed diagnostics upgrade as a real troubleshooting instrument against the accepted
-LazyColumn tail-latency gap, then retain only a measured, architecture-compatible correction.
+Find the source-owned root cause of the accepted `performance.list@5` LazyColumn tail-latency gap
+and retain a measured, architecture-compatible correction without shifting work into startup,
+prefetch, layout, memory, or lifecycle cleanup.
 
-The work has two equal outcomes:
-
-1. reduce the remaining `performance.list@5` scroll and mutation tails without shifting work into
-   startup, prefetch, layout, memory, or lifecycle cleanup; and
-2. determine whether correlated Session discovery, source navigation, mounted-node inspection, and
-   finite composition/reconciliation/binding timing produce an actionable decision on a real
-   performance defect.
+Diagnostics are an instrument for that objective, not a co-equal deliverable or a phase endpoint.
+Correlated Session discovery, source navigation, mounted-node inspection, finite timing, and
+platform tracing may be retained, replaced, or minimally extended as evidence requires. When the
+current instruments cannot distinguish the next causal branch after repeated controlled captures,
+the next task is to build the smallest request-driven diagnostic that can distinguish it before
+trying another production candidate.
 
 The diagnostics result is not assumed to be positive. A truthful finding that the material tail is
 outside the shipped timing domains is useful only when the bounded capture makes that exclusion
@@ -494,10 +495,14 @@ another performance candidate in this phase.
 3. Test one hypothesis at a time against the unchanged ViewCompose action. Reject candidates that
    move cost to startup, first attach, later fling, heap, or disposal.
 4. Preserve rejected measurements and state why they did not justify a production change.
+5. Repeat attribution, one-factor candidate, exact-control measurement, and rejection as one loop.
+   Do not advance candidates from an unobserved hypothesis. When a loop ends with two plausible
+   owners that existing evidence cannot separate, upgrade the bounded diagnostic seam first and
+   resume the same loop with the new observation.
 
-Exit condition: one production-owned cause has source/test ownership and a reversible candidate,
-or evidence proves the material gap is entirely outside ViewCompose-owned work and names the next
-valid owner without pretending the objective is complete.
+Exit condition: one production-owned cause has source/test ownership and a reversible candidate.
+Evidence that moves the gap into another platform phase changes the next investigation step but
+does not satisfy this exit condition or complete the objective.
 
 ### Phase 3: minimum correction
 
@@ -593,6 +598,8 @@ material tail remains unowned, and this plan has no pending next action.
    except when the public contract explicitly requires the fallback.
 7. Do not mark the plan complete while accepted evidence, diagnostic limitations, or remaining
    material gaps exist only in raw reports, chat, or this temporary plan.
+8. Do not stop at an `actionable`, `partially useful`, or unsupported-domain diagnostic result.
+   Continue the attribution/correction loop until the accepted same-run performance criteria pass.
 
 ## Completion criteria
 
