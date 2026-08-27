@@ -215,47 +215,15 @@
     {
       "capabilityId": "animation.composition-motion",
       "referenceId": "reference.animation.composition-motion",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.animation",
-          "documentType": "tutorial",
-          "path": "/tutorials/animation"
-        },
-        {
-          "documentId": "architecture.animation-physics-ownership",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0019-animation-physics-transition-and-inspection-ownership"
-        },
-        {
-          "documentId": "architecture.animation-value-velocity-domains",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0020-separate-animation-value-and-velocity-domains"
-        },
-        {
-          "documentId": "architecture.design-system-resolution",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-resolution-boundary"
-        },
-        {
-          "documentId": "module.viewcompose-animation",
-          "documentType": "module",
-          "path": "/modules/viewcompose-animation"
-        },
-        {
-          "documentId": "module.viewcompose-animation-core",
-          "documentType": "module",
-          "path": "/modules/viewcompose-animation-core"
-        },
-        {
-          "documentId": "migration.compose-animation",
-          "documentType": "migration",
-          "path": "/migration/compose-animation"
-        },
-        {
-          "documentId": "migration.dsl-contract-convergence",
-          "documentType": "migration",
-          "path": "/migration/dsl-contract-convergence"
-        }
+      "relatedDocumentIds": [
+        "tutorial.animation",
+        "architecture.animation-physics-ownership",
+        "architecture.animation-value-velocity-domains",
+        "architecture.design-system-resolution",
+        "module.viewcompose-animation",
+        "module.viewcompose-animation-core",
+        "migration.compose-animation",
+        "migration.dsl-contract-convergence"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -266,12 +234,8 @@
     {
       "capabilityId": "camerax.preview",
       "referenceId": "reference.camerax.preview",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-camerax-androidx",
-          "documentType": "module",
-          "path": "/modules/viewcompose-camerax-androidx"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-camerax-androidx"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -282,17 +246,9 @@
     {
       "capabilityId": "constraintlayout.core",
       "referenceId": "reference.constraintlayout.core",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.public-package-ownership",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
-        },
-        {
-          "documentId": "module.viewcompose-constraintlayout-androidx",
-          "documentType": "module",
-          "path": "/modules/viewcompose-constraintlayout-androidx"
-        }
+      "relatedDocumentIds": [
+        "architecture.public-package-ownership",
+        "module.viewcompose-constraintlayout-androidx"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -303,12 +259,8 @@
     {
       "capabilityId": "constraintlayout.helpers",
       "referenceId": "reference.constraintlayout.helpers",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-constraintlayout-androidx",
-          "documentType": "module",
-          "path": "/modules/viewcompose-constraintlayout-androidx"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-constraintlayout-androidx"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -319,32 +271,12 @@
     {
       "capabilityId": "diagnostics.correlated-events",
       "referenceId": "reference.diagnostics.correlated-events",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.render-diagnostics",
-          "documentType": "tutorial",
-          "path": "/tutorials/render-diagnostics"
-        },
-        {
-          "documentId": "architecture.render-failures",
-          "documentType": "architecture",
-          "path": "/architecture/render-failures"
-        },
-        {
-          "documentId": "adr.correlated-render-diagnostics",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0021-correlated-render-diagnostics-ownership"
-        },
-        {
-          "documentId": "module.viewcompose-ui-foundation",
-          "documentType": "module",
-          "path": "/modules/viewcompose-ui-foundation"
-        },
-        {
-          "documentId": "tooling.diagnostics",
-          "documentType": "tooling",
-          "path": "/tooling/diagnostics"
-        }
+      "relatedDocumentIds": [
+        "tutorial.render-diagnostics",
+        "architecture.render-failures",
+        "adr.correlated-render-diagnostics",
+        "module.viewcompose-ui-foundation",
+        "tooling.diagnostics"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -355,32 +287,12 @@
     {
       "capabilityId": "diagnostics.failure-aggregation",
       "referenceId": "reference.diagnostics.failure-aggregation",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.render-diagnostics",
-          "documentType": "tutorial",
-          "path": "/tutorials/render-diagnostics"
-        },
-        {
-          "documentId": "architecture.render-failures",
-          "documentType": "architecture",
-          "path": "/architecture/render-failures"
-        },
-        {
-          "documentId": "adr.correlated-render-diagnostics",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0021-correlated-render-diagnostics-ownership"
-        },
-        {
-          "documentId": "module.viewcompose-diagnostics",
-          "documentType": "module",
-          "path": "/modules/viewcompose-diagnostics"
-        },
-        {
-          "documentId": "tooling.diagnostics",
-          "documentType": "tooling",
-          "path": "/tooling/diagnostics"
-        }
+      "relatedDocumentIds": [
+        "tutorial.render-diagnostics",
+        "architecture.render-failures",
+        "adr.correlated-render-diagnostics",
+        "module.viewcompose-diagnostics",
+        "tooling.diagnostics"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -391,27 +303,11 @@
     {
       "capabilityId": "diagnostics.node-timing",
       "referenceId": "reference.diagnostics.node-timing",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.render-diagnostics",
-          "documentType": "tutorial",
-          "path": "/tutorials/render-diagnostics"
-        },
-        {
-          "documentId": "adr.correlated-render-diagnostics",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0021-correlated-render-diagnostics-ownership"
-        },
-        {
-          "documentId": "module.viewcompose-ui-foundation",
-          "documentType": "module",
-          "path": "/modules/viewcompose-ui-foundation"
-        },
-        {
-          "documentId": "tooling.diagnostics",
-          "documentType": "tooling",
-          "path": "/tooling/diagnostics"
-        }
+      "relatedDocumentIds": [
+        "tutorial.render-diagnostics",
+        "adr.correlated-render-diagnostics",
+        "module.viewcompose-ui-foundation",
+        "tooling.diagnostics"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -422,27 +318,11 @@
     {
       "capabilityId": "diagnostics.session-inspection",
       "referenceId": "reference.diagnostics.session-inspection",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.render-diagnostics",
-          "documentType": "tutorial",
-          "path": "/tutorials/render-diagnostics"
-        },
-        {
-          "documentId": "adr.correlated-render-diagnostics",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0021-correlated-render-diagnostics-ownership"
-        },
-        {
-          "documentId": "module.viewcompose-ui-foundation",
-          "documentType": "module",
-          "path": "/modules/viewcompose-ui-foundation"
-        },
-        {
-          "documentId": "tooling.diagnostics",
-          "documentType": "tooling",
-          "path": "/tooling/diagnostics"
-        }
+      "relatedDocumentIds": [
+        "tutorial.render-diagnostics",
+        "adr.correlated-render-diagnostics",
+        "module.viewcompose-ui-foundation",
+        "tooling.diagnostics"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -453,12 +333,8 @@
     {
       "capabilityId": "exoplayer2.player",
       "referenceId": "reference.exoplayer2.player",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-exoplayer2-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-exoplayer2-android"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-exoplayer2-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -469,17 +345,9 @@
     {
       "capabilityId": "focus.input",
       "referenceId": "reference.focus.input",
-      "relatedDocuments": [
-        {
-          "documentId": "guide.focus-and-key-input",
-          "documentType": "guide",
-          "path": "/guides/focus-and-input"
-        },
-        {
-          "documentId": "architecture.modifier-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/modifier"
-        }
+      "relatedDocumentIds": [
+        "guide.focus-and-key-input",
+        "architecture.modifier-runtime"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -490,47 +358,15 @@
     {
       "capabilityId": "foundation.components",
       "referenceId": "reference.foundation.components",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.getting-started",
-          "documentType": "tutorial",
-          "path": "/tutorials/getting-started"
-        },
-        {
-          "documentId": "tutorial.state-and-events",
-          "documentType": "tutorial",
-          "path": "/tutorials/state-and-events"
-        },
-        {
-          "documentId": "architecture.design-system-integration",
-          "documentType": "architecture",
-          "path": "/architecture/design-systems"
-        },
-        {
-          "documentId": "architecture.design-system-resolution",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-resolution-boundary"
-        },
-        {
-          "documentId": "architecture.design-system-host-backends",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
-        },
-        {
-          "documentId": "module.viewcompose-ui-foundation",
-          "documentType": "module",
-          "path": "/modules/viewcompose-ui-foundation"
-        },
-        {
-          "documentId": "migration.compose-layout-modifier-environment",
-          "documentType": "migration",
-          "path": "/migration/compose-layout-modifier-and-environment"
-        },
-        {
-          "documentId": "migration.dsl-contract-convergence",
-          "documentType": "migration",
-          "path": "/migration/dsl-contract-convergence"
-        }
+      "relatedDocumentIds": [
+        "tutorial.getting-started",
+        "tutorial.state-and-events",
+        "architecture.design-system-integration",
+        "architecture.design-system-resolution",
+        "architecture.design-system-host-backends",
+        "module.viewcompose-ui-foundation",
+        "migration.compose-layout-modifier-environment",
+        "migration.dsl-contract-convergence"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -541,22 +377,10 @@
     {
       "capabilityId": "foundation.effects",
       "referenceId": "reference.foundation.effects",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.effects",
-          "documentType": "architecture",
-          "path": "/architecture/effects"
-        },
-        {
-          "documentId": "module.viewcompose-ui-foundation",
-          "documentType": "module",
-          "path": "/modules/viewcompose-ui-foundation"
-        },
-        {
-          "documentId": "migration.compose-state-recomposition-restoration",
-          "documentType": "migration",
-          "path": "/migration/compose-state-recomposition-and-restoration"
-        }
+      "relatedDocumentIds": [
+        "architecture.effects",
+        "module.viewcompose-ui-foundation",
+        "migration.compose-state-recomposition-restoration"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -567,22 +391,10 @@
     {
       "capabilityId": "foundation.environment",
       "referenceId": "reference.foundation.environment",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.public-package-ownership",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
-        },
-        {
-          "documentId": "module.viewcompose-ui-foundation",
-          "documentType": "module",
-          "path": "/modules/viewcompose-ui-foundation"
-        },
-        {
-          "documentId": "migration.compose-layout-modifier-environment",
-          "documentType": "migration",
-          "path": "/migration/compose-layout-modifier-and-environment"
-        }
+      "relatedDocumentIds": [
+        "architecture.public-package-ownership",
+        "module.viewcompose-ui-foundation",
+        "migration.compose-layout-modifier-environment"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -593,27 +405,11 @@
     {
       "capabilityId": "gesture.modifiers",
       "referenceId": "reference.gesture.modifiers",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.gestures",
-          "documentType": "tutorial",
-          "path": "/tutorials/gestures"
-        },
-        {
-          "documentId": "architecture.modifier-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/modifier"
-        },
-        {
-          "documentId": "module.viewcompose-gesture",
-          "documentType": "module",
-          "path": "/modules/viewcompose-gesture"
-        },
-        {
-          "documentId": "module.viewcompose-gesture-core",
-          "documentType": "module",
-          "path": "/modules/viewcompose-gesture-core"
-        }
+      "relatedDocumentIds": [
+        "tutorial.gestures",
+        "architecture.modifier-runtime",
+        "module.viewcompose-gesture",
+        "module.viewcompose-gesture-core"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -624,17 +420,9 @@
     {
       "capabilityId": "graphics.custom-drawing",
       "referenceId": "reference.graphics.custom-drawing",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-graphics",
-          "documentType": "module",
-          "path": "/modules/viewcompose-graphics"
-        },
-        {
-          "documentId": "module.viewcompose-graphics-core",
-          "documentType": "module",
-          "path": "/modules/viewcompose-graphics-core"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-graphics",
+        "module.viewcompose-graphics-core"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -645,12 +433,8 @@
     {
       "capabilityId": "host.android-animation",
       "referenceId": "reference.host.android-animation",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-host-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-host-android"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-host-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -661,32 +445,12 @@
     {
       "capabilityId": "host.android-container",
       "referenceId": "reference.host.android-container",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.public-package-ownership",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
-        },
-        {
-          "documentId": "architecture.design-system-host-backends",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
-        },
-        {
-          "documentId": "module.viewcompose-host-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-host-android"
-        },
-        {
-          "documentId": "module.viewcompose-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-android"
-        },
-        {
-          "documentId": "migration.compose-host-lifecycle-android-interop",
-          "documentType": "migration",
-          "path": "/migration/compose-host-lifecycle-and-android-interop"
-        }
+      "relatedDocumentIds": [
+        "architecture.public-package-ownership",
+        "architecture.design-system-host-backends",
+        "module.viewcompose-host-android",
+        "module.viewcompose-android",
+        "migration.compose-host-lifecycle-android-interop"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -697,12 +461,8 @@
     {
       "capabilityId": "host.android-graphics",
       "referenceId": "reference.host.android-graphics",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-host-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-host-android"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-host-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -713,37 +473,13 @@
     {
       "capabilityId": "host.android-resources",
       "referenceId": "reference.host.android-resources",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.android-resource-environment",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
-        },
-        {
-          "documentId": "architecture.design-system-integration",
-          "documentType": "architecture",
-          "path": "/architecture/design-systems"
-        },
-        {
-          "documentId": "architecture.public-package-ownership",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
-        },
-        {
-          "documentId": "architecture.design-system-host-backends",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
-        },
-        {
-          "documentId": "module.viewcompose-host-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-host-android"
-        },
-        {
-          "documentId": "module.viewcompose-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-android"
-        }
+      "relatedDocumentIds": [
+        "architecture.android-resource-environment",
+        "architecture.design-system-integration",
+        "architecture.public-package-ownership",
+        "architecture.design-system-host-backends",
+        "module.viewcompose-host-android",
+        "module.viewcompose-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -754,32 +490,12 @@
     {
       "capabilityId": "host.android-view",
       "referenceId": "reference.host.android-view",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.android-view",
-          "documentType": "tutorial",
-          "path": "/tutorials/android-view"
-        },
-        {
-          "documentId": "module.viewcompose-host-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-host-android"
-        },
-        {
-          "documentId": "migration.compose-host-lifecycle-android-interop",
-          "documentType": "migration",
-          "path": "/migration/compose-host-lifecycle-and-android-interop"
-        },
-        {
-          "documentId": "migration.compose-layout-modifier-environment",
-          "documentType": "migration",
-          "path": "/migration/compose-layout-modifier-and-environment"
-        },
-        {
-          "documentId": "migration.lazy-collection-revision-reuse",
-          "documentType": "migration",
-          "path": "/migration/lazy-collection-revision-and-reuse"
-        }
+      "relatedDocumentIds": [
+        "tutorial.android-view",
+        "module.viewcompose-host-android",
+        "migration.compose-host-lifecycle-android-interop",
+        "migration.compose-layout-modifier-environment",
+        "migration.lazy-collection-revision-reuse"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -790,22 +506,10 @@
     {
       "capabilityId": "image.coil",
       "referenceId": "reference.image.coil",
-      "relatedDocuments": [
-        {
-          "documentId": "guide.image-loading",
-          "documentType": "guide",
-          "path": "/guides/image-loading"
-        },
-        {
-          "documentId": "module.viewcompose-image-coil",
-          "documentType": "module",
-          "path": "/modules/viewcompose-image-coil"
-        },
-        {
-          "documentId": "migration.image-loading",
-          "documentType": "migration",
-          "path": "/migration/image-loading"
-        }
+      "relatedDocumentIds": [
+        "guide.image-loading",
+        "module.viewcompose-image-coil",
+        "migration.image-loading"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -816,22 +520,10 @@
     {
       "capabilityId": "image.foundation",
       "referenceId": "reference.image.foundation",
-      "relatedDocuments": [
-        {
-          "documentId": "guide.image-loading",
-          "documentType": "guide",
-          "path": "/guides/image-loading"
-        },
-        {
-          "documentId": "module.viewcompose-ui-foundation",
-          "documentType": "module",
-          "path": "/modules/viewcompose-ui-foundation"
-        },
-        {
-          "documentId": "migration.image-loading",
-          "documentType": "migration",
-          "path": "/migration/image-loading"
-        }
+      "relatedDocumentIds": [
+        "guide.image-loading",
+        "module.viewcompose-ui-foundation",
+        "migration.image-loading"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -842,17 +534,9 @@
     {
       "capabilityId": "image.glide",
       "referenceId": "reference.image.glide",
-      "relatedDocuments": [
-        {
-          "documentId": "guide.image-loading",
-          "documentType": "guide",
-          "path": "/guides/image-loading"
-        },
-        {
-          "documentId": "module.viewcompose-image-glide",
-          "documentType": "module",
-          "path": "/modules/viewcompose-image-glide"
-        }
+      "relatedDocumentIds": [
+        "guide.image-loading",
+        "module.viewcompose-image-glide"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -863,47 +547,15 @@
     {
       "capabilityId": "lazy.collections",
       "referenceId": "reference.lazy.collections",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.lazy-lists",
-          "documentType": "tutorial",
-          "path": "/tutorials/lazy-lists"
-        },
-        {
-          "documentId": "tutorial.lazy-list-performance",
-          "documentType": "tutorial",
-          "path": "/tutorials/lazy-list-performance"
-        },
-        {
-          "documentId": "guide.lazy-collections",
-          "documentType": "guide",
-          "path": "/guides/lazy-collections"
-        },
-        {
-          "documentId": "architecture.lazy-collections-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/lazy-collections"
-        },
-        {
-          "documentId": "architecture.delayed-session-containers",
-          "documentType": "architecture",
-          "path": "/architecture/session-containers"
-        },
-        {
-          "documentId": "architecture.state-snapshots",
-          "documentType": "architecture",
-          "path": "/architecture/state-snapshots"
-        },
-        {
-          "documentId": "module.viewcompose-ui-foundation",
-          "documentType": "module",
-          "path": "/modules/viewcompose-ui-foundation"
-        },
-        {
-          "documentId": "migration.lazy-collection-revision-reuse",
-          "documentType": "migration",
-          "path": "/migration/lazy-collection-revision-and-reuse"
-        }
+      "relatedDocumentIds": [
+        "tutorial.lazy-lists",
+        "tutorial.lazy-list-performance",
+        "guide.lazy-collections",
+        "architecture.lazy-collections-runtime",
+        "architecture.delayed-session-containers",
+        "architecture.state-snapshots",
+        "module.viewcompose-ui-foundation",
+        "migration.lazy-collection-revision-reuse"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -914,22 +566,10 @@
     {
       "capabilityId": "lifecycle.android-view",
       "referenceId": "reference.lifecycle.android-view",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.lifecycle-saved-state",
-          "documentType": "architecture",
-          "path": "/architecture/lifecycle-and-saved-state"
-        },
-        {
-          "documentId": "module.viewcompose-lifecycle-androidx",
-          "documentType": "module",
-          "path": "/modules/viewcompose-lifecycle-androidx"
-        },
-        {
-          "documentId": "migration.compose-host-lifecycle-android-interop",
-          "documentType": "migration",
-          "path": "/migration/compose-host-lifecycle-and-android-interop"
-        }
+      "relatedDocumentIds": [
+        "architecture.lifecycle-saved-state",
+        "module.viewcompose-lifecycle-androidx",
+        "migration.compose-host-lifecycle-android-interop"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -940,27 +580,11 @@
     {
       "capabilityId": "lifecycle.effects",
       "referenceId": "reference.lifecycle.effects",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.effects",
-          "documentType": "architecture",
-          "path": "/architecture/effects"
-        },
-        {
-          "documentId": "architecture.lifecycle-saved-state",
-          "documentType": "architecture",
-          "path": "/architecture/lifecycle-and-saved-state"
-        },
-        {
-          "documentId": "architecture.transactional-effect-lifecycle",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0008-transactional-effect-lifecycle"
-        },
-        {
-          "documentId": "module.viewcompose-lifecycle-androidx",
-          "documentType": "module",
-          "path": "/modules/viewcompose-lifecycle-androidx"
-        }
+      "relatedDocumentIds": [
+        "architecture.effects",
+        "architecture.lifecycle-saved-state",
+        "architecture.transactional-effect-lifecycle",
+        "module.viewcompose-lifecycle-androidx"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -971,22 +595,10 @@
     {
       "capabilityId": "lifecycle.flow-collection",
       "referenceId": "reference.lifecycle.flow-collection",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.lifecycle-saved-state",
-          "documentType": "architecture",
-          "path": "/architecture/lifecycle-and-saved-state"
-        },
-        {
-          "documentId": "module.viewcompose-lifecycle-androidx",
-          "documentType": "module",
-          "path": "/modules/viewcompose-lifecycle-androidx"
-        },
-        {
-          "documentId": "migration.compose-host-lifecycle-android-interop",
-          "documentType": "migration",
-          "path": "/migration/compose-host-lifecycle-and-android-interop"
-        }
+      "relatedDocumentIds": [
+        "architecture.lifecycle-saved-state",
+        "module.viewcompose-lifecycle-androidx",
+        "migration.compose-host-lifecycle-android-interop"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -997,27 +609,11 @@
     {
       "capabilityId": "lifecycle.owner-boundaries",
       "referenceId": "reference.lifecycle.owner-boundaries",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.lifecycle-saved-state",
-          "documentType": "architecture",
-          "path": "/architecture/lifecycle-and-saved-state"
-        },
-        {
-          "documentId": "module.viewcompose-lifecycle-androidx",
-          "documentType": "module",
-          "path": "/modules/viewcompose-lifecycle-androidx"
-        },
-        {
-          "documentId": "module.viewcompose-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-android"
-        },
-        {
-          "documentId": "migration.compose-host-lifecycle-android-interop",
-          "documentType": "migration",
-          "path": "/migration/compose-host-lifecycle-and-android-interop"
-        }
+      "relatedDocumentIds": [
+        "architecture.lifecycle-saved-state",
+        "module.viewcompose-lifecycle-androidx",
+        "module.viewcompose-android",
+        "migration.compose-host-lifecycle-android-interop"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1028,12 +624,8 @@
     {
       "capabilityId": "maps.google.content",
       "referenceId": "reference.maps.google.content",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-google-maps-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-google-maps-android"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-google-maps-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1044,12 +636,8 @@
     {
       "capabilityId": "maps.google.view",
       "referenceId": "reference.maps.google.view",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-google-maps-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-google-maps-android"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-google-maps-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1060,32 +648,12 @@
     {
       "capabilityId": "material3.components",
       "referenceId": "reference.material3.components",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.design-system-integration",
-          "documentType": "architecture",
-          "path": "/architecture/design-systems"
-        },
-        {
-          "documentId": "architecture.design-system-resolution",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-resolution-boundary"
-        },
-        {
-          "documentId": "architecture.design-system-host-backends",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
-        },
-        {
-          "documentId": "module.viewcompose-material3",
-          "documentType": "module",
-          "path": "/modules/viewcompose-material3"
-        },
-        {
-          "documentId": "module.viewcompose-material3-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-material3-android"
-        }
+      "relatedDocumentIds": [
+        "architecture.design-system-integration",
+        "architecture.design-system-resolution",
+        "architecture.design-system-host-backends",
+        "module.viewcompose-material3",
+        "module.viewcompose-material3-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1096,12 +664,8 @@
     {
       "capabilityId": "media3.player",
       "referenceId": "reference.media3.player",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-media3-androidx",
-          "documentType": "module",
-          "path": "/modules/viewcompose-media3-androidx"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-media3-androidx"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1112,17 +676,9 @@
     {
       "capabilityId": "modifier.appearance",
       "referenceId": "reference.modifier.appearance",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.modifier-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/modifier"
-        },
-        {
-          "documentId": "migration.compose-layout-modifier-environment",
-          "documentType": "migration",
-          "path": "/migration/compose-layout-modifier-and-environment"
-        }
+      "relatedDocumentIds": [
+        "architecture.modifier-runtime",
+        "migration.compose-layout-modifier-environment"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1133,12 +689,8 @@
     {
       "capabilityId": "modifier.drawing",
       "referenceId": "reference.modifier.drawing",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.modifier-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/modifier"
-        }
+      "relatedDocumentIds": [
+        "architecture.modifier-runtime"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1149,22 +701,10 @@
     {
       "capabilityId": "modifier.interaction",
       "referenceId": "reference.modifier.interaction",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.modifier-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/modifier"
-        },
-        {
-          "documentId": "migration.compose-layout-modifier-environment",
-          "documentType": "migration",
-          "path": "/migration/compose-layout-modifier-and-environment"
-        },
-        {
-          "documentId": "migration.dsl-contract-convergence",
-          "documentType": "migration",
-          "path": "/migration/dsl-contract-convergence"
-        }
+      "relatedDocumentIds": [
+        "architecture.modifier-runtime",
+        "migration.compose-layout-modifier-environment",
+        "migration.dsl-contract-convergence"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1175,22 +715,10 @@
     {
       "capabilityId": "modifier.layout",
       "referenceId": "reference.modifier.layout",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.layouts-and-modifiers",
-          "documentType": "tutorial",
-          "path": "/tutorials/layouts-and-modifiers"
-        },
-        {
-          "documentId": "architecture.modifier-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/modifier"
-        },
-        {
-          "documentId": "migration.compose-layout-modifier-environment",
-          "documentType": "migration",
-          "path": "/migration/compose-layout-modifier-and-environment"
-        }
+      "relatedDocumentIds": [
+        "tutorial.layouts-and-modifiers",
+        "architecture.modifier-runtime",
+        "migration.compose-layout-modifier-environment"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1201,12 +729,8 @@
     {
       "capabilityId": "modifier.semantics",
       "referenceId": "reference.modifier.semantics",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.modifier-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/modifier"
-        }
+      "relatedDocumentIds": [
+        "architecture.modifier-runtime"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1217,12 +741,8 @@
     {
       "capabilityId": "modifier.shared-content",
       "referenceId": "reference.modifier.shared-content",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.modifier-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/modifier"
-        }
+      "relatedDocumentIds": [
+        "architecture.modifier-runtime"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1233,42 +753,14 @@
     {
       "capabilityId": "navigation.host",
       "referenceId": "reference.navigation.host",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.navigation",
-          "documentType": "tutorial",
-          "path": "/tutorials/navigation"
-        },
-        {
-          "documentId": "guide.navigation-production-host",
-          "documentType": "guide",
-          "path": "/guides/navigation"
-        },
-        {
-          "documentId": "architecture.navigation-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/navigation"
-        },
-        {
-          "documentId": "architecture.delayed-session-containers",
-          "documentType": "architecture",
-          "path": "/architecture/session-containers"
-        },
-        {
-          "documentId": "module.viewcompose-navigation-core",
-          "documentType": "module",
-          "path": "/modules/viewcompose-navigation-core"
-        },
-        {
-          "documentId": "module.viewcompose-navigation-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-navigation-android"
-        },
-        {
-          "documentId": "migration.compose-navigation",
-          "documentType": "migration",
-          "path": "/migration/compose-navigation"
-        }
+      "relatedDocumentIds": [
+        "tutorial.navigation",
+        "guide.navigation-production-host",
+        "architecture.navigation-runtime",
+        "architecture.delayed-session-containers",
+        "module.viewcompose-navigation-core",
+        "module.viewcompose-navigation-android",
+        "migration.compose-navigation"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1279,22 +771,10 @@
     {
       "capabilityId": "nested.scroll",
       "referenceId": "reference.nested.scroll",
-      "relatedDocuments": [
-        {
-          "documentId": "guide.nested-scroll-coordination",
-          "documentType": "guide",
-          "path": "/guides/nested-scroll"
-        },
-        {
-          "documentId": "architecture.modifier-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/modifier"
-        },
-        {
-          "documentId": "module.viewcompose-gesture",
-          "documentType": "module",
-          "path": "/modules/viewcompose-gesture"
-        }
+      "relatedDocumentIds": [
+        "guide.nested-scroll-coordination",
+        "architecture.modifier-runtime",
+        "module.viewcompose-gesture"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1305,27 +785,11 @@
     {
       "capabilityId": "oneui7.components",
       "referenceId": "reference.oneui7.components",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.design-system-integration",
-          "documentType": "architecture",
-          "path": "/architecture/design-systems"
-        },
-        {
-          "documentId": "architecture.design-system-resolution",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-resolution-boundary"
-        },
-        {
-          "documentId": "architecture.design-system-host-backends",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
-        },
-        {
-          "documentId": "module.viewcompose-oneui7",
-          "documentType": "module",
-          "path": "/modules/viewcompose-oneui7"
-        }
+      "relatedDocumentIds": [
+        "architecture.design-system-integration",
+        "architecture.design-system-resolution",
+        "architecture.design-system-host-backends",
+        "module.viewcompose-oneui7"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1336,17 +800,9 @@
     {
       "capabilityId": "overlay.anchor",
       "referenceId": "reference.overlay.anchor",
-      "relatedDocuments": [
-        {
-          "documentId": "guide.overlay-presentation",
-          "documentType": "guide",
-          "path": "/guides/overlays"
-        },
-        {
-          "documentId": "architecture.overlay-root-selection",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
-        }
+      "relatedDocumentIds": [
+        "guide.overlay-presentation",
+        "architecture.overlay-root-selection"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1357,37 +813,13 @@
     {
       "capabilityId": "overlay.android-transport",
       "referenceId": "reference.overlay.android-transport",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.overlays",
-          "documentType": "tutorial",
-          "path": "/tutorials/overlays"
-        },
-        {
-          "documentId": "guide.overlay-presentation",
-          "documentType": "guide",
-          "path": "/guides/overlays"
-        },
-        {
-          "documentId": "architecture.overlay-root-selection",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
-        },
-        {
-          "documentId": "architecture.design-system-integration",
-          "documentType": "architecture",
-          "path": "/architecture/design-systems"
-        },
-        {
-          "documentId": "architecture.public-package-ownership",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
-        },
-        {
-          "documentId": "module.viewcompose-overlay-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-overlay-android"
-        }
+      "relatedDocumentIds": [
+        "tutorial.overlays",
+        "guide.overlay-presentation",
+        "architecture.overlay-root-selection",
+        "architecture.design-system-integration",
+        "architecture.public-package-ownership",
+        "module.viewcompose-overlay-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1398,27 +830,11 @@
     {
       "capabilityId": "overlay.foundation",
       "referenceId": "reference.overlay.foundation",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.overlays",
-          "documentType": "tutorial",
-          "path": "/tutorials/overlays"
-        },
-        {
-          "documentId": "guide.overlay-presentation",
-          "documentType": "guide",
-          "path": "/guides/overlays"
-        },
-        {
-          "documentId": "architecture.overlay-root-selection",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
-        },
-        {
-          "documentId": "module.viewcompose-ui-foundation",
-          "documentType": "module",
-          "path": "/modules/viewcompose-ui-foundation"
-        }
+      "relatedDocumentIds": [
+        "tutorial.overlays",
+        "guide.overlay-presentation",
+        "architecture.overlay-root-selection",
+        "module.viewcompose-ui-foundation"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1429,12 +845,8 @@
     {
       "capabilityId": "overlay.host-defaults",
       "referenceId": "reference.overlay.host-defaults",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.overlay-root-selection",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
-        }
+      "relatedDocumentIds": [
+        "architecture.overlay-root-selection"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1445,37 +857,13 @@
     {
       "capabilityId": "overlay.material3",
       "referenceId": "reference.overlay.material3",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.overlays",
-          "documentType": "tutorial",
-          "path": "/tutorials/overlays"
-        },
-        {
-          "documentId": "guide.overlay-presentation",
-          "documentType": "guide",
-          "path": "/guides/overlays"
-        },
-        {
-          "documentId": "architecture.overlay-root-selection",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
-        },
-        {
-          "documentId": "architecture.design-system-integration",
-          "documentType": "architecture",
-          "path": "/architecture/design-systems"
-        },
-        {
-          "documentId": "architecture.public-package-ownership",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
-        },
-        {
-          "documentId": "module.viewcompose-overlay-material3-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-overlay-material3-android"
-        }
+      "relatedDocumentIds": [
+        "tutorial.overlays",
+        "guide.overlay-presentation",
+        "architecture.overlay-root-selection",
+        "architecture.design-system-integration",
+        "architecture.public-package-ownership",
+        "module.viewcompose-overlay-material3-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1486,27 +874,11 @@
     {
       "capabilityId": "overlay.oneui7",
       "referenceId": "reference.overlay.oneui7",
-      "relatedDocuments": [
-        {
-          "documentId": "guide.overlay-presentation",
-          "documentType": "guide",
-          "path": "/guides/overlays"
-        },
-        {
-          "documentId": "architecture.overlay-root-selection",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
-        },
-        {
-          "documentId": "architecture.design-system-integration",
-          "documentType": "architecture",
-          "path": "/architecture/design-systems"
-        },
-        {
-          "documentId": "module.viewcompose-overlay-oneui7-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-overlay-oneui7-android"
-        }
+      "relatedDocumentIds": [
+        "guide.overlay-presentation",
+        "architecture.overlay-root-selection",
+        "architecture.design-system-integration",
+        "module.viewcompose-overlay-oneui7-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1517,12 +889,8 @@
     {
       "capabilityId": "paging.androidx",
       "referenceId": "reference.paging.androidx",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-paging-androidx",
-          "documentType": "module",
-          "path": "/modules/viewcompose-paging-androidx"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-paging-androidx"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1533,17 +901,9 @@
     {
       "capabilityId": "preview.core.annotations",
       "referenceId": "reference.preview.core.annotations",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.getting-started",
-          "documentType": "tutorial",
-          "path": "/tutorials/getting-started"
-        },
-        {
-          "documentId": "module.viewcompose-preview-core",
-          "documentType": "module",
-          "path": "/modules/viewcompose-preview-core"
-        }
+      "relatedDocumentIds": [
+        "tutorial.getting-started",
+        "module.viewcompose-preview-core"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1554,12 +914,8 @@
     {
       "capabilityId": "preview.core.protocol",
       "referenceId": "reference.preview.core.protocol",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-preview-core",
-          "documentType": "module",
-          "path": "/modules/viewcompose-preview-core"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-preview-core"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1570,17 +926,9 @@
     {
       "capabilityId": "preview.gradle",
       "referenceId": "reference.preview.gradle",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.getting-started",
-          "documentType": "tutorial",
-          "path": "/tutorials/getting-started"
-        },
-        {
-          "documentId": "module.viewcompose-preview-gradle-plugin",
-          "documentType": "module",
-          "path": "/modules/viewcompose-preview-gradle-plugin"
-        }
+      "relatedDocumentIds": [
+        "tutorial.getting-started",
+        "module.viewcompose-preview-gradle-plugin"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1591,12 +939,8 @@
     {
       "capabilityId": "preview.integration",
       "referenceId": "reference.preview.integration",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-preview",
-          "documentType": "module",
-          "path": "/modules/viewcompose-preview"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-preview"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1607,12 +951,8 @@
     {
       "capabilityId": "preview.runner",
       "referenceId": "reference.preview.runner",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-preview-runner",
-          "documentType": "module",
-          "path": "/modules/viewcompose-preview-runner"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-preview-runner"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1623,12 +963,8 @@
     {
       "capabilityId": "preview.worker",
       "referenceId": "reference.preview.worker",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-preview-worker-host",
-          "documentType": "module",
-          "path": "/modules/viewcompose-preview-worker-host"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-preview-worker-host"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1639,12 +975,8 @@
     {
       "capabilityId": "renderer.decoration-backend",
       "referenceId": "reference.renderer.decoration-backend",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-renderer-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-renderer-android"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-renderer-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1655,12 +987,8 @@
     {
       "capabilityId": "renderer.diagnostics",
       "referenceId": "reference.renderer.diagnostics",
-      "relatedDocuments": [
-        {
-          "documentId": "module.viewcompose-renderer-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-renderer-android"
-        }
+      "relatedDocumentIds": [
+        "module.viewcompose-renderer-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1671,27 +999,11 @@
     {
       "capabilityId": "renderer.reconciliation",
       "referenceId": "reference.renderer.reconciliation",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.node-spec",
-          "documentType": "architecture",
-          "path": "/architecture/node-spec"
-        },
-        {
-          "documentId": "architecture.delayed-session-containers",
-          "documentType": "architecture",
-          "path": "/architecture/session-containers"
-        },
-        {
-          "documentId": "module.viewcompose-renderer-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-renderer-android"
-        },
-        {
-          "documentId": "migration.lazy-collection-revision-reuse",
-          "documentType": "migration",
-          "path": "/migration/lazy-collection-revision-and-reuse"
-        }
+      "relatedDocumentIds": [
+        "architecture.node-spec",
+        "architecture.delayed-session-containers",
+        "module.viewcompose-renderer-android",
+        "migration.lazy-collection-revision-reuse"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1702,32 +1014,12 @@
     {
       "capabilityId": "renderer.tree-transactions",
       "referenceId": "reference.renderer.tree-transactions",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.effects",
-          "documentType": "architecture",
-          "path": "/architecture/effects"
-        },
-        {
-          "documentId": "architecture.node-spec",
-          "documentType": "architecture",
-          "path": "/architecture/node-spec"
-        },
-        {
-          "documentId": "architecture.delayed-session-containers",
-          "documentType": "architecture",
-          "path": "/architecture/session-containers"
-        },
-        {
-          "documentId": "module.viewcompose-renderer-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-renderer-android"
-        },
-        {
-          "documentId": "module.viewcompose-ui-contract",
-          "documentType": "module",
-          "path": "/modules/viewcompose-ui-contract"
-        }
+      "relatedDocumentIds": [
+        "architecture.effects",
+        "architecture.node-spec",
+        "architecture.delayed-session-containers",
+        "module.viewcompose-renderer-android",
+        "module.viewcompose-ui-contract"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1738,42 +1030,14 @@
     {
       "capabilityId": "runtime.state",
       "referenceId": "reference.runtime.state",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.catalog",
-          "documentType": "tutorial",
-          "path": "/tutorials"
-        },
-        {
-          "documentId": "tutorial.getting-started",
-          "documentType": "tutorial",
-          "path": "/tutorials/getting-started"
-        },
-        {
-          "documentId": "tutorial.state-and-events",
-          "documentType": "tutorial",
-          "path": "/tutorials/state-and-events"
-        },
-        {
-          "documentId": "architecture.effects",
-          "documentType": "architecture",
-          "path": "/architecture/effects"
-        },
-        {
-          "documentId": "architecture.state-snapshots",
-          "documentType": "architecture",
-          "path": "/architecture/state-snapshots"
-        },
-        {
-          "documentId": "module.viewcompose-runtime",
-          "documentType": "module",
-          "path": "/modules/viewcompose-runtime"
-        },
-        {
-          "documentId": "migration.compose-state-recomposition-restoration",
-          "documentType": "migration",
-          "path": "/migration/compose-state-recomposition-and-restoration"
-        }
+      "relatedDocumentIds": [
+        "tutorial.catalog",
+        "tutorial.getting-started",
+        "tutorial.state-and-events",
+        "architecture.effects",
+        "architecture.state-snapshots",
+        "module.viewcompose-runtime",
+        "migration.compose-state-recomposition-restoration"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1784,22 +1048,10 @@
     {
       "capabilityId": "shadow.android-backend",
       "referenceId": "reference.shadow.android-backend",
-      "relatedDocuments": [
-        {
-          "documentId": "guide.advanced-shadows",
-          "documentType": "guide",
-          "path": "/guides/shadows"
-        },
-        {
-          "documentId": "architecture.modifier-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/modifier"
-        },
-        {
-          "documentId": "module.viewcompose-shadow-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-shadow-android"
-        }
+      "relatedDocumentIds": [
+        "guide.advanced-shadows",
+        "architecture.modifier-runtime",
+        "module.viewcompose-shadow-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1810,22 +1062,10 @@
     {
       "capabilityId": "shadow.modifiers",
       "referenceId": "reference.shadow.modifiers",
-      "relatedDocuments": [
-        {
-          "documentId": "guide.advanced-shadows",
-          "documentType": "guide",
-          "path": "/guides/shadows"
-        },
-        {
-          "documentId": "architecture.modifier-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/modifier"
-        },
-        {
-          "documentId": "module.viewcompose-shadow-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-shadow-android"
-        }
+      "relatedDocumentIds": [
+        "guide.advanced-shadows",
+        "architecture.modifier-runtime",
+        "module.viewcompose-shadow-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1836,42 +1076,14 @@
     {
       "capabilityId": "text.input",
       "referenceId": "reference.text.input",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.text-input",
-          "documentType": "tutorial",
-          "path": "/tutorials/text-input"
-        },
-        {
-          "documentId": "guide.text-input-editing",
-          "documentType": "guide",
-          "path": "/guides/text-input"
-        },
-        {
-          "documentId": "guide.text-input-rich-text",
-          "documentType": "guide",
-          "path": "/guides/text-input-rich-text"
-        },
-        {
-          "documentId": "architecture.text-input-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/text-input"
-        },
-        {
-          "documentId": "module.viewcompose-text-core",
-          "documentType": "module",
-          "path": "/modules/viewcompose-text-core"
-        },
-        {
-          "documentId": "module.viewcompose-ui-foundation",
-          "documentType": "module",
-          "path": "/modules/viewcompose-ui-foundation"
-        },
-        {
-          "documentId": "migration.dsl-contract-convergence",
-          "documentType": "migration",
-          "path": "/migration/dsl-contract-convergence"
-        }
+      "relatedDocumentIds": [
+        "tutorial.text-input",
+        "guide.text-input-editing",
+        "guide.text-input-rich-text",
+        "architecture.text-input-runtime",
+        "module.viewcompose-text-core",
+        "module.viewcompose-ui-foundation",
+        "migration.dsl-contract-convergence"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1882,37 +1094,13 @@
     {
       "capabilityId": "theme.foundation",
       "referenceId": "reference.theme.foundation",
-      "relatedDocuments": [
-        {
-          "documentId": "guide.theming-local-overrides",
-          "documentType": "guide",
-          "path": "/guides/theming-local-overrides"
-        },
-        {
-          "documentId": "architecture.theme-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/theming"
-        },
-        {
-          "documentId": "architecture.design-system-integration",
-          "documentType": "architecture",
-          "path": "/architecture/design-systems"
-        },
-        {
-          "documentId": "architecture.design-system-resolution",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-resolution-boundary"
-        },
-        {
-          "documentId": "architecture.design-system-host-backends",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
-        },
-        {
-          "documentId": "module.viewcompose-ui-foundation",
-          "documentType": "module",
-          "path": "/modules/viewcompose-ui-foundation"
-        }
+      "relatedDocumentIds": [
+        "guide.theming-local-overrides",
+        "architecture.theme-runtime",
+        "architecture.design-system-integration",
+        "architecture.design-system-resolution",
+        "architecture.design-system-host-backends",
+        "module.viewcompose-ui-foundation"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1923,52 +1111,16 @@
     {
       "capabilityId": "theme.material3",
       "referenceId": "reference.theme.material3",
-      "relatedDocuments": [
-        {
-          "documentId": "tutorial.theming",
-          "documentType": "tutorial",
-          "path": "/tutorials/theming"
-        },
-        {
-          "documentId": "guide.theming-mode-switch",
-          "documentType": "guide",
-          "path": "/guides/theming"
-        },
-        {
-          "documentId": "guide.theming-dynamic-color",
-          "documentType": "guide",
-          "path": "/guides/theming-dynamic-color"
-        },
-        {
-          "documentId": "architecture.theme-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/theming"
-        },
-        {
-          "documentId": "architecture.design-system-integration",
-          "documentType": "architecture",
-          "path": "/architecture/design-systems"
-        },
-        {
-          "documentId": "architecture.design-system-resolution",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-resolution-boundary"
-        },
-        {
-          "documentId": "architecture.design-system-host-backends",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
-        },
-        {
-          "documentId": "module.viewcompose-material3",
-          "documentType": "module",
-          "path": "/modules/viewcompose-material3"
-        },
-        {
-          "documentId": "module.viewcompose-material3-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-material3-android"
-        }
+      "relatedDocumentIds": [
+        "tutorial.theming",
+        "guide.theming-mode-switch",
+        "guide.theming-dynamic-color",
+        "architecture.theme-runtime",
+        "architecture.design-system-integration",
+        "architecture.design-system-resolution",
+        "architecture.design-system-host-backends",
+        "module.viewcompose-material3",
+        "module.viewcompose-material3-android"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -1979,27 +1131,11 @@
     {
       "capabilityId": "theme.oneui7",
       "referenceId": "reference.theme.oneui7",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.design-system-integration",
-          "documentType": "architecture",
-          "path": "/architecture/design-systems"
-        },
-        {
-          "documentId": "architecture.design-system-resolution",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-resolution-boundary"
-        },
-        {
-          "documentId": "architecture.design-system-host-backends",
-          "documentType": "architecture",
-          "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
-        },
-        {
-          "documentId": "module.viewcompose-oneui7",
-          "documentType": "module",
-          "path": "/modules/viewcompose-oneui7"
-        }
+      "relatedDocumentIds": [
+        "architecture.design-system-integration",
+        "architecture.design-system-resolution",
+        "architecture.design-system-host-backends",
+        "module.viewcompose-oneui7"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -2010,27 +1146,11 @@
     {
       "capabilityId": "viewmodel.owner-boundaries",
       "referenceId": "reference.viewmodel.owner-boundaries",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.navigation-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/navigation"
-        },
-        {
-          "documentId": "module.viewcompose-viewmodel-androidx",
-          "documentType": "module",
-          "path": "/modules/viewcompose-viewmodel-androidx"
-        },
-        {
-          "documentId": "module.viewcompose-android",
-          "documentType": "module",
-          "path": "/modules/viewcompose-android"
-        },
-        {
-          "documentId": "migration.compose-host-lifecycle-android-interop",
-          "documentType": "migration",
-          "path": "/migration/compose-host-lifecycle-and-android-interop"
-        }
+      "relatedDocumentIds": [
+        "architecture.navigation-runtime",
+        "module.viewcompose-viewmodel-androidx",
+        "module.viewcompose-android",
+        "migration.compose-host-lifecycle-android-interop"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -2041,22 +1161,10 @@
     {
       "capabilityId": "viewmodel.saved-state",
       "referenceId": "reference.viewmodel.saved-state",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.navigation-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/navigation"
-        },
-        {
-          "documentId": "module.viewcompose-viewmodel-androidx",
-          "documentType": "module",
-          "path": "/modules/viewcompose-viewmodel-androidx"
-        },
-        {
-          "documentId": "migration.compose-host-lifecycle-android-interop",
-          "documentType": "migration",
-          "path": "/migration/compose-host-lifecycle-and-android-interop"
-        }
+      "relatedDocumentIds": [
+        "architecture.navigation-runtime",
+        "module.viewcompose-viewmodel-androidx",
+        "migration.compose-host-lifecycle-android-interop"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -2067,22 +1175,10 @@
     {
       "capabilityId": "viewmodel.store-resolution",
       "referenceId": "reference.viewmodel.store-resolution",
-      "relatedDocuments": [
-        {
-          "documentId": "architecture.navigation-runtime",
-          "documentType": "architecture",
-          "path": "/architecture/navigation"
-        },
-        {
-          "documentId": "module.viewcompose-viewmodel-androidx",
-          "documentType": "module",
-          "path": "/modules/viewcompose-viewmodel-androidx"
-        },
-        {
-          "documentId": "migration.compose-host-lifecycle-android-interop",
-          "documentType": "migration",
-          "path": "/migration/compose-host-lifecycle-and-android-interop"
-        }
+      "relatedDocumentIds": [
+        "architecture.navigation-runtime",
+        "module.viewcompose-viewmodel-androidx",
+        "migration.compose-host-lifecycle-android-interop"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -2091,6 +1187,384 @@
       }
     }
   ],
+  "documents": {
+    "adr.correlated-render-diagnostics": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/0021-correlated-render-diagnostics-ownership"
+    },
+    "architecture.android-resource-environment": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/0007-host-owned-android-resource-environment"
+    },
+    "architecture.animation-physics-ownership": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/0019-animation-physics-transition-and-inspection-ownership"
+    },
+    "architecture.animation-value-velocity-domains": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/0020-separate-animation-value-and-velocity-domains"
+    },
+    "architecture.delayed-session-containers": {
+      "documentType": "architecture",
+      "path": "/architecture/session-containers"
+    },
+    "architecture.design-system-host-backends": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/design-system-host-and-component-backend-boundary"
+    },
+    "architecture.design-system-integration": {
+      "documentType": "architecture",
+      "path": "/architecture/design-systems"
+    },
+    "architecture.design-system-resolution": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/design-system-resolution-boundary"
+    },
+    "architecture.effects": {
+      "documentType": "architecture",
+      "path": "/architecture/effects"
+    },
+    "architecture.lazy-collections-runtime": {
+      "documentType": "architecture",
+      "path": "/architecture/lazy-collections"
+    },
+    "architecture.lifecycle-saved-state": {
+      "documentType": "architecture",
+      "path": "/architecture/lifecycle-and-saved-state"
+    },
+    "architecture.modifier-runtime": {
+      "documentType": "architecture",
+      "path": "/architecture/modifier"
+    },
+    "architecture.navigation-runtime": {
+      "documentType": "architecture",
+      "path": "/architecture/navigation"
+    },
+    "architecture.node-spec": {
+      "documentType": "architecture",
+      "path": "/architecture/node-spec"
+    },
+    "architecture.overlay-root-selection": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
+    },
+    "architecture.public-package-ownership": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/public-package-ownership-and-platform-handles"
+    },
+    "architecture.render-failures": {
+      "documentType": "architecture",
+      "path": "/architecture/render-failures"
+    },
+    "architecture.state-snapshots": {
+      "documentType": "architecture",
+      "path": "/architecture/state-snapshots"
+    },
+    "architecture.text-input-runtime": {
+      "documentType": "architecture",
+      "path": "/architecture/text-input"
+    },
+    "architecture.theme-runtime": {
+      "documentType": "architecture",
+      "path": "/architecture/theming"
+    },
+    "architecture.transactional-effect-lifecycle": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/0008-transactional-effect-lifecycle"
+    },
+    "guide.advanced-shadows": {
+      "documentType": "guide",
+      "path": "/guides/shadows"
+    },
+    "guide.focus-and-key-input": {
+      "documentType": "guide",
+      "path": "/guides/focus-and-input"
+    },
+    "guide.image-loading": {
+      "documentType": "guide",
+      "path": "/guides/image-loading"
+    },
+    "guide.lazy-collections": {
+      "documentType": "guide",
+      "path": "/guides/lazy-collections"
+    },
+    "guide.navigation-production-host": {
+      "documentType": "guide",
+      "path": "/guides/navigation"
+    },
+    "guide.nested-scroll-coordination": {
+      "documentType": "guide",
+      "path": "/guides/nested-scroll"
+    },
+    "guide.overlay-presentation": {
+      "documentType": "guide",
+      "path": "/guides/overlays"
+    },
+    "guide.text-input-editing": {
+      "documentType": "guide",
+      "path": "/guides/text-input"
+    },
+    "guide.text-input-rich-text": {
+      "documentType": "guide",
+      "path": "/guides/text-input-rich-text"
+    },
+    "guide.theming-dynamic-color": {
+      "documentType": "guide",
+      "path": "/guides/theming-dynamic-color"
+    },
+    "guide.theming-local-overrides": {
+      "documentType": "guide",
+      "path": "/guides/theming-local-overrides"
+    },
+    "guide.theming-mode-switch": {
+      "documentType": "guide",
+      "path": "/guides/theming"
+    },
+    "migration.compose-animation": {
+      "documentType": "migration",
+      "path": "/migration/compose-animation"
+    },
+    "migration.compose-host-lifecycle-android-interop": {
+      "documentType": "migration",
+      "path": "/migration/compose-host-lifecycle-and-android-interop"
+    },
+    "migration.compose-layout-modifier-environment": {
+      "documentType": "migration",
+      "path": "/migration/compose-layout-modifier-and-environment"
+    },
+    "migration.compose-navigation": {
+      "documentType": "migration",
+      "path": "/migration/compose-navigation"
+    },
+    "migration.compose-state-recomposition-restoration": {
+      "documentType": "migration",
+      "path": "/migration/compose-state-recomposition-and-restoration"
+    },
+    "migration.dsl-contract-convergence": {
+      "documentType": "migration",
+      "path": "/migration/dsl-contract-convergence"
+    },
+    "migration.image-loading": {
+      "documentType": "migration",
+      "path": "/migration/image-loading"
+    },
+    "migration.lazy-collection-revision-reuse": {
+      "documentType": "migration",
+      "path": "/migration/lazy-collection-revision-and-reuse"
+    },
+    "module.viewcompose-android": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-android"
+    },
+    "module.viewcompose-animation": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-animation"
+    },
+    "module.viewcompose-animation-core": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-animation-core"
+    },
+    "module.viewcompose-camerax-androidx": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-camerax-androidx"
+    },
+    "module.viewcompose-constraintlayout-androidx": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-constraintlayout-androidx"
+    },
+    "module.viewcompose-diagnostics": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-diagnostics"
+    },
+    "module.viewcompose-exoplayer2-android": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-exoplayer2-android"
+    },
+    "module.viewcompose-gesture": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-gesture"
+    },
+    "module.viewcompose-gesture-core": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-gesture-core"
+    },
+    "module.viewcompose-google-maps-android": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-google-maps-android"
+    },
+    "module.viewcompose-graphics": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-graphics"
+    },
+    "module.viewcompose-graphics-core": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-graphics-core"
+    },
+    "module.viewcompose-host-android": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-host-android"
+    },
+    "module.viewcompose-image-coil": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-image-coil"
+    },
+    "module.viewcompose-image-glide": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-image-glide"
+    },
+    "module.viewcompose-lifecycle-androidx": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-lifecycle-androidx"
+    },
+    "module.viewcompose-material3": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-material3"
+    },
+    "module.viewcompose-material3-android": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-material3-android"
+    },
+    "module.viewcompose-media3-androidx": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-media3-androidx"
+    },
+    "module.viewcompose-navigation-android": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-navigation-android"
+    },
+    "module.viewcompose-navigation-core": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-navigation-core"
+    },
+    "module.viewcompose-oneui7": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-oneui7"
+    },
+    "module.viewcompose-overlay-android": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-overlay-android"
+    },
+    "module.viewcompose-overlay-material3-android": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-overlay-material3-android"
+    },
+    "module.viewcompose-overlay-oneui7-android": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-overlay-oneui7-android"
+    },
+    "module.viewcompose-paging-androidx": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-paging-androidx"
+    },
+    "module.viewcompose-preview": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-preview"
+    },
+    "module.viewcompose-preview-core": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-preview-core"
+    },
+    "module.viewcompose-preview-gradle-plugin": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-preview-gradle-plugin"
+    },
+    "module.viewcompose-preview-runner": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-preview-runner"
+    },
+    "module.viewcompose-preview-worker-host": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-preview-worker-host"
+    },
+    "module.viewcompose-renderer-android": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-renderer-android"
+    },
+    "module.viewcompose-runtime": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-runtime"
+    },
+    "module.viewcompose-shadow-android": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-shadow-android"
+    },
+    "module.viewcompose-text-core": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-text-core"
+    },
+    "module.viewcompose-ui-contract": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-ui-contract"
+    },
+    "module.viewcompose-ui-foundation": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-ui-foundation"
+    },
+    "module.viewcompose-viewmodel-androidx": {
+      "documentType": "module",
+      "path": "/modules/viewcompose-viewmodel-androidx"
+    },
+    "tooling.diagnostics": {
+      "documentType": "tooling",
+      "path": "/tooling/diagnostics"
+    },
+    "tutorial.android-view": {
+      "documentType": "tutorial",
+      "path": "/tutorials/android-view"
+    },
+    "tutorial.animation": {
+      "documentType": "tutorial",
+      "path": "/tutorials/animation"
+    },
+    "tutorial.catalog": {
+      "documentType": "tutorial",
+      "path": "/tutorials"
+    },
+    "tutorial.gestures": {
+      "documentType": "tutorial",
+      "path": "/tutorials/gestures"
+    },
+    "tutorial.getting-started": {
+      "documentType": "tutorial",
+      "path": "/tutorials/getting-started"
+    },
+    "tutorial.layouts-and-modifiers": {
+      "documentType": "tutorial",
+      "path": "/tutorials/layouts-and-modifiers"
+    },
+    "tutorial.lazy-list-performance": {
+      "documentType": "tutorial",
+      "path": "/tutorials/lazy-list-performance"
+    },
+    "tutorial.lazy-lists": {
+      "documentType": "tutorial",
+      "path": "/tutorials/lazy-lists"
+    },
+    "tutorial.navigation": {
+      "documentType": "tutorial",
+      "path": "/tutorials/navigation"
+    },
+    "tutorial.overlays": {
+      "documentType": "tutorial",
+      "path": "/tutorials/overlays"
+    },
+    "tutorial.render-diagnostics": {
+      "documentType": "tutorial",
+      "path": "/tutorials/render-diagnostics"
+    },
+    "tutorial.state-and-events": {
+      "documentType": "tutorial",
+      "path": "/tutorials/state-and-events"
+    },
+    "tutorial.text-input": {
+      "documentType": "tutorial",
+      "path": "/tutorials/text-input"
+    },
+    "tutorial.theming": {
+      "documentType": "tutorial",
+      "path": "/tutorials/theming"
+    }
+  },
   "generatedBy": "updateDocumentationCapabilityReference",
   "groups": [
     {
@@ -6663,7 +6137,7 @@
       "groupId": "general"
     }
   ],
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "summary": {
     "artifactCount": 30,
     "countsByKind": {

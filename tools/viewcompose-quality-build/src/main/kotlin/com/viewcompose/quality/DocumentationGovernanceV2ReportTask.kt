@@ -716,9 +716,32 @@ internal object DocumentationGovernanceV2Reporter {
                 )
             }
 
-        val referenceCapabilities = capabilitiesBySymbol.values
+        val referenceCapabilityRecords = capabilitiesBySymbol.values
             .distinctBy(GovernanceRecord::path)
             .sortedBy { capability -> capability.recordId }
+        val relatedDocumentTypesById = referenceCapabilityRecords
+            .flatMap { capability ->
+                val documentOwners = capability.value.objectValue("document_owners").orEmpty()
+                referenceDocumentTypes.flatMap { documentType ->
+                    documentOwners.stringList(documentType).map { documentId ->
+                        documentId to documentType
+                    }
+                }
+            }
+            .groupBy(
+                keySelector = Pair<String, String>::first,
+                valueTransform = Pair<String, String>::second,
+            )
+            .mapValues { (_, documentTypes) -> documentTypes.distinct().sorted() }
+            .toSortedMap()
+        val referenceDocuments = relatedDocumentTypesById.mapValues { (documentId, ownerTypes) ->
+            val document = documentsById[documentId]
+            linkedMapOf<String, Any?>(
+                "documentType" to (document?.get("docType")?.toString() ?: ownerTypes.first()),
+                "path" to document?.referenceRoute(),
+            )
+        }
+        val referenceCapabilities = referenceCapabilityRecords
             .map { capability ->
                 val capabilityValue = capability.value
                 val referenceOwner = capabilityValue.objectValue("reference_owner").orEmpty()
@@ -726,23 +749,18 @@ internal object DocumentationGovernanceV2Reporter {
                 val sampleId = sampleOwner["sample_id"]?.toString()
                 val sampleRecord = sampleId?.let(samplesById::get)
                 val documentOwners = capabilityValue.objectValue("document_owners").orEmpty()
-                val relatedDocuments = referenceDocumentTypes.flatMap { documentType ->
-                    documentOwners.stringList(documentType).map { documentId ->
-                        val document = documentsById[documentId]
-                        linkedMapOf<String, Any?>(
-                            "documentId" to documentId,
-                            "documentType" to documentType,
-                            "path" to document?.referenceRoute(),
-                        )
-                    }
-                }
+                val relatedDocumentIds = referenceDocumentTypes.flatMap { documentType ->
+                    documentOwners.stringList(documentType)
+                }.distinct()
                 linkedMapOf<String, Any?>(
                     "capabilityId" to capability.recordId,
                 ).apply {
                     referenceOwner["reference_id"]?.let { referenceId ->
                         put("referenceId", referenceId)
                     }
-                    if (relatedDocuments.isNotEmpty()) put("relatedDocuments", relatedDocuments)
+                    if (relatedDocumentIds.isNotEmpty()) {
+                        put("relatedDocumentIds", relatedDocumentIds)
+                    }
                     val sample = when {
                         sampleRecord != null -> linkedMapOf<String, Any?>(
                             "sampleClass" to sampleRecord.value["sample_class"],
@@ -799,9 +817,10 @@ internal object DocumentationGovernanceV2Reporter {
         return linkedMapOf(
             "artifacts" to referenceArtifacts,
             "capabilities" to referenceCapabilities,
+            "documents" to referenceDocuments,
             "generatedBy" to "updateDocumentationCapabilityReference",
             "groups" to groups,
-            "schemaVersion" to 2,
+            "schemaVersion" to 3,
             "summary" to linkedMapOf(
                 "artifactCount" to referenceArtifacts.size,
                 "countsByKind" to countsByKind,

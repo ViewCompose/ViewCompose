@@ -7,7 +7,6 @@ import catalogData from '@site/src/data/capability-reference.json';
 import styles from './styles.module.css';
 
 type RelatedDocument = {
-  documentId: string;
   documentType: string;
   path: string | null;
 };
@@ -33,7 +32,7 @@ type ReferenceEntry = {
 type ReferenceCapability = {
   capabilityId: string;
   referenceId?: string;
-  relatedDocuments?: RelatedDocument[];
+  relatedDocumentIds?: string[];
   sample?: ReferenceSample;
 };
 
@@ -54,6 +53,7 @@ type ReferenceGroup = {
 type ReferenceCatalog = {
   artifacts: ReferenceArtifact[];
   capabilities: ReferenceCapability[];
+  documents: Record<string, RelatedDocument>;
   groups: ReferenceGroup[];
   summary: {
     artifactCount: number;
@@ -183,13 +183,14 @@ function EntryCard({entry}: {entry: ReferenceEntry}): ReactNode {
         <Link to={artifact.moduleManual}>
           {translate({id: 'reference.entry.manual', message: 'Module manual'})}
         </Link>
-        {(capability?.relatedDocuments ?? [])
-          .filter((document) => document.path !== null)
-          .map((document) => (
-            <Link key={document.documentId} to={document.path!}>
+        {(capability?.relatedDocumentIds ?? []).map((documentId) => {
+          const document = catalog.documents[documentId];
+          return document?.path ? (
+            <Link key={documentId} to={document.path}>
               {documentTypeLabel(document.documentType)}
             </Link>
-          ))}
+          ) : null;
+        })}
       </div>
     </article>
   );
