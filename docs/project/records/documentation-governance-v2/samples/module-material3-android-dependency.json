@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.material3-android-dependency",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "theme.material3",
+  "document_ids": ["module.viewcompose-material3-android"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "material3-android-module-dependency",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

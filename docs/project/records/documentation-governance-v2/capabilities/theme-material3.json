@@ -11,6 +11,7 @@
   "reference_owner": { "reference_id": "reference.theme.material3", "generated": true },
   "sample_owner": { "sample_id": "tutorial.theming" },
   "document_owners": {
+    "module": ["module.viewcompose-material3", "module.viewcompose-material3-android"],
     "tutorial": ["tutorial.theming"],
     "guide": ["guide.theming-mode-switch", "guide.theming-dynamic-color"],
     "architecture": ["architecture.theme-runtime"]

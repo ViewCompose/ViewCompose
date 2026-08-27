@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "capability_id": "material3.components",
+  "kind": "component",
+  "owner": { "kind": "module", "id": "viewcompose-material3" },
+  "artifact": "viewcompose-material3",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.material3.UiTreeBuilder.Material3Button", "kind": "extension", "visibility": "public", "source": "viewcompose-material3/src/main/java/com/viewcompose/material3/Material3Components.kt" },
+    { "symbol_id": "com.viewcompose.material3.UiTreeBuilder.Material3Card", "kind": "extension", "visibility": "public", "source": "viewcompose-material3/src/main/java/com/viewcompose/material3/Material3Components.kt" },
+    { "symbol_id": "com.viewcompose.material3.UiTreeBuilder.Material3NavigationBar", "kind": "extension", "visibility": "public", "source": "viewcompose-material3/src/main/java/com/viewcompose/material3/Material3Components.kt" },
+    { "symbol_id": "com.viewcompose.material3.UiTreeBuilder.Material3Surface", "kind": "extension", "visibility": "public", "source": "viewcompose-material3/src/main/java/com/viewcompose/material3/Material3Components.kt" },
+    { "symbol_id": "com.viewcompose.material3.UiTreeBuilder.Material3Switch", "kind": "extension", "visibility": "public", "source": "viewcompose-material3/src/main/java/com/viewcompose/material3/Material3Components.kt" },
+    { "symbol_id": "com.viewcompose.material3.UiTreeBuilder.Material3TextField", "kind": "extension", "visibility": "public", "source": "viewcompose-material3/src/main/java/com/viewcompose/material3/Material3Components.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.material3.components", "generated": true },
+  "sample_owner": { "sample_id": "module.material3-components" },
+  "document_owners": {
+    "module": ["module.viewcompose-material3", "module.viewcompose-material3-android"]
+  }
+}

@@ -28,10 +28,12 @@ fun material3ThemeBridgeSample(context: Context): Material3ResolvedTheme {
 }
 
 fun UiTreeBuilder.material3ThemeSample(context: Context) {
-    val resolvedTheme = Material3ThemeBridge.resolveContext(context)
-    Material3Theme(resolvedTheme = resolvedTheme) {
-        Text("Content using Material 3 theme tokens")
-    }
+    // DOCS_REGION_START(material3-module-theme)
+val resolvedTheme = Material3ThemeBridge.resolveContext(context)
+Material3Theme(resolvedTheme = resolvedTheme) {
+    Text("Content using Material 3 theme tokens")
+}
+    // DOCS_REGION_END(material3-module-theme)
 }
 
 fun material3ThemeRefreshSample(controller: Material3ThemeRefreshController) {
@@ -44,6 +46,7 @@ fun material3ResolvedThemeRefreshSample(resolvedTheme: Material3ResolvedTheme) {
     Material3ThemeBridge.fromResolvedTheme(resolvedTheme)
 }
 
+// DOCS_REGION_START(material3-module-components)
 fun UiTreeBuilder.material3ComponentsSample() {
     Material3Theme {
         val fieldState = rememberTextFieldState("Material")
@@ -69,3 +72,4 @@ fun UiTreeBuilder.material3ComponentsSample() {
         }
     }
 }
+// DOCS_REGION_END(material3-module-components)

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: 7ea18bbd5e9bb11aac379c4873c1edf3509e9d901e7dece04fa1eafab1b4a67e
+translation_source_hash: db23355489feea87707479df66b4c5f3051ade90df2295de6d7a45067cbd9093
 translation_status: current
 ---
 
@@ -18,6 +18,7 @@ Renderer 节点；本模块不参与 View 协调，也不会把通用节点映�
 
 ## 构件与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="material3-module-dependency" sample_id="module.material3-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-material3:0.1.0-alpha01")
@@ -39,14 +40,11 @@ dependencies {
 刷新稳定 Wrapper。`Material3ThemeRefreshController` 只保留给尚未安装标准 Android 资源环境的底层
 Host。
 
+{/* compiled-region source="viewcompose-material3/src/test/samples/com/viewcompose/material3/samples/Material3ThemeSamples.kt" region="material3-module-theme" sample_id="module.material3-theme" build_target=":viewcompose-material3:compileDebugUnitTestKotlin" */}
 ```kotlin
-val resolved = Material3ThemeBridge.resolveContext(
-    context = activity,
-    dynamicColorPolicy = Material3DynamicColorPolicy.UseIfAvailable,
-)
-
-Material3Theme(resolvedTheme = resolved) {
-    Content()
+val resolvedTheme = Material3ThemeBridge.resolveContext(context)
+Material3Theme(resolvedTheme = resolvedTheme) {
+    Text("Content using Material 3 theme tokens")
 }
 ```
 
@@ -66,6 +64,9 @@ Android 资源。两个重载都会通过 `DesignSystemDiagnostics` 导出
 | `Material3Switch` | Material 颜色/排版覆盖原生 Android Switch 行为内核 | Equivalent |
 | `Material3TextField` | 原生 Android 编辑内核外包裹 Material 装饰 | Equivalent |
 | `Material3NavigationBar` | Material 选择 Recipe 覆盖中立 Navigation Renderer | Equivalent |
+
+完整的可编译压力切片示例见
+[`Material3ThemeSamples.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-material3/src/test/samples/com/viewcompose/material3/samples/Material3ThemeSamples.kt)。
 
 Material 与 One UI 的公开词汇有意保持差异；两者只共享中立执行与诊断契约，不引入 Union 组件
 API 或全局 Recipe Bundle。

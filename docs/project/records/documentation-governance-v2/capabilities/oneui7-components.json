@@ -1,0 +1,20 @@
+{
+  "schema_version": 2,
+  "capability_id": "oneui7.components",
+  "kind": "component",
+  "owner": { "kind": "module", "id": "viewcompose-oneui7" },
+  "artifact": "viewcompose-oneui7",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.oneui7.UiTreeBuilder.OneUi7Button", "kind": "extension", "visibility": "public", "source": "viewcompose-oneui7/src/main/java/com/viewcompose/oneui7/OneUi7Components.kt" },
+    { "symbol_id": "com.viewcompose.oneui7.UiTreeBuilder.OneUi7NavigationBar", "kind": "extension", "visibility": "public", "source": "viewcompose-oneui7/src/main/java/com/viewcompose/oneui7/OneUi7Components.kt" },
+    { "symbol_id": "com.viewcompose.oneui7.UiTreeBuilder.OneUi7Surface", "kind": "extension", "visibility": "public", "source": "viewcompose-oneui7/src/main/java/com/viewcompose/oneui7/OneUi7Components.kt" },
+    { "symbol_id": "com.viewcompose.oneui7.UiTreeBuilder.OneUi7Switch", "kind": "extension", "visibility": "public", "source": "viewcompose-oneui7/src/main/java/com/viewcompose/oneui7/OneUi7Components.kt" },
+    { "symbol_id": "com.viewcompose.oneui7.UiTreeBuilder.OneUi7TextField", "kind": "extension", "visibility": "public", "source": "viewcompose-oneui7/src/main/java/com/viewcompose/oneui7/OneUi7Components.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.oneui7.components", "generated": true },
+  "sample_owner": { "sample_id": "module.oneui7-components" },
+  "document_owners": {
+    "module": ["module.viewcompose-oneui7"]
+  }
+}

@@ -1,3 +1,24 @@
+---
+schema_version: 2
+document_id: module.viewcompose-oneui7
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-oneui7
+version_lane: released
+capability_ids:
+  - oneui7.components
+  - theme.oneui7
+artifact_ids:
+  - viewcompose-oneui7
+sample_ids:
+  - module.oneui7-dependency
+  - module.oneui7-theme
+  - module.oneui7-components
+coordinate: com.viewcompose:viewcompose-oneui7:0.1.0-alpha01
+minimal_usage_sample_id: module.oneui7-theme
+---
+
 # One UI 7 Five-Component Alpha
 
 `viewcompose-oneui7` is ViewCompose's first public non-Material design-system artifact. It provides
@@ -11,6 +32,7 @@ internal design tokens. It is not a complete One UI component library.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="oneui7-module-dependency" sample_id="module.oneui7-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
@@ -63,10 +85,11 @@ component instead of being shadowed by private hard-coded values.
 
 Install one complete immutable snapshot at the root of the content that uses these components:
 
+{/* compiled-region source="viewcompose-oneui7/src/test/samples/com/viewcompose/oneui7/samples/OneUi7Samples.kt" region="oneui7-module-theme" sample_id="module.oneui7-theme" build_target=":viewcompose-oneui7:compileDebugUnitTestKotlin" */}
 ```kotlin
-setUiContent {
+fun UiTreeBuilder.oneUi7MinimalSample() {
     OneUi7Theme(tokens = OneUi7ThemeDefaults.light()) {
-        OneUi7Button(text = "Continue", onClick = { continueFlow() })
+        OneUi7Button(text = "Continue", onClick = {})
     }
 }
 ```
@@ -81,7 +104,7 @@ Interaction feedback is defined by the snapshot's `UiInteractionTokens` and each
 semantic content role. The adapter does not use a parallel `UiColors.ripple` slot; applications
 customize pressed, focused, and hovered policy by replacing `tokens.interactions`.
 
-The complete compiled example is
+The complete compiled example exercises all five component families with caller-owned state in
 [`OneUi7Samples.kt`](../../../viewcompose-oneui7/src/test/samples/com/viewcompose/oneui7/samples/OneUi7Samples.kt).
 
 ## Public component set

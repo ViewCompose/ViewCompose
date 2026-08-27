@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3-android/README.md
-translation_source_hash: 3b705dad0155ed28466e38204190e1011953bf17f7936c38173e502ea761f8ac
+translation_source_hash: 0eaab15b0a9b9d007ba6ce63432623ca3aaf6aaf4a24b0d4d6e52292c917f0d9
 translation_status: current
 ---
 
@@ -15,6 +15,7 @@ translation_status: current
 
 ## 构件与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="material3-android-module-dependency" sample_id="module.material3-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
@@ -29,15 +30,11 @@ dependencies {
 
 ## 具名 Material Host
 
+{/* compiled-region source="viewcompose-material3-android/src/test/samples/com/viewcompose/material3/android/samples/Material3AndroidHostSamples.kt" region="material3-android-module-host" sample_id="module.material3-android-host" build_target=":viewcompose-material3-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-import com.viewcompose.material3.android.setMaterial3UiContent
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setMaterial3UiContent {
-            Text("Hello from Material 3 ViewCompose")
-        }
+fun installMaterial3Content(activity: ComponentActivity) {
+    activity.setMaterial3UiContent {
+        Text("Hello from Material 3 ViewCompose")
     }
 }
 ```

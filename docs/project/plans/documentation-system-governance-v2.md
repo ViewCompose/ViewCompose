@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the UI Foundation ownership slice, then hard-cut Material 3, Material 3 Android, and One UI 7 ownership as the next Phase 3 boundary.
+next_action: Merge the design-system ownership slice, then hard-cut Paging integration ownership as the final orphan-symbol Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -36,6 +36,7 @@ maven_release_changesets:
   - release/changes/20260827-governance-gesture-phase3.json
   - release/changes/20260827-governance-navigation-modules-phase3.json
   - release/changes/20260827-governance-ui-foundation-phase3.json
+  - release/changes/20260827-governance-design-systems-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -118,6 +119,10 @@ The accepted UI Foundation hard cut now assigns 61 previously orphaned component
 and lazy-collection entries to their existing or new capability owners, registers three exact
 module sample decisions, repairs generated module-manual route derivation, removes 28 resolved
 exceptions, and reduces the report to 108 issues.
+The accepted design-system hard cut now assigns the remaining 12 Material 3 and One UI 7 theme or
+component entries to three new and one existing capability owners, registers eight compiled sample
+decisions across the three module manuals, removes eight resolved exceptions, and reduces the
+report to 87 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -126,8 +131,8 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the UI Foundation ownership slice, then hard-cut Material 3, Material 3 Android,
-and One UI 7 ownership as the next Phase 3 boundary. Pull-request gate scaling
+Next action: merge the design-system ownership slice, then hard-cut Paging integration ownership
+as the final orphan-symbol Phase 3 boundary. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -191,15 +196,20 @@ remains owned by this plan after the Phase 3 content owners move.
   because only test-only compiled documentation samples and governance records were added. Test
   sources are excluded from published artifacts; production source, public signatures, runtime
   behavior, publication metadata, and generated artifact content remain unchanged.
+- `release/changes/20260827-governance-design-systems-phase3.json` explicitly ignores Material 3,
+  Material 3 Android, and One UI 7 because only test-only compiled documentation samples and
+  governance records were added. Test sources are excluded from published artifacts; production
+  source, public signatures, runtime behavior, publication metadata, and generated artifact
+  content remain unchanged.
 
 ## Release intent rationale
 
 The completed Phase 2 governance-tooling slices change governance records, documentation markers,
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
-`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, one explicitly
-ignored test-sample-only artifact, and zero shared-path classifications against
-`0c6b6880ef460d1a703bb0fdcc92877558898bfa`.
+`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, three explicitly
+ignored test-sample-only artifacts, and zero shared-path classifications against
+`434c4b99613991081401d300a3f69134dfeb6b76`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1392,6 +1402,47 @@ Accepted UI Foundation module ownership slice on 2026-08-27:
   artifact. This slice reuses existing unit, renderer, device, visual, and performance evidence and
   makes no new runtime, visual, power, or performance claim. The next action is Material 3,
   Material 3 Android, and One UI 7 ownership.
+
+Accepted Material 3, Material 3 Android, and One UI 7 module ownership slice on 2026-08-27:
+
+- retained all three stable module routes and kept the Material Android artifact as an aggregate
+  over the same Material theme and component owners rather than inventing a second renderer or
+  design-system capability. The hard cut adds `material3.components`, `theme.oneui7`, and
+  `oneui7.components`, extends the existing `theme.material3` document ownership, and assigns the
+  remaining 12 Material 3 and One UI 7 theme or component entries;
+- registered eight compiled dependency, theme, host, and complete component-set sample decisions.
+  Six are exact bilingual fences in the three module manuals; the two longer component-set samples
+  remain compiled, source-linked records so the manuals preserve full coverage without duplicating
+  large executable listings in both locales;
+- removed eight resolved metadata, ownership, and sample exception records. The report changed from
+  108 to 87 issues: missing metadata 47 to 44, orphan symbols 19 to 7, and unclassified samples 42
+  to 36. Taxonomy mismatches, duplicate owners, orphan documents, version conflicts, stale
+  generated output, unbaselined debt, and blocking violations remained zero. The only remaining
+  orphan symbols are the seven Paging integration entries;
+- the generated Reference retained 531 entries while its normalized catalog grew from 231,063 to
+  233,520 bytes, an increase of 2,457 bytes (`1.0633%`), for the 12 symbol-to-capability links and
+  six module-to-capability links. Every generated module link resolves to its stable route;
+- the first complete bilingual representation expanded both full component samples inline and
+  produced 49,067,376 non-API bytes with 110,838 bytes of headroom. Retaining the same compiled
+  records behind source links removed 81,994 duplicated presentation bytes. The accepted site
+  audited 454 pages and 30 redirects, produced 48,985,382 non-API bytes, and left 192,832 bytes
+  under the unchanged 46.9 MiB limit. This is 5,991 bytes (`0.0122%`) above the UI Foundation slice
+  and is `no material change`. Docusaurus completed in `31.7 s`; build timing is `inconclusive`
+  because cache and process state differed, while the absolute result remains below the `120 s`
+  limit;
+- Tutorial, Material 3, Material 3 Android, and One UI 7 sample compilation, exact bilingual region
+  identity, Governance V2, documentation structure, language and translation review, generated
+  Reference freshness, release intent, and the complete bilingual site passed. Complete
+  single-worker `qaQuick` passed 2,342 actionable tasks in `58 s` (188 executed and 2,154
+  up-to-date); this is completeness evidence rather than a speed comparison because it reused
+  previously produced publication, module, and site outputs;
+- the overall conclusion is `improved`: all discovered Material 3 and One UI 7 application-facing
+  entries and the three public module manuals now have exact generated ownership without changing
+  public API, production runtime behavior, routes, or published artifacts. Release intent found
+  zero release artifacts and explicitly ignored the three test-sample-only artifacts. This slice
+  reuses existing unit, gesture, renderer, device, visual, and design-reference evidence and makes
+  no new runtime, visual, power, or performance claim. The next action is Paging integration
+  ownership, which closes the final seven orphan symbols.
 
 | Current area | Required target |
 | --- | --- |

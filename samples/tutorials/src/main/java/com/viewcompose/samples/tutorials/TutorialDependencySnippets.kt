@@ -131,6 +131,30 @@ dependencies {
     // DOCS_REGION_END(ui-foundation-module-dependency)
 }
 
+private val material3ModuleDependency = run {
+    // DOCS_REGION_START(material3-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-material3:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(material3-module-dependency)
+}
+
+private val material3AndroidModuleDependency = run {
+    // DOCS_REGION_START(material3-android-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(material3-android-module-dependency)
+}
+
+private val oneUi7ModuleDependency = run {
+    // DOCS_REGION_START(oneui7-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(oneui7-module-dependency)
+}
+
 private val rendererAndroidModuleDependency = run {
     // DOCS_REGION_START(renderer-android-module-dependency)
 dependencies {
