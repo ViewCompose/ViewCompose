@@ -1,3 +1,31 @@
+---
+schema_version: 2
+document_id: architecture.focus-visibility-pager-selection
+doc_type: architecture
+slug: /architecture/decisions/focus-visibility-and-pager-selection-ownership
+owner:
+  kind: capability
+  id: focus.input
+version_lane: released
+capability_ids:
+  - focus.input
+  - lazy.collections
+  - text.input
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+sample_ids:
+  - guide.focus-form
+  - guide.lazy-collections-state
+  - guide.text-input-editing
+invariants:
+  - Focused-editor visibility delegates movement to the nearest real Android scroll owner and activates one window-scoped coordinator only while a ViewCompose editor owns focus.
+  - Pager selection is discrete logical-page ownership; idle relayout cannot clear focus and within-page visibility stops at the page-local scroll boundary.
+evidence:
+  - Focus and rectangle-propagation suites, pager selection and geometry tests, offscreen and accessibility coverage, LTR and RTL physical-device acceptance, compiled samples, and removed-symbol gates.
+---
+
 # ADR-0018: Focus Visibility and Pager Selection Ownership
 
 - Status: Accepted

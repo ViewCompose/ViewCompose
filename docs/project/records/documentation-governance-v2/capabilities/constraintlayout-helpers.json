@@ -33,5 +33,11 @@
   ],
   "reference_owner": { "reference_id": "reference.constraintlayout.helpers", "generated": true },
   "sample_owner": { "sample_id": "module.constraintlayout-helpers" },
-  "document_owners": { "module": ["module.viewcompose-constraintlayout-androidx"] }
+  "document_owners": {
+    "module": ["module.viewcompose-constraintlayout-androidx"],
+    "architecture": [
+      "architecture.constraintlayout-graph-ownership",
+      "architecture.typed-constraint-helper-expansion"
+    ]
+  }
 }

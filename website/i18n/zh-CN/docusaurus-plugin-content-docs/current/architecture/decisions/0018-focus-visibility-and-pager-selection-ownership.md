@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0018-focus-visibility-and-pager-selection-ownership.md
-translation_source_hash: 577a2601ce9c25e0aa0448b010c752919333cb13708e7d52412d57ba513b4a74
+translation_source_hash: c1e79650c215faeee5786f3de0257919391aaba21b6396867985ffa580febf65
 translation_status: current
 ---
 

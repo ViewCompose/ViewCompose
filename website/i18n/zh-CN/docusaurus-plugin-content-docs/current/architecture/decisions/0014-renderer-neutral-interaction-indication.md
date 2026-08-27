@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0014-renderer-neutral-interaction-indication.md
-translation_source_hash: ff305802ff2c761f060e824253d8b0abdab86582d9d9b06b3e7b69e3bab65e19
+translation_source_hash: eb6d4f1649f399027489cd12bfbdc4197145f2e1a096d1d001381116120dd9d1
 translation_status: current
 ---
 

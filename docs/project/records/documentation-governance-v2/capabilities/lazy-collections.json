@@ -27,7 +27,8 @@
       "architecture.state-snapshots",
       "architecture.hierarchical-saveable-state-ownership",
       "architecture.prefetched-session-activation",
-      "architecture.lazy-collection-ownership"
+      "architecture.lazy-collection-ownership",
+      "architecture.focus-visibility-pager-selection"
     ],
     "migration": ["migration.lazy-collection-revision-reuse"]
   }

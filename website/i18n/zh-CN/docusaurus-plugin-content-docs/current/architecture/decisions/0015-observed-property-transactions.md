@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0015-observed-property-transactions.md
-translation_source_hash: 2530352d9a1c167387d4da2ddc96f983efb3b6328575ffe85c2ba127d593fc93
+translation_source_hash: 2df39102721389f611a67672ba0e3cc475dd75687935c14e4f73bb6cd9b7c931
 translation_status: current
 ---
 

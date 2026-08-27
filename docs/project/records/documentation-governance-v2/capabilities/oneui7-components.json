@@ -20,7 +20,8 @@
       "architecture.design-system-integration",
       "architecture.design-system-resolution",
       "architecture.design-system-host-backends",
-      "architecture.component-appearance-resolution"
+      "architecture.component-appearance-resolution",
+      "architecture.renderer-neutral-interaction-indication"
     ]
   }
 }

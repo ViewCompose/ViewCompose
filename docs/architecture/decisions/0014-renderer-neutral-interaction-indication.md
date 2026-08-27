@@ -1,3 +1,35 @@
+---
+schema_version: 2
+document_id: architecture.renderer-neutral-interaction-indication
+doc_type: architecture
+slug: /architecture/decisions/renderer-neutral-interaction-indication
+owner:
+  kind: capability
+  id: modifier.interaction
+version_lane: released
+capability_ids:
+  - modifier.interaction
+  - foundation.components
+  - material3.components
+  - oneui7.components
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+  - viewcompose-material3
+  - viewcompose-oneui7
+sample_ids:
+  - architecture.modifier-interaction
+  - module.ui-foundation-profile-summary
+  - module.material3-components
+  - module.oneui7-components
+invariants:
+  - Interaction indication is one ordered renderer-neutral modifier value resolved above the renderer rather than an Android-shaped layout or theme slot.
+  - Disabled components install no indication, while native multi-target controls receive complete typed state-layer values.
+evidence:
+  - UI Contract ordering, renderer state-list, retained-View patch, component disabled-state, multi-target, design-system compilation, API, and source-gate suites.
+---
+
 # ADR-0014: Renderer-neutral interaction indication
 
 - Status: Accepted

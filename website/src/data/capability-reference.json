@@ -248,6 +248,8 @@
       "referenceId": "reference.constraintlayout.core",
       "relatedDocumentIds": [
         "architecture.public-package-ownership",
+        "architecture.constraintlayout-graph-ownership",
+        "architecture.typed-constraint-helper-expansion",
         "module.viewcompose-constraintlayout-androidx"
       ],
       "sample": {
@@ -260,6 +262,8 @@
       "capabilityId": "constraintlayout.helpers",
       "referenceId": "reference.constraintlayout.helpers",
       "relatedDocumentIds": [
+        "architecture.constraintlayout-graph-ownership",
+        "architecture.typed-constraint-helper-expansion",
         "module.viewcompose-constraintlayout-androidx"
       ],
       "sample": {
@@ -348,7 +352,8 @@
       "referenceId": "reference.focus.input",
       "relatedDocumentIds": [
         "guide.focus-and-key-input",
-        "architecture.modifier-runtime"
+        "architecture.modifier-runtime",
+        "architecture.focus-visibility-pager-selection"
       ],
       "sample": {
         "sampleClass": "compiled-region",
@@ -366,6 +371,7 @@
         "architecture.design-system-resolution",
         "architecture.design-system-host-backends",
         "architecture.component-appearance-resolution",
+        "architecture.renderer-neutral-interaction-indication",
         "module.viewcompose-ui-foundation",
         "migration.compose-layout-modifier-environment",
         "migration.dsl-contract-convergence"
@@ -563,6 +569,7 @@
         "architecture.hierarchical-saveable-state-ownership",
         "architecture.prefetched-session-activation",
         "architecture.lazy-collection-ownership",
+        "architecture.focus-visibility-pager-selection",
         "module.viewcompose-ui-foundation",
         "migration.lazy-collection-revision-reuse"
       ],
@@ -662,6 +669,7 @@
         "architecture.design-system-resolution",
         "architecture.design-system-host-backends",
         "architecture.component-appearance-resolution",
+        "architecture.renderer-neutral-interaction-indication",
         "module.viewcompose-material3",
         "module.viewcompose-material3-android"
       ],
@@ -713,6 +721,7 @@
       "referenceId": "reference.modifier.interaction",
       "relatedDocumentIds": [
         "architecture.modifier-runtime",
+        "architecture.renderer-neutral-interaction-indication",
         "migration.compose-layout-modifier-environment",
         "migration.dsl-contract-convergence"
       ],
@@ -800,6 +809,7 @@
         "architecture.design-system-resolution",
         "architecture.design-system-host-backends",
         "architecture.component-appearance-resolution",
+        "architecture.renderer-neutral-interaction-indication",
         "module.viewcompose-oneui7"
       ],
       "sample": {
@@ -1038,6 +1048,9 @@
         "architecture.delayed-session-containers",
         "architecture.prefetched-session-activation",
         "architecture.lazy-collection-ownership",
+        "architecture.observed-property-transactions",
+        "architecture.constraintlayout-graph-ownership",
+        "architecture.typed-constraint-helper-expansion",
         "module.viewcompose-renderer-android",
         "module.viewcompose-ui-contract"
       ],
@@ -1101,6 +1114,7 @@
         "guide.text-input-editing",
         "guide.text-input-rich-text",
         "architecture.text-input-runtime",
+        "architecture.focus-visibility-pager-selection",
         "module.viewcompose-text-core",
         "module.viewcompose-ui-foundation",
         "migration.dsl-contract-convergence"
@@ -1229,6 +1243,10 @@
       "documentType": "architecture",
       "path": "/architecture/decisions/component-appearance-resolution-boundary"
     },
+    "architecture.constraintlayout-graph-ownership": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/constraintlayout-graph-and-helper-ownership"
+    },
     "architecture.delayed-session-containers": {
       "documentType": "architecture",
       "path": "/architecture/session-containers"
@@ -1252,6 +1270,10 @@
     "architecture.effects": {
       "documentType": "architecture",
       "path": "/architecture/effects"
+    },
+    "architecture.focus-visibility-pager-selection": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/focus-visibility-and-pager-selection-ownership"
     },
     "architecture.hierarchical-saveable-state-ownership": {
       "documentType": "architecture",
@@ -1281,6 +1303,10 @@
       "documentType": "architecture",
       "path": "/architecture/node-spec"
     },
+    "architecture.observed-property-transactions": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/observed-property-transactions"
+    },
     "architecture.overlay-root-selection": {
       "documentType": "architecture",
       "path": "/architecture/decisions/0006-root-scoped-overlay-backend-selection"
@@ -1297,6 +1323,10 @@
       "documentType": "architecture",
       "path": "/architecture/render-failures"
     },
+    "architecture.renderer-neutral-interaction-indication": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/renderer-neutral-interaction-indication"
+    },
     "architecture.state-snapshots": {
       "documentType": "architecture",
       "path": "/architecture/state-snapshots"
@@ -1312,6 +1342,10 @@
     "architecture.transactional-effect-lifecycle": {
       "documentType": "architecture",
       "path": "/architecture/decisions/0008-transactional-effect-lifecycle"
+    },
+    "architecture.typed-constraint-helper-expansion": {
+      "documentType": "architecture",
+      "path": "/architecture/decisions/typed-constraint-helper-expansion"
     },
     "guide.advanced-shadows": {
       "documentType": "guide",

@@ -1,3 +1,31 @@
+---
+schema_version: 2
+document_id: architecture.constraintlayout-graph-ownership
+doc_type: architecture
+slug: /architecture/decisions/constraintlayout-graph-and-helper-ownership
+owner:
+  kind: capability
+  id: constraintlayout.core
+version_lane: released
+capability_ids:
+  - constraintlayout.core
+  - constraintlayout.helpers
+  - renderer.tree-transactions
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-constraintlayout-androidx
+  - viewcompose-renderer-android
+sample_ids:
+  - module.constraintlayout-dimensions
+  - module.constraintlayout-helpers
+  - module.renderer-tree-transaction
+invariants:
+  - One immutable validated candidate graph is the only source of truth for each ConstraintLayout native commit.
+  - One renderer registry owns every helper View, stable generated ID, membership update, removal, environment transition, and rollback.
+evidence:
+  - DSL and graph suites, exact AndroidX geometry and rollback tests, helper stress, LTR and RTL device acceptance, compiled samples, API gates, and interpreted performance-safety controls.
+---
+
 # ADR-0016: ConstraintLayout graph and helper ownership
 
 - Status: Accepted

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0016-constraintlayout-graph-and-helper-ownership.md
-translation_source_hash: bd93e925ed2f13486e73c644fddd97caaab86a4d9bf50253f6affd2bef3c3c56
+translation_source_hash: 14d2150317997445f289df99c22514558f4928c3116feb919b55f4fec693ba72
 translation_status: current
 ---
 

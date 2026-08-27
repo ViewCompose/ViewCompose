@@ -18,6 +18,9 @@
   "sample_owner": { "sample_id": "guide.focus-form" },
   "document_owners": {
     "guide": ["guide.focus-and-key-input"],
-    "architecture": ["architecture.modifier-runtime"]
+    "architecture": [
+      "architecture.modifier-runtime",
+      "architecture.focus-visibility-pager-selection"
+    ]
   }
 }

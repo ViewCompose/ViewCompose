@@ -2,6 +2,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type {Options, ThemeConfig} from '@docusaurus/preset-classic';
 import {createLocalizedMarkdownLinkResolver} from './src/config/localizedMarkdownLinks';
+import stripGovernanceFrontMatter from './src/remark/stripGovernanceFrontMatter';
 
 const siteDir = __dirname;
 const docsDir = `${siteDir}/../docs`;
@@ -118,6 +119,7 @@ const config: Config = {
           path: '../docs',
           routeBasePath: '/',
           sidebarPath: './sidebars.ts',
+          remarkPlugins: [stripGovernanceFrontMatter],
           exclude: ['archive/**'],
           editUrl: ({docPath}) =>
             `https://github.com/ViewCompose/ViewCompose/edit/main/docs/${docPath}`,
