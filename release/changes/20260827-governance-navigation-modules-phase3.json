@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register Navigation Core and Android module documentation ownership without changing published artifacts.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-navigation-core",
+      "reason": "The existing test-only sample directory is registered with the test source set and gains exact documentation regions; test sources remain excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-navigation-android",
+      "reason": "Only test-only compiled documentation fixtures gain exact source regions and equivalent sample bindings; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

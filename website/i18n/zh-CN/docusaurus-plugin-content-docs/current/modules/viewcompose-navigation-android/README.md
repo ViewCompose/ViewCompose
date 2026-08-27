@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: 1e8819a264b68329bfc929a9133fdd35d129d87abed68fda5da200fc645dda91
+translation_source_hash: dcfdd5659c87b43198eece5e364cd545e8c18ad8cece3f2cb2b40843e6838b9a
 translation_status: current
 ---
 
@@ -15,6 +15,7 @@ translation_status: current
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="navigation-android-module-dependency" sample_id="module.navigation-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
@@ -31,6 +32,7 @@ dependencies {
 
 ## Controller 与宿主
 
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-host" sample_id="module.navigation-android-host" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
 ```kotlin
 fun UiTreeBuilder.AppNavigation() {
     val controller = rememberNavHostController(

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: a65cba34b8bd9e6bd58b9d811c3e0fedde270c51f20d9b680f4afcfdc9bdb538
+translation_source_hash: 3593ea08eefd8cd5f5306fa59c52d71bc50a1bd10d435c4ad9168c085448b404
 translation_status: current
 ---
 
@@ -15,6 +15,7 @@ translation_status: current
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="navigation-core-module-dependency" sample_id="module.navigation-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03")
@@ -28,6 +29,7 @@ dependencies {
 
 ## 导航图与路由
 
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-graph" sample_id="module.navigation-core-graph" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
 ```kotlin
 val graph = navGraph(
     route = "root",
@@ -56,11 +58,12 @@ Saved State 和 ViewModel，同时不把 Android 概念引入本模块。
 
 ## 两阶段事务
 
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-transaction" sample_id="module.navigation-core-transaction" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
 ```kotlin
 when (val preparation = controller.prepare(NavCommand.Push(NavRoute("details")))) {
     is NavPreparation.NoChange -> Unit
     is NavPreparation.Ready -> preparation.transaction.use { transaction ->
-        // 先挂载 transaction.after 并应用 owner 生命周期变化。
+        // First mount transaction.after and apply owner lifecycle changes.
         transaction.commit()
     }
 }
@@ -81,6 +84,7 @@ when (val preparation = controller.prepare(NavCommand.Push(NavRoute("details")))
 
 ## 独立保留栈
 
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-stacks" sample_id="module.navigation-core-stacks" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
 ```kotlin
 val configuration = NavStackConfiguration(
     initialStackId = NavStackId("home"),
@@ -105,6 +109,7 @@ Saved State 和 ViewModel owner 在 Tab 之间泄漏。
 
 ## 深链
 
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-deep-link" sample_id="module.navigation-core-deep-link" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
 ```kotlin
 val profileLink = NavDeepLink(
     uriPattern = "https://viewcompose.com/users/{userId}",
@@ -171,6 +176,6 @@ entry，并要求栈顶始终可见。`NavPaneScene` 默认把所有可见 pane 
 
 ## 兼容性说明
 
-`0.1.0-alpha02` 确立了不可变快照、单一待处理的两阶段事务、独立保留栈、严格 URI 匹配、图层级
+`0.1.0-alpha03` 确立了不可变快照、单一待处理的两阶段事务、独立保留栈、严格 URI 匹配、图层级
 验证、生命周期规划和三个逻辑 pane 角色。只能持久化已提交快照，不要持久化 controller、事务、
 策略、工厂或宿主生命周期计划。

@@ -1,3 +1,25 @@
+---
+schema_version: 2
+document_id: module.viewcompose-navigation-core
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-navigation-core
+version_lane: released
+capability_ids:
+  - navigation.host
+artifact_ids:
+  - viewcompose-navigation-core
+sample_ids:
+  - module.navigation-core-dependency
+  - module.navigation-core-graph
+  - module.navigation-core-transaction
+  - module.navigation-core-stacks
+  - module.navigation-core-deep-link
+coordinate: com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03
+minimal_usage_sample_id: module.navigation-core-dependency
+---
+
 # Navigation Core
 
 `viewcompose-navigation-core` is ViewCompose's platform-neutral navigation state machine. It owns
@@ -11,6 +33,7 @@ The module contains no Android or AndroidX types. `Activity`, predictive Back, `
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="navigation-core-module-dependency" sample_id="module.navigation-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03")
@@ -24,6 +47,7 @@ dependencies {
 
 ## Graphs and routes
 
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-graph" sample_id="module.navigation-core-graph" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
 ```kotlin
 val graph = navGraph(
     route = "root",
@@ -55,6 +79,7 @@ instance without putting Android concepts in this module.
 
 ## Two-phase transactions
 
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-transaction" sample_id="module.navigation-core-transaction" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
 ```kotlin
 when (val preparation = controller.prepare(NavCommand.Push(NavRoute("details")))) {
     is NavPreparation.NoChange -> Unit
@@ -82,6 +107,7 @@ No-change outcomes are explicit:
 
 ## Independent retained stacks
 
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-stacks" sample_id="module.navigation-core-stacks" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
 ```kotlin
 val configuration = NavStackConfiguration(
     initialStackId = NavStackId("home"),
@@ -107,6 +133,7 @@ between tabs.
 
 ## Deep links
 
+{/* compiled-region source="viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt" region="navigation-core-deep-link" sample_id="module.navigation-core-deep-link" build_target=":viewcompose-navigation-core:compileTestKotlin" */}
 ```kotlin
 val profileLink = NavDeepLink(
     uriPattern = "https://viewcompose.com/users/{userId}",
@@ -181,7 +208,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha02` line establishes immutable snapshots, single-pending two-phase transactions,
+The `0.1.0-alpha03` line establishes immutable snapshots, single-pending two-phase transactions,
 independent retained stacks, strict URI matching, graph-hierarchy validation, lifecycle planning,
 and three logical pane roles. Persist only committed snapshots. Do not persist controllers,
 transactions, strategies, factories, or host lifecycle plans.

@@ -46,6 +46,29 @@ fun UiTreeBuilder.rememberedNavHostSample() {
     }
 }
 
+// DOCS_REGION_START(navigation-android-host)
+fun UiTreeBuilder.AppNavigation() {
+    val controller = rememberNavHostController(
+        startDestination = NavRoute("home"),
+    )
+    NavHost(controller = controller) { entry ->
+        when (entry.route.name) {
+            "home" -> HomePage(controller)
+            "details" -> DetailsPage(controller)
+            else -> error("Unknown route ${entry.route.name}")
+        }
+    }
+}
+// DOCS_REGION_END(navigation-android-host)
+
+private fun UiTreeBuilder.HomePage(controller: NavHostController) {
+    Text("Home: ${controller.snapshot.top.route.name}")
+}
+
+private fun UiTreeBuilder.DetailsPage(controller: NavHostController) {
+    Text("Details: ${controller.snapshot.top.route.name}")
+}
+
 /** Pairs one typed visual endpoint across destination sessions owned by the same NavHost. */
 fun UiTreeBuilder.sharedNavigationContentSample(controller: NavHostController) {
     val titleKey = SharedContentKey("article-title")
