@@ -249,6 +249,14 @@ internal object PullRequestImpactPlanner {
         PullRequestGateFamily.DocumentationSite,
         PullRequestGateFamily.Samples,
     )
+    private val acceptedModuleDocumentationSampleGateFamilies = setOf(
+        PullRequestGateFamily.DocumentationGovernance,
+        PullRequestGateFamily.DocumentationSite,
+        PullRequestGateFamily.ModuleVerification,
+        PullRequestGateFamily.Preview,
+        PullRequestGateFamily.ReleaseIntent,
+        PullRequestGateFamily.Samples,
+    )
     private val previewArtifacts = setOf(
         "viewcompose-graphics",
         "viewcompose-graphics-core",
@@ -395,6 +403,13 @@ internal object PullRequestImpactPlanner {
             gates == acceptedDocumentationSampleGateFamilies &&
                 directArtifacts.isEmpty() &&
                 directProjects == setOf(":samples:tutorials") -> PullRequestQaQuickMode.Affected
+            gates == acceptedModuleDocumentationSampleGateFamilies &&
+                isAcceptedModuleDocumentationSampleChange(
+                    changes = changes,
+                    artifacts = artifacts,
+                    directArtifacts = directArtifacts,
+                    directProjects = directProjects,
+                ) -> PullRequestQaQuickMode.Affected
             else -> PullRequestQaQuickMode.AffectedWithShadow
         }
         val workflows = PullRequestWorkflowSelection(
@@ -422,6 +437,45 @@ internal object PullRequestImpactPlanner {
             reasons = reasons.sorted(),
             workflows = workflows,
         )
+    }
+
+    private fun isAcceptedModuleDocumentationSampleChange(
+        changes: List<PullRequestPathChange>,
+        artifacts: Set<String>,
+        directArtifacts: Set<String>,
+        directProjects: Set<String>,
+    ): Boolean {
+        if (directArtifacts.isEmpty()) return false
+        if (
+            directProjects != setOf(":samples:tutorials") &&
+            directProjects != setOf(":samples:counter", ":samples:tutorials")
+        ) {
+            return false
+        }
+        return changes.all { change ->
+            change.paths.all { rawPath ->
+                val path = rawPath.normalizeRepositoryPath()
+                when {
+                    path.startsWith("docs/") -> true
+                    path.startsWith(
+                        "website/i18n/zh-CN/docusaurus-plugin-content-docs/current/",
+                    ) -> true
+                    path == "website/src/data/capability-reference.json" ->
+                        change.status == 'A' || change.status == 'M'
+                    appendOnlyChangeset.matches(path) -> change.status == 'A'
+                    path.startsWith("samples/tutorials/src/main/") ->
+                        change.status == 'A' || change.status == 'M'
+                    path.startsWith("samples/counter/src/debug/") ->
+                        change.status == 'A' || change.status == 'M'
+                    else -> {
+                        val artifact = path.substringBefore('/').takeIf(artifacts::contains)
+                        artifact != null &&
+                            path.startsWith("$artifact/src/test/samples/") &&
+                            (change.status == 'A' || change.status == 'M')
+                    }
+                }
+            }
+        }
     }
 
     private fun classifyArtifactPath(

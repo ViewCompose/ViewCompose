@@ -369,6 +369,19 @@ identity token.
   its actual path. The accepted action is a narrow no-shadow mode for this exact class, not a
   website-stack migration; source verification, API reuse, and the complete site remain unchanged.
 
+- **2026-08-28, module-documentation/compiled-sample corpus acceptance:** eleven scoped pull
+  requests (#186, #187, #188, #189, #190, #191, #194, #195, #198, #199, and #200) changed only
+  documentation/governance records, published-module `src/test/samples`, bounded Tutorial or
+  Counter sample sources, append-only Changesets, Chinese mirrors, and the generated capability
+  catalog. Candidate and complete-shadow outcomes agreed on success in all eleven. Reconstructed
+  no-shadow execution P50/P95 are `8 min 5 s`/`10 min 4 s`; end-to-end P50/P95 are `9 min 13 s`/
+  `11 min 18 s`. Every documentation child reused `5/5` immutable API groups with zero generation
+  or invalid group. A separate eleven-run successful `main` corpus has complete `qaQuick` P95
+  `20 min 41 s`, `16.2%` below the Phase 0 comparator. Scope, cache reuse, and latency are
+  **improved** and correctness is **no material change**. The accepted action removes the full
+  shadow only from this exact path class; module production, build scripts, ordinary tests, code
+  deletion/rename, and sensitive tooling retain it. Website-stack migration remains unjustified.
+
 - **2026-08-26, Governance V2 Text Input local acceptance:** the first four-page task split built
   successfully but produced 49,245,936 non-API bytes, 67,722 bytes above the unchanged 46.9 MiB
   limit. Consolidating adjacent editing/IME and rich/Receive Content tasks into two Guides retained

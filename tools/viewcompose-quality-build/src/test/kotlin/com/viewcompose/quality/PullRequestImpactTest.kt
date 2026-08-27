@@ -156,6 +156,87 @@ class PullRequestImpactTest {
     }
 
     @Test
+    fun `accepted module documentation samples run affected verification without shadow`() {
+        val plan = plan(
+            change('M', "docs/modules/viewcompose-ui-foundation/README.md"),
+            change(
+                'D',
+                "docs/project/records/documentation-governance-v2/exceptions/DOC-0001.json",
+            ),
+            change('A', "release/changes/module-documentation.json"),
+            change(
+                'M',
+                "samples/tutorials/src/main/java/TutorialDependencySnippets.kt",
+            ),
+            change(
+                'M',
+                "viewcompose-ui-foundation/src/test/samples/WidgetCoreSamples.kt",
+            ),
+            change(
+                'M',
+                "website/i18n/zh-CN/docusaurus-plugin-content-docs/current/" +
+                    "modules/viewcompose-ui-foundation/README.md",
+            ),
+            change('M', "website/src/data/capability-reference.json"),
+        )
+
+        assertFalse(plan.fullFallback)
+        assertEquals(
+            setOf(
+                PullRequestGateFamily.DocumentationGovernance,
+                PullRequestGateFamily.DocumentationSite,
+                PullRequestGateFamily.ModuleVerification,
+                PullRequestGateFamily.Preview,
+                PullRequestGateFamily.ReleaseIntent,
+                PullRequestGateFamily.Samples,
+            ),
+            plan.gateFamilies,
+        )
+        assertEquals(setOf("viewcompose-ui-foundation"), plan.directArtifacts)
+        assertEquals(setOf(":samples:tutorials"), plan.directProjects)
+        assertEquals(PullRequestQaQuickMode.Affected, plan.workflows.qaQuickMode)
+        assertTrue(plan.workflows.qaQuick)
+        assertTrue(plan.workflows.qaPreview)
+        assertTrue(plan.workflows.documentation)
+    }
+
+    @Test
+    fun `unaccepted module sample paths retain complete shadow`() {
+        val commonChanges = listOf(
+            change('M', "docs/modules/viewcompose-ui-foundation/README.md"),
+            change('A', "release/changes/module-documentation.json"),
+            change(
+                'M',
+                "samples/tutorials/src/main/java/TutorialDependencySnippets.kt",
+            ),
+        )
+        val unacceptedChanges = listOf(
+            change(
+                'D',
+                "viewcompose-ui-foundation/src/test/samples/WidgetCoreSamples.kt",
+            ),
+            change('M', "viewcompose-ui-foundation/src/test/kotlin/WidgetCoreTest.kt"),
+            change('M', "viewcompose-ui-foundation/build.gradle.kts"),
+            change('M', "website/src/pages/module-documentation.tsx"),
+            change(
+                'R',
+                "viewcompose-ui-foundation/src/test/samples/OldSamples.kt",
+                "viewcompose-ui-foundation/src/test/samples/NewSamples.kt",
+            ),
+        )
+
+        unacceptedChanges.forEach { unacceptedChange ->
+            val plan = plan(changes = commonChanges + unacceptedChange)
+            assertFalse(plan.fullFallback)
+            assertEquals(
+                unacceptedChange.paths.joinToString(),
+                PullRequestQaQuickMode.AffectedWithShadow,
+                plan.workflows.qaQuickMode,
+            )
+        }
+    }
+
+    @Test
     fun `preview production diff selects every current gate workflow`() {
         val plan = plan(change('M', "viewcompose-preview/src/main/kotlin/PreviewCatalog.kt"))
 
