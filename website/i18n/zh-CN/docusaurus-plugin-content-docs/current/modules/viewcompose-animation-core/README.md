@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation-core/README.md
-translation_source_hash: 7e7ece164cef194887d05209fafdb08f15bdd7891295dabe1fdba347398a885d
+translation_source_hash: 5689f89a45e7fc65867ff04046ecb3d0d29b73cf9aebb0d4107c63f03169ec3b
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ Spec、Easing、值/速度转换、显式时间确定性采样、协程驱动 Fr
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="animation-core-module-dependency" sample_id="module.animation-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha04")
@@ -41,6 +42,7 @@ dependencies {
 - `infiniteRepeatable`：时长型 Cycle 持续到取消；
 - `exponentialDecay`：带 Friction Multiplier 与安全上限的无 Target 速度衰减。
 
+{/* compiled-region source="viewcompose-animation-core/src/test/samples/com/viewcompose/animation/core/samples/AnimationCoreSamples.kt" region="animation-core-specifications" sample_id="module.animation-core-specifications" build_target=":viewcompose-animation-core:compileTestKotlin" */}
 ```kotlin
 val motion = repeatable(
     iterations = 2,
@@ -92,6 +94,7 @@ Spec。缩放递归应用到 Tween Delay、Keyframe 时长/Checkpoint 和 Repeat
 不可变 `AnimationState<T, V>`。它不持有 Clock 或可变所有权，适用于 Seek、测试、Transition
 Channel、Renderer Adapter 与 Preview 工具：
 
+{/* compiled-region source="viewcompose-animation-core/src/test/samples/com/viewcompose/animation/core/samples/AnimationCoreSamples.kt" region="animation-core-sampling" sample_id="module.animation-core-sampling" build_target=":viewcompose-animation-core:compileTestKotlin" */}
 ```kotlin
 val animation = TargetAnimation(
     initialValue = 20f,
@@ -119,6 +122,7 @@ val halfway = animation.stateAt(200_000_000L)
 保留整数小数速度，以及有符号 Alpha/Red/Green/Blue 变化率。整数重建向零截断。ARGB 值按编码
 Channel 插值，不执行 Gamma 或色彩空间校正。
 
+{/* compiled-region source="viewcompose-animation-core/src/test/samples/com/viewcompose/animation/core/samples/AnimationCoreSamples.kt" region="animation-core-converter" sample_id="module.animation-core-converter" build_target=":viewcompose-animation-core:compileTestKotlin" */}
 ```kotlin
 data class Point(val x: Float, val y: Float)
 

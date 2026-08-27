@@ -224,3 +224,60 @@ enum class PanelState {
     Collapsed,
     Expanded,
 }
+
+private fun documentationAnimationSpecificationsSample() {
+    // DOCS_REGION_START(animation-core-specifications)
+val motion = repeatable(
+    iterations = 2,
+    animation = tween(
+        durationMillis = 240,
+        easing = EasingDefaults.FastOutSlowIn,
+    ),
+    repeatMode = RepeatMode.Reverse,
+)
+
+val physical = spring(
+    dampingRatio = 0.72f,
+    stiffness = 240f,
+)
+    // DOCS_REGION_END(animation-core-specifications)
+    listOf<AnimationSpec>(motion, physical)
+}
+
+private fun documentationTargetAnimationSample() {
+    // DOCS_REGION_START(animation-core-sampling)
+val animation = TargetAnimation(
+    initialValue = 20f,
+    targetValue = 100f,
+    animationSpec = tween(durationMillis = 400, easing = EasingDefaults.Linear),
+    converter = AnimationConverters.Float,
+)
+val halfway = animation.stateAt(200_000_000L)
+    // DOCS_REGION_END(animation-core-sampling)
+    check(halfway.value.isFinite())
+}
+
+private fun documentationAnimationConverterSample() {
+    // DOCS_REGION_START(animation-core-converter)
+data class Point(val x: Float, val y: Float)
+
+val converter = object : AnimationConverter<Point, Point> {
+    override val vectorSize = 2
+    override val zeroVelocity = Point(0f, 0f)
+    override val visibilityThreshold = Point(0.01f, 0.01f)
+
+    override fun convertToVector(value: Point, destination: FloatArray) {
+        destination[0] = value.x
+        destination[1] = value.y
+    }
+
+    override fun convertFromVector(vector: FloatArray) = Point(vector[0], vector[1])
+
+    override fun convertVelocityToVector(velocity: Point, destination: FloatArray) =
+        convertToVector(velocity, destination)
+
+    override fun convertVelocityFromVector(vector: FloatArray) = convertFromVector(vector)
+}
+    // DOCS_REGION_END(animation-core-converter)
+    check(converter.vectorSize == 2)
+}

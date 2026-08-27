@@ -1,3 +1,25 @@
+---
+schema_version: 2
+document_id: architecture.animation-physics-ownership
+doc_type: architecture
+owner:
+  kind: capability
+  id: animation.composition-motion
+version_lane: released
+capability_ids:
+  - animation.composition-motion
+artifact_ids:
+  - viewcompose-animation-core
+  - viewcompose-animation
+sample_ids:
+  - architecture.animation-provisional-result-model
+invariants:
+  - One physical solver and one mutation writer own each animation timeline.
+  - Content, layout, navigation, renderer, and tooling boundaries preserve committed identity and bounded retention.
+evidence:
+  - Animation Core and Animation module unit tests, compiled samples, renderer tests, Demo verification, and accepted performance evidence.
+---
+
 # ADR-0019: Animation Physics, Transition, and Inspection Ownership
 
 - Status: Accepted
@@ -71,6 +93,7 @@ configuration is observable.
 
 The result model is:
 
+{/* non-executable sample_id="architecture.animation-provisional-result-model" reason="This accepted ADR preserves the superseded provisional single-domain result vocabulary for decision history." visible_explanation="ADR-0020 replaces these provisional generics; use the current API reference for copy-ready declarations." */}
 ```kotlin
 enum class AnimationEndReason {
     Finished,

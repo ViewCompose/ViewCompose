@@ -1,3 +1,30 @@
+---
+schema_version: 2
+document_id: module.viewcompose-animation
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-animation
+version_lane: released
+capability_ids:
+  - animation.composition-motion
+artifact_ids:
+  - viewcompose-animation
+sample_ids:
+  - module.animation-dependency
+  - module.animation-target-as-state
+  - module.animation-animatable
+  - module.animation-transition
+  - module.animation-seekable-transition
+  - module.animation-infinite-transition
+  - module.animation-visibility
+  - module.animation-content
+  - module.animation-content-size
+  - module.animation-bounds
+coordinate: com.viewcompose:viewcompose-animation:0.1.0-alpha04
+minimal_usage_sample_id: module.animation-dependency
+---
+
 # Animation
 
 `viewcompose-animation` integrates the platform-neutral animation engine with ViewCompose state,
@@ -7,6 +34,7 @@ channels, visibility/content transitions, measured-size animation, and real layo
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="animation-module-dependency" sample_id="module.animation-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
@@ -57,6 +85,7 @@ without changing bounds, input ownership, or semantics.
 `animateFloatAsState`, `animateIntAsState`, `animateColorAsState`, `animateDpAsState`, and the generic
 `animateValueAsState` turn a changing target into stable composition-owned `State<T>`:
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-target-as-state" sample_id="module.animation-target-as-state" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 val alpha = animateFloatAsState(
     targetValue = if (enabled) 1f else 0.5f,
@@ -81,6 +110,7 @@ stable dimension count and should itself remain stable across composition.
 `Animatable<T, V>` exposes `value`, typed `velocity`, `targetValue`, `isRunning`, and the stable
 observable `asState` while accepting suspending commands:
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-animatable" sample_id="module.animation-animatable" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 val progress = rememberAnimatable(
     initialValue = 0f,
@@ -95,6 +125,7 @@ LaunchedEffect(command) {
         )
         Command.Close -> progress.animateDecay(AnimationVelocity(-2.4f))
         Command.Stop -> progress.stop()
+        else -> Unit
     }
 }
 ```
@@ -129,6 +160,7 @@ clock; without one, only `snapTo` and `stop` are usable and `animateTo` reports 
 multiple derived channels. Every channel receives the stable `TransitionSegment<S>` selected for
 that segment, so direction-specific timing is type-safe and evaluated once:
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-transition" sample_id="module.animation-transition" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 val transition = updateTransition(
     targetState = if (expanded) PanelState.Expanded else PanelState.Collapsed,
@@ -167,6 +199,7 @@ overload. Infinite specifications remain excluded at compile time.
 For gesture, scrubber, Preview, or predictive-progress ownership, bind one
 `SeekableTransitionState<S>` instead of calling `updateTransition`:
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-seekable-transition" sample_id="module.animation-seekable-transition" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 val seekState = remember { SeekableTransitionState(PanelState.Collapsed) }
 val transition = rememberTransition(seekState, label = "seekable panel")
@@ -182,6 +215,7 @@ LaunchedEffect(command) {
         Command.Preview -> seekState.seekTo(0.7f, PanelState.Expanded)
         Command.Commit -> seekState.animateTo(PanelState.Expanded)
         Command.Reset -> seekState.snapTo(PanelState.Collapsed)
+        else -> Unit
     }
 }
 ```
@@ -244,6 +278,7 @@ The initialization boundary is defined by
 `rememberInfiniteTransition` scopes continuously repeating channels declared with `animateFloat`,
 `animateInt`, `animateColor`, `animateDp`, or generic `animateValue`:
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-infinite-transition" sample_id="module.animation-infinite-transition" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 val pulse = rememberInfiniteTransition(label = "pulse")
 val scale = pulse.animateFloat(
@@ -270,6 +305,7 @@ not essential.
 `AnimatedVisibility` coordinates alpha, measured reveal, measured-size-relative slide, pivoted
 visual scale, and descendant choreography while controlling one content lifetime:
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-visibility" sample_id="module.animation-visibility" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 AnimatedVisibility(
     visible = showDetails,
@@ -343,6 +379,7 @@ the hidden state, then change the target if that motion is required.
 `ContentTransform` for the accepted initial/target pair and can combine fade, measured-item slide,
 scale origin, drawing order, and an optional `SizeTransform`:
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-content" sample_id="module.animation-content" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 AnimatedContent(
     targetState = page,
@@ -395,6 +432,7 @@ The renderer inserts a synthetic native host around the modified node and moves 
 elements to that host. Duration specifications use Android `ValueAnimator`; physical springs use
 the shared animation-core solver and retain width/height velocity across retargeting:
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-content-size" sample_id="module.animation-content-size" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 Column(
     modifier = Modifier.animateContentSize(
@@ -421,6 +459,7 @@ parent after logical start/end and RTL resolution. It commits a real Android rec
 frame rather than applying draw translation or scale, so visible, pointer, focus, and accessibility
 geometry remain aligned:
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-bounds" sample_id="module.animation-bounds" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 Button(
     text = "Move and resize",

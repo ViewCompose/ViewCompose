@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "sample_id": "architecture.animation-value-velocity-model",
+  "sample_class": "non-executable",
+  "language": "kotlin",
+  "capability_id": "animation.composition-motion",
+  "document_ids": ["architecture.animation-value-velocity-domains"],
+  "version_lane": "released",
+  "reason": "This decision excerpt defines the type relationship but omits package context and implementation bodies.",
+  "visible_explanation": "Treat this fence as architectural type vocabulary; use versioned API reference for copy-ready signatures."
+}

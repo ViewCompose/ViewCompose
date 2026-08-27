@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "sample_id": "migration.compose-animation-legacy-spring",
+  "sample_class": "non-executable",
+  "language": "kotlin",
+  "capability_id": "animation.composition-motion",
+  "document_ids": ["migration.compose-animation"],
+  "version_lane": "released",
+  "reason": "The removed durationMillis spring overload cannot compile against the current released animation artifacts.",
+  "visible_explanation": "This historical source shows the signature being migrated; do not copy it into current code."
+}

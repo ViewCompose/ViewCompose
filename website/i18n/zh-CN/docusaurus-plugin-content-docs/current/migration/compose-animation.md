@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-animation.md
-translation_source_hash: 5de538b2cefbf940c0a48af7fe6311c21a575824de3e44d27ba70a7db25a07b0
+translation_source_hash: aee87a32a7965c18fae36f6cda7b1a4d3e8d581519e0227c6164e28fb453afc0
 translation_status: current
 ---
 
@@ -63,6 +63,7 @@ AGP 9.2，而本仓库当前使用 compile SDK 36 与 AGP 8.13.2。因此：
 
 Phase 1 之前的 API 接受名义时长：
 
+{/* non-executable sample_id="migration.compose-animation-legacy-spring" reason="The removed durationMillis spring overload cannot compile against the current released animation artifacts." visible_explanation="This historical source shows the signature being migrated; do not copy it into current code." */}
 ```kotlin
 spring(
     dampingRatio = 0.8f,

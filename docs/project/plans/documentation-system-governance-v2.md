@@ -20,12 +20,13 @@ ordered_work:
   - Generate Reference ownership before broad content and sample migration.
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
-last_verified: 2026-08-26
-next_action: Merge the third-party integration slice, then continue Phase 3 with remaining module ownership.
+last_verified: 2026-08-27
+next_action: Merge the Animation ownership slice, then audit Host Android ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
   - release/changes/20260826-governance-third-party-integrations-phase3.json
+  - release/changes/20260827-governance-animation-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -72,16 +73,21 @@ decisions, removes 27 resolved exceptions, and reduces the report to 390 issues.
 The accepted third-party integration hard cut now assigns all 32 CameraX, Google Maps, Media3, and
 legacy ExoPlayer entries to five capability owners, registers nine compiled sample decisions,
 removes 14 resolved exceptions, and reduces the report to 345 issues.
+The accepted Animation hard cut now assigns the seven previously orphaned Animation composition,
+content, visibility, and layout-motion entries to one capability owner, registers 19 compiled or
+explicitly non-executable sample decisions across two module manuals, one Tutorial, one Migration,
+and two ADRs, removes 17 resolved exceptions, and reduces the report to 313 issues. Android native
+animation interop remains intentionally outside this owner and will be handled with Host Android.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
 enter one explicit ratchet baseline, but the baseline cannot grow, and touching an allowlisted page
 must remove that page's repaired violations instead of preserving them.
 
-Last verified: 2026-08-26.
+Last verified: 2026-08-27.
 
-Next action: merge the third-party integration slice, then continue Phase 3 with remaining module
-ownership. Pull-request gate scaling
+Next action: merge the Animation ownership slice, then audit Host Android ownership as the next
+Phase 3 boundary. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -101,15 +107,19 @@ remains owned by this plan after the Phase 3 content owners move.
   exact regions or were reorganized for separate host/content examples. Test sources are excluded
   from published artifacts; production source, API, runtime behavior, publication metadata, and
   generated artifact content remain unchanged.
+- `release/changes/20260827-governance-animation-phase3.json` explicitly ignores Animation Core and
+  Animation because only test-only compiled documentation fixtures were added. Test sources are
+  excluded from published artifacts; production source, API, runtime behavior, publication
+  metadata, and generated artifact content remain unchanged.
 
 ## Release intent rationale
 
 The completed Phase 2 governance-tooling slices change governance records, documentation markers,
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
-`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, four explicitly
-ignored third-party integration artifacts, and zero shared-path classifications against
-`39e7ae01eedfaeae792ab549f057c66893c98be2`.
+`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, two explicitly
+ignored Animation artifacts, and zero shared-path classifications against
+`74f5310ad154db27c17089007a8839835320475e`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -963,6 +973,35 @@ Accepted third-party integration slice on 2026-08-26:
   artifact changed. This slice reuses the existing module, device, visual, and third-party SDK
   evidence and makes no new runtime, network, power, or performance claim. The next action is
   remaining module and executable-sample ownership.
+
+Accepted Animation ownership slice on 2026-08-27:
+
+- retained the existing Animation Core, Animation, Tutorial, Migration, and ADR routes while
+  separating platform-neutral engine contracts, composition-owned motion, historical migration
+  source, and architectural type vocabulary through structured document metadata;
+- registered one capability owner for all seven previously orphaned `AnimatedVisibility`,
+  `AnimatedContent`, `Crossfade`, `animateContentSize`, and `animateBounds` public entries, plus 16
+  exact compiled regions and three explicitly non-executable historical/architectural sample
+  decisions. Seventeen resolved metadata, symbol, taxonomy, and sample exception records were
+  removed;
+- the report changed from 345 to 313 issues: missing metadata 75 to 69, orphan symbols 156 to 149,
+  taxonomy mismatches 5 to 4, and unclassified samples 109 to 91. Duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- Animation Core and Animation unit tests, all three affected compiled-sample targets, Governance
+  V2, documentation structure, language and translation review, complete API reuse, release
+  intent, and the complete bilingual site passed. The final evidence-bearing site audited 454
+  pages, produced 48,745,500 non-API bytes, left 432,714 bytes under the unchanged 46.9 MiB limit,
+  and completed Docusaurus in `25.3 s`. This is 29,622 bytes (`0.0608%`) above the third-party
+  slice and `7.6%` faster locally, which is `no material change` for one content-only sample.
+  Complete `qaQuick` passed 2,342 actionable tasks in `30 s` (211 executed and 2,131 up-to-date);
+- the overall conclusion is `improved`: Animation ownership, bilingual executable coverage, and
+  explicit historical-sample classification increased while routes, framework API, runtime
+  behavior, and published artifacts remained unchanged. Release intent found zero release
+  artifacts and explicitly ignored two test-sample-only artifacts. The slice reuses existing unit,
+  renderer, device, visual, and performance evidence and makes no new runtime, motion-fidelity, or
+  performance claim. Native Android animation interop remains with Host Android, which is the next
+  Phase 3 audit boundary.
 
 | Current area | Required target |
 | --- | --- |

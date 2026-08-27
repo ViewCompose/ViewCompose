@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.animation-infinite-transition",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "animation.composition-motion",
+  "document_ids": ["module.viewcompose-animation"],
+  "version_lane": "released",
+  "source": "viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt",
+  "region": "animation-infinite-transition",
+  "build_target": ":viewcompose-animation:compileDebugUnitTestKotlin"
+}

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: b1966d59968f240da67eb6c4a800feabc1bfc09a55e21185cdbaf4a42303566b
+translation_source_hash: 7341deba8283a2e7bdc6124275f826a93e32756608488a3a87c62735817e9ba5
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ UI Node 发射与 Android View Renderer。它提供状态驱动值动画、命�
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="animation-module-dependency" sample_id="module.animation-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
@@ -54,6 +55,7 @@ ViewCompose 可观察 State 写入，并使读取方失效。
 `animateFloatAsState`、`animateIntAsState`、`animateColorAsState`、`animateDpAsState` 和泛型
 `animateValueAsState` 把变化目标转换成稳定的组合所有 `State<T>`：
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-target-as-state" sample_id="module.animation-target-as-state" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 val alpha = animateFloatAsState(
     targetValue = if (enabled) 1f else 0.5f,
@@ -76,6 +78,7 @@ ARGB Channel 插值，不执行 Gamma 校正。`UiDp` 插值密度无关
 `Animatable<T, V>` 暴露 `value`、类型化 `velocity`、`targetValue`、`isRunning` 和稳定可观察
 `asState`，并接受挂起命令：
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-animatable" sample_id="module.animation-animatable" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 val progress = rememberAnimatable(
     initialValue = 0f,
@@ -90,6 +93,7 @@ LaunchedEffect(command) {
         )
         Command.Close -> progress.animateDecay(AnimationVelocity(-2.4f))
         Command.Stop -> progress.stop()
+        else -> Unit
     }
 }
 ```
@@ -121,6 +125,7 @@ Mutation 所有权改变前失败。
 每个 Channel 都会接收该 Segment 选定的稳定 `TransitionSegment<S>`，因此可以用类型安全方式选择
 方向相关的 Timing，且每个 Segment 只求值一次：
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-transition" sample_id="module.animation-transition" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 val transition = updateTransition(
     targetState = if (expanded) PanelState.Expanded else PanelState.Collapsed,
@@ -157,6 +162,7 @@ val height = transition.animateDp(
 Gesture、Scrubber、Preview 或 Predictive Progress 需要持有控制权时，应绑定一个
 `SeekableTransitionState<S>`，而不是调用 `updateTransition`：
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-seekable-transition" sample_id="module.animation-seekable-transition" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 val seekState = remember { SeekableTransitionState(PanelState.Collapsed) }
 val transition = rememberTransition(seekState, label = "seekable panel")
@@ -172,6 +178,7 @@ LaunchedEffect(command) {
         Command.Preview -> seekState.seekTo(0.7f, PanelState.Expanded)
         Command.Commit -> seekState.animateTo(PanelState.Expanded)
         Command.Reset -> seekState.snapTo(PanelState.Collapsed)
+        else -> Unit
     }
 }
 ```
@@ -225,6 +232,7 @@ Frame Callback。没有可选 Provider 时不会创建 Source Projection，只�
 `rememberInfiniteTransition` 管理由 `animateFloat`、`animateInt`、`animateColor`、`animateDp` 或
 泛型 `animateValue` 声明的持续重复 Channel：
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-infinite-transition" sample_id="module.animation-infinite-transition" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 val pulse = rememberInfiniteTransition(label = "pulse")
 val scale = pulse.animateFloat(
@@ -249,6 +257,7 @@ val scale = pulse.animateFloat(
 `AnimatedVisibility` 在一个 Content 生命周期内协调 Alpha、实测 Reveal、按实测尺寸计算的
 Slide、带轴心的视觉 Scale 与后代编排：
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-visibility" sample_id="module.animation-visibility" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 AnimatedVisibility(
     visible = showDetails,
@@ -316,6 +325,7 @@ Helper、Transition Element、Scope、后代 Host、Renderer Transport 与已编
 Initial/Target 状态对选择一份 `ContentTransform`，并可组合 Fade、按实测 Item 尺寸计算的
 Slide、Scale Origin、绘制顺序与可选 `SizeTransform`：
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-content" sample_id="module.animation-content" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 AnimatedContent(
     targetState = page,
@@ -361,13 +371,14 @@ Frame Loop，并只释放一次全部保留树。
 插入一个合成原生 Host，并把父布局 Element 移到 Host。时长 Spec 使用 Android
 `ValueAnimator`；物理 Spring 使用共享 Animation Core Solver，并在 Retarget 时保留宽高速度：
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-content-size" sample_id="module.animation-content-size" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 Column(
     modifier = Modifier.animateContentSize(
         spring(dampingRatio = 0.75f, stiffness = 240f),
     ),
 ) {
-    // 测量尺寸会变化的内容。
+    // Content whose measured size changes.
 }
 ```
 
@@ -384,6 +395,7 @@ Layout，Wrapper 还会增加一层 View；不要无差别应用到大型列表�
 解析后的真实位置和尺寸进行动画。每一帧都会提交真实 Android 矩形，而不是只应用绘制平移或缩放，
 因此可见区域、Pointer、Focus 与 Accessibility 几何保持一致：
 
+{/* compiled-region source="viewcompose-animation/src/test/samples/com/viewcompose/animation/samples/AnimationSamples.kt" region="animation-bounds" sample_id="module.animation-bounds" build_target=":viewcompose-animation:compileDebugUnitTestKotlin" */}
 ```kotlin
 Button(
     text = "Move and resize",

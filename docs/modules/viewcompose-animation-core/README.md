@@ -1,3 +1,24 @@
+---
+schema_version: 2
+document_id: module.viewcompose-animation-core
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-animation-core
+version_lane: released
+capability_ids:
+  - animation.composition-motion
+artifact_ids:
+  - viewcompose-animation-core
+sample_ids:
+  - module.animation-core-dependency
+  - module.animation-core-specifications
+  - module.animation-core-sampling
+  - module.animation-core-converter
+coordinate: com.viewcompose:viewcompose-animation-core:0.1.0-alpha04
+minimal_usage_sample_id: module.animation-core-dependency
+---
+
 # Animation Core
 
 `viewcompose-animation-core` is the platform-neutral timing and physical-motion engine for
@@ -8,6 +29,7 @@ composition dependency.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="animation-core-module-dependency" sample_id="module.animation-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha04")
@@ -38,6 +60,7 @@ dependencies {
 - `infiniteRepeatable`: duration-based cycles until cancellation; and
 - `exponentialDecay`: target-free velocity decay with a friction multiplier and safety guard.
 
+{/* compiled-region source="viewcompose-animation-core/src/test/samples/com/viewcompose/animation/core/samples/AnimationCoreSamples.kt" region="animation-core-specifications" sample_id="module.animation-core-specifications" build_target=":viewcompose-animation-core:compileTestKotlin" */}
 ```kotlin
 val motion = repeatable(
     iterations = 2,
@@ -96,6 +119,7 @@ evaluates immutable `AnimationState<T, V>` values at explicit nanosecond play ti
 clock or mutable ownership and is the preferred primitive for seeking, tests, transition channels,
 renderer adapters, and preview tooling:
 
+{/* compiled-region source="viewcompose-animation-core/src/test/samples/com/viewcompose/animation/core/samples/AnimationCoreSamples.kt" region="animation-core-sampling" sample_id="module.animation-core-sampling" build_target=":viewcompose-animation-core:compileTestKotlin" */}
 ```kotlin
 val animation = TargetAnimation(
     initialValue = 20f,
@@ -127,6 +151,7 @@ Separating domains preserves fractional integer velocity and signed alpha/red/gr
 Integer reconstruction truncates toward zero. ARGB values interpolate encoded channels and are not
 gamma-correct or color-space aware.
 
+{/* compiled-region source="viewcompose-animation-core/src/test/samples/com/viewcompose/animation/core/samples/AnimationCoreSamples.kt" region="animation-core-converter" sample_id="module.animation-core-converter" build_target=":viewcompose-animation-core:compileTestKotlin" */}
 ```kotlin
 data class Point(val x: Float, val y: Float)
 

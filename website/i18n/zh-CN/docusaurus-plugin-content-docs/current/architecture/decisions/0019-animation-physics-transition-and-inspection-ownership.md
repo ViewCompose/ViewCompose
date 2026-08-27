@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0019-animation-physics-transition-and-inspection-ownership.md
-translation_source_hash: 5fe846c1c738b31df715d454840ee679894ce13c6bc141adb6541d9f89ee71cb
+translation_source_hash: 177c9792d082a3a87862adb4c8e1389b1943386d1eefbc522bd14b9736ef3563
 translation_status: current
 ---
 
@@ -70,6 +70,7 @@ Domain Value 分配对象，但不得迫使 Endpoint 或 Scratch Array 每帧分
 
 结果模型为：
 
+{/* non-executable sample_id="architecture.animation-provisional-result-model" reason="This accepted ADR preserves the superseded provisional single-domain result vocabulary for decision history." visible_explanation="ADR-0020 replaces these provisional generics; use the current API reference for copy-ready declarations." */}
 ```kotlin
 enum class AnimationEndReason {
     Finished,

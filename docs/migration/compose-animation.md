@@ -1,3 +1,22 @@
+---
+schema_version: 2
+document_id: migration.compose-animation
+doc_type: migration
+owner:
+  kind: capability
+  id: animation.composition-motion
+version_lane: released
+capability_ids:
+  - animation.composition-motion
+artifact_ids:
+  - viewcompose-animation-core
+  - viewcompose-animation
+sample_ids:
+  - migration.compose-animation-legacy-spring
+source_state: Compose Animation 1.12.0 semantics and the removed ViewCompose nominal-duration spring signature.
+target_state: ViewCompose Animation 0.1.0-alpha04 physical, state, content, and layout-motion contracts.
+---
+
 # Migrate Compose animation
 
 This page compares Jetpack Compose Animation with the current ViewCompose animation line and the
@@ -61,6 +80,7 @@ implemented, documented in the owning module, and released.
 
 The pre-Phase-1 API accepted a nominal duration:
 
+{/* non-executable sample_id="migration.compose-animation-legacy-spring" reason="The removed durationMillis spring overload cannot compile against the current released animation artifacts." visible_explanation="This historical source shows the signature being migrated; do not copy it into current code." */}
 ```kotlin
 spring(
     dampingRatio = 0.8f,

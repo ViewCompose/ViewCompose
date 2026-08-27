@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0020-separate-animation-value-and-velocity-domains.md
-translation_source_hash: a05d94f45608bc3b743d4138c233afd82a2a931b2c9c92bc6bb1e02f175372f6
+translation_source_hash: 217b42d858749f7926aaaf3a1bbb66b33f79123c59b0bb5f70e3ef2223aff834
 translation_status: current
 ---
 
@@ -28,6 +28,7 @@ Phase 1 尚未发布，因此保留这套临时单类型 API 会把已知无效�
 
 动画值和速度使用相互独立的泛型值域：
 
+{/* non-executable sample_id="architecture.animation-value-velocity-model" reason="This decision excerpt defines the type relationship but omits package context and implementation bodies." visible_explanation="Treat this fence as architectural type vocabulary; use versioned API reference for copy-ready signatures." */}
 ```kotlin
 interface AnimationConverter<T, V> {
     val vectorSize: Int
