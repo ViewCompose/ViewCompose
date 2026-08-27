@@ -1,3 +1,23 @@
+---
+schema_version: 2
+document_id: module.viewcompose-graphics
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-graphics
+version_lane: released
+capability_ids:
+  - graphics.custom-drawing
+artifact_ids:
+  - viewcompose-graphics
+sample_ids:
+  - module.graphics-dependency
+  - module.graphics-canvas
+  - module.graphics-cache
+coordinate: com.viewcompose:viewcompose-graphics:0.1.0-alpha04
+minimal_usage_sample_id: module.graphics-dependency
+---
+
 # Graphics
 
 `viewcompose-graphics` exposes ViewCompose custom drawing to the UI tree. It provides a dedicated
@@ -6,6 +26,7 @@ aliases for the platform-neutral graphics contracts. Android execution is suppli
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="graphics-module-dependency" sample_id="module.graphics-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha04")
@@ -27,6 +48,7 @@ allocation-light and never perform blocking I/O or launch per-frame work.
 `DrawContext.size` is measured in physical pixels and `density` is pixels per dp. A `Canvas` node has
 no intrinsic size derived from its commands; parent constraints or layout modifiers must size it.
 
+{/* compiled-region source="viewcompose-graphics/src/test/samples/com/viewcompose/graphics/samples/GraphicsSamples.kt" region="graphics-canvas" sample_id="module.graphics-canvas" build_target=":viewcompose-graphics:compileDebugUnitTestKotlin" */}
 ```kotlin
 Canvas(modifier = Modifier.fillMaxWidth().height(120.dp)) { context ->
     drawCircle(
@@ -54,6 +76,7 @@ the element; the inner `cache(key) { ... }` key controls command reuse. Include 
 change the result, especially physical size, density, theme tokens, resource identity, and layout
 direction.
 
+{/* compiled-region source="viewcompose-graphics/src/test/samples/com/viewcompose/graphics/samples/GraphicsSamples.kt" region="graphics-cache" sample_id="module.graphics-cache" build_target=":viewcompose-graphics:compileDebugUnitTestKotlin" */}
 ```kotlin
 val modifier = Modifier.drawWithCache { context ->
     cache(key = context.size) {
@@ -110,6 +133,6 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha03` line establishes UI-thread command recording, a no-intrinsic-size Canvas node,
+The `0.1.0-alpha04` line establishes UI-thread command recording, a no-intrinsic-size Canvas node,
 ordered content drawing, explicit single-entry cache keys, Android Canvas replay, and current
 API-level fallbacks. It is an immediate recording model rather than a retained vector scene graph.

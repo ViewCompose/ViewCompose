@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.graphics-core-scene",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "graphics.custom-drawing",
+  "document_ids": ["module.viewcompose-graphics-core"],
+  "version_lane": "released",
+  "source": "viewcompose-graphics-core/src/test/samples/com/viewcompose/graphics/core/samples/GraphicsCoreSamples.kt",
+  "region": "graphics-core-scene",
+  "build_target": ":viewcompose-graphics-core:compileTestKotlin"
+}

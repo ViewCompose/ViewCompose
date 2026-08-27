@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "capability_id": "graphics.custom-drawing",
+  "kind": "dsl",
+  "owner": { "kind": "module", "id": "viewcompose-graphics" },
+  "artifact": "viewcompose-graphics",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.graphics.UiTreeBuilder.Canvas", "kind": "extension", "visibility": "public", "source": "viewcompose-graphics/src/main/java/com/viewcompose/graphics/GraphicsDsl.kt" },
+    { "symbol_id": "com.viewcompose.graphics.Modifier.drawBehind", "kind": "extension", "visibility": "public", "source": "viewcompose-graphics/src/main/java/com/viewcompose/graphics/GraphicsDsl.kt" },
+    { "symbol_id": "com.viewcompose.graphics.Modifier.drawWithContent", "kind": "extension", "visibility": "public", "source": "viewcompose-graphics/src/main/java/com/viewcompose/graphics/GraphicsDsl.kt" },
+    { "symbol_id": "com.viewcompose.graphics.Modifier.drawWithCache", "kind": "extension", "visibility": "public", "source": "viewcompose-graphics/src/main/java/com/viewcompose/graphics/GraphicsDsl.kt" },
+    { "symbol_id": "com.viewcompose.graphics.Modifier.draw", "kind": "extension", "visibility": "public", "source": "viewcompose-graphics/src/main/java/com/viewcompose/graphics/GraphicsDsl.kt" },
+    { "symbol_id": "com.viewcompose.graphics.Modifier.drawCache", "kind": "extension", "visibility": "public", "source": "viewcompose-graphics/src/main/java/com/viewcompose/graphics/GraphicsDsl.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.graphics.custom-drawing", "generated": true },
+  "sample_owner": { "sample_id": "module.graphics-canvas" },
+  "document_owners": {
+    "module": ["module.viewcompose-graphics", "module.viewcompose-graphics-core"]
+  }
+}

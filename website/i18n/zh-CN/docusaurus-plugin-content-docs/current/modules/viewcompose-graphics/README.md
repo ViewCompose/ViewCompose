@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-graphics/README.md
-translation_source_hash: 2a3729ce420573e09911d2f0b97f3257c3ce2c80a6e0f7550314ca603079a185
+translation_source_hash: 828251a36e2b095579e8fb2509ff80b5d5e25cad8fc65ef97438f7035ce1134a
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ Draw-behind 与 Content-aware Modifier、感知缓存的命令构建，以及平
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="graphics-module-dependency" sample_id="module.graphics-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha04")
@@ -32,6 +33,7 @@ Draw Callback 在 Android View 绘制阶段、UI 线程上录制 `DrawCommand`�
 `DrawContext.size` 使用物理像素，`density` 是每 dp 的像素数。`Canvas` 节点不会从 Command 推导
 固有尺寸；Parent Constraint 或 Layout Modifier 必须提供尺寸。
 
+{/* compiled-region source="viewcompose-graphics/src/test/samples/com/viewcompose/graphics/samples/GraphicsSamples.kt" region="graphics-canvas" sample_id="module.graphics-canvas" build_target=":viewcompose-graphics:compileDebugUnitTestKotlin" */}
 ```kotlin
 Canvas(modifier = Modifier.fillMaxWidth().height(120.dp)) { context ->
     drawCircle(
@@ -56,6 +58,7 @@ Canvas(modifier = Modifier.fillMaxWidth().height(120.dp)) { context ->
 内层 `cache(key) { ... }` Key 控制命令复用。Key 必须包含所有可能改变结果的输入，尤其是物理
 Size、Density、Theme Token、Resource Identity 与 Layout Direction。
 
+{/* compiled-region source="viewcompose-graphics/src/test/samples/com/viewcompose/graphics/samples/GraphicsSamples.kt" region="graphics-cache" sample_id="module.graphics-cache" build_target=":viewcompose-graphics:compileDebugUnitTestKotlin" */}
 ```kotlin
 val modifier = Modifier.drawWithCache { context ->
     cache(key = context.size) {
@@ -109,6 +112,6 @@ Origin 使用 Android `Canvas.drawText`，不增加换行或富文本布局。
 
 ## 兼容性说明
 
-`0.1.0-alpha03` 建立 UI 线程命令录制、无固有尺寸 Canvas Node、有序 Content Drawing、显式
+`0.1.0-alpha04` 建立 UI 线程命令录制、无固有尺寸 Canvas Node、有序 Content Drawing、显式
 Single-entry Cache Key、Android Canvas 回放与当前 API Level 回退。它是即时录制模型，不是保留式
 Vector Scene Graph。

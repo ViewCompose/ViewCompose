@@ -1,12 +1,9 @@
 package com.viewcompose.graphics.core.samples
 
 import com.viewcompose.graphics.core.Brush
-import com.viewcompose.graphics.core.ColorStop
 import com.viewcompose.graphics.core.DrawCache
 import com.viewcompose.graphics.core.DrawCommand
 import com.viewcompose.graphics.core.DrawPaint
-import com.viewcompose.graphics.core.Offset
-import com.viewcompose.graphics.core.PathFillType
 import com.viewcompose.graphics.core.Rect
 import com.viewcompose.graphics.core.drawScene
 import com.viewcompose.graphics.core.path
@@ -18,25 +15,24 @@ fun drawCacheSample(): List<DrawCommand> {
     }
 }
 
-fun pathSample() = path {
-    fillType(PathFillType.EvenOdd)
+// DOCS_REGION_START(graphics-core-path)
+val triangle = path {
     moveTo(8f, 8f)
     lineTo(56f, 8f)
     lineTo(32f, 48f)
     close()
 }
+// DOCS_REGION_END(graphics-core-path)
 
-fun drawSceneSample() = drawScene {
-    val gradient = Brush.LinearGradient(
-        from = Offset(0f, 0f),
-        to = Offset(64f, 48f),
-        colorStops = listOf(
-            ColorStop(0f, 0xFF6750A4.toInt()),
-            ColorStop(1f, 0xFFD0BCFF.toInt()),
-        ),
-    )
+fun pathSample() = triangle
+
+// DOCS_REGION_START(graphics-core-scene)
+val badge = drawScene {
     save()
     clipRect(Rect(0f, 0f, 64f, 48f))
-    drawPath(pathSample(), DrawPaint(brush = gradient))
+    drawPath(triangle, DrawPaint(brush = Brush.SolidColor(0xFF6750A4.toInt())))
     restore()
 }
+// DOCS_REGION_END(graphics-core-scene)
+
+fun drawSceneSample() = badge

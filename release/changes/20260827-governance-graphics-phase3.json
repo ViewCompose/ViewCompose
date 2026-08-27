@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register Graphics custom-drawing documentation ownership without changing published artifacts.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-graphics-core",
+      "reason": "Only test-only compiled documentation fixtures gain exact source regions and equivalent sample bindings; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-graphics",
+      "reason": "Only test-only compiled documentation fixtures gain exact source regions and equivalent sample bindings; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

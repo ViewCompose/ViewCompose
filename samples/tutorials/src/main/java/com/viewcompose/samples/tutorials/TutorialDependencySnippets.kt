@@ -59,6 +59,22 @@ dependencies {
     // DOCS_REGION_END(animation-core-module-dependency)
 }
 
+private val graphicsCoreModuleDependency = run {
+    // DOCS_REGION_START(graphics-core-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha02")
+}
+    // DOCS_REGION_END(graphics-core-module-dependency)
+}
+
+private val graphicsModuleDependency = run {
+    // DOCS_REGION_START(graphics-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha04")
+}
+    // DOCS_REGION_END(graphics-module-dependency)
+}
+
 private val hostAndroidModuleDependency = run {
     // DOCS_REGION_START(host-android-module-dependency)
 dependencies {

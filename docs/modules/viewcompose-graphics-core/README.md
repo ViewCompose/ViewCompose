@@ -1,3 +1,23 @@
+---
+schema_version: 2
+document_id: module.viewcompose-graphics-core
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-graphics-core
+version_lane: released
+capability_ids:
+  - graphics.custom-drawing
+artifact_ids:
+  - viewcompose-graphics-core
+sample_ids:
+  - module.graphics-core-dependency
+  - module.graphics-core-path
+  - module.graphics-core-scene
+coordinate: com.viewcompose:viewcompose-graphics-core:0.1.0-alpha02
+minimal_usage_sample_id: module.graphics-core-dependency
+---
+
 # Graphics Core
 
 `viewcompose-graphics-core` is ViewCompose's platform-neutral immediate-graphics model. It defines
@@ -7,6 +27,7 @@ composition dependency.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="graphics-core-module-dependency" sample_id="module.graphics-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha02")
@@ -47,6 +68,7 @@ in a command or cache key; mutation can change equality and hash code after inse
 snapshots commands at `build`, so later builder reuse cannot alter an earlier model. Direct
 `PathModel` construction retains the provided list and should receive an immutable list.
 
+{/* compiled-region source="viewcompose-graphics-core/src/test/samples/com/viewcompose/graphics/core/samples/GraphicsCoreSamples.kt" region="graphics-core-path" sample_id="module.graphics-core-path" build_target=":viewcompose-graphics-core:compileTestKotlin" */}
 ```kotlin
 val triangle = path {
     moveTo(8f, 8f)
@@ -82,6 +104,7 @@ commands. Renderers replay list order exactly. `Save` and `SaveLayer` push state
 `DrawScene` copies its command list and rejects an unmatched restore or remaining save depth.
 Nested scenes validate independently and can be reused under different transforms and clips:
 
+{/* compiled-region source="viewcompose-graphics-core/src/test/samples/com/viewcompose/graphics/core/samples/GraphicsCoreSamples.kt" region="graphics-core-scene" sample_id="module.graphics-core-scene" build_target=":viewcompose-graphics-core:compileTestKotlin" */}
 ```kotlin
 val badge = drawScene {
     save()

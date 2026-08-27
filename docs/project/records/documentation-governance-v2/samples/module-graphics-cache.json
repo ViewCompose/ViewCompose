@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.graphics-cache",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "graphics.custom-drawing",
+  "document_ids": ["module.viewcompose-graphics"],
+  "version_lane": "released",
+  "source": "viewcompose-graphics/src/test/samples/com/viewcompose/graphics/samples/GraphicsSamples.kt",
+  "region": "graphics-cache",
+  "build_target": ":viewcompose-graphics:compileDebugUnitTestKotlin"
+}
