@@ -1,6 +1,25 @@
 ---
+schema_version: 2
+document_id: project.publishing
+doc_type: project
+owner:
+  kind: project
+  id: publishing
+version_lane: released
+capability_ids: []
+artifact_ids: []
+sample_ids:
+  - project.publishing-material-entry
+  - project.publishing-feature-entries
+  - project.publishing-core-entries
+workflow: 定义独立 Maven 产物规划、准备、验证、Central 发布、来源 Tag 与 Android Studio 插件发版操作。
+validation:
+  - ./gradlew verifyViewComposePublishingConfiguration verifyViewComposeReleaseIntent
+  - ./gradlew verifyViewComposePublishedConsumption
+  - cd tools/viewcompose-studio-plugin && ./gradlew prepareMarketplaceRelease
+lifecycle: 产物身份、发布规划、依赖暴露、签名、远端发布、来源或 Marketplace 操作发生变化时同步更新。
 translation_source: project/publishing.md
-translation_source_hash: 222f324c5012acf09d2ba6f3290df15b0ca4741651ce0349457b222ba2670900
+translation_source_hash: a3d3130f1e735935896c8279b5d9392c64b0be6098cf4c4025625b64eb49c035
 translation_status: current
 ---
 
@@ -246,6 +265,7 @@ GitHub `blob` 链接。带 fragment 的跨页面链接使用权威英文站点�
 产物负责暴露其公开 API 所需的 ViewCompose 类型。因此最小 Android 应用只需要一个 ViewCompose
 坐标：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/PublishingDependencyContractSamples.kt" region="project-publishing-material-entry" sample_id="project.publishing-material-entry" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-material3-android:<version-with-this-contract>")
@@ -260,6 +280,7 @@ dependencies {
 
 Feature 产物会暴露编译其公开 API 所需的全部 ViewCompose 模块，包括平台无关 Core：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/PublishingDependencyContractSamples.kt" region="project-publishing-feature-entries" sample_id="project.publishing-feature-entries" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
@@ -271,6 +292,7 @@ dependencies {
 
 core 制品也可由 Kotlin/JVM 模块独立使用：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/PublishingDependencyContractSamples.kt" region="project-publishing-core-entries" sample_id="project.publishing-core-entries" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03")

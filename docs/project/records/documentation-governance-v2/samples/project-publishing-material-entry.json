@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "project.publishing-material-entry",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "project.publishing",
+  "document_ids": [
+    "project.publishing"
+  ],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/PublishingDependencyContractSamples.kt",
+  "region": "project-publishing-material-entry",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}
