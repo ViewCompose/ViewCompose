@@ -25,7 +25,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
-/** Enforces the Governance V2 no-new-debt ratchet and writes its deterministic audit reports. */
+/** Enforces the zero-exception Governance V2 strict gate and writes deterministic audit reports. */
 abstract class VerifyDocumentationGovernanceV2Task : DefaultTask() {
     @get:Internal
     abstract val repositoryDirectory: DirectoryProperty
@@ -75,7 +75,7 @@ abstract class VerifyDocumentationGovernanceV2Task : DefaultTask() {
     @TaskAction
     fun verify() {
         val repository = repositoryDirectory.get().asFile
-        val mutationAudit = DocumentationGovernanceV2GitRatchet.inspect(
+        val mutationAudit = DocumentationGovernanceV2GitPolicy.inspect(
             repository = repository,
             explicitBaseRevision = baseRevision.orNull,
         )
@@ -89,7 +89,7 @@ abstract class VerifyDocumentationGovernanceV2Task : DefaultTask() {
             publishingFiles = publishingFiles.files,
             documentationPolicyFiles = documentationPolicyFiles.files,
             committedReferenceFile = committedReferenceFile.get().asFile,
-            ratchetContext = DocumentationGovernanceV2RatchetContext(
+            verificationContext = DocumentationGovernanceV2VerificationContext(
                 verificationBase = mutationAudit.verificationBase,
                 mutationViolations = mutationAudit.violations,
                 addedImpactPaths = mutationAudit.addedImpactPaths,
@@ -104,7 +104,7 @@ abstract class VerifyDocumentationGovernanceV2Task : DefaultTask() {
             parentFile.mkdirs()
             writeText(result.humanReport)
         }
-        if (result.contractViolations.isNotEmpty() || result.ratchetViolations.isNotEmpty()) {
+        if (result.contractViolations.isNotEmpty() || result.strictViolations.isNotEmpty()) {
             throw GradleException(
                 buildString {
                     if (result.contractViolations.isNotEmpty()) {
@@ -113,10 +113,10 @@ abstract class VerifyDocumentationGovernanceV2Task : DefaultTask() {
                             appendLine("- $violation")
                         }
                     }
-                    if (result.ratchetViolations.isNotEmpty()) {
+                    if (result.strictViolations.isNotEmpty()) {
                         if (isNotEmpty()) appendLine()
-                        appendLine("Documentation Governance V2 no-new-debt ratchet failed:")
-                        result.ratchetViolations.sorted().forEach { violation ->
+                        appendLine("Documentation Governance V2 strict gate failed:")
+                        result.strictViolations.sorted().forEach { violation ->
                             appendLine("- $violation")
                         }
                     }
@@ -124,9 +124,8 @@ abstract class VerifyDocumentationGovernanceV2Task : DefaultTask() {
             )
         }
         logger.lifecycle(
-            "Documentation Governance V2 verified against {}: {} issue(s), all within the exact baseline. Report: {}.",
+            "Documentation Governance V2 strict gate verified against {}: zero issue(s). Report: {}.",
             mutationAudit.verificationBase,
-            result.issueCount,
             reportFile.get().asFile,
         )
     }
@@ -180,10 +179,11 @@ abstract class UpdateDocumentationCapabilityReferenceTask : DefaultTask() {
             publishingFiles = publishingFiles.files,
             documentationPolicyFiles = documentationPolicyFiles.files,
         )
-        if (result.contractViolations.isNotEmpty()) {
+        if (result.contractViolations.isNotEmpty() || result.strictViolations.isNotEmpty()) {
+            val violations = (result.contractViolations + result.strictViolations).distinct().sorted()
             throw GradleException(
-                "Cannot update the capability Reference while Governance V2 contracts are invalid:\n" +
-                    result.contractViolations.sorted().joinToString("\n") { violation ->
+                "Cannot update the capability Reference while the Governance V2 strict gate is invalid:\n" +
+                    violations.joinToString("\n") { violation ->
                         "- $violation"
                     },
             )
@@ -206,11 +206,11 @@ internal data class DocumentationGovernanceV2ReportResult(
     val referenceCatalog: String,
     val referenceEntryCount: Int,
     val contractViolations: List<String>,
-    val ratchetViolations: List<String>,
+    val strictViolations: List<String>,
     val issueCount: Int,
 )
 
-internal data class DocumentationGovernanceV2RatchetContext(
+internal data class DocumentationGovernanceV2VerificationContext(
     val verificationBase: String? = null,
     val mutationViolations: List<String> = emptyList(),
     val addedImpactPaths: Set<String> = emptySet(),
@@ -250,8 +250,8 @@ internal object DocumentationGovernanceV2Reporter {
         publishingFiles: Set<File>,
         documentationPolicyFiles: Set<File>,
         committedReferenceFile: File? = null,
-        ratchetContext: DocumentationGovernanceV2RatchetContext =
-            DocumentationGovernanceV2RatchetContext(),
+        verificationContext: DocumentationGovernanceV2VerificationContext =
+            DocumentationGovernanceV2VerificationContext(),
     ): DocumentationGovernanceV2ReportResult {
         val canonicalRepository = repository.canonicalFile
         val manifestFile = contractFiles.singleOrNull { it.name == "contract-set.json" }
@@ -328,7 +328,7 @@ internal object DocumentationGovernanceV2Reporter {
         val encodedReferenceCatalog = StableJson.encode(referenceCatalog) + "\n"
         val publicApiChanges = DocumentationGovernanceV2PublicApiChanges.detect(
             baseDeclarations = discoverCapabilityDeclarations(
-                sourceFiles = ratchetContext.changedSourceFiles.mapNotNull { change ->
+                sourceFiles = verificationContext.changedSourceFiles.mapNotNull { change ->
                     change.baseSource?.let { source ->
                         GovernanceSourceFile(change.basePath.orEmpty(), source)
                     }
@@ -337,7 +337,7 @@ internal object DocumentationGovernanceV2Reporter {
                 moduleFamilies = moduleFamilies,
             ),
             currentDeclarations = discoverCapabilityDeclarations(
-                sourceFiles = ratchetContext.changedSourceFiles.mapNotNull { change ->
+                sourceFiles = verificationContext.changedSourceFiles.mapNotNull { change ->
                     change.currentSource?.let { source ->
                         GovernanceSourceFile(change.currentPath.orEmpty(), source)
                     }
@@ -349,7 +349,7 @@ internal object DocumentationGovernanceV2Reporter {
         )
         val publicApiImpactViolations = DocumentationGovernanceV2PublicApiChanges.verifyImpacts(
             changes = publicApiChanges,
-            addedImpactPaths = ratchetContext.addedImpactPaths,
+            addedImpactPaths = verificationContext.addedImpactPaths,
             records = records,
         )
         val issues = buildIssues(
@@ -361,25 +361,19 @@ internal object DocumentationGovernanceV2Reporter {
             committedReferenceFile = committedReferenceFile,
             encodedReferenceCatalog = encodedReferenceCatalog,
         )
-        val baseline = correlateDebtBaseline(issues, records)
-        val ratchetViolations = (
-            ratchetViolations(
-                issues = issues,
-                records = records,
-                baseline = baseline,
-            ) + ratchetContext.mutationViolations + publicApiImpactViolations
+        val strictViolations = (
+            strictViolations(issues = issues, records = records) +
+                verificationContext.mutationViolations +
+                publicApiImpactViolations
         ).distinct().sorted()
-        val reportIssues = issues.map { issue ->
-            val matchingBaseline = baseline.matches[issue.baselineKey]
-            issue.toReportMap(matchingBaseline?.exceptionId)
-        }
+        val reportIssues = issues.map(GovernanceIssue::toReportMap)
         val issueCounts = issueCategories.associateWith { category ->
             issues.count { issue -> issue.category == category }
         }
 
         val report = linkedMapOf<String, Any?>(
             "schemaVersion" to 1,
-            "mode" to "no-new-debt",
+            "mode" to "strict",
             "contractRoot" to contractRootPath,
             "recordRoot" to recordRootPath,
             "fixtureValidation" to fixtureReports,
@@ -400,17 +394,16 @@ internal object DocumentationGovernanceV2Reporter {
                 "publishing" to publishing,
                 "referenceCatalog" to referenceCatalog.getValue("summary"),
             ),
-            "debtBaseline" to baseline.report(),
             "gate" to linkedMapOf(
-                "status" to if (ratchetViolations.isEmpty() && contractViolations.isEmpty()) "passed" else "failed",
-                "verificationBase" to ratchetContext.verificationBase,
+                "status" to if (strictViolations.isEmpty() && contractViolations.isEmpty()) "passed" else "failed",
+                "verificationBase" to verificationContext.verificationBase,
                 "contractViolationCount" to contractViolations.size,
-                "ratchetViolationCount" to ratchetViolations.size,
+                "strictViolationCount" to strictViolations.size,
                 "contractViolations" to contractViolations.sorted(),
-                "ratchetViolations" to ratchetViolations,
+                "strictViolations" to strictViolations,
             ),
             "summary" to linkedMapOf(
-                "blockingViolationCount" to (contractViolations.size + ratchetViolations.size),
+                "blockingViolationCount" to (contractViolations.size + strictViolations.size),
                 "contractCount" to contracts.size,
                 "contractViolationCount" to contractViolations.size,
                 "declarationCount" to declarations.size,
@@ -420,7 +413,6 @@ internal object DocumentationGovernanceV2Reporter {
                 "recordCount" to records.size,
                 "publicApiChangeCount" to publicApiChanges.size,
                 "issueCount" to issues.size,
-                "unbaselinedIssueCount" to baseline.unbaselinedIssueCount,
                 "issueCounts" to issueCounts,
             ),
             "issues" to reportIssues,
@@ -429,18 +421,17 @@ internal object DocumentationGovernanceV2Reporter {
             report = StableJson.encode(report) + "\n",
             humanReport = humanReport(
                 issues = issues,
-                baseline = baseline,
                 declarationCount = declarations.size,
                 documentCount = documents.size,
                 fenceCount = fences.size,
                 publicApiChanges = publicApiChanges,
                 contractViolations = contractViolations.sorted(),
-                ratchetViolations = ratchetViolations,
+                strictViolations = strictViolations,
             ),
             referenceCatalog = encodedReferenceCatalog,
             referenceEntryCount = declarations.size,
             contractViolations = contractViolations.sorted(),
-            ratchetViolations = ratchetViolations,
+            strictViolations = strictViolations,
             issueCount = issues.size,
         )
     }
@@ -504,19 +495,16 @@ internal object DocumentationGovernanceV2Reporter {
                 }
             }
             fences.filterNot { fence -> fence.getValue("registered") as Boolean }.forEach { fence ->
-                val path = fence.getValue("path").toString()
                 add(
                     GovernanceIssue.file(
                         category = "unclassified-sample",
                         target = "${fence.getValue("path")}:${fence.getValue("line")}",
-                        baselineTarget = path,
                         identitySuffix = fence.getValue("stableFenceIdentity").toString(),
                         detail = "executable fence has no adjacent compiled-sample registration marker",
                     ),
                 )
             }
             fences.forEach { fence ->
-                val path = fence.getValue("path").toString()
                 @Suppress("UNCHECKED_CAST")
                 val violations = fence["classificationViolations"] as? List<String> ?: emptyList()
                 if (violations.isNotEmpty()) {
@@ -524,7 +512,6 @@ internal object DocumentationGovernanceV2Reporter {
                         GovernanceIssue.file(
                             category = "taxonomy-mismatch",
                             target = "${fence.getValue("path")}:${fence.getValue("line")}",
-                            baselineTarget = path,
                             identitySuffix =
                                 "sample-contract|${fence.getValue("stableFenceIdentity")}",
                             detail = violations.joinToString("; "),
@@ -541,7 +528,6 @@ internal object DocumentationGovernanceV2Reporter {
                         GovernanceIssue.file(
                             category = "taxonomy-mismatch",
                             target = "${mirror?.get("path")}:${mirror?.get("line")}",
-                            baselineTarget = path,
                             identitySuffix =
                                 "mirror-sample-contract|${fence.getValue("stableFenceIdentity")}",
                             detail = mirrorViolations.joinToString("; "),
@@ -550,7 +536,6 @@ internal object DocumentationGovernanceV2Reporter {
                 }
             }
             fences.forEach { fence ->
-                val path = fence.getValue("path").toString()
                 @Suppress("UNCHECKED_CAST")
                 val mirror = fence["languageMirror"] as? Map<String, Any?>
                 when {
@@ -558,7 +543,6 @@ internal object DocumentationGovernanceV2Reporter {
                         GovernanceIssue.file(
                             category = "taxonomy-mismatch",
                             target = "${fence.getValue("path")}:${fence.getValue("line")}",
-                            baselineTarget = path,
                             identitySuffix = "missing-mirror|${fence.getValue("stableFenceIdentity")}",
                             detail = "executable fence has no corresponding locale-mirror fence",
                         ),
@@ -567,7 +551,6 @@ internal object DocumentationGovernanceV2Reporter {
                         GovernanceIssue.file(
                             category = "taxonomy-mismatch",
                             target = "${fence.getValue("path")}:${fence.getValue("line")}",
-                            baselineTarget = path,
                             identitySuffix = "mirror-content|${fence.getValue("stableFenceIdentity")}",
                             detail = "canonical and locale-mirror executable fence content differs",
                         ),
@@ -576,7 +559,6 @@ internal object DocumentationGovernanceV2Reporter {
                         GovernanceIssue.file(
                             category = "taxonomy-mismatch",
                             target = "${fence.getValue("path")}:${fence.getValue("line")}",
-                            baselineTarget = path,
                             identitySuffix = "mirror-marker|${fence.getValue("stableFenceIdentity")}",
                             detail = "canonical and locale-mirror source markers differ",
                         ),
@@ -609,12 +591,10 @@ internal object DocumentationGovernanceV2Reporter {
                 val symbol = declaration.getValue("symbol").toString()
                 if (symbol !in capabilityOwnersBySymbol) {
                     @Suppress("UNCHECKED_CAST")
-                    val locations = declaration.getValue("locations") as List<Map<String, Any?>>
                     add(
                         GovernanceIssue.symbol(
                             category = "orphan-symbol",
                             target = symbol,
-                            baselineFile = locations.first().getValue("path").toString(),
                             detail = "public production entry has no Governance V2 capability owner",
                         ),
                     )
@@ -766,9 +746,6 @@ internal object DocumentationGovernanceV2Reporter {
                             "sampleClass" to sampleRecord.value["sample_class"],
                             "sampleId" to sampleId,
                             "versionLane" to sampleRecord.value["version_lane"],
-                        )
-                        sampleOwner["exception_id"] != null -> linkedMapOf<String, Any?>(
-                            "exceptionId" to sampleOwner.getValue("exception_id"),
                         )
                         else -> null
                     }
@@ -1838,136 +1815,55 @@ internal object DocumentationGovernanceV2Reporter {
         }
     }.distinctBy(StableJson::encode).sortedBy(StableJson::encode)
 
-    private fun correlateDebtBaseline(
+    private fun strictViolations(
         issues: List<GovernanceIssue>,
         records: List<GovernanceRecord>,
-    ): DebtBaselineResult {
-        val issueGroups = issues.groupBy(GovernanceIssue::baselineKey)
-        val exceptionRecords = records.filter { record -> record.contractId == "exception" && record.valid }
-        val matches = mutableMapOf<String, DebtBaselineMatch>()
-        val entries = exceptionRecords.map { record ->
-            val target = record.value.objectValue("target").orEmpty()
-            val targetKind = if ("file" in target) "file" else "symbol"
-            val targetValue = target[targetKind]?.toString().orEmpty()
-            val category = record.value.requiredString("category")
-            val key = GovernanceIssue.baselineKey(category, targetKind, targetValue)
-            val actualCount = issueGroups[key].orEmpty().size
-            val expectedCount = record.value["violation_count"].asIntegerOrNull() ?: 0
-            val status = when {
-                actualCount == expectedCount -> "exact"
-                actualCount == 0 -> "stale"
-                actualCount < expectedCount -> "reduced"
-                else -> "broadened"
-            }
-            val match = DebtBaselineMatch(
-                exceptionId = record.recordId.orEmpty(),
-                key = key,
-                expectedCount = expectedCount,
-                actualCount = actualCount,
-                status = status,
-                path = record.path,
-            )
-            matches.putIfAbsent(key, match)
-            match
-        }.sortedBy(DebtBaselineMatch::exceptionId)
-        val unbaselined = issues.count { issue -> issue.baselineKey !in matches }
-        return DebtBaselineResult(entries, matches, unbaselined)
-    }
-
-    private fun ratchetViolations(
-        issues: List<GovernanceIssue>,
-        records: List<GovernanceRecord>,
-        baseline: DebtBaselineResult,
     ): List<String> = buildList {
-        val exceptionRecords = records.filter { record -> record.contractId == "exception" }
-        exceptionRecords.groupBy(GovernanceRecord::recordId)
-            .filterKeys { recordId -> !recordId.isNullOrBlank() }
-            .filterValues { matching -> matching.size > 1 }
-            .forEach { (recordId, matching) ->
-                add(
-                    "exception id $recordId is duplicated by " +
-                        matching.map(GovernanceRecord::path).sorted().joinToString(),
-                )
-            }
-        exceptionRecords.filter(GovernanceRecord::valid)
-            .groupBy { record ->
-                val target = record.value.objectValue("target").orEmpty()
-                val targetKind = if ("file" in target) "file" else "symbol"
-                GovernanceIssue.baselineKey(
-                    category = record.value.requiredString("category"),
-                    targetKind = targetKind,
-                    target = target[targetKind]?.toString().orEmpty(),
-                )
-            }
-            .filterValues { matching -> matching.size > 1 }
-            .forEach { (key, matching) ->
-                add(
-                    "baseline target ${key.replace('\u0000', '|')} is duplicated by " +
-                        matching.mapNotNull(GovernanceRecord::recordId).sorted().joinToString(),
-                )
-            }
-        issues.filter { issue -> issue.baselineKey !in baseline.matches }.forEach { issue ->
-            add("${issue.id} is unbaselined: ${issue.target} (${issue.category})")
-        }
-        baseline.entries.filterNot { entry -> entry.status == "exact" }.forEach { entry ->
-            val action = when (entry.status) {
-                "stale" -> "delete the resolved exception"
-                "reduced" -> "lower violation_count to ${entry.actualCount} or finish and delete the exception"
-                else -> "repair the added debt; increasing violation_count is forbidden"
-            }
+        records.filter { record -> record.contractId == "exception" }.forEach { record ->
             add(
-                "${entry.exceptionId} is ${entry.status}: expected ${entry.expectedCount}, " +
-                    "actual ${entry.actualCount}; $action",
+                "${record.path} is a forbidden debt exception; strict mode requires zero exception records",
             )
+        }
+        issues.forEach { issue ->
+            add("${issue.id} is blocking: ${issue.target} (${issue.category})")
         }
     }.distinct().sorted()
 
     private fun humanReport(
         issues: List<GovernanceIssue>,
-        baseline: DebtBaselineResult,
         declarationCount: Int,
         documentCount: Int,
         fenceCount: Int,
         publicApiChanges: List<DocumentationGovernanceV2PublicApiChange>,
         contractViolations: List<String>,
-        ratchetViolations: List<String>,
+        strictViolations: List<String>,
     ): String = buildString {
-        appendLine("Documentation Governance V2 — Phase 2 no-new-debt gate")
+        appendLine("Documentation Governance V2 — strict gate")
         appendLine("Inventory: $declarationCount production entries; $documentCount public pages; $fenceCount executable fences")
         appendLine("Public API changes: ${publicApiChanges.size}")
         publicApiChanges.forEach { change ->
             val previous = change.previousSymbol?.let { symbol -> " (from $symbol)" }.orEmpty()
             appendLine("- ${change.change} ${change.artifact}:${change.symbol}$previous")
         }
-        appendLine("Issues: ${issues.size}; baseline entries: ${baseline.entries.size}; unbaselined: ${baseline.unbaselinedIssueCount}")
-        val blockingViolationCount = contractViolations.size + ratchetViolations.size
+        appendLine("Issues: ${issues.size}; exception records: 0 required")
+        val blockingViolationCount = contractViolations.size + strictViolations.size
         appendLine("Gate: ${if (blockingViolationCount == 0) "passed" else "failed"}; violations: $blockingViolationCount")
         if (contractViolations.isNotEmpty()) {
             appendLine()
             appendLine("[contract-violations] ${contractViolations.size}")
             contractViolations.forEach { violation -> appendLine("- $violation") }
         }
-        if (ratchetViolations.isNotEmpty()) {
+        if (strictViolations.isNotEmpty()) {
             appendLine()
-            appendLine("[ratchet-violations] ${ratchetViolations.size}")
-            ratchetViolations.forEach { violation -> appendLine("- $violation") }
+            appendLine("[strict-violations] ${strictViolations.size}")
+            strictViolations.forEach { violation -> appendLine("- $violation") }
         }
         issueCategories.forEach { category ->
             val matching = issues.filter { issue -> issue.category == category }
             appendLine()
             appendLine("[$category] ${matching.size}")
             matching.forEach { issue ->
-                val baselineId = baseline.matches[issue.baselineKey]?.exceptionId ?: "unbaselined"
-                appendLine("- ${issue.id} [$baselineId] ${issue.target}: ${issue.detail}")
-            }
-        }
-        if (baseline.entries.isNotEmpty()) {
-            appendLine()
-            appendLine("[baseline-status] ${baseline.entries.size}")
-            baseline.entries.forEach { entry ->
-                appendLine(
-                    "- ${entry.exceptionId} ${entry.status}: expected ${entry.expectedCount}, actual ${entry.actualCount} (${entry.path})",
-                )
+                appendLine("- ${issue.id} ${issue.target}: ${issue.detail}")
             }
         }
     }
@@ -2197,9 +2093,6 @@ internal object DocumentationGovernanceV2PublicApiChanges {
         val samples = records.filter { record ->
             record.contractId == "sample" && record.valid
         }.associateBy(GovernanceRecord::recordId)
-        val exceptions = records.filter { record ->
-            record.contractId == "exception" && record.valid
-        }.mapNotNull(GovernanceRecord::recordId).toSet()
         return buildList {
             changes.forEach { change ->
                 val matching = impacts.filter { impact -> impact.matches(change) }
@@ -2233,15 +2126,12 @@ internal object DocumentationGovernanceV2PublicApiChanges {
                 @Suppress("UNCHECKED_CAST")
                 val sampleOwner = owner.value["sample_owner"] as? Map<String, Any?>
                 val sampleId = sampleOwner?.get("sample_id")?.toString()
-                val exceptionId = sampleOwner?.get("exception_id")?.toString()
                 when {
                     sampleId != null && sampleId !in samples ->
                         add("${owner.path} references missing valid sample '$sampleId'")
                     sampleId != null &&
                         samples.getValue(sampleId).value["capability_id"]?.toString() != capabilityId ->
                         add("${owner.path} sample '$sampleId' belongs to a different capability")
-                    exceptionId != null && exceptionId !in exceptions ->
-                        add("${owner.path} references missing valid exception '$exceptionId'")
                 }
             }
             impacts.forEach { impact ->
@@ -2287,7 +2177,7 @@ internal fun interface DocumentationGovernanceV2GitCommandExecutor {
     fun execute(arguments: List<String>): DocumentationGovernanceV2GitCommandResult
 }
 
-internal object DocumentationGovernanceV2GitRatchet {
+internal object DocumentationGovernanceV2GitPolicy {
     private const val exceptionRoot =
         "docs/project/records/documentation-governance-v2/exceptions"
     private const val impactRoot =
@@ -2331,10 +2221,8 @@ internal object DocumentationGovernanceV2GitRatchet {
         val violations = exceptionChanges.distinct().sortedBy { change -> change.displayPath }.mapNotNull { change ->
             when (change.status) {
                 'D' -> null
-                'A' -> "${change.displayPath} adds a debt exception; the frozen baseline cannot grow or re-add a removed id"
-                'M' -> verifyReducedException(repository, git, base, change.displayPath)
-                'R', 'C' -> "${change.displayPath} renames or copies a debt exception; baseline identity is immutable"
-                else -> "${change.displayPath} has unsupported debt-baseline status ${change.status}"
+                else ->
+                    "${change.displayPath} retains or introduces a debt exception; strict mode only permits deletion"
             }
         }.toMutableList()
         val impactChanges = changes.filter { change ->
@@ -2379,32 +2267,6 @@ internal object DocumentationGovernanceV2GitRatchet {
             'D' -> GitFileChange(status, paths.singleOrNull(), null)
             else -> GitFileChange(status, paths.singleOrNull(), paths.singleOrNull())
         }
-    }
-
-    private fun verifyReducedException(
-        repository: File,
-        git: GitCommands,
-        base: String,
-        path: String,
-    ): String? = runCatching {
-        val previous = JsonSlurper().parseText(git.execute("show", "$base:$path")).asObject()
-            ?: error("base content is not a JSON object")
-        val current = repository.resolve(path).parseJsonObject()
-        val previousCount = previous["violation_count"].asIntegerOrNull()
-            ?: error("base violation_count is missing")
-        val currentCount = current["violation_count"].asIntegerOrNull()
-            ?: error("current violation_count is missing")
-        val previousIdentity = previous - "violation_count"
-        val currentIdentity = current - "violation_count"
-        when {
-            previousIdentity != currentIdentity ->
-                "$path changes immutable exception identity or rationale; only a lower violation_count is allowed"
-            currentCount >= previousCount ->
-                "$path changes violation_count from $previousCount to $currentCount; it must decrease"
-            else -> null
-        }
-    }.getOrElse { failure ->
-        "$path cannot be validated as a monotonic exception reduction: ${failure.message}"
     }
 
     private fun processExecutor(repository: File) = DocumentationGovernanceV2GitCommandExecutor { arguments ->
@@ -2580,13 +2442,8 @@ private data class GovernanceIssue(
     val category: String,
     val target: String,
     val detail: String,
-    val baselineTargetKind: String,
-    val baselineTarget: String,
-    val baselineKey: String,
 ) {
-    fun toReportMap(baselineExceptionId: String?): Map<String, Any?> = linkedMapOf(
-        "baselineExceptionId" to baselineExceptionId,
-        "baselineTarget" to linkedMapOf(baselineTargetKind to baselineTarget),
+    fun toReportMap(): Map<String, Any?> = linkedMapOf(
         "category" to category,
         "detail" to detail,
         "id" to id,
@@ -2598,75 +2455,28 @@ private data class GovernanceIssue(
             category: String,
             target: String,
             detail: String,
-            baselineTarget: String = target,
             identitySuffix: String = target,
-        ): GovernanceIssue = create(category, target, detail, "file", baselineTarget, identitySuffix)
+        ): GovernanceIssue = create(category, target, detail, identitySuffix)
 
         fun symbol(
             category: String,
             target: String,
             detail: String,
             identitySuffix: String = target,
-            baselineFile: String? = null,
-        ): GovernanceIssue = create(
-            category,
-            target,
-            detail,
-            if (baselineFile == null) "symbol" else "file",
-            baselineFile ?: target,
-            identitySuffix,
-        )
-
-        fun baselineKey(category: String, targetKind: String, target: String): String =
-            "$category\u0000$targetKind\u0000$target"
+        ): GovernanceIssue = create(category, target, detail, identitySuffix)
 
         private fun create(
             category: String,
             target: String,
             detail: String,
-            baselineTargetKind: String,
-            baselineTarget: String,
             identitySuffix: String,
         ): GovernanceIssue = GovernanceIssue(
             id = "gov2-${sha256("$category\u0000$identitySuffix").take(16)}",
             category = category,
             target = target,
             detail = detail,
-            baselineTargetKind = baselineTargetKind,
-            baselineTarget = baselineTarget,
-            baselineKey = baselineKey(category, baselineTargetKind, baselineTarget),
         )
     }
-}
-
-private data class DebtBaselineMatch(
-    val exceptionId: String,
-    val key: String,
-    val expectedCount: Int,
-    val actualCount: Int,
-    val status: String,
-    val path: String,
-) {
-    fun report(): Map<String, Any?> = linkedMapOf(
-        "actualCount" to actualCount,
-        "exceptionId" to exceptionId,
-        "expectedCount" to expectedCount,
-        "path" to path,
-        "status" to status,
-    )
-}
-
-private data class DebtBaselineResult(
-    val entries: List<DebtBaselineMatch>,
-    val matches: Map<String, DebtBaselineMatch>,
-    val unbaselinedIssueCount: Int,
-) {
-    fun report(): Map<String, Any?> = linkedMapOf(
-        "entries" to entries.map(DebtBaselineMatch::report),
-        "entryCount" to entries.size,
-        "exactEntryCount" to entries.count { entry -> entry.status == "exact" },
-        "unbaselinedIssueCount" to unbaselinedIssueCount,
-    )
 }
 
 private enum class KotlinLexicalState {

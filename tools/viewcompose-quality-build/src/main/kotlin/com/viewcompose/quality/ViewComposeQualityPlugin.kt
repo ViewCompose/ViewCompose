@@ -544,7 +544,7 @@ class ViewComposeQualityRootPlugin : Plugin<Project> {
         ) {
             group = "verification"
             description =
-                "Enforces Governance V2 contracts and the exact no-new-debt baseline."
+                "Enforces zero-exception Governance V2 contracts in blocking strict mode."
             repositoryDirectory.set(extension.repositoryDirectory)
             baseRevision.set(
                 project.providers.gradleProperty("viewComposeDocumentationBaseRevision")

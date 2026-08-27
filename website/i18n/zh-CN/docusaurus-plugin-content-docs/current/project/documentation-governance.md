@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: 4cc2861b63f2eee484e2c01932456bbaa2093c6c9520986e60402738f5a943b9
+translation_source_hash: a27f366c7deed632fc1d7ce05d877e0d757619f3c263c106e620edb9d50da508
 translation_status: current
 ---
 
@@ -61,16 +61,16 @@ Jetpack Compose 的事实比较和迁移路径；由可执行 sample 支撑且�
 ## Governance V2 结构化契约
 
 Governance V2 增加稳定标识和机器可读记录。`verifyDocumentationGovernanceV2` 通过
-`verifyDocumentationStructure` 执行冻结的 Phase 2 基线；下文定义所有权、记录和棘轮规则。
+`verifyDocumentationStructure` 执行零 Exception 的 strict gate；下文定义所有权、记录和阻断规则。
 
 ### 能力标识与所有权
 
 每个面向应用的 DSL、Modifier、组件、host、集成或 tooling 入口都按
-`symbol -> capability_id -> artifact/version -> generated Reference -> sample or exception ->`
+`symbol -> capability_id -> artifact/version -> generated Reference -> compiled sample ->`
 适用手写 owner 解析。
 
 能力只能归并代表同一用户决策的 overload/symbol。记录包含种类、owner、唯一制品和版本状态、
-精确 symbol、生成 Reference、sample/exception 及适用文档 owner。移动、弃用和删除同步更新
+精确 symbol、生成 Reference、compiled sample 及适用文档 owner。移动、弃用和删除同步更新
 identity、impact、migration 与 redirect。internal、test、Demo-only、generated 和 renderer-only
 declaration 不进入应用侧目录。
 
@@ -162,20 +162,21 @@ Architecture/Migration/redirect 处置。处置只能是带精确目标的 `upda
 然负有相同的 impact 记录义务，必须由作者/审阅者结合源码文档和发布检查识别；这一机器边界不构成
 `No documentation impact` 豁免。
 
-### Exception 与债务棘轮
+### Strict issue 与禁止 Exception
 
-Exception 必须有稳定 ID、精确 file/symbol、类别、理由、owner、创建日期、移除条件、计数和可选
-过期日；禁止 wildcard 和永久 legacy bucket。当前棘轮阻断未进入基线、扩大、增加、重新加入或
-改变 identity 的债务；只允许精确降计数和删除已解决记录。完成时基线为空，且本地、PR、部署
-strict gate 全部启用。
+所有发现的治理 issue 都会阻断本地、PR 和部署验证。仓库不再保留债务基线、allowlist、降计数
+路径或 capability 到 Exception 的 fallback。门禁只为给出直接的禁止记录诊断而识别 Exception；
+Git 策略只允许删除，拒绝新增、修改、重命名和复制。缺失 compiled sample 或其他 owner 必须在同一
+变更中修复。
 
 ### 契约资产与门禁边界
 
 `docs/project/contracts/` 中的 V2 清单冻结 schema/fixture 与 record/task/report 位置。Document 用
-front matter，其他 record 用复数子目录。Fixture fail closed；Phase 2 执行冻结的精确基线。
+front matter，其他 record 用复数子目录。Fixture fail closed；清单声明阻断 strict mode，报告必须
+同时保持零 issue 和零 Exception 记录。
 
-机器负责 shape/identity、发现/唯一性、source/lane/route 一致性、棘轮/新鲜度；reviewer 负责
-内聚性、目的、证据、exception 可信度与 rationale。机器通过不能覆盖审查。
+机器负责 shape/identity、发现/唯一性、source/lane/route 一致性、strict issue 阻断与新鲜度；
+reviewer 负责内聚性、目的、证据与 rationale。机器通过不能覆盖审查。
 
 ## 框架与模块边界
 
@@ -330,7 +331,7 @@ URL 和真实 UI literal 原样保留；叙述中的外语 literal 用行内代�
 
 | 变更 | 必需文档影响 |
 | --- | --- |
-| 新增/改变 public/protected symbol | 结构化 capability-impact 记录、capability owner、KDoc/Javadoc、模块页、生成 Reference、sample 或精确 exception，以及 Tutorial/Guide/Architecture/Migration/redirect 的显式处置 |
+| 新增/改变 public/protected symbol | 结构化 capability-impact 记录、capability owner、KDoc/Javadoc、模块页、生成 Reference、compiled sample，以及 Tutorial/Guide/Architecture/Migration/redirect 的显式处置 |
 | 新发布模块 | publishing metadata、目录、模块 README、API pipeline、dependency guide |
 | 发布制品源码或发布输入变化 | 每 PR 不可变 Changeset；按需更新所属模块/API 文档；验证确定性 release plan |
 | 依赖/兼容变化 | 模块页和跨模块兼容矩阵 |

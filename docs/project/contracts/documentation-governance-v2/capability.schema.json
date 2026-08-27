@@ -85,20 +85,10 @@
       }
     },
     "sample_owner": {
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["sample_id"],
-          "properties": { "sample_id": { "type": "string", "minLength": 3 } }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["exception_id"],
-          "properties": { "exception_id": { "type": "string", "minLength": 3 } }
-        }
-      ]
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sample_id"],
+      "properties": { "sample_id": { "type": "string", "minLength": 3 } }
     },
     "document_owners": {
       "type": "object",
