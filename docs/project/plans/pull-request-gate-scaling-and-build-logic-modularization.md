@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Meet the accepted correctness and latency criteria and archive the plan.
 last_verified: 2026-08-28
-next_action: Merge the accepted documentation-sample no-shadow mode, record its first eligible hosted critical path, and retain complete shadow comparison for module and production change classes.
+next_action: Record the first eligible documentation-sample no-shadow hosted critical path and retain complete shadow comparison for module and production change classes.
 maven_release_changesets:
   - release/changes/20260825-quality-build-phase1.json
   - release/changes/20260825-quality-build-phase2-architecture.json
@@ -41,8 +41,8 @@ are in progress.
 
 Last verified: 2026-08-28.
 
-Next action: merge the evidence-backed no-shadow mode for the exact documentation/Tutorial-sample
-class, then record the first eligible hosted critical path after rollout. Module, production,
+Next action: record the first eligible hosted critical path for the now-merged no-shadow mode on the
+exact documentation/Tutorial-sample class. Module, production,
 Preview, Demo, integration, benchmark, release, shared-input, and unknown-path classes retain the
 complete shadow or full fallback until their own observation corpus qualifies. Build-cache and
 configuration-cache probes are complete but neither option is enabled; adoption requires evidence
@@ -837,6 +837,17 @@ strict-closeout baseline and leaves 65,175.4 bytes below the unchanged 46.9 MiB 
 cache and process state differ, so timing is **inconclusive**. Release intent detected zero release
 artifacts, ignored artifacts, or shared publication paths; this repository workflow/build-logic
 change adds no Maven Changeset.
+
+The rollout pull request #215 then exercised the hosted `complete` branch because workflow and
+build-logic changes intentionally force full fallback. Its classifier emitted `complete` with
+`fullFallback=true`; the affected candidate was skipped, full `qaQuick` succeeded, and the
+fail-closed outcome reporter succeeded. The complete Gradle step executed all 2,342 actionable
+tasks in `18 min 27 s`; the enclosing child job completed in `19 min 15 s`. Documentation completed
+in `5 min 14 s` and Preview in `7 min 54 s`, so the required critical path was the `qaQuick` child.
+This result is **no material change** for correctness and **inconclusive** for latency because it is
+a single full-fallback rollout sample rather than the newly accepted no-shadow class. It closes
+hosted verification of the typed `complete` mode; `skip` and the first eligible `affected`
+observation remain next.
 
 The current website stack already uses Docusaurus `3.10.2`, React `19.2.8`, Node `24.19.0`, and npm
 `11.8.0`. Replacing or broadly upgrading it is not accepted as a latency action from this evidence:
