@@ -1,3 +1,41 @@
+---
+schema_version: 2
+document_id: architecture.component-appearance-resolution
+doc_type: architecture
+slug: /architecture/decisions/component-appearance-resolution-boundary
+owner:
+  kind: capability
+  id: foundation.components
+version_lane: released
+capability_ids:
+  - foundation.components
+  - theme.foundation
+  - material3.components
+  - oneui7.components
+  - overlay.foundation
+  - overlay.material3
+  - overlay.oneui7
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-material3
+  - viewcompose-oneui7
+  - viewcompose-overlay-material3-android
+  - viewcompose-overlay-oneui7-android
+sample_ids:
+  - module.ui-foundation-profile-summary
+  - guide.theming-local-override
+  - module.material3-components
+  - module.oneui7-components
+  - tutorial.overlays
+  - module.overlay-material3-dependency
+  - module.overlay-oneui7-dependency
+invariants:
+  - High-level components resolve sparse appearance overrides fieldwise from instance through nested scopes to recipe and semantic-token fallbacks.
+  - Basic primitives and overlay presenters receive complete immutable resolved appearance without performing theme, Local, or design-system policy lookup.
+evidence:
+  - Foundation, Material 3, One UI, overlay presenter, nested-override, NodeSpec mapping, Demo compilation, and API-surface suites.
+---
+
 # ADR-0013: Component appearance resolution boundary
 
 - Status: Accepted

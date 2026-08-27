@@ -26,6 +26,7 @@
       "migration.compose-host-lifecycle-android-interop",
       "migration.compose-layout-modifier-environment",
       "migration.lazy-collection-revision-reuse"
-    ]
+    ],
+    "architecture": ["architecture.lazy-collection-ownership"]
   }
 }

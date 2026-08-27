@@ -1,3 +1,31 @@
+---
+schema_version: 2
+document_id: architecture.development-tooling-isolation
+doc_type: architecture
+slug: /architecture/decisions/development-tooling-isolation
+owner:
+  kind: capability
+  id: diagnostics.session-inspection
+version_lane: released
+capability_ids:
+  - diagnostics.session-inspection
+  - host.android-container
+  - preview.integration
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-host-android
+  - viewcompose-preview
+sample_ids:
+  - tooling.diagnostics-session-inspection
+  - module.host-android-render-into
+  - module.preview-compose-bridge
+invariants:
+  - Concrete application-process tooling remains downstream, debug-only, optional, and inactive until a valid explicit request.
+  - The inactive runtime path performs no tooling-owned I/O, traversal, serialization, recurring observation, or hot-path callback registration.
+evidence:
+  - Tooling isolation verification, Host and Preview request-gate suites, plugin protocol tests, release-classpath checks, and accepted same-device performance evidence.
+---
+
 # ADR-0009: Development tooling isolation and request-driven inspection
 
 - Status: Accepted
@@ -36,9 +64,11 @@ of the rendering engine or its hot paths.
    serialization, stack capture, View-tree traversal, or listener registered on a scroll, layout,
    draw, touch, animation-frame, or recomposition hot path.
 4. The running-device DSL locator is owned by the optional `viewcompose-preview` artifact, which
-   applications add with `debugImplementation`. `viewcompose-host-android` discovers only the
-   neutral `RenderSessionInspectionTooling` service. Absence, ambiguity, or failure of the service is a
-   diagnostic no-op and cannot fail application rendering.
+   applications add with `debugImplementation`. As hard-cut by
+   [ADR-0022](0022-in-memory-development-tooling-installation.md), that artifact installs the
+   neutral `RenderSessionInspectionTooling` port directly in memory before application startup;
+   `viewcompose-host-android` only reads the frozen nullable port. Absence, ambiguity, or failure is
+   a diagnostic no-op and cannot fail application rendering.
 5. `RenderSessionInspectionPolicy` separates passive session registration from source capture.
    Source identity may be captured once, with strict bounds, when an eligible Host, navigation, or
    pager-page session first commits in a debuggable process with the optional artifact installed.
@@ -73,8 +103,9 @@ of the rendering engine or its hot paths.
 - `viewcompose-ui-foundation` owns the Q3 neutral `RenderSessionInspectionTooling`,
   `RenderSessionInspectionPolicy`, and `RenderSessionInspectionRegistration` contract. Its absence
   remains a no-op. This alpha-line hard cut replaces the former source-only port.
-- `viewcompose-host-android` owns only Android platform installation and neutral service discovery;
-  it no longer owns the device locator implementation or protocol.
+- `viewcompose-host-android` owns only Android platform installation and the neutral in-memory
+  tooling slot; it no longer owns the device locator implementation, protocol, or classpath
+  discovery.
 - `viewcompose-preview` owns the debuggable-process locator service, explicit request receiver,
   live-session snapshot, response serialization, and private report lifecycle.
 - the Android Studio plugin owns request creation, nonce validation, response polling, source
@@ -91,8 +122,8 @@ no preview artifact.
   snapshots or report writes.
 - A source-locator click performs one bounded inspection round trip and may take slightly longer
   than reading a continuously refreshed file.
-- Service discovery adds a process-start lookup in the Android Host. The result is immutable and
-  nullable, so it adds no per-frame discovery.
+- The Host performs one synchronized, non-blocking read of the in-memory tooling slot. The frozen
+  result is immutable and nullable, so it adds neither classpath I/O nor per-frame discovery.
 - The one-time bounded source-candidate capture remains an explicit trade-off for accurate page
   navigation without re-running application composition when the IDE request arrives.
 - Tooling that genuinely requires continuous observation must receive a new ADR, a narrow

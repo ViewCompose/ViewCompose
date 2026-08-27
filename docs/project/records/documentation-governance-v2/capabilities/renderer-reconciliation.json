@@ -24,7 +24,12 @@
   "sample_owner": { "sample_id": "module.renderer-reconciliation" },
   "document_owners": {
     "module": ["module.viewcompose-renderer-android"],
-    "architecture": ["architecture.node-spec", "architecture.delayed-session-containers"],
+    "architecture": [
+      "architecture.node-spec",
+      "architecture.delayed-session-containers",
+      "architecture.prefetched-session-activation",
+      "architecture.lazy-collection-ownership"
+    ],
     "migration": ["migration.lazy-collection-revision-reuse"]
   }
 }

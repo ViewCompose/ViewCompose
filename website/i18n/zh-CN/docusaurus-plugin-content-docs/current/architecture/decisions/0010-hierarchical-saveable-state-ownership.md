@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0010-hierarchical-saveable-state-ownership.md
-translation_source_hash: 87f5953d66ee5c9cae411aa7fa7d03c99412c86f4fef4df74ef849fdf77a4336
+translation_source_hash: 8fccd74d1ec80361efd50565b9c24671e83586e21e52194603a2fff36c8781de
 translation_status: current
 ---
 

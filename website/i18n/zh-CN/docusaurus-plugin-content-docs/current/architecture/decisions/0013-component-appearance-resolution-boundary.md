@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0013-component-appearance-resolution-boundary.md
-translation_source_hash: 78fa188771ba9a577d9ae0776103876b7eb99225883fac36fd87a0efacaee3aa
+translation_source_hash: 9d7a8eceffa8633f22889e4e800824223b32fc36596be204ebb14a8cb2e4c688
 translation_status: current
 ---
 

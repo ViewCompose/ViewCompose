@@ -12,7 +12,11 @@
   "sample_owner": { "sample_id": "module.overlay-oneui7-dependency" },
   "document_owners": {
     "guide": ["guide.overlay-presentation"],
-    "architecture": ["architecture.overlay-root-selection", "architecture.design-system-integration"],
+    "architecture": [
+      "architecture.overlay-root-selection",
+      "architecture.design-system-integration",
+      "architecture.component-appearance-resolution"
+    ],
     "module": ["module.viewcompose-overlay-oneui7-android"]
   }
 }

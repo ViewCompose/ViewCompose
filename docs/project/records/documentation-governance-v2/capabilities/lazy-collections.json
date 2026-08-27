@@ -21,7 +21,14 @@
     "module": ["module.viewcompose-ui-foundation"],
     "tutorial": ["tutorial.lazy-lists", "tutorial.lazy-list-performance"],
     "guide": ["guide.lazy-collections"],
-    "architecture": ["architecture.lazy-collections-runtime", "architecture.delayed-session-containers", "architecture.state-snapshots"],
+    "architecture": [
+      "architecture.lazy-collections-runtime",
+      "architecture.delayed-session-containers",
+      "architecture.state-snapshots",
+      "architecture.hierarchical-saveable-state-ownership",
+      "architecture.prefetched-session-activation",
+      "architecture.lazy-collection-ownership"
+    ],
     "migration": ["migration.lazy-collection-revision-reuse"]
   }
 }

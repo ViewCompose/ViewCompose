@@ -15,5 +15,8 @@
   ],
   "reference_owner": { "reference_id": "reference.preview.integration", "generated": true },
   "sample_owner": { "sample_id": "module.preview-compose-bridge" },
-  "document_owners": { "module": ["module.viewcompose-preview"] }
+  "document_owners": {
+    "module": ["module.viewcompose-preview"],
+    "architecture": ["architecture.development-tooling-isolation"]
+  }
 }

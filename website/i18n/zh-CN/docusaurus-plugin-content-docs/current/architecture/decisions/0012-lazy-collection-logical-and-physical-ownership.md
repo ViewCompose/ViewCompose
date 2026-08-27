@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0012-lazy-collection-logical-and-physical-ownership.md
-translation_source_hash: 4a2220922d02ed8ebbc9d60f373f262bebf6722354a661573be1482fa1d36448
+translation_source_hash: 667e10029f595c627162a84ca3eef6f5b2f75956aa522d3c667737d58b0f52ab
 translation_status: current
 ---
 
