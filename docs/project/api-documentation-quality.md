@@ -8,7 +8,10 @@ owner:
 version_lane: version-agnostic
 capability_ids: []
 artifact_ids: []
-sample_ids: []
+sample_ids:
+  - project.api-documentation-contract-comment
+  - project.api-documentation-stateful-dsl-template
+  - project.api-documentation-resource-owner-template
 workflow: Define public source-comment quality levels, contract fields, and authoring forms.
 validation:
   - ./gradlew verifyDocumentationStructure
@@ -293,6 +296,8 @@ Do not copy KDoc Markdown syntax into Javadoc or HTML formatting into KDoc.
 
 The following comment is intentionally contract-focused:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ApiDocumentationContractSamples.kt" region="project-api-documentation-contract-comment" sample_id="project.api-documentation-contract-comment" build_target=":samples:tutorials:compileDebugKotlin" */}
+
 ```kotlin
 /**
  * Applies [block] to the current composition and commits its state when rendering succeeds.
@@ -363,6 +368,8 @@ never leave placeholder headings.
 
 ### Stateful DSL component
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ApiDocumentationContractSamples.kt" region="project-api-documentation-stateful-dsl-template" sample_id="project.api-documentation-stateful-dsl-template" build_target=":samples:tutorials:compileDebugKotlin" */}
+
 ```kotlin
 /**
  * Displays one selectable destination and reports user requests through [onSelected].
@@ -389,6 +396,8 @@ fun UiTreeBuilder.NavigationDestination(
 ```
 
 ### Stateful resource owner
+
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ApiDocumentationContractSamples.kt" region="project-api-documentation-resource-owner-template" sample_id="project.api-documentation-resource-owner-template" build_target=":samples:tutorials:compileDebugKotlin" */}
 
 ```kotlin
 /**

@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "project.api-documentation-contract-comment",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "project.api-documentation-quality",
+  "document_ids": [
+    "project.api-documentation-quality"
+  ],
+  "version_lane": "version-agnostic",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ApiDocumentationContractSamples.kt",
+  "region": "project-api-documentation-contract-comment",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}
