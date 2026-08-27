@@ -994,6 +994,16 @@
           "documentId": "architecture.navigation-runtime",
           "documentType": "architecture",
           "path": "/architecture/navigation"
+        },
+        {
+          "documentId": "module.viewcompose-navigation-core",
+          "documentType": "module",
+          "path": "/modules/viewcompose-navigation-core/README"
+        },
+        {
+          "documentId": "module.viewcompose-navigation-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-navigation-android/README"
         }
       ],
       "sample": {

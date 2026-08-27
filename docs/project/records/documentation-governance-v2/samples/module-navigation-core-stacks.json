@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.navigation-core-stacks",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "navigation.host",
+  "document_ids": ["module.viewcompose-navigation-core"],
+  "version_lane": "released",
+  "source": "viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt",
+  "region": "navigation-core-stacks",
+  "build_target": ":viewcompose-navigation-core:compileTestKotlin"
+}

@@ -33,6 +33,7 @@
   "document_owners": {
     "tutorial": ["tutorial.navigation"],
     "guide": ["guide.navigation-production-host"],
-    "architecture": ["architecture.navigation-runtime"]
+    "architecture": ["architecture.navigation-runtime"],
+    "module": ["module.viewcompose-navigation-core", "module.viewcompose-navigation-android"]
   }
 }

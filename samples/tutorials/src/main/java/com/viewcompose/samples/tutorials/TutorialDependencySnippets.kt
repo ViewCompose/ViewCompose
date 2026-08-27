@@ -156,6 +156,22 @@ dependencies {
     // DOCS_REGION_END(navigation-dependencies)
 }
 
+private val navigationCoreModuleDependency = run {
+    // DOCS_REGION_START(navigation-core-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha03")
+}
+    // DOCS_REGION_END(navigation-core-module-dependency)
+}
+
+private val navigationAndroidModuleDependency = run {
+    // DOCS_REGION_START(navigation-android-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(navigation-android-module-dependency)
+}
+
 private val themingTutorialDependencies = run {
     // DOCS_REGION_START(theming-dependencies)
 repositories { mavenCentral() }

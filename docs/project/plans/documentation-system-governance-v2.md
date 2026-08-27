@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the Gesture ownership slice, then audit Navigation Core and Navigation Android ownership as the next Phase 3 boundary.
+next_action: Merge the Navigation ownership slice, then audit UI Foundation, Material 3, and One UI 7 ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -34,6 +34,7 @@ maven_release_changesets:
   - release/changes/20260827-governance-diagnostics-phase3.json
   - release/changes/20260827-governance-graphics-phase3.json
   - release/changes/20260827-governance-gesture-phase3.json
+  - release/changes/20260827-governance-navigation-modules-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -109,6 +110,9 @@ The accepted Gesture hard cut now assigns the remaining controlled-toggle Modifi
 existing gesture capability, registers seven exact module sample decisions, removes five resolved
 exceptions, repairs one previously non-compiling RTL dp expression, and reduces the report to 182
 issues.
+The accepted Navigation module hard cut now registers seven exact Core and Android module sample
+decisions, compiles the previously unregistered Core sample source set, removes five resolved
+exceptions including the final taxonomy mismatch, and reduces the report to 172 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -117,8 +121,8 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the Gesture ownership slice, then audit Navigation Core and Navigation Android
-ownership as the next Phase 3 boundary. Pull-request gate scaling
+Next action: merge the Navigation ownership slice, then audit UI Foundation, Material 3, and One UI
+7 ownership as the next Phase 3 boundary. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -173,6 +177,11 @@ remains owned by this plan after the Phase 3 content owners move.
   Gesture because only test-only compiled documentation fixtures gained exact regions and sample
   bindings. Test sources are excluded from published artifacts; production source, API, runtime
   behavior, publication metadata, and generated artifact content remain unchanged.
+- `release/changes/20260827-governance-navigation-modules-phase3.json` explicitly ignores
+  Navigation Core and Navigation Android because the existing Core sample directory is registered
+  only with the test source set and both modules gain exact test-only documentation regions. Test
+  sources remain excluded from published artifacts; production source, API, runtime behavior,
+  publication metadata, and generated artifact content remain unchanged.
 
 ## Release intent rationale
 
@@ -181,7 +190,7 @@ workflows, and compiled repository-quality tooling only; they do not change a pu
 production source, publication inputs, or compiled API sample bodies.
 `verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, two explicitly
 ignored test-sample-only artifacts, and zero shared-path classifications against
-`d71b48b781786a0888a1299e2b802ee9d22221c7`.
+`290b1fc07579eb1a2e168ca7c6e71f3836f5eee1`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1294,6 +1303,41 @@ Accepted Gesture ownership slice on 2026-08-27:
   ignored the two test-sample-only Gesture artifacts. This slice reuses existing unit, renderer,
   device, visual, and performance evidence and makes no new runtime, visual, power, or performance
   claim. The next action is Navigation Core and Navigation Android ownership.
+
+Accepted Navigation module ownership slice on 2026-08-27:
+
+- retained the Navigation Core and Navigation Android module routes and treated the platform-neutral
+  graph, transaction, retained-stack, and deep-link model as the lower-level implementation of the
+  existing Android-owned `navigation.host` integration capability;
+- registered seven exact dependency, graph, two-phase transaction, retained-stack, deep-link, and
+  Android-host sample decisions. Navigation Core's pre-existing `src/test/samples` directory was
+  not part of its test source set, so the hard cut now makes `compileTestKotlin` own those samples
+  instead of accepting an uncompiled fixture. The Core compatibility note now names the current
+  `0.1.0-alpha03` line;
+- removed five resolved metadata, taxonomy, and sample exception records. The report changed from
+  182 to 172 issues: missing metadata 50 to 48 and unclassified samples 51 to 44; orphan symbols
+  remained 80. The final taxonomy mismatch fell from 1 to 0, and duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- the generated Reference retained 531 entries while its normalized catalog grew by only 372 bytes,
+  from 225,587 to 225,959 bytes (`0.1649%`), for the two module ownership links. The complete
+  bilingual site audited 454 pages and 30 redirects, produced 48,957,011 non-API bytes, and left
+  221,203 bytes under the unchanged 46.9 MiB limit. This is 5,179 bytes (`0.0106%`) above the
+  Gesture slice and is `no material change`. Docusaurus completed in `32.0 s`; the duration
+  comparison is `inconclusive` because cache and process state differed, while the absolute result
+  remains below the `120 s` limit;
+- Navigation Core samples, Navigation Android unit-test samples, Tutorial compilation, exact
+  bilingual region identity, Governance V2, documentation structure, language and translation
+  review, generated Reference freshness, release intent, and the complete bilingual site passed.
+  Complete `qaQuick` then passed 2,342 actionable tasks in `1 min 5 s` (187 executed and 2,155
+  up-to-date); this is completeness evidence rather than a speed comparison because the warm local
+  task graph reused previously produced publication, module, and site outputs;
+- the overall conclusion is `improved`: all seven public module fences now have exact compiled
+  ownership, the final locale taxonomy mismatch is removed, and no public API, production runtime
+  behavior, route, or published artifact changed. Release intent explicitly ignores the two
+  test-sample-only Navigation artifacts. This slice reuses existing navigation unit, Android host,
+  predictive-Back, adaptive-pane, and device evidence and makes no new runtime, visual, power, or
+  performance claim. The next action is UI Foundation, Material 3, and One UI 7 ownership.
 
 | Current area | Required target |
 | --- | --- |

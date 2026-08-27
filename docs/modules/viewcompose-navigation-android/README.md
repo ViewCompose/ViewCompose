@@ -1,3 +1,22 @@
+---
+schema_version: 2
+document_id: module.viewcompose-navigation-android
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-navigation-android
+version_lane: released
+capability_ids:
+  - navigation.host
+artifact_ids:
+  - viewcompose-navigation-android
+sample_ids:
+  - module.navigation-android-dependency
+  - module.navigation-android-host
+coordinate: com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01
+minimal_usage_sample_id: module.navigation-android-dependency
+---
+
 # Navigation Android
 
 `viewcompose-navigation-android` mounts `viewcompose-navigation-core` state as native Android View pages. It
@@ -11,6 +30,7 @@ not require an Activity or Fragment. The platform-neutral back stack remains in
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="navigation-android-module-dependency" sample_id="module.navigation-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
@@ -29,6 +49,7 @@ dependencies {
 
 ## Controller and host
 
+{/* compiled-region source="viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt" region="navigation-android-host" sample_id="module.navigation-android-host" build_target=":viewcompose-navigation-android:compileDebugUnitTestKotlin" */}
 ```kotlin
 fun UiTreeBuilder.AppNavigation() {
     val controller = rememberNavHostController(
