@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 063f6f0ab25a199983f5c6c14fe14344f1c40263ec6966224c30d07c558b9945
+translation_source_hash: 08fd4b675202548b1d44498f5ad841c93c1c7a77bdc895949da381df2ac58d7e
 translation_status: current
 ---
 
@@ -510,6 +510,43 @@ AndroidX 未报告热节流等待。每批结束后均恢复所有设备状态�
 单调数据流、总能耗或干净的未编译 ART。不同引擎可能产生不同帧数，所以跨引擎结论使用已
 接受的逐帧分布，不虚构跨引擎事务。下一步集合目标是 ViewCompose 滚动 P95/Heap、相对
 Android Views 的更新尾部差距、冷构造和单调数据流。
+
+##### 2.4.3.1 诊断能力指导的列表尾部复检 {/* #2431-diagnostics-guided-list-tail-recheck */}
+
+2026-08-27 的复检保持 `performance.list@5` 工作负载不变，Target 与 Benchmark APK 的精确
+SHA-256 分别为 `5c0ea909553bdb7d7fd7d242c8144b44039bff3f8ef3b371aed292ab57cc7755` 和
+`1430a42a222b172fa4eac30f10ae7e0c4c9bfb64dcfd28c7b211f97c5eee4bb7`。小米 MI 6 的 CPU
+固定为 `1.4016/1.8048 GHz`，GPU 固定为 `515 MHz`，公开的 Interconnect Vote 保持固定，
+厂商性能服务停止、充电暂停，温度不高于 `35 °C`。
+
+AndroidX 1.4.1 通过 `su root id` 检查 Root Shell；该命令在本机 Magisk 配置下不会结束，
+随后 MIUI 又会拒绝库的 Shell 重装降级路径。因此每个方法都在外部复现 AndroidX 自身的
+API 34 之前 Root 流程：以 Root 执行 `cmd package compile --reset`，发送返回结果 `10` 的
+ProfileInstaller `WRITE_SKIP_FILE` Broadcast，再强制停止 Target；Instrumentation 只禁用库内
+重复执行的 Reset。Target 二进制和设备策略都没有变化。AndroidX 仍报告 `run-from-apk`，
+所以该矩阵是稳态交互证据，不是干净的启动证据。
+
+下表帧数据为 P50/P95/P99 毫秒，Heap 为峰值中位数 KiB。
+
+| 动作 | ViewCompose | Compose | Android Views | Run-P50 CV | 结论 |
+| --- | --- | --- | --- | --- | --- |
+| 滚动 | `5.615/9.230/10.682`、Heap `7724` | `5.592/8.066/9.256`、`7848` | `5.204/6.862/8.256`、`4291` | `0.055/0.089/0.012` | 相对 Compose `+0.4%/+14.4%`，为 `no material change`；相对 Android Views `+7.9%/+34.5%`，P95 仍为 `regressed`，Heap 高 `3433 KiB`（`+80.0%`）。 |
+| 更新 | `4.924/12.092/21.111`、Heap `7859` | `6.005/15.771/35.524`、`8776` | `4.922/8.024/9.247`、`5840` | `0.027/0.072/0.088` | 相对 Compose `-18.0%/-23.3%`，为 `improved`；相对 Android Views `+0.0%/+50.7%`，P95 仍为 `regressed`。 |
+
+六个方法都通过 `0.15` 稳定性门禁。有限诊断准确解析到作者编写的 LazyItem 源码，把 Text
+直接 Binding 排在受支持 Item 区间的首位，并排除了真实纯滚动交互中的 Host Composition、
+Reconciliation 与 Binding。独立 Trace 显示所有观测到的冷 `VC.DirectRender` Slice 都位于
+`RV Scroll`，而不是 `RV Prefetch`；Release Trace 还保留了有限计时器不支持的 Input、
+Traversal 与 RenderThread 工作。因此诊断能力可以指导分流，但不能单独排序完整的整帧尾部。
+
+六个可逆探针分别检验了分离式 Preparation、跨 Owner Diff、Row 扁平化、RecyclerView
+Prefetch、Mounted Cache 容量，以及跨 Owner 与 Text Binding 的组合，最终全部回退。最接近的
+成对候选在更新 P50/P95 上变化 `+1.5%/+2.7%`，滚动变化 `+0.8%/-4.0%`，Heap 分别增加
+`1.9%/2.2%`；其分类是 `no material change`，不足以证明增加 Renderer 复杂度有价值。启动有限
+Capture 还会强制执行一个结构帧；所选 LazyItem Session 的 Key 离开 Viewport 后会结束，不能
+自动跟随新出现的 Key。下一步应建立 Interaction-armed 或等价的冷 Session 关联能力，再验证不
+改变冻结工作负载的物理 Holder/Root 复用候选。在取得该证据前，原生滚动与更新 P95 差距继续
+保持开放，本轮不接受任何生产修正。
 
 Observed Property 事务显著减少完整树工作，并优于同批 Compose 属性对照，但原生属性失效
 与 Traversal 仍拥有更低的尾延迟。已接受的 API 33 Trace 证明属性帧进入

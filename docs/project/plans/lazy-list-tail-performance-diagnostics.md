@@ -14,19 +14,20 @@ artifact_ids:
   - viewcompose-renderer-android
 sample_ids: []
 status: active
-scope: Use the shipped finite diagnostics to attribute and reduce the accepted LazyColumn tail-latency gaps.
+scope: Use and, when evidence proves necessary, minimally extend the finite diagnostics to attribute and reduce the accepted LazyColumn tail-latency gaps.
 non_goals:
   - Replace Macrobenchmark or Perfetto with instrumented node timing.
   - Weaken lazy identity, lifecycle, prefetch, accessibility, or benchmark-equivalence contracts.
 baseline: The accepted performance.list@5 matrix regresses in scroll P95 against Compose and Android Views and in mutation P95 against Android Views.
 ordered_work:
   - Freeze the workload and collect pre-change diagnostic, Macrobenchmark, and trace evidence.
+  - When repeated captures cannot observe the cold interaction owner, add one bounded interaction-armed correlation seam before testing more optimization candidates.
   - Isolate one attributed tail source, implement the minimum reversible correction, and remeasure.
   - Interpret both performance and diagnostic-utility results in their active owners before archival.
 completion:
   - Close the accepted list-tail regression or assign every remaining material gap to a separately evidenced owner while proving whether the shipped diagnostics changed the investigation decision.
 last_verified: 2026-08-27
-next_action: Commit this plan, then capture the unchanged Debug list workload with the correlated inspector before changing production source.
+next_action: Add an interaction-armed capture that can follow a future LazyItem logical key or obtain equivalent cold-session correlation, then test physical holder/root reuse without changing performance.list@5.
 maven_release_changesets: []
 ---
 
@@ -35,14 +36,104 @@ maven_release_changesets: []
 ## Status
 
 Active. This work runs in a dedicated worktree and branch based on `main` revision `6ab095a7`, so
-the concurrent Documentation Governance V2 work remains isolated. No production implementation has
-changed yet.
+the concurrent Documentation Governance V2 work remains isolated. The plan-first baseline is
+commit `ffe8797a`. Six one-factor implementation/configuration probes have been measured and
+reverted; no production implementation is retained because none met the acceptance threshold.
 
 Last verified: 2026-08-27.
 
-Next action: commit this planning baseline, then run the unchanged Debug `performance.list@5`
-fixture through the correlated Session inspector and finite timing capture before creating any
-candidate optimization.
+Next action: execute Phase 1A by adding an interaction-armed capture that can follow a future
+LazyItem Session without accepting an application key or forcing a synthetic structural frame,
+then use that capture to decide whether physical holder/root reuse owns the next candidate. The
+plan remains active because the Android Views scroll and mutation P95 gaps are still material.
+
+## Execution record: 2026-08-27
+
+### Diagnostic attribution
+
+The unchanged Debug fixture produced the expected Host plus logical LazyItem parent graph and
+resolved the authored row to `app/src/main/java/com/viewcompose/performance/ViewComposeListPerformanceScreen.kt`.
+Repeated finite captures completed without drops or truncation. Representative LazyItem captures
+ranked direct Text binding at `1.72..1.89 ms`, composition self time at `1.10..1.47 ms`, and
+reconciliation self time at `0.76..0.87 ms`. A Host capture during pure scrolling contained only
+the structural frame forced by starting the capture; the subsequent scroll did not execute a
+supported Host composition, reconciliation, or direct-binding phase.
+
+The identity checks were correct but exposed an important operating limit. Moving the selected key
+out of the viewport ended that logical Session, and the newly visible key received a new Session
+ID. The current inspector cannot arm a capture for that future Session or follow replacement by
+logical role/key. Starting timing also requests an immediate structural render, so that first frame
+must not be mistaken for the later interaction. These limits prevent the current tool from directly
+ranking cold LazyItem activation during the fling.
+
+An independently captured Debug platform trace contained 133 `doFrame`, 127 `RV Scroll`, 125
+`RV Prefetch`, 27 holder binds, and 26 each of `VC.DirectRender`, `VC.Compose`, and
+`VC.RenderTree`. Every `VC.DirectRender` interval was owned by `RV Scroll`; none was owned by
+`RV Prefetch`. The trace is phase-presence evidence only because it is Debug: direct render ranged
+from `2.6..7.1 ms` with one `13.7 ms` outlier, composition from `0.8..2.3 ms`, and render-tree work
+from `1.4..4.0 ms`. Release Perfetto comparison attributed the remaining cross-engine work to the
+unsupported input/traversal and RenderThread domains: representative ViewCompose input/traversal/
+RenderThread DrawFrame averages were `1.369/0.945/4.097 ms`, compared with Android Views
+`0.561/0.872/3.775 ms` and Compose `0.608/1.039/3.494 ms`.
+
+For this investigation, the diagnostics are **actionable for triage but insufficient for
+optimization acceptance**. They changed the decision by rejecting Host recomposition, duplicate
+attach, and detached-preparation ownership as the primary pure-scroll explanation, identified the
+authored Text/direct-binding path to test for mutation, and handed the unsupported remainder to
+Perfetto. They did not identify a correction that passed the Release frame gate, and their forced
+first frame plus inability to follow future cold LazyItem Sessions remain concrete follow-up work.
+
+### Fixed-clock comparison baseline
+
+The Xiaomi MI 6 remained at CPU `1.4016/1.8048 GHz`, GPU `515 MHz`, fixed exposed `cpubw`/`gpubw`
+votes, suspended charging, stopped vendor performance services, and `35 °C` or lower. The exact
+target APK SHA-256 was `5c0ea909553bdb7d7fd7d242c8144b44039bff3f8ef3b371aed292ab57cc7755`;
+the benchmark APK was `1430a42a222b172fa4eac30f10ae7e0c4c9bfb64dcfd28c7b211f97c5eee4bb7`.
+
+AndroidX 1.4.1 tests root capability with `su root id`. That command does not complete under this
+device's Magisk configuration, so the library otherwise uninstalls the target and MIUI rejects the
+shell reinstall with `INSTALL_FAILED_USER_RESTRICTED`. The accepted workaround reproduces the
+library's own pre-API-34 rooted branch before every individual method: root
+`cmd package compile --reset`, an explicit ProfileInstaller `WRITE_SKIP_FILE` broadcast that
+returns result `10`, and a target force-stop; instrumentation then disables only the duplicate
+library-managed compilation step. Every method therefore begins from the same reset ART state
+without changing the target binary or system policy. AndroidX still labels the result
+`run-from-apk`, so these are steady-state interaction results rather than clean startup evidence.
+
+Frame values are P50/P95/P99 milliseconds; heap is median peak KiB.
+
+| Action | ViewCompose | Compose | Android Views | Run-P50 CV | Interpretation |
+| --- | --- | --- | --- | --- | --- |
+| Scroll | `5.615/9.230/10.682`, heap `7724` | `5.592/8.066/9.256`, `7848` | `5.204/6.862/8.256`, `4291` | `0.055/0.089/0.012` | Versus Compose `+0.4%/+14.4%`: `no material change`. Versus Views `+7.9%/+34.5%`: P95 remains `regressed`; heap is `+3433 KiB` (`+80.0%`). |
+| Mutation | `4.924/12.092/21.111`, heap `7859` | `6.005/15.771/35.524`, `8776` | `4.922/8.024/9.247`, `5840` | `0.027/0.072/0.088` | Versus Compose `-18.0%/-23.3%`: `improved`. Versus Views `+0.0%/+50.7%`: P95 remains `regressed`. |
+
+All six stability values pass the `0.15` gate. The corrected protocol also exposed why the earlier
+unreset exploratory batches could not accept a candidate: the exact original APK moved from
+`10.368` to `12.814 ms` mutation P95 and from `8.545` to `9.284 ms` scroll P95 as method order and
+JIT history changed. The hard threshold correctly prevented those batches from manufacturing a
+favorable result.
+
+### Rejected candidates
+
+The following one-factor probes were reverted:
+
+1. a bounded detached-preparation probe did not materially improve scroll and worsened mutation;
+2. cross-owner targeted diffing did not materially change scroll or mutation;
+3. flattening the benchmark row reduced heap directionally but changed the frozen row hierarchy
+   and improved scroll P95 by only `2.6%`, so it was both insufficient and out of scope;
+4. disabling RecyclerView prefetch worsened scroll P95, confirming that staged prefetch remains
+   beneficial even though it does not own the captured direct-render slices;
+5. increasing the mounted-item cache to 12 worsened scroll P95; and
+6. combining direct cross-owner reconciliation with a narrow plain-Text equality guard produced
+   mutation `5.300/13.165`, heap `8102`, and scroll `5.862/8.909`, heap `7126`, against an adjacent
+   exact-original control of `5.224/12.814`, `7949`, and `5.813/9.284`, `6971`. The normalized
+   changes were mutation `+1.5%/+2.7%/+1.9%` and scroll `+0.8%/-4.0%/+2.2%`, all below the combined
+   acceptance thresholds.
+
+The closest candidate is therefore `no material change`, not an optimization. Retaining it would
+add renderer complexity without closing either Android Views P95 gap. No Maven Changeset is
+required because every production probe was reverted and this checkpoint changes documentation
+only.
 
 ## Maven release changesets
 
@@ -230,6 +321,50 @@ Exit condition: the repository contains one reviewable plan commit and no produc
 
 Exit condition: supported-phase evidence is repeatable with no unexplained drop/truncation, and the
 remaining tail owner is either inside a measured phase or explicitly handed to a platform trace.
+
+### Phase 1A: evidence-triggered diagnostic escalation
+
+This phase is now required. Phase 1 and six one-factor probes narrowed the work to cold LazyItem
+activation but could not observe the future logical Session that owns it. Repeating the same
+selected-session capture would add samples without removing that blind spot, so another
+optimization candidate must not be accepted before this seam is available or independently proven
+unnecessary.
+
+1. Preserve the current selected-session capture as the backward-compatible default. Add a
+   separately explicit interaction-armed request that waits for a future Session instead of
+   requesting an immediate structural render.
+2. Match only privacy-safe framework identity: an exact live parent Session plus the expected
+   `LazyItem` child role and a Session created after the request. Do not accept, retain, serialize,
+   hash, or expose an application item key, node content, callback, native object, or source string
+   as a selector.
+3. Own at most one armed request per process. Give it a request nonce, a two-monotonic-second
+   deadline, the existing eight-completed-frame ceiling after attachment, and terminal outcomes for
+   matched, timed out, parent ended, superseded, or process disposed. Registration and timing work
+   exist only while an explicit debuggable-process request is armed.
+4. Ensure the request can attach before the matched Session's first supported render phase. A
+   post-commit discovery callback is insufficient because it would systematically miss the cold
+   frame under investigation.
+5. Keep Preview as the concrete application-process owner under ADR-0009. The runtime-facing seam
+   may be a no-op optional hook, but the inactive and Release-excluded paths must not add recurring
+   observers, Session scans, per-node clocks, allocations, or application-key retention.
+6. Return enough bounded state to distinguish `armed`, the opaque matched Session identity, capture
+   completion, and every terminal reason. Preserve stale-nonce, foreground-package, byte-budget,
+   record/drop/truncation, and fail-closed disposal rules.
+7. Add focused tests for pre-first-frame attachment, unrelated/old child rejection, exact-parent
+   matching, timeout, parent disposal, supersession, selected-session backward compatibility, idle
+   zero work, and Release-classpath exclusion. If the smallest correct implementation changes a
+   public/protected contract, stop first to add its stable capability owner, structured impact
+   dispositions, Q level, canonical-English KDoc, Q3 compiled sample, generated Reference, module
+   manual, reviewed Chinese mirror, and immutable Maven Changeset.
+8. Re-run the unchanged fling. The upgrade is useful for this defect only if it captures a future
+   cold LazyItem Session without a synthetic first frame and changes the next source-level decision;
+   otherwise record it as still insufficient and escalate to a platform/holder correlation design
+   instead of testing more speculative runtime changes.
+
+Exit condition: a bounded capture either ranks the first supported phases of the future cold
+LazyItem Session and names the next owned hypothesis, or produces a tested fail-closed result that
+proves this diagnostic design cannot observe the material owner. Only the first outcome authorizes
+another performance candidate in this phase.
 
 ### Phase 2: platform attribution and one-factor A/B seams
 

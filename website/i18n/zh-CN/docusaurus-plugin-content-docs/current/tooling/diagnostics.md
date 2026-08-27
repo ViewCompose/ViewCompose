@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: 10ca581b07a8fb43fe2582f8be083a65d4424b583b6c4ecbae07083822712058
+translation_source_hash: dbb83f88c5d307eb4221b0484a02df9825a11b56c6a5db40a8b82ea223db1a92
 translation_status: current
 schema_version: 2
 document_id: tooling.diagnostics
@@ -167,6 +167,26 @@ GPU、RenderThread、SurfaceFlinger、图片解码、网络、数据库和外部
 同一进程只能有一个活动 Capture。普通渲染不提供 Collector，因此逐节点时钟读取、计时记录分配、
 报告写入、轮询与持续观察都为零。耗时结果是诊断证据，不是 Frame-time Benchmark；插桩开销和有限
 样本量都会作为显式限制保留。
+
+### Lazy Session 的实机使用规则
+
+启动 `Capture timing` 会立即请求一个结构帧，让所选 Session 生成有界记录。除非待测交互本身触发
+了该帧，否则应把第一帧视为 Capture 初始化，不能把其中的阶段耗时标记成后续手势或更新。Capture
+只跟随所选逻辑 Session。Lazy Key 离开 Viewport 并结束 Session 后，新出现的 Key 会获得新的
+Session ID；即使 RecyclerView 复用了同一个物理 Holder 或 Mounted Presentation 也不例外。当前
+Inspector 不能为未来 Session 预先进入 Armed 状态，也不能按逻辑 Role/Key 自动跟随替换。
+
+排查冷 Lazy List 工作时，只有确认逻辑 Key 能跨交互存活，才应直接选择该 Item；否则先用 Host
+Capture 排除受支持的 Host 阶段，再用平台 Trace 关联 RecyclerView Holder/Bind Section 与新建的
+Item Session。`Session ended` 是身份归属证据，不是空白性能结果。Measure/Layout/Draw、
+RenderThread、GPU 与 Buffer Queue 的归属仍必须使用 Perfetto 或其他平台 Profiler。
+
+`performance.list@5` 实机复检遵守了这项规则。重复 Capture 解析到作者编写的 LazyItem 源码，并在
+被强制执行的 Item 帧内把 Text 直接 Binding 排在首位；Host Capture 则显示真实纯滚动区间没有执行
+受支持阶段。匹配的平台 Trace 把冷 Direct Render 放在 `RV Scroll` 而不是 `RV Prefetch` 下，并
+保留了有限计时器之外的 Input、Traversal 与 RenderThread 工作。该结果可以指导分流，但不足以完成
+优化验收：它改变了被排除的假设，却没有让任何实测候选关闭 Release 尾部。因此未来的
+Interaction-armed 或 Future-Session Capture 属于新的诊断扩展，调用方目前不能假定已有该行为。
 
 ## 8. Demo 检查器
 

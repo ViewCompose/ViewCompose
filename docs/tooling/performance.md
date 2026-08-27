@@ -598,6 +598,48 @@ engines may emit different frame counts, so cross-engine conclusions use accepte
 distributions rather than manufactured transactions. The next collection targets are ViewCompose
 scroll P95/heap, the Android Views mutation-tail gap, cold construction, and monotonic feeds.
 
+##### 2.4.3.1 Diagnostics-guided list-tail recheck {/* #2431-diagnostics-guided-list-tail-recheck */}
+
+The 2026-08-27 recheck used the unchanged `performance.list@5` workload and exact target/benchmark
+APK SHA-256 values `5c0ea909553bdb7d7fd7d242c8144b44039bff3f8ef3b371aed292ab57cc7755` and
+`1430a42a222b172fa4eac30f10ae7e0c4c9bfb64dcfd28c7b211f97c5eee4bb7`. The Xiaomi MI 6 remained
+at fixed CPU `1.4016/1.8048 GHz`, GPU `515 MHz`, fixed exposed interconnect votes, stopped vendor
+performance services, suspended charging, and at most `35 °C`.
+
+AndroidX 1.4.1 checks rooted-shell availability with `su root id`, which does not complete under
+this device's Magisk configuration. MIUI then rejects the library's fallback shell reinstall. Each
+method therefore reproduced AndroidX's own rooted pre-API-34 sequence externally: root
+`cmd package compile --reset`, a ProfileInstaller `WRITE_SKIP_FILE` broadcast returning result
+`10`, and target force-stop; instrumentation disabled only the duplicate library-managed reset.
+The target binary and device policy did not change. AndroidX reports `run-from-apk`, so this matrix
+is steady-state interaction evidence, not clean startup evidence.
+
+Frame values are P50/P95/P99 milliseconds; heap is median peak KiB.
+
+| Action | ViewCompose | Compose | Android Views | Run-P50 CV | Conclusion |
+| --- | --- | --- | --- | --- | --- |
+| Scroll | `5.615/9.230/10.682`, heap `7724` | `5.592/8.066/9.256`, `7848` | `5.204/6.862/8.256`, `4291` | `0.055/0.089/0.012` | Versus Compose `+0.4%/+14.4%`: `no material change`. Versus Views `+7.9%/+34.5%`: P95 remains `regressed`; heap is `+3433 KiB` (`+80.0%`). |
+| Mutation | `4.924/12.092/21.111`, heap `7859` | `6.005/15.771/35.524`, `8776` | `4.922/8.024/9.247`, `5840` | `0.027/0.072/0.088` | Versus Compose `-18.0%/-23.3%`: `improved`. Versus Views `+0.0%/+50.7%`: P95 remains `regressed`. |
+
+All six methods pass the `0.15` stability gate. Finite diagnostics correctly resolved the authored
+LazyItem source, ranked Text/direct binding as the largest supported item interval, and excluded
+Host composition/reconciliation/binding from the actual pure-scroll interaction. An independent
+trace put all observed cold `VC.DirectRender` slices under `RV Scroll`, not `RV Prefetch`, while
+Release traces retained additional input/traversal and RenderThread work that the finite timer does
+not support. The diagnostics were therefore actionable for triage, but they did not by themselves
+rank the complete frame tail.
+
+Six reversible probes tested detached preparation, cross-owner diffing, row flattening,
+RecyclerView prefetch, mounted-cache size, and combined cross-owner/Text binding. All were reverted.
+The closest paired candidate changed mutation by `+1.5%/+2.7%` and scroll by `+0.8%/-4.0%` at
+P50/P95, while increasing heap by `1.9%/2.2%`; its classification is `no material change` and it
+does not justify renderer complexity. Starting a finite capture also forces one structural frame,
+and a selected LazyItem Session ends when its key leaves the viewport instead of following a newly
+visible key. The next action is an interaction-armed or equivalent cold-session correlation path,
+then a physical holder/root-reuse candidate that preserves the frozen workload. Until that evidence
+exists, the native scroll and mutation P95 gaps remain open and no production correction is
+accepted.
+
 Observed-property transactions materially reduce complete-tree work and beat the same-run Compose
 property control, but native property invalidation and traversal still own the lower tail. The
 accepted API-33 trace proves `VC.ObservedPropertyRead` and `VC.ObservedPropertyRender` are entered

@@ -189,6 +189,31 @@ per-node clock reads, timing-record allocation, report writes, polling, or recur
 The timing result is diagnostic evidence, not a frame-time benchmark: instrumentation overhead and
 the small finite sample remain visible limitations.
 
+### Lazy-session field-use rule
+
+Starting **Capture timing** requests one immediate structural frame so the selected Session can
+produce bounded records. Treat that first frame as capture setup unless the interaction itself
+caused it; do not label its phase durations as the later gesture or mutation. The capture follows
+the selected logical Session only. When a lazy key leaves the viewport and its Session ends, a
+newly visible key receives a new Session ID even if RecyclerView reuses the same physical holder or
+mounted presentation. The inspector does not currently arm a request for a future Session or
+follow replacement by logical role/key.
+
+For cold lazy-list work, use a selected item only when its logical key is known to survive the
+interaction. Otherwise use the Host capture to exclude supported Host phases, then correlate
+RecyclerView holder/bind sections and the newly created item Session with a platform trace. A
+Session-ended result is identity evidence, not an empty performance result. Measure/layout/draw,
+RenderThread, GPU, and buffer-queue ownership still requires Perfetto or another platform profiler.
+
+The `performance.list@5` field recheck applied this rule. Repeated captures resolved the authored
+LazyItem source and ranked Text/direct binding inside the forced item frame, while a Host capture
+showed no supported phase during the actual pure-scroll interval. A matching platform trace placed
+cold direct render under `RV Scroll`, not `RV Prefetch`, and retained input/traversal and
+RenderThread work outside the finite timer. The result was actionable for triage but insufficient
+for optimization acceptance: it changed which hypotheses were rejected, yet no measured candidate
+closed the Release tail. Future interaction-armed or future-Session capture is therefore a new
+diagnostic expansion, not behavior that callers should assume today.
+
 ## 8. Demo inspector
 
 `Diagnostics -> Renderer` provides the render tree, patch timeline, recomposition reasons,
