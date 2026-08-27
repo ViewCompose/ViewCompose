@@ -1,7 +1,24 @@
 ---
 translation_source: modules/viewcompose-diagnostics/README.md
-translation_source_hash: 5484310085f152f123f862110c6847dadbd57614f0254ffcd249843859ec3c95
+translation_source_hash: 130f3781459df08730fb7d6ff50d21f1aa262c454240da48700bcd6aea494112
 translation_status: current
+schema_version: 2
+document_id: module.viewcompose-diagnostics
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-diagnostics
+version_lane: released
+capability_ids:
+  - diagnostics.failure-aggregation
+artifact_ids:
+  - viewcompose-diagnostics
+sample_ids:
+  - module.diagnostics-dependency
+  - module.diagnostics-failure-aggregation
+  - module.diagnostics-snapshot-export
+coordinate: com.viewcompose:viewcompose-diagnostics:0.1.0-alpha01
+minimal_usage_sample_id: module.diagnostics-dependency
 ---
 
 # 诊断模块
@@ -13,6 +30,7 @@ View 遍历或进程全局 Sink。
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="diagnostics-module-dependency" sample_id="module.diagnostics-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-diagnostics:0.1.0-alpha01")
@@ -30,18 +48,23 @@ dependencies {
 
 创建一个由应用持有的聚合器，并把它作为根诊断 Sink：
 
+{/* compiled-region source="viewcompose-diagnostics/src/test/samples/com/viewcompose/diagnostics/samples/RenderFailureAggregationSamples.kt" region="diagnostics-failure-aggregation" sample_id="module.diagnostics-failure-aggregation" build_target=":viewcompose-diagnostics:compileDebugUnitTestKotlin" */}
 ```kotlin
-val failureAggregator = BoundedRenderFailureAggregator()
-val diagnostics = RenderDiagnostics(
-    collection = RenderDiagnosticCollection(
-        lifecycle = false,
-        failures = true,
-        frameLevel = RenderFrameDiagnosticLevel.None,
-    ),
-    sink = failureAggregator,
-)
-
-setUiContent(diagnostics = diagnostics) { App() }
+fun boundedFailureAggregationSample(
+    install: (RenderDiagnostics) -> Unit,
+): BoundedRenderFailureAggregator {
+    val aggregator = BoundedRenderFailureAggregator()
+    val diagnostics = RenderDiagnostics(
+        collection = RenderDiagnosticCollection(
+            lifecycle = false,
+            failures = true,
+            frameLevel = RenderFrameDiagnosticLevel.None,
+        ),
+        sink = aggregator,
+    )
+    install(diagnostics)
+    return aggregator
+}
 ```
 
 该配置只收集结构化故障。它不会构建帧统计或树、激活 Preview 工具、遍历已挂载 View、读取逐节点时钟、
@@ -85,9 +108,15 @@ Local 值、URL、媒体、凭据、任意 `toString()` 输出和原始 `Throwab
 Snapshot 和重置都是同步内存操作。应在渲染 Sink 投递之外执行导出，并把慢 I/O 放到应用持有的调度
 与背压之后：
 
+{/* compiled-region source="viewcompose-diagnostics/src/test/samples/com/viewcompose/diagnostics/samples/RenderFailureAggregationSamples.kt" region="diagnostics-snapshot-export" sample_id="module.diagnostics-snapshot-export" build_target=":viewcompose-diagnostics:compileDebugUnitTestKotlin" */}
 ```kotlin
-val completedWindow = failureAggregator.snapshotAndReset()
-applicationQueue.trySend(completedWindow)
+fun exportFailureAggregationSnapshotSample(
+    aggregator: BoundedRenderFailureAggregator,
+    forward: (RenderFailureAggregationSnapshot) -> Unit,
+) {
+    val completedWindow = aggregator.snapshotAndReset()
+    forward(completedWindow)
+}
 ```
 
 本模块永远不会调用导出器，因此导出失败无法递归发布渲染故障。根 Sink 抛出异常仍遵循 Foundation

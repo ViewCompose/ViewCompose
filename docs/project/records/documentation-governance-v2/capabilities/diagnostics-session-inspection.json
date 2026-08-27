@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "capability_id": "diagnostics.session-inspection",
+  "kind": "tooling",
+  "owner": { "kind": "module", "id": "viewcompose-ui-foundation" },
+  "artifact": "viewcompose-ui-foundation",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionPlatformDiagnostics", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSessionPlatform.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionInspectionTooling", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSessionPlatform.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionInspectionPolicy", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSessionPlatform.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionInspectionRegistration", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSessionPlatform.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderNodeToken", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderNodeInspection.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderInspectedNodeKind", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderNodeInspection.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderNodePlatformTarget", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderNodeInspection.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderInspectedNode", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderNodeInspection.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderNodeInspectionSnapshot", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderNodeInspection.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionNodeInspection", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderNodeInspection.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionDiagnosticInspection", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSessionDiagnosticInspection.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionDiagnosticSnapshot", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSessionDiagnosticInspection.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionInspectedFrame", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSessionDiagnosticInspection.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionInspectedFailure", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSessionDiagnosticInspection.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.diagnostics.session-inspection", "generated": true },
+  "sample_owner": { "sample_id": "tooling.diagnostics-session-inspection" },
+  "document_owners": {
+    "tutorial": ["tutorial.render-diagnostics"],
+    "architecture": ["adr.correlated-render-diagnostics"],
+    "tooling": ["tooling.diagnostics"]
+  }
+}

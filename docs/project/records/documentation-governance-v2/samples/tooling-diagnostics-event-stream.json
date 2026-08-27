@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "tooling.diagnostics-event-stream",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "diagnostics.correlated-events",
+  "document_ids": ["tooling.diagnostics", "architecture.render-failures"],
+  "version_lane": "released",
+  "source": "viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/RenderSessionToolingSamples.kt",
+  "region": "diagnostics-correlated-events",
+  "build_target": ":viewcompose-ui-foundation:compileDebugUnitTestKotlin"
+}

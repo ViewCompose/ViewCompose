@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "sample_id": "adr.correlated-diagnostics-identity",
+  "sample_class": "non-executable",
+  "language": "kotlin",
+  "capability_id": "diagnostics.correlated-events",
+  "document_ids": ["adr.correlated-render-diagnostics"],
+  "version_lane": "released",
+  "reason": "This accepted ADR preserves a condensed declaration model and intentionally omits package context and constructor visibility details.",
+  "visible_explanation": "Treat this fence as accepted identity vocabulary; use the versioned API reference for copy-ready declarations."
+}

@@ -22,6 +22,7 @@ import com.viewcompose.ui.foundation.RenderSessionActivityChanged
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.tooling.UiSourceCallSite
 
+// DOCS_REGION_START(diagnostics-correlated-events)
 fun renderDiagnosticsEventSample(): RenderDiagnostics {
     return RenderDiagnostics(
         collection = RenderDiagnosticCollection(
@@ -41,7 +42,9 @@ fun renderDiagnosticsEventSample(): RenderDiagnostics {
         },
     )
 }
+// DOCS_REGION_END(diagnostics-correlated-events)
 
+// DOCS_REGION_START(diagnostics-session-inspection)
 fun renderSessionInspectionToolingSample(): RenderSessionInspectionTooling {
     var renderingActive = true
     var disposed = false
@@ -84,6 +87,7 @@ fun renderSessionInspectionToolingSample(): RenderSessionInspectionTooling {
     check(renderingActive && !disposed)
     return tooling
 }
+// DOCS_REGION_END(diagnostics-session-inspection)
 
 fun renderSessionNodeInspectionSample(nodeInspection: RenderSessionNodeInspection) {
     val snapshot = nodeInspection.snapshot()
@@ -95,6 +99,7 @@ fun renderSessionNodeInspectionSample(nodeInspection: RenderSessionNodeInspectio
     }
 }
 
+// DOCS_REGION_START(diagnostics-node-timing)
 fun renderSessionTimingInspectionSample(
     timingInspection: RenderSessionTimingInspection,
 ): RenderNodeTimingCapture? {
@@ -111,3 +116,4 @@ fun renderSessionTimingInspectionSample(
     if (start.status != RenderNodeTimingStartStatus.Started) return null
     return start.capture
 }
+// DOCS_REGION_END(diagnostics-node-timing)

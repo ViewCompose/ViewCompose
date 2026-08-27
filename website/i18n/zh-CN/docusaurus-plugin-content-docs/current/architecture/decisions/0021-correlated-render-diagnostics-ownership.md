@@ -1,7 +1,33 @@
 ---
 translation_source: architecture/decisions/0021-correlated-render-diagnostics-ownership.md
-translation_source_hash: 73cc96b1613241db41172dca58373ea3880c5575fbcc93bc0d86d6a43c07d096
+translation_source_hash: f51a224671ada53bd1394c0e2eea366d8b8eec178b5f7cba39b1a2ef684b186c
 translation_status: current
+schema_version: 2
+document_id: adr.correlated-render-diagnostics
+doc_type: architecture
+owner:
+  kind: project
+  id: diagnostics
+version_lane: released
+capability_ids:
+  - diagnostics.correlated-events
+  - diagnostics.session-inspection
+  - diagnostics.node-timing
+  - diagnostics.failure-aggregation
+  - renderer.diagnostics
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+  - viewcompose-diagnostics
+  - viewcompose-preview
+sample_ids:
+  - adr.correlated-diagnostics-identity
+  - adr.correlated-diagnostics-event-model
+invariants:
+  - 一套进程内 Session 身份与父子图关联生命周期、故障、帧、源码、节点和计时证据。
+  - 可选检查在显式请求前不执行遍历、序列化、周期观察或逐节点时钟读取。
+evidence:
+  - 关联、传播、故障隔离、有界聚合、节点检查、计时、Release 隔离与真机验收测试。
 ---
 
 # ADR-0021：关联式渲染诊断归属
@@ -27,6 +53,7 @@ translation_status: current
 
 Phase 1 引入以下公共契约：
 
+{/* non-executable sample_id="adr.correlated-diagnostics-identity" reason="This accepted ADR preserves a condensed declaration model and intentionally omits package context and constructor visibility details." visible_explanation="Treat this fence as accepted identity vocabulary; use the versioned API reference for copy-ready declarations." */}
 ```kotlin
 @JvmInline
 value class RenderSessionTraceId internal constructor(val value: Long)
@@ -69,6 +96,7 @@ Phase 1 删除 `UiSourceSessionRole` 和 `UiSourceSessionContainerHandle`。源�
 
 ### 统一事件契约与硬切
 
+{/* non-executable sample_id="adr.correlated-diagnostics-event-model" reason="This accepted ADR condenses the sealed event family and omits the concrete event declarations that complete the production hierarchy." visible_explanation="Treat this fence as the accepted event-contract outline; use the compiled Tutorial and versioned API reference for copy-ready code." */}
 ```kotlin
 enum class RenderFrameDiagnosticLevel { None, Stats, Tree }
 

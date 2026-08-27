@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register correlated diagnostics, inspection, timing, and failure-aggregation documentation ownership without changing published artifacts.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-ui-foundation",
+      "reason": "Only test-only compiled documentation fixtures gain exact source-region comments; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-diagnostics",
+      "reason": "Only test-only compiled documentation fixtures are separated into clearer installation and export examples; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

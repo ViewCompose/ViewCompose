@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "capability_id": "diagnostics.failure-aggregation",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-diagnostics" },
+  "artifact": "viewcompose-diagnostics",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.diagnostics.RenderFailureStackFrame", "kind": "type", "visibility": "public", "source": "viewcompose-diagnostics/src/main/kotlin/com/viewcompose/diagnostics/BoundedRenderFailureAggregator.kt" },
+    { "symbol_id": "com.viewcompose.diagnostics.RenderFailureFingerprint", "kind": "type", "visibility": "public", "source": "viewcompose-diagnostics/src/main/kotlin/com/viewcompose/diagnostics/BoundedRenderFailureAggregator.kt" },
+    { "symbol_id": "com.viewcompose.diagnostics.RenderFailureAggregate", "kind": "type", "visibility": "public", "source": "viewcompose-diagnostics/src/main/kotlin/com/viewcompose/diagnostics/BoundedRenderFailureAggregator.kt" },
+    { "symbol_id": "com.viewcompose.diagnostics.RenderFailureAggregationSnapshot", "kind": "type", "visibility": "public", "source": "viewcompose-diagnostics/src/main/kotlin/com/viewcompose/diagnostics/BoundedRenderFailureAggregator.kt" },
+    { "symbol_id": "com.viewcompose.diagnostics.BoundedRenderFailureAggregator", "kind": "type", "visibility": "public", "source": "viewcompose-diagnostics/src/main/kotlin/com/viewcompose/diagnostics/BoundedRenderFailureAggregator.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.diagnostics.failure-aggregation", "generated": true },
+  "sample_owner": { "sample_id": "module.diagnostics-failure-aggregation" },
+  "document_owners": {
+    "module": ["module.viewcompose-diagnostics"],
+    "tutorial": ["tutorial.render-diagnostics"],
+    "architecture": ["architecture.render-failures", "adr.correlated-render-diagnostics"],
+    "tooling": ["tooling.diagnostics"]
+  }
+}

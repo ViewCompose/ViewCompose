@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "tutorial.render-diagnostics",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "diagnostics.correlated-events",
+  "document_ids": ["tutorial.render-diagnostics"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/RenderDiagnosticsTutorialActivity.kt",
+  "region": "render-diagnostics",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

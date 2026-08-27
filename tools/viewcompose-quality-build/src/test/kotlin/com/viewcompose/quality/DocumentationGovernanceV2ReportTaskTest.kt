@@ -170,6 +170,232 @@ class DocumentationGovernanceV2ReportTaskTest {
     }
 
     @Test
+    fun `foundation diagnostics contracts are inventoried without widening foundation types`() {
+        val repository = temporaryFolder.newFolder("foundation-diagnostics-capability-repository")
+        val contractRoot = repository.resolve(
+            "docs/project/contracts/documentation-governance-v2",
+        )
+        fixtureContract(contractRoot)
+        val sourceRoot = repository.resolve("viewcompose-ui-foundation/src").apply { mkdirs() }
+        repository.resolve(
+            "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/Diagnostics.kt",
+        ).apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package com.viewcompose.ui.foundation
+
+                class RenderDiagnostics
+                data class RenderFailure(val message: String)
+                fun interface RenderNodeTimingCapture
+                interface RenderSessionInspectionTooling
+                class UnrelatedFoundationContract
+                private class HiddenRenderDiagnostics
+                """.trimIndent(),
+            )
+        }
+        val publishing = repository.resolve("gradle/viewcompose-publishing.properties").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                release.unpublishedModules=viewcompose-ui-foundation
+                module.viewcompose-ui-foundation.version=1.0.0
+                module.viewcompose-ui-foundation.sourceRevision=abc
+                """.trimIndent(),
+            )
+        }
+        val releases = repository.resolve(
+            "gradle/viewcompose-documentation-releases.properties",
+        ).apply {
+            writeText("release.count=0\n")
+        }
+        val translationPolicy = repository.resolve("website/i18n/translation-policy.json").apply {
+            parentFile.mkdirs()
+            writeText("""{"schemaVersion":1,"locale":"zh-CN","required":[]}""")
+        }
+        val moduleCatalog = repository.resolve("docs/modules/README.md").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                | Artifact | Family | Runtime role | Manual |
+                | --- | --- | --- | --- |
+                | `viewcompose-ui-foundation` | Foundation | Test | Available |
+                """.trimIndent(),
+            )
+        }
+
+        val result = DocumentationGovernanceV2Reporter.generate(
+            repository = repository,
+            contractFiles = contractRoot.walkTopDown().filter(File::isFile).toSet(),
+            recordFiles = emptySet(),
+            sourceSetDirectories = setOf(sourceRoot),
+            activeDocumentationFiles = emptySet(),
+            localeMirrorFiles = emptySet(),
+            publishingFiles = setOf(publishing, releases),
+            documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
+        )
+        @Suppress("UNCHECKED_CAST")
+        val report = JsonSlurper().parseText(result.report) as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val discovery = report.getValue("discovery") as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val declarations = discovery.getValue("capabilityDeclarations") as List<Map<String, Any?>>
+        val kindsBySymbol = declarations.associate { declaration ->
+            declaration.getValue("symbol").toString() to declaration.getValue("kind").toString()
+        }
+
+        assertEquals("tooling", kindsBySymbol["com.viewcompose.ui.foundation.RenderDiagnostics"])
+        assertEquals("tooling", kindsBySymbol["com.viewcompose.ui.foundation.RenderFailure"])
+        assertEquals(
+            "tooling",
+            kindsBySymbol["com.viewcompose.ui.foundation.RenderNodeTimingCapture"],
+        )
+        assertEquals(
+            "tooling",
+            kindsBySymbol["com.viewcompose.ui.foundation.RenderSessionInspectionTooling"],
+        )
+        assertFalse(
+            kindsBySymbol.containsKey("com.viewcompose.ui.foundation.UnrelatedFoundationContract"),
+        )
+        assertFalse(kindsBySymbol.containsKey("com.viewcompose.ui.foundation.HiddenRenderDiagnostics"))
+    }
+
+    @Test
+    fun `capability reference normalizes shared ownership metadata once`() {
+        val repository = temporaryFolder.newFolder("normalized-reference-repository")
+        val contractRoot = repository.resolve(
+            "docs/project/contracts/documentation-governance-v2",
+        )
+        fixtureContract(contractRoot)
+        contractRoot.resolve("contract-set.json").writeText(
+            """
+            {
+              "contracts": [
+                {
+                  "id": "capability",
+                  "schema": "capability.schema.json",
+                  "accepted": ["fixtures/accepted/capability.json"],
+                  "rejected": [
+                    {
+                      "fixture": "fixtures/rejected/capability.json",
+                      "rule": "capability_id is required"
+                    }
+                  ]
+                }
+              ]
+            }
+            """.trimIndent(),
+        )
+        contractRoot.resolve("capability.schema.json").writeText(
+            """
+            {
+              "type": "object",
+              "required": ["capability_id"],
+              "properties": {
+                "capability_id": {"type": "string", "minLength": 1}
+              }
+            }
+            """.trimIndent(),
+        )
+        contractRoot.resolve("fixtures/accepted/capability.json")
+            .writeText("{\"capability_id\":\"example.entries\"}\n")
+        contractRoot.resolve("fixtures/rejected/capability.json").writeText("{}\n")
+        val sourceRoot = repository.resolve("viewcompose-example/src").apply { mkdirs() }
+        repository.resolve("viewcompose-example/src/main/java/example/Entries.kt").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                package example
+
+                class FirstEntry
+                class SecondEntry
+                """.trimIndent(),
+            )
+        }
+        val publishing = repository.resolve("gradle/viewcompose-publishing.properties").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                release.unpublishedModules=viewcompose-example
+                module.viewcompose-example.version=1.0.0
+                module.viewcompose-example.sourceRevision=abc
+                """.trimIndent(),
+            )
+        }
+        val releases = repository.resolve(
+            "gradle/viewcompose-documentation-releases.properties",
+        ).apply {
+            writeText("release.count=0\n")
+        }
+        val translationPolicy = repository.resolve("website/i18n/translation-policy.json").apply {
+            parentFile.mkdirs()
+            writeText("""{"schemaVersion":1,"locale":"zh-CN","required":[]}""")
+        }
+        val moduleCatalog = repository.resolve("docs/modules/README.md").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                | Artifact | Family | Runtime role | Manual |
+                | --- | --- | --- | --- |
+                | `viewcompose-example` | Integration | Test | Available |
+                """.trimIndent(),
+            )
+        }
+        val capability = repository.resolve(
+            "docs/project/records/documentation-governance-v2/capabilities/example.json",
+        ).apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                {
+                  "schema_version": 2,
+                  "capability_id": "example.entries",
+                  "kind": "integration",
+                  "owner": {"kind": "module", "id": "viewcompose-example"},
+                  "artifact": "viewcompose-example",
+                  "version_state": {"lane": "next"},
+                  "symbols": [
+                    {"symbol_id": "example.FirstEntry", "kind": "type", "visibility": "public", "source": "viewcompose-example/src/main/java/example/Entries.kt"},
+                    {"symbol_id": "example.SecondEntry", "kind": "type", "visibility": "public", "source": "viewcompose-example/src/main/java/example/Entries.kt"}
+                  ],
+                  "reference_owner": {"reference_id": "reference.example.entries", "generated": true},
+                  "sample_owner": {"exception_id": "DOC-9999"},
+                  "document_owners": {}
+                }
+                """.trimIndent(),
+            )
+        }
+
+        val result = DocumentationGovernanceV2Reporter.generate(
+            repository = repository,
+            contractFiles = contractRoot.walkTopDown().filter(File::isFile).toSet(),
+            recordFiles = setOf(capability),
+            sourceSetDirectories = setOf(sourceRoot),
+            activeDocumentationFiles = emptySet(),
+            localeMirrorFiles = emptySet(),
+            publishingFiles = setOf(publishing, releases),
+            documentationPolicyFiles = setOf(translationPolicy, moduleCatalog),
+        )
+        @Suppress("UNCHECKED_CAST")
+        val reference = JsonSlurper().parseText(result.referenceCatalog) as Map<String, Any?>
+        assertEquals(2, (reference.getValue("schemaVersion") as Number).toInt())
+        @Suppress("UNCHECKED_CAST")
+        val capabilities = reference.getValue("capabilities") as List<Map<String, Any?>>
+        assertEquals(1, capabilities.size)
+        assertEquals("example.entries", capabilities.single()["capabilityId"])
+        assertEquals("reference.example.entries", capabilities.single()["referenceId"])
+        @Suppress("UNCHECKED_CAST")
+        val groups = reference.getValue("groups") as List<Map<String, Any?>>
+        val entries = groups.flatMap { group ->
+            @Suppress("UNCHECKED_CAST")
+            group.getValue("entries") as List<Map<String, Any?>>
+        }
+        assertEquals(2, entries.size)
+        assertTrue(entries.all { entry -> entry["capabilityId"] == "example.entries" })
+        assertTrue(entries.none { entry -> "referenceId" in entry || "sample" in entry })
+    }
+
+    @Test
     fun `discovery is deterministic and unbaselined debt is blocking`() {
         val repository = temporaryFolder.newFolder("report-repository")
         val contractRoot = repository.resolve(

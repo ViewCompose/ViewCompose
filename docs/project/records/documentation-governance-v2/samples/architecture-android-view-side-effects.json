@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "sample_id": "architecture.android-view-side-effects",
+  "sample_class": "non-executable",
+  "language": "kotlin",
+  "capability_id": "host.android-view",
+  "document_ids": ["architecture.render-failures"],
+  "version_lane": "released",
+  "reason": "This architecture excerpt uses application-specific player and analytics placeholders to distinguish replay-safe and commit-only effects.",
+  "visible_explanation": "This is an architecture boundary sketch; replace the player and analytics placeholders with application-owned implementations."
+}
