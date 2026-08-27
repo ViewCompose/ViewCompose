@@ -14,6 +14,6 @@
   "document_owners": {
     "module": ["module.viewcompose-ui-foundation"],
     "guide": ["guide.theming-local-overrides"],
-    "architecture": ["architecture.theme-runtime"]
+    "architecture": ["architecture.theme-runtime", "architecture.design-system-integration"]
   }
 }

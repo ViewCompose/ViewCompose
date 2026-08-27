@@ -1,3 +1,35 @@
+---
+schema_version: 2
+document_id: architecture.state-snapshots
+doc_type: architecture
+owner:
+  kind: capability
+  id: runtime.state
+version_lane: released
+capability_ids:
+  - runtime.state
+  - lazy.collections
+artifact_ids:
+  - viewcompose-runtime
+  - viewcompose-ui-contract
+sample_ids:
+  - module.runtime-state
+  - module.runtime-snapshot
+  - guide.lazy-collections-state
+invariants:
+  - MutableState reads select an MVCC StateRecord visible to the active snapshot and every write publishes through a mutable-snapshot transaction.
+  - Concurrent apply never overwrites silently; equality may remove the write, policy merge may resolve it, and an unresolved conflict fails.
+  - One successful apply invalidates each affected Observation at most once after runtime locks are released.
+  - Prepared observation replacement commits or aborts dependency ownership without an invalidation gap or recurring full resubscription.
+  - Renderer-connected state publishes immutable logical snapshots and never owns an Android View.
+evidence:
+  - viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotApiTest.kt
+  - viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotMutationPolicyTest.kt
+  - viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotStateTest.kt
+  - viewcompose-runtime/src/test/java/com/viewcompose/runtime/observation/RuntimeObservationTest.kt
+  - viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/state/StateConnectorContractTest.kt
+---
+
 # ViewCompose State Snapshots
 
 ## 1. Scope

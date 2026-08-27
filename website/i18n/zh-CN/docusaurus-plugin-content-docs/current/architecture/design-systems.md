@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/design-systems.md
-translation_source_hash: 51312889fdf1a8d9e678fd1c587f766bfdbfe51453ad567e407833d6ddc10aaf
+translation_source_hash: 7b208f8c1d9fc29118f5c4d4333a8f4b5756d7bc6a8b11a8413ed9a12b13e5c3
 translation_status: current
 ---
 

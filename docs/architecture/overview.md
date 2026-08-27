@@ -1,3 +1,27 @@
+---
+schema_version: 2
+document_id: architecture.system-overview
+doc_type: architecture
+owner:
+  kind: project
+  id: architecture
+version_lane: released
+capability_ids: []
+artifact_ids: []
+sample_ids: []
+invariants:
+  - Published runtime modules follow the five-layer dependency direction; aggregates and tooling never reverse a lower-layer boundary.
+  - UI Foundation declares renderer-neutral UI while Android Engine mounts resolved contracts without owning business DSL or design-system policy.
+  - RenderSession publishes composition, native-tree, effect, overlay, and diagnostic outcomes through one explicit transactional boundary.
+  - Delayed content retains logical Session identity separately from physical Android holders and refreshes only through committed parent submissions.
+  - Named design systems resolve Context and immutable policy above the neutral host and renderer.
+evidence:
+  - gradle/viewcompose-dependency-contracts.properties
+  - tools/viewcompose-quality-build/src/test/kotlin/com/viewcompose/quality/ArchitectureGateParityTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt
+  - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt
+---
+
 # ViewCompose Architecture
 
 ## 1. Purpose

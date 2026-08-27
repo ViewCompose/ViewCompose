@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/state-snapshots.md
-translation_source_hash: 15a51eebdc5fe3eb6d00da371bfb6b3a3a7ed13a6ca65119356d5af5bb2a2a45
+translation_source_hash: 56ea76e79319041f8442714b031133f82d8aed6fa46f5e5410ef2ad66f88eb5c
 translation_status: current
 ---
 

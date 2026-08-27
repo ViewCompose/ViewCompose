@@ -24,7 +24,7 @@
   "reference_owner": { "reference_id": "reference.host.android-resources", "generated": true },
   "sample_owner": { "sample_id": "module.host-android-resources" },
   "document_owners": {
-    "architecture": ["architecture.android-resource-environment"],
+    "architecture": ["architecture.android-resource-environment", "architecture.design-system-integration"],
     "module": ["module.viewcompose-host-android", "module.viewcompose-android"]
   }
 }

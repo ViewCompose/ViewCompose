@@ -46,7 +46,8 @@
   },
   "document_owners": {
     "architecture": [
-      "architecture.effects"
+      "architecture.effects",
+      "architecture.state-snapshots"
     ],
     "module": [
       "module.viewcompose-runtime"

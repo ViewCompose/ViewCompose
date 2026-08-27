@@ -15,7 +15,7 @@
   "document_owners": {
     "tutorial": ["tutorial.overlays"],
     "guide": ["guide.overlay-presentation"],
-    "architecture": ["architecture.overlay-root-selection"],
+    "architecture": ["architecture.overlay-root-selection", "architecture.design-system-integration"],
     "module": ["module.viewcompose-overlay-android"]
   }
 }

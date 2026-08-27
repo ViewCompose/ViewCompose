@@ -1,3 +1,31 @@
+---
+schema_version: 2
+document_id: architecture.node-spec
+doc_type: architecture
+owner:
+  kind: capability
+  id: renderer.reconciliation
+version_lane: released
+capability_ids:
+  - renderer.reconciliation
+  - renderer.tree-transactions
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+sample_ids: []
+invariants:
+  - Every VNode carries exactly one non-null NodeSpec; no parallel dynamic Props map participates in declaration or rendering.
+  - NodeSpec semantic values are immutable, structurally comparable, platform-neutral inputs to equality, patch planning, subtree skipping, diagnostics, and rollback.
+  - Component semantics belong to NodeSpec, general ordered decoration belongs to Modifier, and theme policy resolves before either reaches Renderer.
+  - DSL emission, descriptor binding, and patching consume the same typed NodeSpec contract and reject mismatched types deterministically.
+evidence:
+  - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/guard/PropsRegressionGuardTest.kt
+  - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/NodeSpecAccessTest.kt
+  - viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/node/NodeSpecTextContractTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/widget/layout/ContainerNodeSpecTest.kt
+---
+
 # NodeSpec-Only Specification
 
 ## 1. Scope

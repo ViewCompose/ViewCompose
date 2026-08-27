@@ -1,3 +1,41 @@
+---
+schema_version: 2
+document_id: architecture.delayed-session-containers
+doc_type: architecture
+owner:
+  kind: capability
+  id: lazy.collections
+version_lane: released
+capability_ids:
+  - lazy.collections
+  - navigation.host
+  - renderer.reconciliation
+  - renderer.tree-transactions
+artifact_ids:
+  - viewcompose-ui-contract
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+  - viewcompose-navigation-android
+sample_ids:
+  - guide.lazy-collections-state
+  - guide.lazy-collections-grid
+  - guide.lazy-collections-pager
+  - tutorial.lazy-list-performance
+invariants:
+  - Logical item, page, and destination Sessions are owned independently from recyclable Android holders and containers.
+  - Parent composition publishes child submissions only after its own commit; rollback runs no child composition, effects, overlays, or diagnostics.
+  - Equal semantic revision and framework environment skip child rendering, while an explicit changed revision refreshes the retained logical Session.
+  - Preparation remains externally silent until activation, and recycling ends logical ownership before native reset or bounded physical reuse.
+  - Keys, content types, spans, saveable state, and presentation replicas preserve deterministic identity without collision or first-match recovery.
+evidence:
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/LazyItemsSnapshotContractTest.kt
+  - viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt
+  - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt
+  - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/lazy/adapter/LazyListAdapterTest.kt
+  - viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/container/PagerAdapterTest.kt
+  - viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavDestinationSessionStoreTest.kt
+---
+
 # Delayed Session Container Checklist
 
 ## 1. Scope
