@@ -11,6 +11,14 @@ import com.viewcompose.ui.foundation.RenderDiagnostics
 import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 import com.viewcompose.ui.foundation.Text
 
+// DOCS_REGION_START(material3-android-module-host)
+fun installMaterial3Content(activity: ComponentActivity) {
+    activity.setMaterial3UiContent {
+        Text("Hello from Material 3 ViewCompose")
+    }
+}
+// DOCS_REGION_END(material3-android-module-host)
+
 fun material3ActivityHostSample(activity: ComponentActivity) {
     val diagnostics = RenderDiagnostics(
         collection = RenderDiagnosticCollection(

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-oneui7/README.md
-translation_source_hash: c487246d17a6fa46a66de80986f2d6e94bac2c4aa649f2aa1c7c9badd039e387
+translation_source_hash: 83abfd9c43ba66c83afc80081c37fbadfe172d053ac946c631042bbe93ef5ee3
 translation_status: current
 ---
 
@@ -15,6 +15,7 @@ NavigationBar 组件集；视觉方向参考 Samsung 公开的 One UI 7 设计�
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="oneui7-module-dependency" sample_id="module.oneui7-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
@@ -65,10 +66,11 @@ Typography Scale 或 One UI 7 Overlay Chrome 的精确值。这些仍是 ViewCom
 
 在使用这些组件的内容根部安装一份完整、不可变的快照：
 
+{/* compiled-region source="viewcompose-oneui7/src/test/samples/com/viewcompose/oneui7/samples/OneUi7Samples.kt" region="oneui7-module-theme" sample_id="module.oneui7-theme" build_target=":viewcompose-oneui7:compileDebugUnitTestKotlin" */}
 ```kotlin
-setUiContent {
+fun UiTreeBuilder.oneUi7MinimalSample() {
     OneUi7Theme(tokens = OneUi7ThemeDefaults.light()) {
-        OneUi7Button(text = "Continue", onClick = { continueFlow() })
+        OneUi7Button(text = "Continue", onClick = {})
     }
 }
 ```
@@ -81,7 +83,7 @@ setUiContent {
 交互反馈由快照中的 `UiInteractionTokens` 与各 One UI Recipe 的语义内容角色定义。适配器不使用
 平行的 `UiColors.ripple` 槽位；应用通过替换 `tokens.interactions` 自定义按下、聚焦和悬停策略。
 
-完整的可编译示例见
+完整的可编译示例使用调用方持有的状态覆盖全部五个组件家族，见
 [`OneUi7Samples.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-oneui7/src/test/samples/com/viewcompose/oneui7/samples/OneUi7Samples.kt)。
 
 ## 公开组件集

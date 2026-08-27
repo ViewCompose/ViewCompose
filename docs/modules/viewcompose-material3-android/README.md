@@ -1,3 +1,23 @@
+---
+schema_version: 2
+document_id: module.viewcompose-material3-android
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-material3-android
+version_lane: released
+capability_ids:
+  - material3.components
+  - theme.material3
+artifact_ids:
+  - viewcompose-material3-android
+sample_ids:
+  - module.material3-android-dependency
+  - module.material3-android-host
+coordinate: com.viewcompose:viewcompose-material3-android:0.1.0-alpha01
+minimal_usage_sample_id: module.material3-android-host
+---
+
 # Material 3 Android Application Integration
 
 `viewcompose-material3-android` is the recommended single dependency for an Android Material 3
@@ -10,6 +30,7 @@ APIs through intentional `api` dependencies.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="material3-android-module-dependency" sample_id="module.material3-android-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
@@ -24,15 +45,11 @@ dependencies {
 
 ## Named Material host
 
+{/* compiled-region source="viewcompose-material3-android/src/test/samples/com/viewcompose/material3/android/samples/Material3AndroidHostSamples.kt" region="material3-android-module-host" sample_id="module.material3-android-host" build_target=":viewcompose-material3-android:compileDebugUnitTestKotlin" */}
 ```kotlin
-import com.viewcompose.material3.android.setMaterial3UiContent
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setMaterial3UiContent {
-            Text("Hello from Material 3 ViewCompose")
-        }
+fun installMaterial3Content(activity: ComponentActivity) {
+    activity.setMaterial3UiContent {
+        Text("Hello from Material 3 ViewCompose")
     }
 }
 ```

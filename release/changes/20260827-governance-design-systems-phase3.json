@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register Material 3, Material 3 Android, and One UI 7 documentation and capability ownership without changing published artifacts.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-material3",
+      "reason": "Only test-only compiled documentation samples and governance records are changed; production sources, public signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-material3-android",
+      "reason": "Only test-only compiled documentation samples and governance records are changed; production sources, public signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-oneui7",
+      "reason": "Only test-only compiled documentation samples and governance records are changed; production sources, public signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

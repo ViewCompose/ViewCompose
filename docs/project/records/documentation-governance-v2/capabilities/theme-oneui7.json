@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "capability_id": "theme.oneui7",
+  "kind": "integration",
+  "owner": { "kind": "module", "id": "viewcompose-oneui7" },
+  "artifact": "viewcompose-oneui7",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.oneui7.UiTreeBuilder.OneUi7Theme", "kind": "extension", "visibility": "public", "source": "viewcompose-oneui7/src/main/java/com/viewcompose/oneui7/OneUi7Components.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.theme.oneui7", "generated": true },
+  "sample_owner": { "sample_id": "module.oneui7-theme" },
+  "document_owners": {
+    "module": ["module.viewcompose-oneui7"]
+  }
+}

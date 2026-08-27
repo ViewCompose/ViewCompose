@@ -1,3 +1,24 @@
+---
+schema_version: 2
+document_id: module.viewcompose-material3
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-material3
+version_lane: released
+capability_ids:
+  - material3.components
+  - theme.material3
+artifact_ids:
+  - viewcompose-material3
+sample_ids:
+  - module.material3-dependency
+  - module.material3-theme
+  - module.material3-components
+coordinate: com.viewcompose:viewcompose-material3:0.1.0-alpha01
+minimal_usage_sample_id: module.material3-theme
+---
+
 # Material 3 Theme Adapter
 
 `viewcompose-material3` is the design-system layer for Google Material 3 on Android. It reads
@@ -13,6 +34,7 @@ dependency.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="material3-module-dependency" sample_id="module.material3-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-material3:0.1.0-alpha01")
@@ -34,14 +56,11 @@ owned by `viewcompose-host-android`, not Material. `Material3ResolvedTheme.refre
 stable wrapper before token mapping. `Material3ThemeRefreshController` remains available only for
 low-level hosts that have not installed the standard Android resource environment.
 
+{/* compiled-region source="viewcompose-material3/src/test/samples/com/viewcompose/material3/samples/Material3ThemeSamples.kt" region="material3-module-theme" sample_id="module.material3-theme" build_target=":viewcompose-material3:compileDebugUnitTestKotlin" */}
 ```kotlin
-val resolved = Material3ThemeBridge.resolveContext(
-    context = activity,
-    dynamicColorPolicy = Material3DynamicColorPolicy.UseIfAvailable,
-)
-
-Material3Theme(resolvedTheme = resolved) {
-    Content()
+val resolvedTheme = Material3ThemeBridge.resolveContext(context)
+Material3Theme(resolvedTheme = resolvedTheme) {
+    Text("Content using Material 3 theme tokens")
 }
 ```
 
@@ -63,6 +82,9 @@ same five-family backend/conformance attribution through `DesignSystemDiagnostic
 | `Material3Switch` | Material colors/type over the native Android Switch behavioral core | Equivalent |
 | `Material3TextField` | Material decoration around the native Android editing core | Equivalent |
 | `Material3NavigationBar` | Material selection recipe over the neutral navigation renderer | Equivalent |
+
+The complete compiled pressure-slice example is
+[`Material3ThemeSamples.kt`](../../../viewcompose-material3/src/test/samples/com/viewcompose/material3/samples/Material3ThemeSamples.kt).
 
 The Material and One UI public vocabularies intentionally remain different. They share neutral
 execution and diagnostic contracts only; no union component API or global recipe bundle is

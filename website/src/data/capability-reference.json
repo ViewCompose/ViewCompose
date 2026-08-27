@@ -917,6 +917,27 @@
       }
     },
     {
+      "capabilityId": "material3.components",
+      "referenceId": "reference.material3.components",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-material3",
+          "documentType": "module",
+          "path": "/modules/viewcompose-material3"
+        },
+        {
+          "documentId": "module.viewcompose-material3-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-material3-android"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.material3-components",
+        "versionLane": "released"
+      }
+    },
+    {
       "capabilityId": "media3.player",
       "referenceId": "reference.media3.player",
       "relatedDocuments": [
@@ -1092,6 +1113,22 @@
       "sample": {
         "sampleClass": "compiled-region",
         "sampleId": "guide.nested-scroll-toolbar",
+        "versionLane": "released"
+      }
+    },
+    {
+      "capabilityId": "oneui7.components",
+      "referenceId": "reference.oneui7.components",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-oneui7",
+          "documentType": "module",
+          "path": "/modules/viewcompose-oneui7"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.oneui7-components",
         "versionLane": "released"
       }
     },
@@ -1548,11 +1585,37 @@
           "documentId": "architecture.theme-runtime",
           "documentType": "architecture",
           "path": "/architecture/theming"
+        },
+        {
+          "documentId": "module.viewcompose-material3",
+          "documentType": "module",
+          "path": "/modules/viewcompose-material3"
+        },
+        {
+          "documentId": "module.viewcompose-material3-android",
+          "documentType": "module",
+          "path": "/modules/viewcompose-material3-android"
         }
       ],
       "sample": {
         "sampleClass": "compiled-region",
         "sampleId": "tutorial.theming",
+        "versionLane": "released"
+      }
+    },
+    {
+      "capabilityId": "theme.oneui7",
+      "referenceId": "reference.theme.oneui7",
+      "relatedDocuments": [
+        {
+          "documentId": "module.viewcompose-oneui7",
+          "documentType": "module",
+          "path": "/modules/viewcompose-oneui7"
+        }
+      ],
+      "sample": {
+        "sampleClass": "compiled-region",
+        "sampleId": "module.oneui7-theme",
         "versionLane": "released"
       }
     },
@@ -2153,6 +2216,7 @@
       "entries": [
         {
           "artifact": "viewcompose-oneui7",
+          "capabilityId": "oneui7.components",
           "kind": "component",
           "namespace": "com.viewcompose.oneui7",
           "overloadCount": 1,
@@ -2161,6 +2225,7 @@
         },
         {
           "artifact": "viewcompose-oneui7",
+          "capabilityId": "oneui7.components",
           "kind": "component",
           "namespace": "com.viewcompose.oneui7",
           "overloadCount": 1,
@@ -2502,6 +2567,7 @@
       "entries": [
         {
           "artifact": "viewcompose-oneui7",
+          "capabilityId": "oneui7.components",
           "kind": "component",
           "namespace": "com.viewcompose.oneui7",
           "overloadCount": 1,
@@ -2597,6 +2663,7 @@
       "entries": [
         {
           "artifact": "viewcompose-oneui7",
+          "capabilityId": "oneui7.components",
           "kind": "component",
           "namespace": "com.viewcompose.oneui7",
           "overloadCount": 1,
@@ -2947,6 +3014,7 @@
       "entries": [
         {
           "artifact": "viewcompose-oneui7",
+          "capabilityId": "oneui7.components",
           "kind": "component",
           "namespace": "com.viewcompose.oneui7",
           "overloadCount": 1,
@@ -3006,6 +3074,7 @@
       "entries": [
         {
           "artifact": "viewcompose-material3",
+          "capabilityId": "material3.components",
           "kind": "component",
           "namespace": "com.viewcompose.material3",
           "overloadCount": 1,
@@ -3014,6 +3083,7 @@
         },
         {
           "artifact": "viewcompose-material3",
+          "capabilityId": "material3.components",
           "kind": "component",
           "namespace": "com.viewcompose.material3",
           "overloadCount": 1,
@@ -3022,6 +3092,7 @@
         },
         {
           "artifact": "viewcompose-material3",
+          "capabilityId": "material3.components",
           "kind": "component",
           "namespace": "com.viewcompose.material3",
           "overloadCount": 1,
@@ -3030,6 +3101,7 @@
         },
         {
           "artifact": "viewcompose-material3",
+          "capabilityId": "material3.components",
           "kind": "component",
           "namespace": "com.viewcompose.material3",
           "overloadCount": 1,
@@ -3038,6 +3110,7 @@
         },
         {
           "artifact": "viewcompose-material3",
+          "capabilityId": "material3.components",
           "kind": "component",
           "namespace": "com.viewcompose.material3",
           "overloadCount": 1,
@@ -3046,6 +3119,7 @@
         },
         {
           "artifact": "viewcompose-material3",
+          "capabilityId": "material3.components",
           "kind": "component",
           "namespace": "com.viewcompose.material3",
           "overloadCount": 1,
@@ -5975,6 +6049,7 @@
       "entries": [
         {
           "artifact": "viewcompose-oneui7",
+          "capabilityId": "theme.oneui7",
           "kind": "dsl",
           "namespace": "com.viewcompose.oneui7",
           "overloadCount": 1,
@@ -6206,7 +6281,7 @@
     },
     "entryCount": 531,
     "groupCount": 15,
-    "ownedEntryCount": 512,
+    "ownedEntryCount": 524,
     "sourceFingerprint": "80f5edb72153bf8b4f5d111fc8e85926e3be3abcc15679a3a7afb2fc126132f9"
   }
 }

@@ -8,6 +8,7 @@ import com.viewcompose.oneui7.OneUi7Surface
 import com.viewcompose.oneui7.OneUi7Switch
 import com.viewcompose.oneui7.OneUi7TextField
 import com.viewcompose.oneui7.OneUi7Theme
+import com.viewcompose.oneui7.OneUi7ThemeDefaults
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.Theme
@@ -19,7 +20,16 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.unit.dp
 
+// DOCS_REGION_START(oneui7-module-theme)
+fun UiTreeBuilder.oneUi7MinimalSample() {
+    OneUi7Theme(tokens = OneUi7ThemeDefaults.light()) {
+        OneUi7Button(text = "Continue", onClick = {})
+    }
+}
+// DOCS_REGION_END(oneui7-module-theme)
+
 /** Builds the complete public One UI 7 five-component alpha slice with caller-owned state. */
+// DOCS_REGION_START(oneui7-module-components)
 fun UiTreeBuilder.oneUi7ComponentsSample() {
     val checked = rememberSaveable(key = "one-ui-switch") { mutableStateOf(true) }
     val selected = rememberSaveable(key = "one-ui-navigation") { mutableStateOf(0) }
@@ -71,3 +81,4 @@ fun UiTreeBuilder.oneUi7ComponentsSample() {
         }
     }
 }
+// DOCS_REGION_END(oneui7-module-components)

@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.material3-theme",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "theme.material3",
+  "document_ids": ["module.viewcompose-material3"],
+  "version_lane": "released",
+  "source": "viewcompose-material3/src/test/samples/com/viewcompose/material3/samples/Material3ThemeSamples.kt",
+  "region": "material3-module-theme",
+  "build_target": ":viewcompose-material3:compileDebugUnitTestKotlin"
+}

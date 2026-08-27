@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.oneui7-components",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "oneui7.components",
+  "document_ids": ["module.viewcompose-oneui7"],
+  "version_lane": "released",
+  "source": "viewcompose-oneui7/src/test/samples/com/viewcompose/oneui7/samples/OneUi7Samples.kt",
+  "region": "oneui7-module-components",
+  "build_target": ":viewcompose-oneui7:compileDebugUnitTestKotlin"
+}
