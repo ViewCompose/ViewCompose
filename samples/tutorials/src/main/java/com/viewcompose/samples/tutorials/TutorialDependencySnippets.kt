@@ -30,6 +30,35 @@ private fun plugins(content: TutorialPluginHandler.() -> Unit) {
     TutorialPluginHandler().content()
 }
 
+private val animationTutorialDependencies = run {
+    // DOCS_REGION_START(animation-dependencies)
+repositories { mavenCentral() }
+
+dependencies {
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
+    implementation("androidx.activity:activity:1.12.4")
+    implementation("com.google.android.material:material:1.13.0")
+}
+    // DOCS_REGION_END(animation-dependencies)
+}
+
+private val animationModuleDependency = run {
+    // DOCS_REGION_START(animation-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha04")
+}
+    // DOCS_REGION_END(animation-module-dependency)
+}
+
+private val animationCoreModuleDependency = run {
+    // DOCS_REGION_START(animation-core-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha04")
+}
+    // DOCS_REGION_END(animation-core-module-dependency)
+}
+
 private val navigationTutorialDependencies = run {
     // DOCS_REGION_START(navigation-dependencies)
 repositories { mavenCentral() }

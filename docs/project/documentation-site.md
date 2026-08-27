@@ -442,6 +442,20 @@ identity token.
   reuses existing module/device evidence and makes no new runtime, network, power, or performance
   claim.
 
+- **2026-08-27, Governance V2 Animation local acceptance:** the hard cut retained the two module,
+  Tutorial, Migration, and ADR routes, registered the seven previously orphaned composition,
+  content, visibility, and layout-motion entries plus 19 compiled or explicitly non-executable
+  sample decisions, and reduced Governance V2 debt from 345 to 313. The final evidence-bearing
+  build audited 454 pages, produced 48,745,500 non-API bytes, left 432,714 bytes under the
+  unchanged limit, and completed Docusaurus in `25.3 s`. Relative to the third-party slice,
+  generated non-API output increased 29,622 bytes (`0.0608%`) while local build time decreased
+  `7.6%`; the site result is
+  **no material change** for one content-only sample, while exact ownership and bilingual sample
+  coverage are **improved**. The existing website stack, route count, framework behavior, and
+  published artifacts did not change. This observation validates documentation structure and
+  output only; it reuses existing Animation behavior evidence and makes no new motion-fidelity or
+  performance claim.
+
 - **2026-08-25, Governance V2 Phase 0A:** the initial bilingual contract candidate exceeded the
   unchanged 46.9 MiB non-API limit by 42,041 bytes. Consolidating repeated normative prose and
   moving the generated quality report outside the deploy tree reduced it to 49,175,712 bytes,

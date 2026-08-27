@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "tutorial.animation",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "animation.composition-motion",
+  "document_ids": ["tutorial.animation"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/AnimationTutorialActivity.kt",
+  "region": "animation",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

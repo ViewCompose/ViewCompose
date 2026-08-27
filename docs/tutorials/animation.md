@@ -1,6 +1,21 @@
 ---
-title: Use AnimatedVisibility
-sidebar_position: 11
+schema_version: 2
+document_id: tutorial.animation
+doc_type: tutorial
+owner:
+  kind: capability
+  id: animation.composition-motion
+version_lane: released
+capability_ids:
+  - animation.composition-motion
+artifact_ids:
+  - viewcompose-animation
+  - viewcompose-material3-android
+sample_ids:
+  - tutorial.animation
+  - tutorial.animation-dependencies
+expected_result: A native View screen that toggles one retained subtree with interruptible visibility motion.
+verification_action: Run the sample and toggle the message repeatedly to verify interruption continuity and final removal.
 ---
 
 # Use AnimatedVisibility
@@ -10,6 +25,7 @@ sidebar_position: 11
 This page is standalone. Visibility animation requires the separate `viewcompose-animation`
 artifact:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="animation-dependencies" sample_id="tutorial.animation-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 

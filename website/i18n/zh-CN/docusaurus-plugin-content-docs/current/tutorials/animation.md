@@ -2,7 +2,7 @@
 title: 使用 AnimatedVisibility
 sidebar_position: 11
 translation_source: tutorials/animation.md
-translation_source_hash: a941cb06bb8b5cc907a3559a6bc0a919d6fc4e2351e5cf4572c7d12e0b2a1911
+translation_source_hash: 3905d3528a2efc98928030cc0857aca6aa47babc40f70c0f78d4b895714dfe8b
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ translation_status: current
 
 本页可以独立使用。可见性动画必须引入单独的 `viewcompose-animation` 产物：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="animation-dependencies" sample_id="tutorial.animation-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 

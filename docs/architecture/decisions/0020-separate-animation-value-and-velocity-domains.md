@@ -1,3 +1,25 @@
+---
+schema_version: 2
+document_id: architecture.animation-value-velocity-domains
+doc_type: architecture
+owner:
+  kind: capability
+  id: animation.composition-motion
+version_lane: released
+capability_ids:
+  - animation.composition-motion
+artifact_ids:
+  - viewcompose-animation-core
+  - viewcompose-animation
+sample_ids:
+  - architecture.animation-value-velocity-model
+invariants:
+  - Animation values and velocity tangents retain distinct compile-time domains end to end.
+  - Conversion dimensions, thresholds, and public velocity meanings remain explicit and validated.
+evidence:
+  - Q3 converter samples and Animation Core tests for integer, ARGB, custom-domain, spring, decay, and retargeting behavior.
+---
+
 # ADR-0020: Separate Animation Value and Velocity Domains
 
 - Status: Accepted
@@ -27,6 +49,7 @@ parallel adapter or a velocity payload whose meaning depends on the value type.
 
 Animation values and velocities use separate generic domains:
 
+{/* non-executable sample_id="architecture.animation-value-velocity-model" reason="This decision excerpt defines the type relationship but omits package context and implementation bodies." visible_explanation="Treat this fence as architectural type vocabulary; use versioned API reference for copy-ready signatures." */}
 ```kotlin
 interface AnimationConverter<T, V> {
     val vectorSize: Int

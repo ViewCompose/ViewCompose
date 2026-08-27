@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: c7480372b3ab87b60b3f25fa05e7b94afade0b9aba01ae6ad7deeb9517979e14
+translation_source_hash: 1d7d4f1d7cba22db389a4112a6f514000384972ae31406030f85e046220cb18b
 translation_status: current
 ---
 
@@ -336,6 +336,16 @@ identity token。
   模块契约和完整可编译样例。结果为 **improved**：精确所有权与双语可执行覆盖增加，构建仍远低于
   不变 Budget，且没有改变 Website Stack、路由、Framework 行为或已发布产物。本次观察复用既有
   模块与设备证据，不提出新的 Runtime、网络、功耗或性能结论。
+
+- **2026-08-27，Governance V2 Animation 本地验收：**本次硬切保留两个模块、Tutorial、
+  Migration 与 ADR 路由，登记七个此前无所有者的组合、内容、可见性和布局运动入口，以及 19 个
+  可编译或显式不可执行的 Sample Decision，并把 Governance V2 债务从 345 降到 313。最终含
+  证据构建审计 454 个页面，产生 48,745,500 字节非 API 输出，在不变上限下留下 432,714 字节，
+  并在 `25.3 s` 内完成 Docusaurus。相比第三方集成批次，生成的非 API 输出增加 29,622 字节
+  （`0.0608%`），本地构建时间减少 `7.6%`；对于单个纯内容样本，站点结果为 **no material
+  change**，精确所有权与双语样例覆盖则为 **improved**。现有 Website Stack、路由数量、
+  Framework 行为和已发布产物均未改变。本次观察只验证文档结构与输出，复用既有 Animation
+  行为证据，不提出新的运动保真或性能结论。
 
 - **2026-08-25，Governance V2 Phase 0A：**首版双语契约候选超过不变的 46.9 MiB 非 API
   上限 42,041 字节。收敛重复规范并把生成质量报告移出部署树后降至 49,175,712 字节，余量

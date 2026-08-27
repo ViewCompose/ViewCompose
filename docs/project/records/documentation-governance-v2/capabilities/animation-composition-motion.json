@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "capability_id": "animation.composition-motion",
+  "kind": "dsl",
+  "owner": { "kind": "module", "id": "viewcompose-animation" },
+  "artifact": "viewcompose-animation",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha04" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.animation.ColumnScope.AnimatedVisibility", "kind": "extension", "visibility": "public", "source": "viewcompose-animation/src/main/java/com/viewcompose/animation/AnimatedVisibility.kt" },
+    { "symbol_id": "com.viewcompose.animation.RowScope.AnimatedVisibility", "kind": "extension", "visibility": "public", "source": "viewcompose-animation/src/main/java/com/viewcompose/animation/AnimatedVisibility.kt" },
+    { "symbol_id": "com.viewcompose.animation.UiTreeBuilder.AnimatedVisibility", "kind": "extension", "visibility": "public", "source": "viewcompose-animation/src/main/java/com/viewcompose/animation/AnimatedVisibility.kt" },
+    { "symbol_id": "com.viewcompose.animation.UiTreeBuilder.AnimatedContent", "kind": "extension", "visibility": "public", "source": "viewcompose-animation/src/main/java/com/viewcompose/animation/AnimatedContent.kt" },
+    { "symbol_id": "com.viewcompose.animation.UiTreeBuilder.Crossfade", "kind": "extension", "visibility": "public", "source": "viewcompose-animation/src/main/java/com/viewcompose/animation/AnimatedContent.kt" },
+    { "symbol_id": "com.viewcompose.animation.Modifier.animateBounds", "kind": "extension", "visibility": "public", "source": "viewcompose-animation/src/main/java/com/viewcompose/animation/AnimateBounds.kt" },
+    { "symbol_id": "com.viewcompose.animation.Modifier.animateContentSize", "kind": "extension", "visibility": "public", "source": "viewcompose-animation/src/main/java/com/viewcompose/animation/AnimateContentSize.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.animation.composition-motion", "generated": true },
+  "sample_owner": { "sample_id": "module.animation-visibility" },
+  "document_owners": {
+    "tutorial": ["tutorial.animation"],
+    "architecture": [
+      "architecture.animation-physics-ownership",
+      "architecture.animation-value-velocity-domains"
+    ],
+    "module": [
+      "module.viewcompose-animation",
+      "module.viewcompose-animation-core"
+    ],
+    "migration": ["migration.compose-animation"]
+  }
+}

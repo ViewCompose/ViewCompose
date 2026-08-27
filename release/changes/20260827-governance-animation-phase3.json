@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "summary": "Register Animation and Animation Core compiled documentation samples and capability ownership without changing published artifacts.",
+  "ignored": [
+    {
+      "artifact": "viewcompose-animation-core",
+      "reason": "Only test-only compiled documentation fixtures are added for existing APIs; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    },
+    {
+      "artifact": "viewcompose-animation",
+      "reason": "Only test-only compiled documentation fixtures are added for existing APIs; test sources are excluded from the published artifact, and production sources, signatures, runtime behavior, publication metadata, and generated artifact content are unchanged."
+    }
+  ]
+}

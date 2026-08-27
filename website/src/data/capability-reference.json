@@ -1997,58 +1997,331 @@
       "entries": [
         {
           "artifact": "viewcompose-animation",
+          "capabilityId": "animation.composition-motion",
           "kind": "component",
           "namespace": "com.viewcompose.animation",
           "overloadCount": 2,
           "receiver": "ColumnScope",
+          "referenceId": "reference.animation.composition-motion",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.animation",
+              "documentType": "tutorial",
+              "path": "/tutorials/animation"
+            },
+            {
+              "documentId": "architecture.animation-physics-ownership",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0019-animation-physics-transition-and-inspection-ownership"
+            },
+            {
+              "documentId": "architecture.animation-value-velocity-domains",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0020-separate-animation-value-and-velocity-domains"
+            },
+            {
+              "documentId": "module.viewcompose-animation",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation/README"
+            },
+            {
+              "documentId": "module.viewcompose-animation-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation-core/README"
+            },
+            {
+              "documentId": "migration.compose-animation",
+              "documentType": "migration",
+              "path": "/migration/compose-animation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.animation-visibility",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.animation.ColumnScope.AnimatedVisibility"
         },
         {
           "artifact": "viewcompose-animation",
+          "capabilityId": "animation.composition-motion",
           "kind": "modifier",
           "namespace": "com.viewcompose.animation",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.animation.composition-motion",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.animation",
+              "documentType": "tutorial",
+              "path": "/tutorials/animation"
+            },
+            {
+              "documentId": "architecture.animation-physics-ownership",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0019-animation-physics-transition-and-inspection-ownership"
+            },
+            {
+              "documentId": "architecture.animation-value-velocity-domains",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0020-separate-animation-value-and-velocity-domains"
+            },
+            {
+              "documentId": "module.viewcompose-animation",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation/README"
+            },
+            {
+              "documentId": "module.viewcompose-animation-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation-core/README"
+            },
+            {
+              "documentId": "migration.compose-animation",
+              "documentType": "migration",
+              "path": "/migration/compose-animation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.animation-visibility",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.animation.Modifier.animateBounds"
         },
         {
           "artifact": "viewcompose-animation",
+          "capabilityId": "animation.composition-motion",
           "kind": "modifier",
           "namespace": "com.viewcompose.animation",
           "overloadCount": 1,
           "receiver": "Modifier",
+          "referenceId": "reference.animation.composition-motion",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.animation",
+              "documentType": "tutorial",
+              "path": "/tutorials/animation"
+            },
+            {
+              "documentId": "architecture.animation-physics-ownership",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0019-animation-physics-transition-and-inspection-ownership"
+            },
+            {
+              "documentId": "architecture.animation-value-velocity-domains",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0020-separate-animation-value-and-velocity-domains"
+            },
+            {
+              "documentId": "module.viewcompose-animation",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation/README"
+            },
+            {
+              "documentId": "module.viewcompose-animation-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation-core/README"
+            },
+            {
+              "documentId": "migration.compose-animation",
+              "documentType": "migration",
+              "path": "/migration/compose-animation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.animation-visibility",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.animation.Modifier.animateContentSize"
         },
         {
           "artifact": "viewcompose-animation",
+          "capabilityId": "animation.composition-motion",
           "kind": "component",
           "namespace": "com.viewcompose.animation",
           "overloadCount": 2,
           "receiver": "RowScope",
+          "referenceId": "reference.animation.composition-motion",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.animation",
+              "documentType": "tutorial",
+              "path": "/tutorials/animation"
+            },
+            {
+              "documentId": "architecture.animation-physics-ownership",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0019-animation-physics-transition-and-inspection-ownership"
+            },
+            {
+              "documentId": "architecture.animation-value-velocity-domains",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0020-separate-animation-value-and-velocity-domains"
+            },
+            {
+              "documentId": "module.viewcompose-animation",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation/README"
+            },
+            {
+              "documentId": "module.viewcompose-animation-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation-core/README"
+            },
+            {
+              "documentId": "migration.compose-animation",
+              "documentType": "migration",
+              "path": "/migration/compose-animation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.animation-visibility",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.animation.RowScope.AnimatedVisibility"
         },
         {
           "artifact": "viewcompose-animation",
+          "capabilityId": "animation.composition-motion",
           "kind": "component",
           "namespace": "com.viewcompose.animation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.animation.composition-motion",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.animation",
+              "documentType": "tutorial",
+              "path": "/tutorials/animation"
+            },
+            {
+              "documentId": "architecture.animation-physics-ownership",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0019-animation-physics-transition-and-inspection-ownership"
+            },
+            {
+              "documentId": "architecture.animation-value-velocity-domains",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0020-separate-animation-value-and-velocity-domains"
+            },
+            {
+              "documentId": "module.viewcompose-animation",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation/README"
+            },
+            {
+              "documentId": "module.viewcompose-animation-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation-core/README"
+            },
+            {
+              "documentId": "migration.compose-animation",
+              "documentType": "migration",
+              "path": "/migration/compose-animation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.animation-visibility",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.animation.UiTreeBuilder.AnimatedContent"
         },
         {
           "artifact": "viewcompose-animation",
+          "capabilityId": "animation.composition-motion",
           "kind": "component",
           "namespace": "com.viewcompose.animation",
           "overloadCount": 2,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.animation.composition-motion",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.animation",
+              "documentType": "tutorial",
+              "path": "/tutorials/animation"
+            },
+            {
+              "documentId": "architecture.animation-physics-ownership",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0019-animation-physics-transition-and-inspection-ownership"
+            },
+            {
+              "documentId": "architecture.animation-value-velocity-domains",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0020-separate-animation-value-and-velocity-domains"
+            },
+            {
+              "documentId": "module.viewcompose-animation",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation/README"
+            },
+            {
+              "documentId": "module.viewcompose-animation-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation-core/README"
+            },
+            {
+              "documentId": "migration.compose-animation",
+              "documentType": "migration",
+              "path": "/migration/compose-animation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.animation-visibility",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.animation.UiTreeBuilder.AnimatedVisibility"
         },
         {
           "artifact": "viewcompose-animation",
+          "capabilityId": "animation.composition-motion",
           "kind": "component",
           "namespace": "com.viewcompose.animation",
           "overloadCount": 1,
           "receiver": "UiTreeBuilder",
+          "referenceId": "reference.animation.composition-motion",
+          "relatedDocuments": [
+            {
+              "documentId": "tutorial.animation",
+              "documentType": "tutorial",
+              "path": "/tutorials/animation"
+            },
+            {
+              "documentId": "architecture.animation-physics-ownership",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0019-animation-physics-transition-and-inspection-ownership"
+            },
+            {
+              "documentId": "architecture.animation-value-velocity-domains",
+              "documentType": "architecture",
+              "path": "/architecture/decisions/0020-separate-animation-value-and-velocity-domains"
+            },
+            {
+              "documentId": "module.viewcompose-animation",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation/README"
+            },
+            {
+              "documentId": "module.viewcompose-animation-core",
+              "documentType": "module",
+              "path": "/modules/viewcompose-animation-core/README"
+            },
+            {
+              "documentId": "migration.compose-animation",
+              "documentType": "migration",
+              "path": "/migration/compose-animation"
+            }
+          ],
+          "sample": {
+            "sampleClass": "compiled-region",
+            "sampleId": "module.animation-visibility",
+            "versionLane": "released"
+          },
           "symbol": "com.viewcompose.animation.UiTreeBuilder.Crossfade"
         },
         {
@@ -8480,7 +8753,7 @@
     },
     "entryCount": 433,
     "groupCount": 15,
-    "ownedEntryCount": 277,
+    "ownedEntryCount": 284,
     "sourceFingerprint": "c7649eff1308210707494d16c9ff4aa2e804bc4be24663fadf9562aa13774730"
   }
 }

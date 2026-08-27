@@ -58,8 +58,14 @@ import com.viewcompose.animation.tooling.AnimationTimelineValueKind
 import com.viewcompose.animation.tooling.installAnimationTimelineTooling
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.frame.MonotonicFrameClock
+import com.viewcompose.ui.foundation.BoxScope
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.TransformOrigin
+import com.viewcompose.ui.modifier.height
+import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
@@ -439,4 +445,201 @@ private object PointConverter : AnimationConverter<Point, Point> {
     }
 
     override fun convertVelocityFromVector(vector: FloatArray): Point = convertFromVector(vector)
+}
+
+private fun UiTreeBuilder.documentationTargetAsStateSample(enabled: Boolean) {
+    // DOCS_REGION_START(animation-target-as-state)
+val alpha = animateFloatAsState(
+    targetValue = if (enabled) 1f else 0.5f,
+    animationSpec = tween(durationMillis = 180),
+)
+    // DOCS_REGION_END(animation-target-as-state)
+    check(alpha.value.isFinite())
+}
+
+private fun UiTreeBuilder.documentationAnimatableSample(command: Command) {
+    // DOCS_REGION_START(animation-animatable)
+val progress = rememberAnimatable(
+    initialValue = 0f,
+    converter = AnimationConverters.Float,
+)
+
+LaunchedEffect(command) {
+    when (command) {
+        Command.Open -> progress.animateTo(
+            targetValue = 1f,
+            animationSpec = spring(dampingRatio = 0.7f, stiffness = 220f),
+        )
+        Command.Close -> progress.animateDecay(AnimationVelocity(-2.4f))
+        Command.Stop -> progress.stop()
+        else -> Unit
+    }
+}
+    // DOCS_REGION_END(animation-animatable)
+}
+
+private fun UiTreeBuilder.documentationTransitionSample(expanded: Boolean) {
+    // DOCS_REGION_START(animation-transition)
+val transition = updateTransition(
+    targetState = if (expanded) PanelState.Expanded else PanelState.Collapsed,
+    label = "panel",
+)
+val alpha = transition.animateFloat { state ->
+    if (state == PanelState.Expanded) 1f else 0.6f
+}
+val height = transition.animateDp(
+    transitionSpec = {
+        if (isTransitioningTo(PanelState.Collapsed, PanelState.Expanded)) {
+            spring(dampingRatio = 0.8f, stiffness = 240f)
+        } else {
+            tween(durationMillis = 180)
+        }
+    },
+) { state ->
+    if (state == PanelState.Expanded) 240.dp else 80.dp
+}
+    // DOCS_REGION_END(animation-transition)
+    check(alpha.value.isFinite() && height.value.value.isFinite())
+}
+
+private fun UiTreeBuilder.documentationSeekableTransitionSample(command: Command) {
+    val pointConverter = PointConverter
+    // DOCS_REGION_START(animation-seekable-transition)
+val seekState = remember { SeekableTransitionState(PanelState.Collapsed) }
+val transition = rememberTransition(seekState, label = "seekable panel")
+val position = transition.animateValue(
+    converter = pointConverter,
+    transitionSpec = { tween(durationMillis = 600) },
+) { state ->
+    if (state == PanelState.Expanded) Point(96f, 32f) else Point(0f, 0f)
+}
+
+LaunchedEffect(command) {
+    when (command) {
+        Command.Preview -> seekState.seekTo(0.7f, PanelState.Expanded)
+        Command.Commit -> seekState.animateTo(PanelState.Expanded)
+        Command.Reset -> seekState.snapTo(PanelState.Collapsed)
+        else -> Unit
+    }
+}
+    // DOCS_REGION_END(animation-seekable-transition)
+    check(position.value.x.isFinite())
+}
+
+private fun UiTreeBuilder.documentationInfiniteTransitionSample() {
+    // DOCS_REGION_START(animation-infinite-transition)
+val pulse = rememberInfiniteTransition(label = "pulse")
+val scale = pulse.animateFloat(
+    initialValue = 0.9f,
+    targetValue = 1f,
+    animationSpec = infiniteRepeatable(
+        animation = tween(durationMillis = 600),
+        repeatMode = RepeatMode.Reverse,
+    ),
+)
+    // DOCS_REGION_END(animation-infinite-transition)
+    check(scale.value.isFinite())
+}
+
+private fun UiTreeBuilder.documentationAnimatedVisibilitySample(showDetails: Boolean) {
+    // DOCS_REGION_START(animation-visibility)
+AnimatedVisibility(
+    visible = showDetails,
+    enter = fadeIn(tween(durationMillis = 160)) +
+        slideInHorizontally(
+            from = SlideDirection.Start,
+            distanceFraction = 0.5f,
+        ) +
+        scaleIn(
+            initialScale = 0.9f,
+            transformOrigin = TransformOrigin(0f, 1f),
+        ) +
+        expandVertically(alignment = BoxAlignment.BottomStart),
+    exit = shrinkVertically(alignment = BoxAlignment.TopEnd) +
+        scaleOut(
+            targetScale = 0.92f,
+            transformOrigin = TransformOrigin(1f, 0f),
+        ) +
+        slideOutHorizontally(towards = SlideDirection.End) +
+        fadeOut(tween(durationMillis = 120)),
+) {
+    Text("Parent transition running: ${transition.isRunning}")
+    AnimatedEnterExit(
+        enter = slideInVertically(from = SlideDirection.Down),
+        exit = slideOutVertically(towards = SlideDirection.Up),
+    ) {
+        Text("Descendant shares the parent clock")
+    }
+}
+    // DOCS_REGION_END(animation-visibility)
+}
+
+private fun UiTreeBuilder.documentationAnimatedContentSample(page: DocumentationPage) {
+    // DOCS_REGION_START(animation-content)
+AnimatedContent(
+    targetState = page,
+    contentKey = { it.id },
+    transitionSpec = {
+        val forward = targetState.index > initialState.index
+        val enter = fadeIn() + slideIntoContainer(
+            from = if (forward) ContentSlideDirection.End else ContentSlideDirection.Start,
+            distanceFraction = 0.35f,
+        ) + scaleIn(initialScale = 0.96f)
+        val exit = fadeOut() + slideOutOfContainer(
+            towards = if (forward) ContentSlideDirection.Start else ContentSlideDirection.End,
+            distanceFraction = 0.2f,
+        )
+        (enter togetherWith exit) using SizeTransform(clip = true)
+    },
+) { state ->
+    Page(state)
+}
+    // DOCS_REGION_END(animation-content)
+}
+
+private fun UiTreeBuilder.documentationAnimateContentSizeSample() {
+    // DOCS_REGION_START(animation-content-size)
+Column(
+    modifier = Modifier.animateContentSize(
+        spring(dampingRatio = 0.75f, stiffness = 240f),
+    ),
+) {
+    // Content whose measured size changes.
+}
+    // DOCS_REGION_END(animation-content-size)
+}
+
+private fun BoxScope.documentationAnimateBoundsSample(
+    expanded: Boolean,
+    onTargetClick: () -> Unit,
+) {
+    // DOCS_REGION_START(animation-bounds)
+Button(
+    text = "Move and resize",
+    onClick = onTargetClick,
+    modifier = Modifier
+        .width(if (expanded) 204.dp else 152.dp)
+        .height(if (expanded) 58.dp else 48.dp)
+        .align(if (expanded) BoxAlignment.BottomEnd else BoxAlignment.BottomStart)
+        .animateBounds(tween(durationMillis = 900)),
+)
+    // DOCS_REGION_END(animation-bounds)
+}
+
+private fun UiTreeBuilder.Page(page: DocumentationPage) {
+    Text("Page ${page.id}")
+}
+
+private data class DocumentationPage(
+    val id: String,
+    val index: Int,
+)
+
+private enum class Command {
+    Open,
+    Close,
+    Stop,
+    Preview,
+    Commit,
+    Reset,
 }
