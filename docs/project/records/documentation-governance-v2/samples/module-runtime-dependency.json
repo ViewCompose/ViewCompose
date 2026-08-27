@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.runtime-dependency",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "runtime.state",
+  "document_ids": ["module.viewcompose-runtime"],
+  "version_lane": "released",
+  "source": "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt",
+  "region": "runtime-module-dependency",
+  "build_target": ":samples:tutorials:compileDebugKotlin"
+}

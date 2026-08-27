@@ -1,7 +1,23 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 6146a1c5635a49363d7cf4e69df992ff8d672c8538e6fa2ac276f42697947075
+translation_source_hash: 2e3adfe3a9805b264ff3d7158138225d16f42e47eada64cd237fd47d934c6f7a
 translation_status: current
+schema_version: 2
+document_id: module.viewcompose-ui-contract
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-ui-contract
+version_lane: released
+capability_ids:
+  - renderer.tree-transactions
+artifact_ids:
+  - viewcompose-ui-contract
+sample_ids:
+  - module.ui-contract-dependency
+  - module.ui-contract-node
+coordinate: com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04
+minimal_usage_sample_id: module.ui-contract-node
 ---
 
 # UI 契约
@@ -18,6 +34,7 @@ Pager 状态。
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="ui-contract-module-dependency" sample_id="module.ui-contract-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04")
@@ -33,13 +50,14 @@ dependencies {
 
 ## 最小契约示例
 
+{/* compiled-region source="viewcompose-ui-contract/src/test/samples/com/viewcompose/ui/samples/UiContractNodeSamples.kt" region="ui-contract-module-node" sample_id="module.ui-contract-node" build_target=":viewcompose-ui-contract:compileTestKotlin" */}
 ```kotlin
 val gap = VNode(
     type = NodeType.Spacer,
     key = "content-gap",
     spec = EmptyNodeSpec,
     modifier = Modifier
-        .size(24.dp)
+        .size(width = 24.dp, height = 24.dp)
         .testTag("content-gap"),
 )
 ```

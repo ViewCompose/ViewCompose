@@ -107,6 +107,30 @@ dependencies {
     // DOCS_REGION_END(android-module-dependency)
 }
 
+private val runtimeModuleDependency = run {
+    // DOCS_REGION_START(runtime-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha03")
+}
+    // DOCS_REGION_END(runtime-module-dependency)
+}
+
+private val textCoreModuleDependency = run {
+    // DOCS_REGION_START(text-core-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha03")
+}
+    // DOCS_REGION_END(text-core-module-dependency)
+}
+
+private val uiContractModuleDependency = run {
+    // DOCS_REGION_START(ui-contract-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha04")
+}
+    // DOCS_REGION_END(ui-contract-module-dependency)
+}
+
 private val lifecycleAndroidxModuleDependency = run {
     // DOCS_REGION_START(lifecycle-androidx-module-dependency)
 dependencies {

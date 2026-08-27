@@ -1,7 +1,26 @@
 ---
 translation_source: modules/viewcompose-text-core/README.md
-translation_source_hash: d9dcb69cf221d78166a1df7249363f3e5dd3f45601c8e7869066cdfad38ef221
+translation_source_hash: 37dfcce4421bb0ffa37679a250899d18cb4df55aaec6fd668a9ae8b4b07c1b7f
 translation_status: current
+schema_version: 2
+document_id: module.viewcompose-text-core
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-text-core
+version_lane: released
+capability_ids:
+  - text.input
+artifact_ids:
+  - viewcompose-text-core
+sample_ids:
+  - module.text-core-dependency
+  - module.text-core-document
+  - module.text-core-state
+  - module.text-core-transformation
+  - module.text-core-save
+coordinate: com.viewcompose:viewcompose-text-core:0.1.0-alpha03
+minimal_usage_sample_id: module.text-core-state
 ---
 
 # Text Core 文本内核模块
@@ -15,6 +34,7 @@ span adapter 位于 renderer/host 模块，并负责与这些契约相互转换�
 
 ## 构件与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="text-core-module-dependency" sample_id="module.text-core-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha03")
@@ -37,6 +57,7 @@ range 时验证其是否超出所属文本。
 
 ## 富文本文档
 
+{/* compiled-region source="viewcompose-text-core/src/test/samples/com/viewcompose/text/samples/TextCoreSamples.kt" region="text-core-module-document" sample_id="module.text-core-document" build_target=":viewcompose-text-core:compileTestKotlin" */}
 ```kotlin
 val document = textDocument {
     append("ViewCompose", TextSpanStyle(fontWeight = 700))
@@ -70,6 +91,7 @@ val document = textDocument {
 
 ## 文本字段状态与编辑事务
 
+{/* compiled-region source="viewcompose-text-core/src/test/samples/com/viewcompose/text/samples/TextCoreSamples.kt" region="text-core-module-state" sample_id="module.text-core-state" build_target=":viewcompose-text-core:compileTestKotlin" */}
 ```kotlin
 val state = TextFieldState()
 
@@ -82,7 +104,9 @@ state.edit {
     replace(selection.min, selection.max, "ViewCompose")
 }
 
-state.undo()
+check(state.text == "ViewCompose")
+check(state.undo())
+check(state.text == "Hello")
 ```
 
 `TextFieldState` 是不可变 `TextFieldValue` 快照的稳定可观察 Owner。其编辑缓冲区与历史栈限制在
@@ -103,11 +127,19 @@ state.undo()
 `InputTransformation` 接收平台用户编辑提案的隔离 buffer。它可以改写提案，也可以通过
 `revertAllChanges()` 拒绝：
 
+{/* compiled-region source="viewcompose-text-core/src/test/samples/com/viewcompose/text/samples/TextCoreSamples.kt" region="text-core-module-transformation" sample_id="module.text-core-transformation" build_target=":viewcompose-text-core:compileTestKotlin" */}
 ```kotlin
 val policy = InputTransformation.digitsOnly()
     .then(InputTransformation.maxCodePoints(6))
+val state = TextFieldState()
 
-state.updateFromInput(proposedValue, policy)
+state.updateFromInput(
+    proposedValue = state.value.copy(
+        document = TextDocument.plain("123456"),
+        selection = TextRange(6),
+    ),
+    inputTransformation = policy,
+)
 ```
 
 链式 policy 共用同一个 buffer，并按声明顺序执行。`maxCodePoints` 按 Unicode code point 而非
@@ -127,9 +159,13 @@ transformation 返回要插入的文档，或返回 `null` 拒绝整个 payload�
 
 ## 保存与恢复
 
+{/* compiled-region source="viewcompose-text-core/src/test/samples/com/viewcompose/text/samples/TextCoreSamples.kt" region="text-core-module-save" sample_id="module.text-core-save" build_target=":viewcompose-text-core:compileTestKotlin" */}
 ```kotlin
-val saved: Map<String, Any?> = TextDocumentSaveCodec.encode(document)
-val restored: TextDocument = TextDocumentSaveCodec.decode(saved)
+val original = richTextDocumentSample()
+val saved = TextDocumentSaveCodec.encode(original)
+val restored = TextDocumentSaveCodec.decode(saved)
+
+check(restored == original)
 ```
 
 带版本的 codec 使用 string、number、boolean、list 和 string-key map 保存文本、样式、段落和

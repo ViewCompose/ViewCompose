@@ -1,3 +1,23 @@
+---
+schema_version: 2
+document_id: module.viewcompose-runtime
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-runtime
+version_lane: released
+capability_ids:
+  - runtime.state
+artifact_ids:
+  - viewcompose-runtime
+sample_ids:
+  - module.runtime-dependency
+  - module.runtime-state
+  - module.runtime-snapshot
+coordinate: com.viewcompose:viewcompose-runtime:0.1.0-alpha03
+minimal_usage_sample_id: module.runtime-state
+---
+
 # Runtime
 
 `viewcompose-runtime` is the platform-neutral state, snapshot, observation, and lightweight
@@ -10,6 +30,7 @@ their hosts.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="runtime-module-dependency" sample_id="module.runtime-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha03")
@@ -26,6 +47,7 @@ dependencies {
 
 ## Minimal state usage
 
+{/* compiled-region source="viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt" region="runtime-module-state" sample_id="module.runtime-state" build_target=":viewcompose-runtime:compileTestKotlin" */}
 ```kotlin
 val count = mutableStateOf(0)
 val label = derivedStateOf { "Count: ${count.value}" }
@@ -37,11 +59,17 @@ check(label.value == "Count: 1")
 State writes outside an explicit mutable snapshot are committed immediately. Use a transaction when
 multiple values must become visible atomically:
 
+{/* compiled-region source="viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt" region="runtime-module-snapshot" sample_id="module.runtime-snapshot" build_target=":viewcompose-runtime:compileTestKotlin" */}
 ```kotlin
+val count = mutableStateOf(0)
+val enabled = mutableStateOf(false)
+
 Snapshot.withMutableSnapshot {
-    count.value = 2
+    count.value = 1
     enabled.value = true
 }
+
+check(count.value == 1 && enabled.value)
 ```
 
 ## Principal APIs

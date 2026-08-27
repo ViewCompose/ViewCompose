@@ -18,6 +18,7 @@ import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.modifier.systemBarsInsetsPaddingRelative
 import com.viewcompose.ui.modifier.sharedBounds
 import com.viewcompose.ui.modifier.sharedElement
+import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.shared.SharedContentKey
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
@@ -229,16 +230,20 @@ fun collectionPolicySample() {
 }
 
 fun vNodeModelSample() {
-    val spacer = VNode(
-        type = NodeType.Spacer,
-        key = "content-gap",
-        spec = EmptyNodeSpec,
-        modifier = Modifier.testTag("content-gap"),
-    )
+    // DOCS_REGION_START(ui-contract-module-node)
+val gap = VNode(
+    type = NodeType.Spacer,
+    key = "content-gap",
+    spec = EmptyNodeSpec,
+    modifier = Modifier
+        .size(width = 24.dp, height = 24.dp)
+        .testTag("content-gap"),
+)
+    // DOCS_REGION_END(ui-contract-module-node)
 
-    check(spacer.type == NodeType.Spacer)
-    check(spacer.key == "content-gap")
-    check(spacer.children.isEmpty())
+    check(gap.type == NodeType.Spacer)
+    check(gap.key == "content-gap")
+    check(gap.children.isEmpty())
 }
 
 /** Correlates a declarative node with one finite composition and renderer timing request. */

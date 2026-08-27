@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.text-core-state",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "text.input",
+  "document_ids": ["module.viewcompose-text-core"],
+  "version_lane": "released",
+  "source": "viewcompose-text-core/src/test/samples/com/viewcompose/text/samples/TextCoreSamples.kt",
+  "region": "text-core-module-state",
+  "build_target": ":viewcompose-text-core:compileTestKotlin"
+}

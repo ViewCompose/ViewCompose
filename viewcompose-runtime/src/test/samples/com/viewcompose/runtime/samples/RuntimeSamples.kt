@@ -13,6 +13,16 @@ import com.viewcompose.runtime.observation.RuntimeObservation
 import com.viewcompose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.Flow
 
+fun runtimeModuleStateSample() {
+    // DOCS_REGION_START(runtime-module-state)
+val count = mutableStateOf(0)
+val label = derivedStateOf { "Count: ${count.value}" }
+
+count.value += 1
+check(label.value == "Count: 1")
+    // DOCS_REGION_END(runtime-module-state)
+}
+
 fun mutableStateSample() {
     val count = mutableStateOf(0)
 
@@ -32,15 +42,17 @@ fun derivedStateSample() {
 }
 
 fun mutableSnapshotSample() {
-    val count = mutableStateOf(0)
-    val enabled = mutableStateOf(false)
+    // DOCS_REGION_START(runtime-module-snapshot)
+val count = mutableStateOf(0)
+val enabled = mutableStateOf(false)
 
-    Snapshot.withMutableSnapshot {
-        count.value = 1
-        enabled.value = true
-    }
+Snapshot.withMutableSnapshot {
+    count.value = 1
+    enabled.value = true
+}
 
-    check(count.value == 1 && enabled.value)
+check(count.value == 1 && enabled.value)
+    // DOCS_REGION_END(runtime-module-snapshot)
 }
 
 fun snapshotMutationPolicySample() {

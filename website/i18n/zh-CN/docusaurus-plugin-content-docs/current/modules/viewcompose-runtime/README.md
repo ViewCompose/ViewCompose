@@ -1,7 +1,24 @@
 ---
 translation_source: modules/viewcompose-runtime/README.md
-translation_source_hash: 2a9d75df38bc3f3018135657b67612cf2174274ae35358d6d15b92242c52caca
+translation_source_hash: 09733ba7f87070596fb040cbad765c8096eea19b5b9161ddb531b093fe1f3f19
 translation_status: current
+schema_version: 2
+document_id: module.viewcompose-runtime
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-runtime
+version_lane: released
+capability_ids:
+  - runtime.state
+artifact_ids:
+  - viewcompose-runtime
+sample_ids:
+  - module.runtime-dependency
+  - module.runtime-state
+  - module.runtime-snapshot
+coordinate: com.viewcompose:viewcompose-runtime:0.1.0-alpha03
+minimal_usage_sample_id: module.runtime-state
 ---
 
 # Runtime 运行时模块
@@ -15,6 +32,7 @@ translation_status: current
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="runtime-module-dependency" sample_id="module.runtime-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha03")
@@ -31,6 +49,7 @@ dependencies {
 
 ## 最小状态示例
 
+{/* compiled-region source="viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt" region="runtime-module-state" sample_id="module.runtime-state" build_target=":viewcompose-runtime:compileTestKotlin" */}
 ```kotlin
 val count = mutableStateOf(0)
 val label = derivedStateOf { "Count: ${count.value}" }
@@ -41,11 +60,17 @@ check(label.value == "Count: 1")
 
 显式可变快照之外的状态写入会立即提交。需要让多个值原子可见时，应使用事务：
 
+{/* compiled-region source="viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt" region="runtime-module-snapshot" sample_id="module.runtime-snapshot" build_target=":viewcompose-runtime:compileTestKotlin" */}
 ```kotlin
+val count = mutableStateOf(0)
+val enabled = mutableStateOf(false)
+
 Snapshot.withMutableSnapshot {
-    count.value = 2
+    count.value = 1
     enabled.value = true
 }
+
+check(count.value == 1 && enabled.value)
 ```
 
 ## 主要 API
