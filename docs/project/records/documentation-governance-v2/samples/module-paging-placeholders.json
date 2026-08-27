@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.paging-placeholders",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "paging.androidx",
+  "document_ids": [
+    "module.viewcompose-paging-androidx"
+  ],
+  "version_lane": "released",
+  "source": "viewcompose-paging-androidx/src/test/samples/com/viewcompose/paging/samples/PagingSamples.kt",
+  "region": "paging-module-placeholders",
+  "build_target": ":viewcompose-paging-androidx:compileDebugUnitTestKotlin"
+}

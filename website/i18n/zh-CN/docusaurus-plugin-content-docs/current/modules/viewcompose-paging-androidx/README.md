@@ -1,7 +1,25 @@
 ---
 translation_source: modules/viewcompose-paging-androidx/README.md
-translation_source_hash: 19cb795cd2fca8c2e2592bae30289eb9fa4c15126dea3bb58cff7333d2a6e205
+translation_source_hash: 031cfac19ce8571e4892f789e6b3495b9ca28d8073c4a0e1d3a37ffc2b91f62a
 translation_status: current
+schema_version: 2
+document_id: module.viewcompose-paging-androidx
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-paging-androidx
+version_lane: released
+capability_ids:
+  - paging.androidx
+artifact_ids:
+  - viewcompose-paging-androidx
+sample_ids:
+  - module.paging-dependency
+  - module.paging-basic
+  - module.paging-placeholders
+  - module.paging-load-states
+coordinate: com.viewcompose:viewcompose-paging-androidx:0.1.0-alpha01
+minimal_usage_sample_id: module.paging-basic
 ---
 
 # Paging AndroidX 集成
@@ -12,6 +30,7 @@ Item Session 标识、生命周期收集和原生 RecyclerView Reconciliation。
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="paging-module-dependency" sample_id="module.paging-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-paging-androidx:0.1.0-alpha01")
@@ -28,36 +47,37 @@ dependencies {
 
 ## 基本用法
 
+{/* compiled-region source="viewcompose-paging-androidx/src/test/samples/com/viewcompose/paging/samples/PagingSamples.kt" region="paging-module-basic" sample_id="module.paging-basic" build_target=":viewcompose-paging-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
-class ContactsViewModel : ViewModel() {
-    val pages = Pager(config, pagingSourceFactory = repository::contacts)
-        .flow
-        .cachedIn(viewModelScope)
-}
-
-val pagingItems = viewModel.pages.collectAsViewComposePagingItems()
-
+val pagingItems = pages.collectAsViewComposePagingItems(
+    lifecyclePolicy = PagingLifecyclePolicy.Composition,
+)
 PagingLazyColumn(
     items = pagingItems,
-    key = Contact::id,
-    contentType = { "contact" },
-    contentRevision = Contact::version,
-) { contact ->
-    ContactRow(contact)
+    key = PagingSampleRow::id,
+    contentType = { "paging-row" },
+    contentRevision = PagingSampleRow::version,
+) { row ->
+    Text(row.label)
 }
 ```
 
+在 Android 应用中，把 ViewModel 持有的 `Pager.flow.cachedIn(viewModelScope)` Flow 传给同一个
+Collector，并保留默认的生命周期可见策略。
+
 当 `Pager` 启用 Placeholder 时，应选择显式 Overload，并独立设置 Placeholder 外观版本：
 
+{/* compiled-region source="viewcompose-paging-androidx/src/test/samples/com/viewcompose/paging/samples/PagingSamples.kt" region="paging-module-placeholders" sample_id="module.paging-placeholders" build_target=":viewcompose-paging-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
 PagingLazyColumn(
     items = pagingItems,
-    key = Contact::id,
-    placeholderContentRevision = contactSkeletonVersion,
-    placeholderContentType = "contact-placeholder",
-    placeholderContent = { ContactPlaceholder() },
-) { contact ->
-    ContactRow(contact)
+    key = PagingSampleRow::id,
+    contentType = { "paging-row" },
+    contentRevision = PagingSampleRow::version,
+    placeholderContentRevision = "paging-placeholder-v1",
+    placeholderContent = { index -> Text("Loading row $index") },
+) { row ->
+    Text(row.label)
 }
 ```
 
@@ -87,16 +107,49 @@ Mediator Refresh 任一失败都会选择 `InitialError`；否则任一 Refresh 
 Refresh 延后采用已安装的 Mediator，本地 Source 失败也不会被显示为空。存在 Loaded Item 后，
 Refresh、Prepend、Append 加载或失败期间均由 `Content` 优先，方向性 UI 不会卸载 List：
 
+{/* compiled-region source="viewcompose-paging-androidx/src/test/samples/com/viewcompose/paging/samples/PagingSamples.kt" region="paging-module-load-states" sample_id="module.paging-load-states" build_target=":viewcompose-paging-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
 when (val state = items.contentState) {
-    PagingContentState.InitialLoading -> InitialLoading()
-    is PagingContentState.InitialError -> InitialError(
-        error = state.error,
-        onRetry = items::retry,
-    )
-    PagingContentState.Empty -> EmptyResults()
-    PagingContentState.Content -> key("contacts") {
-        PagingLazyColumn(items = items, key = Contact::id) { contact -> ContactRow(contact) }
+    PagingContentState.InitialLoading -> Text("Loading contacts")
+    is PagingContentState.InitialError -> {
+        Text(state.error.message ?: "Unable to load contacts")
+        Button("Retry", onClick = items::retry)
+    }
+    PagingContentState.Empty -> Text("No contacts")
+    PagingContentState.Content -> {
+        val refresh = items.loadStates.forLoadType(LoadType.REFRESH)
+        if (refresh.combined is LoadState.Loading) {
+            Text("Refreshing")
+        }
+        val prepend = items.loadStates.forLoadType(LoadType.PREPEND)
+        when (prepend.combined) {
+            is LoadState.Loading -> Text("Loading previous contacts")
+            is LoadState.Error -> Button("Retry previous", onClick = items::retry)
+            is LoadState.NotLoading -> Unit
+        }
+        key("paging-contact-list") {
+            PagingLazyColumn(
+                items = items,
+                key = PagingSampleRow::id,
+                contentType = { "paging-row" },
+                contentRevision = PagingSampleRow::version,
+            ) { row ->
+                Text(row.label)
+            }
+        }
+        val append = items.loadStates.forLoadType(LoadType.APPEND)
+        when (append.combined) {
+            is LoadState.Loading -> Text("Loading more contacts")
+            is LoadState.Error -> Button("Retry more", onClick = items::retry)
+            is LoadState.NotLoading -> Unit
+        }
+        (refresh.source as? LoadState.Error)?.let { source ->
+            Text("Source: ${source.error.message}")
+        }
+        (refresh.mediator as? LoadState.Error)?.let { mediator ->
+            Text("Mediator: ${mediator.error.message}")
+        }
+        Button("Refresh", onClick = items::refresh)
     }
 }
 ```

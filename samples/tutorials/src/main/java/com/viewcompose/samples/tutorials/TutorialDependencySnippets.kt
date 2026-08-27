@@ -155,6 +155,14 @@ dependencies {
     // DOCS_REGION_END(oneui7-module-dependency)
 }
 
+private val pagingModuleDependency = run {
+    // DOCS_REGION_START(paging-module-dependency)
+dependencies {
+    implementation("com.viewcompose:viewcompose-paging-androidx:0.1.0-alpha01")
+}
+    // DOCS_REGION_END(paging-module-dependency)
+}
+
 private val rendererAndroidModuleDependency = run {
     // DOCS_REGION_START(renderer-android-module-dependency)
 dependencies {
