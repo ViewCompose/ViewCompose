@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/navigation.md
-translation_source_hash: be3503315d7d50a8e95bcf5022afd8176e5ac079bddb3e781cb19ef5802e0ec9
+translation_source_hash: fd3fb569c2baecee1e9cf7da5145b9dd0d19299aa063ad706b5984c35bb029cf
 translation_status: current
 ---
 

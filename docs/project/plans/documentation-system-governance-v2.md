@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the Lifecycle ownership slice, then audit ViewModel ownership as the next Phase 3 boundary.
+next_action: Merge the ViewModel ownership slice, then audit Renderer ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -29,6 +29,7 @@ maven_release_changesets:
   - release/changes/20260827-governance-animation-phase3.json
   - release/changes/20260827-governance-host-android-phase3.json
   - release/changes/20260827-governance-lifecycle-phase3.json
+  - release/changes/20260827-governance-viewmodel-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -86,6 +87,9 @@ sample decisions, removes 19 resolved exceptions, and reduces the report to 267 
 The accepted Lifecycle hard cut now assigns all 18 owner-boundary, Flow collection, lifecycle
 effect, native View lifecycle, and saved-state entries to four capability owners, registers seven
 compiled sample decisions, removes 10 resolved exceptions, and reduces the report to 243 issues.
+The accepted ViewModel hard cut now assigns all five owner-boundary, store-resolution, and
+saved-state entries to three capability owners, registers four compiled sample decisions, removes
+six resolved exceptions, and reduces the report to 231 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -94,7 +98,7 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the Lifecycle ownership slice, then audit ViewModel ownership as the next
+Next action: merge the ViewModel ownership slice, then audit Renderer ownership as the next
 Phase 3 boundary. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
@@ -127,6 +131,11 @@ remains owned by this plan after the Phase 3 content owners move.
   because only test-only compiled documentation fixtures gained exact source regions. Test sources
   are excluded from published artifacts; production source, API, runtime behavior, publication
   metadata, and generated artifact content remain unchanged.
+- `release/changes/20260827-governance-viewmodel-phase3.json` explicitly ignores ViewModel AndroidX
+  because only test-only compiled documentation fixtures gained exact source regions and one test
+  declaration was reordered. Test sources are excluded from published artifacts; production
+  source, API, runtime behavior, publication metadata, and generated artifact content remain
+  unchanged.
 
 ## Release intent rationale
 
@@ -134,8 +143,8 @@ The completed Phase 2 governance-tooling slices change governance records, docum
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
 `verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, one explicitly
-ignored Lifecycle AndroidX artifact, and zero shared-path classifications against
-`7d7afaa37f0da2167d0f375b1710a7d00dd74cee`.
+ignored ViewModel AndroidX artifact, and zero shared-path classifications against
+`835c51eb19e794cd3b22ca528e7e2756afcb5f16`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1076,6 +1085,36 @@ Accepted Lifecycle ownership slice on 2026-08-27:
   one test-sample-only Lifecycle artifact. This slice reuses existing unit, device, lifecycle,
   saved-state, and performance evidence and makes no new runtime, visual, power, or performance
   claim. The next action is ViewModel ownership.
+
+Accepted ViewModel ownership slice on 2026-08-27:
+
+- retained the existing ViewModel AndroidX module, neutral Android aggregate, navigation
+  Architecture, and host migration routes while splitting ownership into store-owner boundaries,
+  AndroidX provider/factory/extras resolution, and `SavedStateHandle` integration. Renderer remains
+  a separate audit boundary;
+- registered three capability owners for all five previously orphaned public entries and four exact
+  compiled regions covering dependency, owner boundary, store resolution with keyed instances, and
+  saved state. Six resolved metadata, symbol, bilingual-drift, and sample exception records were
+  removed;
+- the report changed from 243 to 231 issues: missing metadata 61 to 60, orphan symbols 97 to 92,
+  taxonomy mismatches 4 to 2, and unclassified samples 81 to 77. Duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero;
+- ViewModel AndroidX unit tests, both affected compiled-sample targets, Governance V2,
+  documentation structure, language and translation review, complete API reuse, release intent,
+  and the complete bilingual site passed. The final evidence-bearing site audited 454 pages,
+  produced 49,068,528 non-API bytes, left 109,686 bytes under the unchanged 46.9 MiB limit, and
+  completed Docusaurus in `33.9 s`. This is 28,805 bytes (`0.0587%`) above the Lifecycle slice and
+  is `no material change` after replacing duplicate handwritten snippets with four exact compiled
+  regions. The local build-time comparison is `inconclusive` because cache and process state
+  differed, but the absolute result remains below the `120 s` limit. Complete `qaQuick` passed
+  2,342 actionable tasks in `20 s` (185 executed and 2,157 up-to-date);
+- the overall conclusion is `improved`: ViewModel owner, provider, key, factory/extras, and
+  saved-state contracts now have exact generated ownership and compiled bilingual examples without
+  changing public API, runtime behavior, routes, or published artifacts. Release intent found zero
+  release artifacts and explicitly ignored the one test-sample-only ViewModel artifact. This slice
+  reuses existing unit, navigation, saved-state, and performance evidence and makes no new runtime,
+  visual, power, or performance claim. The next action is Renderer ownership.
 
 | Current area | Required target |
 | --- | --- |

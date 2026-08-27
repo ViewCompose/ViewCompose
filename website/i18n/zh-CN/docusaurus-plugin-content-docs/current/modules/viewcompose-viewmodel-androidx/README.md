@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-viewmodel-androidx/README.md
-translation_source_hash: be404089ce18998b27620b13c99d599c736495a38a1a914ac0205e78b2a8a7e5
+translation_source_hash: 6531992379b27a4a979b8127f7555b67363b31b36eb196f2ced06a97fb14686d
 translation_status: current
 ---
 
@@ -12,6 +12,7 @@ translation_status: current
 
 ## 产物与稳定性
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="viewmodel-androidx-module-dependency" sample_id="module.viewmodel-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-viewmodel-androidx:0.1.0-alpha01")
@@ -39,14 +40,46 @@ Owner；`ProvideNavGraphOwner` 会在子树中替换为选定图 Owner。因此�
 延迟子会话会和声明上下文一起捕获该 Local，避免 Overlay 或保留导航内容稍后渲染时意外退回
 另一个 Activity Owner。
 
+{/* compiled-region source="viewcompose-viewmodel-androidx/src/test/samples/com/viewcompose/viewmodel/samples/ViewModelSamples.kt" region="viewmodel-owner-boundary" sample_id="module.viewmodel-owner-boundary" build_target=":viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin" */}
+```kotlin
+/** Installs a custom store owner for a nested subtree. */
+fun UiTreeBuilder.provideViewModelStoreOwnerSample(
+    owner: ViewModelStoreOwner,
+): ProfileViewModel {
+    lateinit var model: ProfileViewModel
+    ProvideViewModelStoreOwner(owner) {
+        model = viewModel()
+    }
+    return model
+}
+```
+
 ## 解析 ViewModel
 
+{/* compiled-region source="viewcompose-viewmodel-androidx/src/test/samples/com/viewcompose/viewmodel/samples/ViewModelSamples.kt" region="viewmodel-resolution" sample_id="module.viewmodel-resolution" build_target=":viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
 class ProfileViewModel : ViewModel()
 
-fun UiTreeBuilder.ProfilePage() {
-    val model = viewModel<ProfileViewModel>()
-    // 渲染可观察模型状态。
+/** Resolves one instance from the owner installed by the current Android host. */
+fun UiTreeBuilder.viewModelSample(): ProfileViewModel {
+    return viewModel()
+}
+
+/** Keeps two instances of the same class in one store under stable application keys. */
+fun UiTreeBuilder.keyedViewModelSample(
+    owner: ViewModelStoreOwner,
+): Pair<ProfileViewModel, ProfileViewModel> {
+    val primary = viewModel(
+        modelClass = ProfileViewModel::class,
+        key = "primary-profile",
+        owner = owner,
+    )
+    val comparison = viewModel(
+        modelClass = ProfileViewModel::class,
+        key = "comparison-profile",
+        owner = owner,
+    )
+    return primary to comparison
 }
 ```
 
@@ -63,12 +96,7 @@ fun UiTreeBuilder.ProfilePage() {
 ## Key 与查询 Identity
 
 null 或空白 key 会选择从 ViewModel 类派生的默认 Identity。在同一个 Owner 中保留多个同类型
-实例时，应提供稳定、非空白 key：
-
-```kotlin
-val primary = viewModel<ProfileViewModel>(key = "primary")
-val comparison = viewModel<ProfileViewModel>(key = "comparison")
-```
+实例时，应提供稳定、非空白 key，如上方已编译的 `keyedViewModelSample` 所示。
 
 Owner、key、factory、extras 和 model class 构成组合的 Provider 查询 Identity。任一项改变时，
 ViewCompose 会重新查询 Provider，但这不会强制重建实例：如果新查询仍指向已有 Owner/key 条目，
@@ -88,10 +116,11 @@ Factory 和 Extras 影响首次创建，不影响 Store 中已有条目。模型
 
 ## SavedStateHandle 便捷入口
 
+{/* compiled-region source="viewcompose-viewmodel-androidx/src/test/samples/com/viewcompose/viewmodel/samples/ViewModelSamples.kt" region="viewmodel-saved-state" sample_id="module.viewmodel-saved-state" build_target=":viewcompose-viewmodel-androidx:compileDebugUnitTestKotlin" */}
 ```kotlin
-fun UiTreeBuilder.Filters() {
-    val handle = savedStateHandle(key = "filters")
-    // 读写 AndroidX SavedStateHandle 支持的值。
+/** Resolves an independent saved-state namespace under a stable key. */
+fun UiTreeBuilder.savedStateHandleSample(): SavedStateHandle {
+    return savedStateHandle(key = "profile-filters")
 }
 ```
 
