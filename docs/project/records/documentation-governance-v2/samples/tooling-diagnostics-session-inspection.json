@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "tooling.diagnostics-session-inspection",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "diagnostics.session-inspection",
+  "document_ids": ["tooling.diagnostics"],
+  "version_lane": "released",
+  "source": "viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/RenderSessionToolingSamples.kt",
+  "region": "diagnostics-session-inspection",
+  "build_target": ":viewcompose-ui-foundation:compileDebugUnitTestKotlin"
+}

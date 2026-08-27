@@ -1,3 +1,36 @@
+---
+schema_version: 2
+document_id: tooling.diagnostics
+doc_type: tooling
+owner:
+  kind: project
+  id: diagnostics
+version_lane: released
+capability_ids:
+  - diagnostics.correlated-events
+  - diagnostics.session-inspection
+  - diagnostics.node-timing
+  - diagnostics.failure-aggregation
+  - renderer.diagnostics
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+  - viewcompose-diagnostics
+  - viewcompose-preview
+sample_ids:
+  - tooling.diagnostics-event-stream
+  - tooling.diagnostics-session-inspection
+  - tooling.diagnostics-node-timing
+supported_versions:
+  - UI Foundation, Android Renderer, and Diagnostics 0.1.0-alpha01
+  - Preview Android integration 0.1.0-alpha04
+  - ViewCompose Preview Android Studio plugin 1.1.0 on build family 261.*
+verification_commands:
+  - ./gradlew :viewcompose-ui-foundation:testDebugUnitTest :viewcompose-diagnostics:testDebugUnitTest
+  - ./gradlew :samples:tutorials:assembleDebug
+  - ./gradlew qaQuick
+---
+
 # ViewCompose Diagnostics
 
 ## 1. Correlated event entry point
@@ -6,23 +39,27 @@ Install one immutable `RenderDiagnostics` at a Host or Preview root. Child navig
 and overlay sessions inherit that sink and receive process-local session and parent IDs. Passing a
 new diagnostics instance to a low-level nested session deliberately starts a new tree.
 
+{/* compiled-region source="viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/RenderSessionToolingSamples.kt" region="diagnostics-correlated-events" sample_id="tooling.diagnostics-event-stream" build_target=":viewcompose-ui-foundation:compileDebugUnitTestKotlin" */}
 ```kotlin
-val diagnostics = RenderDiagnostics(
-    collection = RenderDiagnosticCollection(
-        lifecycle = true,
-        failures = true,
-        frameLevel = RenderFrameDiagnosticLevel.Tree,
-    ),
-    sink = { event ->
-        when (event) {
-            is RenderFrameCompleted -> inspect(event.context, event.report, event.tree)
-            is RenderFailureObserved -> report(event.context, event.failure)
-            else -> recordLifecycle(event)
-        }
-    },
-)
-
-val session = renderInto(container = root, diagnostics = diagnostics) { App() }
+fun renderDiagnosticsEventSample(): RenderDiagnostics {
+    return RenderDiagnostics(
+        collection = RenderDiagnosticCollection(
+            lifecycle = true,
+            failures = true,
+            frameLevel = RenderFrameDiagnosticLevel.Stats,
+        ),
+        sink = { event ->
+            when (event) {
+                is RenderFrameCompleted -> println(event.stats)
+                is RenderFailureObserved -> println(event.failure.phase)
+                is RenderSessionStarted,
+                is RenderSessionActivityChanged,
+                is RenderSessionEnded,
+                -> println(event.context)
+            }
+        },
+    )
+}
 ```
 
 `None` builds no renderer counters or tree details, `Stats` builds aggregate counters, and `Tree`

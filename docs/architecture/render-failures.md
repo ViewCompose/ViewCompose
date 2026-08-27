@@ -1,23 +1,54 @@
+---
+schema_version: 2
+document_id: architecture.render-failures
+doc_type: architecture
+owner:
+  kind: project
+  id: diagnostics
+version_lane: released
+capability_ids:
+  - diagnostics.correlated-events
+  - diagnostics.failure-aggregation
+  - host.android-view
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-diagnostics
+  - viewcompose-host-android
+sample_ids:
+  - tooling.diagnostics-event-stream
+  - architecture.android-view-side-effects
+invariants:
+  - Every failure is attributed only after its recovery state and authoritative frame outcome are known.
+  - Replay-safe native View work remains inside the tree transaction while external effects run only after commit.
+evidence:
+  - Render-session failure tests, Android View rollback tests, diagnostics aggregation tests, and compiled event samples.
+---
+
 # Render failures and Android interop effects
 
 `RenderSession` keeps render failures observable without turning recoverable frame failures into
 process crashes. Root hosts accept one correlated `RenderDiagnostics` sink.
 
+{/* compiled-region source="viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/RenderSessionToolingSamples.kt" region="diagnostics-correlated-events" sample_id="tooling.diagnostics-event-stream" build_target=":viewcompose-ui-foundation:compileDebugUnitTestKotlin" */}
 ```kotlin
-val session = renderInto(
-    container = root,
-    diagnostics = RenderDiagnostics(
+fun renderDiagnosticsEventSample(): RenderDiagnostics {
+    return RenderDiagnostics(
         collection = RenderDiagnosticCollection(
-            lifecycle = false,
+            lifecycle = true,
             failures = true,
-            frameLevel = RenderFrameDiagnosticLevel.None,
+            frameLevel = RenderFrameDiagnosticLevel.Stats,
         ),
         sink = { event ->
-            if (event is RenderFailureObserved) report(event.context, event.failure)
+            when (event) {
+                is RenderFrameCompleted -> println(event.stats)
+                is RenderFailureObserved -> println(event.failure.phase)
+                is RenderSessionStarted,
+                is RenderSessionActivityChanged,
+                is RenderSessionEnded,
+                -> println(event.context)
+            }
         },
-    ),
-) {
-    App()
+    )
 }
 ```
 
@@ -72,6 +103,7 @@ redaction, synchronization, reset, and counter contracts.
 
 `AndroidView` has two deliberately different update paths:
 
+{/* non-executable sample_id="architecture.android-view-side-effects" reason="This architecture excerpt uses application-specific player and analytics placeholders to distinguish replay-safe and commit-only effects." visible_explanation="This is an architecture boundary sketch; replace the player and analytics placeholders with application-owned implementations." */}
 ```kotlin
 AndroidView(
     key = playerId,

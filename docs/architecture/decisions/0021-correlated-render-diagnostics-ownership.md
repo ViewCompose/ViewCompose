@@ -1,3 +1,32 @@
+---
+schema_version: 2
+document_id: adr.correlated-render-diagnostics
+doc_type: architecture
+owner:
+  kind: project
+  id: diagnostics
+version_lane: released
+capability_ids:
+  - diagnostics.correlated-events
+  - diagnostics.session-inspection
+  - diagnostics.node-timing
+  - diagnostics.failure-aggregation
+  - renderer.diagnostics
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+  - viewcompose-diagnostics
+  - viewcompose-preview
+sample_ids:
+  - adr.correlated-diagnostics-identity
+  - adr.correlated-diagnostics-event-model
+invariants:
+  - One process-local Session identity and parent graph correlates lifecycle, failure, frame, source, node, and timing evidence.
+  - Optional inspection performs no traversal, serialization, recurring observation, or per-node clock reads until an explicit request.
+evidence:
+  - Correlation, propagation, failure isolation, bounded aggregation, node inspection, timing, release-isolation, and device acceptance suites.
+---
+
 # ADR-0021: Correlated render diagnostics ownership
 
 - Status: Accepted
@@ -24,6 +53,7 @@ reads while optional tooling is inactive.
 
 Phase 1 introduces the following public contract:
 
+{/* non-executable sample_id="adr.correlated-diagnostics-identity" reason="This accepted ADR preserves a condensed declaration model and intentionally omits package context and constructor visibility details." visible_explanation="Treat this fence as accepted identity vocabulary; use the versioned API reference for copy-ready declarations." */}
 ```kotlin
 @JvmInline
 value class RenderSessionTraceId internal constructor(val value: Long)
@@ -70,6 +100,7 @@ sink.
 
 ### Unified event contract and hard cut
 
+{/* non-executable sample_id="adr.correlated-diagnostics-event-model" reason="This accepted ADR condenses the sealed event family and omits the concrete event declarations that complete the production hierarchy." visible_explanation="Treat this fence as the accepted event-contract outline; use the compiled Tutorial and versioned API reference for copy-ready code." */}
 ```kotlin
 enum class RenderFrameDiagnosticLevel { None, Stats, Tree }
 

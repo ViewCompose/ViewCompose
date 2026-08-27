@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "module.diagnostics-failure-aggregation",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "diagnostics.failure-aggregation",
+  "document_ids": ["module.viewcompose-diagnostics", "tutorial.render-diagnostics"],
+  "version_lane": "released",
+  "source": "viewcompose-diagnostics/src/test/samples/com/viewcompose/diagnostics/samples/RenderFailureAggregationSamples.kt",
+  "region": "diagnostics-failure-aggregation",
+  "build_target": ":viewcompose-diagnostics:compileDebugUnitTestKotlin"
+}

@@ -6,10 +6,11 @@ import com.viewcompose.ui.foundation.RenderDiagnosticCollection
 import com.viewcompose.ui.foundation.RenderDiagnostics
 import com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel
 
-/** Installs failure-only aggregation and forwards a sanitized immutable snapshot. */
+/** Installs failure-only aggregation and returns its application-owned sink. */
+// DOCS_REGION_START(diagnostics-failure-aggregation)
 fun boundedFailureAggregationSample(
-    forward: (RenderFailureAggregationSnapshot) -> Unit,
-): RenderDiagnostics {
+    install: (RenderDiagnostics) -> Unit,
+): BoundedRenderFailureAggregator {
     val aggregator = BoundedRenderFailureAggregator()
     val diagnostics = RenderDiagnostics(
         collection = RenderDiagnosticCollection(
@@ -19,8 +20,18 @@ fun boundedFailureAggregationSample(
         ),
         sink = aggregator,
     )
-
-    // Invoke from application-owned scheduling, outside synchronous render-sink delivery.
-    forward(aggregator.snapshotAndReset())
-    return diagnostics
+    install(diagnostics)
+    return aggregator
 }
+// DOCS_REGION_END(diagnostics-failure-aggregation)
+
+/** Copies and resets one safe window outside synchronous render-sink delivery. */
+// DOCS_REGION_START(diagnostics-snapshot-export)
+fun exportFailureAggregationSnapshotSample(
+    aggregator: BoundedRenderFailureAggregator,
+    forward: (RenderFailureAggregationSnapshot) -> Unit,
+) {
+    val completedWindow = aggregator.snapshotAndReset()
+    forward(completedWindow)
+}
+// DOCS_REGION_END(diagnostics-snapshot-export)

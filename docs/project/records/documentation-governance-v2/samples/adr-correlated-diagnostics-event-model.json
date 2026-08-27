@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "sample_id": "adr.correlated-diagnostics-event-model",
+  "sample_class": "non-executable",
+  "language": "kotlin",
+  "capability_id": "diagnostics.correlated-events",
+  "document_ids": ["adr.correlated-render-diagnostics"],
+  "version_lane": "released",
+  "reason": "This accepted ADR condenses the sealed event family and omits the concrete event declarations that complete the production hierarchy.",
+  "visible_explanation": "Treat this fence as the accepted event-contract outline; use the compiled Tutorial and versioned API reference for copy-ready code."
+}

@@ -1,7 +1,37 @@
 ---
 translation_source: tooling/diagnostics.md
-translation_source_hash: b3c2c504d3b1b6b89b2da4897b85548c07e9630544a72e077b94517ec88a910d
+translation_source_hash: 10ca581b07a8fb43fe2582f8be083a65d4424b583b6c4ecbae07083822712058
 translation_status: current
+schema_version: 2
+document_id: tooling.diagnostics
+doc_type: tooling
+owner:
+  kind: project
+  id: diagnostics
+version_lane: released
+capability_ids:
+  - diagnostics.correlated-events
+  - diagnostics.session-inspection
+  - diagnostics.node-timing
+  - diagnostics.failure-aggregation
+  - renderer.diagnostics
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+  - viewcompose-diagnostics
+  - viewcompose-preview
+sample_ids:
+  - tooling.diagnostics-event-stream
+  - tooling.diagnostics-session-inspection
+  - tooling.diagnostics-node-timing
+supported_versions:
+  - UI Foundation、Android Renderer 与 Diagnostics 0.1.0-alpha01
+  - Preview Android 集成 0.1.0-alpha04
+  - ViewCompose Preview Android Studio 插件 1.1.0，适配 261.* 构建家族
+verification_commands:
+  - ./gradlew :viewcompose-ui-foundation:testDebugUnitTest :viewcompose-diagnostics:testDebugUnitTest
+  - ./gradlew :samples:tutorials:assembleDebug
+  - ./gradlew qaQuick
 ---
 
 # ViewCompose 诊断
@@ -12,23 +42,27 @@ translation_status: current
 Overlay 子 Session 会继承该 Sink，并获得进程内 Session ID 与 Parent ID。底层嵌套 Session
 若显式传入新的 Diagnostics，则会有意开启一棵新的关联树。
 
+{/* compiled-region source="viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/RenderSessionToolingSamples.kt" region="diagnostics-correlated-events" sample_id="tooling.diagnostics-event-stream" build_target=":viewcompose-ui-foundation:compileDebugUnitTestKotlin" */}
 ```kotlin
-val diagnostics = RenderDiagnostics(
-    collection = RenderDiagnosticCollection(
-        lifecycle = true,
-        failures = true,
-        frameLevel = RenderFrameDiagnosticLevel.Tree,
-    ),
-    sink = { event ->
-        when (event) {
-            is RenderFrameCompleted -> inspect(event.context, event.report, event.tree)
-            is RenderFailureObserved -> report(event.context, event.failure)
-            else -> recordLifecycle(event)
-        }
-    },
-)
-
-val session = renderInto(container = root, diagnostics = diagnostics) { App() }
+fun renderDiagnosticsEventSample(): RenderDiagnostics {
+    return RenderDiagnostics(
+        collection = RenderDiagnosticCollection(
+            lifecycle = true,
+            failures = true,
+            frameLevel = RenderFrameDiagnosticLevel.Stats,
+        ),
+        sink = { event ->
+            when (event) {
+                is RenderFrameCompleted -> println(event.stats)
+                is RenderFailureObserved -> println(event.failure.phase)
+                is RenderSessionStarted,
+                is RenderSessionActivityChanged,
+                is RenderSessionEnded,
+                -> println(event.context)
+            }
+        },
+    )
+}
 ```
 
 `None` 不构建 Renderer 计数或树明细；`Stats` 只构建聚合计数；`Tree` 还会构建有界的树、

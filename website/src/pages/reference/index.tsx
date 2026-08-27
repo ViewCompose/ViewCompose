@@ -27,10 +27,14 @@ type ReferenceEntry = {
   namespace: string;
   overloadCount: number;
   receiver?: string;
+  symbol: string;
+};
+
+type ReferenceCapability = {
+  capabilityId: string;
   referenceId?: string;
   relatedDocuments?: RelatedDocument[];
   sample?: ReferenceSample;
-  symbol: string;
 };
 
 type ReferenceArtifact = {
@@ -49,6 +53,7 @@ type ReferenceGroup = {
 
 type ReferenceCatalog = {
   artifacts: ReferenceArtifact[];
+  capabilities: ReferenceCapability[];
   groups: ReferenceGroup[];
   summary: {
     artifactCount: number;
@@ -60,6 +65,9 @@ type ReferenceCatalog = {
 
 const catalog = catalogData as ReferenceCatalog;
 const artifactsById = new Map(catalog.artifacts.map((artifact) => [artifact.artifact, artifact]));
+const capabilitiesById = new Map(
+  catalog.capabilities.map((capability) => [capability.capabilityId, capability]),
+);
 
 function groupLabel(groupId: string): string {
   switch (groupId) {
@@ -139,6 +147,7 @@ function matches(entry: ReferenceEntry, query: string): boolean {
 
 function EntryCard({entry}: {entry: ReferenceEntry}): ReactNode {
   const artifact = artifactsById.get(entry.artifact)!;
+  const capability = entry.capabilityId ? capabilitiesById.get(entry.capabilityId) : undefined;
   const name = entry.symbol.substring(entry.symbol.lastIndexOf('.') + 1);
   return (
     <article className={styles.entryCard}>
@@ -174,7 +183,7 @@ function EntryCard({entry}: {entry: ReferenceEntry}): ReactNode {
         <Link to={artifact.moduleManual}>
           {translate({id: 'reference.entry.manual', message: 'Module manual'})}
         </Link>
-        {(entry.relatedDocuments ?? [])
+        {(capability?.relatedDocuments ?? [])
           .filter((document) => document.path !== null)
           .map((document) => (
             <Link key={document.documentId} to={document.path!}>

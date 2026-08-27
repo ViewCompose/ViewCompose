@@ -1,6 +1,29 @@
 ---
-title: Read render diagnostics
-sidebar_position: 14
+schema_version: 2
+document_id: tutorial.render-diagnostics
+doc_type: tutorial
+owner:
+  kind: project
+  id: diagnostics
+version_lane: released
+capability_ids:
+  - diagnostics.correlated-events
+  - diagnostics.session-inspection
+  - diagnostics.node-timing
+  - diagnostics.failure-aggregation
+  - renderer.diagnostics
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+  - viewcompose-diagnostics
+  - viewcompose-preview
+sample_ids:
+  - tutorial.render-diagnostics-dependencies
+  - tutorial.render-diagnostics
+  - module.diagnostics-dependency
+  - module.diagnostics-failure-aggregation
+expected_result: A visible render-counter summary plus request-only Session inspection and bounded redacted failure snapshots.
+verification_action: Run the sample, press Sample render stats, and verify the summary changes only after the explicit action.
 ---
 
 # Read render diagnostics
@@ -10,6 +33,7 @@ sidebar_position: 14
 This page is standalone. Host diagnostics and `RenderStats` are in the base application modules;
 no optional diagnostics artifact is required:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="render-diagnostics-dependencies" sample_id="tutorial.render-diagnostics-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -101,6 +125,7 @@ loop and distort the counters being measured.
 
 Add the optional artifact when the application needs bounded recurring-failure counts:
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="diagnostics-module-dependency" sample_id="module.diagnostics-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 dependencies {
     implementation("com.viewcompose:viewcompose-diagnostics:0.1.0-alpha01")
@@ -109,19 +134,23 @@ dependencies {
 
 Use one application-owned aggregator as a failure-only sink:
 
+{/* compiled-region source="viewcompose-diagnostics/src/test/samples/com/viewcompose/diagnostics/samples/RenderFailureAggregationSamples.kt" region="diagnostics-failure-aggregation" sample_id="module.diagnostics-failure-aggregation" build_target=":viewcompose-diagnostics:compileDebugUnitTestKotlin" */}
 ```kotlin
-val aggregator = BoundedRenderFailureAggregator()
-val failureDiagnostics = RenderDiagnostics(
-    collection = RenderDiagnosticCollection(
-        lifecycle = false,
-        failures = true,
-        frameLevel = RenderFrameDiagnosticLevel.None,
-    ),
-    sink = aggregator,
-)
-
-val completedWindow = aggregator.snapshotAndReset()
-exportQueue.trySend(completedWindow)
+fun boundedFailureAggregationSample(
+    install: (RenderDiagnostics) -> Unit,
+): BoundedRenderFailureAggregator {
+    val aggregator = BoundedRenderFailureAggregator()
+    val diagnostics = RenderDiagnostics(
+        collection = RenderDiagnosticCollection(
+            lifecycle = false,
+            failures = true,
+            frameLevel = RenderFrameDiagnosticLevel.None,
+        ),
+        sink = aggregator,
+    )
+    install(diagnostics)
+    return aggregator
+}
 ```
 
 Schedule snapshot/export outside sink delivery. The snapshot contains only bounded redacted

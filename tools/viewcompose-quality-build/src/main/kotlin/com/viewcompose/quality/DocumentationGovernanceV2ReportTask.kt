@@ -716,28 +716,54 @@ internal object DocumentationGovernanceV2Reporter {
                 )
             }
 
+        val referenceCapabilities = capabilitiesBySymbol.values
+            .distinctBy(GovernanceRecord::path)
+            .sortedBy { capability -> capability.recordId }
+            .map { capability ->
+                val capabilityValue = capability.value
+                val referenceOwner = capabilityValue.objectValue("reference_owner").orEmpty()
+                val sampleOwner = capabilityValue.objectValue("sample_owner").orEmpty()
+                val sampleId = sampleOwner["sample_id"]?.toString()
+                val sampleRecord = sampleId?.let(samplesById::get)
+                val documentOwners = capabilityValue.objectValue("document_owners").orEmpty()
+                val relatedDocuments = referenceDocumentTypes.flatMap { documentType ->
+                    documentOwners.stringList(documentType).map { documentId ->
+                        val document = documentsById[documentId]
+                        linkedMapOf<String, Any?>(
+                            "documentId" to documentId,
+                            "documentType" to documentType,
+                            "path" to document?.get("path")?.toString()?.removePrefix("docs/")
+                                ?.removeSuffix(".md")?.removeSuffix(".mdx")?.let { path -> "/$path" },
+                        )
+                    }
+                }
+                linkedMapOf<String, Any?>(
+                    "capabilityId" to capability.recordId,
+                ).apply {
+                    referenceOwner["reference_id"]?.let { referenceId ->
+                        put("referenceId", referenceId)
+                    }
+                    if (relatedDocuments.isNotEmpty()) put("relatedDocuments", relatedDocuments)
+                    val sample = when {
+                        sampleRecord != null -> linkedMapOf<String, Any?>(
+                            "sampleClass" to sampleRecord.value["sample_class"],
+                            "sampleId" to sampleId,
+                            "versionLane" to sampleRecord.value["version_lane"],
+                        )
+                        sampleOwner["exception_id"] != null -> linkedMapOf<String, Any?>(
+                            "exceptionId" to sampleOwner.getValue("exception_id"),
+                        )
+                        else -> null
+                    }
+                    if (sample != null) put("sample", sample)
+                }
+            }
+
         val entries = declarations.map { declaration ->
             val artifact = declaration.getValue("artifact").toString()
             val symbol = declaration.getValue("symbol").toString()
             val group = referenceGroup(declaration)
             val capability = capabilitiesBySymbol[symbol]
-            val capabilityValue = capability?.value.orEmpty()
-            val referenceOwner = capabilityValue.objectValue("reference_owner").orEmpty()
-            val sampleOwner = capabilityValue.objectValue("sample_owner").orEmpty()
-            val sampleId = sampleOwner["sample_id"]?.toString()
-            val sampleRecord = sampleId?.let(samplesById::get)
-            val documentOwners = capabilityValue.objectValue("document_owners").orEmpty()
-            val relatedDocuments = referenceDocumentTypes.flatMap { documentType ->
-                documentOwners.stringList(documentType).map { documentId ->
-                    val document = documentsById[documentId]
-                    linkedMapOf<String, Any?>(
-                        "documentId" to documentId,
-                        "documentType" to documentType,
-                        "path" to document?.get("path")?.toString()?.removePrefix("docs/")
-                            ?.removeSuffix(".md")?.removeSuffix(".mdx")?.let { path -> "/$path" },
-                    )
-                }
-            }
             linkedMapOf<String, Any?>(
                 "artifact" to artifact,
                 "kind" to declaration.getValue("kind"),
@@ -748,22 +774,6 @@ internal object DocumentationGovernanceV2Reporter {
                 capability?.recordId?.let { capabilityId -> put("capabilityId", capabilityId) }
                 if (declaration["deprecated"] == true) put("deprecated", true)
                 declaration["receiver"]?.let { receiver -> put("receiver", receiver) }
-                referenceOwner["reference_id"]?.let { referenceId ->
-                    put("referenceId", referenceId)
-                }
-                if (relatedDocuments.isNotEmpty()) put("relatedDocuments", relatedDocuments)
-                val sample = when {
-                    sampleRecord != null -> linkedMapOf<String, Any?>(
-                        "sampleClass" to sampleRecord.value["sample_class"],
-                        "sampleId" to sampleId,
-                        "versionLane" to sampleRecord.value["version_lane"],
-                    )
-                    sampleOwner["exception_id"] != null -> linkedMapOf<String, Any?>(
-                        "exceptionId" to sampleOwner.getValue("exception_id"),
-                    )
-                    else -> null
-                }
-                if (sample != null) put("sample", sample)
                 put("catalogOwner", group)
             }
         }.sortedWith(
@@ -789,9 +799,10 @@ internal object DocumentationGovernanceV2Reporter {
 
         return linkedMapOf(
             "artifacts" to referenceArtifacts,
+            "capabilities" to referenceCapabilities,
             "generatedBy" to "updateDocumentationCapabilityReference",
             "groups" to groups,
-            "schemaVersion" to 1,
+            "schemaVersion" to 2,
             "summary" to linkedMapOf(
                 "artifactCount" to referenceArtifacts.size,
                 "countsByKind" to countsByKind,
@@ -1006,7 +1017,8 @@ internal object DocumentationGovernanceV2Reporter {
                 family == "Integration" ||
                 family == "Preview tooling" ||
                 artifact == "viewcompose-host-android" ||
-                artifact == "viewcompose-renderer-android"
+                artifact == "viewcompose-renderer-android" ||
+                artifact == "viewcompose-ui-foundation"
             ) {
                 topLevelCallableDeclaration.findAll(sanitized).forEach declaration@{ match ->
                     if (braceDepths[match.range.first] != 0) return@declaration
@@ -1370,6 +1382,60 @@ internal object DocumentationGovernanceV2Reporter {
         "ReuseBindingResult",
         "ViewNodeToolingRegistry",
     )
+    private val foundationDiagnosticsEntryNames = setOf(
+        "NodeTypeBindingStats",
+        "RenderDiagnosticCollection",
+        "RenderDiagnosticContext",
+        "RenderDiagnosticEvent",
+        "RenderDiagnostics",
+        "RenderDiagnosticsSink",
+        "RenderFailure",
+        "RenderFailureObserved",
+        "RenderFailureOperation",
+        "RenderFailurePhase",
+        "RenderFailureRecovery",
+        "RenderFrameCompleted",
+        "RenderFrameDiagnosticLevel",
+        "RenderFrameReport",
+        "RenderFrameStatus",
+        "RenderInspectedNode",
+        "RenderInspectedNodeKind",
+        "RenderNodeInspectionSnapshot",
+        "RenderNodePlatformTarget",
+        "RenderNodeTimingCapture",
+        "RenderNodeTimingCaptureRequest",
+        "RenderNodeTimingCaptureResult",
+        "RenderNodeTimingCaptureStart",
+        "RenderNodeTimingClock",
+        "RenderNodeTimingEndReason",
+        "RenderNodeTimingInclusion",
+        "RenderNodeTimingPhase",
+        "RenderNodeTimingRecord",
+        "RenderNodeTimingStartStatus",
+        "RenderNodeTimingUnsupportedDomain",
+        "RenderNodeToken",
+        "RenderPatchOperation",
+        "RenderPatchRecord",
+        "RenderSessionActivityChanged",
+        "RenderSessionDiagnosticInspection",
+        "RenderSessionDiagnosticSnapshot",
+        "RenderSessionEnded",
+        "RenderSessionInspectedFailure",
+        "RenderSessionInspectedFrame",
+        "RenderSessionInspectionPolicy",
+        "RenderSessionInspectionRegistration",
+        "RenderSessionInspectionTooling",
+        "RenderSessionNodeInspection",
+        "RenderSessionPlatformDiagnostics",
+        "RenderSessionRole",
+        "RenderSessionStarted",
+        "RenderSessionTimingInspection",
+        "RenderSessionTraceId",
+        "RenderStats",
+        "RenderStructureStats",
+        "RenderTreeNode",
+        "RenderTreeResult",
+    )
     private val moduleFamilyRow = Regex(
         """^\|\s*`(viewcompose-[a-z0-9-]+)`\s*\|\s*([^|]+?)\s*\|""",
     )
@@ -1492,6 +1558,7 @@ internal object DocumentationGovernanceV2Reporter {
             name.startsWith("Preview") || name.startsWith("ViewComposePreview") || name.endsWith("Plugin")
         artifact == "viewcompose-host-android" -> true
         artifact == "viewcompose-renderer-android" -> packageName in rendererPublicCapabilityPackages
+        artifact == "viewcompose-ui-foundation" -> name in foundationDiagnosticsEntryNames
         family == "Integration" -> true
         else -> false
     }
@@ -1508,6 +1575,7 @@ internal object DocumentationGovernanceV2Reporter {
             packageName == "com.viewcompose.renderer.decoration" -> "integration"
         artifact == "viewcompose-renderer-android" && name in rendererToolingEntryNames -> "tooling"
         artifact == "viewcompose-renderer-android" -> "host"
+        artifact == "viewcompose-ui-foundation" -> "tooling"
         else -> "integration"
     }
 

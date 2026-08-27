@@ -1,0 +1,43 @@
+{
+  "schema_version": 2,
+  "capability_id": "diagnostics.correlated-events",
+  "kind": "tooling",
+  "owner": { "kind": "module", "id": "viewcompose-ui-foundation" },
+  "artifact": "viewcompose-ui-foundation",
+  "version_state": { "lane": "released", "version": "0.1.0-alpha01" },
+  "symbols": [
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionTraceId", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionRole", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderDiagnosticContext", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderFrameDiagnosticLevel", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderDiagnosticCollection", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderDiagnostics", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderDiagnosticsSink", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderDiagnosticEvent", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionStarted", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionActivityChanged", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderFailureObserved", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderFrameCompleted", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderSessionEnded", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderStats", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.NodeTypeBindingStats", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderStructureStats", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderTreeResult", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderTreeNode", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderPatchRecord", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderPatchOperation", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderDiagnostics.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderFailurePhase", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderFailure.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderFailureRecovery", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderFailure.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderFailureOperation", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderFailure.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderFailure", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderFailure.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderFrameStatus", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderFailure.kt" },
+    { "symbol_id": "com.viewcompose.ui.foundation.RenderFrameReport", "kind": "type", "visibility": "public", "source": "viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderFailure.kt" }
+  ],
+  "reference_owner": { "reference_id": "reference.diagnostics.correlated-events", "generated": true },
+  "sample_owner": { "sample_id": "tutorial.render-diagnostics" },
+  "document_owners": {
+    "tutorial": ["tutorial.render-diagnostics"],
+    "architecture": ["architecture.render-failures", "adr.correlated-render-diagnostics"],
+    "tooling": ["tooling.diagnostics"]
+  }
+}

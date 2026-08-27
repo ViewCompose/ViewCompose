@@ -21,7 +21,7 @@ ordered_work:
 completion:
   - Remove the debt baseline, enable strict gates, move durable conclusions, and archive the plan.
 last_verified: 2026-08-27
-next_action: Merge the Renderer ownership slice, then audit Diagnostics ownership as the next Phase 3 boundary.
+next_action: Merge the Diagnostics ownership slice, then audit Graphics Core and Graphics Android ownership as the next Phase 3 boundary.
 maven_release_changesets:
   - release/changes/20260826-governance-shadows-phase3.json
   - release/changes/20260826-governance-preview-tooling-phase3.json
@@ -31,6 +31,7 @@ maven_release_changesets:
   - release/changes/20260827-governance-lifecycle-phase3.json
   - release/changes/20260827-governance-viewmodel-phase3.json
   - release/changes/20260827-governance-renderer-phase3.json
+  - release/changes/20260827-governance-diagnostics-phase3.json
 ---
 
 # Documentation System Governance V2 and Capability Restructure Plan
@@ -95,6 +96,10 @@ The accepted Renderer hard cut now assigns all 41 public transaction, reconcilia
 and decoration-backend entries to four capability owners, registers six compiled sample decisions,
 repairs the scanner's modifier-form and Renderer-package coverage, removes two resolved exceptions,
 and reduces the report to 228 issues.
+The accepted Diagnostics hard cut now assigns 52 previously undiscovered Foundation diagnostic
+contracts and five Diagnostics integration entries to four capability owners, registers 11 exact
+sample decisions, normalizes shared generated-Reference ownership metadata, removes 12 resolved
+exceptions, and reduces the report to 206 issues.
 
 This plan is process-first. Governance V2, machine-readable capability ownership, and a
 no-new-debt gate must land before broad document movement or tutorial expansion. Existing debt may
@@ -103,8 +108,8 @@ must remove that page's repaired violations instead of preserving them.
 
 Last verified: 2026-08-27.
 
-Next action: merge the Renderer ownership slice, then audit Diagnostics ownership as the next
-Phase 3 boundary. Pull-request gate scaling
+Next action: merge the Diagnostics ownership slice, then audit Graphics Core and Graphics Android
+ownership as the next Phase 3 boundary. Pull-request gate scaling
 Phases 3 through 5 are complete, so these scoped content
 changes also supply the gate plan's Phase 6 shadow-observation corpus. Final Reference link closure
 remains owned by this plan after the Phase 3 content owners move.
@@ -145,15 +150,20 @@ remains owned by this plan after the Phase 3 content owners move.
   because only test-only compiled documentation fixtures gained exact source regions and complete
   transaction execution. Test sources are excluded from published artifacts; production source,
   API, runtime behavior, publication metadata, and generated artifact content remain unchanged.
+- `release/changes/20260827-governance-diagnostics-phase3.json` explicitly ignores UI Foundation
+  and Diagnostics because only test-only compiled documentation fixtures gained exact regions or
+  were separated into focused examples. Test sources are excluded from published artifacts;
+  production source, API, runtime behavior, publication metadata, and generated artifact content
+  remain unchanged.
 
 ## Release intent rationale
 
 The completed Phase 2 governance-tooling slices change governance records, documentation markers,
 workflows, and compiled repository-quality tooling only; they do not change a published artifact's
 production source, publication inputs, or compiled API sample bodies.
-`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, one explicitly
-ignored Renderer Android artifact, and zero shared-path classifications against
-`6ab095a7f6dbaff532deaaa01f0c37af9efb1c4f`.
+`verifyViewComposeReleaseIntent` most recently confirmed zero release artifacts, two explicitly
+ignored test-sample-only artifacts, and zero shared-path classifications against
+`9e97994cc12d1e6bd6c7e59fcd7c360d82209d86`.
 Governance, website tooling, and repository verification work can remain publication-neutral.
 Any later phase that changes a published artifact's production source, publication inputs, or
 compiled API samples must add its immutable Changeset in the same pull request and replace this
@@ -1162,6 +1172,44 @@ Accepted Renderer ownership slice on 2026-08-27:
   zero release artifacts and explicitly ignored the one test-sample-only Renderer artifact. This
   slice reuses existing unit, renderer, device, visual, and performance evidence and makes no new
   runtime, visual, power, or performance claim. The next action is Diagnostics ownership.
+
+Accepted Diagnostics ownership slice on 2026-08-27:
+
+- retained the Diagnostics module, Tooling, Tutorial, render-failure Architecture, and correlated
+  diagnostics ADR routes while separating event correlation, session inspection, node timing, and
+  production failure aggregation into four capability owners;
+- hard-cut the scanner to inventory an exact allowlist of 52 public Foundation diagnostic
+  contracts instead of treating the entire Foundation module as application-facing. The generated
+  inventory increased from 479 to 531 entries, and all 52 newly visible entries received ownership
+  in the same slice; the existing Diagnostics module contributes five aggregate and export entries;
+- registered 11 exact dependency, event-stream, inspection, timing, aggregation, export, Android
+  host, and ADR sample decisions. Twelve resolved metadata, taxonomy, symbol, bilingual-drift, and
+  sample exceptions were removed;
+- the report changed from 228 to 206 issues: missing metadata 59 to 54, orphan symbols 92 to 87,
+  taxonomy mismatches 2 to 1, and unclassified samples 75 to 64. Duplicate owners, orphan
+  documents, version conflicts, stale generated output, unbaselined debt, and blocking violations
+  remained zero despite the 52-entry scanner expansion;
+- normalized generated Reference ownership data once per capability instead of repeating the same
+  reference ID, sample, and related-document objects on every entry. The catalog schema advanced
+  from 1 to 2 and its committed size fell from 418,872 to 224,059 bytes, a reduction of 194,813
+  bytes (`46.5078%`), even though the inventory gained 52 entries. The website consumer resolves
+  entries through the normalized capability map, and a focused generator test protects the shape;
+- UI Foundation and Diagnostics unit tests, the affected Tutorial compilation, the quality-tool
+  unit suite, Governance V2, documentation structure, complete API reuse, release intent, and the
+  complete bilingual site passed. The site audited 454 pages and 30 redirects, produced 48,945,157
+  non-API bytes, and left 233,057 bytes under the unchanged 46.9 MiB limit. This is 204,481 bytes
+  (`0.4160%`) below the Renderer slice and is `improved`. Docusaurus completed in `43.3 s`; the
+  duration comparison with the Renderer slice is `inconclusive` because cache and process state
+  differed, while the absolute result remains below the `120 s` limit. Complete `qaQuick` passed
+  2,342 actionable tasks in `9 min 23 s` (2,075 executed and 267 up-to-date); this is completeness
+  evidence rather than a speed comparison because it republished most module documentation;
+- the overall conclusion is `improved`: diagnostics ownership is complete, scanner blindness is
+  removed without widening unrelated Foundation APIs, and generated Reference growth is bounded
+  without changing public API, production runtime behavior, routes, or published artifacts.
+  Release intent found zero release artifacts and explicitly ignored the two test-sample-only
+  artifacts. This slice reuses existing unit, device, diagnostic, and performance evidence and
+  makes no new runtime, visual, power, or performance claim. The next action is Graphics Core and
+  Graphics Android ownership.
 
 | Current area | Required target |
 | --- | --- |

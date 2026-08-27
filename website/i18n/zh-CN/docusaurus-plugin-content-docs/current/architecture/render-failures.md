@@ -1,7 +1,30 @@
 ---
 translation_source: architecture/render-failures.md
-translation_source_hash: 74ed46211167b96c55a2201f1d68e7b0298f25eba67deb6f9868b72c00056e15
+translation_source_hash: e1db8c343d64238aeef77ce0c1022a7184a83e7fd92e116c80597f4b9752b7b0
 translation_status: current
+schema_version: 2
+document_id: architecture.render-failures
+doc_type: architecture
+owner:
+  kind: project
+  id: diagnostics
+version_lane: released
+capability_ids:
+  - diagnostics.correlated-events
+  - diagnostics.failure-aggregation
+  - host.android-view
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-diagnostics
+  - viewcompose-host-android
+sample_ids:
+  - tooling.diagnostics-event-stream
+  - architecture.android-view-side-effects
+invariants:
+  - 只有在恢复状态和权威帧结果确定后，才为每个故障建立归因。
+  - 可安全重放的原生 View 工作保留在树事务内，外部副作用只在提交后执行。
+evidence:
+  - Render Session 故障测试、Android View 回滚测试、诊断聚合测试与已编译事件样例。
 ---
 
 # 渲染失败与 Android 互操作副作用
@@ -9,21 +32,26 @@ translation_status: current
 `RenderSession` 让渲染失败保持可观测，同时不会把可恢复的帧失败变成进程崩溃。根 Host 接受一套
 关联的 `RenderDiagnostics` Sink：
 
+{/* compiled-region source="viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/RenderSessionToolingSamples.kt" region="diagnostics-correlated-events" sample_id="tooling.diagnostics-event-stream" build_target=":viewcompose-ui-foundation:compileDebugUnitTestKotlin" */}
 ```kotlin
-val session = renderInto(
-    container = root,
-    diagnostics = RenderDiagnostics(
+fun renderDiagnosticsEventSample(): RenderDiagnostics {
+    return RenderDiagnostics(
         collection = RenderDiagnosticCollection(
-            lifecycle = false,
+            lifecycle = true,
             failures = true,
-            frameLevel = RenderFrameDiagnosticLevel.None,
+            frameLevel = RenderFrameDiagnosticLevel.Stats,
         ),
         sink = { event ->
-            if (event is RenderFailureObserved) report(event.context, event.failure)
+            when (event) {
+                is RenderFrameCompleted -> println(event.stats)
+                is RenderFailureObserved -> println(event.failure.phase)
+                is RenderSessionStarted,
+                is RenderSessionActivityChanged,
+                is RenderSessionEnded,
+                -> println(event.context)
+            }
         },
-    ),
-) {
-    App()
+    )
 }
 ```
 
@@ -73,24 +101,25 @@ Snapshot 时过期，不存在定时器、存储、传输、厂商 SDK 或进程
 
 `AndroidView` 有两类刻意区分的更新路径：
 
+{/* non-executable sample_id="architecture.android-view-side-effects" reason="This architecture excerpt uses application-specific player and analytics placeholders to distinguish replay-safe and commit-only effects." visible_explanation="This is an architecture boundary sketch; replace the player and analytics placeholders with application-owned implementations." */}
 ```kotlin
 AndroidView(
     key = playerId,
     factory = { context -> PlayerView(context) },
     update = { view ->
-        // 只配置可安全重放的 View 状态。
+        // Replay-safe View configuration only.
         view.isEnabled = enabled
     },
     onReset = { view ->
-        // View 重新绑定前执行可安全重放的清理。
+        // Replay-safe cleanup before the View is rebound.
         view.player = null
     },
     onCommit = { view ->
-        // 不可重放的外部动作，仅在树事务成功后运行。
+        // Non-replayable external action. Runs only after a successful tree transaction.
         analytics.recordPlayerAttached(playerId)
     },
     onRelease = { view ->
-        // 任何永久放弃之后执行一次性资源释放。
+        // One-shot resource release after any permanent abandonment.
         view.player = null
     },
 )

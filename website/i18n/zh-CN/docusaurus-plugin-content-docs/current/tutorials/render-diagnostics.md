@@ -1,9 +1,32 @@
 ---
-title: 读取渲染诊断
-sidebar_position: 14
 translation_source: tutorials/render-diagnostics.md
-translation_source_hash: a1baeb2a135d391c09d0ac4f362a305e10ab5412e06b2702f9a48075eb5b7d49
+translation_source_hash: 085f8c496c3b46f34921a9d00c0039e5d33921fcb81845f30dee3098cf8a2979
 translation_status: current
+schema_version: 2
+document_id: tutorial.render-diagnostics
+doc_type: tutorial
+owner:
+  kind: project
+  id: diagnostics
+version_lane: released
+capability_ids:
+  - diagnostics.correlated-events
+  - diagnostics.session-inspection
+  - diagnostics.node-timing
+  - diagnostics.failure-aggregation
+  - renderer.diagnostics
+artifact_ids:
+  - viewcompose-ui-foundation
+  - viewcompose-renderer-android
+  - viewcompose-diagnostics
+  - viewcompose-preview
+sample_ids:
+  - tutorial.render-diagnostics-dependencies
+  - tutorial.render-diagnostics
+  - module.diagnostics-dependency
+  - module.diagnostics-failure-aggregation
+expected_result: 显示可见的渲染计数摘要，并提供按请求执行的 Session 检查与有界脱敏故障快照。
+verification_action: 运行样例并点击 Sample render stats，确认摘要只在显式操作后发生变化。
 ---
 
 # 读取渲染诊断
@@ -12,6 +35,7 @@ translation_status: current
 
 本页可以独立使用。宿主诊断和 `RenderStats` 位于基础应用模块，不需要额外的诊断产物：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="render-diagnostics-dependencies" sample_id="tutorial.render-diagnostics-dependencies" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
@@ -102,6 +126,7 @@ UI 事件读取。如果每个 `RenderFrameCompleted` 事件都直接写入界�
 
 应用需要有界的重复故障计数时，添加可选产物：
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="diagnostics-module-dependency" sample_id="module.diagnostics-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin title="build.gradle.kts"
 dependencies {
     implementation("com.viewcompose:viewcompose-diagnostics:0.1.0-alpha01")
@@ -110,19 +135,23 @@ dependencies {
 
 使用一个由应用持有的聚合器作为仅故障 Sink：
 
+{/* compiled-region source="viewcompose-diagnostics/src/test/samples/com/viewcompose/diagnostics/samples/RenderFailureAggregationSamples.kt" region="diagnostics-failure-aggregation" sample_id="module.diagnostics-failure-aggregation" build_target=":viewcompose-diagnostics:compileDebugUnitTestKotlin" */}
 ```kotlin
-val aggregator = BoundedRenderFailureAggregator()
-val failureDiagnostics = RenderDiagnostics(
-    collection = RenderDiagnosticCollection(
-        lifecycle = false,
-        failures = true,
-        frameLevel = RenderFrameDiagnosticLevel.None,
-    ),
-    sink = aggregator,
-)
-
-val completedWindow = aggregator.snapshotAndReset()
-exportQueue.trySend(completedWindow)
+fun boundedFailureAggregationSample(
+    install: (RenderDiagnostics) -> Unit,
+): BoundedRenderFailureAggregator {
+    val aggregator = BoundedRenderFailureAggregator()
+    val diagnostics = RenderDiagnostics(
+        collection = RenderDiagnosticCollection(
+            lifecycle = false,
+            failures = true,
+            frameLevel = RenderFrameDiagnosticLevel.None,
+        ),
+        sink = aggregator,
+    )
+    install(diagnostics)
+    return aggregator
+}
 ```
 
 应在 Sink 投递之外调度 Snapshot 与导出。Snapshot 只包含有界脱敏指纹和安全框架上下文，不包含

@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "sample_id": "tooling.diagnostics-node-timing",
+  "sample_class": "compiled-region",
+  "language": "kotlin",
+  "capability_id": "diagnostics.node-timing",
+  "document_ids": ["tooling.diagnostics"],
+  "version_lane": "released",
+  "source": "viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/RenderSessionToolingSamples.kt",
+  "region": "diagnostics-node-timing",
+  "build_target": ":viewcompose-ui-foundation:compileDebugUnitTestKotlin"
+}

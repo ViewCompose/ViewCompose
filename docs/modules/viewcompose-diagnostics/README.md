@@ -1,3 +1,23 @@
+---
+schema_version: 2
+document_id: module.viewcompose-diagnostics
+doc_type: module
+owner:
+  kind: module
+  id: viewcompose-diagnostics
+version_lane: released
+capability_ids:
+  - diagnostics.failure-aggregation
+artifact_ids:
+  - viewcompose-diagnostics
+sample_ids:
+  - module.diagnostics-dependency
+  - module.diagnostics-failure-aggregation
+  - module.diagnostics-snapshot-export
+coordinate: com.viewcompose:viewcompose-diagnostics:0.1.0-alpha01
+minimal_usage_sample_id: module.diagnostics-dependency
+---
+
 # Diagnostics
 
 `viewcompose-diagnostics` is the optional production-observability layer for ViewCompose render
@@ -8,6 +28,7 @@ process-global sink.
 
 ## Artifact and stability
 
+{/* compiled-region source="samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TutorialDependencySnippets.kt" region="diagnostics-module-dependency" sample_id="module.diagnostics-dependency" build_target=":samples:tutorials:compileDebugKotlin" */}
 ```kotlin
 dependencies {
     implementation("com.viewcompose:viewcompose-diagnostics:0.1.0-alpha01")
@@ -27,18 +48,23 @@ dependencies {
 
 Create one application-owned aggregator and pass it as the root diagnostics sink:
 
+{/* compiled-region source="viewcompose-diagnostics/src/test/samples/com/viewcompose/diagnostics/samples/RenderFailureAggregationSamples.kt" region="diagnostics-failure-aggregation" sample_id="module.diagnostics-failure-aggregation" build_target=":viewcompose-diagnostics:compileDebugUnitTestKotlin" */}
 ```kotlin
-val failureAggregator = BoundedRenderFailureAggregator()
-val diagnostics = RenderDiagnostics(
-    collection = RenderDiagnosticCollection(
-        lifecycle = false,
-        failures = true,
-        frameLevel = RenderFrameDiagnosticLevel.None,
-    ),
-    sink = failureAggregator,
-)
-
-setUiContent(diagnostics = diagnostics) { App() }
+fun boundedFailureAggregationSample(
+    install: (RenderDiagnostics) -> Unit,
+): BoundedRenderFailureAggregator {
+    val aggregator = BoundedRenderFailureAggregator()
+    val diagnostics = RenderDiagnostics(
+        collection = RenderDiagnosticCollection(
+            lifecycle = false,
+            failures = true,
+            frameLevel = RenderFrameDiagnosticLevel.None,
+        ),
+        sink = aggregator,
+    )
+    install(diagnostics)
+    return aggregator
+}
 ```
 
 This configuration collects only structured failures. It does not build frame statistics or trees,
@@ -89,9 +115,15 @@ any live `RenderSessionTraceId`; window IDs and trace IDs are separate process-l
 Snapshot and reset are synchronous memory operations. Export outside render-sink delivery and keep
 slow I/O behind application-owned scheduling and backpressure:
 
+{/* compiled-region source="viewcompose-diagnostics/src/test/samples/com/viewcompose/diagnostics/samples/RenderFailureAggregationSamples.kt" region="diagnostics-snapshot-export" sample_id="module.diagnostics-snapshot-export" build_target=":viewcompose-diagnostics:compileDebugUnitTestKotlin" */}
 ```kotlin
-val completedWindow = failureAggregator.snapshotAndReset()
-applicationQueue.trySend(completedWindow)
+fun exportFailureAggregationSnapshotSample(
+    aggregator: BoundedRenderFailureAggregator,
+    forward: (RenderFailureAggregationSnapshot) -> Unit,
+) {
+    val completedWindow = aggregator.snapshotAndReset()
+    forward(completedWindow)
+}
 ```
 
 The module never invokes an exporter, so export failure cannot recursively publish a render
